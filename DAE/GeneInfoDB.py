@@ -4,10 +4,10 @@ import ConfigParser
 import gzip
 import sys
 from collections import defaultdict
+from GeneTerms import *
 
 class GeneInfo:
     pass
-
 
 class Region:
     def len(self):
@@ -80,7 +80,8 @@ class GeneInfoDB:
             return self._fprops
         except AttributeError:
             pass
-        for fpropName in self.config.get('GeneInfo', 'fprops').split(","):
+        self._fprops = self.config.get('GeneInfo', 'fprops').split(",")
+        for fpropName in self._fprops:
             self._loadGenePropertyFile(fpropName)
         return self._fprops
 
@@ -102,6 +103,10 @@ class GeneInfoDB:
         self._loadGeneRegions()
         return self._geneRgnsMap
 
+    def getGeneTerms(self,id):
+        fl = self.config.get('GeneInfo', 'geneTerms.' + id + ".file")
+        return loadGeneTerm(fl)
+        
     def _loadGeneRegions(self):
         geneRegionsFile = self.config.get('GeneInfo', 'geneRgnsFile')
         f = gzip.open(geneRegionsFile)
