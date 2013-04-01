@@ -1,5 +1,9 @@
 import os
 from VariantsDB import VariantsDB 
+from VariantsDB import mat2Str 
+from VariantsDB import str2Mat 
+from VariantsDB import viewVs 
+from VariantsDB import safeVs 
 from GeneInfoDB import GeneInfoDB 
 import phenoDB 
 from Sfari import SfariCollection

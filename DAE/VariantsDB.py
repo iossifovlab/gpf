@@ -14,6 +14,7 @@ import pysam
 import glob 
 from os.path import dirname
 from os.path import basename 
+import tempfile
 
 class DnvVariant:
     def __str__(self):
@@ -94,7 +95,7 @@ class Variant:
         try:
             return self._requestedGeneEffect
         except AttributeError:
-                self._requestedGeneEffect = self.geneEffect() 
+                self._requestedGeneEffect = self.geneEffect
         return self._requestedGeneEffect
 
     @property
@@ -361,14 +362,65 @@ class Study:
             "simple": self._load_family_data_from_simple,
             "StateWE2012-data1-format": self._load_family_data_from_StateWE2012_data1,        
             "EichlerWE2012-SupTab1-format": self._load_family_data_from_EichlerWE2012_SupTab1,
-            "DalyWE2012-SD-Trios": self._load_family_data_from_DalyWE2012_SD_Trios
+            "DalyWE2012-SD-Trios": self._load_family_data_from_DalyWE2012_SD_Trios,
+            "SSCTrios-format": self._load_family_data_SSCTrios,
+            "SSCFams-format": self._load_family_data_SSCFams
         }
     
 
         if fdFormat not in fmMethod:
             raise Exception("Unknown Family File Format: " + fdFormat)
 
-        self.families = fmMethod[fdFormat](fdFile)
+        self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
+
+    def _load_family_data_SSCFams(self, reportF):
+        rf = open(reportF)
+        families = {l.strip():Family() for l in rf}
+        for f in families.values():    
+            f.memberInOrder = []
+
+        rlsMp = { "mother":"mom", "father":"dad", "proband":"prb", "designated-sibling":"sib", "other-sibling":"sib" }
+        genderMap = {"female":"F", "male":"M"}
+
+        for indS in self.vdb.sfriDB.individual.values():
+            if indS.familyId not in families:
+                continue
+            p = Person()
+            p.personId = indS.personId
+            p.gender = genderMap[indS.sex]
+            p.role = rlsMp[indS.role]
+            families[indS.familyId].memberInOrder.append(p)
+        return families,{}
+
+
+    def _load_family_data_SSCTrios(self, reportF):
+        buff = defaultdict(dict) 
+        for indId,indS in self.vdb.sfriDB.individual.items():
+            if indS.collection != "ssc":
+                continue
+            buff[indS.familyId][indS.role] = indS
+
+        rlsMp = zip("mother,father,proband".split(','),"mom,dad,prb".split(','))
+        genderMap = {"female":"F", "male":"M"}
+
+
+        families = {}
+        for fid,rls in buff.items():
+            if "mother" not in rls or "father" not in rls or "proband" not in rls:
+                continue
+            f = Family()
+            f.familyId = fid
+            f.memberInOrder = []
+            
+            for srl,irl in rlsMp:
+                p = Person()
+                p.personId = rls[srl].personId
+                p.gender = genderMap[rls[srl].sex]
+                p.role = irl
+                f.memberInOrder.append(p)
+            families[f.familyId] = f 
+        return families,{}
+
 
     def _load_family_data_from_simple(self,reportF):
         dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments=None)
@@ -385,7 +437,7 @@ class Study:
                 families[fmId].memberInOrder.append(p)
             except AttributeError:
                 families[fmId].memberInOrder = [p]
-        return families
+        return families,{}
             
 
     
@@ -420,7 +472,7 @@ class Study:
             f.memberInOrder = [mom, dad, prb]
 
             families[fid] = f
-        return families
+        return families,{}
 
     def _load_family_data_from_EichlerWE2012_SupTab1(self,reportF):
         famBuff = defaultdict(dict)
@@ -466,26 +518,28 @@ class Study:
 
             families[fid] = f
 
-        return families
+        return families,{}
 
 
     def _load_family_data_from_StateWE2012_data1(self,reportF):
         famBuff = defaultdict(dict) 
+        badFamBuff = defaultdict(dict) 
         dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True, comments=None)
 
         genderDecoding = { "Male":"M", "Female":"F" }
         roleDecoding = { "Mother":"mom", "Father":"dad", "Affected_proband":"prb", "Unaffected_Sibling":"sib" }
 
         for dtR in dt:
-            if dtR['Sample_PassFail'] == 'Fail' or dtR['Family_PassFail'] == 'Fail':
-                continue
             atts = { x: dtR[x] for x in dt.dtype.names }
             p = Person(atts)
             p.gender = genderDecoding[dtR["Gender"]]
             p.role = roleDecoding[dtR["Role"]]
             p.personId = dtR["Sample"] 
 
-            famBuff[str(dtR["Family"])][p.role] = p
+            if dtR['Sample_PassFail'] == 'Fail' or dtR['Family_PassFail'] == 'Fail':
+                badFamBuff[str(dtR["Family"])][p.role] = p
+            else:
+                famBuff[str(dtR["Family"])][p.role] = p
 
 
         families = {}
@@ -503,15 +557,23 @@ class Study:
 
             families[fid] = f
 
-        return families
+        badFamilies = {}
+        for fid,pDct in badFamBuff.items():
+            f = Family()
+            f.familyId = fid
+
+            f.memberInOrder = pDct.values()
+
+            badFamilies[fid] = f
+
+        return families,badFamilies
        
 
     def _load_family_data_from_quad_report(self,reportF):
         families = {}
+        badFamilies = {}
         qrp = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True)
         for qrpR in qrp:
-            if qrpR['status'] != 'OK':
-                continue
             f = Family()
             f.familyId = qrpR['quadquad_id'][5:10]
             f.atts = { x:qrpR[x] for x in qrp.dtype.names }
@@ -548,8 +610,12 @@ class Study:
                 sib.role = 'sib'
                 sib.gender = qrpR['child2gender']
                 f.memberInOrder.append(sib)
-            families[f.familyId] = f
-        return families
+            if qrpR['status'] == 'OK':
+                families[f.familyId] = f
+            else:
+                badFamilies[f.familyId] = f
+
+        return families,badFamilies
 
     
 class VariantsDB:
@@ -903,6 +969,38 @@ def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):
 def mat2Str(mat, colSep=" ", rowSep="/"):
     return rowSep.join([ colSep.join([str(n) for n in mat[i,:]]) for i in xrange(mat.shape[0])  ])
 
+def _safeVs(tf,vs,atts=[]):
+    def ge2Str(gs):
+        return "|".join( x['sym'] + ":" + x['eff'] for x in gs)
+
+    mainAtts = "familyId location variant bestSt counts geneEffect requestedGeneEffects".split()
+    specialStrF = {"bestSt":mat2Str, "counts":mat2Str, "geneEffect":ge2Str, "requestedGeneEffects":ge2Str}
+
+    tf.write("\t".join(mainAtts+atts)+"\n") 
+    for v in vs:
+        mavs = []
+        for att in mainAtts:
+            try:
+                if att in specialStrF:
+                    mavs.append(specialStrF[att](getattr(v,att)))
+                else:
+                    mavs.append(str(getattr(v,att)))
+            except:
+                mavs.append("")
+                    
+        tf.write("\t".join(mavs + [str(v.atts[a]) for a in atts])+"\n")
+    tf.close()
+
+def viewVs(vs,atts=[]):
+    tf = tempfile.NamedTemporaryFile("w", delete=False)
+    print >>sys.stderr, "temp file name: " + tf.name
+    _safeVs(tf,vs,atts)
+    os.system("oocalc " + tf.name)
+    os.remove(tf.name)
+
+def safeVs(vs,fn,atts=[]):
+    f = open(fn,"w")
+    _safeVs(f,vs,atts)
 
 def parseGeneEffect(effStr):
     geneEffect = []
@@ -925,9 +1023,15 @@ def filter_gene_effect(geneEffects, effectTypes, geneSyms):
     return [x for x in geneEffects if x['eff'] in effectTypes and  x['sym'] in geneSyms]
 
 if __name__ == "__main__":
-    wd = os.environ['T115_WORKING_DIR']
+    wd = os.environ['DAE_DB_DIR']
     print "wd:", wd
-    vDB = VariantsDB(wd)
+    from Sfari import SfariCollection
+
+    sfriDB = SfariCollection(os.environ['PHENO_DB_DIR'])
+    vDB = VariantsDB(wd,sfriDB=sfriDB)
+
+    rs = vDB.get_study('wigRNASeq')
+    viewVs(vDB.get_study('wig683').get_denovo_variants(effectTypes="LGDs"))
 
     # print "OOOOOOOOO", len(list(vDB.get_denovo_variants([vDB.get_study("DalyWE2012"), vDB.get_study("EichlerWE2012"), vDB.get_study("wig683")], effectTypes="LGDs", inChild="prb")))
     # sd = vDB.get_study("DalyWE2012")

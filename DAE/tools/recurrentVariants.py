@@ -10,16 +10,17 @@ studyNamesS= 'wig683,DalyWE2012,EichlerWE2012,StateWE2012,wigState333,wigEichler
 # studyNamesS= 'EichlerWE2012,StateWE2012,DalyWE2012'
 # studyNamesS= 'wig683,wigState333,wigEichler374'
 # studyNamesS= 'DalyWE2012'
+# studyNamesS= 'StateWE2012'
+
+if len(sys.argv)>1:
+    print sys.argv
+    studyNamesS=sys.argv[1]
+
 stdyMap = { 'wig683': 'W' ,'DalyWE2012': 'D' ,'EichlerWE2012': 'E' ,'StateWE2012':'S', 'wigState333': 'S', 'wigEichler374': 'E' }
 
 studies = [vDB.get_study(x) for x in studyNamesS.split(",")]
 
 prbLGDs =  list(vDB.get_denovo_variants(studies,inChild='prb', effectTypes="LGDs"))
-
-# studyNamesS= 'StateWE2012'
-if len(sys.argv)>1:
-    print sys.argv
-    studyNamesS=sys.argv[1]
 
 
 
@@ -59,8 +60,8 @@ for g, FN in sorted(sym2FN.items(), key=lambda x: x[1]):
         if eff == '':
             raise Exception('breh')
         outSet[v.familyId] = "".join((stdyMap[v.study.name], eff[0], v.atts['inChild'][3])) 
-    for o in outSet.values():
-        print o,
+    for fid,o in outSet.items():
+        print str(fid)+":"+o,
     print
 
 recCnt = Counter(sym2FN.values())

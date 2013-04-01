@@ -8,10 +8,14 @@ from collections import defaultdict
 import scipy.stats as stats
 
 studyNamesSA = ['wig683,wigState333,wigEichler374',
-                'wig683',
                 'wigState333',
                 'wigEichler374',
-                'DalyWE2012']
+                'wig683',
+                'DalyWE2012',
+                'StateWE2012',
+                'EichlerWE2012',
+                'IossifovWE2012',
+                'wig683,StateWE2012,EichlerWE2012,DalyWE2012']
 
 if len(sys.argv)>1:
     studyNamesSA = sys.argv[1].split(";")
