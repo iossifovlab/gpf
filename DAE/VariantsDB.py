@@ -371,7 +371,7 @@ class Study:
         if fdFormat not in fmMethod:
             raise Exception("Unknown Family File Format: " + fdFormat)
 
-        self.families = fmMethod[fdFormat](fdFile)
+        self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
 
     def _load_family_data_SSCFams(self, reportF):
         rf = open(reportF)
@@ -390,7 +390,7 @@ class Study:
             p.gender = genderMap[indS.sex]
             p.role = rlsMp[indS.role]
             families[indS.familyId].memberInOrder.append(p)
-        return families
+        return families,{}
 
 
     def _load_family_data_SSCTrios(self, reportF):
@@ -419,7 +419,7 @@ class Study:
                 p.role = irl
                 f.memberInOrder.append(p)
             families[f.familyId] = f 
-        return families
+        return families,{}
 
 
     def _load_family_data_from_simple(self,reportF):
@@ -437,7 +437,7 @@ class Study:
                 families[fmId].memberInOrder.append(p)
             except AttributeError:
                 families[fmId].memberInOrder = [p]
-        return families
+        return families,{}
             
 
     
@@ -472,7 +472,7 @@ class Study:
             f.memberInOrder = [mom, dad, prb]
 
             families[fid] = f
-        return families
+        return families,{}
 
     def _load_family_data_from_EichlerWE2012_SupTab1(self,reportF):
         famBuff = defaultdict(dict)
@@ -518,26 +518,28 @@ class Study:
 
             families[fid] = f
 
-        return families
+        return families,{}
 
 
     def _load_family_data_from_StateWE2012_data1(self,reportF):
         famBuff = defaultdict(dict) 
+        badFamBuff = defaultdict(dict) 
         dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True, comments=None)
 
         genderDecoding = { "Male":"M", "Female":"F" }
         roleDecoding = { "Mother":"mom", "Father":"dad", "Affected_proband":"prb", "Unaffected_Sibling":"sib" }
 
         for dtR in dt:
-            if dtR['Sample_PassFail'] == 'Fail' or dtR['Family_PassFail'] == 'Fail':
-                continue
             atts = { x: dtR[x] for x in dt.dtype.names }
             p = Person(atts)
             p.gender = genderDecoding[dtR["Gender"]]
             p.role = roleDecoding[dtR["Role"]]
             p.personId = dtR["Sample"] 
 
-            famBuff[str(dtR["Family"])][p.role] = p
+            if dtR['Sample_PassFail'] == 'Fail' or dtR['Family_PassFail'] == 'Fail':
+                badFamBuff[str(dtR["Family"])][p.role] = p
+            else:
+                famBuff[str(dtR["Family"])][p.role] = p
 
 
         families = {}
@@ -555,15 +557,23 @@ class Study:
 
             families[fid] = f
 
-        return families
+        badFamilies = {}
+        for fid,pDct in badFamBuff.items():
+            f = Family()
+            f.familyId = fid
+
+            f.memberInOrder = pDct.values()
+
+            badFamilies[fid] = f
+
+        return families,badFamilies
        
 
     def _load_family_data_from_quad_report(self,reportF):
         families = {}
+        badFamilies = {}
         qrp = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True)
         for qrpR in qrp:
-            if qrpR['status'] != 'OK':
-                continue
             f = Family()
             f.familyId = qrpR['quadquad_id'][5:10]
             f.atts = { x:qrpR[x] for x in qrp.dtype.names }
@@ -600,8 +610,12 @@ class Study:
                 sib.role = 'sib'
                 sib.gender = qrpR['child2gender']
                 f.memberInOrder.append(sib)
-            families[f.familyId] = f
-        return families
+            if qrpR['status'] == 'OK':
+                families[f.familyId] = f
+            else:
+                badFamilies[f.familyId] = f
+
+        return families,badFamilies
 
     
 class VariantsDB:

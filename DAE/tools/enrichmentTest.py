@@ -71,7 +71,7 @@ def printSummaryTable(geneTerms,allRes,totals,tTests=None):
     print "\t\t\t\t\t" + "\t\t\t\t\t".join(tTests)
     bcgTotal = totals['BACKGROUND'];
     hcols = []
-    hcols.extend(("setId", "setDesc", "NumberOfGenes", "BacktroundOverlap (" + str(bcgTotal) + ")", "BackgroundProportion"));
+    hcols.extend(("setId", "setDesc", "NumberOfGenes", "BackgroundOverlap (" + str(bcgTotal) + ")", "BackgroundProportion"));
     for tTname in tTests:
         hcols.extend(("Overlap (" + str(totals[tTname]) + ")", "Expected", "pVal", "qVal", "lessOrMore"));
     print "\t".join(hcols)
@@ -120,10 +120,12 @@ if __name__ == "__main__":
     allStds= [wigStudy, 
                 vDB.get_study('StateWE2012'), 
                 vDB.get_study('EichlerWE2012'), 
-                vDB.get_study('DalyWE2012')]
+                vDB.get_study('DalyWE2012'),
+                vDB.get_study('wigState333'),
+                vDB.get_study('wigEichler374')]
 
     testVarGenesDict = {}
-    testVarGenesDict['LGDs_Auts_4studies'] =      list(vDB.get_denovo_variants(allStds,inChild='prb',  effectTypes="LGDs"))
+    testVarGenesDict['LGDs_Auts_allStudies'] =      list(vDB.get_denovo_variants(allStds,inChild='prb',  effectTypes="LGDs"))
     testVarGenesDict['LGDs_Auts_wiglerOnly'] =    list(vDB.get_denovo_variants(wigStds,inChild='prb',  effectTypes="LGDs"))
     testVarGenesDict['LGDs_AutM_wiglerOnly'] =    list(vDB.get_denovo_variants(wigStds,inChild='prbM', effectTypes="LGDs"))
     testVarGenesDict['LGDs_AutF_wiglerOnly'] =    list(vDB.get_denovo_variants(wigStds,inChild='prbF', effectTypes="LGDs"))
@@ -142,7 +144,7 @@ if __name__ == "__main__":
     allRes, totals = enrichmentTest(testVarGenesDict, geneTerms)
     print >> sys.stderr, "Preparing the summary table..."
     printSummaryTable(geneTerms,allRes,totals,
-        ['LGDs_Auts_4studies', 'LGDs_Auts_wiglerOnly', 'LGDs_AutM_wiglerOnly', 'LGDs_AutF_wiglerOnly', 
+        ['LGDs_Auts_allStudies', 'LGDs_Auts_wiglerOnly', 'LGDs_AutM_wiglerOnly', 'LGDs_AutF_wiglerOnly', 
         'LGDs_Sibs_wiglerOnly', 'LGDs_SibM_wiglerOnly', 'LGDs_SibF_wiglerOnly', 
         'missense_Auts', 'missense_Sibs', 
         'synonymous_Auts', 'synonymous_Sibs', 

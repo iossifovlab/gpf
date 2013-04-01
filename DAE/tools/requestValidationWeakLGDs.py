@@ -1,6 +1,8 @@
 #!/bin/env python
 from DAE import *
 import getpass
+import sys
+from collections import defaultdict
 
 # TODO get it from argv
 studyName = 'wig683'
@@ -68,6 +70,7 @@ for v in stdy.get_denovo_variants(effectTypes="LGDs",callSet="dirty"):
     reqVs.append(v)
 print >>sys.stderr, "nRequested:", nRequested, sum(nRequested.values())
 
+'''
 import tempfile
 def viewVariants(vs,atts=[]):
     tf = tempfile.NamedTemporaryFile("w", delete=False)
@@ -79,5 +82,5 @@ def viewVariants(vs,atts=[]):
     print >>sys.stderr, "temp file name: " + tfn
     os.system("oocalc " + tfn)
     os.remove(tf.name)
-
-viewVariants(reqVs,optionalAtts)
+'''
+# viewVariants(reqVs,optionalAtts)
