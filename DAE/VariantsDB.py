@@ -988,18 +988,23 @@ def _safeVs(tf,vs,atts=[]):
                 mavs.append("")
                     
         tf.write("\t".join(mavs + [str(v.atts[a]) if a in v.atts else "" for a in atts])+"\n")
-    tf.close()
 
 def viewVs(vs,atts=[]):
     tf = tempfile.NamedTemporaryFile("w", delete=False)
     print >>sys.stderr, "temp file name: " + tf.name
     _safeVs(tf,vs,atts)
+    tf.close()
     os.system("oocalc " + tf.name)
     os.remove(tf.name)
 
 def safeVs(vs,fn,atts=[]):
-    f = open(fn,"w")
+    if fn=="-":
+        f = sys.stdout
+    else:
+        f = open(fn,"w")
     _safeVs(f,vs,atts)
+    if fn!="-":
+        f.close()
 
 def parseGeneEffect(effStr):
     geneEffect = []

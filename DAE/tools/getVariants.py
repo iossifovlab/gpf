@@ -9,7 +9,7 @@ print "hi"
 parser = argparse.ArgumentParser(description="Query denovo and inheritted variants.")
 parser.add_argument('--denovoStudies', type=str, 
         default="allPublishedPlusOurRecent",
-        help='the sutdies to query for denovo variants')
+        help='the studies to query for denovo variants. (i.e. allPublishedPlusOurRecent or all or allPublished or wig683')
 parser.add_argument('--transmittedStudy', type=str, default="wig683",
         help='the sutdy to query the transmitted variants')
 parser.add_argument('--effectTypes', type=str, default="LGDs", 
@@ -24,6 +24,7 @@ parser.add_argument('--inChild', type=str,
         help='i.e. prb, sib, prbM, sibF')
 parser.add_argument('--familiesFile', type=str, 
         help='list of the families to report')
+parser.add_argument('--geneSet', type=str, help='gene set id of the form "collection:setid"')
 parser.add_argument('--geneSym', type=str, help='list of gene syms')
 parser.add_argument('--geneSymFile', type=str, help='the first column should cotain gene symbols')
 parser.add_argument('--geneId', type=str, help='list of gene ids')
@@ -77,6 +78,22 @@ if args.geneId:
 if geneIds:
     geneSyms = { giDB.genes[x].sym for x in geneIds if x in giDB.genes }
 
+if args.geneSet:
+    parts = args.geneSet.split(":")
+    if len(parts)==1:
+        collection = "main"
+        setId = parts[0]
+    elif len(parts)==2:
+        collection = parts[0]
+        setId = parts[1]
+    else:
+        raise Exception('the geneSet definition is wrong')
+
+    gts = giDB.getGeneTerms(collection)
+    geneSyms = set(gts.t2G[setId].keys())
+
+
+
 # regionS
 # regionSFile
 
@@ -106,4 +123,4 @@ if args.transmittedStudy:
                         ultraRareOnly=ultraRare,
                         familyIds=families,geneSyms=geneSyms,regionS=args.regionS)
 
-safeVs(itertools.chain(dvs,ivs),'aaaaa.txt',['all.altFreq','all.nAltAlls'])
+safeVs(itertools.chain(dvs,ivs),'-',['all.altFreq','all.nAltAlls'])
