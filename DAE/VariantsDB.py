@@ -114,9 +114,12 @@ class Variant:
         bs = self.bestSt
         childStr = ''
         for c in xrange(2,len(mbrs)):
-            if bs[1][c]:
+            if isVariant(bs,c,self.location,mbrs[c].gender):
                 childStr += (mbrs[c].role + mbrs[c].gender)
         return childStr
+
+    def get_normal_refCN(self,c):
+        return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
 
 
 class Family:
@@ -643,6 +646,8 @@ class VariantsDB:
         return [self.get_study(s) for s in studiesS.split(",")]
     
     def effectTypesSet(self,effectTypesS):
+        if effectTypesS == "CNVs":
+            return { "CNV+", "CNV-" }
         if effectTypesS == "LGDs":
             return { "frame-shift", "nonsense", "splice-site", "no-frame-shift-new-stop", "no-frame-shift-new-Stop" }    
         if effectTypesS == "nonsynonymous":
@@ -652,6 +657,8 @@ class VariantsDB:
 
     def get_denovo_variants(self, studies, **filters):
         seenVs = set()
+        if isinstance(studies,str):
+            studies = self.get_studies(studies) 
         for study in studies:
             for v in study.get_denovo_variants(**filters):
                 vKey = v.familyId + v.location + v.variant
@@ -779,7 +786,7 @@ class VariantsDB:
                     v.valParent = dtR['valparent']
           
                 if v.familyId in knownFams:
-                    v.memberInOrder = knownFams[f].memberInOrder
+                    v.memberInOrder = knownFams[v.familyId].memberInOrder
                 else:
                     v.memberInOrder = []
                     print "Breh, the family", v.familyId, "is unknown"
@@ -1006,11 +1013,53 @@ def safeVs(vs,fn,atts=[]):
     if fn!="-":
         f.close()
 
+def normalRefCopyNumber(location,gender):
+    clnInd = location.find(":")
+    chr = location[0:clnInd]
+
+    if chr in ['chrX', 'X', '23', 'chr23']:
+        if '-' in location:
+            dshInd = location.find('-')
+            pos = int(location[clnInd+1:dshInd])
+        else:
+            pos = int(location[clnInd+1:])
+
+        # hg19 pseudo autosomes region: chrX:60001-2699520 and chrX:154931044-155260560 
+        if pos < 60001 or (pos>2699520 and pos < 154931044) or pos > 155260560:
+            if gender=='M':
+                return 1
+            elif gender!='F':
+                raise Exception('weird gender ' + gender)
+    elif chr in ['chrY', 'Y', '24', 'chr24']:
+        if gender=='M':
+            return 1
+        elif gender=='F':
+            return 0
+        else:
+            raise Exception('gender needed')
+    return 2
+
+def isVariant(bs,c,location=None,gender=None):
+    normalRefCN=2
+
+    if location:
+        normalRefCN = normalRefCopyNumber(location,gender)
+
+    if bs[0,c] != normalRefCN or any([bs[o,c]!=0 for o in xrange(1,bs.shape[0])]): 
+        return True
+    return False
+        
+
 def parseGeneEffect(effStr):
     geneEffect = []
     if effStr == "intergenic":
         return geneEffect 
-       
+
+    # HACK!!! To rethink
+    if effStr in ["CNV+", "CNV-"]:
+        geneEffect.append({'sym':"", 'eff':effStr})
+        return geneEffect
+      
     for ge in effStr.split("|"):
         cs = ge.split(":");
         if len(cs) != 2:
@@ -1035,6 +1084,12 @@ if __name__ == "__main__":
     vDB = VariantsDB(wd,sfriDB=sfriDB)
 
     st = vDB.get_study('wig683')
+    st = vDB.get_study('LevyCNV2011')
+    for v in st.get_denovo_variants():
+        if v.inChS != v.atts['inChild']:
+            print v.familyId, "".join([str(v.get_normal_refCN(c)) for c in xrange(v.bestSt.shape[1])]), "\t", mat2Str(v.bestSt), "    \t", v.inChS, v.atts['inChild'], v.location, v.variant, "   \t", [(p.role, p.gender) for p in v.study.families[v.familyId].memberInOrder]
+    '''
+    st = vDB.get_study('wig683')
 
     for v in st.get_transmitted_summary_variants(minParentsCalled=0,maxAltFreqPrcnt=-1, regionS="10:90000-94000"):
         print "SUMMARY:", v.location, v.variant
@@ -1042,7 +1097,7 @@ if __name__ == "__main__":
     for v in st.get_transmitted_variants(minParentsCalled=0,maxAltFreqPrcnt=-1, regionS="10:92990-92990"):
         print "FAMILY :", v.location, v.variant, v.familyId
 
-
+    '''
     # rs = vDB.get_study('wigRNASeq')
     # viewVs(vDB.get_study('wig683').get_denovo_variants(effectTypes="LGDs"))
 

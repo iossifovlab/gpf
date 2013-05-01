@@ -6,7 +6,7 @@ from itertools import groupby
 from collections import Counter 
 
 # studyNamesS= 'wig683,DalyWE2012,EichlerWE2012,StateWE2012'
-studyNamesS= 'wig683,DalyWE2012,EichlerWE2012,StateWE2012,wigState333,wigEichler374'
+studyNamesS= 'IossifovWE2012,DalyWE2012,EichlerWE2012,StateWE2012,wigStateWE2012,wigEichlerWE2012,wig683'
 # studyNamesS= 'EichlerWE2012,StateWE2012,DalyWE2012'
 # studyNamesS= 'wig683,wigState333,wigEichler374'
 # studyNamesS= 'DalyWE2012'
@@ -16,9 +16,9 @@ if len(sys.argv)>1:
     print sys.argv
     studyNamesS=sys.argv[1]
 
-stdyMap = { 'wig683': 'W' ,'DalyWE2012': 'D' ,'EichlerWE2012': 'E' ,'StateWE2012':'S', 'wigState333': 'S', 'wigEichler374': 'E' }
+stdyMap = { 'wig781':'W', 'wig683': 'W' ,'DalyWE2012': 'D' ,'EichlerWE2012': 'E' ,'StateWE2012':'S', 'wigState333': 'S', 'wigEichler374': 'E' , 'wigStateWE2012':'S', 'wigEichlerWE2012':'E', 'EichlerTG2012':'G', 'IossifovWE2012':'W'}
 
-studies = [vDB.get_study(x) for x in studyNamesS.split(",")]
+studies = vDB.get_studies(studyNamesS)
 
 prbLGDs =  list(vDB.get_denovo_variants(studies,inChild='prb', effectTypes="LGDs"))
 
@@ -49,8 +49,15 @@ gnSorted = sorted([[ge['sym'], v] for v in prbLGDs for ge in v.requestedGeneEffe
 sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
 sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() } 
 
-for g, FN in sorted(sym2FN.items(), key=lambda x: x[1]):
+for g, FN in sorted(sym2FN.items(), key=lambda x: (x[1],x[0])):
+    gnId = giDB.getCleanGeneId("sym",g)
+    desc = ""
+    if gnId:
+        desc = giDB.genes[gnId].desc
+
+    # print g + "\t" + str(FN) + "\t" + desc + "\t",
     print g + "\t" + str(FN),
+    
     outSet = dict()
     for v in sym2Vars[g]:
         eff = ''

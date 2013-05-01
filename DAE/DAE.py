@@ -4,6 +4,8 @@ from VariantsDB import mat2Str
 from VariantsDB import str2Mat 
 from VariantsDB import viewVs 
 from VariantsDB import safeVs 
+from VariantsDB import isVariant
+from VariantsDB import normalRefCopyNumber 
 from GeneInfoDB import GeneInfoDB 
 import phenoDB 
 from Sfari import SfariCollection

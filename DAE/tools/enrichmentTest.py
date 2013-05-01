@@ -107,12 +107,14 @@ def printSummaryTable(geneTerms,allRes,totals,tTests=None):
 
 if __name__ == "__main__":
     # setsFile = '/mnt/wigclust5/data/unsafe/autism/genomes/hg19/miRNA-TargetScan6.0-Conserved'
-    setsFile = '/mnt/wigclust5/data/unsafe/autism/genomes/hg19/GeneSets'
+    # setsFile = '/mnt/wigclust5/data/unsafe/autism/genomes/hg19/GeneSets'
 
+    setsFile = "main"
     if len(sys.argv)>1:
         setsFile=sys.argv[1]
 
-    geneTerms = loadGeneTerm(setsFile)
+    # geneTerms = loadGeneTerm(setsFile)
+    geneTerms = giDB.getGeneTerms(setsFile)
 
 
     wigStudy = vDB.get_study('wig683')
