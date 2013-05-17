@@ -471,8 +471,11 @@ def saveMetaData(md, filename):
     for variableName in keys:
         variable = md[variableName]
         datatype = variable['datatype']                  
-        
-        values = '|'.join(sorted(variable['values'].keys()))         
+       
+     
+        valuesStr = "|".join([v+";"+str(n) for v,n in sorted(variable['values'].items(), key=lambda x: -x[1])]) 
+
+        # valuesStr = '|'.join(sorted(variable['values'].keys()))         
         uniqueValues = variable['uniqueValues']  
         
         row = []
@@ -480,7 +483,7 @@ def saveMetaData(md, filename):
         row.append(variableName)
         row.append(datatype)
         row.append(uniqueValues)
-        row.append(values)        
+        row.append(valuesStr)        
             
         writer.writerow(row)
         index+=1        

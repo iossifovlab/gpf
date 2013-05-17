@@ -4,6 +4,8 @@ from DAE import *
 from GeneTerms import loadGeneTerm
 from scipy import stats
 import sys
+from itertools import groupby
+from collections import Counter 
 
 class EnrichmentTestRes:
     pass
@@ -113,40 +115,59 @@ if __name__ == "__main__":
     if len(sys.argv)>1:
         setsFile=sys.argv[1]
 
-    # geneTerms = loadGeneTerm(setsFile)
-    geneTerms = giDB.getGeneTerms(setsFile)
+    try:
+        geneTerms = giDB.getGeneTerms(setsFile)
+    except:
+        geneTerms = loadGeneTerm(setsFile)
 
 
-    wigStudy = vDB.get_study('wig683')
-    wigStds= [wigStudy]
-    allStds= [wigStudy, 
-                vDB.get_study('StateWE2012'), 
-                vDB.get_study('EichlerWE2012'), 
-                vDB.get_study('DalyWE2012'),
-                vDB.get_study('wigState333'),
-                vDB.get_study('wigEichler374')]
+    transmStdy = vDB.get_study('wig683')
+    wigStds= vDB.get_studies('wig683') 
+    allStds= vDB.get_studies('allWE')
+
+    def fltVs(vs):
+        ret = []
+        seen = set()
+        for v in vs:
+            hasNew = False
+            for ge in v.requestedGeneEffects:
+                sym = ge['sym']
+                kk = v.familyId + "." + sym
+                if kk not in seen:
+                    hasNew = True
+                seen.add(kk)
+            if hasNew:
+                ret.append(v) 
+        return ret
+
+    def oneVariantPerRecurrent(vs):
+        gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects ]) 
+        sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
+        sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() } 
+        return [x[0] for x in sym2Vars.values() if len(x)>1]
 
     testVarGenesDict = {}
-    testVarGenesDict['LGDs_Auts_allStudies'] =      list(vDB.get_denovo_variants(allStds,inChild='prb',  effectTypes="LGDs"))
-    testVarGenesDict['LGDs_Auts_wiglerOnly'] =    list(vDB.get_denovo_variants(wigStds,inChild='prb',  effectTypes="LGDs"))
-    testVarGenesDict['LGDs_AutM_wiglerOnly'] =    list(vDB.get_denovo_variants(wigStds,inChild='prbM', effectTypes="LGDs"))
-    testVarGenesDict['LGDs_AutF_wiglerOnly'] =    list(vDB.get_denovo_variants(wigStds,inChild='prbF', effectTypes="LGDs"))
-    testVarGenesDict['LGDs_Sibs_wiglerOnly'] =    list(vDB.get_denovo_variants(wigStds,inChild='sib',  effectTypes="LGDs"))
-    testVarGenesDict['LGDs_SibM_wiglerOnly'] =    list(vDB.get_denovo_variants(wigStds,inChild='sibM', effectTypes="LGDs"))
-    testVarGenesDict['LGDs_SibF_wiglerOnly'] =    list(vDB.get_denovo_variants(wigStds,inChild='sibF', effectTypes="LGDs"))
-    testVarGenesDict['missense_Auts'] =           list(vDB.get_denovo_variants(wigStds,inChild='prb',  effectTypes="missense"))
-    testVarGenesDict['missense_Sibs'] =           list(vDB.get_denovo_variants(wigStds,inChild='sib',  effectTypes="missense"))
-    testVarGenesDict['synonymous_Auts'] =         list(vDB.get_denovo_variants(wigStds,inChild='prb',  effectTypes="synonymous"))
-    testVarGenesDict['synonymous_Sibs'] =         list(vDB.get_denovo_variants(wigStds,inChild='sib',  effectTypes="synonymous"))
+    testVarGenesDict['LGDs_Auts_allStudies_rec'] = oneVariantPerRecurrent(vDB.get_denovo_variants(allStds,inChild='prb',  effectTypes="LGDs"))
+    testVarGenesDict['LGDs_Auts_allStudies'] =    fltVs(vDB.get_denovo_variants(allStds,inChild='prb',  effectTypes="LGDs"))
+    testVarGenesDict['LGDs_Auts_wiglerOnly'] =    fltVs(vDB.get_denovo_variants(wigStds,inChild='prb',  effectTypes="LGDs"))
+    testVarGenesDict['LGDs_AutM_wiglerOnly'] =    fltVs(vDB.get_denovo_variants(wigStds,inChild='prbM', effectTypes="LGDs"))
+    testVarGenesDict['LGDs_AutF_wiglerOnly'] =    fltVs(vDB.get_denovo_variants(wigStds,inChild='prbF', effectTypes="LGDs"))
+    testVarGenesDict['LGDs_Sibs_wiglerOnly'] =    fltVs(vDB.get_denovo_variants(wigStds,inChild='sib',  effectTypes="LGDs"))
+    testVarGenesDict['LGDs_SibM_wiglerOnly'] =    fltVs(vDB.get_denovo_variants(wigStds,inChild='sibM', effectTypes="LGDs"))
+    testVarGenesDict['LGDs_SibF_wiglerOnly'] =    fltVs(vDB.get_denovo_variants(wigStds,inChild='sibF', effectTypes="LGDs"))
+    testVarGenesDict['missense_Auts'] =           fltVs(vDB.get_denovo_variants(wigStds,inChild='prb',  effectTypes="missense"))
+    testVarGenesDict['missense_Sibs'] =           fltVs(vDB.get_denovo_variants(wigStds,inChild='sib',  effectTypes="missense"))
+    testVarGenesDict['synonymous_Auts'] =         fltVs(vDB.get_denovo_variants(wigStds,inChild='prb',  effectTypes="synonymous"))
+    testVarGenesDict['synonymous_Sibs'] =         fltVs(vDB.get_denovo_variants(wigStds,inChild='sib',  effectTypes="synonymous"))
 
-    testVarGenesDict['ultrarareKillersParents'] = list(wigStudy.get_transmitted_summary_variants(ultraRareOnly=True, effectTypes="LGDs"))
-    testVarGenesDict['BACKGROUND'] =              list(wigStudy.get_transmitted_summary_variants(ultraRareOnly=True, effectTypes="synonymous"))
+    testVarGenesDict['ultrarareKillersParents'] = list(transmStdy.get_transmitted_summary_variants(ultraRareOnly=True, effectTypes="LGDs"))
+    testVarGenesDict['BACKGROUND'] =              list(transmStdy.get_transmitted_summary_variants(ultraRareOnly=True, effectTypes="synonymous"))
 
     print >> sys.stderr, "Running the test..."
     allRes, totals = enrichmentTest(testVarGenesDict, geneTerms)
     print >> sys.stderr, "Preparing the summary table..."
     printSummaryTable(geneTerms,allRes,totals,
-        ['LGDs_Auts_allStudies', 'LGDs_Auts_wiglerOnly', 'LGDs_AutM_wiglerOnly', 'LGDs_AutF_wiglerOnly', 
+        ['LGDs_Auts_allStudies_rec', 'LGDs_Auts_allStudies', 'LGDs_Auts_wiglerOnly', 'LGDs_AutM_wiglerOnly', 'LGDs_AutF_wiglerOnly', 
         'LGDs_Sibs_wiglerOnly', 'LGDs_SibM_wiglerOnly', 'LGDs_SibF_wiglerOnly', 
         'missense_Auts', 'missense_Sibs', 
         'synonymous_Auts', 'synonymous_Sibs', 

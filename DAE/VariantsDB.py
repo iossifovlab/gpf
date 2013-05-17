@@ -49,6 +49,10 @@ class Variant:
         return self._familyId
 
     @property
+    def studyName(self):
+        return self.study.name
+
+    @property
     def location(self):
         return self.atts[self.locationAtt]
 
@@ -109,14 +113,57 @@ class Variant:
         return self._altFreqPrcnt
 
     @property
+    def memberInOrder(self):
+        try:
+            return self._memberInOrder
+        except AttributeError:
+            self._memberInOrder = self.study.families[self.familyId].memberInOrder
+        return self._memberInOrder
+
+    @property
     def inChS(self):
-        mbrs = self.study.families[self.familyId].memberInOrder
+        mbrs = self.memberInOrder
+        # mbrs = elf.study.families[self.familyId].memberInOrder
         bs = self.bestSt
         childStr = ''
         for c in xrange(2,len(mbrs)):
             if isVariant(bs,c,self.location,mbrs[c].gender):
                 childStr += (mbrs[c].role + mbrs[c].gender)
         return childStr
+
+    @property
+    def fromParentS(self):
+        if self.popType == "denovo":
+            if 'fromParent' in self.atts:
+                return self.atts['fromParent']
+            else:
+                return ''
+        parentStr = ''
+        mbrs = self.memberInOrder
+        bs = self.bestSt
+        for c in xrange(2):
+            if isVariant(bs,c,self.location,mbrs[c].gender):
+                parentStr += mbrs[c].role
+        return parentStr
+
+    @property
+    def altFreqPrcnt(self):
+        try:
+            return self._altFreqPrcnt
+        except AttributeError:
+                self._altFreqPrcnt = 0.0
+                if self.altFreqPrcntAtt in self.atts:
+                    self._altFreqPrcnt = float(self.atts[self.altFreqPrcntAtt])
+        return self._altFreqPrcnt
+
+    @property
+    def memberInOrder(self):
+        try:
+            return self._memberInOrder
+        except AttributeError:
+            self._memberInOrder = self.study.families[self.familyId].memberInOrder
+        return self._memberInOrder
+
 
     def get_normal_refCN(self,c):
         return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
@@ -673,6 +720,14 @@ class VariantsDB:
         studyNames = self.config.get('validation', 'studies' )
         stdies = [self.get_study(x) for x in studyNames.split(',')]
 
+        knownFams = {}
+        for stdy in stdies:
+            for f in stdy.families:
+                if f in knownFams:
+                    print >> sys.stderr, "Ha, family", f, "is more that one study: ", stdy.name, "and", knownFams[f]
+                knownFams[f] = stdy.families[f]
+
+        '''
         knownIns = {}
         for v in self.get_denovo_variants(stdies,callSet="dirty"):
             if v.variant.startswith('ins('):
@@ -689,25 +744,19 @@ class VariantsDB:
                     print >>sys.stderr, 'aaaa: ' + knownIns[k] + " and " + v.variant
                 knownIns[k] = v.variant
 
-        knownFams = {}
-        for stdy in stdies:
-            for f in stdy.families:
-                if f in knownFams:
-                    print >> sys.stderr, "Ha, family", f, "is more that one study: ", stdy.name, "and", knownFams[f]
-                knownFams[f] = stdy.families[f]
             
+        '''
 
         nIncompleteIns = 0
         nCompleteIns = 0
         vars = []
-        nvf = open("view-normalized.txt",'w') 
-        for fn,tp in [(x, 'SNV') for x in glob.glob(validationDir + '/*/reportSNVs.txt')] + \
-                     [(x, 'ID') for x in glob.glob(validationDir + '/*/reportIDs.txt')]:
-
+        # nvf = open("view-normalized.txt",'w') 
+        print "validationDir:", validationDir
+        for fn in glob.glob(validationDir + '/*/reports/report*.txt'):
+            print "Working on file:|", fn,"|"
             dt = genfromtxt(fn,delimiter='\t',dtype=None,names=True, case_sensitive=True)
+            print "Loaded"
             batchId = basename(dirname(fn))  
-            if batchId.endswith('Batch'):
-                batchId = batchId[0:-5]
 
             for dtR in dt:
                 class ValidationVariant:
@@ -744,56 +793,37 @@ class VariantsDB:
 
                 v = ValidationVariant()
 
-                v.familyId = dtR['quadId'][5:10]
                 v.batchId = batchId 
-                # print "\tfamilyId:", familyId
                 v.atts = { x: dtR[x] for x in dt.dtype.names }
 
-                v.location = str(dtR['chr']) + ":" + str(dtR['pos'])
-                # print "\tlocation:", location 
-
-                if tp=='SNV':
-                    v.variant = "sub(" + dtR['exCaprefA'] + "->" + dtR['exCapaltA'] + ")"
-                else:
-                    if dtR['ID']=='D':
-                        v.variant = "del(" + str(dtR['IDlen']) + ")" 
-                    else:
-                        k = "".join((v.familyId,";",v.location,";",str(dtR['IDlen'])))
-                        if k in knownIns:
-                            v.variant = knownIns[k]
-                            nCompleteIns += 1
-                        else: 
-                            if "insSeq" in dt.dtype.names and dtR['insSeq'] != "":
-                                v.variant = "ins(" + dtR['insSeq'] + ")"
-                                nCompleteIns += 1
-                            else:
-                                v.variant = "ins(" + dtR['IDlen']*"?"+  ")"
-                                nIncompleteIns += 1
-                                print >>sys.stderr, "\tINCOMPLETE INS:", v.batchId, v.familyId, v.location, v.variant 
-                v.bestStS = dtR['exCapbestSt']
-                v.resultNote = dtR['note']
-                v.why = 'prePublicationTests'
-                if 'why' in dt.dtype.names:
-                    v.why = dtR['why']
-                v.who = 'Ivan'
-                if 'who' in dt.dtype.names:
-                    v.who = dtR['who']
+                v.familyId = dtR['familyId']
+                v.location = dtR['location']
+                v.variant = dtR['variant']
+                v.bestStS = dtR['bestState']
+                v.resultNote = dtR['valnote']
+                v.why = dtR['why']
+                v.who = dtR['who']
                 v.valCountsS = dtR['valcounts']
-                v.valBestStS = dtR['valbestSt']
+                v.valBestStS = dtR['valbestState']
                 v.valStatus = dtR['valstatus']
+
+
                 v.valParent = ""
                 if 'valparent' in dtR:
                     v.valParent = dtR['valparent']
+
+
           
                 if v.familyId in knownFams:
                     v.memberInOrder = knownFams[v.familyId].memberInOrder
                 else:
                     v.memberInOrder = []
                     print "Breh, the family", v.familyId, "is unknown"
-     
-                nvf.write("\t".join((v.familyId,v.location,v.variant,v.bestStS,v.who,v.why,v.batchId,v.valCountsS,v.valBestStS,v.valStatus,v.resultNote,v.valParent)) + "\n")
+
+
+                # nvf.write("\t".join((v.familyId,v.location,v.variant,v.bestStS,v.who,v.why,v.batchId,v.valCountsS,v.valBestStS,v.valStatus,v.resultNote,v.valParent)) + "\n")
                 vars.append(v)
-        nvf.close()
+        # nvf.close()
         print >>sys.stderr, "nIncompleteIns:", nIncompleteIns
         print >>sys.stderr, "nCompleteIns:", nCompleteIns
         return vars
@@ -979,7 +1009,7 @@ def _safeVs(tf,vs,atts=[]):
     def ge2Str(gs):
         return "|".join( x['sym'] + ":" + x['eff'] for x in gs)
 
-    mainAtts = "familyId location variant bestSt inChS counts geneEffect requestedGeneEffects popType".split()
+    mainAtts = "familyId studyName location variant bestSt fromParentS inChS counts geneEffect requestedGeneEffects popType".split()
     specialStrF = {"bestSt":mat2Str, "counts":mat2Str, "geneEffect":ge2Str, "requestedGeneEffects":ge2Str}
 
     tf.write("\t".join(mainAtts+atts)+"\n") 
@@ -1083,11 +1113,19 @@ if __name__ == "__main__":
     sfriDB = SfariCollection(os.environ['PHENO_DB_DIR'])
     vDB = VariantsDB(wd,sfriDB=sfriDB)
 
+    for v in vDB.get_validation_variants():
+        print v.familyId,v.location,v.variant,v.valStatus
+
+
+    '''
     st = vDB.get_study('wig683')
-    st = vDB.get_study('LevyCNV2011')
+    v = st.get_transmitted_variants().next()
+
+    # st = vDB.get_study('LevyCNV2011')
     for v in st.get_denovo_variants():
         if v.inChS != v.atts['inChild']:
             print v.familyId, "".join([str(v.get_normal_refCN(c)) for c in xrange(v.bestSt.shape[1])]), "\t", mat2Str(v.bestSt), "    \t", v.inChS, v.atts['inChild'], v.location, v.variant, "   \t", [(p.role, p.gender) for p in v.study.families[v.familyId].memberInOrder]
+    '''
     '''
     st = vDB.get_study('wig683')
 

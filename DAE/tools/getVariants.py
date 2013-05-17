@@ -21,6 +21,8 @@ parser.add_argument('--popFrequencyMax', type=str, default="1.0",
         help='maximum population frequency in percents. Can be 100 or -1 for no limit; ultraRare. 1.0 by default.')
 parser.add_argument('--popFrequencyMin', type=str, default="-1",
         help='minimum population frequency in percents. Can be -1 for no limit. -1 by default.')
+parser.add_argument('--popMinParentsCalled', type=str, default="600",
+        help='minimum number of genotyped parents. Can be -1 for no limit. 600 by default.')
 parser.add_argument('--inChild', type=str, 
         help='i.e. prb, sib, prbM, sibF')
 parser.add_argument('--familiesFile', type=str, 
@@ -87,14 +89,13 @@ if geneIds:
 
 if args.geneSet:
     parts = args.geneSet.split(":")
-    if len(parts)==1:
-        collection = "main"
-        setId = parts[0]
-    elif len(parts)==2:
-        collection = parts[0]
-        setId = parts[1]
+    if ":" in args.geneSet:
+        ci = args.geneSet.index(":")
+        collection = args.geneSet[0:ci]
+        setId = args.geneSet[ci+1:] 
     else:
-        raise Exception('the geneSet definition is wrong')
+        collection = "main"
+        setId = args.geneSet 
 
     gts = giDB.getGeneTerms(collection)
     geneSyms = set(gts.t2G[setId].keys())
@@ -134,9 +135,10 @@ if args.transmittedStudy != "None" and args.transmittedStudy != "none" and args.
         sys.exit(-2)
     ivs = ist.get_transmitted_variants(variantTypes=args.variantTypes, effectTypes=effectTypes,
                         inChild=args.inChild,
-                        minParentsCalled=float(args.popFrequencyMin),
+                        minParentsCalled=float(args.popMinParentsCalled),
+                        minAltFreqPrcnt=float(args.popFrequencyMin),
                         maxAltFreqPrcnt=popFreqMax,
                         ultraRareOnly=ultraRare,
                         familyIds=families,geneSyms=geneSyms,regionS=args.regionS)
 
-safeVs(itertools.chain(dvs,ivs),'-',['effectType', 'all.altFreq','all.nAltAlls'])
+safeVs(itertools.chain(dvs,ivs),'-',['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled'])

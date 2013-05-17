@@ -227,7 +227,7 @@ class GeneInfoDB:
                 self._addNSTokenToGeneInfo("sym",gi.sym,gi);
                 for s in gi.syns:
                     self._addNSTokenToGeneInfo("syns",s,gi);
-        print "loaded ", len(self._genes), "genes"
+        print >>sys.stderr, "loaded ", len(self._genes), "genes"
 
     def _addNSTokenToGeneInfo(self, ns, token, gi):
         if not ns in  self._nsTokens:
