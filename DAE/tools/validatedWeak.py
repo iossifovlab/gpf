@@ -13,7 +13,7 @@ for v in stdy.get_denovo_variants(callSet="noweak"):
         raise Exception('lele')
     solidV[k] = v
 
-print "\t".join(("familyId location variant batchId bestState valCounts inChild exCap.counts exCap.denovoScr exCap.chi2Pval".split()))
+print "\t".join(("familyId location variant batchId bestState val.counts val.note inChild who why counts denovoScr chi2Pval".split()))
 
 for vv in vDB.get_validation_variants():
     if vv.valStatus!="valid":
@@ -27,6 +27,8 @@ for vv in vDB.get_validation_variants():
     if bs[1,0]!=0 or bs[1,1]!=0:
         continue
 
-    print "\t".join((vv.familyId,vv.location,vv.variant,vv.batchId, vv.bestStS,vv.valCountsS,vv.inChS,vv.atts['exCapcounts'],str(vv.atts['exCapdenovoScr']), str(vv.atts['exCapchi2Pval']))) 
+    addAtts = ['counts', 'denovoScore', 'chi2APval']
+    print "\t".join([vv.familyId,vv.location,vv.variant,vv.batchId, vv.bestStS,vv.valCountsS, vv.resultNote, vv.inChS,vv.who,vv.why] + 
+                    [str(vv.atts[aa]) if aa in vv.atts else "" for aa in addAtts])
 
 print >>sys.stderr, "Can be annotated with: 'annotateVariants.sh -f aaa.txt -o aaa-ann.txt -x 2 -m 3'"
