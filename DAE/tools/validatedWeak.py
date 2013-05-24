@@ -1,6 +1,7 @@
 #!/bin/env python
 
 from DAE import *
+import sys
 
 # TODO get it from argv
 studyName = 'wig683'
@@ -28,4 +29,4 @@ for vv in vDB.get_validation_variants():
 
     print "\t".join((vv.familyId,vv.location,vv.variant,vv.batchId, vv.bestStS,vv.valCountsS,vv.inChS,vv.atts['exCapcounts'],str(vv.atts['exCapdenovoScr']), str(vv.atts['exCapchi2Pval']))) 
 
-print >>sys.stdout, "Can be annotated with: 'annotateVariants.sh -f aaa.txt -o aaa-ann.txt -x 2 -m 3'"
+print >>sys.stderr, "Can be annotated with: 'annotateVariants.sh -f aaa.txt -o aaa-ann.txt -x 2 -m 3'"

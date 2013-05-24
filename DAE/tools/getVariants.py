@@ -42,7 +42,7 @@ print >>sys.stderr, args
 def loadTextColumn(colSpec):
     cn = 0
     sepC = "\t"
-    header = 1
+    header = 0
     cs = colSpec.split(',')
     fn = cs[0]
     if len(cs)>1:
@@ -141,4 +141,15 @@ if args.transmittedStudy != "None" and args.transmittedStudy != "none" and args.
                         ultraRareOnly=ultraRare,
                         familyIds=families,geneSyms=geneSyms,regionS=args.regionS)
 
-safeVs(itertools.chain(dvs,ivs),'-',['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled'])
+fatherRace = dict(zip(phDB.families,phDB.get_variable('focuv.race_parents')))
+motherRace = dict(zip(phDB.families,phDB.get_variable('mocuv.race_parents')))
+
+def augmentAVar(v):
+    fmId = v.familyId
+    parRaces = ",".join((m[fmId] if fmId in m else "NA" for m in [motherRace, fatherRace]))
+    chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:])) 
+    v.atts["_par_races_"] = parRaces
+    v.atts["_ch_prof_"] = chProf 
+    return v
+
+safeVs(itertools.imap(augmentAVar,itertools.chain(dvs,ivs)),'-',['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
