@@ -720,6 +720,9 @@ class VariantsDB:
         studyNames = self.config.get('validation', 'studies' )
         stdies = [self.get_study(x) for x in studyNames.split(',')]
 
+        print >>sys.stderr, "validationDir: |", validationDir, "|"
+        print >>sys.stderr, "studyNames: |", studyNames, "|"
+
         knownFams = {}
         for stdy in stdies:
             for f in stdy.families:
@@ -727,6 +730,7 @@ class VariantsDB:
                     print >> sys.stderr, "Ha, family", f, "is more that one study: ", stdy.name, "and", knownFams[f]
                 knownFams[f] = stdy.families[f]
 
+	# print knownFams
         '''
         knownIns = {}
         for v in self.get_denovo_variants(stdies,callSet="dirty"):
@@ -751,13 +755,11 @@ class VariantsDB:
         nCompleteIns = 0
         vars = []
         # nvf = open("view-normalized.txt",'w') 
-        print "validationDir:", validationDir
         for fn in glob.glob(validationDir + '/*/reports/report*.txt'):
-            print "Working on file:|", fn,"|"
+            print >>sys.stderr, "Working on file:|", fn,"|"
             dt = genfromtxt(fn,delimiter='\t',dtype=None,names=True, case_sensitive=True)
-            print "Loaded"
-            batchId = basename(dirname(fn))  
-
+            batchId = dirname(fn).split("/")[-2]
+                        
             for dtR in dt:
                 class ValidationVariant:
                     @property
@@ -796,7 +798,7 @@ class VariantsDB:
                 v.batchId = batchId 
                 v.atts = { x: dtR[x] for x in dt.dtype.names }
 
-                v.familyId = dtR['familyId']
+                v.familyId = str(dtR['familyId'])
                 v.location = dtR['location']
                 v.variant = dtR['variant']
                 v.bestStS = dtR['bestState']
@@ -1114,7 +1116,8 @@ if __name__ == "__main__":
     vDB = VariantsDB(wd,sfriDB=sfriDB)
 
     for v in vDB.get_validation_variants():
-        print v.familyId,v.location,v.variant,v.valStatus
+        # pass
+	print v.familyId,v.location,v.variant,v.valStatus
 
 
     '''
