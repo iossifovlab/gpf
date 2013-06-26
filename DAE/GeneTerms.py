@@ -14,6 +14,7 @@ class GeneTerms:
     def renameGenes(self, geneNS, renameF):
         g2T = self.g2T
         self.g2T = defaultdict(lambda : defaultdict(int))
+        self.t2G = defaultdict(lambda : defaultdict(int))
         for g,ts in g2T.items():
             ng = renameF(g)
             if ng:

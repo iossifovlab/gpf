@@ -2,15 +2,18 @@
 
 from DAE import *
 from WeightedSample import WeightedSample
-from collections import defaultdict
 from tfidf import GetTFIDFMatrix 
 from omnibus import GetOmnibusMatrix
 from MatrixClass import *
+from GeneTerms import loadGeneTerm
 
 import numpy as np
+from collections import defaultdict
 from os.path import basename
 from os.path import splitext 
 import glob
+import copy
+import sys
 
 class PPINetwork:
     def __init__(self, fn): 
@@ -53,7 +56,289 @@ class PPINetwork:
 
     def nInternalInters(self,nodeSubset):
         return len([1 for nd in nodeSubset for nbr in self.nbrs[nd] if nbr in nodeSubset])
-            
+
+    def nBetweenInters(self,nodesA,nodesB):
+        nodesBS = set(nodesB)
+        return sum([len(nodesBS & set(self.nbrs[x])) for x in nodesA])
+
+def run_a_test(scrF,gs,ws,withReplacement=False):
+    realScr = scrF(gs)
+    N = len(gs)
+
+    if withReplacement:
+        N = sum([x for x in gs.values()])
+
+    class TestResult:
+        pass
+
+    # for Iter in [100,1000,10000]:
+    for Iter in [100,1000]:
+        ts = TestResult()
+        ts.nBigger = 0
+        ts.randScrs = []
+        ts.Iter = Iter
+        ts.realScr = realScr
+
+        for i in xrange(Iter):
+            if withReplacement:
+                rScr = scrF(ws.getWithReplacement(N))
+            else:
+                rScr = scrF(ws.getWithoutReplacement(N))
+            ts.randScrs.append(rScr)
+            if rScr >= realScr:
+                ts.nBigger+=1
+        ts.pVal = float(ts.nBigger)/Iter
+        if ts.nBigger > 4 and ts.nBigger < Iter - 4:
+            return ts
+    return ts
+
+def run_in_set_test(genes, geneWeights, inSet):
+    sbWghts = geneWeights
+    ws = WeightedSample(sbWghts)
+    gns = [x for x in genes if x in sbWghts]
+
+    if len(gns)==0:
+        return
+
+    def scrF(gis):
+        return len(set(gis) & set(inSet))
+
+    return run_a_test(scrF,gns,ws)
+
+def run_ppn_sc_test(genes, geneWeights, ppn):
+    sbWghts = {g:w for g,w in geneWeights.items() if g in ppn.nodes} 
+    ws = WeightedSample(sbWghts)
+    gns = [x for x in genes if x in sbWghts]
+
+    if len(gns)==0:
+        return
+
+    def scrF(gis):
+        return ppn.nInternalInters(gis)
+
+    return run_a_test(scrF,gns,ws)
+
+def run_ppn_link_test(genesFixed, genes, geneWeights, ppn):
+    genesFixedS = {g for g in genesFixed if g in ppn.nodes} 
+    sbWghts = {g:w for g,w in geneWeights.items() if g in ppn.nodes and g not in genesFixedS} 
+    ws = WeightedSample(sbWghts)
+    gns = [x for x in genes if x in sbWghts and x not in genesFixedS]
+
+    if len(gns)==0:
+        return
+
+    def scrF(gis):
+        return ppn.nBetweenInters(genesFixedS,gis)
+
+    return run_a_test(scrF,gns,ws)
+
+
+def run_wn_sc_test(genes, geneWeights, wn):
+    sbWghts = {g:w for g,w in geneWeights.items() if g in wn.geneIdToIndex} 
+    ws = WeightedSample(sbWghts)
+    gns = [x for x in genes if x in sbWghts]
+
+    if len(gns)==0:
+        return
+
+    def scrF(gis):
+        return wn.GetSubNetworkIvan(gis).mean()
+
+    return run_a_test(scrF,gns,ws)
+
+def run_wn_link_test(genesFixed, genes, geneWeights, wn):
+    genesFixedS = {g for g in genesFixed if g in wn.geneIdToIndex } 
+    sbWghts = {g:w for g,w in geneWeights.items() if g in wn.geneIdToIndex and g not in genesFixedS} 
+    ws = WeightedSample(sbWghts)
+    gns = [x for x in genes if x in sbWghts and x not in genesFixedS]
+
+    if len(gns)==0:
+        return
+
+    def scrF(gis):
+        return wn.GetBetweenWeights(genesFixedS,gis).mean()
+
+    return run_a_test(scrF,gns,ws)
+
+
+def run_number_test(genes, geneWeights, numbers, defaultVal=None):
+
+    testGenes = set(geneWeights.keys()) & set(numbers.keys())
+    vals = {x:numbers[x] for x in testGenes}
+    wghts = {g:w for g,w in geneWeights.items() if g in testGenes}
+    gns = {g:n for g,n in genes.items() if g in testGenes}
+
+    if len(gns)==0:
+        return
+
+    def scrF(gs):
+        return float(sum(vals[g] for g in gs))/len(gs)
+
+    ws = WeightedSample(wghts)
+
+    return run_a_test(scrF,gns,ws)
+
+    '''
+    if defaultVal==None:
+        return
+
+    testGenesD = geneWeights.keys()
+    valsD = {x:numbers[x] if x in numbers else 0 for x in testGenesD }
+    wghtsD = {g:w for g,w in geneWeights.items() if g in testGenesD}
+    gnsD = {g:n for g,n in genes.items() if g in testGenesD }
+
+    def scrFD(gs):
+        return float(sum(valsD[g] for g in gs))/len(gs)
+    wsD = WeightedSample(wghtsD)
+
+    trD = run_a_test(scrFD,gnsD,wsD)
+    '''
+
+
+class FunctionalProfiler:
+    def __init__(self,denovoStudies='allWE',geneWeightProp='refSeqCodingInTargetLen'):
+        giDB.fprops
+        self._geneWeightsId = {id:gi.fprops[geneWeightProp] for id,gi in giDB.genes.items() if geneWeightProp in gi.fprops}
+        self._geneWeightsSym = {gi.sym:gi.fprops[geneWeightProp] for gi in giDB.genes.values() if geneWeightProp in gi.fprops}
+        self.geneSets = vDB.get_denovo_sets(denovoStudies)
+        self.toGeneSets = ['recPrbLGDs', 'sinPrbLGDs']
+   
+    def get_sets_and_weights(self,ns='sym'):
+        if ns=='sym':
+            return self.geneSets,self._geneWeightsSym 
+        elif ns=='id':
+            gsID = copy.deepcopy(self.geneSets)
+            gsID.renameGenes("id", lambda x: giDB.getCleanGeneId("sym", x))
+            return gsID,self._geneWeightsId
+        else:
+            raise Exception('Unknown name space: ' + ns)
+        
+    def profile_wn(self,wn):
+        gSets,gWghts = self.get_sets_and_weights('id')
+        nodeDegrees = weightedNetworkNodeDegrees(wn) 
+        
+        fpRes = defaultdict(dict)
+        for gsN,gsGs in gSets.t2G.items(): 
+
+            print >>sys.stderr, gsN,'sc ...'
+            fpRes[gsN]['sc'] = run_wn_sc_test(gsGs, gWghts, wn)
+
+            print >>sys.stderr, gsN,'degree ...'
+            fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, nodeDegrees)
+
+            print >>sys.stderr, gsN,'inNet ...'
+            fpRes[gsN]['inNet'] = run_in_set_test(gsGs, gWghts, wn.geneIdToIndex)
+
+            for fixedGenes in self.toGeneSets:
+                print >>sys.stderr, gsN,fixedGenes,'...'
+                fpRes[gsN][fixedGenes] = run_wn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, wn)
+
+        return fpRes
+
+    def profile_gts(self,gts,metric='tfidf'):
+        gSets,gWghts = self.get_sets_and_weights(gts.geneNS)
+
+        termNumbers = {g:len(tms) for g,tms in gts.g2T.items() }
+
+        # an alternative that uses the multiplicity of the terms per gene
+        # termNumbers = {g:sum(tms.values()) for g,tms in gts.g2T.items() }
+
+        aaaFixMe = [(g,ts.keys()) for g,ts in gts.g2T.items()]
+
+        if metric=='tfidf':
+            wn = GetTFIDFMatrix(aaaFixMe)
+        elif metric=='omni':
+            wn = GetOmnibusMatrix(aaaFixMe)
+        else:
+            raise Exception('unknown metric:' + metrix)
+        nodeDegrees = weightedNetworkNodeDegrees(wn) 
+
+        fpRes = defaultdict(dict)
+        for gsN,gsGs in gSets.t2G.items(): 
+
+            print >>sys.stderr, gsN,'sc ...'
+            fpRes[gsN]['sc'] = run_wn_sc_test(gsGs, gWghts, wn)
+
+            print >>sys.stderr, gsN,'termNumber...'
+            fpRes[gsN]['termNumber'] = run_number_test(gsGs, gWghts, termNumbers)
+
+            print >>sys.stderr, gsN,'degree ...'
+            fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, nodeDegrees)
+
+            print >>sys.stderr, gsN,'withTerms ...'
+            fpRes[gsN]['withTerms'] = run_in_set_test(gsGs, gWghts, wn.geneIdToIndex)
+
+            for fixedGenes in self.toGeneSets:
+                print >>sys.stderr, gsN,fixedGenes,'...'
+                fpRes[gsN][fixedGenes] = run_wn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, wn)
+
+        return fpRes
+
+    def profile_ppn(self,ppn):
+        gSets,gWghts = self.get_sets_and_weights('id')
+
+        fpRes = defaultdict(dict)
+        for gsN,gsGs in gSets.t2G.items(): 
+
+            print >>sys.stderr, gsN,'inNetwork...'
+            fpRes[gsN]['inNetwork'] = run_in_set_test(gsGs, gWghts, ppn.nodes )
+
+            print >>sys.stderr, gsN,'degree ...'
+            fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, {ni.nId:ni.degree for ni in ppn.nodes.values()} )
+
+            print >>sys.stderr, gsN,'betweennes ...'
+            fpRes[gsN]['betweennes'] = run_number_test(gsGs, gWghts, {ni.nId:ni.betweennes for ni in ppn.nodes.values()} )
+
+            print >>sys.stderr, gsN,'clustCoef...'
+            fpRes[gsN]['clustCoef'] = run_number_test(gsGs, gWghts, {ni.nId:ni.clustCoef for ni in ppn.nodes.values()} )
+
+            print >>sys.stderr, gsN,'sc ...'
+            fpRes[gsN]['sc'] = run_ppn_sc_test(gsGs, gWghts, ppn)
+
+            for fixedGenes in self.toGeneSets:
+                print >>sys.stderr, gsN,fixedGenes,'...'
+                fpRes[gsN][fixedGenes] = run_ppn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, ppn)
+        return fpRes
+
+
+    def print_res_summary(self,f,res):
+        allGeneSetsOrd = self.toGeneSets + sorted([s for s in self.geneSets.t2G if s not in self.toGeneSets])
+
+        specialTests = ['sc'] + self.toGeneSets       
+        testOrder = specialTests + sorted([x for x in {t for gs in res.values() for t in gs} if x not in specialTests])
+
+        def tr_pval_s(tr):
+            if not tr:
+                return "    X     "
+            if tr.pVal>0.05 and tr.pVal<0.95:
+                return "          "
+            return "%10.4f" % (tr.pVal)
+
+
+        f.write("\t".join(["%20s" % " "] + map(lambda x: "%10s" % (x),testOrder)) + "\n")
+                  
+        for gs in allGeneSetsOrd:
+            f.write("\t".join(["%20s" % (gs)] + map(lambda x: tr_pval_s(res[gs][x]), testOrder)) + "\n")
+    
+        
+
+    '''
+    def procPPN(ppn,vls,geneWeights):
+        runNumberTest("PPN." + ppn.name, "degree",  vls, geneWeights, {ni.nId:ni.degree for ni in ppn.nodes.values()} ) 
+        runNumberTest("PPN." + ppn.name, "betweennes",  vls, geneWeights, {ni.nId:ni.betweennes for ni in ppn.nodes.values()} ) 
+        runNumberTest("PPN." + ppn.name, "clustCoef",  vls, geneWeights, {ni.nId:ni.clustCoef for ni in ppn.nodes.values()} ) 
+        runPpnScTest("PPN." + ppn.name, "SVC",  vls, geneWeights, ppn)
+
+    def procGT(gts,vls,geneWeights):
+        numbers = {g:sum([1 for tnum in gts.geneTerms.g2T[g].values()]) for g in gts.geneTerms.g2T }
+
+        runNumberTest("GT." + gts.name, "nTerms", vls, geneWeights, numbers, 0)
+        runNumberTest("GT." + gts.name, "tfidfDegree", vls, geneWeights, gts.tfidfWNDegree)
+        runNumberTest("GT." + gts.name, "omniDegree", vls, geneWeights, gts.omniWNDegree)
+
+        runWnScTest("GT." + gts.name, "tfidfClust",  vls, geneWeights, gts.tfidfM)
+        runWnScTest("GT." + gts.name, "omniClust",  vls, geneWeights, gts.omniM)
+    '''
 
 def weightedNetworkNodeDegrees(m):
     return { g:w for g,w in zip(m.geneIndexToId, m.GetWeightedNodeDegrees()) } 
@@ -277,9 +562,42 @@ def drawNumberTestData(trName):
     # hist(tr.ntVals.values(),1000)
     plot([tr.ntVals[x] for x in tr.ntSubset],1.0 + randn(len(tr.ntSubset))*max(c.values())/100.0,'ro')
 
-
-    
 if __name__ == "__main__":
+    fp = FunctionalProfiler()
+    cmd = sys.argv[1]
+    fn = sys.argv[2]
+
+    if cmd=="ppn":
+        ppn = PPINetwork(fn)
+        fpRes = fp.profile_ppn(ppn)
+    elif cmd=='wn':
+        wn = Matrix(fn)
+        fpRes = fp.profile_wn(wn)
+    elif cmd=='gts':
+        gts = loadGeneTerm(fn)
+        metric = 'tfidf'
+        if len(sys.argv)>3:
+            metric=sys.argv[3]
+        fpRes = fp.profile_gts(gts,metric)
+    else:
+        raise Exception('Unknown command: |' + cmd + "|")
+
+    fp.print_res_summary(sys.stdout,fpRes)
+    
+    # wn = Matrix('/data/safe/ecicek/Workspace6/Matrix/Sarah/Integrated/sarah.npz')
+    # fpRes = fp.profile_wn(wn)
+    # gts = giDB.getGeneTerms('disease',inNS=None)
+    # gts = loadGeneTerm(daeDir + "/GeneToTermMapping/ProComp-map.txt")
+    # gts = loadGeneTerm(daeDir + "/GeneToTermMapping/PPI-map.txt")
+    # fpRes = fp.profile_gts(gts,metric='omni')
+
+    # ppn = PPINetwork('/home/iossifov/work/T115/PPI/hprd-ppimap.txt')
+    # ppn = PPINetwork('/home/iossifov/work/T115/PPI/intnet-ppimap.txt')
+    # fpRes = fp.profile_ppn(ppn)
+    # fp.print_res_summary(sys.stdout,fpRes)
+    
+    
+if __name__ == "__old_main__":
     '''
     weightedNetworks = []
     prepareWeightedNetwork('/data/safe/ecicek/Workspace6/Matrix/Sarah/Integrated/sarah.npz') 

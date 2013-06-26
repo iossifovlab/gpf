@@ -15,6 +15,9 @@ import glob
 from os.path import dirname
 from os.path import basename 
 import tempfile
+from GeneTerms import GeneTerms 
+from itertools import groupby
+
 
 class DnvVariant:
     def __str__(self):
@@ -166,8 +169,10 @@ class Variant:
 
 
     def get_normal_refCN(self,c):
-        return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
+        return normalRefCopyNumber(self.location,self.memberInOrder[c].gender)
 
+    def is_variant_in_person(self,c):
+        return isVariant(self.bestSt,c,self.location,self.memberInOrder[c].gender)
 
 class Family:
     def __init__(self,atts=None):
@@ -340,7 +345,8 @@ class Study:
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
                 continue
-            if inChild and inChild not in v.atts['inChild']:
+            # if inChild and inChild not in v.atts['inChild']:
+            if inChild and inChild not in v.inChS:
                 continue
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
@@ -830,6 +836,57 @@ class VariantsDB:
         print >>sys.stderr, "nCompleteIns:", nCompleteIns
         return vars
 
+    def get_denovo_sets(self,dnvStds):
+        r = GeneTerms()
+        r.geneNS = "sym"
+
+        def addSet(setname, genes):
+            r.tDesc[setname] = setname
+            for gSym in genes:
+                r.t2G[setname][gSym]+=1
+                r.g2T[gSym][setname]+=1
+        def genes(inChild,effectTypes,inGenesSet=None):
+            if inGenesSet:
+                vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild,geneSyms=inGenesSet)
+            else:
+                vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
+            return {ge['sym'] for v in vs for ge in v.requestedGeneEffects}
+
+        # TODO: rethink how to get access ot giDB
+        # def set_genes(geneSetDef):
+        #     gtId,tmId = geneSetDef.split(":")
+        #     return set(giDB.getGeneTerms(gtId).t2G[tmId].keys())
+
+        def recSingleGenes(inChild,effectTypes):
+            vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
+
+            gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects ]) 
+            sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
+            sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() } 
+            return {g for g,nf in sym2FN.items() if nf>1 }, {g for g,nf in sym2FN.items() if nf==1 }
+
+        recPrbLGDs, sinPrbLGDs = recSingleGenes('prb' ,'LGDs')
+        addSet("recPrbLGDs",     recPrbLGDs)
+        addSet("sinPrbLGDs",     sinPrbLGDs) 
+
+        addSet("prbLGDs",           genes('prb' ,'LGDs'))
+        addSet("prbMaleLGDs",       genes('prbM','LGDs'))
+        addSet("prbFemaleLGDs",     genes('prbF','LGDs'))
+
+        # addSet("prbLGDsInFMR1",     genes('prb','LGDs',set_genes("main:FMR1-targets")))
+        # addSet("prbLGDsInCHDs",     genes('prb','LGDs',set("CHD1,CHD2,CHD3,CHD4,CHD5,CHD6,CHD7,CHD8,CHD9".split(','))))
+
+        addSet("prbMissense",       genes('prb' ,'missense'))
+        addSet("prbMaleMissense",   genes('prbM' ,'missense'))
+        addSet("prbFemaleMissense", genes('prbF' ,'missense'))
+        addSet("prbSynonymous",     genes('prb' ,'synonymous'))
+
+        addSet("sibLGDs",           genes('sib' ,'LGDs'))
+        addSet("sibMissense",       genes('sib' ,'missense'))
+        addSet("sibSynonymous",     genes('sib' ,'synonymous'))
+
+        return r
+    
 
     def getDenovoVariantsGeneSyms(self,collection, nChildren=None, inChildRole=None, inChildSex=None, effectTypes=None):
         if isinstance(effectTypes,str):

@@ -66,7 +66,7 @@ for g, FN in sorted(sym2FN.items(), key=lambda x: (x[1],x[0])):
                 eff = ge['eff']
         if eff == '':
             raise Exception('breh')
-        outSet[v.familyId] = "".join((stdyMap[v.study.name], eff[0], v.atts['inChild'][3])) 
+        outSet[v.familyId] = "".join((stdyMap[v.study.name] if v.study.name in stdyMap else v.study.name, eff[0], v.atts['inChild'][3])) 
     for fid,o in outSet.items():
         print str(fid)+":"+o,
     print

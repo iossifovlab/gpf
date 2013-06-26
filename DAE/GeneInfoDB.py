@@ -107,6 +107,8 @@ class GeneInfoDB:
         fl = self.config.get('GeneInfo', 'geneTerms.' + id + ".file")
     
         gt = loadGeneTerm(fl)
+        if not inNS:
+            return gt
         if gt.geneNS == inNS:
             return gt
         if gt.geneNS == "id" and inNS == "sym":

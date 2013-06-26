@@ -3,6 +3,7 @@
 import argparse
 import itertools
 import sys
+from GeneTerms import loadGeneTerm
 
 from DAE import *
 #print "hi"
@@ -97,7 +98,10 @@ if args.geneSet:
         collection = "main"
         setId = args.geneSet 
 
-    gts = giDB.getGeneTerms(collection)
+    try:
+        gts = giDB.getGeneTerms(collection)
+    except:
+        gts = loadGeneTerm(collection)
     geneSyms = set(gts.t2G[setId].keys())
 
 
