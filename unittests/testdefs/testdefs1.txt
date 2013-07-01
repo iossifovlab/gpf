@@ -1,0 +1,8 @@
+getVariants.py --denovoStudies=wig781
+getVariants.py --denovoStudies=allWEandTG
+getVariants.py --effectTypes=none --transmittedVariants=wig1000
+getVariants.py --effectTypes=none --transmittedVariants=wig1000 --geneSet=main:FMR1
+reportVariantNumbers.py wig781 
+reportVariantNumbers.py allWE 
+reportVariantNumbers.py wig781 
+recurrentVariants.py allWEandTG

@@ -29,7 +29,7 @@ class SfariCollection:
 # family,id(),sex,father,mother,birth,guid,individual_properties.role,individual_properties.genetic_ab,individual_properties.genetic_ab_notes,family.collection
 
     def _loadSample(self):
-        f = open(self.dataDir + '/RUCDR_ID-Portal_ID-Map_20111130-id.csv')
+        f = open(os.path.join(self.dataDir,'RUCDR_ID-Portal_ID-Map_20111130-id.csv'))
         h = f
         sN2Pid = defaultdict(set) 
         for l in f:
@@ -56,7 +56,7 @@ class SfariCollection:
            
 
     def _loadTwins(self):
-        f = open(self.dataDir + '/SSC_and_STC_Twins.csv')
+        f = open(os.path.join(self.dataDir,'SSC_and_STC_Twins.csv'))
         h = f.readline()
         # Family,Proband Code,Twin Code,Twin Study Role,Zygosity,Concordance,Collection
         collectionMap = {'Simons Twins Collection': 'stc', 'Simons Simplex Collection': 'ssc'}
@@ -108,12 +108,12 @@ class SfariCollection:
             
 
     def _loadIndividual(self):
-        f = open(self.dataDir + '/individual_v14.csv')
+        f = open(os.path.join(self.dataDir,'individual.csv'))
         h = f.readline()
         for l in f:
             cs = l.strip().split(",")
             if len(cs) != 11:
-                raise Exception('aaa')
+                raise Exception('_loadIndividual failed')
 
             p = Person()
             (p.familyId,

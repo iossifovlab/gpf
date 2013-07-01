@@ -389,15 +389,19 @@ def imputeNew(dt):
         
 def rawTableFactory(filename):
     
-    if 'PHENO_DB_PREFIX' in os.environ:
-        phenoDBPref = os.environ['PHENO_DB_PREFIX']
-    else:
-        if platform.system()=="Windows":
-            phenoDBPref = 'E:\\phenodata\\sfari\\v14\\14_'
-        else:
-            phenoDBPref = '/mnt/wigclust1/data/safe/leotta/sfari/v14/14_'   
+    daeDir = os.environ['DAE_DB_DIR']
+    phenoSubDir = os.environ['PHENO_DB_DIR']
+    phenoDir = os.path.join(daeDir, "phenodb", phenoSubDir)
     
-    filename = phenoDBPref + filename
+    #if 'PHENO_DB_PREFIX' in os.environ:
+    #    phenoDBPref = os.environ['PHENO_DB_PREFIX']
+    #else:
+    #    if platform.system()=="Windows":
+    #        phenoDBPref = 'E:\\phenodata\\sfari\\v14\\14_'
+    #    else:
+    #        phenoDBPref = '/mnt/wigclust1/data/safe/leotta/sfari/v14/14_'   
+    
+    filename = os.path.join(phenoDir,filename)
         
     if filename[len(filename)-4:].lower()==".csv":
         

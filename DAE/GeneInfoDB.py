@@ -159,7 +159,7 @@ class GeneInfoDB:
 
             for chr in chrs:
                 if chr[0:3] != "chr":
-                    raise Excpetion('aaaaaa: ' + chr)
+                    raise Exception('aaaaaa: ' + chr)
                 
                 for b,e in  mergeIntervals(chrs[chr]):
                     r = Region()
@@ -181,7 +181,7 @@ class GeneInfoDB:
         for line in open(fpropFN,"r"):
             cs = line.strip().split("\t");
             if len(cs) != 2:
-                raise Excpetion('Strange line in the gene property file ' + fpropFN)
+                raise Exception('Strange line in the gene property file ' + fpropFN)
             rawId, valS = cs
             val = float(valS)
             if not rawId in rawIdNS:
@@ -190,7 +190,7 @@ class GeneInfoDB:
                 continue;
             gi = rawIdNS[rawId][0]
             if fpropName in gi.fprops:
-                raise Exception('The gene ' + gi.id + '( with rawId: ' + rawId + ') has a repeated property ' + fpropNAme)
+                raise Exception('The gene ' + gi.id + '( with rawId: ' + rawId + ') has a repeated property ' + fpropName)
             gi.fprops[fpropName] = val    
             
         
@@ -204,7 +204,7 @@ class GeneInfoDB:
                     continue
                 cs = line.strip().split("\t")
                 if len(cs) != 15:
-                    raise Excpetion('Unexpected line in the ' + self.geneInfoF)
+                    raise Exception('Unexpected line in the ' + self.geneInfoF)
                 
                 # Format: tax_id GeneID Symbol LocusTag Synonyms dbXrefs chromosome map_location description type_of_gene Symbol_from_nomenclature_authority Full_name_from_nomenclature_authority Nomenclature_status Other_designations Modification_date (tab is used as a separator, pound sign - start of a comment)    
                 (tax_id, GeneID, Symbol, LocusTag, Synonyms, dbXrefs, 
@@ -221,7 +221,7 @@ class GeneInfoDB:
                 gi.fprops = {}
 
                 if (gi.id in self._genes):
-                    raise Excpetion('The gene ' + gi.id + ' is repeated twice in the ' + 
+                    raise Exception('The gene ' + gi.id + ' is repeated twice in the ' + 
                                     self.self.geneInfoF + ' file');
 
                 self._genes[gi.id] = gi
