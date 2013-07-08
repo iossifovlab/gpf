@@ -378,7 +378,7 @@ class Study:
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
                 continue
-            if inChild and inChild not in v.atts['inChild']:
+            if inChild and inChild not in v.inChS:
                 continue
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
@@ -698,7 +698,7 @@ class Study:
 
         return families,badFamilies
 
-# This class is used read the variantDB.conf without actually loading 
+# This class is used to read the variantDB.conf without actually loading 
 # any of the studies.
 class VariantsConfig:
     def __init__(self, vdb, wd, confFile):
@@ -809,11 +809,6 @@ class VariantsDB:
         self.giDir = os.path.join(daeDir, "geneinfodb")
         self.phenoDir = os.path.join(daeDir, "phenodb")
         
-        print "DEBUG %s"%(self.daeDir)
-        print "DEBUG %s"%(self.variantDir)
-        print "DEBUG %s"%(self.giDir)
-        print "DEBUG %s"%(self.phenoDir)
-
         self._VariantsConfig = VariantsConfig(self, daeDir, confFile)
         self.config = self._VariantsConfig.config
         

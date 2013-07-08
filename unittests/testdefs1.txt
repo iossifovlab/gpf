@@ -1,0 +1,34 @@
+getVariants.py --denovoStudies=wig781 --geneSym=HBB --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py allWEAndTG 
+recurrentVariants.py allWEAndTG
+getVariants.py --denovoStudies=wig781 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py wig781 
+getVariants.py --effectTypes=none --transmittedStudy=wig781 --regionS 1:1000000-2000000
+getVariants.py --denovoStudies=wig873 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py wig873 
+getVariants.py --effectTypes=none --transmittedStudy=wig873 --regionS 1:1000000-2000000
+getVariants.py --denovoStudies=wig683 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py wig683 
+getVariants.py --denovoStudies=wigState322 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py wigState322 
+getVariants.py --effectTypes=none --transmittedStudy=wigState322 --regionS 1:1000000-2000000
+getVariants.py --denovoStudies=wigState333 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py wigState333 
+getVariants.py --effectTypes=none --transmittedStudy=wigState333 --regionS 1:1000000-2000000
+getVariants.py --denovoStudies=StateWE2012 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py StateWE2012 
+getVariants.py --denovoStudies=wigStateWE2012 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py wigStateWE2012 
+getVariants.py --denovoStudies=EichlerWE2012 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py EichlerWE2012 
+getVariants.py --denovoStudies=wigEichlerWE2012 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py wigEichlerWE2012 
+getVariants.py --denovoStudies=EichlerTG2012 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py EichlerTG2012 
+getVariants.py --denovoStudies=DalyWE2012 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py DalyWE2012 
+getVariants.py --denovoStudies=IossifovWE2012 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py IossifovWE2012 
+getVariants.py --denovoStudies=KarayiorgouWE2012 --effectTypes=none --transmittedStudy=none
+reportVariantNumbers.py KarayiorgouWE2012 
+getVariants.py --effectTypes=none --transmittedStudy=w873e374s322 --regionS 1:1000000-2000000

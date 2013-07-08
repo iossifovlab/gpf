@@ -7,26 +7,17 @@ from VariantsDB import safeVs
 from VariantsDB import _safeVs
 from VariantsDB import isVariant
 from VariantsDB import normalRefCopyNumber 
-from GeneInfoDB import GeneInfoDB 
-import phenoDB 
+from GeneInfoDB import GeneInfoDB
+import phenoDB
 from Sfari import SfariCollection
 
-#vdb/
-#    geneinfodb  phenodb  variantdb
+from Config import *
+config = Config()
 
-daeDir = os.environ['DAE_DB_DIR']
-phenoSubDir = os.environ['PHENO_DB_DIR']
-
-variantDir = os.path.join(daeDir, "variantdb")
-giDir = os.path.join(daeDir, "geneinfodb")
-phenoDir = os.path.join(daeDir, "phenodb", phenoSubDir)
-
-geneInfoConfFilename = os.path.join(giDir,"geneInfo.conf")
-
-giDB = GeneInfoDB(geneInfoConfFilename, giDir)
-sfriDB = SfariCollection(phenoDir)
-phDB = phenoDB.rawTableFactory('str_zlib5.h5') 
-vDB = VariantsDB(daeDir, sfriDB=sfriDB, giDB=giDB)
+giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
+sfriDB = SfariCollection(config.sfriDBdir)
+phDB = phenoDB.rawTableFactory(config.phenoDBFile)
+vDB = VariantsDB(config.daeDir, config.variantsDBconfFile, sfriDB=sfriDB, giDB=giDB)
 
 if __name__ == "__main__":
     print "hi"

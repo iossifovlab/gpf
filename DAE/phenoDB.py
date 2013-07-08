@@ -12,8 +12,8 @@ from phenoDBUtils import *
 import SfariExportLoader
 import SfariVariableTracker
 import SfariExportLoader
+import ConfigParser
 
-                  
 '''
 ------------------------------------------------------------------------------
  2/14/2013 - 
@@ -162,11 +162,9 @@ class TableInterface:
 class TableInterfaceCSV(TableInterface):
     
     def __init__(self):
-        #print 'TableInterfaceCSV::__init__()'
         TableInterface.__init__(self)        
         
     def load(self, filename):
-        #print 'TableInterfaceCSV::load()'                
         self.sfariLoader.loadFile(filename)
         self.data = self.sfariLoader.data        
         self.variables = self.sfariLoader.variableTracker.variableNames()
@@ -209,12 +207,9 @@ class TableInterfaceH5(TableInterface):
     
     def __init__(self):
         TableInterface.__init__(self)
-        #print 'TableInterfaceH5::__init__()'
         self.variableDataCache = {}
     
     def load(self, filename):
-        #print "TableInterfaceH5::load() %s"%(filename)
-                        
         self.h5file = self.sfariLoader.openh5(filename)                        
         
         try:    
@@ -280,7 +275,6 @@ class TableInterfaceH5(TableInterface):
         else:
             return {}
         
-                    
 
 def imputeNew(dt):
     
@@ -390,16 +384,13 @@ def imputeNew(dt):
 def rawTableFactory(filename):
     
     daeDir = os.environ['DAE_DB_DIR']
-    phenoSubDir = os.environ['PHENO_DB_DIR']
-    phenoDir = os.path.join(daeDir, "phenodb", phenoSubDir)
+
+    _config = ConfigParser.SafeConfigParser({'wd':daeDir})    
+    _config.optionxform = lambda x: x
     
-    #if 'PHENO_DB_PREFIX' in os.environ:
-    #    phenoDBPref = os.environ['PHENO_DB_PREFIX']
-    #else:
-    #    if platform.system()=="Windows":
-    #        phenoDBPref = 'E:\\phenodata\\sfari\\v14\\14_'
-    #    else:
-    #        phenoDBPref = '/mnt/wigclust1/data/safe/leotta/sfari/v14/14_'   
+    confFile = os.path.join(daeDir,"pheno.conf")
+    _config.read(confFile)
+    phenoDir = _config.get('PhenoInfo', 'phenoDir')           
     
     filename = os.path.join(phenoDir,filename)
         

@@ -1,0 +1,1 @@
+getVariants.py --denovoStudies=allWEAndTG --geneSym=HBB --inChild=none
