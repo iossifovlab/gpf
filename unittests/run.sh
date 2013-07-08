@@ -1,6 +1,6 @@
 
-UT_DIR=.
-UT_DEFS_DIR=.
+UT_DIR=$1
+UT_DEFS_DIR=$1
 UT_TEST_DEF=$UT_DEFS_DIR/testdefs1.txt
 
 PRD_DB_DIR=/mnt/wigclust8/home/iossifov/work/T115/secondWD
