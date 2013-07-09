@@ -18,7 +18,7 @@ class Config:
         self._daeConfig.read(os.path.join(self._daeDir,"DAE.conf"))
 
         self._phenoDBFile = self._daeConfig.get('phenoDB', 'file')
-        self._sfriDBdir= self._daeConfig.get('sfriDB', 'dir')
+        self._sfariDBdir= self._daeConfig.get('sfariDB', 'dir')
         self._geneInfoDBdir = self._daeConfig.get('geneInfoDB', 'dir')
         self._geneInfoDBconfFile = self._daeConfig.get('geneInfoDB', 'confFile')
         self._variantsDBdir = self._daeConfig.get('variantsDB', 'dir')
@@ -33,8 +33,8 @@ class Config:
         return self._phenoDBFile
         
     @property
-    def sfriDBdir(self):
-        return self._sfriDBdir
+    def sfariDBdir(self):
+        return self._sfariDBdir
             
     @property
     def geneInfoDBdir(self):

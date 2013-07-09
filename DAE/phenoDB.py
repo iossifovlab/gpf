@@ -383,16 +383,13 @@ def imputeNew(dt):
         
 def rawTableFactory(filename):
     
-    daeDir = os.environ['DAE_DB_DIR']
-
-    _config = ConfigParser.SafeConfigParser({'wd':daeDir})    
-    _config.optionxform = lambda x: x
-    
-    confFile = os.path.join(daeDir,"pheno.conf")
-    _config.read(confFile)
-    phenoDir = _config.get('PhenoInfo', 'phenoDir')           
-    
-    filename = os.path.join(phenoDir,filename)
+    #daeDir = os.environ['DAE_DB_DIR']
+    #_config = ConfigParser.SafeConfigParser({'wd':daeDir})    
+    #_config.optionxform = lambda x: x    
+    #confFile = os.path.join(daeDir,"pheno.conf")
+    #_config.read(confFile)
+    #phenoDir = _config.get('PhenoInfo', 'phenoDir')           
+    #filename = os.path.join(phenoDir,filename)
         
     if filename[len(filename)-4:].lower()==".csv":
         

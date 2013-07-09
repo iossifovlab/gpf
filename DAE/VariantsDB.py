@@ -456,7 +456,7 @@ class Study:
         rlsMp = { "mother":"mom", "father":"dad", "proband":"prb", "designated-sibling":"sib", "other-sibling":"sib" }
         genderMap = {"female":"F", "male":"M"}
 
-        for indS in self.vdb.sfriDB.individual.values():
+        for indS in self.vdb.sfariDB.individual.values():
             if indS.familyId not in families:
                 continue
             p = Person()
@@ -469,7 +469,7 @@ class Study:
 
     def _load_family_data_SSCTrios(self, reportF):
         buff = defaultdict(dict) 
-        for indId,indS in self.vdb.sfriDB.individual.items():
+        for indId,indS in self.vdb.sfariDB.individual.items():
             if indS.collection != "ssc":
                 continue
             buff[indS.familyId][indS.role] = indS
@@ -653,12 +653,12 @@ class Study:
             f.atts = { x:qrpR[x] for x in qrp.dtype.names }
 
             def piF(pi):
-                sfriDB = self.vdb.sfriDB
-                if not sfriDB:
+                sfariDB = self.vdb.sfariDB
+                if not sfariDB:
                     return pi
-                if pi not in sfriDB.sampleNumber2PersonId:
+                if pi not in sfariDB.sampleNumber2PersonId:
                     return pi
-                return sfriDB.sampleNumber2PersonId[pi]
+                return sfariDB.sampleNumber2PersonId[pi]
 
             mom = Person()
             mom.personId = piF(qrpR['mothersample_id'])
@@ -795,7 +795,7 @@ class VariantsConfig:
 
 
 class VariantsDB:
-    def __init__(self, daeDir, confFile=None, sfriDB=None, giDB=None):
+    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None):
         
         self.daeDir = daeDir
         self.variantDir = os.path.join(daeDir, "variantdb")
@@ -807,8 +807,8 @@ class VariantsDB:
         
         self.dnvCols = {}
         self.pardata = []
-        self._studies = {}
-        self.sfriDB = sfriDB
+        #self._studies = {}
+        self.sfariDB = sfariDB
         self.giDB = giDB
         
         # vdb (self) is used all over the place, so the call to 
@@ -909,9 +909,19 @@ class VariantsDB:
         return studies
         
     def get_study(self,name):
-        if name not in self._studies:
-            self._studies[name] = Study(self, name)
-        return self._studies[name]
+        
+        if name in self._VariantsConfig.studies:
+            study = self._VariantsConfig.studies[name]
+            if study.loaded == False:
+                study._load_family_data()
+            return study
+        else:
+            return None
+            
+        #if name not in self._studies:
+        #    self._studies[name] = Study(self, name)
+        #return self._studies[name]
+        
         
     def get_studies(self,definition):
         try:
@@ -1342,8 +1352,8 @@ if __name__ == "__main__":
     print "wd:", wd
     from Sfari import SfariCollection
 
-    sfriDB = SfariCollection(os.environ['PHENO_DB_DIR'])
-    vDB = VariantsDB(wd,sfriDB=sfriDB)
+    sfariDB = SfariCollection(os.environ['PHENO_DB_DIR'])
+    vDB = VariantsDB(wd,sfariDB=sfariDB)
 
     for v in vDB.get_validation_variants():
         # pass

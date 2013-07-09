@@ -7,8 +7,8 @@ from collections import defaultdict
 studies = [vDB.get_study(x) for x in vDB.get_study_names()]
 
 pBuff = defaultdict(set)
-sscCollections = sorted(set([pS.collection for pS in sfriDB.individual.values()]))
-for pId,pS in sfriDB.individual.items():
+sscCollections = sorted(set([pS.collection for pS in sfariDB.individual.values()]))
+for pId,pS in sfariDB.individual.items():
     pBuff[pId].add(pS.collection)
 
 for stdy in studies:

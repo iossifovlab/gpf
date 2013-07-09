@@ -127,7 +127,7 @@ def getDataSet(studyNames,effectTypes,recurrentOnly=False,geneSym=None,geneSetDe
 
     return allSeqFams,famsWithHit
 
-sfri14Fams = {ind.familyId:ind.sex for ind in sfriDB.individual.values() if ind.role=='proband'}
+sfri14Fams = {ind.familyId:ind.sex for ind in sfariDB.individual.values() if ind.role=='proband'}
 
 dataSets = [] 
 
@@ -163,13 +163,13 @@ dataSets.append(["CNV_Levy_large_dups",     getDataSet("LevyCNV2011",       "CNV
 dataSets.append(["CNV_Chris_dels",          getDataSet("wig683",            "CNV-")])
 dataSets.append(["CNV_Chris_dups",          getDataSet("wig683",            "CNV+")])
 dataSets.append(["CNV_LevyChris_16p11.2",   getDataSet("wig683,LevyCNV2011","CNVs",geneSym='MAPK3')])
-dataSets.append(["LGDsWEandTG",             getDataSet("allWEandTG",        "LGDs")])
+dataSets.append(["LGDsWEandTG",             getDataSet("allWEAndTG",        "LGDs")])
 dataSets.append(["LGDsWE",                  getDataSet("allWE",             "LGDs")])
 dataSets.append(["LGDsTG",                  getDataSet("EichlerTG2012",     "LGDs")])
-dataSets.append(["LGDsInCHD8WEandTG",       getDataSet("allWEandTG",        "LGDs",geneSym='CHD8')])
-dataSets.append(["recLGDsWEandTG",          getDataSet("allWEandTG",        "LGDs",recurrentOnly=True)])
+dataSets.append(["LGDsInCHD8WEandTG",       getDataSet("allWEAndTG",        "LGDs",geneSym='CHD8')])
+dataSets.append(["recLGDsWEandTG",          getDataSet("allWEAndTG",        "LGDs",recurrentOnly=True)])
 dataSets.append(["recLGDsWE",               getDataSet("allWE",             "LGDs",recurrentOnly=True)])
-dataSets.append(["LGDsInFMR1PWEandTG",      getDataSet("allWEandTG",        "LGDs",geneSetDef="main:FMR1-targets")])
+dataSets.append(["LGDsInFMR1PWEandTG",      getDataSet("allWEAndTG",        "LGDs",geneSetDef="main:FMR1-targets")])
 dataSets.append(["LGDsInFMR1PWE",           getDataSet("allWE",             "LGDs",geneSetDef="main:FMR1-targets")])
 
 
@@ -177,7 +177,7 @@ dataSets.append(["LGDsInFMR1PWE",           getDataSet("allWE",             "LGD
 #dataSets.append(["rareInheritedLGDs",                     getRareInheritedDataSet(inLGDCandidates=False,maxAllelesInGene=5)])
 
 
-# dataSets.append(["LGDsWithCHROMOWEandTG",   getDataSet("allWEandTG","LGDs",geneSetDef="domain:CHROMO")])
+# dataSets.append(["LGDsWithCHROMOWEandTG",   getDataSet("allWEAndTG","LGDs",geneSetDef="domain:CHROMO")])
 # dataSets.append(["LGDsWithCHROMOWE",        getDataSet("allWE","LGDs",geneSetDef="domain:CHROMO")])
 def getCollectionCenter():
     f = open('ssc_age_at_assessment.csv')
@@ -227,7 +227,7 @@ evlAge = getMeasure('phwhc.measure.eval_age_months')
 seizures_proband = getMeasure2('pumhx.medhx_fam_neurological.seizures_proband')
 
 
-collCenter = getCollectionCenter()
+#collCenter = getCollectionCenter()
 
 whiteFams = {f for f,mr,fr in zip(phDB.families,
                 phDB.get_variable('focuv.race_parents'),
@@ -238,7 +238,7 @@ mkF = open("phnGnt-%4d-%02d-%02d.txt" % (tday.year,tday.month,tday.day), "w")
 mkF.write("\t".join("familyId,colletionCenter,probandGender,whiteParents,vIQ,nvIQ,hdCrcm,evalAgeInMonths,seizures".split(",") + [x[0] for x in dataSets]) + "\n")
 
 for fmId,gender in sfri14Fams.items():
-    mkF.write("\t".join([fmId,collCenter[fmId],gender,"1" if fmId in whiteFams else "0"] +
+    mkF.write("\t".join([fmId,sfariDB.familyCenter[fmId],gender,"1" if fmId in whiteFams else "0"] +
                       [str(msr[fmId]) if fmId in msr else "NA" for msr in [vIQ,nvIQ,HC,evlAge]] ))
     
     if fmId in seizures_proband:

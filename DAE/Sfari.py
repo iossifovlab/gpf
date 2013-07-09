@@ -22,11 +22,13 @@ class SfariCollection:
         self.individual = {}
         self.sample = {}
         self.twinGroups = set() 
-
+        self.familyCenter = {}
+        self.familyAgeAtAssement = {}
         
         self._loadIndividual()
         self._loadSample()
         self._loadTwins()
+        self._loadCollectionCenter()
 
 # family,id(),sex,father,mother,birth,guid,individual_properties.role,individual_properties.genetic_ab,individual_properties.genetic_ab_notes,family.collection
 
@@ -108,6 +110,29 @@ class SfariCollection:
             self.twinGroups.add(tg)
                     
             
+    def _loadCollectionCenter(self):
+        f = open(os.path.join(self.sfariDir,'ssc_age_at_assessment.csv'))
+
+        f.readline()  # header 
+        famCenterS = defaultdict(set) 
+        for l in f:
+            cs = l.strip().split(',')
+            fm,role = cs[0].split('.')
+            age = cs[1]
+            center = cs[2]
+            #famCenterS[fm].add(center)
+            if fm not in self.familyCenter:
+                self.familyCenter[fm]=center
+                self.familyAgeAtAssement[fm]=age
+            
+        ## assert
+        #if len([x for x in famCenterS.values() if len(x)>1])>0:
+        #    raise Exception('aaa')
+        #famCenter = {f:s.pop() for f,s in famCenterS.items() }
+        
+        f.close()
+        
+        #return famCenter
 
     def _loadIndividual(self):
         f = open(os.path.join(self.sfariDir,'individual.csv'))

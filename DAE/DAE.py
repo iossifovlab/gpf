@@ -15,9 +15,9 @@ from Config import *
 config = Config()
 
 giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
-sfriDB = SfariCollection(config.sfriDBdir)
+sfariDB = SfariCollection(config.sfariDBdir)
 phDB = phenoDB.rawTableFactory(config.phenoDBFile)
-vDB = VariantsDB(config.daeDir, config.variantsDBconfFile, sfriDB=sfriDB, giDB=giDB)
+vDB = VariantsDB(config.daeDir, config.variantsDBconfFile, sfariDB=sfariDB, giDB=giDB)
 
 if __name__ == "__main__":
     print "hi"
