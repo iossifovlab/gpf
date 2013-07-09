@@ -120,7 +120,7 @@ class Variant:
         except AttributeError:
             self._memberInOrder = self.study.families[self.familyId].memberInOrder
         return self._memberInOrder
-
+    
     @property
     def inChS(self):
         mbrs = self.memberInOrder
@@ -146,25 +146,6 @@ class Variant:
             if isVariant(bs,c,self.location,mbrs[c].gender):
                 parentStr += mbrs[c].role
         return parentStr
-
-    @property
-    def altFreqPrcnt(self):
-        try:
-            return self._altFreqPrcnt
-        except AttributeError:
-                self._altFreqPrcnt = 0.0
-                if self.altFreqPrcntAtt in self.atts:
-                    self._altFreqPrcnt = float(self.atts[self.altFreqPrcntAtt])
-        return self._altFreqPrcnt
-
-    @property
-    def memberInOrder(self):
-        try:
-            return self._memberInOrder
-        except AttributeError:
-            self._memberInOrder = self.study.families[self.familyId].memberInOrder
-        return self._memberInOrder
-
 
     def get_normal_refCN(self,c):
         return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
@@ -231,6 +212,10 @@ class Study:
         self._description = value
     
     def get_transmitted_summary_variants(self,minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None, effectTypes=None,ultraRareOnly=False, geneSyms=None, regionS=None):
+        
+        if self.loaded==False:
+            self._load_family_data()
+                    
         transmittedVariantsFile = self.vdb.config.get(self.configSection, 'transmittedVariants.indexFile' ) + ".txt.bgz"
         print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile 
 
@@ -306,6 +291,10 @@ class Study:
 
 
     def get_transmitted_variants(self, inChild=None, minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None,effectTypes=None,ultraRareOnly=False, geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
+        
+        if self.loaded==False:
+            self._load_family_data()
+                    
         transmittedVariantsTOOMANYFile = self.vdb.config.get(self.configSection, 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
 
         if TMM_ALL:
@@ -361,6 +350,9 @@ class Study:
 
     def get_denovo_variants(self, inChild=None, variantTypes=None, effectTypes=None, geneSyms=None, familyIds=None, regionS=None, callSet=None):
 
+        if self.loaded==False:
+            self._load_family_data()
+            
         if isinstance(effectTypes,str):
             effectTypes = self.vdb.effectTypesSet(effectTypes)
 
@@ -453,7 +445,8 @@ class Study:
             raise Exception("Unknown Family Fdef __init__(self,vdb,name):ile Format: " + fdFormat)
 
         self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
-
+        self.loaded=True
+        
     def _load_family_data_SSCFams(self, reportF):
         rf = open(reportF)
         families = {l.strip():Family() for l in rf}
@@ -705,7 +698,7 @@ class VariantsConfig:
                     
         self.vdb = vdb
         
-        self._config = ConfigParser.SafeConfigParser({'wd':wd})    
+        self._config = ConfigParser.SafeConfigParser({'wd':wd})            
         self._config.optionxform = lambda x: x
         
         if not confFile:
@@ -744,8 +737,10 @@ class VariantsConfig:
         groupNames = self._config.options('studyGroups')
         
         for name in groupNames:
+            if name == 'wd':
+                continue
             studies = self._config.get('studyGroups', name)             
-            studyList = [s for s in studies.split(",")]         
+            studyList = [s for s in studies.split(",")]
             self._study_groups[name] = studyList
         
     # this function creates and entry for each study
@@ -797,10 +792,8 @@ class VariantsConfig:
                 'Published','Data was published'
                 
                 self._studies[name].description = ', '.join(notes)
-                
-                
-    
-    
+
+
 class VariantsDB:
     def __init__(self, daeDir, confFile=None, sfriDB=None, giDB=None):
         
