@@ -1,6 +1,8 @@
-# from DAE import *
+#!/data/software/local/bin/python
+
 import gzip, pysam, sys, optparse, os
 import numpy as np
+# from DAE import *
 
 class family:
 	def __init__(self, fname):
