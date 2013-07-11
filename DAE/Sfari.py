@@ -3,6 +3,7 @@
 import os
 import sys 
 from collections import defaultdict
+import ConfigParser
 
 class Person:
     pass
@@ -15,21 +16,24 @@ class TwinGroup:
 
 class SfariCollection:
     
-    def __init__(self,dirP):
-        self.dataDir = dirP
+    def __init__(self, sfariDir):
+        
+        self.sfariDir = sfariDir
         self.individual = {}
         self.sample = {}
         self.twinGroups = set() 
-
+        self.familyCenter = {}
+        self.familyAgeAtAssement = {}
         
         self._loadIndividual()
         self._loadSample()
         self._loadTwins()
+        self._loadCollectionCenter()
 
 # family,id(),sex,father,mother,birth,guid,individual_properties.role,individual_properties.genetic_ab,individual_properties.genetic_ab_notes,family.collection
 
     def _loadSample(self):
-        f = open(self.dataDir + '/RUCDR_ID-Portal_ID-Map_20111130-id.csv')
+        f = open(os.path.join(self.sfariDir,'RUCDR_ID-Portal_ID-Map_20111130-id.csv'))
         h = f
         sN2Pid = defaultdict(set) 
         for l in f:
@@ -56,7 +60,7 @@ class SfariCollection:
            
 
     def _loadTwins(self):
-        f = open(self.dataDir + '/SSC_and_STC_Twins.csv')
+        f = open(os.path.join(self.sfariDir,'SSC_and_STC_Twins.csv'))
         h = f.readline()
         # Family,Proband Code,Twin Code,Twin Study Role,Zygosity,Concordance,Collection
         collectionMap = {'Simons Twins Collection': 'stc', 'Simons Simplex Collection': 'ssc'}
@@ -106,14 +110,37 @@ class SfariCollection:
             self.twinGroups.add(tg)
                     
             
+    def _loadCollectionCenter(self):
+        f = open(os.path.join(self.sfariDir,'ssc_age_at_assessment.csv'))
+
+        f.readline()  # header 
+        famCenterS = defaultdict(set) 
+        for l in f:
+            cs = l.strip().split(',')
+            fm,role = cs[0].split('.')
+            age = cs[1]
+            center = cs[2]
+            #famCenterS[fm].add(center)
+            if fm not in self.familyCenter:
+                self.familyCenter[fm]=center
+                self.familyAgeAtAssement[fm]=age
+            
+        ## assert
+        #if len([x for x in famCenterS.values() if len(x)>1])>0:
+        #    raise Exception('aaa')
+        #famCenter = {f:s.pop() for f,s in famCenterS.items() }
+        
+        f.close()
+        
+        #return famCenter
 
     def _loadIndividual(self):
-        f = open(self.dataDir + '/individual_v14.csv')
+        f = open(os.path.join(self.sfariDir,'individual.csv'))
         h = f.readline()
         for l in f:
             cs = l.strip().split(",")
             if len(cs) != 11:
-                raise Exception('aaa')
+                raise Exception('_loadIndividual failed')
 
             p = Person()
             (p.familyId,

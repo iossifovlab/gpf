@@ -20,8 +20,11 @@ def enrichmentTest(testVarGenesDict, geneTerms):
         for s in geneTerms.t2G:
             allRes[s][tName] = EnrichmentTestRes();
             allRes[s][tName].cnt = 0
-        for gs in gSyms:
-            for s in geneTerms.g2T[gs]:
+        for gsg in gSyms:
+            touchedSets = set()
+            for gs in gsg:
+                touchedSets |= set(geneTerms.g2T[gs])
+            for s in touchedSets:
                 allRes[s][tName].cnt +=1
 
     totals = { tName: len(gSyms) for tName,gSyms in testVarGenesDict }
@@ -52,13 +55,11 @@ def computeQVals(pVals):
     ss = sorted([(i,p) for i,p in enumerate(pVals)], key=lambda x: x[1])
     qVals = [ip[1]*len(ss)/(j+1) for j,ip in enumerate(ss)];
     qVals = [q if q<=1.0 else 1.0 for q in qVals]
-    prevPVal = ss[-1][1]
     prevQVal = qVals[-1]
     for i in xrange(len(ss)-2,-1,-1):
-        if ss[i][1] == prevPVal:
+        if qVals[i] > prevQVal:
             qVals[i] = prevQVal
         else:
-            prevPVal = ss[i][1]
             prevQVal = qVals[i]
     return [ q  for d,q in sorted(zip(ss,qVals), key=lambda x: x[0][0])]
 
@@ -101,20 +102,25 @@ def printSummaryTable(testVarGenesDict, geneTerms,allRes,totals):
         print "\t".join(cols)
 
 def fltDnv(vs):
-    fmGns = defaultdict(set)
+    seen = set()
+    ret = []
     for v in vs:
-        for gs in set([ge['sym'] for ge in v.requestedGeneEffects]):
-            fmGns[v.familyId].add(gs)
-    return [gs for gss in fmGns.values() for gs in gss] 
+        vGss = [gs for gs in set([ge['sym'] for ge in v.requestedGeneEffects]) if (v.familyId + gs) not in seen]
+        if not vGss:
+            continue
+        for gs in vGss:
+            seen.add(v.familyId + gs)
+        ret.append(vGss)
+    return ret
 
 def fltInh(vs):
-    return [gs for v in vs for gs in set([ ge['sym'] for ge in v.requestedGeneEffects])]
+    return [ set([ ge['sym'] for ge in v.requestedGeneEffects]) for v in vs ]
 
 def oneVariantPerRecurrent(vs):
     gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects ]) 
     sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
     sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() } 
-    return [ gs for gs,fn in sym2FN.items() if fn>1 ]
+    return [ [gs] for gs,fn in sym2FN.items() if fn>1 ]
 
 
 

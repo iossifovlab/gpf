@@ -15,9 +15,7 @@ import glob
 from os.path import dirname
 from os.path import basename 
 import tempfile
-from GeneTerms import GeneTerms 
-from itertools import groupby
-
+import re
 
 class DnvVariant:
     def __str__(self):
@@ -122,7 +120,7 @@ class Variant:
         except AttributeError:
             self._memberInOrder = self.study.families[self.familyId].memberInOrder
         return self._memberInOrder
-
+    
     @property
     def inChS(self):
         mbrs = self.memberInOrder
@@ -149,30 +147,9 @@ class Variant:
                 parentStr += mbrs[c].role
         return parentStr
 
-    @property
-    def altFreqPrcnt(self):
-        try:
-            return self._altFreqPrcnt
-        except AttributeError:
-                self._altFreqPrcnt = 0.0
-                if self.altFreqPrcntAtt in self.atts:
-                    self._altFreqPrcnt = float(self.atts[self.altFreqPrcntAtt])
-        return self._altFreqPrcnt
-
-    @property
-    def memberInOrder(self):
-        try:
-            return self._memberInOrder
-        except AttributeError:
-            self._memberInOrder = self.study.families[self.familyId].memberInOrder
-        return self._memberInOrder
-
-
     def get_normal_refCN(self,c):
-        return normalRefCopyNumber(self.location,self.memberInOrder[c].gender)
+        return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
 
-    def is_variant_in_person(self,c):
-        return isVariant(self.bestSt,c,self.location,self.memberInOrder[c].gender)
 
 class Family:
     def __init__(self,atts=None):
@@ -190,14 +167,55 @@ class Person:
             self.atts = {} 
 
 class Study:
-    def __init__(self,vdb,name):
+    def __init__(self, vdb, name, load=True):
         self.vdb = vdb
         self.name = name
         self.configSection = 'study.' + name
         self.dnvData = {}
-        self._load_family_data()
+                
+        if self.vdb.config.has_option(self.configSection,'denovoCalls.files'):
+            self._has_denovo = True
+        else:                     
+            self._has_denovo = False
 
+        if self.vdb.config.has_option(self.configSection,'transmittedVariants.indexFile'):
+            self._has_transmitted = True
+        else:                     
+            self._has_transmitted = False
+        
+        self._description = ""
+
+        if load:
+            self._loaded = True
+            self._load_family_data()            
+        else: 
+            self._loaded = False
+            
+    @property
+    def loaded(self):
+        return self._loaded
+                
+    @property
+    def has_denovo(self):
+        return self._has_denovo
+         
+    @property
+    def has_transmitted(self):
+        return self._has_transmitted
+
+    @property
+    def description(self):
+        return self._description
+    
+    @description.setter
+    def description(self, value):
+        self._description = value
+    
     def get_transmitted_summary_variants(self,minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None, effectTypes=None,ultraRareOnly=False, geneSyms=None, regionS=None):
+        
+        if self.loaded==False:
+            self._load_family_data()
+                    
         transmittedVariantsFile = self.vdb.config.get(self.configSection, 'transmittedVariants.indexFile' ) + ".txt.bgz"
         print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile 
 
@@ -273,6 +291,10 @@ class Study:
 
 
     def get_transmitted_variants(self, inChild=None, minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None,effectTypes=None,ultraRareOnly=False, geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
+        
+        if self.loaded==False:
+            self._load_family_data()
+                    
         transmittedVariantsTOOMANYFile = self.vdb.config.get(self.configSection, 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
 
         if TMM_ALL:
@@ -328,6 +350,9 @@ class Study:
 
     def get_denovo_variants(self, inChild=None, variantTypes=None, effectTypes=None, geneSyms=None, familyIds=None, regionS=None, callSet=None):
 
+        if self.loaded==False:
+            self._load_family_data()
+            
         if isinstance(effectTypes,str):
             effectTypes = self.vdb.effectTypesSet(effectTypes)
 
@@ -345,7 +370,6 @@ class Study:
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
                 continue
-            # if inChild and inChild not in v.atts['inChild']:
             if inChild and inChild not in v.inChS:
                 continue
             if variantTypes and v.variant[0:3] not in variantTypes:
@@ -418,10 +442,11 @@ class Study:
     
 
         if fdFormat not in fmMethod:
-            raise Exception("Unknown Family File Format: " + fdFormat)
+            raise Exception("Unknown Family Fdef __init__(self,vdb,name):ile Format: " + fdFormat)
 
         self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
-
+        self.loaded=True
+        
     def _load_family_data_SSCFams(self, reportF):
         rf = open(reportF)
         families = {l.strip():Family() for l in rf}
@@ -431,7 +456,7 @@ class Study:
         rlsMp = { "mother":"mom", "father":"dad", "proband":"prb", "designated-sibling":"sib", "other-sibling":"sib" }
         genderMap = {"female":"F", "male":"M"}
 
-        for indS in self.vdb.sfriDB.individual.values():
+        for indS in self.vdb.sfariDB.individual.values():
             if indS.familyId not in families:
                 continue
             p = Person()
@@ -444,7 +469,7 @@ class Study:
 
     def _load_family_data_SSCTrios(self, reportF):
         buff = defaultdict(dict) 
-        for indId,indS in self.vdb.sfriDB.individual.items():
+        for indId,indS in self.vdb.sfariDB.individual.items():
             if indS.collection != "ssc":
                 continue
             buff[indS.familyId][indS.role] = indS
@@ -628,12 +653,12 @@ class Study:
             f.atts = { x:qrpR[x] for x in qrp.dtype.names }
 
             def piF(pi):
-                sfriDB = self.vdb.sfriDB
-                if not sfriDB:
+                sfariDB = self.vdb.sfariDB
+                if not sfariDB:
                     return pi
-                if pi not in sfriDB.sampleNumber2PersonId:
+                if pi not in sfariDB.sampleNumber2PersonId:
                     return pi
-                return sfriDB.sampleNumber2PersonId[pi]
+                return sfariDB.sampleNumber2PersonId[pi]
 
             mom = Person()
             mom.personId = piF(qrpR['mothersample_id'])
@@ -666,34 +691,241 @@ class Study:
 
         return families,badFamilies
 
-    
-class VariantsDB:
-    def __init__(self, wd, confFile=None, sfriDB=None, giDB=None):
-        self.config = ConfigParser.SafeConfigParser({'wd':wd});
-
+# This class is used to read the variantDB.conf without actually loading 
+# any of the studies.
+class VariantsConfig:
+    def __init__(self, vdb, wd, confFile):
+                    
+        self.vdb = vdb
+        
+        self._config = ConfigParser.SafeConfigParser({'wd':wd})            
+        self._config.optionxform = lambda x: x
+        
         if not confFile:
             confFile = wd + "/variantDB.conf"
+            
+        self._config.read(confFile)
+        
+        self._studies = {}
+        self._study_groups = {}
+        
+        
+    @property
+    def studies(self):
+        return self._studies
 
-        self.config.read(confFile)
+    @property
+    def study_groups(self):
+        return self._study_groups
+    
+    @property
+    def config(self):
+        return self._config
+            
+    # this method loads Study Groups into a dictionary
+    # and load the meta data about each study, but does
+    # not load the actual study data.
+    def processConfig(self):        
+        self.processStudies()
+        self.processStudyGroups()
+        
+    # this function loads the study group names into a dictionary
+    # of lists of study names
+    def processStudyGroups(self):
+        self._study_groups = {}
+        
+        groupNames = self._config.options('studyGroups')
+        
+        for name in groupNames:
+            if name == 'wd':
+                continue
+            studies = self._config.get('studyGroups', name)             
+            studyList = [s for s in studies.split(",")]
+            self._study_groups[name] = studyList
+        
+    # this function creates and entry for each study
+    # but does not load the actual data.                    
+    def processStudies(self):
+        self._studies={}
+        
+        for sn in self.config.sections():
+            if sn.startswith('study.'):                
+                name = sn[6:]
+                self._studies[name] = Study(self.vdb,name,load=False)
+                
+                notes = []
+
+                m = re.search('WE', name)                
+                if m:
+                    notes.append('Whome Exome')
+
+                m = re.search('TG', name)
+                if m:
+                    notes.append('Targeted Sequencing')
+
+                m = re.search('Eichler', name)
+                if m:
+                    notes.append('Eichler Lab')
+
+                m = re.search('Daly', name)
+                if m:
+                    notes.append('Daly Lab')
+
+                m = re.search('State', name)
+                if m:
+                    notes.append('State Lab')
+
+                m = re.search('Iossifov', name)
+                if m:
+                    notes.append('Wigler Lab')
+
+                m = re.search('Levy', name)
+                if m:
+                    notes.append('Wigler Lab')
+
+                m = re.search('^wig', name)                
+                if m:
+                    notes.append('data was re-processed using CSHL pipeline')
+                
+                    
+                'Send','Data which can be sent to a collaborator'
+                'Published','Data was published'
+                
+                self._studies[name].description = ', '.join(notes)
+
+
+class VariantsDB:
+    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None):
+        
+        self.daeDir = daeDir
+        self.variantDir = os.path.join(daeDir, "variantdb")
+        self.giDir = os.path.join(daeDir, "geneinfodb")
+        self.phenoDir = os.path.join(daeDir, "phenodb")
+        
+        self._VariantsConfig = VariantsConfig(self, daeDir, confFile)
+        self.config = self._VariantsConfig.config
+        
         self.dnvCols = {}
         self.pardata = []
-        self.studies = {}
-        self.sfriDB = sfriDB
+        #self._studies = {}
+        self.sfariDB = sfariDB
         self.giDB = giDB
-
-    def get_study_names(self):
-        return [sn[6:] for sn in self.config.sections() if sn.startswith('study.')]
-
         
+        # vdb (self) is used all over the place, so the call to 
+        # process the config needs to go last to make sure all
+        # the required variables are initialized 
+        self._VariantsConfig.processConfig()
 
+
+    @property
+    def studies(self):
+        return self._VariantsConfig.studies
+
+    @property
+    def study_groups(self):
+        return self._VariantsConfig.study_groups
+    
+    
+    # return a list of valid variant types, add None to this list for the UI
+    def get_variant_types(self):
+        types = ['All', 'CNV+', 'CNV-', 'snv', 'ins', 'del']
+        return types
+
+
+    # return a list of valid effect types, add None to this list for the UI
+    def get_effect_types(self):
+        types = ['All', 
+                 'LGDs', 
+                 'CNVs', 
+                 'nonsynonymous',
+                 'CNV-',
+                 'CNV+',
+                 'frame-shift',
+                 'intron',
+                 'no-frame-shift-new-stop',
+                 'synonymous',
+                 'nonsense',
+                 'no-frame-shift',
+                 'missense',
+                 "3'UTR",
+                 "5'UTR",
+                 'splice-site']
+        return types
+                          
+    def get_child_types(self):
+        types = ['prb',
+                 'sib',
+                 'prbM', 
+                 'sibF', 
+                 'sibM', 
+                 'prbF',
+                 #'prbMsibM',
+                 #'prbMsibF'
+                 ]
+        return types
+                                
+    def get_study_names(self):
+        return [sn[6:] for sn in self.config.sections() if sn.startswith('study.')]    
+    
+    def getDenovoStudies(self):
+        names=[]
+
+        for studyKey,study in self.studies.items():
+            if study.has_denovo:
+                names.append(studyKey)
+
+        names = sorted(names)
+                
+        return names
+    
+    
+    def getStudyGroups(self):
+        names=[]
+
+        for studyKey,study in self.study_groups.items():
+            if studyKey != 'wd':
+                names.append(studyKey)
+
+        names = sorted(names)
+                
+        return names    
+    
+        
+    # returns a sorted list of study names, that have the transmittedVariants.indexFile option
+    # in their section
+    # does not return the group names yet
+    # I'd need tp parse the list and make sure all the studies are just Transmitted and contain no denovo
+    
+    def getTransmittedStudies(self):
+        studies=[]
+
+        for sn in self.config.sections():
+            if sn.startswith('study.'):
+                if self.config.has_option(sn,'transmittedVariants.indexFile'):
+                    studies.append(sn[6:])
+
+        studies = sorted(studies)
+            
+        return studies
+        
     def get_study(self,name):
-        if name not in self.studies:
-            self.studies[name] = Study(self, name)
-        return self.studies[name]
+        
+        if name in self._VariantsConfig.studies:
+            study = self._VariantsConfig.studies[name]
+            if study.loaded == False:
+                study._load_family_data()
+            return study
+        else:
+            return None
+            
+        #if name not in self._studies:
+        #    self._studies[name] = Study(self, name)
+        #return self._studies[name]
+        
         
     def get_studies(self,definition):
         try:
-            studiesS = self.config.get('studyGroups', definition )
+            studiesS = self.config.get('studyGroups', definition)
         except:
             studiesS = definition 
         return [self.get_study(s) for s in studiesS.split(",")]
@@ -836,57 +1068,6 @@ class VariantsDB:
         print >>sys.stderr, "nCompleteIns:", nCompleteIns
         return vars
 
-    def get_denovo_sets(self,dnvStds):
-        r = GeneTerms()
-        r.geneNS = "sym"
-
-        def addSet(setname, genes):
-            r.tDesc[setname] = setname
-            for gSym in genes:
-                r.t2G[setname][gSym]+=1
-                r.g2T[gSym][setname]+=1
-        def genes(inChild,effectTypes,inGenesSet=None):
-            if inGenesSet:
-                vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild,geneSyms=inGenesSet)
-            else:
-                vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
-            return {ge['sym'] for v in vs for ge in v.requestedGeneEffects}
-
-        # TODO: rethink how to get access ot giDB
-        # def set_genes(geneSetDef):
-        #     gtId,tmId = geneSetDef.split(":")
-        #     return set(giDB.getGeneTerms(gtId).t2G[tmId].keys())
-
-        def recSingleGenes(inChild,effectTypes):
-            vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
-
-            gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects ]) 
-            sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
-            sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() } 
-            return {g for g,nf in sym2FN.items() if nf>1 }, {g for g,nf in sym2FN.items() if nf==1 }
-
-        recPrbLGDs, sinPrbLGDs = recSingleGenes('prb' ,'LGDs')
-        addSet("recPrbLGDs",     recPrbLGDs)
-        addSet("sinPrbLGDs",     sinPrbLGDs) 
-
-        addSet("prbLGDs",           genes('prb' ,'LGDs'))
-        addSet("prbMaleLGDs",       genes('prbM','LGDs'))
-        addSet("prbFemaleLGDs",     genes('prbF','LGDs'))
-
-        # addSet("prbLGDsInFMR1",     genes('prb','LGDs',set_genes("main:FMR1-targets")))
-        # addSet("prbLGDsInCHDs",     genes('prb','LGDs',set("CHD1,CHD2,CHD3,CHD4,CHD5,CHD6,CHD7,CHD8,CHD9".split(','))))
-
-        addSet("prbMissense",       genes('prb' ,'missense'))
-        addSet("prbMaleMissense",   genes('prbM' ,'missense'))
-        addSet("prbFemaleMissense", genes('prbF' ,'missense'))
-        addSet("prbSynonymous",     genes('prb' ,'synonymous'))
-
-        addSet("sibLGDs",           genes('sib' ,'LGDs'))
-        addSet("sibMissense",       genes('sib' ,'missense'))
-        addSet("sibSynonymous",     genes('sib' ,'synonymous'))
-
-        return r
-    
 
     def getDenovoVariantsGeneSyms(self,collection, nChildren=None, inChildRole=None, inChildSex=None, effectTypes=None):
         if isinstance(effectTypes,str):
@@ -1064,14 +1245,15 @@ def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):
 def mat2Str(mat, colSep=" ", rowSep="/"):
     return rowSep.join([ colSep.join([str(n) for n in mat[i,:]]) for i in xrange(mat.shape[0])  ])
 
-def _safeVs(tf,vs,atts=[]):
+# added sep param in order to produce CSV outout for Web Site
+def _safeVs(tf,vs,atts=[],sep="\t"):
     def ge2Str(gs):
         return "|".join( x['sym'] + ":" + x['eff'] for x in gs)
 
     mainAtts = "familyId studyName location variant bestSt fromParentS inChS counts geneEffect requestedGeneEffects popType".split()
     specialStrF = {"bestSt":mat2Str, "counts":mat2Str, "geneEffect":ge2Str, "requestedGeneEffects":ge2Str}
 
-    tf.write("\t".join(mainAtts+atts)+"\n") 
+    tf.write(sep.join(mainAtts+atts)+"\n") 
     for v in vs:
         mavs = []
         for att in mainAtts:
@@ -1082,8 +1264,9 @@ def _safeVs(tf,vs,atts=[]):
                     mavs.append(str(getattr(v,att)))
             except:
                 mavs.append("")
-                    
-        tf.write("\t".join(mavs + [str(v.atts[a]) if a in v.atts else "" for a in atts])+"\n")
+                 
+        tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts])   
+        tf.write(tmp +"\n")
 
 def viewVs(vs,atts=[]):
     tf = tempfile.NamedTemporaryFile("w", delete=False)
@@ -1169,8 +1352,8 @@ if __name__ == "__main__":
     print "wd:", wd
     from Sfari import SfariCollection
 
-    sfriDB = SfariCollection(os.environ['PHENO_DB_DIR'])
-    vDB = VariantsDB(wd,sfriDB=sfriDB)
+    sfariDB = SfariCollection(os.environ['PHENO_DB_DIR'])
+    vDB = VariantsDB(wd,sfariDB=sfariDB)
 
     for v in vDB.get_validation_variants():
         # pass
@@ -1179,6 +1362,7 @@ if __name__ == "__main__":
 
     '''
     st = vDB.get_study('wig683')
+
     v = st.get_transmitted_variants().next()
 
     # st = vDB.get_study('LevyCNV2011')
@@ -1253,6 +1437,3 @@ if __name__ == "__main__":
     # print "\n".join(["\t".join((v.center, v.geneEffect[0]['sym'], v.majorEffect)) 
     #                 for v in vDB.getDenovoVariants('wig582-3pap',effectTypes="LGDs")
     #                 ])
-
-
-
