@@ -300,11 +300,27 @@ class FunctionalProfiler:
                 fpRes[gsN][fixedGenes] = run_ppn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, ppn)
         return fpRes
 
+    def profile_gene_scalar(self,scalar,keyNS='sym'):
+        gSets,gWghts = self.get_sets_and_weights(keyNS)
+
+        fpRes = defaultdict(dict)
+        for gsN,gsGs in gSets.t2G.items(): 
+
+            print >>sys.stderr, gsN,'inScalar...'
+            fpRes[gsN]['inScalar'] = run_in_set_test(gsGs, gWghts, scalar )
+
+            print >>sys.stderr, gsN,'scalar...'
+            fpRes[gsN]['scalar'] = run_number_test(gsGs, gWghts, scalar)
+        return fpRes
+
 
     def print_res_summary(self,f,res):
         allGeneSetsOrd = self.toGeneSets + sorted([s for s in self.geneSets.t2G if s not in self.toGeneSets])
 
+        allTests = {x for trd in res for x in trd}
+
         specialTests = ['sc'] + self.toGeneSets       
+        specialTests = [tn for tn in specialTests if tn in allTests]
         testOrder = specialTests + sorted([x for x in {t for gs in res.values() for t in gs} if x not in specialTests])
 
         def tr_pval_s(tr):
@@ -564,6 +580,16 @@ def drawNumberTestData(trName):
 
 if __name__ == "__main__":
     fp = FunctionalProfiler()
+    geneWeightProp = 'refSeqCodingInTargetLen'
+
+    scalar = {id:gi.fprops[geneWeightProp] for id,gi in giDB.genes.items() if geneWeightProp in gi.fprops}
+
+    fpRes = fp.profile_gene_scalar(scalar,'id')
+    fp.print_res_summary(sys.stdout,fpRes)
+
+
+if __name__ == "__main_real__":
+    fp = FunctionalProfiler()
     cmd = sys.argv[1]
     fn = sys.argv[2]
 
@@ -595,57 +621,3 @@ if __name__ == "__main__":
     # ppn = PPINetwork('/home/iossifov/work/T115/PPI/intnet-ppimap.txt')
     # fpRes = fp.profile_ppn(ppn)
     # fp.print_res_summary(sys.stdout,fpRes)
-    
-    
-if __name__ == "__old_main__":
-    '''
-    weightedNetworks = []
-    prepareWeightedNetwork('/data/safe/ecicek/Workspace6/Matrix/Sarah/Integrated/sarah.npz') 
-    for f in glob.glob('/data/safe/ecicek/Workspace6/Matrix/Sarah/*.npz'):
-        prepareWeightedNetwork(f)
-
-    geneTermsStrs = []
-    prepareGeneTerms('miRNA') 
-    prepareGeneTerms('domain') 
-    prepareGeneTerms('GO') 
-    '''
-
-    
-    variantLists = [] 
-    vls = prepareVariantList("autLGDs", vDB.get_denovo_variants('allWEandTG',effectTypes="LGDs",inChild="prb"))
-    # variantLists = [] 
-    recurrentVariantList("autLGDsRec", vls)
-    prepareVariantList("autMis", vDB.get_denovo_variants('allWEandTG',effectTypes="missense",inChild="prb"))
-    # prepareVariantList("autSyn", vDB.get_denovo_variants('allWEandTG',effectTypes="synonymous",inChild="prb"))
-    # prepareVariantList("sibLGDs", vDB.get_denovo_variants('allWEandTG',effectTypes="LGDs",inChild="sib"))
-    giDB.fprops
-    
-    nullWeightId = 'refSeqCodingInTargetLen'
-    geneWeights = {id:gi.fprops[nullWeightId] for id,gi in giDB.genes.items() if nullWeightId in gi.fprops}
-
-    testResults = {}
-    '''
-    for wnt in weightedNetworks:
-        for vls in variantLists:
-            procWN(wnt,vls,geneWeights)
-    for gts in geneTermsStrs:
-        for vls in variantLists:
-            procGT(gts,vls,geneWeights)
-    '''
-    '''
-    for gts in geneTermsStrs:
-        gnIds = gts.geneTerms.g2T.keys()
-        dgs = np.array([(len(gts.geneTerms.g2T[x]), gts.tfidfWNDegree[x], gts.omniWNDegree[x]) for x in gnIds])
-        ccs =  np.corrcoef(dgs.T)
-        print gts.name, ccs[0,1], ccs[0,2], ccs[1,2]
-    ''' 
-    for vls in variantLists:
-        for f in glob.glob('/home/iossifov/work/T115/PPI/*-ppimap.txt'):
-            procPPN(PPINetwork(f),vls,geneWeights)
-
-
-    # for g,n in variantLists[0].genes.items(): 
-    #     if giDB.genes[g].sym in cc.t2G['BRK']:
-    #         print giDB.genes[g].sym,n
- 
-
