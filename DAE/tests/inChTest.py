@@ -9,7 +9,6 @@ if len(vDB.studies)==0:
     exitCode=1
 
 for st in vDB.studies.values():
-    print st
     if not st.has_denovo:
         continue
     try:

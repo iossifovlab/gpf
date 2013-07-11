@@ -2,7 +2,7 @@
 
 codePath=$DAE_SOURCE_DIR
 dataPath=$DAE_DB_DIR
-testsDef=default.txt
+testsDef=$DAE_SOURCE_DIR/tests/default.txt
 resDir=.
 
 argCnt=0
