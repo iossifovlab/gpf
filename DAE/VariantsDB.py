@@ -996,6 +996,11 @@ class VariantsDB:
         for fn in glob.glob(validationDir + '/*/reports/report*.txt'):
             print >>sys.stderr, "Working on file:|", fn,"|"
             dt = genfromtxt(fn,delimiter='\t',dtype=None,names=True, case_sensitive=True)
+            # if there is only row of data in the file then the genfromtxt function returns a 0d array.
+            # this causes an error when trying to iterate over it, so it must be converted to a 1d array
+            if dt.ndim==0:
+                dt=dt.reshape(1)
+                
             batchId = dirname(fn).split("/")[-2]
                         
             for dtR in dt:
