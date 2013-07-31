@@ -6,8 +6,12 @@ from VariantsDB import *
 from phase import phase
 from scipy.stats import binom
 from scipy.stats import binom_test
+from scipy.stats import chi2
+
+import numpy as np
 import sys
 from collections import defaultdict
+import argparse
 
 class Counts:
     def __init__(self, study, 
@@ -32,15 +36,28 @@ class Counts:
 
         self.stats = defaultdict(lambda : defaultdict(int))
 
-    def add(self, fid, gs, test, stat, par=None):
+        autosomDistNull = np.array([0.23492706659, 0.249526546265, 0.250880396296, 0.264665990849])
+        
+        compoundNull = np.array([0.0,
+                                 (autosomDistNull[1]+autosomDistNull[3])**2-autosomDistNull[3]**2,
+                                 (autosomDistNull[2]+autosomDistNull[3])**2-autosomDistNull[3]**2,
+                       autosomDistNull[3]**2])
+        compoundNull[0] = 1.0 - compoundNull.sum()
+
+        self.inhPattOrder = ['00', '10', '01', '11']
+        self.inhPattPs = {"DistGene": autosomDistNull, "CompoundHitGene": compoundNull}
+
+
+    def add(self, fid, geneSym, test, stat, par=None):
         if self.testsFilter and test not in self.testsFilter:
             return
         geneSets = ["all"]
         if self.byGene:
-            geneSets.append("gene:" + gs)
+            geneSets.append("gene:" + geneSym)
         if self.geneSets:
-            if gs in self.geneSets.g2T:
-                geneSets.extend(("set:" + s for s in self.geneSets.g2T))
+            if geneSym in self.geneSets.g2T:
+                geneSets.extend(("set:" + s for s in self.geneSets.g2T[geneSym]))
+    
 
         famTps = ["all"]
         if self.byFamilyGenderType:
@@ -79,14 +96,37 @@ class Counts:
         else: 
             f = out
         
-        f.write("\t".join(self.colNames) + "\t" + "\t".join("neither prb sib both pVal".split()) + "\n");
+        f.write("\t".join(self.colNames) + "\t" + "\t".join("neither prb sib both prbVsSibPVal patternPVal expCounts".split()) + "\n");
         for tsKey, stat in self.stats.items():
-            # two-sided: pval = binom_test(stat["10"], stat["10"]+stat["01"], p=0.5)
-            pval = 1.0 - binom.cdf(stat["10"], stat["10"]+stat["01"], 0.5)
+            # two-sided: 
+            prbVsSibPVal = binom_test(stat["10"], stat["10"]+stat["01"], p=0.5)
+
+            pattPValS = ""
+            expS = ""
+
+            test = tsKey
+            if "\t" in tsKey:
+                test = tsKey[0:tsKey.index("\t")]
+
+            if test in self.inhPattPs:
+                ps = self.inhPattPs[test]
+                O = np.array([stat[x] for x in self.inhPattOrder ])
+                E = ps * O.sum()
+                chiStat = sum((O-E)**2/E)
+                pattPValS = str(1.0 - chi2.cdf(chiStat,3))
+                expS = " ".join(['%.1f' % (x) for x in E])
+
+            
+
+            # one-sided ??
+            # pval = 1.0 - binom.cdf(stat["10"], stat["10"]+stat["01"], 0.5)
 
             cols = [tsKey]
-            cols.extend((str(stat[k]) for k in "00 10 01 11".split()))
-            cols.append(str(pval))
+            cols.extend((str(stat[k]) for k in self.inhPattOrder ))
+
+            cols.append(str(prbVsSibPVal))
+            cols.append(pattPValS)
+            cols.append(expS)
 
             f.write("\t".join(cols) + "\n")
 
@@ -107,6 +147,8 @@ class HomozygousTest:
         return "OK"
 
     def addV(self,v):
+        if len(v.memberInOrder) != 4:
+            return
         bs = v.bestSt
         if bs[0,1] + bs[1,1] == 1:
             return
@@ -119,18 +161,17 @@ class HomozygousTest:
         for fid,gss in self.buff.items():
             for gs,vs in gss.items(): 
                 counts.add(fid, gs, "HomozygousGene", "TotalWithErr")
-                for par,vs in pars.items():
-                    if len(vs):
-                        counts.add(fid, gs, "HomozygousGene", "Multi")
-                        phsType = _phsType(vs)
-                        if phsType != "OK":
-                            counts.add(fid, gs, "HomozygousGene", phsType)
-                            continue
-                    st = vs[0].bestSt
-                    a = 1 if bs[1,2]==2 else 0
-                    s = 1 if bs[1,3]==2 else 0
-                    counts.add(fid, gs, "HomozygousGene", "Total")
-                    counts.add(fid, gs, "HomozygousGene", str(a)+str(s))
+                if len(vs):
+                    counts.add(fid, gs, "HomozygousGene", "Multi")
+                    phsType = self._phsType(vs)
+                    if phsType != "OK":
+                        counts.add(fid, gs, "HomozygousGene", phsType)
+                        continue
+                bs = vs[0].bestSt
+                a = 1 if bs[1,2]==2 else 0
+                s = 1 if bs[1,3]==2 else 0
+                counts.add(fid, gs, "HomozygousGene", "Total")
+                counts.add(fid, gs, "HomozygousGene", str(a)+str(s))
 
 class DistTest:
     def __init__(self): 
@@ -138,6 +179,8 @@ class DistTest:
         self.buffX = defaultdict(lambda : defaultdict(list)) 
 
     def addV(self,v):
+        if len(v.memberInOrder) != 4:
+            return
         bs = v.bestSt
         if bs[0,1] + bs[1,1] == 1:
             if bs[1,0]==1 and bs[1,1]==0:
@@ -203,8 +246,8 @@ class DistTest:
                 if len(parBuf) == 2:
                     a = 1 if all([x[0] for x in parBuf]) else 0
                     s = 1 if all([x[1] for x in parBuf]) else 0
-                    counts.add(fid, gs, "CompoundHetGene", "Total")
-                    counts.add(fid, gs, "CompoundHetGene", str(a)+str(s))
+                    counts.add(fid, gs, "CompoundHitGene", "Total")
+                    counts.add(fid, gs, "CompoundHitGene", str(a)+str(s))
         for fid,gss in self.buffX.items():
             for gs,vs in gss.items(): 
                 counts.add(fid, gs, "DistGeneX", "TotalWithErr")
@@ -222,27 +265,52 @@ class DistTest:
                             
                 
         
-print "hi"
 
 if __name__ == "__main__":
-    setsFile = '/mnt/wigclust5/data/unsafe/autism/genomes/hg19/GeneSets'
-    if len(sys.argv)>1:
-        setsFile=sys.argv[1]
-    
-    geneTerms = loadGeneTerm(setsFile)
+
+    parser = argparse.ArgumentParser(description="Run transmission tests.")
+    parser.add_argument('--denovoStudies', type=str, default="allWE", help='the denovo sutdies used to build the denovo gene set.' )
+    parser.add_argument('--transmittedStudy', type=str, default="w873e374s322", help='the transmitted study')
+    parser.add_argument('--effectTypes', type=str, default="LGDs", help='effect types (i.e. LGDs,missense,synonymous). LGDs by default. ')
+    parser.add_argument('--popFrequencyMax', type=str, default='1.0',
+            help='maximum population frequency in percents. Can be 100 or -1 for no limit; ultraRare. 1.0 by default.')
+    # parser.add_argument('--familiesFile', type=str, help='a file with a list of the families to report')
+    parser.add_argument('--geneSets', default="main", type=str, help='gene sets (i.e. denovo, main, miRNA, ...)')
+    args = parser.parse_args()
+
+    print >>sys.stderr, args
+
+
+    whiteFams = {f for f,mr,fr in zip(phDB.families,
+                phDB.get_variable('focuv.race_parents'),
+                phDB.get_variable('mocuv.race_parents')) if mr=='white' and fr=='white' }
+
+ 
+    geneTerms = get_gene_sets_symNS(args.geneSets,denovoStudies=args.denovoStudies)
+
+    ultraRareOnly = True
+    maxAltFreqPrcnt = 1.0
+
+    if args.popFrequencyMax != 'ultraRare':
+        ultraRareOnly = False 
+        maxAltFreqPrcnt = float(args.popFrequencyMax) 
         
-    study = vDB.get_study('wig683')
+        
+    study = vDB.get_study(args.transmittedStudy)
 
-    cnts = Counts(study,bySibGender=True)
+    cnts = Counts(study,geneSets=geneTerms,byParent=True, bySibGender=True)
     distT = DistTest()
+    homozT = HomozygousTest()
 
-    # ultraRareOnly=False, effectTypes="LGDs"
+
     n = 0
-    for v in study.get_transmitted_variants(ultraRareOnly=True, maxAltFreqPrcnt=1, effectTypes="LGDs"):
+    for v in study.get_transmitted_variants(ultraRareOnly=ultraRareOnly, maxAltFreqPrcnt=maxAltFreqPrcnt, effectTypes=args.effectTypes, familyIds=whiteFams):
         distT.addV(v)
+        homozT.addV(v)
         n+=1
-        # print n, v.inChS
+
     print >>sys.stderr, "number of variants:", n
     distT.done(cnts)
+    homozT.done(cnts)
     cnts.dump()
 

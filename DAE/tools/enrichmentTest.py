@@ -135,6 +135,12 @@ if __name__ == "__main__":
     if len(sys.argv)>1:
         setsFile=sys.argv[1]
 
+    if len(sys.argv)>2:
+        denovoStudies=sys.argv[2]
+
+    if len(sys.argv)>3:
+        transmittedStudy=sys.argv[3]
+
     if setsFile=='denovo':
         geneTerms = vDB.get_denovo_sets(denovoStudies)
     else:
