@@ -1063,7 +1063,7 @@ class VariantsDB:
                     v.memberInOrder = knownFams[v.familyId].memberInOrder
                 else:
                     v.memberInOrder = []
-                    print "Breh, the family", v.familyId, "is unknown"
+                    print >>sys.stderr, "Breh, the family", v.familyId, "is unknown"
 
 
                 # nvf.write("\t".join((v.familyId,v.location,v.variant,v.bestStS,v.who,v.why,v.batchId,v.valCountsS,v.valBestStS,v.valStatus,v.resultNote,v.valParent)) + "\n")
