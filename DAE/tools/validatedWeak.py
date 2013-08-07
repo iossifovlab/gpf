@@ -4,7 +4,7 @@ from DAE import *
 import sys
 
 # TODO get it from argv
-studyName = 'wig683'
+studyName = 'wig919'
 stdy = vDB.get_study(studyName)
 solidV = {}
 for v in stdy.get_denovo_variants(callSet="noweak"):
