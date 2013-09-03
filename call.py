@@ -263,8 +263,8 @@ parser.add_option("-o", "--output", dest="outputFile", default="",
                   metavar="OUTPUT", help="write output to FILE")
 parser.add_option("-f", "--family", dest="familyInfo", default='.',
                   metavar="familyInfo", help="family Info")
-parser.add_option("-r", action="store_true", dest="reprocess", default=False,
-                  metavar="reprocess", help="rewrite or reprocess, default [False]")
+#parser.add_option("-r", action="store_true", dest="reprocess", default=False,
+#                  metavar="reprocess", help="rewrite or reprocess, default [False]")
 
 
 ox, args = parser.parse_args()
@@ -272,9 +272,9 @@ ox, args = parser.parse_args()
 # f = gzip.open("/data/unsafe/autism/pilot2/quad/auSSC12950-wholeblood/baseCntStat.bgz")
 f = gzip.open( ox.inputFile )
 
-if os.path.exists(ox.outputFile) and (not ox.reprocess) :
-	print ox.outputFile, '\t exists!\nto overwrite, put "-r" option'
-	exit(1)
+#if os.path.exists(ox.outputFile) and (not ox.reprocess) :
+#	print ox.outputFile, '\t exists!\nto overwrite, put "-r" option'
+#	exit(1)
 
 outfile = open( ox.outputFile, 'w' )
 

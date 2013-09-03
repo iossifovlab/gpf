@@ -8,6 +8,7 @@ from VariantsDB import _safeVs
 from VariantsDB import isVariant
 from VariantsDB import normalRefCopyNumber 
 from GeneInfoDB import GeneInfoDB
+from GeneTerms import loadGeneTerm 
 import phenoDB
 from Sfari import SfariCollection
 
@@ -18,6 +19,26 @@ giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
 sfariDB = SfariCollection(config.sfariDBdir)
 phDB = phenoDB.rawTableFactory(config.phenoDBFile)
 vDB = VariantsDB(config.daeDir, config.variantsDBconfFile, sfariDB=sfariDB, giDB=giDB)
+
+
+def get_gene_sets_symNS(geneSetsDef,denovoStudies=None):
+    if geneSetsDef=='denovo':
+        geneTerms = vDB.get_denovo_sets(denovoStudies)
+    else:
+        try:
+            geneTerms = giDB.getGeneTerms(geneSetsDef)
+        except:
+            geneTerms = loadGeneTerm(geneSetsDef)
+
+        if geneTerms.geneNS=='id':
+            def rF(x):
+                if x in giDB.genes:
+                    return giDB.genes[x].sym
+            geneTerms.renameGenes("sym", rF)
+
+        if geneTerms.geneNS!='sym':
+            raise Excpetion('Only work with id or sym namespace')
+    return geneTerms
 
 if __name__ == "__main__":
     print "hi"

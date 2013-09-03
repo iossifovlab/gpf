@@ -8,7 +8,7 @@ from collections import Counter
 sd = vDB.get_study('w873e374s322')
 
 dstDist = defaultdict(int) 
-for v in sd.get_transmitted_variants(minAltFreqPrcnt=-1,maxAltFreqPrcnt=-1, effectTypes="synonymous", TMM_ALL=True):
+for v in sd.get_transmitted_variants(minAltFreqPrcnt=5,maxAltFreqPrcnt=-1, effectTypes="synonymous", TMM_ALL=True):
     if len(v.memberInOrder) != 4:
         continue
 
@@ -18,7 +18,8 @@ for v in sd.get_transmitted_variants(minAltFreqPrcnt=-1,maxAltFreqPrcnt=-1, effe
     if st[0,1] + st[1,1] == 1:
         continue
 
-    # only one alternative in parents
+    # This is to test Dist patter
+    # only one alternative in parents 
     if st[1,0] + st[1,1] != 1:
         continue 
 
