@@ -1002,7 +1002,6 @@ class VariantsDB:
                 dt=dt.reshape(1)
                 
             batchId = dirname(fn).split("/")[-2]
-                        
             for dtR in dt:
                 class ValidationVariant:
                     @property
@@ -1037,7 +1036,7 @@ class VariantsDB:
                         return childStr
 
                 v = ValidationVariant()
-
+                
                 v.batchId = batchId 
                 v.atts = { x: dtR[x] for x in dt.dtype.names }
 
@@ -1054,9 +1053,10 @@ class VariantsDB:
 
 
                 v.valParent = ""
-                if 'valparent' in dtR:
+                if 'valparent' in dtR.dtype.names:
                     v.valParent = dtR['valparent']
-
+                else:
+                    print  >>sys.stderr, "Breh, valparent is not in dtR", v.batchId 
 
           
                 if v.familyId in knownFams:
