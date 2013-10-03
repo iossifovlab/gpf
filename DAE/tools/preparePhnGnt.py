@@ -172,7 +172,6 @@ dataSets.append(["recLGDsWE",               getDataSet("allWE",             "LGD
 dataSets.append(["LGDsInFMR1PWEandTG",      getDataSet("allWEAndTG",        "LGDs",geneSetDef="main:FMR1-targets")])
 dataSets.append(["LGDsInFMR1PWE",           getDataSet("allWE",             "LGDs",geneSetDef="main:FMR1-targets")])
 
-
 #dataSets.append(["rareInheritedLGDsInDenovoLGDcandidates", getRareInheritedDataSet(inLGDCandidates=True,maxAllelesInGene=20)])
 #dataSets.append(["rareInheritedLGDs",                     getRareInheritedDataSet(inLGDCandidates=False,maxAllelesInGene=5)])
 

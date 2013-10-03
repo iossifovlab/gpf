@@ -49,6 +49,9 @@ def _ReadMappingFile(inputFile):
     f = open(inputFile)
     for ln in f:
         line = ln.strip().split()
+        if line[0]=='#geneNS':
+            r.geneNS = line[1]
+            continue
         geneId = line[0]
         del line[0]
         for t in line:

@@ -5,6 +5,8 @@ from WeightedSample import WeightedSample
 from tfidf import GetTFIDFMatrix 
 from omnibus import GetOmnibusMatrix
 from MatrixClass import *
+from ExpressionData import load_expression_data_bin
+from MicroarrayTest import ConverttoNums
 from GeneTerms import loadGeneTerm
 
 import numpy as np
@@ -14,6 +16,7 @@ from os.path import splitext
 import glob
 import copy
 import sys
+import scipy 
 
 class PPINetwork:
     def __init__(self, fn): 
@@ -213,8 +216,8 @@ class FunctionalProfiler:
         else:
             raise Exception('Unknown name space: ' + ns)
         
-    def profile_wn(self,wn):
-        gSets,gWghts = self.get_sets_and_weights('id')
+    def profile_wn(self,wn, ns='id'):
+        gSets,gWghts = self.get_sets_and_weights(ns)
         nodeDegrees = weightedNetworkNodeDegrees(wn) 
         
         fpRes = defaultdict(dict)
@@ -234,6 +237,7 @@ class FunctionalProfiler:
                 fpRes[gsN][fixedGenes] = run_wn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, wn)
 
         return fpRes
+
 
     def profile_gts(self,gts,metric='tfidf'):
         gSets,gWghts = self.get_sets_and_weights(gts.geneNS)
@@ -578,7 +582,7 @@ def drawNumberTestData(trName):
     # hist(tr.ntVals.values(),1000)
     plot([tr.ntVals[x] for x in tr.ntSubset],1.0 + randn(len(tr.ntSubset))*max(c.values())/100.0,'ro')
 
-if __name__ == "__main__":
+if __name__ == "__main_test__":
     fp = FunctionalProfiler()
     geneWeightProp = 'refSeqCodingInTargetLen'
 
@@ -588,7 +592,7 @@ if __name__ == "__main__":
     fp.print_res_summary(sys.stdout,fpRes)
 
 
-if __name__ == "__main_real__":
+if __name__ == "__main__":
     fp = FunctionalProfiler()
     cmd = sys.argv[1]
     fn = sys.argv[2]
@@ -605,6 +609,15 @@ if __name__ == "__main_real__":
         if len(sys.argv)>3:
             metric=sys.argv[3]
         fpRes = fp.profile_gts(gts,metric)
+    elif cmd=='expression':
+        SD = load_expression_data_bin(fn) 
+        corrs = scipy.corrcoef(SD.expM)
+        if len(np.nonzero(np.isnan(corrs))[0])>0:
+            raise Exception("There are nan correlations")
+        wn = Matrix(SD.genes['ID'],ConverttoNums(corrs))
+        wn.numbers = np.abs(wn.numbers)
+        wn.numbers[wn.numbers<0.0] = 0.0
+        fpRes = fp.profile_wn(wn,ns=SD.atts['geneIdNS'])
     else:
         raise Exception('Unknown command: |' + cmd + "|")
 
