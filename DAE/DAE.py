@@ -11,6 +11,7 @@ from GeneInfoDB import GeneInfoDB
 from GeneTerms import loadGeneTerm 
 import phenoDB
 from Sfari import SfariCollection
+from GenomesDB import GenomesDB
 
 from Config import *
 config = Config()
@@ -19,6 +20,7 @@ giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
 sfariDB = SfariCollection(config.sfariDBdir)
 phDB = phenoDB.rawTableFactory(config.phenoDBFile)
 vDB = VariantsDB(config.daeDir, config.variantsDBconfFile, sfariDB=sfariDB, giDB=giDB)
+genomesDB = GenomesDB(config.daeDir, config.genomesDBconfFile )
 
 
 def get_gene_sets_symNS(geneSetsDef,denovoStudies=None):
