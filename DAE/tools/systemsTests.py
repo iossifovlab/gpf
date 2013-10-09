@@ -19,7 +19,45 @@ import sys
 import scipy 
 
 class PPINetwork:
-    def __init__(self, fn): 
+    def __init__(self, fn=None, ppn=None):
+        if fn:
+            self._load_from_file(fn)
+        if ppn:
+            self.name = ppn.name
+            self.nbrs = copy.deepcopy(ppn.nbrs)
+            self.nodes = copy.deepcopy(ppn.nodes)
+            
+    def shuffle(self):
+        es = [[a,b] for a in self.nbrs for b in self.nbrs[a] if a<b]
+        random.shuffle(es)
+
+        E = len(es)
+        i = 0
+        failed = 0
+        while i<E-1:
+            # print "i:",i
+            j=i+1
+            while j<E:
+                if len(set(es[i]+es[j]))==4:
+                    break
+                j+=1
+            # if j-i>1:
+            #     print "i:",i,"j:",j,"j-i:",j-i
+            if j<E:
+                es[i][1],es[j][1] = es[j][1],es[i][1] 
+                i+=2
+            else:
+                failed+=1
+                i+=1
+        if i<E:
+            failed+=1
+        # print "failed:", failed, "/", E
+        self.nbrs = defaultdict(lambda : defaultdict(int))
+        for a,b in es:
+            self.nbrs[a][b]+=1
+            self.nbrs[b][a]+=1
+        
+    def _load_from_file(self,fn):
         self.name = splitext(basename(fn))[0]
         self.nodes = {}
         self.nbrs = defaultdict(lambda : defaultdict(int))
@@ -95,6 +133,33 @@ def run_a_test(scrF,gs,ws,withReplacement=False):
             return ts
     return ts
 
+def run_a_PPI_shuffle_test(scrF,ppn):
+    realScr = scrF(ppn)
+
+    class TestResult:
+        pass
+
+    ppnS = PPINetwork(ppn=ppn)
+
+    # for Iter in [100,1000,10000]:
+    for Iter in [100,1000]:
+        ts = TestResult()
+        ts.nBigger = 0
+        ts.randScrs = []
+        ts.Iter = Iter
+        ts.realScr = realScr
+
+        for i in xrange(Iter):  
+            ppn.shuffle()
+            rScr = scrF(ppn)
+            ts.randScrs.append(rScr)
+            if rScr >= realScr:
+                ts.nBigger+=1
+        ts.pVal = float(ts.nBigger)/Iter
+        if ts.nBigger > 4 and ts.nBigger < Iter - 4:
+            return ts
+    return ts
+
 def run_in_set_test(genes, geneWeights, inSet):
     sbWghts = geneWeights
     ws = WeightedSample(sbWghts)
@@ -121,8 +186,21 @@ def run_ppn_sc_test(genes, geneWeights, ppn):
 
     return run_a_test(scrF,gns,ws)
 
+def run_ppn_sc_shuffle_test(genes, ppn):
+    gns = [x for x in genes if x in ppn.nodes]
+
+    if len(gns)==0:
+        return
+
+    def scrF(ppn):
+        return ppn.nInternalInters(gns)
+
+    return run_a_PPI_shuffle_test(scrF,ppn)
+
 def run_ppn_link_test(genesFixed, genes, geneWeights, ppn):
     genesFixedS = {g for g in genesFixed if g in ppn.nodes} 
+    if len(genesFixedS)==0:
+        return
     sbWghts = {g:w for g,w in geneWeights.items() if g in ppn.nodes and g not in genesFixedS} 
     ws = WeightedSample(sbWghts)
     gns = [x for x in genes if x in sbWghts and x not in genesFixedS]
@@ -135,6 +213,18 @@ def run_ppn_link_test(genesFixed, genes, geneWeights, ppn):
 
     return run_a_test(scrF,gns,ws)
 
+def run_ppn_link_shuffle_test(genesFixed, genes, ppn):
+    genesFixedS = {g for g in genesFixed if g in ppn.nodes} 
+    if len(genesFixedS)==0:
+        return
+    gns = [x for x in genes if x in ppn.nodes and x not in genesFixedS]
+    if len(gns)==0:
+        return
+
+    def scrF(ppn):
+        return ppn.nBetweenInters(genesFixedS,gns)
+
+    return run_a_PPI_shuffle_test(scrF,ppn)
 
 def run_wn_sc_test(genes, geneWeights, wn):
     sbWghts = {g:w for g,w in geneWeights.items() if g in wn.geneIdToIndex} 
@@ -278,7 +368,7 @@ class FunctionalProfiler:
 
         return fpRes
 
-    def profile_ppn(self,ppn):
+    def profile_ppn(self,ppn,shuffle=False):
         gSets,gWghts = self.get_sets_and_weights('id')
 
         fpRes = defaultdict(dict)
@@ -297,11 +387,17 @@ class FunctionalProfiler:
             fpRes[gsN]['clustCoef'] = run_number_test(gsGs, gWghts, {ni.nId:ni.clustCoef for ni in ppn.nodes.values()} )
 
             print >>sys.stderr, gsN,'sc ...'
-            fpRes[gsN]['sc'] = run_ppn_sc_test(gsGs, gWghts, ppn)
+            if shuffle:
+                fpRes[gsN]['sc'] = run_ppn_sc_shuffle_test(gsGs, ppn)
+            else:
+                fpRes[gsN]['sc'] = run_ppn_sc_test(gsGs, gWghts, ppn)
 
             for fixedGenes in self.toGeneSets:
                 print >>sys.stderr, gsN,fixedGenes,'...'
-                fpRes[gsN][fixedGenes] = run_ppn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, ppn)
+                if shuffle:
+                    fpRes[gsN][fixedGenes] = run_ppn_link_shuffle_test(gSets.t2G[fixedGenes], gsGs, ppn)
+                else:
+                    fpRes[gsN][fixedGenes] = run_ppn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, ppn)
         return fpRes
 
     def profile_gene_scalar(self,scalar,keyNS='sym'):
@@ -599,7 +695,10 @@ if __name__ == "__main__":
 
     if cmd=="ppn":
         ppn = PPINetwork(fn)
-        fpRes = fp.profile_ppn(ppn)
+        shuffle = False
+        if len(sys.argv)>3:
+            shuffle=bool(sys.argv[3])
+        fpRes = fp.profile_ppn(ppn,shuffle)
     elif cmd=='wn':
         wn = Matrix(fn)
         fpRes = fp.profile_wn(wn)
