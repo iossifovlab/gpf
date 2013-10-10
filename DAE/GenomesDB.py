@@ -38,6 +38,7 @@ class GenomesDB:
 
         self.defaultGenome = self.config.get('genomes', 'defaultGenome')
         self._geneModels = {}
+        self._mitoGeneModels = {}
 
     def get_genome(self, genomeId=None):
         if not genomeId:
@@ -57,6 +58,26 @@ class GenomesDB:
             gmDb = load_gene_models(geneModelFile)
             self._geneModels[key] = gmDb
         return self._geneModels[key]
+
+    def get_mito_genome(self, mitoGenomeId=None):
+        if not mitoGenomeId:
+            mitoGenomeId = self.config.get('mito_genomes', 'defaultMitoGenome')
+        mitoGenomeFile = self.config.get('mito_genome.' + genomeId, 'chrAllFile')
+        return openRef(mitoGenomeFile)
+
+    def get_mt_gene_models(self, mitoGeneModelId=None, mitoGenomeId=None):
+        if not mitoGenomeId:
+            mitoGenomeId = self.config.get('mito_genomes', 'defaultMitoGenome')
+        if not mitoGeneModelId:
+            mitoGeneModelId = self.config.get('mito_genome.' + mitoGenomeId, 'defaultGeneModel')
+        key = mitoGenomeId + mitoGeneModelId
+        if key not in self._mitoGeneModels:
+            mitoGeneModelFile = self.config.get('mito_genome.' + mitoGenomeId, 'geneModel.' + mitoGeneModelId + '.file')
+            mmDb = load_gene_models(mitoGeneModelFile)
+            self._mitoGeneModels[key] = mmDb
+        return self._mitoGeneModels[key]
+
+    
     
 # GA = genomesDB.get_GA()
 # GA = genomesDB.getGA("hg19")

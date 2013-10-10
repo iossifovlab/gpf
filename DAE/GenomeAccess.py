@@ -122,12 +122,9 @@ class GenomicSequence_Ivan:
     allChromosomes = None
 
     
-    def __createIndexFile(self, file=None):
+    def __createIndexFile(self, file):
 
         from pysam import faidx
-        
-        if file == None:
-            file = self.genomicSeq
 
         faidx(file)
 
@@ -169,7 +166,7 @@ class GenomicSequence_Ivan:
     def _load_genome(self, file):
 
         if os.path.exists(file + ".fai") == False:
-            self.__createIndexFile()
+            self.__createIndexFile(file)
 
         self.genomicIndexFile =  file + ".fai"
         self.genomicFile = file

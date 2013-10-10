@@ -14,7 +14,7 @@ class AbstractClassDoNotInstantiate:
     name = None #"refseq"
     location = None #"/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz"
     _shift = None #1
-    DictNames = None
+    Alternative_names = None
     
 class TranscriptModel:
    
@@ -293,14 +293,14 @@ class GeneModels(AbstractClassDoNotInstantiate):
         if self.name != "knowngene":
             if self.name == "refseq":
                 try:
-                    gene = self.DictNames[line[12]]
+                    gene = self.Alternative_names[line[12]]
                 except:
                     gene = line[12]
                 trName = line[1] + "_1"
                
             else:
                 try:
-                    gene = self.DictNames[line[1]]
+                    gene = self.Alternative_names[line[1]]
                 except:
                     gene = line[1]
                 trName = line[1]  + "_1"
@@ -311,7 +311,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
            
         else:
             try:
-                gene = self.DictNames[line[0]]
+                gene = self.Alternative_names[line[0]]
             except:
                 gene = line[0]
             trName = line[0] + "_1"
@@ -439,14 +439,14 @@ class GeneModels(AbstractClassDoNotInstantiate):
     
     def _create_gene_model_dict(self, location=None, gene_mapping_file = None):
 
-        self.DictNames={}
+        self.Alternative_names={}
         if gene_mapping_file != None:
             if gene_mapping_file.endswith(".gz"):
                 dict_file = gzip.open(gene_mapping_file)
             else:
                 dict_file = open(gene_mapping_file)
             dict_file.readline()
-            self.DictNames = dict([(line.split()[0],line.split()[1]) for line in dict_file])
+            self.Alternative_names = dict([(line.split()[0],line.split()[1]) for line in dict_file])
             dict_file.close()
        
         if location == None:
@@ -548,7 +548,7 @@ class RefSeq(GeneModels):
     name = "refseq"
     location = "/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz"
     _shift = 1
-    DictNames = None    
+    Alternative_names = None    
 
 class KnownGene(GeneModels):
 
@@ -556,20 +556,20 @@ class KnownGene(GeneModels):
     name="knowngene"
     location = "/data/unsafe/autism/genomes/hg19/geneModels/knownGene.txt.gz"
     _shift = 0
-    DictNames = None       
+    Alternative_names = None       
         
 class Ccds(GeneModels):
 
     name="ccds"
     location = "/data/unsafe/autism/genomes/hg19/geneModels/ccdsGene.txt.gz"
     _shift = 1
-    DictNames = None
+    Alternative_names = None
 
 class MitoModel(GeneModels):
 
     name = "mitomap"
     location = "/data/unsafe/autism/genomes/hg19/geneModels/mitomap.txt"
-    DictNames = None
+    Alternative_names = None
 
     def _create_gene_model_dict(self, file_name):
 
@@ -676,7 +676,45 @@ def create_region(chrom, b, e):
 
 
 
-def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz", gene_mapping_file="default"):
+def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz", gene_mapping_file="default", format=None):
+
+    if format != None:
+
+
+        if format.lower() == "refseq":
+            gm = RefSeq()  
+            gm.utrModels = {}
+            gm.transcriptModels = {}
+            gm.geneModels = {}
+            if gene_mapping_file == "default":
+                gene_mapping_file = None
+            gm.location = file_name
+            gm._create_gene_model_dict(file_name, gene_mapping_file)
+        elif format.lower() == "ccds":
+            gm = Ccds()
+            gm.utrModels = {}
+            gm.transcriptModels = {}
+            gm.geneModels = {}
+            if gene_mapping_file == "default":
+                gene_mapping_file = os.path.dirname(file_name) + "/ccdsId2Sym.txt.gz"
+            gm.location = file_name
+            gm._create_gene_model_dict(file_name, gene_mapping_file)
+        elif format.lower() == "knowngene":
+            gm = KnownGene()
+            gm.utrModels = {}
+            gm.transcriptModels = {}
+            gm.geneModels = {}
+            if gene_mapping_file == "default":
+                gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"    
+            gm.location = file_name
+            gm._create_gene_model_dict(file_name, gene_mapping_file)
+        else:
+            print("Unrecognizable format! Choose between: 'refseq', 'ccds' and 'knowngene'")
+            sys.exit(-1098)
+
+        return gm
+
+
 
     if file_name.endswith("refGene.txt.gz"):
         gm = RefSeq()
@@ -686,7 +724,7 @@ def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refG
         gm.geneModels = {}
 
         if gene_mapping_file == "default":
-             gene_mapping_file = None
+            gene_mapping_file = None
 
     
         gm.location = file_name
@@ -699,8 +737,7 @@ def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refG
         gm.transcriptModels = {}
         gm.geneModels = {}
         if gene_mapping_file == "default":
-             gene_mapping_file = "/data/unsafe/autism/genomes/hg19/geneModels/ccdsId2Sym.txt.gz"
-               
+            gene_mapping_file = os.path.dirname(file_name) + "/ccdsId2Sym.txt.gz"
         gm.location = file_name
         gm._create_gene_model_dict(file_name, gene_mapping_file)
         
@@ -713,8 +750,7 @@ def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refG
         gm.geneModels = {}
 
         if gene_mapping_file == "default":
-             gene_mapping_file = "/data/unsafe/autism/genomes/hg19/geneModels/kgId2Sym.txt.gz"
-        
+            gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"        
         gm.location = file_name
         gm._create_gene_model_dict(file_name, gene_mapping_file)
         

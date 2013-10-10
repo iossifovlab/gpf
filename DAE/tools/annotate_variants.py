@@ -1,6 +1,6 @@
 #!/bin/env python
 
-# Oct 7th 2013
+# Oct 9th 2013
 # written by Ewa
 
 import optparse
@@ -12,13 +12,13 @@ import VariantAnnotation
 import VariantAnnotation_mito
 import time
 import datetime
+from DAE import *
 
 start=time.time()
 
 desc = """Program to annotate variants (substitutions & indels & cnvs)"""
 parser = optparse.OptionParser(version='%prog version 2.1 07/October/2013', description=desc)
-parser.add_option('-f', help='input file path [MANDATORY FIELD!]', action='store', type='string', dest='inputFile')
-parser.add_option('-o', help='output file path [MANDATORY FIELD!]', action='store', type='string', dest='outputFile')
+
 parser.add_option('-c', help='chromosome column number/name', action='store')
 parser.add_option('-p', help='position column number/name', action='store')
 parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
@@ -31,25 +31,38 @@ parser.add_option('-l', help ='length column number/name', action='store')
 
 parser.add_option('-P', help='promoter length', default=0, action='store', type='int', dest = "prom_len")
 parser.add_option('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
-parser.add_option('-T', help='gene model file path [refseq by default]', default="/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz"  , type='string', action='store')
-parser.add_option('-C', help='mitochondrial gene model file path [mitomap by default]', default="/data/unsafe/autism/genomes/hg19/geneModels/mitomap.txt"  , type='string', action='store') 
 
-parser.add_option('-G', help='genome seq fasta file [GATK-hg19 by default]', default="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa"  , type='string', action='store')
-parser.add_option('-M', help='mitochondrial genome seq fasta file [GATK-hg19 by default]', default="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa"  , type='string', action='store')
-parser.add_option('-I', help='geneIDs mapping file [by default geneId files from /data/unsafe/autism/genomes/hg19/geneModels/]; use None for no gene name mapping', default="default"  , type='string', action='store')
+parser.add_option('-T', help='gene models ID <RefSeq, CCDS, knownGene>', type='string', action='store')
+parser.add_option('--Traw', help='outside gene models file path', type='string', action='store')
+parser.add_option('--TrawFormat', help='outside gene models format (refseq, ccds, knowngene)', type='string', action='store') 
+parser.add_option('--Craw', help='mitochondrial gene models file', type='string', action='store') 
+parser.add_option('--CrawFormat', help='outside mitochondrial gene models format <refseq, ccds, knowngene>', type='string', action='store')
+
+parser.add_option('-G', help='genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ', type='string', action='store')
+parser.add_option('--Graw', help='outside genome file', type='string', action='store')
+parser.add_option('--Mraw', help='outside mitochondrial genome file', type='string', action='store')
+
+parser.add_option('-I', help='geneIDs mapping file; use None for no gene name mapping', default="default"  , type='string', action='store')
 
 (opts, args) = parser.parse_args()
 
-if opts.inputFile == None:
-    parser.error('Input filename not given')
-if opts.outputFile == None:
-    parser.error('Output filename not given')
-if os.path.exists(opts.inputFile) == False:
+
+
+if len(args) == 0:
+    print('Input filename not specified')
+    sys.exit(-324)
+if os.path.exists(args[0]) == False:
     print("The given input file does not exist!")
     sys.exit(-78)
+infile = args[0]
+if len(args) == 1:
+    outfile = None
+else:
+    outfile = args[1]
+
 
 if opts.no_header == False:
-    f = open(opts.inputFile)
+    f = open(infile)
     first_line = f.readline()
     f.close()
     first_line = first_line.split()
@@ -65,6 +78,7 @@ def give_column_number(s, header):
         print ("Used parameter: " + s + " does NOT exist in the input file header")
         sys.exit(-678)
 
+
 def assign_values(param):
     if param == None:
         return(param)
@@ -76,6 +90,7 @@ def assign_values(param):
             sys.exit(-49)
         param = give_column_number(param, first_line)
     return(param)
+
 
 def deal_with_old_format(s):
     
@@ -90,17 +105,6 @@ def deal_with_old_format(s):
                 s = r.group(1)
 
     return(s)
-
-        
-chrCol = assign_values(opts.c)
-posCol = assign_values(opts.p)
-locCol = assign_values(opts.x)
-varCol = assign_values(opts.v)
-altCol = assign_values(opts.a)
-refCol = assign_values(opts.r)
-typeCol = assign_values(opts.t)
-seqCol = assign_values(opts.q)
-lengthCol = assign_values(opts.l)
 
 
 
@@ -192,46 +196,87 @@ def parseInputFileRow(line):
              
     return(chr, int(pos), type, seq, length, ref)
         
-        
-
 
 if opts.x == None and opts.c == None:
-    parser.error('Chromosome / location column number (-c/-x option) not given!')    
-if opts.x == None and opts.p == None:
-    parser.error('Position column number (-c option) not given!')
-if opts.x and (opts.c or opts.p):
-    parser.error('Redundant information. Please specify either -x option or both -c and -p options')
+    opts.x = "location"
 if (opts.v == None and opts.a == None) and (opts.v == None and (opts.t == None or opts.q == None or opts.l == None)):
-    parser.error("""You must specify how variants are described in the input file! choose parameters from:
-    \t1) -v (column format examples: sub(A->C), ins(AA), del(3), cnv+)
-    \tor
-    \t2) -a (for substitutions only)
-    \tor
-    \t3) -t -q -l (for indels)""")
+    opts.v = "variant"
+        
+chrCol = assign_values(opts.c)
+posCol = assign_values(opts.p)
+locCol = assign_values(opts.x)
+varCol = assign_values(opts.v)
+altCol = assign_values(opts.a)
+refCol = assign_values(opts.r)
+typeCol = assign_values(opts.t)
+seqCol = assign_values(opts.q)
+lengthCol = assign_values(opts.l)
 
+if opts.I == "None":
+    opts.I = None
 
-gm = load_gene_models(opts.T, opts.I)
+#########################################################
+if opts.G == None and opts.Graw == None:
+    GA = genomesDB.get_genome()
+    if opts.T == None and opts.Traw == None:
+        gmDB = genomesDB.get_gene_models()
+    elif opts.Traw == None:
+        gmDB = genomesDB.get_gene_models(opts.T)
+    else:
+        gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
+    
 
-if opts.T == opts.C:
-    gm_mit = gm
+elif opts.Graw == None:
+    GA = genomesDB.get_genome(opts.G)
+    if opts.T == None and opts.Traw == None:
+        gmDB = genomesDB.get_gene_models(genome=opts.G)
+    elif opts.Traw == None:
+        gmDB = genomesDB.get_gene_models(opts.T, genome=opts.G)
+    else:
+        gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
+
 else:
-    gm_mit = load_gene_models(opts.C, opts.I) 
+    GA = GenomeAccess.openRef(opts.Graw)
+    if opts.Traw == None:
+        print("This genome requires gene models (--Traw option)")
+        sys.exit(-783)
+    gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
+    
+
+if "1" in GA.allChromosomes and "1" not in gmDB.utrModels.keys():
+    gmDB.relabel_chromosomes()
+
+
+print("GENOME: " + GA.genomicFile)
+
+print("GENE MODEL FILES: " + gmDB.location)
+
+
+
+"""
+if opts.Mraw == None:
+    GM = genomesDB.get_mito_genome()  # to be created
+    if opts.Craw == None:
+        mmDB = genomesDB.get_mt_gene_models()
+    else:
+        mmDB = load_gene_models(opts.Craw, opts.I, opts.CrawFormat)
+else:
+    GM = GenomeAccess.openRef(opts.Mraw)
+    if opts.Craw == None:
+        print("The mitochondrial genome requires gene models (--Craw option)")
+        sys.exit(-784)
+    mmDB = load_gene_models(opts.Craw, opts.I, opts.CrawFormat)
+
+
+if "1" in GM.allChromosomes and "1" not in mmDB.utrModels.keys():
+    mmDB.relabel_chromosomes()    
+    
+"""
+#####################################################
+
 
     
-ref_hg = GenomeAccess.openRef(opts.G)
-if opts.G == opts.M:
-    ref_mt = ref_hg
-else:
-    ref_mt = GenomeAccess.openRef(opts.M)
-
-
-if "1" in ref_hg.allChromosomes:
-    gm.relabel_chromosomes()
-
-if "1" in ref_mt.allChromosomes:
-    gm_mit.relabel_chromosomes()
-
-variantFile = open(opts.inputFile)
+variantFile = open(infile)
 
 
 
@@ -241,43 +286,46 @@ if opts.no_header == False:
     resFile.write("effectType\teffectGene\teffectDetails\n")
     line = variantFile.readline()
 
-
-while True:
-    line = variantFile.readline()
-    if not line:
-        break
+print("...processing....................")
+k = 0
+for line in variantFile:
     if line[0] == "#":
         resFile.write("\n")        
-    
-
-
         continue
+    k += 1
+    if k%10000 == 0:
+        print(str(k) + " lines processed")
     
     chrom, pos, type, sequence, l, refNt = parseInputFileRow(line)
     
     if chrom in ["chrM", "M", "MT"]:
         v = VariantAnnotation_mito.load_variant(chr=chrom, position=pos, ref=refNt, length=l, seq=sequence, typ=type)
-        effects = v.annotate(gm_mit, ref_mt, display=False)
+        effects = v.annotate(mmDB, GM, display=False)
         desc = VariantAnnotation_mito.effect_description(effects)
         resFile.write("\t".join(desc) + "\n")
     else:
         v = VariantAnnotation.load_variant(chr=chrom, position=pos, ref=refNt, length=l, seq=sequence, typ=type)
-        effects = v.annotate(gm, ref_hg, display=False, promoter_len = opts.prom_len)
+        effects = v.annotate(gmDB, GA, display=False, promoter_len = opts.prom_len)
         desc = VariantAnnotation.effect_description(effects)
         resFile.write("\t".join(desc) + "\n")
 
+
 variantFile.close()
 resFile.close()
-call("paste " + opts.inputFile + " tempRes.txt > " + opts.outputFile, shell=True)
-
+if outfile != None:
+    call("paste " + infile + " tempRes.txt > " + outfile, shell=True)
+    file = open(outfile, 'a')
+    file.write("# PROCESSING DETAILS:\n")
+    file.write("# " + time.asctime() + "\n")
+    file.write("# " + " ".join(sys.argv) + "\n")
+    print("Output file saved as: " + outfile)
+else:
+    call("paste " + infile + " tempRes.txt", shell=True)
+    print("# PROCESSING DETAILS:\n# " + time.asctime() + "\n# " + " ".join(sys.argv))
+    
 os.remove("tempRes.txt")
 
-file = open(opts.outputFile, 'a')
-file.write("# PROCESSING DETAILS:\n")
-file.write("# " + time.asctime() + "\n")
-file.write("# " + " ".join(sys.argv) + "\n")
 
-print("Output file saved as: " + opts.outputFile)
 print("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start,0))))
 
 
