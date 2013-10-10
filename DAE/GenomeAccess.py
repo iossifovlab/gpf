@@ -3,11 +3,12 @@
 # June 6th 2013
 # by Ewa
 
-import sys
+import sys, os
 
 class GenomicSequence_Dan:
     
-    seq_dic = None
+    _seq_dic = None
+    genomicFile = None
     allChromosomes = None
 
     def createSeqDic(self, outputDir = "./", genome_location = None):
@@ -85,30 +86,43 @@ class GenomicSequence_Dan:
         seq_pickle = outputDir + "seqDic_upper.dump"
         pickle.dump(SeqDic, open(seq_pickle, 'wb'))
 
-    def loadPickleSeq(self, file="/data/unsafe/autism/genomes/hg19/seqDic_upper.dump"):
+    def __loadPickleSeq(self, file="/data/unsafe/autism/genomes/hg19/seqDic_upper.dump"):
         import pickle
         pkl_file = open(file, 'rb')
-        self.seq_dic = pickle.load(pkl_file)
+        self._seq_dic = pickle.load(pkl_file)
         pkl_file.close()
         
     def close(self):
 
         pass
+
+    def _load_genome(self, file):
+        
+        self.genomicFile = file
+        self.__loadPickleSeq(file)
+        self.allChromosomes = self._seq_dic.keys()
+        return(self)
+
+    def get_chr_length(self, chrom):
+        try:
+            return(len(self._seq_dic[chrom]))
+        except KeyError:
+            print("Unknown chromosome!")    
     
     def getSequence(self, chr, start, stop):
 
-        return self.seq_dic[chr][start-1:stop]
+        return self._seq_dic[chr][start-1:stop]
 
         
 
 class GenomicSequence_Ivan:
 
-    genomicSeq = "/mnt/wigclust8/data/unsafe/autism/genomes/hg19/chrAll.fa"
-    genomicIndexFile = "/mnt/wigclust8/data/unsafe/autism/genomes/hg19/chrAll.fa.fai"
+    genomicFile = None
+    genomicIndexFile = None
     allChromosomes = None
 
     
-    def createIndexFile(self, file=None):
+    def __createIndexFile(self, file=None):
 
         from pysam import faidx
         
@@ -118,7 +132,7 @@ class GenomicSequence_Ivan:
         faidx(file)
 
 
-    def chromNames(self):
+    def __chromNames(self):
 
         file = open(self.genomicIndexFile)
 
@@ -135,25 +149,42 @@ class GenomicSequence_Ivan:
 
         self.allChromosomes = Chr
 
-    def initiate(self):
-        self.Indexing = {}
+    def __initiate(self):
+        self._Indexing = {}
         f = open(self.genomicIndexFile, 'r')
         while True:
             line = f.readline()
             if not line:
                 break
             line = line.split()
-            self.Indexing[line[0]] = {'length': int(line[1]), 'startBit': int(line[2]), 'seqLineLength': int(line[3]), 'lineLength': int(line[4])}
+            self._Indexing[line[0]] = {'length': int(line[1]), 'startBit': int(line[2]), 'seqLineLength': int(line[3]), 'lineLength': int(line[4])}
         f.close()
 
-        self.f = open(self.genomicSeq, 'r')
+        self.__f = open(self.genomicFile, 'r')
 
     def close(self):
 
-        self.f.close()
-        
-        
- 
+        self.__f.close()
+
+    def _load_genome(self, file):
+
+        if os.path.exists(file + ".fai") == False:
+            self.__createIndexFile()
+
+        self.genomicIndexFile =  file + ".fai"
+        self.genomicFile = file
+        self.__chromNames()
+        self.__initiate()
+
+        return(self)
+
+    def get_chr_length(self, chrom):
+
+        try:
+            return(self._Indexing[chrom]['length'])
+        except KeyError:
+            print("Unknown chromosome!")
+            
     def getSequence(self, chr, start, stop):
         
         
@@ -161,24 +192,21 @@ class GenomicSequence_Ivan:
             print("Unknown chromosome!")
             return(-1)
 
-        self.f.seek(self.Indexing[chr]['startBit']+start-1+(start-1)/self.Indexing[chr]['seqLineLength'])
+        self.__f.seek(self._Indexing[chr]['startBit']+start-1+(start-1)/self._Indexing[chr]['seqLineLength'])
         
         l = stop-start+1
-        x = 1 + l/self.Indexing[chr]['seqLineLength']
+        x = 1 + l/self._Indexing[chr]['seqLineLength']
         
-        w = self.f.read(l+x)
+        w = self.__f.read(l+x)
         w = w.replace("\n", "")[:l]
         
        
-        return w.upper() 
+        return w.upper()
+
         
-    
 
 
-
-def openRef(file="/mnt/wigclust8/data/unsafe/autism/genomes/hg19/chrAll.fa"):
-
-    import os
+def openRef(file="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa"):
 
     if os.path.exists(file) == False:
         print("The input file: " + file + " does NOT exist!")
@@ -188,25 +216,12 @@ def openRef(file="/mnt/wigclust8/data/unsafe/autism/genomes/hg19/chrAll.fa"):
     if file.endswith('.fa'):
         # ivan's method
         g_a = GenomicSequence_Ivan()
-        g_a.file_name = file
-        g_a.genomicSeq = file
-
-        if os.path.exists(file + ".fai") == False:
-            g_a.createIndexFile()
-
-        g_a.genomicIndexFile =  file + ".fai"
-        g_a.chromNames()
-        g_a.initiate()
-        return(g_a)
+        return(g_a._load_genome(file))
         
     elif file.endswith('.dump'):
         # dan's method
         g_a = GenomicSequence_Dan()
-        g_a.file_name = file
-        g_a.loadPickleSeq(file)
-        g_a.allChromosomes = g_a.seq_dic.keys()
-        return(g_a)
-
+        return(g_a._load_genome(file))
 
     else:
         print("Unrecognizable format of the file: " + file)

@@ -29,33 +29,73 @@ class PPINetwork:
             
     def shuffle(self):
         es = [[a,b] for a in self.nbrs for b in self.nbrs[a] if a<b]
+        # print "0:",len(es)
         random.shuffle(es)
+        print "OO:", " ".join([a+b for a,b in es])
+        # print "1:",len(es)
+
 
         E = len(es)
         i = 0
-        failed = 0
-        while i<E-1:
-            # print "i:",i
-            j=i+1
-            while j<E:
-                if len(set(es[i]+es[j]))==4:
-                    break
-                j+=1
-            # if j-i>1:
-            #     print "i:",i,"j:",j,"j-i:",j-i
-            if j<E:
+       
+        newNbrs = defaultdict(lambda : defaultdict(int))
+        processedI = set()
+
+        def proc(i):
+            if es[i][0] == es[i][1]:
+                x10
+
+            if es[i][1] in newNbrs[es[i][0]]:
+                x10
+
+            newNbrs[es[i][0]][es[i][1]]+=1
+            newNbrs[es[i][1]][es[i][0]]+=1
+            processedI.add(i)
+
+        def swap(i,j):
+            def intS(i):
+                e = es[i]
+                return e[0]+e[1] if e[0] < e[1] else e[1]+e[0]
+            print "Swap attempt: i: %d, j: %d [%s <-> %s]" % (i,j,intS(i),intS(j)),
+            if len(set(es[i]+es[j]))!=4:
+                print "FAIL 1"
+                return False 
+
+            if es[i][0] not in newNbrs[es[j][1]] and es[i][1] not in newNbrs[es[j][0]]:
                 es[i][1],es[j][1] = es[j][1],es[i][1] 
-                i+=2
-            else:
-                failed+=1
-                i+=1
-        if i<E:
-            failed+=1
+                proc(i)
+                proc(j)
+                print "Success 1: [%s <-> %s]" % (intS(i),intS(j))
+                return True
+
+            if es[i][0] not in newNbrs[es[j][0]] and es[i][1] not in newNbrs[es[j][1]]:
+                es[i][1],es[j][0] = es[j][0],es[i][1] 
+                proc(i)
+                proc(j)
+                print "Success 2: [%s <-> %s]" % (intS(i),intS(j))
+                return True
+
+            print "FAIL 2"
+            return False
+        
+        for i in xrange(E):
+            if i in processedI:
+                continue
+            for j in xrange(i+1,E):
+                if j in processedI:
+                    continue
+                
+                if swap(i,j):
+                    break
+            if i not in processedI:
+                proc(i)
+               
+        # print "2:",len(es)
+
         # print "failed:", failed, "/", E
-        self.nbrs = defaultdict(lambda : defaultdict(int))
-        for a,b in es:
-            self.nbrs[a][b]+=1
-            self.nbrs[b][a]+=1
+        self.nbrs = newNbrs
+
+        # print "at the end:", len([[a,b] for a in self.nbrs for b in self.nbrs[a] if a<b])
         
     def _load_from_file(self,fn):
         self.name = splitext(basename(fn))[0]
@@ -72,6 +112,7 @@ class PPINetwork:
             self.nbrs[g1Id][g2Id]+=1
             self.nbrs[g2Id][g1Id]+=1
         f.close()
+        '''
         propsFn = splitext(fn)[0]+"-nodeProps.txt"
         pf = open(propsFn)
         pf.readline()
@@ -94,6 +135,7 @@ class PPINetwork:
         intersection = set(self.nodes) & set(self.nbrs) 
         if len(intersection) != len(self.nodes) or len(intersection) != len(self.nbrs):
             raise Excpetion('The network and the node properties do not match')
+        '''
 
     def nInternalInters(self,nodeSubset):
         return len([1 for nd in nodeSubset for nbr in self.nbrs[nd] if nbr in nodeSubset])
@@ -687,8 +729,27 @@ if __name__ == "__main_test__":
     fpRes = fp.profile_gene_scalar(scalar,'id')
     fp.print_res_summary(sys.stdout,fpRes)
 
-
 if __name__ == "__main__":
+    fp = FunctionalProfiler()
+    # ppn = PPINetwork("/home/iossifov/work/T115/PPI/hprd-ppimap.txt")
+    # gSets,gWghts = fp.get_sets_and_weights('id')
+    def netProfile(ppn):
+        return "%d %d %s" % (len(ppn.nbrs), len([(a,b) for a in ppn.nbrs for b in ppn.nbrs[a] if a < b]), ",".join(["%s:%d" % (n,len(ppn.nbrs[n])) for n in sorted(ppn.nbrs.keys())]))
+    
+    ppn = PPINetwork("tPpn.txt")
+    ppnProf = netProfile(ppn)
+    
+    cc = Counter()
+    for i in xrange(100):
+        print "SHUFFLEE"
+        ppn.shuffle()
+        if netProfile(ppn) != ppnProf:
+            x10
+        cc[" ".join(sorted([a+b for a in ppn.nbrs for b in ppn.nbrs[a] if a < b]))]+=1
+    for n,c in cc.items():
+        print n, c
+
+if __name__ == "__rll_main__":
     fp = FunctionalProfiler()
     cmd = sys.argv[1]
     fn = sys.argv[2]

@@ -7,6 +7,7 @@ print genomesDB
 GA = genomesDB.get_genome()
 GA2 = genomesDB.get_genome('hg19')
 
+
 print GA.getSequence("1", 1000000,1000010)
 print GA2.getSequence("chr1", 1000000,1000010)
 
