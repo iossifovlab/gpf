@@ -17,8 +17,8 @@ from DAE import *
 start=time.time()
 
 desc = """Program to annotate variants (substitutions & indels & cnvs)"""
-parser = optparse.OptionParser(version='%prog version 2.1 07/October/2013', description=desc)
-
+parser = optparse.OptionParser(version='%prog version 2.2 10/October/2013', description=desc, add_help_option=False)
+parser.add_option('-h', '--help', default=False, action='store_true')
 parser.add_option('-c', help='chromosome column number/name', action='store')
 parser.add_option('-p', help='position column number/name', action='store')
 parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
@@ -30,7 +30,7 @@ parser.add_option('-q', help='seq column number/name', action='store')
 parser.add_option('-l', help ='length column number/name', action='store')
 
 parser.add_option('-P', help='promoter length', default=0, action='store', type='int', dest = "prom_len")
-parser.add_option('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
+parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
 
 parser.add_option('-T', help='gene models ID <RefSeq, CCDS, knownGene>', type='string', action='store')
 parser.add_option('--Traw', help='outside gene models file path', type='string', action='store')
@@ -48,6 +48,33 @@ parser.add_option('-I', help='geneIDs mapping file; use None for no gene name ma
 
 
 
+if opts.help:
+    print("\n\n----------------------------------------------------------------\n\nProgram to annotate genomic variants - by Ewa, v2.2, 10/Oct/2013" )
+    print("BASIC USAGE: annotate_variant.py INFILE <OUTFILE> <options>\n")
+    print("-h, --help                       show this help message and exit")
+    print("-c CHROM                         chromosome column number/name ")
+    print("-p POS                           position column number/name")
+    print("-x LOC                           location (chr:pos) column number/name ")
+    print("-v VAR                           variant column number/name ")
+    print("-a ALT                           alternative allele (FOR SUBSTITUTIONS ONLY) column number/name")
+    print("-r REF                           reference allele (FOR SUBSTITUTIONS ONLY) column number/name")
+    print("-t TYPE                          type of mutation column number/name ")
+    print("-q SEQ                           seq column number/name ")
+    print("-l LEN                           length column number/name")
+    print("-P PROM_LEN                      promoter length ")
+    print("-H                               no header in the input file ")
+    print("-T T                             gene models ID <RefSeq, CCDS, knownGene> ")
+    print("--Traw=TRAW                      outside gene models file path")
+    print("--TrawFormat=TRAWFORMAT          outside gene models format (refseq, ccds, knowngene)")
+    print("--Craw=CRAW                      mitochondrial gene models file ")
+    print("--CrawFormat=CRAWFORMAT          outside mitochondrial gene models format (refseq,ccds, knowngene)")
+    print("-G G                             genome ID (GATK_ResourceBundle_5777_b37_phiX174, hg19)")
+    print("--Graw=GRAW                      outside genome file ")
+    print("--Mraw=MRAW                      outside mitochondrial genome file ")
+    print("-I I                             geneIDs mapping file; use None for no gene name mapping ")
+    print("\n----------------------------------------------------------------\n\n")
+
+    
 if len(args) == 0:
     print('Input filename not specified')
     sys.exit(-324)
@@ -253,7 +280,6 @@ print("GENE MODEL FILES: " + gmDB.location)
 
 
 
-"""
 if opts.Mraw == None:
     GM = genomesDB.get_mito_genome()  # to be created
     if opts.Craw == None:
@@ -271,7 +297,11 @@ else:
 if "1" in GM.allChromosomes and "1" not in mmDB.utrModels.keys():
     mmDB.relabel_chromosomes()    
     
-"""
+
+print("\nMITOCHONDRIAL GENOME: " + GM.genomicFile)
+
+print("MITOCHONDRIAL GENE MODEL FILES: " + mmDB.location)
+
 #####################################################
 
 

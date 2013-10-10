@@ -205,6 +205,7 @@ class GenomicSequence_Ivan:
 
 def openRef(file="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa"):
 
+
     if os.path.exists(file) == False:
         print("The input file: " + file + " does NOT exist!")
         sys.exit(-100)

@@ -62,7 +62,7 @@ class GenomesDB:
     def get_mito_genome(self, mitoGenomeId=None):
         if not mitoGenomeId:
             mitoGenomeId = self.config.get('mito_genomes', 'defaultMitoGenome')
-        mitoGenomeFile = self.config.get('mito_genome.' + genomeId, 'chrAllFile')
+        mitoGenomeFile = self.config.get('mito_genome.' + mitoGenomeId, 'chrAllFile')
         return openRef(mitoGenomeFile)
 
     def get_mt_gene_models(self, mitoGeneModelId=None, mitoGenomeId=None):
