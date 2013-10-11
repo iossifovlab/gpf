@@ -35,12 +35,12 @@ parser.add_option('-H',help='no header in the input file', default=False,  actio
 parser.add_option('-T', help='gene models ID <RefSeq, CCDS, knownGene>', type='string', action='store')
 parser.add_option('--Traw', help='outside gene models file path', type='string', action='store')
 parser.add_option('--TrawFormat', help='outside gene models format (refseq, ccds, knowngene)', type='string', action='store') 
-parser.add_option('--Craw', help='mitochondrial gene models file', type='string', action='store') 
-parser.add_option('--CrawFormat', help='outside mitochondrial gene models format <refseq, ccds, knowngene>', type='string', action='store')
+#parser.add_option('--Craw', help='mitochondrial gene models file', type='string', action='store') 
+#parser.add_option('--CrawFormat', help='outside mitochondrial gene models format <refseq, ccds, knowngene>', type='string', action='store')
 
 parser.add_option('-G', help='genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ', type='string', action='store')
 parser.add_option('--Graw', help='outside genome file', type='string', action='store')
-parser.add_option('--Mraw', help='outside mitochondrial genome file', type='string', action='store')
+#parser.add_option('--Mraw', help='outside mitochondrial genome file', type='string', action='store')
 
 parser.add_option('-I', help='geneIDs mapping file; use None for no gene name mapping', default="default"  , type='string', action='store')
 
@@ -66,11 +66,11 @@ if opts.help:
     print("-T T                             gene models ID <RefSeq, CCDS, knownGene> ")
     print("--Traw=TRAW                      outside gene models file path")
     print("--TrawFormat=TRAWFORMAT          outside gene models format (refseq, ccds, knowngene)")
-    print("--Craw=CRAW                      mitochondrial gene models file ")
-    print("--CrawFormat=CRAWFORMAT          outside mitochondrial gene models format (refseq,ccds, knowngene)")
+    #print("--Craw=CRAW                      mitochondrial gene models file ")
+    #print("--CrawFormat=CRAWFORMAT          outside mitochondrial gene models format (refseq,ccds, knowngene)")
     print("-G G                             genome ID (GATK_ResourceBundle_5777_b37_phiX174, hg19)")
     print("--Graw=GRAW                      outside genome file ")
-    print("--Mraw=MRAW                      outside mitochondrial genome file ")
+    #print("--Mraw=MRAW                      outside mitochondrial genome file ")
     print("-I I                             geneIDs mapping file; use None for no gene name mapping ")
     print("\n----------------------------------------------------------------\n\n")
 
@@ -279,7 +279,7 @@ sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
 sys.stderr.write("GENE MODEL FILES: " + gmDB.location + "\n")
 
 
-
+"""
 if opts.Mraw == None:
     GM = genomesDB.get_mito_genome()  # to be created
     if opts.Craw == None:
@@ -301,7 +301,7 @@ if "1" in GM.allChromosomes and "1" not in mmDB.utrModels.keys():
 sys.stderr.write("MITOCHONDRIAL GENOME: " + GM.genomicFile + "\n")
 
 sys.stderr.write("MITOCHONDRIAL GENE MODEL FILES: " + mmDB.location + "\n")
-
+"""
 #####################################################
 
 
@@ -336,7 +336,7 @@ for line in variantFile:
     
     if chrom in ["chrM", "M", "MT"]:
         v = VariantAnnotation_mito.load_variant(chr=chrom, position=pos, ref=refNt, length=l, seq=sequence, typ=type)
-        effects = v.annotate(mmDB, GM, display=False)
+        effects = v.annotate(gmDB, GA, display=False)
         desc = VariantAnnotation_mito.effect_description(effects)
     else:
         v = VariantAnnotation.load_variant(chr=chrom, position=pos, ref=refNt, length=l, seq=sequence, typ=type)

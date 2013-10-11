@@ -655,13 +655,12 @@ def load_pickled_dicts(inputFile):
     
     import pickle
     gm = GeneModels()
+    gm.location = inputFile
     pkl_file = open(inputFile, 'rb')
     Object = pickle.load(pkl_file)
     pkl_file.close()
 
-    gm.utrModels = Object[0]
-    gm.transcriptModels = Object[1]
-    gm.geneModels = Object[2]
+    gm.utrModels, gm.transcriptModels, gm.geneModels = Object
     return(gm)
 
 def create_region(chrom, b, e):
@@ -751,12 +750,7 @@ def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refG
         
 
     elif file_name.endswith(".dump"):
-        gm = GeneModels()
-        
-        if gene_mapping_file == "default":
-             gene_mapping_file = None
-             
-        gm.loadDicts(file_name)
+        return(load_pickled_dicts(file_name))
 
     elif file_name.endswith("mitomap.txt"):
         gm = MitoModel()
