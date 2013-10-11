@@ -23,8 +23,14 @@ class TranscriptModel:
     chr = None
     cds = []
     strand = None
+    exonCount = None
     exons = []
     tx = []
+    bin = None
+    cdsStartStat = None
+    cdsEndStat = None
+    score=None
+    proteinID = None
     
 
     def is_coding(self):
@@ -289,6 +295,11 @@ class GeneModels(AbstractClassDoNotInstantiate):
         chrom = line[1 + self._shift]
     
         if self.name != "knowngene":
+            bin = int(line[0])
+            cdsStartStatus = line[13]
+            cdsEndStatus = line[14]
+            score = int(line[11])
+            proteinId = None
             if self.name == "refseq":
                 try:
                     gene = self.Alternative_names[line[12]]
@@ -308,6 +319,11 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 
            
         else:
+            bin = None
+            cdsStartStatus = None
+            cdsEndStatus = None
+            score = None
+            proteinId = line[10]
             try:
                 gene = self.Alternative_names[line[0]]
             except:
@@ -332,6 +348,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
         cds_end = line[6 + self._shift]
         exon_starts = line[8 + self._shift].split(',')[:-1]
         exon_ends = line[9 + self._shift].split(',')[:-1]
+        exon_count = int(line[7 + self._shift])
 
         l = len(exon_starts)        
                 
@@ -415,6 +432,12 @@ class GeneModels(AbstractClassDoNotInstantiate):
         tm.tx = (transcription_start + 1, int(transcription_end))
         tm.cds = (int(cds_start)+1, int(cds_end))
         tm.exons= exons
+        tm.exonCount = exon_count
+        tm.bin = bin
+        tm.cdsStartStat = cdsStartStatus
+        tm.cdsEndStat = cdsEndStatus
+        tm.score = score
+        tm.proteinID= proteinId
 
        
 
@@ -463,7 +486,11 @@ class GeneModels(AbstractClassDoNotInstantiate):
             
         geneModelFile.close()
 
+   #############################################################
+    #def create_gene_models_file(self, type="refseq", outfile="my_refGene.txt", gzipped=True):
+        #for k,v in self.transcriptModels.items():
 
+###############################################################################
 
     def gene_names(self):
         
@@ -646,21 +673,21 @@ class MitoModel(GeneModels):
     
     
 
-def save_dicts(gm, outputFile = "./geneModels.dump"):
+def save_dicts(gm, outputFile = "./geneModels"):
+    
     import pickle
-    pickle.dump([gm.utrModels, gm.transcriptModels, gm.geneModels], open(outputFile, 'wb'))
-
-
+    
+    pickle.dump([gm.utrModels, gm.transcriptModels, gm.geneModels], open(outputFile + ".dump", 'wb'), 2)
+    
 def load_pickled_dicts(inputFile):
     
     import pickle
+    
     gm = GeneModels()
     gm.location = inputFile
     pkl_file = open(inputFile, 'rb')
-    Object = pickle.load(pkl_file)
+    gm.utrModels, gm.transcriptModels, gm.geneModels = pickle.load(pkl_file)
     pkl_file.close()
-
-    gm.utrModels, gm.transcriptModels, gm.geneModels = Object
     return(gm)
 
 def create_region(chrom, b, e):
