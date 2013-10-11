@@ -10,10 +10,10 @@ from collections import namedtuple
 
                              
 class AbstractClassDoNotInstantiate:
-    # class with default parameters for RefSeq gene model - make these parameters default
-    name = None #"refseq"
-    location = None #"/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz"
-    _shift = None #1
+    
+    name = None
+    location = None
+    _shift = None 
     Alternative_names = None
     
 class TranscriptModel:
@@ -277,13 +277,11 @@ class Exon:
    
 
 class GeneModels(AbstractClassDoNotInstantiate):
-    # uses RefSeq parameters
-    # provides methods for RefSeq, KnownGene, Ccds classes
-
+    
     utrModels = {}
     transcriptModels = {}
     geneModels = {}
-
+    Alternative_names = None
    
 
     def __addToDict(self, line):
@@ -454,11 +452,8 @@ class GeneModels(AbstractClassDoNotInstantiate):
 
         geneModelFile = gzip.open(location, 'rb')
         
-        while True:
         
-            line = geneModelFile.readline()
-            if not line:
-                break
+        for line in geneModelFile:
             if line[0] == "#":
                 continue
             line = line.split()
