@@ -10,10 +10,10 @@ from collections import namedtuple
 
                              
 class AbstractClassDoNotInstantiate:
-    # class with default parameters for RefSeq gene model - make these parameters default
-    name = None #"refseq"
-    location = None #"/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz"
-    _shift = None #1
+    
+    name = None
+    location = None
+    _shift = None 
     Alternative_names = None
     
 class TranscriptModel:
@@ -277,13 +277,11 @@ class Exon:
    
 
 class GeneModels(AbstractClassDoNotInstantiate):
-    # uses RefSeq parameters
-    # provides methods for RefSeq, KnownGene, Ccds classes
-
+    
     utrModels = {}
     transcriptModels = {}
     geneModels = {}
-
+    Alternative_names = None
    
 
     def __addToDict(self, line):
@@ -454,11 +452,8 @@ class GeneModels(AbstractClassDoNotInstantiate):
 
         geneModelFile = gzip.open(location, 'rb')
         
-        while True:
         
-            line = geneModelFile.readline()
-            if not line:
-                break
+        for line in geneModelFile:
             if line[0] == "#":
                 continue
             line = line.split()
@@ -648,7 +643,16 @@ class MitoModel(GeneModels):
         file.close()
 
 
-    
+def loadDicts(inputFile):
+    import pickle
+    pkl_file = open(inputFile, 'rb')
+    Object = pickle.load(pkl_file)
+    pkl_file.close()
+    gm = GeneModels()
+    gm.utrModels = Object[0]
+    gm.transcriptModels = Object[1]
+    gm.geneModels = Object[2]
+    return(gm)
     
 
 def save_dicts(gm, outputFile = "./geneModels.dump"):
@@ -756,12 +760,12 @@ def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refG
         
 
     elif file_name.endswith(".dump"):
-        gm = GeneModels()
+        #gm = GeneModels()
         
-        if gene_mapping_file == "default":
-             gene_mapping_file = None
+        #if gene_mapping_file == "default":
+         #    gene_mapping_file = None
              
-        gm.loadDicts(file_name)
+        gm = loadDicts(file_name)
 
     elif file_name.endswith("mitomap.txt"):
         gm = MitoModel()

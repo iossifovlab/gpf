@@ -76,10 +76,10 @@ if opts.help:
 
     
 if len(args) == 0:
-    print('Input filename not specified')
+    sys.stderr.write('Input filename not specified\n')
     sys.exit(-324)
 if os.path.exists(args[0]) == False:
-    print("The given input file does not exist!")
+    sys.stderr.write("The given input file does not exist!\n")
     sys.exit(-78)
 infile = args[0]
 if len(args) == 1:
@@ -102,7 +102,7 @@ def give_column_number(s, header):
         c = header.index(s)
         return(c+1)
     except:
-        print ("Used parameter: " + s + " does NOT exist in the input file header")
+        sys.stderr.write("Used parameter: " + s + " does NOT exist in the input file header\n")
         sys.exit(-678)
 
 
@@ -113,7 +113,7 @@ def assign_values(param):
         param = int(param)
     except:
         if first_line == None:
-            print("You cannot use column names when the file doesn't have a header (-H option set)!")
+            sys.stderr.write("You cannot use column names when the file doesn't have a header (-H option set)!\n")
             sys.exit(-49)
         param = give_column_number(param, first_line)
     return(param)
@@ -196,7 +196,7 @@ def parseInputFileRow(line):
                 pos = pos_start
                 
             else:
-                print("Incorrect mutation variant: " + line[varCol-1])
+                sys.stderr.write("Incorrect mutation variant: " + line[varCol-1] + "\n")
                 sys.exit(-32)
 
         except:
@@ -218,7 +218,7 @@ def parseInputFileRow(line):
                     if "^" == seq[0] or "$" == seq[-1]: 
                         seq = None
             else:
-                print("Incorrect mutation type: " + line[typeCol-1])
+                sys.stderr.write("Incorrect mutation type: " + line[typeCol-1] + "\n")
                 sys.exit(-34)
              
     return(chr, int(pos), type, seq, length, ref)
@@ -265,7 +265,7 @@ elif opts.Graw == None:
 else:
     GA = GenomeAccess.openRef(opts.Graw)
     if opts.Traw == None:
-        print("This genome requires gene models (--Traw option)")
+        sys.stderr.write("This genome requires gene models (--Traw option)\n")
         sys.exit(-783)
     gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
     
@@ -274,9 +274,9 @@ if "1" in GA.allChromosomes and "1" not in gmDB.utrModels.keys():
     gmDB.relabel_chromosomes()
 
 
-print("GENOME: " + GA.genomicFile)
+sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
 
-print("GENE MODEL FILES: " + gmDB.location)
+sys.stderr.write("GENE MODEL FILES: " + gmDB.location + "\n")
 
 
 
@@ -289,7 +289,7 @@ if opts.Mraw == None:
 else:
     GM = GenomeAccess.openRef(opts.Mraw)
     if opts.Craw == None:
-        print("The mitochondrial genome requires gene models (--Craw option)")
+        sys.stderr.write("The mitochondrial genome requires gene models (--Craw option)\n")
         sys.exit(-784)
     mmDB = load_gene_models(opts.Craw, opts.I, opts.CrawFormat)
 
@@ -298,33 +298,39 @@ if "1" in GM.allChromosomes and "1" not in mmDB.utrModels.keys():
     mmDB.relabel_chromosomes()    
     
 
-print("\nMITOCHONDRIAL GENOME: " + GM.genomicFile)
+sys.stderr.write("MITOCHONDRIAL GENOME: " + GM.genomicFile + "\n")
 
-print("MITOCHONDRIAL GENE MODEL FILES: " + mmDB.location)
+sys.stderr.write("MITOCHONDRIAL GENE MODEL FILES: " + mmDB.location + "\n")
 
 #####################################################
 
 
     
 variantFile = open(infile)
+if outfile != None:
+    out = open(outfile, 'w')
 
 
-
-resFile = open("tempRes.txt", 'w')
 
 if opts.no_header == False:
-    resFile.write("effectType\teffectGene\teffectDetails\n")
     line = variantFile.readline()
+    if outfile == None:
+        print(line[:-1] + "\teffectType\teffectGene\teffectDetails")
+    else:
+        out.write(line[:-1] + "\teffectType\teffectGene\teffectDetails\n")
 
-print("...processing....................")
+sys.stderr.write("...processing....................\n")
 k = 0
 for line in variantFile:
     if line[0] == "#":
-        resFile.write("\n")        
+        if outfile == None:
+            print(line)
+        else:
+            out.write(line) 
         continue
     k += 1
     if k%10000 == 0:
-        print(str(k) + " lines processed")
+        sys.stderr.write(str(k) + " lines processed\n")
     
     chrom, pos, type, sequence, l, refNt = parseInputFileRow(line)
     
@@ -332,31 +338,32 @@ for line in variantFile:
         v = VariantAnnotation_mito.load_variant(chr=chrom, position=pos, ref=refNt, length=l, seq=sequence, typ=type)
         effects = v.annotate(mmDB, GM, display=False)
         desc = VariantAnnotation_mito.effect_description(effects)
-        resFile.write("\t".join(desc) + "\n")
     else:
         v = VariantAnnotation.load_variant(chr=chrom, position=pos, ref=refNt, length=l, seq=sequence, typ=type)
         effects = v.annotate(gmDB, GA, display=False, promoter_len = opts.prom_len)
         desc = VariantAnnotation.effect_description(effects)
-        resFile.write("\t".join(desc) + "\n")
+    if outfile == None:
+        print(line[:-1] + "\t" + "\t".join(desc))
+    else:
+        out.write(line[:-1]+ "\t" + "\t".join(desc) + "\n")
+    
 
 
 variantFile.close()
-resFile.close()
 if outfile != None:
-    call("paste " + infile + " tempRes.txt > " + outfile, shell=True)
-    file = open(outfile, 'a')
-    file.write("# PROCESSING DETAILS:\n")
-    file.write("# " + time.asctime() + "\n")
-    file.write("# " + " ".join(sys.argv) + "\n")
-    print("Output file saved as: " + outfile)
+    out.write("# PROCESSING DETAILS:\n")
+    out.write("# " + time.asctime() + "\n")
+    out.write("# " + " ".join(sys.argv) + "\n")
+    sys.stderr.write("Output file saved as: " + outfile + "\n")
 else:
-    call("paste " + infile + " tempRes.txt", shell=True)
     print("# PROCESSING DETAILS:\n# " + time.asctime() + "\n# " + " ".join(sys.argv))
     
-os.remove("tempRes.txt")
+
+if outfile != None:
+    out.close()
 
 
-print("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start,0))))
+sys.stderr.write("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start,0))) + "\n")
 
 
 
