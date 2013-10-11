@@ -27,4 +27,5 @@ if opts.chr_names != None:
     gmDB.relabel_chromosomes(opts.chr_names)
 else:
     gmDB.relabel_chromosomes()
-save_dicts(gmDB, outputFile = toGMFile)
+# save_dicts(gmDB, outputFile = toGMFile)
+gmDB.save(toGMFile)

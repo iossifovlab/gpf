@@ -7,6 +7,7 @@ import gzip, pickle, os.path, os, sys, re
 from subprocess import call
 import shutil
 from collections import namedtuple
+from collections import defaultdict 
 
                              
 class AbstractClassDoNotInstantiate:
@@ -486,6 +487,84 @@ class GeneModels(AbstractClassDoNotInstantiate):
             
         geneModelFile.close()
 
+    def save(self, outputFile, gzipped=True):
+        if gzipped:
+            f = gzip.open(outputFile,'wb')
+        else:
+            f = open(outputFile,'wb')
+    
+         
+        for tmId,tm in sorted(self.transcriptModels.items()):
+            eStarts = ",".join([str(e.start) for e in tm.exons])
+            eEnds = ",".join([str(e.stop) for e in tm.exons])
+            eFrames = ",".join([str(e.frame) for e in tm.exons])
+            cs = [tm.chr, 
+                    tm.trID,
+                    tm.gene,
+                    tm.strand,
+                    tm.tx[0],
+                    tm.tx[1],
+                    tm.cds[0],
+                    tm.cds[1],
+                    tm.exonCount,
+                    eStarts,
+                    eEnds,
+                    eFrames,
+                    tm.score,
+                    tm.bin,
+                    tm.cdsStartStat,
+                    tm.cdsEndStat,
+                    tm.proteinID
+                 ]
+            f.write("\t".join(map(lambda x: str(x) if x!=None else "", cs)) + "\n")
+        f.close()
+
+    def load(self, inFile):
+        self.location = inFile
+
+        f = gzip.open(inFile)
+        for l in f:
+            cs = l[:-1].split('\t')
+            chr, trID, gene, strand, txB, txE, cdsB, cdsE, exonCount, eStarts, eEnds, eFrames, score, bin, cdsStartStat, cdsEndStat, proteinId = cs
+           
+            exons = [] 
+            for frm,sr,sp in zip(*map(lambda x: x.split(","), [eFrames, eStarts, eEnds])):
+                e = Exon()
+                e.frame = int(frm)
+                e.start = int(sr)
+                e.stop = int(sp)
+                exons.append(e)
+
+            if len(exons) != int(exonCount):
+                raise Exception('inconsistent exon counts')
+
+            tm = TranscriptModel() 
+            tm.gene = gene
+            tm.trID = trID
+            tm.chr = chr 
+            tm.strand = strand
+            tm.tx = (int(txB), int(txE))
+            tm.cds = (int(cdsB), int(cdsE))
+            tm.exons  = exons
+            tm.exonCount = int(exonCount)
+            tm.bin = None if bin=="" else int(bin)
+            tm.cdsStartStat = cdsStartStat
+            tm.cdsEndStat = cdsEndStat
+            tm.score = None if score=="" else int(score)
+            tm.proteinID = proteinId
+
+            self.transcriptModels[tm.trID] = tm 
+        f.close()
+        self.__updateIndexes()
+
+    def __updateIndexes(self):
+        self.geneModels = defaultdict(list)
+        self.utrModels = defaultdict(lambda : defaultdict(list))
+        for tm in self.transcriptModels.values():
+            self.geneModels[tm.gene].append(tm)
+            self.utrModels[tm.chr][tm.tx].append(tm) 
+            
+        
    #############################################################
     #def create_gene_models_file(self, type="refseq", outfile="my_refGene.txt", gzipped=True):
         #for k,v in self.transcriptModels.items():
@@ -673,7 +752,7 @@ class MitoModel(GeneModels):
     
     
 
-def save_dicts(gm, outputFile = "./geneModels"):
+def save_pickled_dicts(gm, outputFile = "./geneModels"):
     
     import pickle
     
@@ -699,61 +778,32 @@ def create_region(chrom, b, e):
 
 def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz", gene_mapping_file="default", format=None):
 
-    if format != None:
-
-
-        if format.lower() == "refseq":
-            gm = RefSeq()  
-            gm.utrModels = {}
-            gm.transcriptModels = {}
-            gm.geneModels = {}
-            if gene_mapping_file == "default":
-                gene_mapping_file = None
-            gm.location = file_name
-            gm._create_gene_model_dict(file_name, gene_mapping_file)
-        elif format.lower() == "ccds":
-            gm = Ccds()
-            gm.utrModels = {}
-            gm.transcriptModels = {}
-            gm.geneModels = {}
-            if gene_mapping_file == "default":
-                gene_mapping_file = os.path.dirname(file_name) + "/ccdsId2Sym.txt.gz"
-            gm.location = file_name
-            gm._create_gene_model_dict(file_name, gene_mapping_file)
-        elif format.lower() == "knowngene":
-            gm = KnownGene()
-            gm.utrModels = {}
-            gm.transcriptModels = {}
-            gm.geneModels = {}
-            if gene_mapping_file == "default":
-                gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"    
-            gm.location = file_name
-            gm._create_gene_model_dict(file_name, gene_mapping_file)
+    # infer the format 
+    if not format:
+        if file_name.endswith("refGene.txt.gz"):
+            format = 'refseq'
+        elif file_name.endswith("ccdsGene.txt.gz"):
+            format = 'ccds'
+        elif file_name.endswith("knownGene.txt.gz"):
+            format = 'knowngene'
+        elif file_name.endswith(".dump"):
+            format = 'pickled'
+        elif file_name.endswith("mitomap.txt"):
+            format = 'mito'
         else:
-            print("Unrecognizable format! Choose between: 'refseq', 'ccds' and 'knowngene'")
-            sys.exit(-1098)
+            format = 'default'
 
-        return gm
-
-
-
-    if file_name.endswith("refGene.txt.gz"):
-        gm = RefSeq()
-        
+    if format.lower() == "refseq":
+        gm = RefSeq()  
         gm.utrModels = {}
         gm.transcriptModels = {}
         gm.geneModels = {}
-
         if gene_mapping_file == "default":
             gene_mapping_file = None
-
-    
         gm.location = file_name
         gm._create_gene_model_dict(file_name, gene_mapping_file)
-        
-    elif file_name.endswith("ccdsGene.txt.gz"):
+    elif format.lower() == "ccds":
         gm = Ccds()
-
         gm.utrModels = {}
         gm.transcriptModels = {}
         gm.geneModels = {}
@@ -761,33 +811,26 @@ def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refG
             gene_mapping_file = os.path.dirname(file_name) + "/ccdsId2Sym.txt.gz"
         gm.location = file_name
         gm._create_gene_model_dict(file_name, gene_mapping_file)
-        
-        
-
-    elif file_name.endswith("knownGene.txt.gz"):
+    elif format.lower() == "knowngene":
         gm = KnownGene()
         gm.utrModels = {}
         gm.transcriptModels = {}
         gm.geneModels = {}
-
         if gene_mapping_file == "default":
-            gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"        
+            gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"    
         gm.location = file_name
         gm._create_gene_model_dict(file_name, gene_mapping_file)
-        
-
-    elif file_name.endswith(".dump"):
+    elif format.lower() == "pickled":
         return(load_pickled_dicts(file_name))
-
-    elif file_name.endswith("mitomap.txt"):
+    elif format.lower() == "mito":
         gm = MitoModel()
         gm._create_gene_model_dict(file_name)
-        
-        
+    elif format.lower() == "default":
+        gm = GeneModels()
+        gm.load(file_name)
     else:
-        print("Unrecognizable file: " + file_name)
-        print("File name must be one of: refGene.txt.gz, ccdsGene.txt.gz, knownGene.txt.gz or .dump file")
-        sys.exit(-46)
-        
+        print("Unrecognizable format! Choose between: 'refseq', 'ccds', 'knowngene', 'pickled', 'mito' or 'default'")
+        sys.exit(-1098)
+
     return gm
 
