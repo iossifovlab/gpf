@@ -1059,6 +1059,9 @@ class VariantsDB:
                 v.valParent = ""
                 if 'valparent' in dtR.dtype.names:
                     v.valParent = dtR['valparent']
+                    # if a column has no data genfromtxt automatically converts the data into a boolean value, which is not what we want in ths case.
+                    if v.valParent==False:
+                        v.valParent=""
                 else:
                     print  >>sys.stderr, "Breh, valparent is not in dtR", v.batchId 
 
