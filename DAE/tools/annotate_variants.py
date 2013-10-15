@@ -75,24 +75,29 @@ if opts.help:
     print("\n----------------------------------------------------------------\n\n")
 
     
-if len(args) == 0:
-    sys.stderr.write('Input filename not specified\n')
-    sys.exit(-324)
-if os.path.exists(args[0]) == False:
+infile = '-'
+outfile = None
+
+if len(args) > 0:
+    infile = args[0]
+
+if infile != '-' and os.path.exists(infile) == False:
     sys.stderr.write("The given input file does not exist!\n")
     sys.exit(-78)
-infile = args[0]
-if len(args) == 1:
-    outfile = None
-else:
-    outfile = args[1]
 
+if len(args) > 1:
+    outfile = args[1]
+if outfile=='-':
+    outfile = None
+
+if infile=='-':
+    variantFile = sys.stdin 
+else:
+    variantFile = open(infile)
 
 if opts.no_header == False:
-    f = open(infile)
-    first_line = f.readline()
-    f.close()
-    first_line = first_line.split()
+    first_line_str = variantFile.readline()
+    first_line = first_line_str.split() 
 else:
     first_line = None
     
@@ -306,18 +311,16 @@ sys.stderr.write("MITOCHONDRIAL GENE MODEL FILES: " + mmDB.location + "\n")
 
 
     
-variantFile = open(infile)
 if outfile != None:
     out = open(outfile, 'w')
 
 
 
 if opts.no_header == False:
-    line = variantFile.readline()
     if outfile == None:
-        print(line[:-1] + "\teffectType\teffectGene\teffectDetails")
+        print(first_line_str[:-1] + "\teffectType\teffectGene\teffectDetails")
     else:
-        out.write(line[:-1] + "\teffectType\teffectGene\teffectDetails\n")
+        out.write(first_line_str[:-1] + "\teffectType\teffectGene\teffectDetails\n")
 
 sys.stderr.write("...processing....................\n")
 k = 0
@@ -329,7 +332,7 @@ for line in variantFile:
             out.write(line) 
         continue
     k += 1
-    if k%10000 == 0:
+    if k%1000 == 0:
         sys.stderr.write(str(k) + " lines processed\n")
     
     chrom, pos, type, sequence, l, refNt = parseInputFileRow(line)
@@ -348,8 +351,9 @@ for line in variantFile:
         out.write(line[:-1]+ "\t" + "\t".join(desc) + "\n")
     
 
+if infile != '-':
+    variantFile.close()
 
-variantFile.close()
 if outfile != None:
     out.write("# PROCESSING DETAILS:\n")
     out.write("# " + time.asctime() + "\n")
