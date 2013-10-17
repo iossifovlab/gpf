@@ -25,7 +25,7 @@ print "\t".join(hdrCs)
 for l in f:
     if l[0]=='#':
         print l,
-        break
+        continue
     cs = l.strip().split("\t")
     for fc,tc in map.items():
         cs[tc] = cs[fc]

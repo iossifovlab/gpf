@@ -327,7 +327,7 @@ k = 0
 for line in variantFile:
     if line[0] == "#":
         if outfile == None:
-            print(line)
+            print line,
         else:
             out.write(line) 
         continue

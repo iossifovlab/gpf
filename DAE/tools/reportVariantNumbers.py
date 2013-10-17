@@ -23,7 +23,7 @@ studyNamesSA = ['wig683,wigState333,wigEichler374',
 if len(sys.argv)>1:
     studyNamesSA = sys.argv[1].split(";")
 
-effTypesSA = [ 'LGDs', 'frame-shift', 'nonsense', 'splice-site', 'missense', 'synonymous', 'CNVs', 'CNV+', 'CNV-' ]
+effTypesSA = [ 'LGDs', 'frame-shift', 'nonsense', 'splice-site', 'missense', 'synonymous', 'CNVs', 'CNV+', 'CNV-', 'noStart', 'noEnd', "5'UTR", "3'UTR", "3'UTR-intron", "5'UTR-intron", "intron" , "non-coding-intron", "non-coding"]
 effTypesA = [ vDB.effectTypesSet(eftS) for eftS in effTypesSA ]
 effTypeToInds = defaultdict(list)
 

@@ -648,12 +648,16 @@ class Study:
        
 
     def _load_family_data_from_quad_report(self,reportF):
+        familyIdRE = re.compile('auSSC(\d\d\d\d\d)-wholeblood') 
         families = {}
         badFamilies = {}
         qrp = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True)
         for qrpR in qrp:
             f = Family()
-            f.familyId = qrpR['quadquad_id'][5:10]
+            f.familyId = qrpR['quadquad_id']
+            if familyIdRE.match(f.familyId):
+                f.familyId = f.familyId[5:10]
+
             f.atts = { x:qrpR[x] for x in qrp.dtype.names }
 
             def piF(pi):

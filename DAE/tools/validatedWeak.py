@@ -4,7 +4,7 @@ from DAE import *
 import sys
 
 # TODO get it from argv
-studyName = 'wig919'
+studyName = 'wig1019'
 stdy = vDB.get_study(studyName)
 solidV = {}
 for v in stdy.get_denovo_variants(callSet="noweak"):
@@ -16,6 +16,8 @@ for v in stdy.get_denovo_variants(callSet="noweak"):
 print "\t".join(("familyId location variant batchId bestState val.counts val.note inChild who why counts denovoScr chi2Pval".split()))
 
 for vv in vDB.get_validation_variants():
+    if vv.location.startswith('M:'):
+        continue
     if vv.valStatus!="valid":
         continue
     if vv.familyId not in stdy.families:
@@ -28,7 +30,7 @@ for vv in vDB.get_validation_variants():
         continue
 
     addAtts = ['counts', 'denovoScore', 'chi2APval']
-    print "\t".join([vv.familyId,vv.location,vv.variant,vv.batchId, vv.bestStS,vv.valCountsS, vv.resultNote, vv.inChS,vv.who,vv.why] + 
+    print "\t".join(map(str,[vv.familyId,vv.location,vv.variant,vv.batchId, vv.bestStS,vv.valCountsS, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
                     [str(vv.atts[aa]) if aa in vv.atts else "" for aa in addAtts])
 
 print >>sys.stderr, "Can be annotated with: 'annotateVariants.sh -f aaa.txt -o aaa-ann.txt -x 2 -m 3'"
