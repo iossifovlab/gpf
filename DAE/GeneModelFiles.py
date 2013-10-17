@@ -18,20 +18,21 @@ class AbstractClassDoNotInstantiate:
     Alternative_names = None
     
 class TranscriptModel:
-   
+
+    attr = {}
     gene = None
     trID = None
     chr = None
     cds = []
     strand = None
-    exonCount = None
+    #exonCount = None
     exons = []
     tx = []
-    bin = None
-    cdsStartStat = None
-    cdsEndStat = None
-    score=None
-    proteinID = None
+    #bin = None
+    #cdsStartStat = None
+    #cdsEndStat = None
+    #score=None
+    #proteinID = None
     
 
     def is_coding(self):
@@ -246,8 +247,8 @@ class TranscriptModel:
         if pos_stop < self.cds[0]:
             if self.__check_if_exon(pos_start, pos_stop) == True:
                 if self.strand == "+":
-                    return("5'utr")
-                return("3'utr")
+                    return("5'UTR")
+                return("3'UTR")
             
             if self.strand == "+":
                 return("5'UTR-intron")
@@ -256,8 +257,8 @@ class TranscriptModel:
         if pos_start > self.cds[1]:
             if self.__check_if_exon(pos_start, pos_stop) == True:
                 if self.strand == "+":
-                    return("3'utr")
-                return("5'utr")
+                    return("3'UTR")
+                return("5'UTR")
           
             if self.strand == "+":
                 return("3'UTR-intron")
@@ -300,7 +301,6 @@ class GeneModels(AbstractClassDoNotInstantiate):
             cdsStartStatus = line[13]
             cdsEndStatus = line[14]
             score = int(line[11])
-            proteinId = None
             if self.name == "refseq":
                 try:
                     gene = self.Alternative_names[line[12]]
@@ -320,10 +320,6 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 
            
         else:
-            bin = None
-            cdsStartStatus = None
-            cdsEndStatus = None
-            score = None
             proteinId = line[10]
             try:
                 gene = self.Alternative_names[line[0]]
@@ -433,12 +429,39 @@ class GeneModels(AbstractClassDoNotInstantiate):
         tm.tx = (transcription_start + 1, int(transcription_end))
         tm.cds = (int(cds_start)+1, int(cds_end))
         tm.exons= exons
-        tm.exonCount = exon_count
-        tm.bin = bin
-        tm.cdsStartStat = cdsStartStatus
-        tm.cdsEndStat = cdsEndStatus
-        tm.score = score
-        tm.proteinID= proteinId
+
+        try:
+            tm.attr['exonCount'] = exon_count
+        except:
+            pass
+        
+        try:
+            tm.attr['bin'] = bin
+        except:
+            pass
+        
+        try:
+            tm.attr['cdsStartStat'] = cdsStartStatus
+        except:
+            pass
+
+        try:
+            tm.attr['cdsEndStat'] = cdsEndStatus
+        except:
+            pass
+
+        
+        try:
+             tm.attr['score'] = score
+        except:
+            pass
+
+        
+        try:
+             tm.attr['proteinID'] = proteinId
+        except:
+            pass
+
 
        
 
@@ -565,11 +588,6 @@ class GeneModels(AbstractClassDoNotInstantiate):
             self.utrModels[tm.chr][tm.tx].append(tm) 
             
         
-   #############################################################
-    #def create_gene_models_file(self, type="refseq", outfile="my_refGene.txt", gzipped=True):
-        #for k,v in self.transcriptModels.items():
-
-###############################################################################
 
     def gene_names(self):
         

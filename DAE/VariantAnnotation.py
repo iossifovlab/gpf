@@ -39,7 +39,7 @@ CodonsAa = {'Gly' : ['GGG', 'GGA', 'GGT', 'GGC'],
 CodonsAaKeys = CodonsAa.keys()
 
 
-Severity = {'all':24, 'splice-site':23, 'frame-shift':22, 'nonsense':21, 'no-frame-shift-newStop':20, 'noStart':19, 'noEnd':18, 'missense':17, 'no-frame-shift':16, 'CDS':15, 'synonymous':14, 'coding_unknown':13,"3'utr":12, "5'utr": 11, "3'UTR":10, "5'UTR": 9, 'intron':7, 'non-coding':6, "5'UTR-intron": 5,"3'UTR-intron":4,  "promoter":3, "non-coding-intron":2, 'unknown':1, 'intergenic':0}
+Severity = {'all':24, 'splice-site':23, 'frame-shift':22, 'nonsense':21, 'no-frame-shift-newStop':20, 'noStart':19, 'noEnd':18, 'missense':17, 'no-frame-shift':16, 'CDS':15, 'synonymous':14, 'coding_unknown':13, "3'UTR":10, "5'UTR": 9, 'intron':7, 'non-coding':6, "5'UTR-intron": 5,"3'UTR-intron":4,  "promoter":3, "non-coding-intron":2, 'unknown':1, 'intergenic':0}
 
 
 
@@ -240,7 +240,7 @@ class Variant:
                         continue
 
        
-                    if what_hit == "5'utr" or what_hit == "3'utr" :
+                    if what_hit == "5'UTR" or what_hit == "3'UTR" :
                         if self.pos_last != self.pos:
                             if self.pos_last < i.cds[0]:
                                 closestToCod = maxInExons(self.pos, self.pos_last, i.exons)
@@ -250,7 +250,7 @@ class Variant:
                             d = distanceFromCoding(closestToCod, i)
                         else:
                             d = distanceFromCoding(self.pos, i)
-                        worstForEachTranscript.append([what_hit.upper(), [i.gene, what_hit.upper(), str(d)], i.strand, i.trID])
+                        worstForEachTranscript.append([what_hit, [i.gene, what_hit, str(d)], i.strand, i.trID])
                         continue
 
                     if what_hit == "5'UTR-intron" or what_hit == "3'UTR-intron":
@@ -561,6 +561,63 @@ class Variant:
 
 #-----------------------------------------------------------------------------
 
+def get_effect_types(types=True, groups=False):
+    T = ['all',
+         'splice-site',
+         'frame-shift',
+         'nonsense',
+         'no-frame-shift-newStop',
+         'noStart',
+         'noEnd',
+         'missense',
+         'no-frame-shift',
+         'CDS',
+         'synonymous',
+         'coding_unknown',
+         "3'UTR",
+         "5'UTR",
+         'intron',
+         'non-coding',
+         "5'UTR-intron",
+         "3'UTR-intron",
+         "promoter",
+         "non-coding-intron",
+         'unknown',
+         'intergenic']
+
+    G = ['LGDs',
+         'introns',
+         'UTRs'
+         ]
+
+    if types == True:
+        if groups == False:
+            return(T)
+        A = T
+        A.extend(G)
+        return(A)
+    if groups == True:
+        return(G)
+    return([])
+
+def get_a(s):
+    s = s.split(',')
+    
+    Groups = {'LGDs':['splice-site','frame-shift','nonsense','no-frame-shift-newStop'],
+              'introns' : ['intron', "non-coding-intron", "5'UTR-intron", "3'UTR-intron"],
+              'UTRs': ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"]}
+    R = []
+
+    for i in s:
+        try:
+            R.extend(Groups[i])
+        except:
+            R.append(i)
+
+    return(list(set(R)))
+    
+              
+             
 
 def annotate_variant(location, variant, gm, refG):
     v = load_variant(loc=location, var=variant)
@@ -604,10 +661,6 @@ def create_effect_details(e):
         eff_d = str(e.dist_from_5utr)
     elif e.effect == "CDS" or  e.effect == "all":
         eff_d = str(e.prot_length)
-    elif e.effect in ["3'utr", "5'utr"]:
-        eff_d = e.cnv_type
-        print e.effect
-   
     return(eff_d)
     
 
