@@ -25,14 +25,8 @@ class TranscriptModel:
     chr = None
     cds = []
     strand = None
-    #exonCount = None
     exons = []
     tx = []
-    #bin = None
-    #cdsStartStat = None
-    #cdsEndStat = None
-    #score=None
-    #proteinID = None
     
 
     def is_coding(self):
@@ -286,10 +280,10 @@ class Exon:
 
 class GeneModels(AbstractClassDoNotInstantiate):
     
-    utrModels = {}
+    _utrModels = {}
     transcriptModels = {}
-    geneModels = {}
-    Alternative_names = None
+    _geneModels = {}
+    _Alternative_names = None
    
 
     def __addToDict(self, line):
@@ -297,20 +291,24 @@ class GeneModels(AbstractClassDoNotInstantiate):
         chrom = line[1 + self._shift]
     
         if self.name != "knowngene":
-            bin = int(line[0])
-            cdsStartStatus = line[13]
-            cdsEndStatus = line[14]
-            score = int(line[11])
+            if line[0] != "":
+                bin = int(line[0])
+            if line[13] != "":
+                cdsStartStatus = line[13]
+            if line[14] != "":
+                cdsEndStatus = line[14]
+            if line[11] != "":
+                score = int(line[11])
             if self.name == "refseq":
                 try:
-                    gene = self.Alternative_names[line[12]]
+                    gene = self._Alternative_names[line[12]]
                 except:
                     gene = line[12]
                 trName = line[1] + "_1"
                
             else:
                 try:
-                    gene = self.Alternative_names[line[1]]
+                    gene = self._Alternative_names[line[1]]
                 except:
                     gene = line[1]
                 trName = line[1]  + "_1"
@@ -320,9 +318,10 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 
            
         else:
-            proteinId = line[10]
+            if line[10] != "":
+                proteinId = line[10]
             try:
-                gene = self.Alternative_names[line[0]]
+                gene = self._Alternative_names[line[0]]
             except:
                 gene = line[0]
             trName = line[0] + "_1"
@@ -468,30 +467,30 @@ class GeneModels(AbstractClassDoNotInstantiate):
         self.transcriptModels[tm.trID] = tm
 
         try:
-            self.geneModels[gene].append(tm)
+            self._geneModels[gene].append(tm)
         except:
-            self.geneModels[gene] = [tm]
+            self._geneModels[gene] = [tm]
 
         try:
-            self.utrModels[chrom][(transcription_start + 1, int(transcription_end))].append(tm)
+            self._utrModels[chrom][(transcription_start + 1, int(transcription_end))].append(tm)
         except KeyError as e:
             if e.args[0] == chrom:
-                self.utrModels[chrom] = {}
-            self.utrModels[chrom][(transcription_start + 1, int(transcription_end))] = [tm]
+                self._utrModels[chrom] = {}
+            self._utrModels[chrom][(transcription_start + 1, int(transcription_end))] = [tm]
 
         return(-1)
                 
     
     def _create_gene_model_dict(self, location=None, gene_mapping_file = None):
 
-        self.Alternative_names={}
+        self._Alternative_names={}
         if gene_mapping_file != None:
             if gene_mapping_file.endswith(".gz"):
                 dict_file = gzip.open(gene_mapping_file)
             else:
                 dict_file = open(gene_mapping_file)
             dict_file.readline()
-            self.Alternative_names = dict([(line.split()[0],line.split()[1]) for line in dict_file])
+            self._Alternative_names = dict([(line.split()[0],line.split()[1]) for line in dict_file])
             dict_file.close()
        
         if location == None:
@@ -512,7 +511,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
 
     def save(self, outputFile, gzipped=True):
         if gzipped:
-            f = gzip.open(outputFile,'wb')
+            f = gzip.open(outputFile + ".gz",'wb')
         else:
             f = open(outputFile,'wb')
     
@@ -521,6 +520,13 @@ class GeneModels(AbstractClassDoNotInstantiate):
             eStarts = ",".join([str(e.start) for e in tm.exons])
             eEnds = ",".join([str(e.stop) for e in tm.exons])
             eFrames = ",".join([str(e.frame) for e in tm.exons])
+            attrs_list = []
+            for i in ['bin', 'score', 'exonCount', 'cdsEndStat', 'cdsStartStat', 'proteinID' ]:
+                try:
+                    attrs_list.append(str(tm.attr[i]))
+                except:
+                    attrs_list.append('')
+            
             cs = [tm.chr, 
                     tm.trID,
                     tm.gene,
@@ -529,17 +535,12 @@ class GeneModels(AbstractClassDoNotInstantiate):
                     tm.tx[1],
                     tm.cds[0],
                     tm.cds[1],
-                    tm.exonCount,
                     eStarts,
                     eEnds,
                     eFrames,
-                    tm.score,
-                    tm.bin,
-                    tm.cdsStartStat,
-                    tm.cdsEndStat,
-                    tm.proteinID
                  ]
-            f.write("\t".join(map(lambda x: str(x) if x!=None else "", cs)) + "\n")
+            f.write("\t".join(map(lambda x: str(x) if x!=None else "", cs)) + "\t")
+            f.write("\t".join(attrs_list) + "\n")
         f.close()
 
     def load(self, inFile):
@@ -548,8 +549,8 @@ class GeneModels(AbstractClassDoNotInstantiate):
         f = gzip.open(inFile)
         for l in f:
             cs = l[:-1].split('\t')
-            chr, trID, gene, strand, txB, txE, cdsB, cdsE, exonCount, eStarts, eEnds, eFrames, score, bin, cdsStartStat, cdsEndStat, proteinId = cs
-           
+            chr, trID, gene, strand, txB, txE, cdsB, cdsE, eStarts, eEnds, eFrames, bin, score, exonCount, cdsStartStat, cdsEndStat, proteinId = cs
+            
             exons = [] 
             for frm,sr,sp in zip(*map(lambda x: x.split(","), [eFrames, eStarts, eEnds])):
                 e = Exon()
@@ -558,8 +559,16 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 e.stop = int(sp)
                 exons.append(e)
 
-            if len(exons) != int(exonCount):
-                raise Exception('inconsistent exon counts')
+           
+            n = ['bin', 'score', 'exonCount', 'cdsStartStat', 'cdsEndStat', 'proteinID']
+            m = [bin, score, exonCount, cdsStartStat, cdsEndStat, proteinId]
+            attrs= dict([(n[i], m[i]) for i in xrange(0, len(n)) if m[i] != ''])
+            for a in ['bin', 'score', 'exonCount']:
+                try:
+                    attrs[a] = int(attrs[a])
+                except:
+                    pass
+            
 
             tm = TranscriptModel() 
             tm.gene = gene
@@ -569,33 +578,28 @@ class GeneModels(AbstractClassDoNotInstantiate):
             tm.tx = (int(txB), int(txE))
             tm.cds = (int(cdsB), int(cdsE))
             tm.exons  = exons
-            tm.exonCount = int(exonCount)
-            tm.bin = None if bin=="" else int(bin)
-            tm.cdsStartStat = cdsStartStat
-            tm.cdsEndStat = cdsEndStat
-            tm.score = None if score=="" else int(score)
-            tm.proteinID = proteinId
+            tm.attr = attrs
 
             self.transcriptModels[tm.trID] = tm 
         f.close()
         self.__updateIndexes()
 
     def __updateIndexes(self):
-        self.geneModels = defaultdict(list)
-        self.utrModels = defaultdict(lambda : defaultdict(list))
+        self._geneModels = defaultdict(list)
+        self._utrModels = defaultdict(lambda : defaultdict(list))
         for tm in self.transcriptModels.values():
-            self.geneModels[tm.gene].append(tm)
-            self.utrModels[tm.chr][tm.tx].append(tm) 
+            self._geneModels[tm.gene].append(tm)
+            self._utrModels[tm.chr][tm.tx].append(tm) 
             
         
 
     def gene_names(self):
         
-        if self.geneModels == None:
+        if self._geneModels == None:
             print("Gene Models haven't been created/uploaded yet! Use either loadGeneModels function or self.createGeneModelDict function")
             return(None)
         
-        return self.geneModels.keys()
+        return self._geneModels.keys()
 
 
     def transcript_IDs(self):
@@ -610,7 +614,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
     def gene_models_by_gene_name(self, name):
 
         try:
-            return(self.geneModels[name])
+            return(self._geneModels[name])
         except:
             pass
 
@@ -621,17 +625,17 @@ class GeneModels(AbstractClassDoNotInstantiate):
 
         
         if pos2 == None:
-            for key in self.utrModels[chr]:
+            for key in self._utrModels[chr]:
                 if pos1 >= key[0] and pos1 <= key[1]:
-                    R.extend(self.utrModels[chr][key])
+                    R.extend(self._utrModels[chr][key])
 
         else:
             if pos2 < pos1:
                 pos1, pos2 = pos2, pos1
                 
-            for key in self.utrModels[chr]:
+            for key in self._utrModels[chr]:
                 if (pos1 <= key[0] and pos2 >= key[0]) or (pos1 >= key[0] and pos1 <= key[1]):
-                    R.extend(self.utrModels[chr][key])
+                    R.extend(self._utrModels[chr][key])
 
         return(R)
 
@@ -645,11 +649,11 @@ class GeneModels(AbstractClassDoNotInstantiate):
         f = open(file)
         Relabel = dict([(line.split()[0], line.split()[1]) for line in f])
         
-        for chrom in self.utrModels.keys():
+        for chrom in self._utrModels.keys():
 
             try:
-                self.utrModels[Relabel[chrom]] = self.utrModels[chrom]
-                self.utrModels.pop(chrom)
+                self._utrModels[Relabel[chrom]] = self._utrModels[chrom]
+                self._utrModels.pop(chrom)
             except KeyError:
                 pass
 
@@ -667,7 +671,7 @@ class RefSeq(GeneModels):
     name = "refseq"
     location = "/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz"
     _shift = 1
-    Alternative_names = None    
+    _Alternative_names = None    
 
 class KnownGene(GeneModels):
 
@@ -675,24 +679,24 @@ class KnownGene(GeneModels):
     name="knowngene"
     location = "/data/unsafe/autism/genomes/hg19/geneModels/knownGene.txt.gz"
     _shift = 0
-    Alternative_names = None       
+    _Alternative_names = None       
         
 class Ccds(GeneModels):
 
     name="ccds"
     location = "/data/unsafe/autism/genomes/hg19/geneModels/ccdsGene.txt.gz"
     _shift = 1
-    Alternative_names = None
+    _Alternative_names = None
 
 class MitoModel(GeneModels):
 
     name = "mitomap"
     location = "/data/unsafe/autism/genomes/hg19/geneModels/mitomap.txt"
-    Alternative_names = None
+    _Alternative_names = None
 
     def _create_gene_model_dict(self, file_name):
 
-        self.utrModels['chrM'] = {}
+        self._utrModels['chrM'] = {}
         if file_name == None:
             file = open(self.location)
         else:
@@ -715,9 +719,9 @@ class MitoModel(GeneModels):
                 e.stop = int(line[3])
                 e.frame = 0
                 mm.exons = [e]
-                self.utrModels['chrM'][mm.tx] = [mm]
+                self._utrModels['chrM'][mm.tx] = [mm]
                 self.transcriptModels[mm.trID] = mm
-                self.geneModels[mm.gene] = [mm]
+                self._geneModels[mm.gene] = [mm]
 
             elif mode == "rRNAs":
                 mm = TranscriptModel()
@@ -730,9 +734,9 @@ class MitoModel(GeneModels):
                 e.start = int(line[2])
                 e.stop = int(line[3])
                 mm.exons = [e]
-                self.utrModels['chrM'][mm.tx] = [mm]
+                self._utrModels['chrM'][mm.tx] = [mm]
                 self.transcriptModels[mm.trID] = mm
-                self.geneModels[mm.gene] = [mm]
+                self._geneModels[mm.gene] = [mm]
 
             elif mode == "tRNAs":
                 mm = TranscriptModel()
@@ -746,9 +750,9 @@ class MitoModel(GeneModels):
                 e.start = int(line[2])
                 e.stop = int(line[3])
                 mm.exons = [e]
-                self.utrModels['chrM'][mm.tx] = [mm]
+                self._utrModels['chrM'][mm.tx] = [mm]
                 self.transcriptModels[mm.trID] = mm
-                self.geneModels[mm.gene] = [mm]
+                self._geneModels[mm.gene] = [mm]
                 
             elif mode == "regulatory_elements":
                 mm = TranscriptModel()
@@ -760,7 +764,7 @@ class MitoModel(GeneModels):
                 e.start = int(line[1])
                 e.stop = int(line[2])
                 mm.exons = [e]
-                self.utrModels['chrM'][mm.tx] = [mm]
+                self._utrModels['chrM'][mm.tx] = [mm]
 
             else:
                 continue
@@ -774,7 +778,7 @@ def save_pickled_dicts(gm, outputFile = "./geneModels"):
     
     import pickle
     
-    pickle.dump([gm.utrModels, gm.transcriptModels, gm.geneModels], open(outputFile + ".dump", 'wb'), 2)
+    pickle.dump([gm._utrModels, gm.transcriptModels, gm._geneModels], open(outputFile + ".dump", 'wb'), 2)
     
 def load_pickled_dicts(inputFile):
     
@@ -783,7 +787,7 @@ def load_pickled_dicts(inputFile):
     gm = GeneModels()
     gm.location = inputFile
     pkl_file = open(inputFile, 'rb')
-    gm.utrModels, gm.transcriptModels, gm.geneModels = pickle.load(pkl_file)
+    gm._utrModels, gm.transcriptModels, gm._geneModels = pickle.load(pkl_file)
     pkl_file.close()
     return(gm)
 
@@ -813,27 +817,27 @@ def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refG
 
     if format.lower() == "refseq":
         gm = RefSeq()  
-        gm.utrModels = {}
+        gm._utrModels = {}
         gm.transcriptModels = {}
-        gm.geneModels = {}
+        gm._geneModels = {}
         if gene_mapping_file == "default":
             gene_mapping_file = None
         gm.location = file_name
         gm._create_gene_model_dict(file_name, gene_mapping_file)
     elif format.lower() == "ccds":
         gm = Ccds()
-        gm.utrModels = {}
+        gm._utrModels = {}
         gm.transcriptModels = {}
-        gm.geneModels = {}
+        gm._geneModels = {}
         if gene_mapping_file == "default":
             gene_mapping_file = os.path.dirname(file_name) + "/ccdsId2Sym.txt.gz"
         gm.location = file_name
         gm._create_gene_model_dict(file_name, gene_mapping_file)
     elif format.lower() == "knowngene":
         gm = KnownGene()
-        gm.utrModels = {}
+        gm._utrModels = {}
         gm.transcriptModels = {}
-        gm.geneModels = {}
+        gm._geneModels = {}
         if gene_mapping_file == "default":
             gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"    
         gm.location = file_name
