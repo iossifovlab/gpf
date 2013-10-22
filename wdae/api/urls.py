@@ -12,7 +12,7 @@ urlpatterns = patterns('api.views',
     url(r'^gene_set/main$', 'gene_set_main_list'),
     url(r'^gene_set/go$', 'gene_set_go_list'),
     url(r'^genes$', 'gene_list'),
-    url(r'^get_variants$', 'get_variants'),
+    url(r'^get_variants_csv$', 'get_variants_csv'),
     
     
 )

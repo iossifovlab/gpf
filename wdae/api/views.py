@@ -120,7 +120,7 @@ def gene_list(request,page_count=30):
 
 
 @api_view(['POST'])
-def get_variants(request):
+def get_variants_csv(request):
     data=request.DATA
     print data
     
