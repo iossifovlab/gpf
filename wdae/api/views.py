@@ -48,7 +48,7 @@ def child_type_list(request):
 def families_list(request,study_name=None):
 
     st=vDB.get_study(study_name)
-    families=st.families
+    families=st.families.keys()
     
     query_params=request.QUERY_PARAMS
     if query_params.has_key('filter'):

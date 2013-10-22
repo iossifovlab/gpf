@@ -21,11 +21,12 @@ class FamiliesTest(APITestCase):
         self.assertEqual(data['study'],'DalyWE2012')
         
     def test_families_get_filter(self):        
-        response=self.client.get('/api/families/DalyWE2012?filter="A"')
+        response=self.client.get('/api/families/DalyWE2012')
                 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data=response.data
         self.assertEqual(data['study'],'DalyWE2012')
+        self.assertEqual(len(data['families']),174)
         
 #     def test_families_post(self):
 #         data={'studies':['DalyWE2012','EichlerTG2012']}
