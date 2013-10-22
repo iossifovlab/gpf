@@ -119,6 +119,8 @@ def gene_list(request,page_count=30):
     return Response(gl[:page_count])
 
 
+
+
 @api_view(['POST'])
 def get_variants_csv(request):
     data=request.DATA
