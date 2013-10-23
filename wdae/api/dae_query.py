@@ -3,17 +3,6 @@ from django.conf import settings
 from DAE import vDB
 from DAE import giDB
 
-def prepare_denovo_studies(data):
-    if not data.has_key('denovoStudies'):
-        return []
-    else:
-        dl=data['denovoStudies']
-        dst=[]
-        try:
-            dst = [vDB.get_study(str(d)) for d in dl]
-        except:
-            print "The denovo study: %s does not exists..." % ' '.join(dl) 
-        return dst
     
 def prepare_inchild(data):
     if not data.has_key('inChild'):
@@ -139,5 +128,37 @@ def prepare_gene_sets(data):
     else:
         return None
 
+def prepare_denovo_studies(data):
+    if not data.has_key('denovoStudies'):
+        return None
+    
+    dl=data['denovoStudies']
+    try:
+        dst = [vDB.get_study(str(d)) for d in dl]
+    except:
+        print "The denovo study: %s does not exists..." % ' '.join(dl)
+        return None
+    
+    dst=[st for st in dst if st is not None]
+    if not dst:
+        return None
+     
+    return dst
 
 
+def prepare_transmitted_studies(data):
+    if not data.has_key('transmittedStudies'):
+        return None
+    
+    tl=data['transmittedStudies']
+    try:
+        dst = [vDB.get_study(str(st)) for st in tl]
+    except:
+        print "The denovo study: %s does not exists..." % ' '.join(tl)
+        return None
+    
+    dst=[st for st in dst if st is not None]
+    if not dst:
+        return None
+     
+    return dst

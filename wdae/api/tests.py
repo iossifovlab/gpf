@@ -50,32 +50,6 @@ class FamiliesTest(APITestCase):
 #         self.assertEqual(response.status_code,status.HTTP_200_OK)
 #         
 
-class StudiesTests(unittest.TestCase):
-    
-    def test_denovo_studies_empty(self):
-        dsl = prepare_denovo_studies({'denovoStudies':[]})
-        self.assertTrue(not dsl)
-        
-        dsl = prepare_denovo_studies({})
-        self.assertTrue(not dsl)
-
-    def test_denovo_studies_single(self):
-        dsl = prepare_denovo_studies({'denovoStudies':["DalyWE2012"]})
-        self.assertEquals(len(dsl), 1)
-        self.assertEqual(dsl[0].name, "DalyWE2012")
-        
-        dsl = prepare_denovo_studies({'denovoStudies':["EichlerTG2012"]})
-        self.assertEquals(len(dsl), 1)
-        self.assertEqual(dsl[0].name, "EichlerTG2012")
-        
-    
-    def test_denovo_studies_double(self):
-        dsl = prepare_denovo_studies({'denovoStudies':["DalyWE2012", "EichlerTG2012"]})
-        self.assertEquals(len(dsl), 2)
-        
-        self.assertEqual(dsl[0].name, "DalyWE2012")
-        self.assertEqual(dsl[1].name, "EichlerTG2012")
-        
 
 class InChildTests(unittest.TestCase):
     def test_inchild_empty(self):
@@ -234,3 +208,60 @@ class GeneSetsTests(unittest.TestCase):
         self.assertTrue(isinstance(gs, set))
 
     
+class StudiesTests(unittest.TestCase):
+    
+    def test_denovo_studies_empty(self):
+        dsl = prepare_denovo_studies({'denovoStudies':[]})
+        self.assertIsNone(dsl)
+        
+        dsl = prepare_denovo_studies({})
+        self.assertIsNone(dsl)
+
+    def test_denovo_studies_single(self):
+        dsl = prepare_denovo_studies({'denovoStudies':["DalyWE2012"]})
+        self.assertEquals(len(dsl), 1)
+        self.assertEqual(dsl[0].name, "DalyWE2012")
+        
+        dsl = prepare_denovo_studies({'denovoStudies':["EichlerTG2012"]})
+        self.assertEquals(len(dsl), 1)
+        self.assertEqual(dsl[0].name, "EichlerTG2012")
+        
+    
+    def test_denovo_studies_double(self):
+        dsl = prepare_denovo_studies({'denovoStudies':["DalyWE2012", "EichlerTG2012"]})
+        self.assertEquals(len(dsl), 2)
+        
+        self.assertEqual(dsl[0].name, "DalyWE2012")
+        self.assertEqual(dsl[1].name, "EichlerTG2012")
+        
+    def test_denovo_studies_not_found(self):
+        dsl = prepare_denovo_studies({'denovoStudies':["ala", "bala"]})
+        self.assertIsNone(dsl)
+        
+    def test_transmitted_studies_empty(self):
+        dsl = prepare_transmitted_studies({'transmittedStudies':[]})
+        self.assertIsNone(dsl)
+        
+        dsl = prepare_transmitted_studies({})
+        self.assertIsNone(dsl)
+
+    def test_transmitted_studies_single(self):
+        dsl = prepare_transmitted_studies({'transmittedStudies':["w873e374s322"]})
+        self.assertEquals(len(dsl), 1)
+        self.assertEqual(dsl[0].name, "w873e374s322")
+        
+        dsl = prepare_transmitted_studies({'transmittedStudies':["wig683"]})
+        self.assertEquals(len(dsl), 1)
+        self.assertEqual(dsl[0].name, "wig683")
+
+    def test_transmitted_studies_double(self):
+        dsl = prepare_transmitted_studies({'transmittedStudies':["w873e374s322", "wig683"]})
+        self.assertEquals(len(dsl), 2)
+        
+        self.assertEqual(dsl[0].name, "w873e374s322")
+        self.assertEqual(dsl[1].name, "wig683")
+        
+    def test_transmitted_studies_not_found(self):
+        dsl = prepare_transmitted_studies({'transmittedStudies':["ala", "bala"]})
+        self.assertIsNone(dsl)
+
