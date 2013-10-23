@@ -1,3 +1,5 @@
+from django.conf import settings
+  
 from DAE import vDB
 from DAE import giDB
 
@@ -76,8 +78,8 @@ def prepare_family_ids(data):
         return None
 
 def __filter_gene_syms(gl):
-    return gl
-#     return [giDB.genes[g].sym for g in gl if g in giDB.genes]
+    
+    return [g for g in gl if g in settings.GENE_SYMS]
 
 def prepare_gene_syms(data):
     if not data.has_key('geneSym'):
@@ -100,7 +102,8 @@ def prepare_gene_syms(data):
     else:
         return None
 
-
+def prepare_gene_sets(data):
+    pass
 
 
 

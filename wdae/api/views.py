@@ -1,5 +1,7 @@
 # Create your views here.
 from django.http import HttpResponse
+from django.conf import settings
+  
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -91,8 +93,6 @@ def __gene_set_filter_response_dict(request,data):
     else:
         return dict(data.items()[0:page_count])
 
-from django.conf import settings
-  
 @api_view(['GET'])
 def gene_set_main_list(request):
     gts = settings.GENE_SETS_MAIN
