@@ -44,3 +44,36 @@ def prepare_effect_types(data):
     return effect_type
 
 
+def prepare_variant_types(data):
+    if not data.has_key('variantTypes'):
+        return None
+    
+    variant_types=data['variantTypes']
+    if variant_types=='none' or variant_types == 'None' or variant_types is None:
+        return None
+    
+    if variant_types not in vDB.get_variant_types():
+        return None
+    
+    if variant_types == 'All':
+        return None
+    
+    return variant_types
+
+def prepare_family_ids(data):
+    if not data.has_key('familiesList'):
+        return None
+    
+    families=data['familiesList']
+    if isinstance(families,str):
+        if families.lower() == 'none' or families.lower() == 'all':
+            return None
+        else:
+            return [s.strip() for s in families.split(',') if len(s.strip())>0]
+    elif isinstance(families,list):
+        return families
+    else:
+        return None
+
+def prepare_gen_syms(data):
+    pass

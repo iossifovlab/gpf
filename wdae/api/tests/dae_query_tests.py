@@ -83,5 +83,53 @@ class EffectTypesTests(unittest.TestCase):
     def test_effect_types_not_correct(self):
         self.assertEqual(prepare_effect_types({'effectTypes':'ala-bala'}),self.ALL)
 
+
+class VariantTypesTests(unittest.TestCase):
+    
+    def test_variant_types_all(self):
+        self.assertIsNone(prepare_variant_types({'variantTypes':'All'}))
+
+    def test_variant_type_none(self):
+        self.assertIsNone(prepare_variant_types({}))
+        self.assertIsNone(prepare_variant_types({'variantTypes' : 'None'}))
+        self.assertIsNone(prepare_variant_types({'variantTypes' : 'none'}))
+        self.assertIsNone(prepare_variant_types({'variantTypes' : None}))
+
+    def test_variant_types_correct(self):
+        self.assertEqual(prepare_variant_types({'variantTypes':'CNV+'}),'CNV+')
+        self.assertEqual(prepare_variant_types({'variantTypes':'CNV-'}),'CNV-')
+        self.assertEqual(prepare_variant_types({'variantTypes':'snv'}),'snv')
+        self.assertEqual(prepare_variant_types({'variantTypes':'ins'}),'ins')
+        self.assertEqual(prepare_variant_types({'variantTypes':'del'}),'del')
+
+    def test_variant_type_not_correct(self):
+        self.assertIsNone(prepare_variant_types({'variantTypes' : 'ala'}))
+        self.assertIsNone(prepare_variant_types({'variantTypes' : 'bala'}))
+    
+class FamilesTests(unittest.TestCase):
+    
+    def test_families_empty(self):
+        self.assertIsNone(prepare_family_ids({}))
+
+    def test_families_none(self):
+        self.assertIsNone(prepare_family_ids({'familiesList' : 'None'}))
+        self.assertIsNone(prepare_family_ids({'familiesList' : 'none'}))
+        self.assertIsNone(prepare_family_ids({'familiesList' : 'All'}))
+        self.assertIsNone(prepare_family_ids({'familiesList' : 'all'}))
+        self.assertIsNone(prepare_family_ids({'familiesList' : None}))
+        self.assertIsNone(prepare_family_ids({'familiesList' : 15}))
+
+    def test_families_string(self):
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111'}),['111'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111,222'}),['111','222'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111 , 222'}),['111','222'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111    ,    222'}),['111','222'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111     ,    222,'}),['111','222'])
+
+    def test_fimiles_list(self):
+        self.assertListEqual(prepare_family_ids({'familiesList' : ['111']}),['111'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : ['111','222']}),['111','222'])
+    
+
 if __name__ == '__main__':
     unittest.main()
