@@ -102,8 +102,38 @@ def prepare_gene_syms(data):
     else:
         return None
 
-def prepare_gene_sets(data):
-    pass
+def __filter_gene_set(gene_set):
+    gs_id=gene_set['gs_id']
+    gs_term=gene_set['gs_term']
+    
+    gs=None
+    if gs_id.lower().strip()=='main':
+        gs=settings.GENE_SETS_MAIN
+    elif gs_id.lower().strip()=='go':
+        gs=settings.GENE_SETS_GO
+    elif gs_id.lower().stip()=='disease':
+        gs=settings.GENE_SETS_DISEASE
+    else:
+        return None
+    
+    if gs_term not in gs.tDesc:
+        return None
+    
+    gl=__filter_gene_set(gs.t2G[gs_term].keys())
+    if not gl:
+        return None
+        
+    return set(gl)
 
+    
+def prepare_gene_sets(data):
+    if not data.has_key('geneSet'):
+        return None
+     
+    gene_set = data['geneSet']
+    if isinstance(gene_set,dict):
+        return __filter_gene_set(gene_set)
+    elif isinstance(gene_set,str):
+        return None
 
 
