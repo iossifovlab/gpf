@@ -9,37 +9,9 @@ import re
 from GeneModelFiles import *
 import GenomeAccess
 
-"""
-stopCodons = ['TAG', 'TAA', 'TGA']
-    
-CodonsAa = {'Gly' : ['GGG', 'GGA', 'GGT', 'GGC'],
-        'Glu' : ['GAG', 'GAA'],
-        'Asp' : ['GAT', 'GAC'],
-        'Val' : ['GTG', 'GTA', 'GTT', 'GTC'],
-        'Ala' : ['GCG', 'GCA', 'GCT', 'GCC'],
-        'Arg' : ['AGG', 'AGA', 'CGG', 'CGA', 'CGT', 'CGC'],
-        'Ser' : ['AGT', 'AGC', 'TCG', 'TCA', 'TCT', 'TCC'],
-        'Lys' : ['AAG', 'AAA'],
-        'Asn' : ['AAT', 'AAC'],
-        'Met' : ['ATG'],
-        'Ile' : ['ATA', 'ATT', 'ATC'],
-        'Thr' : ['ACG', 'ACA', 'ACT', 'ACC'],
-        'Trp' : ['TGG'],
-        'End' : stopCodons,
-        'Cys' : ['TGT', 'TGC'],
-        'Tyr' : ['TAT', 'TAC'],
-        'Leu' : ['TTG', 'TTA', 'CTG', 'CTA', 'CTT', 'CTC'],
-        'Phe' : ['TTT', 'TTC'],
-        'Gln' : ['CAG', 'CAA'],
-        'His' : ['CAT', 'CAC'],
-        'Pro' : ['CCG', 'CCA', 'CCT', 'CCC']}
 
 
-
-CodonsAaKeys = CodonsAa.keys()
-"""
-
-Severity = {'all':24, 'splice-site':23, 'frame-shift':22, 'nonsense':21, 'no-frame-shift-newStop':20, 'noStart':19, 'noEnd':18, 'missense':17, 'no-frame-shift':16, 'CDS':15, 'synonymous':14, 'coding_unknown':13, "3'UTR":10, "5'UTR": 9, 'intron':7, 'non-coding':6, "5'UTR-intron": 5,"3'UTR-intron":4,  "promoter":3, "non-coding-intron":2, 'unknown':1, 'intergenic':0}
+Severity = {'tRNA:ANTICODON':30, 'all':24, 'splice-site':23, 'frame-shift':22, 'nonsense':21, 'no-frame-shift-newStop':20, 'noStart':19, 'noEnd':18, 'missense':17, 'no-frame-shift':16, 'CDS':15, 'synonymous':14, 'coding_unknown':13, 'regulatory':12, "3'UTR":11, "5'UTR": 10, 'intron':9, 'non-coding':8, "5'UTR-intron": 7,"3'UTR-intron":6,  "promoter":5, "non-coding-intron":4, 'unknown':3, 'intergenic':2, 'no-mutation':1}
 
 
 class NuclearCode:
@@ -91,7 +63,8 @@ class MitochondrialCode:
         'Met' : startCodons,
         'Ile' : ['ATT', 'ATC'],
         'Thr' : ['ACG', 'ACA', 'ACT', 'ACC'],
-        'Trp' : stopCodons,
+        'End' : stopCodons,
+        'Trp' : ['TGA', 'TGG'],
         'End' : ['TAA', 'TAG'],
         'Cys' : ['TGT', 'TGC'],
         'Tyr' : ['TAT', 'TAC'],
@@ -178,7 +151,7 @@ def add_effects(l):
             ef.prot_pos = int(i[1][3][:ind])
             ef.prot_length = int(i[1][3][ind+1:])
             ef.aa_change = i[1][1] + "->" + i[1][2]
-        elif ef.effect == "non-coding" or ef.effect == "unknown":
+        elif ef.effect in [ "non-coding", "unknown", "tRNA:ANTICODON"]:
             ef.length = int(i[1][1])
         elif ef.effect == "noStart":
             ef.prot_pos = 1
@@ -194,6 +167,8 @@ def add_effects(l):
         elif ef.effect == "CDS": 
             ef.cnv_type = i[1][1]
             ef.prot_length = i[1][2]
+        elif ef.effect == "no-mutation":
+            pass
         else:
             print "Unrecognizable effect: " + ef.effect
             sys.exit(-6789)
@@ -252,6 +227,7 @@ class Variant:
 
         if self.chr in ['MT', 'chrM', 'M']:
             code = MitochondrialCode()
+            promoter_len = 0
         else:
             code = NuclearCode()
             
@@ -267,9 +243,8 @@ class Variant:
                     if self.seq == None and self.type != "deletion":
                         worstForEachTranscript.append(["unknown", [i.gene, i.CDS_len()/3], i.strand, i.trID]) 
                         continue
-
+                    
                     what_hit = i.what_region(self.chr, self.pos, self.pos_last, prom = promoter_len)
-                   
                     
                     if what_hit == "no_hit":
                         # intergenic
@@ -294,11 +269,24 @@ class Variant:
    
                     worstEffect = None
                     
-                    if i.is_coding() == False:
+                    if what_hit == "non-coding":
                         in_exon = False
                         all_regs = i.all_regions()
+                        """
+                        if all_regs == []:
+                            worstForEachTranscript.append(["regulatory", [i.gene, i.total_len()], i.strand, i.trID])
+                            continue
+                        """
                         for r in all_regs:
-                            if (r.start <= self.pos <= r.stop) or (self.pos < r.start and self.pos_last >= r.start): 
+                            if (r.start <= self.pos <= r.stop) or (self.pos < r.start and self.pos_last >= r.start):
+                                if i.gene.startswith("tRNA"):
+                                    if 'anticodon' in i.attr:
+                                        
+                                        if (i.attr['anticodon'][0] <= self.pos <= i.attr['anticodon'][1]) or (i.attr['anticodon'][0] > self.pos and self.pos_last >= i.attr['anticodon'][0]):
+                                            worstForEachTranscript.append(["tRNA:ANTICODON", [i.gene, i.total_len()], i.strand, i.trID])
+                                            in_exon = True
+                                            break
+                                    
                                 worstForEachTranscript.append(["non-coding", [i.gene, i.total_len()], i.strand, i.trID])
                                 in_exon = True
                                 break
@@ -551,6 +539,7 @@ class Variant:
 
 
                         codingRegions = i.CDS_regions()
+                    
 
                         prev = codingRegions[0][1]
                         
@@ -576,9 +565,11 @@ class Variant:
                                 # coding
 
                                 refCodon, altCodon = whatCodonChange_Snp(i, self.pos, self.seq, refG)
+                        
 
                                 refAA = cod2aa(refCodon, code)
                                 altAA = cod2aa(altCodon, code)
+
 
                                 worstEffect = mutationType(refAA, altAA)
                                 
@@ -613,7 +604,8 @@ class Variant:
                     else:
                         print("Unrecognizable mutation type: " + self.type)
                         sys.exit(-998)
-        
+
+       
         ef_list = add_effects(worstForEachTranscript)
         
 
@@ -630,7 +622,8 @@ class Variant:
 #-----------------------------------------------------------------------------
 
 def get_effect_types(types=True, groups=False):
-    T = ['all',
+    T = ['tRNA:ANTICODON',
+         'all',
          'splice-site',
          'frame-shift',
          'nonsense',
@@ -651,10 +644,11 @@ def get_effect_types(types=True, groups=False):
          "promoter",
          "non-coding-intron",
          'unknown',
-         'intergenic']
+         'intergenic',
+         'no-mutation']
 
     G = ['LGDs',
-         'introns',
+         'introns', "regulatory",
          'UTRs'
          ]
 
@@ -741,7 +735,7 @@ def create_effect_details(e):
         eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
     elif e.effect == "5'UTR" or e.effect == "3'UTR":
         eff_d = str(e.dist_from_coding)
-    elif e.effect == "non-coding" or e.effect == "unknown":
+    elif e.effect in ["non-coding", "unknown", "tRNA:ANTICODON"]:
         eff_d = str(e.length)
     elif e.effect == "noStart" or e.effect == "noEnd":
         eff_d = str(e.prot_length)
@@ -751,6 +745,8 @@ def create_effect_details(e):
         eff_d = str(e.dist_from_5utr)
     elif e.effect == "CDS" or  e.effect == "all":
         eff_d = str(e.prot_length)
+    elif e.effect == "no-mutation":
+        eff_d = "no-mutation"
     return(eff_d)
     
 
@@ -1321,7 +1317,7 @@ def prepareIntronHit(tm, pos, length, cds_reg):
 
     return([tm.gene, indelside, str(distance), str(whichIntron) + "/" + str(howManyIntrons),str(whichAA) + "/" + str(protLength), str(intronLength) ])
 
-
+"""
 def createEffectDetailsPart(mutation):
     if mutation[0] == "intergenic":
         return("")
@@ -1335,7 +1331,7 @@ def createEffectDetailsPart(mutation):
         return(mutation[1][3])
     if mutation[0] == "missense" or mutation[0] == "nonsense" or mutation[0] == "coding_unknown": #or mutation[0] == "noEnd":
         return(mutation[1][3] + "(" + mutation[1][1] + "->" + mutation[1][2] + ")" ) #5->3
-    if mutation[0] == "non-coding":
+    if mutation[0] in ["non-coding", "tRNA-ANTICODON"]:
         return(str(mutation[1][1]))
     if mutation[0] == "splice-site":
         return(mutation[1][4]) 
@@ -1344,7 +1340,7 @@ def createEffectDetailsPart(mutation):
 
     print("unknown mutation type!: " + mutation[0])
     sys.exit(-99)
-
+"""
 
 
 def reverseReport(string):
@@ -1996,11 +1992,16 @@ def findCodingBase(tm, pos, dist, refGenome):
                 return(getSeq(refGenome, tm.chr, pos + dist))
             if dist < 0:
                 d = pos - tm.exons[e].start + dist + 1
-                return(findCodingBase(tm, tm.exons[e-1].stop, d, refGenome))
+                try:
+                    return(findCodingBase(tm, tm.exons[e-1].stop, d, refGenome))
+                except:
+                    return("NA")
             else:
                 d = tm.exons[e].stop - pos + dist - 1
-                return(findCodingBase(tm, tm.exons[e+1].start, d, refGenome))
-
+                try:
+                    return(findCodingBase(tm, tm.exons[e+1].start, d, refGenome))
+                except:
+                    return("NA")
     return(None)
 
 

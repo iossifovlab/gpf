@@ -15,7 +15,7 @@ class AbstractClassDoNotInstantiate:
     name = None
     location = None
     _shift = None 
-    Alternative_names = None
+    _Alternative_names = None
     
 class TranscriptModel:
 
@@ -223,6 +223,8 @@ class TranscriptModel:
 
     def what_region(self, chr, pos_start, pos_stop, prom = 0):
 
+        if self.is_coding() == False:
+             return("non-coding")
         
         if pos_stop < self.exons[0].start:
             if prom == 0:
@@ -521,23 +523,29 @@ class GeneModels(AbstractClassDoNotInstantiate):
             eEnds = ",".join([str(e.stop) for e in tm.exons])
             eFrames = ",".join([str(e.frame) for e in tm.exons])
             attrs_list = []
-            for i in ['bin', 'score', 'exonCount', 'cdsEndStat', 'cdsStartStat', 'proteinID' ]:
+            for i in ['bin', 'score', 'exonCount', 'cdsEndStat', 'cdsStartStat', 'proteinID']:
                 try:
                     attrs_list.append(str(tm.attr[i]))
                 except:
                     attrs_list.append('')
+            try:
+                attrs_list.append(str(tm.attr['anticodon'][0]))
+                attrs_list.append(str(tm.attr['anticodon'][1]))
+            except:
+               attrs_list.append('')
+               attrs_list.append('')
             
             cs = [tm.chr, 
-                    tm.trID,
-                    tm.gene,
-                    tm.strand,
-                    tm.tx[0],
-                    tm.tx[1],
-                    tm.cds[0],
-                    tm.cds[1],
-                    eStarts,
-                    eEnds,
-                    eFrames,
+                  tm.trID,
+                  tm.gene,
+                  tm.strand,
+                  tm.tx[0],
+                  tm.tx[1],
+                  tm.cds[0],
+                  tm.cds[1],
+                  eStarts,
+                  eEnds,
+                  eFrames,
                  ]
             f.write("\t".join(map(lambda x: str(x) if x!=None else "", cs)) + "\t")
             f.write("\t".join(attrs_list) + "\n")
@@ -549,7 +557,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
         f = gzip.open(inFile)
         for l in f:
             cs = l[:-1].split('\t')
-            chr, trID, gene, strand, txB, txE, cdsB, cdsE, eStarts, eEnds, eFrames, bin, score, exonCount, cdsStartStat, cdsEndStat, proteinId = cs
+            chr, trID, gene, strand, txB, txE, cdsB, cdsE, eStarts, eEnds, eFrames, bin, score, exonCount, cdsStartStat, cdsEndStat, proteinId, anticodonB, anticodonE = cs
             
             exons = [] 
             for frm,sr,sp in zip(*map(lambda x: x.split(","), [eFrames, eStarts, eEnds])):
@@ -568,6 +576,10 @@ class GeneModels(AbstractClassDoNotInstantiate):
                     attrs[a] = int(attrs[a])
                 except:
                     pass
+            try:
+                attrs['anticodon'] = (int(anticodonB), int(anticodonE))
+            except:
+                pass
             
 
             tm = TranscriptModel() 
@@ -582,9 +594,9 @@ class GeneModels(AbstractClassDoNotInstantiate):
 
             self.transcriptModels[tm.trID] = tm 
         f.close()
-        self.__updateIndexes()
+        self._updateIndexes()
 
-    def __updateIndexes(self):
+    def _updateIndexes(self):
         self._geneModels = defaultdict(list)
         self._utrModels = defaultdict(lambda : defaultdict(list))
         for tm in self.transcriptModels.values():
@@ -714,6 +726,7 @@ class MitoModel(GeneModels):
                 mm.cds = (int(line[2]), int(line[3]))
                 mm.tx = (int(line[2]), int(line[3]))
                 mm.chr = "chrM"
+                mm.attr = {}
                 e = Exon()
                 e.start = int(line[2])
                 e.stop = int(line[3])
@@ -730,9 +743,11 @@ class MitoModel(GeneModels):
                 mm.cds = (int(line[2]), int(line[2]))
                 mm.tx = (int(line[2]), int(line[3]))
                 mm.chr = "chrM"
+                mm.attr = {}
                 e = Exon()
                 e.start = int(line[2])
                 e.stop = int(line[3])
+                e.frame = -1
                 mm.exons = [e]
                 self._utrModels['chrM'][mm.tx] = [mm]
                 self.transcriptModels[mm.trID] = mm
@@ -745,27 +760,29 @@ class MitoModel(GeneModels):
                 mm.strand = line[1]
                 mm.cds = (int(line[2]), int(line[2]))
                 mm.tx = (int(line[2]), int(line[3]))
-                mm.anticodon = (int(line[4]), int(line[5]))
+                mm.attr = {}
+                mm.attr['anticodon'] = (int(line[4]), int(line[5]))
                 e = Exon()
                 e.start = int(line[2])
                 e.stop = int(line[3])
+                e.frame = -1
                 mm.exons = [e]
                 self._utrModels['chrM'][mm.tx] = [mm]
                 self.transcriptModels[mm.trID] = mm
                 self._geneModels[mm.gene] = [mm]
-                
-            elif mode == "regulatory_elements":
-                mm = TranscriptModel()
-                mm.chr = "chrM"
-                mm.gene = line[0]
-                mm.cds = (int(line[2]), int(line[2]))
-                mm.tx = (int(line[1]), int(line[2]))
-                e = Exon()
-                e.start = int(line[1])
-                e.stop = int(line[2])
-                mm.exons = [e]
-                self._utrModels['chrM'][mm.tx] = [mm]
-
+              
+            #elif mode == "regulatory_elements":
+            #    mm = TranscriptModel()
+            #    mm.chr = "chrM"
+            #    mm.gene = mm.trID = line[0]
+            #    mm.cds = (int(line[2]), int(line[2]))
+            #    mm.tx = (int(line[1]), int(line[2]))
+            #    mm.attr = {}
+            #    mm.exons = []
+            #    self._utrModels['chrM'][mm.tx] = [mm]
+            #    self.transcriptModels[mm.trID] = mm
+            #    self._geneModels[mm.gene] = [mm]
+            
             else:
                 continue
         file.close()
@@ -797,6 +814,27 @@ def create_region(chrom, b, e):
     return(reg(chr=chrom, start=b, stop=e))
 
 
+def join_gene_models(*gene_models):
+
+    if len(gene_models) < 2:
+        raise Exception("The function needs at least 2 arguments!")
+    
+    gm = GeneModels()
+    gm._utrModels = {}
+    gm._geneModels = {}
+    
+   
+    gm.transcriptModels = gene_models[0].transcriptModels.copy()
+    
+    for i in gene_models[1:]:
+        gm.transcriptModels.update(i.transcriptModels)
+
+    gm._updateIndexes()
+
+    return(gm)
+
+    
+    
 
 def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz", gene_mapping_file="default", format=None):
 

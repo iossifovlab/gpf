@@ -9,7 +9,6 @@ import re, os.path
 import GenomeAccess
 from GeneModelFiles import *
 import VariantAnnotation
-import VariantAnnotation_mito
 import time
 import datetime
 from DAE import *
@@ -67,13 +66,18 @@ if opts.help:
     print("--Graw=GRAW                      outside genome file ")
     print("-I I                             geneIDs mapping file; use None for no gene name mapping ")
     print("\n----------------------------------------------------------------\n\n")
-
+    sys.exit(-76)
     
 infile = '-'
 outfile = None
 
-if len(args) > 0:
-    infile = args[0]
+
+
+if len(args) == 0:
+    sys.stderr.write("The program requires an input file!!\n")
+    sys.exit(-77)
+
+infile = args[0]
 
 if infile != '-' and os.path.exists(infile) == False:
     sys.stderr.write("The given input file does not exist!\n")
