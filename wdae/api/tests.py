@@ -33,3 +33,13 @@ class FamiliesTest(APITestCase):
 #         response=self.client.post('/api/families?filter="A"', data, format='json')
 #          
 #         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+# class GetVariantsTest(APITestCase):
+#     client = APIClient()
+#     
+#     def test_get_denovo_simple(self):
+#         query={"denovoStudies":["DalyWE2012", "EichlerTG2012"]}
+#         response=self.client.post("/api/get_variants_csv/",data=query,content_type='application/json')
+#         self.assertEqual(response.status_code,status.HTTP_200_OK)
+#         

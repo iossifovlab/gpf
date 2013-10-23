@@ -3,7 +3,10 @@ from django.http import HttpResponse
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.decorators import renderer_classes
+
 from rest_framework import status
+from rest_framework.renderers import JSONRenderer
 
 from DAE import vDB, giDB, get_gene_sets_symNS,_safeVs
 
@@ -74,28 +77,49 @@ def gene_set_denovo_list(request,denovo_study):
         print "Exception: ",e
         return Response(status=status.HTTP_404_NOT_FOUND,data={"reason":"Denovo study <%s> not found..."%denovo_study})
         
+def __get_page_count(query_params, page_count=30):
+    if query_params.has_key('page_count'):
+        try:
+            page_count = int(query_params['page_count'])
+        except:
+            page_count = 30
+    if not (page_count > 0 and page_count <= 100):
+        page_count = 30
+    return page_count
 
 def __gene_set_filter_response_dict(request,data):
     query_params=request.QUERY_PARAMS
     
+    page_count=__get_page_count(query_params,page_count=100)
+    
     if query_params.has_key('filter'):
         filter_string=query_params['filter']
         l=[(key,value) for (key,value) in data.items() if (filter_string in key) or (filter_string in value)]
-        data=dict(l)
-    return data
-       
+        data=dict(l[0:page_count])
+    else:
+        return dict(data.items()[0:page_count])
+
+from django.conf import settings
+  
 @api_view(['GET'])
 def gene_set_main_list(request):
-    gts = get_gene_sets_symNS('main')
+    gts = settings.GENE_SETS_MAIN
     res=__gene_set_filter_response_dict(request, gts.tDesc)
     return Response(res) 
     
         
 @api_view(['GET'])
 def gene_set_go_list(request):
-    gts=giDB.getGeneTerms('GO')
+    gts=settings.GENE_SETS_GO
     res=__gene_set_filter_response_dict(request, gts.tDesc)
     return Response(res)
+
+@api_view(['GET'])
+def gene_set_disease_list(request):
+    gts=settings.GENE_SETS_DISEASE
+    res=__gene_set_filter_response_dict(request, gts.tDesc)
+    return Response(res)
+
 
 @api_view(['GET'])
 def gene_list(request,page_count=30):
@@ -107,14 +131,7 @@ def gene_list(request,page_count=30):
         start_string=query_params['filter']
         gl=[g for g in gl if g.startswith(start_string)]
         
-    if query_params.has_key('page_count'):
-        try:
-            page_count=int(query_params['page_count'])
-        except:
-            page_count=30
-
-    if not (page_count>0 and page_count<=100):
-        page_count=30
+    page_count = __get_page_count(query_params, page_count)
         
     return Response(gl[:page_count])
 
