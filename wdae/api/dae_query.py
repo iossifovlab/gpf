@@ -3,17 +3,6 @@ from django.conf import settings
 from DAE import vDB
 from DAE import giDB
 
-def prepare_denovo_studies(data):
-    if not data.has_key('denovoStudies'):
-        return []
-    else:
-        dl=data['denovoStudies']
-        dst=[]
-        try:
-            dst = [vDB.get_study(str(d)) for d in dl]
-        except:
-            print "The denovo study: %s does not exists..." % ' '.join(dl) 
-        return dst
     
 def prepare_inchild(data):
     if not data.has_key('inChild'):
@@ -103,6 +92,7 @@ def prepare_gene_syms(data):
         return None
 
 def __filter_gene_set(gene_set):
+
     gs_id=gene_set['gs_id']
     gs_term=gene_set['gs_term']
     
@@ -111,7 +101,7 @@ def __filter_gene_set(gene_set):
         gs=settings.GENE_SETS_MAIN
     elif gs_id.lower().strip()=='go':
         gs=settings.GENE_SETS_GO
-    elif gs_id.lower().stip()=='disease':
+    elif gs_id.lower().strip()=='disease':
         gs=settings.GENE_SETS_DISEASE
     else:
         return None
@@ -119,7 +109,7 @@ def __filter_gene_set(gene_set):
     if gs_term not in gs.tDesc:
         return None
     
-    gl=__filter_gene_set(gs.t2G[gs_term].keys())
+    gl=__filter_gene_syms(gs.t2G[gs_term].keys())
     if not gl:
         return None
         
@@ -135,5 +125,40 @@ def prepare_gene_sets(data):
         return __filter_gene_set(gene_set)
     elif isinstance(gene_set,str):
         return None
+    else:
+        return None
+
+def prepare_denovo_studies(data):
+    if not data.has_key('denovoStudies'):
+        return None
+    
+    dl=data['denovoStudies']
+    try:
+        dst = [vDB.get_study(str(d)) for d in dl]
+    except:
+        print "The denovo study: %s does not exists..." % ' '.join(dl)
+        return None
+    
+    dst=[st for st in dst if st is not None]
+    if not dst:
+        return None
+     
+    return dst
 
 
+def prepare_transmitted_studies(data):
+    if not data.has_key('transmittedStudies'):
+        return None
+    
+    tl=data['transmittedStudies']
+    try:
+        dst = [vDB.get_study(str(st)) for st in tl]
+    except:
+        print "The denovo study: %s does not exists..." % ' '.join(tl)
+        return None
+    
+    dst=[st for st in dst if st is not None]
+    if not dst:
+        return None
+     
+    return dst
