@@ -20,19 +20,19 @@ class FamiliesTest(APITestCase):
     client = APIClient()
             
     def test_families_get(self):        
-        response=self.client.get('/api/families/DalyWE2012')
+        response = self.client.get('/api/families/DalyWE2012')
                 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data=response.data
-        self.assertEqual(data['study'],'DalyWE2012')
+        data = response.data
+        self.assertEqual(data['study'], 'DalyWE2012')
         
     def test_families_get_filter(self):        
-        response=self.client.get('/api/families/DalyWE2012')
+        response = self.client.get('/api/families/DalyWE2012')
                 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data=response.data
-        self.assertEqual(data['study'],'DalyWE2012')
-        self.assertEqual(len(data['families']),174)
+        data = response.data
+        self.assertEqual(data['study'], 'DalyWE2012')
+        self.assertEqual(len(data['families']), 174)
         
 #     def test_families_post(self):
 #         data={'studies':['DalyWE2012','EichlerTG2012']}
@@ -53,25 +53,25 @@ class FamiliesTest(APITestCase):
 class StudiesTests(unittest.TestCase):
     
     def test_denovo_studies_empty(self):
-        dsl=prepare_denovo_studies({'denovoStudies':[]})
+        dsl = prepare_denovo_studies({'denovoStudies':[]})
         self.assertTrue(not dsl)
         
-        dsl=prepare_denovo_studies({})
+        dsl = prepare_denovo_studies({})
         self.assertTrue(not dsl)
 
     def test_denovo_studies_single(self):
-        dsl=prepare_denovo_studies({'denovoStudies':["DalyWE2012"]})
-        self.assertEquals(len(dsl),1)
+        dsl = prepare_denovo_studies({'denovoStudies':["DalyWE2012"]})
+        self.assertEquals(len(dsl), 1)
         self.assertEqual(dsl[0].name, "DalyWE2012")
         
-        dsl=prepare_denovo_studies({'denovoStudies':["EichlerTG2012"]})
-        self.assertEquals(len(dsl),1)
+        dsl = prepare_denovo_studies({'denovoStudies':["EichlerTG2012"]})
+        self.assertEquals(len(dsl), 1)
         self.assertEqual(dsl[0].name, "EichlerTG2012")
         
     
     def test_denovo_studies_double(self):
-        dsl=prepare_denovo_studies({'denovoStudies':["DalyWE2012","EichlerTG2012"]})
-        self.assertEquals(len(dsl),2)
+        dsl = prepare_denovo_studies({'denovoStudies':["DalyWE2012", "EichlerTG2012"]})
+        self.assertEquals(len(dsl), 2)
         
         self.assertEqual(dsl[0].name, "DalyWE2012")
         self.assertEqual(dsl[1].name, "EichlerTG2012")
@@ -87,12 +87,12 @@ class InChildTests(unittest.TestCase):
 
         
     def test_inchild_correct(self):
-        self.assertEqual(prepare_inchild({'inChild':'prb'}),'prb')
-        self.assertEqual(prepare_inchild({'inChild':'sib'}),'sib')
-        self.assertEqual(prepare_inchild({'inChild':'prbM'}),'prbM')
-        self.assertEqual(prepare_inchild({'inChild':'sibF'}),'sibF')
-        self.assertEqual(prepare_inchild({'inChild':'sibM'}),'sibM')
-        self.assertEqual(prepare_inchild({'inChild':'prbF'}),'prbF')
+        self.assertEqual(prepare_inchild({'inChild':'prb'}), 'prb')
+        self.assertEqual(prepare_inchild({'inChild':'sib'}), 'sib')
+        self.assertEqual(prepare_inchild({'inChild':'prbM'}), 'prbM')
+        self.assertEqual(prepare_inchild({'inChild':'sibF'}), 'sibF')
+        self.assertEqual(prepare_inchild({'inChild':'sibM'}), 'sibM')
+        self.assertEqual(prepare_inchild({'inChild':'prbF'}), 'prbF')
 
     def test_inchild_not_correct(self):
         self.assertIsNone(prepare_inchild({'inChild':'prbMsibM'}))
@@ -101,9 +101,9 @@ class InChildTests(unittest.TestCase):
 
 
 class EffectTypesTests(unittest.TestCase):
-    ALL="LGDs,CNVs,nonsynonymous,CNV-,CNV+,frame-shift,intron,no-frame-shift-new-stop,synonymous,nonsense,no-frame-shift,missense,3'UTR,5'UTR,splice-site"
+    ALL = "LGDs,CNVs,nonsynonymous,CNV-,CNV+,frame-shift,intron,no-frame-shift-new-stop,synonymous,nonsense,no-frame-shift,missense,3'UTR,5'UTR,splice-site"
     def test_effect_types_all(self):
-        self.assertEqual(prepare_effect_types({'effectTypes':'All'}),self.ALL)
+        self.assertEqual(prepare_effect_types({'effectTypes':'All'}), self.ALL)
         
     def test_effect_types_none(self):
         self.assertIsNone(prepare_effect_types({}))
@@ -112,24 +112,24 @@ class EffectTypesTests(unittest.TestCase):
         self.assertIsNone(prepare_effect_types({'effectTypes':'none'}))
 
     def test_effect_types_correct(self):
-        self.assertEqual(prepare_effect_types({'effectTypes':'LGDs'}),'LGDs')
-        self.assertEqual(prepare_effect_types({'effectTypes':'CNVs'}),'CNVs')
-        self.assertEqual(prepare_effect_types({'effectTypes':'nonsynonymous'}),'nonsynonymous')
-        self.assertEqual(prepare_effect_types({'effectTypes':'CNV-'}),'CNV-')
-        self.assertEqual(prepare_effect_types({'effectTypes':'CNV+'}),'CNV+')
-        self.assertEqual(prepare_effect_types({'effectTypes':'frame-shift'}),'frame-shift')
-        self.assertEqual(prepare_effect_types({'effectTypes':'intron'}),'intron')
-        self.assertEqual(prepare_effect_types({'effectTypes':'no-frame-shift-new-stop'}),'no-frame-shift-new-stop')
-        self.assertEqual(prepare_effect_types({'effectTypes':'synonymous'}),'synonymous')
-        self.assertEqual(prepare_effect_types({'effectTypes':'nonsense'}),'nonsense')
-        self.assertEqual(prepare_effect_types({'effectTypes':'no-frame-shift'}),'no-frame-shift')
-        self.assertEqual(prepare_effect_types({'effectTypes':'missense'}),'missense')
-        self.assertEqual(prepare_effect_types({'effectTypes':"3'UTR"}),"3'UTR")
-        self.assertEqual(prepare_effect_types({'effectTypes':"5'UTR"}),"5'UTR")
-        self.assertEqual(prepare_effect_types({'effectTypes':"splice-site"}),"splice-site")
+        self.assertEqual(prepare_effect_types({'effectTypes':'LGDs'}), 'LGDs')
+        self.assertEqual(prepare_effect_types({'effectTypes':'CNVs'}), 'CNVs')
+        self.assertEqual(prepare_effect_types({'effectTypes':'nonsynonymous'}), 'nonsynonymous')
+        self.assertEqual(prepare_effect_types({'effectTypes':'CNV-'}), 'CNV-')
+        self.assertEqual(prepare_effect_types({'effectTypes':'CNV+'}), 'CNV+')
+        self.assertEqual(prepare_effect_types({'effectTypes':'frame-shift'}), 'frame-shift')
+        self.assertEqual(prepare_effect_types({'effectTypes':'intron'}), 'intron')
+        self.assertEqual(prepare_effect_types({'effectTypes':'no-frame-shift-new-stop'}), 'no-frame-shift-new-stop')
+        self.assertEqual(prepare_effect_types({'effectTypes':'synonymous'}), 'synonymous')
+        self.assertEqual(prepare_effect_types({'effectTypes':'nonsense'}), 'nonsense')
+        self.assertEqual(prepare_effect_types({'effectTypes':'no-frame-shift'}), 'no-frame-shift')
+        self.assertEqual(prepare_effect_types({'effectTypes':'missense'}), 'missense')
+        self.assertEqual(prepare_effect_types({'effectTypes':"3'UTR"}), "3'UTR")
+        self.assertEqual(prepare_effect_types({'effectTypes':"5'UTR"}), "5'UTR")
+        self.assertEqual(prepare_effect_types({'effectTypes':"splice-site"}), "splice-site")
 
     def test_effect_types_not_correct(self):
-        self.assertEqual(prepare_effect_types({'effectTypes':'ala-bala'}),self.ALL)
+        self.assertEqual(prepare_effect_types({'effectTypes':'ala-bala'}), self.ALL)
 
 
 class VariantTypesTests(unittest.TestCase):
@@ -144,11 +144,11 @@ class VariantTypesTests(unittest.TestCase):
         self.assertIsNone(prepare_variant_types({'variantTypes' : None}))
 
     def test_variant_types_correct(self):
-        self.assertEqual(prepare_variant_types({'variantTypes':'CNV+'}),'CNV+')
-        self.assertEqual(prepare_variant_types({'variantTypes':'CNV-'}),'CNV-')
-        self.assertEqual(prepare_variant_types({'variantTypes':'snv'}),'snv')
-        self.assertEqual(prepare_variant_types({'variantTypes':'ins'}),'ins')
-        self.assertEqual(prepare_variant_types({'variantTypes':'del'}),'del')
+        self.assertEqual(prepare_variant_types({'variantTypes':'CNV+'}), 'CNV+')
+        self.assertEqual(prepare_variant_types({'variantTypes':'CNV-'}), 'CNV-')
+        self.assertEqual(prepare_variant_types({'variantTypes':'snv'}), 'snv')
+        self.assertEqual(prepare_variant_types({'variantTypes':'ins'}), 'ins')
+        self.assertEqual(prepare_variant_types({'variantTypes':'del'}), 'del')
 
     def test_variant_type_not_correct(self):
         self.assertIsNone(prepare_variant_types({'variantTypes' : 'ala'}))
@@ -170,18 +170,18 @@ class FamilesTests(unittest.TestCase):
         self.assertIsNone(prepare_family_ids({'familiesList' : 15}))
 
     def test_families_string(self):
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111'}),['111'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111,222'}),['111','222'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111 , 222'}),['111','222'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111    ,    222'}),['111','222'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111     ,    222,'}),['111','222'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111'}), ['111'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111,222'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111 , 222'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111    ,    222'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : '111     ,    222,'}), ['111', '222'])
 
     def test_families_list(self):
-        self.assertListEqual(prepare_family_ids({'familiesList' : ['111']}),['111'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : ['111','222']}),['111','222'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : ['111']}), ['111'])
+        self.assertListEqual(prepare_family_ids({'familiesList' : ['111', '222']}), ['111', '222'])
     
 
-class GenSymsTests(unittest.TestCase):
+class GeneSymsTests(unittest.TestCase):
     
     def test_gen_syms_empty(self):
         self.assertIsNone(prepare_gene_syms({}))
@@ -192,21 +192,45 @@ class GenSymsTests(unittest.TestCase):
         self.assertIsNone(prepare_gene_syms({'geneSym' : None}))
     
     def test_gen_syms_correct_string(self):
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1'}),set(['CDH1']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1,SCO2'}),set(['CDH1','SCO2']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2'}),set(['CDH1','SCO2']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2  ,   '}),set(['CDH1','SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1'}), set(['CDH1']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1,SCO2'}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2'}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2  ,   '}), set(['CDH1', 'SCO2']))
         
     def test_gen_syms_not_correct_string(self):
         self.assertIsNone(prepare_gene_syms({'geneSym' : 'ala-bala'}))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1,ala-bala'}),set(['CDH1']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1,ala-bala'}), set(['CDH1']))
         
     def test_gen_syms_correct_list(self):
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['CDH1']}),set(['CDH1']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['CDH1','SCO2']}),set(['CDH1','SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['CDH1']}), set(['CDH1']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['CDH1', 'SCO2']}), set(['CDH1', 'SCO2']))
         
     def test_gen_syms_not_correct_list(self):
         self.assertIsNone(prepare_gene_syms({'geneSym' : ['ala-bala']}))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['ala-bala','SCO2']}),set(['SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['ala-bala', 'SCO2']}), set(['SCO2']))
         
         
+class GeneSetsTests(unittest.TestCase):
+    DISEASE_AIDS = set(['IFNG', 'KIR3DL1', 'CXCL12'])
+    GO_GO_2001293 = set(['ACACA', 'ACACB'])
+    MAIN_mPFC_maternal = set(['RAD23B', 'ADD2', 'NCOR2', 'CERS4', 'PPP1R3C', 'KCNK9', 'CLIP2', 'ARF3', 'ADAR', 'DEF8', 'SLC4A8', 'RFTN2', 'COPG2', 'LDHD', 'SPTLC2', 'KCTD20', 'NNT', 'IGF2', 'CLCN2', 'UBE2E2', 'HERC3', 'MEG3', 'TOB1', 'UBR4', 'ZNF157', 'AKAP2', 'DOPEY2', 'SCN1B', 'LIMCH1'])
+    
+    def test_gen_sets_empty(self):
+        self.assertIsNone(prepare_gene_sets({}))
+    
+    def test_get_sets_main(self):
+        gs = prepare_gene_sets({'geneSet':{'gs_id':'main', 'gs_term':'mPFC_maternal'}})
+        self.assertSetEqual(gs, self.MAIN_mPFC_maternal)
+        self.assertTrue(isinstance(gs, set))
+        
+    def test_get_sets_go(self):
+        gs = prepare_gene_sets({'geneSet':{'gs_id':'GO', 'gs_term':'GO:2001293'}})
+        self.assertSetEqual(gs, self.GO_GO_2001293)
+        self.assertTrue(isinstance(gs, set))
+        
+    def test_get_sets_disease(self):
+        gs = prepare_gene_sets({'geneSet':{'gs_id':'disease', 'gs_term':'AIDS'}})
+        self.assertSetEqual(gs, self.DISEASE_AIDS)
+        self.assertTrue(isinstance(gs, set))
+
+    
