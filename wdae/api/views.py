@@ -14,38 +14,39 @@ from GetVariantsInterface import augmentAVar
 
 import itertools
 
+__add_headers={'Access-Control-Allow-Origin':'*'}
 
 @api_view(['GET'])
 def denovo_studies_list(request):
     stds=vDB.getDenovoStudies()
-    return Response({"denovo_studies" : stds})
+    return Response({"denovo_studies" : stds},headers=__add_headers)
 
 @api_view(['GET'])
 def study_groups_list(request):
     stds=vDB.getStudyGroups()
-    return Response({"study_groups" : stds})
+    return Response({"study_groups" : stds},headers=__add_headers)
 
 
 @api_view(['GET'])
 def transmitted_studies_list(request):
     stds=vDB.getTransmittedStudies()
-    return Response({"transmitted_studies" : stds})
+    return Response({"transmitted_studies" : stds},headers=__add_headers)
 
 
 @api_view(['GET'])
 def effect_types_list(request):
     eff=vDB.get_effect_types()
-    return Response({"effect_types" : eff})
+    return Response({"effect_types" : eff},headers=__add_headers)
 
 @api_view(['GET'])
 def variant_types_list(request):
     var_types=vDB.get_variant_types()
-    return Response({'variant_types': var_types})
+    return Response({'variant_types': var_types},headers=__add_headers)
 
 @api_view(['GET'])
 def child_type_list(request):
     child_types=vDB.get_child_types()
-    return Response({'child_types':child_types})
+    return Response({'child_types':child_types},headers=__add_headers)
 
 @api_view(['GET'])
 def families_list(request,study_name=None):
@@ -59,17 +60,17 @@ def families_list(request,study_name=None):
         families=[f for f in families if f.startswith(start_string)]
         
     return Response({'study':study_name,
-                     'families':families})
+                     'families':families},headers=__add_headers)
 
 @api_view(['GET'])
 def gene_set_denovo_list(request,denovo_study):
     try:
         gts = vDB.get_denovo_sets(str(denovo_study))
-        return Response(gts.tDesc) 
+        return Response(gts.tDesc,headers=__add_headers) 
     
     except Exception as e:
         print "Exception: ",e
-        return Response(status=status.HTTP_404_NOT_FOUND,data={"reason":"Denovo study <%s> not found..."%denovo_study})
+        return Response(status=status.HTTP_404_NOT_FOUND,data={"reason":"Denovo study <%s> not found..."%denovo_study},headers=__add_headers)
         
 def __get_page_count(query_params, page_count=30):
     if query_params.has_key('page_count'):
@@ -97,20 +98,20 @@ def __gene_set_filter_response_dict(request,data):
 def gene_set_main_list(request):
     gts = settings.GENE_SETS_MAIN
     res=__gene_set_filter_response_dict(request, gts.tDesc)
-    return Response(res) 
+    return Response(res,headers=__add_headers) 
     
         
 @api_view(['GET'])
 def gene_set_go_list(request):
     gts=settings.GENE_SETS_GO
     res=__gene_set_filter_response_dict(request, gts.tDesc)
-    return Response(res)
+    return Response(res,headers=__add_headers)
 
 @api_view(['GET'])
 def gene_set_disease_list(request):
     gts=settings.GENE_SETS_DISEASE
     res=__gene_set_filter_response_dict(request, gts.tDesc)
-    return Response(res)
+    return Response(res,headers=__add_headers)
 
 
 @api_view(['GET'])
@@ -125,7 +126,7 @@ def gene_list(request,page_count=30):
         
     page_count = __get_page_count(query_params, page_count)
         
-    return Response(gl[:page_count])
+    return Response(gl[:page_count],headers=__add_headers)
 
 
 
@@ -149,6 +150,7 @@ def get_variants_csv(request):
     response = HttpResponse(mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
+    response['Access-Control-Allow-Origin'] = '*'
 
     
     _safeVs(response,itertools.imap(augmentAVar,itertools.chain(dvs,[])),
