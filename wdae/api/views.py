@@ -60,14 +60,8 @@ def families_list(request,study_name=None):
                      'families':families})
 
 @api_view(['GET'])
-def gene_set_list(request,set_name):
-    gs=get_gene_sets_symNS(set_name)
-    return Response(gs.tDesc)    
-
-@api_view(['GET'])
 def gene_set_denovo_list(request,denovo_study):
     try:
-        #gts=vDB.get_denovo_sets('IossifovWE2012')
         gts = vDB.get_denovo_sets(str(denovo_study))
         return Response(gts.tDesc) 
     

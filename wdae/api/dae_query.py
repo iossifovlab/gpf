@@ -1,5 +1,5 @@
 from DAE import vDB
-
+from DAE import giDB
 
 def prepare_denovo_studies(data):
     if not data.has_key('denovoStudies'):
@@ -75,5 +75,32 @@ def prepare_family_ids(data):
     else:
         return None
 
-def prepare_gen_syms(data):
-    pass
+def __filter_gene_syms(gl):
+    return gl
+#     return [giDB.genes[g].sym for g in gl if g in giDB.genes]
+
+def prepare_gene_syms(data):
+    if not data.has_key('geneSym'):
+        return None
+    
+    gene_sym=data['geneSym']
+    if isinstance(gene_sym, list):
+        gl=__filter_gene_syms(gene_sym)
+        if not gl:
+            return None
+        else:
+            return set(gl)
+        
+    elif isinstance(gene_sym, str):
+        gl = [s.strip() for s in gene_sym.split(',') if len(s.strip())>0]
+        gl = __filter_gene_syms(gl)
+        if not gl:
+            return None
+        return set(gl)
+    else:
+        return None
+
+
+
+
+

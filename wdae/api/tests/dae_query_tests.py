@@ -105,7 +105,9 @@ class VariantTypesTests(unittest.TestCase):
     def test_variant_type_not_correct(self):
         self.assertIsNone(prepare_variant_types({'variantTypes' : 'ala'}))
         self.assertIsNone(prepare_variant_types({'variantTypes' : 'bala'}))
-    
+
+
+
 class FamilesTests(unittest.TestCase):
     
     def test_families_empty(self):
@@ -131,5 +133,22 @@ class FamilesTests(unittest.TestCase):
         self.assertListEqual(prepare_family_ids({'familiesList' : ['111','222']}),['111','222'])
     
 
+class GenSymsTests(unittest.TestCase):
+    
+    def test_gen_syms_empty(self):
+        self.assertIsNone(prepare_gene_syms({}))
+
+    def test_gen_syms_none(self):
+        self.assertIsNone(prepare_gene_syms({'geneSym' : ''}))
+        self.assertIsNone(prepare_gene_syms({'geneSym' : '    '}))
+        self.assertIsNone(prepare_gene_syms({'geneSym' : None}))
+    
+    def test_gen_syms_correct_string(self):
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1'}),set(['CDH1']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1,SCO2'}),set(['CDH1','SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2'}),set(['CDH1','SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2  ,   '}),set(['CDH1','SCO2']))
+
 if __name__ == '__main__':
     unittest.main()
+    
