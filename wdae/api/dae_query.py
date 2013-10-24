@@ -1,7 +1,6 @@
 from django.conf import settings
   
 from DAE import vDB
-from DAE import giDB
 
     
 def prepare_inchild(data):
@@ -162,3 +161,93 @@ def prepare_transmitted_studies(data):
         return None
      
     return dst
+
+def combine_gene_syms(data):
+    gene_syms=prepare_gene_syms(data)
+    gene_sets=prepare_gene_sets(data)
+    if gene_syms is None:
+        return gene_sets
+    else:
+        if gene_sets is None:
+            return gene_syms
+        else:
+            return gene_sets.union(gene_syms)
+    
+"minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1"
+
+def __prepare_min_alt_freq_prcnt(data):
+    minAltFreqPrcnt=-1.0
+    if data.has_key('minAltFreqPrcnt'):
+        try:
+            minAltFreqPrcnt=float(str(data['minAltFreqPrcnt']))
+        except:
+            minAltFreqPrcnt=-1.0
+    return minAltFreqPrcnt
+
+def __prepare_max_alt_freq_prcnt(data):
+    maxAltFreqPrcnt=5.0
+    if data.has_key('maxAltFreqPrcnt'):
+        try:
+            maxAltFreqPrcnt=float(str(data['maxAltFreqPrcnt']))
+        except:
+            maxAltFreqPrcnt=5.0
+    return maxAltFreqPrcnt
+        
+
+def __prepare_min_parents_called(data):
+    minParentsCalled=600
+    if data.has_key('minParentsCalled'):
+        try:
+            minParentsCalled=float(str(data['minParentsCalled']))
+        except:
+            minParentsCalled=600
+    return minParentsCalled
+
+
+
+def __prepare_ultra_rare(data):
+    ultraRareOnly=None
+    if data.has_key('ultraRareOnly'):
+        if ultraRareOnly=='True' or ultraRareOnly=='true':
+            ultraRareOnly=True
+    return ultraRareOnly
+
+def prepare_transmitted_filters(data):
+    filters={'variantTypes':prepare_variant_types(data),
+             'effectTypes':prepare_effect_types(data),
+             'inChild':prepare_inchild(data),
+             'familyIds':prepare_family_ids(data),
+             'geneSyms':combine_gene_syms(data),
+             'ultraRareOnly':__prepare_ultra_rare(data),
+             'minParentsCalled':__prepare_min_parents_called(data),
+             'minAltFreqPrcnt':__prepare_min_alt_freq_prcnt(data),
+             'maxAltFreqPrcnt':__prepare_max_alt_freq_prcnt(data)
+             }
+    return filters
+
+def prepare_denovo_filters(data):
+        
+    filters={'inChild':prepare_inchild(data),
+             'variantTypes':prepare_variant_types(data),
+             'effectTypes':prepare_effect_types(data),
+             'familyIds':prepare_family_ids(data),
+             'geneSyms':combine_gene_syms(data)}
+    return filters
+
+def dae_query_variants(data):
+    variants=[]
+    dstudies=prepare_denovo_studies(data)
+    if dstudies is not None:
+        filters=prepare_denovo_filters(data)
+        dvs=vDB.get_denovo_variants(dstudies,**filters)
+        variants.append(dvs)
+    
+    tstudies=prepare_transmitted_studies(data)
+    if tstudies is not None:
+        filters=prepare_transmitted_filters(data)
+        for study in tstudies:
+            tvs=study.get_transmitted_variants(**filters)
+            variants.append(tvs)
+
+    return variants
+    

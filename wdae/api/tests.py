@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 import unittest
+import itertools
 
 from DAE import *
 from api.dae_query import *
@@ -265,3 +266,42 @@ class StudiesTests(unittest.TestCase):
         dsl = prepare_transmitted_studies({'transmittedStudies':["ala", "bala"]})
         self.assertIsNone(dsl)
 
+
+class VariantsTests(unittest.TestCase):
+    
+    def test_studies_empty(self):
+        vs = dae_query_variants({'denovoStudies':[],'transmittedStudies':[]})
+        self.assertListEqual(vs,[])
+        
+        vs = dae_query_variants({})
+        self.assertListEqual(vs,[])
+
+    def test_studies_single(self):
+        vs = dae_query_variants({'denovoStudies':["DalyWE2012"]})
+        self.assertEqual(len(vs), 1)
+
+        vs = dae_query_variants({'transmittedStudies':["wig683"]})
+        self.assertEqual(len(vs), 1)
+
+#     def test_effect_type(self):
+#         vs = dae_query_variants({'denovoStudies':["DalyWE2012"],
+#                                  'transmittedStudies':["wig683"],
+#                                  'effectTypes':'nonsense'})
+#         self.assertEqual(len(vs),2)
+#         for v in itertools.chain(*vs):
+#             self.assertEqual(v.atts['effectType'],'nonsense')
+
+
+    def test_variant_filters(self):
+        vs = dae_query_variants({"denovoStudies":["DalyWE2012"],
+                                 "transmittedStudies":["wig683"],
+                                 "inChild":"sibF",
+                                 "effectTypes":"frame-shift",
+                                 "variantTypes":"del",
+                                 "ultraRareOnly":"True"})
+        
+        self.assertEqual(len(vs),2)
+        for v in itertools.chain(*vs):
+            self.assertTrue('sibF' in v.inChS)
+            self.assertEqual(v.atts['effectType'],'frame-shift')
+            

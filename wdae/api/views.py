@@ -14,7 +14,7 @@ from GetVariantsInterface import augmentAVar
 
 import itertools
 
-
+from dae_query import dae_query_variants
 
 class Response(RestResponse):
     def __init__(self,data=None, status=200,
@@ -139,32 +139,20 @@ def gene_list(request,page_count=30):
         
     return Response(gl[:page_count])
 
-
-
-
 @api_view(['POST'])
 def get_variants_csv(request):
     data=request.DATA
     print data
     
-    dvs = []
-    if data.has_key('denovoStudies'):
-        dl=data['denovoStudies']
-        try:
-            dst = [vDB.get_study(d) for d in dl]
-        except:
-            print "The denovo study: %s DOES NOT EXIST! ...exiting!" % ' '.join(dl) 
-            raise
-        dvs = vDB.get_denovo_variants(dst)
+    vsl=dae_query_variants(data)
     
-    #response=Response(status.HTTP_200_OK,content_type='application/bin',mimetype='text/csv')
     response = HttpResponse(mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
     response['Access-Control-Allow-Origin'] = '*'
 
     
-    _safeVs(response,itertools.imap(augmentAVar,itertools.chain(dvs,[])),
+    _safeVs(response,itertools.imap(augmentAVar,itertools.chain(*vsl)),
                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
     return response
 
