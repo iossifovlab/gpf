@@ -86,11 +86,12 @@ def __gene_set_filter_response_dict(request,data):
     query_params=request.QUERY_PARAMS
     
     page_count=__get_page_count(query_params,page_count=100)
+    print "page_count:", page_count
     
     if query_params.has_key('filter'):
         filter_string=query_params['filter']
         l=[(key,value) for (key,value) in data.items() if (filter_string in key) or (filter_string in value)]
-        data=dict(l[0:page_count])
+        return dict(l[0:page_count])
     else:
         return dict(data.items()[0:page_count])
 
