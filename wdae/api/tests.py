@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 import unittest
+import itertools
 
 from DAE import *
 from api.dae_query import *
@@ -136,23 +137,23 @@ class FamilesTests(unittest.TestCase):
         self.assertIsNone(prepare_family_ids({}))
 
     def test_families_none(self):
-        self.assertIsNone(prepare_family_ids({'familiesList' : 'None'}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : 'none'}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : 'All'}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : 'all'}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : None}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : 15}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 'None'}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 'none'}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 'All'}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 'all'}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : None}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 15}))
 
     def test_families_string(self):
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111'}), ['111'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111,222'}), ['111', '222'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111 , 222'}), ['111', '222'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111    ,    222'}), ['111', '222'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111     ,    222,'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111'}), ['111'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111,222'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111 , 222'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111    ,    222'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111     ,    222,'}), ['111', '222'])
 
     def test_families_list(self):
-        self.assertListEqual(prepare_family_ids({'familiesList' : ['111']}), ['111'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : ['111', '222']}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : ['111']}), ['111'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : ['111', '222']}), ['111', '222'])
     
 
 class GeneSymsTests(unittest.TestCase):
@@ -161,27 +162,27 @@ class GeneSymsTests(unittest.TestCase):
         self.assertIsNone(prepare_gene_syms({}))
 
     def test_gen_syms_none(self):
-        self.assertIsNone(prepare_gene_syms({'geneSym' : ''}))
-        self.assertIsNone(prepare_gene_syms({'geneSym' : '    '}))
-        self.assertIsNone(prepare_gene_syms({'geneSym' : None}))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : ''}))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : '    '}))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : None}))
     
     def test_gen_syms_correct_string(self):
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1'}), set(['CDH1']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1,SCO2'}), set(['CDH1', 'SCO2']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2'}), set(['CDH1', 'SCO2']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2  ,   '}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1'}), set(['CDH1']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1,SCO2'}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1      ,      SCO2'}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1      ,      SCO2  ,   '}), set(['CDH1', 'SCO2']))
         
     def test_gen_syms_not_correct_string(self):
-        self.assertIsNone(prepare_gene_syms({'geneSym' : 'ala-bala'}))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1,ala-bala'}), set(['CDH1']))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : 'ala-bala'}))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1,ala-bala'}), set(['CDH1']))
         
     def test_gen_syms_correct_list(self):
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['CDH1']}), set(['CDH1']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['CDH1', 'SCO2']}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : ['CDH1']}), set(['CDH1']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : ['CDH1', 'SCO2']}), set(['CDH1', 'SCO2']))
         
     def test_gen_syms_not_correct_list(self):
-        self.assertIsNone(prepare_gene_syms({'geneSym' : ['ala-bala']}))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['ala-bala', 'SCO2']}), set(['SCO2']))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : ['ala-bala']}))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : ['ala-bala', 'SCO2']}), set(['SCO2']))
         
         
 class GeneSetsTests(unittest.TestCase):
@@ -265,3 +266,42 @@ class StudiesTests(unittest.TestCase):
         dsl = prepare_transmitted_studies({'transmittedStudies':["ala", "bala"]})
         self.assertIsNone(dsl)
 
+
+class VariantsTests(unittest.TestCase):
+    
+    def test_studies_empty(self):
+        vs = dae_query_variants({'denovoStudies':[],'transmittedStudies':[]})
+        self.assertListEqual(vs,[])
+        
+        vs = dae_query_variants({})
+        self.assertListEqual(vs,[])
+
+    def test_studies_single(self):
+        vs = dae_query_variants({'denovoStudies':["DalyWE2012"]})
+        self.assertEqual(len(vs), 1)
+
+        vs = dae_query_variants({'transmittedStudies':["wig683"]})
+        self.assertEqual(len(vs), 1)
+
+#     def test_effect_type(self):
+#         vs = dae_query_variants({'denovoStudies':["DalyWE2012"],
+#                                  'transmittedStudies':["wig683"],
+#                                  'effectTypes':'nonsense'})
+#         self.assertEqual(len(vs),2)
+#         for v in itertools.chain(*vs):
+#             self.assertEqual(v.atts['effectType'],'nonsense')
+
+
+    def test_variant_filters(self):
+        vs = dae_query_variants({"denovoStudies":["DalyWE2012"],
+                                 "transmittedStudies":["wig683"],
+                                 "inChild":"sibF",
+                                 "effectTypes":"frame-shift",
+                                 "variantTypes":"del",
+                                 "ultraRareOnly":"True"})
+        
+        self.assertEqual(len(vs),2)
+        for v in itertools.chain(*vs):
+            self.assertTrue('sibF' in v.inChS)
+            self.assertEqual(v.atts['effectType'],'frame-shift')
+            

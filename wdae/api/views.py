@@ -14,7 +14,7 @@ from GetVariantsInterface import augmentAVar
 
 import itertools
 
-
+from dae_query import dae_query_variants
 
 class Response(RestResponse):
     def __init__(self,data=None, status=200,
@@ -127,7 +127,7 @@ def gene_set_disease_list(request):
 
 @api_view(['GET'])
 def gene_list(request,page_count=30):
-    gl=settings.GENE_SYMS
+    gl=settings.GENE_SYMS_LIST
 
     query_params=request.QUERY_PARAMS
     
@@ -139,32 +139,52 @@ def gene_list(request,page_count=30):
         
     return Response(gl[:page_count])
 
-
-
-
 @api_view(['POST'])
 def get_variants_csv(request):
+    """
+Performs a query to DAE. The body of the request should be JSON formatted object containing
+all the parameters for the query. 
+
+Example JSON object describing the query is following:
+
+    {
+         "denovoStudies":["DalyWE2012"],
+         "transmittedStudies":["wig683"],
+         "inChild":"sibF",
+         "effectTypes":"frame-shift",
+         "variantTypes":"del",
+         "ultraRareOnly":"True"
+    }
+
+The expected fields are:
+
+* "denovoStudies" -- expects list of denovo studies
+* "transmittedStudies" --- expects list of transmitted studies
+
+* "geneSyms" --- comma separated list of gene symbols or list of gene symbols
+* "geneSet" --- contains dictionary with two elements: "gs_id" is the gene set name (one of 'main','GO' or 'disease') and 'gs_term'. Example: `{'geneSet':{'gs_id':'GO', 'gs_term':'GO:2001293'}}` or `{'geneSet':{'gs_id':'main', 'gs_term':'mPFC_maternal'}}`
+
+* "effectTypes" --- effect types
+* "variantTypes" --- variant types
+* "inChild" --- in child
+* "familyIds" --- comma separated list of family Ids
+
+* "ultraRareOnly" --- True of False
+* "minAltFreqPrcnt" --- minimal frequency
+* "maxAltFreqPrcnt" --- maximum frequency
+ 
+    """
+    
     data=request.DATA
-    print data
+    vsl=dae_query_variants(data)
     
-    dvs = []
-    if data.has_key('denovoStudies'):
-        dl=data['denovoStudies']
-        try:
-            dst = [vDB.get_study(d) for d in dl]
-        except:
-            print "The denovo study: %s DOES NOT EXIST! ...exiting!" % ' '.join(dl) 
-            raise
-        dvs = vDB.get_denovo_variants(dst)
-    
-    #response=Response(status.HTTP_200_OK,content_type='application/bin',mimetype='text/csv')
     response = HttpResponse(mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
     response['Access-Control-Allow-Origin'] = '*'
 
     
-    _safeVs(response,itertools.imap(augmentAVar,itertools.chain(dvs,[])),
+    _safeVs(response,itertools.imap(augmentAVar,itertools.chain(*vsl)),
                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
     return response
 
