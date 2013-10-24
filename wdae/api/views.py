@@ -148,12 +148,12 @@ all the parameters for the query.
 Example JSON object describing the query is following:
 
     {
-             "denovoStudies":["DalyWE2012"],
-             "transmittedStudies":["wig683"],
-             "inChild":"sibF",
-              "effectTypes":"frame-shift",
-             "variantTypes":"del",
-             "ultraRareOnly":"True"
+         "denovoStudies":["DalyWE2012"],
+         "transmittedStudies":["wig683"],
+         "inChild":"sibF",
+         "effectTypes":"frame-shift",
+         "variantTypes":"del",
+         "ultraRareOnly":"True"
     }
 
 The expected fields are:
