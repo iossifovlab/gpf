@@ -648,7 +648,7 @@ class Study:
        
 
     def _load_family_data_from_quad_report(self,reportF):
-        familyIdRE = re.compile('auSSC(\d\d\d\d\d)-wholeblood') 
+        familyIdRE = re.compile('^auSSC(\d\d\d\d\d)') 
         families = {}
         badFamilies = {}
         qrp = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True)

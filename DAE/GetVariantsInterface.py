@@ -178,9 +178,10 @@ def getVariantsInterface(args, response=None):
                             ultraRareOnly=ultraRare,
                             familyIds=families,geneSyms=geneSyms,regionS=args['regionS'])
 
+    additionalAtts = ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_', 'valstatus']
+
     if response==None:
-        safeVs(itertools.imap(augmentAVar,itertools.chain(dvs,ivs)),'-',['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
+        safeVs(itertools.imap(augmentAVar,itertools.chain(dvs,ivs)),'-', additionalAtts)
     else:
-        _safeVs(response,itertools.imap(augmentAVar,itertools.chain(dvs,ivs)),
-                    ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
+        _safeVs(response,itertools.imap(augmentAVar,itertools.chain(dvs,ivs)), additionalAtts)
 
