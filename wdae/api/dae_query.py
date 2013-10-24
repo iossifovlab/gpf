@@ -67,7 +67,7 @@ def prepare_family_ids(data):
 
 def __filter_gene_syms(gl):
     
-    return [g for g in gl if g in settings.GENE_SYMS]
+    return [g for g in gl if g in settings.GENE_SYMS_SET]
 
 def prepare_gene_syms(data):
     if not data.has_key('geneSyms'):

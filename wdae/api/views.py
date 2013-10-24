@@ -127,7 +127,7 @@ def gene_set_disease_list(request):
 
 @api_view(['GET'])
 def gene_list(request,page_count=30):
-    gl=settings.GENE_SYMS
+    gl=settings.GENE_SYMS_LIST
 
     query_params=request.QUERY_PARAMS
     

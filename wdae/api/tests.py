@@ -137,23 +137,23 @@ class FamilesTests(unittest.TestCase):
         self.assertIsNone(prepare_family_ids({}))
 
     def test_families_none(self):
-        self.assertIsNone(prepare_family_ids({'familiesList' : 'None'}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : 'none'}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : 'All'}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : 'all'}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : None}))
-        self.assertIsNone(prepare_family_ids({'familiesList' : 15}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 'None'}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 'none'}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 'All'}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 'all'}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : None}))
+        self.assertIsNone(prepare_family_ids({'familyIds' : 15}))
 
     def test_families_string(self):
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111'}), ['111'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111,222'}), ['111', '222'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111 , 222'}), ['111', '222'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111    ,    222'}), ['111', '222'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : '111     ,    222,'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111'}), ['111'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111,222'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111 , 222'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111    ,    222'}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : '111     ,    222,'}), ['111', '222'])
 
     def test_families_list(self):
-        self.assertListEqual(prepare_family_ids({'familiesList' : ['111']}), ['111'])
-        self.assertListEqual(prepare_family_ids({'familiesList' : ['111', '222']}), ['111', '222'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : ['111']}), ['111'])
+        self.assertListEqual(prepare_family_ids({'familyIds' : ['111', '222']}), ['111', '222'])
     
 
 class GeneSymsTests(unittest.TestCase):
