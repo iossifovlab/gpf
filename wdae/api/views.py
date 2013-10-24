@@ -141,9 +141,41 @@ def gene_list(request,page_count=30):
 
 @api_view(['POST'])
 def get_variants_csv(request):
-    data=request.DATA
-    print data
+    """
+Performs a query to DAE. The body of the request should be JSON formatted object containing
+all the parameters for the query. 
+
+Example JSON object describing the query is following:
+
+    {
+             "denovoStudies":["DalyWE2012"],
+             "transmittedStudies":["wig683"],
+             "inChild":"sibF",
+              "effectTypes":"frame-shift",
+             "variantTypes":"del",
+             "ultraRareOnly":"True"
+    }
+
+The expected fields are:
+
+* "denovoStudies" -- expects list of denovo studies
+* "transmittedStudies" --- expects list of transmitted studies
+
+* "geneSyms" --- comma separated list of gene symbols or list of gene symbols
+* "geneSet" --- contains dictionary with two elements: "gs_id" is the gene set name (one of 'main','GO' or 'disease') and 'gs_term'. Example: `{'geneSet':{'gs_id':'GO', 'gs_term':'GO:2001293'}}` or `{'geneSet':{'gs_id':'main', 'gs_term':'mPFC_maternal'}}`
+
+* "effectTypes" --- effect types
+* "variantTypes" --- variant types
+* "inChild" --- in child
+* "familyIds" --- comma separated list of family Ids
+
+* "ultraRareOnly" --- True of False
+* "minAltFreqPrcnt" --- minimal frequency
+* "maxAltFreqPrcnt" --- maximum frequency
+ 
+    """
     
+    data=request.DATA
     vsl=dae_query_variants(data)
     
     response = HttpResponse(mimetype='text/csv')

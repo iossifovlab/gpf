@@ -162,27 +162,27 @@ class GeneSymsTests(unittest.TestCase):
         self.assertIsNone(prepare_gene_syms({}))
 
     def test_gen_syms_none(self):
-        self.assertIsNone(prepare_gene_syms({'geneSym' : ''}))
-        self.assertIsNone(prepare_gene_syms({'geneSym' : '    '}))
-        self.assertIsNone(prepare_gene_syms({'geneSym' : None}))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : ''}))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : '    '}))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : None}))
     
     def test_gen_syms_correct_string(self):
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1'}), set(['CDH1']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1,SCO2'}), set(['CDH1', 'SCO2']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2'}), set(['CDH1', 'SCO2']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1      ,      SCO2  ,   '}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1'}), set(['CDH1']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1,SCO2'}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1      ,      SCO2'}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1      ,      SCO2  ,   '}), set(['CDH1', 'SCO2']))
         
     def test_gen_syms_not_correct_string(self):
-        self.assertIsNone(prepare_gene_syms({'geneSym' : 'ala-bala'}))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : 'CDH1,ala-bala'}), set(['CDH1']))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : 'ala-bala'}))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : 'CDH1,ala-bala'}), set(['CDH1']))
         
     def test_gen_syms_correct_list(self):
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['CDH1']}), set(['CDH1']))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['CDH1', 'SCO2']}), set(['CDH1', 'SCO2']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : ['CDH1']}), set(['CDH1']))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : ['CDH1', 'SCO2']}), set(['CDH1', 'SCO2']))
         
     def test_gen_syms_not_correct_list(self):
-        self.assertIsNone(prepare_gene_syms({'geneSym' : ['ala-bala']}))
-        self.assertSetEqual(prepare_gene_syms({'geneSym' : ['ala-bala', 'SCO2']}), set(['SCO2']))
+        self.assertIsNone(prepare_gene_syms({'geneSyms' : ['ala-bala']}))
+        self.assertSetEqual(prepare_gene_syms({'geneSyms' : ['ala-bala', 'SCO2']}), set(['SCO2']))
         
         
 class GeneSetsTests(unittest.TestCase):

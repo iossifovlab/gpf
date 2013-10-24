@@ -51,10 +51,10 @@ def prepare_variant_types(data):
     return variant_types
 
 def prepare_family_ids(data):
-    if not data.has_key('familiesList'):
+    if not data.has_key('familyIds'):
         return None
     
-    families=data['familiesList']
+    families=data['familyIds']
     if isinstance(families,str):
         if families.lower() == 'none' or families.lower() == 'all':
             return None
@@ -70,10 +70,10 @@ def __filter_gene_syms(gl):
     return [g for g in gl if g in settings.GENE_SYMS]
 
 def prepare_gene_syms(data):
-    if not data.has_key('geneSym'):
+    if not data.has_key('geneSyms'):
         return None
     
-    gene_sym=data['geneSym']
+    gene_sym=data['geneSyms']
     if isinstance(gene_sym, list):
         gl=__filter_gene_syms(gene_sym)
         if not gl:
