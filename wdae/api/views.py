@@ -175,6 +175,13 @@ The expected fields are:
  
     """
     
+    if request.method == 'OPTIONS':
+        print "get_variants_csv: OPTIONS"
+        
+        
+        return Response()
+
+    
     data=request.DATA
     vsl=dae_query_variants(data)
     
@@ -182,7 +189,6 @@ The expected fields are:
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
     response['Access-Control-Allow-Origin'] = '*'
-
     
     _safeVs(response,itertools.imap(augmentAVar,itertools.chain(*vsl)),
                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
