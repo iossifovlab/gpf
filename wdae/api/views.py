@@ -74,16 +74,6 @@ def families_list(request,study_name=None):
     return Response({'study':study_name,
                      'families':families})
 
-# @api_view(['GET'])
-# def gene_set_denovo_list(request,denovo_study):
-#     try:
-#         gts = vDB.get_denovo_sets(str(denovo_study))
-#         return Response(gts.tDesc) 
-#     
-#     except Exception as e:
-#         print "Exception: ",e
-#         return Response(status=status.HTTP_404_NOT_FOUND,data={"reason":"Denovo study <%s> not found..."%denovo_study})
-        
 def __get_page_count(query_params, page_count=30):
     if query_params.has_key('page_count'):
         try:
@@ -125,6 +115,11 @@ def gene_set_disease_list(request):
     gts=settings.GENE_SETS_DISEASE
     res=__gene_set_filter_response_dict(request, gts.tDesc)
     return Response(res)
+
+@api_view(['GET'])
+def gene_set_denovo_list(request,denovo_study):
+    gts = get_gene_sets_symNS('denovo',str(denovo_study))
+    return Response(gts.tDesc) 
 
 
 @api_view(['GET'])
