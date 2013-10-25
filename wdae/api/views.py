@@ -29,7 +29,9 @@ class Response(RestResponse):
 @api_view(['GET'])
 def denovo_studies_list(request):
     stds=vDB.getDenovoStudies()
-    return Response({"denovo_studies" : stds})
+    stgs=vDB.getStudyGroups()
+    stds.extend(stgs)
+    return Response({"denovo_studies" : [st for st in stds if st!='studyDir']})
 
 @api_view(['GET'])
 def study_groups_list(request):
