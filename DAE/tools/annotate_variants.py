@@ -9,7 +9,6 @@ import re, os.path
 import GenomeAccess
 from GeneModelFiles import *
 import VariantAnnotation
-import VariantAnnotation_mito
 import time
 import datetime
 from DAE import *
@@ -35,12 +34,9 @@ parser.add_option('-H',help='no header in the input file', default=False,  actio
 parser.add_option('-T', help='gene models ID <RefSeq, CCDS, knownGene>', type='string', action='store')
 parser.add_option('--Traw', help='outside gene models file path', type='string', action='store')
 parser.add_option('--TrawFormat', help='outside gene models format (refseq, ccds, knowngene)', type='string', action='store') 
-#parser.add_option('--Craw', help='mitochondrial gene models file', type='string', action='store') 
-#parser.add_option('--CrawFormat', help='outside mitochondrial gene models format <refseq, ccds, knowngene>', type='string', action='store')
 
 parser.add_option('-G', help='genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ', type='string', action='store')
 parser.add_option('--Graw', help='outside genome file', type='string', action='store')
-#parser.add_option('--Mraw', help='outside mitochondrial genome file', type='string', action='store')
 
 parser.add_option('-I', help='geneIDs mapping file; use None for no gene name mapping', default="default"  , type='string', action='store')
 
@@ -66,13 +62,11 @@ if opts.help:
     print("-T T                             gene models ID <RefSeq, CCDS, knownGene> ")
     print("--Traw=TRAW                      outside gene models file path")
     print("--TrawFormat=TRAWFORMAT          outside gene models format (refseq, ccds, knowngene)")
-    #print("--Craw=CRAW                      mitochondrial gene models file ")
-    #print("--CrawFormat=CRAWFORMAT          outside mitochondrial gene models format (refseq,ccds, knowngene)")
     print("-G G                             genome ID (GATK_ResourceBundle_5777_b37_phiX174, hg19)")
     print("--Graw=GRAW                      outside genome file ")
-    #print("--Mraw=MRAW                      outside mitochondrial genome file ")
     print("-I I                             geneIDs mapping file; use None for no gene name mapping ")
     print("\n----------------------------------------------------------------\n\n")
+    sys.exit(0)
 
     
 infile = '-'
@@ -124,116 +118,13 @@ def assign_values(param):
     return(param)
 
 
-def deal_with_old_format(s):
-    
-    if "^" in s[1:-1] or "$" in s[1:-1]:
-        if "$" in  s[1:-1]:
-            r = re.match('(.*)\$[0-9]+', s)
-            if r != None:
-                s = r.group(1)
-        if "^" in s[1:-1]:
-            r = re.match('[0-9]+\^(.*)', s)
-            if r != None:
-                s = r.group(1)
-
-    return(s)
-
-
-
-def parseInputFileRow(line):
-
-
-    global chrCol, posCol, locCol
-    global varCol, altCol, refCol
-    global typeCol, seqCol, lengthCol
-
-    line = line[:-1].split("\t")
-    try:
-        loc = line[locCol-1].split(":")
-        chr = loc[0]
-        pos = loc[1]
-    except:
-        chr = line[chrCol-1]
-        pos = line[posCol-1]
-
-    try:
-        seq = line[altCol-1]
-        type = "S"
-        length = 1
-        try:
-            ref = line[refCol-1]
-        except:
-            ref = None
-            
-    except:
-        try:
-            var = line[varCol-1]
-            type = var[0].upper()
-            x1 = var.index("(")
-            x2 = var.index(")")
-            var = var[x1+1:x2]
-            if "^" in var or "$" in var:
-                var = deal_with_old_format(var)
-            
-                if "^" == var[0] or "$" == var[-1]:
-                    ref = seq  = None
-                    length = 1
-                    return(chr, int(pos), type, seq, length, ref)
-            if type == "I":
-                ref = None
-                seq = re.sub('[0-9]+', '', var)
-                
-                length = len(seq)
-            elif type == "D":
-                ref = None
-                seq = ""
-                length = int(var)
-            elif type == "S":
-                ref = var[0]
-                seq = var[-1]
-                length = 1
-            elif type == "C":
-                type = var.upper()
-                ref = None
-                seq = var[-1]
-                pos_start = pos.split("-")[0]                
-                length = int(pos.split("-")[1])-int(pos_start) +1
-                pos = pos_start
-                
-            else:
-                sys.stderr.write("Incorrect mutation variant: " + line[varCol-1] + "\n")
-                sys.exit(-32)
-
-        except:
-            type = line[typeCol-1][0].upper()
-            if type == "D":
-                seq = ""
-                length = int(line[lengthCol-1])
-                ref = None
-            elif type == "S":
-                seq = line[seqCol-1]
-                length = 1
-                ref = None
-            elif type == "I":
-                seq = re.sub('[0-9]+', '', line[seqCol-1])
-                ref = None
-                length = int(line[lengthCol-1])
-                if "^" in seq or "$" in seq:
-                    seq = deal_with_old_format(seq)
-                    if "^" == seq[0] or "$" == seq[-1]: 
-                        seq = None
-            else:
-                sys.stderr.write("Incorrect mutation type: " + line[typeCol-1] + "\n")
-                sys.exit(-34)
-             
-    return(chr, int(pos), type, seq, length, ref)
-        
 
 if opts.x == None and opts.c == None:
     opts.x = "location"
-if (opts.v == None and opts.a == None) and (opts.v == None and (opts.t == None or opts.q == None or opts.l == None)):
+if (opts.v == None and opts.a == None) and (opts.v == None and opts.t == None):
     opts.v = "variant"
-        
+    
+    
 chrCol = assign_values(opts.c)
 posCol = assign_values(opts.p)
 locCol = assign_values(opts.x)
@@ -247,7 +138,6 @@ lengthCol = assign_values(opts.l)
 if opts.I == "None":
     opts.I = None
 
-#########################################################
 if opts.G == None and opts.Graw == None:
     GA = genomesDB.get_genome()
     if opts.T == None and opts.Traw == None:
@@ -275,7 +165,7 @@ else:
     gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
     
 
-if "1" in GA.allChromosomes and "1" not in gmDB.utrModels.keys():
+if "1" in GA.allChromosomes and "1" not in gmDB._utrModels.keys():
     gmDB.relabel_chromosomes()
 
 
@@ -283,34 +173,6 @@ sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
 
 sys.stderr.write("GENE MODEL FILES: " + gmDB.location + "\n")
 
-
-"""
-if opts.Mraw == None:
-    GM = genomesDB.get_mito_genome()  # to be created
-    if opts.Craw == None:
-        mmDB = genomesDB.get_mt_gene_models()
-    else:
-        mmDB = load_gene_models(opts.Craw, opts.I, opts.CrawFormat)
-else:
-    GM = GenomeAccess.openRef(opts.Mraw)
-    if opts.Craw == None:
-        sys.stderr.write("The mitochondrial genome requires gene models (--Craw option)\n")
-        sys.exit(-784)
-    mmDB = load_gene_models(opts.Craw, opts.I, opts.CrawFormat)
-
-
-if "1" in GM.allChromosomes and "1" not in mmDB.utrModels.keys():
-    mmDB.relabel_chromosomes()    
-    
-
-sys.stderr.write("MITOCHONDRIAL GENOME: " + GM.genomicFile + "\n")
-
-sys.stderr.write("MITOCHONDRIAL GENE MODEL FILES: " + mmDB.location + "\n")
-"""
-#####################################################
-
-
-    
 if outfile != None:
     out = open(outfile, 'w')
 
@@ -322,34 +184,31 @@ if opts.no_header == False:
     else:
         out.write(first_line_str[:-1] + "\teffectType\teffectGene\teffectDetails\n")
 
+argColumnNs = [chrCol, posCol, locCol, varCol, refCol, altCol, lengthCol, seqCol, typeCol]
+
 sys.stderr.write("...processing....................\n")
 k = 0
-for line in variantFile:
-    if line[0] == "#":
+for l in variantFile:
+    if l[0] == "#":
         if outfile == None:
-            print line,
+            print l,
         else:
-            out.write(line) 
+            out.write(l) 
         continue
     k += 1
     if k%1000 == 0:
         sys.stderr.write(str(k) + " lines processed\n")
-    
-    chrom, pos, type, sequence, l, refNt = parseInputFileRow(line)
-    
-    if chrom in ["chrM", "M", "MT"]:
-        v = VariantAnnotation_mito.load_variant(chr=chrom, position=pos, ref=refNt, length=l, seq=sequence, typ=type)
-        effects = v.annotate(gmDB, GA, display=False)
-        desc = VariantAnnotation_mito.effect_description(effects)
-    else:
-        v = VariantAnnotation.load_variant(chr=chrom, position=pos, ref=refNt, length=l, seq=sequence, typ=type)
-        effects = v.annotate(gmDB, GA, display=False, promoter_len = opts.prom_len)
-        desc = VariantAnnotation.effect_description(effects)
+   
+    line = l[:-1].split("\t")
+    params = [line[i-1] if i!=None else None for i in argColumnNs]
+     
+    effects = VariantAnnotation.annotate_variant(gmDB, GA, *params, promoter_len=opts.prom_len)
+    desc = VariantAnnotation.effect_description(effects)
+
     if outfile == None:
-        print(line[:-1] + "\t" + "\t".join(desc))
+        print(l[:-1] + "\t" + "\t".join(desc))
     else:
-        out.write(line[:-1]+ "\t" + "\t".join(desc) + "\n")
-    
+        out.write(l[:-1] + "\t" + "\t".join(desc) + "\n")
 
 if infile != '-':
     variantFile.close()
