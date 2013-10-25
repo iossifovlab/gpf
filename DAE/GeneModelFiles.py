@@ -510,6 +510,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             self.__addToDict(line)
             
         geneModelFile.close()
+        
 
     def save(self, outputFile, gzipped=True):
         if gzipped:
@@ -838,7 +839,6 @@ def join_gene_models(*gene_models):
 
 def load_gene_models(file_name="/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz", gene_mapping_file="default", format=None):
 
-    # infer the format 
     if not format:
         if file_name.endswith("refGene.txt.gz"):
             format = 'refseq'
