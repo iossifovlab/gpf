@@ -103,10 +103,10 @@ def __gene_set_response(request, gts, gt):
         return Response(res) 
         
     if str(gt) not in gts.tDesc.keys():
-        return Response({"gt1":"<%s>"%gt})
+        return Response({})
     gl=gts.t2G[gt].keys()
     if not gl:
-        return Response({"gt2":gt})
+        return Response({})
     return Response({"gene_count":len(gl)})
 
 
