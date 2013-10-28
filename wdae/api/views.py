@@ -144,7 +144,7 @@ def gene_list(request,page_count=30):
     return Response(gl[:page_count])
 
 @api_view(['POST'])
-def get_variants_csv(request):
+def query_variants(request):
     """
 Performs a query to DAE. The body of the request should be JSON formatted object containing
 all the parameters for the query. 
