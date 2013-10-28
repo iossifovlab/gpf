@@ -2,6 +2,8 @@ from django.conf.urls import patterns, url
 from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = patterns('api.views',
+    url(r'^index\.html$', 'index'),                   
+    
     url(r'^denovo_studies$', 'denovo_studies_list'),
     url(r'^study_groups$', 'study_groups_list'),
     url(r'^transmitted_studies$', 'transmitted_studies_list'),

@@ -14,5 +14,6 @@ from django.conf.urls import patterns, url, include
 # Additionally, we include login URLs for the browseable API.
 urlpatterns = patterns('',
 #     url(r'^', include(router.urls)),
+    url(r'^$','variants.views.index'),
     url(r'^api/',include('api.urls')),
 )
