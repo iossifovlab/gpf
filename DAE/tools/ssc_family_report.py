@@ -117,6 +117,19 @@ def mikeRAssignment(fn):
         fam(fid,"0.mikeRAssigned-ftype",ftype)
         fam(fid,"0.mikeRAssigned-coll",coll)
         fam(fid,"0.mikeRAssigned-batch",batch)
+
+def lindaThirdAssignment(fn):
+    f = open(fn)
+    f.readline()
+    for l in f:
+        cs = l.strip().split(",")
+        fid,coll,ftype,lab,assn,ancillary_notes,autoID = cs
+
+        fam(fid,"0.sfri.collection",coll)
+
+        # fam(fid,"0.lindaThird-coll",coll)
+        # fam(fid,"0.lindaThird-ftype",ftype)
+        # fam(fid,"0.lindaThird-ancilaryNotes",ancillary_notes)
         
 def julieStatus(fn,stN):
     f = open(fn)
@@ -150,11 +163,14 @@ if __name__  == "__main__":
     procAssignment('StateAssigned')
     procAssignment('WiglerAssigned')
     procWigStudy('wig1019',True)
-    julieStatus('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/familiesTillTheEnd-jr3-ii3.txt','wig1019')
-    cshlUploadHistory('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/ssc-upload-history-20131020.txt','wig1019')
     procWigStudy('wigState322',downloadHist="1 or 2")
     yaleCurrentUpload('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/yale-201310-upload.txt','wigState322')
-    procWigStudy('wigEichler483',downloadHist="1, 2, or 3")
+    # procWigStudy('wigEichler483',downloadHist="1, 2, or 3")
+    procWigStudy('wigEichler515',downloadHist="1, 2, or 3")
+
+    julieStatus('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/familiesTillTheEnd-jr3-ii3-mr1.txt','wig1019')
+    cshlUploadHistory('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/ssc-upload-history-20131020.txt','wig1019')
+    lindaThirdAssignment('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/wigler_third_assignmnets.csv')
 
     printDt(famDt,"familyId",'famReport.txt')
     printDt(indDt,"personId",'indReport.txt')
