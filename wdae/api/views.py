@@ -97,24 +97,31 @@ def __gene_set_filter_response_dict(request,data):
     else:
         return dict(data.items()[0:page_count])
 
-@api_view(['GET'])
-def gene_set_main_list(request):
-    gts = settings.GENE_SETS_MAIN
-    res=__gene_set_filter_response_dict(request, gts.tDesc)
-    return Response(res) 
-    
+def __gene_set_response(request, gts, gt):
+    if gt is None:
+        res=__gene_set_filter_response_dict(request, gts.tDesc)
+        return Response(res) 
         
-@api_view(['GET'])
-def gene_set_go_list(request):
-    gts=settings.GENE_SETS_GO
-    res=__gene_set_filter_response_dict(request, gts.tDesc)
-    return Response(res)
+    if str(gt) not in gts.tDesc.keys():
+        return Response({"gt1":"<%s>"%gt})
+    gl=gts.t2G[gt].keys()
+    if not gl:
+        return Response({"gt2":gt})
+    return Response({"gene_count":len(gl)})
+
 
 @api_view(['GET'])
-def gene_set_disease_list(request):
-    gts=settings.GENE_SETS_DISEASE
-    res=__gene_set_filter_response_dict(request, gts.tDesc)
-    return Response(res)
+def gene_set_main_list(request,gene_set=None):
+    return __gene_set_response(request,settings.GENE_SETS_MAIN,gene_set)
+        
+
+@api_view(['GET'])
+def gene_set_go_list(request,gene_set=None):
+    return __gene_set_response(request,settings.GENE_SETS_GO,gene_set)
+
+@api_view(['GET'])
+def gene_set_disease_list(request,gene_set=None):
+    return __gene_set_response(request,settings.GENE_SETS_DISEASE,gene_set)
 
 @api_view(['GET'])
 def gene_set_denovo_list(request,denovo_study):
