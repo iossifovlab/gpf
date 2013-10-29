@@ -125,10 +125,9 @@ def gene_set_disease_list(request,gene_set=None):
     return __gene_set_response(request,settings.GENE_SETS_DISEASE,gene_set)
 
 @api_view(['GET'])
-def gene_set_denovo_list(request,denovo_study):
+def gene_set_denovo_list(request,denovo_study,gene_set=None):
     gts = get_gene_sets_symNS('denovo',str(denovo_study))
-    return Response(gts.tDesc) 
-
+    return __gene_set_response(request, gts, gene_set)
 
 @api_view(['GET'])
 def gene_list(request,page_count=30):
