@@ -349,3 +349,7 @@ class CombinedTests(unittest.TestCase):
         
 #         _safeVs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
 #                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
+
+
+class QueryDictTests(unittest.TestCase):
+    TEST_DATA_1="geneSymbols=&geneSet=main&geneSetInput=&denovoStudies=allWEAndTG&transmittedStudies=none&rarity=ultraRare&inChild=prb&variants=All&effectType=All&families="

@@ -145,6 +145,17 @@ def gene_list(request,page_count=30):
 
 from django.http import StreamingHttpResponse,QueryDict
 
+def prepare_query_dict(data):
+    res=[]
+    for (key,value) in data.items():
+        key=str(key)
+        if isinstance(value,list):
+            value=[str(s) for s in value]
+        else:
+            value=str(value)
+        res.append((key,value))
+    return dict(res)
+
 @api_view(['POST'])
 @parser_classes([JSONParser,FormParser])
 def query_variants(request):
@@ -191,7 +202,7 @@ The expected fields are:
     
     data=request.DATA
     if isinstance(data,QueryDict):
-        data=dict(data)
+        data=prepare_query_dict(data)
         
     vsl=dae_query_variants(data)
     print "query_variants: result ready; sending..."

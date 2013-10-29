@@ -124,7 +124,12 @@ def prepare_gene_sets(data):
     if isinstance(gene_set,dict):
         return __filter_gene_set(gene_set)
     elif isinstance(gene_set,str):
-        return None
+        gs_id=gene_set
+        if not data.has_key('geneTerm'):
+            return None
+        gs_term=data['geneTerm']
+        
+        return __filter_gene_set({'gs_id':gs_id,'gs_term':gs_term.split('|')[0].strip()})
     else:
         return None
 
@@ -133,9 +138,11 @@ def prepare_denovo_studies(data):
         return None
     
     dl=data['denovoStudies']
+    if isinstance(dl,list):
+        dst = [vDB.get_studies(str(d)) for d in dl]
+    else:
+        dst=[vDB.get_studies(str(dl))]
 
-    dst = [vDB.get_studies(str(d)) for d in dl]
-    
     flatten=itertools.chain.from_iterable(dst)
     res=[st for st in flatten if st is not None]
     if not res:
@@ -149,9 +156,13 @@ def prepare_transmitted_studies(data):
         return None
     
     tl=data['transmittedStudies']
-    tst = [vDB.get_study(str(st)) for st in tl]
+    if isinstance(tl,list):
+        tst = [vDB.get_studies(str(t)) for t in tl]
+    else:
+        tst=[vDB.get_studies(str(tl))]
     
-    res=[st for st in tst if st is not None]
+    flatten=itertools.chain.from_iterable(tst)
+    res=[st for st in flatten if st is not None]
     if not res:
         return None
      
@@ -181,7 +192,7 @@ def __prepare_min_alt_freq_prcnt(data):
     return minAltFreqPrcnt
 
 def __prepare_max_alt_freq_prcnt(data):
-    maxAltFreqPrcnt=5.0
+    maxAltFreqPrcnt=100.0
     if data.has_key('maxAltFreqPrcnt'):
         try:
             maxAltFreqPrcnt=float(str(data['maxAltFreqPrcnt']))
@@ -206,6 +217,9 @@ def __prepare_ultra_rare(data):
     if data.has_key('ultraRareOnly'):
         if ultraRareOnly=='True' or ultraRareOnly=='true':
             ultraRareOnly=True
+    elif data.has_key('rarity'):
+        if data['rarity'].strip()=='ultraRare':
+            return True
     return ultraRareOnly
 
 def prepare_transmitted_filters(data):
@@ -238,6 +252,7 @@ def dae_query_variants(data):
     
     if dstudies is not None:
         filters=prepare_denovo_filters(data)
+        print 'denovo filters:',filters
         dvs=vDB.get_denovo_variants(dstudies,**filters)
         variants.append(dvs)
     
@@ -245,6 +260,7 @@ def dae_query_variants(data):
     print "transmitted studies:",tstudies
     if tstudies is not None:
         filters=prepare_transmitted_filters(data)
+        print 'transmitted filters:',filters
         for study in tstudies:
             tvs=study.get_transmitted_variants(**filters)
             variants.append(tvs)
