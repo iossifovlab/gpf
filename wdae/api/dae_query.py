@@ -255,7 +255,7 @@ def dae_query_variants(data):
 from VariantsDB import mat2Str
 
 
-def safe_vs(tf,vs,atts=[],sep="\t"):
+def save_vs(tf,vs,atts=[],sep="\t"):
     for line in generate_response(vs,atts,sep):
         tf.write(line)
 

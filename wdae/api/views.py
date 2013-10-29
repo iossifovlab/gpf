@@ -1,5 +1,4 @@
 # Create your views here.
-from django.http import HttpResponse
 from django.conf import settings
   
 
@@ -8,9 +7,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view,parser_classes
 from rest_framework.parsers import JSONParser,FormParser
 
-from rest_framework import status
 
-from DAE import vDB, giDB, get_gene_sets_symNS,_safeVs
+from DAE import vDB, get_gene_sets_symNS
 
 from GetVariantsInterface import augmentAVar
 

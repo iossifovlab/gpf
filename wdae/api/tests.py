@@ -11,12 +11,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 import unittest
-import itertools
 
-from DAE import *
-from DAE import _safeVs
-
-from api.dae_query import *
+from api.dae_query import prepare_inchild,prepare_effect_types,prepare_variant_types,prepare_family_ids,prepare_gene_syms,prepare_gene_sets,prepare_denovo_studies,prepare_transmitted_studies,dae_query_variants,save_vs,generate_response
 
 
 class FamiliesTest(APITestCase):
@@ -268,7 +264,9 @@ class StudiesTests(unittest.TestCase):
         dsl = prepare_transmitted_studies({'transmittedStudies':["ala", "bala"]})
         self.assertIsNone(dsl)
  
- 
+import itertools.chain
+import itertools.imap
+
 class VariantsTests(unittest.TestCase):
      
     def test_studies_empty(self):
@@ -331,7 +329,7 @@ class CombinedTests(unittest.TestCase):
         self.assertEqual(len(vs),1)
         tf = open("test_data_1.tmp","w+")
 
-        safe_vs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
+        save_vs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
                 ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
 
 #         for v in itertools.chain(*vs):
