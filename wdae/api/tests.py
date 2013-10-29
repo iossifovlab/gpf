@@ -331,17 +331,23 @@ class CombinedTests(unittest.TestCase):
         self.assertEqual(len(vs),1)
         tf = open("test_data_1.tmp","w+")
 
-        _safeVs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
-                    ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
+        safe_vs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
+                ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
 
-        for v in itertools.chain(*vs):
-            self.assertTrue('prbM' in v.inChS)
-            
+#         for v in itertools.chain(*vs):
+#             self.assertTrue('prbM' in v.inChS)
+
     def test_variants_gene_sets_3(self):
         vs = dae_query_variants(self.TEST_DATA_3)
         
         self.assertEqual(len(vs),2)
         tf = open("test_data_3.tmp","w+")
-
-        _safeVs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
-                    ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
+        
+        
+        for line in generate_response(itertools.imap(augmentAVar,itertools.chain(*vs)),
+                                      ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_']):
+            tf.write(line)
+        tf.close()
+        
+#         _safeVs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
+#                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])

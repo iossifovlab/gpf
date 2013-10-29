@@ -3,7 +3,6 @@ import itertools
 from django.conf import settings
   
 from DAE import vDB
-
     
 def prepare_inchild(data):
     if not data.has_key('inChild'):
@@ -252,3 +251,38 @@ def dae_query_variants(data):
 
     return variants
     
+
+from VariantsDB import mat2Str
+
+
+def safe_vs(tf,vs,atts=[],sep="\t"):
+    for line in generate_response(vs,atts,sep):
+        tf.write(line)
+
+
+def generate_response(vs,atts=[],sep="\t"):
+    def ge2Str(gs):
+        return "|".join( x['sym'] + ":" + x['eff'] for x in gs)
+
+    mainAtts = "familyId studyName location variant bestSt fromParentS inChS counts geneEffect requestedGeneEffects popType".split()
+    specialStrF = {"bestSt":mat2Str, "counts":mat2Str, "geneEffect":ge2Str, "requestedGeneEffects":ge2Str}
+
+    yield (sep.join(mainAtts+atts)+"\n") 
+
+    for v in vs:
+        mavs = []
+        for att in mainAtts:
+            try:
+                if att in specialStrF:
+                    mavs.append(specialStrF[att](getattr(v,att)))
+                else:
+                    mavs.append(str(getattr(v,att)))
+            except:
+                mavs.append("")
+                 
+        tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts]) 
+        yield (tmp +"\n")
+
+
+
+

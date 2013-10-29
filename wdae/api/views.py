@@ -15,7 +15,7 @@ from GetVariantsInterface import augmentAVar
 
 import itertools
 
-from dae_query import dae_query_variants
+from dae_query import dae_query_variants, generate_response
 
 # class Response(RestResponse):
 #     def __init__(self,data=None, status=200,
@@ -193,13 +193,16 @@ The expected fields are:
     vsl=dae_query_variants(data)
     print "query_variants: result ready; sending..."
     
-    response = HttpResponse(mimetype='text/csv')
+    generator=generate_response(itertools.imap(augmentAVar,itertools.chain(*vsl)),
+                                      ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
+    response = StreamingHttpResponse(generator, mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
-    response['Access-Control-Allow-Origin'] = '*'
     
-    _safeVs(response,itertools.imap(augmentAVar,itertools.chain(*vsl)),
-                    ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
+    #     response['Access-Control-Allow-Origin'] = '*'
+    
+    #     _safeVs(response,itertools.imap(augmentAVar,itertools.chain(*vsl)),
+    #                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
     return response
 
 
