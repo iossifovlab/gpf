@@ -3,7 +3,8 @@ from django.http import HttpResponse
 from django.conf import settings
   
 
-from rest_framework.response import Response as RestResponse
+# from rest_framework.response import Response as RestResponse
+from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 from rest_framework import status
@@ -16,15 +17,15 @@ import itertools
 
 from dae_query import dae_query_variants
 
-class Response(RestResponse):
-    def __init__(self,data=None, status=200,
-                 template_name=None, headers=None,
-                 exception=False, content_type=None):
-        if headers is None:
-            headers={'Access-Control-Allow-Origin':'*'}
-        else:
-            headers['Access-Control-Allow-Origin']='*'
-        RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
+# class Response(RestResponse):
+#     def __init__(self,data=None, status=200,
+#                  template_name=None, headers=None,
+#                  exception=False, content_type=None):
+#         if headers is None:
+#             headers={'Access-Control-Allow-Origin':'*'}
+#         else:
+#             headers['Access-Control-Allow-Origin']='*'
+#         RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
     
 @api_view(['GET'])
 def denovo_studies_list(request):
