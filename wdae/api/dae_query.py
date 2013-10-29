@@ -1,3 +1,5 @@
+import itertools
+
 from django.conf import settings
   
 from DAE import vDB
@@ -66,7 +68,6 @@ def prepare_family_ids(data):
         return None
 
 def __filter_gene_syms(gl):
-    
     return [g for g in gl if g in settings.GENE_SYMS_SET]
 
 def prepare_gene_syms(data):
@@ -91,7 +92,6 @@ def prepare_gene_syms(data):
         return None
 
 def __filter_gene_set(gene_set):
-
     gs_id=gene_set['gs_id']
     gs_term=gene_set['gs_term']
     
@@ -109,6 +109,7 @@ def __filter_gene_set(gene_set):
         return None
     
     gl=__filter_gene_syms(gs.t2G[gs_term].keys())
+
     if not gl:
         return None
         
@@ -120,6 +121,7 @@ def prepare_gene_sets(data):
         return None
      
     gene_set = data['geneSet']
+    
     if isinstance(gene_set,dict):
         return __filter_gene_set(gene_set)
     elif isinstance(gene_set,str):
@@ -132,17 +134,15 @@ def prepare_denovo_studies(data):
         return None
     
     dl=data['denovoStudies']
-    try:
-        dst = [vDB.get_study(str(d)) for d in dl]
-    except:
-        print "The denovo study: %s does not exists..." % ' '.join(dl)
-        return None
+
+    dst = [vDB.get_studies(str(d)) for d in dl]
     
-    dst=[st for st in dst if st is not None]
-    if not dst:
+    flatten=itertools.chain.from_iterable(dst)
+    res=[st for st in flatten if st is not None]
+    if not res:
         return None
      
-    return dst
+    return res
 
 
 def prepare_transmitted_studies(data):
@@ -150,21 +150,18 @@ def prepare_transmitted_studies(data):
         return None
     
     tl=data['transmittedStudies']
-    try:
-        dst = [vDB.get_study(str(st)) for st in tl]
-    except:
-        print "The denovo study: %s does not exists..." % ' '.join(tl)
-        return None
+    tst = [vDB.get_study(str(st)) for st in tl]
     
-    dst=[st for st in dst if st is not None]
-    if not dst:
+    res=[st for st in tst if st is not None]
+    if not res:
         return None
      
-    return dst
+    return res
 
 def combine_gene_syms(data):
     gene_syms=prepare_gene_syms(data)
     gene_sets=prepare_gene_sets(data)
+
     if gene_syms is None:
         return gene_sets
     else:
@@ -173,7 +170,7 @@ def combine_gene_syms(data):
         else:
             return gene_sets.union(gene_syms)
     
-"minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1"
+#"minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1"
 
 def __prepare_min_alt_freq_prcnt(data):
     minAltFreqPrcnt=-1.0
@@ -235,14 +232,18 @@ def prepare_denovo_filters(data):
     return filters
 
 def dae_query_variants(data):
+    print "dae_query_variants:",data
     variants=[]
     dstudies=prepare_denovo_studies(data)
+    print "denovo studies:",dstudies
+    
     if dstudies is not None:
         filters=prepare_denovo_filters(data)
         dvs=vDB.get_denovo_variants(dstudies,**filters)
         variants.append(dvs)
     
     tstudies=prepare_transmitted_studies(data)
+    print "transmitted studies:",tstudies
     if tstudies is not None:
         filters=prepare_transmitted_filters(data)
         for study in tstudies:
