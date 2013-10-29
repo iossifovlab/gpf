@@ -5,7 +5,8 @@ from django.conf import settings
 
 # from rest_framework.response import Response as RestResponse
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,parser_classes
+from rest_framework.parsers import JSONParser,FormParser
 
 from rest_framework import status
 
@@ -144,9 +145,10 @@ def gene_list(request,page_count=30):
     return Response(gl[:page_count])
 
 
-from django.http import StreamingHttpResponse
+from django.http import StreamingHttpResponse,QueryDict
 
 @api_view(['POST'])
+@parser_classes([JSONParser,FormParser])
 def query_variants(request):
     """
 Performs a query to DAE. The body of the request should be JSON formatted object containing
@@ -190,6 +192,9 @@ The expected fields are:
 
     
     data=request.DATA
+    if isinstance(data,QueryDict):
+        data=dict(data)
+        
     vsl=dae_query_variants(data)
     print "query_variants: result ready; sending..."
     
