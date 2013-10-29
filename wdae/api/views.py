@@ -143,6 +143,9 @@ def gene_list(request,page_count=30):
         
     return Response(gl[:page_count])
 
+
+from django.http import StreamingHttpResponse
+
 @api_view(['POST'])
 def query_variants(request):
     """
@@ -188,6 +191,7 @@ The expected fields are:
     
     data=request.DATA
     vsl=dae_query_variants(data)
+    print "query_variants: result ready; sending..."
     
     response = HttpResponse(mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'

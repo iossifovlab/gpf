@@ -14,6 +14,8 @@ import unittest
 import itertools
 
 from DAE import *
+from DAE import _safeVs
+
 from api.dae_query import *
 
 
@@ -305,11 +307,14 @@ class VariantsTests(unittest.TestCase):
             self.assertTrue('sibF' in v.inChS)
             self.assertEqual(v.atts['effectType'],'frame-shift')
 
+from GetVariantsInterface import augmentAVar
 
 class CombinedTests(unittest.TestCase):
 
 
     TEST_DATA_1={"denovoStudies":["allWEAndTG"],"transmittedStudies":["none"],"inChild":"prbM","effectTypes":"All","variantTypes":"All","geneSet":{"gs_id":"main","gs_term":"essentialGenes"},"geneSyms":""}
+    TEST_DATA_2={"denovoStudies":["allWEAndTG"],"transmittedStudies":["w873e374s322"],"inChild":"All","effectTypes":"All","variantTypes":"All","geneSet":{"gs_id":"main","gs_term":None},"geneSyms":"","ultraRareOnly":True}
+    TEST_DATA_3={"denovoStudies":["allWEAndTG"],"transmittedStudies":["wigEichler374"],"inChild":"All","effectTypes":"All","variantTypes":"All","geneSet":{"gs_id":"main","gs_term":None},"geneSyms":"","ultraRareOnly":True}
 
     def test_inchild_correct(self):
         self.assertEqual(prepare_inchild(self.TEST_DATA_1), 'prbM')
@@ -320,9 +325,23 @@ class CombinedTests(unittest.TestCase):
         self.assertEqual(len(gs),1747)
 
             
-    def test_variants_gene_sets(self):
+    def test_variants_gene_sets_1(self):
         vs = dae_query_variants(self.TEST_DATA_1)
         
         self.assertEqual(len(vs),1)
+        tf = open("test_data_1.tmp","w+")
+
+        _safeVs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
+                    ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
+
         for v in itertools.chain(*vs):
             self.assertTrue('prbM' in v.inChS)
+            
+    def test_variants_gene_sets_3(self):
+        vs = dae_query_variants(self.TEST_DATA_3)
+        
+        self.assertEqual(len(vs),2)
+        tf = open("test_data_3.tmp","w+")
+
+        _safeVs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
+                    ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
