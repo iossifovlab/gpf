@@ -208,7 +208,7 @@ The expected fields are:
     print "query_variants: result ready; sending..."
     
     generator=generate_response(itertools.imap(augmentAVar,itertools.chain(*vsl)),
-                                      ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
+                                      ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=',')
     response = StreamingHttpResponse(generator, mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'

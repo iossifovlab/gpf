@@ -295,6 +295,7 @@ def generate_response(vs,atts=[],sep="\t"):
                     mavs.append(str(getattr(v,att)))
             except:
                 mavs.append("")
+        print "mavs:",mavs,"v.atts:",v.atts
                  
         tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts]) 
         yield (tmp +"\n")
