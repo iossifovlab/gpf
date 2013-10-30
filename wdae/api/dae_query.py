@@ -90,7 +90,9 @@ def prepare_gene_syms(data):
     else:
         return None
 
-def __filter_gene_set(gene_set):
+from DAE import get_gene_sets_symNS
+
+def __filter_gene_set(gene_set,data):
     gs_id=gene_set['gs_id']
     gs_term=gene_set['gs_term']
     
@@ -101,6 +103,11 @@ def __filter_gene_set(gene_set):
         gs=settings.GENE_SETS_GO
     elif gs_id.lower().strip()=='disease':
         gs=settings.GENE_SETS_DISEASE
+    elif gs_id.lower().strip()=='denovo':
+        dl=prepare_denovo_studies(data)
+        if not dl:
+            return None
+        gs=get_gene_sets_symNS('denovo',dl)
     else:
         return None
     
@@ -129,7 +136,7 @@ def prepare_gene_sets(data):
             return None
         gs_term=data['geneTerm']
         
-        return __filter_gene_set({'gs_id':gs_id,'gs_term':gs_term.split('|')[0].strip()})
+        return __filter_gene_set({'gs_id':gs_id,'gs_term':gs_term.split('|')[0].strip()},data)
     else:
         return None
 
@@ -295,7 +302,6 @@ def generate_response(vs,atts=[],sep="\t"):
                     mavs.append(str(getattr(v,att)))
             except:
                 mavs.append("")
-        print "mavs:",mavs,"v.atts:",v.atts
                  
         tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts]) 
         yield (tmp +"\n")
