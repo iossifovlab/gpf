@@ -129,7 +129,7 @@ def prepare_gene_sets(data):
     gene_set = data['geneSet']
     
     if isinstance(gene_set,dict):
-        return __filter_gene_set(gene_set)
+        return __filter_gene_set(gene_set,data)
     elif isinstance(gene_set,str):
         gs_id=gene_set
         if not data.has_key('geneTerm'):

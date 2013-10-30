@@ -264,8 +264,7 @@ class StudiesTests(unittest.TestCase):
         dsl = prepare_transmitted_studies({'transmittedStudies':["ala", "bala"]})
         self.assertIsNone(dsl)
  
-import itertools.chain
-import itertools.imap
+import itertools
 
 class VariantsTests(unittest.TestCase):
      
@@ -311,8 +310,10 @@ class CombinedTests(unittest.TestCase):
 
 
     TEST_DATA_1={"denovoStudies":["allWEAndTG"],"transmittedStudies":["none"],"inChild":"prbM","effectTypes":"All","variantTypes":"All","geneSet":{"gs_id":"main","gs_term":"essentialGenes"},"geneSyms":""}
-    TEST_DATA_2={"denovoStudies":["allWEAndTG"],"transmittedStudies":["w873e374s322"],"inChild":"All","effectTypes":"All","variantTypes":"All","geneSet":{"gs_id":"main","gs_term":None},"geneSyms":"","ultraRareOnly":True}
-    TEST_DATA_3={"denovoStudies":["allWEAndTG"],"transmittedStudies":["wigEichler374"],"inChild":"All","effectTypes":"All","variantTypes":"All","geneSet":{"gs_id":"main","gs_term":None},"geneSyms":"","ultraRareOnly":True}
+    TEST_DATA_2={"denovoStudies":[],"transmittedStudies":["w873e374s322"],"inChild":"All","effectTypes":"All","variantTypes":"All","geneSet":{"gs_id":"GO","gs_term":"GO:0022889"},"geneSyms":"","ultraRareOnly":True}
+    TEST_DATA_3={"denovoStudies":["allWEAndTG"],"transmittedStudies":["wigEichler374"],"inChild":"All","effectTypes":"All","variantTypes":"All","geneSet":{"gs_id":"GO","gs_term":'GO:0022889'},"geneSyms":"","ultraRareOnly":True}
+    TEST_DATA_4={"denovoStudies":[],"transmittedStudies":["wigEichler374"],"inChild":"All","effectTypes":"All","variantTypes":"All","geneSet":None,"geneRegion":"1:1018000-1020000","geneSyms":"","ultraRareOnly":True}
+    
 
     def test_inchild_correct(self):
         self.assertEqual(prepare_inchild(self.TEST_DATA_1), 'prbM')
@@ -340,6 +341,18 @@ class CombinedTests(unittest.TestCase):
         
         self.assertEqual(len(vs),2)
         tf = open("test_data_3.tmp","w+")
+        
+        
+        for line in generate_response(itertools.imap(augmentAVar,itertools.chain(*vs)),
+                                      ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_']):
+            tf.write(line)
+        tf.close()
+
+    def test_variants_gene_sets_4(self):
+        vs = dae_query_variants(self.TEST_DATA_4)
+        
+        self.assertEqual(len(vs),1)
+        tf = open("test_data_4.tmp","w+")
         
         
         for line in generate_response(itertools.imap(augmentAVar,itertools.chain(*vs)),
