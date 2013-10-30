@@ -229,12 +229,19 @@ def __prepare_ultra_rare(data):
             return True
     return ultraRareOnly
 
+def prepare_gene_region(data):
+    if not data.has_key('geneRegion'):
+        return None
+    return data['geneRegion'].strip()
+
+
 def prepare_transmitted_filters(data):
     filters={'variantTypes':prepare_variant_types(data),
              'effectTypes':prepare_effect_types(data),
              'inChild':prepare_inchild(data),
              'familyIds':prepare_family_ids(data),
              'geneSyms':combine_gene_syms(data),
+             'regionS': prepare_gene_region(data),
              'ultraRareOnly':__prepare_ultra_rare(data),
              'minParentsCalled':__prepare_min_parents_called(data),
              'minAltFreqPrcnt':__prepare_min_alt_freq_prcnt(data),
@@ -248,7 +255,8 @@ def prepare_denovo_filters(data):
              'variantTypes':prepare_variant_types(data),
              'effectTypes':prepare_effect_types(data),
              'familyIds':prepare_family_ids(data),
-             'geneSyms':combine_gene_syms(data)}
+             'geneSyms':combine_gene_syms(data),
+             'regionS': prepare_gene_region(data)}
     return filters
 
 def dae_query_variants(data):

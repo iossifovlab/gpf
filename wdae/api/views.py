@@ -180,7 +180,12 @@ The expected fields are:
 * "transmittedStudies" --- expects list of transmitted studies
 
 * "geneSyms" --- comma separated list of gene symbols or list of gene symbols
-* "geneSet" --- contains dictionary with two elements: "gs_id" is the gene set name (one of 'main','GO' or 'disease') and 'gs_term'. Example: `{'geneSet':{'gs_id':'GO', 'gs_term':'GO:2001293'}}` or `{'geneSet':{'gs_id':'main', 'gs_term':'mPFC_maternal'}}`
+
+
+* "geneSet" --- contains gene set name (one of 'main','GO' or 'disease')
+* "geneTerm" --- contains gene set term. Example:  'GO:2001293' (from GO), 'mPFC_maternal' (from main).
+
+* "geneRegion" --- gene region to filter (just a text field).
 
 * "effectTypes" --- effect types
 * "variantTypes" --- variant types
