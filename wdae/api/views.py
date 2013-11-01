@@ -31,7 +31,8 @@ def denovo_studies_list(request):
     stds = [st for st in vDB.getDenovoStudies() if st != 'studyDir']
     stgs = [st for st in vDB.getStudyGroups() if st != 'studyDir']
     stds.extend(stgs)
-    stds_desc = ['Description: %s \nDescription Description' % st for st in stds]
+    # FIXME: Add real studies descriptions here...
+    stds_desc = ['Description: %s \nDescription Description\nStudy Descriptions' % st for st in stds]
     return Response({"denovo_studies" : zip(stds, stds_desc)})
 
 @api_view(['GET'])
@@ -43,7 +44,8 @@ def study_groups_list(request):
 @api_view(['GET'])
 def transmitted_studies_list(request):
     stds = vDB.getTransmittedStudies()
-    stds_desc = ['Description: %s \nDescription Description' % st for st in stds]
+    # FIXME: Add real studies descriptions here...
+    stds_desc = ['Description: %s \nDescription Description\nStudy Descriptions' % st for st in stds]
     return Response({"transmitted_studies" : zip(stds, stds_desc)})
 
 
