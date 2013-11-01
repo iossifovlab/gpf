@@ -280,9 +280,8 @@ class Variant:
                         for r in all_regs:
                             if (r.start <= self.pos <= r.stop) or (self.pos < r.start and self.pos_last >= r.start):
                                 if i.gene.startswith("tRNA"):
-                                    if 'anticodon' in i.attr:
-                                        
-                                        if (i.attr['anticodon'][0] <= self.pos <= i.attr['anticodon'][1]) or (i.attr['anticodon'][0] > self.pos and self.pos_last >= i.attr['anticodon'][0]):
+                                    if 'anticodonB' in i.attr:
+                                        if (int(i.attr['anticodonB']) <= self.pos <= int(i.attr['anticodonE'])) or (int(i.attr['anticodonB']) > self.pos and self.pos_last >= int(i.attr['anticodonB'])):
                                             worstForEachTranscript.append(["tRNA:ANTICODON", [i.gene, i.total_len()], i.strand, i.trID])
                                             in_exon = True
                                             break
