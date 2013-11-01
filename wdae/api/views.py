@@ -28,10 +28,11 @@ from dae_query import dae_query_variants, generate_response
 
 @api_view(['GET'])
 def denovo_studies_list(request):
-    stds = vDB.getDenovoStudies()
-    stgs = vDB.getStudyGroups()
+    stds = [st for st in vDB.getDenovoStudies() if st != 'studyDir']
+    stgs = [st for st in vDB.getStudyGroups() if st != 'studyDir']
     stds.extend(stgs)
-    return Response({"denovo_studies" : [st for st in stds if st != 'studyDir']})
+    stds_desc = ['Description: %s \nDescription Description' % st for st in stds]
+    return Response({"denovo_studies" : zip(stds, stds_desc)})
 
 @api_view(['GET'])
 def study_groups_list(request):
@@ -42,7 +43,8 @@ def study_groups_list(request):
 @api_view(['GET'])
 def transmitted_studies_list(request):
     stds = vDB.getTransmittedStudies()
-    return Response({"transmitted_studies" : stds})
+    stds_desc = ['Description: %s \nDescription Description' % st for st in stds]
+    return Response({"transmitted_studies" : zip(stds, stds_desc)})
 
 
 @api_view(['GET'])
