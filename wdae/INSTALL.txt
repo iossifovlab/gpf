@@ -61,7 +61,8 @@ This will collect all static files into tmp/ folder. Move all files into
 /var/www/seqpipe/static (or as configured into seqpipe.conf)
 
 
-7) in wdae/settings.py set debug flags to false 
+7) in wdae/settings.py set debug flags to false. 
+edit ALLOWED_HOSTS to contain allowed host.
 
 8) enable configured virtual host
 
