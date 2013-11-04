@@ -69,3 +69,27 @@ sudo a2ensite seqpipe
 
 9) restart the apache server
 
+
+10) configure external proxy to internal deployment
+
+<VirtualHost *:80>
+	ServerName seqpipe.setelis.com
+
+	ProxyPreserveHost On
+	ProxyRequests off
+	ProxyPass / http://seqpipe-vm.setelis.com/
+	ProxyPassReverse / http://seqpipe-vm.setelis.com/
+
+        <Location '/'>
+            AuthType Basic
+            AuthName "seqpipe"
+            AuthUserFile /home/elephant/seqpipe/htpasswd
+            Require valid-user
+        </Location>
+
+
+</VirtualHost>
+
+11) create 'htpasswd' file in appropriate place. 'genhtpasswd.py' could be used from
+wdae/tools directory
+
