@@ -107,7 +107,13 @@ class GenomicSequence_Dan:
         try:
             return(len(self._seq_dic[chrom]))
         except KeyError:
-            print("Unknown chromosome!")    
+            print("Unknown chromosome!")
+
+    def get_all_chr_lengths(self):
+        R = []
+        for chr in self._seq_dic:
+            R.append((chr, len(self._seq_dic[chr])))
+        return(R)
     
     def getSequence(self, chr, start, stop):
 
@@ -181,6 +187,13 @@ class GenomicSequence_Ivan:
             return(self._Indexing[chrom]['length'])
         except KeyError:
             print("Unknown chromosome!")
+
+    def get_all_chr_lengths(self):
+        R = []
+        for chr in self.allChromosomes:
+            R.append((chr, self._Indexing[chr]['length']))
+        return(R)
+
             
     def getSequence(self, chr, start, stop):
         
