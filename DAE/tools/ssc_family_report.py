@@ -85,7 +85,10 @@ def procWigStudy(stN, addSeqStatus=False, downloadHist=None):
     piAttN = ['mother', 'father', 'child1', 'child2']
     covAtt = '_target_covered_at_20_prcnt'
 
-    st = vDB.get_study(stN)
+    sts = vDB.get_studies(stN)
+    if len(sts)!=1:
+        raise Exception('only expect one study')
+    st = sts[0]
     familyIdRE = re.compile('^\d\d\d\d\d$') 
         
     for fdsc in st.families.values() + st.badFamilies.values():
@@ -162,14 +165,14 @@ if __name__  == "__main__":
     procAssignment('EichlerAssigned')
     procAssignment('StateAssigned')
     procAssignment('WiglerAssigned')
-    procWigStudy('wig1019',True)
-    procWigStudy('wigState322',downloadHist="1 or 2")
-    yaleCurrentUpload('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/yale-201310-upload.txt','wigState322')
+    procWigStudy('cshlSSCWE',True)
+    procWigStudy('yaleSSCWE',downloadHist="1 or 2")
+    yaleCurrentUpload('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/yale-201310-upload.txt','yaleSSCWE')
     # procWigStudy('wigEichler483',downloadHist="1, 2, or 3")
-    procWigStudy('wigEichler515',downloadHist="1, 2, or 3")
+    procWigStudy('udapSSCWE',downloadHist="1, 2, or 3")
 
-    julieStatus('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/familiesTillTheEnd-jr3-ii3-mr1.txt','wig1019')
-    cshlUploadHistory('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/ssc-upload-history-20131020.txt','wig1019')
+    julieStatus('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/familiesTillTheEnd-jr3-ii3-mr1.txt','cshlSSCWE')
+    cshlUploadHistory('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/ssc-upload-history-20131020.txt','cshlSSCWE')
     lindaThirdAssignment('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/wigler_third_assignmnets.csv')
 
     printDt(famDt,"familyId",'famReport.txt')

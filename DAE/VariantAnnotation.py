@@ -648,7 +648,7 @@ def get_effect_types(types=True, groups=False):
          'no-mutation']
 
     G = ['LGDs',
-         'introns', "regulatory",
+         'introns',
          'UTRs'
          ]
 
@@ -662,12 +662,14 @@ def get_effect_types(types=True, groups=False):
         return(G)
     return([])
 
-def get_a(s):  ### change the name of the function
+def get_effect_types_set(s):  ### change the name of the function
     s = s.split(',')
     
     Groups = {'LGDs':['splice-site','frame-shift','nonsense','no-frame-shift-newStop'],
+              'nonsynonymous':['splice-site','frame-shift','nonsense','no-frame-shift-newStop','missense','noStart', 'noEnd', 'no-frame-shift'],
               'introns' : ['intron', "non-coding-intron", "5'UTR-intron", "3'UTR-intron"],
-              'UTRs': ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"]}
+              'UTRs': ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"]
+}
     R = []
 
     for i in s:
@@ -676,7 +678,7 @@ def get_a(s):  ### change the name of the function
         except:
             R.append(i)
 
-    return(list(set(R)))
+    return set(R)
     
 
              
@@ -943,7 +945,7 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
 
     # OLD FORMAT
     if v.seq != None and ("^" in v.seq or "$" in v.seq):
-        print("Old format detected: " + v.seq)
+        print >>sys.stderr, "Old format detected: " + v.seq
         v.seq = None
 
 
