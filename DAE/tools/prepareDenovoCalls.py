@@ -38,7 +38,7 @@ def vKey(v):
 vRawData = defaultdict(list)
 for v in vDB.get_validation_variants():
     vRawData[vKey(v)].append(v)
-valStatusPriority = defaultdict(int,{ vst:(i+1) for i,vst in enumerate("valid invalid failed".split()) })
+valStatusPriority = defaultdict(lambda:4,{ vst:(i+1) for i,vst in enumerate("valid invalid failed".split()) })
 vData = {k:sorted(l,key=lambda v: valStatusPriority[v.valStatus])[0] for k,l in vRawData.items()}
 
 
