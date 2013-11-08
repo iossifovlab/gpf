@@ -221,15 +221,16 @@ for l in GeneRgns:
 
 # ----------- Writing results to the file ---------------------
 
-res = open(outfile, 'w')
+#res = open(outfile, 'w')
 
 
 for k, v in sorted(DD.items(), key = lambda x: x[1]['score'], reverse=True):
-    res.write("\t".join([k, str(v['score']), str(v['length_cov']), str(v['length_total'])]) + "\n")
+    print("\t".join([k, str(v['score']), str(v['length_cov']), str(v['length_total'])]))
+    #res.write("\t".join([k, str(v['score']), str(v['length_cov']), str(v['length_total'])]) + "\n")
 
-res.close()
+#res.close()
 
-sys.stderr.write("File saved as: " + outfile + "\n")
+#sys.stderr.write("File saved as: " + outfile + "\n")
             
         
     
