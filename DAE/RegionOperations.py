@@ -78,7 +78,7 @@ def collapse_noChr(r, is_sorted=False):
 
     
     if is_sorted == False:
-        r.sort(key=lambda x: int(x[0]))
+        r.sort(key=lambda x: x.start)
 
 
     C = [r[0]]
