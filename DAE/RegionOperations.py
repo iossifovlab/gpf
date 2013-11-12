@@ -14,25 +14,67 @@ class Region:
         self.chr = chr
         self.start = start
         self.stop = stop
+
+    def __str__(self):
+        return(self.chr + " " + str(self.start) + " " + str(self.stop))
+
+def all_regions_from_chr(R, chr):
+    A = [r for r in R if r.chr == chr]
+    return(A)
         
 
-def connected_component(*r):
+def unique_regions(R):
+    D = defaultdict(list)
+    
+    for r in R:
+        D[r.chr].append(r)
+
+    for chr in D.keys():
+        D[chr].sort(key=lambda x: x.start)
+   
+    for chr,nds in D.items():
+        cp_nds = list(nds)
+        k = 1
+        removed = 0
+        for i in cp_nds[1:]:
+            for j in xrange(k-1,-1,-1):
+                if i.start != cp_nds[j].start:
+                    break
+                if i.stop == cp_nds[j].stop:
+                    print D[chr][k-removed]
+                    del D[chr][k-removed] #?
+                    removed += 1
+                    break
+            k += 1
+        
+      
+    U = [x for y in D.values() for x in y]
+    
+    return(U)
+        
+
+def connected_component(R):
+
+    Un_R = unique_regions(R)
 
     G = nx.Graph()
-    R = [el for list in r for el in list]
-    
-    sorted(R, key=lambda x: int(x[0]))
-    
+
     G.add_nodes_from(R)
-        
-    for k in xrange(1, len(R)):
-        for j in xrange(k-1,-1,-1):
-            if R[k].chr == R[j].chr and R[k].start <= R[j].stop:
-                G.add_edge(R[k], R[j])
-        
 
-        
+    D = defaultdict(list)
+    for r in R:
+        D[r.chr].append(r) 
 
+
+    for chr,nds in D.items():
+        nds.sort(key=lambda x: x.stop)
+        for k in xrange(1, len(nds)):
+            for j in xrange(k-1,-1,-1):
+                if nds[k].start <= nds[j].stop:
+                    G.add_edge(nds[k], nds[j])
+                else:
+                    break
+        
     CC = nx.connected_components(G)
     return(CC)
 
@@ -93,7 +135,8 @@ def collapse_noChr(r, is_sorted=False):
           
     return C
             
-    
+#------------------------------------------------
+#TO BE CHECKED AND SPEED UP
 
 def intersection(s1, s2):
 
