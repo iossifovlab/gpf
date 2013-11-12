@@ -19,7 +19,7 @@ else:
     studyNamesS="allWEAndTG"
 
 
-stdyMap = { 'wig781':'W', 'wig683': 'W' ,'DalyWE2012': 'D' ,'EichlerWE2012': 'E' ,'StateWE2012':'S', 'wigState333': 'S', 'wigEichler374': 'E' , 'wigStateWE2012':'S', 'wigEichlerWE2012':'E', 'EichlerTG2012':'G', 'IossifovWE2012':'W'}
+stdyMap = { 'wig781':'W', 'wig683': 'W' ,'DalyWE2012': 'D' ,'EichlerWE2012': 'E' ,'StateWE2012':'S', 'wigState333': 'S', 'wigEichler374': 'E' , 'wigStateWE2012':'S', 'wigEichlerWE2012':'E', 'EichlerTG2012':'G', 'IossifovWE2012':'W', 'wig1019n':'W', 'wigState333n':'S', 'wigEichler515n':'E' }
 
 studies = vDB.get_studies(studyNamesS)
 
