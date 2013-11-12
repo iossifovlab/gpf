@@ -1,0 +1,96 @@
+HOW TO DEPLOY
+-------------------------
+
+1) install apache2
+
+sudo apt-get install apahce2
+
+2) install mod_wsgi
+
+sudo apt-get install libapache2-mod-wsgi
+
+3) enable apache2 wsgi module and apache env module
+
+sudo a2enmod wsgi env
+
+4) configure apache virtual host
+
+sudo vi /etc/apache2/sites-available/seqpipe.conf
+
+
+<VirtualHost *:80>
+        ServerAdmin webmaster@mydomain.com
+        ServerName seqpipe-vm.setelis.com
+
+        WSGIScriptAlias / /var/www/seqpipe/index.wsgi
+        WSGIApplicationGroup %{GLOBAL}
+
+        Alias /static/ /var/www/seqpipe/static/
+        <Location "/static/">
+            Options -Indexes
+        </Location>
+
+        LogLevel debug
+</VirtualHost>
+
+5) Prepare wsgi script and put it where WSGIScriptAlias points /var/www/seqpipe/index.wsgi:
+
+import os
+import sys
+
+# Add the app's directory to the PYTHONPATH
+sys.path.append('/home/lubo/SeqPipeline/python/wdae')
+sys.path.append('/home/lubo/SeqPipeline/python/DAE')
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'wdae.settings'
+os.environ['DAE_DB_DIR'] = '/home/lubo/data-dev'
+
+
+import django.core.handlers.wsgi
+application = django.core.handlers.wsgi.WSGIHandler()
+
+
+6) Prepare static files and put them into /var/www/seqpipe/static:
+
+in wdae/ directory:
+mkdir tmp
+cd tmp
+python ../manage.py collectstatic
+
+This will collect all static files into tmp/ folder. Move all files into
+/var/www/seqpipe/static (or as configured into seqpipe.conf)
+
+
+7) in wdae/settings.py set debug flags to false. 
+edit ALLOWED_HOSTS to contain allowed host.
+
+8) enable configured virtual host
+
+sudo a2ensite seqpipe
+
+9) restart the apache server
+
+
+10) configure external proxy to internal deployment
+
+<VirtualHost *:80>
+	ServerName seqpipe.setelis.com
+
+	ProxyPreserveHost On
+	ProxyRequests off
+	ProxyPass / http://seqpipe-vm.setelis.com/
+	ProxyPassReverse / http://seqpipe-vm.setelis.com/
+
+        <Location '/'>
+            AuthType Basic
+            AuthName "seqpipe"
+            AuthUserFile /home/elephant/seqpipe/htpasswd
+            Require valid-user
+        </Location>
+
+
+</VirtualHost>
+
+11) create 'htpasswd' file in appropriate place. 'genhtpasswd.py' could be used from
+wdae/tools directory
+

@@ -502,7 +502,7 @@ class Study:
 
 
     def _load_family_data_from_simple(self,reportF):
-        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments=None)
+        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments="asdgasdgasdga")
         families = defaultdict(Family)
         for dtR in dt:
             fmId = str(dtR['familyId'])
@@ -523,7 +523,7 @@ class Study:
     def _load_family_data_from_DalyWE2012_SD_Trios(self,reportF):
         families = {}
 
-        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments=None)
+        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments="asdgasdgasdga")
 
         genderDecoding = { "female":"F", "male":"M"}
 
@@ -555,7 +555,7 @@ class Study:
 
     def _load_family_data_from_EichlerWE2012_SupTab1(self,reportF):
         famBuff = defaultdict(dict)
-        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments=None)
+        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments="asdgasdgasdga")
 
         genderDecoding = { "female":"F", "male":"M"}
         roleDecoding = { "SSC189":"prb", "SSC189_Sib":"sib", "Pilot_Pro":"prb", "Pilot_Sib":"sib" }
@@ -603,7 +603,7 @@ class Study:
     def _load_family_data_from_StateWE2012_data1(self,reportF):
         famBuff = defaultdict(dict) 
         badFamBuff = defaultdict(dict) 
-        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True, comments=None)
+        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True, comments="asdgasdgasdga")
 
         genderDecoding = { "Male":"M", "Female":"F" }
         roleDecoding = { "Mother":"mom", "Father":"dad", "Affected_proband":"prb", "Unaffected_Sibling":"sib" }
