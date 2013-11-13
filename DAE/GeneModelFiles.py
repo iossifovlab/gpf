@@ -49,27 +49,22 @@ class TranscriptModel:
             
         if self.cds[1] <=  self.exons[k].stop:
             CDS_regions.append(Region(self.chr, self.cds[0], self.cds[1]))
-            #CDS_regions.append(CDS_reg(chr=self.chr, start=self.cds[0], stop=self.cds[1]))
             return CDS_regions
 
         CDS_regions.append(Region(self.chr, self.cds[0], self.exons[k].stop + ss))
-        #CDS_regions.append(CDS_reg(chr=self.chr, start=self.cds[0], stop=self.exons[k].stop + ss)) 
         k += 1
         while k < len(self.exons) and self.exons[k].stop <= self.cds[1]:
             if self.exons[k].stop < self.cds[1]:
                 CDS_regions.append(Region(self.chr, self.exons[k].start - ss, stop=self.exons[k].stop + ss))
-                #CDS_regions.append(CDS_reg(chr=self.chr, start=self.exons[k].start - ss, stop=self.exons[k].stop + ss))
                 k += 1
             else:
                 CDS_regions.append(Region(self.chr, self.exons[k].start - ss, stop=self.exons[k].stop))
-                #CDS_regions.append(CDS_reg(chr=self.chr, start=self.exons[k].start - ss, stop=self.exons[k].stop))
                 return CDS_regions
             
         
         if k < len(self.exons) and self.exons[k].start <= self.cds[1]:
             CDS_regions.append(Region(self.chr, self.exons[k].start - ss, stop=self.cds[1]))
-            #CDS_regions.append(CDS_reg(chr=self.chr, start=self.exons[k].start - ss, stop=self.cds[1]))
-
+    
         
         return CDS_regions
 
@@ -79,7 +74,6 @@ class TranscriptModel:
         if self.cds[0] >= self.cds[1]:
             return([])
 
-        #UTR5_reg=namedtuple('UTR5_reg', 'start stop chr')
         UTR5_regions = []
         k = 0
         if self.strand == "+":
@@ -184,7 +178,7 @@ class TranscriptModel:
         
         length = 0
         for c in cds_region:
-            length += c[1] - c[0] + 1
+            length += c.stop - c.start + 1
         return(length)
 
 
@@ -195,7 +189,7 @@ class TranscriptModel:
         l = 0
 
         for i in utr3:
-            l += i[1] - i[0] + 1
+            l += i.stop - i.start + 1
 
         return l
 
@@ -207,7 +201,7 @@ class TranscriptModel:
        l = 0
 
        for i in utr5:
-           l += i[1] - i[0] + 1
+           l += i.stop - i.start + 1
            
        return l
 

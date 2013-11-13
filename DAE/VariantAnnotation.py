@@ -362,16 +362,16 @@ class Variant:
                             worstForEachTranscript.append(h)
                            
 
-                        prev = codingRegions[0][1]
+                        prev = codingRegions[0].stop
                         for j in codingRegions:
-                            if (self.pos < j[0] and self.pos > prev) or (self.pos_last < j[0] and self.pos_last > prev):
-                                for s in [prev + 1, prev+2, j[0]-1, j[0]-2]:
+                            if (self.pos < j.start and self.pos > prev) or (self.pos_last < j.start and self.pos_last > prev):
+                                for s in [prev + 1, prev+2, j.start-1, j.start-2]:
                                     if self.pos <= s <= self.pos_last:
                                         if s == prev + 1 or s == prev+2:
                                             splice = (prev + 1, prev + 2)
                                             side = "5'"
                                         else:
-                                            splice = (j[0]-2, j[0]-1)
+                                            splice = (j.start-2, j.start-1)
                                             side = "3'"
                                         worstEffect = checkIfSplice(self.chr, self.pos, None, self.length, splice, side, "D", refG)
                                 
@@ -443,14 +443,14 @@ class Variant:
                             continue
 
                         
-                        prev = codingRegions[0][1]
+                        prev = codingRegions[0].stop
                         for j in xrange(0, len(codingRegions)):
-                            if self.pos < codingRegions[j][0] and self.pos > prev:
+                            if self.pos < codingRegions[j].start and self.pos > prev:
                                 if self.pos - prev < 3: 
                                     # splice
                                     worstEffect = checkIfSplice(self.chr, self.pos, self.seq, self.length, (prev+1, prev+2), "5'", "I", refG)
-                                elif codingRegions[j][0] - self.pos < 2:
-                                    worstEffect = checkIfSplice(self.chr, self.pos, self.seq, self.length, (codingRegions[j][0]-2, codingRegions[j][0]-1),"3'", "I", refG)
+                                elif codingRegions[j].start - self.pos < 2:
+                                    worstEffect = checkIfSplice(self.chr, self.pos, self.seq, self.length, (codingRegions[j].start-2, codingRegions[j].start-1),"3'", "I", refG)
                                 else:
                                     # intron not splice
                                     if worstEffect == "intergenic":
@@ -472,7 +472,7 @@ class Variant:
                                 
                                 worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
                                 break
-                            if self.pos == codingRegions[j][0]:
+                            if self.pos == codingRegions[j].start:
                                 if j == 0:
                                     if i.strand == "+":
                                         worstForEachTranscript.append(["5'UTR", [i.gene, "5'UTR", "1"], i.strand, i.trID])
@@ -487,7 +487,7 @@ class Variant:
                              
                                 break
                              
-                            if self.pos <= codingRegions[j][1] and self.pos > codingRegions[j][0]:
+                            if self.pos <= codingRegions[j].stop and self.pos > codingRegions[j].start:
                                 # coding
                                 protPos = checkProteinPosition(i, self.pos, 1, "I", codingRegions)
                                 hit = [i.gene, protPos]
@@ -500,7 +500,7 @@ class Variant:
                                         worstForEachTranscript.append(["no-frame-shift-newStop", hit, i.strand, i.trID])
                                 break
 
-                            prev = codingRegions[j][1]
+                            prev = codingRegions[j].stop
                             
        
                     elif self.type == "substitution":
@@ -540,11 +540,11 @@ class Variant:
                         codingRegions = i.CDS_regions()
                     
 
-                        prev = codingRegions[0][1]
+                        prev = codingRegions[0].stop
                         
                         for j in codingRegions:
-                            if self.pos < j[0] and self.pos > prev:
-                                if self.pos - prev < 3 or j[0] - self.pos < 3:
+                            if self.pos < j.start and self.pos > prev:
+                                if self.pos - prev < 3 or j.start - self.pos < 3:
                                     # splice
                                     worstEffect = "splice-site"
                                 else:
@@ -559,7 +559,7 @@ class Variant:
 
                                 break
 
-                            if self.pos <= j[1] and self.pos >= j[0]:
+                            if self.pos <= j.stop and self.pos >= j.start:
 
                                 # coding
 
@@ -583,7 +583,7 @@ class Variant:
 
 
 
-                            prev = j[1]
+                            prev = j.stop
 
 
                     elif self.type == "+" or self.type == "-":
@@ -1147,18 +1147,18 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
 
     if tm.strand == "+":
         for j in cds_reg:
-            if  minPosCod >= j[0] and minPosCod <= j[1]:
-                minAA += minPosCod - j[0]
+            if  minPosCod >= j.start and minPosCod <= j.stop:
+                minAA += minPosCod - j.start
                 break
 
-            minAA += j[1]-j[0]+1
+            minAA += j.stop-j.start+1
     else:
         for j in cds_reg[::-1]:
-            if maxPosCod >= j[0] and maxPosCod <= j[1]:
-                minAA += j[1] - maxPosCod
+            if maxPosCod >= j.start and maxPosCod <= j.stop:
+                minAA += j.stop - maxPosCod
                 break
 
-            minAA += j[1] - j[0] + 1
+            minAA += j.stop - j.start + 1
     minAA = minAA/3 + 1
 
     return(str(minAA) + "/" + str(protLength))
@@ -1288,30 +1288,30 @@ def prepareIntronHit(tm, pos, length, cds_reg):
 
     for i in xrange(0, howManyIntrons):
 
-        if (pos < cds_reg[i+1][0] and cds_reg[i][1] < pos) or  (pos + length - 1 < cds_reg[i+1][0] and cds_reg[i][1] < pos + length - 1):
-            whichAA += cds_reg[i][1] - cds_reg[i][0] + 1
-            intronLength = cds_reg[i+1][0] - cds_reg[i][1] - 1
+        if (pos < cds_reg[i+1].start and cds_reg[i].stop < pos) or  (pos + length - 1 < cds_reg[i+1].start and cds_reg[i].stop < pos + length - 1):
+            whichAA += cds_reg[i].stop - cds_reg[i].start + 1
+            intronLength = cds_reg[i+1].start - cds_reg[i].stop - 1
             if tm.strand == "+":
                 whichAA = whichAA/3 + 1
                 whichIntron = i + 1
-                if cds_reg[i+1][0] - pos - length + 1 < pos - cds_reg[i][1]:
+                if cds_reg[i+1].start - pos - length + 1 < pos - cds_reg[i].stop:
                     indelside = "3'"
-                    distance = cds_reg[i+1][0] - pos - length + 1
+                    distance = cds_reg[i+1].start - pos - length + 1
                 else:
                     indelside = "5'"
-                    distance = pos - cds_reg[i][1]
+                    distance = pos - cds_reg[i].stop
             else:
                 whichAA = protLength - whichAA/3 
                 whichIntron = howManyIntrons - i
-                if cds_reg[i+1][0] - pos - length + 1 < pos - cds_reg[i][1]:
+                if cds_reg[i+1].start - pos - length + 1 < pos - cds_reg[i].stop:
                     indelside = "5'"
-                    distance = cds_reg[i+1][0] - pos - length + 1
+                    distance = cds_reg[i+1].start - pos - length + 1
                 else:
                     indelside = "3'"
-                    distance = pos - cds_reg[i][1]
+                    distance = pos - cds_reg[i].stop
             break
         else:
-            whichAA += cds_reg[i][1] -  cds_reg[i][0] + 1
+            whichAA += cds_reg[i].stop -  cds_reg[i].start + 1
 
 
     return([tm.gene, indelside, str(distance), str(whichIntron) + "/" + str(howManyIntrons),str(whichAA) + "/" + str(protLength), str(intronLength) ])
@@ -1372,12 +1372,12 @@ def findSpliceBegin(pos, length, cds_reg):
 
     for i in xrange(0, len(cds_reg)-1):
         
-        if (pos > cds_reg[i][1] and pos <= cds_reg[i+1][0]) or (pos + length -1 > cds_reg[i][1] and pos + length - 1 <= cds_reg[i+1][0]):
+        if (pos > cds_reg[i].stop and pos <= cds_reg[i+1].start) or (pos + length -1 > cds_reg[i].stop and pos + length - 1 <= cds_reg[i+1].start):
 
-            if pos - cds_reg[i][1] < 3:
-                spliceStart = cds_reg[i][1] + 1
+            if pos - cds_reg[i].stop < 3:
+                spliceStart = cds_reg[i].stop + 1
             else:
-                spliceStart = cds_reg[i+1][0] - 2
+                spliceStart = cds_reg[i+1].start - 2
 
             return(spliceStart)
     
