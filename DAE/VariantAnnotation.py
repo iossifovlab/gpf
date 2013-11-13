@@ -399,7 +399,7 @@ class Variant:
                                 worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
                                 break
 
-                            if self.pos_last <= j[1] and self.pos >= j[0]:
+                            if self.pos_last <= j.stop and self.pos >= j.start:
                                 #coding
                                 if self.length % 3 != 0:
                                     worstEffect = "frame-shift"
@@ -413,7 +413,7 @@ class Variant:
                                 worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
                                 break
 
-                            prev = j[1]
+                            prev = j.stop
 
                             
                     elif self.type == "insertion":
@@ -1316,30 +1316,6 @@ def prepareIntronHit(tm, pos, length, cds_reg):
 
     return([tm.gene, indelside, str(distance), str(whichIntron) + "/" + str(howManyIntrons),str(whichAA) + "/" + str(protLength), str(intronLength) ])
 
-"""
-def createEffectDetailsPart(mutation):
-    if mutation[0] == "intergenic":
-        return("")
-    if mutation[0] == "intron":
-        return(mutation[1][3] + "[" + mutation[1][2] + "]")
-    if mutation[0] == "no-frame-shift" or mutation[0] == "frame-shift" or mutation[0] == "no-frame-shift-newStop":
-        return(mutation[1][1])
-    if mutation[0] == "3'UTR" or mutation[0] == "5'UTR":
-        return("[" + mutation[1][2] + "]")
-    if  mutation[0] == "synonymous":
-        return(mutation[1][3])
-    if mutation[0] == "missense" or mutation[0] == "nonsense" or mutation[0] == "coding_unknown": #or mutation[0] == "noEnd":
-        return(mutation[1][3] + "(" + mutation[1][1] + "->" + mutation[1][2] + ")" ) #5->3
-    if mutation[0] in ["non-coding", "tRNA-ANTICODON"]:
-        return(str(mutation[1][1]))
-    if mutation[0] == "splice-site":
-        return(mutation[1][4]) 
-    if mutation[0] == "noStart" or mutation[0] == "noEnd":
-        return("[" + mutation[1][1] + "]")
-
-    print("unknown mutation type!: " + mutation[0])
-    sys.exit(-99)
-"""
 
 
 def reverseReport(string):
