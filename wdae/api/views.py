@@ -9,6 +9,7 @@ from rest_framework.parsers import JSONParser, FormParser
 
 
 from DAE import vDB, get_gene_sets_symNS
+from VariantAnnotation import get_effect_types
 
 from GetVariantsInterface import augmentAVar
 
@@ -28,12 +29,20 @@ from dae_query import dae_query_variants, generate_response
 
 @api_view(['GET'])
 def denovo_studies_list(request):
-    stds = [st for st in vDB.getDenovoStudies() if st != 'studyDir']
-    stgs = [st for st in vDB.getStudyGroups() if st != 'studyDir']
-    stds.extend(stgs)
-    # FIXME: Add real studies descriptions here...
-    stds_desc = ['Description: %s \nDescription Description\nStudy Descriptions' % st for st in stds]
-    return Response({"denovo_studies" : zip(stds, stds_desc)})
+    r = []
+
+    for stGN in vDB.get_study_group_names():
+        stG = vDB.get_study_group(stGN)
+        r.append((stGN,stG.description))
+
+    for stN in vDB.get_study_names():
+        st = vDB.get_study(stN)
+        if not st.has_denovo:
+            continue
+        r.append((stN,st.description))
+
+    
+    return Response({"denovo_studies" : r})
 
 @api_view(['GET'])
 def study_groups_list(request):
@@ -43,25 +52,33 @@ def study_groups_list(request):
 
 @api_view(['GET'])
 def transmitted_studies_list(request):
-    stds = vDB.getTransmittedStudies()
-    # FIXME: Add real studies descriptions here...
-    stds_desc = ['Description: %s \nDescription Description\nStudy Descriptions' % st for st in stds]
-    return Response({"transmitted_studies" : zip(stds, stds_desc)})
+    r = []
+    for stN in vDB.get_study_names():
+        st = vDB.get_study(stN)
+        if not st.has_transmitted:
+            continue
+        r.append((stN,st.description))
+
+    return Response({"transmitted_studies" : r})
 
 
 @api_view(['GET'])
 def effect_types_list(request):
-    eff = vDB.get_effect_types()
+    eff = ['All'] + get_effect_types(types=False, groups=True) +  get_effect_types(types=True, groups=False)
     return Response({"effect_types" : eff})
 
 @api_view(['GET'])
 def variant_types_list(request):
-    var_types = vDB.get_variant_types()
+    # var_types = vDB.get_variant_types()
+    # re-think 
+    var_types = ['All', 'CNV+', 'CNV-', 'snv', 'ins', 'del']
     return Response({'variant_types': var_types})
 
 @api_view(['GET'])
 def child_type_list(request):
-    child_types = vDB.get_child_types()
+    # child_types = vDB.get_child_types()
+    # re-think at some point in the future
+    child_types = ['prb', 'sib', 'prbM', 'sibF', 'sibM', 'prbF'] 
     return Response({'child_types':child_types})
 
 @api_view(['GET'])

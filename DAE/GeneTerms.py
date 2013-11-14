@@ -26,6 +26,27 @@ class GeneTerms:
             del self.tDesc[t]
         self.geneNS = geneNS
 
+    def save(self,fn):
+        if fn.endswith("-map.txt"):
+            mapFn = fn
+            dscFn = fn[:-4] + "names.txt"
+        else:
+            mapFn = fn + "-map.txt"
+            dscFn = fn + "-mapnames.txt"
+
+        mapF = open(mapFn,'w')
+        mapF.write("#geneNS\t" + self.geneNS + "\n")
+        for g in sorted(self.g2T):
+            ts = []
+            for t,tn in sorted(self.g2T[g].items()):
+                ts += [t]*tn
+            mapF.write(g + "\t" + " ".join(ts) + "\n")
+        mapF.close()
+
+        dscFn = open(dscFn,'w')
+        dscFn.write("\n".join([t + "\t" + dsc for t, dsc in sorted(self.tDesc.items())]) + "\n")
+        dscFn.close()
+
 
 def _ReadEwaSetFile(inputDir):
     r = GeneTerms()
@@ -72,7 +93,7 @@ def _ReadMappingFile(inputFile):
     return r
         
 def loadGeneTerm(path):
-    if path.endswith(".txt"):
+    if path.endswith("-map.txt"):
         return _ReadMappingFile(path)
     else:
         return _ReadEwaSetFile(path)

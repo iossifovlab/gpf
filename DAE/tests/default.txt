@@ -1,3 +1,4 @@
+studyAndGroups.py
 inChTest.py
 getVariants.py --denovoStudies=wig781 --geneSym=HBB --effectTypes=none --transmittedStudy=none
 reportVariantNumbers.py allWEAndTG 

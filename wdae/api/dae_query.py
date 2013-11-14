@@ -3,6 +3,7 @@ import itertools
 from django.conf import settings
 
 from DAE import vDB
+from VariantAnnotation import get_effect_types
 
 def prepare_inchild(data):
     if not data.has_key('inChild'):
@@ -23,14 +24,14 @@ def prepare_effect_types(data):
         return None
 
     effect_type = data['effectTypes']
-    if effect_type == 'none' or effect_type == 'None' or effect_type is None:
+    if effect_type == 'none' or effect_type == 'None' or effect_type is None or effect_type == 'All':
         return None
 
-    if effect_type not in vDB.get_effect_types():
-        effect_type = 'All'
+    if effect_type not in get_effect_types(types=True, groups=True):
+        return None
 
-    if effect_type == 'All':
-        return ",".join(vDB.get_effect_types()[1:])
+    # if effect_type == 'All':
+    #    return ",".join(vDB.get_effect_types()[1:])
 
     return effect_type
 
@@ -43,8 +44,8 @@ def prepare_variant_types(data):
     if variant_types == 'none' or variant_types == 'None' or variant_types is None:
         return None
 
-    if variant_types not in vDB.get_variant_types():
-        return None
+    # if variant_types not in vDB.get_variant_types():
+    #     return None
 
     if variant_types == 'All':
         return None

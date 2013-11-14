@@ -170,57 +170,48 @@ class Person:
         else:
             self.atts = {} 
 
-class Study:
-    def __init__(self, vdb, name, load=True):
+class StudyGroup:
+    def __init__(self, vdb, name):
         self.vdb = vdb
         self.name = name
-        self.configSection = 'study.' + name
-        self.dnvData = {}
+        self._configSection = 'studyGroup.' + name
+       
+        self.description = ""
+        if self.vdb._config.has_option(self._configSection,'description'):
+            self.description = self.vdb._config.get(self._configSection, 'description' )
+
+        self.studyNames = self.vdb._config.get(self._configSection, 'studies' ).split(",")
+
+    def get_attr(attName):
+        if self.vdb._config.has_option(self._configSection,attName):
+            return self.vdb._config.get(self._configSection,attName)
+
+class Study:
+    def __init__(self, vdb, name):
+        self.vdb = vdb
+        self.name = name
+        self._configSection = 'study.' + name
+        self._dnvData = {}
                 
-        if self.vdb.config.has_option(self.configSection,'denovoCalls.files'):
-            self._has_denovo = True
-        else:                     
-            self._has_denovo = False
+        self.has_denovo = self.vdb._config.has_option(self._configSection,'denovoCalls.files')
+        self.has_transmitted = self.vdb._config.has_option(self._configSection,'transmittedVariants.indexFile')
 
-        if self.vdb.config.has_option(self.configSection,'transmittedVariants.indexFile'):
-            self._has_transmitted = True
-        else:                     
-            self._has_transmitted = False
-        
-        self._description = ""
+        self.description = ""
+        if self.vdb._config.has_option(self._configSection,'description'):
+            self.description = self.vdb._config.get(self._configSection, 'description' )
 
-        if load:
-            self._loaded = True
-            self._load_family_data()            
-        else: 
-            self._loaded = False
+        self._loaded = False
             
-    @property
-    def loaded(self):
-        return self._loaded
-                
-    @property
-    def has_denovo(self):
-        return self._has_denovo
-         
-    @property
-    def has_transmitted(self):
-        return self._has_transmitted
-
-    @property
-    def description(self):
-        return self._description
-    
-    @description.setter
-    def description(self, value):
-        self._description = value
-    
+    def get_attr(attName):
+        if self.vdb._config.has_option(self._configSection,attName):
+            return self.vdb._config.get(self._configSection,attName)
+        
     def get_transmitted_summary_variants(self,minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None, effectTypes=None,ultraRareOnly=False, geneSyms=None, regionS=None):
         
-        if self.loaded==False:
+        if not self._loaded:
             self._load_family_data()
                     
-        transmittedVariantsFile = self.vdb.config.get(self.configSection, 'transmittedVariants.indexFile' ) + ".txt.bgz"
+        transmittedVariantsFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + ".txt.bgz"
         print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile 
 
         if isinstance(effectTypes,str):
@@ -296,10 +287,10 @@ class Study:
 
     def get_transmitted_variants(self, inChild=None, minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None,effectTypes=None,ultraRareOnly=False, geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
         
-        if self.loaded==False:
+        if not self._loaded:
             self._load_family_data()
                     
-        transmittedVariantsTOOMANYFile = self.vdb.config.get(self.configSection, 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
+        transmittedVariantsTOOMANYFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
 
         if TMM_ALL:
             tbf = gzip.open(transmittedVariantsTOOMANYFile)
@@ -354,7 +345,7 @@ class Study:
 
     def get_denovo_variants(self, inChild=None, variantTypes=None, effectTypes=None, geneSyms=None, familyIds=None, regionS=None, callSet=None):
 
-        if self.loaded==False:
+        if not self._loaded:
             self._load_family_data()
             
         if isinstance(effectTypes,str):
@@ -405,10 +396,10 @@ class Study:
             callSet = callSetP
             propName = "denovoCalls." + callSet + ".files"
         
-        if callSet in self.dnvData:
-            return self.dnvData[callSet]
+        if callSet in self._dnvData:
+            return self._dnvData[callSet]
  
-        flsS = self.vdb.config.get(self.configSection, propName)
+        flsS = self.vdb._config.get(self._configSection, propName)
         varList = []
         for fl in flsS.split('\n'):
             print >> sys.stderr, "Loading file", fl, "for collection ", self.name 
@@ -427,13 +418,13 @@ class Study:
                 v.study = self
                 varList.append(v)
 
-        self.dnvData[callSet] = varList
+        self._dnvData[callSet] = varList
         return varList
 
 
     def _load_family_data(self):
-        fdFile = self.vdb.config.get(self.configSection, "familyInfo.file" )
-        fdFormat = self.vdb.config.get(self.configSection, "familyInfo.fileFormat" )
+        fdFile = self.vdb._config.get(self._configSection, "familyInfo.file" )
+        fdFormat = self.vdb._config.get(self._configSection, "familyInfo.fileFormat" )
    
         fmMethod = { 
             "quadReportSSC": self._load_family_data_from_quad_report,
@@ -450,7 +441,7 @@ class Study:
             raise Exception("Unknown Family Fdef __init__(self,vdb,name):ile Format: " + fdFormat)
 
         self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
-        self.loaded=True
+        self._loaded = True
         
     def _load_family_data_SSCFams(self, reportF):
         rf = open(reportF)
@@ -461,7 +452,7 @@ class Study:
         rlsMp = { "mother":"mom", "father":"dad", "proband":"prb", "designated-sibling":"sib", "other-sibling":"sib" }
         genderMap = {"female":"F", "male":"M"}
 
-        for indS in self.vdb.sfariDB.individual.values():
+        for indS in self.vdb._sfariDB.individual.values():
             if indS.familyId not in families:
                 continue
             p = Person()
@@ -474,7 +465,7 @@ class Study:
 
     def _load_family_data_SSCTrios(self, reportF):
         buff = defaultdict(dict) 
-        for indId,indS in self.vdb.sfariDB.individual.items():
+        for indId,indS in self.vdb._sfariDB.individual.items():
             if indS.collection != "ssc":
                 continue
             buff[indS.familyId][indS.role] = indS
@@ -662,7 +653,7 @@ class Study:
             f.atts = { x:qrpR[x] for x in qrp.dtype.names }
 
             def piF(pi):
-                sfariDB = self.vdb.sfariDB
+                sfariDB = self.vdb._sfariDB
                 if not sfariDB:
                     return pi
                 if pi not in sfariDB.sampleNumber2PersonId:
@@ -700,249 +691,76 @@ class Study:
 
         return families,badFamilies
 
-# This class is used to read the variantDB.conf without actually loading 
-# any of the studies.
-class VariantsConfig:
-    def __init__(self, vdb, wd, confFile):
-                    
-        self.vdb = vdb
-        
-        self._config = ConfigParser.SafeConfigParser({'wd':wd})            
-        self._config.optionxform = lambda x: x
-        
-        if not confFile:
-            confFile = wd + "/variantDB.conf"
-            
-        self._config.read(confFile)
-        
-        self._studies = {}
-        self._study_groups = {}
-        
-        
-    @property
-    def studies(self):
-        return self._studies
-
-    @property
-    def study_groups(self):
-        return self._study_groups
-    
-    @property
-    def config(self):
-        return self._config
-            
-    # this method loads Study Groups into a dictionary
-    # and load the meta data about each study, but does
-    # not load the actual study data.
-    def processConfig(self):        
-        self.processStudies()
-        self.processStudyGroups()
-        
-    # this function loads the study group names into a dictionary
-    # of lists of study names
-    def processStudyGroups(self):
-        self._study_groups = {}
-        
-        groupNames = self._config.options('studyGroups')
-        
-        for name in groupNames:
-            if name == 'wd':
-                continue
-            studies = self._config.get('studyGroups', name)             
-            studyList = [s for s in studies.split(",")]
-            self._study_groups[name] = studyList
-        
-    # this function creates and entry for each study
-    # but does not load the actual data.                    
-    def processStudies(self):
-        self._studies={}
-        
-        for sn in self.config.sections():
-            if sn.startswith('study.'):                
-                name = sn[6:]
-                self._studies[name] = Study(self.vdb,name,load=False)
-                
-                notes = []
-
-                m = re.search('WE', name)                
-                if m:
-                    notes.append('Whome Exome')
-
-                m = re.search('TG', name)
-                if m:
-                    notes.append('Targeted Sequencing')
-
-                m = re.search('Eichler', name)
-                if m:
-                    notes.append('Eichler Lab')
-
-                m = re.search('Daly', name)
-                if m:
-                    notes.append('Daly Lab')
-
-                m = re.search('State', name)
-                if m:
-                    notes.append('State Lab')
-
-                m = re.search('Iossifov', name)
-                if m:
-                    notes.append('Wigler Lab')
-
-                m = re.search('Levy', name)
-                if m:
-                    notes.append('Wigler Lab')
-
-                m = re.search('^wig', name)                
-                if m:
-                    notes.append('data was re-processed using CSHL pipeline')
-                
-                    
-                'Send','Data which can be sent to a collaborator'
-                'Published','Data was published'
-                
-                self._studies[name].description = ', '.join(notes)
-
-
 class VariantsDB:
     def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None):
         
-        self.daeDir = daeDir
-        
-        self._VariantsConfig = VariantsConfig(self, daeDir, confFile)
-        self.config = self._VariantsConfig.config
-        
-        self.sfariDB = sfariDB
-        self.giDB = giDB
-        
-        # vdb (self) is used all over the place, so the call to 
-        # process the config needs to go last to make sure all
-        # the required variables are initialized 
-        self._VariantsConfig.processConfig()
-
-
-    @property
-    def studies(self):
-        return self._VariantsConfig.studies
-
-    @property
-    def study_groups(self):
-        return self._VariantsConfig.study_groups
-    
-    
-    # return a list of valid variant types, add None to this list for the UI
-    def get_variant_types(self):
-        types = ['All', 'CNV+', 'CNV-', 'snv', 'ins', 'del']
-        return types
-
-
-    # return a list of valid effect types, add None to this list for the UI
-    def get_effect_types(self):
-        types = ['All', 
-                 'LGDs', 
-                 'CNVs', 
-                 'nonsynonymous',
-                 'CNV-',
-                 'CNV+',
-                 'frame-shift',
-                 'intron',
-                 'no-frame-shift-new-stop',
-                 'synonymous',
-                 'nonsense',
-                 'no-frame-shift',
-                 'missense',
-                 "3'UTR",
-                 "5'UTR",
-                 'splice-site']
-        return types
-                          
-    def get_child_types(self):
-        types = ['prb',
-                 'sib',
-                 'prbM', 
-                 'sibF', 
-                 'sibM', 
-                 'prbF',
-                 #'prbMsibM',
-                 #'prbMsibF'
-                 ]
-        return types
-                                
-    def get_study_names(self):
-        return [sn[6:] for sn in self.config.sections() if sn.startswith('study.')]    
-    
-    def getDenovoStudies(self):
-        names=[]
-
-        for studyKey,study in self.studies.items():
-            if study.has_denovo:
-                names.append(studyKey)
-
-        names = sorted(names)
-                
-        return names
-    
-    
-    def getStudyGroups(self):
-        names=[]
-
-        for studyKey,study in self.study_groups.items():
-            if studyKey != 'wd':
-                names.append(studyKey)
-
-        names = sorted(names)
-                
-        return names    
-    
-        
-    # returns a sorted list of study names, that have the transmittedVariants.indexFile option
-    # in their section
-    # does not return the group names yet
-    # I'd need tp parse the list and make sure all the studies are just Transmitted and contain no denovo
-    
-    def getTransmittedStudies(self):
-        studies=[]
-
-        for sn in self.config.sections():
-            if sn.startswith('study.'):
-                if self.config.has_option(sn,'transmittedVariants.indexFile'):
-                    studies.append(sn[6:])
-
-        studies = sorted(studies)
+        self._sfariDB = sfariDB
+        self._giDB = giDB
+        if not confFile:
+            confFile = daeDir + "/variantDB.conf"
             
-        return studies
+        self._config = ConfigParser.SafeConfigParser({'wd':daeDir})
+        self._config.optionxform = lambda x: x
         
+        self._config.read(confFile)
+        
+        self._studies = {}
+        for secName in self._config.sections():
+            if secName.startswith('study.'):
+                studyName = secName[6:]
+                self._studies[studyName] = Study(self,studyName)
+
+        self._studyGroups = {}
+        for secName in self._config.sections():
+            if secName.startswith('studyGroup.'):
+                gName = secName[11:]
+                self._studyGroups[gName] = StudyGroup(self,gName)
+
+                for stN in self._studyGroups[gName].studyNames:
+                    if stN not in self._studies:
+                        raise Exception("The study " + stN + " in the study group " + gName + " is unknown")
+
+    
+    def get_study_names(self):
+        return sorted(self._studies.keys())
+    
+    def get_study_group_names(self):
+        return sorted(self._studyGroups.keys())
+
     def get_study(self,name):
-        
-        if name in self._VariantsConfig.studies:
-            study = self._VariantsConfig.studies[name]
-            if study.loaded == False:
+        def prepare(study):
+            if not study._loaded:
                 study._load_family_data()
             return study
-        else:
-            return None
-            
-        #if name not in self._studies:
-        #    self._studies[name] = Study(self, name)
-        #return self._studies[name]
-        
+        if name in self._studies:
+            return prepare(self._studies[name])
+        if name in self._studyGroups:
+            if len(self._studyGroups[name].studyNames)!=1:
+                raise Exception('get_study can only use study groups with only one study')
+            return prepare(self._studies[self._studyGroups[name].studyNames[0]])
+        raise Exception('unknown study ' + name)
         
     def get_studies(self,definition):
-        try:
-            studiesS = self.config.get('studyGroups', definition)
-        except:
-            studiesS = definition 
-        return [self.get_study(s) for s in studiesS.split(",")]
-    
-    def effectTypesSet(self,effectTypesS):
-        if effectTypesS == "CNVs":
-            return { "CNV+", "CNV-" }
-        if effectTypesS == "LGDs":
-            return { "frame-shift", "nonsense", "splice-site", "no-frame-shift-new-stop", "no-frame-shift-new-Stop" }    
-        if effectTypesS == "nonsynonymous":
-            return { "frame-shift", "nonsense", "splice-site", "no-frame-shift-new-stop", "no-frame-shift-new-Stop",
-                    "missense", "no-frame-shift" }
-        return set(effectTypesS.split(","))
+        sts = []
 
+        def prepare(study):
+            if not study._loaded:
+                study._load_family_data()
+            sts.append(study)
+            
+        for name in definition.split(","):
+            if name in self._studies:
+                prepare(self._studies[name])
+            if name in self._studyGroups:
+                for sName in self._studyGroups[name].studyNames:
+                    prepare(self._studies[sName])
+        return sts
+                
+    def get_study_group(self, gName):
+        if gName not in self._studyGroups:
+            raise Exception("Unknown study group " + gName)
+        return self._studyGroups[gName]
+    
     def get_denovo_variants(self, studies, **filters):
         seenVs = set()
         if isinstance(studies,str):
@@ -957,8 +775,8 @@ class VariantsDB:
                 
 
     def get_validation_variants(self):
-        validationDir = self.config.get('validation', 'dir' )
-        studyNames = self.config.get('validation', 'studies' )
+        validationDir = self._config.get('validation', 'dir' )
+        studyNames = self._config.get('validation', 'studies' )
         stdies = [self.get_study(x) for x in studyNames.split(',')]
 
         print >>sys.stderr, "validationDir: |", validationDir, "|"
@@ -1060,8 +878,6 @@ class VariantsDB:
                 if 'valparent' in dtR:
                     v.valParent = dtR['valparent']
 
-
-          
                 if v.familyId in knownFams:
                     v.memberInOrder = knownFams[v.familyId].memberInOrder
                 else:
@@ -1092,10 +908,9 @@ class VariantsDB:
                 vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
             return {ge['sym'] for v in vs for ge in v.requestedGeneEffects}
 
-        # TODO: rethink how to get access ot giDB
-        # def set_genes(geneSetDef):
-        #     gtId,tmId = geneSetDef.split(":")
-        #     return set(giDB.getGeneTerms(gtId).t2G[tmId].keys())
+        def set_genes(geneSetDef):
+            gtId,tmId = geneSetDef.split(":")
+            return set(self._giDB.getGeneTerms(gtId).t2G[tmId].keys())
 
         def recSingleGenes(inChild,effectTypes):
             vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
@@ -1113,7 +928,7 @@ class VariantsDB:
         addSet("prbMaleLGDs",       genes('prbM','LGDs'))
         addSet("prbFemaleLGDs",     genes('prbF','LGDs'))
 
-        # addSet("prbLGDsInFMR1",     genes('prb','LGDs',set_genes("main:FMR1-targets")))
+        addSet("prbLGDsInFMR1",     genes('prb','LGDs',set_genes("main:FMR1-targets")))
         # addSet("prbLGDsInCHDs",     genes('prb','LGDs',set("CHD1,CHD2,CHD3,CHD4,CHD5,CHD6,CHD7,CHD8,CHD9".split(','))))
 
         addSet("prbMissense",       genes('prb' ,'missense'))
@@ -1126,9 +941,21 @@ class VariantsDB:
         addSet("sibSynonymous",     genes('sib' ,'synonymous'))
 
         return r
-    
+   
 
-    
+    ### THE ONES BELOW SHOULD BE MOVED 
+    # return a list of valid variant types, add None to this list for the UI
+
+    def effectTypesSet(self,effectTypesS):
+        if effectTypesS == "CNVs":
+            return { "CNV+", "CNV-" }
+        if effectTypesS == "LGDs":
+            return { "frame-shift", "nonsense", "splice-site", "no-frame-shift-new-stop", "no-frame-shift-new-Stop" }    
+        if effectTypesS == "nonsynonymous":
+            return { "frame-shift", "nonsense", "splice-site", "no-frame-shift-new-stop", "no-frame-shift-new-Stop",
+                    "missense", "no-frame-shift" }
+        return set(effectTypesS.split(","))
+                          
             
 def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):
     # print matS, colSep, rowSep, str2NumF 

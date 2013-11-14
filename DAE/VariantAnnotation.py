@@ -645,18 +645,21 @@ def get_effect_types(types=True, groups=False):
          "non-coding-intron",
          'unknown',
          'intergenic',
-         'no-mutation']
+         'no-mutation',
+         'CNV-', 
+         'CNV+']
 
     G = ['LGDs',
          'introns',
-         'UTRs'
+         'UTRs',
+         'CNVs'
          ]
 
     if types == True:
         if groups == False:
             return(T)
-        A = T
-        A.extend(G)
+        A = list(G)
+        A.extend(T)
         return(A)
     if groups == True:
         return(G)
