@@ -47,12 +47,12 @@ for batchDir in glob.glob(dataDir+"/batch*"):
         # In the reference files used by GATK the mitochondrial chromosome is
         # labeled MT, not M, so the chromosome needs to be renames in order
         # for quad processing to work properly.
-        if split[0]=="M":
+        if split[0]=="M" or split[0]=="MT":
             split[0]="MT"
             # the end position must not be greater than the length of the chromosome.This occurs if the variant location is within 400bp of the end of the chromosome.
             if endPos>16569:
                 endPos=16569
-        elif split[0]!="X" and split[0]!="Y":
+        elif split[0]!="X" and split[0]!="Y" and split[0]:
             split[0]=int(split[0])
             
         bedRows.append([split[0],startPos,endPos])
