@@ -623,7 +623,6 @@ class Variant:
 
 def get_effect_types(types=True, groups=False):
     T = ['tRNA:ANTICODON',
-         'all',
          'splice-site',
          'frame-shift',
          'nonsense',

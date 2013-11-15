@@ -33,15 +33,21 @@ def denovo_studies_list(request):
 
     for stGN in vDB.get_study_group_names():
         stG = vDB.get_study_group(stGN)
-        r.append((stGN,stG.description))
+        ord = stG.get_attr('wdae.production.order')
+        if not ord:
+            continue
+        r.append((int(ord), stGN,stG.description))
 
     for stN in vDB.get_study_names():
         st = vDB.get_study(stN)
         if not st.has_denovo:
             continue
-        r.append((stN,st.description))
+        ord = st.get_attr('wdae.production.order')
+        if not ord:
+            continue
+        r.append((int(ord),stN,st.description))
 
-    
+    r = [(stN,dsc) for ord,stN,dsc in sorted(r)]
     return Response({"denovo_studies" : r})
 
 @api_view(['GET'])
@@ -57,8 +63,12 @@ def transmitted_studies_list(request):
         st = vDB.get_study(stN)
         if not st.has_transmitted:
             continue
-        r.append((stN,st.description))
+        ord = st.get_attr('wdae.production.order')
+        if not ord:
+            continue
+        r.append((int(ord),stN,st.description))
 
+    r = [(stN,dsc) for ord,stN,dsc in sorted(r)]
     return Response({"transmitted_studies" : r})
 
 

@@ -182,7 +182,7 @@ class StudyGroup:
 
         self.studyNames = self.vdb._config.get(self._configSection, 'studies' ).split(",")
 
-    def get_attr(attName):
+    def get_attr(self,attName):
         if self.vdb._config.has_option(self._configSection,attName):
             return self.vdb._config.get(self._configSection,attName)
 
@@ -202,7 +202,7 @@ class Study:
 
         self._loaded = False
             
-    def get_attr(attName):
+    def get_attr(self,attName):
         if self.vdb._config.has_option(self._configSection,attName):
             return self.vdb._config.get(self._configSection,attName)
         
