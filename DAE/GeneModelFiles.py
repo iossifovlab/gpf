@@ -658,6 +658,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
 
         f = open(file)
         Relabel = dict([(line.split()[0], line.split()[1]) for line in f])
+        f.close()
         
         for chrom in self._utrModels.keys():
 

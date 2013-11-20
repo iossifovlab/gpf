@@ -13,6 +13,9 @@ import GenomeAccess
 
 Severity = {'tRNA:ANTICODON':30, 'all':24, 'splice-site':23, 'frame-shift':22, 'nonsense':21, 'no-frame-shift-newStop':20, 'noStart':19, 'noEnd':18, 'missense':17, 'no-frame-shift':16, 'CDS':15, 'synonymous':14, 'coding_unknown':13, 'regulatory':12, "3'UTR":11, "5'UTR": 10, 'intron':9, 'non-coding':8, "5'UTR-intron": 7,"3'UTR-intron":6,  "promoter":5, "non-coding-intron":4, 'unknown':3, 'intergenic':2, 'no-mutation':1}
 
+LOF = ['splice-site','frame-shift','nonsense','no-frame-shift-newStop']
+nonsyn = ['splice-site','frame-shift','nonsense','no-frame-shift-newStop','missense','noStart', 'noEnd', 'no-frame-shift']
+
 
 class NuclearCode:
     
@@ -546,7 +549,7 @@ class Variant:
                             if self.pos < j.start and self.pos > prev:
                                 if self.pos - prev < 3 or j.start - self.pos < 3:
                                     # splice
-                                    worstEffect = "splice-site"
+                                    worstE### change the name of the functionffect = "splice-site"
                                 else:
                                     # intron not splice
                                     worstEffect = "intron"
@@ -661,12 +664,17 @@ def get_effect_types(types=True, groups=False):
         return(G)
     return([])
 
-def get_a(s):  ### change the name of the function
+
+def get_effect_types_set(s):  
     s = s.split(',')
+    global LOF
+    global nonsyn
     
-    Groups = {'LGDs':['splice-site','frame-shift','nonsense','no-frame-shift-newStop'],
+    Groups = {'LGDs':LOF,
+              'nonsynonymous':nonsyn,
               'introns' : ['intron', "non-coding-intron", "5'UTR-intron", "3'UTR-intron"],
-              'UTRs': ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"]}
+              'UTRs': ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"]
+}
     R = []
 
     for i in s:
@@ -675,16 +683,8 @@ def get_a(s):  ### change the name of the function
         except:
             R.append(i)
 
-    return(list(set(R)))
-    
+    return set(R)
 
-             
-"""
-def annotate_variant(location, variant, gm, refG):
-    v = load_variant(loc=location, var=variant)
-    e = v.annotate(gm, refG)
-    return (e)
-"""
 
 def _in_stop_codons(s, code):
     if s in code.stopCodons:
@@ -708,6 +708,7 @@ def annotate_variant(gm, refG, chr=None, position=None, loc=None, var=None, ref=
     e = v.annotate(gm, refG, promoter_len)
     return (e)
 
+
 def major_effect(E):
 
     global Severity
@@ -722,6 +723,23 @@ def major_effect(E):
             max_effect = i.effect
         
     return(max_effect)
+
+def tm_with_lof(E):
+    global LOF
+    R = []
+    for ef in E:
+        if ef.effect in LOF:
+            R.append(ef)
+
+#def longest_coding_tm():
+    
+    
+
+def protein_position(e): ###
+    if e.prot_pos == None:
+        return(None)
+    else:
+        return(str(e.prot_pos) + "/" + str(e.prot_length))
 
 
 def create_effect_details(e):
@@ -1136,7 +1154,7 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
 
     # protein length
     transcript_length = tm.CDS_len()
-    protLength = transcript_length/3
+    protLength = transcript_length/3 - 1
     if (transcript_length%3) != 0:
         protLength += 1
    
@@ -2068,7 +2086,6 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
     splice_seq = getSeq(refGenome, chrom, splicePos[0], splicePos[1])
 
     if type == "D":
-
         if side == "5'":
             # prev
             if pos < splicePos[0]:
