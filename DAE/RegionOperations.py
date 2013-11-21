@@ -142,8 +142,8 @@ def intersection(s1, s2):
 
     I = []
 
-    sorted(s1, key=lambda x: int(x[1]))
-    sorted(s2, key=lambda x: int(x[0]))
+    s1.sort(key=lambda x: int(x[1]))
+    s2.sort(key=lambda x: int(x[0]))
    
            
     reg = namedtuple('reg', 'start stop chr')

@@ -92,10 +92,10 @@ def bin_search1(p, I):
             return(I[inds[x]])
             break
         if p < inds[x][0]:
-            e = x
+            e = x-1
         else:
-            b = x
-        if b + 1 >= e:
+            b = x+1
+        if b > e:
             return(None)
 
 outfile = 'scores_per_gene.txt'
