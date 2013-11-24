@@ -1,6 +1,6 @@
 #!/bin/env python
 
-# July 22nd 2013
+# October 25th 2013
 # written by Ewa
 
 import os, sys, optparse
@@ -12,6 +12,9 @@ import GenomeAccess
 
 
 Severity = {'tRNA:ANTICODON':30, 'all':24, 'splice-site':23, 'frame-shift':22, 'nonsense':21, 'no-frame-shift-newStop':20, 'noStart':19, 'noEnd':18, 'missense':17, 'no-frame-shift':16, 'CDS':15, 'synonymous':14, 'coding_unknown':13, 'regulatory':12, "3'UTR":11, "5'UTR": 10, 'intron':9, 'non-coding':8, "5'UTR-intron": 7,"3'UTR-intron":6,  "promoter":5, "non-coding-intron":4, 'unknown':3, 'intergenic':2, 'no-mutation':1}
+
+LOF = ['splice-site','frame-shift','nonsense','no-frame-shift-newStop']
+nonsyn = ['splice-site','frame-shift','nonsense','no-frame-shift-newStop','missense','noStart', 'noEnd', 'no-frame-shift']
 
 
 class NuclearCode:
@@ -280,9 +283,8 @@ class Variant:
                         for r in all_regs:
                             if (r.start <= self.pos <= r.stop) or (self.pos < r.start and self.pos_last >= r.start):
                                 if i.gene.startswith("tRNA"):
-                                    if 'anticodon' in i.attr:
-                                        
-                                        if (i.attr['anticodon'][0] <= self.pos <= i.attr['anticodon'][1]) or (i.attr['anticodon'][0] > self.pos and self.pos_last >= i.attr['anticodon'][0]):
+                                    if 'anticodonB' in i.attr:
+                                        if (int(i.attr['anticodonB']) <= self.pos <= int(i.attr['anticodonE'])) or (int(i.attr['anticodonB']) > self.pos and self.pos_last >= int(i.attr['anticodonB'])):
                                             worstForEachTranscript.append(["tRNA:ANTICODON", [i.gene, i.total_len()], i.strand, i.trID])
                                             in_exon = True
                                             break
@@ -363,16 +365,16 @@ class Variant:
                             worstForEachTranscript.append(h)
                            
 
-                        prev = codingRegions[0][1]
+                        prev = codingRegions[0].stop
                         for j in codingRegions:
-                            if (self.pos < j[0] and self.pos > prev) or (self.pos_last < j[0] and self.pos_last > prev):
-                                for s in [prev + 1, prev+2, j[0]-1, j[0]-2]:
+                            if (self.pos < j.start and self.pos > prev) or (self.pos_last < j.start and self.pos_last > prev):
+                                for s in [prev + 1, prev+2, j.start-1, j.start-2]:
                                     if self.pos <= s <= self.pos_last:
                                         if s == prev + 1 or s == prev+2:
                                             splice = (prev + 1, prev + 2)
                                             side = "5'"
                                         else:
-                                            splice = (j[0]-2, j[0]-1)
+                                            splice = (j.start-2, j.start-1)
                                             side = "3'"
                                         worstEffect = checkIfSplice(self.chr, self.pos, None, self.length, splice, side, "D", refG)
                                 
@@ -400,7 +402,7 @@ class Variant:
                                 worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
                                 break
 
-                            if self.pos_last <= j[1] and self.pos >= j[0]:
+                            if self.pos_last <= j.stop and self.pos >= j.start:
                                 #coding
                                 if self.length % 3 != 0:
                                     worstEffect = "frame-shift"
@@ -414,7 +416,7 @@ class Variant:
                                 worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
                                 break
 
-                            prev = j[1]
+                            prev = j.stop
 
                             
                     elif self.type == "insertion":
@@ -444,14 +446,14 @@ class Variant:
                             continue
 
                         
-                        prev = codingRegions[0][1]
+                        prev = codingRegions[0].stop
                         for j in xrange(0, len(codingRegions)):
-                            if self.pos < codingRegions[j][0] and self.pos > prev:
+                            if self.pos < codingRegions[j].start and self.pos > prev:
                                 if self.pos - prev < 3: 
                                     # splice
                                     worstEffect = checkIfSplice(self.chr, self.pos, self.seq, self.length, (prev+1, prev+2), "5'", "I", refG)
-                                elif codingRegions[j][0] - self.pos < 2:
-                                    worstEffect = checkIfSplice(self.chr, self.pos, self.seq, self.length, (codingRegions[j][0]-2, codingRegions[j][0]-1),"3'", "I", refG)
+                                elif codingRegions[j].start - self.pos < 2:
+                                    worstEffect = checkIfSplice(self.chr, self.pos, self.seq, self.length, (codingRegions[j].start-2, codingRegions[j].start-1),"3'", "I", refG)
                                 else:
                                     # intron not splice
                                     if worstEffect == "intergenic":
@@ -473,7 +475,7 @@ class Variant:
                                 
                                 worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
                                 break
-                            if self.pos == codingRegions[j][0]:
+                            if self.pos == codingRegions[j].start:
                                 if j == 0:
                                     if i.strand == "+":
                                         worstForEachTranscript.append(["5'UTR", [i.gene, "5'UTR", "1"], i.strand, i.trID])
@@ -488,7 +490,7 @@ class Variant:
                              
                                 break
                              
-                            if self.pos <= codingRegions[j][1] and self.pos > codingRegions[j][0]:
+                            if self.pos <= codingRegions[j].stop and self.pos > codingRegions[j].start:
                                 # coding
                                 protPos = checkProteinPosition(i, self.pos, 1, "I", codingRegions)
                                 hit = [i.gene, protPos]
@@ -501,7 +503,7 @@ class Variant:
                                         worstForEachTranscript.append(["no-frame-shift-newStop", hit, i.strand, i.trID])
                                 break
 
-                            prev = codingRegions[j][1]
+                            prev = codingRegions[j].stop
                             
        
                     elif self.type == "substitution":
@@ -541,13 +543,13 @@ class Variant:
                         codingRegions = i.CDS_regions()
                     
 
-                        prev = codingRegions[0][1]
+                        prev = codingRegions[0].stop
                         
                         for j in codingRegions:
-                            if self.pos < j[0] and self.pos > prev:
-                                if self.pos - prev < 3 or j[0] - self.pos < 3:
+                            if self.pos < j.start and self.pos > prev:
+                                if self.pos - prev < 3 or j.start - self.pos < 3:
                                     # splice
-                                    worstEffect = "splice-site"
+                                    worstE### change the name of the functionffect = "splice-site"
                                 else:
                                     # intron not splice
                                     worstEffect = "intron"
@@ -560,7 +562,7 @@ class Variant:
 
                                 break
 
-                            if self.pos <= j[1] and self.pos >= j[0]:
+                            if self.pos <= j.stop and self.pos >= j.start:
 
                                 # coding
 
@@ -584,7 +586,7 @@ class Variant:
 
 
 
-                            prev = j[1]
+                            prev = j.stop
 
 
                     elif self.type == "+" or self.type == "-":
@@ -649,6 +651,7 @@ def get_effect_types(types=True, groups=False):
          'CNV+']
 
     G = ['LGDs',
+         'LoF',
          'nonsynonymous',
          'coding',
          'introns',
@@ -666,13 +669,15 @@ def get_effect_types(types=True, groups=False):
         return(G)
     return([])
 
-def get_effect_types_set(s):  ### change the name of the function
+def get_effect_types_set(s):  
     s = s.split(',')
+    global LOF
+    global nonsyn
     
     Groups = {
-        'LGDs'          : ['splice-site','frame-shift','nonsense','no-frame-shift-newStop'],
-        'nonsynonymous' : ['splice-site','frame-shift','nonsense','no-frame-shift-newStop',
-                            'missense','noStart', 'noEnd', 'no-frame-shift'],
+        'LGDs'          : LOF,
+        'LoF'           : LOF,
+        'nonsynonymous' : nonsyn,
         'introns'       : ['intron', "non-coding-intron", "5'UTR-intron", "3'UTR-intron"],
         'UTRs'          : ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"],
         'coding'        : ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop', 
@@ -690,15 +695,6 @@ def get_effect_types_set(s):  ### change the name of the function
             R.append(i)
 
     return set(R)
-    
-
-             
-"""
-def annotate_variant(location, variant, gm, refG):
-    v = load_variant(loc=location, var=variant)
-    e = v.annotate(gm, refG)
-    return (e)
-"""
 
 def _in_stop_codons(s, code):
     if s in code.stopCodons:
@@ -722,6 +718,7 @@ def annotate_variant(gm, refG, chr=None, position=None, loc=None, var=None, ref=
     e = v.annotate(gm, refG, promoter_len)
     return (e)
 
+
 def major_effect(E):
 
     global Severity
@@ -736,6 +733,23 @@ def major_effect(E):
             max_effect = i.effect
         
     return(max_effect)
+
+def tm_with_lof(E):
+    global LOF
+    R = []
+    for ef in E:
+        if ef.effect in LOF:
+            R.append(ef)
+
+#def longest_coding_tm():
+    
+    
+
+def protein_position(e): ###
+    if e.prot_pos == None:
+        return(None)
+    else:
+        return(str(e.prot_pos) + "/" + str(e.prot_length))
 
 
 def create_effect_details(e):
@@ -1150,7 +1164,7 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
 
     # protein length
     transcript_length = tm.CDS_len()
-    protLength = transcript_length/3
+    protLength = transcript_length/3 - 1
     if (transcript_length%3) != 0:
         protLength += 1
    
@@ -1161,18 +1175,18 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
 
     if tm.strand == "+":
         for j in cds_reg:
-            if  minPosCod >= j[0] and minPosCod <= j[1]:
-                minAA += minPosCod - j[0]
+            if  minPosCod >= j.start and minPosCod <= j.stop:
+                minAA += minPosCod - j.start
                 break
 
-            minAA += j[1]-j[0]+1
+            minAA += j.stop-j.start+1
     else:
         for j in cds_reg[::-1]:
-            if maxPosCod >= j[0] and maxPosCod <= j[1]:
-                minAA += j[1] - maxPosCod
+            if maxPosCod >= j.start and maxPosCod <= j.stop:
+                minAA += j.stop - maxPosCod
                 break
 
-            minAA += j[1] - j[0] + 1
+            minAA += j.stop - j.start + 1
     minAA = minAA/3 + 1
 
     return(str(minAA) + "/" + str(protLength))
@@ -1302,58 +1316,34 @@ def prepareIntronHit(tm, pos, length, cds_reg):
 
     for i in xrange(0, howManyIntrons):
 
-        if (pos < cds_reg[i+1][0] and cds_reg[i][1] < pos) or  (pos + length - 1 < cds_reg[i+1][0] and cds_reg[i][1] < pos + length - 1):
-            whichAA += cds_reg[i][1] - cds_reg[i][0] + 1
-            intronLength = cds_reg[i+1][0] - cds_reg[i][1] - 1
+        if (pos < cds_reg[i+1].start and cds_reg[i].stop < pos) or  (pos + length - 1 < cds_reg[i+1].start and cds_reg[i].stop < pos + length - 1):
+            whichAA += cds_reg[i].stop - cds_reg[i].start + 1
+            intronLength = cds_reg[i+1].start - cds_reg[i].stop - 1
             if tm.strand == "+":
                 whichAA = whichAA/3 + 1
                 whichIntron = i + 1
-                if cds_reg[i+1][0] - pos - length + 1 < pos - cds_reg[i][1]:
+                if cds_reg[i+1].start - pos - length + 1 < pos - cds_reg[i].stop:
                     indelside = "3'"
-                    distance = cds_reg[i+1][0] - pos - length + 1
+                    distance = cds_reg[i+1].start - pos - length + 1
                 else:
                     indelside = "5'"
-                    distance = pos - cds_reg[i][1]
+                    distance = pos - cds_reg[i].stop
             else:
                 whichAA = protLength - whichAA/3 
                 whichIntron = howManyIntrons - i
-                if cds_reg[i+1][0] - pos - length + 1 < pos - cds_reg[i][1]:
+                if cds_reg[i+1].start - pos - length + 1 < pos - cds_reg[i].stop:
                     indelside = "5'"
-                    distance = cds_reg[i+1][0] - pos - length + 1
+                    distance = cds_reg[i+1].start - pos - length + 1
                 else:
                     indelside = "3'"
-                    distance = pos - cds_reg[i][1]
+                    distance = pos - cds_reg[i].stop
             break
         else:
-            whichAA += cds_reg[i][1] -  cds_reg[i][0] + 1
+            whichAA += cds_reg[i].stop -  cds_reg[i].start + 1
 
 
     return([tm.gene, indelside, str(distance), str(whichIntron) + "/" + str(howManyIntrons),str(whichAA) + "/" + str(protLength), str(intronLength) ])
 
-"""
-def createEffectDetailsPart(mutation):
-    if mutation[0] == "intergenic":
-        return("")
-    if mutation[0] == "intron":
-        return(mutation[1][3] + "[" + mutation[1][2] + "]")
-    if mutation[0] == "no-frame-shift" or mutation[0] == "frame-shift" or mutation[0] == "no-frame-shift-newStop":
-        return(mutation[1][1])
-    if mutation[0] == "3'UTR" or mutation[0] == "5'UTR":
-        return("[" + mutation[1][2] + "]")
-    if  mutation[0] == "synonymous":
-        return(mutation[1][3])
-    if mutation[0] == "missense" or mutation[0] == "nonsense" or mutation[0] == "coding_unknown": #or mutation[0] == "noEnd":
-        return(mutation[1][3] + "(" + mutation[1][1] + "->" + mutation[1][2] + ")" ) #5->3
-    if mutation[0] in ["non-coding", "tRNA-ANTICODON"]:
-        return(str(mutation[1][1]))
-    if mutation[0] == "splice-site":
-        return(mutation[1][4]) 
-    if mutation[0] == "noStart" or mutation[0] == "noEnd":
-        return("[" + mutation[1][1] + "]")
-
-    print("unknown mutation type!: " + mutation[0])
-    sys.exit(-99)
-"""
 
 
 def reverseReport(string):
@@ -1386,12 +1376,12 @@ def findSpliceBegin(pos, length, cds_reg):
 
     for i in xrange(0, len(cds_reg)-1):
         
-        if (pos > cds_reg[i][1] and pos <= cds_reg[i+1][0]) or (pos + length -1 > cds_reg[i][1] and pos + length - 1 <= cds_reg[i+1][0]):
+        if (pos > cds_reg[i].stop and pos <= cds_reg[i+1].start) or (pos + length -1 > cds_reg[i].stop and pos + length - 1 <= cds_reg[i+1].start):
 
-            if pos - cds_reg[i][1] < 3:
-                spliceStart = cds_reg[i][1] + 1
+            if pos - cds_reg[i].stop < 3:
+                spliceStart = cds_reg[i].stop + 1
             else:
-                spliceStart = cds_reg[i+1][0] - 2
+                spliceStart = cds_reg[i+1].start - 2
 
             return(spliceStart)
     
@@ -2106,7 +2096,6 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
     splice_seq = getSeq(refGenome, chrom, splicePos[0], splicePos[1])
 
     if type == "D":
-
         if side == "5'":
             # prev
             if pos < splicePos[0]:
