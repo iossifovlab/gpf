@@ -18,6 +18,7 @@ import tempfile
 import re
 from GeneTerms import GeneTerms
 from itertools import groupby
+from VariantAnnotation import get_effect_types_set
 
 class DnvVariant:
     def __str__(self):
@@ -947,6 +948,8 @@ class VariantsDB:
     # return a list of valid variant types, add None to this list for the UI
 
     def effectTypesSet(self,effectTypesS):
+        return get_effect_types_set(effectTypesS)
+        '''
         if effectTypesS == "CNVs":
             return { "CNV+", "CNV-" }
         if effectTypesS == "LGDs":
@@ -955,6 +958,7 @@ class VariantsDB:
             return { "frame-shift", "nonsense", "splice-site", "no-frame-shift-new-stop", "no-frame-shift-new-Stop",
                     "missense", "no-frame-shift" }
         return set(effectTypesS.split(","))
+        '''
                           
             
 def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):

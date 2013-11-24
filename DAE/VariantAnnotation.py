@@ -649,6 +649,8 @@ def get_effect_types(types=True, groups=False):
          'CNV+']
 
     G = ['LGDs',
+         'nonsynonymous',
+         'coding',
          'introns',
          'UTRs',
          'CNVs'
@@ -667,11 +669,18 @@ def get_effect_types(types=True, groups=False):
 def get_effect_types_set(s):  ### change the name of the function
     s = s.split(',')
     
-    Groups = {'LGDs':['splice-site','frame-shift','nonsense','no-frame-shift-newStop'],
-              'nonsynonymous':['splice-site','frame-shift','nonsense','no-frame-shift-newStop','missense','noStart', 'noEnd', 'no-frame-shift'],
-              'introns' : ['intron', "non-coding-intron", "5'UTR-intron", "3'UTR-intron"],
-              'UTRs': ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"]
-}
+    Groups = {
+        'LGDs'          : ['splice-site','frame-shift','nonsense','no-frame-shift-newStop'],
+        'nonsynonymous' : ['splice-site','frame-shift','nonsense','no-frame-shift-newStop',
+                            'missense','noStart', 'noEnd', 'no-frame-shift'],
+        'introns'       : ['intron', "non-coding-intron", "5'UTR-intron", "3'UTR-intron"],
+        'UTRs'          : ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"],
+        'coding'        : ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop', 
+                            'noStart', 'noEnd', 'missense', 'no-frame-shift', 'CDS', 'synonymous' ],
+        'nonsynonymous' : ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop', 
+                            'noStart', 'noEnd', 'missense', 'no-frame-shift', 'CDS' ],
+        'CNVs'          : ['CNV+', 'CNV-']
+        }
     R = []
 
     for i in s:
