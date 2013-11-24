@@ -100,9 +100,13 @@ def bin_search1(p, I):
 
 outfile = 'scores_per_gene.txt'
 
-#----- Creating arrays: denovo (D), random (R) --------
+
+print >>sys.stderr, "Loading scores..."
 
 A = np.load("/mnt/wigclust5/data/safe/egrabows/2013/MutationProbability/Arrays/chrAll.npy")
+
+print >>sys.stderr, "Creating training arrays ..."
+#----- Creating arrays: denovo (D), random (R) --------
 
 chrInds = create_index(A)
 
@@ -152,6 +156,7 @@ R = AA[rand_inds]
 
 
 #------------ Logistic Regression Classifier ---------
+print >>sys.stderr, "Running the logistic regression..."
 
 lrc = linear_model.LogisticRegression()
 
@@ -165,9 +170,11 @@ S = np.core.records.fromarrays([A['chr'], A['pos'], pp[:,0],pp[:,1]], names='chr
 
 
 #------------- Gene Regions -------------------------
+print >>sys.stderr, "Calculation the gene regions..."
 
 GeneRgns = create_gene_regions()
 
+print >>sys.stderr, "Joining the gene regions with the calculated per-base score..."
 
 #------------ Joining gene regions + classifier scores -----------------
 DD = defaultdict(lambda : defaultdict(int))
@@ -222,6 +229,8 @@ for l in GeneRgns:
 # ----------- Writing results to the file ---------------------
 
 #res = open(outfile, 'w')
+
+print >>sys.stderr, "Writing the output..."
 
 
 for k, v in sorted(DD.items(), key = lambda x: x[1]['score'], reverse=True):
