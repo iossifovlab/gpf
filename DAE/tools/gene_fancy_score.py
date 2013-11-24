@@ -16,7 +16,7 @@ import RegionOperations
 
 def create_gene_regions():
 
-    goodChr = ["chr" + str(i) for i in xrange(1,23)]
+    goodChr = [str(i) for i in xrange(1,23)]
     
     genes = defaultdict(lambda : defaultdict(list)) 
     GMs = genomesDB.get_gene_models()
