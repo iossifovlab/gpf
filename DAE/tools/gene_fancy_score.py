@@ -33,7 +33,7 @@ def create_gene_regions():
         
             clpsRgns = RegionOperations.collapse_noChr(rgns)
             for rgn in sorted(clpsRgns,key=lambda x: x.start):
-                rgnTpls.append((int(chr[3:]),rgn.start,rgn.stop,gnm))
+                rgnTpls.append((int(chr),rgn.start,rgn.stop,gnm))
 
 
     geneRgns = [rgnTpl for rgnTpl in sorted(rgnTpls)]
