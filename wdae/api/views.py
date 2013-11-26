@@ -105,7 +105,7 @@ def families_list(request, study_name=None):
     families = st.families.keys()
 
     query_params = request.QUERY_PARAMS
-    if 'filter' not in query_params:
+    if 'filter' in query_params:
         start_string = query_params['filter']
         families = [f for f in families if f.startswith(start_string)]
 
