@@ -15,7 +15,8 @@ from GetVariantsInterface import augmentAVar
 
 import itertools
 
-from dae_query import dae_query_variants, generate_response
+from dae_query import dae_query_variants, generate_response,\
+    get_child_types, get_variant_types
 
 # class Response(RestResponse):
 #     def __init__(self,data=None, status=200,
@@ -27,6 +28,7 @@ from dae_query import dae_query_variants, generate_response
 #             headers['Access-Control-Allow-Origin']='*'
 #         RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
 
+
 @api_view(['GET'])
 def denovo_studies_list(request):
     r = []
@@ -36,7 +38,7 @@ def denovo_studies_list(request):
         ord = stG.get_attr('wdae.production.order')
         if not ord:
             continue
-        r.append((int(ord), stGN,stG.description))
+        r.append((int(ord), stGN, stG.description))
 
     for stN in vDB.get_study_names():
         st = vDB.get_study(stN)
@@ -45,10 +47,10 @@ def denovo_studies_list(request):
         ord = st.get_attr('wdae.production.order')
         if not ord:
             continue
-        r.append((int(ord),stN,st.description))
+        r.append((int(ord), stN, st.description))
 
-    r = [(stN,dsc) for ord,stN,dsc in sorted(r)]
-    return Response({"denovo_studies" : r})
+    r = [(stN, dsc) for ord, stN, dsc in sorted(r)]
+    return Response({"denovo_studies": r})
 
 @api_view(['GET'])
 def study_groups_list(request):
@@ -66,47 +68,53 @@ def transmitted_studies_list(request):
         ord = st.get_attr('wdae.production.order')
         if not ord:
             continue
-        r.append((int(ord),stN,st.description))
+        r.append((int(ord), stN, st.description))
 
-    r = [(stN,dsc) for ord,stN,dsc in sorted(r)]
-    return Response({"transmitted_studies" : r})
+    r = [(stN, dsc) for ord, stN, dsc in sorted(r)]
+    return Response({"transmitted_studies": r})
 
 
 @api_view(['GET'])
 def effect_types_list(request):
-    eff = ['All'] + get_effect_types(types=False, groups=True) +  get_effect_types(types=True, groups=False)
-    return Response({"effect_types" : eff})
+    eff = ['All'] + get_effect_types(types=False, groups=True) + \
+        get_effect_types(types=True, groups=False)
+    return Response({"effect_types": eff})
 
 @api_view(['GET'])
 def variant_types_list(request):
     # var_types = vDB.get_variant_types()
-    # re-think 
-    var_types = ['All', 'CNV+', 'CNV-', 'snv', 'ins', 'del']
+    # re-think
+    # var_types = ['All', 'CNV+', 'CNV-', 'snv', 'ins', 'del']
+    # moved to dae_query; I need them in several places
+    var_types = get_variant_types()
     return Response({'variant_types': var_types})
 
 @api_view(['GET'])
 def child_type_list(request):
     # child_types = vDB.get_child_types()
     # re-think at some point in the future
-    child_types = ['prb', 'sib', 'prbM', 'sibF', 'sibM', 'prbF'] 
-    return Response({'child_types':child_types})
+    # child_types = ['prb', 'sib', 'prbM', 'sibF', 'sibM', 'prbF']
+    # moved to dae_query; I need them in several places
+    child_types = get_child_types()
+    return Response({'child_types': child_types})
 
 @api_view(['GET'])
-def families_list(request, study_name = None):
+def families_list(request, study_name=None):
 
     st = vDB.get_study(study_name)
     families = st.families.keys()
 
     query_params = request.QUERY_PARAMS
-    if query_params.has_key('filter'):
+    if 'filter' not in query_params:
         start_string = query_params['filter']
         families = [f for f in families if f.startswith(start_string)]
 
-    return Response({'study':study_name,
-                     'families':families})
+    return Response({'study': study_name,
+                     'families': families})
 
-def __get_page_count(query_params, page_count = 30):
-    if query_params.has_key('page_count'):
+
+def __get_page_count(query_params, page_count=30):
+    if 'page_count' in query_params:
         try:
             page_count = int(query_params['page_count'])
         except:
@@ -115,18 +123,20 @@ def __get_page_count(query_params, page_count = 30):
         page_count = 30
     return page_count
 
+
 def __gene_set_filter_response_dict(request, data):
     query_params = request.QUERY_PARAMS
 
     page_count = __get_page_count(query_params, page_count = 100)
     print "page_count:", page_count
 
-    if query_params.has_key('filter'):
+    if 'filter' in query_params:
         filter_string = query_params['filter'].lower().strip()
         l = [(key, value) for (key, value) in data.items() if (filter_string in key.lower()) or (filter_string in value.lower())]
         return dict(l[0:page_count])
     else:
         return dict(data.items()[0:page_count])
+
 
 def __gene_set_response(request, gts, gt):
     if gt is None:
@@ -138,20 +148,20 @@ def __gene_set_response(request, gts, gt):
     gl = gts.t2G[gt].keys()
     if not gl:
         return Response({})
-    return Response({"gene_count":len(gl)})
+    return Response({"gene_count": len(gl)})
 
 
 @api_view(['GET'])
-def gene_set_main_list(request, gene_set = None):
+def gene_set_main_list(request, gene_set=None):
     return __gene_set_response(request, settings.GENE_SETS_MAIN, gene_set)
 
 
 @api_view(['GET'])
-def gene_set_go_list(request, gene_set = None):
+def gene_set_go_list(request, gene_set=None):
     return __gene_set_response(request, settings.GENE_SETS_GO, gene_set)
 
 @api_view(['GET'])
-def gene_set_disease_list(request, gene_set = None):
+def gene_set_disease_list(request, gene_set=None):
     return __gene_set_response(request, settings.GENE_SETS_DISEASE, gene_set)
 
 @api_view(['GET'])
@@ -160,12 +170,12 @@ def gene_set_denovo_list(request, denovo_study, gene_set = None):
     return __gene_set_response(request, gts, gene_set)
 
 @api_view(['GET'])
-def gene_list(request, page_count = 30):
+def gene_list(request, page_count=30):
     gl = settings.GENE_SYMS_LIST
 
     query_params = request.QUERY_PARAMS
 
-    if query_params.has_key('filter'):
+    if 'filter' not in query_params:
         start_string = query_params['filter']
         gl = [g for g in gl if g.startswith(start_string)]
 
@@ -175,6 +185,7 @@ def gene_list(request, page_count = 30):
 
 
 from django.http import StreamingHttpResponse, QueryDict
+
 
 def prepare_query_dict(data):
     res = []
@@ -186,6 +197,7 @@ def prepare_query_dict(data):
             value = str(value)
         res.append((key, value))
     return dict(res)
+
 
 @api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
@@ -233,9 +245,7 @@ The expected fields are:
     if request.method == 'OPTIONS':
         print "get_variants_csv: OPTIONS"
 
-
         return Response()
-
 
     data = request.DATA
     if isinstance(data, QueryDict):
@@ -244,17 +254,18 @@ The expected fields are:
     vsl = dae_query_variants(data)
     print "query_variants: result ready; sending..."
 
-    generator = generate_response(itertools.imap(augmentAVar, itertools.chain(*vsl)),
-                                ['effectType',
-                                 'effectDetails',
-                                 'all.altFreq',
-                                 'all.nAltAlls',
-                                 'all.nParCalled',
-                                 '_par_races_',
-                                 '_ch_prof_'],
-                                sep = ',')
+    generator = generate_response(itertools.imap(augmentAVar,
+                                                 itertools.chain(*vsl)),
+                                  ['effectType',
+                                   'effectDetails',
+                                   'all.altFreq',
+                                   'all.nAltAlls',
+                                   'all.nParCalled',
+                                   '_par_races_',
+                                   '_ch_prof_'],
+                                  sep=',')
 
-    response = StreamingHttpResponse(generator, mimetype = 'text/csv')
+    response = StreamingHttpResponse(generator, mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
 
@@ -263,10 +274,3 @@ The expected fields are:
     #     _safeVs(response,itertools.imap(augmentAVar,itertools.chain(*vsl)),
     #                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
     return response
-
-
-
-
-
-
-

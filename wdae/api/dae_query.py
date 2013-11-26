@@ -3,57 +3,67 @@ import itertools
 from django.conf import settings
 
 from DAE import vDB
+from DAE import get_gene_sets_symNS
 from VariantAnnotation import get_effect_types
 
+
+def get_child_types():
+    return ['prb', 'sib', 'prbM', 'sibF', 'sibM', 'prbF']
+
+
+def get_variant_types():
+    return ['All', 'CNV+', 'CNV-', 'snv', 'ins', 'del']
+
+
 def prepare_inchild(data):
-    if not data.has_key('inChild'):
+    if 'inChild' not in data:
         return None
 
     inChild = data['inChild']
     if inChild == 'All' or inChild == 'none' or inChild == 'None':
         return None
 
-    if inChild not in vDB.get_child_types():
+    if inChild not in get_child_types():
         return None
 
     return inChild
 
 
 def prepare_effect_types(data):
-    if not data.has_key('effectTypes'):
+    if 'effectTypes' not in data:
         return None
 
     effect_type = data['effectTypes']
-    if effect_type == 'none' or effect_type == 'None' or effect_type is None or effect_type == 'All':
+    if effect_type == 'none' or effect_type == 'None' or \
+       effect_type is None or effect_type == 'All':
         return None
 
     if effect_type not in get_effect_types(types=True, groups=True):
         return None
 
-    # if effect_type == 'All':
-    #    return ",".join(vDB.get_effect_types()[1:])
-
     return effect_type
 
 
 def prepare_variant_types(data):
-    if not data.has_key('variantTypes'):
+    if 'variantTypes' not in data:
         return None
 
     variant_types = data['variantTypes']
-    if variant_types == 'none' or variant_types == 'None' or variant_types is None:
+    if variant_types == 'none' or variant_types == 'None' or \
+       variant_types is None:
         return None
-
-    # if variant_types not in vDB.get_variant_types():
-    #     return None
 
     if variant_types == 'All':
         return None
 
+    if variant_types not in get_variant_types():
+        return None
+
     return variant_types
 
+
 def prepare_family_ids(data):
-    if not data.has_key('familyIds'):
+    if 'familyIds' not in data:
         return None
 
     families = data['familyIds']
@@ -61,17 +71,20 @@ def prepare_family_ids(data):
         if families.lower() == 'none' or families.lower() == 'all':
             return None
         else:
-            return [s.strip() for s in families.split(',') if len(s.strip()) > 0]
+            return [s.strip()
+                    for s in families.split(',') if len(s.strip()) > 0]
     elif isinstance(families, list):
         return families
     else:
         return None
 
+
 def __filter_gene_syms(gl):
     return [g for g in gl if g in settings.GENE_SYMS_SET]
 
+
 def prepare_gene_syms(data):
-    if not data.has_key('geneSyms'):
+    if 'geneSyms' not in data:
         return None
 
     gene_sym = data['geneSyms']
@@ -91,7 +104,6 @@ def prepare_gene_syms(data):
     else:
         return None
 
-from DAE import get_gene_sets_symNS
 
 def __filter_gene_set(gene_set, data):
     gs_id = gene_set['gs_id']
@@ -124,7 +136,7 @@ def __filter_gene_set(gene_set, data):
 
 
 def prepare_gene_sets(data):
-    if not data.has_key('geneSet'):
+    if 'geneSet' not in data:
         return None
 
     gene_set = data['geneSet']
@@ -137,13 +149,15 @@ def prepare_gene_sets(data):
             return None
         gs_term = data['geneTerm']
 
-        return __filter_gene_set({'gs_id':gs_id, 'gs_term':gs_term.split('|')[0].strip()},
+        return __filter_gene_set({'gs_id': gs_id,
+                                  'gs_term': gs_term.split('|')[0].strip()},
                                  data)
     else:
         return None
 
+
 def prepare_denovo_studies(data):
-    if not data.has_key('denovoStudies'):
+    if 'denovoStudies' not in data:
         return None
 
     dl = data['denovoStudies']
@@ -161,7 +175,7 @@ def prepare_denovo_studies(data):
 
 
 def prepare_transmitted_studies(data):
-    if not data.has_key('transmittedStudies'):
+    if 'transmittedStudies' not in data:
         return None
 
     tl = data['transmittedStudies']
@@ -177,6 +191,7 @@ def prepare_transmitted_studies(data):
 
     return res
 
+
 def combine_gene_syms(data):
     gene_syms = prepare_gene_syms(data)
     gene_sets = prepare_gene_sets(data)
@@ -191,18 +206,20 @@ def combine_gene_syms(data):
 
 # "minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1"
 
+
 def __prepare_min_alt_freq_prcnt(data):
     minAltFreqPrcnt = -1.0
-    if data.has_key('minAltFreqPrcnt'):
+    if 'minAltFreqPrcnt' in data:
         try:
             minAltFreqPrcnt = float(str(data['minAltFreqPrcnt']))
         except:
             minAltFreqPrcnt = -1.0
     return minAltFreqPrcnt
 
+
 def __prepare_max_alt_freq_prcnt(data):
     maxAltFreqPrcnt = 100.0
-    if data.has_key('maxAltFreqPrcnt'):
+    if 'maxAltFreqPrcnt' in data:
         try:
             maxAltFreqPrcnt = float(str(data['maxAltFreqPrcnt']))
         except:
@@ -212,7 +229,7 @@ def __prepare_max_alt_freq_prcnt(data):
 
 def __prepare_min_parents_called(data):
     minParentsCalled = 600
-    if data.has_key('minParentsCalled'):
+    if 'minParentsCalled' in data:
         try:
             minParentsCalled = float(str(data['minParentsCalled']))
         except:
@@ -220,56 +237,56 @@ def __prepare_min_parents_called(data):
     return minParentsCalled
 
 
-
 def __prepare_ultra_rare(data):
     ultraRareOnly = None
-    if data.has_key('ultraRareOnly'):
+    if 'ultraRareOnly' in data:
         if ultraRareOnly == 'True' or ultraRareOnly == 'true':
             ultraRareOnly = True
-    elif data.has_key('rarity'):
+    elif 'rarity' in data:
         if data['rarity'].strip() == 'ultraRare':
             return True
     return ultraRareOnly
 
+
 def prepare_gene_region(data):
-    if not data.has_key('geneRegion'):
+    if 'geneRegion' not in data:
         return None
     return data['geneRegion'].strip()
 
 
 def prepare_transmitted_filters(data):
-    filters = {'variantTypes':prepare_variant_types(data),
-             'effectTypes':prepare_effect_types(data),
-             'inChild':prepare_inchild(data),
-             'familyIds':prepare_family_ids(data),
-             'geneSyms':combine_gene_syms(data),
-             'regionS': prepare_gene_region(data),
-             'ultraRareOnly':__prepare_ultra_rare(data),
-             'minParentsCalled':__prepare_min_parents_called(data),
-             'minAltFreqPrcnt':__prepare_min_alt_freq_prcnt(data),
-             'maxAltFreqPrcnt':__prepare_max_alt_freq_prcnt(data)
+    filters = {'variantTypes': prepare_variant_types(data),
+               'effectTypes': prepare_effect_types(data),
+               'inChild': prepare_inchild(data),
+               'familyIds': prepare_family_ids(data),
+               'geneSyms': combine_gene_syms(data),
+               'regionS': prepare_gene_region(data),
+               'ultraRareOnly': __prepare_ultra_rare(data),
+               'minParentsCalled': __prepare_min_parents_called(data),
+               'minAltFreqPrcnt': __prepare_min_alt_freq_prcnt(data),
+               'maxAltFreqPrcnt': __prepare_max_alt_freq_prcnt(data)
              }
     return filters
 
+
 def prepare_denovo_filters(data):
 
-    filters = {'inChild':prepare_inchild(data),
-             'variantTypes':prepare_variant_types(data),
-             'effectTypes':prepare_effect_types(data),
-             'familyIds':prepare_family_ids(data),
-             'geneSyms':combine_gene_syms(data),
-             'regionS': prepare_gene_region(data)}
+    filters = {'inChild': prepare_inchild(data),
+               'variantTypes': prepare_variant_types(data),
+               'effectTypes': prepare_effect_types(data),
+               'familyIds': prepare_family_ids(data),
+               'geneSyms': combine_gene_syms(data),
+               'regionS': prepare_gene_region(data)}
     return filters
+
 
 def dae_query_variants(data):
     print "dae_query_variants:", data
     variants = []
     dstudies = prepare_denovo_studies(data)
-    print "denovo studies:", dstudies
 
     if dstudies is not None:
         filters = prepare_denovo_filters(data)
-        print 'denovo filters:', filters
         dvs = vDB.get_denovo_variants(dstudies, **filters)
         variants.append(dvs)
 
@@ -288,7 +305,7 @@ def dae_query_variants(data):
 from VariantsDB import mat2Str
 
 
-def save_vs(tf, vs, atts = [], sep = "\t"):
+def save_vs(tf, vs, atts=[], sep="\t"):
     for line in generate_response(vs, atts, sep):
         tf.write(line)
 
@@ -298,7 +315,10 @@ def generate_response(vs, atts = [], sep = "\t"):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
 
     mainAtts = "familyId studyName location variant bestSt fromParentS inChS counts geneEffect requestedGeneEffects popType".split()
-    specialStrF = {"bestSt":mat2Str, "counts":mat2Str, "geneEffect":ge2Str, "requestedGeneEffects":ge2Str}
+    specialStrF = {"bestSt": mat2Str,
+                   "counts": mat2Str,
+                   "geneEffect": ge2Str,
+                   "requestedGeneEffects": ge2Str}
 
     yield (sep.join(mainAtts + atts) + "\n")
 
@@ -315,7 +335,3 @@ def generate_response(vs, atts = [], sep = "\t"):
 
         tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts])
         yield (tmp + "\n")
-
-
-
-
