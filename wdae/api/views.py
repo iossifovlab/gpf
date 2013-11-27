@@ -299,4 +299,6 @@ Example:
     studies = vDB.get_studies(studies_names)
 
     stats = build_stats(studies)
+    stats['studies_names'] = studies_names
+
     return Response(stats)

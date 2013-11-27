@@ -224,8 +224,6 @@ def build_stats(studies):
     [total, child_cnt_hist, child_type_cnt, fam_cnt] = header
 
     stats = defaultdict(list)
-    stats['children'] = get_child_types()
-
     cnts = defaultdict(lambda: defaultdict(float))
 
     for effect_type in effect_types():
@@ -246,11 +244,7 @@ def build_stats(studies):
             cnts[child][effect_type] = vs_cnt
 
     return {'header': __format_header_summary(*header),
-            'result': dict(stats),
+            'stats': dict(stats),
             'footer': __format_footer(cnts, child_type_cnt),
             'rows': effect_types(),
             'cols': get_child_types()}
-
-
-def report_variant(study_names):
-    pass
