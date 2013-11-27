@@ -13,7 +13,7 @@ urlpatterns = patterns('api.views',
 
     url(r'^gene_set/main$', 'gene_set_main_list'),
     url(r'^gene_set/main/(?P<gene_set>[\w:\-\+_]+)$', 'gene_set_main_list'),
-    
+
     url(r'^gene_set/go$', 'gene_set_go_list'),
     url(r'^gene_set/go/(?P<gene_set>[\w:\-\+_]+)$', 'gene_set_go_list'),
 
@@ -22,8 +22,9 @@ urlpatterns = patterns('api.views',
 
     url(r'^genes$', 'gene_list'),
     url(r'^query_variants$', 'query_variants'),
-    
-    
+
+    url(r'^report_variants$', 'report_variants'),
+
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)

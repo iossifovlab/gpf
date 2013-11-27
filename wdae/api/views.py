@@ -17,6 +17,8 @@ import itertools
 
 from dae_query import dae_query_variants, generate_response,\
     get_child_types, get_variant_types
+from report_variants import build_stats
+
 
 # class Response(RestResponse):
 #     def __init__(self,data=None, status=200,
@@ -51,6 +53,7 @@ def denovo_studies_list(request):
 
     r = [(stN, dsc) for ord, stN, dsc in sorted(r)]
     return Response({"denovo_studies": r})
+
 
 @api_view(['GET'])
 def study_groups_list(request):
@@ -274,3 +277,26 @@ The expected fields are:
     #     _safeVs(response,itertools.imap(augmentAVar,itertools.chain(*vsl)),
     #                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
     return response
+
+
+@api_view(['GET'])
+def report_variants(request):
+    """
+Performs query to DAE to generate report similar to 'reportVariantNumbers.py'.
+
+Expects list of studies names as comma separated list in the query parameters
+with name 'studies'.
+
+Example:
+
+     GET /api/report_variants?studies=IossifovWE2012,DalyWE2012
+
+    """
+    if 'studies' not in request.QUERY_PARAMS:
+        return Response({})
+
+    studies_names = request.QUERY_PARAMS['studies']
+    studies = vDB.get_studies(studies_names)
+
+    stats = build_stats(studies)
+    return Response(stats)

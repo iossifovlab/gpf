@@ -119,7 +119,7 @@ print "+++++++++++++++++++++++++++++++++++++++++++"
                     for ft in sorted(fam_type_cnt.items(),
                                      key=lambda ft: -ft[1])]
     return {"fam_total": str(fam_total),
-            "number_of_children": number_of_children,
+            "fam_by_number_of_children": number_of_children,
             "probants": [str(child_type_cnt['prbM']), str(child_type_cnt['prbF'])],
             "siblings": [str(child_type_cnt['sibM']), str(child_type_cnt['sibF'])],
             'family_type': family_types}
@@ -195,6 +195,30 @@ def __format_child_types(ch_cnt, child_type_cnt):
                    child_type_cnt))
 
 
+def __format_footer(cnts, child_type_cnt):
+    footer = defaultdict(list)
+    footer['order'] = ['LGDs', 'missense', 'CNVs']
+    for effect_type in footer['order']:
+        probants = [ratio_str(cnts['prb'][effect_type], child_type_cnt['prb']),
+                    ratio_str(cnts['prbM'][effect_type], child_type_cnt['prbM']),
+                    ratio_str(cnts['prbF'][effect_type], child_type_cnt['prbF']),
+                    bnm_tst(cnts['prbM'][effect_type],
+                            cnts['prbF'][effect_type],
+                            child_type_cnt['prbM'],
+                            child_type_cnt['prbF'])]
+        siblings = [ratio_str(cnts['sib'][effect_type], child_type_cnt['sib']),
+                    ratio_str(cnts['sibM'][effect_type], child_type_cnt['sibM']),
+                    ratio_str(cnts['sibF'][effect_type], child_type_cnt['sibF']),
+                    bnm_tst(cnts['sibM'][effect_type],
+                            cnts['sibF'][effect_type],
+                            child_type_cnt['sibM'],
+                            child_type_cnt['sibF'])]
+
+        footer[effect_type].append([probants, siblings])
+
+    return footer
+
+
 def build_stats(studies):
     header = build_header_summary(studies)
     [total, child_cnt_hist, child_type_cnt, fam_cnt] = header
@@ -221,28 +245,12 @@ def build_stats(studies):
             stats[effect_type].append(data)
             cnts[child][effect_type] = vs_cnt
 
-    footer = defaultdict(list)
-    footer['order'] = ['LGDs', 'missense', 'CNVs']
-    for effect_type in footer['order']:
-        probants = [ratio_str(cnts['prb'][effect_type], child_type_cnt['prb']),
-                    ratio_str(cnts['prbM'][effect_type], child_type_cnt['prbM']),
-                    ratio_str(cnts['prbF'][effect_type], child_type_cnt['prbF']),
-                    bnm_tst(cnts['prbM'][effect_type],
-                            cnts['prbF'][effect_type],
-                            child_type_cnt['prbM'],
-                            child_type_cnt['prbF'])]
-        siblings = [ratio_str(cnts['sib'][effect_type], child_type_cnt['sib']),
-                    ratio_str(cnts['sibM'][effect_type], child_type_cnt['sibM']),
-                    ratio_str(cnts['sibF'][effect_type], child_type_cnt['sibF']),
-                    bnm_tst(cnts['sibM'][effect_type],
-                            cnts['sibF'][effect_type],
-                            child_type_cnt['sibM'],
-                            child_type_cnt['sibF'])]
-
-        footer[effect_type].append([probants, siblings])
-
     return {'header': __format_header_summary(*header),
             'result': dict(stats),
-            'footer': dict(footer),
+            'footer': __format_footer(cnts, child_type_cnt),
             'rows': effect_types(),
             'cols': get_child_types()}
+
+
+def report_variant(study_names):
+    pass

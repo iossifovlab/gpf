@@ -11,6 +11,7 @@ def get_child_types():
     # return ['prb', 'sib', 'prbM', 'sibF', 'sibM', 'prbF']
     return ['prb', 'sib', 'prbM', 'prbF', 'sibM', 'sibF']
 
+
 def get_variant_types():
     return ['All', 'CNV+', 'CNV-', 'snv', 'ins', 'del']
 
