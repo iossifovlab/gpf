@@ -287,9 +287,11 @@ Performs query to DAE to generate report similar to 'reportVariantNumbers.py'.
 Expects list of studies names as comma separated list in the query parameters
 with name 'studies'.
 
-Example:
+Examples:
 
      GET /api/report_variants?studies=IossifovWE2012,DalyWE2012
+     GET /api/report_variants?studies=IossifovWE2012
+     GET /api/report_variants?studies=DalyWE2012
 
     """
     if 'studies' not in request.QUERY_PARAMS:
