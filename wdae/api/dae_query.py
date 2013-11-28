@@ -282,20 +282,17 @@ def prepare_denovo_filters(data):
 
 
 def dae_query_variants(data):
-    print "dae_query_variants:", data
     variants = []
-    dstudies = prepare_denovo_studies(data)
 
+    dstudies = prepare_denovo_studies(data)
     if dstudies is not None:
         filters = prepare_denovo_filters(data)
         dvs = vDB.get_denovo_variants(dstudies, **filters)
         variants.append(dvs)
 
     tstudies = prepare_transmitted_studies(data)
-    print "transmitted studies:", tstudies
     if tstudies is not None:
         filters = prepare_transmitted_filters(data)
-        print 'transmitted filters:', filters
         for study in tstudies:
             tvs = study.get_transmitted_variants(**filters)
             variants.append(tvs)
@@ -311,11 +308,22 @@ def save_vs(tf, vs, atts=[], sep="\t"):
         tf.write(line)
 
 
-def generate_response(vs, atts = [], sep = "\t"):
+def generate_response(vs, atts=[], sep="\t"):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
 
-    mainAtts = "familyId studyName location variant bestSt fromParentS inChS counts geneEffect requestedGeneEffects popType".split()
+    mainAtts = ['familyId',
+                'studyName',
+                'location',
+                'variant',
+                'bestSt',
+                'fromParentS',
+                'inChS',
+                'counts',
+                'geneEffect',
+                'requestedGeneEffects',
+                'popType']
+
     specialStrF = {"bestSt": mat2Str,
                    "counts": mat2Str,
                    "geneEffect": ge2Str,
