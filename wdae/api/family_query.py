@@ -1,7 +1,7 @@
 from DAE import phDB
 
 
-def __get_races():
+def get_races():
     return {'african-amer',
             'asian',
             'more-than-one-race',
@@ -47,6 +47,14 @@ def get_mocuv_race():
 
 def get_focuv_race():
     return __get_string_measure('focuv.race_parents')
+
+
+def get_prb_gender():
+    return __get_string_measure('Proband_Sex')
+
+
+def get_sib_gender():
+    return __get_string_measure('Sibling_Sex')
 
 
 def __studies_familes_keys(studies):
@@ -101,3 +109,99 @@ def filter_families_by_role_gender(studies, role, gender):
     return __filter_families_studies(
         studies,
         lambda st: __filter_families_by_role_gender(st, role, gender))
+
+
+def __prepare_family_race_filter(data, family_filters):
+    if 'familyRace' in data and data['familyRace'] in get_races():
+        family_filters.append(
+            lambda studies: filter_families_by_race(studies, data['familyRace'])
+        )
+
+
+def __prepare_family_trio_quad(data, family_filters):
+    if 'familyQuadTrio' in data:
+        if data['familyQuadTrio'] == 'Trio':
+            family_filters.append(
+                lambda sts: filter_families_trio(sts)
+            )
+        elif data['familyQuadTrio'] == 'Quad':
+            family_filters.append(
+                lambda sts: filter_families_quad(sts)
+            )
+
+
+def __prepare_family_prb_gender(data, family_filters):
+    if 'familyPrbGender' in data:
+        if data['familyPrbGender'] == 'Male':
+            family_filters.append(
+                lambda sts: filter_families_by_role_gender(sts, 'prb', 'M')
+            )
+        elif data['familyPrbGender'] == 'Female':
+            family_filters.append(
+                lambda sts: filter_families_by_role_gender(sts, 'prb', 'F')
+            )
+
+
+def __prepare_family_sib_gender(data, family_filters):
+    if 'familySibGender' in data:
+        if data['familySibGender'] == 'Male':
+            family_filters.append(
+                lambda sts: filter_families_by_role_gender(sts, 'sib', 'M')
+            )
+        elif data['familySibGender'] == 'Female':
+            family_filters.append(
+                lambda sts: filter_families_by_role_gender(sts, 'sib', 'F')
+            )
+
+
+def __prepare_family_verbal_iq(data, family_filters):
+    iq_hi = None
+    iq_lo = None
+
+    if 'familyVerbalIqHi' in data:
+        try:
+            iq_hi = float(data['familyVerbalIqHi'])
+        except:
+            iq_hi = None
+
+    if 'familyVerbalIqLo' in data:
+        try:
+            iq_lo = float(data['familyVerbalIqLo'])
+        except:
+            iq_lo = None
+
+    if iq_hi is None and iq_lo is None:
+        return
+
+    if iq_lo is None:
+        iq_lo = 0.0
+    if iq_hi is None:
+        iq_hi = float('inf')
+
+    family_filters.append(
+        lambda sts: filter_families_by_iq(sts, iq_lo, iq_hi)
+    )
+
+
+def prepare_family_advanced(data):
+    family_filters = []
+    __prepare_family_race_filter(data, family_filters)
+    __prepare_family_trio_quad(data, family_filters)
+    __prepare_family_prb_gender(data, family_filters)
+    __prepare_family_sib_gender(data, family_filters)
+    __prepare_family_verbal_iq(data, family_filters)
+
+    return family_filters
+
+
+def filter_families_advanced(studies, family_filters):
+    family_ids = [fun(studies) for fun in family_filters]
+    return set.intersection(*family_ids)
+
+
+def apply_families_advanced_filter(filters, data, studies):
+    if filters['familyIds'] is None:
+        family_filters = prepare_family_advanced(data)
+        if len(family_filters) > 0:
+            family_ids = filter_families_advanced(studies, family_filters)
+            filters['familyIds'] = family_ids

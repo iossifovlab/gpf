@@ -6,6 +6,8 @@ from DAE import vDB
 from DAE import get_gene_sets_symNS
 from VariantAnnotation import get_effect_types
 
+from api.family_query import apply_families_advanced_filter
+
 
 def get_child_types():
     # return ['prb', 'sib', 'prbM', 'sibF', 'sibM', 'prbF']
@@ -287,12 +289,14 @@ def dae_query_variants(data):
     dstudies = prepare_denovo_studies(data)
     if dstudies is not None:
         filters = prepare_denovo_filters(data)
+        apply_families_advanced_filter(filters, data, dstudies)
         dvs = vDB.get_denovo_variants(dstudies, **filters)
         variants.append(dvs)
 
     tstudies = prepare_transmitted_studies(data)
     if tstudies is not None:
         filters = prepare_transmitted_filters(data)
+        apply_families_advanced_filter(filters, data, tstudies)
         for study in tstudies:
             tvs = study.get_transmitted_variants(**filters)
             variants.append(tvs)
@@ -342,5 +346,6 @@ def generate_response(vs, atts=[], sep="\t"):
             except:
                 mavs.append("")
 
-        tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts])
+        tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';')
+                               if a in v.atts else "" for a in atts])
         yield (tmp + "\n")
