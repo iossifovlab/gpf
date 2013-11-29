@@ -74,41 +74,54 @@ def filter_families_by_iq(studies, iq_lo=0.0, iq_hi=float('inf')):
                 if val >= iq_lo and val <= iq_hi and key in study_families])
 
 
-def __filter_families_by_member_count(study, count):
-    return set([key for key, val in study.families.items()
-                if len(val.memberInOrder) == count])
+def filter_families_by_prb_gender(studies, gender):
+    studies_families = __studies_familes_keys(studies)
+    prb_gender_families = set([key for (key, val) in get_prb_gender().items()
+                               if val == gender])
+    return studies_families.intersection(prb_gender_families)
 
 
-def __filter_families_studies(studies, fun):
-    return set.union(*map(fun, studies))
+def filter_families_by_sib_gender(studies, gender):
+    studies_families = __studies_familes_keys(studies)
+    sib_gender_families = set([key for (key, val) in get_sib_gender().items()
+                               if val == gender])
+    return studies_families.intersection(sib_gender_families)
+
+# def __filter_families_by_member_count(study, count):
+#     return set([key for key, val in study.families.items()
+#                 if len(val.memberInOrder) == count])
 
 
-def filter_families_quad(studies):
-    return __filter_families_studies(
-        studies,
-        lambda st: __filter_families_by_member_count(st, 4))
+# def __filter_families_studies(studies, fun):
+#     return set.union(*map(fun, studies))
 
 
-def filter_families_trio(studies):
-    return __filter_families_studies(
-        studies,
-        lambda st: __filter_families_by_member_count(st, 3))
+# def filter_families_quad(studies):
+#     return __filter_families_studies(
+#         studies,
+#         lambda st: __filter_families_by_member_count(st, 4))
 
 
-def __is_gender(fam, role, gender):
-    return any([p.role == role and p.gender == gender
-                for p in fam.memberInOrder])
+# def filter_families_trio(studies):
+#     return __filter_families_studies(
+#         studies,
+#         lambda st: __filter_families_by_member_count(st, 3))
 
 
-def __filter_families_by_role_gender(study, role, gender):
-    return set([key for key, val in study.families.items()
-                if __is_gender(val, role, gender)])
+# def __is_gender(fam, role, gender):
+#     return any([p.role == role and p.gender == gender
+#                 for p in fam.memberInOrder])
 
 
-def filter_families_by_role_gender(studies, role, gender):
-    return __filter_families_studies(
-        studies,
-        lambda st: __filter_families_by_role_gender(st, role, gender))
+# def __filter_families_by_role_gender(study, role, gender):
+#     return set([key for key, val in study.families.items()
+#                 if __is_gender(val, role, gender)])
+
+
+# def filter_families_by_role_gender(studies, role, gender):
+#     return __filter_families_studies(
+#         studies,
+#         lambda st: __filter_families_by_role_gender(st, role, gender))
 
 
 def __prepare_family_race_filter(data, family_filters):
@@ -118,39 +131,39 @@ def __prepare_family_race_filter(data, family_filters):
         )
 
 
-def __prepare_family_trio_quad(data, family_filters):
-    if 'familyQuadTrio' in data:
-        if data['familyQuadTrio'] == 'Trio':
-            family_filters.append(
-                lambda sts: filter_families_trio(sts)
-            )
-        elif data['familyQuadTrio'] == 'Quad':
-            family_filters.append(
-                lambda sts: filter_families_quad(sts)
-            )
+# def __prepare_family_trio_quad(data, family_filters):
+#     if 'familyQuadTrio' in data:
+#         if data['familyQuadTrio'] == 'Trio':
+#             family_filters.append(
+#                 lambda sts: filter_families_trio(sts)
+#             )
+#         elif data['familyQuadTrio'] == 'Quad':
+#             family_filters.append(
+#                 lambda sts: filter_families_quad(sts)
+#             )
 
 
 def __prepare_family_prb_gender(data, family_filters):
     if 'familyPrbGender' in data:
-        if data['familyPrbGender'] == 'Male':
+        if data['familyPrbGender'].lower() == 'male':
             family_filters.append(
-                lambda sts: filter_families_by_role_gender(sts, 'prb', 'M')
+                lambda sts: filter_families_by_prb_gender(sts, 'male')
             )
-        elif data['familyPrbGender'] == 'Female':
+        elif data['familyPrbGender'].lower() == 'female':
             family_filters.append(
-                lambda sts: filter_families_by_role_gender(sts, 'prb', 'F')
+                lambda sts: filter_families_by_prb_gender(sts, 'female')
             )
 
 
 def __prepare_family_sib_gender(data, family_filters):
     if 'familySibGender' in data:
-        if data['familySibGender'] == 'Male':
+        if data['familySibGender'].lower() == 'male':
             family_filters.append(
-                lambda sts: filter_families_by_role_gender(sts, 'sib', 'M')
+                lambda sts: filter_families_by_sib_gender(sts, 'male')
             )
-        elif data['familySibGender'] == 'Female':
+        elif data['familySibGender'].lower() == 'female':
             family_filters.append(
-                lambda sts: filter_families_by_role_gender(sts, 'sib', 'F')
+                lambda sts: filter_families_by_sib_gender(sts, 'female')
             )
 
 
@@ -186,7 +199,7 @@ def __prepare_family_verbal_iq(data, family_filters):
 def prepare_family_advanced(data):
     family_filters = []
     __prepare_family_race_filter(data, family_filters)
-    __prepare_family_trio_quad(data, family_filters)
+    #__prepare_family_trio_quad(data, family_filters)
     __prepare_family_prb_gender(data, family_filters)
     __prepare_family_sib_gender(data, family_filters)
     __prepare_family_verbal_iq(data, family_filters)
