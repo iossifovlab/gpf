@@ -304,6 +304,10 @@ def dae_query_variants(data):
     return variants
 
 
+def combine_filters(filters):
+    return lambda v: all([f(v) for f in filters])
+
+
 from VariantsDB import mat2Str
 
 

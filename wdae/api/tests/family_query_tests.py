@@ -116,3 +116,122 @@ class FamilyPrbSibGenderTest(unittest.TestCase):
             self.assertEquals('female', sib_gender[v.familyId])
 
         self.assertTrue(count >= 0)
+
+
+from api.family_query import filter_variants_quad, filter_variants_trio
+
+
+class FamilyQuadTrio(unittest.TestCase):
+
+    def test_quad(self):
+        query_string = {'denovoStudies': 'allWEAndTG'}
+
+        vsl = dae_query_variants(query_string)
+        count = 0
+        for v in itertools.ifilter(filter_variants_quad,
+                                   itertools.chain(*vsl)):
+            self.assertEquals(4, len(v.memberInOrder))
+            count += 1
+
+        self.assertTrue(count > 0)
+
+    def test_trio(self):
+        query_string = {'denovoStudies': 'allWEAndTG'}
+
+        vsl = dae_query_variants(query_string)
+        count = 0
+        for v in itertools.ifilter(filter_variants_trio,
+                                   itertools.chain(*vsl)):
+            self.assertEquals(3, len(v.memberInOrder))
+            count += 1
+
+        self.assertTrue(count > 0)
+
+
+from api.family_query import filter_proband_male, filter_proband_female, \
+    filter_sibling_male, filter_sibling_female
+
+
+class FamilyPrbGenderPost(unittest.TestCase):
+    def test_prb_male(self):
+        query_string = {'denovoStudies': 'allWEAndTG'}
+
+        vsl = dae_query_variants(query_string)
+        count = 0
+        for v in itertools.ifilter(filter_proband_male,
+                                   itertools.chain(*vsl)):
+            self.assertEquals('M', v.memberInOrder[2].gender)
+            count += 1
+
+        self.assertTrue(count > 0)
+
+    def test_prb_female(self):
+        query_string = {'denovoStudies': 'allWEAndTG'}
+
+        vsl = dae_query_variants(query_string)
+        count = 0
+        for v in itertools.ifilter(filter_proband_female,
+                                   itertools.chain(*vsl)):
+            self.assertEquals('F', v.memberInOrder[2].gender)
+            count += 1
+
+        self.assertTrue(count > 0)
+
+
+class FamilySibGenderPost(unittest.TestCase):
+    def test_sib_male(self):
+        query_string = {'denovoStudies': 'allWEAndTG'}
+
+        vsl = dae_query_variants(query_string)
+        count = 0
+        for v in itertools.ifilter(filter_sibling_male,
+                                   itertools.chain(*vsl)):
+            self.assertEquals('M', v.memberInOrder[3].gender)
+            count += 1
+
+        self.assertTrue(count > 0)
+
+    def test_sib_female(self):
+        query_string = {'denovoStudies': 'allWEAndTG'}
+
+        vsl = dae_query_variants(query_string)
+        count = 0
+        for v in itertools.ifilter(filter_sibling_female,
+                                   itertools.chain(*vsl)):
+            self.assertEquals('F', v.memberInOrder[3].gender)
+            count += 1
+
+        self.assertTrue(count > 0)
+
+
+from api.dae_query import combine_filters
+
+
+class CombineFiltersPost(unittest.TestCase):
+    def test_prb_male_sib_male(self):
+        query_string = {'denovoStudies': 'allWEAndTG'}
+
+        vsl = dae_query_variants(query_string)
+        count = 0
+        cf = combine_filters([filter_proband_male, filter_sibling_male])
+
+        for v in itertools.ifilter(cf, itertools.chain(*vsl)):
+            self.assertEquals('M', v.memberInOrder[2].gender)
+            self.assertEquals('M', v.memberInOrder[3].gender)
+            count += 1
+
+        self.assertTrue(count > 0)
+
+    def test_prb_male_sib_female(self):
+        query_string = {'denovoStudies': 'allWEAndTG'}
+
+        vsl = dae_query_variants(query_string)
+        count = 0
+        cf = combine_filters([filter_proband_male, filter_sibling_female])
+
+        for v in itertools.ifilter(cf, itertools.chain(*vsl)):
+            self.assertEquals('M', v.memberInOrder[2].gender)
+            self.assertEquals('F', v.memberInOrder[3].gender)
+            count += 1
+
+        self.assertTrue(count > 0)

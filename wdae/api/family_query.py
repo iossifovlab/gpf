@@ -218,3 +218,29 @@ def apply_families_advanced_filter(filters, data, studies):
         if len(family_filters) > 0:
             family_ids = filter_families_advanced(studies, family_filters)
             filters['familyIds'] = family_ids
+
+
+def filter_variants_quad(v):
+    if len(v.memberInOrder) == 4:
+        return True
+
+
+def filter_variants_trio(v):
+    if len(v.memberInOrder) == 3:
+        return True
+
+
+def filter_proband_male(v):
+    return v.memberInOrder[2].gender == 'M'
+
+
+def filter_proband_female(v):
+    return v.memberInOrder[2].gender == 'F'
+
+
+def filter_sibling_male(v):
+    return len(v.memberInOrder) > 3 and v.memberInOrder[3].gender == 'M'
+
+
+def filter_sibling_female(v):
+    return len(v.memberInOrder) > 3 and v.memberInOrder[3].gender == 'F'
