@@ -243,6 +243,16 @@ The expected fields are:
 * "minAltFreqPrcnt" --- minimal frequency
 * "maxAltFreqPrcnt" --- maximum frequency
 
+Advanced family filter expects following fields:
+
+* 'familyRace' --- family race
+* 'familyPrbGender' --- proband gender
+* 'familySibGender' --- sibling gender
+* 'familyVerbalIqHi' --- verbal IQ high limit (default is inf)
+* 'familyVerbalIqLo' --- verbal IQ low limit (default is 0)
+* 'familyQuadTrio' --- Trio/Quad family
+
+
     """
 
     if request.method == 'OPTIONS':
