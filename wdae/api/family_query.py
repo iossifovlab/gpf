@@ -200,8 +200,8 @@ def prepare_family_advanced(data):
     family_filters = []
     __prepare_family_race_filter(data, family_filters)
     #__prepare_family_trio_quad(data, family_filters)
-    __prepare_family_prb_gender(data, family_filters)
-    __prepare_family_sib_gender(data, family_filters)
+    #__prepare_family_prb_gender(data, family_filters)
+    #__prepare_family_sib_gender(data, family_filters)
     __prepare_family_verbal_iq(data, family_filters)
 
     return family_filters
@@ -244,3 +244,47 @@ def filter_sibling_male(v):
 
 def filter_sibling_female(v):
     return len(v.memberInOrder) > 3 and v.memberInOrder[3].gender == 'F'
+
+
+def __prepare_family_prb_gender_post(data, family_filters):
+    if 'familyPrbGender' in data:
+        if data['familyPrbGender'].lower() == 'male':
+            family_filters.append(
+                filter_proband_male
+            )
+        elif data['familyPrbGender'].lower() == 'female':
+            family_filters.append(
+                filter_proband_female
+            )
+
+
+def __prepare_family_sib_gender_post(data, family_filters):
+    if 'familySibGender' in data:
+        if data['familySibGender'].lower() == 'male':
+            family_filters.append(
+                filter_sibling_male
+            )
+        elif data['familySibGender'].lower() == 'female':
+            family_filters.append(
+                filter_sibling_female
+            )
+
+
+def __prepare_family_trio_quad_post(data, family_filters):
+    if 'familyQuadTrio' in data:
+        if data['familyQuadTrio'].lower() == 'trio':
+            family_filters.append(
+                filter_variants_trio
+            )
+        elif data['familyQuadTrio'].lower() == 'quad':
+            family_filters.append(
+                filter_variants_quad
+            )
+
+
+def prepare_family_advanced_variants_filters(data):
+    family_filters = []
+    __prepare_family_prb_gender_post(data, family_filters)
+    __prepare_family_sib_gender_post(data, family_filters)
+    __prepare_family_trio_quad_post(data, family_filters)
+    return family_filters

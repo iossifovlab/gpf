@@ -244,11 +244,11 @@ The expected fields are:
 Advanced family filter expects following fields:
 
 * 'familyRace' --- family race
-* 'familyPrbGender' --- proband gender
-* 'familySibGender' --- sibling gender
+* 'familyPrbGender' --- proband gender; possible values: 'male', 'female'
+* 'familySibGender' --- sibling gender; possible values: 'male', 'female'
 * 'familyVerbalIqHi' --- verbal IQ high limit (default is inf)
 * 'familyVerbalIqLo' --- verbal IQ low limit (default is 0)
-* 'familyQuadTrio' --- Trio/Quad family
+* 'familyQuadTrio' --- Trio/Quad family; possible values are: 'trio' and 'quad'
 
 
     """

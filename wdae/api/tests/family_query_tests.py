@@ -63,59 +63,59 @@ class FamilyVerbalIqTest(unittest.TestCase):
             self.assertTrue(verb_iq[v.familyId] <= 90.0)
 
 
-class FamilyPrbSibGenderTest(unittest.TestCase):
+# class FamilyPrbSibGenderTest(unittest.TestCase):
 
-    def test_prb_male(self):
-        query_string = {'denovoStudies': 'allWEAndTG',
-                        'familyPrbGender': 'male'}
-        vsl = dae_query_variants(query_string)
-        prb_gender = get_prb_gender()
+#     def test_prb_male(self):
+#         query_string = {'denovoStudies': 'allWEAndTG',
+#                         'familyPrbGender': 'male'}
+#         vsl = dae_query_variants(query_string)
+#         prb_gender = get_prb_gender()
 
-        count = 0
-        for v in itertools.chain(*vsl):
-            count += 1
-            self.assertEquals('male', prb_gender[v.familyId])
+#         count = 0
+#         for v in itertools.chain(*vsl):
+#             count += 1
+#             self.assertEquals('male', prb_gender[v.familyId])
 
-        self.assertTrue(count >= 0)
+#         self.assertTrue(count >= 0)
 
-    def test_prb_female(self):
-        query_string = {'denovoStudies': 'allWEAndTG',
-                        'familyPrbGender': 'FeMale'}
-        vsl = dae_query_variants(query_string)
-        prb_gender = get_prb_gender()
+#     def test_prb_female(self):
+#         query_string = {'denovoStudies': 'allWEAndTG',
+#                         'familyPrbGender': 'FeMale'}
+#         vsl = dae_query_variants(query_string)
+#         prb_gender = get_prb_gender()
 
-        count = 0
-        for v in itertools.chain(*vsl):
-            count += 1
-            self.assertEquals('female', prb_gender[v.familyId])
+#         count = 0
+#         for v in itertools.chain(*vsl):
+#             count += 1
+#             self.assertEquals('female', prb_gender[v.familyId])
 
-        self.assertTrue(count >= 0)
+#         self.assertTrue(count >= 0)
 
-    def test_sib_male(self):
-        query_string = {'denovoStudies': 'allWEAndTG',
-                        'familySibGender': 'male'}
-        vsl = dae_query_variants(query_string)
-        sib_gender = get_sib_gender()
+#     def test_sib_male(self):
+#         query_string = {'denovoStudies': 'allWEAndTG',
+#                         'familySibGender': 'male'}
+#         vsl = dae_query_variants(query_string)
+#         sib_gender = get_sib_gender()
 
-        count = 0
-        for v in itertools.chain(*vsl):
-            count += 1
-            self.assertEquals('male', sib_gender[v.familyId])
+#         count = 0
+#         for v in itertools.chain(*vsl):
+#             count += 1
+#             self.assertEquals('male', sib_gender[v.familyId])
 
-        self.assertTrue(count >= 0)
+#         self.assertTrue(count >= 0)
 
-    def test_sib_female(self):
-        query_string = {'denovoStudies': 'allWEAndTG',
-                        'familySibGender': 'FeMale'}
-        vsl = dae_query_variants(query_string)
-        sib_gender = get_sib_gender()
+#     def test_sib_female(self):
+#         query_string = {'denovoStudies': 'allWEAndTG',
+#                         'familySibGender': 'FeMale'}
+#         vsl = dae_query_variants(query_string)
+#         sib_gender = get_sib_gender()
 
-        count = 0
-        for v in itertools.chain(*vsl):
-            count += 1
-            self.assertEquals('female', sib_gender[v.familyId])
+#         count = 0
+#         for v in itertools.chain(*vsl):
+#             count += 1
+#             self.assertEquals('female', sib_gender[v.familyId])
 
-        self.assertTrue(count >= 0)
+#         self.assertTrue(count >= 0)
 
 
 from api.family_query import filter_variants_quad, filter_variants_trio

@@ -9,6 +9,7 @@ from VariantsDB import mat2Str
 
 
 from api.family_query import apply_families_advanced_filter
+from api.family_query import prepare_family_advanced_variants_filters
 
 
 def get_child_types():
@@ -311,7 +312,9 @@ def combine_filters(filters):
 
 
 def prepare_variant_filters(data):
-    return []
+    fl = []
+    prepare_family_advanced_variants_filters(data, fl)
+    return fl
 
 
 def save_vs(tf, vs, atts=[], sep="\t"):
