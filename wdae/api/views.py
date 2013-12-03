@@ -282,7 +282,8 @@ Advanced family filter expects following fields:
                                    '_ch_prof_'],
                                   sep=',')
 
-    response = StreamingHttpResponse(generator, mimetype='text/csv')
+    response = StreamingHttpResponse(
+        itertools.imap(join_line, generator), mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
 

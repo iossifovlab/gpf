@@ -317,12 +317,8 @@ def prepare_variant_filters(data):
     return fl
 
 
-def save_vs(tf, vs, atts=[], sep="\t"):
-    for line in generate_response(vs, atts, sep):
-        tf.write(line)
 
-
-def generate_response(vs, atts=[], sep="\t"):
+def generate_response(vs, atts=[]):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
 
@@ -343,7 +339,7 @@ def generate_response(vs, atts=[], sep="\t"):
                    "geneEffect": ge2Str,
                    "requestedGeneEffects": ge2Str}
 
-    yield (sep.join(mainAtts + atts) + "\n")
+    yield (mainAtts + atts)
 
     for v in vs:
         mavs = []
@@ -356,6 +352,14 @@ def generate_response(vs, atts=[], sep="\t"):
             except:
                 mavs.append("")
 
-        tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';')
-                               if a in v.atts else "" for a in atts])
-        yield (tmp + "\n")
+        yield (mavs + [str(v.atts[a]).replace(',', ';')
+                       if a in v.atts else "" for a in atts])
+
+
+def join_line(l):
+    return ','.join(l) + '\n'
+
+
+def save_vs(tf, vs, atts=[]):
+    for line in itertools.imap(join_line, generate_response(vs, atts)):
+        tf.write(line)

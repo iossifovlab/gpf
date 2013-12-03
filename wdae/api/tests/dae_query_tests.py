@@ -4,7 +4,7 @@ from api.dae_query import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids, prepare_gene_syms, \
     prepare_gene_sets, prepare_denovo_studies, \
     prepare_transmitted_studies, dae_query_variants, \
-    save_vs, generate_response
+    save_vs, generate_response, join_line
 
 
 class InChildTests(unittest.TestCase):
@@ -288,42 +288,41 @@ class VariantsTests(unittest.TestCase):
 
 from GetVariantsInterface import augmentAVar
 
+
 class CombinedTests(unittest.TestCase):
 
-
-    TEST_DATA_1 = {"denovoStudies":["allWEAndTG"],
-                 "transmittedStudies":["none"],
-                 "inChild":"prbM",
-                 "effectTypes":"All",
-                 "variantTypes":"All",
-                 "geneSet":{"gs_id":"main", "gs_term":"essentialGenes"},
-                 "geneSyms":""}
-    TEST_DATA_2 = {"denovoStudies":[],
-                 "transmittedStudies":["w873e374s322"],
-                 "inChild":"All",
-                 "effectTypes":"All",
-                 "variantTypes":"All",
-                 "geneSet":{"gs_id":"GO", "gs_term":"GO:0022889"},
-                 "geneSyms":"",
-                 "ultraRareOnly":True}
-    TEST_DATA_3 = {"denovoStudies":["allWEAndTG"],
-                 "transmittedStudies":["wigEichler374"],
-                 "inChild":"All",
-                 "effectTypes":"All",
-                 "variantTypes":"All",
-                 "geneSet":{"gs_id":"GO", "gs_term":'GO:0022889'},
-                 "geneSyms":"",
-                 "ultraRareOnly":True}
-    TEST_DATA_4 = {"denovoStudies":[],
-                 "transmittedStudies":["wigEichler374"],
-                 "inChild":"All",
-                 "effectTypes":"All",
-                 "variantTypes":"All",
-                 "geneSet":None,
-                 "geneRegion":"1:1018000-1020000",
-                 "geneSyms":"",
-                 "ultraRareOnly":True}
-
+    TEST_DATA_1 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": ["none"],
+                   "inChild": "prbM",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": {"gs_id": "main", "gs_term": "essentialGenes"},
+                   "geneSyms": ""}
+    TEST_DATA_2 = {"denovoStudies": [],
+                   "transmittedStudies": ["w873e374s322"],
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": {"gs_id": "GO", "gs_term": "GO:0022889"},
+                   "geneSyms": "",
+                   "ultraRareOnly": True}
+    TEST_DATA_3 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": ["wigEichler374"],
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": {"gs_id": "GO", "gs_term": 'GO:0022889'},
+                   "geneSyms": "",
+                   "ultraRareOnly": True}
+    TEST_DATA_4 = {"denovoStudies": [],
+                   "transmittedStudies": ["wigEichler374"],
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": None,
+                   "geneRegion": "1:1018000-1020000",
+                   "geneSyms": "",
+                   "ultraRareOnly": True}
 
     def test_inchild_correct(self):
         self.assertEqual(prepare_inchild(self.TEST_DATA_1), 'prbM')
@@ -332,7 +331,6 @@ class CombinedTests(unittest.TestCase):
         gs = prepare_gene_sets(self.TEST_DATA_1)
         self.assertTrue(isinstance(gs, set))
         self.assertEqual(len(gs), 1747)
-
 
     def test_variants_gene_sets_1(self):
         vs = dae_query_variants(self.TEST_DATA_1)
@@ -349,8 +347,7 @@ class CombinedTests(unittest.TestCase):
                  '_par_races_',
                  '_ch_prof_'])
 
-#         for v in itertools.chain(*vs):
-#             self.assertTrue('prbM' in v.inChS)
+        tf.close()
 
     def test_variants_gene_sets_3(self):
         vs = dae_query_variants(self.TEST_DATA_3)
@@ -358,16 +355,15 @@ class CombinedTests(unittest.TestCase):
         self.assertEqual(len(vs), 2)
         tf = open("test_data_3.tmp", "w+")
 
+        save_vs(tf, itertools.imap(augmentAVar, itertools.chain(*vs)),
+                ['effectType',
+                 'effectDetails',
+                 'all.altFreq',
+                 'all.nAltAlls',
+                 'all.nParCalled',
+                 '_par_races_',
+                 '_ch_prof_'])
 
-        for line in generate_response(itertools.imap(augmentAVar, itertools.chain(*vs)),
-                                      ['effectType',
-                                       'effectDetails',
-                                       'all.altFreq',
-                                       'all.nAltAlls',
-                                       'all.nParCalled',
-                                       '_par_races_',
-                                       '_ch_prof_']):
-            tf.write(line)
         tf.close()
 
     def test_variants_gene_sets_4(self):
@@ -376,20 +372,16 @@ class CombinedTests(unittest.TestCase):
         self.assertEqual(len(vs), 1)
         tf = open("test_data_4.tmp", "w+")
 
+        save_vs(tf, itertools.imap(augmentAVar, itertools.chain(*vs)),
+                ['effectType',
+                 'effectDetails',
+                 'all.altFreq',
+                 'all.nAltAlls',
+                 'all.nParCalled',
+                 '_par_races_',
+                 '_ch_prof_'])
 
-        for line in generate_response(itertools.imap(augmentAVar, itertools.chain(*vs)),
-                                      ['effectType',
-                                       'effectDetails',
-                                       'all.altFreq',
-                                       'all.nAltAlls',
-                                       'all.nParCalled',
-                                       '_par_races_',
-                                       '_ch_prof_']):
-            tf.write(line)
         tf.close()
-
-#         _safeVs(tf,itertools.imap(augmentAVar,itertools.chain(*vs)),
-#                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
 
 
 class QueryDictTests(unittest.TestCase):
