@@ -383,3 +383,24 @@ def do_query_variants(data):
                               'all.nParCalled',
                               '_par_races_',
                               '_ch_prof_'])
+
+
+def prepare_summary(generator):
+    rows = []
+    cols = generator.next()
+    count = 0
+    for r in generator:
+        count += 1
+        if count <= 25:
+            rows.append(r)
+        if count > 2000:
+            break
+
+    if count <= 2000:
+        count = str(count)
+    else:
+        count = 'more than 2000'
+
+    return {'count': count,
+            'rows': rows,
+            'cols': cols}

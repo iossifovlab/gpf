@@ -15,7 +15,8 @@ import itertools
 
 from dae_query import do_query_variants, \
     get_child_types, get_variant_types, \
-    join_line
+    join_line, prepare_summary
+
 from report_variants import build_stats
 
 
@@ -199,6 +200,43 @@ def prepare_query_dict(data):
 
 
 @api_view(['POST'])
+def query_variants_preview(request):
+    """
+Performs a query to DAE. The body of the request should be JSON formatted object
+containing all the parameters for the query.
+
+Example JSON object describing the query is following:
+
+    {
+         "denovoStudies":["DalyWE2012"],
+         "transmittedStudies":["wig683"],
+         "inChild":"sibF",
+         "effectTypes":"frame-shift",
+         "variantTypes":"del",
+         "ultraRareOnly":"True"
+    }
+
+All fields are same as in query_variants request
+
+    """
+
+    if request.method == 'OPTIONS':
+        print "get_variants_csv: OPTIONS"
+
+        return Response()
+
+    data = request.DATA
+    if isinstance(data, QueryDict):
+        data = prepare_query_dict(data)
+
+    generator = do_query_variants(data)
+    summary = prepare_summary(generator)
+
+    return Response(summary)
+
+
+
+@api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
 def query_variants(request):
     """
@@ -266,10 +304,6 @@ Advanced family filter expects following fields:
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
 
-    #     response['Access-Control-Allow-Origin'] = '*'
-
-    #     _safeVs(response,itertools.imap(augmentAVar,itertools.chain(*vsl)),
-    #                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
     return response
 
 
