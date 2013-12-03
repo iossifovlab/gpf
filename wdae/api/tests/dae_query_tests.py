@@ -291,13 +291,6 @@ from GetVariantsInterface import augmentAVar
 
 class CombinedTests(unittest.TestCase):
 
-    TEST_DATA_1 = {"denovoStudies": ["allWEAndTG"],
-                   "transmittedStudies": ["none"],
-                   "inChild": "prbM",
-                   "effectTypes": "All",
-                   "variantTypes": "All",
-                   "geneSet": {"gs_id": "main", "gs_term": "essentialGenes"},
-                   "geneSyms": ""}
     TEST_DATA_2 = {"denovoStudies": [],
                    "transmittedStudies": ["w873e374s322"],
                    "inChild": "All",
@@ -331,6 +324,14 @@ class CombinedTests(unittest.TestCase):
         gs = prepare_gene_sets(self.TEST_DATA_1)
         self.assertTrue(isinstance(gs, set))
         self.assertEqual(len(gs), 1747)
+
+    TEST_DATA_1 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": ["none"],
+                   "inChild": "prbM",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": {"gs_id": "main", "gs_term": "essentialGenes"},
+                   "geneSyms": ""}
 
     def test_variants_gene_sets_1(self):
         vs = dae_query_variants(self.TEST_DATA_1)

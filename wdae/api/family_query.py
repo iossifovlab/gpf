@@ -282,8 +282,7 @@ def __prepare_family_trio_quad_post(data, family_filters):
             )
 
 
-def prepare_family_advanced_variants_filters(data):
-    family_filters = []
+def prepare_family_advanced_variants_filters(data, family_filters):
     __prepare_family_prb_gender_post(data, family_filters)
     __prepare_family_sib_gender_post(data, family_filters)
     __prepare_family_trio_quad_post(data, family_filters)

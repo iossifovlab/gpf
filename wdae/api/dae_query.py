@@ -6,6 +6,7 @@ from DAE import vDB
 from DAE import get_gene_sets_symNS
 from VariantAnnotation import get_effect_types
 from VariantsDB import mat2Str
+from GetVariantsInterface import augmentAVar
 
 
 from api.family_query import apply_families_advanced_filter
@@ -317,7 +318,6 @@ def prepare_variant_filters(data):
     return fl
 
 
-
 def generate_response(vs, atts=[]):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
@@ -363,3 +363,23 @@ def join_line(l):
 def save_vs(tf, vs, atts=[]):
     for line in itertools.imap(join_line, generate_response(vs, atts)):
         tf.write(line)
+
+
+def do_query_variants(data):
+    vsl = dae_query_variants(data)
+
+    variant_filters = prepare_variant_filters(data)
+    if len(variant_filters) == 0:
+        res_variants = itertools.chain(*vsl)
+    else:
+        cf = combine_filters(variant_filters)
+        res_variants = itertools.ifilter(cf, itertools.chain(*vsl))
+
+    return generate_response(itertools.imap(augmentAVar, res_variants),
+                             ['effectType',
+                              'effectDetails',
+                              'all.altFreq',
+                              'all.nAltAlls',
+                              'all.nParCalled',
+                              '_par_races_',
+                              '_ch_prof_'])

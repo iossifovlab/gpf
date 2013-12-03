@@ -11,13 +11,11 @@ from rest_framework.parsers import JSONParser, FormParser
 from DAE import vDB, get_gene_sets_symNS
 from VariantAnnotation import get_effect_types
 
-from GetVariantsInterface import augmentAVar
-
 import itertools
 
-from dae_query import dae_query_variants, generate_response,\
-    get_child_types, get_variant_types, combine_filters, \
-    prepare_variant_filters
+from dae_query import do_query_variants, \
+    get_child_types, get_variant_types, \
+    join_line
 from report_variants import build_stats
 
 
@@ -262,26 +260,7 @@ Advanced family filter expects following fields:
     if isinstance(data, QueryDict):
         data = prepare_query_dict(data)
 
-    vsl = dae_query_variants(data)
-    print "query_variants: result ready; sending..."
-
-    variant_filters = prepare_variant_filters(data)
-    if len(variant_filters) == 0:
-        res_variants = itertools.chain(*vsl)
-    else:
-        cf = combine_filters(variant_filters)
-        res_variants = itertools.ifilter(cf, itertools.chain(*vsl))
-
-    generator = generate_response(itertools.imap(augmentAVar, res_variants),
-                                  ['effectType',
-                                   'effectDetails',
-                                   'all.altFreq',
-                                   'all.nAltAlls',
-                                   'all.nParCalled',
-                                   '_par_races_',
-                                   '_ch_prof_'],
-                                  sep=',')
-
+    generator = do_query_variants(data)
     response = StreamingHttpResponse(
         itertools.imap(join_line, generator), mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
