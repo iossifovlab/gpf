@@ -12,6 +12,7 @@ from DAE import vDB, get_gene_sets_symNS
 from VariantAnnotation import get_effect_types
 
 import itertools
+import logging
 
 from dae_query import do_query_variants, \
     get_child_types, get_variant_types, \
@@ -29,6 +30,9 @@ from report_variants import build_stats
 #         else:
 #             headers['Access-Control-Allow-Origin']='*'
 #         RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
+
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
@@ -297,10 +301,11 @@ Advanced family filter expects following fields:
     data = request.DATA
     if isinstance(data, QueryDict):
         data = prepare_query_dict(data)
+    logger.info("query variants request: " + str(data))
 
     generator = do_query_variants(data)
     response = StreamingHttpResponse(
-        itertools.imap(join_line, generator), mimetype='text/csv')
+        itertools.imap(join_line, generator), content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
 
