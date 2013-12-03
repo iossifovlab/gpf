@@ -4,7 +4,12 @@ from api.dae_query import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids, prepare_gene_syms, \
     prepare_gene_sets, prepare_denovo_studies, \
     prepare_transmitted_studies, dae_query_variants, \
-    save_vs, generate_response, join_line
+    do_query_variants
+
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class InChildTests(unittest.TestCase):
@@ -286,34 +291,15 @@ class VariantsTests(unittest.TestCase):
             self.assertTrue('sibF' in v.inChS)
             self.assertEqual(v.atts['effectType'], 'frame-shift')
 
-from GetVariantsInterface import augmentAVar
-
 
 class CombinedTests(unittest.TestCase):
 
     TEST_DATA_2 = {"denovoStudies": [],
                    "transmittedStudies": ["w873e374s322"],
-                   "inChild": "All",
-                   "effectTypes": "All",
+                   "inChild": "prbF",
+                   "effectTypes": "LoF",
                    "variantTypes": "All",
                    "geneSet": {"gs_id": "GO", "gs_term": "GO:0022889"},
-                   "geneSyms": "",
-                   "ultraRareOnly": True}
-    TEST_DATA_3 = {"denovoStudies": ["allWEAndTG"],
-                   "transmittedStudies": ["wigEichler374"],
-                   "inChild": "All",
-                   "effectTypes": "All",
-                   "variantTypes": "All",
-                   "geneSet": {"gs_id": "GO", "gs_term": 'GO:0022889'},
-                   "geneSyms": "",
-                   "ultraRareOnly": True}
-    TEST_DATA_4 = {"denovoStudies": [],
-                   "transmittedStudies": ["wigEichler374"],
-                   "inChild": "All",
-                   "effectTypes": "All",
-                   "variantTypes": "All",
-                   "geneSet": None,
-                   "geneRegion": "1:1018000-1020000",
                    "geneSyms": "",
                    "ultraRareOnly": True}
 
@@ -328,62 +314,225 @@ class CombinedTests(unittest.TestCase):
     TEST_DATA_1 = {"denovoStudies": ["allWEAndTG"],
                    "transmittedStudies": ["none"],
                    "inChild": "prbM",
-                   "effectTypes": "All",
-                   "variantTypes": "All",
+                   "effectTypes": "frame-shift",
+                   "variantTypes": "ins",
                    "geneSet": {"gs_id": "main", "gs_term": "essentialGenes"},
                    "geneSyms": ""}
 
     def test_variants_gene_sets_1(self):
-        vs = dae_query_variants(self.TEST_DATA_1)
+        vs = do_query_variants(self.TEST_DATA_1)
+        cols = vs.next()
+        logger.debug("cols: %s", str(cols))
+        count = 0
+        for v in vs:
+            count += 1
+            self.assertTrue('ins' in v[3], "%s: %s" % (str(v[3]), str(v)))
+            self.assertTrue('prbM' in v[6])
+            self.assertTrue('frame-shift' in v[8])
+            self.assertTrue('frame-shift' in v[9])
+            self.assertTrue('frame-shift' in v[11])
+            self.assertTrue('prbM' in v[17])
 
-        self.assertEqual(len(vs), 1)
-        tf = open("test_data_1.tmp", "w+")
+        self.assertTrue(count > 0)
+    # def test_variants_gene_sets_1_tmp(self):
+    #     vs = dae_query_variants(self.TEST_DATA_1)
 
-        save_vs(tf, itertools.imap(augmentAVar, itertools.chain(*vs)),
-                ['effectType',
-                 'effectDetails',
-                 'all.altFreq',
-                 'all.nAltAlls',
-                 'all.nParCalled',
-                 '_par_races_',
-                 '_ch_prof_'])
+    #     self.assertEqual(len(vs), 1)
+    #     tf = open("test_data_1.tmp", "w+")
 
-        tf.close()
+    #     save_vs(tf, itertools.imap(augmentAVar, itertools.chain(*vs)),
+    #             ['effectType',
+    #              'effectDetails',
+    #              'all.altFreq',
+    #              'all.nAltAlls',
+    #              'all.nParCalled',
+    #              '_par_races_',
+    #              '_ch_prof_'])
+
+    #     tf.close()
+
+    TEST_DATA_3 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": ["wigEichler374"],
+                   "inChild": "prbF",
+                   "effectTypes": "frame-shift",
+                   "variantTypes": "del",
+                   "geneSet": "",
+                   "geneSyms": "",
+                   "ultraRareOnly": True}
 
     def test_variants_gene_sets_3(self):
-        vs = dae_query_variants(self.TEST_DATA_3)
+        vs = do_query_variants(self.TEST_DATA_3)
+        cols = vs.next()
+        logger.debug("cols: %s", str(cols))
+        for v in vs:
+            self.assertTrue('del' in v[3], "%s: %s" % (str(v[3]), str(v)))
+            self.assertTrue('prbF' in v[6])
+            self.assertTrue('frame-shift' in v[8])
+            self.assertTrue('frame-shift' in v[9])
+            self.assertTrue('frame-shift' in v[11])
+            self.assertTrue('prbF' in v[17])
 
-        self.assertEqual(len(vs), 2)
-        tf = open("test_data_3.tmp", "w+")
+        # vs = dae_query_variants(self.TEST_DATA_3)
 
-        save_vs(tf, itertools.imap(augmentAVar, itertools.chain(*vs)),
-                ['effectType',
-                 'effectDetails',
-                 'all.altFreq',
-                 'all.nAltAlls',
-                 'all.nParCalled',
-                 '_par_races_',
-                 '_ch_prof_'])
+        # self.assertEqual(len(vs), 2)
+        # tf = open("test_data_3.tmp", "w+")
 
-        tf.close()
+        # save_vs(tf, itertools.imap(augmentAVar, itertools.chain(*vs)),
+        #         ['effectType',
+        #          'effectDetails',
+        #          'all.altFreq',
+        #          'all.nAltAlls',
+        #          'all.nParCalled',
+        #          '_par_races_',
+        #          '_ch_prof_'])
 
-    def test_variants_gene_sets_4(self):
-        vs = dae_query_variants(self.TEST_DATA_4)
+        # tf.close()
 
-        self.assertEqual(len(vs), 1)
-        tf = open("test_data_4.tmp", "w+")
 
-        save_vs(tf, itertools.imap(augmentAVar, itertools.chain(*vs)),
-                ['effectType',
-                 'effectDetails',
-                 'all.altFreq',
-                 'all.nAltAlls',
-                 'all.nParCalled',
-                 '_par_races_',
-                 '_ch_prof_'])
+class GeneRegionCombinedTests(unittest.TestCase):
+    TEST_DATA = {"denovoStudies": [],
+                 "transmittedStudies": ["wigEichler374"],
+                 "inChild": "All",
+                 "effectTypes": "All",
+                 "variantTypes": "All",
+                 "geneSet": None,
+                 "geneRegion": "1:1018000-1020000",
+                 "geneSyms": "",
+                 "ultraRareOnly": True}
 
-        tf.close()
+    def test_gene_region_filter(self):
+        vs = do_query_variants(self.TEST_DATA)
+        cols = vs.next()
+        logger.debug("cols: %s", str(cols))
+        for v in vs:
+            loc = int(v[2].split(':')[1])
+            self.assertTrue(loc >= 1018000, "%s: %s" % (str(loc), str(v[2])))
+            self.assertTrue(loc <= 1020000, "%s: %s" % (str(loc), str(v[2])))
+
+        # vs = dae_query_variants(self.TEST_DATA_4)
+
+        # self.assertEqual(len(vs), 1)
+        # tf = open("test_data_4.tmp", "w+")
+
+        # save_vs(tf, itertools.imap(augmentAVar, itertools.chain(*vs)),
+        #         ['effectType',
+        #          'effectDetails',
+        #          'all.altFreq',
+        #          'all.nAltAlls',
+        #          'all.nParCalled',
+        #          '_par_races_',
+        #          '_ch_prof_'])
+
+        # tf.close()
 
 
 class QueryDictTests(unittest.TestCase):
     TEST_DATA_1 = "geneSymbols=&geneSet=main&geneSetInput=&denovoStudies=allWEAndTG&transmittedStudies=none&rarity=ultraRare&inChild=prb&variants=All&effectType=All&families="
+
+
+class AdvancedFamilyFilterTests(unittest.TestCase):
+    TEST_DATA_1 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": 'None',
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": "",
+                   "geneSyms": "",
+                   "ultraRareOnly": True,
+                   "familyRace": 'african-amer'}
+
+    def test_family_race(self):
+        vs = do_query_variants(self.TEST_DATA_1)
+        cols = vs.next()
+        logger.debug("cols: %s", str(cols))
+        for v in vs:
+            self.assertTrue('african-amer' in v[16])
+
+    TEST_DATA_2 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": 'None',
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": "",
+                   "geneSyms": "",
+                   "ultraRareOnly": True,
+                   "familyQuadTrio": 'Quad'}
+
+    def test_family_quad(self):
+        vs = do_query_variants(self.TEST_DATA_2)
+        cols = vs.next()
+        logger.debug("cols: %s", str(cols))
+        for v in vs:
+            self.assertEqual(4, len(v[4].split('/')[0].split(' ')), str(v[4]))
+
+    TEST_DATA_3 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": 'None',
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": "",
+                   "geneSyms": "",
+                   "ultraRareOnly": True,
+                   "familyQuadTrio": 'Trio'}
+
+    def test_family_trio(self):
+        vs = do_query_variants(self.TEST_DATA_3)
+        cols = vs.next()
+        logger.debug("cols: %s", str(cols))
+        for v in vs:
+            self.assertEqual(3, len(v[4].split('/')[0].split(' ')), str(v[4]))
+
+    TEST_DATA_4 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": 'None',
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": "",
+                   "geneSyms": "",
+                   "ultraRareOnly": True,
+                   "familySibGender": 'female'}
+
+    def test_family_sibling_gender_female(self):
+        vs = do_query_variants(self.TEST_DATA_4)
+        cols = vs.next()
+        logger.debug("cols: %s", str(cols))
+        for v in vs:
+            self.assertIn('sibF', v[17], str(v[17]))
+
+    TEST_DATA_5 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": 'None',
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": "",
+                   "geneSyms": "",
+                   "ultraRareOnly": True,
+                   "familySibGender": 'male'}
+
+    def test_family_sibling_gender_male(self):
+        vs = do_query_variants(self.TEST_DATA_5)
+        cols = vs.next()
+        logger.debug("cols: %s", str(cols))
+        for v in vs:
+            self.assertIn('sibM', v[17], str(v[17]))
+
+    TEST_DATA_6 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": 'None',
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": "",
+                   "geneSyms": "",
+                   "ultraRareOnly": True,
+                   "familyPrbGender": 'female'}
+
+    def test_family_proband_gender_female(self):
+        vs = do_query_variants(self.TEST_DATA_6)
+        cols = vs.next()
+        logger.debug("cols: %s", str(cols))
+        count = 0
+        for v in vs:
+            count += 1
+            self.assertIn('prbF', v[17], str(v[17]))
+
+        self.assertTrue(count > 0)
