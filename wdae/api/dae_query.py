@@ -5,6 +5,8 @@ from django.conf import settings
 from DAE import vDB
 from DAE import get_gene_sets_symNS
 from VariantAnnotation import get_effect_types
+from VariantsDB import mat2Str
+
 
 from api.family_query import apply_families_advanced_filter
 
@@ -308,7 +310,8 @@ def combine_filters(filters):
     return lambda v: all([f(v) for f in filters])
 
 
-from VariantsDB import mat2Str
+def prepare_variant_filters(data):
+    return []
 
 
 def save_vs(tf, vs, atts=[], sep="\t"):

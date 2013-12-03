@@ -1,6 +1,6 @@
 # Create your views here.
 from django.conf import settings
-
+from django.http import StreamingHttpResponse, QueryDict
 
 # from rest_framework.response import Response as RestResponse
 from rest_framework.response import Response
@@ -16,7 +16,8 @@ from GetVariantsInterface import augmentAVar
 import itertools
 
 from dae_query import dae_query_variants, generate_response,\
-    get_child_types, get_variant_types
+    get_child_types, get_variant_types, combine_filters, \
+    prepare_variant_filters
 from report_variants import build_stats
 
 
@@ -187,9 +188,6 @@ def gene_list(request, page_count=30):
     return Response(gl[:page_count])
 
 
-from django.http import StreamingHttpResponse, QueryDict
-
-
 def prepare_query_dict(data):
     res = []
     for (key, value) in data.items():
@@ -267,8 +265,14 @@ Advanced family filter expects following fields:
     vsl = dae_query_variants(data)
     print "query_variants: result ready; sending..."
 
-    generator = generate_response(itertools.imap(augmentAVar,
-                                                 itertools.chain(*vsl)),
+    variant_filters = prepare_variant_filters(data)
+    if len(variant_filters) == 0:
+        res_variants = itertools.chain(*vsl)
+    else:
+        cf = combine_filters(variant_filters)
+        res_variants = itertools.ifilter(cf, itertools.chain(*vsl))
+
+    generator = generate_response(itertools.imap(augmentAVar, res_variants),
                                   ['effectType',
                                    'effectDetails',
                                    'all.altFreq',
