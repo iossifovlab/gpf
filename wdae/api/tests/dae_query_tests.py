@@ -592,7 +592,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "familyPrbGender": 'male'}
 
     def test_family_proband_gender_male(self):
-        vs = do_query_variants(self.TEST_DATA_6)
+        vs = do_query_variants(self.TEST_DATA_7)
         cols = vs.next()
         logger.debug("cols: %s", str(cols))
         count = 0
