@@ -232,7 +232,7 @@ for l in GeneRgns:
 
 print >>sys.stderr, "Writing the output..."
 
-
+print("\t".join("gene score coveredLen totalLen".split())
 for k, v in sorted(DD.items(), key = lambda x: x[1]['score'], reverse=True):
     print("\t".join([k, str(v['score']), str(v['length_cov']), str(v['length_total'])]))
     #res.write("\t".join([k, str(v['score']), str(v['length_cov']), str(v['length_total'])]) + "\n")
