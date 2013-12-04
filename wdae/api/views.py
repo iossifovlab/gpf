@@ -161,6 +161,10 @@ def __gene_set_response(request, gts, gt):
         return Response({})
     return Response({"gene_count": len(gl)})
 
+@api_view(['GET'])
+def gene_set_list(request, page_count, gene_set):
+    print "PRINTTTTTTT " + gene_set
+    return Reponse({'ala' : 'bala'})
 
 @api_view(['GET'])
 def gene_set_main_list(request, gene_set=None):
