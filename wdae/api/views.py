@@ -34,6 +34,10 @@ from report_variants import build_stats
 
 logger = logging.getLogger(__name__)
 
+@api_view(['GET'])
+def gene_sets_list(request):
+    r = ['Main', 'GO', 'Disease', 'Denovo']
+    return Response({"gene_sets" : r})
 
 @api_view(['GET'])
 def denovo_studies_list(request):

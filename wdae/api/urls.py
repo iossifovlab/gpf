@@ -26,7 +26,7 @@ urlpatterns = patterns('api.views',
     url(r'^query_variants$', 'query_variants'),
 
     url(r'^report_variants$', 'report_variants'),
-
+    url(r'^gene_sets_list$', 'gene_sets_list'),
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)
