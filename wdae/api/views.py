@@ -20,6 +20,8 @@ from dae_query import do_query_variants, \
 
 from report_variants import build_stats
 
+from studies import get_transmitted_studies_names, get_denovo_studies_names
+
 
 # class Response(RestResponse):
 #     def __init__(self,data=None, status=200,
@@ -41,47 +43,18 @@ def gene_sets_list(request):
 
 @api_view(['GET'])
 def denovo_studies_list(request):
-    r = []
-
-    for stGN in vDB.get_study_group_names():
-        stG = vDB.get_study_group(stGN)
-        ord = stG.get_attr('wdae.production.order')
-        if not ord:
-            continue
-        r.append((int(ord), stGN, stG.description))
-
-    for stN in vDB.get_study_names():
-        st = vDB.get_study(stN)
-        if not st.has_denovo:
-            continue
-        ord = st.get_attr('wdae.production.order')
-        if not ord:
-            continue
-        r.append((int(ord), stN, st.description))
-
-    r = [(stN, dsc) for ord, stN, dsc in sorted(r)]
+    r = get_denovo_studies_names()
     return Response({"denovo_studies": r})
 
 
 @api_view(['GET'])
 def study_groups_list(request):
     stds = vDB.getStudyGroups()
-    return Response({"study_groups" : stds})
-
+    return Response({"study_groups": stds})
 
 @api_view(['GET'])
 def transmitted_studies_list(request):
-    r = []
-    for stN in vDB.get_study_names():
-        st = vDB.get_study(stN)
-        if not st.has_transmitted:
-            continue
-        ord = st.get_attr('wdae.production.order')
-        if not ord:
-            continue
-        r.append((int(ord), stN, st.description))
-
-    r = [(stN, dsc) for ord, stN, dsc in sorted(r)]
+    r = get_transmitted_studies_names()
     return Response({"transmitted_studies": r})
 
 

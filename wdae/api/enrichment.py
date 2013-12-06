@@ -1,3 +1,5 @@
+from django.core.cache import get_cache
+
 from DAE import vDB
 import itertools
 
@@ -33,6 +35,18 @@ def filter_denovo(vs):
 def filter_transmitted(vs):
     return [set([ge['sym'] for ge in v.requestedGeneEffects])
             for v in vs]
+
+
+def __build_or_load_transmitted(tstd):
+    cache = get_cache('long')
+    background = cache.get('enrichment_background_model.'+tstd.name)
+    if not background:
+        background = filter_transmitted(
+            tstd.get_transmitted_summary_variants(ultraRareOnly=True,
+                                                  effectTypes="synonymous"))
+        cache.set('enrichment_background_model.'+tstd.name, background)
+
+    return ['BACKGROUND', background]
 
 
 def build_var_genes_dict(dnv, transm):
@@ -104,14 +118,11 @@ def build_var_genes_dict(dnv, transm):
                                      inChild='sib',
                                      effectTypes="synonymous"))],
         # transmitted
-        ['UR LGDs in parents',
-         filter_transmitted(
-             transm.get_transmitted_summary_variants(ultraRareOnly=True,
-                                                     effectTypes="LGDs"))],
-        ['BACKGROUND',
-         filter_transmitted(
-             transm.get_transmitted_summary_variants(ultraRareOnly=True,
-                                                     effectTypes="synonymous"))]
+        # ['UR LGDs in parents',
+        #  filter_transmitted(
+        #      transm.get_transmitted_summary_variants(ultraRareOnly=True,
+        #                                              effectTypes="LGDs"))],
+        __build_or_load_transmitted(transm)
     ]
 
 
@@ -143,7 +154,6 @@ def __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
     for test_name, gene_syms in var_genes_dict:
         for set_name in gene_terms.t2G:
             all_res[set_name][test_name] = EnrichmentTestRes()
-            all_res[set_name][test_name].cnt = 0
         for gene_sym_list in gene_syms:
             touched_gene_sets = set()
             for gene_sym in gene_sym_list:
