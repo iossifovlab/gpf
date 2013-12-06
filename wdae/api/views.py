@@ -38,7 +38,10 @@ logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 def gene_sets_list(request):
-    r = ['Main', 'GO', 'Disease', 'Denovo']
+    r = [{'label' : 'Main', 'conf' : ['key', 'desc', 'count']}, 
+    {'label' : 'GO', 'conf' : ['key', 'count']},
+    {'label' : 'Disease', 'conf' : ['key', 'count']}, 
+    {'label' : 'Denovo', 'conf' : ['key', 'desc', 'count']}]
     return Response({"gene_sets" : r})
 
 @api_view(['GET'])
@@ -108,7 +111,7 @@ def __get_page_count(query_params, page_count=30):
     return page_count
 
 
-def __gene_set_filter_response_dict(request, data):
+def __gene_set_filter_response_dict(request, gts):
     query_params = request.QUERY_PARAMS
 
     page_count = __get_page_count(query_params, page_count = 100)
@@ -116,15 +119,25 @@ def __gene_set_filter_response_dict(request, data):
 
     if 'filter' in query_params:
         filter_string = query_params['filter'].lower().strip()
-        l = [(key, value) for (key, value) in data.items() if (filter_string in key.lower()) or (filter_string in value.lower())]
+
+        filter_by_key = 0;
+        filter_by_desc = 0;
+
+        if query_params['key'] == 'true':
+            filter_by_key = 1;
+        if query_params['desc'] == 'true':
+            filter_by_desc = 1;
+
+        l = [(key, {"desc" : value, "count" : len(gts.t2G[key].keys())}) for (key, value) in gts.tDesc.items() if (filter_string in key.lower() and filter_by_key) or (filter_string in value.lower() and filter_by_desc)]
         return dict(l[0:page_count])
     else:
-        return dict(data.items()[0:page_count])
+        l = [(key, {"desc" : value, "count" : len(gts.t2G[key].keys())}) for (key, value) in gts.tDesc.items()]
+        return dict(l[0:page_count])
 
 
 def __gene_set_response(request, gts, gt):
     if gt is None:
-        res = __gene_set_filter_response_dict(request, gts.tDesc)
+        res = __gene_set_filter_response_dict(request, gts)
         return Response(res)
 
     if str(gt) not in gts.tDesc.keys():
@@ -134,10 +147,32 @@ def __gene_set_response(request, gts, gt):
         return Response({})
     return Response({"gene_count": len(gl)})
 
+def __get_gene_set(gene_set, study_name):
+    if gene_set == 'main':
+        return settings.GENE_SETS_MAIN
+    elif gene_set == 'go':
+        return settings.GENE_SETS_GO
+    elif gene_set == 'disease':
+        return settings.GENE_SETS_DISEASE
+    elif gene_set == 'denovo' and study_name:
+        return get_gene_sets_symNS('denovo', study_name)
+    else:
+        return None
+
 @api_view(['GET'])
-def gene_set_list(request, page_count, gene_set):
-    print "PRINTTTTTTT " + gene_set
-    return Reponse({'ala' : 'bala'})
+def gene_set_list(request):
+    query_params = request.QUERY_PARAMS
+    if 'gene_set' not in query_params:
+        return Response()
+    gene_set = query_params['gene_set']
+    gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
+    study_name = str(query_params['study']) if 'study' in query_params else None
+
+    gts = __get_gene_set(gene_set, study_name)
+    if gts:
+        return __gene_set_response(request, gts, gene_name) 
+    else:
+        return Response()
 
 @api_view(['GET'])
 def gene_set_main_list(request, gene_set=None):
