@@ -15,5 +15,6 @@ from django.conf.urls import patterns, url, include
 urlpatterns = patterns('',
     url(r'^$', 'variants.views.index'),
     url(r'^variant_reports$', 'variants.views.variant_reports'),
+    url(r'^app$', 'variants.views.app'),
     url(r'^api/', include('api.urls')),
 )
