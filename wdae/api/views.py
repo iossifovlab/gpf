@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 def gene_sets_list(request):
-    r = [{'label' : 'Main', 'conf' : ['desc', 'count']}, 
+    r = [{'label' : 'Main', 'conf' : ['key', 'desc', 'count']}, 
     {'label' : 'GO', 'conf' : ['key', 'count']},
     {'label' : 'Disease', 'conf' : ['key', 'count']}, 
     {'label' : 'Denovo', 'conf' : ['key', 'desc', 'count']}]
