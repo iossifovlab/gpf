@@ -226,6 +226,10 @@ def build_stats(studies):
     stats = defaultdict(list)
     cnts = defaultdict(lambda: defaultdict(float))
 
+    for study in studies:
+        if not study.has_denovo:
+            return {'header': __format_header_summary(*header)}
+
     for effect_type in effect_types():
         for child in get_child_types():
             vs = list(vDB.get_denovo_variants(studies,

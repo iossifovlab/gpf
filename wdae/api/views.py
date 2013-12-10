@@ -37,6 +37,10 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names
 logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
+def report_studies(request):
+    return Response({"report_studies" : get_denovo_studies_names() + get_transmitted_studies_names()})
+
+@api_view(['GET'])
 def gene_sets_list(request):
     r = [{'label' : 'Main', 'conf' : ['key', 'desc', 'count']}, 
     {'label' : 'GO', 'conf' : ['key', 'count']},
