@@ -186,3 +186,24 @@ class EnrichmentHelpersTests(unittest.TestCase):
                     fail = True
 
         self.assertFalse(fail, "wrong enrichment counts detected...")
+
+    def test_enrichment_totals_original(self):
+        totals_orig = self.original[2]
+
+        fail = False
+
+        for gene_set_name in totals_orig:
+            all_res, totals = enrichment_test(self.dsts,
+                                              self.tsts,
+                                              self.gene_terms,
+                                              gene_set_name)
+            for test_name in totals:
+                r = totals[test_name]
+                o = totals_orig[test_name]
+                if o != r:
+                    logger.debug("wrong totals numbers: %d != %d for %s",
+                                 o, r,
+                                 test_name)
+                    fail = True
+
+        self.assertFalse(fail, "wrong totals detected...")

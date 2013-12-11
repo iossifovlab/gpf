@@ -241,7 +241,10 @@ def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
     var_genes_dict = build_variants_genes_dict(dsts, tsts,
                                                geneSyms=gene_set_syms)
     all_res = count_gene_set(var_genes_dict, gene_set_name, gene_set_syms)
-    totals = {}
+
+    totals = {test_name: len(gene_syms)
+              for test_name, gene_syms in var_genes_dict}
+    bg_total = totals['BACKGROUND']
 
     return all_res, totals
 
