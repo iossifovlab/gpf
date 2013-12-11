@@ -152,7 +152,7 @@ def prepare_gene_sets(data):
         return __filter_gene_set(gene_set, data)
     elif isinstance(gene_set, str):
         gs_id = gene_set
-        if not data.has_key('geneTerm'):
+        if 'geneTerm' not in data:
             return None
         gs_term = data['geneTerm']
 

@@ -4,17 +4,28 @@ from DAE import vDB
 import itertools
 
 
-def one_variant_per_recurrent(vs):
-    gn = [[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects]
-    gn_sorted = sorted(gn)
+# def one_variant_per_recurrent(vs):
+#     gn_sorted = sorted([[ge['sym'], v] for v in vs
+#                         for ge in v.requestedGeneEffects])
 
+#     sym_2_vars = {sym: [t[1] for t in tpi]
+#                   for sym, tpi in itertools.groupby(gn_sorted,
+#                                                     key=lambda x: x[0])}
+#     sym_2_fn = {sym: len(set([v.familyId for v in vs]))
+#                 for sym, vs in sym_2_vars.items()}
+
+#     return [sym for sym, fn in sym_2_fn.items() if fn > 1]
+
+
+def one_variant_per_recurrent(vs):
+    gn_sorted = sorted([[ge['sym'], v] for v in vs
+                       for ge in v.requestedGeneEffects])
     sym_2_vars = {sym: [t[1] for t in tpi]
                   for sym, tpi in itertools.groupby(gn_sorted,
                                                     key=lambda x: x[0])}
     sym_2_fn = {sym: len(set([v.familyId for v in vs]))
                 for sym, vs in sym_2_vars.items()}
-
-    return [sym for sym, fn in sym_2_fn.items() if fn > 1]
+    return [[gs] for gs, fn in sym_2_fn.items() if fn > 1]
 
 
 def filter_denovo(vs):
@@ -49,74 +60,87 @@ def __build_or_load_transmitted(tstd):
     return ['BACKGROUND', background]
 
 
-def build_var_genes_dict(denovo, transmitted):
+def build_variants_genes_dict(denovo, transmitted, geneSyms=None):
     return [
         ['De novo recPrbLGDs',
          one_variant_per_recurrent(
              vDB.get_denovo_variants(denovo,
                                      inChild='prb',
-                                     effectTypes="LGDs"))],
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
         ['De novo prbLGDs',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prb',
-                                     effectTypes="LGDs"))],
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
         ['De novo prbMaleLGDs',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prbM',
-                                     effectTypes="LGDs"))],
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
         ['De novo prbFemaleLGDs',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prbF',
-                                     effectTypes="LGDs"))],
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
         ['De novo sibLGDs',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='sib',
-                                     effectTypes="LGDs"))],
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
         ['De novo sibMaleLGDs',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='sibM',
-                                     effectTypes="LGDs"))],
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
         ['De novo sibFemaleLGDs',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='sibF',
-                                     effectTypes="LGDs"))],
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
         ['De novo prbMissense',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prb',
-                                     effectTypes="missense"))],
+                                     effectTypes="missense",
+                                     geneSyms=geneSyms))],
 
         ['De novo prbMaleMissense',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prbM',
-                                     effectTypes="missense"))],
+                                     effectTypes="missense",
+                                     geneSyms=geneSyms))],
         ['De novo prbFemaleMissense',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prbF',
-                                     effectTypes="missense"))],
+                                     effectTypes="missense",
+                                     geneSyms=geneSyms))],
         ['De novo sibMissense',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='sib',
-                                     effectTypes="missense"))],
+                                     effectTypes="missense",
+                                     geneSyms=geneSyms))],
         ['De novo prbSynonymous',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prb',
-                                     effectTypes="synonymous"))],
+                                     effectTypes="synonymous",
+                                     geneSyms=geneSyms))],
         ['De novo sibSynonymous',
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='sib',
-                                     effectTypes="synonymous"))],
+                                     effectTypes="synonymous",
+                                     geneSyms=geneSyms))],
         # transmitted
         # ['UR LGDs in parents',
         #  filter_transmitted(
@@ -143,20 +167,20 @@ class EnrichmentTestRes:
 from scipy import stats
 
 
-def __init_gene_set_symbols(gene_terms, gene_set_name):
-    if gene_set_name not in gene_terms:
+def init_gene_set_symbols(gene_terms, gene_set_name):
+    if gene_set_name not in gene_terms.t2G:
         return (gene_set_name, set([]))
-    return (gene_set_name, set(gene_terms.t2G[gene_set_name].kes()))
+    return (gene_set_name, set(gene_terms.t2G[gene_set_name].keys()))
 
 
-def __init_gene_set_enrichment(var_genes_dict, gene_terms):
+def init_gene_set_enrichment(var_genes_dict, gene_terms):
     all_res = {}
     for set_name in gene_terms.t2G:
         all_res[set_name] = {}
     return all_res
 
 
-def __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
+def count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
     for test_name, gene_syms in var_genes_dict:
         for set_name in gene_terms.t2G:
             all_res[set_name][test_name] = EnrichmentTestRes()
@@ -222,8 +246,8 @@ from DAE import giDB
 
 def main():
     dsts = vDB.get_studies('allWE')
-    tsts = vDB.get_study('wig781')
-    var_genes_dict = build_var_genes_dict(dsts, tsts)
+    tsts = vDB.get_study('w873e374s322')
+    var_genes_dict = build_variants_genes_dict(dsts, tsts)
     gene_terms = giDB.getGeneTerms('main')
 
     return (var_genes_dict, gene_terms)
