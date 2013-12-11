@@ -5,10 +5,11 @@ from GeneTerms import *
 from scipy import stats
 import sys
 from itertools import groupby
-from collections import Counter
+
 
 class EnrichmentTestRes:
     pass
+
 
 def enrichmentTest(testVarGenesDict, geneTerms):
     allRes = {}

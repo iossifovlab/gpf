@@ -92,7 +92,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
         original = api.tests.enrichment_test_orig.main(dsts, tsts, gene_terms)
         all_res_orig = original[1]
 
-        all_res, total = enrichment_test(var_genes_dict, gene_terms)
+        all_res, totals = enrichment_test(var_genes_dict, gene_terms)
         fail = False
 
         for gene_set_name in all_res:
@@ -121,3 +121,15 @@ class EnrichmentHelpersTests(unittest.TestCase):
                     fail = True
 
         self.assertFalse(fail, "wrong enrichment values detected...")
+
+        totals_orig = original[2]
+
+        for test_name in totals:
+            r = totals[test_name]
+            o = totals_orig[test_name]
+            if o != r:
+                logger.debug("wrong totals numbers: %d != %d for %s",
+                             o, r,
+                             test_name)
+                fail = True
+        self.assertFalse(fail, "wrong totals detected...")
