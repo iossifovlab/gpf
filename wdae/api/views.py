@@ -42,9 +42,9 @@ def report_studies(request):
 
 @api_view(['GET'])
 def gene_sets_list(request):
-    r = [{'label' : 'Main', 'conf' : ['key', 'desc', 'count']}, 
+    r = [{'label' : 'Main', 'conf' : ['key', 'desc', 'count']},
     {'label' : 'GO', 'conf' : ['key', 'count']},
-    {'label' : 'Disease', 'conf' : ['key', 'count']}, 
+    {'label' : 'Disease', 'conf' : ['key', 'count']},
     {'label' : 'Denovo', 'conf' : ['key', 'desc', 'count']}]
     return Response({"gene_sets" : r})
 
@@ -174,7 +174,7 @@ def gene_set_list(request):
 
     gts = __get_gene_set(gene_set, study_name)
     if gts:
-        return __gene_set_response(request, gts, gene_name) 
+        return __gene_set_response(request, gts, gene_name)
     else:
         return Response()
 
@@ -245,13 +245,15 @@ All fields are same as in query_variants request
     """
 
     if request.method == 'OPTIONS':
-        print "get_variants_csv: OPTIONS"
-
         return Response()
 
-    data = request.DATA
-    if isinstance(data, QueryDict):
-        data = prepare_query_dict(data)
+    data = prepare_query_dict(request.DATA)
+    # if isinstance(data, QueryDict):
+    #     data = prepare_query_dict(data)
+    # else:
+    #     data = prepare_query_dict(data)
+
+    logger.info("preview query variants: " + str(data))
 
     generator = do_query_variants(data)
     summary = prepare_summary(generator)
@@ -318,9 +320,9 @@ Advanced family filter expects following fields:
 
         return Response()
 
-    data = request.DATA
-    if isinstance(data, QueryDict):
-        data = prepare_query_dict(data)
+    data = prepare_query_dict(request.DATA)
+    # if isinstance(data, QueryDict):
+    #     data = prepare_query_dict(data)
     logger.info("query variants request: " + str(data))
 
     generator = do_query_variants(data)

@@ -385,11 +385,11 @@ def do_query_variants(data):
                               '_ch_prof_'])
 
 
-def prepare_summary(generator):
+def prepare_summary(vs):
     rows = []
-    cols = generator.next()
+    cols = vs.next()
     count = 0
-    for r in generator:
+    for r in vs:
         count += 1
         if count <= 25:
             rows.append(r)

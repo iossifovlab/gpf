@@ -49,72 +49,72 @@ def __build_or_load_transmitted(tstd):
     return ['BACKGROUND', background]
 
 
-def build_var_genes_dict(dnv, transm):
+def build_var_genes_dict(denovo, transmitted):
     return [
         ['De novo recPrbLGDs',
          one_variant_per_recurrent(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='prb',
                                      effectTypes="LGDs"))],
         ['De novo prbLGDs',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='prb',
                                      effectTypes="LGDs"))],
         ['De novo prbMaleLGDs',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='prbM',
                                      effectTypes="LGDs"))],
         ['De novo prbFemaleLGDs',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='prbF',
                                      effectTypes="LGDs"))],
         ['De novo sibLGDs',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='sib',
                                      effectTypes="LGDs"))],
         ['De novo sibMaleLGDs',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='sibM',
                                      effectTypes="LGDs"))],
         ['De novo sibFemaleLGDs',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='sibF',
                                      effectTypes="LGDs"))],
         ['De novo prbMissense',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='prb',
                                      effectTypes="missense"))],
 
         ['De novo prbMaleMissense',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='prbM',
                                      effectTypes="missense"))],
         ['De novo prbFemaleMissense',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='prbF',
                                      effectTypes="missense"))],
         ['De novo sibMissense',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='sib',
                                      effectTypes="missense"))],
         ['De novo prbSynonymous',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='prb',
                                      effectTypes="synonymous"))],
         ['De novo sibSynonymous',
          filter_denovo(
-             vDB.get_denovo_variants(dnv,
+             vDB.get_denovo_variants(denovo,
                                      inChild='sib',
                                      effectTypes="synonymous"))],
         # transmitted
@@ -122,7 +122,7 @@ def build_var_genes_dict(dnv, transm):
         #  filter_transmitted(
         #      transm.get_transmitted_summary_variants(ultraRareOnly=True,
         #                                              effectTypes="LGDs"))],
-        __build_or_load_transmitted(transm)
+        __build_or_load_transmitted(transmitted)
     ]
 
 
@@ -141,6 +141,12 @@ class EnrichmentTestRes:
         return self.__str__()
 
 from scipy import stats
+
+
+def __init_gene_set_symbols(gene_terms, gene_set_name):
+    if gene_set_name not in gene_terms:
+        return (gene_set_name, set([]))
+    return (gene_set_name, set(gene_terms.t2G[gene_set_name].kes()))
 
 
 def __init_gene_set_enrichment(var_genes_dict, gene_terms):

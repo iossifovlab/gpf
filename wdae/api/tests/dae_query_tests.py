@@ -601,3 +601,40 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
             self.assertIn('prbM', v[17], str(v[17]))
 
         self.assertTrue(count > 0)
+
+
+from api.dae_query import prepare_summary
+
+
+class PreviewQueryTests(unittest.TestCase):
+    PREVIEW_TEST_1 = {"genes": "All",
+                      "geneTerm": "",
+                      "geneSyms": "",
+                      "geneRegion": "",
+                      "denovoStudies": "allWE",
+                      "transmittedStudies": "none",
+                      "rarity": "ultraRare",
+                      "inChild": "prbF",
+                      "variantTypes": "All",
+                      "effectTypes": "LGDs",
+                      "families": "all",
+                      "familyIds": "",
+                      "familyRace": "All",
+                      "familyVerbalIqLo": "",
+                      "familyVerbalIqHi": "",
+                      "familyQuadTrio": "All",
+                      "familyPrbGender": "All",
+                      "familySibGender": "All"}
+
+    def test_preview_1(self):
+        vs = do_query_variants(self.PREVIEW_TEST_1)
+        cols = vs.next()
+        count = 0
+        for v in vs:
+            count += 1
+        self.assertTrue(count > 0)
+
+    def test_preview_1_summary(self):
+        vs = do_query_variants(self.PREVIEW_TEST_1)
+        summary = prepare_summary(vs)
+        self.assertTrue(int(summary["count"]) > 0)
