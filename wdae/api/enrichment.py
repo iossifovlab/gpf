@@ -173,14 +173,14 @@ def init_gene_set_symbols(gene_terms, gene_set_name):
     return (gene_set_name, set(gene_terms.t2G[gene_set_name].keys()))
 
 
-def init_gene_set_enrichment(var_genes_dict, gene_terms):
+def init_gene_set_enrichment_full(var_genes_dict, gene_terms):
     all_res = {}
     for set_name in gene_terms.t2G:
         all_res[set_name] = {}
     return all_res
 
 
-def count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
+def count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms):
     for test_name, gene_syms in var_genes_dict:
         for set_name in gene_terms.t2G:
             all_res[set_name][test_name] = EnrichmentTestRes()
@@ -192,27 +192,9 @@ def count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
                 all_res[gene_set][test_name].cnt += 1
 
 
-# def __compute_q_val(pvals):
-#     sorted_pvals = sorted([(set_name, p_val)
-#                            for set_name, p_val in enumerate(pvals)],
-#                           key=lambda x: x[1])
-#     # print pvals, sorted_pvals
-#     q_vals = [ip[1]*len(sorted_pvals)/(j+1)
-#               for j, ip in enumerate(sorted_pvals)]
-#     q_vals = [q if q<=1.0 else 1.0 for q in q_vals]
-#     prev_q_val = q_vals[-1]
-#     for i in xrange(len(sorted_pvals)-2, -1, -1):
-#         if q_vals[i] > prev_q_val:
-#             q_vals[i] = prev_q_val
-#         else:
-#             prev_q_val = q_vals[i]
-#     return [q for d, q in sorted(zip(sorted_pvals, q_vals),
-#                                  key=lambda x: x[0][0])]
-
-
-def enrichment_test(var_genes_dict, gene_terms):
-    all_res = init_gene_set_enrichment(var_genes_dict, gene_terms)
-    count_gene_set_enrichment(all_res, var_genes_dict, gene_terms)
+def enrichment_test_full(var_genes_dict, gene_terms):
+    all_res = init_gene_set_enrichment_full(var_genes_dict, gene_terms)
+    count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms)
 
     totals = {test_name: len(gene_syms)
               for test_name, gene_syms in var_genes_dict}
@@ -230,27 +212,7 @@ def enrichment_test(var_genes_dict, gene_terms):
             res.p_val = stats.binom_test(res.cnt, total, p=bg_prob)
             res.expected = round(bg_prob*total, 4)
 
-    # for test_name, gene_syms in var_genes_dict:
-    #     gset_pvals = [(gset, gset_res[test_name].p_val)
-    #                   for gset, gset_res in all_res.items()]
-    #     # print test_name, gset_pvals
-
-    #     q_vals = __compute_q_val([p[1] for p in gset_pvals])
-    #     for a, q in zip(gset_pvals, q_vals):
-    #         all_res[a[0]][test_name].q_val = q
-
     return all_res, totals
-
-from DAE import giDB
-
-
-def main():
-    dsts = vDB.get_studies('allWE')
-    tsts = vDB.get_study('w873e374s322')
-    var_genes_dict = build_variants_genes_dict(dsts, tsts)
-    gene_terms = giDB.getGeneTerms('main')
-
-    return (var_genes_dict, gene_terms)
 
 
 def print_summary_table(var_genes_dict, geneTerms, allRes, totals):

@@ -2,7 +2,8 @@ import unittest
 import logging
 
 from api.enrichment import init_gene_set_symbols, build_variants_genes_dict, \
-    init_gene_set_enrichment, count_gene_set_enrichment, enrichment_test
+    init_gene_set_enrichment_full, count_gene_set_enrichment_full, \
+    enrichment_test_full
 
 from DAE import giDB, vDB
 
@@ -20,14 +21,14 @@ class EnrichmentHelpersTests(unittest.TestCase):
     #     self.assertEquals('E15-maternal', gene_set_name)
     #     logger.debug("gene set symbols: %s", str(gene_set_symbols))
 
-    def test_build_variants_genes_dict(self):
-        dsts = vDB.get_studies('allWE')
-        tsts = vDB.get_study('w873e374s322')
-        var_genes_dict = build_variants_genes_dict(dsts, tsts)
-        gene_terms = giDB.getGeneTerms('main')
-        # logger.debug("variants to genes dict: %s", var_genes_dict)
-        all_res = init_gene_set_enrichment(var_genes_dict, gene_terms)
-        count_gene_set_enrichment(all_res, var_genes_dict, gene_terms)
+    # def test_build_variants_genes_dict(self):
+    #     dsts = vDB.get_studies('allWE')
+    #     tsts = vDB.get_study('w873e374s322')
+    #     var_genes_dict = build_variants_genes_dict(dsts, tsts)
+    #     gene_terms = giDB.getGeneTerms('main')
+    #     # logger.debug("variants to genes dict: %s", var_genes_dict)
+    #     all_res = init_gene_set_enrichment_full(var_genes_dict, gene_terms)
+    #     count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms)
 
     def test_count_variants_enrichment_E15_material(self):
         dsts = vDB.get_studies('allWE')
@@ -35,8 +36,8 @@ class EnrichmentHelpersTests(unittest.TestCase):
         var_genes_dict = build_variants_genes_dict(dsts, tsts)
         gene_terms = giDB.getGeneTerms('main')
         # logger.debug("variants to genes dict: %s", var_genes_dict)
-        all_res = init_gene_set_enrichment(var_genes_dict, gene_terms)
-        count_gene_set_enrichment(all_res, var_genes_dict, gene_terms)
+        all_res = init_gene_set_enrichment_full(var_genes_dict, gene_terms)
+        count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms)
 
         res = all_res['E15-maternal']
         self.assertEqual(2893, res['BACKGROUND'].cnt)
@@ -63,8 +64,8 @@ class EnrichmentHelpersTests(unittest.TestCase):
         original = api.tests.enrichment_test_orig.main(dsts, tsts, gene_terms)
         all_res_orig = original[1]
         # logger.debug("variants to genes dict: %s", var_genes_dict)
-        all_res = init_gene_set_enrichment(var_genes_dict, gene_terms)
-        count_gene_set_enrichment(all_res, var_genes_dict, gene_terms)
+        all_res = init_gene_set_enrichment_full(var_genes_dict, gene_terms)
+        count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms)
 
         fail = False
         for gene_set_name in all_res:
@@ -78,9 +79,6 @@ class EnrichmentHelpersTests(unittest.TestCase):
                                  test_name,
                                  gene_set_name)
                     fail = True
-                # self.assertEqual(all_res_orig[gene_set_name][test_name].cnt,
-                #                  res[test_name].cnt,
-                #                  gene_set_name + ": " + test_name)
         self.assertFalse(fail, "wrong count found...")
 
     def test_enrichment_test_original(self):
@@ -92,7 +90,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
         original = api.tests.enrichment_test_orig.main(dsts, tsts, gene_terms)
         all_res_orig = original[1]
 
-        all_res, totals = enrichment_test(var_genes_dict, gene_terms)
+        all_res, totals = enrichment_test_full(var_genes_dict, gene_terms)
         fail = False
 
         for gene_set_name in all_res:
