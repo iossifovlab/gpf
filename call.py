@@ -152,6 +152,9 @@ class ommission:
 		#print allCnts
 		#print sPCnts, mnRtio
 	else:
+	    if sum( sPCnts < 1 ) > 0:
+		return flag, gens
+	    else:
 		mnRtio /= sPCnts
 
 	gens = -1 * np.ones(4,dtype='int')
