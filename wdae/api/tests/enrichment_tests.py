@@ -2,13 +2,13 @@ import unittest
 import logging
 
 from api.enrichment import init_gene_set_symbols, build_variants_genes_dict, \
-    init_gene_set_enrichment, count_gene_set_enrichment
+    init_gene_set_enrichment, count_gene_set_enrichment, enrichment_test
 
 from DAE import giDB, vDB
 
 logger = logging.getLogger(__name__)
 
-import api.tests.enrichmentTest
+import api.tests.enrichment_test_orig
 
 
 class EnrichmentHelpersTests(unittest.TestCase):
@@ -60,7 +60,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
         var_genes_dict = build_variants_genes_dict(dsts, tsts)
         gene_terms = giDB.getGeneTerms('main')
 
-        original = api.tests.enrichmentTest.main(dsts, tsts, gene_terms)
+        original = api.tests.enrichment_test_orig.main(dsts, tsts, gene_terms)
         all_res_orig = original[1]
         # logger.debug("variants to genes dict: %s", var_genes_dict)
         all_res = init_gene_set_enrichment(var_genes_dict, gene_terms)
@@ -70,7 +70,8 @@ class EnrichmentHelpersTests(unittest.TestCase):
         for gene_set_name in all_res:
             res = all_res[gene_set_name]
             for test_name in res:
-                if all_res_orig[gene_set_name][test_name].cnt != res[test_name].cnt:
+                if all_res_orig[gene_set_name][test_name].cnt != \
+                   res[test_name].cnt:
                     logger.debug("wrong count numbers: %d != %d for %s:%s",
                                  all_res_orig[gene_set_name][test_name].cnt,
                                  res[test_name].cnt,
@@ -81,3 +82,42 @@ class EnrichmentHelpersTests(unittest.TestCase):
                 #                  res[test_name].cnt,
                 #                  gene_set_name + ": " + test_name)
         self.assertFalse(fail, "wrong count found...")
+
+    def test_enrichment_test_original(self):
+        dsts = vDB.get_studies('allWE')
+        tsts = vDB.get_study('w873e374s322')
+        var_genes_dict = build_variants_genes_dict(dsts, tsts)
+        gene_terms = giDB.getGeneTerms('main')
+
+        original = api.tests.enrichment_test_orig.main(dsts, tsts, gene_terms)
+        all_res_orig = original[1]
+
+        all_res, total = enrichment_test(var_genes_dict, gene_terms)
+        fail = False
+
+        for gene_set_name in all_res:
+            res = all_res[gene_set_name]
+            for test_name in res:
+                r = res[test_name]
+                o = all_res_orig[gene_set_name][test_name]
+                if o.cnt != r.cnt:
+                    logger.debug("wrong count numbers: %d != %d for %s:%s",
+                                 o.cnt, r.cnt,
+                                 test_name,
+                                 gene_set_name)
+                    fail = True
+                if o.pVal != r.p_val:
+                    logger.debug("wrong pVal: %f != %f for %s:%s",
+                                 o.pVal, r.p_val,
+                                 test_name,
+                                 gene_set_name)
+                    fail = True
+
+                if o.expected != r.expected:
+                    logger.debug("wrong expected: %d != %d for %s:%s",
+                                 o.expected, r.expected,
+                                 test_name,
+                                 gene_set_name)
+                    fail = True
+
+        self.assertFalse(fail, "wrong enrichment values detected...")

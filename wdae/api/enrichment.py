@@ -211,8 +211,8 @@ def count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
 
 
 def enrichment_test(var_genes_dict, gene_terms):
-    all_res = __init_gene_set_enrichment(var_genes_dict, gene_terms)
-    __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms)
+    all_res = init_gene_set_enrichment(var_genes_dict, gene_terms)
+    count_gene_set_enrichment(all_res, var_genes_dict, gene_terms)
 
     totals = {test_name: len(gene_syms)
               for test_name, gene_syms in var_genes_dict}
