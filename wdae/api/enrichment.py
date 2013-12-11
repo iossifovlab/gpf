@@ -2,6 +2,10 @@ from django.core.cache import get_cache
 
 from DAE import vDB
 import itertools
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 # def one_variant_per_recurrent(vs):
@@ -192,6 +196,22 @@ def count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms):
                 all_res[gene_set][test_name].cnt += 1
 
 
+def count_gene_set(var_genes_dict, gene_set_name, gene_set_syms):
+    all_res = {}
+    for test_name, gene_syms in var_genes_dict:
+        all_res[test_name] = EnrichmentTestRes()
+
+        for gene_sym_list in gene_syms:
+            # logger.debug("gene sym list: %s", str(gene_sym_list))
+            touched_gene_set = False
+            for gene_sym in gene_sym_list:
+                if gene_sym in gene_set_syms:
+                    touched_gene_set = True
+            if touched_gene_set:
+                all_res[test_name].cnt += 1
+    return all_res
+
+
 def enrichment_test_full(var_genes_dict, gene_terms):
     all_res = init_gene_set_enrichment_full(var_genes_dict, gene_terms)
     count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms)
@@ -211,6 +231,17 @@ def enrichment_test_full(var_genes_dict, gene_terms):
             total = totals[test_name]
             res.p_val = stats.binom_test(res.cnt, total, p=bg_prob)
             res.expected = round(bg_prob*total, 4)
+
+    return all_res, totals
+
+
+def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
+    (gene_set_name, gene_set_syms) = \
+        init_gene_set_symbols(gene_terms, gene_set_name)
+    var_genes_dict = build_variants_genes_dict(dsts, tsts,
+                                               geneSyms=gene_set_syms)
+    all_res = count_gene_set(var_genes_dict, gene_set_name, gene_set_syms)
+    totals = {}
 
     return all_res, totals
 

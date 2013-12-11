@@ -3,7 +3,7 @@ import logging
 
 from api.enrichment import init_gene_set_symbols, build_variants_genes_dict, \
     init_gene_set_enrichment_full, count_gene_set_enrichment_full, \
-    enrichment_test_full
+    enrichment_test_full, enrichment_test
 
 from DAE import giDB, vDB
 
@@ -166,3 +166,23 @@ class EnrichmentHelpersTests(unittest.TestCase):
                              test_name)
                 fail = True
         self.assertFalse(fail, "wrong totals detected...")
+
+    def test_enrichment_count_original(self):
+        all_res_orig = self.original[1]
+        fail = False
+        for gene_set_name in all_res_orig:
+            all_res, totals = enrichment_test(self.dsts,
+                                              self.tsts,
+                                              self.gene_terms,
+                                              gene_set_name)
+            for test_name in all_res:
+                r = all_res[test_name]
+                o = all_res_orig[gene_set_name][test_name]
+                if o.cnt != r.cnt:
+                    logger.debug("wrong count numbers: %d != %d for %s:%s",
+                                 o.cnt, r.cnt,
+                                 test_name,
+                                 gene_set_name)
+                    fail = True
+
+        self.assertFalse(fail, "wrong enrichment counts detected...")

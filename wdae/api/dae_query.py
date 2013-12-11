@@ -112,6 +112,10 @@ def prepare_gene_syms(data):
         return None
 
 
+def load_gene_set(gene_set_label):
+    return None
+
+
 def __filter_gene_set(gene_set, data):
     gs_id = gene_set['gs_id']
     gs_term = gene_set['gs_term']
