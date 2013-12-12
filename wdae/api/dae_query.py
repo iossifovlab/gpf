@@ -125,9 +125,6 @@ def __load_gene_set(gene_set_label, study_name=None):
 
     return gs
 
-def load_gene_set(gene_set_label):
-    return None
-
 
 def __filter_gene_set(gene_set, data):
     gs_id = gene_set['gs_id']
