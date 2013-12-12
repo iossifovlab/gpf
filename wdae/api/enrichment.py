@@ -253,9 +253,9 @@ def enrichment_test(dsts, tsts, gene_terms):
 
 
 def enrichment_results(dst_name, tst_name, gt_name, gs_name):
-        dsts = vDB.get_studies('allWE')
-        tsts = vDB.get_study('w873e374s322')
-        gene_terms = get_gene_sets_symNS('main')
+        dsts = vDB.get_studies(dst_name)
+        tsts = vDB.get_study(tst_name)
+        gene_terms = get_gene_sets_symNS(gt_name)
         all_res, totals = enrichment_test(dsts,
                                           tsts,
                                           gene_terms)
@@ -295,6 +295,7 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name):
                 lessmore = 'equal'
             tres['lessmore'] = lessmore
             # tres['prop'] =
+            tres['bg'] = '#ffffff'
 
             res[test_name] = tres
 
