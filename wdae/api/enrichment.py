@@ -252,10 +252,14 @@ def enrichment_test(dsts, tsts, gene_terms):
     return all_res, totals
 
 
+from dae_query import load_gene_set
+
+
 def enrichment_results(dst_name, tst_name, gt_name, gs_name):
         dsts = vDB.get_studies(dst_name)
         tsts = vDB.get_study(tst_name)
-        gene_terms = get_gene_sets_symNS(gt_name)
+        gene_terms = load_gene_set(gt_name, dst_name)
+
         all_res, totals = enrichment_test(dsts,
                                           tsts,
                                           gene_terms)

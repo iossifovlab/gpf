@@ -16,7 +16,7 @@ import logging
 
 from dae_query import do_query_variants, \
     get_child_types, get_variant_types, \
-    join_line, prepare_summary, __load_gene_set
+    join_line, prepare_summary, load_gene_set
 
 from report_variants import build_stats
 from enrichment import enrichment_results
@@ -162,7 +162,7 @@ def gene_set_list(request):
     gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
     study_name = str(query_params['study']) if 'study' in query_params else None
 
-    gts = __load_gene_set(gene_set, study_name)
+    gts = load_gene_set(gene_set, study_name)
 
     if gts:
         return __gene_set_response(request, gts, gene_name)
