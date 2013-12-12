@@ -109,11 +109,13 @@ def prepare_gene_syms(data):
         return None
 
 
-def __load_gene_set(gene_set_label, study_name=None):
+def load_gene_set(gene_set_label, study_name=None):
     cache = get_cache('long')
+
     cache_key = 'gene_set_' + gene_set_label
     if 'denovo' == gene_set_label:
         cache_key += '_study_' + study_name
+
     gs = cache.get(cache_key)
     if not gs:
         if 'denovo' == gene_set_label:
@@ -130,35 +132,18 @@ def __filter_gene_set(gene_set, data):
     gs_id = gene_set['gs_id']
     gs_term = gene_set['gs_term']
 
-    #gs = None
-    #if gs_id.lower().strip() == 'main':
-    #    gs = settings.GENE_SETS_MAIN
-    #elif gs_id.lower().strip() == 'go':
-    #    gs = settings.GENE_SETS_GO
-    #elif gs_id.lower().strip() == 'disease':
-    #    gs = settings.GENE_SETS_DISEASE
-    #elif gs_id.lower().strip() == 'denovo':
-    #    dl = prepare_denovo_studies(data)
-    #    if not dl:
-    #        return None
-    #    gs = get_gene_sets_symNS('denovo', dl)
-    #else:
-    #    return None
-
     if 'denovo' == gs_id:
-        study = data['denovoStudies']
+        study = data['geneStudy']
         if not study:
             return None
-        gs = __load_gene_set('denovo', study)
+        gs = load_gene_set('denovo', study)
     else:
-        gs = __load_gene_set(gs_id)
+        gs = load_gene_set(gs_id)
 
     if gs_term not in gs.tDesc:
         return None
 
     gl = gs.t2G[gs_term].keys()
-
-    print gl
 
     if not gl:
         return None
@@ -342,6 +327,26 @@ def prepare_variant_filters(data):
     return fl
 
 
+def do_query_variants(data):
+    vsl = dae_query_variants(data)
+
+    variant_filters = prepare_variant_filters(data)
+    if len(variant_filters) == 0:
+        res_variants = itertools.chain(*vsl)
+    else:
+        cf = combine_filters(variant_filters)
+        res_variants = itertools.ifilter(cf, itertools.chain(*vsl))
+
+    return generate_response(itertools.imap(augmentAVar, res_variants),
+                             ['effectType',
+                              'effectDetails',
+                              'all.altFreq',
+                              'all.nAltAlls',
+                              'all.nParCalled',
+                              '_par_races_',
+                              '_ch_prof_'])
+
+
 def generate_response(vs, atts=[]):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
@@ -389,33 +394,13 @@ def save_vs(tf, vs, atts=[]):
         tf.write(line)
 
 
-def do_query_variants(data):
-    vsl = dae_query_variants(data)
-
-    variant_filters = prepare_variant_filters(data)
-    if len(variant_filters) == 0:
-        res_variants = itertools.chain(*vsl)
-    else:
-        cf = combine_filters(variant_filters)
-        res_variants = itertools.ifilter(cf, itertools.chain(*vsl))
-
-    return generate_response(itertools.imap(augmentAVar, res_variants),
-                             ['effectType',
-                              'effectDetails',
-                              'all.altFreq',
-                              'all.nAltAlls',
-                              'all.nParCalled',
-                              '_par_races_',
-                              '_ch_prof_'])
-
-
 def prepare_summary(vs):
     rows = []
     cols = vs.next()
     count = 0
     for r in vs:
         count += 1
-        if count <= 25:
+        if count <= 1000:
             rows.append(r)
         if count > 2000:
             break
