@@ -1,9 +1,11 @@
 import itertools
 
 from django.conf import settings
+from django.core.cache import get_cache
 
 from DAE import vDB
 from DAE import get_gene_sets_symNS
+from GeneTerm import GeneTerm
 from VariantAnnotation import get_effect_types
 from VariantsDB import mat2Str
 from GetVariantsInterface import augmentAVar
@@ -111,30 +113,55 @@ def prepare_gene_syms(data):
     else:
         return None
 
+def __load_gene_set(gene_set_label, study_name=None):
+    cache = get_cache('long')
+    cache_key = 'gene_set_' + gene_set_label
+    if 'denovo' == gene_set_label:
+        cache_key += '_study_' + study_name
+    gs = cache.get(cache_key)
+    if not gs:
+        if 'denovo' == gene_set_label:
+            gene_term = get_gene_sets_symNS(gene_set_label, study_name)
+        else:
+            gene_term = get_gene_sets_symNS(gene_set_label)
+        gs = GeneTerm(gene_term)
+        cache.set(cache_key, gs)
+    
+    return gs
 
 def __filter_gene_set(gene_set, data):
     gs_id = gene_set['gs_id']
     gs_term = gene_set['gs_term']
 
-    gs = None
-    if gs_id.lower().strip() == 'main':
-        gs = settings.GENE_SETS_MAIN
-    elif gs_id.lower().strip() == 'go':
-        gs = settings.GENE_SETS_GO
-    elif gs_id.lower().strip() == 'disease':
-        gs = settings.GENE_SETS_DISEASE
-    elif gs_id.lower().strip() == 'denovo':
-        dl = prepare_denovo_studies(data)
-        if not dl:
+    #gs = None
+    #if gs_id.lower().strip() == 'main':
+    #    gs = settings.GENE_SETS_MAIN
+    #elif gs_id.lower().strip() == 'go':
+    #    gs = settings.GENE_SETS_GO
+    #elif gs_id.lower().strip() == 'disease':
+    #    gs = settings.GENE_SETS_DISEASE
+    #elif gs_id.lower().strip() == 'denovo':
+    #    dl = prepare_denovo_studies(data)
+    #    if not dl:
+    #        return None
+    #    gs = get_gene_sets_symNS('denovo', dl)
+    #else:
+    #    return None
+
+    if 'denovo' == gs_id:
+        study = data['denovoStudies']
+        if not study:
             return None
-        gs = get_gene_sets_symNS('denovo', dl)
+        gs = __load_gene_set('denovo', study)
     else:
-        return None
+        gs = __load_gene_set(gs_id)
 
     if gs_term not in gs.tDesc:
         return None
 
     gl = __filter_gene_syms(gs.t2G[gs_term].keys())
+
+    print gl
 
     if not gl:
         return None
