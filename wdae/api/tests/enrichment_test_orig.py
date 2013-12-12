@@ -71,15 +71,23 @@ def printSummaryTable(testVarGenesDict, geneTerms, allRes, totals):
     print "\t\t\tBACKGROUND (UR syn.)\t\t" + "\t\t\t\t\t".join(tTests)
     bcgTotal = totals['BACKGROUND'];
     hcols = []
-    hcols.extend(("setId", "setDesc", "GeneNumber", "Overlap (" + str(bcgTotal) + ")", "proportion"));
+    hcols.extend(("setId",
+                  "setDesc",
+                  "GeneNumber",
+                  "Overlap (" + str(bcgTotal) + ")",
+                  "proportion"));
     for tTname in tTests:
         hcols.extend(("Overlap (" + str(totals[tTname]) + ")", "Expected", "pVal", "qVal", "lessOrMore"));
     print "\t".join(hcols)
     for s in geneTerms.t2G:
         cols = []
         bcgCnt = allRes[s]['BACKGROUND'].cnt
-        bcgProp = str(round(float(bcgCnt)/bcgTotal,3));
-        cols.extend((s,geneTerms.tDesc[s],str(len(geneTerms.t2G[s])), str(bcgCnt), bcgProp))
+        bcgProp = str(round(float(bcgCnt) / bcgTotal, 3));
+        cols.extend((s,
+                     geneTerms.tDesc[s],
+                     str(len(geneTerms.t2G[s])),
+                     str(bcgCnt),
+                     bcgProp))
         for tTname in tTests:
             res = allRes[s][tTname]
 

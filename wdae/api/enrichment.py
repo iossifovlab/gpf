@@ -1,6 +1,7 @@
 from django.core.cache import get_cache
 
-from DAE import vDB
+from DAE import vDB, get_gene_sets_symNS
+
 import itertools
 import logging
 
@@ -62,6 +63,20 @@ def __build_or_load_transmitted(tstd):
         cache.set('enrichment_background_model.'+tstd.name, background)
 
     return ['BACKGROUND', background]
+
+__PRB_TESTS = ['De novo recPrbLGDs',
+                'De novo prbLGDs',
+                'De novo prbMaleLGDs',
+                'De novo prbFemaleLGDs',
+                'De novo prbMissense',
+                'De novo prbMaleMissense',
+                'De novo prbFemaleMissense',
+                'De novo prbSynonymous']
+__SIB_TESTS = ['De novo sibLGDs',
+               'De novo sibMaleLGDs',
+               'De novo sibFemaleLGDs',
+               'De novo sibMissense',
+               'De novo sibSynonymous']
 
 
 def __build_variants_genes_dict(denovo, transmitted, geneSyms=None):
@@ -237,7 +252,58 @@ def enrichment_test(dsts, tsts, gene_terms):
     return all_res, totals
 
 
-# def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
+def enrichment_results(dst_name, tst_name, gt_name, gs_name):
+        dsts = vDB.get_studies('allWE')
+        tsts = vDB.get_study('w873e374s322')
+        gene_terms = get_gene_sets_symNS('main')
+        all_res, totals = enrichment_test(dsts,
+                                          tsts,
+                                          gene_terms)
+        bg_total = totals['BACKGROUND']
+        bg_cnt = all_res[gs_name]['BACKGROUND'].cnt
+        bg_prop = round(float(bg_cnt) / bg_total, 3)
+
+        res = {}
+        res['denovo_study'] = dst_name
+        res['gs_id'] = gs_name
+        res['gs_desc'] = gene_terms.tDesc[gs_name]
+        res['gene_number'] = len(gene_terms.t2G[gs_name])
+        res['overlap'] = bg_cnt
+        res['prop'] = bg_prop
+
+        for test_name in all_res[gs_name]:
+            tres = {}
+
+            eres = all_res[gs_name][test_name]
+
+            tres['count'] = eres.cnt
+
+            if eres.p_val >= 0.0001:
+                p_val = round(eres.p_val, 4)
+                tres['p_val'] = p_val
+            else:
+                tres['p_val'] = str('%.1E' % eres.p_val)
+
+            expected = round(eres.expected, 4)
+            tres['expected'] = str(expected)
+
+            if eres.cnt > expected:
+                lessmore = 'more'
+            elif eres.cnt < expected:
+                lessmore = 'less'
+            else:
+                lessmore = 'equal'
+            tres['lessmore'] = lessmore
+            # tres['prop'] =
+
+            res[test_name] = tres
+
+        res['prb'] = __PRB_TESTS
+        res['sib'] = __SIB_TESTS
+        return res
+
+
+ # def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
 #     (gene_set_name, gene_set_syms) = \
 #         init_gene_set_symbols(gene_terms, gene_set_name)
 #     var_genes_dict = build_variants_genes_dict(dsts, tsts,
