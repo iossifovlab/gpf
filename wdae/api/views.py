@@ -43,10 +43,11 @@ def report_studies(request):
 
 @api_view(['GET'])
 def gene_sets_list(request):
-    r = [{'label' : 'Main', 'val' : 'main', 'conf' : ['key', 'desc', 'count']},
+    r = [{'label' : 'Main', 'val' : 'main', 'conf' : ['[[[', 'key', ']]]', '(((' , 'count', '))):', "desc"]},
     {'label' : 'GO', 'val' : 'GO' ,'conf' : ['key', 'count']},
     {'label' : 'Disease', 'val' : 'disease' ,'conf' : ['key', 'count']},
-    {'label' : 'Denovo', 'val' : 'denovo' ,'conf' : ['key', 'desc', 'count']}]
+    {'label' : 'Denovo', 'val' : 'denovo' ,'conf' : ['---', 'key', '---', 'desc', '---', 'count']}]
+
     return Response({"gene_sets" : r})
 
 @api_view(['GET'])
