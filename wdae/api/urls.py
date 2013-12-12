@@ -29,6 +29,8 @@ urlpatterns = patterns('api.views',
     url(r'^gene_sets$', 'gene_sets_list'),
     url(r'^gene_set_list$', 'gene_set_list'),
     url(r'^report_studies$', 'report_studies'),
+    url(r'^enrichment_test$', 'enrichment_test'),
+
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)

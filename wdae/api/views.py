@@ -19,6 +19,7 @@ from dae_query import do_query_variants, \
     join_line, prepare_summary
 
 from report_variants import build_stats
+from enrichment import enrichment_results
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names
 
@@ -359,3 +360,34 @@ Examples:
     stats['studies_names'] = studies_names
 
     return Response(stats)
+
+
+@api_view(['GET'])
+def enrichment_test(request):
+    """
+Performs enrichment test. Expected parameters are:
+
+    * dst_name - denovo study name;
+    * tst_name - transmitted study name;
+    * gt_name - gene term name;
+    * gs_name - gene set name;
+
+Examples:
+
+    GET /api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers
+    """
+    if 'dst_name' not in request.QUERY_PARAMS:
+        return Response()
+    if 'tst_name' not in request.QUERY_PARAMS:
+        return Response()
+    if 'gt_name' not in request.QUERY_PARAMS:
+        return Response()
+    if 'gs_name' not in request.QUERY_PARAMS:
+        return Response()
+    dst_name = request.QUERY_PARAMS['dst_name']
+    tst_name = request.QUERY_PARAMS['tst_name']
+    gt_name = request.QUERY_PARAMS['gt_name']
+    gs_name = request.QUERY_PARAMS['gs_name']
+
+    res = enrichment_results(dst_name, tst_name, gt_name, gs_name)
+    return Response(res)
