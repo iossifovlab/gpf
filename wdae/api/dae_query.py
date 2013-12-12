@@ -1,6 +1,6 @@
 import itertools
 
-from django.conf import settings
+#from django.conf import settings
 from django.core.cache import get_cache
 
 from DAE import vDB
@@ -88,17 +88,13 @@ def prepare_family_ids(data):
         return None
 
 
-def __filter_gene_syms(gl):
-    return [g for g in gl if g in settings.GENE_SYMS_SET]
-
-
 def prepare_gene_syms(data):
     if 'geneSyms' not in data:
         return None
 
     gene_sym = data['geneSyms']
     if isinstance(gene_sym, list):
-        gl = __filter_gene_syms(gene_sym)
+        gl = gene_sym
         if not gl:
             return None
         else:
@@ -106,12 +102,12 @@ def prepare_gene_syms(data):
 
     elif isinstance(gene_sym, str):
         gl = [s.strip() for s in gene_sym.split(',') if len(s.strip()) > 0]
-        gl = __filter_gene_syms(gl)
         if not gl:
             return None
         return set(gl)
     else:
         return None
+
 
 def __load_gene_set(gene_set_label, study_name=None):
     cache = get_cache('long')
@@ -126,7 +122,7 @@ def __load_gene_set(gene_set_label, study_name=None):
             gene_term = get_gene_sets_symNS(gene_set_label)
         gs = GeneTerm(gene_term)
         cache.set(cache_key, gs)
-    
+
     return gs
 
 def load_gene_set(gene_set_label):
@@ -163,7 +159,7 @@ def __filter_gene_set(gene_set, data):
     if gs_term not in gs.tDesc:
         return None
 
-    gl = __filter_gene_syms(gs.t2G[gs_term].keys())
+    gl = gs.t2G[gs_term].keys()
 
     print gl
 

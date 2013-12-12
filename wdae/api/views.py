@@ -1,6 +1,6 @@
 # Create your views here.
 from django.conf import settings
-from django.http import StreamingHttpResponse, QueryDict
+from django.http import StreamingHttpResponse
 
 # from rest_framework.response import Response as RestResponse
 from rest_framework.response import Response
@@ -168,37 +168,35 @@ def gene_set_list(request):
     else:
         return Response()
 
-@api_view(['GET'])
-def gene_set_main_list(request, gene_set=None):
-    return __gene_set_response(request, settings.GENE_SETS_MAIN, gene_set)
+# @api_view(['GET'])
+# def gene_set_main_list(request, gene_set=None):
+#     return __gene_set_response(request, settings.GENE_SETS_MAIN, gene_set)
 
 
-@api_view(['GET'])
-def gene_set_go_list(request, gene_set=None):
-    return __gene_set_response(request, settings.GENE_SETS_GO, gene_set)
+# @api_view(['GET'])
+# def gene_set_go_list(request, gene_set=None):
+#     return __gene_set_response(request, settings.GENE_SETS_GO, gene_set)
 
-@api_view(['GET'])
-def gene_set_disease_list(request, gene_set=None):
-    return __gene_set_response(request, settings.GENE_SETS_DISEASE, gene_set)
+# @api_view(['GET'])
+# def gene_set_disease_list(request, gene_set=None):
+#     return __gene_set_response(request, settings.GENE_SETS_DISEASE, gene_set)
 
-@api_view(['GET'])
-def gene_set_denovo_list(request, denovo_study, gene_set = None):
-    gts = get_gene_sets_symNS('denovo', str(denovo_study))
-    return __gene_set_response(request, gts, gene_set)
+# @api_view(['GET'])
+# def gene_set_denovo_list(request, denovo_study, gene_set = None):
+#     gts = get_gene_sets_symNS('denovo', str(denovo_study))
+#     return __gene_set_response(request, gts, gene_set)
 
-@api_view(['GET'])
-def gene_list(request, page_count=30):
-    gl = settings.GENE_SYMS_LIST
+# @api_view(['GET'])
+# def gene_list(request, page_count=30):
+#     query_params = request.QUERY_PARAMS
 
-    query_params = request.QUERY_PARAMS
+#     if 'filter' not in query_params:
+#         start_string = query_params['filter']
+#         gl = [g for g in gl if g.startswith(start_string)]
 
-    if 'filter' not in query_params:
-        start_string = query_params['filter']
-        gl = [g for g in gl if g.startswith(start_string)]
+#     page_count = __get_page_count(query_params, page_count)
 
-    page_count = __get_page_count(query_params, page_count)
-
-    return Response(gl[:page_count])
+#     return Response(gl[:page_count])
 
 
 def prepare_query_dict(data):
