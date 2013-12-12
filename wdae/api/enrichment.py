@@ -64,7 +64,7 @@ def __build_or_load_transmitted(tstd):
     return ['BACKGROUND', background]
 
 
-def build_variants_genes_dict(denovo, transmitted, geneSyms=None):
+def __build_variants_genes_dict(denovo, transmitted, geneSyms=None):
     return [
         ['De novo recPrbLGDs',
          one_variant_per_recurrent(
@@ -171,20 +171,20 @@ class EnrichmentTestRes:
 from scipy import stats
 
 
-def init_gene_set_symbols(gene_terms, gene_set_name):
-    if gene_set_name not in gene_terms.t2G:
-        return (gene_set_name, set([]))
-    return (gene_set_name, set(gene_terms.t2G[gene_set_name].keys()))
+# def init_gene_set_symbols(gene_terms, gene_set_name):
+#     if gene_set_name not in gene_terms.t2G:
+#         return (gene_set_name, set([]))
+#     return (gene_set_name, set(gene_terms.t2G[gene_set_name].keys()))
 
 
-def init_gene_set_enrichment_full(var_genes_dict, gene_terms):
+def __init_gene_set_enrichment(var_genes_dict, gene_terms):
     all_res = {}
     for set_name in gene_terms.t2G:
         all_res[set_name] = {}
     return all_res
 
 
-def count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms):
+def __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
     for test_name, gene_syms in var_genes_dict:
         for set_name in gene_terms.t2G:
             all_res[set_name][test_name] = EnrichmentTestRes()
@@ -196,25 +196,27 @@ def count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms):
                 all_res[gene_set][test_name].cnt += 1
 
 
-def count_gene_set(var_genes_dict, gene_set_name, gene_set_syms):
-    all_res = {}
-    for test_name, gene_syms in var_genes_dict:
-        all_res[test_name] = EnrichmentTestRes()
+# def count_gene_set(var_genes_dict, gene_set_name, gene_set_syms):
+#     all_res = {}
+#     for test_name, gene_syms in var_genes_dict:
+#         all_res[test_name] = EnrichmentTestRes()
 
-        for gene_sym_list in gene_syms:
-            # logger.debug("gene sym list: %s", str(gene_sym_list))
-            touched_gene_set = False
-            for gene_sym in gene_sym_list:
-                if gene_sym in gene_set_syms:
-                    touched_gene_set = True
-            if touched_gene_set:
-                all_res[test_name].cnt += 1
-    return all_res
+#         for gene_sym_list in gene_syms:
+#             # logger.debug("gene sym list: %s", str(gene_sym_list))
+#             touched_gene_set = False
+#             for gene_sym in gene_sym_list:
+#                 if gene_sym in gene_set_syms:
+#                     touched_gene_set = True
+#             if touched_gene_set:
+#                 all_res[test_name].cnt += 1
+#     return all_res
 
 
-def enrichment_test_full(var_genes_dict, gene_terms):
-    all_res = init_gene_set_enrichment_full(var_genes_dict, gene_terms)
-    count_gene_set_enrichment_full(all_res, var_genes_dict, gene_terms)
+def enrichment_test(dsts, tsts, gene_terms):
+    var_genes_dict = __build_variants_genes_dict(dsts, tsts)
+
+    all_res = __init_gene_set_enrichment(var_genes_dict, gene_terms)
+    __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms)
 
     totals = {test_name: len(gene_syms)
               for test_name, gene_syms in var_genes_dict}
@@ -235,68 +237,26 @@ def enrichment_test_full(var_genes_dict, gene_terms):
     return all_res, totals
 
 
-def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
-    (gene_set_name, gene_set_syms) = \
-        init_gene_set_symbols(gene_terms, gene_set_name)
-    var_genes_dict = build_variants_genes_dict(dsts, tsts,
-                                               geneSyms=gene_set_syms)
-    all_res = count_gene_set(var_genes_dict, gene_set_name, gene_set_syms)
+# def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
+#     (gene_set_name, gene_set_syms) = \
+#         init_gene_set_symbols(gene_terms, gene_set_name)
+#     var_genes_dict = build_variants_genes_dict(dsts, tsts,
+#                                                geneSyms=gene_set_syms)
+#     all_res = count_gene_set(var_genes_dict, gene_set_name, gene_set_syms)
 
-    totals = {test_name: len(gene_syms)
-              for test_name, gene_syms in var_genes_dict}
-    bg_total = totals['BACKGROUND']
+#     totals = {test_name: len(gene_syms)
+#               for test_name, gene_syms in var_genes_dict}
+#     bg_total = totals['BACKGROUND']
 
-    return all_res, totals
+#     bg_gene_set = all_res['BACKGROUND'].cnt
+#     if bg_gene_set == 0:
+#         bg_gene_set = 0.5
+#     bg_prob = float(bg_gene_set) / bg_total
 
+#     for test_name, gene_syms in var_genes_dict:
+#         res = all_res[test_name]
+#         total = totals[test_name]
+#         res.p_val = stats.binom_test(res.cnt, total, p=bg_prob)
+#         res.expected = round(bg_prob*total, 4)
 
-def print_summary_table(var_genes_dict, geneTerms, allRes, totals):
-    tests = [tn for tn, vs in var_genes_dict if tn != "BACKGROUND"]
-    print "\t\t\tBACKGROUND (UR syn.)\t\t" + "\t\t\t\t\t".join(tests)
-    bg_total = totals['BACKGROUND']
-    hcols = []
-    hcols.extend(("setId",
-                  "setDesc",
-                  "GeneNumber",
-                  "Overlap (" + str(bcgTotal) + ")",
-                  "proportion"))
-
-    for test_name in tests:
-        hcols.extend(("Overlap (" + str(totals[test_name]) + ")",
-                      "Expected",
-                      "pVal",
-                      "lessOrMore"))
-    print "\t".join(hcols)
-    for s in geneTerms.t2G:
-        cols = []
-        bcgCnt = allRes[s]['BACKGROUND'].cnt
-        bcgProp = str(round(float(bcgCnt) / bg_total, 3))
-        cols.extend((s,
-                     geneTerms.tDesc[s],
-                     str(len(geneTerms.t2G[s])),
-                     str(bcgCnt),
-                     bcgProp))
-
-        for test_name in tests:
-            res = allRes[s][test_name]
-
-            if res.pVal >= 0.0001:
-                pVal = str(round(res.pVal, 4))
-            else:
-                pVal = str('%.1E' % (res.pVal))
-
-            # if res.qVal >= 0.0001:
-            #     qVal = str(round(res.qVal, 4))
-            # else:
-            #     qVal = str('%.1E' % (res.qVal))
-
-            expected = str(round(res.expected, 4))
-
-            if res.cnt > res.expected:
-                lessmore = "more"
-            elif res.cnt < res.expected:
-                lessmore = "less"
-            else:
-                lessmore = "equal"
-            cols.extend((str(res.cnt), expected, pVal, lessmore))
-        print "\t".join(cols)
-        break
+#     return all_res, totals
