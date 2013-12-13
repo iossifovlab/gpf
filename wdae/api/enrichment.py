@@ -1,25 +1,12 @@
 from django.core.cache import get_cache
 
-from DAE import vDB, get_gene_sets_symNS
+from DAE import vDB
 
 import itertools
 import logging
 
 
 logger = logging.getLogger(__name__)
-
-
-# def one_variant_per_recurrent(vs):
-#     gn_sorted = sorted([[ge['sym'], v] for v in vs
-#                         for ge in v.requestedGeneEffects])
-
-#     sym_2_vars = {sym: [t[1] for t in tpi]
-#                   for sym, tpi in itertools.groupby(gn_sorted,
-#                                                     key=lambda x: x[0])}
-#     sym_2_fn = {sym: len(set([v.familyId for v in vs]))
-#                 for sym, vs in sym_2_vars.items()}
-
-#     return [sym for sym, fn in sym_2_fn.items() if fn > 1]
 
 
 def one_variant_per_recurrent(vs):
@@ -65,13 +52,13 @@ def __build_or_load_transmitted(tstd):
     return ['BACKGROUND', background]
 
 __PRB_TESTS = ['De novo recPrbLGDs',
-                'De novo prbLGDs',
-                'De novo prbMaleLGDs',
-                'De novo prbFemaleLGDs',
-                'De novo prbMissense',
-                'De novo prbMaleMissense',
-                'De novo prbFemaleMissense',
-                'De novo prbSynonymous']
+               'De novo prbLGDs',
+               'De novo prbMaleLGDs',
+               'De novo prbFemaleLGDs',
+               'De novo prbMissense',
+               'De novo prbMaleMissense',
+               'De novo prbFemaleMissense',
+               'De novo prbSynonymous']
 __SIB_TESTS = ['De novo sibLGDs',
                'De novo sibMaleLGDs',
                'De novo sibFemaleLGDs',
@@ -160,11 +147,7 @@ def __build_variants_genes_dict(denovo, transmitted, geneSyms=None):
                                      inChild='sib',
                                      effectTypes="synonymous",
                                      geneSyms=geneSyms))],
-        # transmitted
-        # ['UR LGDs in parents',
-        #  filter_transmitted(
-        #      transm.get_transmitted_summary_variants(ultraRareOnly=True,
-        #                                              effectTypes="LGDs"))],
+
         __build_or_load_transmitted(transmitted)
     ]
 
@@ -186,12 +169,6 @@ class EnrichmentTestRes:
 from scipy import stats
 
 
-# def init_gene_set_symbols(gene_terms, gene_set_name):
-#     if gene_set_name not in gene_terms.t2G:
-#         return (gene_set_name, set([]))
-#     return (gene_set_name, set(gene_terms.t2G[gene_set_name].keys()))
-
-
 def __init_gene_set_enrichment(var_genes_dict, gene_terms):
     all_res = {}
     for set_name in gene_terms.t2G:
@@ -206,25 +183,10 @@ def __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
         for gene_sym_list in gene_syms:
             touched_gene_sets = set()
             for gene_sym in gene_sym_list:
-                touched_gene_sets |= set(gene_terms.g2T[gene_sym])
+                if gene_sym in gene_terms.g2T:
+                    touched_gene_sets |= set(gene_terms.g2T[gene_sym])
             for gene_set in touched_gene_sets:
                 all_res[gene_set][test_name].cnt += 1
-
-
-# def count_gene_set(var_genes_dict, gene_set_name, gene_set_syms):
-#     all_res = {}
-#     for test_name, gene_syms in var_genes_dict:
-#         all_res[test_name] = EnrichmentTestRes()
-
-#         for gene_sym_list in gene_syms:
-#             # logger.debug("gene sym list: %s", str(gene_sym_list))
-#             touched_gene_set = False
-#             for gene_sym in gene_sym_list:
-#                 if gene_sym in gene_set_syms:
-#                     touched_gene_set = True
-#             if touched_gene_set:
-#                 all_res[test_name].cnt += 1
-#     return all_res
 
 
 def enrichment_test(dsts, tsts, gene_terms):
@@ -268,6 +230,8 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name):
         bg_prop = round(float(bg_cnt) / bg_total, 3)
 
         res = {}
+        res['prb'] = __PRB_TESTS
+        res['sib'] = __SIB_TESTS
         res['denovo_study'] = dst_name
         res['gs_id'] = gs_name
         res['gs_desc'] = gene_terms.tDesc[gs_name]
@@ -280,6 +244,7 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name):
 
             eres = all_res[gs_name][test_name]
 
+            tres['overlap'] = totals[test_name]
             tres['count'] = eres.cnt
 
             if eres.p_val >= 0.0001:
@@ -303,31 +268,4 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name):
 
             res[test_name] = tres
 
-        res['prb'] = __PRB_TESTS
-        res['sib'] = __SIB_TESTS
         return res
-
-
- # def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
-#     (gene_set_name, gene_set_syms) = \
-#         init_gene_set_symbols(gene_terms, gene_set_name)
-#     var_genes_dict = build_variants_genes_dict(dsts, tsts,
-#                                                geneSyms=gene_set_syms)
-#     all_res = count_gene_set(var_genes_dict, gene_set_name, gene_set_syms)
-
-#     totals = {test_name: len(gene_syms)
-#               for test_name, gene_syms in var_genes_dict}
-#     bg_total = totals['BACKGROUND']
-
-#     bg_gene_set = all_res['BACKGROUND'].cnt
-#     if bg_gene_set == 0:
-#         bg_gene_set = 0.5
-#     bg_prob = float(bg_gene_set) / bg_total
-
-#     for test_name, gene_syms in var_genes_dict:
-#         res = all_res[test_name]
-#         total = totals[test_name]
-#         res.p_val = stats.binom_test(res.cnt, total, p=bg_prob)
-#         res.expected = round(bg_prob*total, 4)
-
-#     return all_res, totals
