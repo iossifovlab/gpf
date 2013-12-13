@@ -296,6 +296,23 @@ def prepare_denovo_filters(data):
     return filters
 
 
+def get_denovo_variants(studies, **filters):
+    if isinstance(studies, str):
+        studies = vDB.get_studies(studies)
+    seenVs = set()
+    for study in studies:
+        for f in study.families.values():
+            #f.familyId to test for IQ, race
+            #f.memb...[]
+            pass
+
+        for v in study.get_denovo_variants(**filters,fmail):
+            vKey = v.familyId + v.location + v.variant
+            if vKey in seenVs:
+                continue
+            yield v
+            seenVs.add(vKey)
+
 def dae_query_variants(data):
     variants = []
 
