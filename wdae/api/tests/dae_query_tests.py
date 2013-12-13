@@ -12,7 +12,6 @@ import itertools
 logger = logging.getLogger(__name__)
 
 
-
 class FamilesTests(unittest.TestCase):
 
     def test_families_empty(self):
