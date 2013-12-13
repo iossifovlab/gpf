@@ -1,6 +1,5 @@
 import itertools
 
-#from django.conf import settings
 from django.core.cache import get_cache
 
 from DAE import vDB
