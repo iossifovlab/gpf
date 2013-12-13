@@ -40,7 +40,6 @@ def get_parents_race():
                                       phDB.get_variable('mocuv.race_parents'))])
 
 
-
 def get_pcdv_race():
     return __get_string_measure('pcdv.race')
 
