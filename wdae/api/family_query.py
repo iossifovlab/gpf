@@ -34,7 +34,11 @@ def get_non_verbal_iq():
 
 
 def get_parents_race():
-    return __get_string_measure('focuv.race_parents')
+    return dict([(k, f if f == m else 'more-than-one-race')
+                 for (k, f, m) in zip(phDB.families,
+                                      phDB.get_variable('focuv.race_parents'),
+                                      phDB.get_variable('mocuv.race_parents'))])
+
 
 
 def get_pcdv_race():
