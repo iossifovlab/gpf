@@ -262,7 +262,7 @@ def __bind_family_filter_by_race(data, family_filters):
 
 
 def study_family_filter_by_verbal_iq(families, iq_lo=0.0, iq_hi=float('inf')):
-    return set([key for key, val in get_verbal_iq().items()
+    return dict([(key, families[key]) for key, val in get_verbal_iq().items()
                 if key in families and val >= iq_lo and val <= iq_hi])
 
 
