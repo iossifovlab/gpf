@@ -343,10 +343,12 @@ def study_family_filter_by_trio_quad(families, trio_quad):
 def __bind_family_filter_by_trio_quad(data, family_filters):
     if 'familyQuadTrio' in data:
         if data['familyQuadTrio'].lower() == 'trio':
+            logger.debug("filtering trio families...")
             family_filters.append(
                 lambda fs: study_family_filter_by_trio_quad(fs, 3)
             )
         elif data['familyQuadTrio'].lower() == 'quad':
+            logger.debug("filtering quad families...")
             family_filters.append(
                 lambda fs: study_family_filter_by_trio_quad(fs, 4)
             )
@@ -361,7 +363,11 @@ def __apply_family_filters(study, family_filters):
     return families
 
 
-def advanced_family_filter(data):
+def advanced_family_filter(data, filters):
+    if 'familyIds' in filters and filters['familyIds'] is not None \
+       and len(filters['familyIds']) > 0:
+        return None
+
     family_filters = []
     __bind_family_filter_by_race(data, family_filters)
     __bind_family_filter_by_verbal_iq(data, family_filters)

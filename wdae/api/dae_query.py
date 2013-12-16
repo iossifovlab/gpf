@@ -305,15 +305,10 @@ def get_denovo_variants(studies, family_filters, **filters):
         studies = vDB.get_studies(studies)
     seenVs = set()
     for study in studies:
-        #logger.debug("denovo filters: %s", str(filters))
-        if ('familyIds' not in filters or filters['familyIds'] is None or len(filters['familyIds']) == 0) \
-           and family_filters is not None:
-
-            families = family_filters(study)
-            #logger.debug("filtered families: %s", str(families.keys()))
-
-            filters['familyIds'] = families
-
+        if family_filters is not None:
+            families = family_filters(study).keys()
+            filters['familyIds'] = families if len(families) > 0 else [None]
+            #logger.debug("study: %s, families: %s", study.name, str(families))
         for v in study.get_denovo_variants(**filters):
             vKey = v.familyId + v.location + v.variant
             if vKey in seenVs:
@@ -330,7 +325,7 @@ def dae_query_variants(data):
     dstudies = prepare_denovo_studies(data)
     if dstudies is not None:
         filters = prepare_denovo_filters(data)
-        family_filters = advanced_family_filter(data)
+        family_filters = advanced_family_filter(data, filters)
         dvs = get_denovo_variants(dstudies, family_filters, **filters)
         variants.append(dvs)
 
@@ -338,6 +333,10 @@ def dae_query_variants(data):
     if tstudies is not None:
         filters = prepare_transmitted_filters(data)
         for study in tstudies:
+            family_filters = advanced_family_filter(data, filters)
+            if family_filters is not None:
+                families = family_filters(study).keys()
+                filters['familyIds'] = families if len(families) > 0 else [None]
 
             tvs = study.get_transmitted_variants(**filters)
             variants.append(tvs)
@@ -345,25 +344,8 @@ def dae_query_variants(data):
     return variants
 
 
-def combine_filters(filters):
-    return lambda v: all([f(v) for f in filters])
-
-
-# def prepare_variant_filters(data):
-#     fl = []
-#     prepare_family_advanced_variants_filters(data, fl)
-#     return fl
-
-
 def do_query_variants(data):
     vsl = dae_query_variants(data)
-
-    # variant_filters = prepare_variant_filters(data)
-    # if len(variant_filters) == 0:
-    #     res_variants = itertools.chain(*vsl)
-    # else:
-    #     cf = combine_filters(variant_filters)
-    #     res_variants = itertools.ifilter(cf, itertools.chain(*vsl))
 
     res_variants = itertools.chain(*vsl)
     return generate_response(itertools.imap(augmentAVar, res_variants),
