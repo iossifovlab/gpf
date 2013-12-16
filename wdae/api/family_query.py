@@ -1,5 +1,9 @@
 from DAE import phDB
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def get_races():
     return {'african-amer',
@@ -151,15 +155,15 @@ def __prepare_family_verbal_iq(data, family_filters):
     )
 
 
-def prepare_family_advanced(data):
-    family_filters = []
-    __prepare_family_race_filter(data, family_filters)
-    #__prepare_family_trio_quad(data, family_filters)
-    #__prepare_family_prb_gender(data, family_filters)
-    #__prepare_family_sib_gender(data, family_filters)
-    __prepare_family_verbal_iq(data, family_filters)
+# def prepare_family_advanced(data):
+#     family_filters = []
+#     __prepare_family_race_filter(data, family_filters)
+#     #__prepare_family_trio_quad(data, family_filters)
+#     #__prepare_family_prb_gender(data, family_filters)
+#     #__prepare_family_sib_gender(data, family_filters)
+#     __prepare_family_verbal_iq(data, family_filters)
 
-    return family_filters
+#     return family_filters
 
 
 def filter_families_advanced(studies, family_filters):
@@ -346,3 +350,27 @@ def __bind_family_filter_by_trio_quad(data, family_filters):
             family_filters.append(
                 lambda fs: study_family_filter_by_trio_quad(fs, 4)
             )
+
+
+def __apply_family_filters(study, family_filters):
+    if family_filters is None or len(family_filters) == 0:
+        return None
+    families = study.families
+    for ff in family_filters:
+        families = ff(families)
+    return families
+
+
+def advanced_family_filter(data):
+    family_filters = []
+    __bind_family_filter_by_race(data, family_filters)
+    __bind_family_filter_by_verbal_iq(data, family_filters)
+    __bind_family_filter_by_trio_quad(data, family_filters)
+    __bind_family_filter_by_prb_gender(data, family_filters)
+    __bind_family_filter_by_sib_gender(data, family_filters)
+    logger.debug("family filters: %d", len(family_filters))
+
+    if len(family_filters) == 0:
+        return None
+    else:
+        return lambda study: __apply_family_filters(study, family_filters)
