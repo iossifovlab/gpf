@@ -72,8 +72,7 @@ class CombinedTests(unittest.TestCase):
 
     def test_variants_gene_sets_1(self):
         vs = do_query_variants(self.TEST_DATA_1)
-        cols = vs.next()
-        logger.debug("cols: %s", str(cols))
+        vs.next()
         count = 0
         for v in vs:
             count += 1
@@ -97,8 +96,8 @@ class CombinedTests(unittest.TestCase):
 
     def test_variants_gene_sets_3(self):
         vs = do_query_variants(self.TEST_DATA_3)
-        cols = vs.next()
-        logger.debug("cols: %s", str(cols))
+        vs.next()
+
         for v in vs:
             self.assertTrue('del' in v[3], "%s: %s" % (str(v[3]), str(v)))
             self.assertTrue('prbF' in v[6])
@@ -121,8 +120,8 @@ class GeneRegionCombinedTests(unittest.TestCase):
 
     def test_gene_region_filter(self):
         vs = do_query_variants(self.TEST_DATA)
-        cols = vs.next()
-        logger.debug("cols: %s", str(cols))
+        vs.next()
+
         for v in vs:
             loc = int(v[2].split(':')[1])
             self.assertTrue(loc >= 1018000, "%s: %s" % (str(loc), str(v[2])))
@@ -159,7 +158,7 @@ class PreviewQueryTests(unittest.TestCase):
 
     def test_preview_1(self):
         vs = do_query_variants(self.PREVIEW_TEST_1)
-        cols = vs.next()
+        vs.next()
         count = 0
         for v in vs:
             count += 1

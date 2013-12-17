@@ -1,13 +1,8 @@
 import unittest
 
-from api.dae_query import prepare_inchild, prepare_effect_types, \
-    prepare_variant_types, prepare_family_ids, prepare_gene_syms, \
-    prepare_gene_sets, prepare_denovo_studies, \
-    prepare_transmitted_studies, dae_query_variants, \
-    do_query_variants
+from api.dae_query import do_query_variants
 
 import logging
-import itertools
 
 logger = logging.getLogger(__name__)
 
@@ -160,3 +155,22 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
             self.assertIn('prbM', v[17], str(v[17]))
 
         self.assertTrue(count > 0)
+
+    TEST_DATA_8 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": 'None',
+                   "inChild": "All",
+                   "effectTypes": "All",
+                   "variantTypes": "All",
+                   "geneSet": "",
+                   "geneSyms": "",
+                   "ultraRareOnly": True,
+                   "familyRace": 'ala-bala'}
+
+    def test_family_wrong_race(self):
+        vs = do_query_variants(self.TEST_DATA_8)
+        vs.next()
+        count = 0
+        for v in vs:
+            count += 1
+
+        self.assertEqual(0, count)

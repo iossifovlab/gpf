@@ -282,8 +282,7 @@ def prepare_transmitted_filters(data):
                'ultraRareOnly': __prepare_ultra_rare(data),
                'minParentsCalled': __prepare_min_parents_called(data),
                'minAltFreqPrcnt': __prepare_min_alt_freq_prcnt(data),
-               'maxAltFreqPrcnt': __prepare_max_alt_freq_prcnt(data)
-             }
+               'maxAltFreqPrcnt': __prepare_max_alt_freq_prcnt(data)}
     return filters
 
 
