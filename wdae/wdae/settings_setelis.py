@@ -182,14 +182,54 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'api': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        }
     }
 }
 
-from DAE import get_gene_sets_symNS, giDB
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 3600,
+        'OPTIONS': {
+            'MAX_ENTRIES': 10000
+        }
+    },
+    'long': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 2592000,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000
+        }
+    },
 
-GENE_SETS_GO = get_gene_sets_symNS('GO')
-GENE_SETS_MAIN = get_gene_sets_symNS('main')
-GENE_SETS_DISEASE = get_gene_sets_symNS('disease')
 
-GENE_SYMS_LIST = [g.sym for g in giDB.genes.values()]
-GENE_SYMS_SET = set(GENE_SYMS_LIST)
+    # 'default': {
+    #     'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+    #     'LOCATION': 'default_cache_table',
+
+    #     'TIMEOUT': 3600,
+    #     'OPTIONS': {
+    #         'MAX_ENTRIES': 10000
+    #     }
+    # },
+
+    # 'default': {
+    #     'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    #     'LOCATION': 'unique-snowflake'
+    # },
+    # 'long': {
+    #     'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+    #     'LOCATION': 'long_cache_table',
+
+    #     'TIMEOUT': 2592000,
+    #     'OPTIONS': {
+    #         'MAX_ENTRIES': 1000
+    #     }
+    # },
+}
