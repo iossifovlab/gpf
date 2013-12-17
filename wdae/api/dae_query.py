@@ -10,8 +10,6 @@ from VariantsDB import mat2Str
 from GetVariantsInterface import augmentAVar
 
 
-from api.family_query import apply_families_advanced_filter
-from api.family_query import prepare_family_advanced_variants_filters
 from api.family_query import advanced_family_filter
 
 import logging
