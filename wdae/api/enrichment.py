@@ -51,97 +51,98 @@ def __build_or_load_transmitted(tstd):
 
     return ['BACKGROUND', background]
 
-__PRB_TESTS = ['De novo recPrbLGDs',
-               'De novo prbLGDs',
-               'De novo prbMaleLGDs',
-               'De novo prbFemaleLGDs',
-               'De novo prbMissense',
-               'De novo prbMaleMissense',
-               'De novo prbFemaleMissense',
-               'De novo prbSynonymous']
-__SIB_TESTS = ['De novo sibLGDs',
-               'De novo sibMaleLGDs',
-               'De novo sibFemaleLGDs',
-               'De novo sibMissense',
-               'De novo sibSynonymous']
+PRB_TESTS = ['prb:Rec LGDs',         # 0
+             'prb:LGDs',             # 1
+             'prb:Male LGDs',        # 2
+             'prb:Female LGDs',      # 3
+             'prb:Missense',         # 4
+             'prb:Male Missense',    # 5
+             'prb:Female Missense',  # 6
+             'prb:Synonymous']       # 7
+
+SIB_TESTS = ['sib:LGDs',             # 0
+             'sib:Male LGDs',        # 1
+             'sib:Female LGDs',      # 2
+             'sib:Missense',         # 3
+             'sib:Synonymous']       # 4
 
 
 def __build_variants_genes_dict(denovo, transmitted, geneSyms=None):
     return [
-        ['De novo recPrbLGDs',
+        [PRB_TESTS[0],
          one_variant_per_recurrent(
              vDB.get_denovo_variants(denovo,
                                      inChild='prb',
                                      effectTypes="LGDs",
                                      geneSyms=geneSyms))],
-        ['De novo prbLGDs',
+        [PRB_TESTS[1],
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prb',
                                      effectTypes="LGDs",
                                      geneSyms=geneSyms))],
-        ['De novo prbMaleLGDs',
+        [PRB_TESTS[2],
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prbM',
                                      effectTypes="LGDs",
                                      geneSyms=geneSyms))],
-        ['De novo prbFemaleLGDs',
+        [PRB_TESTS[3],
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prbF',
                                      effectTypes="LGDs",
                                      geneSyms=geneSyms))],
-        ['De novo sibLGDs',
-         filter_denovo(
-             vDB.get_denovo_variants(denovo,
-                                     inChild='sib',
-                                     effectTypes="LGDs",
-                                     geneSyms=geneSyms))],
-        ['De novo sibMaleLGDs',
-         filter_denovo(
-             vDB.get_denovo_variants(denovo,
-                                     inChild='sibM',
-                                     effectTypes="LGDs",
-                                     geneSyms=geneSyms))],
-        ['De novo sibFemaleLGDs',
-         filter_denovo(
-             vDB.get_denovo_variants(denovo,
-                                     inChild='sibF',
-                                     effectTypes="LGDs",
-                                     geneSyms=geneSyms))],
-        ['De novo prbMissense',
+        [PRB_TESTS[4],
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prb',
                                      effectTypes="missense",
                                      geneSyms=geneSyms))],
 
-        ['De novo prbMaleMissense',
+        [PRB_TESTS[5],
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prbM',
                                      effectTypes="missense",
                                      geneSyms=geneSyms))],
-        ['De novo prbFemaleMissense',
+        [PRB_TESTS[6],
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prbF',
                                      effectTypes="missense",
                                      geneSyms=geneSyms))],
-        ['De novo sibMissense',
-         filter_denovo(
-             vDB.get_denovo_variants(denovo,
-                                     inChild='sib',
-                                     effectTypes="missense",
-                                     geneSyms=geneSyms))],
-        ['De novo prbSynonymous',
+        [PRB_TESTS[7],
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='prb',
                                      effectTypes="synonymous",
                                      geneSyms=geneSyms))],
-        ['De novo sibSynonymous',
+        [SIB_TESTS[0],
+         filter_denovo(
+             vDB.get_denovo_variants(denovo,
+                                     inChild='sib',
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
+        [SIB_TESTS[1],
+         filter_denovo(
+             vDB.get_denovo_variants(denovo,
+                                     inChild='sibM',
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
+        [SIB_TESTS[2],
+         filter_denovo(
+             vDB.get_denovo_variants(denovo,
+                                     inChild='sibF',
+                                     effectTypes="LGDs",
+                                     geneSyms=geneSyms))],
+        [SIB_TESTS[3],
+         filter_denovo(
+             vDB.get_denovo_variants(denovo,
+                                     inChild='sib',
+                                     effectTypes="missense",
+                                     geneSyms=geneSyms))],
+        [SIB_TESTS[4],
          filter_denovo(
              vDB.get_denovo_variants(denovo,
                                      inChild='sib',
@@ -230,8 +231,8 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name):
         bg_prop = round(float(bg_cnt) / bg_total, 3)
 
         res = {}
-        res['prb'] = __PRB_TESTS
-        res['sib'] = __SIB_TESTS
+        res['prb'] = PRB_TESTS
+        res['sib'] = SIB_TESTS
         res['denovo_study'] = dst_name
         res['gs_id'] = gs_name
         res['gs_desc'] = gene_terms.tDesc[gs_name]
