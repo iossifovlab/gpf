@@ -266,8 +266,32 @@ def __prepare_ultra_rare(data):
     return ultraRareOnly
 
 
+import re
+
+
+REGION = re.compile(r"""(\d+|[Xx]):(\d+)-(\d+)""")
+
+
+def validate_region(region):
+    res = REGION.match(region)
+    if not res:
+        return None
+
+    try:
+        start = int(res.groups()[1])
+        end = int(res.groups()[2])
+    except ValueError:
+        return None
+    if start >= end:
+        return None
+    return True
+
+
 def prepare_gene_region(data):
     if 'geneRegion' not in data:
+        return None
+    region = data['geneRegion']
+    if not validate_region(region):
         return None
     return data['geneRegion'].strip()
 
