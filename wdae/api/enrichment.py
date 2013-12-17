@@ -216,6 +216,26 @@ def enrichment_test(dsts, tsts, gene_terms):
 
 
 from dae_query import load_gene_set
+import numpy as np
+
+
+def colormap_value(p_val, lessmore):
+    scale = 0
+    if p_val > 0:
+        scale = - np.log10(p_val)
+        if scale > 5:
+            scale = 5
+        elif scale < 0:
+            scale = 0
+
+    intensity = int((5.0-scale) * 255.0/5.0)
+    if lessmore == 'more':
+        color = "rgba(%d,%d,%d,180)" % (255, intensity, intensity)
+    elif lessmore == 'less':
+        color = "rgba(%d,%d,%d,180)" % (intensity, intensity, 255)
+    else:
+        color = "rgb(255,255,255)"
+    return color
 
 
 def enrichment_results(dst_name, tst_name, gt_name, gs_name):
@@ -248,6 +268,7 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name):
             tres['overlap'] = totals[test_name]
             tres['count'] = eres.cnt
 
+            p_val = eres.p_val
             if eres.p_val >= 0.0001:
                 p_val = round(eres.p_val, 4)
                 tres['p_val'] = p_val
@@ -265,7 +286,7 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name):
                 lessmore = 'equal'
             tres['lessmore'] = lessmore
             # tres['prop'] =
-            tres['bg'] = '#ffffff'
+            tres['bg'] = colormap_value(p_val, lessmore)
 
             res[test_name] = tres
 
