@@ -73,7 +73,7 @@ def family_filter_by_race(families, race):
 
 
 def __bind_family_filter_by_race(data, family_filters):
-    if 'familyRace' in data:
+    if 'familyRace' in data and data['familyRace'].lower() != 'all':
         family_filters.append(
             lambda fs: family_filter_by_race(fs, data['familyRace'])
         )
@@ -192,7 +192,7 @@ def advanced_family_filter(data, filters):
     __bind_family_filter_by_trio_quad(data, family_filters)
     __bind_family_filter_by_prb_gender(data, family_filters)
     __bind_family_filter_by_sib_gender(data, family_filters)
-    logger.debug("family filters: %d", len(family_filters))
+    # logger.debug("family filters: %d", len(family_filters))
 
     if len(family_filters) == 0:
         return None
