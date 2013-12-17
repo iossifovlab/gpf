@@ -278,6 +278,9 @@ def validate_region(region):
         return None
 
     try:
+        chromo = res.groups()[0]
+        if chromo.lower() != 'x' and not (22 >= int(chromo) >= 1):
+            return None
         start = int(res.groups()[1])
         end = int(res.groups()[2])
     except ValueError:
