@@ -1,6 +1,6 @@
 import unittest
 
-from api.dae_query import do_query_variants
+from query_variants import do_query_variants
 
 import logging
 

@@ -1,5 +1,4 @@
 # Create your views here.
-from django.conf import settings
 from django.http import StreamingHttpResponse
 
 # from rest_framework.response import Response as RestResponse
@@ -8,15 +7,17 @@ from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import JSONParser, FormParser
 
 
-from DAE import vDB, get_gene_sets_symNS
+from DAE import vDB
 from VariantAnnotation import get_effect_types
 
 import itertools
 import logging
 
-from dae_query import do_query_variants, \
+from query_variants import do_query_variants, \
     get_child_types, get_variant_types, \
-    join_line, prepare_summary, load_gene_set
+    join_line
+
+from dae_query import prepare_summary, load_gene_set
 
 from report_variants import build_stats
 from enrichment import enrichment_results

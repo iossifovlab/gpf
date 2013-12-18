@@ -1,6 +1,6 @@
 import unittest
 
-from api.family_query import advanced_family_filter, get_parents_race
+from query_variants import advanced_family_filter, get_parents_race
 from DAE import vDB
 import logging
 
