@@ -2,7 +2,6 @@ import unittest
 
 from query_variants import advanced_family_filter, get_parents_race
 from DAE import vDB
-import logging
 
 
 class FamilyRaceTests(unittest.TestCase):

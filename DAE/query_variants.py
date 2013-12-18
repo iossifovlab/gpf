@@ -620,8 +620,8 @@ def generate_response(vs, atts=[]):
                        if a in v.atts else "" for a in atts])
 
 
-def join_line(l):
-    return ','.join(l) + '\n'
+def join_line(l, sep=','):
+    return sep.join(l) + '\n'
 
 
 def save_vs(tf, vs, atts=[]):
