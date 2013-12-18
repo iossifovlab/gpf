@@ -321,7 +321,18 @@ def prepare_gene_syms(data):
         return None
 
 
-def __filter_gene_set(gene_set, data, gene_set_loader=get_gene_sets_symNS):
+def gene_set_loader(gene_set_label, study_name=None):
+
+    if 'denovo' == gene_set_label:
+        dsts = vDB.get_studies(study_name)
+        gene_term = get_gene_sets_symNS(gene_set_label, dsts)
+    else:
+        gene_term = get_gene_sets_symNS(gene_set_label)
+
+    return gene_term
+
+
+def __filter_gene_set(gene_set, data, gene_set_loader=gene_set_loader):
     gs_id = gene_set['gs_id']
     gs_term = gene_set['gs_term']
 
@@ -344,14 +355,14 @@ def __filter_gene_set(gene_set, data, gene_set_loader=get_gene_sets_symNS):
     return set(gl)
 
 
-def prepare_gene_sets(data, gene_set_loader=get_gene_sets_symNS):
+def prepare_gene_sets(data, gene_set_loader=gene_set_loader):
     if 'geneSet' not in data:
         return None
 
     gene_set = data['geneSet']
 
     if isinstance(gene_set, dict):
-        return __filter_gene_set(gene_set, data)
+        return __filter_gene_set(gene_set, data, gene_set_loader)
     elif isinstance(gene_set, str):
         gs_id = gene_set
         if 'geneTerm' not in data:
@@ -402,7 +413,7 @@ def prepare_transmitted_studies(data):
     return res
 
 
-def combine_gene_syms(data, gene_set_loader=get_gene_sets_symNS):
+def combine_gene_syms(data, gene_set_loader=gene_set_loader):
     gene_syms = prepare_gene_syms(data)
     gene_sets = prepare_gene_sets(data, gene_set_loader)
 
@@ -488,7 +499,7 @@ def prepare_gene_region(data):
     return data['geneRegion'].strip()
 
 
-def prepare_transmitted_filters(data, gene_set_loader=get_gene_sets_symNS):
+def prepare_transmitted_filters(data, gene_set_loader=gene_set_loader):
     filters = {'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
                'inChild': prepare_inchild(data),
@@ -502,7 +513,7 @@ def prepare_transmitted_filters(data, gene_set_loader=get_gene_sets_symNS):
     return filters
 
 
-def prepare_denovo_filters(data, gene_set_loader=get_gene_sets_symNS):
+def prepare_denovo_filters(data, gene_set_loader=gene_set_loader):
 
     filters = {'inChild': prepare_inchild(data),
                'variantTypes': prepare_variant_types(data),
@@ -530,7 +541,7 @@ def get_denovo_variants(studies, family_filters, **filters):
             seenVs.add(vKey)
 
 
-def dae_query_variants(data, gene_set_loader=get_gene_sets_symNS):
+def dae_query_variants(data, gene_set_loader=gene_set_loader):
     logger.info("query received: %s", str(data))
 
     variants = []
@@ -568,7 +579,7 @@ def __augment_vars(v):
     return v
 
 
-def do_query_variants(data, gene_set_loader=get_gene_sets_symNS):
+def do_query_variants(data, gene_set_loader=gene_set_loader):
     vsl = dae_query_variants(data, gene_set_loader)
 
     res_variants = itertools.chain(*vsl)

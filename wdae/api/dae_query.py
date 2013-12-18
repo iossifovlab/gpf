@@ -23,7 +23,8 @@ def load_gene_set(gene_set_label, study_name=None):
     gs = cache.get(cache_key)
     if not gs:
         if 'denovo' == gene_set_label:
-            gene_term = get_gene_sets_symNS(gene_set_label, study_name)
+            dsts = vDB.get_studies(study_name)
+            gene_term = get_gene_sets_symNS(gene_set_label, dsts)
         else:
             gene_term = get_gene_sets_symNS(gene_set_label)
         gs = api.GeneTerm.GeneTerm(gene_term)
