@@ -5,6 +5,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+
+
 def get_races():
     return {'african-amer',
             'asian',
@@ -37,13 +39,6 @@ def get_non_verbal_iq():
     return __get_float_measure('pcdv.ssc_diagnosis_nonverbal_iq')
 
 
-def get_parents_race():
-    return dict([(k, f if f == m else 'more-than-one-race')
-                 for (k, f, m) in zip(phDB.families,
-                                      phDB.get_variable('focuv.race_parents'),
-                                      phDB.get_variable('mocuv.race_parents'))])
-
-
 def get_pcdv_race():
     return __get_string_measure('pcdv.race')
 
@@ -64,8 +59,35 @@ def get_sib_gender():
     return __get_string_measure('Sibling_Sex')
 
 
+FATHER_RACE = get_focuv_race()
+MOTHER_RACE = get_mocuv_race()
+PARENTS_RACE = dict([(k, ';'.join([m, f])) for (k, m, f) in zip(phDB.families,
+                                                                MOTHER_RACE,
+                                                                FATHER_RACE)])
+PARENTS_RACE_QUERY = dict([(k, f if f == m else 'more-than-one-race')
+                           for (k, f, m) in zip(phDB.families,
+                                                MOTHER_RACE,
+                                                FATHER_RACE)])
+
+
+def get_father_race():
+    return FATHER_RACE
+
+
+def get_mother_race():
+    return MOTHER_RACE
+
+
+def get_parents_race():
+    return PARENTS_RACE
+
+
+def __get_parents_race_filter():
+    return PARENTS_RACE_QUERY
+
+
 def family_filter_by_race(families, race):
-    races = get_parents_race()
+    races = __get_parents_race_filter()
     res = dict([(key, val) for (key, val) in families.items()
                 if key in races and races[key] == race])
     # logger.debug("family_filter_by_race: %s", str(res))

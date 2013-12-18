@@ -190,11 +190,11 @@ def __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
                 all_res[gene_set][test_name].cnt += 1
 
 
-from api.GeneTerm import GeneTerm
+import api.GeneTerm
 
 
 def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
-    gtr = GeneTerm(gene_terms, gene_set_name)
+    gtr = api.GeneTerm.GeneTerm(gene_terms, gene_set_name)
     var_genes_dict = __build_variants_genes_dict(dsts, tsts)
 
     all_res = __init_gene_set_enrichment(var_genes_dict, gtr)

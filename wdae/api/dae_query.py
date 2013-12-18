@@ -4,17 +4,27 @@ from django.core.cache import get_cache
 
 from DAE import vDB
 from DAE import get_gene_sets_symNS
-from GeneTerm import GeneTerm
+import api.GeneTerm
 from VariantAnnotation import get_effect_types
 from VariantsDB import mat2Str
-from GetVariantsInterface import augmentAVar
 
-
-from api.family_query import advanced_family_filter
+from api.family_query import advanced_family_filter, get_parents_race
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def augmentAVar(v):
+    fmId = v.familyId
+    parRaces = get_parents_race()[fmId] \
+        if fmId in get_parents_race() else "NA;NA"
+
+    chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+    v.atts["_par_races_"] = parRaces
+    v.atts["_ch_prof_"] = chProf
+    return v
+
 
 
 def get_child_types():
@@ -124,7 +134,7 @@ def load_gene_set(gene_set_label, study_name=None):
             gene_term = get_gene_sets_symNS(gene_set_label, study_name)
         else:
             gene_term = get_gene_sets_symNS(gene_set_label)
-        gs = GeneTerm(gene_term)
+        gs = api.GeneTerm.GeneTerm(gene_term)
         cache.set(cache_key, gs)
 
     return gs
@@ -342,7 +352,7 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 
 def dae_query_variants(data):
-    logger.debug("query received: %s", str(data))
+    logger.info("query received: %s", str(data))
 
     variants = []
 
