@@ -190,17 +190,21 @@ def __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
                 all_res[gene_set][test_name].cnt += 1
 
 
-def enrichment_test(dsts, tsts, gene_terms):
+from api.GeneTerm import GeneTerm
+
+
+def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
+    gtr = GeneTerm(gene_terms, gene_set_name)
     var_genes_dict = __build_variants_genes_dict(dsts, tsts)
 
-    all_res = __init_gene_set_enrichment(var_genes_dict, gene_terms)
-    __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms)
+    all_res = __init_gene_set_enrichment(var_genes_dict, gtr)
+    __count_gene_set_enrichment(all_res, var_genes_dict, gtr)
 
     totals = {test_name: len(gene_syms)
               for test_name, gene_syms in var_genes_dict}
     bg_total = totals['BACKGROUND']
 
-    for gene_set in gene_terms.t2G:
+    for gene_set in gtr.t2G:
         bg_gene_set = all_res[gene_set]['BACKGROUND'].cnt
         if bg_gene_set == 0:
             bg_gene_set = 0.5
@@ -245,7 +249,8 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name):
 
         all_res, totals = enrichment_test(dsts,
                                           tsts,
-                                          gene_terms)
+                                          gene_terms,
+                                          gs_name)
         bg_total = totals['BACKGROUND']
         bg_cnt = all_res[gs_name]['BACKGROUND'].cnt
         bg_prop = round(float(bg_cnt) / bg_total, 3)

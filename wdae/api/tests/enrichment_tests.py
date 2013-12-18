@@ -20,11 +20,6 @@ class EnrichmentHelpersTests(unittest.TestCase):
         cls.original = api.tests.enrichment_test_orig.main(cls.dsts,
                                                            cls.tsts,
                                                            cls.gene_terms)
-        logger.debug("calculating new enrichment test values...")
-        cls.enrichment = enrichment_test(cls.dsts,
-                                         cls.tsts,
-                                         cls.gene_terms)
-
     @classmethod
     def tearDownClass(cls):
         pass
@@ -93,9 +88,16 @@ class EnrichmentHelpersTests(unittest.TestCase):
 
     def test_enrichment_full_count_original(self):
         all_res_orig = self.original[1]
-        all_res, totals = self.enrichment
+        totals_orig = self.original[2]
         fail = False
-        for gene_set_name in all_res:
+        for gene_set_name in all_res_orig:
+
+            logger.debug("calculating new enrichment test values...")
+            all_res, totals = enrichment_test(self.dsts,
+                                              self.tsts,
+                                              self.gene_terms,
+                                              gene_set_name)
+
             res = all_res[gene_set_name]
             for test_name in res:
                 r = res[test_name]
@@ -108,18 +110,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
                     fail = True
                 else:
                     print '.',
-        self.assertFalse(fail, "wrong enrichment values detected...")
 
-    def test_enrichment_full_pval_original(self):
-        all_res_orig = self.original[1]
-        all_res, totals = self.enrichment
-
-        fail = False
-        for gene_set_name in all_res:
-            res = all_res[gene_set_name]
-            for test_name in res:
-                r = res[test_name]
-                o = all_res_orig[gene_set_name][test_name]
                 if o.pVal != r.p_val:
                     logger.debug("wrong pVal: %f != %f for %s:%s",
                                  o.pVal, r.p_val,
@@ -128,17 +119,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
                     fail = True
                 else:
                     print '.',
-        self.assertFalse(fail, "wrong enrichment values detected...")
 
-    def test_enrichment_full_expected_original(self):
-        all_res_orig = self.original[1]
-        all_res, totals = self.enrichment
-        fail = False
-        for gene_set_name in all_res:
-            res = all_res[gene_set_name]
-            for test_name in res:
-                r = res[test_name]
-                o = all_res_orig[gene_set_name][test_name]
                 if o.expected != r.expected:
                     logger.debug("wrong expected: %d != %d for %s:%s",
                                  o.expected, r.expected,
@@ -148,24 +129,75 @@ class EnrichmentHelpersTests(unittest.TestCase):
                 else:
                     print '.',
 
+                r = totals[test_name]
+                o = totals_orig[test_name]
+                if o != r:
+                    logger.debug("wrong totals numbers: %d != %d for %s",
+                                 o, r,
+                                 test_name)
+                    fail = True
         self.assertFalse(fail, "wrong enrichment values detected...")
 
-    def test_enrichment_full_total_original(self):
-        all_res, totals = self.enrichment
-        totals_orig = self.original[2]
+    # def test_enrichment_full_pval_original(self):
+    #     all_res_orig = self.original[1]
 
-        fail = False
-        for test_name in totals:
-            r = totals[test_name]
-            o = totals_orig[test_name]
-            if o != r:
-                logger.debug("wrong totals numbers: %d != %d for %s",
-                             o, r,
-                             test_name)
-                fail = True
-            else:
-                print '.',
-        self.assertFalse(fail, "wrong totals detected...")
+    #     fail = False
+    #     for gene_set_name in all_res_orig:
+    #         logger.debug("calculating new enrichment test values...")
+    #         all_res, totals = enrichment_test(self.dsts,
+    #                                           self.tsts,
+    #                                           self.gene_terms,
+    #                                           gene_set_name)
+    #         res = all_res[gene_set_name]
+    #         for test_name in res:
+    #             r = res[test_name]
+    #             o = all_res_orig[gene_set_name][test_name]
+    #             if o.pVal != r.p_val:
+    #                 logger.debug("wrong pVal: %f != %f for %s:%s",
+    #                              o.pVal, r.p_val,
+    #                              test_name,
+    #                              gene_set_name)
+    #                 fail = True
+    #             else:
+    #                 print '.',
+    #     self.assertFalse(fail, "wrong enrichment values detected...")
+
+    # def test_enrichment_full_expected_original(self):
+    #     all_res_orig = self.original[1]
+    #     all_res, totals = self.enrichment
+    #     fail = False
+    #     for gene_set_name in all_res:
+    #         res = all_res[gene_set_name]
+    #         for test_name in res:
+    #             r = res[test_name]
+    #             o = all_res_orig[gene_set_name][test_name]
+    #             if o.expected != r.expected:
+    #                 logger.debug("wrong expected: %d != %d for %s:%s",
+    #                              o.expected, r.expected,
+    #                              test_name,
+    #                              gene_set_name)
+    #                 fail = True
+    #             else:
+    #                 print '.',
+
+    #     self.assertFalse(fail, "wrong enrichment values detected...")
+
+    # def test_enrichment_full_total_original(self):
+    #     all_res, totals = self.enrichment
+    #     totals_orig = self.original[2]
+
+    #     fail = False
+    #     for test_name in totals:
+    #         r = totals[test_name]
+    #         o = totals_orig[test_name]
+    #         if o != r:
+    #             logger.debug("wrong totals numbers: %d != %d for %s",
+    #                          o, r,
+    #                          test_name)
+    #             fail = True
+    #         else:
+    #             print '.',
+    #     self.assertFalse(fail, "wrong totals detected...")
 
     # def test_enrichment_count_original(self):
     #     all_res_orig = self.original[1]
