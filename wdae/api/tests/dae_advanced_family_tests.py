@@ -21,11 +21,16 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
     def test_family_race(self):
         vs = do_query_variants(self.TEST_DATA_1)
         vs.next()
-
+        count = 0
+        fail = False
         for v in vs:
+            count += 1
             #self.assertEqual('african-amer;african-amer', v[16])
             if v[16] != 'african-amer;african-amer':
                 print v[16]
+                fail = True
+        self.assertFalse(fail)
+        self.assertTrue(count > 0)
 
     TEST_DATA_1_1 = {"denovoStudies": ["allWEAndTG"],
                      "transmittedStudies": 'None',
@@ -41,10 +46,15 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         vs = do_query_variants(self.TEST_DATA_1_1)
         vs.next()
 
+        count = 0
+        fail = False
         for v in vs:
-            #self.assertEqual('white;white', v[16])
+            count += 1
             if v[16] != 'white;white':
                 print v[16]
+                fail = True
+        self.assertFalse(fail)
+        self.assertTrue(count > 0)
 
     TEST_DATA_2 = {"denovoStudies": ["allWEAndTG"],
                    "transmittedStudies": 'None',
@@ -60,8 +70,13 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         vs = do_query_variants(self.TEST_DATA_2)
         vs.next()
 
+        count = 0
+        fail = False
         for v in vs:
+            count += 1
             self.assertEqual(4, len(v[4].split('/')[0].split(' ')), str(v[4]))
+        self.assertFalse(fail)
+        self.assertTrue(count > 0)
 
     TEST_DATA_3 = {"denovoStudies": ["allWEAndTG"],
                    "transmittedStudies": 'None',
@@ -77,8 +92,11 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         vs = do_query_variants(self.TEST_DATA_3)
         vs.next()
 
+        count = 0
         for v in vs:
+            count += 1
             self.assertEqual(3, len(v[4].split('/')[0].split(' ')), str(v[4]))
+        self.assertTrue(count > 0)
 
     TEST_DATA_4 = {"denovoStudies": ["allWEAndTG"],
                    "transmittedStudies": 'None',
@@ -92,10 +110,13 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_sibling_gender_female(self):
         vs = do_query_variants(self.TEST_DATA_4)
-        cols = vs.next()
-        logger.debug("cols: %s", str(cols))
+        vs.next()
+
+        count = 0
         for v in vs:
             self.assertIn('sibF', v[17], str(v[17]))
+            count += 1
+        self.assertTrue(count > 0)
 
     TEST_DATA_5 = {"denovoStudies": ["allWEAndTG"],
                    "transmittedStudies": 'None',
@@ -109,10 +130,13 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_sibling_gender_male(self):
         vs = do_query_variants(self.TEST_DATA_5)
-        cols = vs.next()
-        logger.debug("cols: %s", str(cols))
+        vs.next()
+
+        count = 0
         for v in vs:
             self.assertIn('sibM', v[17], str(v[17]))
+            count += 1
+        self.assertTrue(count > 0)
 
     TEST_DATA_6 = {"denovoStudies": ["allWEAndTG"],
                    "transmittedStudies": 'None',

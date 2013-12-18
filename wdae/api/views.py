@@ -245,7 +245,7 @@ All fields are same as in query_variants request
 
     logger.info("preview query variants: " + str(data))
 
-    generator = do_query_variants(data)
+    generator = do_query_variants(data, gene_set_loader=load_gene_set)
     summary = prepare_summary(generator)
 
     return Response(summary)
@@ -315,7 +315,7 @@ Advanced family filter expects following fields:
     #     data = prepare_query_dict(data)
     logger.info("query variants request: " + str(data))
 
-    generator = do_query_variants(data)
+    generator = do_query_variants(data, gene_set_loader=load_gene_set)
     response = StreamingHttpResponse(
         itertools.imap(join_line, generator), content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'

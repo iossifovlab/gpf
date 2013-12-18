@@ -76,12 +76,12 @@ def get_sib_gender():
 FATHER_RACE = get_focuv_race()
 MOTHER_RACE = get_mocuv_race()
 PARENTS_RACE = dict([(k, ';'.join([m, f])) for (k, m, f) in zip(phDB.families,
-                                                                MOTHER_RACE,
-                                                                FATHER_RACE)])
+                                                                phDB.get_variable('mocuv.race_parents'),
+                                                                phDB.get_variable('focuv.race_parents'))])
 PARENTS_RACE_QUERY = dict([(k, f if f == m else 'more-than-one-race')
                            for (k, f, m) in zip(phDB.families,
-                                                MOTHER_RACE,
-                                                FATHER_RACE)])
+                                                phDB.get_variable('mocuv.race_parents'),
+                                                phDB.get_variable('focuv.race_parents'))])
 
 
 def get_father_race():
@@ -321,7 +321,7 @@ def prepare_gene_syms(data):
         return None
 
 
-def __filter_gene_set(gene_set, data, load_gene_set=get_gene_sets_symNS):
+def __filter_gene_set(gene_set, data, gene_set_loader=get_gene_sets_symNS):
     gs_id = gene_set['gs_id']
     gs_term = gene_set['gs_term']
 
@@ -329,9 +329,9 @@ def __filter_gene_set(gene_set, data, load_gene_set=get_gene_sets_symNS):
         study = data['geneStudy']
         if not study:
             return None
-        gs = load_gene_set('denovo', study)
+        gs = gene_set_loader('denovo', study)
     else:
-        gs = load_gene_set(gs_id)
+        gs = gene_set_loader(gs_id)
 
     if gs_term not in gs.tDesc:
         return None
@@ -344,7 +344,7 @@ def __filter_gene_set(gene_set, data, load_gene_set=get_gene_sets_symNS):
     return set(gl)
 
 
-def prepare_gene_sets(data):
+def prepare_gene_sets(data, gene_set_loader=get_gene_sets_symNS):
     if 'geneSet' not in data:
         return None
 
@@ -360,7 +360,8 @@ def prepare_gene_sets(data):
 
         return __filter_gene_set({'gs_id': gs_id,
                                   'gs_term': gs_term.split('|')[0].strip()},
-                                 data)
+                                 data,
+                                 gene_set_loader)
     else:
         return None
 
@@ -401,9 +402,9 @@ def prepare_transmitted_studies(data):
     return res
 
 
-def combine_gene_syms(data):
+def combine_gene_syms(data, gene_set_loader=get_gene_sets_symNS):
     gene_syms = prepare_gene_syms(data)
-    gene_sets = prepare_gene_sets(data)
+    gene_sets = prepare_gene_sets(data, gene_set_loader)
 
     if gene_syms is None:
         return gene_sets
@@ -487,12 +488,12 @@ def prepare_gene_region(data):
     return data['geneRegion'].strip()
 
 
-def prepare_transmitted_filters(data):
+def prepare_transmitted_filters(data, gene_set_loader=get_gene_sets_symNS):
     filters = {'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
                'inChild': prepare_inchild(data),
                'familyIds': prepare_family_ids(data),
-               'geneSyms': combine_gene_syms(data),
+               'geneSyms': combine_gene_syms(data, gene_set_loader),
                'regionS': prepare_gene_region(data),
                'ultraRareOnly': __prepare_ultra_rare(data),
                'minParentsCalled': __prepare_min_parents_called(data),
@@ -501,13 +502,13 @@ def prepare_transmitted_filters(data):
     return filters
 
 
-def prepare_denovo_filters(data):
+def prepare_denovo_filters(data, gene_set_loader=get_gene_sets_symNS):
 
     filters = {'inChild': prepare_inchild(data),
                'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
                'familyIds': prepare_family_ids(data),
-               'geneSyms': combine_gene_syms(data),
+               'geneSyms': combine_gene_syms(data, gene_set_loader),
                'regionS': prepare_gene_region(data)}
     return filters
 
@@ -529,21 +530,21 @@ def get_denovo_variants(studies, family_filters, **filters):
             seenVs.add(vKey)
 
 
-def dae_query_variants(data):
+def dae_query_variants(data, gene_set_loader=get_gene_sets_symNS):
     logger.info("query received: %s", str(data))
 
     variants = []
 
     dstudies = prepare_denovo_studies(data)
     if dstudies is not None:
-        filters = prepare_denovo_filters(data)
+        filters = prepare_denovo_filters(data, gene_set_loader)
         family_filters = advanced_family_filter(data, filters)
         dvs = get_denovo_variants(dstudies, family_filters, **filters)
         variants.append(dvs)
 
     tstudies = prepare_transmitted_studies(data)
     if tstudies is not None:
-        filters = prepare_transmitted_filters(data)
+        filters = prepare_transmitted_filters(data, gene_set_loader)
         for study in tstudies:
             family_filters = advanced_family_filter(data, filters)
             if family_filters is not None:
@@ -567,8 +568,8 @@ def __augment_vars(v):
     return v
 
 
-def do_query_variants(data):
-    vsl = dae_query_variants(data)
+def do_query_variants(data, gene_set_loader=get_gene_sets_symNS):
+    vsl = dae_query_variants(data, gene_set_loader)
 
     res_variants = itertools.chain(*vsl)
     return generate_response(itertools.imap(__augment_vars, res_variants),
