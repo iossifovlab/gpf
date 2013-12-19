@@ -226,11 +226,14 @@ import numpy as np
 def colormap_value(p_val, lessmore):
     scale = 0
     if p_val > 0:
-        scale = - np.log10(p_val)
-        if scale > 5:
-            scale = 5
-        elif scale < 0:
+        if p_val > 0.05:
             scale = 0
+        else:
+            scale = - np.log10(p_val)
+            if scale > 5:
+                scale = 5
+            elif scale < 0:
+                scale = 0
 
     intensity = int((5.0-scale) * 255.0/5.0)
     if lessmore == 'more':
