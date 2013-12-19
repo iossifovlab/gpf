@@ -56,7 +56,7 @@ parser.add_argument('--familyRace', type=str,
                     help='''family race; one of 'african-amer', 'asian', 'more-than-one-race',
 'native-american', 'native-hawaiian', 'white' ''')
 parser.add_argument('--familyVerbalIqLo', type=int,
-                    help='proband verbel IQ low limit')
+                    help='proband verbal IQ low limit')
 parser.add_argument('--familyVerbalIqHi', type=int,
                     help='proband verbal IQ high limit')
 parser.add_argument('--familyQuadTrio', type=str,
