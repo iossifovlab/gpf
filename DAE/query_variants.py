@@ -585,8 +585,6 @@ def prepare_denovo_filters(data, gene_set_loader=gene_set_loader):
 
 
 def get_denovo_variants(studies, family_filters, **filters):
-    if isinstance(studies, str):
-        studies = vDB.get_studies(studies)
     seenVs = set()
     for study in studies:
         if family_filters is not None:
