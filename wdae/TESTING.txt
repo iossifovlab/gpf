@@ -1,0 +1,35 @@
+TESTING
+=======
+
+
+1) Most of the tests in wdae are in api/tests directory. Some of them 
+use django testing framework. Most are pure python unit tests. So these
+tests can be re-located in other place if neccessary.
+
+2) Most of the tests are included in api.tests module. To run them use (from 
+wdae/ directory):
+
+python manageWDAE.py test api.tests
+
+3) There are some tests for enrichment, that compare new enrichment computations
+with old implementation. To run them use:
+
+python manageWDAE.py test api.tests.enrichment_tests
+
+4) There are standard test coverage tool for python applications called 'coverage'.
+To install it use:
+
+pip install coverage
+
+5) To check the test coverage from wdae/ directory call:
+
+coverage run --source='..' manageWDAE.py test api.tests
+
+This will generate coverage data in the file '.coverage', that is not human
+readable.
+
+6) To generate html coverage report from wdae/ directory call:
+
+coverage html
+
+The coverage report is generated in htmlcov/ sub-direcrory.

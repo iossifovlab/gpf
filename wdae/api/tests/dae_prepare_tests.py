@@ -4,7 +4,8 @@ from query_variants import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids, prepare_gene_syms, \
     prepare_gene_sets, prepare_denovo_studies, \
     prepare_transmitted_studies, dae_query_variants, \
-    do_query_variants, prepare_family_file
+    do_query_variants
+#, prepare_family_file
 
 from api.dae_query import load_gene_set
 
