@@ -75,7 +75,7 @@ def get_sib_gender():
 
 FATHER_RACE = get_focuv_race()
 MOTHER_RACE = get_mocuv_race()
-PARENTS_RACE = dict([(k, ';'.join([m, f])) for (k, m, f) in zip(phDB.families,
+PARENTS_RACE = dict([(k, ','.join([m, f])) for (k, m, f) in zip(phDB.families,
                                                                 phDB.get_variable('mocuv.race_parents'),
                                                                 phDB.get_variable('focuv.race_parents'))])
 PARENTS_RACE_QUERY = dict([(k, f if f == m else 'more-than-one-race')
@@ -109,7 +109,9 @@ def family_filter_by_race(families, race):
 
 
 def __bind_family_filter_by_race(data, family_filters):
-    if 'familyRace' in data and data['familyRace'].lower() != 'all':
+    if 'familyRace' in data and data['familyRace'] \
+       and data['familyRace'].lower() != 'all':
+
         family_filters.append(
             lambda fs: family_filter_by_race(fs, data['familyRace'])
         )
@@ -124,13 +126,13 @@ def __bind_family_filter_by_verbal_iq(data, family_filters):
     iq_hi = None
     iq_lo = None
 
-    if 'familyVerbalIqHi' in data:
+    if 'familyVerbalIqHi' in data and data['familyVerbalIqHi']:
         try:
             iq_hi = float(data['familyVerbalIqHi'])
         except:
             iq_hi = None
 
-    if 'familyVerbalIqLo' in data:
+    if 'familyVerbalIqLo' in data and data['familyVerbalIqLo']:
         try:
             iq_lo = float(data['familyVerbalIqLo'])
         except:
@@ -155,7 +157,7 @@ def family_filter_by_prb_gender(families, gender):
 
 
 def __bind_family_filter_by_prb_gender(data, family_filters):
-    if 'familyPrbGender' in data:
+    if 'familyPrbGender' in data and data['familyPrbGender']:
         if data['familyPrbGender'].lower() == 'male':
             family_filters.append(
                 lambda fs: family_filter_by_prb_gender(fs, 'M')
@@ -173,7 +175,7 @@ def family_filter_by_sib_gender(families, gender):
 
 
 def __bind_family_filter_by_sib_gender(data, family_filters):
-    if 'familySibGender' in data:
+    if 'familySibGender' in data and data['familySibGender']:
         if data['familySibGender'].lower() == 'male':
             family_filters.append(
                 lambda fs: family_filter_by_sib_gender(fs, 'M')
@@ -195,7 +197,7 @@ def family_filter_by_trio_quad(families, trio_quad):
 
 
 def __bind_family_filter_by_trio_quad(data, family_filters):
-    if 'familyQuadTrio' in data:
+    if 'familyQuadTrio' in data and data['familyQuadTrio']:
         if data['familyQuadTrio'].lower() == 'trio':
             logger.debug("filtering trio families...")
             family_filters.append(
@@ -569,7 +571,7 @@ def dae_query_variants(data, gene_set_loader=gene_set_loader):
 def __augment_vars(v):
     fmId = v.familyId
     parRaces = get_parents_race()[fmId] \
-        if fmId in get_parents_race() else "NA;NA"
+        if fmId in get_parents_race() else "NA,NA"
 
     chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
     v.atts["_par_races_"] = parRaces
@@ -588,10 +590,11 @@ def do_query_variants(data, gene_set_loader=gene_set_loader):
                               'all.nAltAlls',
                               'all.nParCalled',
                               '_par_races_',
-                              '_ch_prof_'])
+                              '_ch_prof_',
+                              'valstatus'])
 
 
-def generate_response(vs, atts=[]):
+def generate_response(vs, atts=[], sep='\t'):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
 
@@ -625,7 +628,7 @@ def generate_response(vs, atts=[]):
             except:
                 mavs.append("")
 
-        yield (mavs + [str(v.atts[a]).replace(',', ';')
+        yield (mavs + [str(v.atts[a]).replace(sep, ';')
                        if a in v.atts else "" for a in atts])
 
 
