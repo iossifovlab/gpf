@@ -3,7 +3,7 @@ TESTING
 
 
 1) Most of the tests in wdae are in api/tests directory. Some of them 
-use django testing framework. Most are pure python unit tests. So these
+use django testing framework, but most are pure python unit tests. So these
 tests can be re-located in other place if neccessary.
 
 2) Most of the tests are included in api.tests module. To run them use (from 
