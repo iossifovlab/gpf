@@ -471,9 +471,9 @@ def combine_gene_syms(data, gene_set_loader=gene_set_loader):
 
 def __prepare_min_alt_freq_prcnt(data):
     minAltFreqPrcnt = -1.0
-    if 'minAltFreqPrcnt' in data:
+    if 'popFrequencyMin' in data:
         try:
-            minAltFreqPrcnt = float(str(data['minAltFreqPrcnt']))
+            minAltFreqPrcnt = float(str(data['popFrequencyMin']))
         except:
             minAltFreqPrcnt = -1.0
     return minAltFreqPrcnt
@@ -481,9 +481,9 @@ def __prepare_min_alt_freq_prcnt(data):
 
 def __prepare_max_alt_freq_prcnt(data):
     maxAltFreqPrcnt = 100.0
-    if 'maxAltFreqPrcnt' in data:
+    if 'popFrequencyMax' in data:
         try:
-            maxAltFreqPrcnt = float(str(data['maxAltFreqPrcnt']))
+            maxAltFreqPrcnt = float(str(data['popFrequencyMax']))
         except:
             maxAltFreqPrcnt = 5.0
     return maxAltFreqPrcnt
@@ -562,9 +562,6 @@ def __load_text_column(colSpec):
         r.append(cs[cn])
     f.close()
     return r
-
-
-
 
 
 def prepare_transmitted_filters(data, gene_set_loader=gene_set_loader):
