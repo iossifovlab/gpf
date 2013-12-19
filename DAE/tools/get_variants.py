@@ -51,6 +51,21 @@ parser.add_argument('--geneId', type=str,
 parser.add_argument('--geneIdFile', type=str,
                     help='the first column should cotain gene ids')
 parser.add_argument('--regionS', type=str, help='region')
+
+parser.add_argument('--familyRace', type=str,
+                    help='''family race; one of 'african-amer', 'asian', 'more-than-one-race',
+'native-american', 'native-hawaiian', 'white' ''')
+parser.add_argument('--familyVerbalIqLo', type=int,
+                    help='proband verbel IQ low limit')
+parser.add_argument('--familyVerbalIqHi', type=int,
+                    help='proband verbal IQ high limit')
+parser.add_argument('--familyQuadTrio', type=str,
+                    help='filter Quad or Trio families; should be one of "Quad" or "Trio"')
+parser.add_argument('--familyPrbGender', type=str,
+                    help='gender of the proband ("male" or "female")')
+parser.add_argument('--familySibGender', type=str,
+                    help='gender of the sibling ("male" or "female")')
+
 args = parser.parse_args()
 
 print >>sys.stderr, args

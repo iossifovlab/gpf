@@ -109,7 +109,7 @@ def family_filter_by_race(families, race):
 
 
 def __bind_family_filter_by_race(data, family_filters):
-    if 'familyRace' in data and data['familyRace'].lower() != 'all':
+    if 'familyRace' in data and data['familyRace'] and data['familyRace'].lower() != 'all':
         family_filters.append(
             lambda fs: family_filter_by_race(fs, data['familyRace'])
         )
@@ -124,13 +124,13 @@ def __bind_family_filter_by_verbal_iq(data, family_filters):
     iq_hi = None
     iq_lo = None
 
-    if 'familyVerbalIqHi' in data:
+    if 'familyVerbalIqHi' in data and data['familyVerbalIqHi']:
         try:
             iq_hi = float(data['familyVerbalIqHi'])
         except:
             iq_hi = None
 
-    if 'familyVerbalIqLo' in data:
+    if 'familyVerbalIqLo' in data and data['familyVerbalIqLo']:
         try:
             iq_lo = float(data['familyVerbalIqLo'])
         except:
@@ -155,7 +155,7 @@ def study_family_filter_by_prb_gender(families, gender):
 
 
 def __bind_family_filter_by_prb_gender(data, family_filters):
-    if 'familyPrbGender' in data:
+    if 'familyPrbGender' in data and data['familyPrbGender']:
         if data['familyPrbGender'].lower() == 'male':
             family_filters.append(
                 lambda fs: study_family_filter_by_prb_gender(fs, 'M')
@@ -173,7 +173,7 @@ def study_family_filter_by_sib_gender(families, gender):
 
 
 def __bind_family_filter_by_sib_gender(data, family_filters):
-    if 'familySibGender' in data:
+    if 'familySibGender' in data and data['familySibGender']:
         if data['familySibGender'].lower() == 'male':
             family_filters.append(
                 lambda fs: study_family_filter_by_sib_gender(fs, 'M')
@@ -195,7 +195,7 @@ def study_family_filter_by_trio_quad(families, trio_quad):
 
 
 def __bind_family_filter_by_trio_quad(data, family_filters):
-    if 'familyQuadTrio' in data:
+    if 'familyQuadTrio' in data and data['familyQuadTrio']:
         if data['familyQuadTrio'].lower() == 'trio':
             logger.debug("filtering trio families...")
             family_filters.append(
@@ -469,7 +469,7 @@ def combine_gene_syms(data, gene_set_loader=gene_set_loader):
 # "minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1"
 
 
-def __prepare_min_alt_freq_prcnt(data):
+def prepare_min_alt_freq_prcnt(data):
     minAltFreqPrcnt = -1.0
     if 'popFrequencyMin' in data:
         try:
@@ -479,7 +479,7 @@ def __prepare_min_alt_freq_prcnt(data):
     return minAltFreqPrcnt
 
 
-def __prepare_max_alt_freq_prcnt(data):
+def prepare_max_alt_freq_prcnt(data):
     maxAltFreqPrcnt = 100.0
     if 'popFrequencyMax' in data:
         try:
@@ -499,15 +499,13 @@ def prepare_pop_min_parents_called(data):
     return minParentsCalled
 
 
-def __prepare_ultra_rare(data):
-    ultraRareOnly = None
-    if 'ultraRareOnly' in data:
-        if ultraRareOnly == 'True' or ultraRareOnly == 'true':
-            ultraRareOnly = True
-    elif 'rarity' in data:
+def prepare_ultra_rare(data):
+    if 'rarity' in data:
         if data['rarity'].strip() == 'ultraRare':
             return True
-    return ultraRareOnly
+    elif 'popFrequencyMax' in data and data['popFrequencyMax'] == 'ultraRare':
+        return True
+    return False
 
 
 REGION = re.compile(r"""(\d+|[Xx]):(\d+)-(\d+)""")
@@ -564,18 +562,15 @@ def __load_text_column(colSpec):
     return r
 
 
-def prepare_transmitted_filters(data, gene_set_loader=gene_set_loader):
-    filters = {'variantTypes': prepare_variant_types(data),
-               'effectTypes': prepare_effect_types(data),
-               'inChild': prepare_inchild(data),
-               'familyIds': prepare_family_ids(data),
-               'geneSyms': combine_gene_syms(data, gene_set_loader),
-               'regionS': prepare_gene_region(data),
-               'ultraRareOnly': __prepare_ultra_rare(data),
+def prepare_transmitted_filters(data,
+                                denovo_filters={},
+                                gene_set_loader=gene_set_loader):
+
+    filters = {'ultraRareOnly': prepare_ultra_rare(data),
                'minParentsCalled': prepare_pop_min_parents_called(data),
-               'minAltFreqPrcnt': __prepare_min_alt_freq_prcnt(data),
-               'maxAltFreqPrcnt': __prepare_max_alt_freq_prcnt(data)}
-    return filters
+               'minAltFreqPrcnt': prepare_min_alt_freq_prcnt(data),
+               'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data)}
+    return dict(filters, **denovo_filters)
 
 
 def prepare_denovo_filters(data, gene_set_loader=gene_set_loader):
@@ -609,25 +604,29 @@ def get_denovo_variants(studies, family_filters, **filters):
 def dae_query_variants(data, gene_set_loader=gene_set_loader):
     logger.info("query received: %s", str(data))
 
-    variants = []
-
     dstudies = prepare_denovo_studies(data)
+    tstudies = prepare_transmitted_studies(data)
+    if dstudies is None and tstudies is None:
+        return []
+
+    denovo_filters = prepare_denovo_filters(data, gene_set_loader)
+    family_filters = advanced_family_filter(data, denovo_filters)
+
+    variants = []
     if dstudies is not None:
-        filters = prepare_denovo_filters(data, gene_set_loader)
-        family_filters = advanced_family_filter(data, filters)
-        dvs = get_denovo_variants(dstudies, family_filters, **filters)
+        dvs = get_denovo_variants(dstudies, family_filters, **denovo_filters)
         variants.append(dvs)
 
-    tstudies = prepare_transmitted_studies(data)
     if tstudies is not None:
-        filters = prepare_transmitted_filters(data, gene_set_loader)
+        transmitted_filters = prepare_transmitted_filters(data, denovo_filters,
+                                                          gene_set_loader)
         for study in tstudies:
-            family_filters = advanced_family_filter(data, filters)
             if family_filters is not None:
                 families = family_filters(study).keys()
-                filters['familyIds'] = families if len(families) > 0 else [None]
+                transmitted_filters['familyIds'] = families \
+                    if len(families) > 0 else [None]
 
-            tvs = study.get_transmitted_variants(**filters)
+            tvs = study.get_transmitted_variants(**transmitted_filters)
             variants.append(tvs)
 
     return variants
