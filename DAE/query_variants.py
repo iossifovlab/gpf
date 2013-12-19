@@ -575,7 +575,7 @@ def prepare_transmitted_filters(data, gene_set_loader=gene_set_loader):
                'geneSyms': combine_gene_syms(data, gene_set_loader),
                'regionS': prepare_gene_region(data),
                'ultraRareOnly': __prepare_ultra_rare(data),
-               'minParentsCalled': __prepare_min_parents_called(data),
+               'minParentsCalled': prepare_pop_min_parents_called(data),
                'minAltFreqPrcnt': __prepare_min_alt_freq_prcnt(data),
                'maxAltFreqPrcnt': __prepare_max_alt_freq_prcnt(data)}
     return filters
