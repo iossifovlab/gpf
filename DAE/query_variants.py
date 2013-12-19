@@ -109,7 +109,7 @@ def family_filter_by_race(families, race):
 
 
 def __bind_family_filter_by_race(data, family_filters):
-    if 'familyRace' in data and data['familyRace'] and data['familyRace'].lower() != 'all':
+    if 'familyRace' in data and data['familyRace'].lower() != 'all':
         family_filters.append(
             lambda fs: family_filter_by_race(fs, data['familyRace'])
         )
@@ -124,13 +124,13 @@ def __bind_family_filter_by_verbal_iq(data, family_filters):
     iq_hi = None
     iq_lo = None
 
-    if 'familyVerbalIqHi' in data and data['familyVerbalIqHi']:
+    if 'familyVerbalIqHi' in data:
         try:
             iq_hi = float(data['familyVerbalIqHi'])
         except:
             iq_hi = None
 
-    if 'familyVerbalIqLo' in data and data['familyVerbalIqLo']:
+    if 'familyVerbalIqLo' in data:
         try:
             iq_lo = float(data['familyVerbalIqLo'])
         except:
@@ -155,7 +155,7 @@ def family_filter_by_prb_gender(families, gender):
 
 
 def __bind_family_filter_by_prb_gender(data, family_filters):
-    if 'familyPrbGender' in data and data['familyPrbGender']:
+    if 'familyPrbGender' in data:
         if data['familyPrbGender'].lower() == 'male':
             family_filters.append(
                 lambda fs: family_filter_by_prb_gender(fs, 'M')
@@ -173,7 +173,7 @@ def family_filter_by_sib_gender(families, gender):
 
 
 def __bind_family_filter_by_sib_gender(data, family_filters):
-    if 'familySibGender' in data and data['familySibGender']:
+    if 'familySibGender' in data:
         if data['familySibGender'].lower() == 'male':
             family_filters.append(
                 lambda fs: family_filter_by_sib_gender(fs, 'M')
@@ -195,7 +195,7 @@ def family_filter_by_trio_quad(families, trio_quad):
 
 
 def __bind_family_filter_by_trio_quad(data, family_filters):
-    if 'familyQuadTrio' in data and data['familyQuadTrio']:
+    if 'familyQuadTrio' in data:
         if data['familyQuadTrio'].lower() == 'trio':
             logger.debug("filtering trio families...")
             family_filters.append(
@@ -284,12 +284,10 @@ def prepare_variant_types(data):
 
 
 def prepare_family_ids(data):
-    if 'familyIds' not in data and 'familiesList' not in data:
+    if 'familyIds' not in data:
         return None
 
-    families = data['familyIds'] if 'familyIds' in data \
-        else data['familiesList']
-
+    families = data['familyIds']
     if isinstance(families, str):
         if families.lower() == 'none' or families.lower() == 'all':
             return None
@@ -298,13 +296,6 @@ def prepare_family_ids(data):
                     for s in families.split(',') if len(s.strip()) > 0]
     elif isinstance(families, list):
         return families
-    else:
-        return None
-
-
-def prepare_family_file(data):
-    if 'familiesFile' in data:
-        return __load_text_column(data['familiesFile'])
     else:
         return None
 
@@ -330,25 +321,6 @@ def prepare_gene_syms(data):
         return None
 
 
-def prepare_gene_syms_file(data):
-    if 'geneSymFile' not in data:
-        return None
-    return __load_text_column(data['geneSymFile'])
-
-
-def prepare_gene_ids(data):
-    if 'geneId' not in data:
-        return None
-    return set([s.strip() for s in data['geneId'].split(',')
-                if len(s.strip()) > 0])
-
-
-def prepare_gene_ids_file(data):
-    if 'geneIdFile' not in data:
-        return None
-    return set(__load_text_column(data['geneIdFile']))
-
-
 def gene_set_loader(gene_set_label, study_name=None):
 
     if 'denovo' == gene_set_label:
@@ -360,19 +332,22 @@ def gene_set_loader(gene_set_label, study_name=None):
     return gene_term
 
 
-def __load_gene_set(gene_set, gene_term, gene_study, gene_set_loader=gene_set_loader):
+def __filter_gene_set(gene_set, data, gene_set_loader=gene_set_loader):
+    gs_id = gene_set['gs_id']
+    gs_term = gene_set['gs_term']
 
-    if 'denovo' == gene_set:
-        if not gene_study:
+    if 'denovo' == gs_id:
+        study = data['geneStudy']
+        if not study:
             return None
-        gs = gene_set_loader('denovo', gene_study)
+        gs = gene_set_loader('denovo', study)
     else:
-        gs = gene_set_loader(gene_set)
+        gs = gene_set_loader(gs_id)
 
-    if gene_term not in gs.tDesc:
+    if gs_term not in gs.tDesc:
         return None
 
-    gl = gs.t2G[gene_term].keys()
+    gl = gs.t2G[gs_term].keys()
 
     if not gl:
         return None
@@ -380,42 +355,26 @@ def __load_gene_set(gene_set, gene_term, gene_study, gene_set_loader=gene_set_lo
     return set(gl)
 
 
-def __prepare_cli_gene_sets(data):
-    gene_set = data['geneSet'].strip()
-    if ":" in gene_set:
-        ci = gene_set.index(":")
-        collection = gene_set[0:ci]
-        setId = gene_set[ci+1:]
-    else:
-        collection = "main"
-        setId = gene_set
-    if collection.lower() == 'denovo':
-        study = data['denovoStudies']
-    else:
-        study = None
-    return (collection, setId, study)
-
-
-def __prepare_web_gene_sets(data):
-    gene_set = data['geneSet']
-    gene_term = data['geneTerm']
-    gene_study = data['geneStudy'] if 'geneStudy' in data else None
-    return (gene_set, gene_term, gene_study)
-
-
 def prepare_gene_sets(data, gene_set_loader=gene_set_loader):
-    if 'geneSet' not in data or not data['geneSet'] or not data['geneSet'].strip():
+    if 'geneSet' not in data:
         return None
 
-    if 'geneTerm' in data:
-        # web interface
-        (gene_set, gene_term, gene_study) = __prepare_web_gene_sets(data)
-    else:
-        # CLI
-        (gene_set, gene_term, gene_study) = __prepare_cli_gene_sets(data)
+    gene_set = data['geneSet']
 
-    return __load_gene_set(gene_set, gene_term, gene_study,
-                           gene_set_loader)
+    if isinstance(gene_set, dict):
+        return __filter_gene_set(gene_set, data, gene_set_loader)
+    elif isinstance(gene_set, str):
+        gs_id = gene_set
+        if 'geneTerm' not in data:
+            return None
+        gs_term = data['geneTerm']
+
+        return __filter_gene_set({'gs_id': gs_id,
+                                  'gs_term': gs_term.split('|')[0].strip()},
+                                 data,
+                                 gene_set_loader)
+    else:
+        return None
 
 
 def prepare_denovo_studies(data):
@@ -469,43 +428,45 @@ def combine_gene_syms(data, gene_set_loader=gene_set_loader):
 # "minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1"
 
 
-def prepare_min_alt_freq_prcnt(data):
+def __prepare_min_alt_freq_prcnt(data):
     minAltFreqPrcnt = -1.0
-    if 'popFrequencyMin' in data:
+    if 'minAltFreqPrcnt' in data:
         try:
-            minAltFreqPrcnt = float(str(data['popFrequencyMin']))
+            minAltFreqPrcnt = float(str(data['minAltFreqPrcnt']))
         except:
             minAltFreqPrcnt = -1.0
     return minAltFreqPrcnt
 
 
-def prepare_max_alt_freq_prcnt(data):
+def __prepare_max_alt_freq_prcnt(data):
     maxAltFreqPrcnt = 100.0
-    if 'popFrequencyMax' in data:
+    if 'maxAltFreqPrcnt' in data:
         try:
-            maxAltFreqPrcnt = float(str(data['popFrequencyMax']))
+            maxAltFreqPrcnt = float(str(data['maxAltFreqPrcnt']))
         except:
             maxAltFreqPrcnt = 5.0
     return maxAltFreqPrcnt
 
 
-def prepare_pop_min_parents_called(data):
+def __prepare_min_parents_called(data):
     minParentsCalled = 600
-    if 'popMinParentsCalled' in data:
+    if 'minParentsCalled' in data:
         try:
-            minParentsCalled = float(str(data['popMinParentsCalled']))
+            minParentsCalled = float(str(data['minParentsCalled']))
         except:
             minParentsCalled = 600
     return minParentsCalled
 
 
-def prepare_ultra_rare(data):
-    if 'rarity' in data:
+def __prepare_ultra_rare(data):
+    ultraRareOnly = None
+    if 'ultraRareOnly' in data:
+        if ultraRareOnly == 'True' or ultraRareOnly == 'true':
+            ultraRareOnly = True
+    elif 'rarity' in data:
         if data['rarity'].strip() == 'ultraRare':
             return True
-    elif 'popFrequencyMax' in data and data['popFrequencyMax'] == 'ultraRare':
-        return True
-    return False
+    return ultraRareOnly
 
 
 REGION = re.compile(r"""(\d+|[Xx]):(\d+)-(\d+)""")
@@ -538,39 +499,18 @@ def prepare_gene_region(data):
     return data['geneRegion'].strip()
 
 
-def __load_text_column(colSpec):
-    cn = 0
-    sepC = "\t"
-    header = 0
-    cs = colSpec.split(',')
-    fn = cs[0]
-    if len(cs) > 1:
-        cn = int(cs[1])
-    if len(cs) > 2:
-        sepC = cs[2]
-    if len(cs) > 3:
-        header = int(cs[3])
-    f = open(fn)
-    if header == 1:
-        f.readline()
-
-    r = []
-    for l in f:
-        cs = l.strip().split(sepC)
-        r.append(cs[cn])
-    f.close()
-    return r
-
-
-def prepare_transmitted_filters(data,
-                                denovo_filters={},
-                                gene_set_loader=gene_set_loader):
-
-    filters = {'ultraRareOnly': prepare_ultra_rare(data),
-               'minParentsCalled': prepare_pop_min_parents_called(data),
-               'minAltFreqPrcnt': prepare_min_alt_freq_prcnt(data),
-               'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data)}
-    return dict(filters, **denovo_filters)
+def prepare_transmitted_filters(data, gene_set_loader=gene_set_loader):
+    filters = {'variantTypes': prepare_variant_types(data),
+               'effectTypes': prepare_effect_types(data),
+               'inChild': prepare_inchild(data),
+               'familyIds': prepare_family_ids(data),
+               'geneSyms': combine_gene_syms(data, gene_set_loader),
+               'regionS': prepare_gene_region(data),
+               'ultraRareOnly': __prepare_ultra_rare(data),
+               'minParentsCalled': __prepare_min_parents_called(data),
+               'minAltFreqPrcnt': __prepare_min_alt_freq_prcnt(data),
+               'maxAltFreqPrcnt': __prepare_max_alt_freq_prcnt(data)}
+    return filters
 
 
 def prepare_denovo_filters(data, gene_set_loader=gene_set_loader):
@@ -602,29 +542,25 @@ def get_denovo_variants(studies, family_filters, **filters):
 def dae_query_variants(data, gene_set_loader=gene_set_loader):
     logger.info("query received: %s", str(data))
 
-    dstudies = prepare_denovo_studies(data)
-    tstudies = prepare_transmitted_studies(data)
-    if dstudies is None and tstudies is None:
-        return []
-
-    denovo_filters = prepare_denovo_filters(data, gene_set_loader)
-    family_filters = advanced_family_filter(data, denovo_filters)
-
     variants = []
+
+    dstudies = prepare_denovo_studies(data)
     if dstudies is not None:
-        dvs = get_denovo_variants(dstudies, family_filters, **denovo_filters)
+        filters = prepare_denovo_filters(data, gene_set_loader)
+        family_filters = advanced_family_filter(data, filters)
+        dvs = get_denovo_variants(dstudies, family_filters, **filters)
         variants.append(dvs)
 
+    tstudies = prepare_transmitted_studies(data)
     if tstudies is not None:
-        transmitted_filters = prepare_transmitted_filters(data, denovo_filters,
-                                                          gene_set_loader)
+        filters = prepare_transmitted_filters(data, gene_set_loader)
         for study in tstudies:
+            family_filters = advanced_family_filter(data, filters)
             if family_filters is not None:
                 families = family_filters(study).keys()
-                transmitted_filters['familyIds'] = families \
-                    if len(families) > 0 else [None]
+                filters['familyIds'] = families if len(families) > 0 else [None]
 
-            tvs = study.get_transmitted_variants(**transmitted_filters)
+            tvs = study.get_transmitted_variants(**filters)
             variants.append(tvs)
 
     return variants
