@@ -44,13 +44,22 @@ class VariantsTests(unittest.TestCase):
 
 
 class CombinedTests(unittest.TestCase):
+    TEST_DATA_1 = {"denovoStudies": ["allWEAndTG"],
+                   "transmittedStudies": ["none"],
+                   "inChild": "prbM",
+                   "effectTypes": "frame-shift",
+                   "variantTypes": "ins",
+                   "geneSet": "main",
+                   "geneTerm": "essentialGenes",
+                   "geneSyms": ""}
 
     TEST_DATA_2 = {"denovoStudies": [],
                    "transmittedStudies": ["w873e374s322"],
                    "inChild": "prbF",
                    "effectTypes": "LoF",
                    "variantTypes": "All",
-                   "geneSet": {"gs_id": "GO", "gs_term": "GO:0022889"},
+                   "geneSet": "GO",
+                   "geneTerm": "GO:0022889",
                    "geneSyms": "",
                    "ultraRareOnly": True}
 
@@ -59,16 +68,8 @@ class CombinedTests(unittest.TestCase):
 
     def test_gene_sets_main(self):
         gs = prepare_gene_sets(self.TEST_DATA_1)
-        self.assertTrue(isinstance(gs, set))
+        self.assertTrue(isinstance(gs, set), "gene set: %s" % str(gs))
         # self.assertEqual(len(gs), 1747)
-
-    TEST_DATA_1 = {"denovoStudies": ["allWEAndTG"],
-                   "transmittedStudies": ["none"],
-                   "inChild": "prbM",
-                   "effectTypes": "frame-shift",
-                   "variantTypes": "ins",
-                   "geneSet": {"gs_id": "main", "gs_term": "essentialGenes"},
-                   "geneSyms": ""}
 
     def test_variants_gene_sets_1(self):
         vs = do_query_variants(self.TEST_DATA_1)

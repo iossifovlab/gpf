@@ -211,20 +211,18 @@ class GeneSetsTests(unittest.TestCase):
         self.assertIsNone(prepare_gene_sets({}))
 
     def test_gete_sets_main(self):
-        gs = prepare_gene_sets({'geneSet':
-                                {'gs_id':'main', 'gs_term':'mPFC_maternal'}})
+        gs = prepare_gene_sets({'geneSet': 'main',
+                                'geneTerm': 'mPFC_maternal'})
         self.assertSetEqual(gs, self.MAIN_mPFC_maternal)
         self.assertTrue(isinstance(gs, set))
 
     def test_gete_sets_go(self):
-        gs = prepare_gene_sets({'geneSet':
-                                {'gs_id': 'GO', 'gs_term': 'GO:2001293'}})
+        gs = prepare_gene_sets({'geneSet': 'GO', 'geneTerm': 'GO:2001293'})
         self.assertSetEqual(gs, self.GO_GO_2001293)
         self.assertTrue(isinstance(gs, set))
 
     def test_gete_sets_disease(self):
-        gs = prepare_gene_sets({'geneSet':
-                                {'gs_id': 'disease', 'gs_term': 'AIDS'}})
+        gs = prepare_gene_sets({'geneSet': 'disease', 'geneTerm': 'AIDS'})
         self.assertSetEqual(gs, self.DISEASE_AIDS)
         self.assertTrue(isinstance(gs, set))
 

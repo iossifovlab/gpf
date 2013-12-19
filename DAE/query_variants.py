@@ -284,10 +284,12 @@ def prepare_variant_types(data):
 
 
 def prepare_family_ids(data):
-    if 'familyIds' not in data:
+    if 'familyIds' not in data and 'familiesList' not in data:
         return None
 
-    families = data['familyIds']
+    families = data['familyIds'] if 'familyIds' in data \
+        else data['familiesList']
+
     if isinstance(families, str):
         if families.lower() == 'none' or families.lower() == 'all':
             return None
@@ -296,6 +298,13 @@ def prepare_family_ids(data):
                     for s in families.split(',') if len(s.strip()) > 0]
     elif isinstance(families, list):
         return families
+    else:
+        return None
+
+
+def prepare_family_file(data):
+    if 'familiesFile' in data:
+        return __load_text_column(data['familiesFile'])
     else:
         return None
 
@@ -321,6 +330,25 @@ def prepare_gene_syms(data):
         return None
 
 
+def prepare_gene_syms_file(data):
+    if 'geneSymFile' not in data:
+        return None
+    return __load_text_column(data['geneSymFile'])
+
+
+def prepare_gene_ids(data):
+    if 'geneId' not in data:
+        return None
+    return set([s.strip() for s in data['geneId'].split(',')
+                if len(s.strip()) > 0])
+
+
+def prepare_gene_ids_file(data):
+    if 'geneIdFile' not in data:
+        return None
+    return set(__load_text_column(data['geneIdFile']))
+
+
 def gene_set_loader(gene_set_label, study_name=None):
 
     if 'denovo' == gene_set_label:
@@ -332,22 +360,19 @@ def gene_set_loader(gene_set_label, study_name=None):
     return gene_term
 
 
-def __filter_gene_set(gene_set, data, gene_set_loader=gene_set_loader):
-    gs_id = gene_set['gs_id']
-    gs_term = gene_set['gs_term']
+def __load_gene_set(gene_set, gene_term, gene_study, gene_set_loader=gene_set_loader):
 
-    if 'denovo' == gs_id:
-        study = data['geneStudy']
-        if not study:
+    if 'denovo' == gene_set:
+        if not gene_study:
             return None
-        gs = gene_set_loader('denovo', study)
+        gs = gene_set_loader('denovo', gene_study)
     else:
-        gs = gene_set_loader(gs_id)
+        gs = gene_set_loader(gene_set)
 
-    if gs_term not in gs.tDesc:
+    if gene_term not in gs.tDesc:
         return None
 
-    gl = gs.t2G[gs_term].keys()
+    gl = gs.t2G[gene_term].keys()
 
     if not gl:
         return None
@@ -355,26 +380,42 @@ def __filter_gene_set(gene_set, data, gene_set_loader=gene_set_loader):
     return set(gl)
 
 
-def prepare_gene_sets(data, gene_set_loader=gene_set_loader):
-    if 'geneSet' not in data:
-        return None
-
-    gene_set = data['geneSet']
-
-    if isinstance(gene_set, dict):
-        return __filter_gene_set(gene_set, data, gene_set_loader)
-    elif isinstance(gene_set, str):
-        gs_id = gene_set
-        if 'geneTerm' not in data:
-            return None
-        gs_term = data['geneTerm']
-
-        return __filter_gene_set({'gs_id': gs_id,
-                                  'gs_term': gs_term.split('|')[0].strip()},
-                                 data,
-                                 gene_set_loader)
+def __prepare_cli_gene_sets(data):
+    gene_set = data['geneSet'].strip()
+    if ":" in gene_set:
+        ci = gene_set.index(":")
+        collection = gene_set[0:ci]
+        setId = gene_set[ci+1:]
     else:
+        collection = "main"
+        setId = gene_set
+    if collection.lower() == 'denovo':
+        study = data['denovoStudies']
+    else:
+        study = None
+    return (collection, setId, study)
+
+
+def __prepare_web_gene_sets(data):
+    gene_set = data['geneSet']
+    gene_term = data['geneTerm']
+    gene_study = data['geneStudy'] if 'geneStudy' in data else None
+    return (gene_set, gene_term, gene_study)
+
+
+def prepare_gene_sets(data, gene_set_loader=gene_set_loader):
+    if 'geneSet' not in data or not data['geneSet'] or not data['geneSet'].strip():
         return None
+
+    if 'geneTerm' in data:
+        # web interface
+        (gene_set, gene_term, gene_study) = __prepare_web_gene_sets(data)
+    else:
+        # CLI
+        (gene_set, gene_term, gene_study) = __prepare_cli_gene_sets(data)
+
+    return __load_gene_set(gene_set, gene_term, gene_study,
+                           gene_set_loader)
 
 
 def prepare_denovo_studies(data):
@@ -448,11 +489,11 @@ def __prepare_max_alt_freq_prcnt(data):
     return maxAltFreqPrcnt
 
 
-def __prepare_min_parents_called(data):
+def prepare_pop_min_parents_called(data):
     minParentsCalled = 600
-    if 'minParentsCalled' in data:
+    if 'popMinParentsCalled' in data:
         try:
-            minParentsCalled = float(str(data['minParentsCalled']))
+            minParentsCalled = float(str(data['popMinParentsCalled']))
         except:
             minParentsCalled = 600
     return minParentsCalled
@@ -497,6 +538,33 @@ def prepare_gene_region(data):
     if not validate_region(region):
         return None
     return data['geneRegion'].strip()
+
+
+def __load_text_column(colSpec):
+    cn = 0
+    sepC = "\t"
+    header = 0
+    cs = colSpec.split(',')
+    fn = cs[0]
+    if len(cs) > 1:
+        cn = int(cs[1])
+    if len(cs) > 2:
+        sepC = cs[2]
+    if len(cs) > 3:
+        header = int(cs[3])
+    f = open(fn)
+    if header == 1:
+        f.readline()
+
+    r = []
+    for l in f:
+        cs = l.strip().split(sepC)
+        r.append(cs[cn])
+    f.close()
+    return r
+
+
+
 
 
 def prepare_transmitted_filters(data, gene_set_loader=gene_set_loader):
