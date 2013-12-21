@@ -14,11 +14,37 @@ from query_variants import get_variant_types, get_child_types
 
 class FamiliesApiTest(APITestCase):
 
+    def test_query_variants(self):
+        url = '/api/query_variants'
+        data = {"denovoStudies":["DalyWE2012"],
+        "transmittedStudies":["wig683"],
+        "inChild":"sibF",
+        "effectTypes":"frame-shift",
+        "variantTypes":"del",
+        "ultraRareOnly":"True"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.streaming_content
+
+        data.next()
+        for row in data:
+            self.assertIn('del', row)
+            self.assertIn('frame-shift', row)
+            self.assertIn('sibF', row)
+
     def test_report_variants(self):
         # Test with no studies provided
         url_no_study = '/api/report_variants'
         response = self.client.get(url_no_study)
         self.assertEqual(response.data, {})
+
+        # Test with study provided
+        url_report = '/api/report_variants?studies=IossifovWE2012'
+        response = self.client.get(url_report)
+        data = response.data
+        self.assertEqual(len(data['rows']), 18)
+
 
     def test_gene_set_response(self):
         # Test simple with gene_set only provided
@@ -61,6 +87,20 @@ class FamiliesApiTest(APITestCase):
         url_with_wrong_gn = '/api/gene_set_list?gene_set=main&gene_name=foo'
         response = self.client.get(url_with_wrong_gn)
         self.assertEqual(response.data, {})
+
+        # Test page count attr
+        url_page_count = '/api/gene_set_list?gene_set=main&page_count=5'
+        response = self.client.get(url_page_count)
+        self.assertEqual(len(response.data), 5)
+
+        # Test page count with wrong attr
+        url_page_count = '/api/gene_set_list?gene_set=main&page_count=foo'
+        response = self.client.get(url_page_count)
+        self.assertEqual(len(response.data), 30)
+
+        url_page_count = '/api/gene_set_list?gene_set=main&page_count=-10'
+        response = self.client.get(url_page_count)
+        self.assertEqual(len(response.data), 30)
 
     def test_child_type_list(self):
         response = self.client.get('/api/child_types')
