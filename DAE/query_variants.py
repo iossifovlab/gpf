@@ -320,6 +320,8 @@ def prepare_gene_syms(data):
         gene_sym = data['geneSyms']
     elif 'geneSym' in data and data['geneSym']:
         gene_sym = data['geneSym']
+    elif 'geneSymFile' in data and data['geneSymFile']:
+        gene_sym = __load_text_column(data['geneSymFile'])
     else:
         return None
 
@@ -339,23 +341,16 @@ def prepare_gene_syms(data):
         return None
 
 
-def prepare_gene_syms_file(data):
-    if 'geneSymFile' not in data:
-        return None
-    return __load_text_column(data['geneSymFile'])
-
-
 def prepare_gene_ids(data):
-    if 'geneId' not in data:
+    if 'geneId' not in data and 'geneIdFile' not in data:
         return None
-    return set([s.strip() for s in data['geneId'].split(',')
-                if len(s.strip()) > 0])
-
-
-def prepare_gene_ids_file(data):
-    if 'geneIdFile' not in data:
+    if 'geneId' in data and data['geneId']:
+        return set([s.strip() for s in data['geneId'].split(',')
+                    if len(s.strip()) > 0])
+    elif 'geneIdFile' in data and data['geneIdFile']:
+        return set(__load_text_column(data['geneIdFile']))
+    else:
         return None
-    return set(__load_text_column(data['geneIdFile']))
 
 
 def gene_set_loader(gene_set_label, study_name=None):
@@ -598,6 +593,7 @@ def prepare_denovo_filters(data, gene_set_loader=gene_set_loader):
                'effectTypes': prepare_effect_types(data),
                'familyIds': prepare_family_ids(data),
                'geneSyms': combine_gene_syms(data, gene_set_loader),
+               'geneIds': prepare_gene_ids(data),
                'regionS': prepare_gene_region(data)}
     return filters
 
