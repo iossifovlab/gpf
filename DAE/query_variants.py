@@ -287,11 +287,18 @@ def prepare_variant_types(data):
 
 
 def prepare_family_ids(data):
-    if 'familyIds' not in data and 'familiesList' not in data:
+    if 'familyIds' not in data and 'familiesList' not in data \
+       and 'familiesFile' not in data:
         return None
 
-    families = data['familyIds'] if 'familyIds' in data \
-        else data['familiesList']
+    if 'familyIds' in data and data['familyIds']:
+        families = data['familyIds']
+    elif 'familiesList' in data and data['familiesList']:
+        families = data['familiesList']
+    elif 'familiesFile' in data and data['familiesFile']:
+        families = __load_text_column(data['familiesFile'])
+    else:
+        return None
 
     if isinstance(families, str):
         if families.lower() == 'none' or families.lower() == 'all':
@@ -301,13 +308,6 @@ def prepare_family_ids(data):
                     for s in families.split(',') if len(s.strip()) > 0]
     elif isinstance(families, list):
         return families
-    else:
-        return None
-
-
-def prepare_family_file(data):
-    if 'familiesFile' in data:
-        return __load_text_column(data['familiesFile'])
     else:
         return None
 
