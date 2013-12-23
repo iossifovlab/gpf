@@ -593,7 +593,7 @@ def prepare_denovo_filters(data, gene_set_loader=gene_set_loader):
                'effectTypes': prepare_effect_types(data),
                'familyIds': prepare_family_ids(data),
                'geneSyms': combine_gene_syms(data, gene_set_loader),
-               'geneIds': prepare_gene_ids(data),
+               # 'geneIds': prepare_gene_ids(data),
                'regionS': prepare_gene_region(data)}
     return filters
 
