@@ -1,6 +1,7 @@
 import itertools
 import re
 import logging
+import sys
 
 from DAE import vDB, phDB
 from DAE import get_gene_sets_symNS
@@ -303,10 +304,16 @@ def prepare_family_ids(data):
 
 
 def prepare_gene_syms(data):
-    if 'geneSyms' not in data:
+    if 'geneSyms' not in data and 'geneSym' not in data:
         return None
 
-    gene_sym = data['geneSyms']
+    if 'geneSyms' in data and data['geneSyms']:
+        gene_sym = data['geneSyms']
+    elif 'geneSym' in data and data['geneSym']:
+        gene_sym = data['geneSym']
+    else:
+        return None
+
     if isinstance(gene_sym, list):
         gl = gene_sym
         if not gl:
@@ -398,10 +405,14 @@ def prepare_denovo_studies(data):
 
 
 def prepare_transmitted_studies(data):
-    if 'transmittedStudies' not in data:
+    if 'transmittedStudies' not in data and 'transmittedStudy' not in data:
         return None
 
-    tl = data['transmittedStudies']
+    if 'transmittedStudies' in data:
+        tl = data['transmittedStudies']
+    else:
+        tl = data['transmittedStudy']
+
     if isinstance(tl, list):
         tst = [vDB.get_studies(str(t)) for t in tl]
     else:
@@ -441,7 +452,7 @@ def __prepare_min_alt_freq_prcnt(data):
 
 
 def __prepare_max_alt_freq_prcnt(data):
-    maxAltFreqPrcnt = 100.0
+    maxAltFreqPrcnt = 1.0
     if 'maxAltFreqPrcnt' in data:
         try:
             maxAltFreqPrcnt = float(str(data['maxAltFreqPrcnt']))
@@ -493,12 +504,17 @@ def validate_region(region):
 
 
 def prepare_gene_region(data):
-    if 'geneRegion' not in data:
+    if 'geneRegion' not in data and 'regionS' not in data:
         return None
-    region = data['geneRegion']
+    if 'geneRegion' in data and data['geneRegion']:
+        region = data['geneRegion']
+    elif 'regionS' in data and data['regionS']:
+        region = data['regionS']
+    else:
+        return None
     if not validate_region(region):
         return None
-    return data['geneRegion'].strip()
+    return region.strip()
 
 
 def prepare_transmitted_filters(data, gene_set_loader=gene_set_loader):
@@ -549,6 +565,7 @@ def dae_query_variants(data, gene_set_loader=gene_set_loader):
     dstudies = prepare_denovo_studies(data)
     if dstudies is not None:
         filters = prepare_denovo_filters(data, gene_set_loader)
+        print >>sys.stderr, 'denovo filters:', filters
         family_filters = advanced_family_filter(data, filters)
         dvs = get_denovo_variants(dstudies, family_filters, **filters)
         variants.append(dvs)
@@ -556,6 +573,7 @@ def dae_query_variants(data, gene_set_loader=gene_set_loader):
     tstudies = prepare_transmitted_studies(data)
     if tstudies is not None:
         filters = prepare_transmitted_filters(data, gene_set_loader)
+        print >>sys.stderr, "transmitted filters:", filters
         for study in tstudies:
             family_filters = advanced_family_filter(data, filters)
             if family_filters is not None:
