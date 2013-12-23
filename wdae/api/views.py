@@ -158,7 +158,7 @@ def __gene_set_response(request, gts, gt):
 def gene_set_list(request):
     query_params = request.QUERY_PARAMS
     if 'gene_set' not in query_params:
-        return Response()
+        return Response({})
     gene_set = query_params['gene_set']
     gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
     study_name = str(query_params['study']) if 'study' in query_params else None
