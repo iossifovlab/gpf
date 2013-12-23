@@ -26,7 +26,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         for v in vs:
             count += 1
             #self.assertEqual('african-amer;african-amer', v[16])
-            if v[16] != 'african-amer;african-amer':
+            if v[16] != 'african-amer,african-amer':
                 print v[16]
                 fail = True
         self.assertFalse(fail)
@@ -50,7 +50,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         fail = False
         for v in vs:
             count += 1
-            if v[16] != 'white;white':
+            if v[16] != 'white,white':
                 print v[16]
                 fail = True
         self.assertFalse(fail)

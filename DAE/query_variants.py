@@ -565,7 +565,7 @@ def dae_query_variants(data, gene_set_loader=gene_set_loader):
     dstudies = prepare_denovo_studies(data)
     if dstudies is not None:
         filters = prepare_denovo_filters(data, gene_set_loader)
-        print >>sys.stderr, 'denovo filters:', filters
+        # print >>sys.stderr, 'denovo filters:', filters
         family_filters = advanced_family_filter(data, filters)
         dvs = get_denovo_variants(dstudies, family_filters, **filters)
         variants.append(dvs)
@@ -573,7 +573,7 @@ def dae_query_variants(data, gene_set_loader=gene_set_loader):
     tstudies = prepare_transmitted_studies(data)
     if tstudies is not None:
         filters = prepare_transmitted_filters(data, gene_set_loader)
-        print >>sys.stderr, "transmitted filters:", filters
+        # print >>sys.stderr, "transmitted filters:", filters
         for study in tstudies:
             family_filters = advanced_family_filter(data, filters)
             if family_filters is not None:
