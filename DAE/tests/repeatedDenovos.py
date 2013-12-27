@@ -3,7 +3,7 @@
 from DAE import *
 
 from collections import defaultdict
-allDnvVs = list(vDB.get_denovo_variants('all'))
+allDnvVs = list(vDB.get_denovo_variants('allWEAndTG'))
 
 ## the same family, the same gene
 bf = defaultdict(list)

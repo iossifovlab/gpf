@@ -269,7 +269,7 @@ class DistTest:
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run transmission tests.")
-    parser.add_argument('--denovoStudies', type=str, default="allWE", help='the denovo sutdies used to build the denovo gene set.' )
+    parser.add_argument('--denovoStudies', type=str, default="allWEAndTG", help='the denovo sutdies used to build the denovo gene set.' )
     parser.add_argument('--transmittedStudy', type=str, default="w873e374s322", help='the transmitted study')
     parser.add_argument('--effectTypes', type=str, default="LGDs", help='effect types (i.e. LGDs,missense,synonymous). LGDs by default. ')
     parser.add_argument('--popFrequencyMax', type=str, default='1.0',
@@ -285,8 +285,32 @@ if __name__ == "__main__":
                 phDB.get_variable('focuv.race_parents'),
                 phDB.get_variable('mocuv.race_parents')) if mr=='white' and fr=='white' }
 
+    def getMeasure(mName):
+        strD = dict(zip(phDB.families,phDB.get_variable(mName)))
+        # fltD = {f:float(m) for f,m in strD.items() if m!=''}
+        fltD = {}
+        for f,m in strD.items():
+            try:
+                mf = float(m)
+                fltD[f] = float(m)
+            except:
+                pass
+        return fltD
+
+    vIQ  = getMeasure('pcdv.ssc_diagnosis_verbal_iq')
+    nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq')
+
+    
  
     geneTerms = get_gene_sets_symNS(args.geneSets,denovoStudies=args.denovoStudies)
+   
+    ''' 
+    # 
+    fOutF = open('filterOutGenes.txt')
+    fOutGns = {gn.strip() for gn in fOutF}
+    fOutF.close()
+    geneTerms.filterGenes(lambda gl: [g for g in gl if g not in fOutGns])
+    '''
 
     ultraRareOnly = True
     maxAltFreqPrcnt = 1.0
@@ -298,13 +322,23 @@ if __name__ == "__main__":
         
     study = vDB.get_study(args.transmittedStudy)
 
+    # familySubset = whiteFams & \
+    #             {f for f,iq in nvIQ.items() if iq>90.0} & \
+    #             {f.familyId for f in study.families.values() if f.memberInOrder[2].gender == 'M'}
+
+    familySubset = {f for f,iq in nvIQ.items() if iq>90.0}
+
+    # familySubset = None
+
+    # print >>sys.stderr, "The size of the familySubset is", len(familySubset)
+
     cnts = Counts(study,geneSets=geneTerms,byParent=True, bySibGender=True)
     distT = DistTest()
     homozT = HomozygousTest()
 
 
     n = 0
-    for v in study.get_transmitted_variants(ultraRareOnly=ultraRareOnly, maxAltFreqPrcnt=maxAltFreqPrcnt, effectTypes=args.effectTypes, familyIds=whiteFams):
+    for v in study.get_transmitted_variants(ultraRareOnly=ultraRareOnly, maxAltFreqPrcnt=maxAltFreqPrcnt, effectTypes=args.effectTypes, familyIds=familySubset):
         distT.addV(v)
         homozT.addV(v)
         n+=1

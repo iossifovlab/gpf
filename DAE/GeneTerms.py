@@ -11,6 +11,16 @@ class GeneTerms:
         self.tDesc = {}
         self.geneNS = None
 
+    def filterGenes(self, filterF):
+        keepGs = filterF(self.g2T.keys())
+        self.g2T = {g:ts for g,ts in self.g2T.items() if g in keepGs}
+        self.t2G = defaultdict(lambda : defaultdict(int))
+        for g,ts in self.g2T.items():
+            for t, n in ts.items():
+                self.t2G[t][g] = n
+        for t in set(self.tDesc)-set(self.t2G):
+            del self.tDesc[t]
+
     def renameGenes(self, geneNS, renameF):
         g2T = self.g2T
         self.g2T = defaultdict(lambda : defaultdict(int))

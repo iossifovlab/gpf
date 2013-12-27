@@ -202,7 +202,16 @@ class Study:
             self.description = self.vdb._config.get(self._configSection, 'description' )
 
         self._loaded = False
-            
+           
+    def get_targeted_genes(self):
+        if not self.vdb._config.has_option(self._configSection,"targetedGenes"):
+            return
+        tGsFN = self.vdb._config.get(self._configSection,"targetedGenes")
+        tGsF = open(tGsFN) 
+        tgsS = {l.strip() for l in tGsF}
+        tGsF.close()
+        return tgsS
+         
     def get_attr(self,attName):
         if self.vdb._config.has_option(self._configSection,attName):
             return self.vdb._config.get(self._configSection,attName)
@@ -897,17 +906,41 @@ class VariantsDB:
         r = GeneTerms()
         r.geneNS = "sym"
 
-        def addSet(setname, genes):
-            r.tDesc[setname] = setname
+        def getMeasure(mName):
+            from DAE import phDB
+            strD = dict(zip(phDB.families,phDB.get_variable(mName)))
+            # fltD = {f:float(m) for f,m in strD.items() if m!=''}
+            fltD = {}
+            for f,m in strD.items():
+                try:
+                    mf = float(m)
+                    # if mf>70:
+                    fltD[f] = float(m)
+                except:
+                    pass 
+            return fltD
+
+        nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq') 
+
+        def addSet(setname, genes,desc=None):
+            if desc:
+                r.tDesc[setname] = desc
+            else:
+                r.tDesc[setname] = setname
             for gSym in genes:
                 r.t2G[setname][gSym]+=1
                 r.g2T[gSym][setname]+=1
-        def genes(inChild,effectTypes,inGenesSet=None):
+        def genes(inChild,effectTypes,inGenesSet=None,minIQ=None,maxIQ=None):
             if inGenesSet:
                 vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild,geneSyms=inGenesSet)
             else:
                 vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
-            return {ge['sym'] for v in vs for ge in v.requestedGeneEffects}
+            if not (minIQ or maxIQ):
+                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects}
+            if minIQ:
+                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId]>=minIQ }
+            if maxIQ:
+                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] < maxIQ }
 
         def set_genes(geneSetDef):
             gtId,tmId = geneSetDef.split(":")
@@ -941,6 +974,16 @@ class VariantsDB:
         addSet("sibMissense",       genes('sib' ,'missense'))
         addSet("sibSynonymous",     genes('sib' ,'synonymous'))
 
+        addSet("A",      recPrbLGDs, "recPrbLGDs")
+        addSet("B",      genes('prbF','LGDs'), "prbF")
+        addSet("C",      genes('prb','LGDs',set_genes("main:FMR1-targets")), "prbFMRP")
+        addSet("D",      genes('prb','LGDs',maxIQ=90),"prbML")
+        addSet("E",      genes('prb','LGDs',minIQ=90),"prbMH")
+
+        addSet("AB",     set(r.t2G['A']) | set(r.t2G['B'])) 
+        addSet("ABC",    set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])) 
+        addSet("ABCD",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) )
+        addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
         return r
    
 

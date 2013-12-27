@@ -8,6 +8,7 @@ from subprocess import call
 import re
 from GeneModelFiles import *
 import GenomeAccess
+import numpy as np
 
 
 
@@ -549,7 +550,7 @@ class Variant:
                             if self.pos < j.start and self.pos > prev:
                                 if self.pos - prev < 3 or j.start - self.pos < 3:
                                     # splice
-                                    worstE### change the name of the functionffect = "splice-site"
+                                    worstEffect = "splice-site"
                                 else:
                                     # intron not splice
                                     worstEffect = "intron"
@@ -734,14 +735,27 @@ def major_effect(E):
         
     return(max_effect)
 
-def tm_with_lof(E):
+def with_lof(E):
     global LOF
     R = []
     for ef in E:
         if ef.effect in LOF:
             R.append(ef)
+    return(R)
 
-#def longest_coding_tm():
+
+def longest_protein(Effects, protein_pos=False, return_ef=False):
+    R = []
+    max_ind = np.argmax([ef.prot_length for ef in Effects])
+    e = Effects[max_ind]
+    if e.prot_length == None:
+        return(None)
+    if return_ef == False:
+        if protein_pos == True:
+            return(str(e.prot_pos) + "/" + str(e.prot_length))
+        return(e.prot_length)
+    else:
+        return(e)
     
     
 

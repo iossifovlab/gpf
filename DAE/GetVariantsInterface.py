@@ -123,7 +123,8 @@ def getVariantsInterface(args, response=None):
             collection = "main"
             setId = args['geneSet']
     
-        gts = giDB.getGeneTerms(collection)
+        # gts = giDB.getGeneTerms(collection)
+        gts = get_gene_sets_symNS(collection,denovoStudies=args['denovoStudies'])
         geneSyms = set(gts.t2G[setId].keys())
 
     if args['variantTypes']:
