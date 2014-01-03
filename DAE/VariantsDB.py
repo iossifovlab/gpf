@@ -283,6 +283,9 @@ class Study:
         if isinstance(variantTypes, str):
             variantTypes = set(variantTypes.split(","))
 
+        if not regionS and geneSyms and len(geneSyms) <= 10:
+            regionS = self.get_gene_regions(geneSyms)
+
         if regionS:
             f = gzip.open(transmittedVariantsFile)
             colNms = f.readline().strip().split("\t")
@@ -339,9 +342,6 @@ class Study:
             tbf = gzip.open(transmittedVariantsTOOMANYFile)
         else:
             tbf = pysam.Tabixfile(transmittedVariantsTOOMANYFile)
-
-        if not regionS and geneSyms and len(geneSyms) <= 10:
-            regionS = self.get_gene_regions(geneSyms)
 
         for vs in self.get_transmitted_summary_variants(minParentsCalled,maxAltFreqPrcnt,minAltFreqPrcnt,variantTypes,effectTypes,ultraRareOnly, geneSyms, regionS):
             if not vs:
