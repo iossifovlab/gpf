@@ -11,9 +11,9 @@ def parse_cli_arguments(argv=sys.argv[1:]):
     parser.add_argument('--denovoStudies', type=str,
                         default="allPublishedWEWithOurCallsAndTG",
                         help='''the studies to query for denovo variants. (i.e. None;
-allPublishedPlusOurRecent; all; allPublished; wig683; IossifovWE2012;
-DalyWE2012; StateWE2012; EichlerWE2012); type "--denovoStudies None" to get
-transmitted variants only''')
+                        allPublishedPlusOurRecent; all; allPublished; wig683; IossifovWE2012;
+                        DalyWE2012; StateWE2012; EichlerWE2012); type "--denovoStudies None" to get
+                        transmitted variants only''')
 
     parser.add_argument('--transmittedStudy', type=str, default="None",
                         help='''the study to query the transmitted variants
@@ -51,7 +51,7 @@ LGDs by default. none for all variants''')
 
     parser.add_argument('--familyRace', type=str,
                         help='''family race; one of 'african-amer', 'asian', 'more-than-one-race',
-'native-american', 'native-hawaiian', 'white' ''')
+                        'native-american', 'native-hawaiian', 'white' ''')
     parser.add_argument('--familyVerbalIqLo', type=int,
                         help='proband verbal IQ low limit')
     parser.add_argument('--familyVerbalIqHi', type=int,
