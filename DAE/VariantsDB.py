@@ -19,6 +19,8 @@ import re
 from GeneTerms import GeneTerms
 from itertools import groupby
 from VariantAnnotation import get_effect_types_set
+import itertools
+
 
 class DnvVariant:
     def __str__(self):
@@ -206,38 +208,23 @@ class Study:
     def get_attr(self,attName):
         if self.vdb._config.has_option(self._configSection,attName):
             return self.vdb._config.get(self._configSection,attName)
-        
-    def get_transmitted_summary_variants(self,minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None, effectTypes=None,ultraRareOnly=False, geneSyms=None, regionS=None):
-        
-        if not self._loaded:
-            self._load_family_data()
-                    
-        transmittedVariantsFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + ".txt.bgz"
-        print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile 
 
-        if isinstance(effectTypes,str):
-            effectTypes = self.vdb.effectTypesSet(effectTypes)
-
-        if isinstance(variantTypes,str):
-            variantTypes = set(variantTypes.split(","))
-
-        if regionS:
-            f = gzip.open(transmittedVariantsFile)
-            colNms = f.readline().strip().split("\t")
-            f.close()
-            tbf = pysam.Tabixfile(transmittedVariantsFile)
-            f = tbf.fetch(regionS)
-        else:
-            f = gzip.open(transmittedVariantsFile)
-            colNms = f.readline().strip().split("\t")
-
+    def filter_transmitted_variants(self, f, colNms,
+                                    minParentsCalled=600,
+                                    maxAltFreqPrcnt=5.0,
+                                    minAltFreqPrcnt=-1,
+                                    variantTypes=None,
+                                    effectTypes=None,
+                                    ultraRareOnly=False,
+                                    geneSyms=None):
         for l in f:
+            #print "line:", l
             if l[0] == '#':
                 continue
             vls = l.strip().split("\t")
             if len(colNms) != len(vls):
-                raise Exception("Incorrect transmitted variants file: " + transmittedVariantsFile)
-            mainAtts = dict(zip(colNms,vls))
+                raise Exception("Incorrect transmitted variants file: ")
+            mainAtts = dict(zip(colNms, vls))
 
             mainAtts["location"] = mainAtts["chr"] + ":" + mainAtts["position"]
 
@@ -253,38 +240,93 @@ class Study:
                 if minAltFreqPrcnt != -1 and altPrcnt < minAltFreqPrcnt:
                     continue
 
-            ultraRare = int(mainAtts['all.nAltAlls'])==1
+            ultraRare = int(mainAtts['all.nAltAlls']) == 1
             if ultraRareOnly and not ultraRare:
                 continue
 
             geneEffect = None
             if effectTypes or geneSyms:
                 geneEffect = parseGeneEffect(mainAtts['effectGene'])
-                requestedGeneEffects = filter_gene_effect(geneEffect, effectTypes, geneSyms)
+                requestedGeneEffects = filter_gene_effect(geneEffect,
+                                                          effectTypes,
+                                                          geneSyms)
                 if not requestedGeneEffects:
                     continue
             v = Variant(mainAtts)
             v.study = self
 
-            if geneEffect != None:
+            if geneEffect:
                 v._geneEffect = geneEffect
                 v._requestedGeneEffect = requestedGeneEffects
             if ultraRare:
-                v.popType="ultraRare"
+                v.popType = "ultraRare"
             else:
                 # rethink
-                v.popType="common" 
+                v.popType = "common"
 
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
-
             yield v
+
+
+    def get_transmitted_summary_variants(self,minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None, effectTypes=None,ultraRareOnly=False, geneSyms=None, regionS=None):
+
+        if not self._loaded:
+            self._load_family_data()
+
+        transmittedVariantsFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + ".txt.bgz"
+        print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile 
+
+        if isinstance(effectTypes, str):
+            effectTypes = self.vdb.effectTypesSet(effectTypes)
+
+        if isinstance(variantTypes, str):
+            variantTypes = set(variantTypes.split(","))
+
+        if regionS:
+            f = gzip.open(transmittedVariantsFile)
+            colNms = f.readline().strip().split("\t")
+            f.close()
+            tbf = pysam.Tabixfile(transmittedVariantsFile)
+
+            if isinstance(regionS, str):
+                regionS = [regionS]
+
+            for reg in regionS:
+                f = tbf.fetch(reg)
+                for v in self.filter_transmitted_variants(f, colNms,
+                                                          minParentsCalled,
+                                                          maxAltFreqPrcnt,
+                                                          minAltFreqPrcnt,
+                                                          variantTypes,
+                                                          effectTypes,
+                                                          ultraRareOnly,
+                                                          geneSyms):
+                    yield v
+        else:
+            f = gzip.open(transmittedVariantsFile)
+            colNms = f.readline().strip().split("\t")
+            for v in self.filter_transmitted_variants(f, colNms,
+                                                      minParentsCalled,
+                                                      maxAltFreqPrcnt,
+                                                      minAltFreqPrcnt,
+                                                      variantTypes,
+                                                      effectTypes,
+                                                      ultraRareOnly,
+                                                      geneSyms):
+                yield v
 
         if regionS:
             tbf.close()
         else:
             f.close()
 
+    def get_gene_regions(self, gene_list):
+        DATA = {"OSBPL8": "12:76770000-76890000",
+                "DIP2C": "10:323271-532485",
+                "FAM49A": "2:16725000-16780000",
+                "AGPAT3": "21:4537000-45403000"}
+        return [DATA[gs] for gs in gene_list if gs in DATA]
 
     def get_transmitted_variants(self, inChild=None, minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None,effectTypes=None,ultraRareOnly=False, geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
         
@@ -298,7 +340,13 @@ class Study:
         else:
             tbf = pysam.Tabixfile(transmittedVariantsTOOMANYFile)
 
+        if not regionS and geneSyms and len(geneSyms) <= 10:
+            regionS = self.get_gene_regions(geneSyms)
+
         for vs in self.get_transmitted_summary_variants(minParentsCalled,maxAltFreqPrcnt,minAltFreqPrcnt,variantTypes,effectTypes,ultraRareOnly, geneSyms, regionS):
+            if not vs:
+                continue
+
             fmsData = vs.atts['familyData']
             if not fmsData:
                 continue 
