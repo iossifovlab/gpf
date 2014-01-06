@@ -13,12 +13,13 @@ start=time.time()
 desc = """Program to annotate genomic positions with genomic scores (GERP, PhyloP, phastCons, nt, GC, cov)"""
 parser = optparse.OptionParser(version='%prog version 1.0 12/December/2013', description=desc, add_help_option=False)
 parser.add_option('-h', '--help', default=False, action='store_true')
+parser.add_option('-c', help='chromosome column number/name', action='store')
 parser.add_option('-p', help='position column number/name', action='store')
 parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
+parser.add_option('-F', help='genomic score file', action='store')
+parser.add_option('-S', help='scores subset [string - colon separated]', action='store')
 parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
-parser.add_option('-A',help='annotate with all scores', default=False,  action='store_true')
-parser.add_option('-C',help='annotate with conservation scores only (GERP, phyloP, phastCons) - SET BY DEFAULT', default=False,  action='store_true')
-parser.add_option('-L',help='all scores listed as a string separated by ";"', type='string')
+
 
 
 (opts, args) = parser.parse_args()
@@ -29,11 +30,10 @@ if opts.help:
     print("-h, --help                       show this help message and exit")
     print("-c CHROM                         chromosome column number/name ")
     print("-p POS                           position column number/name")
+    print("-F FILE                          genomic score file path")
+    print("-S FILE                          scores subset: string colon separated")
     print("-x LOC                           location (chr:pos) column number/name ")
     print("-H                               no header in the input file ")
-    print("-A                               annotate with all scores")
-    print("-C                               annotate with conservation scores only - DEFAULT OPTION")
-    print("-L                               annotate with all scores listed as a string separated by ';'")
     print("\n----------------------------------------------------------------\n\n")
     sys.exit(0)
 
@@ -47,13 +47,6 @@ if len(args) > 0:
 
 if infile != '-' and os.path.exists(infile) == False:
     raise Exception("The given input file does not exist!")
-
-if opts.A == None and opts.L == None:
-    opts.C = True
-
-if (opts.A != None and opts.C != None) or (opts.A != None and opts.L != None) or (opts.C != None and opts.L != None):
-    raise Exception("You can only choose one parameter from -A, -C and -L!")
-
 
 
 
@@ -85,12 +78,12 @@ def assign_values(param):
     if param == None:
         return(param)
     try:
-        param = int(param)
+        param = int(param) - 1
     except:
         if first_line == None:
             sys.stderr.write("You cannot use column names when the file doesn't have a header (-H option set)!\n")
             sys.exit(-49)
-        param = give_column_number(param, first_line)
+        param = give_column_number(param, first_line) - 1
     return(param)
 
 
@@ -102,24 +95,14 @@ chrCol = assign_values(opts.c)
 posCol = assign_values(opts.p)
 locCol = assign_values(opts.x)
 
-if outfile != None:
-    out = open(outfile, 'w')
 
-if opts.no_header == False:
-    if outfile == None:
-        print(first_line_str[:-1] + "\teffectType\teffectGene\teffectDetails") ###? [NAME OF THE SCORES]
-    else:
-        out.write(first_line_str[:-1] + "\teffectType\teffectGene\teffectDetails\n") ###? [NAME OF THE SCORES]
-
-sys.stderr.write("...processing....................\n")
-
-
-# general function: load_gerp............
-
+All_lines = []
 All_locs = []
 for l in variantFile:
+    All_lines.append(l)
     if l[0] == "#":
-       All_locs.append(None) 
+       #All_locs.append(None)
+       continue
     line = l[:-1].split("\t")
     if locCol:
         All_locs.append(line[locCol])
@@ -127,28 +110,35 @@ for l in variantFile:
         All_locs.append(line[chrCol] + ":" + line[posCol])
 
 
-    
 
-    #??
-    # LIST OF LINES=POSITIONS? parallel?
-Res = []
-if opts.C:
-    # load_gerp
-    gs = load_genomic_scores("/mnt/wigclust5/data/safe/egrabows/2013/Modules/gerp.npz")
-    res = gs.get_multi_score(all_locs)
-    Res.append(res)
-    # load_pp
-    gs = load_genomic_scores("/mnt/wigclust5/data/safe/egrabows/2013/Modules/phyloP.npz")
-    res = gs.get_multi_score(all_locs)
-    Res.append(res)
-    # load_phastcons
-    gs = load_genomic_scores("/mnt/wigclust5/data/safe/egrabows/2013/Modules/phastCons.npz")
-    res = gs.get_multi_score(all_locs)
-    Res.append(res)
+
+gs = load_genomic_scores(opts.F)
+if opts.S != None:
+    scores = opts.S.split(";")
+else:
+    scores = gs._score_names
+res = gs.get_multi_score(All_locs, scores=scores)
+
+
+
+if outfile != None:
+    out = open(outfile, 'w')
+
+
+
+if opts.no_header == False:
+    header_line = "\t".join([gs.type + ":" + s for s in scores])
+    if outfile == None:
+        print(first_line_str[:-1] + "\t" + header_line)
+    else:
+        out.write(first_line_str[:-1] + "\t" + header_line + "\n")
+sys.stderr.write("...processing....................\n")
+
+   
     
     
 k = 0
-for l in variantFile:
+for l in All_lines:
     if l[0] == "#":
         if outfile == None:
             print l,
@@ -156,7 +146,9 @@ for l in variantFile:
             out.write(l)
         k+=1
         continue
-    s = [a for b in [x[k] for x in Res] for a in b]
+    s = map(str,[a for a in res[k]])
+    if s == []:
+        s = ['','','']
     if outfile == None:
         print(l[:-1] + "\t" + "\t".join(s))
     else:
@@ -173,7 +165,7 @@ if outfile != None:
     out.write("# " + " ".join(sys.argv) + "\n")
     sys.stderr.write("Output file saved as: " + outfile + "\n")
 else:
-    print("# PROCESSING DETAILS:\n# " + time.asctime() + "\n# " + " ".join(sys.argv))
+    sys.stderr.write("# PROCESSING DETAILS:\n# " + time.asctime() + "\n# " + " ".join(sys.argv) + "\n")
     
 
 if outfile != None:

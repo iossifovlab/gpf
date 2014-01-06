@@ -1,6 +1,6 @@
 #!/bin/env python
 
-# Nov 7th 2013
+# Jan 6th 2013
 # Ewa
 
 from DAE import *
@@ -13,6 +13,27 @@ from sklearn.linear_model import LogisticRegression
 from collections import defaultdict
 from collections import namedtuple
 import RegionOperations
+from GenomicScores import *
+
+
+#genomic_arrays = ['nt', 'cov']
+#scores = ['nt', 'cov/']
+
+
+# all available now:
+# 'nt':'nt'
+# 'GC_5':'gc'
+# 'GC_10':'gc'
+# 'GC_20':'gc'
+# 'GC_50':'gc'
+# 'GC_100':'gc'
+# 'cov-':'cov'
+# 'cov/':'cov'
+
+Genomic_scores = {'nt':'nt', 'cov/':'cov', 'GC_5':'gc'} # very important line
+
+genomic_arrays = list(set(Genomic_scores.values()))
+scores = Genomic_scores.keys()
 
 def create_gene_regions():
 
@@ -103,49 +124,68 @@ outfile = 'scores_per_gene.txt'
 
 print >>sys.stderr, "Loading scores..."
 
-A = np.load("/mnt/wigclust5/data/safe/egrabows/2013/MutationProbability/Arrays/chrAll.npy")
+A_dict = {}
+all_arrays = []
+for s in genomic_arrays:
+    gs = load_genomic_scores("/data/unsafe/autism/genomes/hg19/GenomicScores/Other/" + s + ".npz")
+    all_arrays.append(gs)
+    A_dict[s] = gs
+
+
+Main_array = create_one_array(*all_arrays)
+A = Main_array.array
+chrInds = Main_array.index
 
 print >>sys.stderr, "Creating training arrays ..."
 #----- Creating arrays: denovo (D), random (R) --------
 
-chrInds = create_index(A)
-
 stds = vDB.get_studies('allWE')
 locs = [v.location for v in vDB.get_denovo_variants(stds,variantTypes="sub")]
 
-D=np.zeros((len(locs), 1), dtype=[('nt', '<i8'),('cov/', '<f8')]).reshape(len(locs))
+types = []
+for s in scores:
+    t = A[s].dtype.type
+    if t == np.string_:
+        t = '<i8'
+    types.append((s, t))
+D=np.zeros((len(locs), 1), dtype=types).reshape(len(locs))
 
 denovo_inds = []
 k = 0
 for loc in locs:
-    chr, pos = loc.split(":")
     if chr == 'X' or chr == "Y":
         D = np.delete(D,-1,0)
         continue
-    pos = int(pos)
-    rangeA = bin_search1(pos, chrInds[chr])
-    
-    if rangeA == None:
+    chr = loc.split(":")[0]
+    loc_index = gs.get_index(loc)
+    if loc_index == None:
         sys.stderr.write(chr + ":" + str(pos) + " has not been found\n")
         D = np.delete(D,-1,0)
         continue
-
-    posS = A[rangeA[0],]['pos']
-    ind = rangeA[0] - posS + pos
-    hit = A[ind,]
-    denovo_inds.append(ind)
-    D[k]['nt'] =  1 if hit['nt'] in ['G', 'C'] else 0
-    D[k]['cov/'] =  hit['cov/']
+    denovo_inds.append(loc_index)
+    
+    for i in scores:
+        ar = A_dict[Genomic_scores[i]]
+        sc = ar.Scores[i][chr][loc_index]
+        if i == 'nt':
+            D[k]['nt'] =  1 if sc in ['G', 'C'] else 0
+        else:
+           D[k][i] =  sc 
     k += 1
-D = np.c_[D['nt'], D['cov/']]
+
+D = np.column_stack([D[s] for s in scores])
+
 
 
 nt2N = {'A':0, 'C':1, 'G':1, 'T':0, 'N':0}
-AA = np.zeros((len(A),2))
-AA[:,1] = A['cov/']
-for n,nn in nt2N.items():
-    AA[A['nt']==n,0] = nn
 
+AA = np.zeros((len(A),len(scores)))
+for i in xrange(0, len(scores)):
+    if scores[i] == "nt":
+        for n,nn in nt2N.items():
+            AA[A['nt']==n,i] = nn
+    else:
+        AA[:,i] = A[scores[i]]
 
 S = set(np.arange(len(AA))) - set(denovo_inds)
 
@@ -177,54 +217,8 @@ GeneRgns = create_gene_regions()
 print >>sys.stderr, "Joining the gene regions with the calculated per-base score..."
 
 #------------ Joining gene regions + classifier scores -----------------
-DD = defaultdict(lambda : defaultdict(int))
 
-
-p = 0
-I = sorted(chrInds['1'].keys())
-length = len(I)
-chr_prev = '1'
-for l in GeneRgns:
-    chr = str(l[0])
-    if chr != chr_prev:
-        I = sorted(chrInds[chr].keys())
-        chr_prev = chr
-        length = len(I)
-        p = 0
-        
-    ex_b = l[1]
-    ex_e = l[2]
-    pointer = p
-
-
-    while pointer < length and I[pointer][1] < ex_b:
-        pointer += 1
-    p = pointer
-
-   
-    
-    DD[l[3]]['length_total'] += ex_e - ex_b + 1
-    
-    while pointer < length and I[pointer][0] <= ex_e:
-
-        indexes = chrInds[chr][I[pointer]]
-        if ex_b <= I[pointer][0]:
-            begin = indexes[0]
-        else:
-            begin = indexes[0] + ex_b - I[pointer][0]
-        
-        if ex_e >= I[pointer][1]:
-            end = indexes[-1]
-        else:
-            end = indexes[-1] + ex_e - I[pointer][1] 
-        
-
-
-        DD[l[3]]['score'] += sum(S[begin:end+1]['pp_1'])
-        DD[l[3]]['length_cov'] += end - begin + 1
-        
-
-        pointer += 1
+DD = integrate(S, chrInds, GeneRgns, 'pp_1')
 
 # ----------- Writing results to the file ---------------------
 

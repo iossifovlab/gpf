@@ -274,8 +274,12 @@ class ProteinDomains:
         f.close()
         #print self._D
 
-d = ProteinDomains()
-d._create_dict()
+#d = ProteinDomains()
+#d._create_dict()
 #d._parse_original_file("uniprot_sprot.dat.gz")
             
 
+def load_protein_domains():
+    d = ProteinDomains()
+    d._create_dict()
+    return(d)
