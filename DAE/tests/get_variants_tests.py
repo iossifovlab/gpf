@@ -67,3 +67,37 @@ class GetVariantsTests(unittest.TestCase):
         filename = 'data/denovo_defaults_wig873.test'
         self.assert_variants_to_data_file(args, filename)
 
+    def test_transmitted_with_region_wig873(self):
+        args = ['--effectTypes=none',
+                '--transmittedStudy=wig873',
+                '--regionS', '1:1000000-2000000']
+        filename = 'data/transmitted_with_region_wig873.test'
+        self.assert_variants_to_data_file(args, filename)
+
+    def test_denovo_defaults_wig683(self):
+        args = ['--denovoStudies=wig683',
+                '--effectTypes=none',
+                '--transmittedStudy=none']
+        filename = 'data/denovo_defaults_wig683.test'
+        self.assert_variants_to_data_file(args, filename)
+
+    def test_denovo_defaults_wigState322(self):
+        args = ['--denovoStudies=wigState322',
+                '--effectTypes=none',
+                '--transmittedStudy=none']
+        filename = 'data/denovo_defaults_wigState322.test'
+        self.assert_variants_to_data_file(args, filename)
+
+    def test_transmitted_with_region_wigState322(self):
+        args = ['--effectTypes=none',
+                '--transmittedStudy=wigState322',
+                '--regionS', '1:1000000-2000000']
+        filename = 'data/transmitted_with_region_wigState322.test'
+        self.assert_variants_to_data_file(args, filename)
+
+    def test_denovo_defaults_wigState333(self):
+        args = ['--denovoStudies=wigState333',
+                '--effectTypes=none',
+                '--transmittedStudy=none']
+        filename = 'data/denovo_defaults_wigState333.test'
+        self.assert_variants_to_data_file(args, filename)
