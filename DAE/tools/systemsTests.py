@@ -23,6 +23,7 @@ class PPINetwork:
         if fn:
             self._load_from_file(fn)
         if ppn:
+            self.geneNS = ppn.geneNS
             self.name = ppn.name
             self.nbrs = copy.deepcopy(ppn.nbrs)
             self.nodes = copy.deepcopy(ppn.nodes)
@@ -30,7 +31,7 @@ class PPINetwork:
     def shuffle(self):
         es = [[a,b] for a in self.nbrs for b in self.nbrs[a] if a<b]
         # print "0:",len(es)
-        random.shuffle(es)
+        np.random.shuffle(es)
         es = [[a,b] if r < 0.5 else [b,a] for r,(a,b) in zip(np.random.rand(len(es)),es)]
         # print "OO:", " ".join([a+b for a,b in es])
         # print "1:",len(es)
@@ -105,11 +106,16 @@ class PPINetwork:
         # print "at the end:", len([[a,b] for a in self.nbrs for b in self.nbrs[a] if a<b])
         
     def _load_from_file(self,fn):
+        self.geneNS = "id"
         self.name = splitext(basename(fn))[0]
         self.nodes = {}
         self.nbrs = defaultdict(lambda : defaultdict(int))
         f = open(fn)
         for l in f:
+            if l[0] == "#":
+                if l.startswith("# geneNS: "):
+                    self.geneNS = l.strip()[len("# geneNS: "):]
+                continue
             gis = l.strip().split('\t')
             if len(gis)!=2:
                 raise Exception("Wrong line in " + fn)
@@ -438,7 +444,7 @@ class FunctionalProfiler:
         return fpRes
 
     def profile_ppn(self,ppn,shuffle=False):
-        gSets,gWghts = self.get_sets_and_weights('id')
+        gSets,gWghts = self.get_sets_and_weights(ppn.geneNS)
 
         fpRes = defaultdict(dict)
         for gsN,gsGs in gSets.t2G.items(): 

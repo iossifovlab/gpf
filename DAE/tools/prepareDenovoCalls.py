@@ -152,7 +152,7 @@ def procDenovoFile(iFn,vtype):
                 fsToWrite.append(fls[vtype]['weakToValidate'])
                 stats[vtype][strn+"-toValidate"]+=1
         for oF in fsToWrite:
-            oF.write("\t".join(cs) + "\n")
+            oF.write("\t".join(map(str,cs)) + "\n")
 procDenovoFile(indelFN,"indel")
 procDenovoFile(subFN,"sub")
 

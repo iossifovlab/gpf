@@ -877,8 +877,17 @@ class VariantsDB:
                 v.variant = dtR['variant']
                 v.bestStS = dtR['bestState']
                 v.resultNote = dtR['valnote']
-                v.why = dtR['why']
-                v.who = dtR['who']
+
+                try:
+                    v.why = dtR['why']
+                except:
+                    v.why = "???"
+            
+                try:
+                    v.who = dtR['who']
+                except:
+                    v.who = "???"
+
                 v.valCountsS = dtR['valcounts']
                 v.valBestStS = dtR['valbestState']
                 v.valStatus = dtR['valstatus']
