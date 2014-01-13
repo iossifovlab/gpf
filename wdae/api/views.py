@@ -57,7 +57,6 @@ def gene_sets_list(request):
         if not label or not formatStr:
             continue
         r.append({'label':label, 'val':tsId, 'conf':formatStr.split("|")})
-    print "gene_sets_list return:", r
     return Response({"gene_sets" : r})
 
 @api_view(['GET'])

@@ -202,8 +202,6 @@ class Study:
         self.description = ""
         if self.vdb._config.has_option(self._configSection,'description'):
             self.description = self.vdb._config.get(self._configSection, 'description' )
-
-        self._loaded = False
            
     def get_targeted_genes(self):
         if not self.vdb._config.has_option(self._configSection,"targetedGenes"):
@@ -280,9 +278,6 @@ class Study:
 
     def get_transmitted_summary_variants(self,minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None, effectTypes=None,ultraRareOnly=False, geneSyms=None, regionS=None):
 
-        if not self._loaded:
-            self._load_family_data()
-
         transmittedVariantsFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + ".txt.bgz"
         print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile 
 
@@ -336,9 +331,6 @@ class Study:
 
     def get_transmitted_variants(self, inChild=None, minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None,effectTypes=None,ultraRareOnly=False, geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
         
-        if not self._loaded:
-            self._load_family_data()
-                    
         transmittedVariantsTOOMANYFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
 
         if TMM_ALL:
@@ -397,9 +389,6 @@ class Study:
 
     def get_denovo_variants(self, inChild=None, variantTypes=None, effectTypes=None, geneSyms=None, familyIds=None, regionS=None, callSet=None):
 
-        if not self._loaded:
-            self._load_family_data()
-            
         if isinstance(effectTypes,str):
             effectTypes = self.vdb.effectTypesSet(effectTypes)
 
@@ -473,6 +462,16 @@ class Study:
         self._dnvData[callSet] = varList
         return varList
 
+    @property
+    def families(self):
+        self._load_family_data()
+        return self.families
+
+    @property
+    def badFamilies(self):
+        self._load_family_data()
+        return self.badFamilies
+        
     def _load_family_data(self):
         fdFile = self.vdb._config.get(self._configSection, "familyInfo.file" )
         fdFormat = self.vdb._config.get(self._configSection, "familyInfo.fileFormat" )
@@ -492,7 +491,6 @@ class Study:
             raise Exception("Unknown Family Fdef __init__(self,vdb,name):ile Format: " + fdFormat)
 
         self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
-        self._loaded = True
         
     def _load_family_data_SSCFams(self, reportF):
         rf = open(reportF)
@@ -804,32 +802,23 @@ class VariantsDB:
         return sorted(self._studyGroups.keys())
 
     def get_study(self,name):
-        def prepare(study):
-            if not study._loaded:
-                study._load_family_data()
-            return study
         if name in self._studies:
-            return prepare(self._studies[name])
+            return self._studies[name]
         if name in self._studyGroups:
             if len(self._studyGroups[name].studyNames)!=1:
                 raise Exception('get_study can only use study groups with only one study')
-            return prepare(self._studies[self._studyGroups[name].studyNames[0]])
+            return self._studies[self._studyGroups[name].studyNames[0]]
         raise Exception('unknown study ' + name)
         
     def get_studies(self,definition):
         sts = []
 
-        def prepare(study):
-            if not study._loaded:
-                study._load_family_data()
-            sts.append(study)
-            
         for name in definition.split(","):
             if name in self._studies:
-                prepare(self._studies[name])
+                sts.append(self._studies[name])
             if name in self._studyGroups:
                 for sName in self._studyGroups[name].studyNames:
-                    prepare(self._studies[sName])
+                    sts.append(self._studies[sName])
         return sts
                 
     def get_study_group(self, gName):
