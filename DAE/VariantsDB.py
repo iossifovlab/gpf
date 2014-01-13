@@ -20,7 +20,7 @@ from GeneTerms import GeneTerms
 from itertools import groupby
 from VariantAnnotation import get_effect_types_set
 import itertools
-
+from RegionOperations import Region,collapse
 
 class DnvVariant:
     def __str__(self):
@@ -293,7 +293,7 @@ class Study:
             variantTypes = set(variantTypes.split(","))
 
         if not regionS and geneSyms and len(geneSyms) <= 10:
-            regionS = self.get_gene_regions(geneSyms)
+            regionS = self.vdb.get_gene_regions(geneSyms)
 
         if regionS:
             f = gzip.open(transmittedVariantsFile)
@@ -333,12 +333,6 @@ class Study:
         else:
             f.close()
 
-    def get_gene_regions(self, gene_list):
-        DATA = {"OSBPL8": "12:76770000-76890000",
-                "DIP2C": "10:323271-532485",
-                "FAM49A": "2:16725000-16780000",
-                "AGPAT3": "21:4537000-45403000"}
-        return [DATA[gs] for gs in gene_list if gs in DATA]
 
     def get_transmitted_variants(self, inChild=None, minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None,effectTypes=None,ultraRareOnly=False, geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
         
@@ -479,7 +473,6 @@ class Study:
         self._dnvData[callSet] = varList
         return varList
 
-
     def _load_family_data(self):
         fdFile = self.vdb._config.get(self._configSection, "familyInfo.file" )
         fdFormat = self.vdb._config.get(self._configSection, "familyInfo.fileFormat" )
@@ -510,7 +503,7 @@ class Study:
         rlsMp = { "mother":"mom", "father":"dad", "proband":"prb", "designated-sibling":"sib", "other-sibling":"sib" }
         genderMap = {"female":"F", "male":"M"}
 
-        for indS in self.vdb._sfariDB.individual.values():
+        for indS in self.vdb.sfariDB.individual.values():
             if indS.familyId not in families:
                 continue
             p = Person()
@@ -523,7 +516,7 @@ class Study:
 
     def _load_family_data_SSCTrios(self, reportF):
         buff = defaultdict(dict) 
-        for indId,indS in self.vdb._sfariDB.individual.items():
+        for indId,indS in self.vdb.sfariDB.individual.items():
             if indS.collection != "ssc":
                 continue
             buff[indS.familyId][indS.role] = indS
@@ -711,7 +704,7 @@ class Study:
             f.atts = { x:qrpR[x] for x in qrp.dtype.names }
 
             def piF(pi):
-                sfariDB = self.vdb._sfariDB
+                sfariDB = self.vdb.sfariDB
                 if not sfariDB:
                     return pi
                 if pi not in sfariDB.sampleNumber2PersonId:
@@ -750,10 +743,13 @@ class Study:
         return families,badFamilies
 
 class VariantsDB:
-    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None):
-        
-        self._sfariDB = sfariDB
-        self._giDB = giDB
+    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None, phDB=None, genomesDB=None):
+        self.sfariDB = sfariDB
+        self.giDB = giDB
+
+        self.phDB = phDB 
+        self.genomesDB = genomesDB 
+
         if not confFile:
             confFile = daeDir + "/variantDB.conf"
             
@@ -778,6 +774,28 @@ class VariantsDB:
                     if stN not in self._studies:
                         raise Exception("The study " + stN + " in the study group " + gName + " is unknown")
 
+    def get_gene_regions(self, gene_list):
+        DATA = {"OSBPL8": "12:76770000-76890000",
+                "DIP2C": "10:323271-532485",
+                "FAM49A": "2:16725000-16780000",
+                "AGPAT3": "21:4537000-45403000"}
+
+        if not self.genomesDB:
+            return
+             
+        try:
+            gms = self._gms
+        except AttributeError:
+            gms = self.genomesDB.get_gene_models()
+            self._gms = gms
+
+        rgns = []
+        for gs in gene_list:
+            for gm in gms.gene_models_by_gene_name(gs):
+                rgns.append(Region(gm.chr,gm.tx[0]-200,gm.tx[1]+200))      
+        if rgns:
+            rgns = collapse(rgns)        
+        return ["%s:%d-%d" % (r.chr,r.start,r.stop) for r in rgns]
     
     def get_study_names(self):
         return sorted(self._studies.keys())
@@ -1001,7 +1019,7 @@ class VariantsDB:
 
         def set_genes(geneSetDef):
             gtId,tmId = geneSetDef.split(":")
-            return set(self._giDB.getGeneTerms(gtId).t2G[tmId].keys())
+            return set(self.giDB.getGeneTerms(gtId).t2G[tmId].keys())
 
         def recSingleGenes(inChild,effectTypes):
             vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
