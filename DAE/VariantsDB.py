@@ -987,6 +987,8 @@ class VariantsDB:
         nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq') 
 
         def addSet(setname, genes,desc=None):
+            if not genes:
+                return
             if desc:
                 r.tDesc[setname] = desc
             else:
@@ -1018,26 +1020,30 @@ class VariantsDB:
             sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() } 
             return {g for g,nf in sym2FN.items() if nf>1 }, {g for g,nf in sym2FN.items() if nf==1 }
 
+        addSet("prb.LoF",             genes('prb' ,'LGDs'))
         recPrbLGDs, sinPrbLGDs = recSingleGenes('prb' ,'LGDs')
-        addSet("recPrbLGDs",     recPrbLGDs)
-        addSet("sinPrbLGDs",     sinPrbLGDs) 
+        addSet("prb.LoF.Recurrent",   recPrbLGDs)
+        addSet("prb.LoF.Single",      sinPrbLGDs) 
 
-        addSet("prbLGDs",           genes('prb' ,'LGDs'))
-        addSet("prbMaleLGDs",       genes('prbM','LGDs'))
-        addSet("prbFemaleLGDs",     genes('prbF','LGDs'))
+        addSet("prb.LoF.Male",        genes('prbM','LGDs'))
+        addSet("prb.LoF.Female",      genes('prbF','LGDs'))
 
-        addSet("prbLGDsInFMR1",     genes('prb','LGDs',set_genes("main:FMR1-targets")))
+        addSet("prb.LoF.LowIQ",       genes('prb','LGDs',maxIQ=90))
+        addSet("prb.LoF.HighIQ",      genes('prb','LGDs',minIQ=90))
+
+        addSet("prb.LoF.FMRP",        genes('prb','LGDs',set_genes("main:FMR1-targets")))
         # addSet("prbLGDsInCHDs",     genes('prb','LGDs',set("CHD1,CHD2,CHD3,CHD4,CHD5,CHD6,CHD7,CHD8,CHD9".split(','))))
 
-        addSet("prbMissense",       genes('prb' ,'missense'))
-        addSet("prbMaleMissense",   genes('prbM' ,'missense'))
-        addSet("prbFemaleMissense", genes('prbF' ,'missense'))
-        addSet("prbSynonymous",     genes('prb' ,'synonymous'))
+        addSet("prb.Missense",        genes('prb' ,'missense'))
+        addSet("prb.Missense.Male",   genes('prbM' ,'missense'))
+        addSet("prb.Missense.Female", genes('prbF' ,'missense'))
+        addSet("prb.Synonymous",      genes('prb' ,'synonymous'))
 
-        addSet("sibLGDs",           genes('sib' ,'LGDs'))
-        addSet("sibMissense",       genes('sib' ,'missense'))
-        addSet("sibSynonymous",     genes('sib' ,'synonymous'))
+        addSet("sib.LoF",             genes('sib' ,'LGDs'))
+        addSet("sib.Missense",        genes('sib' ,'missense'))
+        addSet("sib.Synonymous",      genes('sib' ,'synonymous'))
 
+        '''
         addSet("A",      recPrbLGDs, "recPrbLGDs")
         addSet("B",      genes('prbF','LGDs'), "prbF")
         addSet("C",      genes('prb','LGDs',set_genes("main:FMR1-targets")), "prbFMRP")
@@ -1048,6 +1054,19 @@ class VariantsDB:
         addSet("ABC",    set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])) 
         addSet("ABCD",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) )
         addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
+        '''
+
+        recPrbCNVs, sinPrbCNVs = recSingleGenes('prb' ,'CNVs')
+        addSet("prb.CNV.Recurrent",     recPrbCNVs)
+
+        addSet("prb.CNV",   genes('prb' ,'CNVs'))
+        addSet("prb.Dup",   genes('prb' ,'CNV+'))
+        addSet("prb.Del",   genes('prb' ,'CNV-'))
+
+        addSet("sib.CNV",   genes('sib' ,'CNVs'))
+        addSet("sib.Dup",   genes('sib' ,'CNV+'))
+        addSet("sib.Del",   genes('sib' ,'CNV-'))
+
         return r
    
 
