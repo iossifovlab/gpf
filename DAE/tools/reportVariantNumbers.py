@@ -54,7 +54,8 @@ for studyNamesS in studyNamesSA:
                 if p.personId in famBuff[f.familyId]:
                     pp = famBuff[f.familyId][p.personId]
                     if pp.role != p.role or pp.gender != p.gender:
-                        raise Exception("dddd")
+                        # raise Exception("dddd")
+                        print >>sys.stderr, "dddd:" + f.familyId
                 else:
                     famBuff[f.familyId][p.personId] = p
                 

@@ -16,7 +16,7 @@ import RegionOperations
 
 def create_gene_regions():
 
-    goodChr = ["chr" + str(i) for i in xrange(1,23)]
+    goodChr = [str(i) for i in xrange(1,23)]
     
     genes = defaultdict(lambda : defaultdict(list)) 
     GMs = genomesDB.get_gene_models()
@@ -33,7 +33,7 @@ def create_gene_regions():
         
             clpsRgns = RegionOperations.collapse_noChr(rgns)
             for rgn in sorted(clpsRgns,key=lambda x: x.start):
-                rgnTpls.append((int(chr[3:]),rgn.start,rgn.stop,gnm))
+                rgnTpls.append((int(chr),rgn.start,rgn.stop,gnm))
 
 
     geneRgns = [rgnTpl for rgnTpl in sorted(rgnTpls)]
@@ -226,13 +226,64 @@ for l in GeneRgns:
 
         pointer += 1
 
+def integrate(S,column='pp_1'):
+    DD = defaultdict(lambda : defaultdict(int))
+
+
+    p = 0
+    I = sorted(chrInds['1'].keys())
+    length = len(I)
+    chr_prev = '1'
+    for l in GeneRgns:
+        chr = str(l[0])
+        if chr != chr_prev:
+            I = sorted(chrInds[chr].keys())
+            chr_prev = chr
+            length = len(I)
+            p = 0
+            
+        ex_b = l[1]
+        ex_e = l[2]
+        pointer = p
+
+
+        while pointer < length and I[pointer][1] < ex_b:
+            pointer += 1
+        p = pointer
+
+       
+        
+        DD[l[3]]['length_total'] += ex_e - ex_b + 1
+        
+        while pointer < length and I[pointer][0] <= ex_e:
+
+            indexes = chrInds[chr][I[pointer]]
+            if ex_b <= I[pointer][0]:
+                begin = indexes[0]
+            else:
+                begin = indexes[0] + ex_b - I[pointer][0]
+            
+            if ex_e >= I[pointer][1]:
+                end = indexes[-1]
+            else:
+                end = indexes[-1] + ex_e - I[pointer][1] 
+            
+
+
+            DD[l[3]]['score'] += sum(S[begin:end+1][column])
+            DD[l[3]]['length_cov'] += end - begin + 1
+            
+
+            pointer += 1
+    return DD
+
 # ----------- Writing results to the file ---------------------
 
 #res = open(outfile, 'w')
 
 print >>sys.stderr, "Writing the output..."
 
-
+print("\t".join("gene score coveredLen totalLen".split()))
 for k, v in sorted(DD.items(), key = lambda x: x[1]['score'], reverse=True):
     print("\t".join([k, str(v['score']), str(v['length_cov']), str(v['length_total'])]))
     #res.write("\t".join([k, str(v['score']), str(v['length_cov']), str(v['length_total'])]) + "\n")

@@ -103,8 +103,15 @@ class GeneInfoDB:
         self._loadGeneRegions()
         return self._geneRgnsMap
 
+    def getGeneTermIds(self):
+        return [sn[10:] for sn in self.config.sections() if sn.startswith('geneTerms.')]
+
+    def getGeneTermAtt(self,id,attName):
+        if self.config.has_option('geneTerms.' + id,attName):
+            return self.config.get('geneTerms.' + id, attName)
+
     def getGeneTerms(self,id="main",inNS="sym"):
-        fl = self.config.get('GeneInfo', 'geneTerms.' + id + ".file")
+        fl = self.config.get('geneTerms.' + id, "file")
     
         gt = loadGeneTerm(fl)
         if not inNS:
@@ -267,7 +274,7 @@ class GeneInfoDB:
 if __name__ == "__main__":
     import os
     print "hi";
-    wd = os.environ['T115_WORKING_DIR']
+    wd = os.environ['DAE_DB_DIR']
 
     d = GeneInfoDB(wd + "/geneInfo.conf", wd)
 
