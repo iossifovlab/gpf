@@ -1,6 +1,7 @@
 #!/bin/env python
 
-# Nov 7th 2013
+# version 2
+# January/10th/2014
 # written by Ewa
 
 import networkx as nx

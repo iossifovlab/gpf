@@ -30,9 +30,9 @@ if opts.help:
     print("-h, --help                       show this help message and exit")
     print("-c CHROM                         chromosome column number/name ")
     print("-p POS                           position column number/name")
+    print("-x LOC                           location (chr:pos) column number/name ")
     print("-F FILE                          genomic score file path")
     print("-S FILE                          scores subset: string colon separated")
-    print("-x LOC                           location (chr:pos) column number/name ")
     print("-H                               no header in the input file ")
     print("\n----------------------------------------------------------------\n\n")
     sys.exit(0)
@@ -127,7 +127,7 @@ if outfile != None:
 
 
 if opts.no_header == False:
-    header_line = "\t".join([gs.type + ":" + s for s in scores])
+    header_line = "\t".join([gs.name + ":" + s for s in scores])
     if outfile == None:
         print(first_line_str[:-1] + "\t" + header_line)
     else:
@@ -148,7 +148,7 @@ for l in All_lines:
         continue
     s = map(str,[a for a in res[k]])
     if s == []:
-        s = ['','','']
+        s = ['NA']*len(scores)
     if outfile == None:
         print(l[:-1] + "\t" + "\t".join(s))
     else:

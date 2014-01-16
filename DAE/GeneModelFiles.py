@@ -355,7 +355,6 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 ex.start = int(exon_starts[i])+1
                 ex.stop = int(exon_ends[i])
                 ex.frame = int(Frame[i])
-                ex.seq = None
                 exons.append(ex)
 
         else:
