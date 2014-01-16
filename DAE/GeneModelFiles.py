@@ -6,7 +6,6 @@
 import gzip, pickle, os.path, os, sys, re
 from subprocess import call
 import shutil
-#from collections import namedtuple
 from collections import defaultdict 
 from RegionOperations import *
                              
@@ -356,7 +355,6 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 ex.start = int(exon_starts[i])+1
                 ex.stop = int(exon_ends[i])
                 ex.frame = int(Frame[i])
-                ex.seq = None
                 exons.append(ex)
 
         else:
@@ -646,7 +644,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 self._utrModels[Relabel[chrom]] = self._utrModels[chrom]
                 self._utrModels.pop(chrom)
             except KeyError:
-                pass
+                self._utrModels.pop(chrom)
 
         
         for trID in self.transcriptModels:
@@ -750,19 +748,7 @@ class MitoModel(GeneModels):
                 self._utrModels['chrM'][mm.tx] = [mm]
                 self.transcriptModels[mm.trID] = mm
                 self._geneModels[mm.gene] = [mm]
-              
-            #elif mode == "regulatory_elements":
-            #    mm = TranscriptModel()
-            #    mm.chr = "chrM"
-            #    mm.gene = mm.trID = line[0]
-            #    mm.cds = (int(line[2]), int(line[2]))
-            #    mm.tx = (int(line[1]), int(line[2]))
-            #    mm.attr = {}
-            #    mm.exons = []
-            #    self._utrModels['chrM'][mm.tx] = [mm]
-            #    self.transcriptModels[mm.trID] = mm
-            #    self._geneModels[mm.gene] = [mm]
-            
+           
             else:
                 continue
         file.close()
@@ -812,6 +798,36 @@ def join_gene_models(*gene_models):
     gm._updateIndexes()
 
     return(gm)
+
+def get_gene_regions(GMs, autosomes=False, basic23=False):
+
+    if autosomes == True or basic23== True:
+        goodChr = [str(i) for i in xrange(1,23)]
+        if basic23== True:
+            goodChr.append("X")
+            goodChr.append("Y")
+    
+    genes = defaultdict(lambda : defaultdict(list)) 
+    for gm in GMs.transcriptModels.values():
+        if autosomes == True or basic23== True:
+            if gm.chr in goodChr: 
+                genes[gm.gene][gm.chr] += gm.CDS_regions()
+        else:
+            genes[gm.gene][gm.chr] += gm.CDS_regions()
+
+    rgnTpls = []
+
+    for gnm,chrsD in genes.items():
+        for chr,rgns in chrsD.items():
+        
+            clpsRgns = collapse_noChr(rgns)
+            for rgn in sorted(clpsRgns,key=lambda x: x.start):
+                rgnTpls.append((chr,rgn.start,rgn.stop,gnm))
+
+
+    geneRgns = [rgnTpl for rgnTpl in sorted(rgnTpls)]
+
+    return(geneRgns)
 
     
     
