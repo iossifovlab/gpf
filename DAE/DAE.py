@@ -19,8 +19,9 @@ config = Config()
 giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
 sfariDB = SfariCollection(config.sfariDBdir)
 phDB = phenoDB.rawTableFactory(config.phenoDBFile)
-vDB = VariantsDB(config.daeDir, config.variantsDBconfFile, sfariDB=sfariDB, giDB=giDB)
 genomesDB = GenomesDB(config.daeDir, config.genomesDBconfFile )
+
+vDB = VariantsDB(config.daeDir, config.variantsDBconfFile, sfariDB=sfariDB, giDB=giDB, phDB=phDB, genomesDB=genomesDB)
 
 
 def get_gene_sets_symNS(geneSetsDef,denovoStudies=None):

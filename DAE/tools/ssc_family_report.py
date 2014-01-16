@@ -167,7 +167,7 @@ if __name__  == "__main__":
     procAssignment('WiglerAssigned')
     procWigStudy('cshlSSCWE',True)
     procWigStudy('yaleSSCWE',downloadHist="1 or 2")
-    yaleCurrentUpload('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/yale-201310-upload.txt','yaleSSCWE')
+    # yaleCurrentUpload('/mnt/wigclust8/home/iossifov/work/sscExomeJointPaper/familyStatus/yale-201310-upload.txt','yaleSSCWE')
     # procWigStudy('wigEichler483',downloadHist="1, 2, or 3")
     procWigStudy('udapSSCWE',downloadHist="1, 2, or 3")
 

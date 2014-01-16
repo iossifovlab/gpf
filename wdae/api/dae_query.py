@@ -9,9 +9,7 @@ import api.GeneTerm
 from VariantAnnotation import get_effect_types
 from VariantsDB import mat2Str
 
-
 logger = logging.getLogger(__name__)
-
 
 def load_gene_set(gene_set_label, study_name=None):
     cache = get_cache('long')
