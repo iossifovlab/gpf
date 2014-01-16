@@ -245,10 +245,10 @@ def colormap_value(p_val, lessmore):
     return color
 
 
-def enrichment_results(dst_name, tst_name, gt_name, gs_name):
+def enrichment_results(dst_name, tst_name, gt_name, gs_name, gt_study=None):
         dsts = vDB.get_studies(dst_name)
         tsts = vDB.get_study(tst_name)
-        gene_terms = load_gene_set(gt_name, dst_name)
+        gene_terms = load_gene_set(gt_name, gt_study)
 
         all_res, totals = enrichment_test(dsts,
                                           tsts,

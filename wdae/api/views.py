@@ -381,10 +381,17 @@ Examples:
         return Response()
     if 'gs_name' not in request.QUERY_PARAMS:
         return Response()
+
     dst_name = request.QUERY_PARAMS['dst_name']
     tst_name = request.QUERY_PARAMS['tst_name']
     gt_name = request.QUERY_PARAMS['gt_name']
     gs_name = request.QUERY_PARAMS['gs_name']
 
-    res = enrichment_results(dst_name, tst_name, gt_name, gs_name)
+    if gt_name == 'denovo' and 'gt_study' not in request.QUERY_PARAMS:
+        return Response()
+    gene_study = None
+    if 'gt_study' in request.QUERY_PARAMS and gt_name == 'denovo':
+        gene_study = request.QUERY_PARAMS['gt_study']
+
+    res = enrichment_results(dst_name, tst_name, gt_name, gs_name, gene_study)
     return Response(res)
