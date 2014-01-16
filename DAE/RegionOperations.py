@@ -1,7 +1,7 @@
 #!/bin/env python
 
-# version 2
-# January/10th/2014
+# version 2.1
+# January/16th/2014
 # written by Ewa
 
 import networkx as nx
@@ -24,6 +24,9 @@ class Region:
 
     def __eq__(self,other):
         return self.chr == other.chr and self.start == other.start and self.stop == other.stop
+
+    def __ne__(self,other):
+        return not (self.chr == other.chr and self.start == other.start and self.stop == other.stop)
         
 
 def all_regions_from_chr(R, chr):
@@ -35,35 +38,9 @@ def all_regions_from_chr(R, chr):
 
 def unique_regions(R):
     """removed duplicated regions""" 
-    # return list(set(R))
-    D = defaultdict(list)
-    
-    for r in R:
-        D[r.chr].append(r)
 
-    for chr in D.keys():
-        D[chr].sort(key=lambda x: x.start)
-   
-    for chr,nds in D.items():
-        cp_nds = list(nds)
-        k = 1
-        removed = 0
-        for i in cp_nds[1:]:
-            for j in xrange(k-1,-1,-1):
-                if i.start != cp_nds[j].start:
-                    break
-                if i.stop == cp_nds[j].stop:
-                    print D[chr][k-removed]
-                    del D[chr][k-removed] #?
-                    removed += 1
-                    break
-            k += 1
-        
-      
-    U = [x for y in D.values() for x in y]
-    
-    return(U)
-        
+    return list(set(R))
+
 
 def connected_component(R):
     """This might be the same as collapse"""
@@ -127,9 +104,10 @@ def collapse(r, is_sorted=False):
 
 
 def collapse_noChr(r, is_sorted=False):
-    """collapse by ignoring the chromosome. Usefull when the caller knows that all the regions are from the same chromosome."""
+    """collapse by ignoring the chromosome. Useful when the caller knows that all the regions are from the same chromosome."""
     
     if r == []:
+
         return r
     r_copy = copy.copy(r)
     
@@ -199,42 +177,52 @@ def union(*r):
     r_sum = [el for list in r for el in list]
     return(collapse(r_sum))
 
-
-
-def difference(s1, s2):
-    '''This is in fact a symmetric difference'''
-    # union - intersection
+def _diff(A,B):
     D = []
-    U = union(s1, s2)
-    U.sort(key=lambda x: (x.chr, x.start))
-    I = intersection(s1, s2)
-
     k = 0
 
-    for u in U:
-        if k >= len(I):
-            D.append(u)
+    for a in A:
+        if k >= len(B):
+            D.append(a)
             continue 
-        if u.chr < I[k].chr:
-            D.append(u)
+        if a.chr < B[k].chr:
+            D.append(a)
             continue
-        if u.stop < I[k].start:
-            D.append(u)
+        if a.stop < B[k].start:
+            D.append(a)
             continue
-        prev = u.start
-        while k < len(I) and I[k].stop <= u.stop:
-            if prev < I[k].start:
-                new_u = Region(u.chr, prev, I[k].start - 1)
-                D.append(new_u)
-            prev = I[k].stop + 1
+        prev = a.start
+        while k < len(B) and B[k].stop <= a.stop and B[k].chr == a.chr:
+            if prev < B[k].start:
+                new_a = Region(a.chr, prev, B[k].start - 1)
+                D.append(new_a)
+            prev = B[k].stop + 1
             k+=1
-        if prev <= u.stop:
-           D.append(Region(u.chr, prev, u.stop))
+        if   k < len(B) and B[k].chr != a.chr:
+            continue
+        if prev <= a.stop:
+           D.append(Region(a.chr, prev, a.stop))
         
     return(D)
-        
-            
 
+
+def difference(s1, s2, symmetric=False):
+
+   
+    if symmetric == False:
+        A = collapse(s1)
+        A.sort(key=lambda x : (x.chr, x.start))
+    else:
+        A = union(s1, s2)
+        A.sort(key=lambda x: (x.chr, x.start))
+
+    B = intersection(s1, s2)
+
+    D = _diff(A, B)
+
+    return(D)
+    
+    
 
     
   
