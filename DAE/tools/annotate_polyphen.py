@@ -130,23 +130,21 @@ for l in variantFile:
 
     if locCol != None:
         loc = line[locCol]
-        chrom, position = loc.split(":")
     else:
         chrom = line[chrCol]
         position = line[posCol]
-    if chrom.startswith("chr") == False:
+        loc = chrom + ":" + position
+    if loc.startswith("chr") == False:
         chrom = "chr" + chrom
-    position = int(position)
 
     if varCol != None:
-        ref_allele, alt_allele = line[varCol].split("->")
-        ref_allele = ref_allele[-1]
-        alt_allele = alt_allele[0]
+        variant = line[varCol]
     else:
         ref_allele = line[refCol]
         alt_allele = line[altCol]
+        variant = "sub(" + ref_allele + "->" + alt_allele + ")"
 
-    pp_res = PP.get_variant(chrom, position, ref_allele, alt_allele)
+    pp_res = PP.get_variant(loc, variant)
     if pp_res == None:
         desc = "NA\tNA\tNA\tNA"
     else:
