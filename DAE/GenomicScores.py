@@ -379,7 +379,7 @@ class GenomicScore:
 
     def cut_target(self, target_file="/mnt/wigclust5/data/safe/egrabows/2013/MutationProbability/NMWE50_20.1.target.bed", target_file_format = "GATK"):
         if self.chr_format == "hg19" and target_file_format == "GATK":
-            new_gs = self.relabel_chromosomes_2()
+            new_gs = self.relabel_chromosomes(new_object=True)
         else:
             new_gs = self
                     
@@ -478,74 +478,79 @@ class GenomicScore:
                    Lengths[key] += v[1] - v[0] + 1 
         return(Lengths)
 
-    def _ucsc2gatk(self, chr):
-        chr = chr[3:]
-        if len(chr) < 3:
-            return(chr)
-        try:
-            chr = chr[chr.index("_")+1:]
-        except ValueError:
-            sys.stderr.write("chr" + " - not the hg19 format!\n")
-            return(None)
-        chr = chr.upper()
-        if "_" in chr:
-            chr = chr[:chr.index("_")]
-        return(chr + ".1")
-        
-
-    def relabel_chromosomes_2(self):
-        gs = GenomicScore()
-        gs.name = self.name
-        gs.Scores = defaultdict(dict)
-        gs._Keys = {}
-        gs.Indexing = {}
-        gs._score_names = self._score_names 
-
-        for key in self.Scores:
-            sys.stderr.write("Relabeling for: " + key + "\n")
-            for k, v in self.Scores[key].items():
-                gs.Scores[key][self._ucsc2gatk(k)] = v
-
-        for k,v in self.Indexing.items():
-            gs.Indexing[self._ucsc2gatk(k)] = v
-
-        for k, v in self._Keys.items():
-            gs._Keys[self._ucsc2gatk(k)] = v
-
-        gs.chr_format = "GATK"
-        return(gs)
-        
+  
                    
-    def relabel_chromosomes(self, file="/data/unsafe/autism/genomes/hg19/ucsc2gatk.txt"):
+    def relabel_chromosomes(self, file="/data/unsafe/autism/genomes/hg19/ucsc2gatk.txt", gatk=True, hg19=False, new_object = False):
+
+        if gatk == True and hg19 == True:
+            raise Exception("Please select only one chromosome format: gatk or hg19")
     
         f = open(file)
-        Relabel = dict([(line.split()[0], line.split()[1]) for line in f])
+        if gatk == True:
+            Relabel = dict([(line.split()[0], line.split()[1]) for line in f])
+        elif hg19 == True:
+            Relabel = dict([(line.split()[1], line.split()[0]) for line in f])
+        else:
+            raise Exception("Please select chromosome format: gatk or hg19 (both cannot be set to False)")
         f.close()
 
-        for key in self.Scores:
-            sys.stderr.write("Relabeling for: " + key + "\n")
-            for k, v in self.Scores[key].items():
+        if new_object == False:
+
+            for key in self.Scores:
+                sys.stderr.write("Relabeling for: " + key + "\n")
+                for k, v in self.Scores[key].items():
+                    try:
+                        self.Scores[key][Relabel[k]] = v
+                        del self.Scores[key][k]
+                    except:
+                        sys.stderr.write("Unknown chromosome: " + k + " -  has not been changed\n")
+
+            for k,v in self.Indexing.items():
                 try:
-                    self.Scores[key][Relabel[k]] = v
-                    del self.Scores[key][k]
+                    self.Indexing[Relabel[k]] = v
+                    del self.Indexing[k]
                 except:
-                    sys.stderr.write("Unknown chromosome: " + k + " -  has not been changed\n")
+                    pass
+
+            for k, v in self._Keys.items():
+                try:
+                    self._Keys[Relabel[k]] = v
+                    del self._Keys[k]
+                except:
+                    pass
                 
-        for k,v in self.Indexing.items():
-            try:
-                self.Indexing[Relabel[k]] = v
-                del self.Indexing[k]
-            except:
-                pass
+            if gatk == True:
+                self.chr_format = "GATK"
+            else:
+                self.chr_format = "hg19"
 
-        for k, v in self._Keys.items():
-            try:
-                self._Keys[Relabel[k]] = v
-                del self._Keys[k]
-            except:
-                pass
+        else:
+            gs = GenomicScore()
+            gs.name = self.name
+            gs.Scores = defaultdict(dict)
+            gs._Keys = {}
+            gs.Indexing = {}
+            gs._score_names = self._score_names 
 
-        self.chr_format = "GATK"
+            for key in self.Scores:
+                sys.stderr.write("Relabeling for: " + key + "\n")
+                for k, v in self.Scores[key].items():
+                    gs.Scores[key][Relabel[k]] = v
+
+            for k,v in self.Indexing.items():
+                gs.Indexing[Relabel[k]] = v
+
+            for k, v in self._Keys.items():
+                gs._Keys[Relabel[k]] = v
+            
+            if gatk == True:
+                gs.chr_format = "GATK"
+            else:
+                gs.chr_format = "hg19"
+            return(gs)
+        
+
+        
             
             
     def _bin_search1(self, chr, p):       

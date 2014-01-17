@@ -104,19 +104,29 @@ for l in variantFile:
        #All_locs.append(None)
        continue
     line = l[:-1].split("\t")
-    if locCol:
+    if locCol != None:
         All_locs.append(line[locCol])
     else:
         All_locs.append(line[chrCol] + ":" + line[posCol])
 
-
-
+if All_locs[0].startswith("chr"):
+    file_chr_format = "hg19"
+else:
+    file_chr_format = "GATK"
+    
 
 gs = load_genomic_scores(opts.F)
 if opts.S != None:
     scores = opts.S.split(";")
 else:
     scores = gs._score_names
+
+if gs.chr_format != file_chr_format:
+    if gs.chr_format == "hg19":
+        gs.relabel_chromosomes()
+    else:
+        gs.relabel_chromosomes(gatk=False, hg19=True)
+    
 res = gs.get_multi_score(All_locs, scores=scores)
 
 
