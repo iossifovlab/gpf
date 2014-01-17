@@ -146,7 +146,7 @@ for l in variantFile:
 
     pp_res = PP.get_variant(loc, variant)
     if pp_res == None:
-        desc = "NA\tNA\tNA\tNA"
+        desc = "\t\t\t"
     else:
         desc = pp_res.hdiv_pred + "\t" + str(pp_res.hdiv_prob) + "\t" + pp_res.hvar_pred+ "\t" + str(pp_res.hvar_prob)
 
