@@ -35,6 +35,7 @@ Genomic_scores = {'nt':'nt', 'cov/':'cov', 'GC_5':'gc'} # very important line
 genomic_arrays = list(set(Genomic_scores.values()))
 scores = Genomic_scores.keys()
 
+## TO BE REMOVED!!
 def create_gene_regions():
 
     goodChr = [str(i) for i in xrange(1,23)]
@@ -62,6 +63,7 @@ def create_gene_regions():
     return(geneRgns)
 
 
+## SEE IF THIS CAN GO 
 def join_intervals(D):
 
     for chr in D.keys():
@@ -118,6 +120,9 @@ def bin_search1(p, I):
             b = x+1
         if b > e:
             return(None)
+
+
+## CLEAR UP TO HERE
 
 outfile = 'scores_per_gene.txt'
 
