@@ -377,19 +377,18 @@ class GenomicScore:
         
     
 
-    def cut_target(self, target_file="/mnt/wigclust5/data/safe/egrabows/2013/MutationProbability/NMWE50_20.1.target.bed", target_file_format = "GATK"):
-        if self.chr_format == "hg19" and target_file_format == "GATK":
-            new_gs = self.relabel_chromosomes(new_object=True)
-        else:
-            new_gs = self
-                    
+    def cut_target(self, target_file="/mnt/wigclust5/data/safe/egrabows/2013/MutationProbability/NMWE50_20.1.target.bed"):
+        
         file = open(target_file)
         Locs = []
         for line in file:
             line = line.split()
             loc = (line[0] + ":" + line[1] + "-" + line[2])
             Locs.append(loc)
-        TS = new_gs.get_multi_score(Locs, if_sorted=True, region = True)#, fill_with_NA = True)
+        if Locs[0].startswith("chr") == False and self.chr_format == "hg19":
+            raise Exception("Chromosome formats don't match (gatk vs ucsc)")
+        
+        TS = self.get_multi_score(Locs, if_sorted=True, region = True)#, fill_with_NA = True)
         file.close()
         
         
@@ -397,7 +396,7 @@ class GenomicScore:
         gs.name = self.name
         gs._score_names = self._score_names
         gs.location = self.location
-        gs.chr_format = target_file_format
+        gs.chr_format = self.chr_format
 
         cols = len(gs._score_names)
         
@@ -413,8 +412,7 @@ class GenomicScore:
                 TS_dict[ts[cols][0].chr].append(ts)
 
        
-        #for chrom in new_gs._Keys.keys(): ###?
-        #    one_chr = [x for x in TS if x[cols] and x[cols][0].chr == chrom]
+
         for chr, vls in TS_dict.items():
     
             for sp in xrange(0, number_of_alignments):
@@ -480,18 +478,17 @@ class GenomicScore:
 
   
                    
-    def relabel_chromosomes(self, file="/data/unsafe/autism/genomes/hg19/ucsc2gatk.txt", gatk=True, hg19=False, new_object = False):
+    def relabel_chromosomes(self, file="/data/unsafe/autism/genomes/hg19/ucsc2gatk.txt", chr_format="GATK", new_object = False):
 
-        if gatk == True and hg19 == True:
-            raise Exception("Please select only one chromosome format: gatk or hg19")
+
     
         f = open(file)
-        if gatk == True:
+        if chr_format == "GATK":
             Relabel = dict([(line.split()[0], line.split()[1]) for line in f])
-        elif hg19 == True:
+        elif chr_format == "hg19":
             Relabel = dict([(line.split()[1], line.split()[0]) for line in f])
         else:
-            raise Exception("Please select chromosome format: gatk or hg19 (both cannot be set to False)")
+            raise Exception("Chromosome format should be either GATK or hg19")
         f.close()
 
         if new_object == False:
@@ -519,8 +516,8 @@ class GenomicScore:
                 except:
                     pass
                 
-            if gatk == True:
-                self.chr_format = "GATK"
+            if chr_format == "GATK":
+                self.chr_format = "GATK" 
             else:
                 self.chr_format = "hg19"
 
@@ -543,7 +540,7 @@ class GenomicScore:
             for k, v in self._Keys.items():
                 gs._Keys[Relabel[k]] = v
             
-            if gatk == True:
+            if chr_format == "GATK":
                 gs.chr_format = "GATK"
             else:
                 gs.chr_format = "hg19"
