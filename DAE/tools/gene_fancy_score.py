@@ -1,6 +1,6 @@
 #!/bin/env python
 
-# Jan 6th 2013
+# Jan 17h 2014
 # Ewa
 
 from DAE import *
@@ -14,10 +14,7 @@ from collections import defaultdict
 from collections import namedtuple
 import RegionOperations
 from GenomicScores import *
-
-
-#genomic_arrays = ['nt', 'cov']
-#scores = ['nt', 'cov/']
+from GeneModelFiles import get_gene_regions
 
 
 # all available now:
@@ -35,96 +32,8 @@ Genomic_scores = {'nt':'nt', 'cov/':'cov', 'GC_5':'gc'} # very important line
 genomic_arrays = list(set(Genomic_scores.values()))
 scores = Genomic_scores.keys()
 
-## TO BE REMOVED!!
-def create_gene_regions():
 
-    goodChr = [str(i) for i in xrange(1,23)]
-    
-    genes = defaultdict(lambda : defaultdict(list)) 
-    GMs = genomesDB.get_gene_models()
-
-
-    for gm in GMs.transcriptModels.values():
-        if gm.chr in goodChr:
-            genes[gm.gene][gm.chr] += gm.CDS_regions()
-
-    rgnTpls = []
-
-    for gnm,chrsD in genes.items():
-        for chr,rgns in chrsD.items():
-        
-            clpsRgns = RegionOperations.collapse_noChr(rgns)
-            for rgn in sorted(clpsRgns,key=lambda x: x.start):
-                rgnTpls.append((int(chr),rgn.start,rgn.stop,gnm))
-
-
-    geneRgns = [rgnTpl for rgnTpl in sorted(rgnTpls)]
-
-    return(geneRgns)
-
-
-## SEE IF THIS CAN GO 
-def join_intervals(D):
-
-    for chr in D.keys():
-        prev = (-2,-2)
-        for key in sorted(D[chr].keys(), key=lambda tup: tup[0]):
-            if key[0] == prev[1] + 1:
-                D[chr][(prev[0], key[1])] = (D[chr][prev][0], D[chr][key][1])
-                del D[chr][prev]
-                del D[chr][key]
-                prev = (prev[0], key[1])
-            else:
-                prev = key
-
-def create_index_binary(Ar, D, k):
-    
-    posb = Ar[0][1]
-    chrb = Ar[0][0]
-    pose = Ar[-1][1]
-    chre = Ar[-1][0]
-    length = len(Ar)
-    if chrb == chre and pose - length + 1 == posb:
-        D[chrb][(posb, pose)] = (k, k+length-1)
-        
-    else:
-        create_index_binary(Ar[:length/2], D, k)
-        create_index_binary(Ar[length/2:], D, k+length/2)
-
-def create_index(Ar):
-    
-    Inds = defaultdict(dict)
-    create_index_binary(Ar, Inds, 0)
-    join_intervals(Inds)
-    Inds.pop('X')
-    Inds.pop('Y')
-    return(Inds)
-        
-
-
-
-def bin_search1(p, I):
-    inds = I.keys()
-    inds.sort(key=lambda x: int(x[0]))
-    b = 0
-    e = len(inds)
-
-    while True:
-        x = b + (e-b)/2
-        if inds[x][1] >= p >=inds[x][0]:
-            return(I[inds[x]])
-            break
-        if p < inds[x][0]:
-            e = x-1
-        else:
-            b = x+1
-        if b > e:
-            return(None)
-
-
-## CLEAR UP TO HERE
-
-outfile = 'scores_per_gene.txt'
+#outfile = 'scores_per_gene.txt'
 
 
 print >>sys.stderr, "Loading scores..."
@@ -144,7 +53,7 @@ chrInds = Main_array.index
 print >>sys.stderr, "Creating training arrays ..."
 #----- Creating arrays: denovo (D), random (R) --------
 
-stds = vDB.get_studies('allWE')
+stds = vDB.get_studies('allWE')   ## DE NOVO STUDIES - A POSSIBLE PARAMETER
 locs = [v.location for v in vDB.get_denovo_variants(stds,variantTypes="sub")]
 
 types = []
@@ -217,7 +126,8 @@ S = np.core.records.fromarrays([A['chr'], A['pos'], pp[:,0],pp[:,1]], names='chr
 #------------- Gene Regions -------------------------
 print >>sys.stderr, "Calculation the gene regions..."
 
-GeneRgns = create_gene_regions()
+GMs = genomesDB.get_gene_models()
+GeneRgns = get_gene_regions(GMs, autosomes=True)
 
 print >>sys.stderr, "Joining the gene regions with the calculated per-base score..."
 
@@ -225,56 +135,6 @@ print >>sys.stderr, "Joining the gene regions with the calculated per-base score
 
 DD = integrate(S, chrInds, GeneRgns, 'pp_1')
 
-def integrate(S,column='pp_1'):
-    DD = defaultdict(lambda : defaultdict(int))
-
-
-    p = 0
-    I = sorted(chrInds['1'].keys())
-    length = len(I)
-    chr_prev = '1'
-    for l in GeneRgns:
-        chr = str(l[0])
-        if chr != chr_prev:
-            I = sorted(chrInds[chr].keys())
-            chr_prev = chr
-            length = len(I)
-            p = 0
-            
-        ex_b = l[1]
-        ex_e = l[2]
-        pointer = p
-
-
-        while pointer < length and I[pointer][1] < ex_b:
-            pointer += 1
-        p = pointer
-
-       
-        
-        DD[l[3]]['length_total'] += ex_e - ex_b + 1
-        
-        while pointer < length and I[pointer][0] <= ex_e:
-
-            indexes = chrInds[chr][I[pointer]]
-            if ex_b <= I[pointer][0]:
-                begin = indexes[0]
-            else:
-                begin = indexes[0] + ex_b - I[pointer][0]
-            
-            if ex_e >= I[pointer][1]:
-                end = indexes[-1]
-            else:
-                end = indexes[-1] + ex_e - I[pointer][1] 
-            
-
-
-            DD[l[3]]['score'] += sum(S[begin:end+1][column])
-            DD[l[3]]['length_cov'] += end - begin + 1
-            
-
-            pointer += 1
-    return DD
 
 # ----------- Writing results to the file ---------------------
 
