@@ -4,7 +4,6 @@
 # January/16th/2014
 # written by Ewa
 
-import networkx as nx
 from collections import namedtuple
 from collections import defaultdict
 import copy
@@ -44,6 +43,8 @@ def unique_regions(R):
 
 def connected_component(R):
     """This might be the same as collapse"""
+
+    import networkx as nx
 
     Un_R = unique_regions(R)
 
