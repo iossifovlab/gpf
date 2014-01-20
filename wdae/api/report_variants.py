@@ -47,6 +47,7 @@ from DAE import vDB
 from collections import defaultdict
 from collections import Counter
 import scipy.stats as stats
+import sys
 
 
 def effect_types():
@@ -91,7 +92,8 @@ def family_buffer(studies):
                 if p.personId in fam_buff[f.familyId]:
                     prev_p = fam_buff[f.familyId][p.personId]
                     if prev_p.role != p.role or prev_p.gender != p.gender:
-                        raise Exception("Person role/gender mismatch")
+                        # raise Exception("Person role/gender mismatch")
+                        print >>sys.stdout, "Person role/gender mismatch: familyId:", f.familyId, ", personId:", p.personId
                 else:
                     fam_buff[f.familyId][p.personId] = p
     return fam_buff
