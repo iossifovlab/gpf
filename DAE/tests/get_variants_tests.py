@@ -7,6 +7,7 @@ from query_variants import do_query_variants, join_line
 logger = logging.getLogger(__name__)
 
 
+@unittest.skip
 class GetVariantsTests(unittest.TestCase):
     def perform_query(self, args):
         args_dict = parse_cli_arguments(args)
