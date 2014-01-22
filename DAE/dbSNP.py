@@ -90,9 +90,11 @@ class DbSNP:
 		f = h5py.File(file, 'r')
 
 		for k,v in f.items():
-			self.Scores[str(k)] = v
+			self.Scores[str(k)] = np.array(v) 
 
-		#self.__create_sub_dics()
+		f.close()
+
+	
 	"""
 	def find_variants_for_location(self, chr, pos1, pos2=None, d=100):
 		if pos2 == None:
