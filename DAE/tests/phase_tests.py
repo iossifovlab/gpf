@@ -37,3 +37,13 @@ class PhaseTest(unittest.TestCase):
 
     def test_consistence_fail_loci(self):
         self.assertRaises(Exception, checkConsistency, self.inp_fail_loci)
+
+    # def test_phase(self):
+    #     res = phase(self.inp)
+    #     print res
+    #     for r in res:
+    #         print "r:", r
+    #         print 'mom:', r[0]
+    #         print 'dad:', r[1]
+
+    #     self.asertEqual(res)

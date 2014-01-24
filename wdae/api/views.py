@@ -21,7 +21,7 @@ from query_variants import do_query_variants, \
 from dae_query import prepare_summary, load_gene_set
 
 from report_variants import build_stats
-from enrichment import enrichment_results
+from enrichment_query import enrichment_results
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names
 

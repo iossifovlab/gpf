@@ -1,11 +1,10 @@
 import unittest
 
-from query_variants import prepare_inchild, prepare_effect_types, \
-    prepare_variant_types, prepare_family_ids, prepare_gene_syms, \
-    prepare_gene_sets, prepare_denovo_studies, \
-    prepare_transmitted_studies, dae_query_variants, \
+from query_variants import prepare_inchild, \
+    dae_query_variants, \
     do_query_variants
 
+from query_prepare import prepare_gene_sets
 import logging
 import itertools
 

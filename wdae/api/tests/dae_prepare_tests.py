@@ -1,10 +1,10 @@
 import unittest
 
-from query_variants import prepare_inchild, prepare_effect_types, \
-    prepare_variant_types, prepare_family_ids, prepare_gene_syms, \
+from query_prepare import prepare_gene_syms, \
     prepare_gene_sets, prepare_denovo_studies, \
-    prepare_transmitted_studies, dae_query_variants, \
-    do_query_variants
+    prepare_transmitted_studies
+from query_variants import prepare_inchild, prepare_effect_types, \
+    prepare_variant_types, prepare_family_ids
 #, prepare_family_file
 
 from api.dae_query import load_gene_set
@@ -106,7 +106,7 @@ class VariantTypesTests(unittest.TestCase):
         self.assertEqual(
             prepare_variant_types({'variantTypes': 'CNV-'}), 'CNV-')
         self.assertEqual(
-            prepare_variant_types({'variantTypes': 'snv'}), 'snv')
+            prepare_variant_types({'variantTypes': 'sub'}), 'sub')
         self.assertEqual(
             prepare_variant_types({'variantTypes': 'ins'}), 'ins')
         self.assertEqual(
@@ -228,14 +228,14 @@ class GeneSetsTests(unittest.TestCase):
 
     DENOVO_GENE_SET_1 = {'geneSet': 'denovo',
                          'geneStudy': 'StateWE2012',
-                         'geneTerm': 'prbLGDs'}
+                         'geneTerm': 'prb.Missense'}
 
     def test_denovo_gene_set(self):
         gs = prepare_gene_sets(self.DENOVO_GENE_SET_1)
         logger.debug("denovo gene sets: %s", str(gs))
         self.assertIsNotNone(gs)
         gt = load_gene_set('denovo', 'StateWE2012')
-        self.assertSetEqual(set(gt.t2G['prbLGDs'].keys()), gs)
+        self.assertSetEqual(set(gt.t2G['prb.Missense'].keys()), gs)
 
     DENOVO_GENE_SET_2 = {'geneSet': 'ala-bala',
                          'geneStudy': 'StateWE2012',
