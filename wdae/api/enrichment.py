@@ -42,7 +42,7 @@ def filter_transmitted(vs):
 
 def __build_or_load_transmitted(tstd):
     cache = get_cache('long')
-    background = cache.get('enrichment_background_model.'+tstd.name)
+    background = cache.get('enrichment_background_model.' + tstd.name)
     if not background:
         background = filter_transmitted(
             tstd.get_transmitted_summary_variants(ultraRareOnly=True,
@@ -170,18 +170,9 @@ class EnrichmentTestRes:
 from scipy import stats
 
 
-# def __init_gene_set_enrichment(var_genes_dict, gene_terms):
-#     all_res = {}
-#     # for set_name in gene_terms.t2G:
-#     #     all_res[set_name] = {}
-#     return all_res
-
-
 def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
     all_res = {}
     for test_name, gene_syms in var_genes_dict:
-        # for set_name in gene_terms.t2G:
-        #     # all_res[set_name][test_name] = EnrichmentTestRes()
         all_res[test_name] = EnrichmentTestRes()
         for gene_sym_list in gene_syms:
             touched_gene_sets = False
@@ -194,16 +185,9 @@ def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
 
 
 def enrichment_test(dsts, tsts, gene_syms_set):
-    # gtr = api.GeneTerm.GeneTerm(gene_terms, gene_set_name)
-    # logger.info('gtr: t2G: %s;', gtr.t2G)
-
     var_genes_dict = __build_variants_genes_dict(dsts, tsts)
 
-    # all_res = __init_gene_set_enrichment(var_genes_dict, gtr)
-    # logger.info('all_res: %s', all_res)
-
     all_res = __count_gene_set_enrichment(var_genes_dict, gene_syms_set)
-
     totals = {test_name: len(gene_syms)
               for test_name, gene_syms in var_genes_dict}
     bg_total = totals['BACKGROUND']
