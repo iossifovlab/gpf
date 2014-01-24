@@ -170,50 +170,53 @@ class EnrichmentTestRes:
 from scipy import stats
 
 
-def __init_gene_set_enrichment(var_genes_dict, gene_terms):
+# def __init_gene_set_enrichment(var_genes_dict, gene_terms):
+#     all_res = {}
+#     # for set_name in gene_terms.t2G:
+#     #     all_res[set_name] = {}
+#     return all_res
+
+
+def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
     all_res = {}
-    for set_name in gene_terms.t2G:
-        all_res[set_name] = {}
+    for test_name, gene_syms in var_genes_dict:
+        # for set_name in gene_terms.t2G:
+        #     # all_res[set_name][test_name] = EnrichmentTestRes()
+        all_res[test_name] = EnrichmentTestRes()
+        for gene_sym_list in gene_syms:
+            touched_gene_sets = False
+            for gene_sym in gene_sym_list:
+                if gene_sym in gene_syms_set:
+                    touched_gene_sets = True
+            if touched_gene_sets:
+                all_res[test_name].cnt += 1
     return all_res
 
 
-def __count_gene_set_enrichment(all_res, var_genes_dict, gene_terms):
-    for test_name, gene_syms in var_genes_dict:
-        for set_name in gene_terms.t2G:
-            all_res[set_name][test_name] = EnrichmentTestRes()
-        for gene_sym_list in gene_syms:
-            touched_gene_sets = set()
-            for gene_sym in gene_sym_list:
-                if gene_sym in gene_terms.g2T:
-                    touched_gene_sets |= set(gene_terms.g2T[gene_sym])
-            for gene_set in touched_gene_sets:
-                all_res[gene_set][test_name].cnt += 1
+def enrichment_test(dsts, tsts, gene_syms_set):
+    # gtr = api.GeneTerm.GeneTerm(gene_terms, gene_set_name)
+    # logger.info('gtr: t2G: %s;', gtr.t2G)
 
-
-import api.GeneTerm
-
-
-def enrichment_test(dsts, tsts, gene_terms, gene_set_name):
-    gtr = api.GeneTerm.GeneTerm(gene_terms, gene_set_name)
     var_genes_dict = __build_variants_genes_dict(dsts, tsts)
 
-    all_res = __init_gene_set_enrichment(var_genes_dict, gtr)
-    __count_gene_set_enrichment(all_res, var_genes_dict, gtr)
+    # all_res = __init_gene_set_enrichment(var_genes_dict, gtr)
+    # logger.info('all_res: %s', all_res)
+
+    all_res = __count_gene_set_enrichment(var_genes_dict, gene_syms_set)
 
     totals = {test_name: len(gene_syms)
               for test_name, gene_syms in var_genes_dict}
     bg_total = totals['BACKGROUND']
 
-    for gene_set in gtr.t2G:
-        bg_gene_set = all_res[gene_set]['BACKGROUND'].cnt
-        if bg_gene_set == 0:
-            bg_gene_set = 0.5
-        bg_prob = float(bg_gene_set) / bg_total
+    bg_gene_set = all_res['BACKGROUND'].cnt
+    if bg_gene_set == 0:
+        bg_gene_set = 0.5
+    bg_prob = float(bg_gene_set) / bg_total
 
-        for test_name, gene_syms in var_genes_dict:
-            res = all_res[gene_set][test_name]
-            total = totals[test_name]
-            res.p_val = stats.binom_test(res.cnt, total, p=bg_prob)
-            res.expected = round(bg_prob*total, 4)
+    for test_name, gene_syms in var_genes_dict:
+        res = all_res[test_name]
+        total = totals[test_name]
+        res.p_val = stats.binom_test(res.cnt, total, p=bg_prob)
+        res.expected = round(bg_prob*total, 4)
 
     return all_res, totals

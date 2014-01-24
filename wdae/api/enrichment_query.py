@@ -31,11 +31,11 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name, gt_study=None):
         dsts = vDB.get_studies(dst_name)
         tsts = vDB.get_study(tst_name)
         gene_terms = load_gene_set(gt_name, gt_study)
+        gene_syms_set = set(gene_terms.t2G[gs_name].keys())
 
         all_res, totals = enrichment_test(dsts,
                                           tsts,
-                                          gene_terms,
-                                          gs_name)
+                                          gene_syms_set)
         bg_total = totals['BACKGROUND']
         bg_cnt = all_res[gs_name]['BACKGROUND'].cnt
         bg_prop = round(float(bg_cnt) / bg_total, 3)

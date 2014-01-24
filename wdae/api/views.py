@@ -8,7 +8,7 @@ from rest_framework.parsers import JSONParser, FormParser
 
 
 from DAE import vDB
-from DAE import giDB 
+from DAE import giDB
 from VariantAnnotation import get_effect_types
 
 import itertools
@@ -314,8 +314,6 @@ Advanced family filter expects following fields:
     """
 
     if request.method == 'OPTIONS':
-        print "get_variants_csv: OPTIONS"
-
         return Response()
 
     data = prepare_query_dict(request.DATA)
