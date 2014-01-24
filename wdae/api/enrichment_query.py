@@ -37,7 +37,7 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name, gt_study=None):
                                           tsts,
                                           gene_syms_set)
         bg_total = totals['BACKGROUND']
-        bg_cnt = all_res[gs_name]['BACKGROUND'].cnt
+        bg_cnt = all_res['BACKGROUND'].cnt
         bg_prop = round(float(bg_cnt) / bg_total, 3)
 
         res = {}
@@ -50,10 +50,10 @@ def enrichment_results(dst_name, tst_name, gt_name, gs_name, gt_study=None):
         res['overlap'] = bg_cnt
         res['prop'] = bg_prop
 
-        for test_name in all_res[gs_name]:
+        for test_name in all_res:
             tres = {}
 
-            eres = all_res[gs_name][test_name]
+            eres = all_res[test_name]
 
             tres['overlap'] = totals[test_name]
             tres['count'] = eres.cnt
