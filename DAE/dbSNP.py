@@ -30,6 +30,21 @@ def find_gt(A, x):
 	i = bisect.bisect_right(A, x)
 	return(i)
 
+def string_complement(s):
+	s2 = ""
+	for i in s[::-1]:
+		if i == "A":
+			s2 += "T"
+		elif i == "T":
+			s2 += "A"
+		elif i == "C":
+			s2 += "G"
+		elif i == "G":
+			s2 += "C"
+		else:
+			s2 += i
+	return(s2)
+
 
 class DbSNP:
 	location = None
@@ -122,7 +137,11 @@ class DbSNP:
 				if i['class'] != "single":
 					I -= 1
 					continue
-				Obs = i['observed'].split("/")
+				if i['strand'] == "-":
+					o = string_complement(i['observed'])
+				else:
+					o = i['observed']
+				Obs = o.split("/")
 				if v.ref in Obs and v.seq in Obs:
 					R.append(i)
 			
@@ -137,8 +156,12 @@ class DbSNP:
 				if i['class'] != "insertion":
 					I -= 1
 					continue
-				obs_seq = i['observed'].split("/")[1]
-				if obs_seq ==  v.seq:
+				if i['strand'] == "-":
+					o = string_complement(i['observed'])
+				else:
+					o = i['observed']
+				obs_seq_list = o.split("/")
+				if v.seq in obs_seq_list:
 					R.append(i)
 
 			else:

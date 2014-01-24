@@ -26,7 +26,7 @@ parser.add_option('-q', help='seq column number/name', action='store')
 parser.add_option('-l', help ='length column number/name', action='store')
 
 parser.add_option('-F', help='dbSNP file', default="/data/unsafe/autism/genomes/hg19/dbSNP/dbSNP_138.hdf5", action='store') #
-parser.add_option('-C', help='dbSNP column numbers to annotate with', default="None", action='store')
+parser.add_option('-C', help='dbSNP column numbers to annotate with', default="5", action='store')
 parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
 
 
@@ -48,7 +48,7 @@ if opts.help:
     print("-l LEN                           length column number/name")
 
     print("-F FILE                          dbSNP file (/data/unsafe/autism/genomes/hg19/dbSNP/snp138.txt.gz by default)")
-    print("-C,                              dbSNP column numbers to annotate with: a string separated by colons (None by default)")
+    print("-C,                              dbSNP column numbers to annotate with: a string separated by colons ('5' by default)")
     print("-H                               no header in the input file ")
     print("\n----------------------------------------------------------------\n\n")
     sys.exit(0)
@@ -121,10 +121,10 @@ seqCol = assign_values(opts.q)
 lengthCol = assign_values(opts.l)
 
 
-if opts.C != "None":
-    opts.C = opts.C.replace(" ", "")
-    db_columns = map(int, opts.C.split(":"))
-    
+
+opts.C = opts.C.replace(" ", "")
+db_columns = map(int, opts.C.split(":"))
+
 
 db_snp = load_dbSNP(file=opts.F)
 
@@ -133,11 +133,8 @@ if outfile != None:
     out = open(outfile, 'w')
 
 if opts.no_header == False:
-    if opts.C == "None":
-        cols_header = "in_dbSNP"
-    else:
-        score_names = db_snp.Scores[db_snp.Scores.keys()[0]].dtype.names
-        cols_header = "\t".join([score_names[i-1] for i in db_columns])
+    score_names = db_snp.Scores[db_snp.Scores.keys()[0]].dtype.names
+    cols_header = "\t".join([score_names[i-1] for i in db_columns])
     if outfile == None:
         print(first_line_str[:-1] + "\t" + cols_header) #
     else:
@@ -174,21 +171,17 @@ for l in variantFile:
             db_snp.relabel_chromosomes()
 
     res_vars = db_snp.find_variant(*params)
+
     if res_vars == []:
-        if opts.C == "None":
-            des = "0"
-        else:
             des ="\t" * len(db_columns)
     else:
-        if opts.C == "None":
-            des = "1"
-        else:
-            des = ""
-            for c in db_columns:
-                for i in res_vars:
-                    des += str(i[c-1]) + "|"
-                des = des[:-1] + "\t"
-            des = des[:-1]
+        des = ""
+        for c in db_columns:
+            for i in res_vars:
+                des += str(i[c-1]) + "|"
+            des = des[:-1] + "\t"
+        des = des[:-1]
+        
             
 
     if outfile == None:
