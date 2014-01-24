@@ -1,5 +1,5 @@
 #!/bin/env python
-# Jan 8th 2013
+# Jan 17th 2014
 # by Ewa
 
 import sqlite3
@@ -13,9 +13,14 @@ class Polyphen:
         self.c = self.conn.cursor()
 
     def get_variant(self, loc, var):
-        pass
-
-    def get_variant(self, chr, pos, ref, alt):
+        if var.startswith("sub") == False:
+            return(None)
+        ref = var[4]
+        alt = var[-2]
+        chr, pos = loc.split(":")
+        pos = int(pos)
+        
+    #def get_variant(self, chr, pos, ref, alt):
 
         v = self.c.execute("SELECT chrom||':'||chrpos AS chrpos,gene,nt1,nt2,pos,aa1,aa2,hdiv_prediction,hdiv_prob,hvar_prediction,hvar_prob FROM features JOIN scores USING(id) WHERE chrom='" + chr + "' AND chrpos='" + str(pos) + "' AND nt1='" + ref + "' AND nt2='" + alt + "' ORDER BY hdiv_prob DESC LIMIT 1;")
         v = v.fetchone()

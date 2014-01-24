@@ -1,18 +1,19 @@
 #!/bin/env python
 
-# Jan 8th 2014
+# Jan 21th 2014
 # by Ewa
 
-import optparse
-from Polyphen import *
-import os
+from dbSNP import *
+from VariantAnnotation import load_variant
+import sys
 import time
-import datetime
+import optparse
+import os
 
 start=time.time()
 
-desc = """Program to annotate SNPs with polyphen scores """
-parser = optparse.OptionParser(version='%prog version 2.0 7/January/2014', description=desc, add_help_option=False)
+desc = """Program to annotate genetic variants with dbSNP"""
+parser = optparse.OptionParser(version='%prog version 1.0 21/January/2014', description=desc, add_help_option=False)
 parser.add_option('-h', '--help', default=False, action='store_true')
 parser.add_option('-c', help='chromosome column number/name', action='store')
 parser.add_option('-p', help='position column number/name', action='store')
@@ -20,14 +21,21 @@ parser.add_option('-x', help='location (chr:pos) column number/name', action='st
 parser.add_option('-v', help='variant column number/name', action='store')
 parser.add_option('-a', help='alternative allele (FOR SUBSTITUTIONS ONLY) column number/name', action='store')
 parser.add_option('-r', help='reference allele (FOR SUBSTITUTIONS ONLY) column number/name', action='store')
+parser.add_option('-t', help='type of mutation column number/name', action='store')
+parser.add_option('-q', help='seq column number/name', action='store')
+parser.add_option('-l', help ='length column number/name', action='store')
 
+parser.add_option('-F', help='dbSNP file', default="/data/unsafe/autism/genomes/hg19/dbSNP/dbSNP_138.hdf5", action='store') #
+parser.add_option('-C', help='dbSNP column numbers to annotate with', default="None", action='store')
 parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
+
+
 
 (opts, args) = parser.parse_args()
 
 if opts.help:
-    print("\n\n----------------------------------------------------------------\n\nProgram to annotate SNPs with polyphen scores - by Ewa, v2.0, 7/January/2014" )
-    print("BASIC USAGE: annotate_polyphen.py INFILE <OUTFILE> <options>\n")
+    print("\n\n----------------------------------------------------------------\n\n" + desc )
+    print("BASIC USAGE: " + sys.argv[0] + " INFILE <OUTFILE> <options>\n")
     print("-h, --help                       show this help message and exit")
     print("-c CHROM                         chromosome column number/name ")
     print("-p POS                           position column number/name")
@@ -35,9 +43,17 @@ if opts.help:
     print("-v VAR                           variant column number/name ")
     print("-a ALT                           alternative allele (FOR SUBSTITUTIONS ONLY) column number/name")
     print("-r REF                           reference allele (FOR SUBSTITUTIONS ONLY) column number/name")
+    print("-t TYPE                          type of mutation column number/name ")
+    print("-q SEQ                           seq column number/name ")
+    print("-l LEN                           length column number/name")
+
+    print("-F FILE                          dbSNP file (/data/unsafe/autism/genomes/hg19/dbSNP/snp138.txt.gz by default)")
+    print("-C,                              dbSNP column numbers to annotate with: a string separated by colons (None by default)")
     print("-H                               no header in the input file ")
     print("\n----------------------------------------------------------------\n\n")
     sys.exit(0)
+
+
 
 infile = '-'
 outfile = None
@@ -63,8 +79,8 @@ if opts.no_header == False:
     first_line = first_line_str.split() 
 else:
     first_line = None
-
     
+
 def give_column_number(s, header):
     try:
         c = header.index(s)
@@ -78,82 +94,107 @@ def assign_values(param):
     if param == None:
         return(param)
     try:
-        param = int(param) - 1
+        param = int(param)
     except:
         if first_line == None:
             sys.stderr.write("You cannot use column names when the file doesn't have a header (-H option set)!\n")
             sys.exit(-49)
-        param = give_column_number(param, first_line) - 1
+        param = give_column_number(param, first_line)
     return(param)
+
 
 
 if opts.x == None and opts.c == None:
     opts.x = "location"
-if (opts.v == None and opts.a == None):
+if (opts.v == None and opts.a == None) and (opts.v == None and opts.t == None):
     opts.v = "variant"
-
+    
+    
 chrCol = assign_values(opts.c)
 posCol = assign_values(opts.p)
 locCol = assign_values(opts.x)
 varCol = assign_values(opts.v)
 altCol = assign_values(opts.a)
 refCol = assign_values(opts.r)
+typeCol = assign_values(opts.t)
+seqCol = assign_values(opts.q)
+lengthCol = assign_values(opts.l)
+
+
+if opts.C != "None":
+    opts.C = opts.C.replace(" ", "")
+    db_columns = map(int, opts.C.split(":"))
+    
+
+db_snp = load_dbSNP(file=opts.F)
+
 
 if outfile != None:
     out = open(outfile, 'w')
 
-sys.stderr.write("...processing polyphen...............\n")
-
-PP = load_polyphen()
-
-file_header = "hdiv_pred\thdiv_prob_hvar_pred\thvar_prob"
-
 if opts.no_header == False:
-    if outfile == None:
-        print(first_line_str[:-1] + "\t" + file_header)
+    if opts.C == "None":
+        cols_header = "in_dbSNP"
     else:
-        out.write(first_line_str[:-1] + "\t" + file_header + "\n")
+        score_names = db_snp.Scores[db_snp.Scores.keys()[0]].dtype.names
+        cols_header = "\t".join([score_names[i-1] for i in db_columns])
+    if outfile == None:
+        print(first_line_str[:-1] + "\t" + cols_header) #
+    else:
+        out.write(first_line_str[:-1] + "\t" + cols_header + "\n") 
 
+argColumnNs = [chrCol, posCol, locCol, varCol, refCol, altCol]
+
+sys.stderr.write("...processing....................\n")
+chr_format = None
 k = 0
 for l in variantFile:
     if l[0] == "#":
         if outfile == None:
             print l,
         else:
-            out.write(l)
+            out.write(l) 
         continue
     k += 1
     if k%1000 == 0:
         sys.stderr.write(str(k) + " lines processed\n")
 
     line = l[:-1].split("\t")
+    params = [line[i-1] if i != None else None for i in argColumnNs]
 
-    if locCol != None:
-        loc = line[locCol]
-    else:
-        chrom = line[chrCol]
-        position = line[posCol]
-        loc = chrom + ":" + position
-    if loc.startswith("chr") == False:
-        chrom = "chr" + chrom
+    if chr_format == None:
+        if params[0] == None:
+            chr = params[3].split(":")[0]
+        else:
+            chr = params[0]
+        if chr.startswith("chr"):
+            chr_format = "hg19"
+        else:
+            chr_format = "GATK"
+            db_snp.relabel_chromosomes()
 
-    if varCol != None:
-        variant = line[varCol]
+    res_vars = db_snp.find_variant(*params)
+    if res_vars == []:
+        if opts.C == "None":
+            des = "0"
+        else:
+            des ="\t" * len(db_columns)
     else:
-        ref_allele = line[refCol]
-        alt_allele = line[altCol]
-        variant = "sub(" + ref_allele + "->" + alt_allele + ")"
-
-    pp_res = PP.get_variant(loc, variant)
-    if pp_res == None:
-        desc = "\t\t\t"
-    else:
-        desc = pp_res.hdiv_pred + "\t" + str(pp_res.hdiv_prob) + "\t" + pp_res.hvar_pred+ "\t" + str(pp_res.hvar_prob)
+        if opts.C == "None":
+            des = "1"
+        else:
+            des = ""
+            for c in db_columns:
+                for i in res_vars:
+                    des += str(i[c-1]) + "|"
+                des = des[:-1] + "\t"
+            des = des[:-1]
+            
 
     if outfile == None:
-        print(l[:-1] + "\t" + desc)
+        print(l[:-1] + "\t" + des)
     else:
-        out.write(l[:-1] + "\t" + desc + "\n")
+        out.write(l[:-1] + "\t" + des + "\n")
 
 if infile != '-':
     variantFile.close()
@@ -173,8 +214,8 @@ if outfile != None:
 
 sys.stderr.write("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start,0))) + "\n")
 
+
+
+
+
     
-
-
-
-        

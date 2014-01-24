@@ -280,16 +280,7 @@ class GenomicScore:
             
         np.savez(file, arrays=args, subscores = kwds)
             
-        #for subscore in self.Scores.keys():
-        #    if os.path.isdir(dir + "/" + subscore + "/") == False:
-        #        os.makedirs(dir + "/" + subscore + "/")
-           
-            #np.savez(dir + "/" + subscore + "/all_chr", self.Scores[subscore].values())
-         #   for k,v in self.Scores[subscore].items():
-         #       np.save(dir + "/" + subscore + "/" + k, v)
-        #seq_pickle = dir + "/Index.dump"
-        #pickle.dump(self.Indexing, open(seq_pickle, 'wb'))
-    
+       
     def _load_exome_scores(self, file, name = None):
         self.Scores = defaultdict(dict)
         self.Indexing = defaultdict(dict)
@@ -377,19 +368,18 @@ class GenomicScore:
         
     
 
-    def cut_target(self, target_file="/mnt/wigclust5/data/safe/egrabows/2013/MutationProbability/NMWE50_20.1.target.bed", target_file_format = "GATK"):
-        if self.chr_format == "hg19" and target_file_format == "GATK":
-            new_gs = self.relabel_chromosomes(new_object=True)
-        else:
-            new_gs = self
-                    
+    def cut_target(self, target_file="/mnt/wigclust5/data/safe/egrabows/2013/MutationProbability/NMWE50_20.1.target.bed"):
+        
         file = open(target_file)
         Locs = []
         for line in file:
             line = line.split()
             loc = (line[0] + ":" + line[1] + "-" + line[2])
             Locs.append(loc)
-        TS = new_gs.get_multi_score(Locs, if_sorted=True, region = True)#, fill_with_NA = True)
+        if Locs[0].startswith("chr") == False and self.chr_format == "hg19":
+            raise Exception("Chromosome formats don't match (gatk vs ucsc)")
+        
+        TS = self.get_multi_score(Locs, if_sorted=True, region = True)#, fill_with_NA = True)
         file.close()
         
         
@@ -397,7 +387,7 @@ class GenomicScore:
         gs.name = self.name
         gs._score_names = self._score_names
         gs.location = self.location
-        gs.chr_format = target_file_format
+        gs.chr_format = self.chr_format
 
         cols = len(gs._score_names)
         
@@ -413,8 +403,7 @@ class GenomicScore:
                 TS_dict[ts[cols][0].chr].append(ts)
 
        
-        #for chrom in new_gs._Keys.keys(): ###?
-        #    one_chr = [x for x in TS if x[cols] and x[cols][0].chr == chrom]
+
         for chr, vls in TS_dict.items():
     
             for sp in xrange(0, number_of_alignments):
@@ -480,18 +469,17 @@ class GenomicScore:
 
   
                    
-    def relabel_chromosomes(self, file="/data/unsafe/autism/genomes/hg19/ucsc2gatk.txt", gatk=True, hg19=False, new_object = False):
+    def relabel_chromosomes(self, file="/data/unsafe/autism/genomes/hg19/ucsc2gatk.txt", chr_format="GATK", new_object = False):
 
-        if gatk == True and hg19 == True:
-            raise Exception("Please select only one chromosome format: gatk or hg19")
+
     
         f = open(file)
-        if gatk == True:
+        if chr_format == "GATK":
             Relabel = dict([(line.split()[0], line.split()[1]) for line in f])
-        elif hg19 == True:
+        elif chr_format == "hg19":
             Relabel = dict([(line.split()[1], line.split()[0]) for line in f])
         else:
-            raise Exception("Please select chromosome format: gatk or hg19 (both cannot be set to False)")
+            raise Exception("Chromosome format should be either GATK or hg19")
         f.close()
 
         if new_object == False:
@@ -519,8 +507,8 @@ class GenomicScore:
                 except:
                     pass
                 
-            if gatk == True:
-                self.chr_format = "GATK"
+            if chr_format == "GATK":
+                self.chr_format = "GATK" 
             else:
                 self.chr_format = "hg19"
 
@@ -543,7 +531,7 @@ class GenomicScore:
             for k, v in self._Keys.items():
                 gs._Keys[Relabel[k]] = v
             
-            if gatk == True:
+            if chr_format == "GATK":
                 gs.chr_format = "GATK"
             else:
                 gs.chr_format = "hg19"
@@ -678,24 +666,7 @@ class GenomicScore:
 
             scrs = [self.Scores[s][chr][left_ind:right_ind+1] for s in scores]
             Rgns = [Region(chr, x[0], x[1]) for x in K]
-            """
-            if fill_with_NA == True:
-                if Rgns[0].start > posB:
-                    for p in xrange(0, len(scrs)-1):
-                        scrs[p].insert(0, ['NA']*(Rgns[0].start-posB))
-                r_ind = 0
-                for r in xrange(0, len(Rgns)-1):
-                    r_ind += Rgns[r].stop - Rgns[r].start + 1
-                    for p in xrange(0, len(scrs)-1):
-                        scrs[p].insert(r_ind, ['NA']* (Rgns[r+1].start - Rgns[r].stop - 1))
-
-                if Rgns[-1].stop < posE:
-                    for p in xrange(0, len(scrs)-1):
-                        scrs[p].extend(['NA']*(posE - Rgns[-1].stop))
-
-                Rgns = [Region(chr, posB, posE)] 
-            """     
-         
+           
                     
                     
             scrs.append(Rgns) 
@@ -813,84 +784,12 @@ class GenomicScore:
                 Region_list.append(Region(chrom, r[0], r[1]))
         return(Region_list)
 
-    """
-    def create_one_array(self):
-
-        L = self.get_lengths()
-        scores = self._score_names
-        #length = sum(L.values())
-        col_names='chr,pos,' + ",".join(scores)
-        D = {}
-
-        
-        for chrom, vls in self._Keys.items():
-            arr = []
-            
-            for v in vls:
-                arr.append(np.arange(v[0], v[1]+1))
-            chr = np.array([chrom]*L[chrom], dtype='<a6')
-            pos = np.hstack(arr)
-            one_chr = [chr, pos]
-            for i in scores:
-                one_chr.append(self.Scores[i][chrom])
-            D[chrom] = np.core.records.fromarrays(one_chr, names=col_names)
-
-        to_concat = []
-        #m = 0
-        #Indexing = defaultdict()
-        #return(D)
-        for chr,arr in sorted(D.items()):
-            to_concat.append(arr)
-            #for k, v in sorted(self.Indexing[chr].items()):
-            #    Indexing[chr][k] = (v[0]+m, v[1]+m)
-            #    m += v[1] - v[0] + 1
-
-        D_concat = np.concatenate(to_concat)
-        return(D_concat)
-    """
-
+ 
 
 class OneArray:
     array = None
     index = None
-    """
-    def __join_intervals(self, D):
-
-        for chr in D.keys():
-            prev = (-2,-2)
-            for key in sorted(D[chr].keys(), key=lambda tup: tup[0]):
-                if key[0] == prev[1] + 1:
-                    D[chr][(prev[0], key[1])] = (D[chr][prev][0], D[chr][key][1])
-                    del D[chr][prev]
-                    del D[chr][key]
-                    prev = (prev[0], key[1])
-                else:
-                    prev = key
-
-    def __create_index_binary(self, Ar, D, k):
     
-        posb = Ar[0]['pos']
-        chrb = Ar[0]['chr']
-        pose = Ar[-1]['pos']
-        chre = Ar[-1]['chr']
-        length = len(Ar)
-        if chrb == chre and pose - length + 1 == posb:
-            D[chrb][(posb, pose)] = (k, k+length-1)
-
-        else:
-            self.__create_index_binary(Ar[:length/2], D, k)
-            self.__create_index_binary(Ar[length/2:], D, k+length/2)
-
-    def create_index(self):
-
-        Inds = defaultdict(dict)
-        self.__create_index_binary(self.array, Inds, 0)
-        self.__join_intervals(Inds)
-        #Inds.pop('X')
-        #Inds.pop('Y')
-        self.index = Inds
-        #return(Inds)
-    """
 def create_one_array(*gs):
         
     L = gs[0].get_lengths()
