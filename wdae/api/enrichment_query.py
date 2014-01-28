@@ -3,10 +3,34 @@ from enrichment import enrichment_test, PRB_TESTS, SIB_TESTS
 
 from dae_query import load_gene_set
 import numpy as np
+from query_prepare import prepare_denovo_studies, prepare_transmitted_studies
+import logging
 
+logger = logging.getLogger(__name__)
+
+
+def __prepare_gene_set(data):
+    if 'geneSet' not in data or not data['geneSet'] \
+       or not data['geneSet'].strip():
+        return None
+    return data['geneSet'].strip()
+
+def __prepare_string_value(data, key):
+    if key not in data or not data[key] \
+       or not data[key].strip():
+        return None
+    return data[key].strip()
 
 def enrichment_prepare(data):
-    return None
+    result = {'denovoStudies': prepare_denovo_studies(data),
+              'transmittedStudies': prepare_transmitted_studies(data),
+              'geneSet': __prepare_string_value(data, 'geneSet'),
+              'geneTerm': __prepare_string_value(data, 'geneTerm')}
+
+    logger.info('enrichment_prepare result: %s', result)
+    if not all(result.values()):
+        return None
+    return result
 
 
 def colormap_value(p_val, lessmore):
