@@ -10,15 +10,14 @@ logger = logging.getLogger(__name__)
 
 class EnrichmentPrepareTests(unittest.TestCase):
 
+    def test_empty_denovo_study(self):
+        data = enrichment_prepare({'denovoStudies': []})
+        self.assertIsNone(data)
 
     TEST_DATA_MAIN = {'denovoStudies': ['allWEAndTG'],
                       'transmittedStudies': ['w873e374s322'],
                       'geneSet': 'main',
                       'geneTerm': 'ChromatinModifiers'}
-
-    def test_empty_denovo_study(self):
-        data = enrichment_prepare({'denovoStudies': []})
-        self.assertIsNone(data)
 
     def test_noneempty_result(self):
         data = enrichment_prepare(self.TEST_DATA_MAIN)
@@ -33,3 +32,34 @@ class EnrichmentPrepareTests(unittest.TestCase):
         data = enrichment_prepare(self.TEST_DATA_MAIN)
         assert_that(data, has_key('geneTerm'))
         assert_that(data, has_entry('geneTerm', 'ChromatinModifiers'))
+
+    def test_has_gene_set_main_symbols(self):
+        data = enrichment_prepare(self.TEST_DATA_MAIN)
+        assert_that(data, has_key('geneSyms'))
+
+    TEST_DATA_BAD_GENE_SET = {'denovoStudies': ['allWEAndTG'],
+                              'transmittedStudies': ['w873e374s322'],
+                              'geneSet': 'BAD_GENE_SET',
+                              'geneTerm': 'ChromatinModifiers'}
+
+    def test_gene_set_bad(self):
+        data = enrichment_prepare(self.TEST_DATA_BAD_GENE_SET)
+        assert_that(data, is_(none()))
+
+    TEST_DATA_BAD_GENE_TERM = {'denovoStudies': ['allWEAndTG'],
+                               'transmittedStudies': ['w873e374s322'],
+                               'geneSet': 'main',
+                               'geneTerm': 'BAD_GENE_TERM'}
+
+    def test_gene_term_bad(self):
+        data = enrichment_prepare(self.TEST_DATA_BAD_GENE_TERM)
+        assert_that(data, is_(none()))
+
+    TEST_DATA_GENE_SYMS = {'denovoStudies': ['allWEAndTG'],
+                           'transmittedStudies': ['w873e374s322'],
+                           'geneSyms': ['POGZ']}
+
+    def test_gene_syms(self):
+        data = enrichment_prepare(self.TEST_DATA_GENE_SYMS)
+
+        assert_that(data, has_key('geneSyms'))
