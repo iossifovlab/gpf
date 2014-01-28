@@ -63,3 +63,47 @@ class EnrichmentPrepareTests(unittest.TestCase):
         data = enrichment_prepare(self.TEST_DATA_GENE_SYMS)
 
         assert_that(data, has_key('geneSyms'))
+
+    TEST_DATA_DENOVO_GENE_SET_NO_GENE_STUDY = \
+        {'denovoStudies': ['allWEAndTG'],
+         'transmittedStudies': ['w873e374s322'],
+         'geneSet': 'denovo',
+         'geneTerm': 'prb.LoF'}
+
+    def test_denovo_gene_set_no_gene_study(self):
+        data = enrichment_prepare(self.TEST_DATA_DENOVO_GENE_SET_NO_GENE_STUDY)
+
+        assert_that(data, is_(none()))
+        
+    TEST_DATA_DENOVO_GENE_SET = \
+        {'denovoStudies': ['allWEAndTG'],
+         'transmittedStudies': ['w873e374s322'],
+         'geneSet': 'denovo',
+         'geneTerm': 'prb.LoF',
+         'geneStudy': 'DalyWE2012'}
+
+    def test_denovo_gene_set(self):
+        data = enrichment_prepare(self.TEST_DATA_DENOVO_GENE_SET)
+
+        assert_that(data, has_entry('geneStudy', 'DalyWE2012'))
+        assert_that(data, has_entry('geneSet', 'denovo'))
+        assert_that(data, has_entry('geneTerm', 'prb.LoF'))
+        assert_that(data, has_key('geneSyms'))
+
+    TEST_DATA_MAIN_BAD_DENOVO_STUDY = {'denovoStudies': ['BAD_STUDY'],
+                                       'transmittedStudies': ['w873e374s322'],
+                                       'geneSet': 'main',
+                                       'geneTerm': 'ChromatinModifiers'}
+
+    def test_bad_denovo_study(self):
+        data = enrichment_prepare(self.TEST_DATA_MAIN_BAD_DENOVO_STUDY)
+        assert_that(data, is_(none()))
+
+    TEST_DATA_MAIN_BAD_TRANSMITTED_STUDY = {'denovoStudies': ['DalyWE2012'],
+                                            'transmittedStudies': ['BAD_STUDY'],
+                                            'geneSet': 'main',
+                                            'geneTerm': 'ChromatinModifiers'}
+
+    def test_bad_transmitted_study(self):
+        data = enrichment_prepare(self.TEST_DATA_MAIN_BAD_TRANSMITTED_STUDY)
+        assert_that(data, is_(none()))

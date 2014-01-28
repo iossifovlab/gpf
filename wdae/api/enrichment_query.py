@@ -35,6 +35,7 @@ def enrichment_prepare(data):
 
     if not all(result.values()):
         return None
+
     return result
 
 
