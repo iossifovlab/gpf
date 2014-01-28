@@ -362,6 +362,19 @@ def enrichment_test(request):
     """
 Performs enrichment test. Expected parameters are:
 
+* "denovoStudies" -- expects list of denovo studies
+* "transmittedStudies" --- expects list of transmitted studies
+
+* "geneSyms" --- comma separated list of gene symbols or list of gene symbols
+
+
+* "geneSet" --- contains gene set name (one of 'main','GO' or 'disease')
+* "geneTerm" --- contains gene set term. Example:  'GO:2001293' (from GO),
+'mPFC_maternal' (from main).
+* "geneStudy --- if geneSet is 'denovo', then we expect this additional parameter, to
+    specify which denovo study to use
+
+
     * dst_name - denovo study name;
     * tst_name - transmitted study name;
     * gt_name - gene term name;
@@ -371,6 +384,12 @@ Examples:
 
     GET /api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers
     """
+
+    data = prepare_query_dict(request.QUERY_PARAMS)
+    # if isinstance(data, QueryDict):
+    #     data = prepare_query_dict(data)
+    logger.info("enrichment request: " + str(data))
+
     if 'dst_name' not in request.QUERY_PARAMS:
         return Response()
     if 'tst_name' not in request.QUERY_PARAMS:

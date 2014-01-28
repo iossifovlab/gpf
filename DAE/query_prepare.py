@@ -78,7 +78,8 @@ def gene_set_loader(gene_set_label, study_name=None):
     return gene_term
 
 
-def __load_gene_set(gene_set, gene_term, gene_study, gene_set_loader=gene_set_loader):
+def __load_gene_set(gene_set, gene_term, gene_study,
+                    gene_set_loader=gene_set_loader):
 
     if 'denovo' == gene_set:
         if not gene_study:

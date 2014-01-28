@@ -5,6 +5,10 @@ from dae_query import load_gene_set
 import numpy as np
 
 
+def enrichment_prepare(data):
+    return None
+
+
 def colormap_value(p_val, lessmore):
     scale = 0
     if p_val > 0:
