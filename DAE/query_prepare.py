@@ -1,5 +1,9 @@
 import itertools
+import logging
 from DAE import get_gene_sets_symNS, vDB
+
+
+logger = logging.getLogger(__name__)
 
 
 def __load_text_column(colSpec):
@@ -180,6 +184,8 @@ def prepare_transmitted_studies(data):
 def combine_gene_syms(data, gene_set_loader=gene_set_loader):
     gene_syms = prepare_gene_syms(data)
     gene_sets = prepare_gene_sets(data, gene_set_loader)
+    logger.info('combine gene syms: %s', gene_syms)
+    logger.info('combine gene syms: %s', gene_sets)
 
     if gene_syms is None:
         return gene_sets

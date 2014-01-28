@@ -32,6 +32,8 @@ def enrichment_prepare(data):
 
     if 'geneSet' in result and result['geneSet'] != 'denovo':
         del result['geneStudy']
+    
+    logger.info("enrichment prepare: %s", result)
 
     if not all(result.values()):
         return None
@@ -61,57 +63,66 @@ def colormap_value(p_val, lessmore):
     return color
 
 
-def enrichment_results(dst_name, tst_name, gt_name, gs_name, gt_study=None):
-        dsts = vDB.get_studies(dst_name)
-        tsts = vDB.get_study(tst_name)
-        gene_terms = load_gene_set(gt_name, gt_study)
-        gene_syms_set = set(gene_terms.t2G[gs_name].keys())
+def enrichment_results(denovoStudies=None,
+                       denovoStudiesName=None,
+                       transmittedStudies=None,
+                       geneSet=None,
+                       geneTerm=None,
+                       geneStudy=None,
+                       geneSyms=None):
 
-        all_res, totals = enrichment_test(dsts,
-                                          tsts,
-                                          gene_syms_set)
-        bg_total = totals['BACKGROUND']
-        bg_cnt = all_res['BACKGROUND'].cnt
-        bg_prop = round(float(bg_cnt) / bg_total, 3)
+    if geneSet is None:
+        gene_terms = None
+    else:
+        gene_terms = load_gene_set(geneSet, geneStudy)
 
-        res = {}
-        res['prb'] = PRB_TESTS
-        res['sib'] = SIB_TESTS
-        res['denovo_study'] = dst_name
-        res['gs_id'] = gs_name
-        res['gs_desc'] = gene_terms.tDesc[gs_name]
-        res['gene_number'] = len(gene_terms.t2G[gs_name])
-        res['overlap'] = bg_cnt
-        res['prop'] = bg_prop
+    all_res, totals = enrichment_test(denovoStudies,
+                                      transmittedStudies[0],
+                                      geneSyms)
+    bg_total = totals['BACKGROUND']
+    bg_cnt = all_res['BACKGROUND'].cnt
+    bg_prop = round(float(bg_cnt) / bg_total, 3)
 
-        for test_name in all_res:
-            tres = {}
+    res = {}
+    res['prb'] = PRB_TESTS
+    res['sib'] = SIB_TESTS
+    res['denovo_study'] = denovoStudiesName
+    res['gs_id'] = geneSet
+    if gene_terms:
+        res['gs_desc'] = gene_terms.tDesc[geneTerm]
 
-            eres = all_res[test_name]
+    res['gene_number'] = len(geneSyms)
+    res['overlap'] = bg_cnt
+    res['prop'] = bg_prop
 
-            tres['overlap'] = totals[test_name]
-            tres['count'] = eres.cnt
+    for test_name in all_res:
+        tres = {}
 
-            p_val = eres.p_val
-            if eres.p_val >= 0.0001:
-                p_val = round(eres.p_val, 4)
-                tres['p_val'] = p_val
-            else:
-                tres['p_val'] = str('%.1E' % eres.p_val)
+        eres = all_res[test_name]
 
-            expected = round(eres.expected, 4)
-            tres['expected'] = str(expected)
+        tres['overlap'] = totals[test_name]
+        tres['count'] = eres.cnt
 
-            if eres.cnt > expected:
-                lessmore = 'more'
-            elif eres.cnt < expected:
-                lessmore = 'less'
-            else:
-                lessmore = 'equal'
-            tres['lessmore'] = lessmore
-            # tres['prop'] =
-            tres['bg'] = colormap_value(p_val, lessmore)
+        p_val = eres.p_val
+        if eres.p_val >= 0.0001:
+            p_val = round(eres.p_val, 4)
+            tres['p_val'] = p_val
+        else:
+            tres['p_val'] = str('%.1E' % eres.p_val)
 
-            res[test_name] = tres
+        expected = round(eres.expected, 4)
+        tres['expected'] = str(expected)
 
-        return res
+        if eres.cnt > expected:
+            lessmore = 'more'
+        elif eres.cnt < expected:
+            lessmore = 'less'
+        else:
+            lessmore = 'equal'
+        tres['lessmore'] = lessmore
+        # tres['prop'] =
+        tres['bg'] = colormap_value(p_val, lessmore)
+
+        res[test_name] = tres
+
+    return res

@@ -21,7 +21,7 @@ from query_variants import do_query_variants, \
 from dae_query import prepare_summary, load_gene_set
 
 from report_variants import build_stats
-from enrichment_query import enrichment_results
+from enrichment_query import enrichment_results, enrichment_prepare
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names
 
@@ -385,30 +385,12 @@ Examples:
     GET /api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers
     """
 
-    data = prepare_query_dict(request.QUERY_PARAMS)
+    data = enrichment_prepare(request.QUERY_PARAMS)
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
     logger.info("enrichment request: " + str(data))
+    if data is None:
+        return Response(None)
 
-    if 'dst_name' not in request.QUERY_PARAMS:
-        return Response()
-    if 'tst_name' not in request.QUERY_PARAMS:
-        return Response()
-    if 'gt_name' not in request.QUERY_PARAMS:
-        return Response()
-    if 'gs_name' not in request.QUERY_PARAMS:
-        return Response()
-
-    dst_name = request.QUERY_PARAMS['dst_name']
-    tst_name = request.QUERY_PARAMS['tst_name']
-    gt_name = request.QUERY_PARAMS['gt_name']
-    gs_name = request.QUERY_PARAMS['gs_name']
-
-    if gt_name == 'denovo' and 'gt_study' not in request.QUERY_PARAMS:
-        return Response()
-    gene_study = None
-    if 'gt_study' in request.QUERY_PARAMS and gt_name == 'denovo':
-        gene_study = request.QUERY_PARAMS['gt_study']
-
-    res = enrichment_results(dst_name, tst_name, gt_name, gs_name, gene_study)
+    res = enrichment_results(**data)
     return Response(res)
