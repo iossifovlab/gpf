@@ -47,27 +47,11 @@ from DAE import vDB
 from collections import defaultdict
 from collections import Counter
 import scipy.stats as stats
+from VariantAnnotation import get_effect_types
 
 
 def effect_types():
-    return ['LGDs',
-            'frame-shift',
-            'nonsense',
-            'splice-site',
-            'missense',
-            'synonymous',
-            'CNVs',
-            'CNV+',
-            'CNV-',
-            'noStart',
-            'noEnd',
-            "5'UTR",
-            "3'UTR",
-            "3'UTR-intron",
-            "5'UTR-intron",
-            "intron",
-            "non-coding-intron",
-            "non-coding"]
+    return get_effect_types()
 
 
 def effect_type_sets():
@@ -243,12 +227,18 @@ def build_stats(studies):
             data = [__format_variants(vs_cnt,
                                       child_type_cnt[child]),
                     __format_child_types(ch_cnt,
-                                         child_type_cnt[child])]
+                                         child_type_cnt[child]),
+                    vs_cnt, ch_cnt]
+
             stats[effect_type].append(data)
             cnts[child][effect_type] = vs_cnt
+
+        zero_test = [d[2] == 0 and d[3] == 0 for d in stats[effect_type]]
+        if all(zero_test):
+            del stats[effect_type]
 
     return {'header': __format_header_summary(*header),
             'stats': dict(stats),
             'footer': __format_footer(cnts, child_type_cnt),
-            'rows': effect_types(),
+            'rows': sorted(stats.keys()),
             'cols': get_child_types()}
