@@ -321,9 +321,15 @@ Advanced family filter expects following fields:
     #     data = prepare_query_dict(data)
     logger.info("query variants request: " + str(data))
 
+    comment = ', '.join([': '.join([k, v]) for (k, v) in data.items()])
+    print comment
+
     generator = do_query_variants(data, gene_set_loader=load_gene_set)
     response = StreamingHttpResponse(
-        itertools.imap(join_line, generator), content_type='text/csv')
+        itertools.chain(
+            itertools.imap(join_line, generator),
+            ['# %s' % comment]),
+        content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
 
