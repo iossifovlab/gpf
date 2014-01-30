@@ -1,15 +1,13 @@
-import itertools
-import re
+import hashlib
 import logging
 from django.core.cache import get_cache
 
 from DAE import vDB
 from DAE import get_gene_sets_symNS
 import api.GeneTerm
-from VariantAnnotation import get_effect_types
-from VariantsDB import mat2Str
 
 logger = logging.getLogger(__name__)
+
 
 def load_gene_set(gene_set_label, study_name=None):
     cache = get_cache('long')
@@ -18,7 +16,10 @@ def load_gene_set(gene_set_label, study_name=None):
     if 'denovo' == gene_set_label:
         cache_key += '_study_' + study_name
 
-    gs = cache.get(cache_key)
+    key = hashlib.sha1(cache_key).hexdigest()
+    gs = cache.get(key)
+    logger.info("looking in cache for %s, found(%s)?",
+                cache_key, (gs is not None))
     if not gs:
         if 'denovo' == gene_set_label:
             dsts = vDB.get_studies(study_name)
@@ -26,7 +27,8 @@ def load_gene_set(gene_set_label, study_name=None):
         else:
             gene_term = get_gene_sets_symNS(gene_set_label)
         gs = api.GeneTerm.GeneTerm(gene_term)
-        cache.set(cache_key, gs)
+
+        cache.set(key, gs)
 
     return gs
 

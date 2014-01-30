@@ -45,10 +45,10 @@ def report_studies(request):
 
 @api_view(['GET'])
 def gene_sets_list(request):
-    r = [{'label' : 'Main', 'val' : 'main', 'conf' : ['[[[', 'key', ']]]', '(((' , 'count', '))):', "desc"]},
-    {'label' : 'GO', 'val' : 'GO' ,'conf' : ['key', 'count']},
-    {'label' : 'Disease', 'val' : 'disease' ,'conf' : ['key', 'count']},
-    {'label' : 'Denovo', 'val' : 'denovo' ,'conf' : ['---', 'key', '---', 'desc', '---', 'count']}]
+    # r = [{'label' : 'Main', 'val' : 'main', 'conf' : ['[[[', 'key', ']]]', '(((' , 'count', '))):', "desc"]},
+    # {'label' : 'GO', 'val' : 'GO' ,'conf' : ['key', 'count']},
+    # {'label' : 'Disease', 'val' : 'disease' ,'conf' : ['key', 'count']},
+    # {'label' : 'Denovo', 'val' : 'denovo' ,'conf' : ['---', 'key', '---', 'desc', '---', 'count']}]
 
     r = []
     for tsId in giDB.getGeneTermIds():
@@ -394,7 +394,7 @@ Examples:
     data = enrichment_prepare(request.QUERY_PARAMS)
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
-    logger.info("enrichment request: " + str(data))
+
     if data is None:
         return Response(None)
 

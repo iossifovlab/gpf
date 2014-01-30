@@ -32,8 +32,6 @@ def enrichment_prepare(data):
 
     if 'geneSet' in result and result['geneSet'] != 'denovo':
         del result['geneStudy']
-    
-    logger.info("enrichment prepare: %s", result)
 
     if not all(result.values()):
         return None
