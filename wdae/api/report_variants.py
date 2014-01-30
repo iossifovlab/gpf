@@ -48,6 +48,9 @@ from collections import defaultdict
 from collections import Counter
 import scipy.stats as stats
 from VariantAnnotation import get_effect_types
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def effect_types():
@@ -75,7 +78,13 @@ def family_buffer(studies):
                 if p.personId in fam_buff[f.familyId]:
                     prev_p = fam_buff[f.familyId][p.personId]
                     if prev_p.role != p.role or prev_p.gender != p.gender:
-                        raise Exception("Person role/gender mismatch")
+                        logger.error("study: (%s), familyId: (%s), personId: (%s), role: (%s), prev: (%s)",
+                                     study.name,
+                                     f.familyId,
+                                     p.personId,
+                                     "%s:%s" % (p.role, p.gender),
+                                     "%s:%s" % (prev_p.role, prev_p.gender))
+                        #raise Exception("Person role/gender mismatch")
                 else:
                     fam_buff[f.familyId][p.personId] = p
     return fam_buff
