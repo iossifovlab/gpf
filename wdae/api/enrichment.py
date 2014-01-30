@@ -1,10 +1,10 @@
-from django.core.cache import get_cache
 
 from DAE import vDB
 
 import itertools
 import logging
 import hashlib
+from api.wdae_cache import store, retrieve
 
 logger = logging.getLogger(__name__)
 
@@ -40,39 +40,16 @@ def filter_transmitted(vs):
             for v in vs]
 
 
-import pickle
-
-
-def store(key, value, chunksize=950000):
-    memcache = get_cache('long')
-    serialized = pickle.dumps(value, 2)
-    values = {}
-    for i in xrange(0, len(serialized), chunksize):
-        values['%s.%s' % (key, i//chunksize)] = serialized[i: i+chunksize]
-    memcache.set_many(values)
-
-
-def retrieve(key):
-    memcache = get_cache('long')
-    result = memcache.get_many(['%s.%s' % (key, i) for i in xrange(32)])
-    print "cache get:", [(k, len(v)) for (k, v) in result.items()]
-    l = [v for v in result.values() if v is not None]
-    if len(l) == 0:
-        return None
-    serialized = ''.join(l)
-    return pickle.loads(serialized)
-
-
 def __build_or_load_transmitted(tstd):
-    key = hashlib.sha1('enrichment_background_model.' + tstd.name)
-    background = retrieve(key.hexdigest())
+    key = 'enrichment_background_model.' + tstd.name
+    background = retrieve(key)
 
     if not background:
         background = filter_transmitted(
             tstd.get_transmitted_summary_variants(ultraRareOnly=True,
                                                   effectTypes="synonymous"))
         logger.info("caching background: %s", len(background))
-        store(key.hexdigest(), background)
+        store(key, background)
 
     return ['BACKGROUND', background]
 
