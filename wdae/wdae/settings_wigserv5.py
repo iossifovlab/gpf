@@ -1,6 +1,6 @@
 # Django settings for wdae project.
 
-DEBUG = False #True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -22,7 +22,7 @@ DATABASES = {
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['seqpipe-vm.setelis.com', 'seqpipe.setelis.com']
+ALLOWED_HOSTS = ['seqpipe-vm.setelis.com', 'seqpipe.setelis.com', 'wigserv5', 'wigserv5.cshl.edu']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -49,22 +49,22 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-MEDIA_ROOT = ''
+MEDIA_ROOT = '/data/dae/media/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.seqpipe-vm.setelis.com
 # Examples: "http://example.com/media/", "http://media.example.com/"
-MEDIA_URL = ''
+MEDIA_URL = 'http://wigserv5.cshl.edu/dae-media/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-STATIC_ROOT = ''
+STATIC_ROOT = '/data/dae/static/'
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
-STATIC_URL = '/static/'
+STATIC_URL = 'http://wigserv5.cshl.edu/dae-static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -82,7 +82,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'w6_2wbx1a)l)w+#gcty7*+$j=srtv$=v_)0_xsri1uwd3m%ku_'
+SECRET_KEY = 'w6_2wbx1a)l)w+#gcty7*+$j=srtv$=v_)0_xsri1uwd3m%ku_!!!!!!!!hdfkjhsk'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -160,10 +160,10 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console':{
+        'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
+            'formatter': 'verbose'
         },
         'mail_admins': {
             'level': 'ERROR',
@@ -189,6 +189,7 @@ LOGGING = {
         }
     }
 }
+
 
 CACHES = {
     'default': {

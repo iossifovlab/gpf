@@ -1,3 +1,16 @@
+VERSION 2 ADDITIONS:
+-------------------------
+1) In file
+
+python/wdae/variants/static/variants/js/constants.js
+
+change variable ApplicationURL to match the URL of the deployed
+application. For example, if application is deployed with 'dae/' prefix
+the ApplicationURL variable should be changed to:
+
+ApplicationURL = window.location.origin + '/dae/api/';
+
+
 HOW TO DEPLOY
 -------------------------
 
