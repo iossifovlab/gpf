@@ -902,12 +902,12 @@ class VariantsDB:
 
 
             v.valParent = ""
-                # if the valparent column exists but is empty, then the values
-                # are turned into a boolean value not and string, if this is
-                # the case then do not set the value because it will cause an
-                # error
-                if 'valparent' in dtR.dtype.names and dtR['valparent'].dtype!=bool:
-                    v.valParent = dtR['valparent']
+            # if the valparent column exists but is empty, then the values
+            # are turned into a boolean value not and string, if this is
+            # the case then do not set the value because it will cause an
+            # error
+            if 'valparent' in dtR.dtype.names and dtR['valparent'].dtype!=bool:
+                v.valParent = dtR['valparent']
 
             if v.familyId in knownFams:
                 v.memberInOrder = knownFams[v.familyId].memberInOrder
