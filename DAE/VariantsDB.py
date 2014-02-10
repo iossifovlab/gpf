@@ -22,14 +22,6 @@ from VariantAnnotation import get_effect_types_set
 import itertools
 from RegionOperations import Region,collapse
 
-class DnvVariant:
-    def __str__(self):
-        return "DnvVariant\n\t" + "\n\t".join([str((x,getattr(self, x))) for x in dir(self) if x[0] != '_'])
-
-class ParentVariant:
-    def __str__(self):
-        return "ParentVariant\n\t" + "\n\t".join([str((x,getattr(self, x))) for x in dir(self) if x[0] != '_'])
-
 class Variant:
     def __init__(self,atts,familyIdAtt="familyId", locationAtt="location", 
                 variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
@@ -837,7 +829,97 @@ class VariantsDB:
                     continue
                 yield v
                 seenVs.add(vKey)
-                
+
+    def _parse_validation_report(self,fn,knownFams,batchId=None):
+        print >>sys.stderr, "Parsing validation reprt file:|", fn,"|"
+        vars = []
+        dt = genfromtxt(fn,delimiter='\t',dtype=None,names=True, case_sensitive=True)
+        # if there is only row of data in the file then the genfromtxt function returns a 0d array.
+        # this causes an error when trying to iterate over it, so it must be converted to a 1d array
+        if dt.ndim==0:
+            dt=dt.reshape(1)
+           
+        if not batchId: 
+            batchId = dirname(fn).split("/")[-2]
+                    
+        for dtR in dt:
+            class ValidationVariant:
+                @property
+                def bestSt(self):
+                    try:
+                        return self._bestSt
+                    except AttributeError:
+                        self._bestSt = str2Mat(self.bestStS, colSep=" ")
+                        return self._bestSt
+                @property
+                def valBestSt(self):
+                    try:
+                        return self._valBestSt
+                    except AttributeError:
+                        self._valBestSt = str2Mat(self.valBestStS, colSep=" ")
+                        return self._valBestSt
+                @property
+                def valCounts(self):
+                    try:
+                        return self._valCounts
+                    except AttributeError:
+                        self._valCounts= str2Mat(self.valCountsS, colSep=" ")
+                        return self._valCounts
+                @property
+                def inChS(self):
+                    mbrs = self.memberInOrder
+                    bs = self.bestSt
+                    childStr = ''
+                    for c in xrange(2,len(mbrs)):
+                        if bs[1][c]:
+                            childStr += (mbrs[c].role + mbrs[c].gender)
+                    return childStr
+
+            v = ValidationVariant()
+
+            v.batchId = batchId 
+            v.atts = { x: dtR[x] for x in dt.dtype.names }
+
+            v.familyId = str(dtR['familyId'])
+            v.location = dtR['location']
+            v.variant = dtR['variant']
+            v.bestStS = dtR['bestState']
+            v.resultNote = dtR['valnote']
+
+            try:
+                v.why = dtR['why']
+            except:
+                v.why = "???"
+        
+            try:
+                v.who = dtR['who']
+            except:
+                v.who = "???"
+
+            v.valCountsS = dtR['valcounts']
+            v.valBestStS = dtR['valbestState']
+            v.valStatus = dtR['valstatus']
+
+
+            v.valParent = ""
+                # if the valparent column exists but is empty, then the values
+                # are turned into a boolean value not and string, if this is
+                # the case then do not set the value because it will cause an
+                # error
+                if 'valparent' in dtR.dtype.names and dtR['valparent'].dtype!=bool:
+                    v.valParent = dtR['valparent']
+
+            if v.familyId in knownFams:
+                v.memberInOrder = knownFams[v.familyId].memberInOrder
+            else:
+                v.memberInOrder = []
+                print >>sys.stderr, "Breh, the family", v.familyId, "is unknown"
+
+
+            # nvf.write("\t".join((v.familyId,v.location,v.variant,v.bestStS,v.who,v.why,v.batchId,v.valCountsS,v.valBestStS,v.valStatus,v.resultNote,v.valParent)) + "\n")
+            vars.append(v)
+        # nvf.close()
+        return vars
 
     def get_validation_variants(self):
         validationDir = self._config.get('validation', 'dir' )
@@ -854,7 +936,7 @@ class VariantsDB:
                     print >> sys.stderr, "Ha, family", f, "is more that one study: ", stdy.name, "and", knownFams[f]
                 knownFams[f] = stdy.families[f]
 
-	# print knownFams
+        # print knownFams
         '''
         knownIns = {}
         for v in self.get_denovo_variants(stdies,callSet="dirty"):
@@ -878,94 +960,8 @@ class VariantsDB:
         nIncompleteIns = 0
         nCompleteIns = 0
         vars = []
-        # nvf = open("view-normalized.txt",'w') 
         for fn in glob.glob(validationDir + '/*/reports/report*.txt'):
-            print >>sys.stderr, "Working on file:|", fn,"|"
-            dt = genfromtxt(fn,delimiter='\t',dtype=None,names=True, case_sensitive=True)
-            # if there is only row of data in the file then the genfromtxt function returns a 0d array.
-            # this causes an error when trying to iterate over it, so it must be converted to a 1d array
-            if dt.ndim==0:
-                dt=dt.reshape(1)
-                
-            batchId = dirname(fn).split("/")[-2]
-                        
-            for dtR in dt:
-                class ValidationVariant:
-                    @property
-                    def bestSt(self):
-                        try:
-                            return self._bestSt
-                        except AttributeError:
-                            self._bestSt = str2Mat(self.bestStS, colSep=" ")
-                            return self._bestSt
-                    @property
-                    def valBestSt(self):
-                        try:
-                            return self._valBestSt
-                        except AttributeError:
-                            self._valBestSt = str2Mat(self.valBestStS, colSep=" ")
-                            return self._valBestSt
-                    @property
-                    def valCounts(self):
-                        try:
-                            return self._valCounts
-                        except AttributeError:
-                            self._valCounts= str2Mat(self.valCountsS, colSep=" ")
-                            return self._valCounts
-                    @property
-                    def inChS(self):
-                        mbrs = self.memberInOrder
-                        bs = self.bestSt
-                        childStr = ''
-                        for c in xrange(2,len(mbrs)):
-                            if bs[1][c]:
-                                childStr += (mbrs[c].role + mbrs[c].gender)
-                        return childStr
-
-                v = ValidationVariant()
-
-                v.batchId = batchId 
-                v.atts = { x: dtR[x] for x in dt.dtype.names }
-
-                v.familyId = str(dtR['familyId'])
-                v.location = dtR['location']
-                v.variant = dtR['variant']
-                v.bestStS = dtR['bestState']
-                v.resultNote = dtR['valnote']
-
-                try:
-                    v.why = dtR['why']
-                except:
-                    v.why = "???"
-            
-                try:
-                    v.who = dtR['who']
-                except:
-                    v.who = "???"
-
-                v.valCountsS = dtR['valcounts']
-                v.valBestStS = dtR['valbestState']
-                v.valStatus = dtR['valstatus']
-
-
-                v.valParent = ""
-                # if the valparent column exists but is empty, then the values
-                # are turned into a boolean value not and string, if this is
-                # the case then do not set the value because it will cause an
-                # error
-                if 'valparent' in dtR.dtype.names and dtR['valparent'].dtype!=bool:
-                    v.valParent = dtR['valparent']
-
-                if v.familyId in knownFams:
-                    v.memberInOrder = knownFams[v.familyId].memberInOrder
-                else:
-                    v.memberInOrder = []
-                    print >>sys.stderr, "Breh, the family", v.familyId, "is unknown"
-
-
-                # nvf.write("\t".join((v.familyId,v.location,v.variant,v.bestStS,v.who,v.why,v.batchId,v.valCountsS,v.valBestStS,v.valStatus,v.resultNote,v.valParent)) + "\n")
-                vars.append(v)
-        # nvf.close()
+            vars += self._parse_validation_report(fn,knownFams)
         print >>sys.stderr, "nIncompleteIns:", nIncompleteIns
         print >>sys.stderr, "nCompleteIns:", nCompleteIns
         return vars
@@ -1212,7 +1208,7 @@ if __name__ == "__main__":
 
     for v in vDB.get_validation_variants():
         # pass
-	print v.familyId,v.location,v.variant,v.valStatus
+        print v.familyId,v.location,v.variant,v.valStatus
 
 
     '''
