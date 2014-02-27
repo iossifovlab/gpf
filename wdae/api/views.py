@@ -388,8 +388,7 @@ Performs enrichment test. Expected parameters are:
 
 Examples:
 
-    GET /api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers
-    """
+    GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
 
     data = enrichment_prepare(request.QUERY_PARAMS)
     # if isinstance(data, QueryDict):
