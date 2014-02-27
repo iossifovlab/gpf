@@ -321,7 +321,7 @@ Advanced family filter expects following fields:
     #     data = prepare_query_dict(data)
     logger.info("query variants request: " + str(data))
 
-    comment = ', '.join([': '.join([k, v]) for (k, v) in data.items()])
+    comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
     print comment
 
     generator = do_query_variants(data, gene_set_loader=load_gene_set)
