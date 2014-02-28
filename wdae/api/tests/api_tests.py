@@ -13,7 +13,7 @@ from VariantAnnotation import get_effect_types
 from query_variants import get_variant_types, get_child_types
 
 
-class FamiliesApiTest(APITestCase):
+class ApiTest(APITestCase):
 
     def test_query_variants(self):
         url = '/api/query_variants'
@@ -44,7 +44,7 @@ class FamiliesApiTest(APITestCase):
         url_report = '/api/report_variants?studies=IossifovWE2012'
         response = self.client.get(url_report)
         data = response.data
-        self.assertEqual(len(data['rows']), 18)
+        self.assertEqual(len(data['rows']), 15)
 
 
     def test_gene_set_response(self):
@@ -126,21 +126,21 @@ class FamiliesApiTest(APITestCase):
         data = {"report_studies" : get_denovo_studies_names() + get_transmitted_studies_names()}
         self.assertEqual(response.data, data)
 
-    def test_enrichment_test(self):
-        # Testing the best case
-        TEST_DATA = enrichment_results('allWE', 'w873e374s322', 'main', 'ChromatinModifiers')
-        url = '/api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers'
-        self.assertEqual(self.client.get(url).data, TEST_DATA)
-        # Testing missing arguments
-        url_missing_dst_name = '/api/enrichment_test?tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers';
-        url_missing_tst_name = '/api/enrichment_test?dst_name=allWE&gt_name=main&gs_name=ChromatinModifiers'
-        url_missing_gt_name = '/api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gs_name=ChromatinModifiers'
-        url_missing_gs_name = '/api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main'
+    # def test_enrichment_test(self):
+    #     # Testing the best case
+    #     TEST_DATA = enrichment_results('allWE', 'w873e374s322', 'main', 'ChromatinModifiers')
+    #     url = '/api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers'
+    #     self.assertEqual(self.client.get(url).data, TEST_DATA)
+    #     # Testing missing arguments
+    #     url_missing_dst_name = '/api/enrichment_test?tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers';
+    #     url_missing_tst_name = '/api/enrichment_test?dst_name=allWE&gt_name=main&gs_name=ChromatinModifiers'
+    #     url_missing_gt_name = '/api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gs_name=ChromatinModifiers'
+    #     url_missing_gs_name = '/api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main'
 
-        self.assertEqual(self.client.get(url_missing_dst_name).data, None)
-        self.assertEqual(self.client.get(url_missing_tst_name).data, None)
-        self.assertEqual(self.client.get(url_missing_gt_name).data, None)
-        self.assertEqual(self.client.get(url_missing_gs_name).data, None)
+    #     self.assertEqual(self.client.get(url_missing_dst_name).data, None)
+    #     self.assertEqual(self.client.get(url_missing_tst_name).data, None)
+    #     self.assertEqual(self.client.get(url_missing_gt_name).data, None)
+    #     self.assertEqual(self.client.get(url_missing_gs_name).data, None)
 
     # def test_gene_sets_list(self):
     #     TEST_DATA = {"gene_sets" : [{'label' : 'Main', 'val' : 'main', 'conf' : ['[[[', 'key', ']]]', '(((' , 'count', '))):', "desc"]},
