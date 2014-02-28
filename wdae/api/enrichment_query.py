@@ -82,8 +82,6 @@ def enrichment_results(denovoStudies=None,
     else:
         gene_terms = load_gene_set(geneSet, geneStudy)
 
-    print('gene terms: %s' % str(gene_terms))
-
     all_res, totals = enrichment_test(denovoStudies,
                                       transmittedStudies[0],
                                       geneSyms)
@@ -98,10 +96,8 @@ def enrichment_results(denovoStudies=None,
     res['gs_id'] = geneSet
 
     if geneSet and geneTerm:
-        print('gene term: <%s>, <%s>' % (str(geneSet), str(geneTerm)))
         res['gs_desc'] = gene_terms.tDesc[geneTerm]
     else:
-        print('gene syms: %s' % geneSyms)
         desc = ','.join(geneSyms)
         res['gs_desc'] = desc
         res['gs_id'] = desc
