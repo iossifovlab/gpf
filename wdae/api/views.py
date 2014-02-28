@@ -39,17 +39,15 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names
 
 logger = logging.getLogger(__name__)
 
+
 @api_view(['GET'])
 def report_studies(request):
-    return Response({"report_studies" : get_denovo_studies_names() + get_transmitted_studies_names()})
+    return Response({"report_studies": get_denovo_studies_names() +
+                     get_transmitted_studies_names()})
+
 
 @api_view(['GET'])
 def gene_sets_list(request):
-    # r = [{'label' : 'Main', 'val' : 'main', 'conf' : ['[[[', 'key', ']]]', '(((' , 'count', '))):', "desc"]},
-    # {'label' : 'GO', 'val' : 'GO' ,'conf' : ['key', 'count']},
-    # {'label' : 'Disease', 'val' : 'disease' ,'conf' : ['key', 'count']},
-    # {'label' : 'Denovo', 'val' : 'denovo' ,'conf' : ['---', 'key', '---', 'desc', '---', 'count']}]
-
     r = []
     for tsId in giDB.getGeneTermIds():
         label = giDB.getGeneTermAtt(tsId, "webLabel")
@@ -58,6 +56,7 @@ def gene_sets_list(request):
             continue
         r.append({'label':label, 'val':tsId, 'conf':formatStr.split("|")})
     return Response({"gene_sets" : r})
+
 
 @api_view(['GET'])
 def denovo_studies_list(request):
@@ -389,10 +388,11 @@ Performs enrichment test. Expected parameters are:
 Examples:
 
     GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
-
-    data = enrichment_prepare(request.QUERY_PARAMS)
+    query_data = prepare_query_dict(request.QUERY_PARAMS)
+    data = enrichment_prepare(query_data)
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
+    logger.info("enrichment query: %s" % str(data))
 
     if data is None:
         return Response(None)

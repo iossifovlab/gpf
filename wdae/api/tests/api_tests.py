@@ -46,7 +46,6 @@ class ApiTest(APITestCase):
         data = response.data
         self.assertEqual(len(data['rows']), 15)
 
-
     def test_gene_set_response(self):
         # Test simple with gene_set only provided
         url_gs = '/api/gene_set_list?gene_set=main'

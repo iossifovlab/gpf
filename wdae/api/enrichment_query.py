@@ -14,7 +14,10 @@ def __prepare_string_value(data, key):
     if key not in data or not data[key] \
        or not data[key].strip():
         return None
-    return data[key].strip()
+    res = data[key].strip()
+    if res == 'null' or res == 'Null' or res == 'None' or res == 'none':
+        return None
+    return res
 
 
 def enrichment_prepare(data):
@@ -26,6 +29,11 @@ def enrichment_prepare(data):
               'geneSyms': combine_gene_syms(data)}
 
     if 'geneSet' not in result or result['geneSet'] is None:
+        del result['geneSet']
+        del result['geneTerm']
+        del result['geneStudy']
+
+    if 'geneTerm' not in result or result['geneTerm'] is None:
         del result['geneSet']
         del result['geneTerm']
         del result['geneStudy']
@@ -69,10 +77,12 @@ def enrichment_results(denovoStudies=None,
                        geneStudy=None,
                        geneSyms=None):
 
-    if geneSet is None:
+    if geneSet is None or geneSet is None:
         gene_terms = None
     else:
         gene_terms = load_gene_set(geneSet, geneStudy)
+
+    print('gene terms: %s' % str(gene_terms))
 
     all_res, totals = enrichment_test(denovoStudies,
                                       transmittedStudies[0],
@@ -86,8 +96,15 @@ def enrichment_results(denovoStudies=None,
     res['sib'] = SIB_TESTS
     res['denovo_study'] = denovoStudiesName
     res['gs_id'] = geneSet
-    if gene_terms:
+
+    if geneSet and geneTerm:
+        print('gene term: <%s>, <%s>' % (str(geneSet), str(geneTerm)))
         res['gs_desc'] = gene_terms.tDesc[geneTerm]
+    else:
+        print('gene syms: %s' % geneSyms)
+        desc = ','.join(geneSyms)
+        res['gs_desc'] = desc
+        res['gs_id'] = desc
 
     res['gene_number'] = len(geneSyms)
     res['overlap'] = bg_cnt

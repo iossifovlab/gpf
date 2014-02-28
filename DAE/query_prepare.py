@@ -31,11 +31,15 @@ def __load_text_column(colSpec):
 
 
 def prepare_gene_syms(data):
+    print("prepare gene syms data: %s" % str(data))
+
     if 'geneSyms' not in data and 'geneSym' not in data:
         return None
 
     if 'geneSyms' in data and data['geneSyms']:
         gene_sym = data['geneSyms']
+        print('gene syms found: %s' % str(gene_sym))
+
     elif 'geneSym' in data and data['geneSym']:
         gene_sym = data['geneSym']
     elif 'geneSymFile' in data and data['geneSymFile']:
@@ -45,6 +49,7 @@ def prepare_gene_syms(data):
 
     if isinstance(gene_sym, list):
         gl = gene_sym
+        print("gene list: %s" % str(gl))
         if not gl:
             return None
         else:
@@ -52,10 +57,12 @@ def prepare_gene_syms(data):
 
     elif isinstance(gene_sym, str):
         gl = [s.strip() for s in gene_sym.split(',') if len(s.strip()) > 0]
+        print("string gene list: %s" % str(gl))
         if not gl:
             return None
         return set(gl)
     else:
+        print('bad gene syms type: %s' % type(gene_sym))
         return None
 
 
