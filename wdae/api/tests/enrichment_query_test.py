@@ -1,9 +1,9 @@
 import unittest
 
-from query_prepare import prepare_gene_sets
+# from query_prepare import prepare_gene_sets
 import logging
 from api.enrichment_query import enrichment_prepare
-from hamcrest import *
+from hamcrest import assert_that, has_entry, has_key, is_, none
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class EnrichmentPrepareTests(unittest.TestCase):
         data = enrichment_prepare(self.TEST_DATA_DENOVO_GENE_SET_NO_GENE_STUDY)
 
         assert_that(data, is_(none()))
-        
+
     TEST_DATA_DENOVO_GENE_SET = \
         {'denovoStudies': ['allWEAndTG'],
          'transmittedStudies': ['w873e374s322'],
