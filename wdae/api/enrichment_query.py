@@ -28,12 +28,8 @@ def enrichment_prepare(data):
               'geneStudy': __prepare_string_value(data, 'geneStudy'),
               'geneSyms': combine_gene_syms(data)}
 
-    if 'geneSet' not in result or result['geneSet'] is None:
-        del result['geneSet']
-        del result['geneTerm']
-        del result['geneStudy']
-
-    if 'geneTerm' not in result or result['geneTerm'] is None:
+    if 'geneSet' not in result or result['geneSet'] is None or \
+       'geneTerm' not in result or result['geneTerm'] is None:
         del result['geneSet']
         del result['geneTerm']
         del result['geneStudy']

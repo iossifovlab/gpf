@@ -1,7 +1,7 @@
 import itertools
 import re
 import logging
-from query_prepare import combine_gene_syms, gene_set_loader, \
+from query_prepare import combine_gene_syms, \
     prepare_denovo_studies, prepare_transmitted_studies
 
 
@@ -414,8 +414,7 @@ def __load_text_column(colSpec):
 
 
 def prepare_transmitted_filters(data,
-                                denovo_filters={},
-                                gene_set_loader=gene_set_loader):
+                                denovo_filters={}):
 
     filters = {'ultraRareOnly': prepare_ultra_rare(data),
                'minParentsCalled': prepare_pop_min_parents_called(data),
@@ -424,13 +423,13 @@ def prepare_transmitted_filters(data,
     return dict(filters, **denovo_filters)
 
 
-def prepare_denovo_filters(data, gene_set_loader=gene_set_loader):
+def prepare_denovo_filters(data):
 
     filters = {'inChild': prepare_inchild(data),
                'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
                'familyIds': prepare_family_ids(data),
-               'geneSyms': combine_gene_syms(data, gene_set_loader),
+               'geneSyms': combine_gene_syms(data),
                # 'geneIds': prepare_gene_ids(data),
                'regionS': prepare_gene_region(data)}
     return filters
@@ -451,7 +450,7 @@ def get_denovo_variants(studies, family_filters, **filters):
             seenVs.add(vKey)
 
 
-def dae_query_variants(data, gene_set_loader=gene_set_loader):
+def dae_query_variants(data):
     logger.info("query received: %s", str(data))
 
     dstudies = prepare_denovo_studies(data)
@@ -459,7 +458,7 @@ def dae_query_variants(data, gene_set_loader=gene_set_loader):
     if dstudies is None and tstudies is None:
         return []
 
-    denovo_filters = prepare_denovo_filters(data, gene_set_loader)
+    denovo_filters = prepare_denovo_filters(data)
     family_filters = advanced_family_filter(data, denovo_filters)
 
     variants = []
@@ -468,8 +467,7 @@ def dae_query_variants(data, gene_set_loader=gene_set_loader):
         variants.append(dvs)
 
     if tstudies is not None:
-        transmitted_filters = prepare_transmitted_filters(data, denovo_filters,
-                                                          gene_set_loader)
+        transmitted_filters = prepare_transmitted_filters(data, denovo_filters)
         for study in tstudies:
             if family_filters is not None:
                 families = family_filters(study).keys()
@@ -493,8 +491,8 @@ def __augment_vars(v):
     return v
 
 
-def do_query_variants(data, gene_set_loader=gene_set_loader):
-    vsl = dae_query_variants(data, gene_set_loader)
+def do_query_variants(data):
+    vsl = dae_query_variants(data)
 
     res_variants = itertools.chain(*vsl)
     return generate_response(itertools.imap(__augment_vars, res_variants),

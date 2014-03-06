@@ -252,7 +252,7 @@ All fields are same as in query_variants request
 
     logger.info("preview query variants: " + str(data))
 
-    generator = do_query_variants(data, gene_set_loader=load_gene_set)
+    generator = do_query_variants(data)
     summary = prepare_summary(generator)
 
     return Response(summary)
@@ -323,7 +323,7 @@ Advanced family filter expects following fields:
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
     print comment
 
-    generator = do_query_variants(data, gene_set_loader=load_gene_set)
+    generator = do_query_variants(data)
     response = StreamingHttpResponse(
         itertools.chain(
             itertools.imap(join_line, generator),
