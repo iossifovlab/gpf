@@ -17,3 +17,14 @@ urlpatterns = patterns(
     url(r'^$', 'variants.views.index'),
     url(r'^api/', include('api.urls')),
 )
+
+try:
+    from query_prepare import prepare_transmitted_studies
+    from api.enrichment import preload_background
+
+    transmitted = prepare_transmitted_studies({"transmittedStudies" : 'w873e374s322'});
+    preload_background(transmitted[0])
+
+except Exception, ex:
+    print "Missing import", ex 
+

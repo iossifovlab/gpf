@@ -5,9 +5,9 @@ import itertools
 import logging
 import hashlib
 from api.wdae_cache import store, retrieve
+import threading
 
 logger = logging.getLogger(__name__)
-
 
 def one_variant_per_recurrent(vs):
     gn_sorted = sorted([[ge['sym'], v] for v in vs
@@ -39,19 +39,48 @@ def filter_transmitted(vs):
     return [set([ge['sym'] for ge in v.requestedGeneEffects])
             for v in vs]
 
+background = {}
+lock = threading.Lock()
+
+class BackgroundBuilderTask (threading.Thread):
+
+    def __init__(self, builders):
+        threading.Thread.__init__(self)
+        self.builders = builders
+    def run(self):
+        if not lock.acquire(False):
+            print "Resource locked"
+            return 
+        else:
+            try:
+                print 'Starting background task'
+                global background
+                for builder in self.builders:
+                    background[builder[2]] = builder[0](*builder[1])
+            finally:
+                print 'Exiting background task'
+                lock.release()
+
+def build_transmitted(tstd):
+    return filter_transmitted(
+        tstd.get_transmitted_summary_variants(ultraRareOnly=True,
+                                              effectTypes="synonymous"))
+
+def get_background(key):
+    lock.acquire(True)
+    value = background[key]
+    lock.release()
+    return value
 
 def __build_or_load_transmitted(tstd):
-    key = 'enrichment_background_model.' + tstd.name
-    background = retrieve(key)
+    return ['BACKGROUND', get_background('background')]
 
-    if not background:
-        background = filter_transmitted(
-            tstd.get_transmitted_summary_variants(ultraRareOnly=True,
-                                                  effectTypes="synonymous"))
-        logger.info("caching background: %s", len(background))
-        store(key, background)
-
-    return ['BACKGROUND', background]
+def preload_background(tstd):
+    if len(background) == 0:
+        builder_func = build_transmitted, (tstd, ), 'background'
+        builders = [builder_func]
+        thread = BackgroundBuilderTask(builders)
+        thread.start()
 
 PRB_TESTS = ['prb|Rec LGDs',         # 0
              'prb|LGDs',             # 1

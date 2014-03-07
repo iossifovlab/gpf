@@ -25,6 +25,8 @@ from enrichment_query import enrichment_results, enrichment_prepare
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names
 
+from query_prepare import prepare_transmitted_studies
+
 
 # class Response(RestResponse):
 #     def __init__(self,data=None, status=200,
@@ -72,6 +74,7 @@ def study_groups_list(request):
 @api_view(['GET'])
 def transmitted_studies_list(request):
     r = get_transmitted_studies_names()
+
     return Response({"transmitted_studies": r})
 
 
