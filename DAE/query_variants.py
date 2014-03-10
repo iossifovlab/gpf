@@ -18,7 +18,7 @@ def get_child_types():
 
 
 def get_variant_types():
-    return ['All', 'CNV+', 'CNV-', 'CNV+,CNV-', 'sub', 'ins', 'del', 'ins,del']
+    return ['All', 'CNV+', 'CNV-', 'CNV', 'sub', 'ins', 'del', 'ins,del']
 
 
 def get_races():

@@ -389,11 +389,13 @@ class Study:
 
     def get_denovo_variants(self, inChild=None, variantTypes=None, effectTypes=None, geneSyms=None, familyIds=None, regionS=None, callSet=None):
 
-        if isinstance(effectTypes,str):
+        if isinstance(effectTypes, str):
             effectTypes = self.vdb.effectTypesSet(effectTypes)
 
-        if isinstance(variantTypes,str):
+        if isinstance(variantTypes, str):
             variantTypes = set(variantTypes.split(","))
+
+        print('variant types: %s' % str(variantTypes))
 
         if regionS:
             smcP = regionS.find(":")
@@ -408,6 +410,7 @@ class Study:
                 continue
             if inChild and inChild not in v.inChS:
                 continue
+            # print('v.variant: %s' % v.variant)
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
             if regionS:
