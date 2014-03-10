@@ -84,6 +84,13 @@ def effect_types_list(request):
         get_effect_types(types=True, groups=False)
     return Response({"effect_types": eff})
 
+
+@api_view(['GET'])
+def chromes_effect_types(request):
+    from VariantAnnotation import LOF, nonsyn
+    return Response({"LoF": LOF,
+                     "nonsyn": nonsyn})
+
 @api_view(['GET'])
 def variant_types_list(request):
     # var_types = vDB.get_variant_types()
