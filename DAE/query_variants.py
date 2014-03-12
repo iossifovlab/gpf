@@ -18,7 +18,7 @@ def get_child_types():
 
 
 def get_variant_types():
-    return ['All', 'CNV+', 'CNV-', 'CNV', 'sub', 'ins', 'del', 'ins,del']
+    return ['All', 'CNV', 'sub', 'ins', 'del', 'ins,del']
 
 
 def get_races():
@@ -304,7 +304,8 @@ def prepare_family_ids(data):
             return None
         else:
             return [s.strip()
-                    for s in families.split(',') if len(s.strip()) > 0]
+                    for s in families.replace(',', ' ').split()
+                    if len(s.strip()) > 0]
     elif isinstance(families, list):
         return families
     else:
@@ -384,9 +385,14 @@ def prepare_gene_region(data):
         region = data['regionS']
     else:
         return None
-    if not validate_region(region):
+
+    if isinstance(region, str):
+        region = region.replace(',', ' ').split()
+    region = [r for r in region if validate_region(r)]
+    if region:
+        return region
+    else:
         return None
-    return region.strip()
 
 
 def __load_text_column(colSpec):

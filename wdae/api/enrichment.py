@@ -9,6 +9,7 @@ import threading
 
 logger = logging.getLogger(__name__)
 
+
 def one_variant_per_recurrent(vs):
     gn_sorted = sorted([[ge['sym'], v] for v in vs
                        for ge in v.requestedGeneEffects])
@@ -42,15 +43,17 @@ def filter_transmitted(vs):
 background = {}
 lock = threading.Lock()
 
+
 class BackgroundBuilderTask (threading.Thread):
 
     def __init__(self, builders):
         threading.Thread.__init__(self)
         self.builders = builders
+
     def run(self):
         if not lock.acquire(False):
             print "Resource locked"
-            return 
+            return
         else:
             try:
                 print 'Starting background task'
@@ -61,10 +64,12 @@ class BackgroundBuilderTask (threading.Thread):
                 print 'Exiting background task'
                 lock.release()
 
+
 def build_transmitted(tstd):
     return filter_transmitted(
         tstd.get_transmitted_summary_variants(ultraRareOnly=True,
                                               effectTypes="synonymous"))
+
 
 def get_background(key):
     lock.acquire(True)
@@ -72,8 +77,10 @@ def get_background(key):
     lock.release()
     return value
 
+
 def __build_or_load_transmitted(tstd):
     return ['BACKGROUND', get_background('background')]
+
 
 def preload_background(tstd):
     if len(background) == 0:

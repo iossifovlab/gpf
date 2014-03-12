@@ -22,7 +22,7 @@ try:
     from query_prepare import prepare_transmitted_studies
     from api.enrichment import preload_background
 
-    transmitted = prepare_transmitted_studies({"transmittedStudies" : 'w873e374s322'});
+    transmitted = prepare_transmitted_studies({"transmittedStudies": 'w873e374s322'})
     preload_background(transmitted[0])
 
 except Exception, ex:
