@@ -54,20 +54,20 @@ def build_transmitted_background(tstd):
 #     thread.start()
 
 
-PRB_TESTS = ['prb|Rec LGDs',         # 0
-             'prb|LGDs',             # 1
-             'prb|Male LGDs',        # 2
-             'prb|Female LGDs',      # 3
-             'prb|Missense',         # 4
-             'prb|Male Missense',    # 5
-             'prb|Female Missense',  # 6
-             'prb|Synonymous']       # 7
+PRB_TESTS = ['prb|Rec LGDs',                       # 0
+             'prb|LGDs|prb|LGD',                   # 1
+             'prb|Male LGDs|prbM|LGD',             # 2
+             'prb|Female LGDs|prbF|LGD',           # 3
+             'prb|Missense|prb|missense',          # 4
+             'prb|Male Missense|prbM|missense',    # 5
+             'prb|Female Missense|prbF|missense',  # 6
+             'prb|Synonymous|prb|synonymous']      # 7
 
-SIB_TESTS = ['sib|LGDs',             # 0
-             'sib|Male LGDs',        # 1
-             'sib|Female LGDs',      # 2
-             'sib|Missense',         # 3
-             'sib|Synonymous']       # 4
+SIB_TESTS = ['sib|LGDs|sib|LGD',                   # 0
+             'sib|Male LGDs|sibM|LGD',             # 1
+             'sib|Female LGDs|sibF|LGD',           # 2
+             'sib|Missense|sib|missense',          # 3
+             'sib|Synonymous|sib|synonymous']      # 4
 
 
 def __build_variants_genes_dict(denovo, geneSyms=None):
