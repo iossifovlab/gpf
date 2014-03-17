@@ -1,7 +1,8 @@
 import threading
 
-background = {}
-lock = threading.Lock()
+_background = {}
+_lock = threading.Lock()
+_builder_started = False
 
 
 class BackgroundBuilderTask (threading.Thread):
@@ -11,27 +12,36 @@ class BackgroundBuilderTask (threading.Thread):
         self.builders = builders
 
     def run(self):
-        global lock
-        if not lock.acquire(False):
+        global _lock, _builder_started
+
+        if not _lock.acquire(False):
             print("Background builder already started...")
             return
         else:
+            if _builder_started:
+                _lock.release()
+                return
+            _builder_started = True
+
             try:
                 print 'Starting background task'
                 global background
                 for (func, args, key) in self.builders:
                     res = func(*args)
-                    background[key] = res
+                    _background[key] = res
             finally:
                 print 'Exiting background task'
-                lock.release()
+                _lock.release()
 
 
 def get_background(key):
-    global lock, background
-    lock.acquire(True)
-    value = background[key]
-    lock.release()
+    global _lock, background
+    _lock.acquire(True)
+    try:
+        value = _background[key]
+    finally:
+        _lock.release()
+
     return value
 
 

@@ -1,13 +1,14 @@
 import unittest
 import logging
 
-from api.enrichment import enrichment_test
+from api.enrichment import enrichment_test, build_transmitted_background
 
 from DAE import vDB, get_gene_sets_symNS
 
 logger = logging.getLogger(__name__)
 
 import api.tests.enrichment_test_orig
+from api.bg_loader import preload_background
 
 
 class EnrichmentHelpersTests(unittest.TestCase):
@@ -20,6 +21,11 @@ class EnrichmentHelpersTests(unittest.TestCase):
         cls.original = api.tests.enrichment_test_orig.main(cls.dsts,
                                                            cls.tsts,
                                                            cls.gene_terms)
+        builders = [(build_transmitted_background,
+                     [cls.tsts],
+                     'enrichment_background')]
+
+        preload_background(builders)
 
     @classmethod
     def tearDownClass(cls):
@@ -35,7 +41,6 @@ class EnrichmentHelpersTests(unittest.TestCase):
             gene_syms_set = set(self.gene_terms.t2G[gene_set_name].keys())
 
             res, totals = enrichment_test(self.dsts,
-                                          self.tsts,
                                           gene_syms_set)
 
             for test_name in res:

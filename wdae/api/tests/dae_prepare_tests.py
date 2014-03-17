@@ -102,9 +102,7 @@ class VariantTypesTests(unittest.TestCase):
 
     def test_variant_types_correct(self):
         self.assertEqual(
-            prepare_variant_types({'variantTypes': 'CNV+'}), 'CNV+')
-        self.assertEqual(
-            prepare_variant_types({'variantTypes': 'CNV-'}), 'CNV-')
+            prepare_variant_types({'variantTypes': 'CNV'}), 'CNV')
         self.assertEqual(
             prepare_variant_types({'variantTypes': 'sub'}), 'sub')
         self.assertEqual(
