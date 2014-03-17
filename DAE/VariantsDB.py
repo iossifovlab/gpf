@@ -387,6 +387,21 @@ class Study:
                 yield v
         tbf.close()
 
+    def __regions_matcher(regions):
+        regs = regions.split(',')
+        reg_defs = []
+        for r in regs:
+            smcP = r.find(":")
+            dsP = r.find("-")
+            chr = r[0:smcP]
+            beg = int(r[smcP+1:dsP])
+            end = int(r[dsP+1:])
+            reg_defs.append((chr, beg, end))
+        return lambda (vchr, vpos): any([(chr == vchr
+                                          and vpos >= beg
+                                          and vpos <= end)
+                                         for(chr, beg, end) in reg_defs])
+        
     def get_denovo_variants(self, inChild=None, variantTypes=None, effectTypes=None, geneSyms=None, familyIds=None, regionS=None, callSet=None):
 
         if isinstance(effectTypes, str):
@@ -395,12 +410,14 @@ class Study:
         if isinstance(variantTypes, str):
             variantTypes = set(variantTypes.split(","))
 
+        reg_matcher = None
         if regionS:
-            smcP = regionS.find(":")
-            dsP = regionS.find("-")
-            chr = regionS[0:smcP]
-            beg = int(regionS[smcP+1:dsP])
-            end = int(regionS[dsP+1:])
+            # smcP = regionS.find(":")
+            # dsP = regionS.find("-")
+            # chr = regionS[0:smcP]
+            # beg = int(regionS[smcP+1:dsP])
+            # end = int(regionS[dsP+1:])
+            reg_matcher = self.__regions_matcher(regionS)
 
         dnvData = self._load_dnv_data(callSet)
         for v in dnvData:
@@ -411,21 +428,24 @@ class Study:
             # print('v.variant: %s' % v.variant)
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
-            if regionS:
+            if reg_matcher:
                 smcP = v.location.find(":")
                 vChr = v.location[0:smcP]
-                vPos = int(v.location[smcP+1:]) 
-                if vChr!=chr:
+                vPos = int(v.location[smcP+1:])
+                # if vChr!=chr:
+                #     continue
+                # if vPos<beg or vPos>end:
+                #     continue
+                if not reg_matcher(vChr, vPos):
                     continue
-                if vPos<beg or vPos>end:
-                    continue
+
             if effectTypes or geneSyms:
                 requestedGeneEffects = filter_gene_effect(v.geneEffect, effectTypes, geneSyms)
                 if not requestedGeneEffects:
                     continue
                 vc = copy.copy(v)
                 vc._requestedGeneEffect = requestedGeneEffects
-                yield vc 
+                yield vc
             else:
                 yield v
                 
