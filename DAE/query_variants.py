@@ -75,7 +75,7 @@ def get_sib_gender():
 
 FATHER_RACE = get_focuv_race()
 MOTHER_RACE = get_mocuv_race()
-PARENTS_RACE = dict([(k, ','.join([m, f])) for (k, m, f) in zip(phDB.families,
+PARENTS_RACE = dict([(k, ':'.join([m, f])) for (k, m, f) in zip(phDB.families,
                                                                 phDB.get_variable('mocuv.race_parents'),
                                                                 phDB.get_variable('focuv.race_parents'))])
 PARENTS_RACE_QUERY = dict([(k, f if f == m else 'more-than-one-race')
@@ -489,7 +489,7 @@ def dae_query_variants(data):
 def __augment_vars(v):
     fmId = v.familyId
     parRaces = get_parents_race()[fmId] \
-        if fmId in get_parents_race() else "NA,NA"
+        if fmId in get_parents_race() else "NA:NA"
 
     chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
     v.atts["_par_races_"] = parRaces

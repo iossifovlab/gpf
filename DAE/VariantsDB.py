@@ -448,7 +448,6 @@ class Study:
                 yield vc
             else:
                 yield v
-                
 
     def _load_dnv_data(self, callSetP):
         callSet =  "default"

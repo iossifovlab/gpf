@@ -271,7 +271,6 @@ All fields are same as in query_variants request
     return Response(summary)
 
 
-
 @api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
 def query_variants(request):
