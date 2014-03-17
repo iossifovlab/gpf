@@ -20,11 +20,17 @@ urlpatterns = patterns(
 
 try:
     from query_prepare import prepare_transmitted_studies
-    from api.enrichment import preload_background
+    from api.enrichment import build_transmitted_background
+    from api.bg_loader import preload_background
 
-    transmitted = prepare_transmitted_studies({"transmittedStudies": 'w873e374s322'})
-    preload_background(transmitted[0])
+    transmitted = prepare_transmitted_studies(
+        {"transmittedStudies": 'w873e374s322'})
+
+    builders = [(build_transmitted_background,
+                 transmitted,
+                 'enrichment_background')]
+
+    preload_background(builders)
 
 except Exception, ex:
-    print "Missing import", ex 
-
+    print "Missing import", ex

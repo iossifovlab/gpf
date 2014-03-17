@@ -395,8 +395,6 @@ class Study:
         if isinstance(variantTypes, str):
             variantTypes = set(variantTypes.split(","))
 
-        print('variant types: %s' % str(variantTypes))
-
         if regionS:
             smcP = regionS.find(":")
             dsP = regionS.find("-")

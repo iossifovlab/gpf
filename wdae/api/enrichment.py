@@ -3,9 +3,9 @@ from DAE import vDB
 
 import itertools
 import logging
-import hashlib
-from api.wdae_cache import store, retrieve
-import threading
+# import hashlib
+# from api.wdae_cache import store, retrieve
+from bg_loader import get_background
 
 logger = logging.getLogger(__name__)
 
@@ -40,54 +40,19 @@ def filter_transmitted(vs):
     return [set([ge['sym'] for ge in v.requestedGeneEffects])
             for v in vs]
 
-background = {}
-lock = threading.Lock()
 
-
-class BackgroundBuilderTask (threading.Thread):
-
-    def __init__(self, builders):
-        threading.Thread.__init__(self)
-        self.builders = builders
-
-    def run(self):
-        if not lock.acquire(False):
-            print "Resource locked"
-            return
-        else:
-            try:
-                print 'Starting background task'
-                global background
-                for builder in self.builders:
-                    background[builder[2]] = builder[0](*builder[1])
-            finally:
-                print 'Exiting background task'
-                lock.release()
-
-
-def build_transmitted(tstd):
+def build_transmitted_background(tstd):
     return filter_transmitted(
         tstd.get_transmitted_summary_variants(ultraRareOnly=True,
                                               effectTypes="synonymous"))
 
 
-def get_background(key):
-    lock.acquire(True)
-    value = background[key]
-    lock.release()
-    return value
+# def preload_background(tstd):
+#     builder_func = build_transmitted, (tstd, ), 'background'
+#     builders = [builder_func]
+#     thread = BackgroundBuilderTask(builders)
+#     thread.start()
 
-
-def __build_or_load_transmitted(tstd):
-    return ['BACKGROUND', get_background('background')]
-
-
-def preload_background(tstd):
-    if len(background) == 0:
-        builder_func = build_transmitted, (tstd, ), 'background'
-        builders = [builder_func]
-        thread = BackgroundBuilderTask(builders)
-        thread.start()
 
 PRB_TESTS = ['prb|Rec LGDs',         # 0
              'prb|LGDs',             # 1
@@ -105,7 +70,7 @@ SIB_TESTS = ['sib|LGDs',             # 0
              'sib|Synonymous']       # 4
 
 
-def __build_variants_genes_dict(denovo, transmitted, geneSyms=None):
+def __build_variants_genes_dict(denovo, geneSyms=None):
     return [
         [PRB_TESTS[0],
          one_variant_per_recurrent(
@@ -187,7 +152,9 @@ def __build_variants_genes_dict(denovo, transmitted, geneSyms=None):
                                      effectTypes="synonymous",
                                      geneSyms=geneSyms))],
 
-        __build_or_load_transmitted(transmitted)
+
+        ['BACKGROUND', get_background('enrichment_background')]
+
     ]
 
 
@@ -222,8 +189,8 @@ def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
     return all_res
 
 
-def enrichment_test(dsts, tsts, gene_syms_set):
-    var_genes_dict = __build_variants_genes_dict(dsts, tsts)
+def enrichment_test(dsts, gene_syms_set):
+    var_genes_dict = __build_variants_genes_dict(dsts)
 
     all_res = __count_gene_set_enrichment(var_genes_dict, gene_syms_set)
     totals = {test_name: len(gene_syms)

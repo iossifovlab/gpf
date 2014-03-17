@@ -25,7 +25,7 @@ from enrichment_query import enrichment_results, enrichment_prepare
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names
 
-from query_prepare import prepare_transmitted_studies
+# from query_prepare import prepare_transmitted_studies
 
 
 # class Response(RestResponse):
@@ -56,8 +56,8 @@ def gene_sets_list(request):
         formatStr = giDB.getGeneTermAtt(tsId, "webFormatStr")
         if not label or not formatStr:
             continue
-        r.append({'label':label, 'val':tsId, 'conf':formatStr.split("|")})
-    return Response({"gene_sets" : r})
+        r.append({'label': label, 'val': tsId, 'conf': formatStr.split("|")})
+    return Response({"gene_sets": r})
 
 
 @api_view(['GET'])
@@ -91,6 +91,7 @@ def chromes_effect_types(request):
     return Response({"LoF": LOF,
                      "nonsyn": nonsyn})
 
+
 @api_view(['GET'])
 def variant_types_list(request):
     # var_types = vDB.get_variant_types()
@@ -100,6 +101,7 @@ def variant_types_list(request):
     var_types = get_variant_types()
     return Response({'variant_types': var_types})
 
+
 @api_view(['GET'])
 def child_type_list(request):
     # child_types = vDB.get_child_types()
@@ -108,6 +110,7 @@ def child_type_list(request):
     # moved to dae_query; I need them in several places
     child_types = get_child_types()
     return Response({'child_types': child_types})
+
 
 @api_view(['GET'])
 def families_list(request, study_name=None):

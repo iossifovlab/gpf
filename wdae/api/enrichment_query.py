@@ -79,7 +79,6 @@ def enrichment_results(denovoStudies=None,
         gene_terms = load_gene_set(geneSet, geneStudy)
 
     all_res, totals = enrichment_test(denovoStudies,
-                                      transmittedStudies[0],
                                       geneSyms)
     bg_total = totals['BACKGROUND']
     bg_cnt = all_res['BACKGROUND'].cnt
