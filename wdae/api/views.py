@@ -57,6 +57,7 @@ def gene_sets_list(request):
         if not label or not formatStr:
             continue
         r.append({'label': label, 'val': tsId, 'conf': formatStr.split("|")})
+        print tsId, label, formatStr
     return Response({"gene_sets": r})
 
 
@@ -70,6 +71,7 @@ def denovo_studies_list(request):
 def study_groups_list(request):
     stds = vDB.getStudyGroups()
     return Response({"study_groups": stds})
+
 
 @api_view(['GET'])
 def transmitted_studies_list(request):
@@ -141,24 +143,28 @@ def __get_page_count(query_params, page_count=30):
 def __gene_set_filter_response_dict(request, gts):
     query_params = request.QUERY_PARAMS
 
-    page_count = __get_page_count(query_params, page_count = 100)
+    page_count = __get_page_count(query_params, page_count=100)
     print "page_count:", page_count
 
     if 'filter' in query_params:
         filter_string = query_params['filter'].lower().strip()
 
-        filter_by_key = 0;
-        filter_by_desc = 0;
+        filter_by_key = 0
+        filter_by_desc = 0
 
         if query_params['key'] == 'true':
-            filter_by_key = 1;
+            filter_by_key = 1
         if query_params['desc'] == 'true':
-            filter_by_desc = 1;
+            filter_by_desc = 1
 
-        l = [(key, {"desc" : value, "count" : len(gts.t2G[key].keys())}) for (key, value) in gts.tDesc.items() if key in gts.t2G and (filter_string in key.lower() and filter_by_key) or (filter_string in value.lower() and filter_by_desc)]
+        l = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
+             for (key, value) in gts.tDesc.items() if key in gts.t2G and
+             (filter_string in key.lower() and filter_by_key) or
+             (filter_string in value.lower() and filter_by_desc)]
         return dict(l[0:page_count])
     else:
-        l = [(key, {"desc" : value, "count" : len(gts.t2G[key].keys())}) for (key, value) in gts.tDesc.items() if key in gts.t2G]
+        l = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
+             for (key, value) in gts.tDesc.items() if key in gts.t2G]
         return dict(l[0:page_count])
 
 
@@ -173,6 +179,7 @@ def __gene_set_response(request, gts, gt):
     if not gl:
         return Response({})
     return Response({"gene_count": len(gl)})
+
 
 @api_view(['GET'])
 def gene_set_list(request):

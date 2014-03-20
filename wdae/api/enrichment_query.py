@@ -91,7 +91,8 @@ def enrichment_results(denovoStudies=None,
     res['gs_id'] = geneSet
 
     if geneSet and geneTerm:
-        res['gs_desc'] = gene_terms.tDesc[geneTerm]
+        res['gs_desc'] = "%s: %s" % (geneTerm,
+                                     gene_terms.tDesc[geneTerm])
     else:
         desc = ','.join(geneSyms)
         res['gs_desc'] = desc
