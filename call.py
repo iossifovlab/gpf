@@ -157,7 +157,7 @@ class ommission:
 	    else:
 		mnRtio /= sPCnts
 
-	gens = -1 * np.ones(4,dtype='int')
+	gens = -1 * np.ones(len(mnRtio),dtype='int')
 	gens[mnRtio<0.02] = 2
 	gens[mnRtio>0.98] = 0
 	gens[np.logical_and(mnRtio>0.2,mnRtio < 0.8)] = 1
@@ -177,7 +177,7 @@ class ommission:
 	xstr = ''
 
 	issues = []
-	for c in xrange(2,4):
+	for c in xrange(2,len(gens)):
 	    if gens[c]==1:
         	continue
 	    for p in xrange(2):
@@ -209,7 +209,7 @@ class ommission:
 	gens[ np.array(self.male) & (gens>1)] = 1
 	#print 'processX',gens
 	issues = []
-	for c in xrange(2,4):
+	for c in xrange(2,len(gens)):
 	   if self.male[c]:
 		if (gens[0] != 1 ) and (gens[0]/2 != gens[c]):
 			issues.append(str(0)+str(c))
