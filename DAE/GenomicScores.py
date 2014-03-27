@@ -126,22 +126,25 @@ class GenomicScore:
     def _create_array_allele_count(self,dir):
         self.location=dir
         self.Scores=defaultdict(dict)
-        self.chr_format='hg19'
-        self._score_names = ['allele_count']
+        self.chr_format='GATK'
+        self._score_names = ['A', 'C', 'G', 'T']
 
         fileNames=[f for f in os.listdir(dir)]
         positions=defaultdict(list)
         for fileName in fileNames:            
-            chr="chr"+fileName.split(".")[0]
+            chr=fileName.split(".")[0]
             sys.stderr.write("reading file for chrom "+chr+"\n")            
             scoreList=[]
             with open(dir+fileName,"rb") as file:
                 next(file)
                 for line in file:
                     row=line.split('\t')
+                    assert len(row)==6
                     scoreList.append([int(x) for x in row[2:]])
                     positions[chr].append(int(row[1]))
-            self.Scores["allele_count"][chr]=np.array(scoreList)
+            scoreList = np.array(scoreList)
+            for scI,scN in enumerate("ACGT"):
+                self.Scores[scN][chr]=scoreList[:,scI]
 
         self._create_index_allele_count(positions)
         
@@ -587,19 +590,21 @@ class GenomicScore:
         
             
             
-    def _bin_search1(self, chr, p):       
+    def _bin_search1(self, chr, p):
+        if chr not in self._Keys:
+            return ((False,0))
         b = 0
         e = len(self._Keys[chr])
 
         while True:
-            x = b + (e-b)/2 
+            x = b + (e-b)/2
             if self._Keys[chr][x][1] >= p >= self._Keys[chr][x][0]:
                 return((True, x, self.Indexing[chr][self._Keys[chr][x]][0] + p - self._Keys[chr][x][0]))
             if p < self._Keys[chr][x][0]:
                 e = x-1
             else:
                 b = x+1
-            if b > e:
+            if b >= e:
                 return((False,b))
 
     def _get_scores_for_region(self, loc, scores=None):
@@ -996,32 +1001,12 @@ def load_target(target_file="/mnt/wigclust5/data/safe/egrabows/2013/MutationProb
     return(t)
 
 def load_genomic_scores(file, format=None):
-    if not format:
-        if "gerp" in file.lower():
-            format = "gerp"
-        elif "phylop" in file.lower():
-            format = "phylop"
-        elif "phastcons" in file.lower():
-            format = "phastcons"
-        elif 'gc' in file.lower():
-            format = "gc"
-        elif 'cov' in file.lower():
-            format = "cov"
-        elif 'nt' in file.lower():
-            format = "nt"
-        elif 'alleleCount' in file.lower():
-            format="alleleCount"
-        
-    if  format.lower() not in ['gerp','phylop', 'phastcons', 'nt', 'gc', 'cov','alleleCount']:
-        raise Exception("Unrecognizable format! Available formats: gerp, phylop, phastcons, nt, gc, cov,alleleCount")
-
-
     es = GenomicScore()
     if file.endswith(".npz"):
-        es._load_exome_scores(file, format)
+        es._load_exome_scores(file, os.path.basename(file)[:-4])
         return es
     if file.endswith(".hdf5"):
-        es._load_hdf5(file, format)
+        es._load_hdf5(file, os.path.basename(file)[:-5])
         return es
     
     raise Exception("Unrecognizable format! The program needs a .npz format or .hdf5 format!")    
