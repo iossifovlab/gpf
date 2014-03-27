@@ -123,6 +123,55 @@ class GenomicScore:
             
         self._score_names = ['Primates', 'Placental', 'Vertebrates']
 
+    def _create_array_allele_count(self,dir):
+        self.location=dir
+        self.Scores=defaultdict(dict)
+        self.chr_format='GATK'
+        self._score_names = ['A', 'C', 'G', 'T']
+
+        fileNames=[f for f in os.listdir(dir)]
+        positions=defaultdict(list)
+        for fileName in fileNames:            
+            chr=fileName.split(".")[0]
+            sys.stderr.write("reading file for chrom "+chr+"\n")            
+            scoreList=[]
+            with open(dir+fileName,"rb") as file:
+                next(file)
+                for line in file:
+                    row=line.split('\t')
+                    assert len(row)==6
+                    scoreList.append([int(x) for x in row[2:]])
+                    positions[chr].append(int(row[1]))
+            scoreList = np.array(scoreList)
+            for scI,scN in enumerate("ACGT"):
+                self.Scores[scN][chr]=scoreList[:,scI]
+
+        self._create_index_allele_count(positions)
+        
+
+    def _create_index_allele_count(self,positions):
+        self.Indexing =  defaultdict(dict) 
+        self._Keys = defaultdict(list)
+        for chr in positions.keys():            
+            chromStart=positions[chr][0]
+            indexStart=0
+            blockLength=0
+            sys.stderr.write("creating index for chrom "+chr+"\n")
+
+            length=len(positions[chr])
+            for i in xrange(0,length):
+                if i+1 == length:
+                    self.Indexing[chr][(chromStart,chromStart+blockLength)]=(indexStart,indexStart+blockLength)
+                    self._Keys[chr].append((chromStart,chromStart+blockLength))
+                elif positions[chr][i]+1!=positions[chr][i+1]:
+                    self.Indexing[chr][(chromStart,chromStart+blockLength)]=(indexStart,indexStart+blockLength)
+                    self._Keys[chr].append((chromStart,chromStart+blockLength))
+                    chromStart=positions[chr][i+1]
+                    blockLength=0
+                    indexStart=i+1
+                else:
+                    blockLength+=1
+
     def _create_index_only_target_file(self, target_file, is_sorted = True):
         self.Indexing =  defaultdict(dict) 
         self._Keys = defaultdict(list)
@@ -918,7 +967,10 @@ def create_pos(array="/mnt/wigclust5/data/safe/egrabows/2013/MutationProbability
     return(gs)
 
 
-
+def create_allele_count(dir):
+    gs=GenomicScore()
+    gs._create_array_allele_count(dir)
+    return gs
 
 
 def load_dir(dir, format=None):
@@ -947,30 +999,12 @@ def load_target(target_file="/mnt/wigclust5/data/safe/egrabows/2013/MutationProb
     return(t)
 
 def load_genomic_scores(file, format=None):
-    if not format:
-        if "gerp" in file.lower():
-            format = "gerp"
-        elif "phylop" in file.lower():
-            format = "phylop"
-        elif "phastcons" in file.lower():
-            format = "phastcons"
-        elif 'gc' in file.lower():
-            format = "gc"
-        elif 'cov' in file.lower():
-            format = "cov"
-        elif 'nt' in file.lower():
-            format = "nt"
-        
-    if  format.lower() not in ['gerp','phylop', 'phastcons', 'nt', 'gc', 'cov']:
-        raise Exception("Unrecognizable format! Available formats: gerp, phylop, phastcons, nt, gc, cov")
-
-
     es = GenomicScore()
     if file.endswith(".npz"):
-        es._load_exome_scores(file, format)
+        es._load_exome_scores(file, os.path.basename(file)[:-4])
         return es
     if file.endswith(".hdf5"):
-        es._load_hdf5(file, format)
+        es._load_hdf5(file, os.path.basename(file)[:-5])
         return es
     
     raise Exception("Unrecognizable format! The program needs a .npz format or .hdf5 format!")    

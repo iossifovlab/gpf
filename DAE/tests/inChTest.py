@@ -9,8 +9,8 @@ for stN in vDB.get_study_names():
         continue
     try:
         vs = [v for v in vDB.get_study(st.name).get_denovo_variants() if v.inChS!=v.atts['inChild'] ]
-    except:
-        print st.name, "FAIL" 
+    except Exception,e:
+        print st.name, "FAIL", e
         continue
          
     if vs:
