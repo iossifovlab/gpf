@@ -17,6 +17,12 @@ import glob
 import copy
 import sys
 import scipy 
+import pickle
+
+
+
+# randIterss = [100,1000,10000]
+randIterss = [1000]
 
 class PPINetwork:
     def __init__(self, fn=None, ppn=None):
@@ -134,8 +140,12 @@ class PPINetwork:
             if len(cs) != 4:
                 raise Excpetion("Worng line in " + propsFn)
             nId, degree, betweennes, clustCoef = cs
+            if nId not in self.nbrs:
+                print "AAAAA",cs 
+                continue
             class NodeProps:
                 pass
+            
             nps = NodeProps()
             nps.nId = nId
             nps.degree = len(self.nbrs[nId]) 
@@ -167,7 +177,7 @@ def run_a_test(scrF,gs,ws,withReplacement=False):
         pass
 
     # for Iter in [100,1000,10000]:
-    for Iter in [100,1000]:
+    for Iter in randIterss:
         ts = TestResult()
         ts.nBigger = 0
         ts.randScrs = []
@@ -215,7 +225,7 @@ def run_a_PPI_shuffle_test(scrF,ppn):
     ppnS = PPINetwork(ppn=ppn)
 
     # for Iter in [100,1000,10000]:
-    for Iter in [100,1000]:
+    for Iter in randIterss: 
     # for Iter in [100]:
         print "Runniter with Iter:", Iter
         ts = TestResult()
@@ -369,7 +379,8 @@ class FunctionalProfiler:
         self._geneWeightsId = {id:gi.fprops[geneWeightProp] for id,gi in giDB.genes.items() if geneWeightProp in gi.fprops}
         self._geneWeightsSym = {gi.sym:gi.fprops[geneWeightProp] for gi in giDB.genes.values() if geneWeightProp in gi.fprops}
         self.geneSets = vDB.get_denovo_sets(denovoStudies)
-        self.toGeneSets = ['recPrbLGDs', 'sinPrbLGDs']
+        # self.toGeneSets = ['recPrbLGDs', 'sinPrbLGDs']
+        self.toGeneSets = ['prb.LoF.Recurrent', 'prb.LoF.Single']
    
     def get_sets_and_weights(self,ns='sym'):
         if ns=='sym':
@@ -593,6 +604,8 @@ def prepareVariantList(name,vs):
     variantLists.append(vls)
     return vls
 
+class TestResult:
+    pass
     
 def runATest(scrF,gs,ws,withReplacement=False):
     realScr = scrF(gs)
@@ -601,10 +614,8 @@ def runATest(scrF,gs,ws,withReplacement=False):
     if withReplacement:
         N = sum([x for x in gs.values()])
 
-    class TestResult:
-        pass
 
-    for Iter in [100,1000,10000]:
+    for Iter in randIterss:
         ts = TestResult()
         ts.nBigger = 0
         ts.randScrs = []
@@ -789,6 +800,117 @@ if __name__ == "__main_test__":
     # ppnProfS = netProfile(ppn)
     # print ppnProf==ppnProfS
 
+def drawTwoSets(s1,s2,gts,ppn):
+    clf()
+    def gSym(g):
+        if gts.geneNS == 'sym':
+            return g
+        else:
+            return giDB.genes[g].sym
+
+    gs1S = set(gts.t2G[s1].keys())
+    gs2S = set(gts.t2G[s2].keys())  
+
+    gs1 = sorted(gs1S,key=gSym)
+    gs1Ind = {g:i for i,g in enumerate(gs1)}
+
+    gs2 = sorted(gs2S-gs1S,key=gSym) 
+    gs2Ind = {g:i for i,g in enumerate(gs2)}
+
+    gs3 = sorted(gs2S&gs1S,key=gSym) 
+    gs3Ind = {g:i for i,g in enumerate(gs2)}
+
+    print [gSym(g) for g in gs3]
+    ddd = {'s1U'   : [gs1, gs1Ind, -10, len(gs1)/2, 'right','s2U'],
+           's2U'   : [gs2, gs2Ind,  10, len(gs2)/2, 'left', 's1U'] }
+           # 'common': [gs3, gs3Ind,  20, len(gs3)/2, 'left']}
+
+    # for gs,sId,x,ha in zip([gs1,gs2,gs3],[s1,s2,'common'],[-10,10,20],['right','left','left']):
+    for sId,(gs, gsIn,x,y0,ha,otherSId) in ddd.items():
+        otherGsInd = ddd[otherSId][1]
+        otherX = ddd[otherSId][2]
+        otherY0 = ddd[otherSId][3]
+
+        y = y0
+        totalInt2Other = 0
+        for g in gs:
+            sgn = 1.0
+            if ha=='right':
+                sgn = -1.0
+            otherNbrs = [n for n in ppn.nbrs[g] if n in otherGsInd]
+            int2Other = len(otherNbrs)
+            intAll = len(ppn.nbrs[g])
+            prcnt = 0.0
+            if intAll>0:
+                prcnt = 100.00 * int2Other / intAll
+            
+            
+            plot([x,x+sgn*intAll/100.0],[y+0.2,y+0.2],'b')
+            plot([x,x+sgn*prcnt/10.0],[y-0.2,y-0.2],'r')
+            plot([x,x],[y,y],'.')
+
+            for n in otherNbrs:
+                plot([x, otherX], [y, otherY0-otherGsInd[n]])
+            totalInt2Other += int2Other
+            txt = "%d / %d" % (int2Other,  intAll)
+            if ha=='right':
+                txt = gSym(g) + " " + txt
+            else:
+                txt = txt + " " + gSym(g) 
+            text(1.1*x,y,txt,horizontalalignment=ha,va="center")
+            y-=1
+        print sId, totalInt2Other
+    xlim([-20,30]) 
+    My = 1.2*max(len(gs1),len(gs2))/2
+    ylim([-My,My]) 
+    show() 
+
+def testCount(genesFixed, genes, ppn):
+    genesFixedS = {g for g in genesFixed if g in ppn.nodes} 
+    if len(genesFixedS)==0:
+        return
+    gns = [x for x in genes if x in ppn.nodes and x not in genesFixedS]
+    if len(gns)==0:
+        return
+
+    def scrF(ppn):
+        return ppn.nBetweenInters(genesFixedS,gns)
+
+    return scrF(ppn) 
+
+if __name__ == "__test_shuffle_main__":
+    realNds = {g:len(nbs) for g,nbs in ppn.nbrs.items()}
+    assert len([1 for g1,nbs in ppn.nbrs.items() if g1 in nbs]) == 0
+    realE = sum([len(nbs) for nbs in ppn.nbrs.values()])/2
+
+    
+
+    rnts = getRandNets(ppn,10)
+    for rPpn in rnts:
+        nds = {g:len(nbs) for g,nbs in rPpn.nbrs.items()}
+        assert realNds == nds
+        assert len([1 for g1,nbs in rPpn.nbrs.items() if g1 in nbs]) == 0
+        E = sum([len(nbs) for nbs in rPpn.nbrs.values()])/2
+        assert realE == E
+
+
+if __name__ == "__draw_two_main__":
+    ppn = PPINetwork('/home/iossifov/work/T115/PPI/hprd-ppimap.txt')
+    fp = FunctionalProfiler()
+    gSets,gWghts = fp.get_sets_and_weights(ppn.geneNS)   
+    s1 = 'prb.LoF.Single'
+    s2 = 'prb.Missense'
+    figure()
+    drawTwoSets(s1,s2,gSets,ppn)
+    print testCount(gSets.t2G[s1],gSets.t2G[s2],ppn)
+    print testCount(gSets.t2G[s2],gSets.t2G[s1],ppn)
+
+    rnts = getRandNets(ppn,2)
+    for rPpn in rnts:
+        # raw_input("Press Enter to continue...")
+        figure()
+        drawTwoSets(s1,s2,gSets,rPpn)
+        print testCount(gSets.t2G[s1],gSets.t2G[s2],rPpn)
 if __name__ == "__main__":
     fp = FunctionalProfiler()
     cmd = sys.argv[1]
@@ -821,8 +943,13 @@ if __name__ == "__main__":
     else:
         raise Exception('Unknown command: |' + cmd + "|")
 
+    PF = open('fpRes.pckl','w')
+    pklr = pickle.Pickler(PF)
+    pklr.dump(fpRes) 
+    PF.close() 
+
     fp.print_res_summary(sys.stdout,fpRes)
-    
+   
     # wn = Matrix('/data/safe/ecicek/Workspace6/Matrix/Sarah/Integrated/sarah.npz')
     # fpRes = fp.profile_wn(wn)
     # gts = giDB.getGeneTerms('disease',inNS=None)

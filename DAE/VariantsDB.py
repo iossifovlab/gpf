@@ -682,6 +682,7 @@ class Study:
 
     def _load_family_data_from_quad_report(self,reportF):
         familyIdRE = re.compile('^auSSC(\d\d\d\d\d)') 
+        rlsMap = {"self":"prb", "sibling":"sib"}
         families = {}
         badFamilies = {}
         qrp = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True)
@@ -711,20 +712,20 @@ class Study:
             dad.role = 'dad'
             dad.gender = 'M'
 
-            prb = Person()
-            prb.personId = piF(qrpR['child1sample_id'])
-            prb.role = 'prb'
-            prb.gender = qrpR['child1gender']
+            ch1 = Person()
+            ch1.personId = piF(qrpR['child1sample_id'])
+            ch1.role = rlsMap[qrpR['child1role']]
+            ch1.gender = qrpR['child1gender']
 
             
-            f.memberInOrder = [mom, dad, prb]
+            f.memberInOrder = [mom, dad, ch1]
            
             if qrpR['child2sample_id']: 
-                sib= Person()
-                sib.personId = piF(qrpR['child2sample_id'])
-                sib.role = 'sib'
-                sib.gender = qrpR['child2gender']
-                f.memberInOrder.append(sib)
+                ch2 = Person()
+                ch2.personId = piF(qrpR['child2sample_id'])
+                ch2.role = rlsMap[qrpR['child2role']]
+                ch2.gender = qrpR['child2gender']
+                f.memberInOrder.append(ch2)
             if qrpR['status'] == 'OK':
                 families[f.familyId] = f
             else:
@@ -902,7 +903,11 @@ class VariantsDB:
 
 
             v.valParent = ""
-            if 'valparent' in dtR:
+            # if the valparent column exists but is empty, then the values
+            # are turned into a boolean value not and string, if this is
+            # the case then do not set the value because it will cause an
+            # error
+            if 'valparent' in dtR.dtype.names and dtR['valparent'].dtype!=bool:
                 v.valParent = dtR['valparent']
 
             if v.familyId in knownFams:

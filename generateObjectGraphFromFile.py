@@ -8,14 +8,19 @@ import re
 class objectgraph:
 
     def __init__(self,fname):
-	self.req = {}
-	self.params = {}
-	self.objectsByKey = {}
-	self.objectsByType = {}
-	self.baseDir = ""
+        self.req = {}
+        self.params = {}
+        self.objectsByKey = {}
+        self.objectsByType = {}
+        self.baseDir = ""
 
-	self.loadFile(fname)
-	
+        self.loadFile(fname)
+        self._generateOLinks()
+  
+    def _generateOLinks(self):
+        for o in self.objectsByKey.values():
+            o.depsO = [self.objectsByKey[x] for x in o.deps]
+            o.parentsO= [self.objectsByKey[x] for x in o.parents]
         
     def fillHash(self, line, h):
         p = re.compile('^(.*)=(.*)$')
@@ -29,12 +34,12 @@ class objectgraph:
 
         
     def addObject(self, ob):
-	key = ob.type+":"+ob.name
+        key = ob.type+":"+ob.name
 
         if key in self.objectsByKey:
                    print "The object " + key + " is already added\n";
                    raise
-	self.objectsByKey[key] = ob;
+        self.objectsByKey[key] = ob;
         if ob.type in self.objectsByType:
             self.objectsByType[ob.type][ob.name] = ob
         else:
@@ -42,8 +47,8 @@ class objectgraph:
             self.objectsByType[ob.type][ob.name] = ob
 
     def objDir(self, o):
-	patt = self.params["obj.dir.pattern"]
-	NNN = o.NNN
+        patt = self.params["obj.dir.pattern"]
+        NNN = o.NNN
         nodeObjDir=patt.replace("${NNN}", str(NNN))
         return nodeObjDir+"/"+o.type+"/"+o.name
 
@@ -93,24 +98,24 @@ class objectgraph:
             line = line.rstrip()
             if line == "":
                 done = 0;
-		parents = []
-		if req["parents"] != "":
-                	parents = req["parents"].split(",")
-		deps = []
-		if req['deps'] != "":
-                	deps = req["deps"].split(",")
+                parents = []
+                if req["parents"] != "":
+                        parents = req["parents"].split(",")
+                deps = []
+                if req['deps'] != "":
+                        deps = req["deps"].split(",")
 
-		class OGO:
-			pass
+                class OGO:
+                        pass
 
-		ob = OGO()
-		ob.name = req['id']
+                ob = OGO()
+                ob.name = req['id']
                 ob.type = req["type"]
-		ob.dir = req["dir"]
-		ob.NNN = req["NNN"]
+                ob.dir = req["dir"]
+                ob.NNN = req["NNN"]
                 ob.parents = parents
-		ob.deps = deps
-		ob.pars = pars
+                ob.deps = deps
+                ob.pars = pars
 
                 # ob = { "name":req["id"], "type":req["type"], "dir":req["dir"], \
                 #        "parents":parents, "deps":deps, "pars":pars, "NNN":req["NNN"] }
@@ -131,8 +136,8 @@ class objectgraph:
             else:
                 self.fillHash(line, pars);
                 #self.printH(self.pars)
-	hf.close()
+        hf.close()
         
 if __name__ == "__main__":        
-	a = objectgraph(sys.argv[1])
-	a.writeObjectGraph(sys.argv[2])
+        a = objectgraph(sys.argv[1])
+        a.writeObjectGraph(sys.argv[2])
