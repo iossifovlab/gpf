@@ -12,6 +12,7 @@ from VariantsDB import parseGeneEffect
 import VariantAnnotation
 import sys
 from numpy.lib.npyio import genfromtxt
+import numpy as np
 import copy
 
 indelFN = '/data/safe/autism/pilot2/denovoCalls/objLinks/denovoIndels/1019/indel-CSHL-1019.txt'
@@ -269,7 +270,10 @@ for vKey,vv in vData.items():
         
 
     addAtts = ['counts', 'denovoScore', 'chi2APval']
-    otherValidatedF.write("\t".join(map(str,[vv.familyId,vv.location,vv.variant,"other",vv.batchId, vv.bestStS,vv.valStatus,vv.valCountsS, vv.valParent, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
+    if vv.bestSt.shape[1] == 3 and len(vv.memberInOrder) == 4:
+        print "EXTENDING the best state for ", vv.familyId, vv.location, vv.variant
+        vv.bestSt = np.append(vv.bestSt,[[2],[0]],axis=1)
+    otherValidatedF.write("\t".join(map(str,[vv.familyId,vv.location,vv.variant,"other",vv.batchId, mat2Str(vv.bestSt),vv.valStatus,vv.valCountsS, vv.valParent, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
                     [str(vv.atts[aa]) if aa in vv.atts else "" for aa in addAtts] + list(desc)) + "\n")
 otherValidatedF.close()
 

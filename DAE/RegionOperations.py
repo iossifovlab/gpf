@@ -15,8 +15,11 @@ class Region:
         self.start = start
         self.stop = stop
 
+    def __repr__(self):
+        return("Region(" + self.chr + "," + str(self.start) + "," + str(self.stop)+")")
+
     def __str__(self):
-        return(self.chr + " " + str(self.start) + " " + str(self.stop))
+        return(self.chr + ":" + str(self.start) + "-" + str(self.stop))
 
     def __hash__(self):
         return str(self).__hash__()
@@ -26,6 +29,8 @@ class Region:
 
     def __ne__(self,other):
         return not (self.chr == other.chr and self.start == other.start and self.stop == other.stop)
+    def len(self):
+        return self.stop-self.start+1
         
 
 def all_regions_from_chr(R, chr):
@@ -127,6 +132,8 @@ def collapse_noChr(r, is_sorted=False):
           
     return C
             
+def totalLen(s):
+    return sum(x.len() for x in s)
 
 def intersection(s1,s2):
     """ First collapses each for lists of regions s1 and s2 and then find the intersection. """
