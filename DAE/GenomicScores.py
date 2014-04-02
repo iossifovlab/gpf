@@ -590,19 +590,21 @@ class GenomicScore:
         
             
             
-    def _bin_search1(self, chr, p):       
+    def _bin_search1(self, chr, p):
+        if chr not in self._Keys:
+            return ((False,0))
         b = 0
         e = len(self._Keys[chr])
 
         while True:
-            x = b + (e-b)/2 
+            x = b + (e-b)/2
             if self._Keys[chr][x][1] >= p >= self._Keys[chr][x][0]:
                 return((True, x, self.Indexing[chr][self._Keys[chr][x]][0] + p - self._Keys[chr][x][0]))
             if p < self._Keys[chr][x][0]:
                 e = x-1
             else:
                 b = x+1
-            if b > e:
+            if b >= e:
                 return((False,b))
 
     def _get_scores_for_region(self, loc, scores=None):
