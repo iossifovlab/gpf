@@ -646,12 +646,18 @@ class GeneModels(AbstractClassDoNotInstantiate):
             except KeyError:
                 self._utrModels.pop(chrom)
 
-        
+
+        # the b37 reference genome does not contain alternative haplotypes, while hg19 does, so
+        # these transcripts must be removed to be used with GenomeAccess, which uses b37 as a reference
+        transcriptsToDelete=[]
         for trID in self.transcriptModels:
             try:
                 self.transcriptModels[trID].chr = Relabel[self.transcriptModels[trID].chr]
             except KeyError:
-                pass
+                transcriptsToDelete.append(trID)
+                
+        for key in transcriptsToDelete:
+            del self.transcriptModels[key]
   
    
 
