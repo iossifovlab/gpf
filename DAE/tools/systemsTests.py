@@ -141,7 +141,7 @@ class PPINetwork:
                 raise Excpetion("Worng line in " + propsFn)
             nId, degree, betweennes, clustCoef = cs
             if nId not in self.nbrs:
-                print "AAAAA",cs 
+                # print "AAAAA",cs 
                 continue
             class NodeProps:
                 pass
