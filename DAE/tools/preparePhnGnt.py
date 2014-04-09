@@ -9,7 +9,13 @@ import numpy as np
 from collections import defaultdict
 from collections import Counter 
 from datetime import date
+import sys
 
+
+tday = date.today()
+oFN = "phnGnt-%4d-%02d-%02d.txt" % (tday.year,tday.month,tday.day)
+if len(sys.argv)>1:
+    oFN = sys.argv[1]
 
 varData = phDB.get_variable('pumhx.medhx_fam_neurological.seizures_proband')
 
@@ -131,6 +137,16 @@ sfri14Fams = {ind.familyId:ind.sex for ind in sfariDB.individual.values() if ind
 
 dataSets = [] 
 
+dataSets.append(["missense",          getDataSet("combSSCWE",         "missense")])
+dataSets.append(["synonymous",        getDataSet("combSSCWE",         "synonymous")])
+dataSets.append(["LGDs",              getDataSet("combSSCWE",         "LGDs")])
+dataSets.append(["recLGDs",           getDataSet("combSSCWE",         "LGDs",recurrentOnly=True)])
+dataSets.append(["LGDsInFMR1P",       getDataSet("combSSCWE",         "LGDs",geneSetDef="main:FMR1-targets")])
+
+# dataSets.append(["recLGDs",           getDataSet("combSSCWE",         "LGDs",recurrentOnly=True)])
+
+
+'''
 dataSets.append(["missensePublishedWEWithOurCalls",          getDataSet("allPublishedWEWithOurCalls",         "missense")])
 dataSets.append(["synonymousPublishedWEWithOurCalls",        getDataSet("allPublishedWEWithOurCalls",         "synonymous")])
 dataSets.append(["LGDsPublishedWEWithOurCalls",              getDataSet("allPublishedWEWithOurCalls",         "LGDs")])
@@ -174,7 +190,7 @@ dataSets.append(["LGDsInFMR1PWE",           getDataSet("allWE",             "LGD
 
 #dataSets.append(["rareInheritedLGDsInDenovoLGDcandidates", getRareInheritedDataSet(inLGDCandidates=True,maxAllelesInGene=20)])
 #dataSets.append(["rareInheritedLGDs",                     getRareInheritedDataSet(inLGDCandidates=False,maxAllelesInGene=5)])
-
+'''
 
 # dataSets.append(["LGDsWithCHROMOWEandTG",   getDataSet("allWEAndTG","LGDs",geneSetDef="domain:CHROMO")])
 # dataSets.append(["LGDsWithCHROMOWE",        getDataSet("allWE","LGDs",geneSetDef="domain:CHROMO")])
@@ -232,8 +248,7 @@ whiteFams = {f for f,mr,fr in zip(phDB.families,
                 phDB.get_variable('focuv.race_parents'),
                 phDB.get_variable('mocuv.race_parents')) if mr=='white' and fr=='white' }
 
-tday = date.today()
-mkF = open("phnGnt-%4d-%02d-%02d.txt" % (tday.year,tday.month,tday.day), "w")
+mkF = open(oFN, "w")
 mkF.write("\t".join("familyId,colletionCenter,probandGender,whiteParents,vIQ,nvIQ,hdCrcm,evalAgeInMonths,seizures".split(",") + [x[0] for x in dataSets]) + "\n")
 
 for fmId,gender in sfri14Fams.items():

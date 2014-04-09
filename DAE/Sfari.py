@@ -34,9 +34,11 @@ class SfariCollection:
 
     def _loadSample(self):
         f = open(os.path.join(self.sfariDir,'RUCDR_ID-Portal_ID-Map_20111130-id.csv'))
-        h = f
+        h = f.readline()
         sN2Pid = defaultdict(set) 
         for l in f:
+            if l.startswith("#"):
+                continue
             cs = l.strip().split(",")
             if len(cs) != 3:
                 raise Exception('bbb')

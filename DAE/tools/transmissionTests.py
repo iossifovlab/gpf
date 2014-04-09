@@ -326,9 +326,9 @@ if __name__ == "__main__":
     #             {f for f,iq in nvIQ.items() if iq>90.0} & \
     #             {f.familyId for f in study.families.values() if f.memberInOrder[2].gender == 'M'}
 
-    familySubset = {f for f,iq in nvIQ.items() if iq>90.0}
+    # familySubset = {f for f,iq in nvIQ.items() if iq>90.0}
 
-    # familySubset = None
+    familySubset = None
 
     # print >>sys.stderr, "The size of the familySubset is", len(familySubset)
 

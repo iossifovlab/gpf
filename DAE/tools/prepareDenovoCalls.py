@@ -11,7 +11,9 @@ from VariantsDB import str2Mat
 from VariantsDB import parseGeneEffect
 import VariantAnnotation
 import sys
-from numpy.lib.npyio import genfromtxt 
+from numpy.lib.npyio import genfromtxt
+import numpy as np
+import copy
 
 indelFN = '/data/safe/autism/pilot2/denovoCalls/objLinks/denovoIndels/1019/indel-CSHL-1019.txt'
 subFN = '/data/safe/autism/pilot2/denovoCalls/objLinks/denovoSnvs/1019/snv-CSHL-1019.txt' 
@@ -47,7 +49,32 @@ def indelRecStrength(r):
         return "strong"
     if r['passedSNVFilter']=='TRUE':
         return "weak"
+
+    if int(r['pop.totalReadsWithAltInOtherFams'])>200:
+       return "supper weak"
+
+    if int(r['denovoScore'])<35:
+        return "supper weak"
+
+    countMat=str2Mat(r["counts"],colSep=" ")
+    if countMat[1,0]>0 or countMat[1,1]>0:
+        return "supper weak"
+
+    for c in xrange(2,countMat.shape[1]):
+        if countMat[1,c]>=2:
+            totalCnt=float(countMat.sum(0)[c])
+            if countMat[1,c]/totalCnt > 0.05:
+                return "weak"
+    
     return "supper weak"
+    '''
+        cleanCounts (procIndelList.m)
+        o   parents' allele count=0
+        o   at least one child's 
+           count >= 2
+           count Prcnt >= 5%
+        readsWithAltInOther<=200
+    '''
 
 def subRecStrength(r):
     if r['SNVFilter']=='TRUE':
@@ -90,6 +117,11 @@ stats = defaultdict(lambda : defaultdict(int))
 
 standardValStatus = set("valid invalid failed".split())
 
+subRE = re.compile('^sub\(([ACGT])->([ACGT])\)$') 
+# indelRE = re.compile('^ins\(([ACGTacgt]+)\d*\)$|^del\((\d+)\)$') 
+indelRE = re.compile('^ins\(([ACGT]+)\)$|^del\((\d+)\)$') 
+ins2FixRE = re.compile('^ins\((\^?)([ACGT]+)(\d*)\)$') 
+
 def procDenovoFile(iFn,vtype):
     if reannotateInput:
         iF = Popen(["annotate_variants.py " + iFn + " | re_annotate_variants.py"], shell=True, stdout=PIPE).stdout
@@ -102,7 +134,10 @@ def procDenovoFile(iFn,vtype):
     for i in rmColInds:
         del hdr[i]
     for oF in fls[vtype].values():
-        oF.write("\t".join(hdr + "strength val.status val.counts val.batch val.parent val.note".split()) + "\n")
+        if not oF.name.endswith('ToValidate.txt'):
+            oF.write("\t".join(hdr + "strength val.status val.counts val.batch val.parent val.note".split()) + "\n")
+        else:
+            oF.write("\t".join(hdr + ["strength"]) + "\n")
     for l in iF:
         # TODO: consider writing the comments to the listed file
         if l[0] == '#':
@@ -111,6 +146,24 @@ def procDenovoFile(iFn,vtype):
         for i in rmColInds:
             del cs[i]
         rec = dict(zip(hdr,cs))
+        ## repair variant column
+
+        if vtype=="sub":
+            if not subRE.match(rec['variant']):
+                raise Exception("Wrong substitution variant: " + rec['variant'])
+        elif vtype=="indel":
+            grps = ins2FixRE.match(rec['variant'])
+            if grps:
+                rprIns = "ins(" + grps.group(2) + ")"
+                if rprIns != rec['variant']:
+                    print >>sys.stderr, "REPAIRING", rec['variant'], rprIns
+                    rec['variant'] = "ins(" + grps.group(2) + ")"
+                    cs[hdr.index('variant')] = rec['variant']
+            if not indelRE.match(rec['variant']):
+                raise Exception("Wrong indel variant: " + rec['variant'])
+        else:
+            assert False
+        
 
         strn = strengthF[vtype](rec)
         cs += [strn] 
@@ -132,6 +185,7 @@ def procDenovoFile(iFn,vtype):
                 stValSt = 'inconclusiv'
             stats[vtype][strn+"-valStat-"+stValSt]+=1
 
+        csNoValCols=copy.copy(cs)
         cs += valCols    
         fsToWrite = [fls[vtype]['listed']]
         if strn=='strong':
@@ -152,7 +206,10 @@ def procDenovoFile(iFn,vtype):
                 fsToWrite.append(fls[vtype]['weakToValidate'])
                 stats[vtype][strn+"-toValidate"]+=1
         for oF in fsToWrite:
-            oF.write("\t".join(map(str,cs)) + "\n")
+            if not oF.name.endswith('ToValidate.txt'):
+                oF.write("\t".join(map(str,cs)) + "\n")
+            else:
+                oF.write("\t".join(map(str,csNoValCols))+"\n")
 procDenovoFile(indelFN,"indel")
 procDenovoFile(subFN,"sub")
 
@@ -213,7 +270,10 @@ for vKey,vv in vData.items():
         
 
     addAtts = ['counts', 'denovoScore', 'chi2APval']
-    otherValidatedF.write("\t".join(map(str,[vv.familyId,vv.location,vv.variant,"other",vv.batchId, vv.bestStS,vv.valStatus,vv.valCountsS, vv.valParent, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
+    if vv.bestSt.shape[1] == 3 and len(vv.memberInOrder) == 4:
+        print "EXTENDING the best state for ", vv.familyId, vv.location, vv.variant
+        vv.bestSt = np.append(vv.bestSt,[[2],[0]],axis=1)
+    otherValidatedF.write("\t".join(map(str,[vv.familyId,vv.location,vv.variant,"other",vv.batchId, mat2Str(vv.bestSt),vv.valStatus,vv.valCountsS, vv.valParent, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
                     [str(vv.atts[aa]) if aa in vv.atts else "" for aa in addAtts] + list(desc)) + "\n")
 otherValidatedF.close()
 

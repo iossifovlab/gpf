@@ -52,7 +52,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 def effect_types():
     return get_effect_types()
 
