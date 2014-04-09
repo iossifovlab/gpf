@@ -70,6 +70,7 @@ class MetaData:
             ln.seqrun = None
             print >>sys.stderr, "The fc ", fc, "has not sequencing run"
         ln.capture = self.CP[captureId]
+        ln.capture.lanes.append(ln)
         ln.atts = atts
 
         self.LN[laneId] = ln

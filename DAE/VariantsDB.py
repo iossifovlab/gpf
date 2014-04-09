@@ -702,20 +702,34 @@ class Study:
                     return pi
                 return sfariDB.sampleNumber2PersonId[pi]
 
+            def transferPersonAtts(pd,attPref):
+                pd.atts['sample_id'] = qrpR[attPref + 'sample_id']
+                pd.atts['mean_depth'] = qrpR[attPref + 'mean_depth']
+                pd.atts['target_covered_at_1_prcnt'] = qrpR[attPref + '_target_covered_at_1_prcnt']
+                pd.atts['target_covered_at_10_prcnt'] = qrpR[attPref + '_target_covered_at_10_prcnt']
+                pd.atts['target_covered_at_20_prcnt'] = qrpR[attPref + '_target_covered_at_20_prcnt']
+                pd.atts['target_covered_at_40_prcnt'] = qrpR[attPref + '_target_covered_at_40_prcnt']
+                pd.atts['relXcopy'] = qrpR[attPref + 'relXcopy']
+                pd.atts['relYcopy'] = qrpR[attPref + 'relYcopy']
+                pd.atts['genderMismatchStr'] = qrpR[attPref + 'genderMismatchStr']
+     
             mom = Person()
             mom.personId = piF(qrpR['mothersample_id'])
             mom.role = 'mom'
             mom.gender = 'F'
+            transferPersonAtts(mom,"mother")
 
             dad = Person()
             dad.personId = piF(qrpR['fathersample_id'])
             dad.role = 'dad'
             dad.gender = 'M'
+            transferPersonAtts(dad,"father")
 
             ch1 = Person()
             ch1.personId = piF(qrpR['child1sample_id'])
             ch1.role = rlsMap[qrpR['child1role']]
             ch1.gender = qrpR['child1gender']
+            transferPersonAtts(ch1,"child1")
 
             
             f.memberInOrder = [mom, dad, ch1]
@@ -725,6 +739,7 @@ class Study:
                 ch2.personId = piF(qrpR['child2sample_id'])
                 ch2.role = rlsMap[qrpR['child2role']]
                 ch2.gender = qrpR['child2gender']
+                transferPersonAtts(ch2,"child2")
                 f.memberInOrder.append(ch2)
             if qrpR['status'] == 'OK':
                 families[f.familyId] = f
