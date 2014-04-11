@@ -54,7 +54,10 @@ logger = logging.getLogger(__name__)
 
 
 def effect_types():
-    return get_effect_types()
+    res = []
+    res.extend(get_effect_types(types=False, groups=True))
+    res.extend(get_effect_types(types=True, groups=False))
+    return res
 
 
 def effect_type_sets():
@@ -111,6 +114,7 @@ print "+++++++++++++++++++++++++++++++++++++++++++"
     family_types = [ft[0] + ": " + str(ft[1])
                     for ft in sorted(fam_type_cnt.items(),
                                      key=lambda ft: -ft[1])]
+
     return {"fam_total": str(fam_total),
             "fam_by_number_of_children": number_of_children,
             "probants": [str(child_type_cnt['prbM']), str(child_type_cnt['prbF'])],
@@ -222,7 +226,7 @@ def build_stats(studies):
     for study in studies:
         if not study.has_denovo:
             return {'header': __format_header_summary(*header)}
-
+    rows = []
     for effect_type in effect_types():
         for child in get_child_types():
             vs = list(vDB.get_denovo_variants(studies,
@@ -245,9 +249,11 @@ def build_stats(studies):
         zero_test = [d[2] == 0 and d[3] == 0 for d in stats[effect_type]]
         if all(zero_test):
             del stats[effect_type]
+        else:
+            rows.append(effect_type)
 
     return {'header': __format_header_summary(*header),
             'stats': dict(stats),
             'footer': __format_footer(cnts, child_type_cnt),
-            'rows': sorted(stats.keys()),
+            'rows': rows,
             'cols': get_child_types()}
