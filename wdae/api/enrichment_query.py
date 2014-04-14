@@ -94,7 +94,8 @@ def enrichment_results(denovoStudies=None,
         res['gs_desc'] = "%s: %s" % (geneTerm,
                                      gene_terms.tDesc[geneTerm])
     else:
-        desc = ','.join(geneSyms)
+        syms = list(geneSyms)
+        desc = ','.join(sorted(syms))
         res['gs_desc'] = desc
         res['gs_id'] = desc
 
