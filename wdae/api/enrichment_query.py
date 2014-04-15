@@ -64,6 +64,7 @@ def colormap_value(p_val, lessmore):
         color = "rgb(255,255,255)"
     return color
 
+from itertools import chain
 
 def enrichment_results(denovoStudies=None,
                        denovoStudiesName=None,
@@ -80,7 +81,7 @@ def enrichment_results(denovoStudies=None,
 
     all_res, totals = enrichment_test(denovoStudies,
                                       geneSyms)
-    bg_total = totals['BACKGROUND']
+    bg_total = totals['BACKGROUND'][0]
     bg_cnt = all_res['BACKGROUND'].cnt
     bg_prop = round(float(bg_cnt) / bg_total, 3)
 
@@ -108,8 +109,11 @@ def enrichment_results(denovoStudies=None,
 
         eres = all_res[test_name]
 
-        tres['overlap'] = totals[test_name]
+        tres['overlap'] = totals[test_name][0]
         tres['count'] = eres.cnt
+        if test_name == 'prb|Rec LGDs':
+            tres['syms'] = set(chain.from_iterable(totals[test_name][1]))
+            tres['syms'] = tres['syms'].intersection(geneSyms)
 
         p_val = eres.p_val
         if eres.p_val >= 0.0001:
