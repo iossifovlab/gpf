@@ -135,16 +135,13 @@ def __get_page_count(query_params, page_count=30):
             page_count = int(query_params['page_count'])
         except:
             page_count = 30
-    if not (page_count > 0 and page_count <= 100):
+    if not (page_count > 0 and page_count <= 200):
         page_count = 30
     return page_count
 
 
-def __gene_set_filter_response_dict(request, gts):
-    query_params = request.QUERY_PARAMS
-
+def __gene_set_filter_response_dict(query_params, gts):
     page_count = __get_page_count(query_params, page_count=100)
-    print "page_count:", page_count
 
     if 'filter' in query_params:
         filter_string = query_params['filter'].lower().strip()
@@ -168,9 +165,9 @@ def __gene_set_filter_response_dict(request, gts):
         return dict(l[0:page_count])
 
 
-def __gene_set_response(request, gts, gt):
+def __gene_set_response(query_params, gts, gt):
     if gt is None:
-        res = __gene_set_filter_response_dict(request, gts)
+        res = __gene_set_filter_response_dict(query_params, gts)
         return Response(res)
 
     if str(gt) not in gts.tDesc.keys():
@@ -183,7 +180,7 @@ def __gene_set_response(request, gts, gt):
 
 @api_view(['GET'])
 def gene_set_list(request):
-    query_params = request.QUERY_PARAMS
+    query_params = prepare_query_dict(request.QUERY_PARAMS)
     if 'gene_set' not in query_params:
         return Response({})
     gene_set = query_params['gene_set']
@@ -193,7 +190,7 @@ def gene_set_list(request):
     gts = load_gene_set(gene_set, study_name)
 
     if gts:
-        return __gene_set_response(request, gts, gene_name)
+        return __gene_set_response(query_params, gts, gene_name)
     else:
         return Response()
 
