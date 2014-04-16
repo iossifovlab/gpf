@@ -1,5 +1,5 @@
 from fabric.contrib.files import append, exists, sed
-from fabric.api import env, local, run, cd
+from fabric.api import env, run, cd
 import random
 import os
 
@@ -15,8 +15,8 @@ def staging():
 
     _create_directory_structure_if_necessary(site_folder)
     _get_latest_source(source_folder)
-    _update_settings(wdae_folder)
-    # _update_static_files(source_folder)
+    _update_settings(site_folder, wdae_folder)
+    _update_static_files(wdae_folder)
 
 
 def _create_directory_structure_if_necessary(site_folder):
@@ -35,8 +35,8 @@ def _get_latest_source(source_folder):
         run('hg up --clean')
 
 
-def _update_settings(source_folder):
-    settings_path = os.path.join(source_folder, 'wdae/settings.py')
+def _update_settings(site_folder, wdae_folder):
+    settings_path = os.path.join(wdae_folder, 'wdae/settings.py')
     sed(settings_path, "DEBUG = True", "DEBUG = False")
     sed(settings_path,
         "ALLOWED_HOSTS = .+$",
@@ -44,8 +44,11 @@ def _update_settings(source_folder):
     sed(settings_path,
         'TIME_ZONE = .+$',
         'TIME_ZONE = "Europe/Sofia"')
+    sed(settings_path,
+        'STATIC_ROOT = .+$',
+        'STATIC_ROOT = "%s"' % os.path.join(site_folder, 'static'))
 
-    secret_key_file = os.path.join(source_folder, 'wdae/secret_key.py')
+    secret_key_file = os.path.join(wdae_folder, 'wdae/secret_key.py')
     if not exists(secret_key_file):
         chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$^&*(-_=+)'
         key = ''.join(random.SystemRandom().choice(chars) for _ in range(50))
