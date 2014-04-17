@@ -175,7 +175,7 @@ def __gene_set_response(query_params, gts, gt):
     gl = gts.t2G[gt].keys()
     if not gl:
         return Response({})
-    return Response({"gene_count": len(gl)})
+    return Response({"gene_count": len(gl), "key": gt, "desc": gts.tDesc[gt]})
 
 
 @api_view(['GET'])
