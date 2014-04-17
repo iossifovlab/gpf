@@ -17,7 +17,8 @@ def staging():
     print("site_folder: %s, source_folder: %s" % (site_folder, source_folder))
 
     # _create_directory_structure_if_necessary(site_folder)
-    # _get_latest_source(source_folder)
+    _get_latest_source(source_folder)
+    _update_source_consts(wdae_folder)
     _update_settings(site_folder, wdae_folder)
     _update_wsgi(site_folder, dae_folder, wdae_folder, data_folder)
     _update_static_files(wdae_folder)
@@ -62,6 +63,12 @@ def _update_settings(site_folder, wdae_folder):
         key = ''.join(random.SystemRandom().choice(chars) for _ in range(50))
         append(secret_key_file, 'SECRET_KEY = "%s"' % (key,))
     append(settings_path, '\nfrom .secret_key import SECRET_KEY')
+
+
+def _update_source_consts(wdae_folder):
+    jsconst_path = os.path.join(wdae_folder,
+                                'variants/static/variants/js/constants.js')
+    sed(jsconst_path, "/api/", "/dae/api/")
 
 
 def _update_static_files(wdae_folder):
