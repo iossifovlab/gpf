@@ -38,8 +38,7 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names
 #             headers['Access-Control-Allow-Origin']='*'
 #         RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
 
-
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('wdae.api')
 
 
 @api_view(['GET'])
@@ -405,10 +404,11 @@ Examples:
 
     GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
     query_data = prepare_query_dict(request.QUERY_PARAMS)
+    logger.info("enrichment query: %s" % str(query_data))
+
     data = enrichment_prepare(query_data)
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
-    logger.info("enrichment query: %s" % str(data))
 
     if data is None:
         return Response(None)
