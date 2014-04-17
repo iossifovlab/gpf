@@ -16,7 +16,7 @@ def staging():
 
     print("site_folder: %s, source_folder: %s" % (site_folder, source_folder))
 
-    # _create_directory_structure_if_necessary(site_folder)
+    _create_directory_structure_if_necessary(site_folder)
     _get_latest_source(source_folder)
     _update_source_consts(wdae_folder)
     _update_settings(site_folder, wdae_folder)
@@ -75,29 +75,14 @@ def _update_static_files(wdae_folder):
     with cd(wdae_folder):
         run('python manageWDAE.py collectstatic --noinput')
 
-# VHOST_CONF = """
-# <VirtualHost *:80>
-#   ServerAdmin webmaster@mydomain.com
-#   ServerName seqpipe-vm.setelis.com
-
-#   WSGIScriptAlias /dae %s
-#   WSGIApplicationGroup %{GLOBAL}
-
-#   Alias /dae/static/ %s
-#   <Location "/dae/static/">
-#     Allow From All
-#   </Location>
-
-#   LogLevel debug
-# </VirtualHost>
-# """
-
 
 def _update_vhost_conf(site_folder, wdae_folder):
     upload_template('confs/vhost.conf',
                     '/etc/apache2/sites-available/seqpipe.setelis.com.conf',
-                    context={'wsgi_file': os.path.join(wdae_folder, 'wdae/index.wsgi'),
-                             'static_folder': os.path.join(site_folder, 'static'),
+                    context={'wsgi_file': os.path.join(wdae_folder,
+                                                       'wdae/index.wsgi'),
+                             'static_folder': os.path.join(site_folder,
+                                                           'static'),
                              'wdae_folder': wdae_folder},
                     use_sudo=True)
     apache.enable_module('wsgi')
