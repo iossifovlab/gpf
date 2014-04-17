@@ -57,9 +57,9 @@ def _update_settings(site_folder, wdae_folder):
         'STATIC_URL = .+$',
         'STATIC_URL = "/dae/static/"')
 
-    sed(settings_path,
-        'wdae-api.log',
-        '/var/log/apache2/wdae-api.log')
+    # sed(settings_path,
+    #     'wdae-api.log',
+    #     '/var/log/apache2/wdae-api.log')
 
     secret_key_file = os.path.join(wdae_folder, 'wdae/secret_key.py')
     if not exists(secret_key_file):
