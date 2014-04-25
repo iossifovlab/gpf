@@ -41,6 +41,20 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names
 logger = logging.getLogger('wdae.api')
 
 
+def filter(request, message):
+    request_method = getattr(request, 'method', '-')
+    path_info = getattr(request, 'path_info', '-')
+    # Headers
+    META = getattr(request, 'META', {})
+    remote_addr = META.get('REMOTE_ADDR', '-')
+    # server_protocol = META.get('SERVER_PROTOCOL', '-')
+    # http_user_agent = META.get('HTTP_USER_AGENT', '-')
+    return "remote addr: %s; method: %s; path: %s; %s" % (remote_addr,
+                                                          request_method,
+                                                          path_info,
+                                                          message)
+
+
 @api_view(['GET'])
 def report_studies(request):
     return Response({"report_studies": get_denovo_studies_names() +
@@ -266,7 +280,7 @@ All fields are same as in query_variants request
     # else:
     #     data = prepare_query_dict(data)
 
-    logger.info("preview query variants: " + str(data))
+    logger.info(filter(request, "preview query variants: " + str(data)))
 
     generator = do_query_variants(data)
     summary = prepare_summary(generator)
@@ -333,7 +347,7 @@ Advanced family filter expects following fields:
     data = prepare_query_dict(request.DATA)
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
-    logger.info("query variants request: " + str(data))
+    logger.info(filter(request, "query variants request: " + str(data)))
 
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
     print comment
@@ -404,7 +418,7 @@ Examples:
 
     GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
     query_data = prepare_query_dict(request.QUERY_PARAMS)
-    logger.info("enrichment query: %s" % str(query_data))
+    logger.info(filter(request, "enrichment query: %s" % str(query_data)))
 
     data = enrichment_prepare(query_data)
     # if isinstance(data, QueryDict):
