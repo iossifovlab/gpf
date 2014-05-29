@@ -38,8 +38,7 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names
 #             headers['Access-Control-Allow-Origin']='*'
 #         RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
 
-
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('wdae.api')
 
 
 @api_view(['GET'])
@@ -135,16 +134,13 @@ def __get_page_count(query_params, page_count=30):
             page_count = int(query_params['page_count'])
         except:
             page_count = 30
-    if not (page_count > 0 and page_count <= 100):
+    if not (page_count > 0 and page_count <= 200):
         page_count = 30
     return page_count
 
 
-def __gene_set_filter_response_dict(request, gts):
-    query_params = request.QUERY_PARAMS
-
+def __gene_set_filter_response_dict(query_params, gts):
     page_count = __get_page_count(query_params, page_count=100)
-    print "page_count:", page_count
 
     if 'filter' in query_params:
         filter_string = query_params['filter'].lower().strip()
@@ -168,9 +164,9 @@ def __gene_set_filter_response_dict(request, gts):
         return dict(l[0:page_count])
 
 
-def __gene_set_response(request, gts, gt):
+def __gene_set_response(query_params, gts, gt):
     if gt is None:
-        res = __gene_set_filter_response_dict(request, gts)
+        res = __gene_set_filter_response_dict(query_params, gts)
         return Response(res)
 
     if str(gt) not in gts.tDesc.keys():
@@ -178,12 +174,12 @@ def __gene_set_response(request, gts, gt):
     gl = gts.t2G[gt].keys()
     if not gl:
         return Response({})
-    return Response({"gene_count": len(gl)})
+    return Response({"gene_count": len(gl), "key": gt, "desc": gts.tDesc[gt]})
 
 
 @api_view(['GET'])
 def gene_set_list(request):
-    query_params = request.QUERY_PARAMS
+    query_params = prepare_query_dict(request.QUERY_PARAMS)
     if 'gene_set' not in query_params:
         return Response({})
     gene_set = query_params['gene_set']
@@ -193,7 +189,7 @@ def gene_set_list(request):
     gts = load_gene_set(gene_set, study_name)
 
     if gts:
-        return __gene_set_response(request, gts, gene_name)
+        return __gene_set_response(query_params, gts, gene_name)
     else:
         return Response()
 
@@ -408,10 +404,11 @@ Examples:
 
     GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
     query_data = prepare_query_dict(request.QUERY_PARAMS)
+    logger.info("enrichment query: %s" % str(query_data))
+
     data = enrichment_prepare(query_data)
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
-    logger.info("enrichment query: %s" % str(data))
 
     if data is None:
         return Response(None)

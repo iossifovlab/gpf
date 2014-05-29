@@ -193,9 +193,9 @@ def enrichment_test(dsts, gene_syms_set):
     var_genes_dict = __build_variants_genes_dict(dsts)
 
     all_res = __count_gene_set_enrichment(var_genes_dict, gene_syms_set)
-    totals = {test_name: len(gene_syms)
+    totals = {test_name: [len(gene_syms), gene_syms]
               for test_name, gene_syms in var_genes_dict}
-    bg_total = totals['BACKGROUND']
+    bg_total = totals['BACKGROUND'][0]
 
     bg_gene_set = all_res['BACKGROUND'].cnt
     if bg_gene_set == 0:
@@ -204,7 +204,7 @@ def enrichment_test(dsts, gene_syms_set):
 
     for test_name, gene_syms in var_genes_dict:
         res = all_res[test_name]
-        total = totals[test_name]
+        total = totals[test_name][0]
         res.p_val = stats.binom_test(res.cnt, total, p=bg_prob)
         res.expected = round(bg_prob*total, 4)
 
