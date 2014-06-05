@@ -30,6 +30,24 @@ class ParentVariant:
     def __str__(self):
         return "ParentVariant\n\t" + "\n\t".join([str((x,getattr(self, x))) for x in dir(self) if x[0] != '_'])
 
+
+def regions_matcher(regions):
+    regs = regions.split(',')
+    reg_defs = []
+
+    for r in regs:
+        smcP = r.find(":")
+        dsP = r.find("-")
+        chr = r[0:smcP]
+        beg = int(r[smcP+1:dsP])
+        end = int(r[dsP+1:])
+        reg_defs.append((chr, beg, end))
+
+    return lambda vchr, vpos: any([(chrom == vchr
+                                    and vpos >= beg
+                                    and vpos <= end)
+                                   for(chrom, beg, end) in reg_defs])
+
 class Variant:
     def __init__(self,atts,familyIdAtt="familyId", locationAtt="location", 
                 variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
@@ -387,21 +405,6 @@ class Study:
                 yield v
         tbf.close()
 
-    def __regions_matcher(regions):
-        regs = regions.split(',')
-        reg_defs = []
-        for r in regs:
-            smcP = r.find(":")
-            dsP = r.find("-")
-            chr = r[0:smcP]
-            beg = int(r[smcP+1:dsP])
-            end = int(r[dsP+1:])
-            reg_defs.append((chr, beg, end))
-        return lambda (vchr, vpos): any([(chr == vchr
-                                          and vpos >= beg
-                                          and vpos <= end)
-                                         for(chr, beg, end) in reg_defs])
-        
     def get_denovo_variants(self, inChild=None, variantTypes=None, effectTypes=None, geneSyms=None, familyIds=None, regionS=None, callSet=None):
 
         if isinstance(effectTypes, str):
@@ -417,7 +420,9 @@ class Study:
             # chr = regionS[0:smcP]
             # beg = int(regionS[smcP+1:dsP])
             # end = int(regionS[dsP+1:])
-            reg_matcher = self.__regions_matcher(regionS)
+            print("regionS: %s" % regionS)
+
+            reg_matcher = regions_matcher(regionS)
 
         dnvData = self._load_dnv_data(callSet)
         for v in dnvData:
