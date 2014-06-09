@@ -21,7 +21,7 @@ urlpatterns = patterns(
 try:
     from query_prepare import prepare_transmitted_studies
     from api.enrichment import build_transmitted_background
-    from api.bg_loader import preload_background
+    from bg_loader import preload_background
 
     transmitted = prepare_transmitted_studies(
         {"transmittedStudies": 'w873e374s322'})

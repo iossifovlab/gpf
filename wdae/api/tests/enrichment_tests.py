@@ -8,7 +8,7 @@ from DAE import vDB, get_gene_sets_symNS
 logger = logging.getLogger(__name__)
 
 import api.tests.enrichment_test_orig
-from api.bg_loader import preload_background
+from bg_loader import preload_background
 
 
 class EnrichmentHelpersTests(unittest.TestCase):

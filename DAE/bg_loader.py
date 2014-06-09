@@ -38,7 +38,7 @@ def get_background(key):
     global _lock, background
     _lock.acquire(True)
     try:
-        value = _background[key]
+        value = _background.get(key)
     finally:
         _lock.release()
 
