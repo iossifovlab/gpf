@@ -2,11 +2,12 @@
 import logging
 # from django.core.cache import get_cache
 
-from DAE import vDB
-from DAE import get_gene_sets_symNS
+# from DAE import vDB
+# from DAE import get_gene_sets_symNS
 import api.GeneTerm
 
 logger = logging.getLogger(__name__)
+from query_prepare import gene_set_loader
 
 
 def load_gene_set(gene_set_label, study_name=None):
@@ -21,11 +22,12 @@ def load_gene_set(gene_set_label, study_name=None):
     # logger.info("looking in cache for %s, found(%s)?",
     #             cache_key, (gs is not None))
     # if not gs:
-    if 'denovo' == gene_set_label:
-        dsts = vDB.get_studies(study_name)
-        gene_term = get_gene_sets_symNS(gene_set_label, dsts)
-    else:
-        gene_term = get_gene_sets_symNS(gene_set_label)
+    # if 'denovo' == gene_set_label:
+    #     dsts = vDB.get_studies(study_name)
+    #     gene_term = get_gene_sets_symNS(gene_set_label, dsts)
+    # else:
+    #     gene_term = get_gene_sets_symNS(gene_set_label)
+    gene_term = gene_set_loader(gene_set_label, study_name)
     gs = api.GeneTerm.GeneTerm(gene_term)
     return gs
 
