@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
     setsFile = "main"
     denovoStudies = "allWE"
-    transmittedStudy = "w873e374s322"
+    transmittedStudy = "w1202s766e611"
 
     if len(sys.argv)>1:
         setsFile=sys.argv[1]

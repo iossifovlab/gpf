@@ -66,7 +66,7 @@ class Counts:
             famTps.append("sib:x" + self.study.families[fid].memberInOrder[3].gender)
 
 
-        parGroups = ["both"]
+        parGroups = ["either"]
         if self.byParent and par:
             parGroups.append(par)
 
@@ -138,6 +138,8 @@ class HomozygousTest:
         self.buff = defaultdict(lambda : defaultdict( list )) 
 
     def _phsType(self,vs):
+        if len(vs)>5:
+            return "Too many"
         posFamilyPhs = phase([v.bestSt for v in vs])
         if len(posFamilyPhs)!=1:
             return "MultiBad"
@@ -161,6 +163,8 @@ class HomozygousTest:
         for fid,gss in self.buff.items():
             for gs,vs in gss.items(): 
                 counts.add(fid, gs, "HomozygousGene", "TotalWithErr")
+                if len(vs)>5:
+                    print >>sys.stderr, "TOO MANY VARIANTS:", fid, gs, len(vs)
                 if len(vs):
                     counts.add(fid, gs, "HomozygousGene", "Multi")
                     phsType = self._phsType(vs)
@@ -252,16 +256,16 @@ class DistTest:
             for gs,vs in gss.items(): 
                 counts.add(fid, gs, "DistGeneX", "TotalWithErr")
                 if len(vs)>1:
-                    counts.add(fid, gs, "DistGeneX", "Multi", par)
+                    counts.add(fid, gs, "DistGeneX", "Multi", "mom")
                     phsType = self._phsType(vs)
                     if phsType != "OK":
-                        counts.add(fid, gs, "DistGeneX", phsType, par)
+                        counts.add(fid, gs, "DistGeneX", phsType, "mom")
                         continue
                 st = vs[0].bestSt
                 a,s = st[1,2:4]
-                counts.add(fid, gs, "DistGeneX", "Total", par)
-                counts.add(fid, gs, "DistGeneX", str(a)+str(s), par)
-                parBuf.append((a,s))
+                counts.add(fid, gs, "DistGeneX", "Total", "mom")
+                counts.add(fid, gs, "DistGeneX", str(a)+str(s), "mom")
+                # parBuf.append((a,s))
                             
                 
         
@@ -270,7 +274,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run transmission tests.")
     parser.add_argument('--denovoStudies', type=str, default="allWEAndTG", help='the denovo sutdies used to build the denovo gene set.' )
-    parser.add_argument('--transmittedStudy', type=str, default="w873e374s322", help='the transmitted study')
+    parser.add_argument('--transmittedStudy', type=str, default="w1202s766e611", help='the transmitted study')
     parser.add_argument('--effectTypes', type=str, default="LGDs", help='effect types (i.e. LGDs,missense,synonymous). LGDs by default. ')
     parser.add_argument('--popFrequencyMax', type=str, default='1.0',
             help='maximum population frequency in percents. Can be 100 or -1 for no limit; ultraRare. 1.0 by default.')

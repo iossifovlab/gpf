@@ -506,6 +506,10 @@ def prepare_pop_min_parents_called(data):
             minParentsCalled = 600
     return minParentsCalled
 
+def prepare_TMM_ALL(data):
+    if 'TMM_ALL' in data and data['TMM_ALL']:
+        return True
+    return False
 
 def prepare_ultra_rare(data):
     if 'rarity' in data:
@@ -582,7 +586,9 @@ def prepare_transmitted_filters(data,
     filters = {'ultraRareOnly': prepare_ultra_rare(data),
                'minParentsCalled': prepare_pop_min_parents_called(data),
                'minAltFreqPrcnt': prepare_min_alt_freq_prcnt(data),
-               'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data)}
+               'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data),
+               'TMM_ALL': prepare_TMM_ALL(data)
+    }
     return dict(filters, **denovo_filters)
 
 

@@ -31,6 +31,7 @@ LGDs by default. none for all variants''')
                         help='minimum population frequency in percents. Can be -1 for no limit. -1 by default.')
     parser.add_argument('--popMinParentsCalled', type=str, default="600",
                         help='minimum number of genotyped parents. Can be -1 for no limit. 600 by default.')
+    parser.add_argument('--TMM_ALL', help='Speeds up global transmitted data queries',action="store_true")
     parser.add_argument('--inChild', type=str,
                         help='i.e. prb, sib, prbM, sibF')
     parser.add_argument('--familiesFile', type=str,
@@ -76,6 +77,7 @@ if __name__ == "__main__":
 
     print >>sys.stderr, sys.argv
     args_dict = parse_cli_arguments(sys.argv[1:])
+    print args_dict
     generator = do_query_variants(args_dict)
     for l in generator:
         sys.stdout.write(join_line(l, '\t'))
