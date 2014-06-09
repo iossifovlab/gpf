@@ -87,10 +87,8 @@ def gene_set_loader(gene_set_label, study_name=None):
 
 
 def gene_set_bgloader(gene_set_label):
-    print("gene set label: %s" % gene_set_label)
-
     if 'denovo' == gene_set_label:
-        pass
+        return None
     else:
         gene_term = get_gene_sets_symNS(gene_set_label)
 
