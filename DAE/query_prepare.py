@@ -1,7 +1,7 @@
 import itertools
 import logging
 from DAE import get_gene_sets_symNS, vDB
-
+from bg_loader import get_background
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +78,19 @@ def gene_set_loader(gene_set_label, study_name=None):
     if 'denovo' == gene_set_label:
         dsts = vDB.get_studies(study_name)
         gene_term = get_gene_sets_symNS(gene_set_label, dsts)
+    else:
+        gene_term = get_background(gene_set_label)
+        if not gene_term:
+            gene_term = get_gene_sets_symNS(gene_set_label)
+
+    return gene_term
+
+
+def gene_set_bgloader(gene_set_label):
+    print("gene set label: %s" % gene_set_label)
+
+    if 'denovo' == gene_set_label:
+        pass
     else:
         gene_term = get_gene_sets_symNS(gene_set_label)
 

@@ -19,7 +19,7 @@ urlpatterns = patterns(
 )
 
 try:
-    from query_prepare import prepare_transmitted_studies
+    from query_prepare import prepare_transmitted_studies, gene_set_bgloader
     from api.enrichment import build_transmitted_background
     from bg_loader import preload_background
 
@@ -28,7 +28,13 @@ try:
 
     builders = [(build_transmitted_background,
                  transmitted,
-                 'enrichment_background')]
+                 'enrichment_background'),
+                (gene_set_bgloader,
+                 ['GO'],
+                 'GO'),
+                (gene_set_bgloader,
+                 ['MSigDB.curated'],
+                 'MSigDB.curated')]
 
     preload_background(builders)
 

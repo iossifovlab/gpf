@@ -27,6 +27,7 @@ class BackgroundBuilderTask (threading.Thread):
                 print 'Starting background task'
                 global background
                 for (func, args, key) in self.builders:
+                    print("args: %s" % args)
                     res = func(*args)
                     _background[key] = res
             finally:
