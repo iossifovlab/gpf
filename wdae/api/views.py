@@ -425,6 +425,6 @@ Examples:
 
     if data is None:
         return Response(None)
-    print("enrichment query: %s" % data)
+
     res = enrichment_results(**data)
     return Response(res)

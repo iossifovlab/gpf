@@ -79,10 +79,6 @@ def enrichment_results(denovoStudies=None,
         gene_terms = None
     else:
         gene_terms = load_gene_set(geneSet, geneStudy)
-    # print("gene_terms: %s" % gene_terms)
-    # print("gene_terms: %s" % gene_terms.t2G)
-    # print("gene_terms: %s" % gene_terms.g2T)
-    print("geneSyms: %s" % geneSyms)
 
     all_res, totals = enrichment_test(denovoStudies,
                                       geneSyms)

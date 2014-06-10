@@ -39,13 +39,9 @@ class BackgroundBuilderTask (threading.Thread):
 def get_background(key):
     global _lock, _background, _builder_started
     _lock.acquire(True)
-    print("background keys: %s" % _background.keys())
-    print("key: %s" % key)
 
     try:
         value = _background.get(key)
-        if not value:
-            print("background value is None")
     finally:
         _lock.release()
 
