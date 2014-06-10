@@ -26,15 +26,18 @@ try:
     transmitted = prepare_transmitted_studies(
         {"transmittedStudies": 'w873e374s322'})
 
-    builders = [(build_transmitted_background,
-                 transmitted,
-                 'enrichment_background'),
-                (gene_set_bgloader,
+    builders = [(gene_set_bgloader,
                  ['GO'],
                  'GO'),
+
                 (gene_set_bgloader,
                  ['MSigDB.curated'],
-                 'MSigDB.curated')]
+                 'MSigDB.curated'),
+
+                (build_transmitted_background,
+                 transmitted,
+                 'enrichment_background')
+                ]
 
     preload_background(builders)
 

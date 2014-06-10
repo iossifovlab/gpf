@@ -70,7 +70,7 @@ def gene_sets_list(request):
         if not label or not formatStr:
             continue
         r.append({'label': label, 'val': tsId, 'conf': formatStr.split("|")})
-        print tsId, label, formatStr
+
     return Response({"gene_sets": r})
 
 
@@ -350,7 +350,6 @@ Advanced family filter expects following fields:
     logger.info(log_filter(request, "query variants request: " + str(data)))
 
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
-    print comment
 
     generator = do_query_variants(data)
     response = StreamingHttpResponse(
@@ -426,6 +425,6 @@ Examples:
 
     if data is None:
         return Response(None)
-
+    print("enrichment query: %s" % data)
     res = enrichment_results(**data)
     return Response(res)

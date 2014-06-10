@@ -12,7 +12,7 @@ class BackgroundBuilderTask (threading.Thread):
         self.builders = builders
 
     def run(self):
-        global _lock, _builder_started
+        global _lock, _background,  _builder_started
 
         if not _lock.acquire(False):
             print("Background builder already started...")
@@ -25,21 +25,27 @@ class BackgroundBuilderTask (threading.Thread):
 
             try:
                 print 'Starting background task'
-                global background
+                global _background
                 for (func, args, key) in self.builders:
-                    print("args: %s" % args)
+                    print("key: %s; args: %s" % (key,args))
                     res = func(*args)
                     _background[key] = res
+
             finally:
                 print 'Exiting background task'
                 _lock.release()
 
 
 def get_background(key):
-    global _lock, background
+    global _lock, _background, _builder_started
     _lock.acquire(True)
+    print("background keys: %s" % _background.keys())
+    print("key: %s" % key)
+
     try:
         value = _background.get(key)
+        if not value:
+            print("background value is None")
     finally:
         _lock.release()
 

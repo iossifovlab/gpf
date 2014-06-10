@@ -179,6 +179,9 @@ def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
     all_res = {}
     for test_name, gene_syms in var_genes_dict:
         all_res[test_name] = EnrichmentTestRes()
+        if test_name == 'BACKGROUND':
+            gene_syms = get_background('enrichment_background')
+
         for gene_sym_list in gene_syms:
             touched_gene_sets = False
             for gene_sym in gene_sym_list:
