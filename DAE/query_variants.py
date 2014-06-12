@@ -390,7 +390,7 @@ def prepare_gene_region(data):
         region = region.replace(',', ' ').split()
     region = [r for r in region if validate_region(r)]
     if region:
-        return region
+        return ','.join(region)
     else:
         return None
 
