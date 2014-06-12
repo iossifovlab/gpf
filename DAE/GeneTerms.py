@@ -4,6 +4,7 @@ from collections import defaultdict
 import glob
 import os
 
+
 class GeneTerms:
     def __init__(self):
         self.g2T = defaultdict(lambda : defaultdict(int)) 

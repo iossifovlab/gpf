@@ -66,6 +66,7 @@ def colormap_value(p_val, lessmore):
 
 from itertools import chain
 
+
 def enrichment_results(denovoStudies=None,
                        denovoStudiesName=None,
                        transmittedStudies=None,
