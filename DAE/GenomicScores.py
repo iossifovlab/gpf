@@ -693,6 +693,8 @@ class GenomicScore:
         while True:
             x = (b+e)/2
 
+            # print >>sys.stderr, "_bin_search: b:",b,"e:",e,"x:",x
+
             if chrAr[x][0] <= p <= chrAr[x][1]:
                 return((True, x, self.Indexing[chr][chrAr[x]][0] + p - chrAr[x][0]))
 

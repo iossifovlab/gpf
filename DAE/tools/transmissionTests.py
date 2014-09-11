@@ -285,6 +285,7 @@ if __name__ == "__main__":
     print >>sys.stderr, args
 
 
+    '''
     whiteFams = {f for f,mr,fr in zip(phDB.families,
                 phDB.get_variable('focuv.race_parents'),
                 phDB.get_variable('mocuv.race_parents')) if mr=='white' and fr=='white' }
@@ -303,7 +304,7 @@ if __name__ == "__main__":
 
     vIQ  = getMeasure('pcdv.ssc_diagnosis_verbal_iq')
     nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq')
-
+    '''
     
  
     geneTerms = get_gene_sets_symNS(args.geneSets,denovoStudies=args.denovoStudies)
