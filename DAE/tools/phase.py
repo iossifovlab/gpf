@@ -1,6 +1,7 @@
 #!/bin/env python
 
 import numpy as np
+import sys
 
 
 def getDims(inp):
@@ -50,7 +51,12 @@ def possiblePersonPhasing(inp, L, P, nCpies, p):
 
 
 def phase(inp):
-    L, P, nCpies = getDims(inp)
+    L,P,nCpies = getDims(inp)
+    # print >>sys.stderr, "inp:", inp 
+    # print >>sys.stderr, "L:", L 
+    # print >>sys.stderr, "P:", P 
+    # print >>sys.stderr, "nCpies:", nCpies 
+    # print >>sys.stderr, "phase called with L: %d, P, %d" % (L,P)
 
     chSts = set()
 
@@ -79,7 +85,6 @@ def phase(inp):
                 posFamilyPhs.append((mph, dph))
 
     return posFamilyPhs
-
 
 if __name__ == "__main__":
     print "hi"

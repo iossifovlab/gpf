@@ -13,6 +13,8 @@ from operator import itemgetter
 import re
 from RegionOperations import *
 import h5py
+import glob
+import os.path
 
 
 class GenomicScore:
@@ -123,6 +125,101 @@ class GenomicScore:
             
         self._score_names = ['Primates', 'Placental', 'Vertebrates']
 
+    def pasteScrs(self,other):
+        assert self.chr_format == other.chr_format
+        assert self.Indexing   == other.Indexing
+        assert self._Keys      == other._Keys
+        assert not set(self._score_names) & set(other._score_names)
+
+        self.location = ";".join([self.location,other.location])
+        self._score_names += other._score_names
+        for scN in other._score_names:
+            self.Scores[scN] = other.Scores[scN]
+
+
+    def _create_array_position_genomic_score_file(self,filePattern):
+        self.location=filePattern
+        self.Scores=defaultdict(dict)
+        self.chr_format='GATK'
+
+        fileNames=[f for f in glob.glob(filePattern)]
+        positions=defaultdict(list)
+        chr=""
+        for fileName in fileNames:            
+            sys.stderr.write("reading file "+os.path.basename(fileName)+"\n")            
+            scoreList=[]
+
+            colNames=[]
+            # get the score names from the header and the chromosome.
+            with open(fileName,'rb') as file:
+                header=file.readline().strip();
+                colNames=header.split('\t')
+                self._score_names=colNames[2:]
+                firstLine=file.readline().strip()
+                chr=firstLine.strip().split('\t')[0]
+
+            # read in the values
+            with open(fileName,"rb") as file:
+                next(file)
+                for line in file:
+                    row=line.split('\t')
+                    scoreList.append([float(x) for x in row[2:]])
+                    positions[chr].append(int(row[1]))
+            scoreList = np.array(scoreList)
+            for scI,scN in enumerate(colNames[2:]):
+                self.Scores[scN][chr]=scoreList[:,scI]
+    
+
+        self.Scores = {scN:scD for scN,scD in self.Scores.items()}
+        self._create_index_allele_count(positions)
+
+    def _create_array_regions_genomic_score_file(self,filePattern):
+        self.location=filePattern
+        self.Scores=defaultdict(lambda : defaultdict(list))
+        self._Keys=defaultdict(list)
+        self.Indexing=defaultdict(dict)
+        self.chr_format='GATK'
+
+        fileNames=[f for f in glob.glob(filePattern)]
+        self._score_name=[]
+        for fileName in fileNames:            
+            sys.stderr.write("reading file "+os.path.basename(fileName)+"\n")            
+
+            # read in the values
+            with open(fileName,"rb") as file:
+                header=file.readline().strip();
+                colNames=header.split('\t')[3:]
+                if self._score_names:
+                    if self._score_name != colNames:
+                        raise Exception("The files do not have the same scores" + str(self._score_names) + " != ", str(colNames))    
+                else:
+                    self._score_names = colNames
+
+                for line in file:
+                    row=line.strip().split('\t')
+                    if len(row) != len(self._score_names)+3:
+                        raise Exception("Unexpected number of columns in " + fileName)
+                    chr=row[0]
+                    regBegin=int(row[1])
+                    regEnd=int(row[2])
+                    
+                    # for each score column, split the scores
+                    self._Keys[chr].append((regBegin,regEnd))
+                    rgL = regEnd-regBegin+1
+                    bgI = 0
+                    if len(self.Scores):
+                        bgI = len(self.Scores.values()[0][chr])
+                    enI = bgI + rgL - 1
+                    self.Indexing[chr][(regBegin,regEnd)]=(bgI,enI)
+                    regionScores=[]
+                    for scN,scoresS in zip(self._score_names,row[3:]):
+                        scores=map(float,scoresS.split(','))
+                        if len(scores) != rgL:
+                            raise Exception('Wrong number of scores for ' + scN + " in file " + fileName)
+                        self.Scores[scN][chr] += scores
+
+        self.Scores = {scN:{chr:np.array(scrs) for chr,scrs in scD.items()} for scN,scD in self.Scores.items()}
+
     def _create_array_allele_count(self,dir):
         self.location=dir
         self.Scores=defaultdict(dict)
@@ -147,7 +244,6 @@ class GenomicScore:
                 self.Scores[scN][chr]=scoreList[:,scI]
 
         self._create_index_allele_count(positions)
-        
 
     def _create_index_allele_count(self,positions):
         self.Indexing =  defaultdict(dict) 
@@ -326,8 +422,7 @@ class GenomicScore:
                 L.append((k[0], k[1], v[0], v[1]))
             kwds.append("Index:" + key)
             args.append(np.array(L))
-            
-        np.savez(file, arrays=args, subscores = kwds)
+        np.savez(file, arrays=args, subscores = kwds, location=self.location, chr_format=self.chr_format,_score_names=self._score_names)
             
        
     def _load_exome_scores(self, file, name = None):
@@ -341,30 +436,24 @@ class GenomicScore:
 
         score_names = []
 
+        self.chr_format = f['chr_format']
+        self._score_names = list(f['_score_names'])
+        # self.location = f['location']
+
         for subscore,ar in zip(f['subscores'], f['arrays']):
             s1, s2 = subscore.split(":")
             s1 = str(s1)
             s2 = str(s2)
-            if self.chr_format == None:
-                if s2.startswith("chr"):
-                    self.chr_format = "hg19"
-                else:
-                    self.chr_format = "GATK"
             if s1 == "Index":
                 for i in ar:
                    self.Indexing[s2][(i[0], i[1])] = (i[2], i[3])
             else:
-                score_names.append(s1)
                 self.Scores[s1][s2] = ar
 
         for chr in self.Indexing.keys():
             self._Keys[chr] = sorted(self.Indexing[chr].keys(), key=lambda x: int(x[0]))
+        self.Scores = {scN:scD for scN,scD in self.Scores.items()}
 
-        self._score_names = list(set(score_names))
-        if all(i in self._score_names for i in ['Placental', 'Primates', 'Vertebrates']):
-            self._score_names = ['Primates', 'Placental','Vertebrates']
-        elif self.name == "gc":
-            self._score_names.sort(key = lambda x: int(x.split("_")[1]))
 
     def __reindex(self):
         for chr in self.Indexing.keys():
@@ -593,18 +682,29 @@ class GenomicScore:
     def _bin_search1(self, chr, p):
         if chr not in self._Keys:
             return ((False,0))
+        chrAr = self._Keys[chr]
+
         b = 0
-        e = len(self._Keys[chr])
+        e = len(chrAr)
+
+        # if p < chrAr[0][0] or p > chrAr[-1][1]:
+        #    return((False,b))
 
         while True:
-            x = b + (e-b)/2
-            if self._Keys[chr][x][1] >= p >= self._Keys[chr][x][0]:
-                return((True, x, self.Indexing[chr][self._Keys[chr][x]][0] + p - self._Keys[chr][x][0]))
-            if p < self._Keys[chr][x][0]:
-                e = x-1
+            x = (b+e)/2
+
+            # print >>sys.stderr, "_bin_search: b:",b,"e:",e,"x:",x
+
+            if chrAr[x][0] <= p <= chrAr[x][1]:
+                return((True, x, self.Indexing[chr][chrAr[x]][0] + p - chrAr[x][0]))
+
+            if p < chrAr[x][0]:
+                e = x
             else:
                 b = x+1
-            if b >= e:
+
+            assert b<=e
+            if b == e:
                 return((False,b))
 
     def _get_scores_for_region(self, loc, scores=None):
@@ -968,7 +1068,24 @@ def create_pos(array="/mnt/wigclust5/data/safe/egrabows/2013/MutationProbability
     gs._create_mut_prob_array_features(array, 'pos')
     return(gs)
 
+# takes a filename or glob pattern as an arguement
+# loads a file with one score in each column per position
+def load_position_genomic_score_file(filePattern):
+    gs=GenomicScore()
+    gs._create_array_position_genomic_score_file(filePattern)
+    return gs
 
+## create load_regions_genomic_score_file()
+def load_regions_genomic_score_file(filePattern):
+    gs=GenomicScore()
+    gs._create_array_regions_genomic_score_file(filePattern)
+    return gs
+
+
+## create paste_genomic_score(gs1,gs2)
+
+# takes a directory and build scores from a file where the score columns are hardcoded
+# to be A,C,T,G. This has been replaced by load_position_genomic_score_file
 def create_allele_count(dir):
     gs=GenomicScore()
     gs._create_array_allele_count(dir)
@@ -1011,5 +1128,20 @@ def load_genomic_scores(file, format=None):
     
     raise Exception("Unrecognizable format! The program needs a .npz format or .hdf5 format!")    
         
-    
-        
+if __name__ == "__main__":
+    print 'hi'
+    gsR = load_regions_genomic_score_file("region_gs_test.txt")
+    gsP = load_position_genomic_score_file("position_gs_test.txt")
+
+    def testEq(gsR,gsP):
+        print "location", gsR.location == gsP.location
+        print "Indexing", gsR.Indexing == gsP.Indexing
+        print "_Keys", gsR._Keys == gsP._Keys
+        print "Scores", repr(gsR.Scores) == repr(gsP.Scores)
+        print "chr_format", gsR.chr_format == gsP.chr_format
+        print "_score_names", gsR._score_names == gsP._score_names
+
+    # testEq(gsR,gsP)
+    gsR.save_exome_scores('aaa')
+    gsL = load_genomic_scores('aaa.npz')
+    testEq(gsR,gsL)

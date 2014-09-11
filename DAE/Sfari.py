@@ -23,7 +23,7 @@ class SfariCollection:
         self.sample = {}
         self.twinGroups = set() 
         self.familyCenter = {}
-        self.familyAgeAtAssement = {}
+        self.personAgeAtAssement = {}
         
         self._loadIndividual()
         self._loadSample()
@@ -119,13 +119,14 @@ class SfariCollection:
         famCenterS = defaultdict(set) 
         for l in f:
             cs = l.strip().split(',')
+            pid = cs[0]
             fm,role = cs[0].split('.')
             age = cs[1]
             center = cs[2]
             #famCenterS[fm].add(center)
+            self.personAgeAtAssement[pid]=int(age)
             if fm not in self.familyCenter:
                 self.familyCenter[fm]=center
-                self.familyAgeAtAssement[fm]=age
             
         ## assert
         #if len([x for x in famCenterS.values() if len(x)>1])>0:

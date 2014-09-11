@@ -8,6 +8,27 @@ from collections import namedtuple
 from collections import defaultdict
 import copy
 
+
+def bedFile2Rgns(bedFN):
+    F = open(bedFN)
+    r = []
+    for l in F:
+        if l[0]=='#':
+            continue
+        chr,beg,end = l.strip().split("\t")
+        beg = int(beg)
+        end = int(end)
+        r.append(Region(chr,beg+1,end))
+    F.close()
+    return r
+  
+def rgns2BedFile(rgns,bedFN):
+    F = open(bedFN,"w")
+    for rr in rgns:
+        F.write("%s\t%d\t%d\n" % (rr.chr, rr.start-1, rr.stop))
+    F.close()
+
+
 class Region:
 
     def __init__(self, chr, start, stop):
