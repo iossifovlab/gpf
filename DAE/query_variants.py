@@ -517,7 +517,16 @@ def do_query_variants(data):
                               '_ch_prof_',
                               'valstatus'])
 
+def __gene_effect_get_worst_effect(gs):
+    if len(gs) == 0:
+        return ''
+    return gs[0]['eff']
 
+
+def __gene_effect_get_genes(gs):
+    genes = [g['sym'] for g in gs]
+    return '|'.join(genes)
+    
 def generate_response(vs, atts=[], sep='\t'):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
@@ -529,6 +538,8 @@ def generate_response(vs, atts=[], sep='\t'):
                 'bestSt',
                 'fromParentS',
                 'inChS',
+                'worstEffect',
+                'genes',
                 'counts',
                 'geneEffect',
                 'requestedGeneEffects',
@@ -538,6 +549,9 @@ def generate_response(vs, atts=[], sep='\t'):
                    "counts": mat2Str,
                    "geneEffect": ge2Str,
                    "requestedGeneEffects": ge2Str}
+    
+    specialGeneEffects = {"genes": __gene_effect_get_genes,
+                          "worstEffect": __gene_effect_get_worst_effect}
 
     yield (mainAtts + atts)
 
@@ -547,6 +561,8 @@ def generate_response(vs, atts=[], sep='\t'):
             try:
                 if att in specialStrF:
                     mavs.append(specialStrF[att](getattr(v, att)))
+                elif att in specialGeneEffects:
+                    mavs.append(specialGeneEffects[att](getattr(v, 'geneEffect')))
                 else:
                     mavs.append(str(getattr(v, att)))
             except:
