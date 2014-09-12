@@ -44,7 +44,7 @@ class ApiTest(APITestCase):
         url_report = '/api/report_variants?studies=IossifovWE2012'
         response = self.client.get(url_report)
         data = response.data
-        self.assertEqual(len(data['rows']), 15)
+        self.assertEqual(len(data['rows']), 21)
 
     def test_gene_set_response(self):
         # Test simple with gene_set only provided

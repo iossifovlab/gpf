@@ -33,7 +33,7 @@ class FamilyRaceTests(unittest.TestCase):
             fs = family_filters(dst)
             for k in fs.keys():
                 self.assertIn(k, races)
-                self.assertEquals('african-amer,african-amer', races[k])
+                self.assertEquals('african-amer:african-amer', races[k])
 
     def test_family_race_asian(self):
         dsts = vDB.get_studies('allWEAndTG')
@@ -43,4 +43,4 @@ class FamilyRaceTests(unittest.TestCase):
             fs = family_filters(dst)
             for k in fs.keys():
                 self.assertIn(k, races)
-                self.assertEquals('asian,asian', races[k])
+                self.assertEquals('asian:asian', races[k])

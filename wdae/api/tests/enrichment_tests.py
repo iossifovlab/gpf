@@ -47,8 +47,8 @@ class EnrichmentHelpersTests(unittest.TestCase):
                 r = res[test_name]
                 o = all_res_orig[gene_set_name][test_name]
                 if o.cnt != r.cnt:
-                    logger.debug("wrong count numbers: %d != %d for %s:%s",
-                                 o.cnt, r.cnt,
+                    logger.error("wrong count numbers: %s != %s for %s:%s",
+                                 str(o.cnt), str(r.cnt),
                                  test_name,
                                  gene_set_name)
                     fail = True
@@ -56,8 +56,8 @@ class EnrichmentHelpersTests(unittest.TestCase):
                     print '.',
 
                 if o.pVal != r.p_val:
-                    logger.debug("wrong pVal: %f != %f for %s:%s",
-                                 o.pVal, r.p_val,
+                    logger.error("wrong pVal: %s != %s for %s:%s",
+                                 str(o.pVal), str(r.p_val),
                                  test_name,
                                  gene_set_name)
                     fail = True
@@ -65,19 +65,22 @@ class EnrichmentHelpersTests(unittest.TestCase):
                     print '.',
 
                 if o.expected != r.expected:
-                    logger.debug("wrong expected: %d != %d for %s:%s",
-                                 o.expected, r.expected,
+                    logger.error("wrong expected: %s != %s for %s:%s",
+                                 str(o.expected), str(r.expected),
                                  test_name,
                                  gene_set_name)
                     fail = True
                 else:
                     print '.',
 
-                r = totals[test_name]
+                r = totals[test_name][0]
                 o = totals_orig[test_name]
                 if o != r:
-                    logger.debug("wrong totals numbers: %d != %d for %s",
-                                 o, r,
+                    logger.error("wrong totals numbers: %s != %s for %s",
+                                 str(o), str(r),
                                  test_name)
                     fail = True
+                else:
+                    print('.')
+
         self.assertFalse(fail, "wrong enrichment values detected...")
