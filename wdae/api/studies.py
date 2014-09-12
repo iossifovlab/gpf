@@ -37,3 +37,27 @@ def get_denovo_studies_names():
 
     r = [(stN, dsc) for ord, stN, dsc in sorted(r)]
     return r
+
+def get_studies_summaries():
+    r = []
+    for stN in vDB.get_study_names():
+        st = vDB.get_study(stN)
+
+        ord = st.get_attr('wdae.production.order')
+        if not ord:
+            continue
+        r.append((int(ord), [stN, 
+                             st.description,
+                             len(st.families),
+                             st.has_denovo,
+                             st.has_transmitted]))
+
+    studies = [summary for ord, summary in sorted(r)]
+
+    return {"columns": ["Study Name",
+                        "Description",
+                        "Families",
+                        "Denovo",
+                        "Transmitted"],
+            "studies": studies}
+

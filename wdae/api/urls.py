@@ -19,7 +19,9 @@ urlpatterns = patterns(
     url(r'^gene_set_list$', 'gene_set_list'),
     url(r'^report_studies$', 'report_studies'),
     url(r'^enrichment_test$', 'enrichment_test'),
-    url(r'^child_types$', 'child_type_list')
+    url(r'^child_types$', 'child_type_list'),
+    url(r'^studies_summaries$', 'studies_summaries'),
+    
 
 )
 

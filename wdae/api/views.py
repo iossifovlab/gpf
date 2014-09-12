@@ -23,7 +23,8 @@ from dae_query import prepare_summary, load_gene_set
 from report_variants import build_stats
 from enrichment_query import enrichment_results, enrichment_prepare
 
-from studies import get_transmitted_studies_names, get_denovo_studies_names
+from studies import get_transmitted_studies_names, get_denovo_studies_names, \
+    get_studies_summaries
 
 # from query_prepare import prepare_transmitted_studies
 
@@ -59,6 +60,12 @@ def log_filter(request, message):
 def report_studies(request):
     return Response({"report_studies": get_denovo_studies_names() +
                      get_transmitted_studies_names()})
+
+
+@api_view(['GET'])
+def studies_summaries(request):
+    return Response(get_studies_summaries())
+
 
 
 @api_view(['GET'])
