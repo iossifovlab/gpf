@@ -111,5 +111,5 @@ def get_studies_summaries():
                         "Families",
                         "Denovo",
                         "Transmitted"],
-            "studies": summaries}
+            "summaries": summaries}
 
