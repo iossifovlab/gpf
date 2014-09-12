@@ -78,10 +78,10 @@ class CombinedTests(unittest.TestCase):
             count += 1
             self.assertTrue('ins' in v[3], "%s: %s" % (str(v[3]), str(v)))
             self.assertTrue('prbM' in v[6])
-            self.assertTrue('frame-shift' in v[8])
-            self.assertTrue('frame-shift' in v[9])
+            self.assertTrue('frame-shift' in v[10])
             self.assertTrue('frame-shift' in v[11])
-            self.assertTrue('prbM' in v[17])
+            self.assertTrue('frame-shift' in v[13])
+            self.assertTrue('prbM' in v[19])
 
         self.assertTrue(count > 0)
 
@@ -101,10 +101,10 @@ class CombinedTests(unittest.TestCase):
         for v in vs:
             self.assertTrue('del' in v[3], "%s: %s" % (str(v[3]), str(v)))
             self.assertTrue('prbF' in v[6])
-            self.assertTrue('frame-shift' in v[8])
-            self.assertTrue('frame-shift' in v[9])
+            self.assertTrue('frame-shift' in v[10])
             self.assertTrue('frame-shift' in v[11])
-            self.assertTrue('prbF' in v[17])
+            self.assertTrue('frame-shift' in v[13])
+            self.assertTrue('prbF' in v[19])
 
 
 class GeneRegionCombinedTests(unittest.TestCase):
