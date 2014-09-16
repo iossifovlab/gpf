@@ -526,6 +526,32 @@ def __gene_effect_get_worst_effect(gs):
 def __gene_effect_get_genes(gs):
     genes = [g['sym'] for g in gs]
     return ';'.join(genes)
+
+
+COLUMN_TITLES = {'familyId': 'family id',
+                'location': 'location',
+                'variant': 'variant',
+                'bestSt': 'family genotype',
+                'fromParentS': 'from parent',
+                'inChS': 'in child',
+                'effectType': 'worst effect',
+                'genes': 'genes',
+                'geneEffect': 'all effects',
+                'requestedGeneEffects': 'requested effects',
+                'popType': 'population type',
+                'effectDetails': 'effect details',
+                'all.altFreq': 'alternative allele frequency',
+                'all.nAltAlls': 'number of alternative alleles',
+                'all.nParCalled': 'number of genotyped parents',
+                '_par_races_': 'parent races',
+                '_ch_prof_': 'children description',
+                'studyName': 'study',
+                'counts': 'count',
+                'valstatus': 'validation status',
+}
+
+def attr_title(attr_key):
+    return COLUMN_TITLES.get(attr_key, attr_key)
     
 def generate_response(vs, atts=[], sep='\t'):
     def ge2Str(gs):
@@ -553,7 +579,8 @@ def generate_response(vs, atts=[], sep='\t'):
     specialGeneEffects = {"genes": __gene_effect_get_genes,
                           "worstEffect": __gene_effect_get_worst_effect}
 
-    yield (mainAtts + atts)
+
+    yield [attr_title(attr) for attr in mainAtts + atts]
 
     for v in vs:
         mavs = []
