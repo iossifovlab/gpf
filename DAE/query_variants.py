@@ -525,7 +525,7 @@ def __gene_effect_get_worst_effect(gs):
 
 def __gene_effect_get_genes(gs):
     genes = [g['sym'] for g in gs]
-    return '|'.join(genes)
+    return ';'.join(genes)
     
 def generate_response(vs, atts=[], sep='\t'):
     def ge2Str(gs):
@@ -562,7 +562,7 @@ def generate_response(vs, atts=[], sep='\t'):
                 if att in specialStrF:
                     mavs.append(specialStrF[att](getattr(v, att)))
                 elif att in specialGeneEffects:
-                    mavs.append(specialGeneEffects[att](getattr(v, 'geneEffect')))
+                    mavs.append(specialGeneEffects[att](getattr(v, 'requestedGeneEffects')))
                 else:
                     mavs.append(str(getattr(v, att)))
             except:
