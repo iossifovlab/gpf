@@ -90,9 +90,9 @@ def __build_studies_summaries(studies):
     fams_stat = build_header_summary(studies)
 
 
-    return [','.join(phenotype),
-            ','.join(study_type),
-            ','.join(study_year),
+    return [', '.join(phenotype),
+            ', '.join(study_type),
+            ', '.join(study_year),
             pub_med,
             fams_stat[0],
             fams_stat[2]['prb'],
@@ -111,7 +111,8 @@ def __build_denovo_studies_summaries():
         studies_names = ','.join(group.studyNames)
         studies = vDB.get_studies(studies_names)
         summary = [study_group_name,
-                   "%s (%s)" % (group.description, studies_names)]
+                   "%s (%s)" % (group.description, 
+                                studies_names.replace(',', ', '))]
         summary.extend(__build_studies_summaries(studies))
         
         r.append((int(ord), summary))
