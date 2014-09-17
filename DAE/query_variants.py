@@ -75,6 +75,9 @@ def get_sib_gender():
 
 FATHER_RACE = get_focuv_race()
 MOTHER_RACE = get_mocuv_race()
+PROBAND_VIQ  = get_verbal_iq()
+PROBAND_NVIQ = get_non_verbal_iq()
+
 PARENTS_RACE = dict([(k, ':'.join([m, f])) for (k, m, f) in zip(phDB.families,
                                                                 phDB.get_variable('mocuv.race_parents'),
                                                                 phDB.get_variable('focuv.race_parents'))])
@@ -498,8 +501,16 @@ def __augment_vars(v):
         if fmId in get_parents_race() else "NA:NA"
 
     chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+
+    viq = str(PROBAND_VIQ[fmId]) \
+        if fmId in PROBAND_VIQ else "NA"
+    nviq = str(PROBAND_NVIQ[fmId]) \
+        if fmId in PROBAND_NVIQ else "NA"
+
     v.atts["_par_races_"] = parRaces
     v.atts["_ch_prof_"] = chProf
+    v.atts["_prb_viq_"] = viq 
+    v.atts["_prb_nviq_"] = nviq
     return v
 
 
@@ -515,6 +526,8 @@ def do_query_variants(data):
                               'all.nParCalled',
                               '_par_races_',
                               '_ch_prof_',
+                              '_prb_viq_',
+                              '_prb_nviq_',
                               'valstatus'])
 
 def __gene_effect_get_worst_effect(gs):
@@ -546,6 +559,8 @@ COLUMN_TITLES = {'familyId': 'family id',
                 'all.nParCalled': 'number of genotyped parents',
                 '_par_races_': 'parent races',
                 '_ch_prof_': 'children description',
+                '_prb_viq_': 'proband verbal iq',
+                '_prb_nviq_': 'proband non-verbal iq',
                 'studyName': 'study',
                 'counts': 'count',
                 'valstatus': 'validation status',
