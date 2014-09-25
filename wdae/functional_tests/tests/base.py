@@ -20,8 +20,17 @@ class FunctionalTest(LiveServerTestCase):
             LiveServerTestCase.tearDownClass()
 
     def setUp(self):
-        self.browser = webdriver.Firefox()
-        self.browser.implicitly_wait(3)
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference('browser.download.folderList', 2) # custom location
+        profile.set_preference('browser.download.manager.showWhenStarting',
+                               False)
+        profile.set_preference('browser.download.dir', '/tmp')
+        profile.set_preference('browser.helperApps.neverAsk.saveToDisk',
+                               'text/csv')
+
+        self.browser = webdriver.Firefox(profile)
+
+        self.browser.implicitly_wait(5)
 
     def tearDown(self):
         self.browser.quit()
