@@ -37,4 +37,34 @@ class NewVisitorTest(FunctionalTest):
             )
         finally:
             pass
+
+    def test_reports_page(self):
+        self.browser.get(self.server_url)
+        reports_button_elem = self.browser.find_element_by_css_selector(
+            "#reports > a")
+        reports_button_elem.click()
+        
+        try:
+            element = WebDriverWait(self.browser, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "#sammyContainer > div > h1"))
+            )
+            self.assertIn("Variant report", element.text.decode())
+        finally:
+            pass
+
+    def test_enrichment_page(self):
+        self.browser.get(self.server_url)
+        enrichment_button_elem = self.browser.find_element_by_css_selector(
+            "#enrichment > a")
+        enrichment_button_elem.click()
+        
+        try:
+            element = WebDriverWait(self.browser, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR,
+                                                "#pageContent > div > h1"))
+            )
+            self.assertIn("Enrichment", element.text.decode())
+        finally:
+            pass
+        
         
