@@ -166,7 +166,8 @@ class CheckPreviewTest(FunctionalTest):
 	def handle_quad_trio(self):
 		
 		quad_trio_option = Select(self.browser.find_element_by_id("quad-trio"))
-		quad_trio_option.select_by_visible_text(random.choice(quad_trio_option.options).text)
+		quad_trio_option.select_by_visible_text(
+                        random.choice(quad_trio_option.options).text)
 		time.sleep(2)
 		
 	def handle_proband_gender(self):
