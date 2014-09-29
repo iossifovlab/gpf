@@ -128,6 +128,38 @@ class GeneRegionCombinedTests(unittest.TestCase):
             self.assertTrue(loc <= 1020000, "%s: %s" % (str(loc), str(v[2])))
 
 
+class IvanchoSubmittedQueryTests(unittest.TestCase):
+    TEST_DATA = {'geneRegionType': 'on',
+                 'familyIds': '',
+                 'genes': 'Gene Symbols',
+                 'families': 'all',
+                 'geneSyms': 'AARS\r\n,ABCD1',
+                 'familyVerbalIqLo': '',
+                 'geneTerm': '',
+                 'geneStudy': 'allWEAndTG',
+                 'inChild': 'All',
+                 'rarity': 'ultraRare',
+                 'geneRegion': '',
+                 'effectTypes': 'LGDs',
+                 'familySibGender': 'All',
+                 'familyPrbGender': 'All',
+                 'geneSet': 'main',
+                 'variantTypes': 'All',
+                 'familyQuadTrio': 'All',
+                 'transmittedStudies': 'w1202s766e611',
+                 'familyVerbalIqHi': '',
+                 'familyRace': 'All',
+                 'denovoStudies': 'cshlSSCWE'}
+
+    def test_gene_region_filter(self):
+        vs = do_query_variants(self.TEST_DATA)
+        # vs.next()
+
+        for v in vs:
+            print v
+
+
+
 class QueryDictTests(unittest.TestCase):
     TEST_DATA_1 = "geneSymbols=&geneSet=main&geneSetInput=&denovoStudies=allWEAndTG&transmittedStudies=none&rarity=ultraRare&inChild=prb&variants=All&effectType=All&families="
 

@@ -51,6 +51,7 @@ def prepare_gene_syms(data):
             return set(gl)
 
     elif isinstance(gene_sym, str):
+        gene_sym = ','.join(gene_sym.split())
         gl = [s.strip() for s in gene_sym.split(',') if len(s.strip()) > 0]
         if not gl:
             return None
