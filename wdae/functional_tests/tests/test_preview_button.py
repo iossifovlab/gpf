@@ -21,19 +21,14 @@ class CheckPreviewTest(FunctionalTest):
 	def is_element_stale(self,webelement):
 
     		try:
-    			webelement.tag_name
+    			webelement
     		except StaleElementReferenceException:
     			return False
     		except:
     			pass
     
     		return True
-		
-	def wait_for_element_with_xpath(self, element_xpath):
-		
-		WebDriverWait(self.browser, timeout=30).until(
-			lambda b: b.find_element_by_xpath(element_xpath)
-        )
+
 	
 	def random_families(self):
 		
@@ -162,9 +157,10 @@ class CheckPreviewTest(FunctionalTest):
 		
 	def random_gene_set_value(self):
 		
-		gene_set_value_option = self.browser.find_element_by_xpath(
+		gene_set_value_option =self.browser.find_element_by_xpath(
 			"//div[@id='preloadedBtn']/button")
 		gene_set_value_option.click()
+		time.sleep(5)
 		dropdown_menu = self.browser.find_elements_by_xpath(
 			"//ul[@id='ui-id-1']/li")
 		
@@ -172,11 +168,14 @@ class CheckPreviewTest(FunctionalTest):
 			1,len(dropdown_menu)))
 		
 		print "I want this len = " , len(dropdown_menu)
-		random_element =self.browser.find_element_by_xpath(
+		random_element =lambda: self.browser.find_element_by_xpath(
 			"//ul[@id='ui-id-1']/li[" + 
 			random_value_from_dropdown_menu + "]")
 		
-		try:
+		#wait = WebDriverWait(self.browser, 10)
+		#element = wait.until(lambda s: CheckPreviewTest.is_element_stale(self,random_element))
+		
+		"""try:
 			element = WebDriverWait(self.browser, 30).until(
 				        EC.element_to_be_clickable(
 				        	(By.XPATH,
@@ -185,9 +184,9 @@ class CheckPreviewTest(FunctionalTest):
                                 )
 		finally:
 			pass
-
+		"""
 		 
-		random_element.click()
+		random_element().click()
 		time.sleep(2)
 		
 	def random_gene_sets_radio_buttons(self):
@@ -201,6 +200,7 @@ class CheckPreviewTest(FunctionalTest):
 		
 		genes_all_option = self.browser.find_element_by_id(
 			random.choice(["allGenesRadio","geneSetsRadio"]))
+			#random.choice(["geneSetsRadio"]))
 		genes_all_option.click()
 		
 		time.sleep(5)
@@ -340,7 +340,7 @@ class CheckPreviewTest(FunctionalTest):
 		self.browser.get(self.server_url)
 		self.multiple_tests_not_random(5)
 		
-	def test_preview_button_random(self):
+	def test_preview_button_random_clicks(self):
 		
 		self.browser.get(self.server_url)
 		self.multiple_tests_random(5)
