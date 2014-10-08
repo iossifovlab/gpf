@@ -1,14 +1,17 @@
 from fabric.contrib.files import append, exists, sed, upload_template
-from fabric.api import env, run, cd, local, put
+from fabric.api import env, run, cd, local, put, sudo, path
 from fabric.colors import green, yellow
 
-from fabtools import apache, service
+# from fabtools import apache, service
 import random
 import os
 from datetime import datetime
 
-APACHE_USER = 'www-data'
-APACHE_GROUP = 'www-data'
+# APACHE_USER = 'www-data'
+# APACHE_GROUP = 'www-data'
+
+APACHE_USER = 'apache'
+APACHE_GROUP = 'apache'
 
 SITE_FOLDER = '/data/dae'
 
@@ -28,6 +31,8 @@ def deploy():
     _patch_settings(site_folder, wdae_folder)
 
     _update_static_files(wdae_folder)
+
+    run('/etc/init.d/httpd restart')
 
     # _update_wsgi(site_folder, dae_folder, wdae_folder, data_folder)
     # _update_vhost_conf(site_folder, wdae_folder)
@@ -60,7 +65,8 @@ def _patch_source_consts(wdae_folder):
     print(yellow("patching constants.js file..."))    
     jsconst_path = os.path.join(wdae_folder,
                                 'variants/static/variants/js/constants.js')
-    sed(jsconst_path, "/api/", "/dae-static/api/")
+    # sed(jsconst_path, "/api/", "/dae-static/api/")
+    sed(jsconst_path, "/api/", "/dae/api/")
     
 
 def _patch_settings(site_folder, wdae_folder):
@@ -79,7 +85,7 @@ def _patch_settings(site_folder, wdae_folder):
     
     sed(settings_path,
         "ALLOWED_HOSTS = .+$",
-        'ALLOWED_HOSTS = ["wigserv2", "wigserv2.cshl.edu"]')
+        'ALLOWED_HOSTS = ["wigserv2", "wigserv2.cshl.edu", "wigserv5", "wigserv5.cshl.edu",]')
     
     sed(settings_path,
         'TIME_ZONE = .+$',
@@ -113,7 +119,7 @@ def _patch_settings_secret(settings_path, secret_key_file):
     
 def _update_static_files(wdae_folder):
     print(yellow("update static files..."))    
-    with cd(wdae_folder):
+    with cd(wdae_folder), path('/data/software/local/bin',behavior='prepend'):
         run('python manageWDAE.py collectstatic --noinput')
 
 
