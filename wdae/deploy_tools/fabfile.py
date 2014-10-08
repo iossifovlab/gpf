@@ -7,17 +7,16 @@ import random
 import os
 from datetime import datetime
 
-REPO_URL = "ssh://lubo@seqpipe.setelis.com:2020/SeqPipeline"
+APACHE_USER = 'www-data'
+APACHE_GROUP = 'www-data'
 
+SITE_FOLDER = '/data/dae'
 
 def deploy():
-    site_folder = '/data/dae'
+    site_folder = SITE_FOLDER
     source_folder = os.path.join(site_folder, 'SeqPipeline')
     wdae_folder = os.path.join(source_folder, 'python/wdae')
     
-    # site_folder = '/home/%s/sites/%s' % (env.user, env.host)
-    # source_folder = os.path.join(site_folder, 'source')
-    # dae_folder = os.path.join(source_folder, 'python/DAE')
     # data_folder = '/home/lubo/data-dev'
 
     print("site_folder: %s, source_folder: %s" % (site_folder, source_folder))
@@ -68,6 +67,8 @@ def _patch_settings(site_folder, wdae_folder):
     print(yellow("patching settings.py file..."))    
     settings_path = os.path.join(wdae_folder, 'wdae/settings.py')
     static_path = os.path.join(site_folder, 'static')
+    log_file = os.path.join(site_folder, 'logs/wdae-api.log')
+    secret_key_file = os.path.join(wdae_folder, 'wdae/secret_key.py')
     
     sed(settings_path,
         "DEBUG = True",
@@ -91,44 +92,51 @@ def _patch_settings(site_folder, wdae_folder):
         'STATIC_URL = .+$',
         'STATIC_URL = "/dae-static/"')
 
-    # sed(settings_path,
-    #     'wdae-api.log',
-    #     '/var/log/apache2/wdae-api.log')
+    _patch_settings_logfile(settings_path, log_file)
+    _patch_settings_secret(settings_path, secret_key_file)
+    
 
-    secret_key_file = os.path.join(wdae_folder, 'wdae/secret_key.py')
+def _patch_settings_logfile(settings_path, log_file):
+    sed(settings_path,
+        'wdae-api.log',
+        log_file)
+
+    sudo('touch %s' % log_file)
+    sudo('chown %s:%s %s' % (APACHE_USER, APACHE_GROUP, log_file))
+
+def _patch_settings_secret(settings_path, secret_key_file):
     if not exists(secret_key_file):
         chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$^&*(-_=+)'
         key = ''.join(random.SystemRandom().choice(chars) for _ in range(50))
         append(secret_key_file, 'SECRET_KEY = "%s"' % (key,))
-    append(settings_path, '\nfrom .secret_key import SECRET_KEY')
-
-
+        append(settings_path, '\nfrom .secret_key import SECRET_KEY')
+    
 def _update_static_files(wdae_folder):
     print(yellow("update static files..."))    
     with cd(wdae_folder):
         run('python manageWDAE.py collectstatic --noinput')
 
 
-def _update_vhost_conf(site_folder, wdae_folder):
-    upload_template('confs/vhost.conf',
-                    '/etc/apache2/sites-available/seqpipe.setelis.com.conf',
-                    context={'wsgi_file': os.path.join(wdae_folder,
-                                                       'wdae/index.wsgi'),
-                             'static_folder': os.path.join(site_folder,
-                                                           'static'),
-                             'wdae_folder': wdae_folder},
-                    use_sudo=True)
-    apache.enable_module('wsgi')
-    apache.enable_site('seqpipe.setelis.com')
-    service.restart('apache2')
+# def _update_vhost_conf(site_folder, wdae_folder):
+#     upload_template('confs/vhost.conf',
+#                     '/etc/apache2/sites-available/seqpipe.setelis.com.conf',
+#                     context={'wsgi_file': os.path.join(wdae_folder,
+#                                                        'wdae/index.wsgi'),
+#                              'static_folder': os.path.join(site_folder,
+#                                                            'static'),
+#                              'wdae_folder': wdae_folder},
+#                     use_sudo=True)
+#     apache.enable_module('wsgi')
+#     apache.enable_site('seqpipe.setelis.com')
+#     service.restart('apache2')
 
 
-def _update_wsgi(site_folder, dae_folder, wdae_folder, data_folder):
-    wsgi_file = os.path.join(wdae_folder, 'wdae/index.wsgi')
-    upload_template('confs/index.wsgi',
-                    wsgi_file,
-                    context={'wsgi_file': wsgi_file,
-                             'dae_folder': dae_folder,
-                             'wdae_folder': wdae_folder,
-                             'data_folder': data_folder})
-    run('chmod +x %s' % wsgi_file)
+# def _update_wsgi(site_folder, dae_folder, wdae_folder, data_folder):
+#     wsgi_file = os.path.join(wdae_folder, 'wdae/index.wsgi')
+#     upload_template('confs/index.wsgi',
+#                     wsgi_file,
+#                     context={'wsgi_file': wsgi_file,
+#                              'dae_folder': dae_folder,
+#                              'wdae_folder': wdae_folder,
+#                              'data_folder': data_folder})
+#     run('chmod +x %s' % wsgi_file)
