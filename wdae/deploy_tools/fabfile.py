@@ -1,61 +1,95 @@
 from fabric.contrib.files import append, exists, sed, upload_template
-from fabric.api import env, run, cd
+from fabric.api import env, run, cd, local, put
+from fabric.colors import green, yellow
+
 from fabtools import apache, service
 import random
 import os
+from datetime import datetime
 
 REPO_URL = "ssh://lubo@seqpipe.setelis.com:2020/SeqPipeline"
 
 
-def staging():
-    site_folder = '/home/%s/sites/%s' % (env.user, env.host)
-    source_folder = os.path.join(site_folder, 'source')
+def deploy():
+    site_folder = '/data/dae'
+    source_folder = os.path.join(site_folder, 'SeqPipeline')
     wdae_folder = os.path.join(source_folder, 'python/wdae')
-    dae_folder = os.path.join(source_folder, 'python/DAE')
-    data_folder = '/home/lubo/data-dev'
+    
+    # site_folder = '/home/%s/sites/%s' % (env.user, env.host)
+    # source_folder = os.path.join(site_folder, 'source')
+    # dae_folder = os.path.join(source_folder, 'python/DAE')
+    # data_folder = '/home/lubo/data-dev'
 
     print("site_folder: %s, source_folder: %s" % (site_folder, source_folder))
-
     _create_directory_structure_if_necessary(site_folder)
-    _get_latest_source(source_folder)
-    _update_source_consts(wdae_folder)
-    _update_settings(site_folder, wdae_folder)
-    _update_wsgi(site_folder, dae_folder, wdae_folder, data_folder)
-    _update_static_files(wdae_folder)
-    _update_vhost_conf(site_folder, wdae_folder)
+    _backup_existing_source_dir(source_folder)
+    _put_repository_tarball(site_folder)
+    
+    _patch_source_consts(wdae_folder)
+    _patch_settings(site_folder, wdae_folder)
 
+    _update_static_files(wdae_folder)
+
+    # _update_wsgi(site_folder, dae_folder, wdae_folder, data_folder)
+    # _update_vhost_conf(site_folder, wdae_folder)
 
 def _create_directory_structure_if_necessary(site_folder):
-    for subfolder in ('database', 'static', 'virtualenv', 'source'):
-        run('mkdir -p %s/%s' % (site_folder, subfolder))
+    print(yellow("creating directory structure..."))
+    static_dir = os.path.join(site_folder, 'static')
+    log_dir = os.path.join(site_folder, 'logs')
+    data_dir = os.path.join(site_folder, 'DAEDB')
+    for folder in [static_dir, log_dir, data_dir]:
+        if not exists(folder):
+            run('mkdir -p %s' % folder)
+    
+def _backup_existing_source_dir(source_folder):
+    print(yellow("backup source dir..."))
+    if exists(source_folder):
+        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        source_folder_bak = '%s.%s' % (source_folder, timestamp)
+        run('mv %s %s' % (source_folder, source_folder_bak))
 
+def _put_repository_tarball(site_folder):
+    print(yellow("put new source tarball..."))    
+    local('hg archive -t tgz SeqPipeline.tar.gz')
+    remote_tarball = os.path.join(site_folder, 'SeqPipeline.tar.gz')
+    put('SeqPipeline.tar.gz', remote_tarball)
+    with cd(site_folder):
+        run('tar zxvf %s' % remote_tarball)
 
-def _get_latest_source(source_folder):
-    if exists(os.path.join(source_folder, '.hg')):
-        with cd(source_folder):
-            run('hg pull')
-    else:
-        run('hg clone %s %s' % (REPO_URL, source_folder))
+def _patch_source_consts(wdae_folder):
+    print(yellow("patching constants.js file..."))    
+    jsconst_path = os.path.join(wdae_folder,
+                                'variants/static/variants/js/constants.js')
+    sed(jsconst_path, "/api/", "/dae-static/api/")
+    
 
-    with cd(source_folder):
-        run('hg up --clean')
-
-
-def _update_settings(site_folder, wdae_folder):
+def _patch_settings(site_folder, wdae_folder):
+    print(yellow("patching settings.py file..."))    
     settings_path = os.path.join(wdae_folder, 'wdae/settings.py')
-    sed(settings_path, "DEBUG = True", "DEBUG = False")
+    static_path = os.path.join(site_folder, 'static')
+    
+    sed(settings_path,
+        "DEBUG = True",
+        "DEBUG = False")
+    sed(settings_path,
+        "TEMPLATE_DEBUG =.+$",
+        "DEBUG = False")
+    
     sed(settings_path,
         "ALLOWED_HOSTS = .+$",
-        'ALLOWED_HOSTS = ["seqpipe-vm.setelis.com", "seqpipe.setelis.com"]')
+        'ALLOWED_HOSTS = ["wigserv2", "wigserv2.cshl.edu"]')
+    
     sed(settings_path,
         'TIME_ZONE = .+$',
-        'TIME_ZONE = "Europe/Sofia"')
+        'TIME_ZONE = "America/Chicago"')
+    
     sed(settings_path,
         'STATIC_ROOT = .+$',
-        'STATIC_ROOT = "%s/"' % os.path.join(site_folder, 'static'))
+        'STATIC_ROOT = "%s/"' % static_path)
     sed(settings_path,
         'STATIC_URL = .+$',
-        'STATIC_URL = "/dae/static/"')
+        'STATIC_URL = "/dae-static/"')
 
     # sed(settings_path,
     #     'wdae-api.log',
@@ -69,13 +103,8 @@ def _update_settings(site_folder, wdae_folder):
     append(settings_path, '\nfrom .secret_key import SECRET_KEY')
 
 
-def _update_source_consts(wdae_folder):
-    jsconst_path = os.path.join(wdae_folder,
-                                'variants/static/variants/js/constants.js')
-    sed(jsconst_path, "/api/", "/dae/api/")
-
-
 def _update_static_files(wdae_folder):
+    print(yellow("update static files..."))    
     with cd(wdae_folder):
         run('python manageWDAE.py collectstatic --noinput')
 
