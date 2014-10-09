@@ -1,5 +1,5 @@
 from fabric.contrib.files import append, exists, sed, upload_template
-from fabric.api import env, run, cd
+from fabric.api import env, run, cd, sudo
 from fabtools import apache, service
 import random
 import os
@@ -22,11 +22,12 @@ def staging():
     _update_settings(site_folder, wdae_folder)
     _update_wsgi(site_folder, dae_folder, wdae_folder, data_folder)
     _update_static_files(wdae_folder)
+    _update_settings_logfile(site_folder, wdae_folder)
     _update_vhost_conf(site_folder, wdae_folder)
 
 
 def _create_directory_structure_if_necessary(site_folder):
-    for subfolder in ('database', 'static', 'virtualenv', 'source'):
+    for subfolder in ('database', 'static', 'virtualenv', 'source', 'logs'):
         run('mkdir -p %s/%s' % (site_folder, subfolder))
 
 
@@ -57,10 +58,6 @@ def _update_settings(site_folder, wdae_folder):
         'STATIC_URL = .+$',
         'STATIC_URL = "/dae/static/"')
 
-    # sed(settings_path,
-    #     'wdae-api.log',
-    #     '/var/log/apache2/wdae-api.log')
-
     secret_key_file = os.path.join(wdae_folder, 'wdae/secret_key.py')
     if not exists(secret_key_file):
         chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$^&*(-_=+)'
@@ -69,6 +66,15 @@ def _update_settings(site_folder, wdae_folder):
     append(settings_path, '\nfrom .secret_key import SECRET_KEY')
 
 
+def _update_settings_logfile(site_folder, wdae_folder):
+    settings_path = os.path.join(wdae_folder, 'wdae/settings.py')
+    logs_path = os.path.join(site_folder, 'logs/wdae-apt.log')
+    sed(settings_path,
+        'wdae-api.log',
+        logs_path)
+    sudo('touch %s' % logs_path)
+    sudo('chown www-data:www-data %s' % logs_path)
+    
 def _update_source_consts(wdae_folder):
     jsconst_path = os.path.join(wdae_folder,
                                 'variants/static/variants/js/constants.js')
