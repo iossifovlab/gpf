@@ -33,12 +33,10 @@ class IvanchoSubmittedQueryTests(unittest.TestCase):
 
     def test_double_genes(self):
         vs = do_query_variants(self.TEST_DATA)
-        # vs.next()
+        vs.next()
 
         for v in vs:
-            print(v[8])
             gl = v[8].split(';')
-            print(gl)
-            print(gl.count('FMR1'))
+            print(v[8], gl, gl.count('FMR1'))
             self.assertEqual(1, gl.count('FMR1'))
 
