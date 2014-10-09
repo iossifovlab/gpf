@@ -309,16 +309,22 @@ class Study:
                 regionS = [regionS]
 
             for reg in regionS:
-                f = tbf.fetch(reg)
-                for v in self.filter_transmitted_variants(f, colNms,
-                                                          minParentsCalled,
-                                                          maxAltFreqPrcnt,
-                                                          minAltFreqPrcnt,
-                                                          variantTypes,
-                                                          effectTypes,
-                                                          ultraRareOnly,
-                                                          geneSyms):
-                    yield v
+                try:
+                    f = tbf.fetch(reg)
+                    for v in self.filter_transmitted_variants(
+                            f, colNms,
+                            minParentsCalled,
+                            maxAltFreqPrcnt,
+                            minAltFreqPrcnt,
+                            variantTypes,
+                            effectTypes,
+                            ultraRareOnly,
+                            geneSyms):
+                        
+                        yield v
+                except ValueError as ex:
+                    print >> sys.stderr, "Bad region:", ex 
+                    continue
         else:
             f = gzip.open(transmittedVariantsFile)
             colNms = f.readline().strip().split("\t")
