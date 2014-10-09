@@ -1,10 +1,13 @@
 from fabric.contrib.files import append, exists, sed, upload_template
-from fabric.api import env, run, cd, sudo
+from fabric.api import env, run, cd, sudo, local
+from fabric.colors import green, yellow, red
+
 from fabtools import apache, service
 import random
 import os
 
 REPO_URL = "ssh://lubo@seqpipe.setelis.com:2020/SeqPipeline"
+REMOTE_DATA_DIR = '/data/dae/DAEDB/data'
 
 
 def staging():
@@ -25,6 +28,11 @@ def staging():
     _update_settings_logfile(site_folder, wdae_folder)
     _update_vhost_conf(site_folder, wdae_folder)
 
+def data_sync_to():
+    remote_data_dir = env.get('REMOTE_DATA_DIR', REMOTE_DATA_DIR)
+    if not exists(remote_data_dir):
+        run('mkdir -p %s' % remote_data_dir)
+    local('''rsync -aP  --rsh='ssh' $DAE_DB_DIR/ %s@%s:%s''' % (env.user, env.host, remote_data_dir))
 
 def _create_directory_structure_if_necessary(site_folder):
     for subfolder in ('database', 'static', 'virtualenv', 'source', 'logs'):

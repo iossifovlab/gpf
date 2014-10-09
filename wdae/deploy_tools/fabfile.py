@@ -15,6 +15,8 @@ APACHE_GROUP = 'apache'
 
 SITE_FOLDER = '/data/dae'
 
+REMOTE_DATA_DIR = '/data/dae/DAEDB/data'
+
 def deploy():
     site_folder = SITE_FOLDER
     source_folder = os.path.join(site_folder, 'SeqPipeline')
@@ -36,6 +38,16 @@ def deploy():
 
     # _update_wsgi(site_folder, dae_folder, wdae_folder, data_folder)
     # _update_vhost_conf(site_folder, wdae_folder)
+
+
+def data_sync_to():
+    remote_data_dir = env.get('REMOTE_DATA_DIR', REMOTE_DATA_DIR)
+    if not exists(remote_data_dir):
+        run('mkdir -p %s' % remote_data_dir)
+    local('''rsync -aP  --rsh='ssh' $DAE_DB_DIR/ %s@%s:%s''' % (env.user,
+                                                                env.host,
+                                                                remote_data_dir))
+
 
 def _create_directory_structure_if_necessary(site_folder):
     print(yellow("creating directory structure..."))
