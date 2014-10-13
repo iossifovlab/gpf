@@ -293,6 +293,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
       cols = vs.next()
       count = 0
       for v in vs:
+	  print(v)
           count += 1
           self.assertIn('del', v[3], str(v[3]))
 
