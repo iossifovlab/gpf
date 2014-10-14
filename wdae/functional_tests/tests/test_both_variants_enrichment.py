@@ -1,6 +1,5 @@
 from .base import FunctionalTest
-import test_get_variants
-#from .test_get_variants import CheckPreviewTest
+
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -79,29 +78,16 @@ class CheckBothVariantsAndEnrichment(FunctionalTest):
 		]
 				
 		for i in range(0, number_of_repetitions):
+			
 			print "Test " ,i+1 , " ---------------------------------------"
 			variations_of_functions = random.sample(key_array ,1 )
 			print "The function is = " , variations_of_functions[0]
 			functions_map[variations_of_functions[0]](self)
-			if( variations_of_functions[0] == "click_variants_link" ):
-				test = test_get_variants.CheckPreviewTest("multiple_tests_not_random")
-				test.multiple_tests_not_random(1)
-			else:
-				pass
 		
 	def test_both_variants_and_enrichment(self):
 		
-		print "test_both"
 		self.browser.get(self.server_url)
-		#self.multiple_tests_random(5)
-
-		
-	def suite():
-		
-		suite = unittest.TestSuite()
-		suite.addTest(test_get_variants.CheckPreviewTest("test_preview_button_multiple_times"))
-		return suite
-	
+		self.multiple_tests_random(100)
 		
 
 

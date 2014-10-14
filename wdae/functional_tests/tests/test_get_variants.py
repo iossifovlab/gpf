@@ -74,6 +74,7 @@ class CheckPreviewTest(FunctionalTest):
 	
 	def random_rare_radio_button_max(self):
 		
+		time.sleep(1)
 		try:
 			element = WebDriverWait(self.browser, 10).until(
 				EC.presence_of_element_located(
@@ -91,6 +92,7 @@ class CheckPreviewTest(FunctionalTest):
 				
 	def random_interval_max_min(self):
 		
+		time.sleep(1)
 		try:
 			element = WebDriverWait(self.browser, 10).until(
 				EC.presence_of_element_located(
@@ -353,7 +355,7 @@ class CheckPreviewTest(FunctionalTest):
 	def wait_for_table(self):
 		
 		try:
-			element = WebDriverWait(self.browser, 30).until(
+			element = WebDriverWait(self.browser, 60).until(
 				EC.presence_of_element_located((By.ID,
                                                 "previewTable"))
                                 )
