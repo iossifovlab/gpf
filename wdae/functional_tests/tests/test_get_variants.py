@@ -476,12 +476,12 @@ class CheckPreviewTest(FunctionalTest):
 	def test_preview_button_multiple_times(self):
 		
 		self.browser.get(self.server_url)
-		self.multiple_tests_not_random(0)
+		self.multiple_tests_not_random(100)
 		
 	def test_preview_button_random_clicks(self):
 		
 		self.browser.get(self.server_url)
-		self.multiple_tests_random(1000)
+		self.multiple_tests_random(100)
 		
 
 			
