@@ -74,6 +74,7 @@ class CheckPreviewTest(FunctionalTest):
 	
 	def random_rare_radio_button_max(self):
 		
+		time.sleep(1)
 		try:
 			element = WebDriverWait(self.browser, 10).until(
 				EC.presence_of_element_located(
@@ -91,6 +92,7 @@ class CheckPreviewTest(FunctionalTest):
 				
 	def random_interval_max_min(self):
 		
+		time.sleep(1)
 		try:
 			element = WebDriverWait(self.browser, 10).until(
 				EC.presence_of_element_located(
@@ -353,7 +355,7 @@ class CheckPreviewTest(FunctionalTest):
 	def wait_for_table(self):
 		
 		try:
-			element = WebDriverWait(self.browser, 30).until(
+			element = WebDriverWait(self.browser, 60).until(
 				EC.presence_of_element_located((By.ID,
                                                 "previewTable"))
                                 )
@@ -418,7 +420,7 @@ class CheckPreviewTest(FunctionalTest):
 		time.sleep(2)
 		self.wait_for_page_to_load()
 		self.check_reset_button_is_working()
-		
+	
 	def multiple_tests_not_random(self, number_of_repetitions):
 		
 		for i in range(0, number_of_repetitions):
@@ -431,7 +433,7 @@ class CheckPreviewTest(FunctionalTest):
 			self.random_effect_type_option()
 			self.random_families()
 			self.click_the_preview_button()
-			
+	
 	def multiple_tests_random(self, number_of_repetitions):
 		
 		functions_map = {
@@ -468,10 +470,7 @@ class CheckPreviewTest(FunctionalTest):
 				print "The function is = " , variations_of_functions[j]
 				functions_map[variations_of_functions[j]](self)
 			print "The function is = click_the_preview_button"
-			self.click_the_preview_button()
-			
-	
-			
+			self.click_the_preview_button()			
 		
 	
 	def test_preview_button_multiple_times(self):
@@ -486,5 +485,8 @@ class CheckPreviewTest(FunctionalTest):
 		
 
 			
+if __name__ == "__main__":
 	
+	suite = unittest.TestSuite()
+	suite.addTest(CheckPreviewTest("test_preview_button_multiple_times"))
 	

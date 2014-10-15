@@ -22,11 +22,11 @@ class CheckVariantReportTest(FunctionalTest):
 	
 	def random_variant_report(self):
 		
-		denovo_gene_set_option = Select(
+		variant_report_option = Select(
 			self.browser.find_element_by_id("reportSelect"))
-		denovo_gene_set_option.select_by_visible_text(
-			random.choice(denovo_gene_set_option.options).text)
-		print denovo_gene_set_option.first_selected_option.text
+		variant_report_option.select_by_visible_text(
+			random.choice(variant_report_option.options).text)
+		print variant_report_option.first_selected_option.text
 		time.sleep(2)
 		
 	def wait_for_table(self):
@@ -64,7 +64,7 @@ class CheckVariantReportTest(FunctionalTest):
 		finally:
 			pass
 		
-		self.multiple_tests_not_random(3)
+		self.multiple_tests_not_random(30)
 
 		
 
