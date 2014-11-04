@@ -87,7 +87,7 @@ class CheckBothVariantsAndEnrichment(FunctionalTest):
 	def test_both_variants_and_enrichment(self):
 		
 		self.browser.get(self.server_url)
-		self.multiple_tests_random(100)
+		self.multiple_tests_random(self.ITER_COUNT)
 		
 
 

@@ -5,6 +5,8 @@ import sys
 
 
 class FunctionalTest(LiveServerTestCase):
+    ITER_COUNT = 10
+    
     @classmethod
     def setUpClass(cls):
         for arg in sys.argv:

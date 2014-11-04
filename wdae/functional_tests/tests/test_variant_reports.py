@@ -64,7 +64,7 @@ class CheckVariantReportTest(FunctionalTest):
 		finally:
 			pass
 		
-		self.multiple_tests_not_random(30)
+		self.multiple_tests_not_random(self.ITER_COUNT)
 
 		
 

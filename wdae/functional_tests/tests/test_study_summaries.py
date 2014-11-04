@@ -124,4 +124,4 @@ class CheckStudySummaries(FunctionalTest):
 	def test_random_study_summaries(self):
 		
 		self.browser.get(self.server_url)
-		self.multiple_tests(50)
+		self.multiple_tests(self.ITER_COUNT)

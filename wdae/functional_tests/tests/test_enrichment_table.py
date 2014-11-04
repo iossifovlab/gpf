@@ -249,13 +249,13 @@ class CheckEnrichmentTest(FunctionalTest):
 		enrichment_button_elem.click()
 		time.sleep(3)
 		try:
-			element = WebDriverWait(self.browser, 10).until(
+			WebDriverWait(self.browser, 10).until(
 				EC.presence_of_element_located((By.ID, 
 					"downloadEnrichment"))
 			)
 		finally:
 			pass
 		
-		self.multiple_tests_random(1000)
+		self.multiple_tests_random(self.ITER_COUNT)
 		
 		

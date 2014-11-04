@@ -16,6 +16,14 @@ import os
 import time
 import random
 
+# class VariantsTestBase(FunctionalTest):
+#     pass
+
+#     def select_gene_symbols(self, gene_list):
+#         "\n".join(gene_list)
+#         pass
+
+
 class CheckPreviewTest(FunctionalTest):
 	
 	def is_element_stale(self,webelement):
@@ -160,7 +168,11 @@ class CheckPreviewTest(FunctionalTest):
 			self.random_rarity_radio_buttons()
 
 		time.sleep(2)
-	
+
+    # def select_denovo_study(self, denovoStudy):
+    #     pass
+    #     self.select_denovo_study("combSSCWE")
+
 	def random_denovo_studies(self):
 		
 		denovo_studies = Select(
@@ -352,20 +364,18 @@ class CheckPreviewTest(FunctionalTest):
 		self.random_proband_gender()
 		self.random_sibling_gender()
 	
-	def wait_for_table(self):
-		
-		try:
-			element = WebDriverWait(self.browser, 60).until(
-				EC.presence_of_element_located((By.ID,
+    def wait_for_table(self):
+        try:
+            WebDriverWait(self.browser, 600).until(
+                EC.presence_of_element_located((By.ID,
                                                 "previewTable"))
-                                )
+            )
 		finally:
 			pass
 		
 		time.sleep(2)
 		
 	def click_the_preview_button(self):
-		
 		preview_button = self.browser.find_element_by_id("previewBtn")
 		preview_button.click()
 		self.wait_for_table()
@@ -424,6 +434,7 @@ class CheckPreviewTest(FunctionalTest):
 	def multiple_tests_not_random(self, number_of_repetitions):
 		
 		for i in range(0, number_of_repetitions):
+			print "Test Non Random Seq: " ,i+1 , " ---------------------------------------"
 						
 			self.random_genes()
 			self.random_denovo_studies()
@@ -462,7 +473,7 @@ class CheckPreviewTest(FunctionalTest):
 		]
 		
 		for i in range(0, number_of_repetitions):
-			print "Test " ,i+1 , " ---------------------------------------"
+			print "Test Random Seq:" ,i+1 , " ---------------------------------------"
 			random_integer = random.randint(1,len(key_array))
 			print "Random Integer = " , random_integer
 			variations_of_functions = random.sample(key_array, random_integer)
@@ -476,12 +487,12 @@ class CheckPreviewTest(FunctionalTest):
 	def test_preview_button_multiple_times(self):
 		
 		self.browser.get(self.server_url)
-		self.multiple_tests_not_random(100)
+		self.multiple_tests_not_random(self.ITER_COUNT)
 		
 	def test_preview_button_random_clicks(self):
 		
 		self.browser.get(self.server_url)
-		self.multiple_tests_random(100)
+		self.multiple_tests_random(self.ITER_COUNT)
 		
 
 			

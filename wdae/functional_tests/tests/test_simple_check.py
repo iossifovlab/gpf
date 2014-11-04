@@ -34,7 +34,7 @@ class CheckPagesTest(FunctionalTest):
         summaries_button_elem.click()
         
         try:
-            element = WebDriverWait(self.browser, 10).until(
+            WebDriverWait(self.browser, 10).until(
                 EC.presence_of_element_located((By.ID, "summariesTable"))
             )
         finally:
@@ -132,7 +132,7 @@ class VariantsSimpleTest(FunctionalTest):
         chromes_button.click()
         
         try:
-            element = WebDriverWait(self.browser, 10).until(
+            WebDriverWait(self.browser, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR,
                                                 "#preview > svg"))
             )
