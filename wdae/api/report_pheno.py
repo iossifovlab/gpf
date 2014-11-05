@@ -6,28 +6,7 @@ from query_variants import dae_query_variants
 from query_prepare import prepare_denovo_studies, \
     combine_gene_syms, prepare_string_value
 
-
-def pheno_prepare(data):
-    result = {'denovoStudies': prepare_denovo_studies(data),
-              'geneSet': prepare_string_value(data, 'geneSet'),
-              'geneTerm': prepare_string_value(data, 'geneTerm'),
-              'geneStudy': prepare_string_value(data, 'geneStudy'),
-              'geneSyms': combine_gene_syms(data)}
-
-    if 'geneSet' not in result or result['geneSet'] is None or \
-       'geneTerm' not in result or result['geneTerm'] is None:
-        del result['geneSet']
-        del result['geneTerm']
-        del result['geneStudy']
-
-    if 'geneSet' in result and result['geneSet'] != 'denovo':
-        del result['geneStudy']
-
-    if not all(result.values()):
-        return None
-
-    return result
-    
+from collections import Counter
 
 def filter_one_var_per_gene_per_child(vs):
     ret = []
@@ -42,7 +21,24 @@ def filter_one_var_per_gene_per_child(vs):
 
 
 def pheno_query_variants(data):
-    query = pheno_prepare(data)
-    vsl = dae_query_variants(query)
+    vsl = dae_query_variants(data)
     vs = itertools.chain(*vsl)
-    return vs
+    return filter_one_var_per_gene_per_child(vs)
+
+
+def prb_gender(fms):
+    prb_inds = [ind for ind, prsn in enumerate(fms.memberInOrder) if prsn.role=='prb']
+    if len(prb_inds)!=1:
+        return '?'
+    else:
+        return fms.memberInOrder[prb_inds[0]].gender
+
+def pheno_query(data):
+    vs = pheno_query_variants(data)
+    
+    stds = prepare_denovo_studies(data)
+    all_families = {fid:prb_gender(family) for st in stds
+                    for fid, family in st.families.items()}
+    families_with_hit = Counter([v.familyId for v in vs])
+
+    return all_families, families_with_hit
