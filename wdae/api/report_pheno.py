@@ -1,4 +1,8 @@
-from DAE import 
+import itertools
+
+from DAE import *
+from query_variants import dae_query_variants
+
 from query_prepare import prepare_denovo_studies, \
     combine_gene_syms, prepare_string_value
 
@@ -37,3 +41,8 @@ def filter_one_var_per_gene_per_child(vs):
     return ret
 
 
+def pheno_query_variants(data):
+    query = pheno_prepare(data)
+    vsl = dae_query_variants(query)
+    vs = itertools.chain(*vsl)
+    return vs
