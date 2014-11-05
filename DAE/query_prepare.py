@@ -29,6 +29,14 @@ def __load_text_column(colSpec):
     f.close()
     return r
 
+def prepare_string_value(data, key):
+    if key not in data or not data[key] \
+       or not data[key].strip():
+        return None
+    res = data[key].strip()
+    if res == 'null' or res == 'Null' or res == 'None' or res == 'none':
+        return None
+    return res    
 
 def prepare_gene_syms(data):
     if 'geneSyms' not in data and 'geneSym' not in data:

@@ -4,28 +4,19 @@ from enrichment import enrichment_test, PRB_TESTS, SIB_TESTS
 from dae_query import load_gene_set
 import numpy as np
 from query_prepare import prepare_denovo_studies, prepare_transmitted_studies, \
-    combine_gene_syms
+    combine_gene_syms, prepare_string_value
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def __prepare_string_value(data, key):
-    if key not in data or not data[key] \
-       or not data[key].strip():
-        return None
-    res = data[key].strip()
-    if res == 'null' or res == 'Null' or res == 'None' or res == 'none':
-        return None
-    return res
-
 
 def enrichment_prepare(data):
     result = {'denovoStudies': prepare_denovo_studies(data),
               'transmittedStudies': prepare_transmitted_studies(data),
-              'geneSet': __prepare_string_value(data, 'geneSet'),
-              'geneTerm': __prepare_string_value(data, 'geneTerm'),
-              'geneStudy': __prepare_string_value(data, 'geneStudy'),
+              'geneSet': prepare_string_value(data, 'geneSet'),
+              'geneTerm': prepare_string_value(data, 'geneTerm'),
+              'geneStudy': prepare_string_value(data, 'geneStudy'),
               'geneSyms': combine_gene_syms(data)}
 
     if 'geneSet' not in result or result['geneSet'] is None or \
