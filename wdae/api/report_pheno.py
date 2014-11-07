@@ -10,6 +10,7 @@ from query_prepare import prepare_denovo_studies, \
 
 from collections import Counter
 import numpy as np
+from scipy.stats import ttest_ind, nanmean, nanstd
 
 logger = logging.getLogger(__name__)
 SUPPORTED_PHENO_STUDIES = {'combSSCWE', 'cshlSSCWE', 'yaleSSCWE', 'udapSSCWE'}
@@ -81,13 +82,13 @@ def pheno_query(data):
 
     yield ['family id', 'gender', 'LGDs', 'missense', 'synonymous', measure_name]
     for fid, gender in seq_prbs.items():
-        row = []
-        row.append(fid)
-        row.append(gender)
-        row.append(1 if fid in families_with_lgds else 0)
-        row.append(1 if fid in families_with_missense else 0)
-        row.append(1 if fid in families_with_synonymous else 0)
-        row.append(measure[fid] if fid in measure else np.NaN)
+        row = (
+            fid,
+            gender,
+            1 if fid in families_with_lgds else 0,
+            1 if fid in families_with_missense else 0,
+            1 if fid in families_with_synonymous else 0,
+            measure[fid] if fid in measure else np.NaN)
         yield row
 
 def prepare_pheno_measure(data):
@@ -119,3 +120,45 @@ def get_verbal_iq():
 def get_non_verbal_iq():
     return get_pheno_measure("pcdv.ssc_diagnosis_nonverbal_iq", float)
 
+
+def calc_pv(positive, negative):
+    pv = ttest_ind(positive, negative)[1]
+    if pv >= 0.1:
+        return "%.1f" % (pv) 
+    if pv >= 0.01:
+        return "%.2f" % (pv) 
+    if pv >= 0.001:
+        return "%.3f" % (pv) 
+    if pv >= 0.0001:
+        return "%.3f" % (pv) 
+    return "%.5f" % (pv) 
+
+def pheno_calc(ps):
+    ps.next() # skip column names
+    rows = [p for p in ps]
+    dtype = np.dtype([('fid', 'S10'),
+                      ('gender', 'S1'),
+                      ('LGDs', '<i4'),
+                      ('missense', '<i4'),
+                      ('synonymous', '<i4'),
+                      ('m', 'f')])
+    data = np.array(rows, dtype=dtype)
+    data = data[~np.isnan(data['m'])]
+    res = []
+    
+    for (effect_type, gender) in itertools.product(*[['LGDs', 'missense', 'synonymous'],
+                                                     ['M', 'F']]):
+        
+        positive = data[np.logical_and(data['gender'] == gender,
+                                       data[effect_type] == 1)]['m']
+        negative = data[np.logical_and(data['gender'] == gender,
+                                       data[effect_type] == 0)]['m']
+        p_mean = np.mean(positive, dtype=np.float64)
+        n_mean = np.mean(negative, dtype=np.float64)
+        p_std = 1.96 * np.std(positive, dtype=np.float64)/np.sqrt(len(positive))
+        n_std = 1.96 * np.std(negative, dtype=np.float64)/np.sqrt(len(negative))
+        pv = calc_pv(positive, negative)
+
+        res.append((effect_type, gender, n_mean, n_std, p_mean, p_std, pv))
+    return res
+        

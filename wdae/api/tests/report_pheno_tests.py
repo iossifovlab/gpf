@@ -2,13 +2,14 @@ import unittest
 
 from api.report_pheno import pheno_query_variants, pheno_query, \
     get_pheno_measure, get_verbal_iq, get_non_verbal_iq, \
-    get_supported_measures, get_supported_studies
+    get_supported_measures, get_supported_studies, \
+    pheno_calc
 
 from query_prepare import prepare_denovo_studies
 
 class PhenoTest(unittest.TestCase):
     TEST_DATA = {"denovoStudies": "combSSCWE",
-                 'effectTypes': 'LGDs'}
+                 "measure": "NvIQ"}
 
     def test_variants(self):
         vs = pheno_query_variants(self.TEST_DATA)
@@ -23,6 +24,7 @@ class PhenoTest(unittest.TestCase):
         ps = pheno_query(self.TEST_DATA)
         for p in ps:
             self.assertTrue(p)
+            # print(p)
 
 
     def test_pheno_measures(self):
@@ -50,3 +52,8 @@ class PhenoTest(unittest.TestCase):
     def test_get_supported_measures(self):
         supp_measures = get_supported_measures()
         print(supp_measures)
+
+    def test_pheno_calc(self):
+        ps = pheno_query(self.TEST_DATA)
+        res = pheno_calc(ps)
+        print(res)
