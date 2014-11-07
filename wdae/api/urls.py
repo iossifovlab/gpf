@@ -24,6 +24,7 @@ urlpatterns = patterns(
     url(r'^pheno_supported_studies$', 'pheno_supported_studies'),
     url(r'^pheno_supported_measures$', 'pheno_supported_measures'),
     url(r'^pheno_report_preview$', 'pheno_report_preview'),
+    url(r'^pheno_report_download$', 'pheno_report_download'),
     
 
 )

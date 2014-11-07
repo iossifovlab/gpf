@@ -81,13 +81,13 @@ def pheno_query(data):
 
     yield ['family id', 'gender', 'LGDs', 'missense', 'synonymous', measure_name]
     for fid, gender in seq_prbs.items():
-        row = (
+        row = [
             fid,
             gender,
             1 if fid in families_with_lgds else 0,
             1 if fid in families_with_missense else 0,
             1 if fid in families_with_synonymous else 0,
-            measure[fid] if fid in measure else np.NaN)
+            measure[fid] if fid in measure else np.NaN]
         yield row
 
 def prepare_pheno_measure(data):
@@ -134,7 +134,7 @@ def calc_pv(positive, negative):
 
 def pheno_calc(ps):
     ps.next() # skip column names
-    rows = [p for p in ps]
+    rows = [tuple(p) for p in ps]
     dtype = np.dtype([('fid', 'S10'),
                       ('gender', 'S1'),
                       ('LGDs', '<i4'),
