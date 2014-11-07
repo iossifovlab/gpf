@@ -5,12 +5,11 @@ from DAE import phDB
 from api.studies import get_denovo_studies_names
 from query_variants import dae_query_variants
 
-from query_prepare import prepare_denovo_studies, \
-    combine_gene_syms, prepare_string_value
+from query_prepare import prepare_denovo_studies
 
 from collections import Counter
 import numpy as np
-from scipy.stats import ttest_ind, nanmean, nanstd
+from scipy.stats import ttest_ind
 
 logger = logging.getLogger(__name__)
 SUPPORTED_PHENO_STUDIES = {'combSSCWE', 'cshlSSCWE', 'yaleSSCWE', 'udapSSCWE'}
@@ -92,10 +91,10 @@ def pheno_query(data):
         yield row
 
 def prepare_pheno_measure(data):
-    if 'measure' not in data:
+    if 'pheno_measure' not in data:
         logger.error("no measure name in request. returning NvIQ")
         return ('NvIQ', get_non_verbal_iq())
-    measure = data['measure']
+    measure = data['pheno_measure']
     if measure =='NvIQ':
         return ('NvIQ', get_non_verbal_iq())
     elif measure == 'vIQ':

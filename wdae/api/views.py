@@ -435,3 +435,29 @@ Examples:
 
     res = enrichment_results(**data)
     return Response(res)
+
+from api.report_pheno import get_supported_studies, get_supported_measures, \
+    pheno_calc, pheno_query
+
+    
+@api_view(['GET'])
+def pheno_supported_studies(request):
+    return Response({"pheno_supported_studies": get_supported_studies()})
+
+@api_view(['GET'])
+def pheno_supported_measures(request):
+    return Response({"pheno_supported_measures": get_supported_measures()})
+
+@api_view(['POST'])
+def pheno_report_preview(request):
+
+    if request.method == 'OPTIONS':
+        return Response()
+
+    data = prepare_query_dict(request.DATA)
+
+    logger.info(log_filter(request, "preview pheno report: " + str(data)))
+    ps = pheno_query(data)
+    res = pheno_calc(ps)
+
+    return Response(res)
