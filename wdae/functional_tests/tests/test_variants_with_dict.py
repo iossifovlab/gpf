@@ -16,6 +16,7 @@ import unittest
 import os
 import time
 import random
+import ast
 
 
 class VariantsTest(FunctionalTest,base_select):
@@ -25,11 +26,11 @@ class VariantsTest(FunctionalTest,base_select):
 
 
 
-	def select_gene_set_main(self,_dict):
+	def select_gene_set_main(self, data):
 		
-		base_select(self).select_method_by_value("geneSet",_dict['geneSet'])
+		base_select(self).select_method_by_value("geneSet",data['geneSet'])
 		
-	def select_gene_set_value(self,_dict):
+	def select_gene_set_value(self,data):
 		
 		gene_set_value_option =self.browser.find_element_by_xpath(
 			"//div[@id='preloadedBtn']/button")
@@ -43,7 +44,7 @@ class VariantsTest(FunctionalTest,base_select):
 		finally:
 			pass
 		selected_element =lambda: self.browser.find_element_by_xpath(
-				"//ul[@class='ui-autocomplete ui-front ui-menu ui-widget ui-widget-content ui-corner-all']/li/a[contains(text(),'" + _dict['geneTerm'] +"')]"
+				"//ul[@class='ui-autocomplete ui-front ui-menu ui-widget ui-widget-content ui-corner-all']/li/a[contains(text(),'" + data['geneTerm'] +"')]"
 			)
 		
 		print "Random gene set value : " , selected_element().text
@@ -52,51 +53,51 @@ class VariantsTest(FunctionalTest,base_select):
 		
 		time.sleep(2)
 	
-	def select_denovo_studies(self, _dict):
+	def select_denovo_studies(self, data):
 		
-		base_select(self).select_method("denovoStudies",_dict['denovoStudies'])
+		base_select(self).select_method("denovoStudies",data['denovoStudies'])
 	
-	def select_in_child(self, _dict):
+	def select_in_child(self, data):
 		
-		base_select(self).select_method("inChild",_dict['inChild'])
+		base_select(self).select_method("inChild",data['inChild'])
 		
-	def select_effect_type(self,_dict):
+	def select_effect_type(self,data):
 		
-		base_select(self).select_method("effectType",_dict['effectTypes'])
+		base_select(self).select_method("effectType",data['effectTypes'])
 		
-	def select_variant_type(self,_dict):
+	def select_variant_type(self,data):
 		
-		base_select(self).select_method("variants",_dict['variantTypes'])
+		base_select(self).select_method("variants",data['variantTypes'])
 		
-	def genes_radio_buttons(self,_dict):
+	def genes_radio_buttons(self,data):
 		
-		base_select(self).radio_button_select(_dict['genes'])
+		base_select(self).radio_button_select(data['genes'])
 	
 	
-	def select_rare_max(self,_dict):
+	def select_rare_max(self,data):
 		
-		base_select(self).type_method("max",_dict['popFrequencyMax'])
+		base_select(self).type_method("max",data['popFrequencyMax'])
 		
-	def select_rare_interval(self,_dict):
+	def select_rare_interval(self,data):
 		
-		base_select(self).type_method("min",_dict['popFrequencyMin'])
-		base_select(self).type_method("max",_dict['popFrequencyMax'])
+		base_select(self).type_method("min",data['popFrequencyMin'])
+		base_select(self).type_method("max",data['popFrequencyMax'])
 	
-	def select_rarity_radio_buttons(self,_dict):
+	def select_rarity_radio_buttons(self,data):
 		
-		self.browser.find_element_by_id(_dict['rarity']).click()
-		if _dict['rarity'] == "rare":
-			self.select_rare_max(_dict)
-		if _dict['rarity'] == "interval":
-			self.select_rare_interval(_dict)
+		self.browser.find_element_by_id(data['rarity']).click()
+		if data['rarity'] == "rare":
+			self.select_rare_max(data)
+		if data['rarity'] == "interval":
+			self.select_rare_interval(data)
 			
 	
-	def select_transmitted_studies(self, _dict):
+	def select_transmitted_studies(self, data):
 		
-		base_select(self).select_method("transmittedStudies",_dict['transmittedStudies'])
+		base_select(self).select_method("transmittedStudies",data['transmittedStudies'])
 		rarity_div = self.browser.find_element_by_id("rarity")
 		if rarity_div.is_displayed():
-			self.select_rarity_radio_buttons(_dict)
+			self.select_rarity_radio_buttons(data)
 	
 	def select_gene_symbols(self,gene_list):
 		
@@ -106,62 +107,138 @@ class VariantsTest(FunctionalTest,base_select):
 		gene_syms_text_area.send_keys("\n".join(gene_list))
 		time.sleep(2)
 		
-	def select_race_option(self,_dict):
+	def select_race_option(self,data):
 		
-		base_select(self).select_method("race",_dict['familyRace']);
+		base_select(self).select_method("race",data['familyRace']);
 	
-	def select_verbal_iq_low(self,_dict):
+	def select_verbal_iq_low(self,data):
 		
-		base_select(self).type_method("verbalIQLow",_dict['familyVerbalIqLo'])
+		base_select(self).type_method("verbalIQLow",data['familyVerbalIqLo'])
 		
-	def select_verbal_iq_high(self,_dict):
+	def select_verbal_iq_high(self,data):
 		
-		base_select(self).type_method("verbalIQHigh",_dict['familyVerbalIqHi'])
+		base_select(self).type_method("verbalIQHigh",data['familyVerbalIqHi'])
 		
-	def select_quad_trio(self,_dict):
+	def select_quad_trio(self,data):
 		
-		base_select(self).select_method("quad-trio",_dict['familyQuadTrio']);
+		base_select(self).select_method("quad-trio",data['familyQuadTrio']);
 		
-	def select_proband_gender(self,_dict):
+	def select_proband_gender(self,data):
 		
-		base_select(self).select_method("probandGender",_dict['familyPrbGender']);
+		base_select(self).select_method("probandGender",data['familyPrbGender']);
 		
-	def select_sibling_gender(self,_dict):
+	def select_sibling_gender(self,data):
 		
-		base_select(self).select_method("siblingGender",_dict['familySibGender']);
+		base_select(self).select_method("siblingGender",data['familySibGender']);
 		
-	def select_family_advanced_options(self,_dict):
+	def select_family_advanced_options(self,data):
 		
-		self.select_race_option(_dict)
-		self.select_verbal_iq_low(_dict)
-		self.select_verbal_iq_high(_dict)
-		self.select_quad_trio(_dict)
-		self.select_proband_gender(_dict)
-		self.select_sibling_gender(_dict)
+		self.select_race_option(data)
+		self.select_verbal_iq_low(data)
+		self.select_verbal_iq_high(data)
+		self.select_quad_trio(data)
+		self.select_proband_gender(data)
+		self.select_sibling_gender(data)
 		
-	def select_families(self,_dict):
+	def select_families(self,data):
 		
-		self.browser.find_element_by_xpath("//div[@class='controls form-inline']//input[@value='" + _dict['families'] + "']").click()
-		if _dict['families'] == "advanced":
-			self.select_family_advanced_options(_dict)
-		
-	def dictionary_test(self,_dict):
+		self.browser.find_element_by_xpath(
+			"//div[@class='controls form-inline']//input[@value='" + data['families'] + "']").click()
+		if data['families'] == "advanced":
+			self.select_family_advanced_options(data)
+			
+	def wait_for_table(self):
+
+		try:
+		    element = WebDriverWait(self.browser, 60).until(
+			EC.presence_of_element_located((By.ID,
+							"previewTable"))
+					)
+		finally:
+		    pass
 	
-		self.genes_radio_buttons(_dict)
-		self.select_gene_set_main(_dict)
-		self.select_gene_set_value(_dict)
-		self.select_denovo_studies(_dict)
-		self.select_transmitted_studies(_dict)
-		self.select_in_child(_dict)
-		self.select_variant_type(_dict)
-		self.select_effect_type(_dict)
-		self.select_families(_dict)
+		time.sleep(2)
+		
+	def wait_for_chroms(self):
+		
+		try:
+		    element = WebDriverWait(self.browser, 60).until(
+			EC.presence_of_element_located((By.CSS_SELECTOR,
+							"div#preview > svg"))
+					)
+		finally:
+		    pass
+	
+		time.sleep(2)
+
+   	def click_the_preview_button(self):
+	
+		preview_button = self.browser.find_element_by_id("previewBtn")
+		preview_button.click()
+		self.wait_for_table()
+		
+	def click_the_chroms_button(self):
+		
+		preview_button = self.browser.find_element_by_id("chromsBtn")
+		preview_button.click()
+		self.wait_for_chroms()
+		
+	def get_table_content(self,idx):
+		
+		table_content = []
+		temp = self.browser.find_elements_by_css_selector(
+			"table#previewTable > tbody > tr")
+		#print "length of table : " , len(temp)
+		for tr in temp:
+			tds=tr.find_elements_by_css_selector('td')
+			for td in tds:
+				table_content.append(td.text)
+		f = open('/home/alexanderpopov/Projects/SeqPipelineTesting/python/wdae/functional_tests/tests/table_results_' + str(idx) + '.txt', 'w+')
+		f.write(str([str(x) for x in table_content]))
+		f.close()
+		
+	def get_chroms_content(self,idx):
+		
+		chroms_content = []
+		temp = self.browser.find_elements_by_css_selector(
+			"div#preview > svg > svg > g > rect")
+		#print "length of table : " , len(temp)
+		for rect in temp:
+			print rect.get_attribute("x")
+		f = open('/home/alexanderpopov/Projects/SeqPipelineTesting/python/wdae/functional_tests/tests/chroms_results_' + str(idx) + '.txt', 'w+')
+		f.write(str([str(x) for x in chroms_content]))
+		f.close()
+		
+	def dictionary_test(self,data,idx):
+	
+		self.genes_radio_buttons(data)
+		if data['genes'] == 'Gene Sets':
+			self.select_gene_set_main(data)
+			self.select_gene_set_value(data)
+		self.select_denovo_studies(data)
+		self.select_transmitted_studies(data)
+		self.select_in_child(data)
+		self.select_variant_type(data)
+		self.select_effect_type(data)
+		self.select_families(data)
+		self.click_the_preview_button()
+		self.get_table_content(idx)
+		self.click_the_chroms_button()
+		self.get_chroms_content(idx)
 		
 	def test_variants_with_predefined_values(self):
 		
 		self.browser.get(self.server_url)
-		_dict = self.get_dictionary()
-		print "keys : ", _dict.keys()
-		self.dictionary_test(_dict)
+		data = self.get_dictionary()
+		text_file = open(
+			r'/home/alexanderpopov/Projects/SeqPipelineTesting/python/wdae/functional_tests/tests/data_dict.txt')
+		lines = text_file.readlines()
+		print len(lines)
+		for idx,line in enumerate(lines):
+			print "idx",idx
+			temp_data = ast.literal_eval(line)
+			self.dictionary_test(temp_data,idx)
+		text_file.close()
+		#self.dictionary_test(data)
 		#self.select_gene_symbols(["a","b","c"])
 		
