@@ -91,10 +91,10 @@ def pheno_query(data):
         yield row
 
 def prepare_pheno_measure(data):
-    if 'pheno_measure' not in data:
+    if 'phenoMeasure' not in data:
         logger.error("no measure name in request. returning NvIQ")
         return ('NvIQ', get_non_verbal_iq())
-    measure = data['pheno_measure']
+    measure = data['phenoMeasure']
     if measure =='NvIQ':
         return ('NvIQ', get_non_verbal_iq())
     elif measure == 'vIQ':
