@@ -17,6 +17,7 @@ import os
 import time
 import random
 import ast
+import filecmp
 
 
 class VariantsTest(FunctionalTest,base_select):
@@ -104,7 +105,16 @@ class VariantsTest(FunctionalTest,base_select):
 		gene_syms_radio = self.browser.find_element_by_id("geneSymsRadio")
 		gene_syms_radio.click()
 		gene_syms_text_area = self.browser.find_element_by_id("geneSyms")
-		gene_syms_text_area.send_keys("\n".join(gene_list))
+		gene_syms_text_area.send_keys(gene_list)
+		time.sleep(2)
+		
+	def select_family_ids(self,family_list):
+		
+		family_ids_radio = self.browser.find_element_by_id(
+			"familyIdsRadio")
+		family_ids_radio.click()
+		family_ids_text_area = self.browser.find_element_by_id("familyIds")
+		family_ids_text_area.send_keys(family_list)
 		time.sleep(2)
 		
 	def select_race_option(self,data):
@@ -146,6 +156,8 @@ class VariantsTest(FunctionalTest,base_select):
 			"//div[@class='controls form-inline']//input[@value='" + data['families'] + "']").click()
 		if data['families'] == "advanced":
 			self.select_family_advanced_options(data)
+		if data['families'] == 'familyIds':
+			self.select_family_ids(data['familyIds'])
 			
 	def wait_for_table(self):
 
@@ -188,33 +200,67 @@ class VariantsTest(FunctionalTest,base_select):
 		table_content = []
 		temp = self.browser.find_elements_by_css_selector(
 			"table#previewTable > tbody > tr")
-		#print "length of table : " , len(temp)
+		f = open('/home/alexanderpopov/Projects/SeqPipelineTesting/python/wdae/functional_tests/tests/table_results_' + str(idx) + '.txt', 'w+')
 		for tr in temp:
 			tds=tr.find_elements_by_css_selector('td')
 			for td in tds:
 				table_content.append(td.text)
-		f = open('/home/alexanderpopov/Projects/SeqPipelineTesting/python/wdae/functional_tests/tests/table_results_' + str(idx) + '.txt', 'w+')
 		f.write(str([str(x) for x in table_content]))
 		f.close()
 		
 	def get_chroms_content(self,idx):
 		
 		chroms_content = []
-		temp = self.browser.find_elements_by_css_selector(
-			"div#preview > svg > svg > g > rect")
-		#print "length of table : " , len(temp)
-		for rect in temp:
-			print rect.get_attribute("x")
+		temp = self.browser.find_element_by_css_selector(
+			"div#preview > svg > svg > g")
+		temp_rect = temp.find_elements_by_css_selector("rect")
+		temp_path = temp.find_elements_by_css_selector("path")
 		f = open('/home/alexanderpopov/Projects/SeqPipelineTesting/python/wdae/functional_tests/tests/chroms_results_' + str(idx) + '.txt', 'w+')
-		f.write(str([str(x) for x in chroms_content]))
+		for elem in temp_rect:
+			f.write(str(elem.get_attribute("x")) + " / ")
+			f.write(str(elem.get_attribute("y")) +" / ")
+			f.write(str(elem.get_attribute("width"))+" / ")
+			f.write(str(elem.get_attribute("height"))+ " / ")
+			f.write(str(elem.get_attribute("style"))+ " / ")
+			f.write("\n")
+		for elem in temp_path:
+			f.write(str(elem.get_attribute("d"))+" / ")
+			f.write(str(elem.get_attribute("transform"))+ " / ")
+			f.write(str(elem.get_attribute("style"))+ " / ")
+			f.write("\n")		
 		f.close()
 		
-	def dictionary_test(self,data,idx):
+	def wait_for_page_to_load(self):
+
+		try:
+		    element = WebDriverWait(self.browser, 30).until(
+			EC.presence_of_element_located((By.ID,
+			    "sammyContainer"
+			    ))
+			)
+		finally:
+			pass
 	
+	def click_the_reset_button(self):
+	
+		reset_button = self.browser.find_element_by_id("resetBtn")
+		reset_button.click()
+		time.sleep(2)
+		self.wait_for_page_to_load()
+		
+	def compare_chroms_files(self):
+		
+		print filecmp.cmp('/home/alexanderpopov/Projects/SeqPipelineTesting/python/wdae/functional_tests/tests/chroms_results_0.txt' , '/home/alexanderpopov/Projects/SeqPipelineTesting/python/wdae/functional_tests/tests/chroms_results_0.txt')
+		
+	def dictionary_test(self,data,idx):
+		
+		self.compare_chroms_files()
 		self.genes_radio_buttons(data)
 		if data['genes'] == 'Gene Sets':
 			self.select_gene_set_main(data)
 			self.select_gene_set_value(data)
+		if data['genes'] == 'Gene Symbols':
+			self.select_gene_symbols(data['geneSyms'])
 		self.select_denovo_studies(data)
 		self.select_transmitted_studies(data)
 		self.select_in_child(data)
@@ -225,6 +271,7 @@ class VariantsTest(FunctionalTest,base_select):
 		self.get_table_content(idx)
 		self.click_the_chroms_button()
 		self.get_chroms_content(idx)
+		self.click_the_reset_button()
 		
 	def test_variants_with_predefined_values(self):
 		

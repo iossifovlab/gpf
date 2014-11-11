@@ -959,5 +959,34 @@
 50 / 900 / 8 / 5 / fill: blue; / 
 150 / 900 / 8 / 5 / fill: red; / 
 250 / 925 / 8 / 5 / fill: black; / 
+M 218 134 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 437 134 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 469 344 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 500 414 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 233 554 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 326 764 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 341 834 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 469 834 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 887 344 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 0 0 l 2.3 4.5 l 4 0.5 l -3.5 3.5 l 1.5 5 l -4.5 -2.5 l -4.5 2.5 l 1.5 -5 l -3.5 -3.5 l 4.3 -0.5 / translate(0, -6) scale(0.8) translate(1197.5, 257.5) / fill: blue; / 
+M 0 0 l 2.3 4.5 l 4 0.5 l -3.5 3.5 l 1.5 5 l -4.5 -2.5 l -4.5 2.5 l 1.5 -5 l -3.5 -3.5 l 4.3 -0.5 / translate(0, -6) scale(0.8) translate(1071.25, 782.5) / fill: blue; / 
+M 0 0 l 2.3 4.5 l 4 0.5 l -3.5 3.5 l 1.5 5 l -4.5 -2.5 l -4.5 2.5 l 1.5 -5 l -3.5 -3.5 l 4.3 -0.5 / translate(0, -6) scale(0.8) translate(1071.25, 772.5) / fill: blue; / 
+M 0 0 l 2.3 4.5 l 4 0.5 l -3.5 3.5 l 1.5 5 l -4.5 -2.5 l -4.5 2.5 l 1.5 -5 l -3.5 -3.5 l 4.3 -0.5 / translate(0, -6) scale(0.8) translate(367.5, 345) / fill: blue; / 
+M 0 0 l 2.3 4.5 l 4 0.5 l -3.5 3.5 l 1.5 5 l -4.5 -2.5 l -4.5 2.5 l 1.5 -5 l -3.5 -3.5 l 4.3 -0.5 / translate(0, -6) scale(0.8) translate(1101.25, 257.5) / fill: blue; / 
+M 213 204 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 956 196 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 413 64 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 457 624 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 264 624 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 360 624 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 197 764 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 466 828 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 0 0 l 2.3 4.5 l 4 0.5 l -3.5 3.5 l 1.5 5 l -4.5 -2.5 l -4.5 2.5 l 1.5 -5 l -3.5 -3.5 l 4.3 -0.5 / translate(0, -6) scale(0.8) translate(1197.5, 240) / fill: blue; / 
+M 0 0 l 2.3 4.5 l 4 0.5 l -3.5 3.5 l 1.5 5 l -4.5 -2.5 l -4.5 2.5 l 1.5 -5 l -3.5 -3.5 l 4.3 -0.5 / translate(0, -6) scale(0.8) translate(1060, 695) / fill: blue; / 
+M 0 0 l 2.3 4.5 l 4 0.5 l -3.5 3.5 l 1.5 5 l -4.5 -2.5 l -4.5 2.5 l 1.5 -5 l -3.5 -3.5 l 4.3 -0.5 / translate(0, -6) scale(0.8) translate(1071.25, 762.5) / fill: blue; / 
+M 840 274 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 466 822 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 812 484 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
+M 497 408 l 5 0 l 0 5 l -5 0 / None / fill: blue; / 
 M 0 0 l 2.3 4.5 l 4 0.5 l -3.5 3.5 l 1.5 5 l -4.5 -2.5 l -4.5 2.5 l 1.5 -5 l -3.5 -3.5 l 4.3 -0.5 / translate(0, -6) scale(0.8) translate(66.25, 1158.75) / fill: black; / 
 M 151 925 l 5 0 l 0 5 l -5 0 / None / fill: black; / 
