@@ -22,6 +22,11 @@ import filecmp
 
 class VariantsTest(FunctionalTest,base_select):
 	
+	location = os.path.realpath(
+		os.path.join(os.getcwd(), os.path.dirname(__file__)))
+	results_dir='/results_dir/variants/'
+	tests_defs='data_dict.txt'
+	
 	def get_dictionary(self):
 		return {'geneRegionType': 'on',
 			'familyVerbalIqLo': '45',
@@ -98,9 +103,13 @@ class VariantsTest(FunctionalTest,base_select):
 		base_select(self).select_method(
 			"variants",data['variantTypes'])
 		
-	def genes_radio_buttons(self,data):
-		
+	def genes_radio_buttons(self, data):
 		base_select(self).radio_button_select(data['genes'])
+		if data['genes'] == 'Gene Sets':
+	                self.select_gene_set_main(data)
+		        self.select_gene_set_value(data)
+		if data['genes'] == 'Gene Symbols':
+		        self.select_gene_symbols(data['geneSyms'])
 	
 	
 	def select_rare_max(self,data):
@@ -233,15 +242,13 @@ class VariantsTest(FunctionalTest,base_select):
 		preview_button.click()
 		self.wait_for_chroms()
 		
-	def get_table_content(self,idx):
+	def get_preview_content(self,idx):
 		
 		table_content = []
 		temp = self.browser.find_elements_by_css_selector(
 			"table#previewTable > tbody > tr")
-		location = os.path.realpath(
-			os.path.join(os.getcwd(), os.path.dirname(__file__)))
 		f = open(os.path.join(
-			location, 'table_results_' + str(idx) + '.txt'),'w+')
+			VariantsTest.location + VariantsTest.results_dir, 'table_results_' + str(idx) + '.txt'),'w+')
 		for tr in temp:
 			tds=tr.find_elements_by_css_selector('td')
 			for td in tds:
@@ -256,10 +263,8 @@ class VariantsTest(FunctionalTest,base_select):
 			"div#preview > svg > svg > g")
 		temp_rect = temp.find_elements_by_css_selector("rect")
 		temp_path = temp.find_elements_by_css_selector("path")
-		location = os.path.realpath(
-			os.path.join(os.getcwd(), os.path.dirname(__file__)))
 		f = open(os.path.join(
-			location, 'chroms_results_' + str(idx) + '.txt'),'w+')
+			VariantsTest.location + VariantsTest.results_dir, 'chroms_results_' + str(idx) + '.txt'),'w+')
 		for elem in temp_rect:
 			chroms_content.append(elem.get_attribute("x"))
 			chroms_content.append(elem.get_attribute("y"))
@@ -293,25 +298,21 @@ class VariantsTest(FunctionalTest,base_select):
 		self.wait_for_page_to_load()
 		
 	def compare_table_files(self):
-		
-		location = os.path.realpath(
-			os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 		print filecmp.cmp(
 			os.path.join(
-			location, 'table_results_0.txt') ,
+			VariantsTest.location, 'table_results_0.txt') ,
 			os.path.join(
-			location, 'table_results_1.txt'))
+			VariantsTest.location, 'table_results_1.txt'))
 
 		
 	def compare_chroms_files(self):
-		
-		location = os.path.realpath(
-			os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 		print filecmp.cmp(
 			os.path.join(
-			location, 'chroms_results_0.txt') ,
+			VariantsTest.location, 'chroms_results_0.txt') ,
 			os.path.join(
-			location, 'chroms_results_0.txt'))	
+			VariantsTest.location, 'chroms_results_0.txt'))	
 	
 	def download_file(self):
 		
@@ -327,46 +328,74 @@ class VariantsTest(FunctionalTest,base_select):
 		download_button = self.browser.find_element_by_id(
 			"submitBtn")
 		download_button.click()
-		self.assertTrue(os.path.exists("unruly.csv"))
+		#self.assertTrue(os.path.exists("unruly.csv"))
 		
 	def dictionary_test(self,data,idx):
 		
 		self.genes_radio_buttons(data)
-		if data['genes'] == 'Gene Sets':
-			self.select_gene_set_main(data)
-			self.select_gene_set_value(data)
-		if data['genes'] == 'Gene Symbols':
-			self.select_gene_symbols(data['geneSyms'])
 		self.select_denovo_studies(data)
 		self.select_transmitted_studies(data)
 		self.select_in_child(data)
 		self.select_variant_type(data)
 		self.select_effect_type(data)
 		self.select_families(data)
-		self.download_file()
+		#self.download_file()
 		self.click_the_preview_button()
-		self.get_table_content(idx)
+		self.get_preview_content(idx)
 		self.click_the_chroms_button()
 		self.get_chroms_content(idx)
 		self.click_the_reset_button()
 		self.compare_table_files()
 		self.compare_chroms_files()
 		
+	def fill_variants_form(self,data):
+		
+	        self.genes_radio_buttons(data)
+	        self.select_denovo_studies(data)
+		self.select_transmitted_studies(data)
+		self.select_in_child(data)
+		self.select_variant_type(data)
+		self.select_effect_type(data)
+		self.select_families(data)
+		
+	def execute(self, idx):
+		
+		#self.download_file()
+		self.click_the_preview_button()
+		self.get_preview_content(idx)
+		self.click_the_chroms_button()
+		self.get_chroms_content(idx)
+		self.click_the_reset_button()
+		
+	def save(self,results_dir):
+		
+		self.get_preview_content(idx)
+		self.get_chroms_content()
+		
+
+        def save_variants_results(self, data, idx):
+        	
+        	self.fill_variants_form(data)
+        	self.execute(idx)
+        	
+        def run_variants_tests(self):
+        	
+        	
+		
 	def test_variants_with_predefined_values(self):
 		
 		self.browser.get(self.server_url)
 		data = self.get_dictionary()
-		
-		location = os.path.realpath(
-			os.path.join(os.getcwd(), os.path.dirname(__file__)))
-
+		if not os.path.exists(os.path.dirname(VariantsTest.location + VariantsTest.results_dir)):
+			print 'dir does not exists'
+			os.makedirs(os.path.dirname(VariantsTest.location + VariantsTest.results_dir))
 		text_file = open(os.path.join(
-			location, 'data_dict.txt'),'r')
+			VariantsTest.location, 'data_dict.txt'),'r')
 		lines = text_file.readlines()
-		#print len(lines)
 		for idx,line in enumerate(lines):
 			print "idx",idx
 			temp_data = ast.literal_eval(line)
-			self.dictionary_test(temp_data,idx)
+			#self.dictionary_test(temp_data,idx)
+			self.save_variants_results(temp_data,idx)
 		text_file.close()
 		
