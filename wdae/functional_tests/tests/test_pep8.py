@@ -250,7 +250,7 @@ class VariantsTest(FunctionalTest, base_select):
         return preview_content
 
     def get_chroms_content(self, idx):
-        
+
         chroms_content = []
         temp = self.browser.find_element_by_css_selector(
             "div#preview > svg > svg > g")
@@ -267,16 +267,16 @@ class VariantsTest(FunctionalTest, base_select):
             chroms_content.append(elem.get_attribute("d"))
             chroms_content.append(elem.get_attribute("transform"))
             chroms_content.append(elem.get_attribute("style"))
-            
+
         return chroms_content
-        
+
     def generate_file(self, idx, type_of_data):
-    	return (VariantsTest.location + VariantsTest.results_dir +
-    	       str(type_of_data)+str(idx)+'.txt')
-        
+        return (VariantsTest.location + VariantsTest.results_dir +
+                str(type_of_data) + str(idx) + '.txt')
+
     def save_content_to_file(self, data, idx, type_of_data):
-    	filename=self.generate_file(idx, type_of_data)
-    	f = open(os.path.join(filename), 'w+')
+        filename = self.generate_file(idx, type_of_data)
+        f = open(os.path.join(filename), 'w+')
         f.write(str([str(x) for x in data]))
         f.close()
 
@@ -319,7 +319,7 @@ class VariantsTest(FunctionalTest, base_select):
             "submitBtn")
         download_button.click()
         time.sleep(3)
-        
+
     def dictionary_test(self, data, idx):
 
         self.genes_radio_buttons(data)
@@ -349,37 +349,37 @@ class VariantsTest(FunctionalTest, base_select):
         self.select_families(data_defs)
 
     def read_content_from_file(self, idx, type_of_data):
-    	f=open(VariantsTest.location+VariantsTest.results_dir+
-    		'/'+str(type_of_data)+str(idx)+'.txt','r')
-    	data=f.read()
-    	f.close()
-    	print ast.literal_eval(data)
+        f = open(VariantsTest.location + VariantsTest.results_dir +
+                 '/' + str(type_of_data) + str(idx) + '.txt', 'r')
+        data = f.read()
+        f.close()
+        print ast.literal_eval(data)
         return ast.literal_eval(data)
-    
+
     def execute(self, idx):
 
-        #self.download_file()
+        # self.download_file()
         self.click_the_preview_button()
-        preview_content=self.get_preview_content(idx)
-        preview_content_from_file=self.read_content_from_file(idx,
-        	                                             'preview_results_')
-        self.assertTrue(preview_content==preview_content_from_file)
-	self.click_the_chroms_button()
-        chroms_content=self.get_chroms_content(idx)
-        chroms_content_from_file=self.read_content_from_file(idx,
-        	                                             'chroms_results_')
-        for x in chroms_content_from_file:
-	       print 'chroms_content_from_file: ',x
-        self.assertTrue(chroms_content==chroms_content_from_file)
+        preview_content = self.get_preview_content(idx)
+        preview_content_from_file = self.read_content_from_file(idx,
+                                                            'preview_results_')
+        self.assertTrue(preview_content == preview_content_from_file)
+        self.click_the_chroms_button()
+        chroms_content = self.get_chroms_content(idx)
+        chroms_content_from_file = self.read_content_from_file(idx,
+                                                             'chroms_results_')
+        for x in chroms_content and chroms_content_from_file:
+            print x
+        self.assertTrue(chroms_content == chroms_content_from_file)
         self.click_the_reset_button()
 
     def save(self, idx):
 
         self.click_the_preview_button()
-        preview_content=self.get_preview_content(idx)
+        preview_content = self.get_preview_content(idx)
         self.save_content_to_file(preview_content, idx, 'preview_results_')
         self.click_the_chroms_button()
-        chroms_content=self.get_chroms_content(idx)
+        chroms_content = self.get_chroms_content(idx)
         self.save_content_to_file(chroms_content, idx, 'chroms_results_')
         self.download_file()
         self.click_the_reset_button()
@@ -387,7 +387,7 @@ class VariantsTest(FunctionalTest, base_select):
     def save_variants_results(self, data_defs, idx):
 
         self.fill_variants_form(data_defs)
-        #self.save(idx)
+        # self.save(idx)
         self.execute(idx)
 
     def test_variants_with_predefined_values(self):
