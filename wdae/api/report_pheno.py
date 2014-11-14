@@ -85,8 +85,8 @@ def pheno_query(data):
             fid,
             gender,
             families_with_lgds.get(fid, 0),
-            families_with_missense[fid] if fid in families_with_missense else 0,
-            families_with_synonymous[fid] if fid in families_with_synonymous else 0,
+            families_with_missense.get(fid, 0),
+            families_with_synonymous.get(fid, 0),
             measure[fid] if fid in measure else 'NA']
         yield row
 
