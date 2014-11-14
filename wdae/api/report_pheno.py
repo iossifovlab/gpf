@@ -152,11 +152,25 @@ def pheno_calc(ps):
                                        data[effect_type] == 1)]['m']
         negative = data[np.logical_and(data['gender'] == gender,
                                        data[effect_type] == 0)]['m']
-        p_mean = np.mean(positive, dtype=np.float64)
-        n_mean = np.mean(negative, dtype=np.float64)
-        p_std = 1.96 * np.std(positive, dtype=np.float64)/np.sqrt(len(positive))
-        n_std = 1.96 * np.std(negative, dtype=np.float64)/np.sqrt(len(negative))
-        pv = calc_pv(positive, negative)
+        p_count = len(positive)
+        if p_count == 0:
+            p_mean = 0
+            p_std = 0
+        else:
+            p_mean = np.mean(positive, dtype=np.float64)
+            p_std = 1.96 * np.std(positive, dtype=np.float64)/np.sqrt(len(positive))
+
+        n_count = len(negative)
+        if n_count == 0:
+            n_mean = 0
+            n_std = 0
+        else:
+            n_mean = np.mean(negative, dtype=np.float64)
+            n_std = 1.96 * np.std(negative, dtype=np.float64)/np.sqrt(len(negative))
+        if n_count == 0 or p_count == 0:
+            pv='NA'
+        else:
+            pv = calc_pv(positive, negative)
 
         res.append((effect_type, gender, n_mean, n_std, p_mean, p_std, pv))
     return res
