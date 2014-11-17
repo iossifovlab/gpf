@@ -28,33 +28,22 @@ class VariantsTest(FunctionalTest, base_select):
     tests_defs = 'data_dict.txt'
 
     def get_dictionary(self):
-        return {'geneRegionType': 'on',
-                'familyVerbalIqLo': '45',
-                'geneTerm': 'BIOCARTA_BCELLSURVIVAL_PATHWAY',
-                'inChild': 'prb', 'popFrequencyMax': '14.31',
-                'familyPrbGender': 'All',
-                'transmittedStudies': 'w1202s766e611',
-                'popFrequencyMin': '12.34',
-                'geneSet': 'MSigDB.curated',
-                'families': 'advanced',
-                'familyIds': '',
-                'familyQuadTrio': 'All',
-                'genes': 'Gene Sets',
-                'effectTypes': 'tRNA:ANTICODON',
-                'familySibGender': 'All',
-                'variantTypes': 'del',
-                'familyRace': 'All',
-                'denovoStudies': 'sscPublishedWE',
-                'geneSyms': '',
-                'geneStudy': 'allWEAndTG',
-                'rarity': 'interval',
-                'familyVerbalIqHi': '145',
-                'geneRegion': ''}
+        text_file = open(os.path.join(
+            VariantsTest.location, 'data_dict.txt'), 'r')
+        data = text_file.readlines()
+        text_file.close()
+        return data
+
+    def select_denovo_gene_set(self, data):
+        base_select(self).select_method_by_value(
+            "denovoStudiesInGeneSet", data['geneStudy'])
 
     def select_gene_set_main(self, data):
 
         base_select(self).select_method_by_value(
             "geneSet", data['geneSet'])
+        if data['geneSet'] == 'denovo':
+            self.select_denovo_gene_set(data)
 
     def select_gene_set_value(self, data):
 
@@ -250,7 +239,7 @@ class VariantsTest(FunctionalTest, base_select):
         return preview_content
 
     def get_chroms_content(self, idx):
-        
+
         chroms_content = []
         temp = self.browser.find_element_by_css_selector(
             "div#preview > svg > svg > g")
@@ -267,17 +256,18 @@ class VariantsTest(FunctionalTest, base_select):
             chroms_content.append(elem.get_attribute("d"))
             chroms_content.append(elem.get_attribute("transform"))
             chroms_content.append(elem.get_attribute("style"))
-            
+
         return chroms_content
-        
+
     def generate_file(self, idx, type_of_data):
-    	return (VariantsTest.location + VariantsTest.results_dir +
-    	       str(type_of_data)+str(idx)+'.txt')
-        
+        return (VariantsTest.location + VariantsTest.results_dir +
+                str(type_of_data) + str(idx) + '.txt')
+
     def save_content_to_file(self, data, idx, type_of_data):
-    	filename=self.generate_file(idx, type_of_data)
-    	f = open(os.path.join(filename), 'w+')
-        f.write(str([str(x) for x in data]))
+        filename = self.generate_file(idx, type_of_data)
+        f = open(os.path.join(filename), 'w+')
+        # f.write(str([str(x) for x in data]))
+        f.write(str(data))
         f.close()
 
     def wait_for_page_to_load(self):
@@ -319,7 +309,7 @@ class VariantsTest(FunctionalTest, base_select):
             "submitBtn")
         download_button.click()
         time.sleep(3)
-        
+
     def dictionary_test(self, data, idx):
 
         self.genes_radio_buttons(data)
@@ -349,62 +339,62 @@ class VariantsTest(FunctionalTest, base_select):
         self.select_families(data_defs)
 
     def read_content_from_file(self, idx, type_of_data):
-    	f=open(VariantsTest.location+VariantsTest.results_dir+
-    		'/'+str(type_of_data)+str(idx)+'.txt','r')
-    	data=f.read()
-    	f.close()
-    	print ast.literal_eval(data)
+        f = open(VariantsTest.location + VariantsTest.results_dir +
+                 '/' + str(type_of_data) + str(idx) + '.txt', 'r')
+        data = f.read()
+        f.close()
+        print ast.literal_eval(data)
         return ast.literal_eval(data)
-    
+
     def execute(self, idx):
 
-        #self.download_file()
+        # self.download_file()
         self.click_the_preview_button()
-        preview_content=self.get_preview_content(idx)
-        preview_content_from_file=self.read_content_from_file(idx,
-        	                                             'preview_results_')
-        self.assertTrue(preview_content==preview_content_from_file)
-	self.click_the_chroms_button()
-        chroms_content=self.get_chroms_content(idx)
-        chroms_content_from_file=self.read_content_from_file(idx,
-        	                                             'chroms_results_')
-        for x in chroms_content_from_file:
-	       print 'chroms_content_from_file: ',x
-        self.assertTrue(chroms_content==chroms_content_from_file)
+        preview_content = self.get_preview_content(idx)
+        preview_content_from_file = self.read_content_from_file(idx,
+                                                                'preview_results_')
+        self.assertTrue(preview_content == preview_content_from_file)
+        self.click_the_chroms_button()
+        chroms_content = self.get_chroms_content(idx)
+        chroms_content_from_file = self.read_content_from_file(idx,
+                                                               'chroms_results_')
+        self.assertTrue(chroms_content == chroms_content_from_file)
         self.click_the_reset_button()
 
     def save(self, idx):
 
         self.click_the_preview_button()
-        preview_content=self.get_preview_content(idx)
+        preview_content = self.get_preview_content(idx)
         self.save_content_to_file(preview_content, idx, 'preview_results_')
         self.click_the_chroms_button()
-        chroms_content=self.get_chroms_content(idx)
+        chroms_content = self.get_chroms_content(idx)
         self.save_content_to_file(chroms_content, idx, 'chroms_results_')
         self.download_file()
-        self.click_the_reset_button()
+        # self.click_the_reset_button()
 
     def save_variants_results(self, data_defs, idx):
 
         self.fill_variants_form(data_defs)
-        #self.save(idx)
+        self.save(idx)
         self.execute(idx)
+
+    def make_results_dir(self):
+        if not os.path.exists(os.path.dirname(
+                VariantsTest.location + VariantsTest.results_dir)):
+            print 'dir does not exist'
+            os.makedirs(os.path.dirname(
+                VariantsTest.location +
+                VariantsTest.results_dir))
+
+    def run_variants_tests(self):
+        self.make_results_dir()
+        data_defs = self.get_dictionary()
+        for idx, line in enumerate(data_defs):
+            print "idx", idx
+            temp_data_defs = ast.literal_eval(line)
+            self.save_variants_results(temp_data_defs, idx)
 
     def test_variants_with_predefined_values(self):
 
         self.browser.get(self.server_url)
-        data = self.get_dictionary()
-        if not os.path.exists(os.path.dirname(
-                VariantsTest.location + VariantsTest.results_dir)):
-            print 'dir does not exists'
-            os.makedirs(os.path.dirname(
-                VariantsTest.location +
-                VariantsTest.results_dir))
-        text_file = open(os.path.join(
-            VariantsTest.location, 'data_dict.txt'), 'r')
-        lines = text_file.readlines()
-        for idx, line in enumerate(lines):
-            print "idx", idx
-            temp_data = ast.literal_eval(line)
-            self.save_variants_results(temp_data, idx)
-        text_file.close()
+        self.run_variants_tests()
