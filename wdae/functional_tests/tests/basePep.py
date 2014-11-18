@@ -2,11 +2,11 @@ from django.test import LiveServerTestCase
 
 from selenium import webdriver
 import sys
-import os
+
 
 class FunctionalTest(LiveServerTestCase):
     ITER_COUNT = 10
-    
+
     @classmethod
     def setUpClass(cls):
         for arg in sys.argv:
@@ -22,14 +22,13 @@ class FunctionalTest(LiveServerTestCase):
             LiveServerTestCase.tearDownClass()
 
     def setUp(self):
-    	location = os.path.realpath(
-                        os.path.join(os.getcwd(), os.path.dirname(__file__)))
-        results_dir = '/results_dir/variants/' 
         profile = webdriver.FirefoxProfile()
         profile.set_preference('browser.download.folderList', 2)
         profile.set_preference('browser.download.manager.showWhenStarting',
                                False)
-        profile.set_preference('browser.download.dir',location+results_dir)
+        profile.set_preference('browser.download.dir', '/ home / alexanderpopov /
+                               Projects / SeqPipelineTesting / python / wdae / functional_tests /
+                               tests / results_dir / variants')
         profile.set_preference('browser.helperApps.neverAsk.saveToDisk',
                                'text/csv')
 
