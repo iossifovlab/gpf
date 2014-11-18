@@ -5,6 +5,9 @@ from selenium import webdriver
 
 import time
 import ast
+import tempfile
+import os
+import shutil
 
 from base_variants import select_method, select_method_by_value, \
     type_method, radio_button_select
@@ -143,7 +146,7 @@ def select_families(browser, data):
     if data['families'] == 'familyIds':
         select_family_ids(browser, data['familyIds'])
 
-def wait_for_table(browser, timeout=300):
+def wait_for_preview(browser, timeout=300):
     element = None
     try:
         element = WebDriverWait(browser,timeout).until(
@@ -165,48 +168,78 @@ def wait_for_chroms(browser, timeout=300):
         pass
     return element
 
+def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
+    fullname = os.path.join(ddir, filename)
+
+    while not os.path.exists(fullname):
+        print("waiting for %s" % fullname)
+        time.sleep(2)
+    
+    file_size_stored = os.stat(fullname).st_size
+
+    while True:
+        try:
+            file_size_current = os.stat(fullname).st_size
+            if file_size_stored == file_size_current:
+                break
+            else:
+                file_size_stored = file_size_current
+                print(fullname, file_size_stored)
+                time.sleep(2)
+        except: 
+            pass
+
+    return fullname
+
 def click_the_preview_button(browser):
     preview_button = browser.find_element_by_id("previewBtn")
     preview_button.click()
-    wait_for_table(browser)
+    wait_for_preview(browser)
+    return get_preview_content(browser)
 
 def click_the_chroms_button(browser):
     preview_button = browser.find_element_by_id("chromsBtn")
     preview_button.click()
     wait_for_chroms(browser)
+    return get_chroms_content(browser)
 
+
+def click_the_download_button(browser, ddir):
+    download_button = browser.find_element_by_id(
+        "submitBtn")
+    download_button.click()
+    filename = wait_for_download(browser, ddir)
+    print(filename)
+    return filename
+
+def save_preview_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "preview_result_%03d.out" % idx)
+    with open(fullname, "w") as f:
+        f.write(content)
+
+def save_request_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "request_%03d.out" % idx)
+    with open(fullname, "w") as f:
+        f.write(str(content))
+        
+def save_chroms_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "chroms_result_%03d.out" % idx)
+    with open(fullname, "w") as f:
+        f.write(content)
+
+def save_download_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "unruly_result_%03d.out" % idx)
+    print("moving %s -> %s" % (content, fullname))
+    shutil.move(content, fullname)
 
 def get_preview_content(browser):
-    preview_content = []
-    table = browser.find_elements_by_css_selector(
-        "table#previewTable > tbody > tr")
-    for tr in table:
-        tds = tr.find_elements_by_css_selector('td')
-        for td in tds:
-            preview_content.append(td.text)
-    return preview_content
-
-def get_chroms_content(browser):
-    chroms_content = []
-    chroms = browser.find_element_by_css_selector(
-        "div#preview > svg > svg > g")
-    temp_rect = chroms.find_elements_by_css_selector("rect")
-    temp_path = chroms.find_elements_by_css_selector("path")
+    table = browser.find_element_by_id("previewTable")
+    return table.get_attribute('innerHTML')
     
-    for elem in temp_rect:
-        chroms_content.append(elem.get_attribute("x"))
-        chroms_content.append(elem.get_attribute("y"))
-        chroms_content.append(elem.get_attribute("width"))
-        chroms_content.append(elem.get_attribute("height"))
-        chroms_content.append(elem.get_attribute("style"))
-    for elem in temp_path:
-        chroms_content.append(elem.get_attribute("d"))
-        chroms_content.append(elem.get_attribute("transform"))
-        chroms_content.append(elem.get_attribute("style"))
-        
-    return chroms_content
-
-
+def get_chroms_content(browser):
+    chroms = browser.find_element_by_css_selector(
+        "div#preview > svg")
+    return chroms.get_attribute('innerHTML')
     
 def fill_variants_form(browser, data):
     genes_radio_buttons(browser, data)
@@ -232,26 +265,47 @@ def start_browser():
     profile.set_preference('browser.download.folderList', 2)
     profile.set_preference('browser.download.manager.showWhenStarting',
                            False)
-    profile.set_preference('browser.download.dir', "/tmp")
+    tmpdir = tempfile.mkdtemp()
+    
+    profile.set_preference('browser.download.dir', tmpdir)
     profile.set_preference('browser.helperApps.neverAsk.saveToDisk',
                            'text/csv')
     
     browser = webdriver.Firefox(profile)
     browser.implicitly_wait(5)
 
-    return browser
+    return (browser, tmpdir)
 
 def stop_browser(browser):
     browser.quit()
 
 
 if __name__ == "__main__":
-    data = load_dictionary("data_dict.txt")
-    browser = start_browser()
     
-    for dd in data:
-        print(dd, type(dd))
+    data = load_dictionary("data_dict.txt")
+    (browser, ddir) = start_browser()
+    print(ddir)
+    rdir = "./results"
+    try:
+        os.makedirs(rdir)
+    except:
+        pass
+        
+    for (idx, request) in enumerate(data):
+        print(request, type(request))
         browser.get("http://seqpipe-vm.setelis.com/dae")
-        fill_variants_form(browser, dd)
+        save_request_content(rdir, idx, request)
+        fill_variants_form(browser, request)
 
+        preview = click_the_preview_button(browser)
+        save_preview_content(rdir, idx, preview)
+        
+        chroms = click_the_chroms_button(browser)
+        save_chroms_content(rdir, idx, chroms)
+        
+        down = click_the_download_button(browser, ddir)
+        save_download_content(rdir, idx, down)
+
+        
     stop_browser(browser)
+    # shutil.rmtree(ddir)
