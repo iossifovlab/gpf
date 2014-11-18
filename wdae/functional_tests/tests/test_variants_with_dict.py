@@ -20,16 +20,16 @@ import ast
 import filecmp
 
 
-class VariantsTest(FunctionalTest, base_select):
+class VariantsTest(FunctionalTest):
 
     location = os.path.realpath(
         os.path.join(os.getcwd(), os.path.dirname(__file__)))
     results_dir = '/results_dir/variants/'
-    tests_defs = 'data_dict.txt'
+    tests_defs = 'data_dict_variants.txt'
 
     def get_dictionary(self):
         text_file = open(os.path.join(
-            VariantsTest.location, 'data_dict.txt'), 'r')
+            VariantsTest.location, VariantsTest.tests_defs), 'r')
         data = text_file.readlines()
         text_file.close()
         return data
@@ -309,6 +309,16 @@ class VariantsTest(FunctionalTest, base_select):
             "submitBtn")
         download_button.click()
         time.sleep(3)
+        	
+    def rename_download_file(self, idx):
+    	for filename in os.listdir(VariantsTest.location+
+        	                   VariantsTest.results_dir):
+             if filename.startswith("unruly.csv"):
+                   os.renames(VariantsTest.location+
+        	                   VariantsTest.results_dir+filename,
+        	                   VariantsTest.location+
+        	                   VariantsTest.results_dir+"unruly_"+
+        	                   str(idx)+".csv")
 
     def dictionary_test(self, data, idx):
 
@@ -370,13 +380,18 @@ class VariantsTest(FunctionalTest, base_select):
         chroms_content = self.get_chroms_content(idx)
         self.save_content_to_file(chroms_content, idx, 'chroms_results_')
         self.download_file()
+        self.rename_download_file(idx)
         # self.click_the_reset_button()
 
-    def save_variants_results(self, data_defs, idx):
+    def execute_variants(self, data_defs, idx):
+
+        self.fill_variants_form(data_defs)
+        self.execute(idx)
+
+    def save_variants(self, data_defs, idx):
 
         self.fill_variants_form(data_defs)
         self.save(idx)
-        self.execute(idx)
 
     def make_results_dir(self):
         if not os.path.exists(os.path.dirname(
@@ -387,14 +402,21 @@ class VariantsTest(FunctionalTest, base_select):
                 VariantsTest.results_dir))
 
     def run_variants_tests(self):
+        data_defs = self.get_dictionary()
+        for idx, line in enumerate(data_defs):
+            print "idx", idx
+            temp_data_defs = ast.literal_eval(line)
+            self.execute_variants(temp_data_defs, idx)
+
+    def save_variants_tests(self):
         self.make_results_dir()
         data_defs = self.get_dictionary()
         for idx, line in enumerate(data_defs):
             print "idx", idx
             temp_data_defs = ast.literal_eval(line)
-            self.save_variants_results(temp_data_defs, idx)
+            self.save_variants(temp_data_defs, idx)
 
     def test_variants_with_predefined_values(self):
 
         self.browser.get(self.server_url)
-        self.run_variants_tests()
+        self.save_variants_tests()
