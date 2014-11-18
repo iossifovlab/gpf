@@ -21,6 +21,10 @@ urlpatterns = patterns(
     url(r'^enrichment_test$', 'enrichment_test'),
     url(r'^child_types$', 'child_type_list'),
     url(r'^studies_summaries$', 'studies_summaries'),
+    url(r'^pheno_supported_studies$', 'pheno_supported_studies'),
+    url(r'^pheno_supported_measures$', 'pheno_supported_measures'),
+    url(r'^pheno_report_preview$', 'pheno_report_preview'),
+    url(r'^pheno_report_download$', 'pheno_report_download'),
     
 
 )
