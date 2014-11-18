@@ -258,7 +258,6 @@ def assert_download_content(rdir, idx, content):
         scont = f.read()
     assert orig == scont
 
-
 def get_preview_content(browser):
     table = browser.find_element_by_id("previewTable")
     return table.get_attribute('innerHTML')
@@ -286,7 +285,6 @@ def load_dictionary(filename):
     text_file.close()
     return data_dict
 
-
 def start_browser():
     profile = webdriver.FirefoxProfile()
     profile.set_preference('browser.download.folderList', 2)
@@ -305,7 +303,6 @@ def start_browser():
 
 def stop_browser(browser):
     browser.quit()
-
 
 def ensure_directory(dirname):
     try:
