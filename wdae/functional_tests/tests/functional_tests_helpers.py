@@ -306,8 +306,9 @@ def stop_browser(browser):
 
 def ensure_directory(dirname):
     try:
-        os.makedirs(rdir)
-    except:
+        os.makedirs(dirname)
+    except Exception, ex:
+        print(ex)
         pass
 
 
