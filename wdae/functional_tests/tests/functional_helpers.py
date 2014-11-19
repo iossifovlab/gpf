@@ -8,7 +8,10 @@ import time
 import ast
 import tempfile
 import os
+import sys
 import shutil
+import difflib
+import traceback
 
 
 def select_method(browser, select_target,select_name):
@@ -98,9 +101,13 @@ def select_variant_type(browser, data):
                   "variants", data['variantTypes'])
 
 def genes_radio_buttons(browser, data):
-    print(data['genes'])
     radio_button_select(browser, data['genes'])
     if data['genes'] == 'Gene Sets':
+        WebDriverWait(browser, 10).until(
+            EC.presence_of_element_located((By.ID,
+                                            "geneSet"))
+        )
+        
         select_gene_set_main(browser, data)
         select_gene_set_value(browser, data)
     if data['genes'] == 'Gene Symbols':
@@ -255,38 +262,50 @@ def save_preview_content(rdir, idx, content):
     with open(fullname, "w") as f:
         f.write(content)
 
-def assert_preview_content(rdir, idx, content):
-    fullname = os.path.join(rdir, "preview_result_%03d.out" % idx)
-    with open(fullname, "r") as f:
-        orig = f.read()
-        assert content == orig
-
 def save_request_content(rdir, idx, content):
     fullname = os.path.join(rdir, "request_%03d.out" % idx)
     with open(fullname, "w") as f:
         f.write(str(content))
-
-def assert_request_content(rdir, idx, content):
-    fullname = os.path.join(rdir, "request_%03d.out" % idx)
-    with open(fullname, "r") as f:
-        orig = f.read()
-        assert content == orig
 
 def save_chroms_content(rdir, idx, content):
     fullname = os.path.join(rdir, "chroms_result_%03d.out" % idx)
     with open(fullname, "w") as f:
         f.write(content)
 
-def assert_chroms_content(rdir, idx, content):
-    fullname = os.path.join(rdir, "chroms_result_%03d.out" % idx)
-    with open(fullname, "r") as f:
-        orig = f.read()
-        assert content == orig
-
 def save_download_content(rdir, idx, content):
     fullname = os.path.join(rdir, "unruly_result_%03d.out" % idx)
     print("moving %s -> %s" % (content, fullname))
     shutil.move(content, fullname)
+
+def _equal(orig, content):
+    if orig != content:
+        print("************************************************************")
+        ostr = orig.splitlines(1)
+        cstr = content.splitlines(1)
+        diff = difflib.context_diff(ostr, cstr)
+        for line in diff:
+            print >>sys.stderr, line
+        return False
+    return True
+    
+def assert_request_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "request_%03d.out" % idx)
+    with open(fullname, "r") as f:
+        orig = f.read()
+    
+    assert _equal(str(content), orig)
+
+def assert_preview_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "preview_result_%03d.out" % idx)
+    with open(fullname, "r") as f:
+        orig = f.read()
+    assert _equal(content, orig)
+
+def assert_chroms_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "chroms_result_%03d.out" % idx)
+    with open(fullname, "r") as f:
+        orig = f.read()
+    assert _equal(content, orig)
 
 def assert_download_content(rdir, idx, content):
     fullname = os.path.join(rdir, "unruly_result_%03d.out" % idx)
@@ -294,7 +313,7 @@ def assert_download_content(rdir, idx, content):
         orig = f.read()
     with open(content, 'r') as f:
         scont = f.read()
-    assert orig == scont
+    assert _equal(orig, scont)
 
 def get_preview_content(browser):
     table = browser.find_element_by_id("previewTable")
@@ -345,8 +364,7 @@ def stop_browser(browser):
 def ensure_directory(dirname):
     try:
         os.makedirs(dirname)
-    except Exception, ex:
-        print(ex)
+    except Exception:
         pass
 
 
@@ -355,9 +373,8 @@ def save_results_mode(server_url, frequests, rdir):
 
     data = load_dictionary(frequests)
     (browser, ddir) = start_browser()
-    
+
     for (idx, request) in enumerate(data):
-        print(request, type(request))
         browser.get(server_url)
         save_request_content(rdir, idx, request)
         fill_variants_form(browser, request)
@@ -377,24 +394,30 @@ def save_results_mode(server_url, frequests, rdir):
 def test_results_mode(server_url, frequests, rdir):
     data = load_dictionary(frequests)
     (browser, ddir) = start_browser()
-    
+
     for (idx, request) in enumerate(data):
-        browser.get(server_url)
-        save_request_content(rdir, idx, request)
-        fill_variants_form(browser, request)
-
-        preview = click_the_preview_button(browser)
-        assert_preview_content(rdir, idx, preview)
+        try:
+            browser.get(server_url)
+            fill_variants_form(browser, request)
         
-        chroms = click_the_chroms_button(browser)
-        assert_chroms_content(rdir, idx, chroms)
+            assert_request_content(rdir, idx, request)
+            
+            preview = click_the_preview_button(browser)
+            assert_preview_content(rdir, idx, preview)
+            
+            chroms = click_the_chroms_button(browser)
+            assert_chroms_content(rdir, idx, chroms)
+            
+            down = click_the_download_button(browser, ddir)
+            assert_download_content(rdir, idx, down)
+        except AssertionError, ex:
+            print >>sys.stderr, request
+            print >>sys.stderr, traceback.format_exc()
+            print >>sys.stderr, sys.exc_info()[0]
         
-        down = click_the_download_button(browser, ddir)
-        assert_download_content(rdir, idx, down)
-
     stop_browser(browser)
     shutil.rmtree(ddir)
-    
+        
 if __name__ == "__main__":
     
     rdir = "./results"
