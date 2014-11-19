@@ -9,6 +9,9 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
     parser.add_argument('--variants-requests', type=str, default=None,
                         help='''file containing list of request dictionaries''')
+    
+    parser.add_argument('--enrichment-requests', type=str, default=None,
+                        help='''file containing list of request dictionaries''')
 
     parser.add_argument('--results-dir', type=str, default=None,
                     help='''dictionary where results are/should be stored''')
@@ -20,10 +23,10 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         print('--url argurment is required')
         parser.print_help()
         sys.exit(1)
-    if args.variants_requests is None:
+    if args.variants_requests is None and args.enrichment_requests is None:
         print('--requests-data argument is required')
         parser.print_help()
-        sys.exit(1)
+        sys.exit(1)  
     if args.results_dir is None:
         print('--results-dir argument is required')
         parser.print_help()
@@ -38,17 +41,27 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
 if __name__ == "__main__":
     from functional_tests.tests.functional_helpers import test_results_mode, \
-        save_results_mode
+         save_results_mode, test_results_mode_enrichment, save_results_mode_enrichment
 
     args = parse_cli_arguments(sys.argv[1:])
     if args.mode == 'save':
-        save_results_mode(args.url,
-                          args.variants_requests,
-                          args.results_dir)
+    	 if args.variants_requests is None:   
+		save_results_mode_enrichment(args.url,
+				  args.enrichment_requests,
+				  args.results_dir)
+         else:
+                save_results_mode(args.url,
+				  args.variants_requests,
+				  args.results_dir) 
     elif args.mode == 'test':
-        test_results_mode(args.url,
-                          args.variants_requests,
-                          args.results_dir)
+    	 if args.variants_requests is None:
+		test_results_mode_enrichment(args.url,
+				  args.enrichment_requests,
+				  args.results_dir)
+	 else:
+		test_results_mode(args.url,
+				  args.variants_requests,
+				  args.results_dir)    
     else:
         print("unexpected mode (%s)" % args.mode)
         

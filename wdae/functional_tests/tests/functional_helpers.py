@@ -46,7 +46,11 @@ def type_method(browser, type_target,text):
 
 def radio_button_select(browser, radio_button_target):
     print(radio_button_target)
+    #time.sleep(3)
     xpath = "//div[@class='controls form-inline']/input[@value='%s']" % radio_button_target
+    WebDriverWait(browser, 10).until(
+        EC.element_to_be_clickable(
+            (By.XPATH, xpath)))
     browser.find_element_by_xpath(xpath).click()
 
 
@@ -186,6 +190,13 @@ def select_families(browser, data):
     if data['families'] == 'familyIds':
         select_family_ids(browser, data['familyIds'])
 
+def wait_for_enrichment(browser, timeout=300):
+    element = WebDriverWait(browser,timeout).until(
+        EC.presence_of_element_located((By.ID,
+                                        "enrichmentTable"))
+    )
+    return element
+
 def wait_for_preview(browser, timeout=300):
     element = WebDriverWait(browser,timeout).until(
         EC.presence_of_element_located((By.ID,
@@ -223,6 +234,14 @@ def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
 
     return fullname
 
+def wait_button_to_be_clickable(browser, timeout=300):
+    element = WebDriverWait(browser, timeout).until(
+        EC.element_to_be_clickable((
+		                    By.CSS_SELECTOR,
+		                    "#enrichment > a"))
+        )
+    return element
+
 def click_the_preview_button(browser):
     preview_button = browser.find_element_by_id("previewBtn")
     preview_button.click()
@@ -243,6 +262,12 @@ def click_the_download_button(browser, ddir):
     filename = wait_for_download(browser, ddir)
     print(filename)
     return filename
+    
+def click_the_enrichment_button(browser, ddir):
+    enrichment_button = browser.find_element_by_id("downloadEnrichment")
+    enrichment_button.click()
+    wait_for_enrichment(browser)
+    return get_enrichment_content(browser)
 
 def save_preview_content(rdir, idx, content):
     fullname = os.path.join(rdir, "preview_result_%03d.out" % idx)
@@ -263,6 +288,11 @@ def save_download_content(rdir, idx, content):
     fullname = os.path.join(rdir, "unruly_result_%03d.out" % idx)
     print("moving %s -> %s" % (content, fullname))
     shutil.move(content, fullname)
+    
+def save_enrichment_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "enrichment_result_%03d.out" % idx)
+    with open(fullname, "w") as f:
+    	f.write(content)
 
 def _equal(orig, content):
     if orig != content:
@@ -281,6 +311,12 @@ def assert_request_content(rdir, idx, content):
         orig = f.read()
     
     assert _equal(str(content), orig)
+
+def assert_enrichment_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "enrichment_result_%03d.out" %idx)
+    with open(fullname, "r") as f:
+    	 orig = f.read()
+    assert _equal(content, orig)
 
 def assert_preview_content(rdir, idx, content):
     fullname = os.path.join(rdir, "preview_result_%03d.out" % idx)
@@ -311,6 +347,10 @@ def get_chroms_content(browser):
         "div#preview > svg")
     return chroms.get_attribute('innerHTML')
     
+def get_enrichment_content(browser):
+    enrichment = browser.find_element_by_id("enrichmentTable")
+    return enrichment.get_attribute('innerHTML')
+    
 def fill_variants_form(browser, data):
     genes_radio_buttons(browser, data)
     select_denovo_studies(browser, data)
@@ -319,6 +359,10 @@ def fill_variants_form(browser, data):
     select_variant_type(browser, data)
     select_effect_type(browser, data)
     select_families(browser, data)
+    
+def fill_enrichment_form(browser, data):
+    genes_radio_buttons(browser, data)
+    select_denovo_studies(browser, data)
 
 def load_dictionary(filename):
     text_file = open(filename, 'r')
@@ -355,6 +399,35 @@ def ensure_directory(dirname):
         pass
 
 
+def save_results_mode_enrichment(server_url, frequests, rdir):
+    ensure_directory(rdir)
+    
+    data = load_dictionary(frequests)
+    (browser, ddir) = start_browser()
+    
+    wait_button_to_be_clickable(browser)
+    enrichment_button_elem = self.browser.find_element_by_css_selector(
+	       "#enrichment > a")
+    enrichment_button_elem.click()
+    try:
+    	WebDriverWait(self.browser, 10).until(
+		EC.presence_of_element_located((By.ID, 
+				      "downloadEnrichment"))
+	        )
+    finally:
+	pass
+    
+    for (idx, request) in enumerate(data):
+    	browser.get(server_url)
+    	save_request_content(rdir, idx, request)
+    	fill_enrichment_form(browser, request)
+    	
+    	enrichment = click_the_enrichment_button(browser)
+    	save_enrichment_content(rdir, idx, enrichment)
+    
+    stop_browser(browser)
+    shutil.rmtree(ddir)
+
 def save_results_mode(server_url, frequests, rdir):
     ensure_directory(rdir)
 
@@ -375,6 +448,39 @@ def save_results_mode(server_url, frequests, rdir):
         down = click_the_download_button(browser, ddir)
         save_download_content(rdir, idx, down)
 
+    stop_browser(browser)
+    shutil.rmtree(ddir)
+
+def test_results_mode_enrichment(server_url, frequests, rdir):
+    data = load_dictionary(frequests)
+    (browser, ddir) = start_browser()
+    
+    #wait_button_to_be_clickable(browser)
+    enrichment_button_elem = browser.find_element_by_css_selector(
+	       "#enrichment > a")
+    enrichment_button_elem.click()
+    try:
+    	WebDriverWait(browser, 10).until(
+		EC.presence_of_element_located((By.ID, 
+				      "downloadEnrichment"))
+	        )
+    finally:
+	pass
+    
+    for (idx, request) in enumerate(data):
+    	try:
+            browser.get(server_url)
+            fill_enrichment_form(browser, request)
+            
+            assert_request_content(rdir, idx, request)
+            
+            enrichment = click_the_enrichment_button(browser)
+            assert_enrichment_content(rdir, idx, enrichment)
+        except AssertionError:
+            print >>sys.stderr, request
+            print >>sys.stderr, traceback.format_exc()
+            print >>sys.stderr, sys.exc_info()[0]
+       
     stop_browser(browser)
     shutil.rmtree(ddir)
 
@@ -412,5 +518,5 @@ if __name__ == "__main__":
     server_url = "http://seqpipe-vm.setelis.com/dae"
 
     # save_results_mode(server_url, frequests, rdir)
-    test_results_mode(server_url, frequests, rdir)
+    #test_results_mode(server_url, frequests, rdir)
     
