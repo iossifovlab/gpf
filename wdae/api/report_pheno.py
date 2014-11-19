@@ -92,7 +92,7 @@ def pheno_query(data):
 
     (measure_name, measure) = prepare_pheno_measure(data)
 
-    yield ['family id', 'gender', 'LGDs', 'missense', 'synonymous', measure_name]
+    yield ['family id', 'gender', 'LGDs', 'recLGDs', 'missense', 'synonymous', measure_name]
     for fid, gender in seq_prbs.items():
         row = [
             fid,
