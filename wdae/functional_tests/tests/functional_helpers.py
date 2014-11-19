@@ -33,12 +33,9 @@ def select_method_by_value(browser, select_target, select_value):
 
     
 def type_method(browser, type_target,text):
-    try:
-        WebDriverWait(browser, 10).until(
-            EC.presence_of_element_located(
-                (By.ID,type_target)))
-    finally: 
-        pass
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located(
+            (By.ID,type_target)))
         
     type_target_variable = browser.find_element_by_id(type_target)
     type_target_variable.clear()
@@ -70,12 +67,10 @@ def select_gene_set_value(browser, data):
         "//div[@id='preloadedBtn']/button")
     gene_set_value_option.click()
     
-    try:
-        WebDriverWait(browser, 10).until(
-            EC.presence_of_element_located(
-                (By.CSS_SELECTOR, ".ui-autocomplete")))
-    finally:
-        pass
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, ".ui-autocomplete")))
+
     selected_element = lambda: browser.find_element_by_xpath(
         "//ul[@class='ui-autocomplete " +
         "ui-front ui-menu ui-widget ui-widget-content " +
@@ -192,25 +187,17 @@ def select_families(browser, data):
         select_family_ids(browser, data['familyIds'])
 
 def wait_for_preview(browser, timeout=300):
-    element = None
-    try:
-        element = WebDriverWait(browser,timeout).until(
-            EC.presence_of_element_located((By.ID,
-                                            "previewTable"))
-        )
-    finally:
-        pass
+    element = WebDriverWait(browser,timeout).until(
+        EC.presence_of_element_located((By.ID,
+                                        "previewTable"))
+    )
     return element
         
 def wait_for_chroms(browser, timeout=300):
-    element = None
-    try:
-        element = WebDriverWait(browser, timeout).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR,
-                                            "div#preview > svg"))
-        )
-    finally:
-        pass
+    element = WebDriverWait(browser, timeout).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR,
+                                        "div#preview > svg"))
+    )
     return element
 
 def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
