@@ -410,7 +410,7 @@ def test_results_mode(server_url, frequests, rdir):
             
             down = click_the_download_button(browser, ddir)
             assert_download_content(rdir, idx, down)
-        except AssertionError, ex:
+        except AssertionError:
             print >>sys.stderr, request
             print >>sys.stderr, traceback.format_exc()
             print >>sys.stderr, sys.exc_info()[0]
