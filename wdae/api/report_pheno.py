@@ -33,6 +33,15 @@ def filter_one_var_per_gene_per_child(vs):
         seen |= vKs
     return ret
 
+def filter_var_in_recurent_genes(vs):
+    gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects]) 
+    sym2Vars = {sym: [ t[1] for t in tpi] for sym, tpi
+                in itertools.groupby(gnSorted, key=lambda x: x[0])}
+    sym2FN = {sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items()} 
+    recGenes = {sym for sym, FN in sym2FN.items() if FN>1}
+    return [v for v in vs if { ge['sym'] for ge in v.requestedGeneEffects } & recGenes]
+
+
 def _pheno_query_variants(data, effect_type):
     data['effectTypes'] = effect_type
     vsl = dae_query_variants(data)
@@ -41,14 +50,17 @@ def _pheno_query_variants(data, effect_type):
     
 def pheno_query_variants(data):
     lgds = _pheno_query_variants(data, 'LGDs')
+    rec_lgds = filter_var_in_recurent_genes(lgds)
     missense = _pheno_query_variants(data, 'missense')
     synonymous = _pheno_query_variants(data, 'synonymous')
 
     families_with_lgds = Counter([v.familyId for v in lgds])
+    families_with_rec_lgds = Counter([v.familyId for v in rec_lgds])
     families_with_missense = Counter([v.familyId for v in missense])
     families_with_synonymous = Counter([v.familyId for v in synonymous])
 
     return (families_with_lgds,
+            families_with_rec_lgds,
             families_with_missense,
             families_with_synonymous)
 
@@ -73,6 +85,7 @@ def prb_gender(fms):
 
 def pheno_query(data):
     (families_with_lgds,
+     families_with_rec_lgds,
      families_with_missense,
      families_with_synonymous) = pheno_query_variants(data)
     seq_prbs, all_families = pheno_prepare_families_data(data)
@@ -85,6 +98,7 @@ def pheno_query(data):
             fid,
             gender,
             families_with_lgds.get(fid, 0),
+            families_with_rec_lgds.get(fid, 0),
             families_with_missense.get(fid, 0),
             families_with_synonymous.get(fid, 0),
             measure[fid] if fid in measure else 'NA']
@@ -138,6 +152,7 @@ def pheno_calc(ps):
     dtype = np.dtype([('fid', 'S10'),
                       ('gender', 'S1'),
                       ('LGDs', '<i4'),
+                      ('recLGDs', '<i4'),
                       ('missense', '<i4'),
                       ('synonymous', '<i4'),
                       ('m', 'f')])
@@ -145,7 +160,7 @@ def pheno_calc(ps):
     data = data[~np.isnan(data['m'])]
     res = []
     
-    for (effect_type, gender) in itertools.product(*[['LGDs', 'missense', 'synonymous'],
+    for (effect_type, gender) in itertools.product(*[['LGDs', 'recLGDs', 'missense', 'synonymous'],
                                                      ['M', 'F']]):
         
         positive = data[np.logical_and(data['gender'] == gender,
