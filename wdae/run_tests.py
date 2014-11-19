@@ -37,7 +37,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
 
 if __name__ == "__main__":
-    from functional_tests.tests.functional_tests_helpers import test_results_mode, \
+    from functional_tests.tests.functional_helpers import test_results_mode, \
         save_results_mode
 
     args = parse_cli_arguments(sys.argv[1:])
