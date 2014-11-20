@@ -196,6 +196,13 @@ def wait_for_enrichment(browser, timeout=300):
                                         "enrichmentTable"))
     )
     return element
+    
+def wait_for_enrichment_page(browser, timeout=300):
+    element=WebDriverWait(browser, 10).until(
+		EC.presence_of_element_located((By.ID, 
+				      "downloadEnrichment"))
+	        )
+    return element
 
 def wait_for_preview(browser, timeout=300):
     element = WebDriverWait(browser,timeout).until(
@@ -214,8 +221,8 @@ def wait_for_chroms(browser, timeout=300):
 def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
     fullname = os.path.join(ddir, filename)
 
-    while not os.path.exists(fullname):
-        print("waiting for %s" % fullname)
+    while os.path.exists(fullname+'.part'):
+        print("waiting for %s.part" % fullname)
         time.sleep(2)
     
     file_size_stored = os.stat(fullname).st_size
@@ -234,7 +241,7 @@ def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
 
     return fullname
 
-def wait_button_to_be_clickable(browser, timeout=300):
+def wait_button_to_be_clickable(browser, timeout=30):
     element = WebDriverWait(browser, timeout).until(
         EC.element_to_be_clickable((
 		                    By.CSS_SELECTOR,
@@ -263,14 +270,25 @@ def click_the_download_button(browser, ddir):
     print(filename)
     return filename
     
-def click_the_enrichment_button(browser, ddir):
+def click_the_enrichment_button(browser):
     enrichment_button = browser.find_element_by_id("downloadEnrichment")
     enrichment_button.click()
     wait_for_enrichment(browser)
     return get_enrichment_content(browser)
-
+    
+def click_enrichment_link(browser):
+    enrichment_button_elem = browser.find_element_by_css_selector(
+	       "#enrichment > a")
+    enrichment_button_elem.click()
+    wait_for_enrichment_page(browser)
+    
 def save_preview_content(rdir, idx, content):
     fullname = os.path.join(rdir, "preview_result_%03d.out" % idx)
+    with open(fullname, "w") as f:
+        f.write(content)
+        
+def save_preview_content_test(rdir, idx, content):
+    fullname = os.path.join(rdir, "preview_result_%03d.test" % idx)
     with open(fullname, "w") as f:
         f.write(content)
 
@@ -278,19 +296,49 @@ def save_request_content(rdir, idx, content):
     fullname = os.path.join(rdir, "request_%03d.out" % idx)
     with open(fullname, "w") as f:
         f.write(str(content))
+        
+def save_request_content_test(rdir, idx, content):
+    fullname = os.path.join(rdir, "request_%03d.test" % idx)
+    with open(fullname, "w") as f:
+        f.write(str(content))
+        
+def save_request_content_enrichment(rdir, idx, content):
+    fullname = os.path.join(rdir, "request_enrichment_%03d.out" % idx)
+    with open(fullname, "w") as f:
+        f.write(str(content))
+        
+def save_request_content_enrichment_test(rdir, idx, content):
+    fullname = os.path.join(rdir, "request_enrichment_%03d.test" % idx)
+    with open(fullname, "w") as f:
+        f.write(str(content))
 
 def save_chroms_content(rdir, idx, content):
     fullname = os.path.join(rdir, "chroms_result_%03d.out" % idx)
     with open(fullname, "w") as f:
         f.write(content)
+        
+def save_chroms_content_test(rdir, idx, content):
+    fullname = os.path.join(rdir, "chroms_result_%03d.test" % idx)
+    with open(fullname, "w") as f:
+        f.write(content) 
 
 def save_download_content(rdir, idx, content):
     fullname = os.path.join(rdir, "unruly_result_%03d.out" % idx)
     print("moving %s -> %s" % (content, fullname))
     shutil.move(content, fullname)
     
+def save_download_content_test(rdir, idx, content):
+    fullname = os.path.join(rdir, "unruly_result_%03d.test" % idx)
+    print("moving %s -> %s" % (content, fullname))
+    shutil.move(content, fullname)
+    
 def save_enrichment_content(rdir, idx, content):
     fullname = os.path.join(rdir, "enrichment_result_%03d.out" % idx)
+    with open(fullname, "w") as f:
+    	f.write(content)
+    	
+def save_enrichment_content_test(rdir, idx, content):
+    fullname = os.path.join(rdir, "enrichment_result_%03d.test" % idx)
     with open(fullname, "w") as f:
     	f.write(content)
 
@@ -307,6 +355,13 @@ def _equal(orig, content):
     
 def assert_request_content(rdir, idx, content):
     fullname = os.path.join(rdir, "request_%03d.out" % idx)
+    with open(fullname, "r") as f:
+        orig = f.read()
+    
+    assert _equal(str(content), orig)
+
+def assert_request_content_enrichment(rdir, idx, content):
+    fullname = os.path.join(rdir, "request_enrichment_%03d.out" % idx)
     with open(fullname, "r") as f:
         orig = f.read()
     
@@ -385,8 +440,9 @@ def start_browser():
                            'text/csv')
     
     browser = webdriver.Firefox(profile)
+    
     browser.implicitly_wait(5)
-
+    print 'In browser'
     return (browser, tmpdir)
 
 def stop_browser(browser):
@@ -405,21 +461,11 @@ def save_results_mode_enrichment(server_url, frequests, rdir):
     data = load_dictionary(frequests)
     (browser, ddir) = start_browser()
     
-    wait_button_to_be_clickable(browser)
-    enrichment_button_elem = self.browser.find_element_by_css_selector(
-	       "#enrichment > a")
-    enrichment_button_elem.click()
-    try:
-    	WebDriverWait(self.browser, 10).until(
-		EC.presence_of_element_located((By.ID, 
-				      "downloadEnrichment"))
-	        )
-    finally:
-	pass
-    
     for (idx, request) in enumerate(data):
     	browser.get(server_url)
-    	save_request_content(rdir, idx, request)
+    	wait_button_to_be_clickable(browser)
+        click_enrichment_link(browser)
+    	save_request_content_enrichment(rdir, idx, request)
     	fill_enrichment_form(browser, request)
     	
     	enrichment = click_the_enrichment_button(browser)
@@ -453,28 +499,19 @@ def save_results_mode(server_url, frequests, rdir):
 
 def test_results_mode_enrichment(server_url, frequests, rdir):
     data = load_dictionary(frequests)
-    (browser, ddir) = start_browser()
-    
-    #wait_button_to_be_clickable(browser)
-    enrichment_button_elem = browser.find_element_by_css_selector(
-	       "#enrichment > a")
-    enrichment_button_elem.click()
-    try:
-    	WebDriverWait(browser, 10).until(
-		EC.presence_of_element_located((By.ID, 
-				      "downloadEnrichment"))
-	        )
-    finally:
-	pass
-    
+    (browser, ddir)=start_browser()
+
     for (idx, request) in enumerate(data):
     	try:
             browser.get(server_url)
+            wait_button_to_be_clickable(browser)
+            click_enrichment_link(browser)
             fill_enrichment_form(browser, request)
             
-            assert_request_content(rdir, idx, request)
+            assert_request_content_enrichment(rdir, idx, request)
             
             enrichment = click_the_enrichment_button(browser)
+            save_enrichment_content_test(rdir, idx, enrichment)
             assert_enrichment_content(rdir, idx, enrichment)
         except AssertionError:
             print >>sys.stderr, request
@@ -496,12 +533,15 @@ def test_results_mode(server_url, frequests, rdir):
             assert_request_content(rdir, idx, request)
             
             preview = click_the_preview_button(browser)
+            save_preview_content_test(rdir, idx, preview)
             assert_preview_content(rdir, idx, preview)
             
             chroms = click_the_chroms_button(browser)
+            save_chroms_content_test(rdir, idx, preview)
             assert_chroms_content(rdir, idx, chroms)
             
             down = click_the_download_button(browser, ddir)
+            save_download_content_test(rdir, idx, preview)
             assert_download_content(rdir, idx, down)
         except AssertionError:
             print >>sys.stderr, request
@@ -518,5 +558,5 @@ if __name__ == "__main__":
     server_url = "http://seqpipe-vm.setelis.com/dae"
 
     # save_results_mode(server_url, frequests, rdir)
-    #test_results_mode(server_url, frequests, rdir)
+    test_results_mode_enrichment(server_url, frequests, rdir)
     
