@@ -219,16 +219,18 @@ def wait_for_chroms(browser, timeout=300):
 
 def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
     fullname = os.path.join(ddir, filename)
-    #print "os.path.exists : " , not os.path.exists(fullname)
-    #print "os.path.exists fullname : " , not os.path.exists(fullname+'.part')
-    
-    while os.path.getsize(fullname) == 0:
-    	print("waiting for download to start ")
+
+    while not os.path.exists(fullname):
+        print ("download has not started yet ")
+        time.sleep(2)
+
+    while os.path.getsize(fullname) == 0 or os.path.exists(fullname+'.part'):
+    	print("waiting for download")
         time.sleep(2)   
 
-    while os.path.exists(fullname+'.part'):
-        print("waiting for %s.part" % fullname)
-        time.sleep(2)
+    #while os.path.exists(fullname+'.part'):
+    #    print("waiting for %s.part" % fullname)
+    #    time.sleep(2)
     
     file_size_stored = os.stat(fullname).st_size
 
@@ -525,19 +527,24 @@ def test_results_mode(server_url, frequests, rdir):
             
             down = click_the_download_button(browser, ddir)
             down_in_rdir = save_download_content(rdir, idx, down, "test")
-            #assert_download_content(rdir, idx, down_in_rdir)
+            assert_download_content(rdir, idx, down_in_rdir)
             results_log['test_results_mode ' + str(idx)] = 'OK'
         except AssertionError:
             #print >>sys.stderr, request
             #print >>sys.stderr, traceback.format_exc()
             #print >>sys.stderr, sys.exc_info()[0]
-            results_log['test_results_mode ' + str(idx)]=[sys.stderr,request, sys.stderr,traceback.format_exc(), sys.stderr,sys.exc_info()[0]]
+            results_log['test_results_mode ' + str(idx)]=[request,traceback.format_exc(),sys.exc_info()[0]]
             
             
             	    
     
     for key in results_log:
-    	print key,"--------------------------------------",results_log[key]
+    	print key,"------------------------------------------------------------"
+    	if isinstance(results_log[key], list):
+              for err in range(0, len(results_log[key])):
+              	  print results_log[key][err]
+        else:
+              print results_log[key]
         
     stop_browser(browser)
     shutil.rmtree(ddir)
