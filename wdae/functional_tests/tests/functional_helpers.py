@@ -342,32 +342,32 @@ def assert_request_content(rdir, idx, content):
     with open(fullname, "r") as f:
         orig = f.read()
     
-    assert _equal(str(content), orig)
+    return _equal(str(content), orig)
 
 def assert_request_content_enrichment(rdir, idx, content):
     fullname = os.path.join(rdir, "request_enrichment_%03d.out" % idx)
     with open(fullname, "r") as f:
         orig = f.read()
     
-    assert _equal(str(content), orig)
+    return _equal(str(content), orig)
 
 def assert_enrichment_content(rdir, idx, content):
     fullname = os.path.join(rdir, "enrichment_result_%03d.out" %idx)
     with open(fullname, "r") as f:
     	 orig = f.read()
-    assert _equal(content, orig)
+    return _equal(content, orig)
 
 def assert_preview_content(rdir, idx, content):
     fullname = os.path.join(rdir, "preview_result_%03d.out" % idx)
     with open(fullname, "r") as f:
         orig = f.read()
-    assert _equal(content, orig)
+    return _equal(content, orig)
 
 def assert_chroms_content(rdir, idx, content):
     fullname = os.path.join(rdir, "chroms_result_%03d.out" % idx)
     with open(fullname, "r") as f:
         orig = f.read()
-    assert _equal(content, orig)
+    return _equal(content, orig)
 
 def assert_download_content(rdir, idx, content):
     fullname = os.path.join(rdir, "unruly_result_%03d.out" % idx)
@@ -375,7 +375,7 @@ def assert_download_content(rdir, idx, content):
         orig = f.read()
     with open(content, 'r') as f:
         scont = f.read()
-    assert _equal(orig, scont)
+    return _equal(orig, scont)
 
 def get_preview_content(browser):
     table = browser.find_element_by_id("previewTable")

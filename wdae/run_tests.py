@@ -45,23 +45,23 @@ if __name__ == "__main__":
 
     args = parse_cli_arguments(sys.argv[1:])
     if args.mode == 'save':
-    	 if not args.enrichment_requests is None:
-		save_results_mode_enrichment(args.url,
-				  args.enrichment_requests,
-				  args.results_dir)
-         if not args.variants_requests is None:
-                save_results_mode(args.url,
-				  args.variants_requests,
-				  args.results_dir) 
+        if not args.enrichment_requests is None:
+             save_results_mode_enrichment(args.url,
+                                          args.enrichment_requests,
+                                          args.results_dir)
+        if not args.variants_requests is None:
+            save_results_mode(args.url,
+                              args.variants_requests,
+                              args.results_dir) 
     elif args.mode == 'test':
-    	 if not args.enrichment_requests is None:
-		test_results_mode_enrichment(args.url,
-				  args.enrichment_requests,
-				  args.results_dir)
-	 if not args.variants_requests is None:
-		test_results_mode(args.url,
-				  args.variants_requests,
-				  args.results_dir)    
+        if not args.enrichment_requests is None:
+            test_results_mode_enrichment(args.url,
+                                         args.enrichment_requests,
+                                         args.results_dir)
+        if not args.variants_requests is None:
+            test_results_mode(args.url,
+                              args.variants_requests,
+                              args.results_dir)    
     else:
         print("unexpected mode (%s)" % args.mode)
         
