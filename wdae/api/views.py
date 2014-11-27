@@ -289,7 +289,7 @@ All fields are same as in query_variants request
 
     logger.info(log_filter(request, "preview query variants: " + str(data)))
 
-    generator = do_query_variants(data, atts=["_pheno_pedigree_"])
+    generator = do_query_variants(data, atts=["_pedigree_"])
     summary = prepare_summary(generator)
 
     return Response(summary)
