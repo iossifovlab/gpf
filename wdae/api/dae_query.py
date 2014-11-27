@@ -11,6 +11,17 @@ def load_gene_set(gene_set_label, study_name=None):
     return gs
 
 
+def prepare_pheno_pedigree(cols, rows):
+    genotype_index = cols.index['family genotype']
+    from_parent_index = cols.index['from parent']
+    in_child_index = cols.index['in child']
+    population_type_index = cols.index['population type']
+    children_description_index=cols.index['children description']
+
+    for row in rows:
+        
+        pass
+    
 def prepare_summary(vs):
     rows = []
     cols = vs.next()

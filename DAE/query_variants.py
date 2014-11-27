@@ -494,7 +494,20 @@ def dae_query_variants(data):
 
     return variants
 
-
+def pedigree_data(v):
+    m = getattr(v, 'bestSt')
+    if m.ndim==2 and m.shape[0]==2:
+        return [v.study.get_attr('study.phenotype'),
+                [[p.role, p.gender, n] for (p, n) in zip(v.memberInOrder, m[1])]]
+    elif m.ndim == 2 and m.shape[0]==1:
+        # CNVs
+        base = {'F': m[0][0], 'M': m[0][1]}
+        return [v.study.get_attr('study.phenotype'),
+                [[p.role, p.gender, abs(n - base[p.gender])]
+                 for (p, n) in zip(v.memberInOrder, m[0])]]
+    else:
+        raise Exception
+    
 def __augment_vars(v):
     fmId = v.familyId
     parRaces = get_parents_race()[fmId] \
@@ -511,10 +524,12 @@ def __augment_vars(v):
     v.atts["_ch_prof_"] = chProf
     v.atts["_prb_viq_"] = viq 
     v.atts["_prb_nviq_"] = nviq
+    v.atts["_pedigree_"] = pedigree_data(v)
+    
     return v
 
 
-def do_query_variants(data):
+def do_query_variants(data, atts=[]):
     vsl = dae_query_variants(data)
 
     res_variants = itertools.chain(*vsl)
@@ -528,7 +543,7 @@ def do_query_variants(data):
                               '_ch_prof_',
                               '_prb_viq_',
                               '_prb_nviq_',
-                              'valstatus'])
+                              'valstatus'] + atts)
 
 def __gene_effect_get_worst_effect(gs):
     if len(gs) == 0:
@@ -566,7 +581,7 @@ COLUMN_TITLES = {'familyId': 'family id',
                 'studyName': 'study',
                 'counts': 'count',
                 'valstatus': 'validation status',
-}
+             }
 
 def attr_title(attr_key):
     return COLUMN_TITLES.get(attr_key, attr_key)
@@ -592,11 +607,13 @@ def generate_response(vs, atts=[], sep='\t'):
     specialStrF = {"bestSt": mat2Str,
                    "counts": mat2Str,
                    "geneEffect": ge2Str,
-                   "requestedGeneEffects": ge2Str}
+                   "requestedGeneEffects": ge2Str,
+    }
     
     specialGeneEffects = {"genes": __gene_effect_get_genes,
                           "worstEffect": __gene_effect_get_worst_effect}
 
+    print "atts=", atts
 
     yield [attr_title(attr) for attr in mainAtts + atts]
 
