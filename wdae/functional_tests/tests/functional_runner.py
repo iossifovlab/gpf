@@ -63,6 +63,12 @@ if __name__ == "__main__":
         suite.addTest(test_case)
 
     print("staring test suite...")
-    unittest.TextTestRunner().run(suite)
 
+    runner = unittest.TextTestRunner()
+    result = runner.run(suite)
+    
     stop_browser(browser)
+
+    print result
+    result.printErrors()
+    
