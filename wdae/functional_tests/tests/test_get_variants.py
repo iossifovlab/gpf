@@ -16,6 +16,7 @@ import unittest
 import os
 import time
 import random
+from .functional_helpers import select_method, type_method
 
 
 class CheckPreviewTest(FunctionalTest, base_select):
@@ -47,21 +48,21 @@ class CheckPreviewTest(FunctionalTest, base_select):
 
     def random_effect_type_option(self):
 
-        base_select(self).select_method("effectType", random.choice(Select(
+        select_method(self.browser,"effectType", random.choice(Select(
             self.browser.find_element_by_id("effectType")).options).text)
 
         time.sleep(2)
 
     def random_variant_types_option(self):
 
-        base_select(self).select_method("variants", random.choice(Select(
+        select_method(self.browser,"variants", random.choice(Select(
             self.browser.find_element_by_id("variants")).options).text)
 
         time.sleep(2)
 
     def random_in_child_option(self):
 
-        base_select(self).select_method("inChild", random.choice(Select(
+        select_method(self.browser,"inChild", random.choice(Select(
             self.browser.find_element_by_id("inChild")).options).text)
         time.sleep(2)
 
@@ -69,17 +70,17 @@ class CheckPreviewTest(FunctionalTest, base_select):
 
         random_max_percentages = str(
                 round(random.uniform(0, 100), 2))
-        base_select(self).type_method("max", random_max_percentages)
+        type_method(self.browser,"max", random_max_percentages)
 
     def random_interval_max_min(self):
 
         random_min_percentages = str(
                 round(random.uniform(0, 100), 2))
-        base_select(self).type_method("min", random_min_percentages)
+        type_method(self.browser,"min", random_min_percentages)
 
         random_max_percentages = str(round(random.uniform(
                 float(random_min_percentages), 100), 2))
-        base_select(self).type_method("max", random_max_percentages)
+        type_method(self.browser,"max", random_max_percentages)
 
     def random_rarity_radio_buttons(self):
 
@@ -105,7 +106,7 @@ class CheckPreviewTest(FunctionalTest, base_select):
 
     def random_transmitted_studies(self):
 
-        base_select(self).select_method("transmittedStudies", random.choice(Select(
+        select_method(self.browser, "transmittedStudies", random.choice(Select(
             self.browser.find_element_by_id("transmittedStudies")).options).text)
 
         rarity_div = self.browser.find_element_by_id("rarity")
@@ -117,20 +118,20 @@ class CheckPreviewTest(FunctionalTest, base_select):
 
     def random_denovo_studies(self):
 
-        base_select(self).select_method("denovoStudies", random.choice(Select(
+        select_method(self.browser, "denovoStudies", random.choice(Select(
             self.browser.find_element_by_id("denovoStudies")).options).text)
 
         time.sleep(2)
 
     def random_denovo_gene_set(self):
 
-        base_select(self).select_method("denovoStudiesInGeneSet", random.choice(Select(
+        select_method(self.browser, "denovoStudiesInGeneSet", random.choice(Select(
             self.browser.find_element_by_id("denovoStudiesInGeneSet")).options).text)
         time.sleep(2)
 
     def random_gene_set_main(self):
 
-        base_select(self).select_method("geneSet", random.choice(Select(
+        select_method(self.browser, "geneSet", random.choice(Select(
             self.browser.find_element_by_id("geneSet")).options).text)
 
         denovo_studies_controls = self.browser.find_element_by_id("denovoStudiesControls")
@@ -196,37 +197,37 @@ class CheckPreviewTest(FunctionalTest, base_select):
 
     def random_race_option(self):
 
-        base_select(self).select_method("race", random.choice(Select(
+        select_method(self.browser, "race", random.choice(Select(
             self.browser.find_element_by_id("race")).options).text)
 
         time.sleep(2)
 
     def random_verbal_iq_low(self):
-        base_select(self).type_method("verbalIQLow", str(random.randrange(1, 100)))
+        type_method(self.browser, "verbalIQLow", str(random.randrange(1, 100)))
 
     def random_verbal_iq_high(self):
-        base_select(self).type_method("verbalIQHigh", str(random.randrange(int(
+        type_method(self.browser, "verbalIQHigh", str(random.randrange(int(
             self.browser.find_element_by_id(
                 "verbalIQLow").get_attribute("value")
             ), 200)))
 
     def random_quad_trio(self):
 
-        base_select(self).select_method("quad-trio", random.choice(Select(
+        select_method(self.browser, "quad-trio", random.choice(Select(
             self.browser.find_element_by_id("quad-trio")).options).text)
 
         time.sleep(2)
 
     def random_proband_gender(self):
 
-        base_select(self).select_method("probandGender", random.choice(Select(
+        select_method(self.browser, "probandGender", random.choice(Select(
             self.browser.find_element_by_id("probandGender")).options).text)
 
         time.sleep(2)
 
     def random_sibling_gender(self):
 
-        base_select(self).select_method("siblingGender", random.choice(Select(
+        select_method(self.browser, "siblingGender", random.choice(Select(
             self.browser.find_element_by_id("siblingGender")).options).text)
 
         time.sleep(2)
@@ -362,12 +363,10 @@ class CheckPreviewTest(FunctionalTest, base_select):
     def test_preview_button_multiple_times(self):
 
         self.browser.get(self.server_url)
-        self.multiple_tests_not_random(0)
+        self.multiple_tests_not_random(1)
 
     def test_preview_button_random_clicks(self):
 
         self.browser.get(self.server_url)
         self.multiple_tests_random(0)
 
-
-#{'geneRegionType': 'on', 'familyIds': '', 'genes': 'Gene Sets', 'families': 'all', 'geneSyms': '', 'familyVerbalIqLo': '', 'geneTerm': 'transmittedCNV_amp', 'geneStudy': 'allWEAndTG', 'inChild': 'All', 'rarity': 'ultraRare', 'geneRegion': '', 'effectTypes': 'LGDs', 'familySibGender': 'All', 'familyPrbGender': 'All', 'geneSet': 'main', 'variantTypes': 'All', 'familyQuadTrio': 'All', 'transmittedStudies': 'none', 'familyVerbalIqHi': '', 'familyRace': 'All', 'denovoStudies': 'allWEAndTG'}

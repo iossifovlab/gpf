@@ -47,6 +47,9 @@ def type_method(browser, type_target,text):
 def radio_button_select(browser, radio_button_target):
     print(radio_button_target)
     xpath = "//div[@class='controls form-inline']/input[@value='%s']" % radio_button_target
+    WebDriverWait(browser, 10).until(
+        EC.element_to_be_clickable(
+            (By.XPATH, xpath)))
     browser.find_element_by_xpath(xpath).click()
 
 
@@ -186,6 +189,20 @@ def select_families(browser, data):
     if data['families'] == 'familyIds':
         select_family_ids(browser, data['familyIds'])
 
+def wait_for_enrichment(browser, timeout=300):
+    element = WebDriverWait(browser,timeout).until(
+        EC.presence_of_element_located((By.ID,
+                                        "enrichmentTable"))
+    )
+    return element
+    
+def wait_for_enrichment_page(browser, timeout=300):
+    element=WebDriverWait(browser, 10).until(
+		EC.presence_of_element_located((By.ID, 
+				      "downloadEnrichment"))
+	        )
+    return element
+
 def wait_for_preview(browser, timeout=300):
     element = WebDriverWait(browser,timeout).until(
         EC.presence_of_element_located((By.ID,
@@ -204,8 +221,16 @@ def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
     fullname = os.path.join(ddir, filename)
 
     while not os.path.exists(fullname):
-        print("waiting for %s" % fullname)
+        print ("download has not started yet ")
         time.sleep(2)
+
+    while os.path.getsize(fullname) == 0 or os.path.exists(fullname+'.part'):
+    	print("waiting for download")
+        time.sleep(2)   
+
+    #while os.path.exists(fullname+'.part'):
+    #    print("waiting for %s.part" % fullname)
+    #    time.sleep(2)
     
     file_size_stored = os.stat(fullname).st_size
 
@@ -222,6 +247,14 @@ def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
             pass
 
     return fullname
+
+def wait_button_to_be_clickable(browser, timeout=30):
+    element = WebDriverWait(browser, timeout).until(
+        EC.element_to_be_clickable((
+		                    By.CSS_SELECTOR,
+		                    "#enrichment > a"))
+        )
+    return element
 
 def click_the_preview_button(browser):
     preview_button = browser.find_element_by_id("previewBtn")
@@ -243,26 +276,55 @@ def click_the_download_button(browser, ddir):
     filename = wait_for_download(browser, ddir)
     print(filename)
     return filename
-
-def save_preview_content(rdir, idx, content):
-    fullname = os.path.join(rdir, "preview_result_%03d.out" % idx)
+    
+def click_the_enrichment_button(browser):
+    enrichment_button = browser.find_element_by_id("downloadEnrichment")
+    enrichment_button.click()
+    wait_for_enrichment(browser)
+    return get_enrichment_content(browser)
+    
+def click_enrichment_link(browser):
+    enrichment_button_elem = browser.find_element_by_css_selector(
+	       "#enrichment > a")
+    enrichment_button_elem.click()
+    wait_for_enrichment_page(browser)
+    
+def save_preview_content(rdir, idx, content, mode):
+    fullname = os.path.join(rdir, "preview_result_%(idx)03d.%(mode)s" 
+    	                    %{'idx':idx,'mode':mode}) 
     with open(fullname, "w") as f:
         f.write(content)
 
-def save_request_content(rdir, idx, content):
-    fullname = os.path.join(rdir, "request_%03d.out" % idx)
+def save_request_content(rdir, idx, content, mode):
+    fullname = os.path.join(rdir, "request_%(idx)03d.%(mode)s"
+    	                    %{'idx':idx,'mode':mode})
+    with open(fullname, "w") as f:
+        f.write(str(content))
+        
+def save_request_content_enrichment(rdir, idx, content, mode):
+    fullname = os.path.join(rdir, "request_enrichment_%(idx)03d.%(mode)s"
+    	                    %{'idx':idx,'mode':mode})
     with open(fullname, "w") as f:
         f.write(str(content))
 
-def save_chroms_content(rdir, idx, content):
-    fullname = os.path.join(rdir, "chroms_result_%03d.out" % idx)
+def save_chroms_content(rdir, idx, content, mode):
+    fullname = os.path.join(rdir, "chroms_result_%(idx)03d.%(mode)s" 
+    	                    %{'idx':idx,'mode':mode})
     with open(fullname, "w") as f:
-        f.write(content)
+        f.write(content) 
 
-def save_download_content(rdir, idx, content):
-    fullname = os.path.join(rdir, "unruly_result_%03d.out" % idx)
+def save_download_content(rdir, idx, content, mode):
+    fullname = os.path.join(rdir, "unruly_result_%(idx)03d.%(mode)s"
+    	                    %{'idx':idx,'mode':mode})
     print("moving %s -> %s" % (content, fullname))
     shutil.move(content, fullname)
+    return fullname
+    
+def save_enrichment_content(rdir, idx, content, mode):
+    fullname = os.path.join(rdir, "enrichment_result_%(idx)03d.%(mode)s" 
+    	                    %{'idx':idx,'mode':mode})
+    with open(fullname, "w") as f:
+    	f.write(content)
 
 def _equal(orig, content):
     if orig != content:
@@ -281,6 +343,19 @@ def assert_request_content(rdir, idx, content):
         orig = f.read()
     
     assert _equal(str(content), orig)
+
+def assert_request_content_enrichment(rdir, idx, content):
+    fullname = os.path.join(rdir, "request_enrichment_%03d.out" % idx)
+    with open(fullname, "r") as f:
+        orig = f.read()
+    
+    assert _equal(str(content), orig)
+
+def assert_enrichment_content(rdir, idx, content):
+    fullname = os.path.join(rdir, "enrichment_result_%03d.out" %idx)
+    with open(fullname, "r") as f:
+    	 orig = f.read()
+    assert _equal(content, orig)
 
 def assert_preview_content(rdir, idx, content):
     fullname = os.path.join(rdir, "preview_result_%03d.out" % idx)
@@ -311,6 +386,10 @@ def get_chroms_content(browser):
         "div#preview > svg")
     return chroms.get_attribute('innerHTML')
     
+def get_enrichment_content(browser):
+    enrichment = browser.find_element_by_id("enrichmentTable")
+    return enrichment.get_attribute('innerHTML')
+    
 def fill_variants_form(browser, data):
     genes_radio_buttons(browser, data)
     select_denovo_studies(browser, data)
@@ -319,6 +398,10 @@ def fill_variants_form(browser, data):
     select_variant_type(browser, data)
     select_effect_type(browser, data)
     select_families(browser, data)
+    
+def fill_enrichment_form(browser, data):
+    genes_radio_buttons(browser, data)
+    select_denovo_studies(browser, data)
 
 def load_dictionary(filename):
     text_file = open(filename, 'r')
@@ -341,8 +424,8 @@ def start_browser():
                            'text/csv')
     
     browser = webdriver.Firefox(profile)
+    
     browser.implicitly_wait(5)
-
     return (browser, tmpdir)
 
 def stop_browser(browser):
@@ -355,6 +438,25 @@ def ensure_directory(dirname):
         pass
 
 
+def save_results_mode_enrichment(server_url, frequests, rdir):
+    ensure_directory(rdir)
+    
+    data = load_dictionary(frequests)
+    (browser, ddir) = start_browser()
+    
+    for (idx, request) in enumerate(data):
+    	browser.get(server_url)
+    	wait_button_to_be_clickable(browser)
+        click_enrichment_link(browser)
+    	save_request_content_enrichment(rdir, idx, request, "out")
+    	fill_enrichment_form(browser, request)
+    	
+    	enrichment = click_the_enrichment_button(browser)
+    	save_enrichment_content(rdir, idx, enrichment, "out")
+    
+    stop_browser(browser)
+    shutil.rmtree(ddir)
+
 def save_results_mode(server_url, frequests, rdir):
     ensure_directory(rdir)
 
@@ -363,24 +465,50 @@ def save_results_mode(server_url, frequests, rdir):
 
     for (idx, request) in enumerate(data):
         browser.get(server_url)
-        save_request_content(rdir, idx, request)
+        save_request_content(rdir, idx, request, "out")
         fill_variants_form(browser, request)
 
         preview = click_the_preview_button(browser)
-        save_preview_content(rdir, idx, preview)
+        save_preview_content(rdir, idx, preview, "out")
         
         chroms = click_the_chroms_button(browser)
-        save_chroms_content(rdir, idx, chroms)
+        save_chroms_content(rdir, idx, chroms, "out")
         
         down = click_the_download_button(browser, ddir)
-        save_download_content(rdir, idx, down)
+        save_download_content(rdir, idx, down, "out")
 
+    stop_browser(browser)
+    shutil.rmtree(ddir)
+
+def test_results_mode_enrichment(server_url, frequests, rdir):
+    data = load_dictionary(frequests)
+    (browser, ddir)=start_browser()
+
+    for (idx, request) in enumerate(data):
+    	try:
+            browser.get(server_url)
+            wait_button_to_be_clickable(browser)
+            click_enrichment_link(browser)
+            fill_enrichment_form(browser, request)
+            
+            assert_request_content_enrichment(rdir, idx, request)
+            
+            enrichment = click_the_enrichment_button(browser)
+            save_enrichment_content(rdir, idx, enrichment, "test")
+            assert_enrichment_content(rdir, idx, enrichment)
+        except AssertionError:
+            print >>sys.stderr, request
+            print >>sys.stderr, traceback.format_exc()
+            print >>sys.stderr, sys.exc_info()[0]
+       
     stop_browser(browser)
     shutil.rmtree(ddir)
 
 def test_results_mode(server_url, frequests, rdir):
     data = load_dictionary(frequests)
     (browser, ddir) = start_browser()
+
+    results_log = {};
 
     for (idx, request) in enumerate(data):
         try:
@@ -390,17 +518,33 @@ def test_results_mode(server_url, frequests, rdir):
             assert_request_content(rdir, idx, request)
             
             preview = click_the_preview_button(browser)
+            save_preview_content(rdir, idx, preview, "test")
             assert_preview_content(rdir, idx, preview)
             
             chroms = click_the_chroms_button(browser)
+            save_chroms_content(rdir, idx, chroms, "test")
             assert_chroms_content(rdir, idx, chroms)
             
             down = click_the_download_button(browser, ddir)
-            assert_download_content(rdir, idx, down)
+            down_in_rdir = save_download_content(rdir, idx, down, "test")
+            assert_download_content(rdir, idx, down_in_rdir)
+            results_log['test_results_mode ' + str(idx)] = 'OK'
         except AssertionError:
-            print >>sys.stderr, request
-            print >>sys.stderr, traceback.format_exc()
-            print >>sys.stderr, sys.exc_info()[0]
+            #print >>sys.stderr, request
+            #print >>sys.stderr, traceback.format_exc()
+            #print >>sys.stderr, sys.exc_info()[0]
+            results_log['test_results_mode ' + str(idx)]=[request,traceback.format_exc(),sys.exc_info()[0]]
+            
+            
+            	    
+    
+    for key in results_log:
+    	print key,"------------------------------------------------------------"
+    	if isinstance(results_log[key], list):
+              for err in range(0, len(results_log[key])):
+              	  print results_log[key][err]
+        else:
+              print results_log[key]
         
     stop_browser(browser)
     shutil.rmtree(ddir)
@@ -412,5 +556,5 @@ if __name__ == "__main__":
     server_url = "http://seqpipe-vm.setelis.com/dae"
 
     # save_results_mode(server_url, frequests, rdir)
-    test_results_mode(server_url, frequests, rdir)
+    test_results_mode_enrichment(server_url, frequests, rdir)
     
