@@ -630,7 +630,7 @@ def generate_response(vs, atts=[], sep='\t'):
             except:
                 mavs.append("")
 
-        yield (mavs + [str(v.atts[a]).replace(sep, ';')
+        yield (mavs + [str(v.atts[a]).replace(sep, ';').replace("'", '"')
                        if a in v.atts else "" for a in atts])
 
 
