@@ -53,39 +53,48 @@ class MyTestResult(unittest.TestResult):
         self.failures = []
         self.errors = []
         self.success = []
-	
-    def printResults(self):
-    	pprint.pprint(results.failures)
-        pprint.pprint(results.errors)
-        pprint.pprint(results.success)
+        self._mirrorOutput = False
+        
+        self.tests_run = []
+        
+    def getTestsReport(self):
+    	return self.tests_run
 	
     def addError(self, test, err):
     	super(MyTestResult, self).addError(test, err)
     	err_desc = self._exc_info_to_string(err, test)
-    	print "Error Description : ", err_desc
-    	print "Test Description : "
-    	pprint.pprint(test.request)
-    	print "Test index --> ", test.index
-    	self.errors.append((test.request, test.index, self._exc_info_to_string(err, test)))
+    	#print "Error Description : ", err_desc
+    	#print "Test Description : "
+    	#pprint.pprint(test.request)
+    	#print "Test index --> ", test.index
+    	self.errors.append((test.__class__.__name__, test.index, test.request, self._exc_info_to_string(err, test)))
+    	self._mirrorOutput = True
+    	self.tests_run.append([test.__class__.__name__, test.request,self.testsRun, self._exc_info_to_string(err, test)])
     	
     def addFailure(self, test, err):
     	super(MyTestResult, self).addFailure(test, err)
     	err_desc = self._exc_info_to_string(err, test)
-    	print "Error Description : ", err_desc
-    	print "Test Description : "
-    	pprint.pprint(test.request)
-    	print "Test index --> ", test.index
-    	print "Short Description : ", test.shortDescription()
-    	print "Test id : ", test.id()
-    	self.failures.append((test.request, test.index, self._exc_info_to_string(err, test)))
+    	#print "Error Description : ", err_desc
+    	#print "Test Description : "
+    	#pprint.pprint(test.request)
+    	#print "Test index --> ", test.index
+    	#print "Short Description : ", test.shortDescription()
+    	#print "Test id : ", test.id()
+    	self.failures.append((test.__class__.__name__, test.index, test.request, self._exc_info_to_string(err, test)))
+    	self._mirrorOutput = True
+    	self.tests_run.append([test.__class__.__name__, self.testsRun, test.request, self._exc_info_to_string(err, test)])
     	
     def addSuccess(self, test):
     	super(MyTestResult, self).addSuccess(test)
-    	print "Success"
-    	print "Test Description : "
-    	pprint.pprint(test.request)
-    	print "Test index --> ", test.index
-    	self.success.append((test.request, test.index, "OK"))
+    	print "tests run : ", self.testsRun
+    	#print "Success"
+    	#print "Test Description : "
+    	#pprint.pprint(test.request)
+    	#print "Test index --> ", test.index
+    	self.success.append((test.__class__.__name__, test.index, test.request, "OK"))
+    	self._mirrorOutput = True
+    	self.tests_run.append([test.__class__.__name__, test.request,self.testsRun, "OK"])
+    	
                         
 if __name__ == "__main__":
     #data = load_dictionary("variants_tests/variants_requests.txt")
@@ -98,12 +107,10 @@ if __name__ == "__main__":
 
     suite = unittest.TestSuite()
     for (index, request) in enumerate(data):
-    	print "index : ", index
-    	pprint.pprint(request)
         test_case = VariantsPreviewTest()
         test_case.set_context(url, browser, data_dir, index, request)
         suite.addTest(test_case)
-        print "short description : ", test_case.request
+        print "instance of : ", test_case.__class__.__name__
 
         test_case = VariantsChromesTest()
         test_case.set_context(url, browser, data_dir, index, request)
@@ -121,8 +128,8 @@ if __name__ == "__main__":
     #print "A list containing 2-tuples of TestCase instances and strings holding formatted tracebacks : " , testRes.errors
     #print "A list containing 2-tuples of TestCase instances and strings holding formatted tracebacks : " , testRes.failures
     stop_browser(browser)
+    pprint.pprint(results.getTestsReport())
 
-    results.printResults()
     #print "End Results : " , testRes
     #results.printErrors()
     
