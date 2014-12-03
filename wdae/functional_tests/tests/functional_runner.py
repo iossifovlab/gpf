@@ -44,7 +44,7 @@ class VariantsPreviewTest(VariantsBase):
 
     def runTest(self):
         preview = click_the_preview_button(self.browser)
-        save_preview_content(self.data_dir,
+        save_preview_content(self.results_dir,
                              self.index,
                              preview, "test")
         self.assertTrue(assert_preview_content(self.data_dir,
@@ -56,7 +56,7 @@ class VariantsChromesTest(VariantsBase):
 
     def runTest(self):
         chroms = click_the_chroms_button(self.browser)
-        save_chroms_content(self.data_dir,
+        save_chroms_content(self.results_dir,
                             self.index,
                             chroms, "test")
         
