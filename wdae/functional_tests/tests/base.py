@@ -3,6 +3,8 @@ from django.test import LiveServerTestCase
 from selenium import webdriver
 import sys
 import os
+from functional_helpers import start_browser, stop_browser
+
 
 class FunctionalTest(LiveServerTestCase):
     ITER_COUNT = 10
@@ -22,23 +24,13 @@ class FunctionalTest(LiveServerTestCase):
             LiveServerTestCase.tearDownClass()
 
     def setUp(self):
-    	location = os.path.realpath(
-                        os.path.join(os.getcwd(), os.path.dirname(__file__)))
-        results_dir = '/results_dir/variants/' 
-        profile = webdriver.FirefoxProfile()
-        profile.set_preference('browser.download.folderList', 2)
-        profile.set_preference('browser.download.manager.showWhenStarting',
-                               False)
-        profile.set_preference('browser.download.dir',location+results_dir)
-        profile.set_preference('browser.helperApps.neverAsk.saveToDisk',
-                               'text/csv')
-
-        self.browser = webdriver.Firefox(profile)
+        self.browser, self.download_dir = start_browser()
 
         self.browser.implicitly_wait(5)
 
     def tearDown(self):
-        self.browser.quit()
+        stop_browser(self.browser)
+
 
     def check_for_row_in_list_table(self, row_text):
         table = self.browser.find_element_by_id('id_list_table')

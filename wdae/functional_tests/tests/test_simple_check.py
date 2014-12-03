@@ -157,7 +157,7 @@ class VariantsSimpleTest(FunctionalTest):
         download_button.click()
         
         time.sleep(2.0)
-
-        self.assertTrue(os.path.exists("/tmp/unruly.csv"))
-        self.assertTrue(os.path.isfile("/tmp/unruly.csv"))
+        unruly_csv = os.path.join(self.download_dir, "unruly.csv")
+        self.assertTrue(os.path.exists(unruly_csv))
+        self.assertTrue(os.path.isfile(unruly_csv))
                         
