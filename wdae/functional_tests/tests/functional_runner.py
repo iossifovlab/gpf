@@ -103,14 +103,9 @@ def test_report(result):
     print("-----------------------------------------------------------------------")
     for (test, msg) in result.successes:
         print("PASS: %s" % str(test))
-        
-if __name__ == "__main__":
-    data = load_dictionary("variants_tests/variants_requests.txt")
-    # data = load_dictionary("data_dict_variants.txt")
-    data_dir = "variants_tests/"
-    # data_dir = "results_dir/"
-    url = "http://seqpipe-vm.setelis.com/dae"
-    
+
+def build_variants_test_suite(url, variants_requests, data_dir, results_dir):
+    data = load_dictionary(variants_requests)
     (browser, download_dir) = start_browser()
 
     context = {'data_dir': data_dir,
@@ -118,7 +113,7 @@ if __name__ == "__main__":
                'browser': browser,
                'url': url,
                'results_dir': data_dir}
-    
+
     suite = unittest.TestSuite()
     for (index, request) in enumerate(data):
         context['index']=index
@@ -136,8 +131,24 @@ if __name__ == "__main__":
         test_case.set_context(**context)
         suite.addTest(test_case)
         
+    return (context, suite)
+
+def cleanup_variants_test(**context):
+    stop_browser(context['browser'])
+    shutil.rmtree(context['download_dir'])
+    
+
+if __name__ == "__main__":
+    variants_context = {'variants_requests': "variants_tests/variants_requests.txt",
+                        'data_dir': "variants_tests/",
+                        'results_dir': "variants_tests/",
+                        'url': "http://seqpipe-vm.setelis.com/dae",
+                    }
+    context, suite = build_variants_test_suite(**variants_context)
+    
     runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
     result = runner.run(suite)
 
-    stop_browser(browser)
+    cleanup_variants_test(**context)
+    
     test_report(result)
