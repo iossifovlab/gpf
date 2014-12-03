@@ -112,7 +112,7 @@ def build_variants_test_suite(url, variants_requests, data_dir, results_dir, **c
                'download_dir': download_dir,
                'browser': browser,
                'url': url,
-               'results_dir': data_dir}
+               'results_dir': results_dir}
 
     suite = unittest.TestSuite()
     for (index, request) in enumerate(data):
