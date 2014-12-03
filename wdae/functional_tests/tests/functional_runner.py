@@ -27,13 +27,17 @@ class VariantsBase(unittest.TestCase):
     def runTest(self):
         raise NotImplementedError
 
-    def __str__(self):
-        return "%s: %03d;\ndata dir: %s;\nresults_dir: %s;\nrequest: %s" % \
-            (self.__class__.__name__,
-             self.index,
+    def __repr__(self):
+        return "%s;\ndata dir: %s;\nresults_dir: %s;\nrequest: %s" % \
+            (str(self),
              self.data_dir,
              self.results_dir,
              self.request)
+
+    def __str__(self):
+        return "%s: %03d" % \
+            (self.__class__.__name__,
+             self.index)
 
 
 class VariantsPreviewTest(VariantsBase):
@@ -46,7 +50,7 @@ class VariantsPreviewTest(VariantsBase):
         self.assertTrue(assert_preview_content(self.data_dir,
                                                self.index,
                                                preview),
-                        str(self))
+                        repr(self))
         
 class VariantsChromesTest(VariantsBase):
 
@@ -59,7 +63,7 @@ class VariantsChromesTest(VariantsBase):
         self.assertTrue(assert_chroms_content(self.data_dir,
                                               self.index,
                                               chroms),
-                        str(self))
+                        repr(self))
 
 class VariantsDownloadTest(VariantsBase):
     def runTest(self):
@@ -72,7 +76,7 @@ class VariantsDownloadTest(VariantsBase):
         self.assertTrue(assert_download_content(self.data_dir,
                                                 self.index,
                                                 down_result),
-                        str(self))
+                        repr(self))
         
 
 class SeqpipeTestResult(unittest.TestResult):
@@ -88,18 +92,17 @@ class SeqpipeTestResult(unittest.TestResult):
 def test_report(result):
     for (test, msg) in result.failures:
         print("-----------------------------------------------------------------------")
-        print("FAILURE: %s: %03d: requset: %s" % (test.__class__.__name__,
-                                         test.index,
-                                         str(test.request)))
-        print(msg)
-
+        print("FAILURE: %s" % repr(test))
+        # print(msg)
+        
     for (test, msg) in result.errors:
         print("-----------------------------------------------------------------------")
-        print("ERROR: %s: %03d: requset: %s" % (test.__class__.__name__,
-                                         test.index,
-                                         str(test.request)))
-        print(msg)
-        
+        print("ERROR: %s" % repr(test))
+        # print(msg)
+
+    print("-----------------------------------------------------------------------")
+    for (test, msg) in result.successes:
+        print("PASS: %s" % str(test))
         
 if __name__ == "__main__":
     data = load_dictionary("variants_tests/variants_requests.txt")
