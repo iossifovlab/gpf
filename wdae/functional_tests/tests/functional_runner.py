@@ -35,7 +35,7 @@ class VariantsBase(unittest.TestCase):
              self.request)
 
     def __str__(self):
-        return "%s: %03d" % \
+        return "%50s: %03d" % \
             (self.__class__.__name__,
              self.index)
 
@@ -102,9 +102,9 @@ def test_report(result):
 
     print("-----------------------------------------------------------------------")
     for (test, msg) in result.successes:
-        print("PASS: %s" % str(test))
+        print("PASS:\t %s" % str(test))
 
-def build_variants_test_suite(url, variants_requests, data_dir, results_dir):
+def build_variants_test_suite(url, variants_requests, data_dir, results_dir, **context):
     data = load_dictionary(variants_requests)
     (browser, download_dir) = start_browser()
 

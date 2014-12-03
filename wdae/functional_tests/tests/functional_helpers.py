@@ -458,25 +458,27 @@ def save_results_mode_enrichment(server_url, frequests, rdir):
     stop_browser(browser)
     shutil.rmtree(ddir)
 
-def save_results_mode(server_url, frequests, rdir):
-    ensure_directory(rdir)
+def save_variants_results(**context):
+    data_dir = context['data_dir']
+    url = context['url']
+    ensure_directory(data_dir)
 
-    data = load_dictionary(frequests)
+    data = load_dictionary(context['variants_requests'])
     (browser, ddir) = start_browser()
 
-    for (idx, request) in enumerate(data):
-        browser.get(server_url)
-        save_request_content(rdir, idx, request, "out")
+    for (index, request) in enumerate(data):
+        browser.get(url)
+        save_request_content(data_dir, index, request, "out")
         fill_variants_form(browser, request)
 
         preview = click_the_preview_button(browser)
-        save_preview_content(rdir, idx, preview, "out")
+        save_preview_content(data_dir, index, preview, "out")
         
         chroms = click_the_chroms_button(browser)
-        save_chroms_content(rdir, idx, chroms, "out")
+        save_chroms_content(data_dir, index, chroms, "out")
         
         down = click_the_download_button(browser, ddir)
-        save_download_content(rdir, idx, down, "out")
+        save_download_content(data_dir, index, down, "out")
 
     stop_browser(browser)
     shutil.rmtree(ddir)
