@@ -5,20 +5,35 @@ from functional_helpers import *
 
 class VariantsBase(unittest.TestCase):
 
-    def set_context(self, url, browser, data_dir, download_dir, index, request, *args, **kwargs):
+    def set_context(self, url, browser, data_dir, download_dir, results_dir,
+                    index, request, *args, **kwargs):
+        
         self.url = url
         self.browser = browser
         self.data_dir = data_dir
         self.download_dir = download_dir
         self.index = index
         self.request = request
+        self.results_dir = results_dir
         
     def setUp(self):
+        self.assertTrue(assert_request_content(self.data_dir,
+                                               self.index,
+                                               self.request))
+        
         self.browser.get(self.url)
         fill_variants_form(self.browser, self.request)
 
     def runTest(self):
         raise NotImplementedError
+
+    def __str__(self):
+        return "%s: %03d;\ndata dir: %s;\nresults_dir: %s;\nrequest: %s" % \
+            (self.__class__.__name__,
+             self.index,
+             self.data_dir,
+             self.results_dir,
+             self.request)
 
 
 class VariantsPreviewTest(VariantsBase):
@@ -30,7 +45,9 @@ class VariantsPreviewTest(VariantsBase):
                              preview, "test")
         self.assertTrue(assert_preview_content(self.data_dir,
                                                self.index,
-                                               preview))
+                                               preview),
+                        str(self))
+        
 class VariantsChromesTest(VariantsBase):
 
     def runTest(self):
@@ -41,14 +58,21 @@ class VariantsChromesTest(VariantsBase):
         
         self.assertTrue(assert_chroms_content(self.data_dir,
                                               self.index,
-                                              chroms))
+                                              chroms),
+                        str(self))
 
 class VariantsDownloadTest(VariantsBase):
     def runTest(self):
         down = click_the_download_button(self.browser,
                                          self.download_dir)
-        down_in_rdir = save_download_content(rdir, idx, down, "test")
-        self.assertTrue(assert_download_content(rdir, idx, down_in_rdir))
+        down_result = save_download_content(self.results_dir,
+                                            self.index,
+                                            down,
+                                            "test")
+        self.assertTrue(assert_download_content(self.data_dir,
+                                                self.index,
+                                                down_result),
+                        str(self))
         
 
 class SeqpipeTestResult(unittest.TestResult):
@@ -61,7 +85,22 @@ class SeqpipeTestResult(unittest.TestResult):
     	super(SeqpipeTestResult, self).addSuccess(test)
     	self.successes.append((test, "OK"))
     	
-                        
+def test_report(result):
+    for (test, msg) in result.failures:
+        print("-----------------------------------------------------------------------")
+        print("FAILURE: %s: %03d: requset: %s" % (test.__class__.__name__,
+                                         test.index,
+                                         str(test.request)))
+        print(msg)
+
+    for (test, msg) in result.errors:
+        print("-----------------------------------------------------------------------")
+        print("ERROR: %s: %03d: requset: %s" % (test.__class__.__name__,
+                                         test.index,
+                                         str(test.request)))
+        print(msg)
+        
+        
 if __name__ == "__main__":
     data = load_dictionary("variants_tests/variants_requests.txt")
     # data = load_dictionary("data_dict_variants.txt")
@@ -71,25 +110,31 @@ if __name__ == "__main__":
     
     (browser, download_dir) = start_browser()
 
+    context = {'data_dir': data_dir,
+               'download_dir': download_dir,
+               'browser': browser,
+               'url': url,
+               'results_dir': data_dir}
+    
     suite = unittest.TestSuite()
     for (index, request) in enumerate(data):
+        context['index']=index
+        context['request']=request
+        
         test_case = VariantsPreviewTest()
-        test_case.set_context(url, browser, data_dir, download_dir, index, request)
+        test_case.set_context(**context)
         suite.addTest(test_case)
-        print "instance of : ", test_case.__class__.__name__
 
         test_case = VariantsChromesTest()
-        test_case.set_context(url, browser, data_dir, download_dir, index, request)
+        test_case.set_context(**context)
         suite.addTest(test_case)
 
-    print("staring test suite...")
-    
+        test_case = VariantsDownloadTest()
+        test_case.set_context(**context)
+        suite.addTest(test_case)
+        
     runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
     result = runner.run(suite)
-    print "number of tests represented by this test object : ", suite.countTestCases()
 
     stop_browser(browser)
-    print(result.errors)
-    print(result.failures)
-
-    print(result.successes)
+    test_report(result)

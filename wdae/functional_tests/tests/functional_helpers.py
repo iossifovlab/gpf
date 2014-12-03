@@ -327,15 +327,16 @@ def save_enrichment_content(rdir, idx, content, mode):
     	f.write(content)
 
 def _equal(orig, content):
-    if orig != content:
-        print("************************************************************")
-        ostr = orig.splitlines(1)
-        cstr = content.splitlines(1)
-        diff = difflib.context_diff(ostr, cstr)
-        for line in diff:
-            print >>sys.stderr, line
-        return False
-    return True
+    return orig == content
+    # if orig != content:
+    #     print("************************************************************")
+    #     ostr = orig.splitlines(1)
+    #     cstr = content.splitlines(1)
+    #     diff = difflib.context_diff(ostr, cstr)
+    #     for line in diff:
+    #         print >>sys.stderr, line
+    #     return False
+    # return True
     
 def assert_request_content(rdir, idx, content):
     fullname = os.path.join(rdir, "request_%03d.out" % idx)
