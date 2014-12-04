@@ -81,16 +81,16 @@ class CheckPreviewTest(FunctionalTest):
         select_random_rarity_option = self.browser.find_element_by_xpath(
             "//div[@id='rarity']/div/input[" + random_integer + "]")
 
-        print "Random rarity radio buttons : ", select_random_rarity_option.get_attribute("value")
+        # print "Random rarity radio buttons : ", select_random_rarity_option.get_attribute("value")
 
-        if select_random_rarity_option.is_displayed():
-            select_random_rarity_option.click()
+        # if select_random_rarity_option.is_displayed():
+        #     select_random_rarity_option.click()
 
-        if random_integer == "3":
-            self.random_rare_radio_button_max()
+        # if random_integer == "3":
+        #     self.random_rare_radio_button_max()
 
-        if random_integer == "4":
-            self.random_interval_max_min()
+        # if random_integer == "4":
+        #     self.random_interval_max_min()
 
 
     def random_transmitted_studies(self):
