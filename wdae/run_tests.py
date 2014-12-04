@@ -58,7 +58,6 @@ if __name__ == "__main__":
     if args.mode == 'save':
         save_test_suite(suite)
         cleanup_variants_test(**test_context)
-        return 0
         
     elif args.mode == 'test':
         runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
@@ -66,10 +65,9 @@ if __name__ == "__main__":
         test_report(result)            
         cleanup_variants_test(**test_context)
         if result.failures or result.errors:
-            return 1
-        else:
-            return 0
+            sys.exit(1)
+
     else:
         print("unexpected mode (%s)" % args.mode)
-        return 1
+
     
