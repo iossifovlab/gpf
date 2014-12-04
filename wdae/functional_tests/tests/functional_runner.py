@@ -93,7 +93,7 @@ class VariantsBase(unittest.TestCase):
 class VariantsPreviewTest(VariantsBase):
 
     def name(self):
-        return "preview_test"
+        return "variants_preview_test"
         
     def implementation(self):
         self.browser.get(self.url)
@@ -102,30 +102,29 @@ class VariantsPreviewTest(VariantsBase):
         
 class VariantsChromesTest(VariantsBase):
 
-    def runTest(self):
-        chroms = click_the_chroms_button(self.browser)
-        save_chroms_content(self.results_dir,
-                            self.index,
-                            chroms, "test")
-        
-        self.assertTrue(assert_chroms_content(self.data_dir,
-                                              self.index,
-                                              chroms),
-                        repr(self))
+    def name(self):
+        return "variants_chromes_test"
+
+    def implementation(self):
+        self.browser.get(self.url)
+        fill_variants_form(self.browser, self.request)
+        return click_the_chroms_button(self.browser)
 
 class VariantsDownloadTest(VariantsBase):
-    def runTest(self):
-        down = click_the_download_button(self.browser,
-                                         self.download_dir)
-        down_result = save_download_content(self.results_dir,
-                                            self.index,
-                                            down,
-                                            "test")
-        self.assertTrue(assert_download_content(self.data_dir,
-                                                self.index,
-                                                down_result),
-                        repr(self))
+    def name(self):
+        return "variants_download_test"
+
+    def implementation(self):
+        self.browser.get(self.url)
+        fill_variants_form(self.browser, self.request)
+        down_filename = click_the_download_button(self.browser,
+                                                  self.download_dir)
+        with open(down_filename, 'r') as f:
+            content = f.read()
+        os.remove(down_filename)
         
+        return content
+
 
 class SeqpipeTestResult(unittest.TestResult):
 	
@@ -171,13 +170,13 @@ def build_variants_test_suite(url, variants_requests, data_dir, results_dir, **c
         test_case.set_context(**context)
         suite.addTest(test_case)
 
-        # test_case = VariantsChromesTest()
-        # test_case.set_context(**context)
-        # suite.addTest(test_case)
+        test_case = VariantsChromesTest()
+        test_case.set_context(**context)
+        suite.addTest(test_case)
 
-        # test_case = VariantsDownloadTest()
-        # test_case.set_context(**context)
-        # suite.addTest(test_case)
+        test_case = VariantsDownloadTest()
+        test_case.set_context(**context)
+        suite.addTest(test_case)
         
     return (context, suite)
 
