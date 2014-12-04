@@ -2,6 +2,11 @@ import sys
 import argparse
 import unittest
 
+from functional_tests.tests.functional_runner import build_test_suite, \
+    cleanup_variants_test, test_report, save_test_suite, SeqpipeTestResult
+# from functional_tests.tests.functional_helpers import test_results_mode, \
+#          save_variants_results, test_results_mode_enrichment, save_results_mode_enrichment
+
 def parse_cli_arguments(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(description="Functional tests runner.")
     parser.add_argument('--url', type=str,
@@ -44,37 +49,23 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
 
 if __name__ == "__main__":
-    from functional_tests.tests.functional_helpers import test_results_mode, \
-         save_variants_results, test_results_mode_enrichment, save_results_mode_enrichment
 
     args = parse_cli_arguments(sys.argv[1:])
     context = dict(args._get_kwargs())
-    if args.mode == 'save':
-        if not args.enrichment_requests is None:
-             save_results_mode_enrichment(args.url,
-                                          args.enrichment_requests,
-                                          args.results_dir)
-        if not args.variants_requests is None:
-            save_variants_results(**context)
-            
-    elif args.mode == 'test':
-        if not args.enrichment_requests is None:
-            test_results_mode_enrichment(args.url,
-                                         args.enrichment_requests,
-                                         args.results_dir)
-        if not args.variants_requests is None:
-            from functional_tests.tests.functional_runner import build_variants_test_suite, \
-                cleanup_variants_test, test_report, SeqpipeTestResult
-            
-            variants_context, suite = build_variants_test_suite(**context)
-    
-            runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
-            result = runner.run(suite)
 
-            cleanup_variants_test(**variants_context)
-            
-            test_report(result)            
+    test_context, suite = build_test_suite(**context)
+    
+    if args.mode == 'save':
+        save_test_suite(suite)
+    elif args.mode == 'test':
+        runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
+        result = runner.run(suite)
+        test_report(result)            
+        
     else:
         print("unexpected mode (%s)" % args.mode)
         
+
+    cleanup_variants_test(**test_context)
+            
     

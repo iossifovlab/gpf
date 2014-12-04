@@ -7,7 +7,7 @@ from functional_helpers import *
 class FunctionalBase(unittest.TestCase):
 
     def set_context(self, url, browser, data_dir, tmp_dir, results_dir,
-                    index, request, *args, **kwargs):
+                    index, request, **kwargs):
         
         self.url = url
         self.browser = browser
@@ -119,6 +119,20 @@ class VariantsDownloadTest(FunctionalBase):
         return click_the_download_button(self.browser,
                                          self.tmp_dir)
 
+class EnrichmentTest(FunctionalBase):
+
+    def name(self):
+        return "enrichment_test"
+
+    def implementation(self):
+    	self.browser.get(self.url)
+    	wait_button_to_be_clickable(self.browser)
+        click_enrichment_link(self.browser)
+    	fill_enrichment_form(self.browser, self.request)
+        
+    	content = click_the_enrichment_button(self.browser)
+        return self.save_data(content)
+
 class SeqpipeTestResult(unittest.TestResult):
 	
     def __init__(self, *args, **kwargs):
@@ -142,33 +156,48 @@ def test_report(result):
     for (test, msg) in result.successes:
         print("PASS:\t %s" % str(test))
 
-def build_variants_test_suite(url, variants_requests, data_dir, results_dir, **context):
-    data = load_dictionary(variants_requests)
+def build_test_suite(**context):
+
     (browser, tmp_dir) = start_browser()
 
-    context = {'data_dir': data_dir,
-               'tmp_dir': tmp_dir,
-               'browser': browser,
-               'url': url,
-               'results_dir': results_dir}
+    context['tmp_dir'] = tmp_dir
+    context['browser'] = browser
 
     suite = unittest.TestSuite()
-    for (index, request) in enumerate(data):
-        context['index']=index
-        context['request']=request
-        
-        test_case = VariantsPreviewTest()
-        test_case.set_context(**context)
-        suite.addTest(test_case)
+    print(context)
+    
+    variants_requests = context.get('variants_requests', None)
+    if variants_requests:
+        data = load_dictionary(variants_requests)
 
-        test_case = VariantsChromesTest()
-        test_case.set_context(**context)
-        suite.addTest(test_case)
-
-        test_case = VariantsDownloadTest()
-        test_case.set_context(**context)
-        suite.addTest(test_case)
+        for (index, request) in enumerate(data):
+            context['index']=index
+            context['request']=request
         
+            test_case = VariantsPreviewTest()
+            test_case.set_context(**context)
+            suite.addTest(test_case)
+            
+            test_case = VariantsChromesTest()
+            test_case.set_context(**context)
+            suite.addTest(test_case)
+            
+            test_case = VariantsDownloadTest()
+            test_case.set_context(**context)
+            suite.addTest(test_case)
+    
+    enrichment_requests = context.get('enrichment_requests', None)
+    if enrichment_requests:
+        data = load_dictionary(enrichment_requests)
+
+        for (index, request) in enumerate(data):
+            context['index']=index
+            context['request']=request
+        
+            test_case = EnrichmentTest()
+            test_case.set_context(**context)
+            suite.addTest(test_case)
+
     return (context, suite)
 
 def cleanup_variants_test(**context):
@@ -185,19 +214,20 @@ def run_test_suite(suite):
         test.runTest()
     
 if __name__ == "__main__":
-    variants_context = {'variants_requests': "variants_tests/variants_requests.txt",
-                        'data_dir': "variants_tests/",
-                        'results_dir': "tmp/",
-                        'url': "http://seqpipe-vm.setelis.com/dae",
-                    }
-    context, suite = build_variants_test_suite(**variants_context)
+    test_context = {'variants_requests': "variants_tests/variants_requests.txt",
+                    # 'enrichment_requests': 'variants_tests/enrichment_requests.txt',
+                    'data_dir': "variants_tests/",
+                    'results_dir': "tmp/",
+                    'url': "http://seqpipe-vm.setelis.com/dae",
+                }
+    context, suite = build_test_suite(**test_context)
     
 
     save_test_suite(suite)
-    # run_test_suite(suite)
-    runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
-    result = runner.run(suite)
-    test_report(result)
+    run_test_suite(suite)
+    # runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
+    # result = runner.run(suite)
+    # test_report(result)
     
     cleanup_variants_test(**context)
     
