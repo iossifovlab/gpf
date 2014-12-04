@@ -99,6 +99,7 @@ def select_variant_type(browser, data):
                   "variants", data['variantTypes'])
 
 def genes_radio_buttons(browser, data):
+    
     radio_button_select(browser, data['genes'])
     if data['genes'] == 'Gene Sets':
         WebDriverWait(browser, 10).until(
@@ -110,6 +111,20 @@ def genes_radio_buttons(browser, data):
         select_gene_set_value(browser, data)
     if data['genes'] == 'Gene Symbols':
         select_gene_symbols(browser, data['geneSyms'])
+        
+def genes_radio_buttons_enrichment(browser, data):
+    if data['geneSet'] != 'null':
+       print "geneSet != null"
+       radio_button_select(browser, 'Gene Sets')
+       WebDriverWait(browser, 10).until(
+            EC.presence_of_element_located((By.ID,
+                                            "geneSet"))
+       )
+       select_gene_set_main(browser, data)
+       select_gene_set_value(browser, data)
+    else:
+       radio_button_select(browser, 'Gene Symbols')
+       select_gene_symbols(browser, data['geneSyms'])
 
 def select_rare_max(browser, data):
     type_method(browser, "max", data['popFrequencyMax'])
@@ -128,9 +143,10 @@ def select_rarity_radio_buttons(browser, data):
 def select_transmitted_studies(browser, data):
     select_method(browser, "transmittedStudies",
                   data['transmittedStudies'])
-    rarity_div = browser.find_element_by_id("rarity")
-    if rarity_div.is_displayed():
-        select_rarity_radio_buttons(browser, data)
+    rarity_div = browser.find_elements_by_id("rarity")
+    if len(rarity_div) > 0 :
+       if rarity_div.is_displayed():
+          select_rarity_radio_buttons(browser, data)
 
 def select_gene_symbols(browser, gene_list):
     gene_syms_radio = browser.find_element_by_id(
@@ -312,8 +328,9 @@ def fill_variants_form(browser, data):
     select_families(browser, data)
     
 def fill_enrichment_form(browser, data):
-    genes_radio_buttons(browser, data)
+    genes_radio_buttons_enrichment(browser, data)
     select_denovo_studies(browser, data)
+    select_transmitted_studies(browser, data)
 
 def load_dictionary(filename):
     text_file = open(filename, 'r')
@@ -322,6 +339,7 @@ def load_dictionary(filename):
     for dd in data:
         data_dict.append(ast.literal_eval(dd))
     text_file.close()
+    print "data_dict : ", data_dict
     return data_dict
 
 def start_browser():

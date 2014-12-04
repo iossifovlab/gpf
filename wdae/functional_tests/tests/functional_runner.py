@@ -215,7 +215,7 @@ def run_test_suite(suite):
     
 if __name__ == "__main__":
     test_context = {'variants_requests': "variants_tests/variants_requests.txt",
-                    # 'enrichment_requests': 'variants_tests/enrichment_requests.txt',
+                    'enrichment_requests': 'variants_tests/enrichment_requests.txt',
                     'data_dir': "variants_tests/",
                     'results_dir': "tmp/",
                     'url': "http://seqpipe-vm.setelis.com/dae",
