@@ -1,17 +1,18 @@
 import unittest
+import filecmp
 import pprint
 from functional_helpers import *
 
 
-class VariantsBase(unittest.TestCase):
+class FunctionalBase(unittest.TestCase):
 
-    def set_context(self, url, browser, data_dir, download_dir, results_dir,
+    def set_context(self, url, browser, data_dir, tmp_dir, results_dir,
                     index, request, *args, **kwargs):
         
         self.url = url
         self.browser = browser
         self.data_dir = data_dir
-        self.download_dir = download_dir
+        self.tmp_dir = tmp_dir
         self.index = index
         self.request = request
         self.results_dir = results_dir
@@ -19,9 +20,10 @@ class VariantsBase(unittest.TestCase):
     def runTest(self):
         self.assertTrue(self.compare_requests(),
                         "requests does not match;\n%s" % repr(self))        
-        content = self.implementation()
-        self._save_content(content, self._result_filename())
-        self.assertTrue(self.compare_content(content),
+        datafile = self.implementation()
+        
+        shutil.move(datafile, self._result_filename())
+        self.assertTrue(self.compare_content(),
                         repr(self))
 
     def name(self):
@@ -36,11 +38,8 @@ class VariantsBase(unittest.TestCase):
             orig = f.read()
         return str(self.request) == orig
 
-    def compare_content(self, content):
-        fullname = self._output_filename()
-        with open(fullname, "r") as f:
-            orig = f.read()
-        return content == orig
+    def compare_content(self):
+        return filecmp.cmp(self._result_filename(), self._output_filename())
 
     def _output_filename(self):
         return os.path.join(self.data_dir,
@@ -54,6 +53,9 @@ class VariantsBase(unittest.TestCase):
         return os.path.join(self.data_dir,
                             "%03d_%s_request.out" % (self.index, self.name()))
 
+    def _tmp_filename(self):
+        return os.path.join(self.tmp_dir,
+                            "%03d_%s.tmp" % (self.index, self.name()))
     def _save_request(self):
         self._save_content(str(self.request),
                            self._request_filename())
@@ -61,12 +63,16 @@ class VariantsBase(unittest.TestCase):
     def _save_content(self, content, filename):
         with open(filename, "w") as f:
             f.write(content)
-            
+        return filename
+
+    def save_data(self, content):
+        return self._save_content(content,
+                                  self._tmp_filename())
+        
     def save_test(self):
         self._save_request()
-        content = self.implementation()
-        self._save_content(content, self._output_filename())
-
+        datafile = self.implementation()
+        shutil.move(datafile, self._output_filename())
         
     def __repr__(self):
         return "%s;\ndata:    %s;\nresults: %s;\nrequest: %s" % \
@@ -81,7 +87,7 @@ class VariantsBase(unittest.TestCase):
              self.index)
 
 
-class VariantsPreviewTest(VariantsBase):
+class VariantsPreviewTest(FunctionalBase):
 
     def name(self):
         return "variants_preview_test"
@@ -89,9 +95,10 @@ class VariantsPreviewTest(VariantsBase):
     def implementation(self):
         self.browser.get(self.url)
         fill_variants_form(self.browser, self.request)
-        return click_the_preview_button(self.browser)
+        content = click_the_preview_button(self.browser)
+        return self.save_data(content)
         
-class VariantsChromesTest(VariantsBase):
+class VariantsChromesTest(FunctionalBase):
 
     def name(self):
         return "variants_chromes_test"
@@ -99,23 +106,18 @@ class VariantsChromesTest(VariantsBase):
     def implementation(self):
         self.browser.get(self.url)
         fill_variants_form(self.browser, self.request)
-        return click_the_chroms_button(self.browser)
+        content = click_the_chroms_button(self.browser)
+        return self.save_data(content)
 
-class VariantsDownloadTest(VariantsBase):
+class VariantsDownloadTest(FunctionalBase):
     def name(self):
         return "variants_download_test"
 
     def implementation(self):
         self.browser.get(self.url)
         fill_variants_form(self.browser, self.request)
-        down_filename = click_the_download_button(self.browser,
-                                                  self.download_dir)
-        with open(down_filename, 'r') as f:
-            content = f.read()
-        os.remove(down_filename)
-        
-        return content
-
+        return click_the_download_button(self.browser,
+                                         self.tmp_dir)
 
 class SeqpipeTestResult(unittest.TestResult):
 	
@@ -131,12 +133,10 @@ def test_report(result):
     for (test, msg) in result.failures:
         print("-----------------------------------------------------------------------")
         print("FAILURE: %s" % repr(test))
-        # print(msg)
         
     for (test, msg) in result.errors:
         print("-----------------------------------------------------------------------")
         print("ERROR: %s" % repr(test))
-        # print(msg)
 
     print("-----------------------------------------------------------------------")
     for (test, msg) in result.successes:
@@ -144,10 +144,10 @@ def test_report(result):
 
 def build_variants_test_suite(url, variants_requests, data_dir, results_dir, **context):
     data = load_dictionary(variants_requests)
-    (browser, download_dir) = start_browser()
+    (browser, tmp_dir) = start_browser()
 
     context = {'data_dir': data_dir,
-               'download_dir': download_dir,
+               'tmp_dir': tmp_dir,
                'browser': browser,
                'url': url,
                'results_dir': results_dir}
@@ -173,7 +173,7 @@ def build_variants_test_suite(url, variants_requests, data_dir, results_dir, **c
 
 def cleanup_variants_test(**context):
     stop_browser(context['browser'])
-    shutil.rmtree(context['download_dir'])
+    shutil.rmtree(context['tmp_dir'])
     
 
 def save_test_suite(suite):
