@@ -20,7 +20,7 @@ class VariantsBase(unittest.TestCase):
         self.assertTrue(self.compare_requests(),
                         "requests does not match;\n%s" % repr(self))        
         content = self.implementation()
-        self._save_results(content)
+        self._save_content(content, self._result_filename())
         self.assertTrue(self.compare_content(content),
                         repr(self))
 
@@ -31,58 +31,49 @@ class VariantsBase(unittest.TestCase):
         raise NotImplementedError
 
     def compare_requests(self):
-        fullname = os.path.join(self.data_dir,
-                                self._request_filename())
+        fullname = self._request_filename()
         with open(fullname, "r") as f:
             orig = f.read()
         return str(self.request) == orig
 
     def compare_content(self, content):
-        fullname = os.path.join(self.data_dir,
-                                self._output_filename())
+        fullname = self._output_filename()
         with open(fullname, "r") as f:
             orig = f.read()
         return content == orig
 
     def _output_filename(self):
-        return "%03d_%s.out" % (self.index, self.name())
+        return os.path.join(self.data_dir,
+                            "%03d_%s.out" % (self.index, self.name()))
 
     def _result_filename(self):
-        return "%03d_%s.test" % (self.index, self.name())
+        return os.path.join(self.results_dir,
+                            "%03d_%s.test" % (self.index, self.name()))
 
     def _request_filename(self):
-        return "%03d_%s_request.out" % (self.index, self.name())
-
-    def _save_results(self, content):
-        fullname = os.path.join(self.results_dir,
-                                self._result_filename())
-        with open(fullname, "w") as f:
-            f.write(content)
+        return os.path.join(self.data_dir,
+                            "%03d_%s_request.out" % (self.index, self.name()))
 
     def _save_request(self):
-        fullname = os.path.join(self.data_dir,
-                                self._request_filename())
-        with open(fullname, "w") as f:
-            f.write(str(self.request))
-
-    def _save_output(self, content):
-        fullname = os.path.join(self.data_dir,
-                                self._output_filename())
-        with open(fullname, "w") as f:
-            f.write(str(content))
-    
+        self._save_content(str(self.request),
+                           self._request_filename())
+        
+    def _save_content(self, content, filename):
+        with open(filename, "w") as f:
+            f.write(content)
+            
     def save_test(self):
         self._save_request()
         content = self.implementation()
-        self._save_output(content)
+        self._save_content(content, self._output_filename())
 
         
     def __repr__(self):
-        return "%s;\ndata dir: %s;\nresults_dir: %s;\nrequest: %s" % \
+        return "%s;\ndata:    %s;\nresults: %s;\nrequest: %s" % \
             (str(self),
-             self.data_dir,
-             self.results_dir,
-             self.request)
+             self._output_filename(),
+             self._result_filename(),
+             self._request_filename())
 
     def __str__(self):
         return "%50s: %03d" % \
@@ -206,7 +197,7 @@ if __name__ == "__main__":
     # run_test_suite(suite)
     runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
     result = runner.run(suite)
+    test_report(result)
     
     cleanup_variants_test(**context)
     
-    test_report(result)
