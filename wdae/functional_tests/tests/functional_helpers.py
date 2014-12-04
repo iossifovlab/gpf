@@ -536,7 +536,9 @@ def test_results_mode(server_url, frequests, rdir):
             #print >>sys.stderr, request
             #print >>sys.stderr, traceback.format_exc()
             #print >>sys.stderr, sys.exc_info()[0]
-            results_log['test_results_mode ' + str(idx)]=[request,traceback.format_exc(),sys.exc_info()[0]]
+            results_log['test_results_mode ' + str(idx)]=[request,
+                                                          traceback.format_exc(),
+                                                          sys.exc_info()[0]]
             
             
             	    

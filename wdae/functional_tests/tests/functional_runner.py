@@ -16,17 +16,67 @@ class VariantsBase(unittest.TestCase):
         self.request = request
         self.results_dir = results_dir
         
-    def setUp(self):
-        self.assertTrue(assert_request_content(self.data_dir,
-                                               self.index,
-                                               self.request))
-        
-        self.browser.get(self.url)
-        fill_variants_form(self.browser, self.request)
-
     def runTest(self):
+        self.assertTrue(self.compare_requests(),
+                        "requests does not match;\n%s" % repr(self))        
+        content = self.implementation()
+        self._save_results(content)
+        self.assertTrue(self.compare_content(content),
+                        repr(self))
+
+    def name(self):
         raise NotImplementedError
 
+    def implementation(self):
+        raise NotImplementedError
+
+    def compare_requests(self):
+        fullname = os.path.join(self.data_dir,
+                                self._request_filename())
+        with open(fullname, "r") as f:
+            orig = f.read()
+        return str(self.request) == orig
+
+    def compare_content(self, content):
+        fullname = os.path.join(self.data_dir,
+                                self._output_filename())
+        with open(fullname, "r") as f:
+            orig = f.read()
+        return content == orig
+
+    def _output_filename(self):
+        return "%03d_%s.out" % (self.index, self.name())
+
+    def _result_filename(self):
+        return "%03d_%s.test" % (self.index, self.name())
+
+    def _request_filename(self):
+        return "%03d_%s_request.out" % (self.index, self.name())
+
+    def _save_results(self, content):
+        fullname = os.path.join(self.results_dir,
+                                self._result_filename())
+        with open(fullname, "w") as f:
+            f.write(content)
+
+    def _save_request(self):
+        fullname = os.path.join(self.data_dir,
+                                self._request_filename())
+        with open(fullname, "w") as f:
+            f.write(str(self.request))
+
+    def _save_output(self, content):
+        fullname = os.path.join(self.data_dir,
+                                self._output_filename())
+        with open(fullname, "w") as f:
+            f.write(str(content))
+    
+    def save_test(self):
+        self._save_request()
+        content = self.implementation()
+        self._save_output(content)
+
+        
     def __repr__(self):
         return "%s;\ndata dir: %s;\nresults_dir: %s;\nrequest: %s" % \
             (str(self),
@@ -42,15 +92,13 @@ class VariantsBase(unittest.TestCase):
 
 class VariantsPreviewTest(VariantsBase):
 
-    def runTest(self):
-        preview = click_the_preview_button(self.browser)
-        save_preview_content(self.results_dir,
-                             self.index,
-                             preview, "test")
-        self.assertTrue(assert_preview_content(self.data_dir,
-                                               self.index,
-                                               preview),
-                        repr(self))
+    def name(self):
+        return "preview_test"
+        
+    def implementation(self):
+        self.browser.get(self.url)
+        fill_variants_form(self.browser, self.request)
+        return click_the_preview_button(self.browser)
         
 class VariantsChromesTest(VariantsBase):
 
@@ -123,13 +171,13 @@ def build_variants_test_suite(url, variants_requests, data_dir, results_dir, **c
         test_case.set_context(**context)
         suite.addTest(test_case)
 
-        test_case = VariantsChromesTest()
-        test_case.set_context(**context)
-        suite.addTest(test_case)
+        # test_case = VariantsChromesTest()
+        # test_case.set_context(**context)
+        # suite.addTest(test_case)
 
-        test_case = VariantsDownloadTest()
-        test_case.set_context(**context)
-        suite.addTest(test_case)
+        # test_case = VariantsDownloadTest()
+        # test_case.set_context(**context)
+        # suite.addTest(test_case)
         
     return (context, suite)
 
@@ -138,17 +186,28 @@ def cleanup_variants_test(**context):
     shutil.rmtree(context['download_dir'])
     
 
+def save_test_suite(suite):
+    for test in suite:
+        test.save_test()
+
+def run_test_suite(suite):
+    for test in suite:
+        test.runTest()
+    
 if __name__ == "__main__":
     variants_context = {'variants_requests': "variants_tests/variants_requests.txt",
                         'data_dir': "variants_tests/",
-                        'results_dir': "variants_tests/",
+                        'results_dir': "tmp/",
                         'url': "http://seqpipe-vm.setelis.com/dae",
                     }
     context, suite = build_variants_test_suite(**variants_context)
     
+
+    save_test_suite(suite)
+    # run_test_suite(suite)
     runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
     result = runner.run(suite)
-
+    
     cleanup_variants_test(**context)
     
     test_report(result)
