@@ -144,8 +144,8 @@ def select_transmitted_studies(browser, data):
     select_method(browser, "transmittedStudies",
                   data['transmittedStudies'])
     rarity_div = browser.find_elements_by_id("rarity")
-    if len(rarity_div) > 0 :
-       if rarity_div.is_displayed():
+    if rarity_div:
+       if rarity_div[0].is_displayed():
           select_rarity_radio_buttons(browser, data)
 
 def select_gene_symbols(browser, gene_list):
