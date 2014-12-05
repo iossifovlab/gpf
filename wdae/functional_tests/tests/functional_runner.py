@@ -1,7 +1,11 @@
 import unittest
 import filecmp
-import pprint
-from functional_helpers import *
+import os
+import shutil
+from functional_helpers import fill_variants_form, click_the_preview_button, \
+    click_the_chroms_button, click_the_download_button, wait_enrichment_link_to_be_clickable, \
+    click_enrichment_link, fill_enrichment_form, click_the_enrichment_button, \
+    start_browser, stop_browser, load_dictionary
 
 
 class FunctionalBase(unittest.TestCase):
@@ -126,7 +130,7 @@ class EnrichmentTest(FunctionalBase):
 
     def implementation(self):
     	self.browser.get(self.url)
-    	wait_button_to_be_clickable(self.browser)
+    	wait_enrichment_link_to_be_clickable(self.browser)
         click_enrichment_link(self.browser)
     	fill_enrichment_form(self.browser, self.request)
         
@@ -164,8 +168,6 @@ def build_test_suite(**context):
     context['browser'] = browser
 
     suite = unittest.TestSuite()
-    print(context)
-    
     variants_requests = context.get('variants_requests', None)
     if variants_requests:
         data = load_dictionary(variants_requests)

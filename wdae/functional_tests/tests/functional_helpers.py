@@ -264,7 +264,7 @@ def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
 
     return fullname
 
-def wait_button_to_be_clickable(browser, timeout=30):
+def wait_enrichment_link_to_be_clickable(browser, timeout=30):
     element = WebDriverWait(browser, timeout).until(
         EC.element_to_be_clickable((
 		                    By.CSS_SELECTOR,
