@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+{% load static %}
+<html>
+<head><title> Test Results </title>
+	<link href="{% static 'table_style.css' %}"
+        	rel="stylesheet">
+</head>
+
+<body>
+
+<h1> Variants Tests </h1>
+<table cellspacing="1" border="1" cellpadding="1">
+<tr class="status_done">
+	<td> Index </td>
+	<td> Request </td>
+	<td> Status </td>
+	<td> Notes </td>
+
+</tr>
+<tr class= {% cycle class_name_success  class_name_failure %}>
+</tr>
+</table>
+
+<h1> Chroms Tests </h1>
+<table cellspacing="1" border="1" cellpadding="1">
+<tr class="status_done">
+	<td> Index </td>
+	<td> Request </td>
+	<td> Status </td>
+	<td> Notes </td>
+
+</tr>
+{% for dict in result %}
+	{% ifequal dict.status "FAIL" %}
+		<tr class= {{ class_name_failure }}>
+	{% else %}
+		<tr class= {{ class_name_success }}>
+	{% endifequal %}
+		
+
+		   <td> {{ dict.index}} </td> 
+		   <td> {{ dict.request}} </td>
+		   <td> {{ dict.status}} </td>
+		   <td> {{ dict.notes}} </td>
+    </tr>
+{% endfor%}
+</table>
+
+
+</body>
+</html>

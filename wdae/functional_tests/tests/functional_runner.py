@@ -1,12 +1,13 @@
 import unittest
 import filecmp
+import pprint
 import os
-import shutil
-from functional_helpers import fill_variants_form, click_the_preview_button, \
-    click_the_chroms_button, click_the_download_button, wait_enrichment_link_to_be_clickable, \
-    click_enrichment_link, fill_enrichment_form, click_the_enrichment_button, \
-    start_browser, stop_browser, load_dictionary
+from functional_helpers import *
+from django.template import Template, Context, loader
+from django.conf import settings
 
+template_path = os.path.realpath(os.path.dirname(__file__))
+settings.configure(TEMPLATE_DIRS=(template_path+"/django_templates",))
 
 class FunctionalBase(unittest.TestCase):
 
@@ -130,7 +131,7 @@ class EnrichmentTest(FunctionalBase):
 
     def implementation(self):
     	self.browser.get(self.url)
-    	wait_enrichment_link_to_be_clickable(self.browser)
+    	#wait_button_to_be_clickable(self.browser)
         click_enrichment_link(self.browser)
     	fill_enrichment_form(self.browser, self.request)
         
@@ -160,6 +161,37 @@ def test_report(result):
     for (test, msg) in result.successes:
         print("PASS:\t %s" % str(test))
 
+def result_to_dict(result):
+    result_dict = [];
+    for i in range(0, len(result.failures)):
+    	result_dict.append({'index': result.failures[i][0].index,
+    			    'request': result.failures[i][0].request,
+    			    'status': 'FAIL',
+    			    'notes':result.failures[i][1]})
+    for i in range(0, len(result.errors)):
+    	result_dict.append({'index': result.errors[i][0].index,
+    			    'request': result.errors[i][0].request,
+    			    'status': 'ERROR',
+    			    'notes':result.errors[i][1]})
+    for i in range(0, len(result.successes)):
+    	result_dict.append({'index': result.successes[i][0].index,
+    			    'request': result.successes[i][0].request,
+    			    'status': 'OK',
+    			    'notes': result.successes[i][1]})
+    return result_dict
+
+def make_results_file(result):
+    table_rows = ["1", "2", "3", "4", "5"]
+    t=loader.get_template('results_template.html')
+    #print "Result successes : ", type(result.successes)
+    #print "Result successes 2: ", result.successes[0][0].index
+    page=Context({"result":result,
+                  'class_name_success': 'status_passed',
+		  'class_name_failure': 'status_failed'})
+    f = open(template_path+"/django_templates/resultsSEQ.html", 'w+')
+    f.write(t.render(page))
+    f.close()
+
 def build_test_suite(**context):
 
     (browser, tmp_dir) = start_browser()
@@ -168,6 +200,8 @@ def build_test_suite(**context):
     context['browser'] = browser
 
     suite = unittest.TestSuite()
+    print(context)
+    
     variants_requests = context.get('variants_requests', None)
     if variants_requests:
         data = load_dictionary(variants_requests)
@@ -216,20 +250,22 @@ def run_test_suite(suite):
         test.runTest()
     
 if __name__ == "__main__":
-    test_context = {'variants_requests': "variants_tests/variants_requests.txt",
-                    'enrichment_requests': 'variants_tests/enrichment_requests.txt',
+    test_context = {#'variants_requests': "variants_tests/data_dict_variants.txt",
+                    'enrichment_requests': 'variants_tests/data_dict_enrichment.txt',
                     'data_dir': "variants_tests/",
-                    'results_dir': "tmp/",
+                    'results_dir': "results_dir/",
                     'url': "http://seqpipe-vm.setelis.com/dae",
                 }
     context, suite = build_test_suite(**test_context)
     
 
-    save_test_suite(suite)
-    run_test_suite(suite)
-    # runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
-    # result = runner.run(suite)
-    # test_report(result)
-    
+    #save_test_suite(suite)
+    #run_test_suite(suite)
+    runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
+    result = runner.run(suite)
+    #test_report(result)
+    make_results_file(result_to_dict(result))
+    #make_results_file(result)
+    pprint.pprint(result_to_dict(result))
     cleanup_variants_test(**context)
     
