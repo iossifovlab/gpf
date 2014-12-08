@@ -9,7 +9,7 @@
 
 <body>
 
-<h1> Variants Tests </h1>
+<h1> Preview Tests </h1>
 <table cellspacing="1" border="1" cellpadding="1">
 <tr class="status_done">
 	<td> Index </td>
@@ -18,11 +18,23 @@
 	<td> Notes </td>
 
 </tr>
-<tr class= {% cycle class_name_success  class_name_failure %}>
-</tr>
+{% for dict in result.VariantsPreviewTest %}
+	{% ifequal dict.name "variants_preview_test" %}
+		{% ifequal dict.status "FAIL" %}
+			<tr class= {{ class_name_failure }}>
+		{% else %}
+			<tr class= {{ class_name_success }}>
+		{% endifequal %}
+			   <td> {{ dict.index}} </td> 
+			   <td> {{ dict.request}} </td>
+			   <td> {{ dict.status}} </td>
+			   <td> {{ dict.notes}} </td>
+	    </tr>
+	{% endifequal %}
+{% endfor%}
 </table>
 
-<h1> Chroms Tests </h1>
+<h1> Chromes Tests </h1>
 <table cellspacing="1" border="1" cellpadding="1">
 <tr class="status_done">
 	<td> Index </td>
@@ -31,19 +43,71 @@
 	<td> Notes </td>
 
 </tr>
-{% for dict in result %}
-	{% ifequal dict.status "FAIL" %}
-		<tr class= {{ class_name_failure }}>
-	{% else %}
-		<tr class= {{ class_name_success }}>
+{% for dict in result.VariantsChromesTest %}
+	{% ifequal dict.name "variants_chromes_test" %}
+		{% ifequal dict.status "FAIL" %}
+			<tr class= {{ class_name_failure }}>
+		{% else %}
+			<tr class= {{ class_name_success }}>
+		{% endifequal %}
+			   <td> {{ dict.index}} </td> 
+			   <td> {{ dict.request}} </td>
+			   <td> {{ dict.status}} </td>
+			   <td> {{ dict.notes}} </td>
+	    </tr>
 	{% endifequal %}
-		
+{% endfor%}
+</table>
 
-		   <td> {{ dict.index}} </td> 
-		   <td> {{ dict.request}} </td>
-		   <td> {{ dict.status}} </td>
-		   <td> {{ dict.notes}} </td>
-    </tr>
+
+<h1> Download Tests </h1>
+<table cellspacing="1" border="1" cellpadding="1">
+<tr class="status_done">
+	<td> Index </td>
+	<td> Request </td>
+	<td> Status </td>
+	<td> Notes </td>
+
+</tr>
+{% for dict in result.VariantsDownloadTest %}
+	{% ifequal dict.name "variants_download_test" %}
+		{% ifequal dict.status "FAIL" %}
+			<tr class= {{ class_name_failure }}>
+		{% else %}
+			<tr class= {{ class_name_success }}>
+		{% endifequal %}
+			   <td> {{ dict.index}} </td> 
+			   <td> {{ dict.request}} </td>
+			   <td> {{ dict.status}} </td>
+			   <td> {{ dict.notes}} </td>
+	    </tr>
+	{% endifequal %}
+{% endfor%}
+</table>
+
+
+<h1> Enrichment Tests </h1>
+<table cellspacing="1" border="1" cellpadding="1">
+<tr class="status_done">
+	<td> Index </td>
+	<td> Request </td>
+	<td> Status </td>
+	<td> Notes </td>
+
+</tr>
+{% for dict in result.EnrichmentTest %}
+	{% ifequal dict.name "enrichment_test" %}
+		{% ifequal dict.status "FAIL" %}
+			<tr class= {{ class_name_failure }}>
+		{% else %}
+			<tr class= {{ class_name_success }}>
+		{% endifequal %}
+			   <td> {{ dict.index}} </td> 
+			   <td> {{ dict.request}} </td>
+			   <td> {{ dict.status}} </td>
+			   <td> {{ dict.notes}} </td>
+	    </tr>
+	{% endifequal %}
 {% endfor%}
 </table>
 

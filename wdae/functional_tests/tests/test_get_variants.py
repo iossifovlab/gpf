@@ -1,5 +1,5 @@
 from .base import FunctionalTest
-from .functional_helpers import select_method, type_method
+from .functional_helpers import *
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 

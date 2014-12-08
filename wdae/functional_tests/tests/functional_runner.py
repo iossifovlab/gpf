@@ -161,30 +161,44 @@ def test_report(result):
     for (test, msg) in result.successes:
         print("PASS:\t %s" % str(test))
 
-def result_to_dict(result):
-    result_dict = [];
+def result_to_dict(result, number_of_tests):
+
+    print "length of results : ", len(result.failures) + len(result.errors) +len(result.successes) 
+    result_dict = {"VariantsPreviewTest" : [None]*number_of_tests,
+                   "VariantsChromesTest" : [None]*number_of_tests,
+                   "VariantsDownloadTest" : [None]*number_of_tests,
+                   "EnrichmentTest" : [None]*number_of_tests};
     for i in range(0, len(result.failures)):
-    	result_dict.append({'index': result.failures[i][0].index,
+    	result_dict.get(result.failures[i][0].__class__.__name__)[result.failures[i][0].index] = {
+    		            'index': result.failures[i][0].index,
     			    'request': result.failures[i][0].request,
+    			    'name': result.failures[i][0].name,
     			    'status': 'FAIL',
-    			    'notes':result.failures[i][1]})
+    			    'notes':repr(result.failures[i][1])}
     for i in range(0, len(result.errors)):
-    	result_dict.append({'index': result.errors[i][0].index,
+        result_dict.get(result.errors[i][0].__class__.__name__)[result.errors[i][0].index] = {
+    		            'index': result.errors[i][0].index,
     			    'request': result.errors[i][0].request,
+    			    'name': result.errors[i][0].name,
     			    'status': 'ERROR',
-    			    'notes':result.errors[i][1]})
+    			    'notes':result.errors[i][1]}
     for i in range(0, len(result.successes)):
-    	result_dict.append({'index': result.successes[i][0].index,
+    	result_dict.get(result.successes[i][0].__class__.__name__)[result.successes[i][0].index] ={
+    		            'index': result.successes[i][0].index,
     			    'request': result.successes[i][0].request,
+    			    'name': result.successes[i][0].name,
     			    'status': 'OK',
-    			    'notes': result.successes[i][1]})
+    			    'notes': result.successes[i][1]}
+    
+    result_dict["VariantsPreviewTest"] = filter(lambda a: a!=None, result_dict["VariantsPreviewTest"])
+    result_dict["VariantsChromesTest"] = filter(lambda a: a!=None, result_dict["VariantsChromesTest"])
+    result_dict["VariantsDownloadTest"] = filter(lambda a: a!=None, result_dict["VariantsDownloadTest"])
+    result_dict["EnrichmentTest"] = filter(lambda a: a!=None, result_dict["EnrichmentTest"])
+    
     return result_dict
 
 def make_results_file(result):
-    table_rows = ["1", "2", "3", "4", "5"]
     t=loader.get_template('results_template.html')
-    #print "Result successes : ", type(result.successes)
-    #print "Result successes 2: ", result.successes[0][0].index
     page=Context({"result":result,
                   'class_name_success': 'status_passed',
 		  'class_name_failure': 'status_failed'})
@@ -250,7 +264,7 @@ def run_test_suite(suite):
         test.runTest()
     
 if __name__ == "__main__":
-    test_context = {#'variants_requests': "variants_tests/data_dict_variants.txt",
+    test_context = {'variants_requests': "variants_tests/data_dict_variants.txt",
                     'enrichment_requests': 'variants_tests/data_dict_enrichment.txt',
                     'data_dir': "variants_tests/",
                     'results_dir': "results_dir/",
@@ -264,8 +278,7 @@ if __name__ == "__main__":
     runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
     result = runner.run(suite)
     #test_report(result)
-    make_results_file(result_to_dict(result))
-    #make_results_file(result)
-    pprint.pprint(result_to_dict(result))
+    number_of_tests = suite.countTestCases()
+    make_results_file(result_to_dict(result, number_of_tests))
     cleanup_variants_test(**context)
     
