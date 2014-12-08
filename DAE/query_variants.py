@@ -496,17 +496,25 @@ def dae_query_variants(data):
 
 def pedigree_data(v):
     m = getattr(v, 'bestSt')
+    res = None
     if m.ndim==2 and m.shape[0]==2:
-        return [v.study.get_attr('study.phenotype'),
-                [[p.role, p.gender, n] for (p, n) in zip(v.memberInOrder, m[1])]]
+        res = [v.study.get_attr('study.phenotype'),
+               [[p.role, p.gender, n] for (p, n) in zip(v.memberInOrder, m[1])]]
     elif m.ndim == 2 and m.shape[0]==1:
         # CNVs
         base = {'F': m[0][0], 'M': m[0][1]}
-        return [v.study.get_attr('study.phenotype'),
-                [[p.role, p.gender, abs(n - base[p.gender])]
-                 for (p, n) in zip(v.memberInOrder, m[0])]]
+        res = [v.study.get_attr('study.phenotype'),
+               [[p.role, p.gender, abs(n - base[p.gender])]
+                for (p, n) in zip(v.memberInOrder, m[0])]]
     else:
         raise Exception
+
+    if v.fromParentS == "mom":
+        res[1][0].append(1)
+    elif v.fromParentS == "dad":
+        res[1][1].append(1)
+    print(res)
+    return res
     
 def __augment_vars(v):
     fmId = v.familyId
