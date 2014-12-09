@@ -3,13 +3,15 @@
 {% load static %}
 <html>
 <head><title> Test Results </title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 	<link href="{% static 'table_style.css' %}"
         	rel="stylesheet">
+        <script type="text/javascript" src="{% static 'resultSEQ.js' %}" > </script>
 </head>
 
 <body>
 
-<h1> Preview Tests </h1>
+<h1> Variants Tests </h1>
 <table cellspacing="1" border="1" cellpadding="1">
 <tr class="status_done">
 	<td> Index </td>
@@ -18,73 +20,22 @@
 	<td> Notes </td>
 
 </tr>
-{% for dict in result.VariantsPreviewTest %}
-	{% ifequal dict.name "variants_preview_test" %}
-		{% ifequal dict.status "FAIL" %}
-			<tr class= {{ class_name_failure }}>
-		{% else %}
-			<tr class= {{ class_name_success }}>
-		{% endifequal %}
-			   <td> {{ dict.index}} </td> 
-			   <td> {{ dict.request}} </td>
-			   <td> {{ dict.status}} </td>
-			   <td> {{ dict.notes}} </td>
-	    </tr>
-	{% endifequal %}
+{% for dict in result.varTest %}
+	{% ifnotequal dict.status "OK" %}
+		<tr class= {{ class_name_failure }}>
+	{% else %}
+		<tr class= {{ class_name_success }}>
+	{% endifnotequal %}
+		   <td>{{ dict.index}} -- {{ dict.name }}</td>
+		   <td> <span class = "expanded" >  {{ dict.request}} </span> 
+			<span class = "collapsed">  </span> 
+			<a href="javascript:void(0)" class="collapsed">Expand</a>
+			<a href="javascript:void(0)" class="expanded"> Collapse</a></td>
+		   <td> {{ dict.status}} </td>
+		   <td> {{ dict.notes}} </td>
+    </tr>
 {% endfor%}
 </table>
-
-<h1> Chromes Tests </h1>
-<table cellspacing="1" border="1" cellpadding="1">
-<tr class="status_done">
-	<td> Index </td>
-	<td> Request </td>
-	<td> Status </td>
-	<td> Notes </td>
-
-</tr>
-{% for dict in result.VariantsChromesTest %}
-	{% ifequal dict.name "variants_chromes_test" %}
-		{% ifequal dict.status "FAIL" %}
-			<tr class= {{ class_name_failure }}>
-		{% else %}
-			<tr class= {{ class_name_success }}>
-		{% endifequal %}
-			   <td> {{ dict.index}} </td> 
-			   <td> {{ dict.request}} </td>
-			   <td> {{ dict.status}} </td>
-			   <td> {{ dict.notes}} </td>
-	    </tr>
-	{% endifequal %}
-{% endfor%}
-</table>
-
-
-<h1> Download Tests </h1>
-<table cellspacing="1" border="1" cellpadding="1">
-<tr class="status_done">
-	<td> Index </td>
-	<td> Request </td>
-	<td> Status </td>
-	<td> Notes </td>
-
-</tr>
-{% for dict in result.VariantsDownloadTest %}
-	{% ifequal dict.name "variants_download_test" %}
-		{% ifequal dict.status "FAIL" %}
-			<tr class= {{ class_name_failure }}>
-		{% else %}
-			<tr class= {{ class_name_success }}>
-		{% endifequal %}
-			   <td> {{ dict.index}} </td> 
-			   <td> {{ dict.request}} </td>
-			   <td> {{ dict.status}} </td>
-			   <td> {{ dict.notes}} </td>
-	    </tr>
-	{% endifequal %}
-{% endfor%}
-</table>
-
 
 <h1> Enrichment Tests </h1>
 <table cellspacing="1" border="1" cellpadding="1">
@@ -95,19 +46,20 @@
 	<td> Notes </td>
 
 </tr>
-{% for dict in result.EnrichmentTest %}
-	{% ifequal dict.name "enrichment_test" %}
-		{% ifequal dict.status "FAIL" %}
-			<tr class= {{ class_name_failure }}>
-		{% else %}
-			<tr class= {{ class_name_success }}>
-		{% endifequal %}
-			   <td> {{ dict.index}} </td> 
-			   <td> {{ dict.request}} </td>
-			   <td> {{ dict.status}} </td>
-			   <td> {{ dict.notes}} </td>
-	    </tr>
-	{% endifequal %}
+{% for dict in result.enrTest %}
+	{% ifnotequal dict.status "OK" %}
+		<tr class= {{ class_name_failure }}>
+	{% else %}
+		<tr class= {{ class_name_success }}>
+	{% endifnotequal %}
+		   <td> {{ dict.index}} </td> 
+		   <td> <span class = "expanded" >  {{ dict.request}} </span> 
+			<span class = "collapsed">  </span> 
+			<a href="javascript:void(0)" class="collapsed">Expand</a>
+			<a href="javascript:void(0)" class="expanded"> Collapse</a></td>
+		   <td> {{ dict.status}} </td>
+		   <td> {{ dict.notes}} </td>
+    </tr>
 {% endfor%}
 </table>
 

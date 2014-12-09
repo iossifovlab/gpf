@@ -2,6 +2,7 @@ import unittest
 import filecmp
 import pprint
 import os
+from operator import itemgetter
 from functional_helpers import *
 from django.template import Template, Context, loader
 from django.conf import settings
@@ -125,7 +126,6 @@ class VariantsDownloadTest(FunctionalBase):
                                          self.tmp_dir)
 
 class EnrichmentTest(FunctionalBase):
-
     def name(self):
         return "enrichment_test"
 
@@ -161,40 +161,33 @@ def test_report(result):
     for (test, msg) in result.successes:
         print("PASS:\t %s" % str(test))
 
-def result_to_dict(result, number_of_tests):
-
-    print "length of results : ", len(result.failures) + len(result.errors) +len(result.successes) 
-    result_dict = {"VariantsPreviewTest" : [None]*number_of_tests,
-                   "VariantsChromesTest" : [None]*number_of_tests,
-                   "VariantsDownloadTest" : [None]*number_of_tests,
-                   "EnrichmentTest" : [None]*number_of_tests};
+def result_to_dict(result):
+    
+    result_dict = {"varTest" : [],
+                   "enrTest" : []}
     for i in range(0, len(result.failures)):
-    	result_dict.get(result.failures[i][0].__class__.__name__)[result.failures[i][0].index] = {
+        result_dict[result.failures[i][0].name()[:3]  + "Test"].append({
     		            'index': result.failures[i][0].index,
     			    'request': result.failures[i][0].request,
-    			    'name': result.failures[i][0].name,
+    			    'name': result.failures[i][0].name(),
     			    'status': 'FAIL',
-    			    'notes':repr(result.failures[i][1])}
+    			    'notes': result.failures[i][1]})
     for i in range(0, len(result.errors)):
-        result_dict.get(result.errors[i][0].__class__.__name__)[result.errors[i][0].index] = {
+        result_dict[result.errors[i][0].name()[:3]  + "Test"].append({
     		            'index': result.errors[i][0].index,
     			    'request': result.errors[i][0].request,
-    			    'name': result.errors[i][0].name,
+    			    'name': result.errors[i][0].name(),
     			    'status': 'ERROR',
-    			    'notes':result.errors[i][1]}
+    			    'notes': result.errors[i][1]})
     for i in range(0, len(result.successes)):
-    	result_dict.get(result.successes[i][0].__class__.__name__)[result.successes[i][0].index] ={
+        result_dict[result.successes[i][0].name()[:3]  + "Test"].append({
     		            'index': result.successes[i][0].index,
     			    'request': result.successes[i][0].request,
-    			    'name': result.successes[i][0].name,
+    			    'name': result.successes[i][0].name(),
     			    'status': 'OK',
-    			    'notes': result.successes[i][1]}
-    
-    result_dict["VariantsPreviewTest"] = filter(lambda a: a!=None, result_dict["VariantsPreviewTest"])
-    result_dict["VariantsChromesTest"] = filter(lambda a: a!=None, result_dict["VariantsChromesTest"])
-    result_dict["VariantsDownloadTest"] = filter(lambda a: a!=None, result_dict["VariantsDownloadTest"])
-    result_dict["EnrichmentTest"] = filter(lambda a: a!=None, result_dict["EnrichmentTest"])
-    
+    			    'notes': result.successes[i][1]})    
+    result_dict["varTest"] = sorted(result_dict["varTest"], key=itemgetter('name', 'index'))
+    result_dict["enrTest"] = sorted(result_dict["enrTest"], key=itemgetter('name','index'))
     return result_dict
 
 def make_results_file(result):
@@ -278,7 +271,6 @@ if __name__ == "__main__":
     runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
     result = runner.run(suite)
     #test_report(result)
-    number_of_tests = suite.countTestCases()
-    make_results_file(result_to_dict(result, number_of_tests))
+    make_results_file(result_to_dict(result))
     cleanup_variants_test(**context)
     
