@@ -510,9 +510,11 @@ def pedigree_data(v):
         raise Exception
 
     if v.fromParentS == "mom":
+        res[1][0][2] = 1
         res[1][0].append(1)
     elif v.fromParentS == "dad":
         res[1][1].append(1)
+        res[1][1][2] = 1
     print(res)
     return res
     
