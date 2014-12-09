@@ -22,6 +22,7 @@ class FunctionalBase(unittest.TestCase):
         self.index = index
         self.request = request
         self.results_dir = results_dir
+        self.link = ""
         
     def runTest(self):
         self.assertTrue(self.compare_requests(),
@@ -97,10 +98,15 @@ class VariantsPreviewTest(FunctionalBase):
 
     def name(self):
         return "variants_preview_test"
-        
+       
+    def link(self):
+    	return link
+       
     def implementation(self):
         self.browser.get(self.url)
         fill_variants_form(self.browser, self.request)
+        print "Current Very Usefull URL : " , self.browser.current_url
+        link = self.browser.current_url
         content = click_the_preview_button(self.browser)
         return self.save_data(content)
         
@@ -128,15 +134,20 @@ class VariantsDownloadTest(FunctionalBase):
 class EnrichmentTest(FunctionalBase):
     def name(self):
         return "enrichment_test"
+            
+    def Link(self):
+    	return self.link
 
     def implementation(self):
     	self.browser.get(self.url)
     	#wait_button_to_be_clickable(self.browser)
         click_enrichment_link(self.browser)
     	fill_enrichment_form(self.browser, self.request)
-        
+        self.link = self.browser.current_url
+    	print "self.link : ", self.link
     	content = click_the_enrichment_button(self.browser)
         return self.save_data(content)
+     
 
 class SeqpipeTestResult(unittest.TestResult):
 	
@@ -171,7 +182,8 @@ def result_to_dict(result):
     			    'request': result.failures[i][0].request,
     			    'name': result.failures[i][0].name(),
     			    'status': 'FAIL',
-    			    'notes': result.failures[i][1]})
+    			    'notes': result.failures[i][1],
+    	                    'link': result.failures[i][0].Link()})
     for i in range(0, len(result.errors)):
         result_dict[result.errors[i][0].name()[:3]  + "Test"].append({
     		            'index': result.errors[i][0].index,
@@ -257,7 +269,7 @@ def run_test_suite(suite):
         test.runTest()
     
 if __name__ == "__main__":
-    test_context = {'variants_requests': "variants_tests/data_dict_variants.txt",
+    test_context = {#'variants_requests': "variants_tests/data_dict_variants.txt",
                     'enrichment_requests': 'variants_tests/data_dict_enrichment.txt',
                     'data_dir': "variants_tests/",
                     'results_dir': "results_dir/",
