@@ -6,7 +6,6 @@
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 	<link href="{% static 'table_style.css' %}"
         	rel="stylesheet">
-        <script type="text/javascript" src="{% static 'resultSEQ.js' %}" > </script>
 </head>
 
 <body>
@@ -27,10 +26,7 @@
 		<tr class= {{ class_name_success }}>
 	{% endifnotequal %}
 		   <td>{{ dict.index}} -- {{ dict.name }}</td>
-		   <td> <span class = "expanded" >  {{ dict.request}} </span> 
-			<span class = "collapsed">  </span> 
-			<a href="javascript:void(0)" class="collapsed">Expand</a>
-			<a href="javascript:void(0)" class="expanded"> Collapse</a></td>
+		   <td><a href="{{ dict.link }}"> Request </a></td>
 		   <td> {{ dict.status}} </td>
 		   <td> {{ dict.notes}} </td>
     </tr>
@@ -53,13 +49,9 @@
 		<tr class= {{ class_name_success }}>
 	{% endifnotequal %}
 		   <td> {{ dict.index}} </td> 
-		   <td> <span class = "expanded" >  {{ dict.request}} </span> 
-			<span class = "collapsed">  </span> 
-			<a href="javascript:void(0)" class="collapsed">Expand</a>
-			<a href="javascript:void(0)" class="expanded"> Collapse</a></td>
+		   <td> <a href="{{ dict.link }}"> Request </a> </td>
 		   <td> {{ dict.status}} </td>
 		   <td> {{ dict.notes}} </td>
-		   <td> {{ dict.link}} </td>
     </tr>
 {% endfor%}
 </table>
