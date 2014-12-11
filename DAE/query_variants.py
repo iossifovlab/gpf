@@ -515,7 +515,7 @@ def pedigree_data(v):
     elif v.fromParentS == "dad":
         res[1][1].append(1)
         res[1][1][2] = 1
-    print(res)
+    # print(res)
     return res
     
 def __augment_vars(v):
