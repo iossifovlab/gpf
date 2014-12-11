@@ -102,6 +102,7 @@ class CheckPreviewTest(FunctionalTest):
 
     def random_gene_set_value(self):
 
+        data = {}
         gene_set_value_option = self.browser.find_element_by_xpath(
             "//div[@id='preloadedBtn']/button")
         gene_set_value_option.click()
@@ -110,20 +111,18 @@ class CheckPreviewTest(FunctionalTest):
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, ".ui-autocomplete")))
 
-       	time.sleep(5)
+       	time.sleep(2)
         dropdown_menu =self.browser.find_elements_by_css_selector(
             "ul.ui-autocomplete > li")
         random_value_from_dropdown_menu = str(random.randint(
             1, len(dropdown_menu)))
-        random_element = lambda: self.browser.find_element_by_css_selector(
-            "ul.ui-autocomplete > li:nth-child(10)")
         
-        random_element = lambda: self.browser.find_element_by_xpath(
+        random_element = self.browser.find_element_by_xpath(
         	"//ul[@class='ui-autocomplete " +
         	"ui-front ui-menu ui-widget ui-widget-content " +
         	"ui-corner-all']/li[" + random_value_from_dropdown_menu + "]"
         )
-        random_element().click()
+        random_element.click()
 
 
     def random_gene_sets_radio_buttons(self):
