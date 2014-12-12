@@ -102,7 +102,6 @@ class CheckPreviewTest(FunctionalTest):
 
     def random_gene_set_value(self):
 
-        data = {}
         gene_set_value_option = self.browser.find_element_by_xpath(
             "//div[@id='preloadedBtn']/button")
         gene_set_value_option.click()
