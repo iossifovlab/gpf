@@ -33,7 +33,7 @@ def select_method_by_value(browser, select_target, select_value):
 
     
 def type_method(browser, type_target,text):
-    WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 30).until(
         EC.presence_of_element_located(
             (By.ID,type_target)))
         
@@ -63,13 +63,40 @@ def select_gene_set_main(browser, data):
                            "geneSet", data['geneSet'])
     if data['geneSet'] == 'denovo':
         select_denovo_gene_set(browser, data)
+        
+def select_gene_set_main_custom(browser, data):
+    select_method(browser,
+                          "geneSet", data['geneSet'])
+    if data['geneSet'] == 'denovo':
+    	   data['geneStudy'] = random.choice(Select(
+                    self.browser.find_element_by_id(
+                    "denovoStudiesInGeneSet")).options).text
+           select_denovo_gene_set(browser, data)
 
 def select_gene_set_value(browser, data):
 
-    gene_set_value_option = browser.find_element_by_xpath(
-        "//div[@id='preloadedBtn']/button")
-    gene_set_value_option.click()
+    #gene_set_value_option = browser.find_element_by_xpath(
+    #    "//div[@id='preloadedBtn']/button")
+    #gene_set_value_option.click()
     
+    #WebDriverWait(browser, 10).until(
+    #    EC.presence_of_element_located(
+    #        (By.CSS_SELECTOR, ".ui-autocomplete")))
+
+    selected_element = lambda: browser.find_element_by_xpath(
+        "//ul[@class='ui-autocomplete " +
+        "ui-front ui-menu ui-widget ui-widget-content " +
+        "ui-corner-all']/li/a[contains(text(),'" +
+        data['geneTerm'] + "')]"
+    )
+
+    print("Random gene set value : %s" % selected_element().text)
+    selected_element().click()
+    
+def select_gene_set_value_custom(browser, data):
+    gene_set_value_option = browser.find_element_by_xpath(
+            "//div[@id='preloadedBtn']/button")
+    gene_set_value_option.click()
     WebDriverWait(browser, 10).until(
         EC.presence_of_element_located(
             (By.CSS_SELECTOR, ".ui-autocomplete")))
@@ -80,7 +107,6 @@ def select_gene_set_value(browser, data):
         "ui-corner-all']/li/a[contains(text(),'" +
         data['geneTerm'] + "')]"
     )
-
     print("Random gene set value : %s" % selected_element().text)
     selected_element().click()
 
@@ -134,6 +160,11 @@ def select_rare_interval(browser, data):
     type_method(browser, "max", data['popFrequencyMax'])
     
 def select_rarity_radio_buttons(browser, data):
+	
+    WebDriverWait(browser, 10).until(
+	    EC.element_to_be_clickable(
+		(By.ID, data['rarity'])))
+    
     browser.find_element_by_id(data['rarity']).click()
     if data['rarity'] == "rare":
         select_rare_max(browser, data)

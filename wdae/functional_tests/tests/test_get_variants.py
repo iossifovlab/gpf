@@ -91,37 +91,62 @@ class CheckPreviewTest(FunctionalTest):
             self.browser.find_element_by_id("denovoStudiesInGeneSet")).options).text)
 
     def random_gene_set_main(self):
+    	    
+    	data = {}
+    	data['geneSet'] = random.choice(Select(
+            self.browser.find_element_by_id("geneSet")).options).text
+        
+        select_gene_set_main_custom(self.browser, data)
 
-        select_method(self.browser, "geneSet", random.choice(Select(
-            self.browser.find_element_by_id("geneSet")).options).text)
+        #select_method(self.browser, "geneSet", random.choice(Select(
+        #    self.browser.find_element_by_id("geneSet")).options).text)
 
-        denovo_studies_controls = self.browser.find_element_by_id("denovoStudiesControls")
+        #denovo_studies_controls = self.browser.find_element_by_id("denovoStudiesControls")
 
-        if denovo_studies_controls.is_displayed():
-            self.random_denovo_gene_set()
+        #if denovo_studies_controls.is_displayed():
+        #    self.random_denovo_gene_set()
 
     def random_gene_set_value(self):
-
+        data = {}
         gene_set_value_option = self.browser.find_element_by_xpath(
             "//div[@id='preloadedBtn']/button")
         gene_set_value_option.click()
         
-        WebDriverWait(self.browser, 10).until(
-            EC.presence_of_element_located(
-                (By.CSS_SELECTOR, ".ui-autocomplete")))
+        #WebDriverWait(self.browser, 10).until(
+        #    EC.presence_of_element_located(
+        #        (By.CSS_SELECTOR, ".ui-autocomplete")))
 
-       	time.sleep(2)
+       	#time.sleep(2)
+       	
+       	WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, 
+                	  "//ul[@class='ui-autocomplete " +
+        	          "ui-front ui-menu ui-widget ui-widget-content " +
+        	          "ui-corner-all']/li[1]")))
+       	
         dropdown_menu =self.browser.find_elements_by_css_selector(
             "ul.ui-autocomplete > li")
         random_value_from_dropdown_menu = str(random.randint(
             1, len(dropdown_menu)))
-        
-        random_element = self.browser.find_element_by_xpath(
+        #print "random number : ", random_value_from_dropdown_menu
+        random_element =lambda: self.browser.find_element_by_xpath(
         	"//ul[@class='ui-autocomplete " +
         	"ui-front ui-menu ui-widget ui-widget-content " +
         	"ui-corner-all']/li[" + random_value_from_dropdown_menu + "]"
-        )
-        random_element.click()
+        	)
+        #print "random text : ", random_element().text
+        
+        data['geneTerm'] = random_element().text
+        select_gene_set_value_custom(self.browser, data)
+        
+        
+        #random_element =self.browser.find_element_by_xpath(
+        #	"//ul[@class='ui-autocomplete " +
+        #	"ui-front ui-menu ui-widget ui-widget-content " +
+        #	"ui-corner-all']/li[" + random_value_from_dropdown_menu + "]"
+        #)
+        #random_element.click()
 
 
     def random_gene_sets_radio_buttons(self):
@@ -185,7 +210,7 @@ class CheckPreviewTest(FunctionalTest):
     def wait_for_table(self):
 
         try:
-            element = WebDriverWait(self.browser, 60).until(
+            element = WebDriverWait(self.browser, 120).until(
                 EC.presence_of_element_located((By.ID,
                                                 "previewTable"))
                                 )
@@ -301,10 +326,10 @@ class CheckPreviewTest(FunctionalTest):
     def test_preview_button_multiple_times(self):
 
         self.browser.get(self.server_url)
-        self.multiple_tests_not_random(30)
+        self.multiple_tests_not_random(50)
 
     def test_preview_button_random_clicks(self):
 
         self.browser.get(self.server_url)
-        self.multiple_tests_random(30)
+        self.multiple_tests_random(0)
 

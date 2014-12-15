@@ -20,45 +20,61 @@ import random
 
 class CheckEnrichmentTest(FunctionalTest):
 	
-	def random_denovo_gene_set_enrichment_page(self):
-		
-		denovo_gene_set_option = Select(
-			self.browser.find_element_by_id("denovoStudiesInGeneSet"))
-		denovo_gene_set_option.select_by_visible_text(
-			random.choice(denovo_gene_set_option.options).text)
-		print "Random denovo gene set : " , denovo_gene_set_option.first_selected_option.text
+	#def random_denovo_gene_set_enrichment_page(self):
+	#	
+	#	denovo_gene_set_option = Select(
+	#		self.browser.find_element_by_id("denovoStudiesInGeneSet"))
+	#	denovo_gene_set_option.select_by_visible_text(
+	#		random.choice(denovo_gene_set_option.options).text)
+	#	print "Random denovo gene set : " , denovo_gene_set_option.first_selected_option.text
 	
 	def random_gene_set_main_enrichment_page(self):
 		
-		gene_set_main_option = Select(
-			self.browser.find_element_by_id("geneSet"))
-		gene_set_main_option.select_by_visible_text(
-			random.choice(gene_set_main_option.options).text)
-		print "Random gene set main : " , gene_set_main_option.first_selected_option.text
-		if gene_set_main_option.first_selected_option.text == "Denovo":
-			self.random_denovo_gene_set_enrichment_page()
+		data = {}
+    	        data['geneSet'] = random.choice(Select(
+                     self.browser.find_element_by_id("geneSet")).options).text
+        
+                select_gene_set_main_custom(self.browser, data)
+		
+		#gene_set_main_option = Select(
+		#	self.browser.find_element_by_id("geneSet"))
+		#gene_set_main_option.select_by_visible_text(
+		#	random.choice(gene_set_main_option.options).text)
+		#print "Random gene set main : " , gene_set_main_option.first_selected_option.text
+		#if gene_set_main_option.first_selected_option.text == "Denovo":
+		#	self.random_denovo_gene_set_enrichment_page()
 		
 	def random_gene_set_value_enrichment_page(self):
+		
+                data = {}
+                gene_set_value_option = self.browser.find_element_by_xpath(
+                     "//div[@id='preloadedBtn']/button")
+                gene_set_value_option.click()		
+		
 		gene_set_value_option = self.browser.find_element_by_xpath(
 		    "//div[@id='preloadedBtn']/button")
 		gene_set_value_option.click()
 		
 		WebDriverWait(self.browser, 10).until(
-		    EC.presence_of_element_located(
-			(By.CSS_SELECTOR, ".ui-autocomplete")))
-	
-		time.sleep(2)
-		dropdown_menu =self.browser.find_elements_by_css_selector(
-		    "ul.ui-autocomplete > li")
-		random_value_from_dropdown_menu = str(random.randint(
-		    1, len(dropdown_menu)))
-		
-		random_element = self.browser.find_element_by_xpath(
-			"//ul[@class='ui-autocomplete " +
-			"ui-front ui-menu ui-widget ui-widget-content " +
-			"ui-corner-all']/li[" + random_value_from_dropdown_menu + "]"
-		)
-		random_element.click()
+                EC.element_to_be_clickable(
+                (By.XPATH, 
+                	  "//ul[@class='ui-autocomplete " +
+        	          "ui-front ui-menu ui-widget ui-widget-content " +
+        	          "ui-corner-all']/li[1]")))
+       	
+                dropdown_menu =self.browser.find_elements_by_css_selector(
+                       "ul.ui-autocomplete > li")
+                random_value_from_dropdown_menu = str(random.randint(
+                         1, len(dropdown_menu)))
+               
+                random_element =lambda: self.browser.find_element_by_xpath(
+        	   "//ul[@class='ui-autocomplete " +
+        	   "ui-front ui-menu ui-widget ui-widget-content " +
+        	   "ui-corner-all']/li[" + random_value_from_dropdown_menu + "]"
+        	)
+        
+                data['geneTerm'] = random_element().text
+                select_gene_set_value_custom(self.browser, data)
 		
 	def random_gene_set(self):
 		
@@ -209,7 +225,7 @@ class CheckEnrichmentTest(FunctionalTest):
 		finally:
 			pass
 		
-		self.multiple_tests_not_random(0)
+		self.multiple_tests_not_random(50)
 		
 
 		
