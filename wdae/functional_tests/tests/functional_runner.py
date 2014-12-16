@@ -98,9 +98,6 @@ class VariantsPreviewTest(FunctionalBase):
     def name(self):
         return "variants_preview_test"
        
-    def link(self):
-    	return link
-       
     def implementation(self):
         self.browser.get(self.url)
         fill_variants_form(self.browser, self.request)

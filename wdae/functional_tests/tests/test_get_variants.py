@@ -104,7 +104,6 @@ class CheckPreviewTest(FunctionalTest):
         gene_set_value_option = self.browser.find_element_by_xpath(
             "//div[@id='preloadedBtn']/button")
         gene_set_value_option.click()
-
        	
        	WebDriverWait(self.browser, 10).until(
             EC.element_to_be_clickable(
