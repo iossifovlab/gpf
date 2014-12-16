@@ -12,6 +12,7 @@ import sys
 import shutil
 import difflib
 import traceback
+import random
 
 
 def select_method(browser, select_target,select_name):
@@ -67,21 +68,13 @@ def select_gene_set_main(browser, data):
 def select_gene_set_main_custom(browser, data):
     select_method(browser,
                           "geneSet", data['geneSet'])
-    if data['geneSet'] == 'denovo':
+    if data['geneSet'] == 'Denovo':
     	   data['geneStudy'] = random.choice(Select(
-                    self.browser.find_element_by_id(
+                    browser.find_element_by_id(
                     "denovoStudiesInGeneSet")).options).text
            select_denovo_gene_set(browser, data)
 
 def select_gene_set_value(browser, data):
-
-    #gene_set_value_option = browser.find_element_by_xpath(
-    #    "//div[@id='preloadedBtn']/button")
-    #gene_set_value_option.click()
-    
-    #WebDriverWait(browser, 10).until(
-    #    EC.presence_of_element_located(
-    #        (By.CSS_SELECTOR, ".ui-autocomplete")))
 
     selected_element = lambda: browser.find_element_by_xpath(
         "//ul[@class='ui-autocomplete " +
@@ -167,8 +160,18 @@ def select_rarity_radio_buttons(browser, data):
     
     browser.find_element_by_id(data['rarity']).click()
     if data['rarity'] == "rare":
+    	max_textbox = browser.find_elements_by_id('max')
+    	if not max_textbox:
+    	   print "TextBox is missing !!! >>>>>>>>>"
+    	   browser.find_element_by_id('interval').click()
+    	   browser.find_element_by_id(data['rarity']).click()
         select_rare_max(browser, data)
     if data['rarity'] == "interval":
+    	max_textbox = browser.find_elements_by_id('max')
+    	if not max_textbox:
+           print "TextBox is missing !!! >>>>>>>>>"
+           browser.find_element_by_id('rare').click()
+    	   browser.find_element_by_id(data['rarity']).click()
         select_rare_interval(browser, data)
 
 def select_transmitted_studies(browser, data):

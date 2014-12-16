@@ -98,25 +98,13 @@ class CheckPreviewTest(FunctionalTest):
         
         select_gene_set_main_custom(self.browser, data)
 
-        #select_method(self.browser, "geneSet", random.choice(Select(
-        #    self.browser.find_element_by_id("geneSet")).options).text)
-
-        #denovo_studies_controls = self.browser.find_element_by_id("denovoStudiesControls")
-
-        #if denovo_studies_controls.is_displayed():
-        #    self.random_denovo_gene_set()
 
     def random_gene_set_value(self):
         data = {}
         gene_set_value_option = self.browser.find_element_by_xpath(
             "//div[@id='preloadedBtn']/button")
         gene_set_value_option.click()
-        
-        #WebDriverWait(self.browser, 10).until(
-        #    EC.presence_of_element_located(
-        #        (By.CSS_SELECTOR, ".ui-autocomplete")))
 
-       	#time.sleep(2)
        	
        	WebDriverWait(self.browser, 10).until(
             EC.element_to_be_clickable(
@@ -129,24 +117,15 @@ class CheckPreviewTest(FunctionalTest):
             "ul.ui-autocomplete > li")
         random_value_from_dropdown_menu = str(random.randint(
             1, len(dropdown_menu)))
-        #print "random number : ", random_value_from_dropdown_menu
         random_element =lambda: self.browser.find_element_by_xpath(
         	"//ul[@class='ui-autocomplete " +
         	"ui-front ui-menu ui-widget ui-widget-content " +
         	"ui-corner-all']/li[" + random_value_from_dropdown_menu + "]"
         	)
-        #print "random text : ", random_element().text
         
-        data['geneTerm'] = random_element().text
+        data['geneTerm'] = random_element().text[:10]
         select_gene_set_value_custom(self.browser, data)
-        
-        
-        #random_element =self.browser.find_element_by_xpath(
-        #	"//ul[@class='ui-autocomplete " +
-        #	"ui-front ui-menu ui-widget ui-widget-content " +
-        #	"ui-corner-all']/li[" + random_value_from_dropdown_menu + "]"
-        #)
-        #random_element.click()
+
 
 
     def random_gene_sets_radio_buttons(self):
@@ -164,7 +143,6 @@ class CheckPreviewTest(FunctionalTest):
 
         genes_all_option = self.browser.find_element_by_id(
             random_choice)
-        #random.choice(["geneSetsRadio"]))
         genes_all_option.click()
         if genes_all_option.get_attribute("id") == "geneSetsRadio":
 
@@ -326,7 +304,7 @@ class CheckPreviewTest(FunctionalTest):
     def test_preview_button_multiple_times(self):
 
         self.browser.get(self.server_url)
-        self.multiple_tests_not_random(50)
+        self.multiple_tests_not_random(100)
 
     def test_preview_button_random_clicks(self):
 

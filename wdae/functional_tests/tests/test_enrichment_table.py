@@ -20,14 +20,6 @@ import random
 
 class CheckEnrichmentTest(FunctionalTest):
 	
-	#def random_denovo_gene_set_enrichment_page(self):
-	#	
-	#	denovo_gene_set_option = Select(
-	#		self.browser.find_element_by_id("denovoStudiesInGeneSet"))
-	#	denovo_gene_set_option.select_by_visible_text(
-	#		random.choice(denovo_gene_set_option.options).text)
-	#	print "Random denovo gene set : " , denovo_gene_set_option.first_selected_option.text
-	
 	def random_gene_set_main_enrichment_page(self):
 		
 		data = {}
@@ -35,15 +27,6 @@ class CheckEnrichmentTest(FunctionalTest):
                      self.browser.find_element_by_id("geneSet")).options).text
         
                 select_gene_set_main_custom(self.browser, data)
-		
-		#gene_set_main_option = Select(
-		#	self.browser.find_element_by_id("geneSet"))
-		#gene_set_main_option.select_by_visible_text(
-		#	random.choice(gene_set_main_option.options).text)
-		#print "Random gene set main : " , gene_set_main_option.first_selected_option.text
-		#if gene_set_main_option.first_selected_option.text == "Denovo":
-		#	self.random_denovo_gene_set_enrichment_page()
-		
 	def random_gene_set_value_enrichment_page(self):
 		
                 data = {}
@@ -51,13 +34,9 @@ class CheckEnrichmentTest(FunctionalTest):
                      "//div[@id='preloadedBtn']/button")
                 gene_set_value_option.click()		
 		
-		gene_set_value_option = self.browser.find_element_by_xpath(
-		    "//div[@id='preloadedBtn']/button")
-		gene_set_value_option.click()
-		
 		WebDriverWait(self.browser, 10).until(
-                EC.element_to_be_clickable(
-                (By.XPATH, 
+                    EC.element_to_be_clickable(
+                          (By.XPATH, 
                 	  "//ul[@class='ui-autocomplete " +
         	          "ui-front ui-menu ui-widget ui-widget-content " +
         	          "ui-corner-all']/li[1]")))
@@ -73,7 +52,7 @@ class CheckEnrichmentTest(FunctionalTest):
         	   "ui-corner-all']/li[" + random_value_from_dropdown_menu + "]"
         	)
         
-                data['geneTerm'] = random_element().text
+                data['geneTerm'] = random_element().text[:10]
                 select_gene_set_value_custom(self.browser, data)
 		
 	def random_gene_set(self):
@@ -88,28 +67,17 @@ class CheckEnrichmentTest(FunctionalTest):
 		data['denovoStudies'] = random.choice(Select(
 		    self.browser.find_element_by_id("denovoStudies")).options).text
 		select_denovo_studies(self.browser, data)
-		
-	def wait_for_report_div(self):
-		
-		try:
-			element = WebDriverWait(self.browser, 30).until(
-				EC.presence_of_element_located((By.ID,
-                                                "report"))
-                                )
-		finally:
-			pass
-		
-		
+
 		
 	def wait_for_enrichment_table(self):
 		
 		try:
 			element = WebDriverWait(self.browser, 30).until(
-				EC.presence_of_element_located((By.ID,
-                                                "enrichmentTable"))
+				EC.presence_of_element_located((By.XPATH,
+                                                "//table[@id = 'enrichmentTable']" + 
+                                                "| //div[@id ='report'][contains(text(),'Empty')]"))
                                 )
-                except:
-                	self.wait_for_report_div()
+
 		finally:
 			pass
 		
