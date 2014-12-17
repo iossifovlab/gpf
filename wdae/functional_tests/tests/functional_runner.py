@@ -141,6 +141,18 @@ class EnrichmentTest(FunctionalBase):
     	content = click_the_enrichment_button(self.browser)
     	setattr(self, "link", self.browser.current_url)
         return self.save_data(content)
+        
+class PhenoReportTest(FunctionalBase):
+      def name(self):
+      	  return "pheno_report_test"
+      def implementation(self):
+      	  self.browser.get(self.url)
+      	  click_pheno_link(self.browser)
+      	  fill_pheno_form(self.browser, self.request)
+      	  content = click_the_report_button(self.browser)
+      	  setattr(self, "link", self.browser.current_url)
+      	  return self.save_data(content)
+      	  
      
 def set_attribute(obj, attr_name, attr_value):
     setattr(obj, attr_name, attr_value)
@@ -171,7 +183,8 @@ def test_report(result):
 def result_to_dict(result):
     
     result_dict = {"varTest" : [],
-                   "enrTest" : []}
+                   "enrTest" : [],
+                   "pheTest" : []}
     for i in range(0, len(result.failures)):
         result_dict[result.failures[i][0].name()[:3]  + "Test"].append({
     		            'index': result.failures[i][0].index,
@@ -199,6 +212,7 @@ def result_to_dict(result):
     			    'notes': result.successes[i][1]})    
     result_dict["varTest"] = sorted(result_dict["varTest"], key=itemgetter('name', 'index'))
     result_dict["enrTest"] = sorted(result_dict["enrTest"], key=itemgetter('name','index'))
+    result_dict["pheTest"] = sorted(result_dict["pheTest"], key=itemgetter('name','index'))
     return result_dict
 
 def make_results_file(result):
@@ -251,6 +265,17 @@ def build_test_suite(**context):
             test_case = EnrichmentTest()
             test_case.set_context(**context)
             suite.addTest(test_case)
+            
+    pheno_requests = context.get('pheno_requests', None)
+    if pheno_requests:
+       data = load_dictionary(pheno_requests)
+       for (index, request) in enumerate(data):
+       	   context['index'] = index
+       	   context['request'] = request
+       	   
+       	   test_case = PhenoReportTest()
+       	   test_case.set_context(**context)
+       	   suite.addTest(test_case)
 
     return (context, suite)
 
@@ -270,6 +295,7 @@ def run_test_suite(suite):
 if __name__ == "__main__":
     test_context = {'variants_requests': "variants_tests/data_dict_variants.txt",
                     'enrichment_requests': 'variants_tests/data_dict_enrichment.txt',
+                    'pheno_requests' : 'variants_tests/data_dict_pheno.txt',
                     'data_dir': "variants_tests/",
                     'results_dir': "results_dir/",
                     'url': "http://seqpipe-vm.setelis.com/dae",

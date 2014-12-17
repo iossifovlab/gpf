@@ -56,6 +56,29 @@
 {% endfor%}
 </table>
 
+<h1> Pheno Tests </h1>
+<table cellspacing="1" border="1" cellpadding="1">
+<tr class="status_done">
+	<td> Index </td>
+	<td> Request </td>
+	<td> Status </td>
+	<td> Notes </td>
+
+</tr>
+{% for dict in result.pheTest %}
+	{% ifnotequal dict.status "OK" %}
+		<tr class= {{ class_name_failure }}>
+	{% else %}
+		<tr class= {{ class_name_success }}>
+	{% endifnotequal %}
+		   <td> {{ dict.index}} </td> 
+		   <td> <a href="{{ dict.link }}"> Request </a> </td>
+		   <td> {{ dict.status}} </td>
+		   <td> {{ dict.notes}} </td>
+    </tr>
+{% endfor%}
+</table>
+
 
 </body>
 </html>

@@ -97,10 +97,6 @@ def select_gene_set_value(browser, data):
     
 def select_gene_set_value_custom(browser, data):
 
-    #WebDriverWait(browser, 10).until(
-    #    EC.presence_of_element_located(
-    #        (By.CSS_SELECTOR, ".ui-autocomplete")))
-
     selected_element = lambda: browser.find_element_by_xpath(
         "//ul[@class='ui-autocomplete " +
         "ui-front ui-menu ui-widget ui-widget-content " +
@@ -122,7 +118,11 @@ def select_effect_type(browser, data):
 
 def select_variant_type(browser, data):
     select_method(browser,
-                  "variants", data['variantTypes'])
+                  "variants", data['variantTypes']) 
+    
+def select_pheno_measure(browser, data):
+    select_method(browser,
+    	          "phenoMeasure", data['phenoMeasure'])
 
 def genes_radio_buttons(browser, data):
     
@@ -254,11 +254,19 @@ def wait_for_enrichment(browser, timeout=300):
     return element
     
 def wait_for_enrichment_page(browser, timeout=300):
-    element=WebDriverWait(browser, 10).until(
+    element=WebDriverWait(browser, timeout).until(
 		EC.presence_of_element_located((By.ID, 
 				      "downloadEnrichment"))
 	        )
     return element
+
+def wait_for_pheno_page_to_load(browser, timeout=300):
+      	element = WebDriverWait(browser, timeout).until(
+      	      	  EC.presence_of_element_located((By.ID,
+      	      	                "pageContent"
+      	      	       )) 
+                  )
+        return element
 
 def wait_for_preview(browser, timeout=300):
     element = WebDriverWait(browser,timeout).until(
@@ -284,10 +292,6 @@ def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
     while os.path.getsize(fullname) == 0 or os.path.exists(fullname+'.part'):
     	print("waiting for download")
         time.sleep(2)   
-
-    #while os.path.exists(fullname+'.part'):
-    #    print("waiting for %s.part" % fullname)
-    #    time.sleep(2)
     
     file_size_stored = os.stat(fullname).st_size
 
@@ -304,6 +308,12 @@ def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
             pass
 
     return fullname
+    
+def wait_for_pheno_report(browser, timeout=300):
+    element = WebDriverWait(browser, 30).until(
+      	      EC.presence_of_element_located((By.CSS_SELECTOR, 
+      	      "#preview > svg")))
+    return element    
 
 def wait_enrichment_link_to_be_clickable(browser, timeout=30):
     element = WebDriverWait(browser, timeout).until(
@@ -340,11 +350,23 @@ def click_the_enrichment_button(browser):
     wait_for_enrichment(browser)
     return get_enrichment_content(browser)
     
+def click_the_report_button(browser):
+    report_button = browser.find_element_by_id("reportBtn")
+    report_button.click()
+    wait_for_pheno_report(browser)
+    return get_pheno_content(browser)
+    
 def click_enrichment_link(browser):
     enrichment_button_elem = browser.find_element_by_css_selector(
 	       "#enrichment > a")
     enrichment_button_elem.click()
     wait_for_enrichment_page(browser)
+    
+def click_pheno_link(browser):
+    pheno_button_elem = browser.find_element_by_css_selector(
+	         "#phenos > a")
+    pheno_button_elem.click()
+    wait_for_pheno_page_to_load(browser)
     
 def get_preview_content(browser):
     table = browser.find_element_by_id("previewTable")
@@ -358,6 +380,9 @@ def get_chroms_content(browser):
 def get_enrichment_content(browser):
     enrichment = browser.find_element_by_id("enrichmentTable")
     return enrichment.get_attribute('innerHTML')
+def get_pheno_content(browser):
+    pheno = browser.find_element_by_id("previewGroup")
+    return pheno.get_attribute('innerHTML')
     
 def fill_variants_form(browser, data):
     genes_radio_buttons(browser, data)
@@ -372,6 +397,11 @@ def fill_enrichment_form(browser, data):
     genes_radio_buttons_enrichment(browser, data)
     select_denovo_studies(browser, data)
     select_transmitted_studies(browser, data)
+    
+def fill_pheno_form(browser, data): 
+    genes_radio_buttons(browser, data)
+    select_denovo_studies(browser, data)
+    select_pheno_measure(browser, data)
 
 def load_dictionary(filename):
     text_file = open(filename, 'r')
