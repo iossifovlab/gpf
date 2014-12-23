@@ -509,13 +509,13 @@ def pedigree_data(v):
     else:
         raise Exception
 
-    if v.fromParentS == "mom":
+    if v.fromParentS == "mom" and res[1][0][2] == 0:
         res[1][0][2] = 1
         res[1][0].append(1)
-    elif v.fromParentS == "dad":
-        res[1][1].append(1)
+    elif v.fromParentS == "dad" and res[1][1][2] == 0:
         res[1][1][2] = 1
-    # print(res)
+        res[1][1].append(1)
+    # print m, res
     return res
     
 def __augment_vars(v):
