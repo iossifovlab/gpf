@@ -1,12 +1,14 @@
 import unittest
 import filecmp
+import pprint
 import os
-import shutil
-from functional_helpers import fill_variants_form, click_the_preview_button, \
-    click_the_chroms_button, click_the_download_button, wait_enrichment_link_to_be_clickable, \
-    click_enrichment_link, fill_enrichment_form, click_the_enrichment_button, \
-    start_browser, stop_browser, load_dictionary
+from operator import itemgetter
+from functional_helpers import *
+from django.template import Template, Context, loader
+from django.conf import settings
 
+template_path = os.path.realpath(os.path.dirname(__file__))
+settings.configure(TEMPLATE_DIRS=(template_path+"/django_templates",))
 
 class FunctionalBase(unittest.TestCase):
 
@@ -95,11 +97,12 @@ class VariantsPreviewTest(FunctionalBase):
 
     def name(self):
         return "variants_preview_test"
-        
+       
     def implementation(self):
         self.browser.get(self.url)
         fill_variants_form(self.browser, self.request)
         content = click_the_preview_button(self.browser)
+        setattr(self, "link", self.browser.current_url)
         return self.save_data(content)
         
 class VariantsChromesTest(FunctionalBase):
@@ -111,6 +114,7 @@ class VariantsChromesTest(FunctionalBase):
         self.browser.get(self.url)
         fill_variants_form(self.browser, self.request)
         content = click_the_chroms_button(self.browser)
+        setattr(self, "link", self.browser.current_url)
         return self.save_data(content)
 
 class VariantsDownloadTest(FunctionalBase):
@@ -120,22 +124,38 @@ class VariantsDownloadTest(FunctionalBase):
     def implementation(self):
         self.browser.get(self.url)
         fill_variants_form(self.browser, self.request)
+        setattr(self, "link", self.browser.current_url)
         return click_the_download_button(self.browser,
                                          self.tmp_dir)
 
 class EnrichmentTest(FunctionalBase):
-
+	
     def name(self):
         return "enrichment_test"
 
     def implementation(self):
     	self.browser.get(self.url)
-    	wait_enrichment_link_to_be_clickable(self.browser)
+    	#wait_button_to_be_clickable(self.browser)
         click_enrichment_link(self.browser)
     	fill_enrichment_form(self.browser, self.request)
-        
     	content = click_the_enrichment_button(self.browser)
+    	setattr(self, "link", self.browser.current_url)
         return self.save_data(content)
+        
+class PhenoReportTest(FunctionalBase):
+      def name(self):
+      	  return "pheno_report_test"
+      def implementation(self):
+      	  self.browser.get(self.url)
+      	  click_pheno_link(self.browser)
+      	  fill_pheno_form(self.browser, self.request)
+      	  content = click_the_report_button(self.browser)
+      	  setattr(self, "link", self.browser.current_url)
+      	  return self.save_data(content)
+      	  
+     
+def set_attribute(obj, attr_name, attr_value):
+    setattr(obj, attr_name, attr_value)
 
 class SeqpipeTestResult(unittest.TestResult):
 	
@@ -160,6 +180,50 @@ def test_report(result):
     for (test, msg) in result.successes:
         print("PASS:\t %s" % str(test))
 
+def result_to_dict(result):
+    
+    result_dict = {"varTest" : [],
+                   "enrTest" : [],
+                   "pheTest" : []}
+    for i in range(0, len(result.failures)):
+        result_dict[result.failures[i][0].name()[:3]  + "Test"].append({
+    		            'index': result.failures[i][0].index,
+    			    'request': result.failures[i][0].request,
+    			    'name': result.failures[i][0].name(),
+    			    'status': 'FAIL',
+    			    'link': result.failures[i][0].link,
+    			    'notes': result.failures[i][1]
+    	                     })
+    for i in range(0, len(result.errors)):
+        result_dict[result.errors[i][0].name()[:3]  + "Test"].append({
+    		            'index': result.errors[i][0].index,
+    			    'request': result.errors[i][0].request,
+    			    'name': result.errors[i][0].name(),
+    			    'status': 'ERROR',
+    			    'link': result.errors[i][0].link,
+    			    'notes': result.errors[i][1]})
+    for i in range(0, len(result.successes)):
+        result_dict[result.successes[i][0].name()[:3]  + "Test"].append({
+    		            'index': result.successes[i][0].index,
+    			    'request': result.successes[i][0].request,
+    			    'name': result.successes[i][0].name(),
+    			    'status': 'OK',
+    			    'link': result.successes[i][0].link,
+    			    'notes': result.successes[i][1]})    
+    result_dict["varTest"] = sorted(result_dict["varTest"], key=itemgetter('name', 'index'))
+    result_dict["enrTest"] = sorted(result_dict["enrTest"], key=itemgetter('name','index'))
+    result_dict["pheTest"] = sorted(result_dict["pheTest"], key=itemgetter('name','index'))
+    return result_dict
+
+def make_results_file(result):
+    t=loader.get_template('results_template.html')
+    page=Context({"result":result,
+                  'class_name_success': 'status_passed',
+		  'class_name_failure': 'status_failed'})
+    f = open(template_path+"/django_templates/resultsSEQ.html", 'w+')
+    f.write(t.render(page))
+    f.close()
+
 def build_test_suite(**context):
 
     (browser, tmp_dir) = start_browser()
@@ -168,6 +232,8 @@ def build_test_suite(**context):
     context['browser'] = browser
 
     suite = unittest.TestSuite()
+    print(context)
+    
     variants_requests = context.get('variants_requests', None)
     if variants_requests:
         data = load_dictionary(variants_requests)
@@ -199,6 +265,17 @@ def build_test_suite(**context):
             test_case = EnrichmentTest()
             test_case.set_context(**context)
             suite.addTest(test_case)
+            
+    pheno_requests = context.get('pheno_requests', None)
+    if pheno_requests:
+       data = load_dictionary(pheno_requests)
+       for (index, request) in enumerate(data):
+       	   context['index'] = index
+       	   context['request'] = request
+       	   
+       	   test_case = PhenoReportTest()
+       	   test_case.set_context(**context)
+       	   suite.addTest(test_case)
 
     return (context, suite)
 
@@ -216,20 +293,21 @@ def run_test_suite(suite):
         test.runTest()
     
 if __name__ == "__main__":
-    test_context = {'variants_requests': "variants_tests/variants_requests.txt",
-                    'enrichment_requests': 'variants_tests/enrichment_requests.txt',
+    test_context = {'variants_requests': "variants_tests/data_dict_variants.txt",
+                    'enrichment_requests': 'variants_tests/data_dict_enrichment.txt',
+                    'pheno_requests' : 'variants_tests/data_dict_pheno.txt',
                     'data_dir': "variants_tests/",
-                    'results_dir': "tmp/",
+                    'results_dir': "results_dir/",
                     'url': "http://seqpipe-vm.setelis.com/dae",
                 }
     context, suite = build_test_suite(**test_context)
     
 
-    save_test_suite(suite)
-    run_test_suite(suite)
-    # runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
-    # result = runner.run(suite)
-    # test_report(result)
-    
+    #save_test_suite(suite)
+    #run_test_suite(suite)
+    runner = unittest.TextTestRunner(resultclass = SeqpipeTestResult)
+    result = runner.run(suite)
+    #test_report(result)
+    make_results_file(result_to_dict(result))
     cleanup_variants_test(**context)
     

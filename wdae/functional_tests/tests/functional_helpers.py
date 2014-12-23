@@ -12,6 +12,7 @@ import sys
 import shutil
 import difflib
 import traceback
+import random
 
 
 def select_method(browser, select_target,select_name):
@@ -33,7 +34,7 @@ def select_method_by_value(browser, select_target, select_value):
 
     
 def type_method(browser, type_target,text):
-    WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 30).until(
         EC.presence_of_element_located(
             (By.ID,type_target)))
         
@@ -63,17 +64,27 @@ def select_gene_set_main(browser, data):
                            "geneSet", data['geneSet'])
     if data['geneSet'] == 'denovo':
         select_denovo_gene_set(browser, data)
+        
+def select_gene_set_main_custom(browser, data):
+    select_method(browser,
+                          "geneSet", data['geneSet'])
+    if data['geneSet'] == 'Denovo':
+    	   data['geneStudy'] = random.choice(Select(
+                    browser.find_element_by_id(
+                    "denovoStudiesInGeneSet")).options).text
+           select_denovo_gene_set(browser, data)
 
 def select_gene_set_value(browser, data):
 
     gene_set_value_option = browser.find_element_by_xpath(
-        "//div[@id='preloadedBtn']/button")
+            "//div[@id='preloadedBtn']/button")
     gene_set_value_option.click()
     
     WebDriverWait(browser, 10).until(
         EC.presence_of_element_located(
             (By.CSS_SELECTOR, ".ui-autocomplete")))
 
+    
     selected_element = lambda: browser.find_element_by_xpath(
         "//ul[@class='ui-autocomplete " +
         "ui-front ui-menu ui-widget ui-widget-content " +
@@ -81,6 +92,17 @@ def select_gene_set_value(browser, data):
         data['geneTerm'] + "')]"
     )
 
+    print("Random gene set value : %s" % selected_element().text)
+    selected_element().click()
+    
+def select_gene_set_value_custom(browser, data):
+
+    selected_element = lambda: browser.find_element_by_xpath(
+        "//ul[@class='ui-autocomplete " +
+        "ui-front ui-menu ui-widget ui-widget-content " +
+        "ui-corner-all']/li/a[contains(text(),'" +
+        data['geneTerm'] + "')]"
+    )
     print("Random gene set value : %s" % selected_element().text)
     selected_element().click()
 
@@ -96,7 +118,11 @@ def select_effect_type(browser, data):
 
 def select_variant_type(browser, data):
     select_method(browser,
-                  "variants", data['variantTypes'])
+                  "variants", data['variantTypes']) 
+    
+def select_pheno_measure(browser, data):
+    select_method(browser,
+    	          "phenoMeasure", data['phenoMeasure'])
 
 def genes_radio_buttons(browser, data):
     
@@ -134,10 +160,25 @@ def select_rare_interval(browser, data):
     type_method(browser, "max", data['popFrequencyMax'])
     
 def select_rarity_radio_buttons(browser, data):
+	
+    WebDriverWait(browser, 10).until(
+	    EC.element_to_be_clickable(
+		(By.ID, data['rarity'])))
+    
     browser.find_element_by_id(data['rarity']).click()
     if data['rarity'] == "rare":
+    	max_textbox = browser.find_elements_by_id('max')
+    	if not max_textbox:
+    	   print "TextBox is missing !!! >>>>>>>>>"
+    	   browser.find_element_by_id('interval').click()
+    	   browser.find_element_by_id(data['rarity']).click()
         select_rare_max(browser, data)
     if data['rarity'] == "interval":
+    	max_textbox = browser.find_elements_by_id('max')
+    	if not max_textbox:
+           print "TextBox is missing !!! >>>>>>>>>"
+           browser.find_element_by_id('rare').click()
+    	   browser.find_element_by_id(data['rarity']).click()
         select_rare_interval(browser, data)
 
 def select_transmitted_studies(browser, data):
@@ -213,11 +254,19 @@ def wait_for_enrichment(browser, timeout=300):
     return element
     
 def wait_for_enrichment_page(browser, timeout=300):
-    element=WebDriverWait(browser, 10).until(
+    element=WebDriverWait(browser, timeout).until(
 		EC.presence_of_element_located((By.ID, 
 				      "downloadEnrichment"))
 	        )
     return element
+
+def wait_for_pheno_page_to_load(browser, timeout=300):
+      	element = WebDriverWait(browser, timeout).until(
+      	      	  EC.presence_of_element_located((By.ID,
+      	      	                "pageContent"
+      	      	       )) 
+                  )
+        return element
 
 def wait_for_preview(browser, timeout=300):
     element = WebDriverWait(browser,timeout).until(
@@ -243,10 +292,6 @@ def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
     while os.path.getsize(fullname) == 0 or os.path.exists(fullname+'.part'):
     	print("waiting for download")
         time.sleep(2)   
-
-    #while os.path.exists(fullname+'.part'):
-    #    print("waiting for %s.part" % fullname)
-    #    time.sleep(2)
     
     file_size_stored = os.stat(fullname).st_size
 
@@ -263,6 +308,12 @@ def wait_for_download(browser, ddir, filename='unruly.csv', timeout=300):
             pass
 
     return fullname
+    
+def wait_for_pheno_report(browser, timeout=300):
+    element = WebDriverWait(browser, 30).until(
+      	      EC.presence_of_element_located((By.CSS_SELECTOR, 
+      	      "#preview > svg")))
+    return element    
 
 def wait_enrichment_link_to_be_clickable(browser, timeout=30):
     element = WebDriverWait(browser, timeout).until(
@@ -299,11 +350,23 @@ def click_the_enrichment_button(browser):
     wait_for_enrichment(browser)
     return get_enrichment_content(browser)
     
+def click_the_report_button(browser):
+    report_button = browser.find_element_by_id("reportBtn")
+    report_button.click()
+    wait_for_pheno_report(browser)
+    return get_pheno_content(browser)
+    
 def click_enrichment_link(browser):
     enrichment_button_elem = browser.find_element_by_css_selector(
 	       "#enrichment > a")
     enrichment_button_elem.click()
     wait_for_enrichment_page(browser)
+    
+def click_pheno_link(browser):
+    pheno_button_elem = browser.find_element_by_css_selector(
+	         "#phenos > a")
+    pheno_button_elem.click()
+    wait_for_pheno_page_to_load(browser)
     
 def get_preview_content(browser):
     table = browser.find_element_by_id("previewTable")
@@ -317,6 +380,9 @@ def get_chroms_content(browser):
 def get_enrichment_content(browser):
     enrichment = browser.find_element_by_id("enrichmentTable")
     return enrichment.get_attribute('innerHTML')
+def get_pheno_content(browser):
+    pheno = browser.find_element_by_id("previewGroup")
+    return pheno.get_attribute('innerHTML')
     
 def fill_variants_form(browser, data):
     genes_radio_buttons(browser, data)
@@ -331,6 +397,11 @@ def fill_enrichment_form(browser, data):
     genes_radio_buttons_enrichment(browser, data)
     select_denovo_studies(browser, data)
     select_transmitted_studies(browser, data)
+    
+def fill_pheno_form(browser, data): 
+    genes_radio_buttons(browser, data)
+    select_denovo_studies(browser, data)
+    select_pheno_measure(browser, data)
 
 def load_dictionary(filename):
     text_file = open(filename, 'r')

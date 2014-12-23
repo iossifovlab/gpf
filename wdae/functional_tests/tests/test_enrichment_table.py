@@ -1,5 +1,5 @@
 from .base import FunctionalTest
-
+from .functional_helpers import *
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import ActionChains
@@ -20,66 +20,40 @@ import random
 
 class CheckEnrichmentTest(FunctionalTest):
 	
-	def random_denovo_gene_set_enrichment_page(self):
-		
-		denovo_gene_set_option = Select(
-			self.browser.find_element_by_id("denovoStudiesInGeneSet"))
-		denovo_gene_set_option.select_by_visible_text(
-			random.choice(denovo_gene_set_option.options).text)
-		print "Random denovo gene set : " , denovo_gene_set_option.first_selected_option.text
-		time.sleep(2)
-	
 	def random_gene_set_main_enrichment_page(self):
 		
-		gene_set_main_option = Select(
-			self.browser.find_element_by_id("geneSet"))
-		gene_set_main_option.select_by_visible_text(
-			random.choice(gene_set_main_option.options).text)
-		print "Random gene set main : " , gene_set_main_option.first_selected_option.text
-		if gene_set_main_option.first_selected_option.text == "Denovo":
-			self.random_denovo_gene_set_enrichment_page()
-		time.sleep(2)
-		
+		data = {}
+    	        data['geneSet'] = random.choice(Select(
+                     self.browser.find_element_by_id("geneSet")).options).text
+        
+                select_gene_set_main_custom(self.browser, data)
 	def random_gene_set_value_enrichment_page(self):
 		
-		gene_set_value_option =self.browser.find_element_by_xpath(
-			"//div[@id='preloadedBtn']/button")
-		gene_set_value_option.click()
-		time.sleep(5)
-		try:
-			element = WebDriverWait(self.browser, 10).until(
-				EC.presence_of_element_located(
-					(By.CSS_SELECTOR,".ui-autocomplete")))
-		finally:
-			pass
+                data = {}
+                gene_set_value_option = self.browser.find_element_by_xpath(
+                     "//div[@id='preloadedBtn']/button")
+                gene_set_value_option.click()		
 		
-		dropdown_menu = self.browser.find_elements_by_css_selector(
-			"ul.ui-autocomplete > li")
-		
-		print "dropdown_menu len" , len(dropdown_menu)
-		
-		random_value_from_dropdown_menu = str(random.randint(
-			1,len(dropdown_menu)))
-		
-		print "random_value_from_dropdown_menu " , random_value_from_dropdown_menu
-		
-		"""
-		try:
-			random_element = WebDriverWait(self.browser, 10).until(
-				EC.element_to_be_clickable((
-					By.CSS_SELECTOR,
-					"ul.ui-autocomplete > li:nth-child(" + random_value_from_dropdown_menu + ") > a"))
-				)
-		finally:
-			pass
-		"""
-		
-		random_element =lambda: self.browser.find_element_by_css_selector(
-			"ul.ui-autocomplete > li:nth-child(" + random_value_from_dropdown_menu + ")")
-		
-		print "Random gene set value : " , random_element().text
-		random_element().click()
-		time.sleep(2)
+		WebDriverWait(self.browser, 10).until(
+                    EC.element_to_be_clickable(
+                          (By.XPATH, 
+                	  "//ul[@class='ui-autocomplete " +
+        	          "ui-front ui-menu ui-widget ui-widget-content " +
+        	          "ui-corner-all']/li[1]")))
+       	
+                dropdown_menu =self.browser.find_elements_by_css_selector(
+                       "ul.ui-autocomplete > li")
+                random_value_from_dropdown_menu = str(random.randint(
+                         1, len(dropdown_menu)))
+               
+                random_element =lambda: self.browser.find_element_by_xpath(
+        	   "//ul[@class='ui-autocomplete " +
+        	   "ui-front ui-menu ui-widget ui-widget-content " +
+        	   "ui-corner-all']/li[" + random_value_from_dropdown_menu + "]"
+        	)
+        
+                data['geneTerm'] = random_element().text[:10]
+                select_gene_set_value_custom(self.browser, data)
 		
 	def random_gene_set(self):
 		
@@ -89,39 +63,24 @@ class CheckEnrichmentTest(FunctionalTest):
 		
 	def random_denovo_studies_enrichment_page(self):
 		
-		denovo_studies = Select(
-			self.browser.find_element_by_id("denovoStudies"))
-		denovo_studies.select_by_visible_text(
-			random.choice(denovo_studies.options).text)
-		print "Random Denovo Studies : " , denovo_studies.first_selected_option.text
-		time.sleep(2)
-		
-	def wait_for_report_div(self):
-		
-		try:
-			element = WebDriverWait(self.browser, 30).until(
-				EC.presence_of_element_located((By.ID,
-                                                "report"))
-                                )
-		finally:
-			pass
-		
-		time.sleep(2)
-		
+		data = {}
+		data['denovoStudies'] = random.choice(Select(
+		    self.browser.find_element_by_id("denovoStudies")).options).text
+		select_denovo_studies(self.browser, data)
+
 		
 	def wait_for_enrichment_table(self):
 		
 		try:
 			element = WebDriverWait(self.browser, 30).until(
-				EC.presence_of_element_located((By.ID,
-                                                "enrichmentTable"))
+				EC.presence_of_element_located((By.XPATH,
+                                                "//table[@id = 'enrichmentTable']" + 
+                                                "| //div[@id ='report'][contains(text(),'Empty')]"))
                                 )
-                except:
-                	self.wait_for_report_div()
+
 		finally:
 			pass
 		
-		time.sleep(2)
 		
 	def click_the_enrichment_test_button(self):
 		
@@ -161,7 +120,6 @@ class CheckEnrichmentTest(FunctionalTest):
 		
 		reset_button = self.browser.find_element_by_id("resetEnrichment")
 		reset_button.click()
-		time.sleep(2)
 		self.wait_for_enrichment_page_to_load()
 		self.check_reset_button_is_working_enrichment_page()
 		
@@ -227,7 +185,6 @@ class CheckEnrichmentTest(FunctionalTest):
 		enrichment_button_elem = self.browser.find_element_by_css_selector(
 			"#enrichment > a")
 		enrichment_button_elem.click()
-		time.sleep(3)
 		try:
 			element = WebDriverWait(self.browser, 10).until(
 				EC.presence_of_element_located((By.ID, 
@@ -236,7 +193,7 @@ class CheckEnrichmentTest(FunctionalTest):
 		finally:
 			pass
 		
-		self.multiple_tests_not_random(0)
+		self.multiple_tests_not_random(50)
 		
 
 		
@@ -247,7 +204,6 @@ class CheckEnrichmentTest(FunctionalTest):
 		enrichment_button_elem = self.browser.find_element_by_css_selector(
 			"#enrichment > a")
 		enrichment_button_elem.click()
-		time.sleep(3)
 		try:
 			WebDriverWait(self.browser, 10).until(
 				EC.presence_of_element_located((By.ID, 
