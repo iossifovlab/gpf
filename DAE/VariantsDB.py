@@ -505,7 +505,8 @@ class Study:
             "EichlerWE2012-SupTab1-format": self._load_family_data_from_EichlerWE2012_SupTab1,
             "DalyWE2012-SD-Trios": self._load_family_data_from_DalyWE2012_SD_Trios,
             "SSCTrios-format": self._load_family_data_SSCTrios,
-            "SSCFams-format": self._load_family_data_SSCFams
+            "SSCFams-format": self._load_family_data_SSCFams,
+            "IossifovWE2014": self._load_family_data_from_IossifovWE2014_families
         }
     
 
@@ -709,6 +710,85 @@ class Study:
 
         return families,badFamilies
        
+    def _load_family_data_from_IossifovWE2014_families(self,reportF):
+        families = {}
+        badFamilies = {}
+        qrp = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True)
+        for qrpR in qrp:
+            f = Family()
+            f.familyId = str(qrpR['familyId'])
+
+            f.atts = { x:qrpR[x] for x in qrp.dtype.names }
+            
+           
+            fCntrs = set() 
+            chldSfx = defaultdict(set)
+            for saA in qrpR.dtype.names:
+                if not saA.startswith('SequencedAt'):
+                    continue
+                cntr = saA[len('SequencedAt'):] 
+                cntrChldS = qrpR[saA]
+                if not cntrChldS:
+                    continue
+                for sfx in cntrChldS.split(","):
+                
+                    fCntrs.add(cntr)
+                    chldSfx[sfx.strip('"')].add(cntr)
+            fmCntrS = ",".join(sorted(fCntrs)) 
+            f.atts['centers'] = fmCntrS 
+                
+            mom = Person()
+            mom.personId = f.familyId + ".mo"
+            mom.role = 'mom'
+            mom.gender = 'F'
+            mom.atts['race'] = qrpR['motherRace']
+            mom.atts['centers'] = fmCntrS 
+
+            dad = Person()
+            dad.personId = f.familyId + ".fa"
+            dad.role = 'dad'
+            dad.gender = 'M'
+            dad.atts['race'] = qrpR['fatherRace']
+            dad.atts['centers'] = fmCntrS 
+
+
+            f.memberInOrder = [mom, dad]
+
+            sfxC2Role = {'p':'prb', 's':'sib'}
+            sfxC2GenderAt = {'p':'probandGender', 's':'siblingGender'}
+            for sfx,chCntrs in sorted(chldSfx.items()):
+                chl = Person()
+                chl.personId = f.familyId + "." + sfx
+                chl.role = sfxC2Role[sfx[0]]
+                chl.gender = qrpR[sfxC2GenderAt[sfx[0]]]
+                chl.atts['centers'] = ",".join(sorted(chCntrs))
+                f.memberInOrder.append(chl)
+
+            families[f.familyId] = f
+
+            '''
+            # HERE
+
+            ch1 = Person()
+            ch1.personId = piF(qrpR['child1sample_id'])
+            ch1.role = rlsMap[qrpR['child1role']]
+            ch1.gender = qrpR['child1gender']
+            transferPersonAtts(ch1,"child1")
+            
+           
+            if qrpR['child2sample_id']: 
+                ch2 = Person()
+                ch2.personId = piF(qrpR['child2sample_id'])
+                ch2.role = rlsMap[qrpR['child2role']]
+                ch2.gender = qrpR['child2gender']
+                transferPersonAtts(ch2,"child2")
+                f.memberInOrder.append(ch2)
+            if qrpR['status'] == 'OK':
+                families[f.familyId] = f
+            else:
+                badFamilies[f.familyId] = f
+            '''
+        return families,badFamilies
 
     def _load_family_data_from_quad_report(self,reportF):
         familyIdRE = re.compile('^auSSC(\d\d\d\d\d)') 
@@ -777,6 +857,7 @@ class Study:
                 badFamilies[f.familyId] = f
 
         return families,badFamilies
+
 
 class VariantsDB:
     def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None, phDB=None, genomesDB=None):
@@ -1247,15 +1328,28 @@ def filter_gene_effect(geneEffects, effectTypes, geneSyms):
 if __name__ == "__main__":
     wd = os.environ['DAE_DB_DIR']
     print "wd:", wd
-    from Sfari import SfariCollection
 
-    sfariDB = SfariCollection(os.environ['PHENO_DB_DIR'])
-    vDB = VariantsDB(wd,sfariDB=sfariDB)
+    from Config import *
+    config = Config()
 
+    # giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
+    # sfariDB = SfariCollection(config.sfariDBdir)
+    # phDB = phenoDB.rawTableFactory(config.phenoDBFile)
+    # genomesDB = GenomesDB(config.daeDir, config.genomesDBconfFile )
+
+    vDB = VariantsDB(config.daeDir, config.variantsDBconfFile)
+
+    st = vDB.get_study("IossifovWE2014")
+    fd = st.families['13394']
+    print fd.familyId,len(fd.memberInOrder),fd.atts
+    for pd in fd.memberInOrder:
+        print "\t",pd.personId,pd.role,pd.gender,pd.atts
+
+    '''
     for v in vDB.get_validation_variants():
         # pass
         print v.familyId,v.location,v.variant,v.valStatus
-
+    '''
 
     '''
     st = vDB.get_study('wig683')
