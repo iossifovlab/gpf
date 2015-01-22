@@ -10,6 +10,7 @@ urlpatterns = patterns(
     url(r'^effect_types_filters$', 'effect_types_filters'),
     url(r'^chromes_effect_types$', 'chromes_effect_types'),
     url(r'^variant_types$', 'variant_types_list'),
+    url(r'^variant_types_filters$', 'variant_types_filters'),
     url(r'^families/(?P<study_name>.+)$', 'families_list'),
 
     url(r'^query_variants_preview$', 'query_variants_preview'),

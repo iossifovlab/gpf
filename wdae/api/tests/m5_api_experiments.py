@@ -3,13 +3,14 @@ import logging
 import urllib
 
 from VariantAnnotation import get_effect_types, get_effect_types_set
+from DAE import vDB
 
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 logger = logging.getLogger(__name__)
 
-class M5ExperimentsTests(APITestCase):
+class EffectTypesFiltersTests(APITestCase):
     def test_effect_types(self):
         logger.info("All: %s", get_effect_types(types=True, groups=True))
         logger.info("Groups: %s", get_effect_types(types=False, groups=True))
@@ -67,4 +68,87 @@ class M5ExperimentsTests(APITestCase):
 
         logger.info("result: %s", result)
         self.assertEqual('2', result['count'])
-        
+
+class VariantTypesFiltersTests(APITestCase):
+
+    def test_variant_types_whole_exome(self):
+        data = {"variantFilter": "WHOLE EXOME"}
+        url = '/api/variant_types_filters?%s' % urllib.urlencode(data)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+
+    def test_variant_types_whole_ssc(self):
+        data = {"variantFilter": "SSC"}
+        url = '/api/variant_types_filters?%s' % urllib.urlencode(data)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+
+    def test_variant_filters(self):
+        url = '/api/query_variants_preview'
+
+        data = {"geneSyms":"CHD2",
+                "denovoStudies":"IossifovWE2014",
+                "variantTypes": "All",
+                "effectTypes": "LGDs"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.data
+
+        logger.info("result: %s", result)
+        self.assertEqual('3', result['count'])
+
+        data = {"geneSyms":"CHD2",
+                "denovoStudies":"IossifovWE2014",
+                "variantTypes": "del",
+                "effectTypes": "LGDs"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.data
+
+        logger.info("result: %s", result)
+        self.assertEqual('1', result['count'])
+
+        data = {"geneSyms":"CHD2",
+                "denovoStudies":"IossifovWE2014",
+                "variantTypes": "del,ins",
+                "effectTypes": "LGDs"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.data
+
+        logger.info("result: %s", result)
+        self.assertEqual('2', result['count'])
+
+        data = {"geneSyms":"CHD2",
+                "denovoStudies":"IossifovWE2014",
+                "variantTypes": "del,ins,sub",
+                "effectTypes": "LGDs"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.data
+
+        logger.info("result: %s", result)
+        self.assertEqual('3', result['count'])
+
+    def test_variant_filters_cnv(self):
+        url = '/api/query_variants_preview'
+
+        data = {"geneSyms":"DOC2A",
+                "denovoStudies":"LevyCNV2011",
+                "variantTypes": "CNV",
+                "effectTypes": "All"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.data
+
+        logger.info("result: %s", result)
+        self.assertEqual('10', result['count'])

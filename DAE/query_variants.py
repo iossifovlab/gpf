@@ -282,10 +282,14 @@ def prepare_variant_types(data):
     if variant_types == 'All':
         return None
 
-    if variant_types not in get_variant_types():
-        return None
-
-    return variant_types
+    variant_types_set= set(get_variant_types())
+    variant_types_list = variant_types.split(',')
+    result = [vt for vt in variant_types_list if vt in variant_types_set]
+    logger.info("variant types: %s", result)
+    if result:
+        return ','.join(result)
+        
+    return None
 
 
 def prepare_family_ids(data):

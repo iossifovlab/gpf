@@ -146,6 +146,36 @@ def chromes_effect_types(request):
     return Response({"LoF": LOF,
                      "nonsyn": nonsyn})
 
+@api_view(['GET'])
+def variant_types_filters(request):
+    """
+Variant types filters list.
+
+Request expects 'variantFilter' with posible values:
+    * ALL
+    * SSC
+    * WHOLE EXOME
+Example:
+    /api/variant_types_filters?variantFilter=SSC
+
+    """
+    query_params = request.QUERY_PARAMS
+    variant_filter = string.upper(query_params['variantFilter'])
+    logger.info("variant_filter: %s", variant_filter)
+    
+    all_var_types = ['sub', 'ins', 'del', 'CNV']
+    result = all_var_types
+    if variant_filter == 'WHOLE EXOME':
+        result = ['sub', 'ins', 'del']
+    elif variant_filter == 'SSC':
+        result = all_var_types
+    elif not variant_filter or variant_filter == "ALL":
+        result = all_var_types
+    else:
+        return Response({'variant_filters': "error: unsuported tab name (%s)" % variant_filter},
+                        status=status.HTTP_400_BAD_REQUEST)
+        
+    return Response({'variant_filters': result})
 
 @api_view(['GET'])
 def variant_types_list(request):
