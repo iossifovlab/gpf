@@ -108,8 +108,29 @@ def _get_effect_types_sorted(effect_types_set):
     
 @api_view(['GET'])
 def effect_types_filters(request):
+    """
+Effect types filters list.
+
+Request expects 'effectFilter' with posible values:
+    
+    * ALL
+    * NONE
+    * LGDs
+    * coding
+    * nonsynonymous
+    * UTRs
+    * noncoding
+    
+Example:
+    
+    GET /api/effect_types_filters?effectFilter=UTRs
+
+    """
     query_params = request.QUERY_PARAMS
-    effect_filter = string.lower(query_params['effectFilter'])
+    if 'effectFilter' not in query_params:
+        effect_filter = 'all'
+    else:
+        effect_filter = string.lower(query_params['effectFilter'])
     logger.info("effect_filter: %s", effect_filter)
     result = []
     if effect_filter == 'all':
@@ -152,14 +173,22 @@ def variant_types_filters(request):
 Variant types filters list.
 
 Request expects 'variantFilter' with posible values:
+    
     * ALL
     * SSC
     * WHOLE EXOME
+    
 Example:
-    /api/variant_types_filters?variantFilter=SSC
+    
+    GET /api/variant_types_filters?variantFilter=SSC
 
     """
+    all_var_types = ['sub', 'ins', 'del', 'CNV']
+
     query_params = request.QUERY_PARAMS
+    if 'variantFilter' not in query_params:
+        return Response({'variant_filters': all_var_types})
+
     variant_filter = string.upper(query_params['variantFilter'])
     logger.info("variant_filter: %s", variant_filter)
     
@@ -189,11 +218,15 @@ def variant_types_list(request):
 @api_view(['GET'])
 def pheno_types_filters(request):
     query_params = request.QUERY_PARAMS
+    all_result = ['autism', 'congenital heart disease', 'epilepsy', 'intelectual disability',
+                  'schizophrenia','unaffected']
+
+    if 'phenotypeFilter' not in query_params:
+        return Response({'pheno_type_filters': all_result})
+        
     phenotype_filter = string.upper(query_params['phenotypeFilter'])
     logger.info("pheno_type_filters: %s", phenotype_filter)
     
-    all_result = ['autism', 'congenital heart disease', 'epilepsy', 'intelectual disability',
-                  'schizophrenia','unaffected']
     if phenotype_filter == 'WHOLE EXOME':
         result = all_result
     elif phenotype_filter == 'SSC':
