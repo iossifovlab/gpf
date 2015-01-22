@@ -79,7 +79,7 @@ class VariantTypesFiltersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         logger.info("result data: %s", response.data)
 
-    def test_variant_types_whole_ssc(self):
+    def test_variant_types_ssc(self):
         data = {"variantFilter": "SSC"}
         url = '/api/variant_types_filters?%s' % urllib.urlencode(data)
         response = self.client.get(url)
@@ -152,3 +152,40 @@ class VariantTypesFiltersTests(APITestCase):
 
         logger.info("result: %s", result)
         self.assertEqual('10', result['count'])
+
+class PhenotypeFiltersTests(APITestCase):
+
+    def test_pheno_types_whole_exome(self):
+        data = {"phenotypeFilter": "WHOLE EXOME"}
+        url = '/api/pheno_types_filters?%s' % urllib.urlencode(data)
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+
+    def test_variant_filters(self):
+        url = '/api/query_variants_preview'
+
+        data = {"geneSyms":"CCDC171",
+                "denovoStudies":"ALL WHOLE EXOME",
+                "variantTypes": "All",
+                "effectTypes": "All"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('2', response.data['count'])
+
+    def test_phenotype_filters(self):
+        url = '/api/query_variants_preview'
+
+        data = {"geneSyms":"CCDC171",
+                "denovoStudies":"ALL WHOLE EXOME",
+                "variantTypes": "All",
+                "effectTypes": "All",
+                'phenoTypes': 'autism'
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('1', response.data['count'])

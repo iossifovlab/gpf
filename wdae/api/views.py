@@ -186,6 +186,27 @@ def variant_types_list(request):
     var_types = get_variant_types()
     return Response({'variant_types': var_types})
 
+@api_view(['GET'])
+def pheno_types_filters(request):
+    query_params = request.QUERY_PARAMS
+    phenotype_filter = string.upper(query_params['phenotypeFilter'])
+    logger.info("pheno_type_filters: %s", phenotype_filter)
+    
+    all_result = ['autism', 'congenital heart disease', 'epilepsy', 'intelectual disability',
+                  'schizophrenia','unaffected']
+    if phenotype_filter == 'WHOLE EXOME':
+        result = all_result
+    elif phenotype_filter == 'SSC':
+        result = ['autism', 'unaffected', 'no child']
+    elif not phenotype_filter or phenotype_filter == "ALL":
+        result = all_result
+    else:
+        return Response({'pheno_type_filters': "error: unsuported pheno group name (%s)" % phenotype_filter},
+                        status=status.HTTP_400_BAD_REQUEST)
+        
+    return Response({'pheno_type_filters': result})
+    
+
 
 @api_view(['GET'])
 def child_type_list(request):
