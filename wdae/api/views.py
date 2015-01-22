@@ -5,14 +5,16 @@ from django.http import StreamingHttpResponse
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import JSONParser, FormParser
+from rest_framework import status
 
 
 from DAE import vDB
 from DAE import giDB
-from VariantAnnotation import get_effect_types
+from VariantAnnotation import get_effect_types, get_effect_types_set
 
 import itertools
 import logging
+import string
 
 from query_variants import do_query_variants, \
     get_child_types, get_variant_types, \
@@ -98,6 +100,37 @@ def transmitted_studies_list(request):
     r = get_transmitted_studies_names()
 
     return Response({"transmitted_studies": r})
+
+
+def _get_effect_types_sorted(effect_types_set):
+    return [ef for ef in get_effect_types(types=True, groups=False)
+            if ef in effect_types_set]
+    
+@api_view(['GET'])
+def effect_types_filters(request):
+    query_params = request.QUERY_PARAMS
+    effect_filter = string.lower(query_params['effectFilter'])
+    logger.info("effect_filter: %s", effect_filter)
+    result = []
+    if effect_filter == 'all':
+        result = get_effect_types(types=True, groups=False)
+    elif effect_filter == 'none':
+        result = []
+    elif effect_filter == 'lgds':
+        result = _get_effect_types_sorted(get_effect_types_set('LGDs'))
+    elif effect_filter == 'coding':
+        result = _get_effect_types_sorted(get_effect_types_set('coding'))
+    elif effect_filter == 'nonsynonymous':
+        result = _get_effect_types_sorted(get_effect_types_set('nonsynonymous'))
+    elif effect_filter == 'utrs':
+        result = _get_effect_types_sorted(get_effect_types_set('UTRs'))
+    elif effect_filter == 'noncoding':
+        noncoding = set(get_effect_types()).difference(get_effect_types_set('coding'))
+        result = _get_effect_types_sorted(noncoding)
+    else:
+        result = "error: unsupported filter set name"
+        return Response({'effect_filter': result}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'effect_filter': result})
 
 
 @api_view(['GET'])
