@@ -1,9 +1,14 @@
 import unittest
 import logging
 import urllib
+import itertools
 
 from VariantAnnotation import get_effect_types, get_effect_types_set
+from VariantsDB import mat2Str
+
 from DAE import vDB
+from query_prepare import prepare_denovo_studies
+from query_variants import dae_query_variants, pedigree_data
 
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -190,34 +195,73 @@ class PhenotypeFiltersTests(APITestCase):
         logger.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
-    def test_phenotype_filters_with_transmitted(self):
-        url = '/api/query_variants_preview'
+    # def test_phenotype_filters_with_transmitted(self):
+    #     url = '/api/query_variants_preview'
 
-        data = {"geneSyms":"CCDC171",
-                "denovoStudies":"ALL WHOLE EXOME",
-                'transmittedStudies': 'w1202s766e611',
-                'rarity': 'ultraRare',
-                "variantTypes": "All",
-                "effectTypes": "All",
-                'phenoTypes': 'autism'
+    #     data = {"geneSyms":"CCDC171",
+    #             "denovoStudies":"ALL WHOLE EXOME",
+    #             'transmittedStudies': 'w1202s766e611',
+    #             'rarity': 'ultraRare',
+    #             "variantTypes": "All",
+    #             "effectTypes": "All",
+    #             'phenoTypes': 'autism'
+    #     }
+    #     response = self.client.post(url, data, format='json')
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    #     logger.info("result data: %s", response.data)
+    #     self.assertEqual('1', response.data['count'])
+
+    # def test_phenotype_filters_ssc_with_transmitted(self):
+    #     url = '/api/query_variants_preview'
+
+    #     data = {"geneSyms":"CHD8,ARID1B,POGZ",
+    #             "denovoStudies":"ALL SSC",
+    #             'transmittedStudies': 'w1202s766e611',
+    #             'rarity': 'ultraRare',
+    #             "variantTypes": "All",
+    #             "effectTypes": "All",
+    #             'phenoTypes': 'unaffected'
+    #     }
+    #     response = self.client.post(url, data, format='json')
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    #     logger.info("result data: %s", response.data)
+    #     self.assertEqual('1', response.data['count'])
+
+
+
+
+class VariantPedigreeTests(unittest.TestCase):
+    def test_pedigree_CUL1(self):
+        data = {
+            "geneSyms": "CUL1",
+            "denovoStudies":"ALL WHOLE EXOME",
         }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        logger.info("result data: %s", response.data)
-        self.assertEqual('1', response.data['count'])
 
-    def test_phenotype_filters_ssc_with_transmitted(self):
-        url = '/api/query_variants_preview'
+        
+        dst = prepare_denovo_studies(data)
+        self.assertFalse(dst is None)
+        vsl = dae_query_variants(data)
+        variants = itertools.chain(*vsl)
+        
+        for v in variants:
+            logger.info("v.inChS=%s; v.bestSt=%s", v.inChS, mat2Str(v.bestSt))
+            for m in v.memberInOrder:
+                logger.info("m.role=%s; m.gender=%s; ", m.role, m.gender)
 
-        data = {"geneSyms":"CHD8,ARID1B,POGZ",
-                "denovoStudies":"ALL SSC",
-                'transmittedStudies': 'w1202s766e611',
-                'rarity': 'ultraRare',
-                "variantTypes": "All",
-                "effectTypes": "All",
-                'phenoTypes': 'unaffected'
+    def test_pedigree_ALK(self):
+        data = {
+            "geneSyms": "ALK",
+            "denovoStudies":"ALL WHOLE EXOME",
         }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        logger.info("result data: %s", response.data)
-        self.assertEqual('1', response.data['count'])        
+
+        
+        dst = prepare_denovo_studies(data)
+        self.assertFalse(dst is None)
+        vsl = dae_query_variants(data)
+        variants = itertools.chain(*vsl)
+        
+        for v in variants:
+            logger.info("v.inChS=%s; v.bestSt=%s", v.inChS, mat2Str(v.bestSt))
+            logger.info("pedigree=%s", pedigree_data(v))
+            logger.info('v.popType=%s; v.atts=%s', v.popType, v.atts)
+            logger.info('v.pedigree=%s', v.pedigree)

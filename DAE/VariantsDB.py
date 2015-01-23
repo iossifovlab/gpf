@@ -21,7 +21,7 @@ from itertools import groupby
 from VariantAnnotation import get_effect_types_set
 import itertools
 from RegionOperations import Region,collapse
-
+import operator
 
 def regions_matcher(regions):
     regs = regions.split(',')
@@ -161,6 +161,30 @@ class Variant:
                 parentStr += mbrs[c].role
         return parentStr
 
+    @property
+    def pedigree(self):
+        mbrs = self.memberInOrder
+        bs = self.bestSt
+        denovo_parent = self.denovo_parent()
+        res = [reduce(operator.add, [[m.role,
+                                      m.gender],
+                                     variantCount(bs, c, self.location, m.gender, denovo_parent)])
+               for (c, m) in enumerate(mbrs)]
+        return res
+
+    def denovo_parent(self):
+        denovo_parent = None
+        if self.popType == 'denovo':
+            if 'fromParent' in self.atts:
+                if self.atts['fromParent'] == 'mom':
+                    denovo_parent = 0
+                elif self.atts['fromParent'] == 'dad':
+                    denovo_parent = 1
+                else:
+                    print("strange fromParent value: %s" % self.atts['fromParent'])
+                    denovo_parent = None
+        return denovo_parent
+        
     def get_normal_refCN(self,c):
         return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
 
@@ -1288,6 +1312,21 @@ def normalRefCopyNumber(location,gender):
         else:
             raise Exception('gender needed')
     return 2
+
+def variantCount(bs,c,location=None,gender=None, denovoParent=None):
+    normalRefCN=2
+    if location:
+        normalRefCN = normalRefCopyNumber(location,gender)
+        
+        count = abs(bs[0,c] - normalRefCN)
+        if count == 0 and bs.shape[0]>1:
+            # print("bs=%s; bs.shape[0]=%s" % (bs, bs.shape[0]))
+            count = max([bs[o,c] for o in xrange(1,bs.shape[0])])
+        if c!=denovoParent:
+            return [count]
+        else:
+            return [1, 1]
+    
 
 def isVariant(bs,c,location=None,gender=None):
     normalRefCN=2

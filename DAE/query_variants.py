@@ -498,29 +498,32 @@ def dae_query_variants(data):
 
     return variants
 
-def pedigree_data(v):
-    m = getattr(v, 'bestSt')
-    res = None
-    if m.ndim==2 and m.shape[0]==2:
-        res = [v.study.get_attr('study.phenotype'),
-               [[p.role, p.gender, n] for (p, n) in zip(v.memberInOrder, m[1])]]
-    elif m.ndim == 2 and m.shape[0]==1:
-        # CNVs
-        base = {'F': m[0][0], 'M': m[0][1]}
-        res = [v.study.get_attr('study.phenotype'),
-               [[p.role, p.gender, abs(n - base[p.gender])]
-                for (p, n) in zip(v.memberInOrder, m[0])]]
-    else:
-        raise Exception
+# def pedigree_data(v):
+#     m = getattr(v, 'bestSt')
+#     res = None
+#     if m.ndim==2 and m.shape[0]==2:
+#         res = [v.study.get_attr('study.phenotype'),
+#                [[p.role, p.gender, n] for (p, n) in zip(v.memberInOrder, m[1])]]
+#     elif m.ndim == 2 and m.shape[0]==1:
+#         # CNVs
+#         base = {'F': m[0][0], 'M': m[0][1]}
+#         res = [v.study.get_attr('study.phenotype'),
+#                [[p.role, p.gender, abs(n - base[p.gender])]
+#                 for (p, n) in zip(v.memberInOrder, m[0])]]
+#     else:
+#         raise Exception
 
-    if v.fromParentS == "mom" and res[1][0][2] == 0:
-        res[1][0][2] = 1
-        res[1][0].append(1)
-    elif v.fromParentS == "dad" and res[1][1][2] == 0:
-        res[1][1][2] = 1
-        res[1][1].append(1)
-    # print m, res
-    return res
+#     if v.fromParentS == "mom" and res[1][0][2] == 0:
+#         res[1][0][2] = 1
+#         res[1][0].append(1)
+#     elif v.fromParentS == "dad" and res[1][1][2] == 0:
+#         res[1][1][2] = 1
+#         res[1][1].append(1)
+#     # print m, res
+#     return res
+
+def pedigree_data(v):
+    return [v.study.get_attr('study.phenotype'), v.pedigree]
     
 def __augment_vars(v):
     fmId = v.familyId
