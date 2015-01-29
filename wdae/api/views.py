@@ -15,6 +15,7 @@ from VariantAnnotation import get_effect_types, get_effect_types_set
 import itertools
 import logging
 import string
+import operator
 
 from query_variants import do_query_variants, \
     get_child_types, get_variant_types, \
@@ -102,10 +103,77 @@ def transmitted_studies_list(request):
     return Response({"transmitted_studies": r})
 
 
-def _get_effect_types_sorted(effect_types_set):
-    return [ef for ef in get_effect_types(types=True, groups=False)
-            if ef in effect_types_set]
+__EFFECT_TYPES = {
+    "Nonsense": ["nonsense"],
+    "Frame-shift": ["frame-shift"],
+    "Splice-site": ["splice-site"],
+    "Missense": ["missense"],
+    "Non-frame-shift": ["no-frame-shift"],
+    "noStart": ["noStart"],
+    "noEnd": ["noEnd"],
+    "Synonymous": ["synonymous"],
+    "Non coding": ["non-coding"],
+    "Intron": ["intron"],
+    "Intergenic": ["intergenic"],
+    "3'-UTR": ["3'UTR", "3'UTR-intron"],
+    "5'-UTR": ["5'UTR", "5'UTR-intron"],
+    "CNV": ["CNV+", "CNV-"],
+
+}
+
+
+__EFFECT_GROUPS = {
+    "coding":[
+        "Nonsense",
+        "Frame-shift",
+        "Splice-site",
+        "Missense",
+        "Non-frame-shift",
+        "noStart",
+        "noEnd",
+        "Synonymous",
+    ],
+    "noncoding": [
+        "Non coding",
+        "Intron",
+        "Intergenic",
+        "3'-UTR",
+        "5'-UTR",
+        "CNV",
+    ],
+    "lgds": [
+        "Nonsense",
+        "Frame-shift",
+        "Splice-site",
+    ],
+    "nonsynonymous": [
+        "Nonsense",
+        "Frame-shift",
+        "Splice-site",
+        "Missense",
+        "Non-frame-shift",
+        "noStart",
+        "noEnd",        
+    ],
+    "utrs": [
+        "3'-UTR",
+        "5'-UTR",
+    ]
     
+}
+
+
+def build_effect_type_filter(data):
+    if "effectTypes" not in data:
+        return
+    effects_string = data['effectTypes']
+    effects = effects_string.split(',')
+    result_effects = reduce(operator.add, [__EFFECT_TYPES[et] for et in effects])
+    data["effectTypes"] = ','.join(result_effects)
+    logger.info("result effects: %s", result_effects)
+    logger.info("effectTypes: %s", data["effectTypes"])
+    
+
 @api_view(['GET'])
 def effect_types_filters(request):
     """
@@ -134,20 +202,19 @@ Example:
     logger.info("effect_filter: %s", effect_filter)
     result = []
     if effect_filter == 'all':
-        result = get_effect_types(types=True, groups=False)
+        result = __EFFECT_GROUPS['conding'] + __EFFECT_GROUPS['nonconding']
     elif effect_filter == 'none':
         result = []
     elif effect_filter == 'lgds':
-        result = _get_effect_types_sorted(get_effect_types_set('LGDs'))
+        result = __EFFECT_GROUPS['lgds']
     elif effect_filter == 'coding':
-        result = _get_effect_types_sorted(get_effect_types_set('coding'))
+        result = __EFFECT_GROUPS['coding']
     elif effect_filter == 'nonsynonymous':
-        result = _get_effect_types_sorted(get_effect_types_set('nonsynonymous'))
+        result = __EFFECT_GROUPS['nonsynonymous']
     elif effect_filter == 'utrs':
-        result = _get_effect_types_sorted(get_effect_types_set('UTRs'))
+        result = __EFFECT_GROUPS['utrs']
     elif effect_filter == 'noncoding':
-        noncoding = set(get_effect_types()).difference(get_effect_types_set('coding'))
-        result = _get_effect_types_sorted(noncoding)
+        result = __EFFECT_GROUPS['noncoding']
     else:
         result = "error: unsupported filter set name"
         return Response({'effect_filter': result}, status=status.HTTP_400_BAD_REQUEST)
@@ -399,6 +466,8 @@ All fields are same as in query_variants request
         return Response()
 
     data = prepare_query_dict(request.DATA)
+    build_effect_type_filter(data)
+    
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
     # else:
@@ -469,6 +538,8 @@ Advanced family filter expects following fields:
         return Response()
 
     data = prepare_query_dict(request.DATA)
+    build_effect_type_filter(data)
+
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
     logger.info(log_filter(request, "query variants request: " + str(data)))

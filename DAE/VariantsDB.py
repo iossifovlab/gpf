@@ -181,7 +181,7 @@ class Variant:
                 elif self.atts['fromParent'] == 'dad':
                     denovo_parent = 1
                 else:
-                    print("strange fromParent value: %s" % self.atts['fromParent'])
+                    # print("strange fromParent value: %s" % self.atts['fromParent'])
                     denovo_parent = None
         return denovo_parent
         
