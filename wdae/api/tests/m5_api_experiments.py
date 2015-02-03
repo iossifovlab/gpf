@@ -455,4 +455,22 @@ class GenderFilterTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         logger.info("result data: %s", response.data)
         self.assertEqual('0', response.data['count'])
+
+class SSCPhenotypeFilterTests(APITestCase):
+    def test_ssc_phenotype_CCDC171(self):
+        data = {
+            "geneSyms": "CCDC171",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "w1202s766e611",
+            "rarity": "ultraRare",
+        }
+
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # logger.info("result data: %s", response.data)
+        self.assertEqual('147', response.data['count'])
+
         
