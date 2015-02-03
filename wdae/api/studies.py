@@ -121,15 +121,15 @@ def __build_denovo_studies_summaries():
         study = vDB.get_study(study_name)
         if not study.has_denovo:
             continue
-        ord = study.get_attr('wdae.production.order')
-        if not ord:
+        order = study.get_attr('wdae.production.order')
+        if not order:
             continue
         summary = [study_name, study.description]
         summary.extend(__build_studies_summaries([study]))
 
         r.append((int(ord), summary))
 
-    r = [summary for ord, summary in sorted(r)]
+    r = [s for o, s in sorted(r)]
     return r
     
 
@@ -141,15 +141,15 @@ def __build_transmitted_studies_summaries():
         if not study.has_transmitted:
             continue
 
-        ord = study.get_attr('wdae.production.order')
-        if not ord:
+        order = study.get_attr('wdae.production.order')
+        if not order:
             continue
         summary = [study_name, study.description]
         summary.extend(__build_studies_summaries([study]))
 
-        r.append((int(ord), summary))
+        r.append((int(order), summary))
 
-    r = [summary for ord, summary in sorted(r)]
+    r = [s for o, s in sorted(r)]
     return r
 
 

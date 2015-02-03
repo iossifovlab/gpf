@@ -2,10 +2,11 @@ import itertools
 import re
 import logging
 from query_prepare import combine_gene_syms, \
-    prepare_denovo_studies, prepare_transmitted_studies
+    prepare_denovo_studies, prepare_transmitted_studies, \
+    prepare_denovo_phenotype
 
 
-from VariantAnnotation import get_effect_types_set
+from VariantAnnotation import get_effect_types
 from VariantsDB import mat2Str
 from DAE import phDB
 
@@ -478,7 +479,8 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 def dae_query_variants(data):
     logger.info("query received: %s", str(data))
-
+    prepare_denovo_phenotype(data)
+    
     dstudies = prepare_denovo_studies(data)
     tstudies = prepare_transmitted_studies(data)
     if dstudies is None and tstudies is None:

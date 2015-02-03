@@ -293,3 +293,36 @@ class VariantPedigreeTests(unittest.TestCase):
             logger.info("pedigree=%s", pedigree_data(v))
             logger.info('v.popType=%s; v.atts=%s', v.popType, v.atts)
             logger.info('v.pedigree=%s', v.pedigree)
+
+
+class PhenotypeFilterTests(APITestCase):
+    def test_pedigree_BTN1A1_BTNL2(self):
+        data = {
+            "geneSyms": "BTN1A1, BTNL2",
+            "denovoStudies":"ALL WHOLE EXOME",
+        }
+
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('2', response.data['count'])
+
+
+    def test_pedigree_BTN1A1_BTNL2_schizophrenia(self):
+        data = {
+            "geneSyms": "BTN1A1, BTNL2",
+            "denovoStudies":"ALL WHOLE EXOME",
+            "phenoType": "schizophrenia",
+        }
+
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('1', response.data['count'])
+        

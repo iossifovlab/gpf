@@ -449,6 +449,7 @@ class Study:
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
                 continue
+            # print("v: %s" % v.__dict__)
             if inChild and inChild not in v.inChS:
                 continue
             # print('v.variant: %s' % v.variant)
