@@ -168,13 +168,9 @@ def build_effect_type_filter(data):
         return
     effects_string = data['effectTypes']
     effects = effects_string.split(',')
-    logger.info("result effects: %s", effects)
-
     result_effects = reduce(operator.add,
-                            [__EFFECT_TYPES[et]  if et in __EFFECT_TYPES else et for et in effects])
+                            [__EFFECT_TYPES[et]  if et in __EFFECT_TYPES else [et] for et in effects])
     data["effectTypes"] = ','.join(result_effects)
-    logger.info("result effects: %s", result_effects)
-    logger.info("effectTypes: %s", data["effectTypes"])
     
 
 @api_view(['GET'])

@@ -5,7 +5,7 @@ from query_prepare import combine_gene_syms, \
     prepare_denovo_studies, prepare_transmitted_studies
 
 
-from VariantAnnotation import get_effect_types
+from VariantAnnotation import get_effect_types_set
 from VariantsDB import mat2Str
 from DAE import phDB
 
@@ -264,10 +264,17 @@ def prepare_effect_types(data):
        effect_type is None or effect_type == 'All':
         return None
 
-    if effect_type not in get_effect_types(types=True, groups=True):
-        return None
+    return get_effect_types_set(effect_type)
+    # print("effect_types: %s" % effect_type)
+    # effect_types = effect_type.split(',')
+    # result = [et for et in effect_types if et in get_effect_types(types=True, groups=True)]
+    # print("effect types: %s" % result)
+    
+    # return set(result)
+    # if effect_type not in get_effect_types(types=True, groups=True):
+    #     return None
 
-    return effect_type
+    # return effect_type
 
 
 def prepare_variant_types(data):
@@ -478,6 +485,8 @@ def dae_query_variants(data):
         return []
 
     denovo_filters = prepare_denovo_filters(data)
+    print("denovo filters: %s" % denovo_filters)
+    
     family_filters = advanced_family_filter(data, denovo_filters)
 
     variants = []
