@@ -6,7 +6,7 @@ from query_prepare import combine_gene_syms, \
     prepare_denovo_phenotype, prepare_gender_filter
 
 
-from VariantAnnotation import get_effect_types_set
+from VariantAnnotation import get_effect_types_set, get_effect_types
 from VariantsDB import mat2Str
 from DAE import phDB
 
@@ -245,10 +245,18 @@ def advanced_family_filter(data, filters):
 def prepare_inchild(data):
     if 'inChild' not in data:
         return None
-
+    
     inChild = data['inChild']
+    print("inchild inChild: %s" % inChild)
+
+    if not inChild:
+        return None
+
     if inChild == 'All' or inChild == 'none' or inChild == 'None':
         return None
+    print("inChild type: %s" % type(inChild))
+    if isinstance(inChild, str):
+        inChild = inChild.split(',')
 
     res = [ic for ic in inChild if ic in get_child_types()]
     print("inchild res: %s" % res)
@@ -266,7 +274,12 @@ def prepare_effect_types(data):
        effect_type is None or effect_type == 'All':
         return None
 
-    return get_effect_types_set(effect_type)
+    effect_type_list = [et for et in effect_type.split(',')
+                        if et in get_effect_types(types=True, groups=True)]
+
+    if not effect_type_list:
+        return None
+    return get_effect_types_set(','.join(effect_type_list))
     # print("effect_types: %s" % effect_type)
     # effect_types = effect_type.split(',')
     # result = [et for et in effect_types if et in get_effect_types(types=True, groups=True)]

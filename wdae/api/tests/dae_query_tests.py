@@ -63,7 +63,7 @@ class CombinedTests(unittest.TestCase):
                    "ultraRareOnly": True}
 
     def test_inchild_correct(self):
-        self.assertEqual(prepare_inchild(self.TEST_DATA_1), 'prbM')
+        self.assertEqual(prepare_inchild(self.TEST_DATA_1), set(['prbM']))
 
     def test_gene_sets_main(self):
         gs = prepare_gene_sets(self.TEST_DATA_1)

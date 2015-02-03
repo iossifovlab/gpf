@@ -24,12 +24,12 @@ class InChildTests(unittest.TestCase):
         self.assertIsNone(prepare_inchild({'inChild': 'none'}))
 
     def test_inchild_correct(self):
-        self.assertEqual(prepare_inchild({'inChild': 'prb'}), 'prb')
-        self.assertEqual(prepare_inchild({'inChild': 'sib'}), 'sib')
-        self.assertEqual(prepare_inchild({'inChild': 'prbM'}), 'prbM')
-        self.assertEqual(prepare_inchild({'inChild': 'sibF'}), 'sibF')
-        self.assertEqual(prepare_inchild({'inChild': 'sibM'}), 'sibM')
-        self.assertEqual(prepare_inchild({'inChild': 'prbF'}), 'prbF')
+        self.assertEqual(prepare_inchild({'inChild': 'prb'}), set(['prb']))
+        self.assertEqual(prepare_inchild({'inChild': 'sib'}), set(['sib']))
+        self.assertEqual(prepare_inchild({'inChild': 'prbM'}), set(['prbM']))
+        self.assertEqual(prepare_inchild({'inChild': 'sibF'}), set(['sibF']))
+        self.assertEqual(prepare_inchild({'inChild': 'sibM'}), set(['sibM']))
+        self.assertEqual(prepare_inchild({'inChild': 'prbF'}), set(['prbF']))
 
     def test_inchild_not_correct(self):
         self.assertIsNone(prepare_inchild({'inChild': 'prbMsibM'}))
@@ -52,36 +52,45 @@ class EffectTypesTests(unittest.TestCase):
 
     def test_effect_types_correct(self):
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'LGDs'}), 'LGDs')
+            prepare_effect_types({'effectTypes': 'LGDs'}),
+            set(['no-frame-shift-newStop', 'frame-shift', 'nonsense', 'splice-site']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'CNVs'}), 'CNVs')
+            prepare_effect_types({'effectTypes': 'CNVs'}),
+            set(['CNV-', 'CNV+']))
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'nonsynonymous'}),
-            'nonsynonymous')
+            set(['noStart', 'frame-shift', 'noEnd', 'nonsense', 'no-frame-shift-newStop', 'no-frame-shift', 'missense', 'CDS', 'splice-site']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'CNV-'}), 'CNV-')
+            prepare_effect_types({'effectTypes': 'CNV-'}), set(['CNV-']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'CNV+'}), 'CNV+')
+            prepare_effect_types({'effectTypes': 'CNV+'}), set(['CNV+']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'frame-shift'}), 'frame-shift')
+            prepare_effect_types({'effectTypes': 'frame-shift'}),
+            set(['frame-shift']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'intron'}), 'intron')
+            prepare_effect_types({'effectTypes': 'intron'}),
+            set(['intron']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'synonymous'}), 'synonymous')
+            prepare_effect_types({'effectTypes': 'synonymous'}),
+            set(['synonymous']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'nonsense'}), 'nonsense')
+            prepare_effect_types({'effectTypes': 'nonsense'}),
+            set(['nonsense']))
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'no-frame-shift'}),
-            'no-frame-shift')
+            set(['no-frame-shift']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'missense'}), 'missense')
+            prepare_effect_types({'effectTypes': 'missense'}),
+            set(['missense']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': "3'UTR"}), "3'UTR")
+            prepare_effect_types({'effectTypes': "3'UTR"}),
+            set(["3'UTR"]))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': "5'UTR"}), "5'UTR")
+            prepare_effect_types({'effectTypes': "5'UTR"}),
+            set(["5'UTR"]))
         self.assertEqual(
             prepare_effect_types({'effectTypes': "splice-site"}),
-            "splice-site")
+            set(["splice-site"]))
 
     def test_effect_types_not_correct(self):
         self.assertEqual(

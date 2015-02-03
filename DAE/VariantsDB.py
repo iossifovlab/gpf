@@ -421,7 +421,9 @@ class Study:
                 v.atts['bestState'] = bestStateS
                 v.atts['counts'] = cntsS
 
-                if inChild and inChild not in v.inChS:
+                # if inChild and inChild not in v.inChS:
+                #     continue
+                if inChild and not any([(inch in v.inChS) for inch in inChild]):
                     continue
                 yield v
         tbf.close()
