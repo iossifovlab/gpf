@@ -6,7 +6,7 @@ from query_prepare import combine_gene_syms, \
     prepare_denovo_phenotype
 
 
-from VariantAnnotation import get_effect_types
+from VariantAnnotation import get_effect_types_set
 from VariantsDB import mat2Str
 from DAE import phDB
 
@@ -250,10 +250,11 @@ def prepare_inchild(data):
     if inChild == 'All' or inChild == 'none' or inChild == 'None':
         return None
 
-    if inChild not in get_child_types():
+    res = [ic for ic in inChild if ic in get_child_types()]
+    print("inchild res: %s" % res)
+    if not res:
         return None
-
-    return inChild
+    return set(res)
 
 
 def prepare_effect_types(data):
@@ -478,8 +479,9 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 
 def dae_query_variants(data):
-    logger.info("query received: %s", str(data))
+    print("query received: %s" % str(data))
     prepare_denovo_phenotype(data)
+    print("phenotype prepared data: %s" % str(data))
     
     dstudies = prepare_denovo_studies(data)
     tstudies = prepare_transmitted_studies(data)

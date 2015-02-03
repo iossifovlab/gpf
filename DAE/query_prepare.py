@@ -167,17 +167,34 @@ def prepare_gene_sets(data, gene_set_loader=gene_set_loader):
 
 
 def prepare_denovo_phenotype(data):
-    if 'phenoType' in data:
-        phenoType = data['phenoType']
-        print("phenoType: %s" % phenoType)
+    if 'phenoType' not in data:
+        return
         
-        if phenoType is None or phenoType.lower() == 'none':
-            del data['phenoType']
-            return
-            
-        phenoType = set(data['phenoType'].split(','))
-        data['phenoType'] = phenoType
+    phenoType = data['phenoType']
+    print("phenoType: %s" % phenoType)
 
+    if phenoType is None or phenoType.lower() == 'none':
+        del data['phenoType']
+        return
+        
+    phenoType = set(data['phenoType'].split(','))
+    
+    if 'unaffected' in phenoType:
+        phenoType.remove('unaffected')
+        data['inChild']=set(["sib"])
+
+    if not phenoType:
+        del data['phenoType']
+        return
+
+    data['phenoType'] = phenoType
+    if 'inChild' in data:
+        data['inChild'].add('prb')
+    else:
+        data['inChild'] = set(['prb'])
+        
+    print("prepare_denove_phenotype: %s" % data)
+    
     
 def prepare_denovo_studies(data):
     if 'denovoStudies' not in data:

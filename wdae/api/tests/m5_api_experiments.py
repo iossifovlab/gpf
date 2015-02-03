@@ -296,7 +296,7 @@ class VariantPedigreeTests(unittest.TestCase):
 
 
 class PhenotypeFilterTests(APITestCase):
-    def test_pedigree_BTN1A1_BTNL2(self):
+    def test_phenotype_BTN1A1_BTNL2(self):
         data = {
             "geneSyms": "BTN1A1, BTNL2",
             "denovoStudies":"ALL WHOLE EXOME",
@@ -311,7 +311,7 @@ class PhenotypeFilterTests(APITestCase):
         self.assertEqual('2', response.data['count'])
 
 
-    def test_pedigree_BTN1A1_BTNL2_schizophrenia(self):
+    def test_phenotype_BTN1A1_BTNL2_schizophrenia(self):
         data = {
             "geneSyms": "BTN1A1, BTNL2",
             "denovoStudies":"ALL WHOLE EXOME",
@@ -325,4 +325,61 @@ class PhenotypeFilterTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         logger.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
+
+    def test_phenotype_ATRX_SPEG(self):
+        data = {
+            "geneSyms": "ATRX, SPEG",
+            "denovoStudies":"ALL WHOLE EXOME",
+        }
+
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('8', response.data['count'])
+
+    def test_phenotype_ATRX_SPEG_unaffected(self):
+        data = {
+            "geneSyms": "ATRX, SPEG",
+            "denovoStudies":"ALL WHOLE EXOME",
+            "phenoType": "unaffected",
+        }
+
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('3', response.data['count'])
+
+    def test_phenotype_ATRX_SPEG_schizophrenia(self):
+        data = {
+            "geneSyms": "ATRX, SPEG",
+            "denovoStudies":"ALL WHOLE EXOME",
+            "phenoType": "schizophrenia",
+        }
+
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('1', response.data['count'])
+
+    def test_phenotype_ATRX_SPEG_schizophrenia_unaffected(self):
+        data = {
+            "geneSyms": "ATRX, SPEG",
+            "denovoStudies":"ALL WHOLE EXOME",
+            "phenoType": "schizophrenia,unaffected",
+        }
+
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('4', response.data['count'])
         
