@@ -52,7 +52,7 @@ class EffectTypesFiltersTests(APITestCase):
         data = {"geneSyms":"SCNN1D",
                 "denovoStudies":"IossifovWE2014",
                 "variantTypes":"All",
-                "effectTypes":["nonsense", "missense"]
+                "effectTypes": "nonsense,missense",
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -62,18 +62,21 @@ class EffectTypesFiltersTests(APITestCase):
         self.assertEqual('2', result['count'])
 
 
-        data = {"geneSyms":"SCNN1D",
-                "denovoStudies":"IossifovWE2014",
+    def test_effect_filters_ARHGAP30(self):
+        url = '/api/query_variants_preview'
+
+        data = {"geneSyms":"ARHGAP30",
+                "denovoStudies":'ALL WHOLE EXOME',
                 "variantTypes":"All",
-                "effectTypes":"nonsense,missense"
+                "effectTypes":  "nonsense,frame-shift,splice-site",
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.data
 
         logger.info("result: %s", result)
-        self.assertEqual('2', result['count'])
-
+        self.assertEqual('1', result['count'])
+        
 class VariantTypesFiltersTests(APITestCase):
 
     def test_variant_types_whole_exome(self):

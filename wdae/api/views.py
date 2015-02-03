@@ -168,7 +168,10 @@ def build_effect_type_filter(data):
         return
     effects_string = data['effectTypes']
     effects = effects_string.split(',')
-    result_effects = reduce(operator.add, [__EFFECT_TYPES[et] for et in effects])
+    logger.info("result effects: %s", effects)
+
+    result_effects = reduce(operator.add,
+                            [__EFFECT_TYPES[et]  if et in __EFFECT_TYPES else et for et in effects])
     data["effectTypes"] = ','.join(result_effects)
     logger.info("result effects: %s", result_effects)
     logger.info("effectTypes: %s", data["effectTypes"])
@@ -202,7 +205,7 @@ Example:
     logger.info("effect_filter: %s", effect_filter)
     result = []
     if effect_filter == 'all':
-        result = __EFFECT_GROUPS['conding'] + __EFFECT_GROUPS['nonconding']
+        result = __EFFECT_GROUPS['coding'] + __EFFECT_GROUPS['noncoding']
     elif effect_filter == 'none':
         result = []
     elif effect_filter == 'lgds':
