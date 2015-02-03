@@ -192,8 +192,24 @@ def prepare_denovo_phenotype(data):
         data['inChild'].add('prb')
     else:
         data['inChild'] = set(['prb'])
-        
+
     print("prepare_denove_phenotype: %s" % data)
+
+def prepare_gender_filter(data):
+    if 'gender' in data:
+        genderFilter = data['gender'].split(',')
+        if 'inChild' in data:
+            inChild = data['inChild']
+        else:
+            inChild = set(['prb', 'sib'])
+        if 'female' in genderFilter and 'male' in genderFilter:
+            return
+        elif 'female' in genderFilter:
+            inChild = set([inch+'F' for inch in inChild])
+        elif 'male' in genderFilter:
+            inChild = set([inch+'M' for inch in inChild])
+        data['inChild'] = inChild
+        
     
     
 def prepare_denovo_studies(data):

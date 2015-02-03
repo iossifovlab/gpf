@@ -216,7 +216,7 @@ class PhenotypeFiltersTests(APITestCase):
                 "denovoStudies":"ALL WHOLE EXOME",
                 "variantTypes": "All",
                 "effectTypes": "All",
-                'phenoTypes': 'autism'
+                'phenoType': 'autism'
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -369,11 +369,69 @@ class PhenotypeFilterTests(APITestCase):
         logger.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
-    def test_phenotype_ATRX_SPEG_schizophrenia_unaffected(self):
+    def test_phenotype_ATRX_SPEG_schizophrenia_autisim_unaffected(self):
         data = {
             "geneSyms": "ATRX, SPEG",
             "denovoStudies":"ALL WHOLE EXOME",
-            "phenoType": "schizophrenia,unaffected",
+            "phenoType": "autism,schizophrenia,unaffected",
+        }
+
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('8', response.data['count'])
+        
+
+class GenderFilterTests(APITestCase):
+    def test_gender_ATRX_SPEG(self):
+        data = {
+            "geneSyms": "ATRX, SPEG",
+            "denovoStudies":"ALL WHOLE EXOME",
+        }
+
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('8', response.data['count'])
+
+    def test_gender_ATRX_SPEG_female(self):
+        data = {
+            "geneSyms": "ATRX, SPEG",
+            "denovoStudies":"ALL WHOLE EXOME",
+            "gender": "female",
+        }
+
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('3', response.data['count'])
+
+    def test_gender_ATRX_SPEG_male(self):
+        data = {
+            "geneSyms": "ATRX, SPEG",
+            "denovoStudies":"ALL WHOLE EXOME",
+            "gender": "male",
+        }
+
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('5', response.data['count'])
+
+    def test_gender_ATRX_SPEG_autism_male(self):
+        data = {
+            "geneSyms": "ATRX, SPEG",
+            "denovoStudies":"ALL WHOLE EXOME",
+            "phenoType": "autism",
+            "gender": "male",
         }
 
         url = '/api/query_variants_preview'
@@ -382,4 +440,19 @@ class PhenotypeFilterTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         logger.info("result data: %s", response.data)
         self.assertEqual('4', response.data['count'])
+
+    def test_gender_ATRX_SPEG_autism_female(self):
+        data = {
+            "geneSyms": "ATRX, SPEG",
+            "denovoStudies":"ALL WHOLE EXOME",
+            "phenoType": "autism",
+            "gender": "female",
+        }
+
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('0', response.data['count'])
         
