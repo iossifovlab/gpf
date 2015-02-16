@@ -443,7 +443,7 @@ class Study:
             # chr = regionS[0:smcP]
             # beg = int(regionS[smcP+1:dsP])
             # end = int(regionS[dsP+1:])
-            print("regionS: %s" % regionS)
+            # print("regionS: %s" % regionS)
 
             reg_matcher = regions_matcher(regionS)
 
@@ -451,8 +451,12 @@ class Study:
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
                 continue
+            # print "inChS:", v.inChS
             if inChild and not any([(inch in v.inChS) for inch in inChild]):
+                # print "inChild:", inChild, any([(inch in v.inChS) for inch in inChild])
                 continue
+            # else:
+            #     print "inChild filter:", inChild
 
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue

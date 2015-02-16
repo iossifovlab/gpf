@@ -216,7 +216,8 @@ class PhenotypeFiltersTests(APITestCase):
                 "denovoStudies":"ALL WHOLE EXOME",
                 "variantTypes": "All",
                 "effectTypes": "All",
-                'phenoType': 'autism'
+                'phenoType': 'autism',
+                'gender': 'female,male',
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -316,6 +317,7 @@ class PhenotypeFilterTests(APITestCase):
             "geneSyms": "BTN1A1, BTNL2",
             "denovoStudies":"ALL WHOLE EXOME",
             "phenoType": "schizophrenia",
+            "gender": "female,male",
         }
 
         
@@ -345,6 +347,7 @@ class PhenotypeFilterTests(APITestCase):
             "geneSyms": "ATRX, SPEG",
             "denovoStudies":"ALL WHOLE EXOME",
             "phenoType": "unaffected",
+            "gender": "female,male"
         }
 
         
@@ -360,6 +363,7 @@ class PhenotypeFilterTests(APITestCase):
             "geneSyms": "ATRX, SPEG",
             "denovoStudies":"ALL WHOLE EXOME",
             "phenoType": "schizophrenia",
+            "gender": "female,male"
         }
 
         url = '/api/query_variants_preview'
@@ -402,6 +406,7 @@ class GenderFilterTests(APITestCase):
         data = {
             "geneSyms": "ATRX, SPEG",
             "denovoStudies":"ALL WHOLE EXOME",
+            "phenoType": "autism,schizophrenia,unaffected",
             "gender": "female",
         }
 
@@ -416,6 +421,7 @@ class GenderFilterTests(APITestCase):
         data = {
             "geneSyms": "ATRX, SPEG",
             "denovoStudies":"ALL WHOLE EXOME",
+            "phenoType": "autism,schizophrenia,unaffected",
             "gender": "male",
         }
 
@@ -472,5 +478,21 @@ class SSCPhenotypeFilterTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # logger.info("result data: %s", response.data)
         self.assertEqual('147', response.data['count'])
+
+    def test_ssc_phenotype_CACNA1S(self):
+        data = {
+            "geneSyms": "CACNA1S",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "w1202s766e611",
+            "rarity": "ultraRare",
+        }
+
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # logger.info("result data: %s", response.data)
+        self.assertEqual('203', response.data['count'])
 
         

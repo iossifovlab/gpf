@@ -3,7 +3,7 @@ import re
 import logging
 from query_prepare import combine_gene_syms, \
     prepare_denovo_studies, prepare_transmitted_studies, \
-    prepare_denovo_phenotype, prepare_gender_filter
+    prepare_denovo_phenotype, prepare_gender_filter, prepare_denovo_pheno_filter
 
 
 from VariantAnnotation import get_effect_types_set, get_effect_types
@@ -473,17 +473,30 @@ def prepare_denovo_filters(data):
                'geneSyms': combine_gene_syms(data),
                # 'geneIds': prepare_gene_ids(data),
                'regionS': prepare_gene_region(data)}
+    
     return filters
 
 
 def get_denovo_variants(studies, family_filters, **filters):
     seenVs = set()
-    for study in studies:
+    print "studies:", studies
+    for (study, phenoFilter) in studies:
         if family_filters is not None:
             families = family_filters(study).keys()
             filters['familyIds'] = families if len(families) > 0 else [None]
             #logger.debug("study: %s, families: %s", study.name, str(families))
-        for v in study.get_denovo_variants(**filters):
+        if phenoFilter:
+            print "phenoFilter:", phenoFilter
+            print "filters:", filters
+            
+            all_filters = dict(filters, **phenoFilter)
+            print "all_filters:", all_filters
+            
+        else:
+            all_filters = filters
+            print "all_filters(no pheno):", all_filters
+            
+        for v in study.get_denovo_variants(**all_filters):
             vKey = v.familyId + v.location + v.variant
             if vKey in seenVs:
                 continue
@@ -492,9 +505,7 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 
 def dae_query_variants(data):
-    print("query received: %s" % str(data))
     prepare_denovo_phenotype(data)
-    print("phenotype prepared data: %s" % str(data))
     prepare_gender_filter(data)
     
     dstudies = prepare_denovo_studies(data)
@@ -503,13 +514,13 @@ def dae_query_variants(data):
         return []
 
     denovo_filters = prepare_denovo_filters(data)
-    print("denovo filters: %s" % denovo_filters)
-    
     family_filters = advanced_family_filter(data, denovo_filters)
 
+    
     variants = []
     if dstudies is not None:
-        dvs = get_denovo_variants(dstudies, family_filters, **denovo_filters)
+        denovo_filtered_studies = prepare_denovo_pheno_filter(data, dstudies)
+        dvs = get_denovo_variants(denovo_filtered_studies, family_filters, **denovo_filters)
         variants.append(dvs)
 
     if tstudies is not None:

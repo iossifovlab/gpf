@@ -10,7 +10,7 @@ from rest_framework import status
 
 from DAE import vDB
 from DAE import giDB
-from VariantAnnotation import get_effect_types, get_effect_types_set
+from VariantAnnotation import get_effect_types
 
 import itertools
 import logging

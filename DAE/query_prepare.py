@@ -165,7 +165,27 @@ def prepare_gene_sets(data, gene_set_loader=gene_set_loader):
                            gene_set_loader)
 
 
-
+def _prepare_denovo_phenotype_gender_filter(phenoType, gender, st):
+    if st.get_attr('study.phenotype') in phenoType:
+        if len(gender)==2:
+            if 'unaffected' in phenoType:
+                return (st, {'inChild': set(['prb', 'sib'])})
+            else:
+                return (st, {'inChild': set(['prb'])})
+        else:
+            if 'unaffected' in phenoType:
+                return (st, {'inChild': set(['prb' + gender[0], 'sib' + gender[0]])})
+            else:
+                return (st, {'inChild': set(['prb' + gender[0]])})
+        
+    elif 'unaffected' in phenoType:
+        if len(gender)==2:
+            return (st, {'inChild': set(['sib'])})
+        else:
+            return (st, {'inChild': set(['sib' + gender[0]])})
+    else:
+        return (st, None)
+    
 def prepare_denovo_phenotype(data):
     if 'phenoType' not in data:
         return
@@ -178,37 +198,34 @@ def prepare_denovo_phenotype(data):
         return
         
     phenoType = set(data['phenoType'].split(','))
-    
-    if 'unaffected' in phenoType:
-        phenoType.remove('unaffected')
-        data['inChild']=set(["sib"])
-
-    if not phenoType:
-        del data['phenoType']
-        return
-
     data['phenoType'] = phenoType
-    if 'inChild' in data:
-        data['inChild'].add('prb')
-    else:
-        data['inChild'] = set(['prb'])
 
-    print("prepare_denove_phenotype: %s" % data)
+    print("prepare_denovo_phenotype: %s" % data)
 
 def prepare_gender_filter(data):
     if 'gender' in data:
         genderFilter = data['gender'].split(',')
-        if 'inChild' in data:
-            inChild = data['inChild']
+        res = []
+        if 'female' in genderFilter:
+            res.append('F')
+        if 'male' in genderFilter:
+            res.append('M')
+        if res:
+            data['gender'] = res
         else:
-            inChild = set(['prb', 'sib'])
-        if 'female' in genderFilter and 'male' in genderFilter:
-            return
-        elif 'female' in genderFilter:
-            inChild = set([inch+'F' for inch in inChild])
-        elif 'male' in genderFilter:
-            inChild = set([inch+'M' for inch in inChild])
-        data['inChild'] = inChild
+            del data['gender']
+            
+        # if 'inChild' in data:
+        #     inChild = data['inChild']
+        # else:
+        #     inChild = set(['prb', 'sib'])
+        # if 'female' in genderFilter and 'male' in genderFilter:
+        #     return
+        # elif 'female' in genderFilter:
+        #     inChild = set([inch+'F' for inch in inChild])
+        # elif 'male' in genderFilter:
+        #     inChild = set([inch+'M' for inch in inChild])
+        # data['inChild'] = inChild
         
     
     
@@ -227,14 +244,23 @@ def prepare_denovo_studies(data):
     if not res:
         return None
 
-    if 'phenoType' in data:
-        phenoType = data['phenoType']
-        print("phenoType: %s" % phenoType)
-        
-        return [st for st in res if st.get_attr('study.phenotype') in phenoType]
     return res
 
 
+def prepare_denovo_pheno_filter(data, dstudies):
+    if 'phenoType' not in data or 'gender' not in data:
+        return [(st, {'inChild': None}) for st in dstudies]
+    
+    
+    phenoType = data['phenoType']
+    gender = data['gender']
+    
+    res = [_prepare_denovo_phenotype_gender_filter(phenoType, gender, st)
+           for st in dstudies]
+    print "res:", res
+    return [(st, f) for (st, f) in res if f]
+
+    
 def prepare_transmitted_studies(data):
     if 'transmittedStudies' not in data and 'transmittedStudy' not in data:
         return None
