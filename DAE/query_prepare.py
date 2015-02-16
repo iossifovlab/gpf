@@ -249,7 +249,7 @@ def prepare_denovo_studies(data):
 
 def prepare_denovo_pheno_filter(data, dstudies):
     if 'phenoType' not in data or 'gender' not in data:
-        return [(st, {'inChild': None}) for st in dstudies]
+        return [(st, None) for st in dstudies]
     
     
     phenoType = data['phenoType']
