@@ -368,7 +368,10 @@ class Study:
             f.close()
 
 
-    def get_transmitted_variants(self, inChild=None, minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None,effectTypes=None,ultraRareOnly=False, geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
+    def get_transmitted_variants(self, inChild=None, presentInChild=None, presentInParent=None,
+                                 minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,
+                                 variantTypes=None, effectTypes=None, ultraRareOnly=False,
+                                 geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
         
         transmittedVariantsTOOMANYFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
 
