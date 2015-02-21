@@ -265,6 +265,21 @@ def prepare_inchild(data):
     return set(res)
 
 
+def prepare_present_in_child(data):
+    if "presentInChild" in data:
+        present_in_child = set(data['presentInChild'].split(','))
+        print "presentInChild:", present_in_child
+        if set(['autism only']) == present_in_child:
+            return lambda inCh: (len(inCh)==4 and 'p' == inCh[0])
+        if set(['unaffected only']) == present_in_child:
+            return lambda inCh: (len(inCh)==4 and 's' == inCh[0])
+        if set(['autism and unaffected']) == present_in_child:
+            return lambda inCh: (len(inCh)==8)
+        if set(['autism only', 'unaffected only']) == present_in_child:
+            return lambda inCh: (len(inCh)==8)
+        return lambda inCh: True
+    return None
+    
 def prepare_effect_types(data):
     if 'effectTypes' not in data:
         return None
@@ -467,6 +482,7 @@ def prepare_transmitted_filters(data,
 def prepare_denovo_filters(data):
 
     filters = {'inChild': prepare_inchild(data),
+               'presentInChild': prepare_present_in_child(data),
                'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
                'familyIds': prepare_family_ids(data),

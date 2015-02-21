@@ -428,7 +428,9 @@ class Study:
                 yield v
         tbf.close()
 
-    def get_denovo_variants(self, inChild=None, variantTypes=None, effectTypes=None, geneSyms=None, familyIds=None, regionS=None, callSet=None):
+    def get_denovo_variants(self, inChild=None, presentInChild=None,
+                            variantTypes=None, effectTypes=None, geneSyms=None,
+                            familyIds=None, regionS=None, callSet=None):
 
         if isinstance(effectTypes, str):
             effectTypes = self.vdb.effectTypesSet(effectTypes)
@@ -438,13 +440,6 @@ class Study:
 
         reg_matcher = None
         if regionS:
-            # smcP = regionS.find(":")
-            # dsP = regionS.find("-")
-            # chr = regionS[0:smcP]
-            # beg = int(regionS[smcP+1:dsP])
-            # end = int(regionS[dsP+1:])
-            # print("regionS: %s" % regionS)
-
             reg_matcher = regions_matcher(regionS)
 
         dnvData = self._load_dnv_data(callSet)
@@ -452,7 +447,14 @@ class Study:
             if familyIds and v.familyId not in familyIds:
                 continue
             # print "inChS:", v.inChS
-            if inChild and not any([(inch in v.inChS) for inch in inChild]):
+            if presentInChild:
+                if not presentInChild(v.inChS):
+                    # print "inChS:", v.inChS
+                    continue
+                # else:
+                #     print "MATCH:", "inChS:", v.inChS
+                    
+            elif inChild and not any([(inch in v.inChS) for inch in inChild]):
                 # print "inChild:", inChild, any([(inch in v.inChS) for inch in inChild])
                 continue
             # else:
