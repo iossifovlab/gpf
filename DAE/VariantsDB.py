@@ -454,19 +454,11 @@ class Study:
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
                 continue
-            # print "inChS:", v.inChS
             if presentInChild:
                 if not presentInChild(v.inChS):
-                    # print "inChS:", v.inChS
-                    continue
-                # else:
-                #     print "MATCH:", "inChS:", v.inChS
-                    
+                    continue                    
             elif inChild and not any([(inch in v.inChS) for inch in inChild]):
-                # print "inChild:", inChild, any([(inch in v.inChS) for inch in inChild])
                 continue
-            # else:
-            #     print "inChild filter:", inChild
 
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
@@ -474,10 +466,6 @@ class Study:
                 smcP = v.location.find(":")
                 vChr = v.location[0:smcP]
                 vPos = int(v.location[smcP+1:])
-                # if vChr!=chr:
-                #     continue
-                # if vPos<beg or vPos>end:
-                #     continue
                 if not reg_matcher(vChr, vPos):
                     continue
 
