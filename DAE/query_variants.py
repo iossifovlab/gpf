@@ -268,16 +268,23 @@ def prepare_inchild(data):
 def prepare_present_in_child(data):
     if "presentInChild" in data:
         present_in_child = set(data['presentInChild'].split(','))
-        print "presentInChild:", present_in_child
+        print "GENDER: ", data['gender']
+        
+        gender = set(data['gender'])
+        # if len(gender)==2:
+        #     gender = None
+
         if set(['autism only']) == present_in_child:
-            return lambda inCh: (len(inCh)==4 and 'p' == inCh[0])
+            return lambda inCh: (len(inCh)==4 and 'p' == inCh[0] and inCh[3] in gender)
         if set(['unaffected only']) == present_in_child:
-            return lambda inCh: (len(inCh)==4 and 's' == inCh[0])
+            return lambda inCh: (len(inCh)==4 and 's' == inCh[0] and inCh[3] in gender)
         if set(['autism and unaffected']) == present_in_child:
-            return lambda inCh: (len(inCh)==8)
+            return lambda inCh: (len(inCh)==8 and inCh[3] in gender and inCh[7] in gender)
         if set(['autism only', 'unaffected only']) == present_in_child:
-            return lambda inCh: (len(inCh)==8)
-        return lambda inCh: True
+            return lambda inCh: (len(inCh)==4 and inCh[3] in gender)
+        return lambda inCh: ( (len(inCh)==4 and inCh[3] in gender) or
+                              (len(inCh)==8 and  inCh[3] in gender and inCh[7] in gender) )
+        # return lambda inCh: True
     return None
 
 def prepare_present_in_parent(data):
