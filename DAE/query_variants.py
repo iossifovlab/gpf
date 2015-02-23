@@ -279,7 +279,18 @@ def prepare_present_in_child(data):
             return lambda inCh: (len(inCh)==8)
         return lambda inCh: True
     return None
-    
+
+def prepare_present_in_parent(data):
+    if "presentInParent" in data:
+        present_in_parent = set(data['presentInParent'].split(','))
+        print "presentInParent:", present_in_parent
+        if set(['father']) == present_in_parent:
+            print("setting present in father filter")
+            return lambda fromParent: (len(fromParent)==3 and 'd' == fromParent[0])
+
+        return lambda fromParent: True
+    return None
+
 def prepare_effect_types(data):
     if 'effectTypes' not in data:
         return None
@@ -470,7 +481,8 @@ def __load_text_column(colSpec):
 def prepare_transmitted_filters(data,
                                 denovo_filters={}):
 
-    filters = {'ultraRareOnly': prepare_ultra_rare(data),
+    filters = {'presentInParent': prepare_present_in_parent(data),
+               'ultraRareOnly': prepare_ultra_rare(data),
                'minParentsCalled': prepare_pop_min_parents_called(data),
                'minAltFreqPrcnt': prepare_min_alt_freq_prcnt(data),
                'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data),

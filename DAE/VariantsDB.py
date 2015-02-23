@@ -426,8 +426,22 @@ class Study:
 
                 # if inChild and inChild not in v.inChS:
                 #     continue
-                if inChild and not any([(inch in v.inChS) for inch in inChild]):
+                # if inChild and not any([(inch in v.inChS) for inch in inChild]):
+                #     continue
+                if presentInChild:
+                    if not presentInChild(v.inChS):
+                        continue
+                    
+                elif inChild and not any([(inch in v.inChS) for inch in inChild]):
+                    # print "inChild:", inChild, any([(inch in v.inChS) for inch in inChild])
                     continue
+                if presentInParent:
+                    print(v.fromParentS)
+                    if not presentInParent(v.fromParentS):
+                        continue
+                    # else:
+                    #     print "MATCH:", v.fromParentS, v.inChS
+                        
                 yield v
         tbf.close()
 
