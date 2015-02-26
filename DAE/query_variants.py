@@ -290,10 +290,24 @@ def prepare_present_in_child(data):
 def prepare_present_in_parent(data):
     if "presentInParent" in data:
         present_in_parent = set(data['presentInParent'].split(','))
+        print present_in_parent
         print "presentInParent:", present_in_parent
-        if set(['father']) == present_in_parent:
-            print("setting present in father filter")
+        if set(['father only']) == present_in_parent:
             return lambda fromParent: (len(fromParent)==3 and 'd' == fromParent[0])
+        if set(['mother only']) == present_in_parent:
+            return lambda fromParent: (len(fromParent)==3 and 'm' == fromParent[0])
+        if set(['mother and father']) == present_in_parent:
+            return lambda fromParent: len(fromParent)==6
+        if set(['mother only','mother and father']) == present_in_parent:
+            return lambda fromParent: ( (len(fromParent)==3 and 'm' == fromParent[0])
+                                        or len(fromParent) == 6 )
+        if set(['father only','mother and father']) == present_in_parent:
+            return lambda fromParent: ( (len(fromParent)==3 and 'd' == fromParent[0])
+                                        or len(fromParent) == 6 )
+        if set(['father only','mother only','mother and father']) == present_in_parent:
+            return lambda fromParent: ( len(fromParent) > 0 )
+        if set(['neither']) == present_in_parent:
+            return lambda fromParent: ( len(fromParent) == 0)
 
         return lambda fromParent: True
     return None
