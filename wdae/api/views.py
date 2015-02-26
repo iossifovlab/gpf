@@ -139,6 +139,8 @@ __EFFECT_GROUPS = {
         "Intergenic",
         "3'-UTR",
         "5'-UTR",
+    ],
+    "cnv": [
         "CNV",
     ],
     "lgds": [
@@ -187,6 +189,7 @@ Request expects 'effectFilter' with posible values:
     * nonsynonymous
     * UTRs
     * noncoding
+    * CNV
     
 Example:
     
@@ -214,6 +217,8 @@ Example:
         result = __EFFECT_GROUPS['utrs']
     elif effect_filter == 'noncoding':
         result = __EFFECT_GROUPS['noncoding']
+    elif effect_filter == 'cnv':
+        result = __EFFECT_GROUPS['cnv']
     else:
         result = "error: unsupported filter set name"
         return Response({'effect_filter': result}, status=status.HTTP_400_BAD_REQUEST)
