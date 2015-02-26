@@ -211,7 +211,7 @@ def prepare_gender_filter(data):
         if 'male' in genderFilter:
             res.append('M')
         if res:
-            data['gender'] = res
+            data['gender'] = set(res)
         else:
             del data['gender']
             

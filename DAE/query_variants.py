@@ -268,29 +268,41 @@ def prepare_inchild(data):
 def prepare_present_in_child(data):
     if "presentInChild" in data:
         present_in_child = set(data['presentInChild'].split(','))
-        print "GENDER: ", data['gender']
-        
-        gender = set(data['gender'])
-        # if len(gender)==2:
-        #     gender = None
 
-        if set(['autism only']) == present_in_child:
-            return lambda inCh: (len(inCh)==4 and 'p' == inCh[0] and inCh[3] in gender)
-        if set(['unaffected only']) == present_in_child:
-            return lambda inCh: (len(inCh)==4 and 's' == inCh[0] and inCh[3] in gender)
-        if set(['autism and unaffected']) == present_in_child:
-            return lambda inCh: (len(inCh)==8 and inCh[3] in gender and inCh[7] in gender)
-        if set(['autism only', 'unaffected only']) == present_in_child:
-            return lambda inCh: (len(inCh)==4 and inCh[3] in gender)
-        return lambda inCh: ( (len(inCh)==4 and inCh[3] in gender) or
-                              (len(inCh)==8 and  inCh[3] in gender and inCh[7] in gender) )
-        # return lambda inCh: True
+        gender = None
+        if 'gender' in data:
+            gender = set(data['gender'])
+
+        pheno_filter = []
+        if 'autism only' in present_in_child:
+            pheno_filter.append( lambda inCh: (len(inCh)==4 and 'p' == inCh[0]) )
+        if 'unaffected only' in present_in_child:
+            pheno_filter.append( lambda inCh: (len(inCh)==4 and 's' == inCh[0]) )
+        if 'autism and unaffected' in present_in_child:
+            pheno_filter.append( lambda inCh: (len(inCh)==8) )
+        if 'neither' in present_in_child:
+            pheno_filter.append( lambda inCh: len(inCh) == 0 )
+
+        comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
+        
+        if set(['F']) == gender:
+            gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'F'
+            comp.append(gender_filter)
+        elif set(['M']) == gender:
+            gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'M'
+            comp.append(gender_filter)
+    
+        print "comp: ", comp
+        if len(comp)==1:
+            return comp[0]
+
+        return lambda inCh: all([f(inCh) for f in comp])
+
     return None
 
 def prepare_present_in_parent(data):
     if "presentInParent" in data:
         present_in_parent = set(data['presentInParent'].split(','))
-        print present_in_parent
         print "presentInParent:", present_in_parent
         if set(['father only']) == present_in_parent:
             return lambda fromParent: (len(fromParent)==3 and 'd' == fromParent[0])
