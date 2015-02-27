@@ -505,7 +505,7 @@ class SSCPresentInChildTests(APITestCase):
             "transmittedStudies": "None",
             "presentInChild": "autism only,unaffected only,autism and unaffected",
             "gender": "male,female",
-            "phenoType": "autism",
+            # "phenoType": "autism",
         }
 
         
@@ -525,7 +525,7 @@ class SSCPresentInChildTests(APITestCase):
             "transmittedStudies": "None",
             "presentInChild": "autism only",
             "gender": "male,female",
-            "phenoType": "autism",
+            # "phenoType": "autism",
         }
 
         
@@ -544,7 +544,7 @@ class SSCPresentInChildTests(APITestCase):
             "transmittedStudies": "None",
             "presentInChild": "unaffected only",
             "gender": "male,female",
-            "phenoType": "autism",
+            # "phenoType": "autism",
         }
 
         
@@ -563,7 +563,7 @@ class SSCPresentInChildTests(APITestCase):
             "transmittedStudies": "None",
             "presentInChild": "autism and unaffected",
             "gender": "male,female",
-            "phenoType": "autism",
+            # "phenoType": "autism",
         }
 
         
@@ -584,7 +584,7 @@ class SSCPresentInParentTests(APITestCase):
             "presentInChild": "autism only,unaffected only,autism and unaffected,neither",
             "presentInParent": "mother only,father only,mother and father,neither",
             "gender": "male,female",
-            "phenoType": "autism",
+            # "phenoType": "autism",
             "rarity": "ultraRare",
             "transmittedStudies": "w1202s766e611",
             "variantTypes": "sub,ins,del,CNV",
@@ -607,7 +607,7 @@ class SSCPresentInParentTests(APITestCase):
             "presentInChild": "autism only,unaffected only,autism and unaffected,neither",
             "presentInParent": "father only",
             "gender": "male,female",
-            "phenoType": "autism",
+            # "phenoType": "autism",
             "rarity": "ultraRare",
             "transmittedStudies": "w1202s766e611",
             "variantTypes": "sub,ins,del,CNV",
@@ -631,7 +631,7 @@ class SSCPresentInParentTests(APITestCase):
             "presentInChild": "autism only",
             "presentInParent": "father only",
             "gender": "male,female",
-            "phenoType": "autism",
+            # "phenoType": "autism",
             "rarity": "ultraRare",
             "transmittedStudies": "w1202s766e611",
             "variantTypes": "sub,ins,del,CNV",
