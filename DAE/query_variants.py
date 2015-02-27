@@ -271,7 +271,7 @@ def prepare_present_in_child(data):
 
         gender = None
         if 'gender' in data:
-            gender = set(data['gender'])
+            gender = data['gender']
 
         pheno_filter = []
         if 'autism only' in present_in_child:
@@ -285,14 +285,14 @@ def prepare_present_in_child(data):
 
         comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
         
-        if set(['F']) == gender:
+        if ['F'] == gender:
             gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'F'
             comp.append(gender_filter)
-        elif set(['M']) == gender:
+        elif ['M'] == gender:
             gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'M'
             comp.append(gender_filter)
     
-        print "comp: ", comp
+        # print "comp: ", comp
         if len(comp)==1:
             return comp[0]
 
