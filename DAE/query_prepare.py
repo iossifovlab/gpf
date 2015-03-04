@@ -92,7 +92,7 @@ def gene_set_loader(gene_set_label, study_name=None):
         gene_term = get_background(gene_set_label)
         if not gene_term:
             gene_term = get_gene_sets_symNS(gene_set_label)
-        print("gene_term: %s" % gene_term)
+        # print("gene_term: %s" % gene_term)
 
     return gene_term
 

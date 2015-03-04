@@ -247,19 +247,15 @@ def prepare_inchild(data):
         return None
     
     inChild = data['inChild']
-    print("inchild inChild: %s" % inChild)
-
     if not inChild:
         return None
 
     if inChild == 'All' or inChild == 'none' or inChild == 'None':
         return None
-    print("inChild type: %s" % type(inChild))
     if isinstance(inChild, str):
         inChild = inChild.split(',')
 
     res = [ic for ic in inChild if ic in get_child_types()]
-    print("inchild res: %s" % res)
     if not res:
         return None
     return set(res)
@@ -548,11 +544,8 @@ def get_denovo_variants(studies, family_filters, **filters):
         if family_filters is not None:
             families = family_filters(study).keys()
             filters['familyIds'] = families if len(families) > 0 else [None]
-            #logger.debug("study: %s, families: %s", study.name, str(families))
-        if phenoFilter:
-            print "phenoFilter:", phenoFilter
-            print "filters:", filters
-            
+
+        if phenoFilter:            
             all_filters = dict(filters, **phenoFilter)            
         else:
             all_filters = filters
