@@ -25,6 +25,14 @@ class PresentInParentTests(unittest.TestCase):
         self.assertFalse(f('momdad'))
         self.assertFalse(f(''))
 
+    def test_mother_only_and_father_only(self):
+        f = prepare_present_in_parent(
+            {'presentInParent':'mother only,father only'})
+        self.assertTrue(f('mom'))
+        self.assertTrue(f('dad'))
+        self.assertFalse(f('momdad'))
+        self.assertFalse(f(''))
+        
     def test_mother_and_father(self):
         f = prepare_present_in_parent(
             {'presentInParent':'mother and father'})

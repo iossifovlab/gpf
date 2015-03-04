@@ -310,6 +310,9 @@ def prepare_present_in_parent(data):
             return lambda fromParent: (len(fromParent)==3 and 'm' == fromParent[0])
         if set(['mother and father']) == present_in_parent:
             return lambda fromParent: len(fromParent)==6
+        if set(['mother only','father only']) == present_in_parent:
+            return lambda fromParent: len(fromParent)==3
+            
         if set(['mother only','mother and father']) == present_in_parent:
             return lambda fromParent: ( (len(fromParent)==3 and 'm' == fromParent[0])
                                         or len(fromParent) == 6 )
