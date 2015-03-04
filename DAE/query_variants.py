@@ -553,12 +553,9 @@ def get_denovo_variants(studies, family_filters, **filters):
             print "phenoFilter:", phenoFilter
             print "filters:", filters
             
-            all_filters = dict(filters, **phenoFilter)
-            print "all_filters:", all_filters
-            
+            all_filters = dict(filters, **phenoFilter)            
         else:
             all_filters = filters
-            print "all_filters(no pheno):", all_filters
             
         for v in study.get_denovo_variants(**all_filters):
             vKey = v.familyId + v.location + v.variant
