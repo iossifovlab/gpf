@@ -7,12 +7,12 @@ def get_transmitted_studies_names():
         st = vDB.get_study(stN)
         if not st.has_transmitted:
             continue
-        ord = st.get_attr('wdae.production.order')
-        if not ord:
+        order = st.get_attr('wdae.production.order')
+        if not order:
             continue
-        r.append((int(ord), stN, st.description))
+        r.append((int(order), stN, st.description))
 
-    r = [(stN, dsc) for ord, stN, dsc in sorted(r)]
+    r = [(stN, dsc) for o, stN, dsc in sorted(r)]
     return r
 
 
@@ -21,32 +21,33 @@ def get_denovo_studies_names():
 
     for stGN in vDB.get_study_group_names():
         stG = vDB.get_study_group(stGN)
-        ord = stG.get_attr('wdae.production.order')
-        if not ord:
+        order = stG.get_attr('wdae.production.order')
+        if not order:
             continue
-        r.append((int(ord), stGN, stG.description))
+        r.append((int(order), stGN, stG.description))
 
     for stN in vDB.get_study_names():
         st = vDB.get_study(stN)
         if not st.has_denovo:
             continue
-        ord = st.get_attr('wdae.production.order')
-        if not ord:
+        order = st.get_attr('wdae.production.order')
+        if not order:
             continue
-        r.append((int(ord), stN, st.description))
+        r.append((int(order), stN, st.description))
 
-    r = [(stN, dsc) for ord, stN, dsc in sorted(r)]
+    r = [(stN, dsc) for o, stN, dsc in sorted(r)]
     return r
 
-def __build_studies_family_stats(fams):
     
-    fam_buff = defaultdict(dict)
-    for study in studies:
-        for f in study.families.values():
-            for p in [f.memberInOrder[c] for c in xrange(2, len(f.memberInOrder))]:
-                if p.personId not in fam_buff[f.familyId]:
-                    fam_buff[f.familyId][p.personId] = p
-    return fam_buff
+# def __build_studies_family_stats(fams):
+    
+#     fam_buff = defaultdict(dict)
+#     for study in studies:
+#         for f in study.families.values():
+#             for p in [f.memberInOrder[c] for c in xrange(2, len(f.memberInOrder))]:
+#                 if p.personId not in fam_buff[f.familyId]:
+#                     fam_buff[f.familyId][p.personId] = p
+#     return fam_buff
 
 
 def __build_studies_summaries(studies):
@@ -105,8 +106,8 @@ def __build_denovo_studies_summaries():
 
     for study_group_name in vDB.get_study_group_names():
         group = vDB.get_study_group(study_group_name)
-        ord = group.get_attr('wdae.production.order')
-        if not ord:
+        order = group.get_attr('wdae.production.order')
+        if not order:
             continue
         studies_names = ','.join(group.studyNames)
         studies = vDB.get_studies(studies_names)
@@ -115,7 +116,7 @@ def __build_denovo_studies_summaries():
                                 studies_names.replace(',', ', '))]
         summary.extend(__build_studies_summaries(studies))
         
-        r.append((int(ord), summary))
+        r.append((int(order), summary))
 
     for study_name in vDB.get_study_names():
         study = vDB.get_study(study_name)
@@ -127,7 +128,7 @@ def __build_denovo_studies_summaries():
         summary = [study_name, study.description]
         summary.extend(__build_studies_summaries([study]))
 
-        r.append((int(ord), summary))
+        r.append((int(order), summary))
 
     r = [s for o, s in sorted(r)]
     return r
