@@ -514,8 +514,7 @@ def __load_text_column(colSpec):
 def prepare_transmitted_filters(data,
                                 denovo_filters={}):
 
-    filters = {'presentInParent': prepare_present_in_parent(data),
-               'ultraRareOnly': prepare_ultra_rare(data),
+    filters = {'ultraRareOnly': prepare_ultra_rare(data),
                'minParentsCalled': prepare_pop_min_parents_called(data),
                'minAltFreqPrcnt': prepare_min_alt_freq_prcnt(data),
                'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data),
@@ -528,6 +527,7 @@ def prepare_denovo_filters(data):
 
     filters = {'inChild': prepare_inchild(data),
                'presentInChild': prepare_present_in_child(data),
+               'presentInParent': prepare_present_in_parent(data),
                'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
                'familyIds': prepare_family_ids(data),

@@ -373,7 +373,9 @@ class Study:
                                  variantTypes=None, effectTypes=None, ultraRareOnly=False,
                                  geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
         
-        transmittedVariantsTOOMANYFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
+        transmittedVariantsTOOMANYFile = \
+            self.vdb._config.get(self._configSection,
+                                 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
 
         if TMM_ALL:
             tbf = gzip.open(transmittedVariantsTOOMANYFile)
@@ -436,7 +438,7 @@ class Study:
                 yield v
         tbf.close()
 
-    def get_denovo_variants(self, inChild=None, presentInChild=None,
+    def get_denovo_variants(self, inChild=None, presentInChild=None, presentInParent=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None):
 
@@ -460,6 +462,10 @@ class Study:
             elif inChild and not any([(inch in v.inChS) for inch in inChild]):
                 continue
 
+            if presentInParent:
+                if not presentInParent(v.fromParentS):
+                    continue
+            
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
             if reg_matcher:
