@@ -83,7 +83,7 @@ def prepare_gene_ids(data):
 
 
 def gene_set_loader(gene_set_label, study_name=None):
-    print("gene set label: %s" % gene_set_label)
+    # print("gene set label: %s" % gene_set_label)
 
     if 'denovo' == gene_set_label:
         dsts = vDB.get_studies(study_name)
