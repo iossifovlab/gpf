@@ -645,83 +645,6 @@ class SSCPresentInParentTests(APITestCase):
         # logger.info("result data: %s", response.data)
         self.assertEqual('4', response.data['count'])
 
-class SSCPresentInChildGenderTests(APITestCase):
-    pass
-    # def test_present_in_child_male_all(self):
-    #     data = {
-    #         "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-    #         "effectTypes": "Nonsense,Frame-shift,Splice-site",
-    #         "denovoStudies": "ALL SSC",
-    #         "transmittedStudies": "None",
-    #         "presentInChild": "autism only,unaffected only,autism and unaffected",
-    #         "gender": "male",
-    #         "phenoType": "autism",
-    #     }
-
-        
-    #     url = '/api/query_variants_preview'
-
-    #     response = self.client.post(url, data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     # logger.info("result data: %s", response.data)
-    #     self.assertEqual('2', response.data['count'])
-
-
-    # def test_present_in_child_male_autism_only(self):
-    #     data = {
-    #         "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-    #         "effectTypes": "Nonsense,Frame-shift,Splice-site",
-    #         "denovoStudies": "ALL SSC",
-    #         "transmittedStudies": "None",
-    #         "presentInChild": "autism only",
-    #         "gender": "male",
-    #         "phenoType": "autism",
-    #     }
-        
-    #     url = '/api/query_variants_preview'
-
-    #     response = self.client.post(url, data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     # logger.info("result data: %s", response.data)
-    #     self.assertEqual('0', response.data['count'])
-
-    # def test_present_in_child_male_unaffected_only(self):
-    #     data = {
-    #         "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-    #         "effectTypes": "Nonsense,Frame-shift,Splice-site",
-    #         "denovoStudies": "ALL SSC",
-    #         "transmittedStudies": "None",
-    #         "presentInChild": "unaffected only",
-    #         "gender": "male",
-    #         "phenoType": "autism",
-    #     }
-
-        
-    #     url = '/api/query_variants_preview'
-
-    #     response = self.client.post(url, data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     # logger.info("result data: %s", response.data)
-    #     self.assertEqual('1', response.data['count'])
-
-    # def test_present_in_child_male_autism_and_unaffected(self):
-    #     data = {
-    #         "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-    #         "effectTypes": "Nonsense,Frame-shift,Splice-site",
-    #         "denovoStudies": "ALL SSC",
-    #         "transmittedStudies": "None",
-    #         "presentInChild": "autism and unaffected",
-    #         "gender": "male",
-    #         "phenoType": "autism",
-    #     }
-
-        
-    #     url = '/api/query_variants_preview'
-
-    #     response = self.client.post(url, data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     # logger.info("result data: %s", response.data)
-    #     self.assertEqual('2', response.data['count'])
 
 
 class PhenotypeFilterTestsSRI(APITestCase):
@@ -749,4 +672,83 @@ class PhenotypeFilterTestsSRI(APITestCase):
         logger.info("pedigree data: %s" % pedigree_data)
         self.assertEqual('["schizophrenia", [["mom", "F", 0], ["dad", "M", 0], ["sib", "M", 1]]]',
                          pedigree_data)
+
+
         
+class SSCPresentInChildGenderTests(APITestCase):
+    def test_present_in_child_male_all(self):
+        data = {
+            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
+            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "None",
+            "presentInChild": "autism only,unaffected only,autism and unaffected",
+            "gender": "male",
+            # "phenoType": "autism",
+        }
+
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('3', response.data['count'])
+
+
+    def test_present_in_child_male_autism_only(self):
+        data = {
+            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
+            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "None",
+            "presentInChild": "autism only",
+            "gender": "male",
+            # "phenoType": "autism",
+        }
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('0', response.data['count'])
+
+    def test_present_in_child_male_unaffected_only(self):
+        data = {
+            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
+            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "None",
+            "presentInChild": "unaffected only",
+            "gender": "male",
+            # "phenoType": "autism",
+        }
+
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('1', response.data['count'])
+
+    def test_present_in_child_male_autism_and_unaffected(self):
+        data = {
+            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
+            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "None",
+            "presentInChild": "autism and unaffected",
+            "gender": "male",
+            # "phenoType": "autism",
+        }
+
+        
+        url = '/api/query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logger.info("result data: %s", response.data)
+        self.assertEqual('2', response.data['count'])
+
