@@ -239,6 +239,8 @@ class VariantPedigreeTests(unittest.TestCase):
         variants = itertools.chain(*vsl)
         
         for v in variants:
+            print "v.atts=", v.atts
+            
             logger.info("v.inChS=%s; v.bestSt=%s", v.inChS, mat2Str(v.bestSt))
             for m in v.memberInOrder:
                 logger.info("m.role=%s; m.gender=%s; ", m.role, m.gender)
@@ -256,6 +258,8 @@ class VariantPedigreeTests(unittest.TestCase):
         variants = itertools.chain(*vsl)
         
         for v in variants:
+            print "v.atts=", v.atts
+
             logger.info("v.inChS=%s; v.bestSt=%s", v.inChS, mat2Str(v.bestSt))
             logger.info("pedigree=%s", pedigree_data(v))
             logger.info('v.popType=%s; v.atts=%s', v.popType, v.atts)

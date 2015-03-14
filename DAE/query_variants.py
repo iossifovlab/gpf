@@ -542,7 +542,6 @@ def prepare_denovo_filters(data):
 
 def get_denovo_variants(studies, family_filters, **filters):
     seenVs = set()
-    print "studies:", studies
     for (study, phenoFilter) in studies:
         if family_filters is not None:
             families = family_filters(study).keys()
@@ -592,30 +591,6 @@ def dae_query_variants(data):
             variants.append(tvs)
 
     return variants
-
-# def pedigree_data(v):
-#     m = getattr(v, 'bestSt')
-#     res = None
-#     if m.ndim==2 and m.shape[0]==2:
-#         res = [v.study.get_attr('study.phenotype'),
-#                [[p.role, p.gender, n] for (p, n) in zip(v.memberInOrder, m[1])]]
-#     elif m.ndim == 2 and m.shape[0]==1:
-#         # CNVs
-#         base = {'F': m[0][0], 'M': m[0][1]}
-#         res = [v.study.get_attr('study.phenotype'),
-#                [[p.role, p.gender, abs(n - base[p.gender])]
-#                 for (p, n) in zip(v.memberInOrder, m[0])]]
-#     else:
-#         raise Exception
-
-#     if v.fromParentS == "mom" and res[1][0][2] == 0:
-#         res[1][0][2] = 1
-#         res[1][0].append(1)
-#     elif v.fromParentS == "dad" and res[1][1][2] == 0:
-#         res[1][1][2] = 1
-#         res[1][1].append(1)
-#     # print m, res
-#     return res
 
 def pedigree_data(v):
     return [v.study.get_attr('study.phenotype'), v.pedigree]
@@ -701,7 +676,7 @@ def attr_title(attr_key):
 def generate_response(vs, atts=[], sep='\t'):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
-
+        
     mainAtts = ['familyId',
                 'studyName',
                 'location',
@@ -724,8 +699,6 @@ def generate_response(vs, atts=[], sep='\t'):
     
     specialGeneEffects = {"genes": __gene_effect_get_genes,
                           "worstEffect": __gene_effect_get_worst_effect}
-
-    print "atts=", atts
 
     yield [attr_title(attr) for attr in mainAtts + atts]
 

@@ -463,7 +463,7 @@ class Study:
                 continue
 
             if presentInParent:
-                if not presentInParent(v.fromParentS):
+                if not presentInParent(''):
                     continue
             
             if variantTypes and v.variant[0:3] not in variantTypes:
