@@ -22,6 +22,8 @@ from query_variants import do_query_variants, \
     get_child_types, get_variant_types, \
     join_line
 
+from query_prepare import prepare_ssc_filter
+
 from dae_query import prepare_summary, load_gene_set
 
 from report_variants import build_stats
@@ -574,7 +576,48 @@ Advanced family filter expects following fields:
 
     return response
 
+@api_view(['POST'])
+def ssc_query_variants_preview(request):
 
+    if request.method == 'OPTIONS':
+        return Response()
+
+    data = prepare_query_dict(request.DATA)
+    data = prepare_ssc_filter(data)
+    
+    logger.info(log_filter(request, "preview query variants: " + str(data)))
+
+    generator = do_query_variants(data, atts=["_pedigree_"])
+    summary = prepare_summary(generator)
+
+    return Response(summary)
+
+    
+@api_view(['POST'])
+@parser_classes([JSONParser, FormParser])
+def ssc_query_variants(request):
+    if request.method == 'OPTIONS':
+        return Response()
+
+    data = prepare_query_dict(request.DATA)
+    data = prepare_ssc_filter(data)
+    
+    logger.info(log_filter(request, "query variants request: " + str(data)))
+
+    comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
+
+    generator = do_query_variants(data)
+    response = StreamingHttpResponse(
+        itertools.chain(
+            itertools.imap(join_line, generator),
+            ['# %s' % comment]),
+        content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=unruly.csv'
+    response['Expires'] = '0'
+
+    return response
+
+    
 @api_view(['GET'])
 def report_variants(request):
     """

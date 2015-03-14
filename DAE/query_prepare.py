@@ -318,3 +318,12 @@ def combine_gene_syms(data, gene_set_loader=gene_set_loader):
             return gene_syms
         else:
             return gene_sets.union(gene_syms)
+
+
+def prepare_ssc_filter(data):
+    if 'presentInParent' in data and data['presentInParent'] == 'neither':
+        data['transmittedStudies']='None'
+    if 'phenoType' in data:
+        del data['phenoType']
+        
+    return data

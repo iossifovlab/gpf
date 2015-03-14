@@ -8,7 +8,7 @@ from VariantAnnotation import get_effect_types, get_effect_types_set
 from VariantsDB import mat2Str
 
 from DAE import vDB
-from query_prepare import prepare_denovo_studies
+from query_prepare import prepare_ssc_filter
 from query_variants import dae_query_variants, pedigree_data
 
 from rest_framework import status
@@ -194,3 +194,21 @@ class PhenotypeFilterTests(APITestCase):
     #             'phenoType': "['schizophrenia', 'autism', 'unaffected']",
     #             'variantTypes': "['sub', 'ins', 'del']",
     #             'transmittedStudies': "['none']"}
+
+class PrepareSSCFilterTests(APITestCase):
+    def test_present_in_child_male_all(self):
+        data = {
+            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
+            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "w1202s766e611",
+            "transmittedStudies": "w1202s766e611",
+            "presentInChild": "autism only,unaffected only,autism and unaffected",
+            "presentInParent": 'neither',
+            "gender": "male",
+        }
+
+        
+        res = prepare_ssc_filter(data)
+
+        self.assertEqual('None', res['transmittedStudies'])

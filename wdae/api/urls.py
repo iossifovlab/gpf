@@ -19,6 +19,9 @@ urlpatterns = patterns(
     url(r'^query_variants_preview$', 'query_variants_preview'),
     url(r'^query_variants$', 'query_variants'),
 
+    url(r'^ssc_query_variants_preview$', 'ssc_query_variants_preview'),
+    url(r'^ssc_query_variants$', 'ssc_query_variants'),
+    
     url(r'^report_variants$', 'report_variants'),
     url(r'^gene_sets$', 'gene_sets_list'),
     url(r'^gene_set_list$', 'gene_set_list'),
