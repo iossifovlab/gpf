@@ -321,9 +321,23 @@ def combine_gene_syms(data, gene_set_loader=gene_set_loader):
 
 
 def prepare_ssc_filter(data):
-    if 'presentInParent' in data and data['presentInParent'] == 'neither':
+    if 'presentInParent' not in data:
+        data['presentInParent']='neither'
+
+    if 'presentInChild' not in data:
+        data['presentInChild'] = 'neither'
+        
+    if data['presentInParent'] == 'neither':
         data['transmittedStudies']='None'
+    else:
+        data['transmittedStudies']='w1202s766e611'
+
+    if data['presentInChild'] == 'neither':
+        data['denovoStudies'] = 'None'
+    else:
+        data['denovoStudies'] = 'ALL SSC'
+
     if 'phenoType' in data:
         del data['phenoType']
-        
+
     return data

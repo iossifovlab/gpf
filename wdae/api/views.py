@@ -553,14 +553,9 @@ Advanced family filter expects following fields:
     if request.method == 'OPTIONS':
         return Response()
 
-    logger.info("request data: %s", request.DATA)
-
     data = prepare_query_dict(request.DATA)
-    logger.info("request data 2: %s", data)
     build_effect_type_filter(data)
 
-    # if isinstance(data, QueryDict):
-    #     data = prepare_query_dict(data)
     logger.info(log_filter(request, "query variants request: " + str(data)))
 
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
@@ -584,6 +579,7 @@ def ssc_query_variants_preview(request):
 
     data = prepare_query_dict(request.DATA)
     data = prepare_ssc_filter(data)
+    build_effect_type_filter(data)
     
     logger.info(log_filter(request, "preview query variants: " + str(data)))
 
@@ -601,6 +597,7 @@ def ssc_query_variants(request):
 
     data = prepare_query_dict(request.DATA)
     data = prepare_ssc_filter(data)
+    build_effect_type_filter(data)
     
     logger.info(log_filter(request, "query variants request: " + str(data)))
 

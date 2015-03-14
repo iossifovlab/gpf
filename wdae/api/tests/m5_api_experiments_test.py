@@ -474,7 +474,10 @@ class SSCPresentInChildTests(APITestCase):
             "denovoStudies": "ALL SSC",
             "transmittedStudies": "None",
             "presentInChild": "autism only,unaffected only,autism and unaffected",
+            'presentInParent': 'neither',
             "gender": "male,female",
+            'inChild': "None",
+            
             # "phenoType": "autism",
         }
 
@@ -483,9 +486,12 @@ class SSCPresentInChildTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
-        self.assertEqual('5', response.data['count'])
 
+        print response.data['cols']
+        for c,r in enumerate(response.data['rows']):
+            print c,":",r
+        
+        self.assertEqual('7', response.data['count'])
 
     def test_present_in_child_autism_only(self):
         data = {
