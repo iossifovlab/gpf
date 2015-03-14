@@ -224,40 +224,6 @@ class PhenotypeFiltersTests(APITestCase):
         logger.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
-    # def test_phenotype_filters_with_transmitted(self):
-    #     url = '/api/query_variants_preview'
-
-    #     data = {"geneSyms":"CCDC171",
-    #             "denovoStudies":"ALL WHOLE EXOME",
-    #             'transmittedStudies': 'w1202s766e611',
-    #             'rarity': 'ultraRare',
-    #             "variantTypes": "All",
-    #             "effectTypes": "All",
-    #             'phenoTypes': 'autism'
-    #     }
-    #     response = self.client.post(url, data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     logger.info("result data: %s", response.data)
-    #     self.assertEqual('1', response.data['count'])
-
-    # def test_phenotype_filters_ssc_with_transmitted(self):
-    #     url = '/api/query_variants_preview'
-
-    #     data = {"geneSyms":"CHD8,ARID1B,POGZ",
-    #             "denovoStudies":"ALL SSC",
-    #             'transmittedStudies': 'w1202s766e611',
-    #             'rarity': 'ultraRare',
-    #             "variantTypes": "All",
-    #             "effectTypes": "All",
-    #             'phenoTypes': 'unaffected'
-    #     }
-    #     response = self.client.post(url, data, format='json')
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     logger.info("result data: %s", response.data)
-    #     self.assertEqual('1', response.data['count'])
-
-
-
 
 class VariantPedigreeTests(unittest.TestCase):
     def test_pedigree_CUL1(self):

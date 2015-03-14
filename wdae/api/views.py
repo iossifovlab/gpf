@@ -1,5 +1,6 @@
 # Create your views here.
 from django.http import StreamingHttpResponse
+from django.http import QueryDict
 
 # from rest_framework.response import Response as RestResponse
 from rest_framework.response import Response
@@ -435,13 +436,22 @@ def gene_set_list(request):
 
 def prepare_query_dict(data):
     res = []
-    for (key, value) in data.items():
+    if isinstance(data, QueryDict):
+        items = data.iterlists()
+    else:
+        items = data.items()
+        
+    for (key, val) in items:
         key = str(key)
-        if isinstance(value, list):
-            value = [str(s) for s in value]
+        if isinstance(val, list):
+            print "value:", val,
+            value = ','.join([str(s).strip() for s in val])
+            print "after: ", value
         else:
-            value = str(value)
+            value = str(val)
+
         res.append((key, value))
+    
     return dict(res)
 
 
@@ -541,7 +551,10 @@ Advanced family filter expects following fields:
     if request.method == 'OPTIONS':
         return Response()
 
+    logger.info("request data: %s", request.DATA)
+
     data = prepare_query_dict(request.DATA)
+    logger.info("request data 2: %s", data)
     build_effect_type_filter(data)
 
     # if isinstance(data, QueryDict):
