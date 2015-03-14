@@ -258,7 +258,10 @@ def prepare_inchild(data):
     res = [ic for ic in inChild if ic in get_child_types()]
     if not res:
         return None
-    return set(res)
+    if len(res) != 1:
+        logger.error("inChild format wrong: %s, %s", inChild, res)
+        return None
+    return res[0]
 
 
 def prepare_present_in_child(data):

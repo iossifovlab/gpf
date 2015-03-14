@@ -10,6 +10,7 @@ from .gene_set_tests import *
 from .enrichment_tests import *
 from .enrichment_query_test import *
 from .m5_api_experiments import *
+from .m5_api_problems import *
 from .pheno_pedigree_test import *
 from .prepare_denovo_phenotype_gender_filter_test import *
 from .present_in_child_filters_test import *
