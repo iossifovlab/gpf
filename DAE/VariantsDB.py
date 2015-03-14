@@ -429,7 +429,7 @@ class Study:
                 if presentInChild:
                     if not presentInChild(v.inChS):
                         continue
-                elif inChild and not any([(inch in v.inChS) for inch in inChild]):
+                elif inChild and inChild not in v.inChS:
                     continue
                 if presentInParent:
                     if not presentInParent(v.fromParentS):
@@ -459,7 +459,7 @@ class Study:
             if presentInChild:
                 if not presentInChild(v.inChS):
                     continue                    
-            elif inChild and not any([(inch in v.inChS) for inch in inChild]):
+            elif inChild and inChild not in v.inChS:
                 continue
 
             if presentInParent:
