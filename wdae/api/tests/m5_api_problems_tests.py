@@ -437,3 +437,83 @@ class SSCPresentInParentTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # logger.info("result data: %s", response.data)
         self.assertEqual('4', response.data['count'])
+
+
+class SSCPresentInChildDownloadTests(APITestCase):
+    def test_rec_lgds_preview(self):
+        data = {
+            'geneRegionType': 'on',
+            'familyIds': '',
+            'genes': 'Gene Sets',
+            'families': 'all',
+            'geneSyms': '',
+            'familyVerbalIqLo': '',
+            'geneStudy': 'AUTISM',
+            'familySibGender': 'All',
+            'rarity': 'ultraRare',
+            'familyRace': 'All',
+            'effectTypes': 'nonsense,frame-shift,splice-site',
+            'familyQuadTrio': 'All',
+            'presentInChild': 'autism only,autism and unaffected',
+            'variantTypes': 'sub,ins,del,CNV',
+            'gender': 'male,female',
+            'geneTerm': 'prb.LoF.Recurrent',
+            'presentInParent': 'neither',
+            'familyVerbalIqHi': '',
+            'geneRegion': '',
+            'geneSet': 'denovo',
+            'familyPrbGender': 'All'
+        }
+
+        
+        url = '/api/ssc_query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # logger.info("result data: %s", response.data)
+        self.assertEqual('77', response.data['count'])
+
+
+    def test_rec_lgds_download(self):
+        data = {
+            'geneRegionType': 'on',
+            'familyIds': '',
+            'genes': 'Gene Sets',
+            'families': 'all',
+            'geneSyms': '',
+            'familyVerbalIqLo': '',
+            'geneStudy': 'AUTISM',
+            'familySibGender': 'All',
+            'rarity': 'ultraRare',
+            'familyRace': 'All',
+            'effectTypes': 'nonsense,frame-shift,splice-site',
+            'familyQuadTrio': 'All',
+            'presentInChild': 'autism only,autism and unaffected',
+            'variantTypes': 'sub,ins,del,CNV',
+            'gender': 'male,female',
+            'geneTerm': 'prb.LoF.Recurrent',
+            'presentInParent': 'neither',
+            'familyVerbalIqHi': '',
+            'geneRegion': '',
+            'geneSet': 'denovo',
+            'familyPrbGender': 'All'
+        }
+
+        
+        url = '/api/ssc_query_variants'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(79, count_iterable(response.streaming_content))
+
+    def test_rec_lgds_download_urlencoded(self):
+        data = 'genes=Gene+Sets&geneSet=denovo&geneStudy=AUTISM&geneTerm=prb.LoF.Recurrent&geneSyms=&geneRegionType=on&geneRegion=&presentInChild=autism+only&presentInChild=autism+and+unaffected&presentInParent=neither&gender=male&gender=female&variantTypes=sub&variantTypes=ins&variantTypes=del&variantTypes=CNV&effectTypes=Nonsense&effectTypes=Frame-shift&effectTypes=Splice-site&rarity=ultraRare&families=all&familyIds=&familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&familyPrbGender=All&familySibGender=All'
+
+        logger.info("urldecoded: %s", urlparse.parse_qs(data))
+        url = '/api/ssc_query_variants'
+
+        response = self.client.post(url, data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(79, count_iterable(response.streaming_content))
+        
