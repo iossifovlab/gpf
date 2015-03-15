@@ -710,8 +710,9 @@ Performs enrichment test. Expected parameters are:
     * gs_name - gene set name;
 
 Examples:
+    GET /api/enrichment_test_by_phenotype?denovoStudies=ALL+WHOLE+EXOME&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main
 
-    GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
+    """
 
     query_data = prepare_query_dict(request.QUERY_PARAMS)
     logger.info(log_filter(request, "enrichment query by phenotype: %s" % str(query_data)))
