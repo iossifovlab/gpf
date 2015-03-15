@@ -1,4 +1,4 @@
-
+from collections import defaultdict
 from DAE import vDB
 
 import itertools
@@ -69,6 +69,61 @@ SIB_TESTS = ['sib|LGDs|sib|LGD',                   # 0
              'sib|Missense|sib|missense',          # 3
              'sib|Synonymous|sib|synonymous']      # 4
 
+PRB_TESTS_VARS = [('prb|Rec LGDs', 'prb', 'LGDs'),                              # 0
+                  ('prb|LGDs|prb|LGD', 'prb', 'LGDs'),                          # 1
+                  ('prb|Male LGDs|prbM|LGD', 'prbM', 'LGDs'),                   # 2
+                  ('prb|Female LGDs|prbF|LGD', 'prbF', 'LGDs'),                 # 3
+                  ('prb|Missense|prb|missense', 'prb', 'missense'),             # 4
+                  ('prb|Male Missense|prbM|missense', 'prbM', 'missense'),      # 5
+                  ('prb|Female Missense|prbF|missense', 'prbF', 'missense'),    # 6
+                  ('prb|Synonymous|prb|synonymous', 'prb', 'synonymous'),]      # 7
+
+SIB_TESTS_VARS = [('sib|LGDs|sib|LGD', 'sib', 'LGDs'),                          # 0
+                  ('sib|Male LGDs|sibM|LGD', 'sibM', 'LGDs'),                   # 1
+                  ('sib|Female LGDs|sibF|LGD', 'sibF', 'LGDs'),                 # 2
+                  ('sib|Missense|sib|missense', 'sib', 'missense'),             # 3
+                  ('sib|Synonymous|sib|synonymous', 'sib', 'synonymous'),]      # 4
+
+def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
+    collector = defaultdict(lambda: [[],[],[],[],[],[],[],[]])
+    for dst in dsts:
+        phenotype = dst.get_attr('study.phenotype')
+        logger.info("collecting PRB enrichment variants for: %s", phenotype)
+        for n, (label, in_child, effect_types) in enumerate(PRB_TESTS_VARS):
+            collector[phenotype][n].append(
+                dst.get_denovo_variants(inChild=in_child,
+                                        effectTypes=effect_types,
+                                        geneSyms=gene_syms))
+
+    res = {}
+    for key, evars in collector.items():
+        res[key] = [itertools.chain.from_iterable(vgen) for vgen in evars]
+    return res
+
+def collect_sib_enrichment_variants_by_phenotype(dsts, gene_syms=None):
+    collector = [[],[],[],[],[],]
+    for dst in dsts:
+        for n, (label, in_child, effect_types) in enumerate(SIB_TESTS_VARS):
+            collector[n].append(
+                dst.get_denovo_variants(inChild=in_child,
+                                        effectTypes=effect_types,
+                                        geneSyms=gene_syms))
+
+    res = [itertools.chain.from_iterable(vgen) for vgen in collector]
+    return res
+
+def filter_prb_enrichment_variants_by_phenotype(pheno_evars):
+    res = {}
+    for phenotype, evars in pheno_evars.items():
+        gen = iter(evars)
+        rec_vars = gen.next()
+        res[phenotype] = [one_variant_per_recurrent(rec_vars)]
+        for vs in gen:
+            res[phenotype].append(filter_denovo(vs))
+    return res
+
+def filter_sib_enrichment_variants_by_phenotype(evars):
+    return [filter_denovo(vs) for vs in evars]
 
 def __build_variants_genes_dict(denovo, geneSyms=None):
     return [
@@ -173,7 +228,6 @@ class EnrichmentTestRes:
         return self.__str__()
 
 from scipy import stats
-
 
 def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
     all_res = {}
