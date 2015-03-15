@@ -3,8 +3,8 @@ from DAE import vDB
 
 import itertools
 import logging
-# import hashlib
-# from api.wdae_cache import store, retrieve
+from scipy import stats
+
 from bg_loader import get_background
 
 logger = logging.getLogger(__name__)
@@ -88,7 +88,6 @@ def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
     collector = defaultdict(lambda: [[],[],[],[],[],[],[],[]])
     for dst in dsts:
         phenotype = dst.get_attr('study.phenotype')
-        logger.info("collecting PRB enrichment variants for: %s", phenotype)
         for n, (label, in_child, effect_types) in enumerate(PRB_TESTS_VARS):
             collector[phenotype][n].append(
                 dst.get_denovo_variants(inChild=in_child,
@@ -117,14 +116,54 @@ def filter_prb_enrichment_variants_by_phenotype(pheno_evars):
     for phenotype, evars in pheno_evars.items():
         gen = iter(evars)
         rec_vars = gen.next()
-        res[phenotype] = [one_variant_per_recurrent(rec_vars)]
+        pheno_res = [one_variant_per_recurrent(rec_vars)]
         for vs in gen:
-            res[phenotype].append(filter_denovo(vs))
+            pheno_res.append(filter_denovo(vs))
+        res[phenotype] = zip(PRB_TESTS, pheno_res)
     return res
 
 def filter_sib_enrichment_variants_by_phenotype(evars):
-    return [filter_denovo(vs) for vs in evars]
+    return zip(SIB_TESTS, [filter_denovo(vs) for vs in evars])
 
+def build_enrichment_variants_genes_dict_by_phenotype(dsts, geneSyms=None):
+    genes_dict = filter_prb_enrichment_variants_by_phenotype(
+        collect_prb_enrichment_variants_by_phenotype(dsts, geneSyms))
+    genes_dict['unaffected'] = filter_sib_enrichment_variants_by_phenotype(
+        collect_sib_enrichment_variants_by_phenotype(dsts, geneSyms))
+    return genes_dict
+
+def count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set):
+    all_res = defaultdict(dict)
+    for phenotype, genes_dict in genes_dict_by_pheno.items():
+        pheno_res = {}
+        for test_name, gene_syms in genes_dict:
+            pheno_res[test_name] = EnrichmentTestRes()
+
+            for gene_sym_list in gene_syms:
+                touched_gene_sets = False
+                for gene_sym in gene_sym_list:
+                    if gene_sym in gene_syms_set:
+                        touched_gene_sets = True
+                if touched_gene_sets:
+                    pheno_res[test_name].cnt += 1
+        all_res[phenotype] = pheno_res
+    return all_res
+    
+
+def count_background(gene_syms_set):
+    gene_syms = get_background('enrichment_background')
+    res = EnrichmentTestRes()
+    
+    for gene_sym_list in gene_syms:
+        touched_gene_sets = False
+        for gene_sym in gene_sym_list:
+            if gene_sym in gene_syms_set:
+                touched_gene_sets = True
+        if touched_gene_sets:
+            res.cnt += 1
+    return res
+    
+    
 def __build_variants_genes_dict(denovo, geneSyms=None):
     return [
         [PRB_TESTS[0],
@@ -227,8 +266,6 @@ class EnrichmentTestRes:
     def __repr__(self):
         return self.__str__()
 
-from scipy import stats
-
 def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
     all_res = {}
     for test_name, gene_syms in var_genes_dict:
@@ -247,6 +284,7 @@ def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
 
 
 def enrichment_test(dsts, gene_syms_set):
+    
     var_genes_dict = __build_variants_genes_dict(dsts)
 
     all_res = __count_gene_set_enrichment(var_genes_dict, gene_syms_set)
@@ -266,3 +304,32 @@ def enrichment_test(dsts, gene_syms_set):
         res.expected = round(bg_prob*total, 4)
 
     return all_res, totals
+
+def enrichment_test_by_phenotype(dsts, gene_syms_set):
+    genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(dsts)
+    
+    count_res_by_pheno = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
+    
+    count_bg = count_background(gene_syms_set)
+    if count_bg.cnt == 0:
+        count_bg.cnt = 0.5
+
+    total_bg = len(get_background('enrichment_background'))
+    prob_bg = float(count_bg.cnt) / total_bg
+
+    totals_by_pheno = {}
+    for phenotype, genes_dict in genes_dict_by_pheno.items():
+        totals = {testname: len(gene_syms) for testname, gene_syms in genes_dict}
+        totals_by_pheno[phenotype] = totals
+
+        all_res = count_res_by_pheno[phenotype]
+
+        for testname, gene_syms in genes_dict:
+            res = all_res[testname]
+            total = totals[testname]
+
+            res.p_val = stats.binom_test(res.cnt, total, p=prob_bg)
+            res.expected = round(prob_bg * total, 4)
+
+    return (count_res_by_pheno, totals_by_pheno,
+            {phenotype: dict(genes_dict) for phenotype, genes_dict in genes_dict_by_pheno.items()})

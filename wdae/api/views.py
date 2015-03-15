@@ -27,7 +27,9 @@ from query_prepare import prepare_ssc_filter
 from dae_query import prepare_summary, load_gene_set
 
 from report_variants import build_stats
-from enrichment_query import enrichment_results, enrichment_prepare
+from enrichment_query import enrichment_results, \
+    enrichment_results_by_phenotype, \
+    enrichment_prepare
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names, \
     get_studies_summaries
@@ -675,10 +677,53 @@ Examples:
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
 
+    print "enrichment query:", data
+    
     if data is None:
         return Response(None)
 
     res = enrichment_results(**data)
+    return Response(res)
+
+
+@api_view(['GET'])
+def enrichment_test_by_phenotype(request):
+    """
+Performs enrichment test. Expected parameters are:
+
+* "denovoStudies" -- expects list of denovo studies
+* "transmittedStudies" --- expects list of transmitted studies
+
+* "geneSyms" --- comma separated list of gene symbols or list of gene symbols
+
+
+* "geneSet" --- contains gene set name (one of 'main','GO' or 'disease')
+* "geneTerm" --- contains gene set term. Example:  'GO:2001293' (from GO),
+'mPFC_maternal' (from main).
+* "geneStudy --- if geneSet is 'denovo', then we expect this additional parameter, to
+    specify which denovo study to use
+
+
+    * dst_name - denovo study name;
+    * tst_name - transmitted study name;
+    * gt_name - gene term name;
+    * gs_name - gene set name;
+
+Examples:
+
+    GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
+
+    query_data = prepare_query_dict(request.QUERY_PARAMS)
+    logger.info(log_filter(request, "enrichment query by phenotype: %s" % str(query_data)))
+
+    data = enrichment_prepare(query_data)
+    # if isinstance(data, QueryDict):
+    #     data = prepare_query_dict(data)
+
+    if data is None:
+        return Response(None)
+
+    res = enrichment_results_by_phenotype(**data)
     return Response(res)
 
 from api.report_pheno import get_supported_studies, get_supported_measures, \
