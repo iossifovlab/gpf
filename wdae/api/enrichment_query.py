@@ -133,12 +133,13 @@ def enrichment_results(denovoStudies=None,
     return res
 
 
-def enrichment_test_helper(all_res, totals, genes_dict, gene_syms):
-    res = {}
-    for testname in all_res:
+def enrichment_test_helper(all_res, totals, genes_dict, gene_syms, tests):
+    res = []
+    for testname in tests:
         tres = {}
         eres = all_res[testname]
         tres['overlap'] = totals[testname]
+        tres['label'] = testname.split('|')[1]
         tres['count'] = eres.cnt
         if testname == 'prb|Rec LGDs':
             tres['syms'] = set(chain.from_iterable(genes_dict[testname]))
@@ -163,7 +164,8 @@ def enrichment_test_helper(all_res, totals, genes_dict, gene_syms):
         tres['lessmore'] = lessmore
         tres['bg'] = colormap_value(p_val, lessmore)
 
-        res[testname] = tres
+        res.append(tres)
+        
     return res
     
 def enrichment_results_by_phenotype(
@@ -178,8 +180,6 @@ def enrichment_results_by_phenotype(
         enrichment_test_by_phenotype(denovoStudies, geneSyms)
     
     res = {}
-    res['prb'] = PRB_TESTS
-    res['sib'] = SIB_TESTS
     res['gs_id'] = geneSet
 
     if geneSet is None:
@@ -203,7 +203,9 @@ def enrichment_results_by_phenotype(
         all_res = count_res_by_pheno[phenotype]
         totals = totals_by_pheno[phenotype]
         genes_dict = genes_dict_by_pheno[phenotype]
-        
-        res[phenotype] = enrichment_test_helper(all_res, totals, genes_dict, geneSyms)
+        tests = PRB_TESTS
+        if phenotype == 'unaffected':
+            tests = SIB_TESTS
+        res[phenotype] = enrichment_test_helper(all_res, totals, genes_dict, geneSyms, tests)
 
     return res
