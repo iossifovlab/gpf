@@ -493,7 +493,7 @@ All fields are same as in query_variants request
 
     logger.info(log_filter(request, "preview query variants: " + str(data)))
 
-    generator = do_query_variants(data, atts=["_pedigree_"])
+    generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
 
     return Response(summary)
@@ -585,7 +585,7 @@ def ssc_query_variants_preview(request):
     
     logger.info(log_filter(request, "preview query variants: " + str(data)))
 
-    generator = do_query_variants(data, atts=["_pedigree_"])
+    generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
 
     return Response(summary)

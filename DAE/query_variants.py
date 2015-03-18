@@ -612,6 +612,7 @@ def __augment_vars(v):
     v.atts["_prb_viq_"] = viq 
     v.atts["_prb_nviq_"] = nviq
     v.atts["_pedigree_"] = pedigree_data(v)
+    # v.atts["phenoInChS"] = v.phenoInChS()
     
     return v
 
@@ -716,7 +717,7 @@ def generate_response(vs, atts=[], sep='\t'):
                 mavs.append("")
 
         yield (mavs + [str(v.atts[a]).replace(sep, ';').replace("'", '"')
-                       if a in v.atts else "" for a in atts])
+                       if a in v.atts else str(getattr(v, a, '')) for a in atts])
 
 
 def join_line(l, sep=','):
