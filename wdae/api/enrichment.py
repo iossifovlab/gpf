@@ -55,19 +55,19 @@ def build_transmitted_background(tstd):
 
 
 PRB_TESTS = ['prb|Rec LGDs',                       # 0
-             'prb|LGDs|prb|LGD',                   # 1
-             'prb|Male LGDs|prbM|LGD',             # 2
-             'prb|Female LGDs|prbF|LGD',           # 3
-             'prb|Missense|prb|missense',          # 4
-             'prb|Male Missense|prbM|missense',    # 5
-             'prb|Female Missense|prbF|missense',  # 6
-             'prb|Synonymous|prb|synonymous']      # 7
+             'prb|LGDs|prb|male,female|Nonsense,Frame-shift,Split-site',                   # 1
+             'prb|Male LGDs|prb|male|Nonsense,Frame-shift,Split-site',             # 2
+             'prb|Female LGDs|prb|female|Nonsense,Frame-shift,Split-site',           # 3
+             'prb|Missense|prb|male,female|Missense',          # 4
+             'prb|Male Missense|prb|male|Missense',    # 5
+             'prb|Female Missense|prb|female|Missense',  # 6
+             'prb|Synonymous|prb|male,female|Synonymous']      # 7
 
-SIB_TESTS = ['sib|LGDs|sib|LGD',                   # 0
-             'sib|Male LGDs|sibM|LGD',             # 1
-             'sib|Female LGDs|sibF|LGD',           # 2
-             'sib|Missense|sib|missense',          # 3
-             'sib|Synonymous|sib|synonymous']      # 4
+SIB_TESTS = ['sib|LGDs|sib|male,female|Nonsense,Frame-shift,Split-site',                   # 0
+             'sib|Male LGDs|sib|male|Nonsense,Frame-shift,Split-site',             # 1
+             'sib|Female LGDs|sib|female|Nonsense,Frame-shift,Split-site',           # 2
+             'sib|Missense|sib|male,female|Missense',          # 3
+             'sib|Synonymous|sib|male,female|Synonymous']      # 4
 
 PRB_TESTS_VARS = [('prb|Rec LGDs', 'prb', 'LGDs'),                              # 0
                   ('prb|LGDs|prb|LGD', 'prb', 'LGDs'),                          # 1

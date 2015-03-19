@@ -144,7 +144,8 @@ def enrichment_test_helper(all_res, totals, genes_dict, gene_syms, tests):
         if testname == 'prb|Rec LGDs':
             tres['syms'] = set(chain.from_iterable(genes_dict[testname]))
             tres['syms'] = tres['syms'].intersection(gene_syms)
-
+        else:
+            tres['filter'] = testname.split('|')[2:]
         p_val = eres.p_val
         if eres.p_val >= 0.0001:
             p_val = round(eres.p_val, 4)
