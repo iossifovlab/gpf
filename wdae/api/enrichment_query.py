@@ -196,6 +196,9 @@ def enrichment_results_by_phenotype(
         desc = ','.join(sorted(syms))
         res['gs_desc'] = desc
         res['gs_id'] = desc
+
+    res['gene_number'] = len(geneSyms)
+
     res['phenotypes'] = sorted(count_res_by_pheno.keys())
 
     for phenotype in count_res_by_pheno.keys():
