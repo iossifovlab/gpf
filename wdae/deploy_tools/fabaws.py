@@ -47,7 +47,7 @@ def _update_settings(site_folder, wdae_folder):
     sed(settings_path, "DEBUG = True", "DEBUG = False")
     sed(settings_path,
         "ALLOWED_HOSTS = .+$",
-        'ALLOWED_HOSTS = ["seqpipe-vm.setelis.com", "seqpipe.setelis.com"]')
+        'ALLOWED_HOSTS = ["iossifovlab.com", "www.iossifovlab.com"]')
     sed(settings_path,
         'TIME_ZONE = .+$',
         'TIME_ZONE = "Europe/Sofia"')
@@ -56,7 +56,7 @@ def _update_settings(site_folder, wdae_folder):
         'STATIC_ROOT = "%s/"' % os.path.join(site_folder, 'static'))
     sed(settings_path,
         'STATIC_URL = .+$',
-        'STATIC_URL = "/dae/static/"')
+        'STATIC_URL = "/static/"')
 
     secret_key_file = os.path.join(wdae_folder, 'wdae/secret_key.py')
     if not exists(secret_key_file):
