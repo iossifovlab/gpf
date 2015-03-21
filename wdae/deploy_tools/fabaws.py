@@ -17,9 +17,10 @@ def staging():
 
     print("site_folder: %s, source_folder: %s" % (site_folder, source_folder))
 
-    _create_directory_structure_if_necessary(site_folder)
-    _put_repository_tarball(site_folder, source_folder)
+    # _create_directory_structure_if_necessary(site_folder)
+    # _put_repository_tarball(site_folder, source_folder)
     
+    _update_settings_logfile(site_folder, wdae_folder, 'lubo')
     _update_source_consts(wdae_folder)
     _update_settings(site_folder, wdae_folder)
     _update_wsgi(site_folder, dae_folder, wdae_folder, data_folder)
@@ -66,14 +67,14 @@ def _update_settings(site_folder, wdae_folder):
     append(settings_path, '\nfrom .secret_key import SECRET_KEY')
 
 
-def _update_settings_logfile(site_folder, wdae_folder):
+def _update_settings_logfile(site_folder, wdae_folder, owner='www-data'):
     settings_path = os.path.join(wdae_folder, 'wdae/settings.py')
     logs_path = os.path.join(site_folder, 'logs/wdae-apt.log')
     sed(settings_path,
         'wdae-api.log',
         logs_path)
     sudo('touch %s' % logs_path)
-    sudo('chown www-data:www-data %s' % logs_path)
+    sudo('chown %s:%s %s' % (owner, owner, logs_path))
     
 def _update_source_consts(wdae_folder):
     jsconst_path = os.path.join(wdae_folder,
