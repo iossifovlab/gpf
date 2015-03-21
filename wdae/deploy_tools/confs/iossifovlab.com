@@ -1,11 +1,11 @@
 <VirtualHost *:80>
-  ServerAdmin admin@setelis.com
-  ServerName seqpipe-vm.setelis.com
+  ServerAdmin admin@iossifov.com
+  ServerName iossifovlab.com
 
-  WSGIScriptAlias /dae %(wsgi_file)s
+  WSGIScriptAlias / %(wsgi_file)s
   WSGIApplicationGroup %%{GLOBAL}
 
-  Alias /dae/static/ %(static_folder)s/
+  Alias /static/ %(static_folder)s/
   <Location "/dae/static/">
     Allow From All
   </Location>
