@@ -1,13 +1,17 @@
 # Create your views here.
+from django.contrib.auth import get_user_model
+from django.dispatch import receiver
 from django.http import StreamingHttpResponse
 from django.http import QueryDict
+from django.db.models.signals import post_save
 
 # from rest_framework.response import Response as RestResponse
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import JSONParser, FormParser
+from rest_framework import serializers
 from rest_framework import status
-
 
 from DAE import vDB
 from DAE import giDB
@@ -17,6 +21,7 @@ import itertools
 import logging
 import string
 import operator
+import uuid
 
 from query_variants import do_query_variants, \
     get_child_types, get_variant_types, \
@@ -34,6 +39,8 @@ from enrichment_query import enrichment_results, \
 from studies import get_transmitted_studies_names, get_denovo_studies_names, \
     get_studies_summaries
 
+from models import UserSerializer
+
 # from query_prepare import prepare_transmitted_studies
 
 
@@ -50,6 +57,11 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names, \
 logger = logging.getLogger('wdae.api')
 
 
+@receiver(post_save, sender=get_user_model())
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+
 def log_filter(request, message):
     request_method = getattr(request, 'method', '-')
     path_info = getattr(request, 'path_info', '-')
@@ -63,6 +75,23 @@ def log_filter(request, message):
                                                           path_info,
                                                           message)
 
+@api_view(['POST'])
+def register(request):
+    serialized = UserSerializer(data=request.DATA)
+    if serialized.is_valid():
+        user = get_user_model()
+        researcher_number = serialized.init_data['researcher_number']
+        email = serialized.init_data['email']
+        
+        created_user = user.objects.create_user(email, researcher_number)
+        created_user.first_name = serialized.init_data['first_name']
+        created_user.middle_name = serialized.init_data['middle_name']
+        created_user.last_name = serialized.init_data['last_name']
+
+        created_user.save()
+        return Response(serialized.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serialized._errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 def report_studies(request):

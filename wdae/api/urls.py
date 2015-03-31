@@ -1,8 +1,12 @@
 from django.conf.urls import patterns, url
 from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework.authtoken import views as rest_views
 
 urlpatterns = patterns(
     'api.views',
+    url(r'^users/register$', 'register'),
+    url(r'^users/api-token-auth$', rest_views.obtain_auth_token),
+    
     url(r'^denovo_studies$', 'denovo_studies_list'),
     url(r'^study_groups$', 'study_groups_list'),
     url(r'^transmitted_studies$', 'transmitted_studies_list'),
@@ -34,8 +38,6 @@ urlpatterns = patterns(
     url(r'^pheno_supported_measures$', 'pheno_supported_measures'),
     url(r'^pheno_report_preview$', 'pheno_report_preview'),
     url(r'^pheno_report_download$', 'pheno_report_download'),
-    
-
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)
