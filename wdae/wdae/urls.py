@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, url, include
-
+from django.contrib import admin
 
 # import api.views
 # router = routers.DefaultRouter()
@@ -12,10 +12,15 @@ from django.conf.urls import patterns, url, include
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browseable API.
+
+
+admin.autodiscover()
 urlpatterns = patterns(
     '',
     url(r'^$', 'variants.views.index'),
     url(r'^api/', include('api.urls')),
+    url(r'^api/', include('variants.urls')),
+    url(r'^admin/', include(admin.site.urls) )
 )
 
 try:

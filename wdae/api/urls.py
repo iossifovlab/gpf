@@ -1,12 +1,8 @@
 from django.conf.urls import patterns, url
 from rest_framework.urlpatterns import format_suffix_patterns
-from rest_framework.authtoken import views as rest_views
 
 urlpatterns = patterns(
-    'api.views',
-    url(r'^users/register$', 'register'),
-    url(r'^users/api-token-auth$', rest_views.obtain_auth_token),
-    
+    'api.views',    
     url(r'^denovo_studies$', 'denovo_studies_list'),
     url(r'^study_groups$', 'study_groups_list'),
     url(r'^transmitted_studies$', 'transmitted_studies_list'),
