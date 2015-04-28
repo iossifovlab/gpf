@@ -148,7 +148,8 @@ __EFFECT_GROUPS = {
         "5'-UTR",
     ],
     "cnv": [
-        "CNV",
+        "CNV+",
+        "CNV-"
     ],
     "lgds": [
         "Nonsense",

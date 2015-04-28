@@ -56,7 +56,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         res = collect_sib_enrichment_variants_by_phenotype(dsts)
 
         logger.info("collected SIB variants: %s", res)
-        self.assertEqual(5, len(res))
+        self.assertEqual(8, len(res))
 
     def test_filter_prb_variants_by_phenotype_whole_exome(self):
         data = {
@@ -97,7 +97,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         evars = collect_sib_enrichment_variants_by_phenotype(dsts)
         res = filter_sib_enrichment_variants_by_phenotype(evars)
         
-        self.assertEqual(5, len(res))
+        self.assertEqual(8, len(res))
 
     def test_build_enrichment_variants_genes_dict(self):
         data = {

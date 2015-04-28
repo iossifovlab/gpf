@@ -53,7 +53,7 @@ def pheno_query_variants(data):
     rec_lgds = filter_var_in_recurent_genes(lgds)
     missense = _pheno_query_variants(data, 'missense')
     synonymous = _pheno_query_variants(data, 'synonymous')
-    cnvs = _pheno_query_variants(data, 'CNV')
+    cnvs = _pheno_query_variants(data, 'CNV+,CNV-')
 
     families_with_lgds = Counter([v.familyId for v in lgds])
     families_with_rec_lgds = Counter([v.familyId for v in rec_lgds])

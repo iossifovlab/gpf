@@ -54,35 +54,45 @@ def build_transmitted_background(tstd):
 #     thread.start()
 
 
-PRB_TESTS = ['prb|Rec LGDs',                       # 0
-             'prb|LGDs|prb|male,female|Nonsense,Frame-shift,Splice-site',                   # 1
-             'prb|Male LGDs|prb|male|Nonsense,Frame-shift,Splice-site',             # 2
-             'prb|Female LGDs|prb|female|Nonsense,Frame-shift,Splice-site',           # 3
-             'prb|Missense|prb|male,female|Missense',          # 4
-             'prb|Male Missense|prb|male|Missense',    # 5
-             'prb|Female Missense|prb|female|Missense',  # 6
-             'prb|Synonymous|prb|male,female|Synonymous']      # 7
+PRB_TESTS = [
+    'prb|Rec LGDs',                                                   # 0
+    'prb|LGDs|prb|male,female|Nonsense,Frame-shift,Splice-site',      # 1
+    'prb|Male LGDs|prb|male|Nonsense,Frame-shift,Splice-site',        # 2
+    'prb|Female LGDs|prb|female|Nonsense,Frame-shift,Splice-site',    # 3
+    'prb|Missense|prb|male,female|Missense',                          # 4
+    'prb|Male Missense|prb|male|Missense',                            # 5
+    'prb|Female Missense|prb|female|Missense',                        # 6
+    'prb|Synonymous|prb|male,female|Synonymous']                      # 7
 
-SIB_TESTS = ['sib|LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site',                   # 0
-             'sib|Male LGDs|sib|male|Nonsense,Frame-shift,Splice-site',             # 1
-             'sib|Female LGDs|sib|female|Nonsense,Frame-shift,Splice-site',           # 2
-             'sib|Missense|sib|male,female|Missense',          # 3
-             'sib|Synonymous|sib|male,female|Synonymous']      # 4
+SIB_TESTS = [
+    'sib|Rec LGDs',                                                   # 0
+    'sib|LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site',      # 1
+    'sib|Male LGDs|sib|male|Nonsense,Frame-shift,Splice-site',        # 2
+    'sib|Female LGDs|sib|female|Nonsense,Frame-shift,Splice-site',    # 3
+    'sib|Missense|sib|male,female|Missense',                          # 4
+    'sib|Male Missense|sib|male|Missense',                            # 5
+    'sib|Female Missense|sib|female|Missense',                        # 6
+    'sib|Synonymous|sib|male,female|Synonymous']                      # 7
 
-PRB_TESTS_VARS = [('prb|Rec LGDs', 'prb', 'LGDs'),                              # 0
-                  ('prb|LGDs|prb|LGD', 'prb', 'LGDs'),                          # 1
-                  ('prb|Male LGDs|prbM|LGD', 'prbM', 'LGDs'),                   # 2
-                  ('prb|Female LGDs|prbF|LGD', 'prbF', 'LGDs'),                 # 3
-                  ('prb|Missense|prb|missense', 'prb', 'missense'),             # 4
-                  ('prb|Male Missense|prbM|missense', 'prbM', 'missense'),      # 5
-                  ('prb|Female Missense|prbF|missense', 'prbF', 'missense'),    # 6
-                  ('prb|Synonymous|prb|synonymous', 'prb', 'synonymous'),]      # 7
+PRB_TESTS_VARS = [
+    ('prb|Rec LGDs', 'prb', 'LGDs'),                              # 0
+    ('prb|LGDs|prb|LGD', 'prb', 'LGDs'),                          # 1
+    ('prb|Male LGDs|prbM|LGD', 'prbM', 'LGDs'),                   # 2
+    ('prb|Female LGDs|prbF|LGD', 'prbF', 'LGDs'),                 # 3
+    ('prb|Missense|prb|missense', 'prb', 'missense'),             # 4
+    ('prb|Male Missense|prbM|missense', 'prbM', 'missense'),      # 5
+    ('prb|Female Missense|prbF|missense', 'prbF', 'missense'),    # 6
+    ('prb|Synonymous|prb|synonymous', 'prb', 'synonymous'),]      # 7
 
-SIB_TESTS_VARS = [('sib|LGDs|sib|LGD', 'sib', 'LGDs'),                          # 0
-                  ('sib|Male LGDs|sibM|LGD', 'sibM', 'LGDs'),                   # 1
-                  ('sib|Female LGDs|sibF|LGD', 'sibF', 'LGDs'),                 # 2
-                  ('sib|Missense|sib|missense', 'sib', 'missense'),             # 3
-                  ('sib|Synonymous|sib|synonymous', 'sib', 'synonymous'),]      # 4
+SIB_TESTS_VARS = [
+    ('sib|Rec LGDs', 'sib', 'LGDs'),                              # 0
+    ('sib|LGDs|sib|LGD', 'sib', 'LGDs'),                          # 1
+    ('sib|Male LGDs|sibM|LGD', 'sibM', 'LGDs'),                   # 3
+    ('sib|Female LGDs|sibF|LGD', 'sibF', 'LGDs'),                 # 3
+    ('sib|Missense|sib|missense', 'sib', 'missense'),             # 4
+    ('sib|Male Missense|sibM|missense', 'sibM', 'missense'),      # 5
+    ('sib|Female Missense|sibF|missense', 'sibF', 'missense'),    # 6
+    ('sib|Synonymous|sib|synonymous', 'sib', 'synonymous'),]      # 7
 
 def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
     collector = defaultdict(lambda: [[],[],[],[],[],[],[],[]])
@@ -100,7 +110,7 @@ def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
     return res
 
 def collect_sib_enrichment_variants_by_phenotype(dsts, gene_syms=None):
-    collector = [[],[],[],[],[],]
+    collector = [[],[],[],[],[],[],[],[],]
     for dst in dsts:
         for n, (label, in_child, effect_types) in enumerate(SIB_TESTS_VARS):
             collector[n].append(
@@ -123,7 +133,12 @@ def filter_prb_enrichment_variants_by_phenotype(pheno_evars):
     return res
 
 def filter_sib_enrichment_variants_by_phenotype(evars):
-    return zip(SIB_TESTS, [filter_denovo(vs) for vs in evars])
+    gen = iter(evars)
+    rec_vars = gen.next()
+    res = [one_variant_per_recurrent(rec_vars)]
+    for vs in gen:
+        res.append(filter_denovo(vs))
+    return zip(SIB_TESTS, res)
 
 def build_enrichment_variants_genes_dict_by_phenotype(dsts, geneSyms=None):
     genes_dict = filter_prb_enrichment_variants_by_phenotype(
