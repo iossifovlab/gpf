@@ -1,9 +1,12 @@
 # Create your views here.
+from django.contrib.auth.models import AnonymousUser
 from django.http import StreamingHttpResponse
 from django.http import QueryDict
 
 # from rest_framework.response import Response as RestResponse
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import JSONParser, FormParser
 from rest_framework import serializers
@@ -459,6 +462,15 @@ def prepare_query_dict(data):
 
 
 @api_view(['POST'])
+def query_variants_preview_full(request):
+    result = authenticated_user_or_403(request)
+
+    if result:
+        return result
+
+    query_variants_preview(request)
+
+@api_view(['POST'])
 def query_variants_preview(request):
     """
 Performs a query to DAE. The body of the request should be JSON formatted object
@@ -497,6 +509,15 @@ All fields are same as in query_variants request
 
     return Response(summary)
 
+@api_view(['POST'])
+@parser_classes([JSONParser, FormParser])
+def query_variants_full(request):
+    result = admin_user_or_403(request.user)
+
+    if result:
+        return result
+
+    query_variants(request)
 
 @api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
@@ -572,12 +593,16 @@ Advanced family filter expects following fields:
 
     return response
 
-# TODO: Permission
 @api_view(['POST'])
 def ssc_query_variants_preview(request):
 
     if request.method == 'OPTIONS':
         return Response()
+
+    result = authenticated_user_or_403(request)
+
+    if result:
+        return result
 
     data = prepare_query_dict(request.DATA)
     data = prepare_ssc_filter(data)
@@ -587,10 +612,9 @@ def ssc_query_variants_preview(request):
 
     generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
-
+    print request.user
     return Response(summary)
 
-# TODO: Permission
 @api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
 def ssc_query_variants(request):
@@ -613,6 +637,7 @@ def ssc_query_variants(request):
         content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
+
 
     return response
 
@@ -777,3 +802,25 @@ def pheno_report_download(request):
     response['Expires'] = '0'
 
     return response
+
+def authenticated_user_or_403(request):
+    user = build_user(request.META['HTTP_AUTHORIZATION'])
+    if type(user) is AnonymousUser:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    return False
+
+def admin_user_or_403(request):
+    user = build_user(request.META['HTTP_AUTHORIZATION'])
+    if type(user) is AnonymousUser or not user.is_staff:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    return False
+
+def build_user(token):
+    try:
+        user = Token.objects.get(key=token.split(' ')[1]).user
+        return user
+    except Token.DoesNotExist:
+        return AnonymousUser()
+
