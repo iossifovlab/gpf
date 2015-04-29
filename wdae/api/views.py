@@ -1,8 +1,10 @@
 # Create your views here.
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.http import StreamingHttpResponse
 from django.http import QueryDict
-
 # from rest_framework.response import Response as RestResponse
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -37,6 +39,14 @@ from enrichment_query import enrichment_results, \
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names, \
     get_studies_summaries
+
+from models import VerificationPath
+from serializers import UserSerializer
+
+@receiver(post_save, sender=get_user_model())
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
 
 # from query_prepare import prepare_transmitted_studies
 
@@ -464,10 +474,10 @@ def prepare_query_dict(data):
 
 @api_view(['POST'])
 def query_variants_preview_full(request):
-    result = authenticated_user_or_403(request)
+    not_auth = check_not_auth(request)
 
-    if result:
-        return result
+    if not_auth:
+        return not_auth
 
     query_variants_preview(request)
 
@@ -513,10 +523,10 @@ All fields are same as in query_variants request
 @api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
 def query_variants_full(request):
-    result = admin_user_or_403(request.user)
+    not_admin = check_not_admin_auth(request)
 
-    if result:
-        return result
+    if not_admin:
+        return not_auth
 
     query_variants(request)
 
@@ -600,10 +610,10 @@ def ssc_query_variants_preview(request):
     if request.method == 'OPTIONS':
         return Response()
 
-    result = authenticated_user_or_403(request)
+    not_auth = check_not_auth(request)
 
-    if result:
-        return result
+    if not_auth:
+        return not_auth
 
     data = prepare_query_dict(request.DATA)
     data = prepare_ssc_filter(data)
@@ -613,7 +623,6 @@ def ssc_query_variants_preview(request):
 
     generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
-    print request.user
     return Response(summary)
 
 @api_view(['POST'])
@@ -804,14 +813,14 @@ def pheno_report_download(request):
 
     return response
 
-def authenticated_user_or_403(request):
+def check_not_auth(request):
     user = build_user(request.META['HTTP_AUTHORIZATION'])
     if type(user) is AnonymousUser:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
     return False
 
-def admin_user_or_403(request):
+def check_not_admin_auth(request):
     user = build_user(request.META['HTTP_AUTHORIZATION'])
     if type(user) is AnonymousUser or not user.is_staff:
         return Response(status=status.HTTP_403_FORBIDDEN)
@@ -824,4 +833,69 @@ def build_user(token):
         return user
     except Token.DoesNotExist:
         return AnonymousUser()
+@api_view(['POST'])
+def register(request):
+    serialized = UserSerializer(data=request.DATA)
+    if serialized.is_valid():
+        user = get_user_model()
+        researcher_number = serialized.init_data['researcher_number']
+        email = serialized.init_data['email']
+        
+        created_user = user.objects.create_user(email, researcher_number)
+        created_user.first_name = serialized.init_data['first_name']
+        created_user.last_name = serialized.init_data['last_name']
 
+        created_user.save()
+        return Response(serialized.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serialized._errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def check_verif_path(request):
+    verif_path = request.DATA['verif_path']
+    try:
+        VerificationPath.objects.get(path=verif_path)
+        return Response({}, status=status.HTTP_200_OK)
+    except VerificationPath.DoesNotExist:
+        return Response({
+                        'errors': 'Verification path does not exist.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def change_password(request):
+    password = request.DATA['password']
+    verif_path = request.DATA['verif_path']
+
+    get_user_model().change_password(verif_path, password)
+
+    return Response({}, status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+def get_user_type(request):
+    token = request.DATA['token']
+    try:
+        user = Token.objects.get(key=token).user
+        print user
+        if (user.is_staff):
+            userType = 'admin'
+        else:
+            userType = 'registered'
+
+        return Response({ 'userType': userType }, status.HTTP_200_OK)
+    except Token.DoesNotExist:
+        return Response({}, status.HTTP_200_OK)
+
+@api_view(['POST'])
+def reset_password(request):
+    email = request.DATA['email']
+    user_model = get_user_model()
+    try:
+        user = user_model.objects.get(email=email)
+        user.reset_password()
+
+        return Response({}, status.HTTP_200_OK)
+    except user_model.DoesNotExist:
+        return Response({
+                        'errors': 'User with this email not found'
+                    }, status=status.HTTP_400_BAD_REQUEST)
