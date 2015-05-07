@@ -19,7 +19,6 @@ urlpatterns = patterns(
     '',
     url(r'^$', 'variants.views.index'),
     url(r'^api/', include('api.urls')),
-    url(r'^api/', include('variants.urls')),
     url(r'^admin/', include(admin.site.urls) )
 )
 
