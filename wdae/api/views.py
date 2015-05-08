@@ -6,10 +6,11 @@ from django.dispatch import receiver
 from django.http import StreamingHttpResponse
 from django.http import QueryDict
 # from rest_framework.response import Response as RestResponse
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.decorators import api_view, parser_classes
+from rest_framework.decorators import api_view, parser_classes, authentication_classes, permission_classes
 from rest_framework.parsers import JSONParser, FormParser
 from rest_framework import serializers
 from rest_framework import status
@@ -473,12 +474,9 @@ def prepare_query_dict(data):
 
 
 @api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
 def query_variants_preview_full(request):
-    not_auth = check_not_auth(request)
-
-    if not_auth:
-        return not_auth
-
     query_variants_preview(request)
 
 @api_view(['POST'])
@@ -521,13 +519,10 @@ All fields are same as in query_variants request
     return Response(summary)
 
 @api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAdminUser,))
 @parser_classes([JSONParser, FormParser])
 def query_variants_full(request):
-    not_admin = check_not_admin_auth(request)
-
-    if not_admin:
-        return not_auth
-
     query_variants(request)
 
 @api_view(['POST'])
@@ -605,15 +600,12 @@ Advanced family filter expects following fields:
     return response
 
 @api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
 def ssc_query_variants_preview(request):
 
     if request.method == 'OPTIONS':
         return Response()
-
-    not_auth = check_not_auth(request)
-
-    if not_auth:
-        return not_auth
 
     data = prepare_query_dict(request.DATA)
     data = prepare_ssc_filter(data)
@@ -813,35 +805,15 @@ def pheno_report_download(request):
 
     return response
 
-def check_not_auth(request):
-    user = build_user(request.META['HTTP_AUTHORIZATION'])
-    if type(user) is AnonymousUser:
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-    return False
-
-def check_not_admin_auth(request):
-    user = build_user(request.META['HTTP_AUTHORIZATION'])
-    if type(user) is AnonymousUser or not user.is_staff:
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-    return False
-
-def build_user(token):
-    try:
-        user = Token.objects.get(key=token.split(' ')[1]).user
-        return user
-    except Token.DoesNotExist:
-        return AnonymousUser()
 @api_view(['POST'])
 def register(request):
     serialized = UserSerializer(data=request.DATA)
     if serialized.is_valid():
         user = get_user_model()
-        researcher_number = serialized.init_data['researcher_number']
+        researcher_id = serialized.init_data['researcher_id']
         email = serialized.init_data['email']
         
-        created_user = user.objects.create_user(email, researcher_number)
+        created_user = user.objects.create_user(email, researcher_id)
         created_user.first_name = serialized.init_data['first_name']
         created_user.last_name = serialized.init_data['last_name']
 
@@ -872,7 +844,8 @@ def change_password(request):
     return Response({}, status.HTTP_201_CREATED)
 
 @api_view(['POST'])
-def get_user_type(request):
+def get_user_info(request):
+    print request.user
     token = request.DATA['token']
     try:
         user = Token.objects.get(key=token).user
@@ -882,7 +855,7 @@ def get_user_type(request):
         else:
             userType = 'registered'
 
-        return Response({ 'userType': userType }, status.HTTP_200_OK)
+        return Response({ 'userType': userType, 'email': user.email }, status.HTTP_200_OK)
     except Token.DoesNotExist:
         return Response({}, status.HTTP_200_OK)
 

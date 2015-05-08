@@ -3,11 +3,11 @@ import csv
 from django.core.management.base import BaseCommand, CommandError
 from django.db.utils import IntegrityError
 
-from variants.models import Researcher
+from api.models import Researcher
 
 class Command(BaseCommand):
     args = '<file> <file> ...'
-    help = 'Creates researchers from csv. Column names for the csv file - first name, last name, email and researcher_number.'
+    help = 'Creates researchers from csv. Column names for the csv file - first name, last name, email and researcher_id.'
 
     def handle(self, *args, **options):
         if(len(args) < 1):
@@ -20,7 +20,7 @@ class Command(BaseCommand):
                     for res in resreader:
                         res_instance = Researcher()
                         res_instance.email = res['email']
-                        res_instance.unique_number = int(res['researcher id'])
+                        res_instance.unique_number = str(res['researcher id'])
                         res_instance.first_name = res['first name']
                         res_instance.last_name = res['last name']
                         try:

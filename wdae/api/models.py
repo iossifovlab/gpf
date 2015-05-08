@@ -4,7 +4,7 @@ import socket
 from django.db import models
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 
 from rest_framework.authtoken.models import Token
@@ -34,7 +34,7 @@ class VerificationPath(models.Model):
 		db_table = 'verification_paths'
 
 class WdaeUserManager(BaseUserManager):
-    def _create_user(self, email, password, researcher_number=None, is_staff=False, is_active=False):
+    def _create_user(self, email, password, researcher_id=None, is_staff=False, is_active=False):
         """
         Creates and saves a User with the given email and password.
         """
@@ -43,21 +43,22 @@ class WdaeUserManager(BaseUserManager):
             raise ValueError('The given email must be set')
 
         email = self.normalize_email(email)
-
-        user = self.model(email=email, date_joined=now)
+        print self.model
+        user = self.model(email=email)
+        user.date_joined = now
         user.set_password(password)
         user.is_staff = is_staff
         user.is_active = is_active
         if(not user.is_staff):
 	        user.verification_path = _create_verif_path()
-	        user.researcher_number = researcher_number
+	        user.researcher_id = researcher_id
 
         user.save(using=self._db)
 
         return user
 
-    def create_user(self, email, researcher_number, password=None,):
-        user = self._create_user(email, uuid.uuid4(), researcher_number)
+    def create_user(self, email, researcher_id, password=None,):
+        user = self._create_user(email, uuid.uuid4(), researcher_id)
         send_verif_email(user)
 
         return user
@@ -75,7 +76,7 @@ class WdaeUser(AbstractBaseUser):
 	first_name = models.CharField(max_length='100')
 	last_name = models.CharField(max_length='100')
 	email = models.EmailField(unique=True)
-	researcher_number = models.CharField(max_length='100', unique=True, blank=True, null=True) #CHECK
+	researcher_id = models.CharField(max_length='100', unique=True, blank=True, null=True) #CHECK
 	verification_path = models.OneToOneField(VerificationPath, blank=True, null=True)
 	is_staff = models.BooleanField(default=False)
 	is_active = models.BooleanField(default=False)
@@ -84,7 +85,7 @@ class WdaeUser(AbstractBaseUser):
 	objects = WdaeUserManager()
 
 	USERNAME_FIELD = 'email'
-	REQUIRED_FIELDS = ['researcher_number', 'first_name', 'last_name']
+	REQUIRED_FIELDS = ['researcher_id', 'first_name', 'last_name']
 
 	def email_user(self, subject, message, from_email=None):
 		send_mail(subject, message, from_email, [self.email])

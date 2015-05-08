@@ -9,11 +9,11 @@ class UserSerializer(serializers.Serializer):
 	middle_name = serializers.CharField(max_length='100', required=False)
 	last_name = serializers.CharField(max_length='100')
 	email = serializers.EmailField()
-	researcher_number = serializers.CharField(max_length='100') #CHECK
+	researcher_id = serializers.CharField(max_length='100') #CHECK
 
 	def validate(self, data):
 		user_model = get_user_model()
-		res_number = data['researcher_number']
+		res_number = data['researcher_id']
 		email = data['email']
 		first_name = data['first_name']
 		last_name = data['last_name']

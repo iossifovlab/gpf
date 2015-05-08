@@ -37,7 +37,7 @@ urlpatterns = patterns(
     url(r'^pheno_report_preview$', 'pheno_report_preview'),
     url(r'^pheno_report_download$', 'pheno_report_download'),
     url(r'^users/register$', 'register'),
-    url(r'^users/get_user_type$', 'get_user_type'),
+    url(r'^users/get_user_info$', 'get_user_info'),
     url(r'^users/check_verif_path', 'check_verif_path'),
     url(r'^users/change_password', 'change_password'),
     url(r'^users/reset_password', 'reset_password'),
