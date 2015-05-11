@@ -839,9 +839,9 @@ def change_password(request):
     password = request.DATA['password']
     verif_path = request.DATA['verif_path']
 
-    get_user_model().change_password(verif_path, password)
+    user = get_user_model().change_password(verif_path, password)
 
-    return Response({}, status.HTTP_201_CREATED)
+    return Response({'username': user.email, 'password': password }, status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 def get_user_info(request):

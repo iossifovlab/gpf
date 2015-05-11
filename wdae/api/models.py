@@ -125,6 +125,8 @@ class WdaeUser(AbstractBaseUser):
 		user.is_active = True
 		user.save()
 
+		return user
+
 	def __str__(self):
 		return self.email
 
