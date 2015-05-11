@@ -845,7 +845,6 @@ def change_password(request):
 
 @api_view(['POST'])
 def get_user_info(request):
-    print request.user
     token = request.DATA['token']
     try:
         user = Token.objects.get(key=token).user
@@ -857,7 +856,7 @@ def get_user_info(request):
 
         return Response({ 'userType': userType, 'email': user.email }, status.HTTP_200_OK)
     except Token.DoesNotExist:
-        return Response({}, status.HTTP_200_OK)
+        return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def reset_password(request):

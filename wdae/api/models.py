@@ -43,12 +43,12 @@ class WdaeUserManager(BaseUserManager):
             raise ValueError('The given email must be set')
 
         email = self.normalize_email(email)
-        print self.model
         user = self.model(email=email)
         user.date_joined = now
         user.set_password(password)
         user.is_staff = is_staff
         user.is_active = is_active
+        
         if(not user.is_staff):
 	        user.verification_path = _create_verif_path()
 	        user.researcher_id = researcher_id
