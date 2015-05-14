@@ -62,7 +62,10 @@ PRB_TESTS = [
     'prb|Missense|prb|male,female|Missense',                          # 4
     'prb|Male Missense|prb|male|Missense',                            # 5
     'prb|Female Missense|prb|female|Missense',                        # 6
-    'prb|Synonymous|prb|male,female|Synonymous']                      # 7
+    'prb|Synonymous|prb|male,female|Synonymous',                      # 7
+    'prb|Male Synonymous|prb|male|Synonymous',                        # 8
+    'prb|Female Synonymous|prb|female|Synonymous',                    # 9
+]
 
 SIB_TESTS = [
     'sib|Rec LGDs',                                                   # 0
@@ -75,14 +78,17 @@ SIB_TESTS = [
     'sib|Synonymous|sib|male,female|Synonymous']                      # 7
 
 PRB_TESTS_VARS = [
-    ('prb|Rec LGDs', 'prb', 'LGDs'),                              # 0
-    ('prb|LGDs|prb|LGD', 'prb', 'LGDs'),                          # 1
-    ('prb|Male LGDs|prbM|LGD', 'prbM', 'LGDs'),                   # 2
-    ('prb|Female LGDs|prbF|LGD', 'prbF', 'LGDs'),                 # 3
-    ('prb|Missense|prb|missense', 'prb', 'missense'),             # 4
-    ('prb|Male Missense|prbM|missense', 'prbM', 'missense'),      # 5
-    ('prb|Female Missense|prbF|missense', 'prbF', 'missense'),    # 6
-    ('prb|Synonymous|prb|synonymous', 'prb', 'synonymous'),]      # 7
+    ('prb|Rec LGDs', 'prb', 'LGDs'),                                # 0
+    ('prb|LGDs|prb|LGD', 'prb', 'LGDs'),                            # 1
+    ('prb|Male LGDs|prbM|LGD', 'prbM', 'LGDs'),                     # 2
+    ('prb|Female LGDs|prbF|LGD', 'prbF', 'LGDs'),                   # 3
+    ('prb|Missense|prb|missense', 'prb', 'missense'),               # 4
+    ('prb|Male Missense|prbM|missense', 'prbM', 'missense'),        # 5
+    ('prb|Female Missense|prbF|missense', 'prbF', 'missense'),      # 6
+    ('prb|Synonymous|prb|synonymous', 'prb', 'synonymous'),         # 7
+    ('prb|Male Synonymous|prb|synonymous', 'prbM', 'synonymous'),   # 8
+    ('prb|Female Synonymous|prb|synonymous', 'prbF', 'synonymous'), # 9
+]
 
 SIB_TESTS_VARS = [
     ('sib|Rec LGDs', 'sib', 'LGDs'),                              # 0
@@ -95,7 +101,7 @@ SIB_TESTS_VARS = [
     ('sib|Synonymous|sib|synonymous', 'sib', 'synonymous'),]      # 7
 
 def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
-    collector = defaultdict(lambda: [[],[],[],[],[],[],[],[]])
+    collector = defaultdict(lambda: [[],[],[],[],[],[],[],[],[],[]])
     for dst in dsts:
         phenotype = dst.get_attr('study.phenotype')
         for n, (label, in_child, effect_types) in enumerate(PRB_TESTS_VARS):
