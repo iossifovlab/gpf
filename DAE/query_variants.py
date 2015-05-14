@@ -245,7 +245,7 @@ def advanced_family_filter(data, filters):
 def prepare_inchild(data):
     if 'inChild' not in data:
         return None
-    
+
     inChild = data['inChild']
     if not inChild:
         return None
@@ -283,14 +283,14 @@ def prepare_present_in_child(data):
             pheno_filter.append( lambda inCh: len(inCh) == 0 )
 
         comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
-        
+
         if ['F'] == gender:
             gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'F'
             comp.append(gender_filter)
         elif ['M'] == gender:
             gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'M'
             comp.append(gender_filter)
-    
+
         # print "comp: ", comp
         if len(comp)==1:
             return comp[0]
@@ -311,7 +311,7 @@ def prepare_present_in_parent(data):
             return lambda fromParent: len(fromParent)==6
         if set(['mother only','father only']) == present_in_parent:
             return lambda fromParent: len(fromParent)==3
-            
+
         if set(['mother only','mother and father']) == present_in_parent:
             return lambda fromParent: ( (len(fromParent)==3 and 'm' == fromParent[0])
                                         or len(fromParent) == 6 )
@@ -345,7 +345,7 @@ def prepare_effect_types(data):
     # effect_types = effect_type.split(',')
     # result = [et for et in effect_types if et in get_effect_types(types=True, groups=True)]
     # print("effect types: %s" % result)
-    
+
     # return set(result)
     # if effect_type not in get_effect_types(types=True, groups=True):
     #     return None
@@ -371,7 +371,7 @@ def prepare_variant_types(data):
     logger.info("variant types: %s", result)
     if result:
         return ','.join(result)
-        
+
     return None
 
 
@@ -536,7 +536,7 @@ def prepare_denovo_filters(data):
                'geneSyms': combine_gene_syms(data),
                # 'geneIds': prepare_gene_ids(data),
                'regionS': prepare_gene_region(data)}
-    
+
     return filters
 
 
@@ -547,11 +547,11 @@ def get_denovo_variants(studies, family_filters, **filters):
             families = family_filters(study).keys()
             filters['familyIds'] = families if len(families) > 0 else [None]
 
-        if phenoFilter:            
-            all_filters = dict(filters, **phenoFilter)            
+        if phenoFilter:
+            all_filters = dict(filters, **phenoFilter)
         else:
             all_filters = filters
-            
+
         for v in study.get_denovo_variants(**all_filters):
             vKey = v.familyId + v.location + v.variant
             if vKey in seenVs:
@@ -563,7 +563,7 @@ def get_denovo_variants(studies, family_filters, **filters):
 def dae_query_variants(data):
     prepare_denovo_phenotype(data)
     prepare_gender_filter(data)
-    
+
     dstudies = prepare_denovo_studies(data)
     tstudies = prepare_transmitted_studies(data)
     if dstudies is None and tstudies is None:
@@ -572,7 +572,7 @@ def dae_query_variants(data):
     denovo_filters = prepare_denovo_filters(data)
     family_filters = advanced_family_filter(data, denovo_filters)
 
-    
+
     variants = []
     if dstudies is not None:
         denovo_filtered_studies = prepare_denovo_pheno_filter(data, dstudies)
@@ -594,7 +594,7 @@ def dae_query_variants(data):
 
 def pedigree_data(v):
     return [v.study.get_attr('study.phenotype'), v.pedigree]
-    
+
 def __augment_vars(v):
     fmId = v.familyId
     parRaces = get_parents_race()[fmId] \
@@ -609,11 +609,11 @@ def __augment_vars(v):
 
     v.atts["_par_races_"] = parRaces
     v.atts["_ch_prof_"] = chProf
-    v.atts["_prb_viq_"] = viq 
+    v.atts["_prb_viq_"] = viq
     v.atts["_prb_nviq_"] = nviq
     v.atts["_pedigree_"] = pedigree_data(v)
     # v.atts["phenoInChS"] = v.phenoInChS()
-    
+
     return v
 
 
@@ -631,7 +631,14 @@ def do_query_variants(data, atts=[]):
                               '_ch_prof_',
                               '_prb_viq_',
                               '_prb_nviq_',
-                              'valstatus'] + atts)
+                              'valstatus']
+                            +
+                            atts
+                            +
+                            ['SSCfreq',
+                             'EVSfreq',
+                             'E65freq',
+                            ])
 
 def __gene_effect_get_worst_effect(gs):
     if len(gs) == 0:
@@ -642,7 +649,7 @@ def __gene_effect_get_worst_effect(gs):
 def __gene_effect_get_genes(gs):
     genes_set = set([g['sym'] for g in gs])
     genes = list(genes_set)
-    
+
     return ';'.join(genes)
 
 
@@ -673,11 +680,11 @@ COLUMN_TITLES = {'familyId': 'family id',
 
 def attr_title(attr_key):
     return COLUMN_TITLES.get(attr_key, attr_key)
-    
+
 def generate_response(vs, atts=[], sep='\t'):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
-        
+
     mainAtts = ['familyId',
                 'studyName',
                 'location',
@@ -697,7 +704,7 @@ def generate_response(vs, atts=[], sep='\t'):
                    "geneEffect": ge2Str,
                    "requestedGeneEffects": ge2Str,
     }
-    
+
     specialGeneEffects = {"genes": __gene_effect_get_genes,
                           "worstEffect": __gene_effect_get_worst_effect}
 

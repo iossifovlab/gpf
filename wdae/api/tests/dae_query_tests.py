@@ -108,7 +108,7 @@ class CombinedTests(unittest.TestCase):
             self.assertTrue('prbF' in v[6])
             self.assertTrue('frame-shift' in v[10])
             self.assertTrue('frame-shift' in v[11])
-            print(v)
+#             print(v)
             self.assertTrue('frame-shift' in v[13])
             self.assertTrue('prbF' in v[19])
 
