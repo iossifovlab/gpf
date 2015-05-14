@@ -4,16 +4,16 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.authtoken import views as rest_views
 
 urlpatterns = patterns(
-    'api.views',    
+    'api.views',
     url(r'^denovo_studies$', 'denovo_studies_list'),
-    url(r'^study_groups$', 'study_groups_list'),
+#     url(r'^study_groups$', 'study_groups_list'),
     url(r'^transmitted_studies$', 'transmitted_studies_list'),
     url(r'^effect_types$', 'effect_types_list'),
     url(r'^effect_types_filters$', 'effect_types_filters'),
     url(r'^chromes_effect_types$', 'chromes_effect_types'),
     url(r'^variant_types$', 'variant_types_list'),
     url(r'^variant_types_filters$', 'variant_types_filters'),
-    
+
     url(r'^pheno_types_filters$', 'pheno_types_filters'),
 
     url(r'^families/(?P<study_name>.+)$', 'families_list'),
@@ -23,7 +23,7 @@ urlpatterns = patterns(
 
     url(r'^ssc_query_variants_preview$', 'ssc_query_variants_preview'),
     url(r'^ssc_query_variants$', 'ssc_query_variants'),
-    
+
     url(r'^report_variants$', 'report_variants'),
     url(r'^gene_sets$', 'gene_sets_list'),
     url(r'^gene_set_list$', 'gene_set_list'),

@@ -163,12 +163,12 @@ def count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set):
                     pheno_res[test_name].cnt += 1
         all_res[phenotype] = pheno_res
     return all_res
-    
+
 
 def count_background(gene_syms_set):
     gene_syms = get_background('enrichment_background')
     res = EnrichmentTestRes()
-    
+
     for gene_sym_list in gene_syms:
         touched_gene_sets = False
         for gene_sym in gene_sym_list:
@@ -177,8 +177,8 @@ def count_background(gene_syms_set):
         if touched_gene_sets:
             res.cnt += 1
     return res
-    
-    
+
+
 def __build_variants_genes_dict(denovo, geneSyms=None):
     return [
         [PRB_TESTS[0],
@@ -299,7 +299,7 @@ def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
 
 
 def enrichment_test(dsts, gene_syms_set):
-    
+
     var_genes_dict = __build_variants_genes_dict(dsts)
 
     all_res = __count_gene_set_enrichment(var_genes_dict, gene_syms_set)
@@ -322,9 +322,9 @@ def enrichment_test(dsts, gene_syms_set):
 
 def enrichment_test_by_phenotype(dsts, gene_syms_set):
     genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(dsts)
-    
+
     count_res_by_pheno = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
-    
+
     count_bg = count_background(gene_syms_set)
     if count_bg.cnt == 0:
         count_bg.cnt = 0.5

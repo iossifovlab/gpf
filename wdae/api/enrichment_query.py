@@ -141,7 +141,7 @@ def enrichment_test_helper(all_res, totals, genes_dict, gene_syms, tests):
         tres['overlap'] = totals[testname]
         tres['label'] = testname.split('|')[1]
         tres['count'] = eres.cnt
-        if testname == 'prb|Rec LGDs':
+        if testname == 'prb|Rec LGDs' or 'sib|Rec LGDs':
             tres['syms'] = set(chain.from_iterable(genes_dict[testname]))
             tres['syms'] = tres['syms'].intersection(gene_syms)
         else:
@@ -166,9 +166,9 @@ def enrichment_test_helper(all_res, totals, genes_dict, gene_syms, tests):
         tres['bg'] = colormap_value(p_val, lessmore)
 
         res.append(tres)
-        
+
     return res
-    
+
 def enrichment_results_by_phenotype(
         denovoStudies=None,
         transmittedStudies=None,
@@ -179,7 +179,7 @@ def enrichment_results_by_phenotype(
 
     count_res_by_pheno, totals_by_pheno, genes_dict_by_pheno = \
         enrichment_test_by_phenotype(denovoStudies, geneSyms)
-    
+
     res = {}
     res['gs_id'] = geneSet
 
@@ -187,7 +187,7 @@ def enrichment_results_by_phenotype(
         gene_terms = None
     else:
         gene_terms = load_gene_set(geneSet, geneStudy)
-    
+
     if geneSet and geneTerm:
         res['gs_desc'] = "%s: %s" % (geneTerm,
                                      gene_terms.tDesc[geneTerm])
@@ -203,7 +203,7 @@ def enrichment_results_by_phenotype(
 
     for phenotype in count_res_by_pheno.keys():
         logger.info("calculating enrichment for phenotype: %s", phenotype)
-        
+
         all_res = count_res_by_pheno[phenotype]
         totals = totals_by_pheno[phenotype]
         genes_dict = genes_dict_by_pheno[phenotype]
