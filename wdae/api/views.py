@@ -107,11 +107,11 @@ def denovo_studies_list(request):
     r = get_denovo_studies_names()
     return Response({"denovo_studies": r})
 
-
-@api_view(['GET'])
-def study_groups_list(request):
-    stds = vDB.getStudyGroups()
-    return Response({"study_groups": stds})
+# FIXME: delete this
+# @api_view(['GET'])
+# def study_groups_list(request):
+#     stds = vDB.getStudyGroups()
+#     return Response({"study_groups": stds})
 
 
 @api_view(['GET'])
@@ -174,13 +174,13 @@ __EFFECT_GROUPS = {
         "Missense",
         "Non-frame-shift",
         "noStart",
-        "noEnd",        
+        "noEnd",
     ],
     "utrs": [
         "3'-UTR",
         "5'-UTR",
     ]
-    
+
 }
 
 
@@ -192,7 +192,7 @@ def build_effect_type_filter(data):
     result_effects = reduce(operator.add,
                             [__EFFECT_TYPES[et]  if et in __EFFECT_TYPES else [et] for et in effects])
     data["effectTypes"] = ','.join(result_effects)
-    
+
 
 @api_view(['GET'])
 def effect_types_filters(request):
@@ -200,7 +200,7 @@ def effect_types_filters(request):
 Effect types filters list.
 
 Request expects 'effectFilter' with posible values:
-    
+
     * ALL
     * NONE
     * LGDs
@@ -209,9 +209,9 @@ Request expects 'effectFilter' with posible values:
     * UTRs
     * noncoding
     * CNV
-    
+
 Example:
-    
+
     GET /api/effect_types_filters?effectFilter=UTRs
 
     """
@@ -263,13 +263,13 @@ def variant_types_filters(request):
 Variant types filters list.
 
 Request expects 'variantFilter' with posible values:
-    
+
     * ALL
     * SSC
     * WHOLE EXOME
-    
+
 Example:
-    
+
     GET /api/variant_types_filters?variantFilter=SSC
 
     """
@@ -281,7 +281,7 @@ Example:
 
     variant_filter = string.upper(query_params['variantFilter'])
     logger.info("variant_filter: %s", variant_filter)
-    
+
     all_var_types = ['sub', 'ins', 'del', 'CNV']
     result = all_var_types
     if variant_filter == 'WHOLE EXOME':
@@ -293,7 +293,7 @@ Example:
     else:
         return Response({'variant_filters': "error: unsuported tab name (%s)" % variant_filter},
                         status=status.HTTP_400_BAD_REQUEST)
-        
+
     return Response({'variant_filters': result})
 
 @api_view(['GET'])
@@ -313,10 +313,10 @@ def pheno_types_filters(request):
 
     if 'phenotypeFilter' not in query_params:
         return Response({'pheno_type_filters': all_result})
-        
+
     phenotype_filter = string.upper(query_params['phenotypeFilter'])
     logger.info("pheno_type_filters: %s", phenotype_filter)
-    
+
     if phenotype_filter == 'WHOLE EXOME':
         result = all_result
     elif phenotype_filter == 'SSC':
@@ -326,9 +326,9 @@ def pheno_types_filters(request):
     else:
         return Response({'pheno_type_filters': "error: unsuported pheno group name (%s)" % phenotype_filter},
                         status=status.HTTP_400_BAD_REQUEST)
-        
+
     return Response({'pheno_type_filters': result})
-    
+
 
 
 @api_view(['GET'])
@@ -458,7 +458,7 @@ def prepare_query_dict(data):
         items = data.iterlists()
     else:
         items = data.items()
-        
+
     for (key, val) in items:
         key = str(key)
         if isinstance(val, list):
@@ -469,13 +469,13 @@ def prepare_query_dict(data):
             value = str(val)
 
         res.append((key, value))
-    
+
     return dict(res)
 
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((TokenAuthentication,))
+# @permission_classes((IsAuthenticated,))
 def query_variants_preview_full(request):
     query_variants_preview(request)
 
@@ -505,7 +505,7 @@ All fields are same as in query_variants request
 
     data = prepare_query_dict(request.DATA)
     build_effect_type_filter(data)
-    
+
     # if isinstance(data, QueryDict):
     #     data = prepare_query_dict(data)
     # else:
@@ -519,8 +519,8 @@ All fields are same as in query_variants request
     return Response(summary)
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAdminUser,))
+# @authentication_classes((TokenAuthentication,))
+# @permission_classes((IsAdminUser,))
 @parser_classes([JSONParser, FormParser])
 def query_variants_full(request):
     query_variants(request)
@@ -600,8 +600,8 @@ Advanced family filter expects following fields:
     return response
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((TokenAuthentication,))
+# @permission_classes((IsAuthenticated,))
 def ssc_query_variants_preview(request):
 
     if request.method == 'OPTIONS':
@@ -610,7 +610,7 @@ def ssc_query_variants_preview(request):
     data = prepare_query_dict(request.DATA)
     data = prepare_ssc_filter(data)
     build_effect_type_filter(data)
-    
+
     logger.info(log_filter(request, "preview query variants: " + str(data)))
 
     generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
@@ -626,7 +626,7 @@ def ssc_query_variants(request):
     data = prepare_query_dict(request.DATA)
     data = prepare_ssc_filter(data)
     build_effect_type_filter(data)
-    
+
     logger.info(log_filter(request, "query variants request: " + str(data)))
 
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
@@ -643,7 +643,7 @@ def ssc_query_variants(request):
 
     return response
 
-    
+
 @api_view(['GET'])
 def report_variants(request):
     """
@@ -705,7 +705,7 @@ Examples:
     #     data = prepare_query_dict(data)
 
     print "enrichment query:", data
-    
+
     if data is None:
         return Response(None)
 
@@ -757,7 +757,7 @@ Examples:
 from api.report_pheno import get_supported_studies, get_supported_measures, \
     pheno_calc, pheno_query
 
-    
+
 @api_view(['GET'])
 def pheno_supported_studies(request):
     return Response({"pheno_supported_studies": get_supported_studies()})
@@ -782,7 +782,7 @@ def pheno_report_preview(request):
 def join_row(p, sep=','):
     r = [str(c) for c in p]
     return sep.join(r) + '\n'
-    
+
 @api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
 def pheno_report_download(request):
@@ -812,7 +812,7 @@ def register(request):
         user = get_user_model()
         researcher_id = serialized.init_data['researcher_id']
         email = serialized.init_data['email']
-        
+
         created_user = user.objects.create_user(email, researcher_id)
         created_user.first_name = serialized.init_data['first_name']
         created_user.last_name = serialized.init_data['last_name']

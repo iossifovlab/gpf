@@ -8,7 +8,7 @@ from api.report_pheno import pheno_query_variants, pheno_query, \
 from query_prepare import prepare_denovo_studies
 
 class PhenoTest(unittest.TestCase):
-    TEST_DATA = {"denovoStudies": "combSSCWE",
+    TEST_DATA = {"denovoStudies": "ALL SSC",
                  "measure": "NvIQ"}
 
     def test_variants(self):
@@ -38,7 +38,7 @@ class PhenoTest(unittest.TestCase):
         dysmorphyic_proband = get_pheno_measure('padm2.dysmorphic_yes_no')
         # print(seizures_proband)
         # print(dysmorphyic_proband)
-        
+
         self.assertTrue(seizures_proband)
         self.assertTrue(dysmorphyic_proband)
 

@@ -65,11 +65,10 @@ class AlexPopovSubmittedBadRegionQueryTests(unittest.TestCase):
                  'denovoStudies': 'allWEandTG'}
 
     def test_bad_region_exception(self):
-        
+
         vs = do_query_variants(self.TEST_DATA)
-        
+
         vs.next()
 
         for v in vs:
             print v
-            

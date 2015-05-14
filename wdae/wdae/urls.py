@@ -28,7 +28,7 @@ try:
     from bg_loader import preload_background
 
     transmitted = prepare_transmitted_studies(
-        {"transmittedStudies": 'w873e374s322'})
+        {"transmittedStudies": 'w1202s766e611'})
 
     builders = [(gene_set_bgloader,
                  ['GO'],

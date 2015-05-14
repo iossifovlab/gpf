@@ -3,17 +3,17 @@
 import ConfigParser
 import os
 import sys
-from numpy.lib.npyio import genfromtxt 
+from numpy.lib.npyio import genfromtxt
 import numpy as np
 from pprint import pprint
 from collections import defaultdict
-from collections import Counter 
+from collections import Counter
 import copy
 import gzip
-import pysam 
-import glob 
+import pysam
+import glob
 from os.path import dirname
-from os.path import basename 
+from os.path import basename
 import tempfile
 import re
 from GeneTerms import GeneTerms
@@ -40,7 +40,7 @@ def regions_matcher(regions):
                                     and vpos <= end)
                                    for(chrom, beg, end) in reg_defs])
 class Variant:
-    def __init__(self,atts,familyIdAtt="familyId", locationAtt="location", 
+    def __init__(self,atts,familyIdAtt="familyId", locationAtt="location",
                 variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
                 countsAtt="counts", effectGeneAtt="effectGene", altFreqPrcntAtt="all.altFreq"):
         self.atts = atts
@@ -50,7 +50,7 @@ class Variant:
         self.variantAtt = variantAtt
         self.bestStAtt = bestStAtt
         self.bestStColSep = bestStColSep
-        self.countsAtt = countsAtt 
+        self.countsAtt = countsAtt
         self.effectGeneAtt = effectGeneAtt
         self.altFreqPrcntAtt = altFreqPrcntAtt
 
@@ -74,7 +74,7 @@ class Variant:
     @property
     def variant(self):
         return self.atts[self.variantAtt]
-            
+
     @property
     def bestStStr(self):
         return self.atts[self.bestStAtt]
@@ -134,7 +134,7 @@ class Variant:
         except AttributeError:
             self._memberInOrder = self.study.families[self.familyId].memberInOrder
         return self._memberInOrder
-    
+
     @property
     def inChS(self):
         mbrs = self.memberInOrder
@@ -196,19 +196,19 @@ class Variant:
                     # print("strange fromParent value: %s" % self.atts['fromParent'])
                     denovo_parent = None
         return denovo_parent
-        
+
     def get_normal_refCN(self,c):
         return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
 
     def is_variant_in_person(self,c):
         return isVariant(self.bestSt,c,self.location,self.memberInOrder[c].gender)
- 
+
 class Family:
     def __init__(self,atts=None):
         if atts:
             self.atts = atts
         else:
-            self.atts = {} 
+            self.atts = {}
     pass
 
 class Person:
@@ -216,14 +216,14 @@ class Person:
         if atts:
             self.atts = atts
         else:
-            self.atts = {} 
+            self.atts = {}
 
 class StudyGroup:
     def __init__(self, vdb, name):
         self.vdb = vdb
         self.name = name
         self._configSection = 'studyGroup.' + name
-       
+
         self.description = ""
         if self.vdb._config.has_option(self._configSection,'description'):
             self.description = self.vdb._config.get(self._configSection, 'description' )
@@ -240,23 +240,23 @@ class Study:
         self.name = name
         self._configSection = 'study.' + name
         self._dnvData = {}
-                
+
         self.has_denovo = self.vdb._config.has_option(self._configSection,'denovoCalls.files')
         self.has_transmitted = self.vdb._config.has_option(self._configSection,'transmittedVariants.indexFile')
 
         self.description = ""
         if self.vdb._config.has_option(self._configSection,'description'):
             self.description = self.vdb._config.get(self._configSection, 'description' )
-           
+
     def get_targeted_genes(self):
         if not self.vdb._config.has_option(self._configSection,"targetedGenes"):
             return
         tGsFN = self.vdb._config.get(self._configSection,"targetedGenes")
-        tGsF = open(tGsFN) 
+        tGsF = open(tGsFN)
         tgsS = {l.strip() for l in tGsF}
         tGsF.close()
         return tgsS
-         
+
     def get_attr(self,attName):
         if self.vdb._config.has_option(self._configSection,attName):
             return self.vdb._config.get(self._configSection,attName)
@@ -270,11 +270,13 @@ class Study:
                                     ultraRareOnly=False,
                                     geneSyms=None):
         for l in f:
-            #print "line:", l
+            # print "line:", l
             if l[0] == '#':
                 continue
-            vls = l.strip().split("\t")
+            vls = l.split("\t")
+            # FIXME: empty strings for additional frequences: 'EVS-freq', 'E65-freq'
             if len(colNms) != len(vls):
+                print("colNms len: %d; variant col: %d" % (len(colNms), len(vls)))
                 raise Exception("Incorrect transmitted variants file: ")
             mainAtts = dict(zip(colNms, vls))
 
@@ -324,7 +326,7 @@ class Study:
     def get_transmitted_summary_variants(self,minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None, effectTypes=None,ultraRareOnly=False, geneSyms=None, regionS=None):
 
         transmittedVariantsFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + ".txt.bgz"
-        print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile 
+        print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile
 
         if isinstance(effectTypes, str):
             effectTypes = self.vdb.effectTypesSet(effectTypes)
@@ -356,10 +358,10 @@ class Study:
                             effectTypes,
                             ultraRareOnly,
                             geneSyms):
-                        
+
                         yield v
                 except ValueError as ex:
-                    print >> sys.stderr, "Bad region:", ex 
+                    print >> sys.stderr, "Bad region:", ex
                     continue
         else:
             f = gzip.open(transmittedVariantsFile)
@@ -384,7 +386,7 @@ class Study:
                                  minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,
                                  variantTypes=None, effectTypes=None, ultraRareOnly=False,
                                  geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
-        
+
         transmittedVariantsTOOMANYFile = \
             self.vdb._config.get(self._configSection,
                                  'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
@@ -400,15 +402,15 @@ class Study:
 
             fmsData = vs.atts['familyData']
             if not fmsData:
-                continue 
+                continue
             if fmsData == "TOOMANY":
-                chr = vs.atts['chr']
+                chrom = vs.atts['chr']
                 pos = vs.atts['position']
                 var = vs.atts['variant']
                 if TMM_ALL:
                     for l in tbf:
                         chrL,posL,varL,fdL = l.strip().split("\t")
-                        if chr==chr and pos==posL and var==varL:
+                        if chrom==chrom and pos==posL and var==varL:
                             fmsData = fdL
                             break
                     if fmsData == "TOOMANY":
@@ -416,20 +418,20 @@ class Study:
                 else:
                     flns = []
                     posI = int(pos)
-                    for l in tbf.fetch(chr, posI-1, posI):
+                    for l in tbf.fetch(chrom, posI-1, posI):
                         chrL,posL,varL,fdL = l.strip().split("\t")
-                    
-                        if chr==chr and pos==posL and var==varL:
+
+                        if chrom==chrom and pos==posL and var==varL:
                             flns.append(fdL)
                     if len(flns)!=1:
                         raise Exception('TOOMANY mismatch')
                     fmsData = flns[0]
 
             for fmData in fmsData.split(";"):
-                cs = fmData.split(":") 
+                cs = fmData.split(":")
                 if len(cs) != 3:
                     raise Exception("Wrong family data format: " + fmData)
-                familyId, bestStateS, cntsS = cs 
+                familyId, bestStateS, cntsS = cs
                 if familyIds and familyId not in familyIds:
                     continue
                 v = copy.copy(vs)
@@ -446,7 +448,7 @@ class Study:
                 if presentInParent:
                     if not presentInParent(v.fromParentS):
                         continue
-                        
+
                 yield v
         tbf.close()
 
@@ -470,14 +472,14 @@ class Study:
                 continue
             if presentInChild:
                 if not presentInChild(v.inChS):
-                    continue                    
+                    continue
             elif inChild and inChild not in v.inChS:
                 continue
 
             if presentInParent:
                 if not presentInParent(''):
                     continue
-            
+
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
             if reg_matcher:
@@ -504,14 +506,14 @@ class Study:
         if callSetP:
             callSet = callSetP
             propName = "denovoCalls." + callSet + ".files"
-        
+
         if callSet in self._dnvData:
             return self._dnvData[callSet]
- 
+
         flsS = self.vdb._config.get(self._configSection, propName)
         varList = []
         for fl in flsS.split('\n'):
-            print >> sys.stderr, "Loading file", fl, "for collection ", self.name 
+            print >> sys.stderr, "Loading file", fl, "for collection ", self.name
             dt = genfromtxt(fl,delimiter='\t',dtype=None,names=True,
                             case_sensitive=True)
             if len(dt.shape)==0:
@@ -539,32 +541,32 @@ class Study:
     def badFamilies(self):
         self._load_family_data()
         return self.badFamilies
-        
+
     def _load_family_data(self):
         fdFile = self.vdb._config.get(self._configSection, "familyInfo.file" )
         fdFormat = self.vdb._config.get(self._configSection, "familyInfo.fileFormat" )
-   
-        fmMethod = { 
+
+        fmMethod = {
             "quadReportSSC": self._load_family_data_from_quad_report,
             "simple": self._load_family_data_from_simple,
-            "StateWE2012-data1-format": self._load_family_data_from_StateWE2012_data1,        
+            "StateWE2012-data1-format": self._load_family_data_from_StateWE2012_data1,
             "EichlerWE2012-SupTab1-format": self._load_family_data_from_EichlerWE2012_SupTab1,
             "DalyWE2012-SD-Trios": self._load_family_data_from_DalyWE2012_SD_Trios,
             "SSCTrios-format": self._load_family_data_SSCTrios,
             "SSCFams-format": self._load_family_data_SSCFams,
             "IossifovWE2014": self._load_family_data_from_IossifovWE2014_families
         }
-    
+
 
         if fdFormat not in fmMethod:
             raise Exception("Unknown Family Fdef __init__(self,vdb,name):ile Format: " + fdFormat)
 
         self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
-        
+
     def _load_family_data_SSCFams(self, reportF):
         rf = open(reportF)
         families = {l.strip():Family() for l in rf}
-        for f in families.values():    
+        for f in families.values():
             f.memberInOrder = []
 
         rlsMp = { "mother":"mom", "father":"dad", "proband":"prb", "designated-sibling":"sib", "other-sibling":"sib" }
@@ -582,7 +584,7 @@ class Study:
 
 
     def _load_family_data_SSCTrios(self, reportF):
-        buff = defaultdict(dict) 
+        buff = defaultdict(dict)
         for indId,indS in self.vdb.sfariDB.individual.items():
             if indS.collection != "ssc":
                 continue
@@ -599,14 +601,14 @@ class Study:
             f = Family()
             f.familyId = fid
             f.memberInOrder = []
-            
+
             for srl,irl in rlsMp:
                 p = Person()
                 p.personId = rls[srl].personId
                 p.gender = genderMap[rls[srl].sex]
                 p.role = irl
                 f.memberInOrder.append(p)
-            families[f.familyId] = f 
+            families[f.familyId] = f
         return families,{}
 
 
@@ -626,9 +628,9 @@ class Study:
             except AttributeError:
                 families[fmId].memberInOrder = [p]
         return families,{}
-            
 
-    
+
+
     def _load_family_data_from_DalyWE2012_SD_Trios(self,reportF):
         families = {}
 
@@ -674,7 +676,7 @@ class Study:
             p = Person(atts)
             p.gender = genderDecoding[dtR["sex"]]
             p.role = roleDecoding[dtR["type"]]
-            p.personId = dtR["child"] 
+            p.personId = dtR["child"]
 
             pid = p.personId
             fid = pid[0:pid.find('.')]
@@ -710,8 +712,8 @@ class Study:
 
 
     def _load_family_data_from_StateWE2012_data1(self,reportF):
-        famBuff = defaultdict(dict) 
-        badFamBuff = defaultdict(dict) 
+        famBuff = defaultdict(dict)
+        badFamBuff = defaultdict(dict)
         dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True, comments="asdgasdgasdga")
 
         genderDecoding = { "Male":"M", "Female":"F" }
@@ -722,7 +724,7 @@ class Study:
             p = Person(atts)
             p.gender = genderDecoding[dtR["Gender"]]
             p.role = roleDecoding[dtR["Role"]]
-            p.personId = dtR["Sample"] 
+            p.personId = dtR["Sample"]
 
             if dtR['Sample_PassFail'] == 'Fail' or dtR['Family_PassFail'] == 'Fail':
                 badFamBuff[str(dtR["Family"])][p.role] = p
@@ -755,7 +757,7 @@ class Study:
             badFamilies[fid] = f
 
         return families,badFamilies
-       
+
     def _load_family_data_from_IossifovWE2014_families(self,reportF):
         families = {}
         badFamilies = {}
@@ -765,37 +767,37 @@ class Study:
             f.familyId = str(qrpR['familyId'])
 
             f.atts = { x:qrpR[x] for x in qrp.dtype.names }
-            
-           
-            fCntrs = set() 
+
+
+            fCntrs = set()
             chldSfx = defaultdict(set)
             for saA in qrpR.dtype.names:
                 if not saA.startswith('SequencedAt'):
                     continue
-                cntr = saA[len('SequencedAt'):] 
+                cntr = saA[len('SequencedAt'):]
                 cntrChldS = qrpR[saA]
                 if not cntrChldS:
                     continue
                 for sfx in cntrChldS.split(","):
-                
+
                     fCntrs.add(cntr)
                     chldSfx[sfx.strip('"')].add(cntr)
-            fmCntrS = ",".join(sorted(fCntrs)) 
-            f.atts['centers'] = fmCntrS 
-                
+            fmCntrS = ",".join(sorted(fCntrs))
+            f.atts['centers'] = fmCntrS
+
             mom = Person()
             mom.personId = f.familyId + ".mo"
             mom.role = 'mom'
             mom.gender = 'F'
             mom.atts['race'] = qrpR['motherRace']
-            mom.atts['centers'] = fmCntrS 
+            mom.atts['centers'] = fmCntrS
 
             dad = Person()
             dad.personId = f.familyId + ".fa"
             dad.role = 'dad'
             dad.gender = 'M'
             dad.atts['race'] = qrpR['fatherRace']
-            dad.atts['centers'] = fmCntrS 
+            dad.atts['centers'] = fmCntrS
 
 
             f.memberInOrder = [mom, dad]
@@ -820,9 +822,9 @@ class Study:
             ch1.role = rlsMap[qrpR['child1role']]
             ch1.gender = qrpR['child1gender']
             transferPersonAtts(ch1,"child1")
-            
-           
-            if qrpR['child2sample_id']: 
+
+
+            if qrpR['child2sample_id']:
                 ch2 = Person()
                 ch2.personId = piF(qrpR['child2sample_id'])
                 ch2.role = rlsMap[qrpR['child2role']]
@@ -837,7 +839,7 @@ class Study:
         return families,badFamilies
 
     def _load_family_data_from_quad_report(self,reportF):
-        familyIdRE = re.compile('^auSSC(\d\d\d\d\d)') 
+        familyIdRE = re.compile('^auSSC(\d\d\d\d\d)')
         rlsMap = {"self":"prb", "sibling":"sib"}
         families = {}
         badFamilies = {}
@@ -868,7 +870,7 @@ class Study:
                 pd.atts['relXcopy'] = qrpR[attPref + 'relXcopy']
                 pd.atts['relYcopy'] = qrpR[attPref + 'relYcopy']
                 pd.atts['genderMismatchStr'] = qrpR[attPref + 'genderMismatchStr']
-     
+
             mom = Person()
             mom.personId = piF(qrpR['mothersample_id'])
             mom.role = 'mom'
@@ -887,10 +889,10 @@ class Study:
             ch1.gender = qrpR['child1gender']
             transferPersonAtts(ch1,"child1")
 
-            
+
             f.memberInOrder = [mom, dad, ch1]
-           
-            if qrpR['child2sample_id']: 
+
+            if qrpR['child2sample_id']:
                 ch2 = Person()
                 ch2.personId = piF(qrpR['child2sample_id'])
                 ch2.role = rlsMap[qrpR['child2role']]
@@ -910,17 +912,17 @@ class VariantsDB:
         self.sfariDB = sfariDB
         self.giDB = giDB
 
-        self.phDB = phDB 
-        self.genomesDB = genomesDB 
+        self.phDB = phDB
+        self.genomesDB = genomesDB
 
         if not confFile:
             confFile = daeDir + "/variantDB.conf"
-            
+
         self._config = ConfigParser.SafeConfigParser({'wd':daeDir})
         self._config.optionxform = lambda x: x
-        
+
         self._config.read(confFile)
-        
+
         self._studies = {}
         for secName in self._config.sections():
             if secName.startswith('study.'):
@@ -945,7 +947,7 @@ class VariantsDB:
 
         if not self.genomesDB:
             return
-             
+
         try:
             gms = self._gms
         except AttributeError:
@@ -955,14 +957,14 @@ class VariantsDB:
         rgns = []
         for gs in gene_list:
             for gm in gms.gene_models_by_gene_name(gs):
-                rgns.append(Region(gm.chr,gm.tx[0]-200,gm.tx[1]+200))      
+                rgns.append(Region(gm.chr,gm.tx[0]-200,gm.tx[1]+200))
         if rgns:
-            rgns = collapse(rgns)        
+            rgns = collapse(rgns)
         return ["%s:%d-%d" % (r.chr,r.start,r.stop) for r in rgns]
-    
+
     def get_study_names(self):
         return sorted(self._studies.keys())
-    
+
     def get_study_group_names(self):
         return sorted(self._studyGroups.keys())
 
@@ -974,7 +976,7 @@ class VariantsDB:
                 raise Exception('get_study can only use study groups with only one study')
             return self._studies[self._studyGroups[name].studyNames[0]]
         raise Exception('unknown study ' + name)
-        
+
     def get_studies(self,definition):
         sts = []
 
@@ -985,16 +987,16 @@ class VariantsDB:
                 for sName in self._studyGroups[name].studyNames:
                     sts.append(self._studies[sName])
         return sts
-                
+
     def get_study_group(self, gName):
         if gName not in self._studyGroups:
             raise Exception("Unknown study group " + gName)
         return self._studyGroups[gName]
-    
+
     def get_denovo_variants(self, studies, **filters):
         seenVs = set()
         if isinstance(studies,str):
-            studies = self.get_studies(studies) 
+            studies = self.get_studies(studies)
         for study in studies:
             for v in study.get_denovo_variants(**filters):
                 vKey = v.familyId + v.location + v.variant
@@ -1011,10 +1013,10 @@ class VariantsDB:
         # this causes an error when trying to iterate over it, so it must be converted to a 1d array
         if dt.ndim==0:
             dt=dt.reshape(1)
-           
-        if not batchId: 
+
+        if not batchId:
             batchId = dirname(fn).split("/")[-2]
-                    
+
         for dtR in dt:
             class ValidationVariant:
                 @property
@@ -1050,7 +1052,7 @@ class VariantsDB:
 
             v = ValidationVariant()
 
-            v.batchId = batchId 
+            v.batchId = batchId
             v.atts = { x: dtR[x] for x in dt.dtype.names }
 
             v.familyId = str(dtR['familyId'])
@@ -1063,7 +1065,7 @@ class VariantsDB:
                 v.why = dtR['why']
             except:
                 v.why = "???"
-        
+
             try:
                 v.who = dtR['who']
             except:
@@ -1121,13 +1123,13 @@ class VariantsDB:
                 ic+=1
                 seq = seq[0:ic]
                 iLen = len(seq)
-                
+
                 k = "".join((v.familyId,";",v.location,";",str(iLen)))
                 if k in knownIns:
                     print >>sys.stderr, 'aaaa: ' + knownIns[k] + " and " + v.variant
                 knownIns[k] = v.variant
 
-            
+
         '''
 
         nIncompleteIns = 0
@@ -1154,10 +1156,10 @@ class VariantsDB:
                     # if mf>70:
                     fltD[f] = float(m)
                 except:
-                    pass 
+                    pass
             return fltD
 
-        nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq') 
+        nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq')
 
         def addSet(setname, genes,desc=None):
             if not genes:
@@ -1188,15 +1190,15 @@ class VariantsDB:
         def recSingleGenes(inChild,effectTypes):
             vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
 
-            gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects ]) 
+            gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects ])
             sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
-            sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() } 
+            sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() }
             return {g for g,nf in sym2FN.items() if nf>1 }, {g for g,nf in sym2FN.items() if nf==1 }
 
         addSet("prb.LoF",             genes('prb' ,'LGDs'))
         recPrbLGDs, sinPrbLGDs = recSingleGenes('prb' ,'LGDs')
         addSet("prb.LoF.Recurrent",   recPrbLGDs)
-        addSet("prb.LoF.Single",      sinPrbLGDs) 
+        addSet("prb.LoF.Single",      sinPrbLGDs)
 
         addSet("prb.LoF.Male",        genes('prbM','LGDs'))
         addSet("prb.LoF.Female",      genes('prbF','LGDs'))
@@ -1223,8 +1225,8 @@ class VariantsDB:
         addSet("D",      genes('prb','LGDs',maxIQ=90),"prbML")
         addSet("E",      genes('prb','LGDs',minIQ=90),"prbMH")
 
-        addSet("AB",     set(r.t2G['A']) | set(r.t2G['B'])) 
-        addSet("ABC",    set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])) 
+        addSet("AB",     set(r.t2G['A']) | set(r.t2G['B']))
+        addSet("ABC",    set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C']))
         addSet("ABCD",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) )
         addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
         '''
@@ -1241,9 +1243,9 @@ class VariantsDB:
         addSet("sib.Del",   genes('sib' ,'CNV-'))
 
         return r
-   
 
-    ### THE ONES BELOW SHOULD BE MOVED 
+
+    ### THE ONES BELOW SHOULD BE MOVED
     # return a list of valid variant types, add None to this list for the UI
 
     def effectTypesSet(self,effectTypesS):
@@ -1252,16 +1254,16 @@ class VariantsDB:
         if effectTypesS == "CNVs":
             return { "CNV+", "CNV-" }
         if effectTypesS == "LGDs":
-            return { "frame-shift", "nonsense", "splice-site", "no-frame-shift-new-stop", "no-frame-shift-new-Stop" }    
+            return { "frame-shift", "nonsense", "splice-site", "no-frame-shift-new-stop", "no-frame-shift-new-Stop" }
         if effectTypesS == "nonsynonymous":
             return { "frame-shift", "nonsense", "splice-site", "no-frame-shift-new-stop", "no-frame-shift-new-Stop",
                     "missense", "no-frame-shift" }
         return set(effectTypesS.split(","))
         '''
-                          
-            
+
+
 def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):
-    # print matS, colSep, rowSep, str2NumF 
+    # print matS, colSep, rowSep, str2NumF
     if colSep == -1:
         return np.array([ [ str2NumF(c) for c in r ] for r in matS.split(rowSep) ])
     return np.array([ [ str2NumF(v) for v in r.split(colSep) ] for r in matS.split(rowSep) ])
@@ -1277,7 +1279,7 @@ def _safeVs(tf,vs,atts=[],sep="\t"):
     mainAtts = "familyId studyName location variant bestSt fromParentS inChS counts geneEffect requestedGeneEffects popType".split()
     specialStrF = {"bestSt":mat2Str, "counts":mat2Str, "geneEffect":ge2Str, "requestedGeneEffects":ge2Str}
 
-    tf.write(sep.join(mainAtts+atts)+"\n") 
+    tf.write(sep.join(mainAtts+atts)+"\n")
     for v in vs:
         mavs = []
         for att in mainAtts:
@@ -1288,8 +1290,8 @@ def _safeVs(tf,vs,atts=[],sep="\t"):
                     mavs.append(str(getattr(v,att)))
             except:
                 mavs.append("")
-                 
-        tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts])   
+
+        tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts])
         tf.write(tmp +"\n")
 
 def viewVs(vs,atts=[]):
@@ -1320,7 +1322,7 @@ def normalRefCopyNumber(location,gender):
         else:
             pos = int(location[clnInd+1:])
 
-        # hg19 pseudo autosomes region: chrX:60001-2699520 and chrX:154931044-155260560 
+        # hg19 pseudo autosomes region: chrX:60001-2699520 and chrX:154931044-155260560
         if pos < 60001 or (pos>2699520 and pos < 154931044) or pos > 155260560:
             if gender=='M':
                 return 1
@@ -1339,7 +1341,7 @@ def variantCount(bs,c,location=None,gender=None, denovoParent=None):
     normalRefCN=2
     if location:
         normalRefCN = normalRefCopyNumber(location,gender)
-        
+
         count = abs(bs[0,c] - normalRefCN)
         if count == 0 and bs.shape[0]>1:
             # print("bs=%s; bs.shape[0]=%s" % (bs, bs.shape[0]))
@@ -1348,7 +1350,7 @@ def variantCount(bs,c,location=None,gender=None, denovoParent=None):
             return [count]
         else:
             return [1, 1]
-    
+
 
 def isVariant(bs,c,location=None,gender=None):
     normalRefCN=2
@@ -1356,21 +1358,21 @@ def isVariant(bs,c,location=None,gender=None):
     if location:
         normalRefCN = normalRefCopyNumber(location,gender)
 
-    if bs[0,c] != normalRefCN or any([bs[o,c]!=0 for o in xrange(1,bs.shape[0])]): 
+    if bs[0,c] != normalRefCN or any([bs[o,c]!=0 for o in xrange(1,bs.shape[0])]):
         return True
     return False
-        
+
 
 def parseGeneEffect(effStr):
     geneEffect = []
     if effStr == "intergenic":
-        return geneEffect 
+        return geneEffect
 
     # HACK!!! To rethink
     if effStr in ["CNV+", "CNV-"]:
         geneEffect.append({'sym':"", 'eff':effStr})
         return geneEffect
-      
+
     for ge in effStr.split("|"):
         cs = ge.split(":");
         if len(cs) != 2:
@@ -1448,7 +1450,7 @@ if __name__ == "__main__":
 
 '''
     fo = open("CHD5-nv.txt","w")
-    fo.write("\t".join("mikesEncoding familyId location variant bestSt counts familyGenderType " 
+    fo.write("\t".join("mikesEncoding familyId location variant bestSt counts familyGenderType "
                      "fromParent inChildren popType altFreqPrcnt effectType effectGene effectDetails".split()) + "\n")
 
     for v in sd.get_transmitted_variants(maxAltFreqPrcnt=1.0,geneSyms={"CHD5"}):
@@ -1467,16 +1469,16 @@ if __name__ == "__main__":
 
         mikesEncoding = "[M%d F%d A%s%d S%s%d]" % (bs[1,0], bs[1,1], mbrs[2].gender, bs[1,2], mbrs[3].gender, bs[1,3])
 
-        fo.write("\t".join((mikesEncoding, v.familyId, v.location, v.variant, v.bestStStr, v.countsStr, 
-            sd.families[v.familyId].memberInOrder[2].gender+sd.families[v.familyId].memberInOrder[3].gender, 
+        fo.write("\t".join((mikesEncoding, v.familyId, v.location, v.variant, v.bestStStr, v.countsStr,
+            sd.families[v.familyId].memberInOrder[2].gender+sd.families[v.familyId].memberInOrder[3].gender,
             parentStr, childStr,
             v.popType, str(v.altFreqPrcnt), v.atts['effectType'], v.atts['effectGene'], v.atts['effectDetails'])) + "\n")
     fo.close()
-'''         
-    
+'''
+
     # vDB.getDenovoVariants('wigler582')
     # vDB.getDenovoVariants('3papers')
-    # 
+    #
     # res = vDB.getDenovoVariantsGeneSyms('wig582-3pap',inChildRole='prb', effectTypes="LGDs")
     # right = set()
     # for l in open(wd + '/rightPrbLGDs.txt'):
@@ -1486,6 +1488,6 @@ if __name__ == "__main__":
     # print 'res but not right:', " ".join([g for g in res if not g in right])
     # print 'right but not res:', " ".join([g for g in right if not g in res])
 
-    # print "\n".join(["\t".join((v.center, v.geneEffect[0]['sym'], v.majorEffect)) 
+    # print "\n".join(["\t".join((v.center, v.geneEffect[0]['sym'], v.majorEffect))
     #                 for v in vDB.getDenovoVariants('wig582-3pap',effectTypes="LGDs")
     #                 ])

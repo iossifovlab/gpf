@@ -303,22 +303,23 @@ class StudiesTests(unittest.TestCase):
 
     def test_transmitted_studies_single(self):
         dsl = prepare_transmitted_studies({'transmittedStudies':
-                                           ["w873e374s322"]})
+                                           ["w1202s766e611"]})
+
         self.assertEquals(len(dsl), 1)
-        self.assertEqual(dsl[0].name, "w873e374s322")
+        self.assertEqual(dsl[0].name, "w1202s766e611")
 
-        dsl = prepare_transmitted_studies({'transmittedStudies':
-                                           ["wig683"]})
-        self.assertEquals(len(dsl), 1)
-        self.assertEqual(dsl[0].name, "wig683")
+#         dsl = prepare_transmitted_studies({'transmittedStudies':
+#                                            ["wig683"]})
+#         self.assertEquals(len(dsl), 1)
+#         self.assertEqual(dsl[0].name, "wig683")
 
-    def test_transmitted_studies_double(self):
-        dsl = prepare_transmitted_studies({'transmittedStudies':
-                                           ["w873e374s322", "wig683"]})
-        self.assertEquals(len(dsl), 2)
-
-        self.assertEqual(dsl[0].name, "w873e374s322")
-        self.assertEqual(dsl[1].name, "wig683")
+#     def test_transmitted_studies_double(self):
+#         dsl = prepare_transmitted_studies({'transmittedStudies':
+#                                            ["w873e374s322", "wig683"]})
+#         self.assertEquals(len(dsl), 2)
+#
+#         self.assertEqual(dsl[0].name, "w873e374s322")
+#         self.assertEqual(dsl[1].name, "wig683")
 
     def test_transmitted_studies_not_found(self):
         dsl = prepare_transmitted_studies({'transmittedStudies':
