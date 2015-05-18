@@ -626,6 +626,9 @@ def do_query_variants(data, atts=[]):
                               'effectDetails',
                               'all.altFreq',
                               'all.nAltAlls',
+                              'SSCfreq',
+                              'EVSfreq',
+                              'E65freq',
                               'all.nParCalled',
                               '_par_races_',
                               '_ch_prof_',
@@ -633,12 +636,7 @@ def do_query_variants(data, atts=[]):
                               '_prb_nviq_',
                               'valstatus']
                             +
-                            atts
-                            +
-                            ['SSCfreq',
-                             'EVSfreq',
-                             'E65freq',
-                            ])
+                            atts)
 
 def __gene_effect_get_worst_effect(gs):
     if len(gs) == 0:
