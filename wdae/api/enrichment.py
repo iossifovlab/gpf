@@ -62,6 +62,7 @@ PRB_TESTS = [
     'prb|Missense|prb|male,female|Missense',                          # 4
     'prb|Male Missense|prb|male|Missense',                            # 5
     'prb|Female Missense|prb|female|Missense',                        # 6
+    'prb|Rec Synonymous',                                             # 7
     'prb|Synonymous|prb|male,female|Synonymous',                      # 7
     'prb|Male Synonymous|prb|male|Synonymous',                        # 8
     'prb|Female Synonymous|prb|female|Synonymous',                    # 9
@@ -85,6 +86,7 @@ PRB_TESTS_VARS = [
     ('prb|Missense|prb|missense', 'prb', 'missense'),               # 4
     ('prb|Male Missense|prbM|missense', 'prbM', 'missense'),        # 5
     ('prb|Female Missense|prbF|missense', 'prbF', 'missense'),      # 6
+    ('prb|Rec Synonymous', 'prb', 'synonymous'),                    # 7
     ('prb|Synonymous|prb|synonymous', 'prb', 'synonymous'),         # 7
     ('prb|Male Synonymous|prb|synonymous', 'prbM', 'synonymous'),   # 8
     ('prb|Female Synonymous|prb|synonymous', 'prbF', 'synonymous'), # 9
@@ -101,10 +103,11 @@ SIB_TESTS_VARS = [
     ('sib|Synonymous|sib|synonymous', 'sib', 'synonymous'),]      # 7
 
 def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
-    collector = defaultdict(lambda: [[],[],[],[],[],[],[],[],[],[]])
+    collector = defaultdict(lambda: [[],[],[],[],[],[],[],[],[],[],[],])
     for dst in dsts:
         phenotype = dst.get_attr('study.phenotype')
         for n, (label, in_child, effect_types) in enumerate(PRB_TESTS_VARS):
+            print("enrichment collector prb label: %s" % label)
             collector[phenotype][n].append(
                 dst.get_denovo_variants(inChild=in_child,
                                         effectTypes=effect_types,
@@ -130,16 +133,25 @@ def collect_sib_enrichment_variants_by_phenotype(dsts, gene_syms=None):
 def filter_prb_enrichment_variants_by_phenotype(pheno_evars):
     res = {}
     for phenotype, evars in pheno_evars.items():
-        gen = iter(evars)
-        rec_vars = gen.next()
-        pheno_res = [one_variant_per_recurrent(rec_vars)]
-        for vs in gen:
-            pheno_res.append(filter_denovo(vs))
+        gen = zip(PRB_TESTS, evars)
+        print("generator: %s" % gen)
+        pheno_res = []
+        for test, vs in gen:
+            if "Rec" in test:
+                pheno_res.append(one_variant_per_recurrent(vs))
+            else:
+                pheno_res.append(filter_denovo(vs))
+#         gen = iter(evars)
+#         rec_vars = gen.next()
+#         pheno_res = [one_variant_per_recurrent(rec_vars)]
+#         for vs in gen:
+#             pheno_res.append(filter_denovo(vs))
         res[phenotype] = zip(PRB_TESTS, pheno_res)
     return res
 
 def filter_sib_enrichment_variants_by_phenotype(evars):
     gen = iter(evars)
+
     rec_vars = gen.next()
     res = [one_variant_per_recurrent(rec_vars)]
     for vs in gen:

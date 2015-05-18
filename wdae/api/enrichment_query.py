@@ -1,4 +1,4 @@
-from DAE import vDB
+# from DAE import vDB
 from enrichment import enrichment_test, PRB_TESTS, SIB_TESTS, \
     enrichment_test_by_phenotype
 
@@ -141,7 +141,7 @@ def enrichment_test_helper(all_res, totals, genes_dict, gene_syms, tests):
         tres['overlap'] = totals[testname]
         tres['label'] = testname.split('|')[1]
         tres['count'] = eres.cnt
-        if testname == 'prb|Rec LGDs' or 'sib|Rec LGDs':
+        if "Rec" in testname:
             tres['syms'] = set(chain.from_iterable(genes_dict[testname]))
             tres['syms'] = tres['syms'].intersection(gene_syms)
         else:

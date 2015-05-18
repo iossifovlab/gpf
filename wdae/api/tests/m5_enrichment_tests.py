@@ -70,7 +70,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         logger.info("filtered enrichment variants phenotypes: %s", res.keys())
         self.assertEqual(5, len(res.keys()))
         for phenotype, fevars in res.items():
-            self.assertEqual(8, len(fevars))
+            self.assertEqual(11, len(fevars))
 
 
     def test_filter_prb_variants_by_phenotype_autism(self):
@@ -86,7 +86,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         self.assertEqual(1, len(res.keys()))
 
         for phenotype, fevars in res.items():
-            self.assertEqual(8, len(fevars))
+            self.assertEqual(11, len(fevars))
 
     def test_filter_sib_variants_by_phenotype_whole_exome(self):
         data = {
@@ -237,3 +237,21 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
         unaffected_rec_lgds=res['unaffected'][0]
         self.assertTrue(unaffected_rec_lgds.has_key('syms'))
 
+    def test_enrichment_results_by_phenotype_rec_synonymous(self):
+        data = enrichment_prepare({
+            "denovoStudies":"ALL WHOLE EXOME",
+            'geneSyms': '',
+            'geneStudy': '',
+            'transmittedStudies': 'w1202s766e611',
+            'geneTerm': 'FMR1-targets',
+            'geneSet': 'main',
+        })
+
+        res = enrichment_results_by_phenotype(**data)
+        logger.info("enrichment results by phenotype: %s", res)
+
+        import pprint
+        pprint.pprint(res)
+        pprint.pprint(res['autism'][7])
+        rec_synonymous=res['autism'][7]
+        self.assertEquals(rec_synonymous['label'], 'Rec Synonymous')
