@@ -1,6 +1,6 @@
 import unittest
 import logging
-import itertools
+# import itertools
 
 from DAE import vDB
 from query_prepare import prepare_denovo_studies
@@ -56,7 +56,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         res = collect_sib_enrichment_variants_by_phenotype(dsts)
 
         logger.info("collected SIB variants: %s", res)
-        self.assertEqual(8, len(res))
+        self.assertEqual(12, len(res))
 
     def test_filter_prb_variants_by_phenotype_whole_exome(self):
         data = {
@@ -69,8 +69,8 @@ class EnrichmentBasicTest(unittest.TestCase):
         res = filter_prb_enrichment_variants_by_phenotype(evars)
         logger.info("filtered enrichment variants phenotypes: %s", res.keys())
         self.assertEqual(5, len(res.keys()))
-        for phenotype, fevars in res.items():
-            self.assertEqual(11, len(fevars))
+        for _phenotype, fevars in res.items():
+            self.assertEqual(12, len(fevars))
 
 
     def test_filter_prb_variants_by_phenotype_autism(self):
@@ -85,8 +85,8 @@ class EnrichmentBasicTest(unittest.TestCase):
         logger.info("filtered enrichment variants phenotypes: %s", res.keys())
         self.assertEqual(1, len(res.keys()))
 
-        for phenotype, fevars in res.items():
-            self.assertEqual(11, len(fevars))
+        for _phenotype, fevars in res.items():
+            self.assertEqual(12, len(fevars))
 
     def test_filter_sib_variants_by_phenotype_whole_exome(self):
         data = {
@@ -97,7 +97,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         evars = collect_sib_enrichment_variants_by_phenotype(dsts)
         res = filter_sib_enrichment_variants_by_phenotype(evars)
 
-        self.assertEqual(8, len(res))
+        self.assertEqual(12, len(res))
 
     def test_build_enrichment_variants_genes_dict(self):
         data = {
@@ -252,6 +252,25 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
 
         import pprint
         pprint.pprint(res)
-        pprint.pprint(res['autism'][7])
-        rec_synonymous=res['autism'][7]
+        pprint.pprint(res['autism'][8])
+        rec_synonymous=res['autism'][8]
         self.assertEquals(rec_synonymous['label'], 'Rec Synonymous')
+
+    def test_enrichment_results_by_phenotype_rec_missense(self):
+        data = enrichment_prepare({
+            "denovoStudies":"ALL WHOLE EXOME",
+            'geneSyms': '',
+            'geneStudy': '',
+            'transmittedStudies': 'w1202s766e611',
+            'geneTerm': 'FMR1-targets',
+            'geneSet': 'main',
+        })
+
+        res = enrichment_results_by_phenotype(**data)
+        logger.info("enrichment results by phenotype: %s", res)
+
+        import pprint
+        pprint.pprint(res)
+        pprint.pprint(res['autism'][4])
+        rec_synonymous=res['autism'][4]
+        self.assertEquals(rec_synonymous['label'], 'Rec Missense')
