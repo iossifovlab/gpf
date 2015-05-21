@@ -5,21 +5,21 @@ import os
 import sys
 from numpy.lib.npyio import genfromtxt
 import numpy as np
-from pprint import pprint
+# from pprint import pprint
 from collections import defaultdict
-from collections import Counter
+# from collections import Counter
 import copy
 import gzip
 import pysam
 import glob
 from os.path import dirname
-from os.path import basename
+# from os.path import basename
 import tempfile
 import re
 from GeneTerms import GeneTerms
 from itertools import groupby
 from VariantAnnotation import get_effect_types_set
-import itertools
+# import itertools
 from RegionOperations import Region,collapse
 import operator
 
@@ -30,10 +30,10 @@ def regions_matcher(regions):
     for r in regs:
         smcP = r.find(":")
         dsP = r.find("-")
-        chr = r[0:smcP]
+        chrom = r[0:smcP]
         beg = int(r[smcP+1:dsP])
         end = int(r[dsP+1:])
-        reg_defs.append((chr, beg, end))
+        reg_defs.append((chrom, beg, end))
 
     return lambda vchr, vpos: any([(chrom == vchr
                                     and vpos >= beg
@@ -197,8 +197,9 @@ class Variant:
                     denovo_parent = None
         return denovo_parent
 
-    def get_normal_refCN(self,c):
-        return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
+# FIXME:
+#     def get_normal_refCN(self,c):
+#         return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
 
     def is_variant_in_person(self,c):
         return isVariant(self.bestSt,c,self.location,self.memberInOrder[c].gender)
@@ -409,7 +410,7 @@ class Study:
                 var = vs.atts['variant']
                 if TMM_ALL:
                     for l in tbf:
-                        chrL,posL,varL,fdL = l.strip().split("\t")
+                        _chrL,posL,varL,fdL = l.strip().split("\t")
                         if chrom==chrom and pos==posL and var==varL:
                             fmsData = fdL
                             break
@@ -419,7 +420,7 @@ class Study:
                     flns = []
                     posI = int(pos)
                     for l in tbf.fetch(chrom, posI-1, posI):
-                        chrL,posL,varL,fdL = l.strip().split("\t")
+                        _chrL,posL,varL,fdL = l.strip().split("\t")
 
                         if chrom==chrom and pos==posL and var==varL:
                             flns.append(fdL)
@@ -585,7 +586,7 @@ class Study:
 
     def _load_family_data_SSCTrios(self, reportF):
         buff = defaultdict(dict)
-        for indId,indS in self.vdb.sfariDB.individual.items():
+        for _indId,indS in self.vdb.sfariDB.individual.items():
             if indS.collection != "ssc":
                 continue
             buff[indS.familyId][indS.role] = indS
