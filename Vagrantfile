@@ -12,9 +12,9 @@ Vagrant.configure(2) do |config|
   config.vm.network "forwarded_port", guest: 8000, host: 8000
 
   config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "deploy_tools/vagrant.yml"
+    ansible.playbook = "deploy_tools/iossifovlab-provision.yml"
     ansible.host_key_checking = false
-    ansible.verbose = "vvvv"
+    ansible.verbose = "v"
 
   end
 

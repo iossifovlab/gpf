@@ -366,12 +366,14 @@ def enrichment_test_by_phenotype(dsts, gene_syms_set):
 
     count_res_by_pheno = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
 
+    ###########
     count_bg = count_background(gene_syms_set)
     if count_bg.cnt == 0:
         count_bg.cnt = 0.5
 
     total_bg = len(get_background('enrichment_background'))
     prob_bg = float(count_bg.cnt) / total_bg
+    ###########
 
     totals_by_pheno = {}
     for phenotype, genes_dict in genes_dict_by_pheno.items():
