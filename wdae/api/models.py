@@ -1,17 +1,16 @@
 import uuid
-import socket
 
 from django.db import models
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
+from django.conf import settings
 
 from rest_framework.authtoken.models import Token
 
 # TODO: add south
-_HOST = 'http://localhost:8000/'
-_PATH = 'static/variants/index.html#/users/validate/'
+EMAIL_VERIFICATION_PATH = '/static/variants/index.html#/users/validate/'
 
 class Researcher(models.Model):
 	first_name = models.CharField(max_length='100')
@@ -76,7 +75,12 @@ class WdaeUser(AbstractBaseUser):
 	first_name = models.CharField(max_length='100')
 	last_name = models.CharField(max_length='100')
 	email = models.EmailField(unique=True)
-	researcher_id = models.CharField(max_length='100', unique=True, blank=True, null=True) #CHECK
+	researcher_id = models.CharField(
+		max_length='100',
+		unique=True,
+		blank=True,
+		null=True)  # CHECK
+	
 	verification_path = models.OneToOneField(VerificationPath, blank=True, null=True)
 	is_staff = models.BooleanField(default=False)
 	is_active = models.BooleanField(default=False)
@@ -88,7 +92,8 @@ class WdaeUser(AbstractBaseUser):
 	REQUIRED_FIELDS = ['researcher_id', 'first_name', 'last_name']
 
 	def email_user(self, subject, message, from_email=None):
-		send_mail(subject, message, from_email, [self.email])
+		mail = send_mail(subject, message, from_email, [self.email])
+		return mail
 
 	def get_full_name(self):
 		full_name = '%s %s' % (self.first_name, self.last_name)
@@ -134,11 +139,16 @@ class WdaeUser(AbstractBaseUser):
 		db_table = 'users'
 
 def send_verif_email(user):
-    email = _create_verif_email(_HOST, _PATH, str(user.verification_path.path))
+    email = _create_verif_email(
+		settings.EMAIL_VERIFICATION_HOST,
+		EMAIL_VERIFICATION_PATH, str(user.verification_path.path))
     user.email_user(email['subject'], email['message'])
 
 def send_reset_email(user):
-	email = _create_reset_mail(_HOST, _PATH, str(user.verification_path))
+	email = _create_reset_mail(
+		settings.EMAIL_VERIFICATION_HOST, 
+		EMAIL_VERIFICATION_PATH, str(user.verification_path))
+	
 	user.email_user(email['subject'], email['message'])
 
 ''' Returns dict - subject and message of the email '''
