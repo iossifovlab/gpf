@@ -71,5 +71,16 @@ class Test(unittest.TestCase):
         self.assertIn('LoF.LowIQ', autism_gene_sets)
         self.assertIn('LoF.HighIQ', autism_gene_sets)
           
-        
+    def test_prb_cnv_tests_by_phenotype(self):
+        all_studies = get_denovo_studies_by_phenotype()
+        gene_sets = prb_default_tests_by_phenotype(all_studies)
+        # print(gene_sets)
+        self.assertTrue(gene_sets)
+        self.assertIn('congenital heart disease', gene_sets)
+        congenital_heart_disease = gene_sets['congenital heart disease']
+        self.assertIn('CNV', congenital_heart_disease)
+        self.assertIn('Dup', congenital_heart_disease)
+        self.assertIn('Del', congenital_heart_disease)
+          
+    
         

@@ -140,12 +140,25 @@ def get_denovo_sets(denovo_studies):
 
 
 
+    recPrbCNVs, sinPrbCNVs = recSingleGenes(denovo_studies, 'prb' ,'CNVs')
+    addSet("prb.CNV.Recurrent",     recPrbCNVs)
+
+    addSet("prb.CNV",   genes(denovo_studies, 'prb' ,'CNVs', nvIQ))
+    addSet("prb.Dup",   genes(denovo_studies, 'prb' ,'CNV+', nvIQ))
+    addSet("prb.Del",   genes(denovo_studies, 'prb' ,'CNV-', nvIQ))
 
 
 
     addSet("sib.LoF",             genes(denovo_studies, 'sib', 'LGDs', nvIQ))
     addSet("sib.Missense",        genes(denovo_studies, 'sib', 'missense', nvIQ))
     addSet("sib.Synonymous",      genes(denovo_studies, 'sib', 'synonymous', nvIQ))
+
+
+
+    addSet("sib.CNV",   genes(denovo_studies, 'sib' ,'CNVs', nvIQ))
+    addSet("sib.Dup",   genes(denovo_studies, 'sib' ,'CNV+', nvIQ))
+    addSet("sib.Del",   genes(denovo_studies, 'sib' ,'CNV-', nvIQ))
+
 
     '''
     addSet("A",      recPrbLGDs, "recPrbLGDs")
@@ -160,16 +173,6 @@ def get_denovo_sets(denovo_studies):
     addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
     '''
 
-    recPrbCNVs, sinPrbCNVs = recSingleGenes(denovo_studies, 'prb' ,'CNVs')
-    addSet("prb.CNV.Recurrent",     recPrbCNVs)
-
-    addSet("prb.CNV",   genes(denovo_studies, 'prb' ,'CNVs', nvIQ))
-    addSet("prb.Dup",   genes(denovo_studies, 'prb' ,'CNV+', nvIQ))
-    addSet("prb.Del",   genes(denovo_studies, 'prb' ,'CNV-', nvIQ))
-
-    addSet("sib.CNV",   genes(denovo_studies, 'sib' ,'CNVs', nvIQ))
-    addSet("sib.Dup",   genes(denovo_studies, 'sib' ,'CNV+', nvIQ))
-    addSet("sib.Del",   genes(denovo_studies, 'sib' ,'CNV-', nvIQ))
 
     return r
 
@@ -216,6 +219,11 @@ def prb_default_tests_per_phenotype():
         "Missense.Female": lambda studies: genes_test_default(studies, in_child="prbF", effect_types="missense"),
         
         "Synonymous": lambda studies: genes_test_default(studies, in_child="prb", effect_types="synonymous"),
+        
+        "CNV": lambda studies: genes_test_default(studies, in_child="prb", effect_types="CNV"),
+        "Dup": lambda studies: genes_test_default(studies, in_child="prb", effect_types="CNV+"),
+        "Del": lambda studies: genes_test_default(studies, in_child="prb", effect_types="CNV-"),
+        
     }
     return prb_tests
 
