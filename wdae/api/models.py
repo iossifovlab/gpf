@@ -34,7 +34,8 @@ class VerificationPath(models.Model):
 		db_table = 'verification_paths'
 
 class WdaeUserManager(BaseUserManager):
-	def _create_user(self, email, password, researcher_id=None, is_staff=False, is_active=False):
+	def _create_user(self, email, password, researcher_id=None,
+					 is_staff=False, is_active=False):
 		"""
         Creates and saves a User with the given email and password.
         """
@@ -79,7 +80,9 @@ class WdaeUser(AbstractBaseUser):
 		blank=True,
 		null=True)  # CHECK
 	
-	verification_path = models.OneToOneField(VerificationPath, blank=True, null=True)
+	verification_path = models.OneToOneField(
+			VerificationPath,
+			blank=True, null=True)
 	is_staff = models.BooleanField(default=False)
 	is_active = models.BooleanField(default=False)
 	date_joined = models.DateTimeField(default=timezone.now)
