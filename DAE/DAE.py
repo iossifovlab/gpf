@@ -40,7 +40,7 @@ def get_gene_sets_symNS(geneSetsDef,denovoStudies=None):
             geneTerms.renameGenes("sym", rF)
 
         if geneTerms.geneNS!='sym':
-            raise Excpetion('Only work with id or sym namespace')
+            raise Exception('Only work with id or sym namespace')
     return geneTerms
 
 if __name__ == "__main__":
