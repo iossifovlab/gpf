@@ -62,6 +62,25 @@ def genes_test_with_measure(denovo_studies,
                     if v.familyId in measure and measure[v.familyId] < mmax }
     return None
 
+def genes_test_recurrent_and_single(
+            denovo_studies, 
+            in_child=None,
+            effect_types=None,
+            gene_set=None):
+    
+    vs = vDB.get_denovo_variants(denovo_studies,
+                                 effectTypes=effect_types,
+                                 inChild=in_child,
+                                 geneSyms=gene_set)
+    gnSorted = sorted([[ge['sym'], v] 
+        for v in vs for ge in v.requestedGeneEffects ])
+    sym2Vars = { sym: [ t[1] for t in tpi] 
+        for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
+    sym2FN = { sym: len(set([v.familyId for v in vs])) 
+        for sym, vs in sym2Vars.items() }
+    return ({g for g,nf in sym2FN.items() if nf>1 }, 
+            {g for g,nf in sym2FN.items() if nf==1 })
+
 
 def get_measure(measure_name):
     from DAE import phDB
@@ -138,8 +157,6 @@ def get_denovo_sets(denovo_studies):
     addSet("prb.Missense.Female", genes(denovo_studies, 'prbF', 'missense', nvIQ))
     addSet("prb.Synonymous",      genes(denovo_studies, 'prb', 'synonymous', nvIQ))
 
-
-
     recPrbCNVs, sinPrbCNVs = recSingleGenes(denovo_studies, 'prb' ,'CNVs')
     addSet("prb.CNV.Recurrent",     recPrbCNVs)
 
@@ -147,18 +164,13 @@ def get_denovo_sets(denovo_studies):
     addSet("prb.Dup",   genes(denovo_studies, 'prb' ,'CNV+', nvIQ))
     addSet("prb.Del",   genes(denovo_studies, 'prb' ,'CNV-', nvIQ))
 
-
-
     addSet("sib.LoF",             genes(denovo_studies, 'sib', 'LGDs', nvIQ))
     addSet("sib.Missense",        genes(denovo_studies, 'sib', 'missense', nvIQ))
     addSet("sib.Synonymous",      genes(denovo_studies, 'sib', 'synonymous', nvIQ))
 
-
-
     addSet("sib.CNV",   genes(denovo_studies, 'sib' ,'CNVs', nvIQ))
     addSet("sib.Dup",   genes(denovo_studies, 'sib' ,'CNV+', nvIQ))
     addSet("sib.Del",   genes(denovo_studies, 'sib' ,'CNV-', nvIQ))
-
 
     '''
     addSet("A",      recPrbLGDs, "recPrbLGDs")
@@ -201,7 +213,7 @@ def get_denovo_studies_by_phenotype():
     
     return studies
 
-def prb_default_tests_per_phenotype():
+def prb_tests_per_phenotype():
     nvIQ = get_measure('pcdv.ssc_diagnosis_nonverbal_iq')
     
     prb_tests = {
@@ -228,7 +240,7 @@ def prb_default_tests_per_phenotype():
     return prb_tests
 
 def prb_default_tests_by_phenotype(all_studies):
-    prb_default_tests = prb_default_tests_per_phenotype()
+    prb_default_tests = prb_tests_per_phenotype()
     res = {}
     for phenotype, studies in all_studies.items():
         res[phenotype] = dict([(test_name, test_filter(studies)) 
