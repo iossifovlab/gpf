@@ -5,7 +5,7 @@ Created on May 27, 2015
 '''
 import unittest
 
-from query_denovo_gene_sets import get_denovo_sets, set_genes, get_measure, \
+from denovo_gene_sets import get_denovo_sets, set_genes, get_measure, \
     get_denovo_studies_by_phenotype, prb_default_tests_by_phenotype
 from DAE import vDB
 
