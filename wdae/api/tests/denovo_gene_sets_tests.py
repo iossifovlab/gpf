@@ -7,7 +7,8 @@ import unittest
 
 from denovo_gene_sets import get_denovo_sets, set_genes, get_measure, \
     get_denovo_studies_by_phenotype, prb_default_tests_by_phenotype,\
-    genes_test_default, prb_tests_per_phenotype
+    genes_test_default, prb_tests_per_phenotype, sib_default_tests,\
+    get_denovo_gene_sets_by_phenotype
 from DAE import vDB
 
 class Test(unittest.TestCase):
@@ -99,6 +100,8 @@ class Test(unittest.TestCase):
     def test_studies_by_phenotype(self):
         all_studies = get_denovo_studies_by_phenotype()
         for key, studies in all_studies.items():
+            if key=="all":
+                continue
             for study in studies:
                 print(key, study.get_attr('study.phenotype'))
                 self.assertEquals(key, study.get_attr('study.phenotype'))
@@ -149,3 +152,24 @@ class Test(unittest.TestCase):
         cnv_test = all_tests['Del']
         cnv_genes = cnv_test(autism_studies)
         self.assertEquals(425, len(cnv_genes))
+        
+    def test_siblings_tests(self):
+        all_studies = get_denovo_studies_by_phenotype()
+
+        gene_sets = sib_default_tests(all_studies)
+        print(gene_sets)
+        
+        for key, gs in gene_sets.items():
+            print(key, gs)
+            self.assertTrue(len(gs)>0)
+
+
+    def test_clean_denovo_gene_sets(self):
+        gene_sets = get_denovo_gene_sets_by_phenotype()
+        
+        for gss in gene_sets.values():
+            for key, gs in gss.items():
+                print(key, gs)
+                self.assertTrue(len(gs)>0)
+                
+    

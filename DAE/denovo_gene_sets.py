@@ -226,7 +226,7 @@ def get_denovo_studies_by_phenotype():
      for study in ssc_studies if study not in whole_exome_studies]
         
     studies = {
-        # "all": all_denovo_studies,
+        "all": all_denovo_studies,
         "autism": 
             [dst for dst in all_denovo_studies 
              if dst.get_attr('study.phenotype') == 'autism'],
@@ -252,23 +252,69 @@ def prb_tests_per_phenotype():
     nvIQ = get_measure('pcdv.ssc_diagnosis_nonverbal_iq')
     
     prb_tests = {
-        "LoF": lambda studies: genes_test_default(studies, in_child='prb', effect_types='LGDs'),
-        "LoF.Male": lambda studies: genes_test_default(studies, in_child='prbM', effect_types='LGDs'),
-        "LoF.Female": lambda studies: genes_test_default(studies, in_child='prbF', effect_types='LGDs'),
+        "LoF": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child='prb', 
+                                        effect_types='LGDs'),
+        "LoF.Male": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child='prbM', 
+                                        effect_types='LGDs'),
         
-        "LoF.Recurrent": lambda studies: genes_test_recurrent(studies, "prb", "LGDs"),
-        "LoF.Single": lambda studies: genes_test_single(studies, "prb", "LGDs"),
+        "LoF.Female": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child='prbF', 
+                                        effect_types='LGDs'),
         
-        "LoF.LowIQ": lambda studies: genes_test_with_measure(studies, in_child='prb', effect_types='LGDs', measure=nvIQ, mmax=90),
-        "LoF.HighIQ": lambda studies: genes_test_with_measure(studies, in_child='prb', effect_types='LGDs', measure=nvIQ, mmin=90),
+        "LoF.Recurrent": lambda studies: genes_test_recurrent(
+                                        studies, 
+                                        in_child="prb",
+                                        effect_types="LGDs"),
+                 
+        "LoF.Single": lambda studies: genes_test_single(
+                                        studies, 
+                                        in_child="prb", 
+                                        effect_types="LGDs"),
         
-        "LoF.FMRP": lambda studies: genes_test_default(studies, in_child='prb', effect_types='LGDs', gene_syms=set_genes("main:FMR1-targets")),
+        "LoF.LowIQ": lambda studies: genes_test_with_measure(
+                                        studies, 
+                                        in_child='prb', 
+                                        effect_types='LGDs', 
+                                        measure=nvIQ, 
+                                        mmax=90),
+                 
+        "LoF.HighIQ": lambda studies: genes_test_with_measure(
+                                        studies, 
+                                        in_child='prb', 
+                                        effect_types='LGDs', 
+                                        measure=nvIQ, 
+                                        mmin=90),
         
-        "Missense": lambda studies: genes_test_default(studies, in_child="prb", effect_types="missense"),
-        "Missense.Male": lambda studies: genes_test_default(studies, in_child="prbM", effect_types="missense"),
-        "Missense.Female": lambda studies: genes_test_default(studies, in_child="prbF", effect_types="missense"),
+        "LoF.FMRP": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child='prb', 
+                                        effect_types='LGDs', 
+                                        gene_syms=set_genes("main:FMR1-targets")),
         
-        "Synonymous": lambda studies: genes_test_default(studies, in_child="prb", effect_types="synonymous"),
+        "Missense": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child="prb", 
+                                        effect_types="missense"),
+                 
+        "Missense.Male": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child="prbM", 
+                                        effect_types="missense"),
+                 
+        "Missense.Female": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child="prbF", 
+                                        effect_types="missense"),
+        
+        "Synonymous": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child="prb", 
+                                        effect_types="synonymous"),
         
         "CNV": lambda studies: genes_test_default(
                                         studies, 
@@ -300,8 +346,53 @@ def prb_default_tests_by_phenotype(all_studies):
         
     return res
 
+def sib_default_tests(all_studies):
+    studies = all_studies["all"]
+    
+    res = {
+        "LoF": genes_test_default(
+                        studies, 
+                        in_child='sib', 
+                        effect_types='LGDs'),
+        "Missense": genes_test_default(
+                        studies, 
+                        in_child='sib', 
+                        effect_types='missense'),
+        "Synonymous": genes_test_default(
+                        studies, 
+                        in_child='sib', 
+                        effect_types='synonymous'),
+        "CNV": genes_test_default(
+                        studies, 
+                        in_child='sib', 
+                        effect_types='CNVs'),
+        "Dup": genes_test_default(
+                        studies, 
+                        in_child='sib', 
+                        effect_types='CNV+'),
+        "Del": genes_test_default(
+                        studies, 
+                        in_child='sib', 
+                        effect_types='CNV-'),
+    }
+        
+    return res
+
+def clear_denovo_gene_sets(gene_sets):
+    for phenotype, gss in gene_sets.items():
+        keys_to_remove=[]
+        for key, gs in gss.items():
+            if not gs:
+                keys_to_remove.append(key)
+        for key in keys_to_remove:
+            del gss[key]
+         
+    return gene_sets
 
 def get_denovo_gene_sets_by_phenotype():
-    studies = get_denovo_studies_by_phenotype()
+    all_studies = get_denovo_studies_by_phenotype()
+    res = prb_default_tests_by_phenotype(all_studies)
     
-    pass
+    res["unaffected"] = sib_default_tests(all_studies)
+    res = clear_denovo_gene_sets(res)
+    return res
