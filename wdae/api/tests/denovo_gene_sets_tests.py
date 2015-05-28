@@ -6,7 +6,8 @@ Created on May 27, 2015
 import unittest
 
 from denovo_gene_sets import get_denovo_sets, set_genes, get_measure, \
-    get_denovo_studies_by_phenotype, prb_default_tests_by_phenotype
+    get_denovo_studies_by_phenotype, prb_default_tests_by_phenotype,\
+    genes_test_default, prb_tests_per_phenotype
 from DAE import vDB
 
 class Test(unittest.TestCase):
@@ -82,5 +83,69 @@ class Test(unittest.TestCase):
         self.assertIn('Dup', congenital_heart_disease)
         self.assertIn('Del', congenital_heart_disease)
           
+    def test_prb_cnv_recurrent_tests_by_phenotype(self):
+        all_studies = get_denovo_studies_by_phenotype()
+        gene_sets = prb_default_tests_by_phenotype(all_studies)
+        # print(gene_sets)
+        self.assertTrue(gene_sets)
+        self.assertIn('autism', gene_sets)
+        autism = gene_sets['autism']
+        self.assertIn('CNV', autism)
+        self.assertIn('Dup', autism)
+        self.assertIn('Del', autism)
     
+        self.assertIn('CNV.Recurrent', autism)
         
+    def test_studies_by_phenotype(self):
+        all_studies = get_denovo_studies_by_phenotype()
+        for key, studies in all_studies.items():
+            for study in studies:
+                print(key, study.get_attr('study.phenotype'))
+                self.assertEquals(key, study.get_attr('study.phenotype'))
+        
+        [cnv_study] = vDB.get_studies("LevyCNV2011")
+        self.assertIn(cnv_study, all_studies['autism'])
+        
+#         all_set = set()
+#         for studies in all_studies.items():
+#             print(studies)
+#             all_set.union(set(studies))
+#         self.assertEqual(11, len(all_set))
+        
+    def test_cnv_genes(self):
+        cnv_studies = vDB.get_studies("LevyCNV2011")
+        print(cnv_studies)
+        gene_set = genes_test_default(cnv_studies,
+                                      in_child="prb",
+                                      effect_types="CNVs")
+        
+        self.assertTrue(len(gene_set) > 0)
+        
+
+    def test_apply_cnv_recurrent_test(self):
+        all_tests = prb_tests_per_phenotype()
+        cnv_test = all_tests['CNV.Recurrent']
+        cnv_studies = vDB.get_studies("LevyCNV2011")
+        cnv_genes = cnv_test(cnv_studies)
+        self.assertEquals(77, len(cnv_genes))
+        
+    def test_apply_cnv_tests_to_autism_studies(self):
+        all_studies = get_denovo_studies_by_phenotype()
+        autism_studies=all_studies['autism']
+        
+        all_tests = prb_tests_per_phenotype()
+        cnv_test = all_tests['CNV.Recurrent']
+        cnv_genes = cnv_test(autism_studies)
+        self.assertEquals(77, len(cnv_genes))
+        
+        cnv_test = all_tests['CNV']
+        cnv_genes = cnv_test(autism_studies)
+        self.assertEquals(818, len(cnv_genes))
+        
+        cnv_test = all_tests['Dup']
+        cnv_genes = cnv_test(autism_studies)
+        self.assertEquals(430, len(cnv_genes))
+    
+        cnv_test = all_tests['Del']
+        cnv_genes = cnv_test(autism_studies)
+        self.assertEquals(425, len(cnv_genes))

@@ -62,7 +62,7 @@ def genes_test_with_measure(denovo_studies,
                     if v.familyId in measure and measure[v.familyId] < mmax }
     return None
 
-def genes_test_recurrent_and_single(
+def genes_test_prepare_counting(
             denovo_studies, 
             in_child=None,
             effect_types=None,
@@ -78,9 +78,39 @@ def genes_test_recurrent_and_single(
         for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
     sym2FN = { sym: len(set([v.familyId for v in vs])) 
         for sym, vs in sym2Vars.items() }
+    return sym2FN
+
+def genes_test_recurrent_and_single(
+            denovo_studies, 
+            in_child=None,
+            effect_types=None,
+            gene_set=None):
+    
+    sym2FN = genes_test_prepare_counting(denovo_studies, in_child, 
+                                         effect_types, gene_set)
+    
     return ({g for g,nf in sym2FN.items() if nf>1 }, 
             {g for g,nf in sym2FN.items() if nf==1 })
 
+def genes_test_recurrent(
+            denovo_studies, 
+            in_child=None,
+            effect_types=None,
+            gene_set=None):
+    
+    sym2FN = genes_test_prepare_counting(denovo_studies, in_child, 
+                                         effect_types, gene_set)
+    return {g for g,nf in sym2FN.items() if nf>1 }
+
+def genes_test_single(
+            denovo_studies, 
+            in_child=None,
+            effect_types=None,
+            gene_set=None):
+    
+    sym2FN = genes_test_prepare_counting(denovo_studies, in_child, 
+                                         effect_types, gene_set)
+    return {g for g,nf in sym2FN.items() if nf==1 }
 
 def get_measure(measure_name):
     from DAE import phDB
@@ -185,11 +215,16 @@ def get_denovo_sets(denovo_studies):
     addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
     '''
 
-
     return r
 
 def get_denovo_studies_by_phenotype():
-    all_denovo_studies = vDB.get_studies("ALL WHOLE EXOME")
+    whole_exome_studies = vDB.get_studies("ALL WHOLE EXOME")
+    ssc_studies = vDB.get_studies("ALL SSC")
+    
+    all_denovo_studies = whole_exome_studies[:]
+    [all_denovo_studies.append(study) 
+     for study in ssc_studies if study not in whole_exome_studies]
+        
     studies = {
         # "all": all_denovo_studies,
         "autism": 
@@ -221,6 +256,9 @@ def prb_tests_per_phenotype():
         "LoF.Male": lambda studies: genes_test_default(studies, in_child='prbM', effect_types='LGDs'),
         "LoF.Female": lambda studies: genes_test_default(studies, in_child='prbF', effect_types='LGDs'),
         
+        "LoF.Recurrent": lambda studies: genes_test_recurrent(studies, "prb", "LGDs"),
+        "LoF.Single": lambda studies: genes_test_single(studies, "prb", "LGDs"),
+        
         "LoF.LowIQ": lambda studies: genes_test_with_measure(studies, in_child='prb', effect_types='LGDs', measure=nvIQ, mmax=90),
         "LoF.HighIQ": lambda studies: genes_test_with_measure(studies, in_child='prb', effect_types='LGDs', measure=nvIQ, mmin=90),
         
@@ -232,9 +270,23 @@ def prb_tests_per_phenotype():
         
         "Synonymous": lambda studies: genes_test_default(studies, in_child="prb", effect_types="synonymous"),
         
-        "CNV": lambda studies: genes_test_default(studies, in_child="prb", effect_types="CNV"),
-        "Dup": lambda studies: genes_test_default(studies, in_child="prb", effect_types="CNV+"),
-        "Del": lambda studies: genes_test_default(studies, in_child="prb", effect_types="CNV-"),
+        "CNV": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child="prb", 
+                                        effect_types="CNVs"),
+        "CNV.Recurrent": lambda studies: genes_test_recurrent(
+                                        studies, 
+                                        in_child="prb",
+                                        effect_types="CNVs"),
+        
+        "Dup": lambda studies: genes_test_default(
+                                        studies,
+                                        in_child="prb",
+                                        effect_types="CNV+"),
+        "Del": lambda studies: genes_test_default(
+                                        studies, 
+                                        in_child="prb",
+                                        effect_types="CNV-"),
         
     }
     return prb_tests
