@@ -5,9 +5,9 @@ Created on May 27, 2015
 '''
 import unittest
 
-from denovo_gene_sets import get_denovo_sets, set_genes, get_measure, \
+from denovo_gene_sets import set_genes, get_measure, \
     get_denovo_studies_by_phenotype, prb_default_tests_by_phenotype,\
-    genes_test_default, prb_tests_per_phenotype, sib_default_tests,\
+    genes_test, prb_tests_per_phenotype, sib_default_tests,\
     get_denovo_gene_sets_by_phenotype
 from DAE import vDB
 
@@ -21,9 +21,9 @@ class Test(unittest.TestCase):
         pass
 
 
-    def test_get_denovo_sets_simple(self):
-        denovo_gene_sets = get_denovo_sets(self.denovo_studies)
-        print(denovo_gene_sets.t2G.keys())
+#     def test_get_denovo_sets_simple(self):
+#         denovo_gene_sets = get_denovo_gene_sets_by_phenotype()
+#         print(denovo_gene_sets.t2G.keys())
             
 
     def test_set_genes(self):
@@ -118,7 +118,7 @@ class Test(unittest.TestCase):
     def test_cnv_genes(self):
         cnv_studies = vDB.get_studies("LevyCNV2011")
         print(cnv_studies)
-        gene_set = genes_test_default(cnv_studies,
+        gene_set = genes_test(cnv_studies,
                                       in_child="prb",
                                       effect_types="CNVs")
         
