@@ -103,36 +103,54 @@ def get_measure(measure_name):
     return fltD
 
 
-def get_denovo_studies_by_phenotype():
+# def get_denovo_studies_by_phenotype():
+#     whole_exome_studies = vDB.get_studies("ALL WHOLE EXOME")
+#     ssc_studies = vDB.get_studies("ALL SSC")
+#     
+#     all_denovo_studies = whole_exome_studies[:]
+#     [all_denovo_studies.append(study) 
+#      for study in ssc_studies if study not in whole_exome_studies]
+#         
+#     studies = {
+#         "all": all_denovo_studies,
+#         "autism": 
+#             [dst for dst in all_denovo_studies 
+#              if dst.get_attr('study.phenotype') == 'autism'],
+#         'congenital heart disease':
+#             [dst for dst in all_denovo_studies 
+#              if dst.get_attr('study.phenotype') == 'congenital heart disease'],
+#                
+#         "epilepsy":
+#             [dst for dst in all_denovo_studies 
+#              if dst.get_attr('study.phenotype') == 'epilepsy'],
+#                
+#         'intelectual disability':
+#              [dst for dst in all_denovo_studies 
+#               if dst.get_attr('study.phenotype') == 'intelectual disability'],
+#         
+#         'schizophrenia':
+#             [dst for dst in all_denovo_studies 
+#              if dst.get_attr('study.phenotype') == 'schizophrenia']}
+#     
+#     return studies
+
+def get_all_denovo_studies():
     whole_exome_studies = vDB.get_studies("ALL WHOLE EXOME")
     ssc_studies = vDB.get_studies("ALL SSC")
     
     all_denovo_studies = whole_exome_studies[:]
+
     [all_denovo_studies.append(study) 
      for study in ssc_studies if study not in whole_exome_studies]
-        
-    studies = {
-        "all": all_denovo_studies,
-        "autism": 
-            [dst for dst in all_denovo_studies 
-             if dst.get_attr('study.phenotype') == 'autism'],
-        'congenital heart disease':
-            [dst for dst in all_denovo_studies 
-             if dst.get_attr('study.phenotype') == 'congenital heart disease'],
-               
-        "epilepsy":
-            [dst for dst in all_denovo_studies 
-             if dst.get_attr('study.phenotype') == 'epilepsy'],
-               
-        'intelectual disability':
-             [dst for dst in all_denovo_studies 
-              if dst.get_attr('study.phenotype') == 'intelectual disability'],
-        
-        'schizophrenia':
-            [dst for dst in all_denovo_studies 
-             if dst.get_attr('study.phenotype') == 'schizophrenia']}
-    
-    return studies
+
+    return all_denovo_studies
+
+
+def filter_denovo_studies_by_phenotype(denovo_studies, phenotype):
+    result = [dst for dst in denovo_studies 
+              if dst.get_attr('study.phenotype') == phenotype]
+    return result
+
 
 def prb_tests_per_phenotype():
     nvIQ = get_measure('pcdv.ssc_diagnosis_nonverbal_iq')
@@ -224,76 +242,104 @@ def prb_tests_per_phenotype():
     }
     return prb_tests
 
-def prb_default_tests_by_phenotype(all_studies):
-    prb_default_tests = prb_tests_per_phenotype()
-    res = {}
-    for phenotype, studies in all_studies.items():
-        res[phenotype] = dict([(test_name, test_filter(studies)) 
-                               for test_name, test_filter in prb_default_tests.items()])
-        
-    return res
+# def prb_default_tests_by_phenotype(all_studies):
+#     prb_default_tests = prb_tests_per_phenotype()
+#     res = {}
+#     for phenotype, studies in all_studies.items():
+#         res[phenotype] = dict([(test_name, test_filter(studies)) 
+#                                for test_name, test_filter in prb_default_tests.items()])
+#         
+#     return res
 
-def sib_default_tests(all_studies):
-    studies = all_studies["all"]
+def add_set(gene_terms, setname, genes, desc=None):
+    if not genes:
+        return
+    if desc:
+        gene_terms.tDesc[setname] = desc
+    else:
+        gene_terms.tDesc[setname] = setname
+    for gsym in genes:
+        gene_terms.t2G[setname][gsym] += 1
+        gene_terms.g2T[gsym][setname] += 1
+
+
+def build_prb_test_by_phenotype(denovo_studies, phenotype):
+    phenotype_studies = filter_denovo_studies_by_phenotype(
+                denovo_studies, phenotype)
+    prb_tests = prb_tests_per_phenotype()
+    
+    gene_terms = GeneTerms()
+    
+    for test_name, test_filter in prb_tests.items():
+        add_set(gene_terms, test_name, test_filter(phenotype_studies))
+        
+    return gene_terms
+
+
+def sib_tests(denovo_studies):
+    
     
     res = {
         "LoF": genes_test(
-                        studies,
+                        denovo_studies,
                         in_child='sib',
                         effect_types='LGDs'),
         "Missense": genes_test(
-                        studies,
+                        denovo_studies,
                         in_child='sib',
                         effect_types='missense'),
         "Synonymous": genes_test(
-                        studies,
+                        denovo_studies,
                         in_child='sib',
                         effect_types='synonymous'),
         "CNV": genes_test(
-                        studies,
+                        denovo_studies,
                         in_child='sib',
                         effect_types='CNVs'),
         "Dup": genes_test(
-                        studies,
+                        denovo_studies,
                         in_child='sib',
                         effect_types='CNV+'),
         "Del": genes_test(
-                        studies,
+                        denovo_studies,
                         in_child='sib',
                         effect_types='CNV-'),
     }
         
     return res
 
-def clear_denovo_gene_sets(gene_sets):
-    for _phenotype, gss in gene_sets.items():
-        keys_to_remove = []
-        for key, gs in gss.items():
-            if not gs:
-                keys_to_remove.append(key)
-        for key in keys_to_remove:
-            del gss[key]
-         
-    return gene_sets
-
-
-def get_denovo_gene_sets_by_phenotype():
-#     gene_terms = GeneTerms()
-#     def add_set(setname, genes, desc=None):
-#         if not genes:
-#             return
-#         if desc:
-#             gene_terms.tDesc[setname] = desc
-#         else:
-#             gene_terms.tDesc[setname] = setname
-#         for gsym in genes:
-#             gene_terms.t2G[setname][gsym] += 1
-#             gene_terms.g2T[gsym][setname] += 1
+def build_sib_test(denovo_studies):
+    gene_syms = sib_tests(denovo_studies)
     
-    all_studies = get_denovo_studies_by_phenotype()
-    res = prb_default_tests_by_phenotype(all_studies)
+    gene_terms = GeneTerms()
     
-    res["unaffected"] = sib_default_tests(all_studies)
-    res = clear_denovo_gene_sets(res)
-    return res
+    for test_name, gene_set in gene_syms.items():
+        add_set(gene_terms, test_name, gene_set)
+        
+    return gene_terms
 
+
+# def clear_denovo_gene_sets(gene_syms):
+#     for _phenotype, gss in gene_syms.items():
+#         keys_to_remove = []
+#         for key, gs in gss.items():
+#             if not gs:
+#                 keys_to_remove.append(key)
+#         for key in keys_to_remove:
+#             del gss[key]
+#          
+#     return gene_syms
+
+
+def build_denovo_gene_sets():
+    result = {}
+    denovo_studies = get_all_denovo_studies()
+    all_phenotypes = ['autism', 'congenital heart disease',
+                       "epilepsy", 'intelectual disability', 'schizophrenia']
+    for phenotype in all_phenotypes:
+        gene_terms = build_prb_test_by_phenotype(denovo_studies, phenotype)
+        result[phenotype]=gene_terms
+        
+    result['unaffected'] = build_sib_test(denovo_studies)
+    
+    return result
