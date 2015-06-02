@@ -266,7 +266,7 @@ class SSCPresentInParentTests(APITestCase):
         u.save()
 
         cls.user = u
-        token = Token.objects.get_or_create(user=u)
+        _token = Token.objects.get_or_create(user=u)
         cls.user.save()
         
     def setUp(self):
