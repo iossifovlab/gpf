@@ -56,18 +56,6 @@ def genes_test_prepare_counting(
         for sym, vs in sym2Vars.items() }
     return sym2FN
 
-def genes_test_recurrent_and_single(
-            denovo_studies,
-            in_child=None,
-            effect_types=None,
-            gene_set=None):
-    
-    sym2FN = genes_test_prepare_counting(denovo_studies, in_child,
-                                         effect_types, gene_set)
-    
-    return ({g for g, nf in sym2FN.items() if nf > 1 },
-            {g for g, nf in sym2FN.items() if nf == 1 })
-
 def genes_test_recurrent(
             denovo_studies,
             in_child=None,
@@ -102,37 +90,6 @@ def get_measure(measure_name):
             pass
     return fltD
 
-
-# def get_denovo_studies_by_phenotype():
-#     whole_exome_studies = vDB.get_studies("ALL WHOLE EXOME")
-#     ssc_studies = vDB.get_studies("ALL SSC")
-#     
-#     all_denovo_studies = whole_exome_studies[:]
-#     [all_denovo_studies.append(study) 
-#      for study in ssc_studies if study not in whole_exome_studies]
-#         
-#     studies = {
-#         "all": all_denovo_studies,
-#         "autism": 
-#             [dst for dst in all_denovo_studies 
-#              if dst.get_attr('study.phenotype') == 'autism'],
-#         'congenital heart disease':
-#             [dst for dst in all_denovo_studies 
-#              if dst.get_attr('study.phenotype') == 'congenital heart disease'],
-#                
-#         "epilepsy":
-#             [dst for dst in all_denovo_studies 
-#              if dst.get_attr('study.phenotype') == 'epilepsy'],
-#                
-#         'intelectual disability':
-#              [dst for dst in all_denovo_studies 
-#               if dst.get_attr('study.phenotype') == 'intelectual disability'],
-#         
-#         'schizophrenia':
-#             [dst for dst in all_denovo_studies 
-#              if dst.get_attr('study.phenotype') == 'schizophrenia']}
-#     
-#     return studies
 
 def get_all_denovo_studies():
     whole_exome_studies = vDB.get_studies("ALL WHOLE EXOME")
@@ -242,14 +199,6 @@ def prb_tests_per_phenotype():
     }
     return prb_tests
 
-# def prb_default_tests_by_phenotype(all_studies):
-#     prb_default_tests = prb_tests_per_phenotype()
-#     res = {}
-#     for phenotype, studies in all_studies.items():
-#         res[phenotype] = dict([(test_name, test_filter(studies)) 
-#                                for test_name, test_filter in prb_default_tests.items()])
-#         
-#     return res
 
 def add_set(gene_terms, setname, genes, desc=None):
     if not genes:
@@ -317,18 +266,6 @@ def build_sib_test(denovo_studies):
         add_set(gene_terms, test_name, gene_set)
         
     return gene_terms
-
-
-# def clear_denovo_gene_sets(gene_syms):
-#     for _phenotype, gss in gene_syms.items():
-#         keys_to_remove = []
-#         for key, gs in gss.items():
-#             if not gs:
-#                 keys_to_remove.append(key)
-#         for key in keys_to_remove:
-#             del gss[key]
-#          
-#     return gene_syms
 
 
 def build_denovo_gene_sets():
