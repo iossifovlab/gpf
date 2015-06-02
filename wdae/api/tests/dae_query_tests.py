@@ -86,7 +86,7 @@ class CombinedTests(unittest.TestCase):
             self.assertTrue('frame-shift' in v[10])
             self.assertTrue('frame-shift' in v[11])
             self.assertTrue('frame-shift' in v[13])
-            self.assertTrue('prbM' in v[19])
+            self.assertTrue('prbM' in v[22])
 
         self.assertTrue(count > 0)
 
@@ -110,7 +110,7 @@ class CombinedTests(unittest.TestCase):
             self.assertTrue('frame-shift' in v[11])
 #             print(v)
             self.assertTrue('frame-shift' in v[13])
-            self.assertTrue('prbF' in v[19])
+            self.assertTrue('prbF' in v[22])
 
 
 class GeneRegionCombinedTests(unittest.TestCase):
@@ -198,7 +198,7 @@ class PreviewQueryTests(unittest.TestCase):
         vs = do_query_variants(self.PREVIEW_TEST_1)
         vs.next()
         count = 0
-        for v in vs:
+        for _v in vs:
             count += 1
         self.assertTrue(count > 0)
 

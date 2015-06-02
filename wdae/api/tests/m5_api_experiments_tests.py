@@ -644,7 +644,7 @@ class PhenotypeFilterTestsSRI(APITestCase):
         logger.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
-        pedigree_data = response.data['rows'][0][23]
+        pedigree_data = response.data['rows'][0][26]
         pprint.pprint(pedigree_data)
         logger.info("pedigree data: %s" % pedigree_data)
         self.assertEqual('["schizophrenia", [["mom", "F", 0], ["dad", "M", 0], ["sib", "M", 1]]]',
