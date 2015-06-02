@@ -1,6 +1,6 @@
 # Create your views here.
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser
+# from django.contrib.auth.models import AnonymousUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import StreamingHttpResponse
@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, parser_classes, authentication_classes, permission_classes
 from rest_framework.parsers import JSONParser, FormParser
-from rest_framework import serializers
+# from rest_framework import serializers
 from rest_framework import status
 
 from DAE import vDB
@@ -23,7 +23,7 @@ import itertools
 import logging
 import string
 import operator
-import uuid
+# import uuid
 
 from query_variants import do_query_variants, \
     get_child_types, get_variant_types, \
@@ -34,7 +34,7 @@ from query_prepare import prepare_ssc_filter
 from dae_query import prepare_summary, load_gene_set
 
 from report_variants import build_stats
-from enrichment_query import enrichment_results, \
+from enrichment_query import \
     enrichment_results_by_phenotype, \
     enrichment_prepare
 
@@ -438,8 +438,8 @@ def prepare_query_dict(data):
 
 
 @api_view(['POST'])
-# @authentication_classes((TokenAuthentication,))
-# @permission_classes((IsAuthenticated,))
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
 def query_variants_preview_full(request):
     query_variants_preview(request)
 
@@ -482,12 +482,14 @@ All fields are same as in query_variants request
 
     return Response(summary)
 
+
 @api_view(['POST'])
-# @authentication_classes((TokenAuthentication,))
-# @permission_classes((IsAdminUser,))
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAdminUser,))
 @parser_classes([JSONParser, FormParser])
 def query_variants_full(request):
     query_variants(request)
+
 
 @api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
@@ -564,8 +566,8 @@ Advanced family filter expects following fields:
     return response
 
 @api_view(['POST'])
-# @authentication_classes((TokenAuthentication,))
-# @permission_classes((IsAuthenticated,))
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
 def ssc_query_variants_preview(request):
 
     if request.method == 'OPTIONS':
@@ -635,46 +637,46 @@ Examples:
     return Response(stats)
 
 
-@api_view(['GET'])
-def enrichment_test(request):
-    """
-Performs enrichment test. Expected parameters are:
-
-* "denovoStudies" -- expects list of denovo studies
-* "transmittedStudies" --- expects list of transmitted studies
-
-* "geneSyms" --- comma separated list of gene symbols or list of gene symbols
-
-
-* "geneSet" --- contains gene set name (one of 'main','GO' or 'disease')
-* "geneTerm" --- contains gene set term. Example:  'GO:2001293' (from GO),
-'mPFC_maternal' (from main).
-* "geneStudy --- if geneSet is 'denovo', then we expect this additional parameter, to
-    specify which denovo study to use
-
-
-    * dst_name - denovo study name;
-    * tst_name - transmitted study name;
-    * gt_name - gene term name;
-    * gs_name - gene set name;
-
-Examples:
-
-    GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
-    query_data = prepare_query_dict(request.QUERY_PARAMS)
-    logger.info(log_filter(request, "enrichment query: %s" % str(query_data)))
-
-    data = enrichment_prepare(query_data)
-    # if isinstance(data, QueryDict):
-    #     data = prepare_query_dict(data)
-
-    print "enrichment query:", data
-
-    if data is None:
-        return Response(None)
-
-    res = enrichment_results(**data)
-    return Response(res)
+# @api_view(['GET'])
+# def enrichment_test(request):
+#     """
+# Performs enrichment test. Expected parameters are:
+# 
+# * "denovoStudies" -- expects list of denovo studies
+# * "transmittedStudies" --- expects list of transmitted studies
+# 
+# * "geneSyms" --- comma separated list of gene symbols or list of gene symbols
+# 
+# 
+# * "geneSet" --- contains gene set name (one of 'main','GO' or 'disease')
+# * "geneTerm" --- contains gene set term. Example:  'GO:2001293' (from GO),
+# 'mPFC_maternal' (from main).
+# * "geneStudy --- if geneSet is 'denovo', then we expect this additional parameter, to
+#     specify which denovo study to use
+# 
+# 
+#     * dst_name - denovo study name;
+#     * tst_name - transmitted study name;
+#     * gt_name - gene term name;
+#     * gs_name - gene set name;
+# 
+# Examples:
+# 
+#     GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
+#     query_data = prepare_query_dict(request.QUERY_PARAMS)
+#     logger.info(log_filter(request, "enrichment query: %s" % str(query_data)))
+# 
+#     data = enrichment_prepare(query_data)
+#     # if isinstance(data, QueryDict):
+#     #     data = prepare_query_dict(data)
+# 
+#     print "enrichment query:", data
+# 
+#     if data is None:
+#         return Response(None)
+# 
+#     res = enrichment_results(**data)
+#     return Response(res)
 
 
 @api_view(['GET'])

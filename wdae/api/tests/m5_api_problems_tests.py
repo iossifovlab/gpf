@@ -247,65 +247,36 @@ class PrepareSSCFilterTests(APITestCase):
 
         self.assertFalse('phenoType' in res)
 
-class SSCPhenotypeFilterTests(APITestCase):
-    def test_ssc_phenotype_CCDC171(self):
-        data = {
-            "geneSyms": "CCDC171",
-            "denovoStudies": "ALL SSC",
-            "transmittedStudies": "w1202s766e611",
-            "rarity": "ultraRare",
-            "presentInChild": "autism only,unaffected only,autism and unaffected,neither",
-            "presentInParent": 'mother only,father only,mother and father,neither',
-        }
 
+class SSCPresentInParentTests(APITestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        from django.contrib.auth import get_user_model
+        from rest_framework.authtoken.models import Token
         
-        url = '/api/ssc_query_variants_preview'
+        User = get_user_model()
+        u = User.objects.create(email="admin@example.com",
+                                     first_name="First",
+                                     last_name="Last",
+                                     is_staff=True,
+                                     is_active=True,
+                                     researcher_id="0001000")
+        u.set_password("secret")
+        u.save()
 
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
-        self.assertEqual('147', response.data['count'])
-
-    def test_ssc_phenotype_CACNA1S(self):
-        data = {
-            "geneSyms": "CACNA1S",
-            "denovoStudies": "ALL SSC",
-            "transmittedStudies": "w1202s766e611",
-            "rarity": "ultraRare",
-            "presentInChild": "autism only,unaffected only,autism and unaffected,neither",
-            "presentInParent": 'mother only,father only,mother and father,neither',
-        }
+        cls.user = u
+        token = Token.objects.get_or_create(user=u)
+        cls.user.save()
         
-        url = '/api/ssc_query_variants_preview'
+    def setUp(self):
+        from rest_framework.authtoken.models import Token
 
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
-        self.assertEqual('203', response.data['count'])
+        APITestCase.setUp(self)
 
-
-class SSCPresentInChildTests(APITestCase):
-    def test_present_in_child_all(self):
-        data = {
-            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-            "effectTypes": "Nonsense,Frame-shift,Splice-site",
-            "denovoStudies": "ALL SSC",
-            "transmittedStudies": "None",
-            "presentInChild": "autism only,unaffected only,autism and unaffected",
-            "gender": "male,female",
-            # "phenoType": "autism",
-        }
-
-        
-        url = '/api/ssc_query_variants_preview'
-
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print response.data['cols']
-        for c,r in enumerate(response.data['rows']):
-            print c,":",r
-
-        self.assertEqual('5', response.data['count'])
+        self.client.login(email='admin@example.com', password='secret')
+        token = Token.objects.get(user__email='admin@example.com')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
 
     def test_present_in_child_autism_only(self):
@@ -326,6 +297,7 @@ class SSCPresentInChildTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('2', response.data['count'])
 
+        
     def test_present_in_child_unaffected_only(self):
         data = {
             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
@@ -349,28 +321,7 @@ class SSCPresentInChildTests(APITestCase):
 
         # logger.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
-
-    def test_present_in_child_autism_and_unaffected(self):
-        data = {
-            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-            "effectTypes": "Nonsense,Frame-shift,Splice-site",
-            "denovoStudies": "ALL SSC",
-            "transmittedStudies": "None",
-            "presentInChild": "autism and unaffected",
-            "gender": "male,female",
-            # "phenoType": "autism",
-        }
-
-        
-        url = '/api/ssc_query_variants_preview'
-
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
-        self.assertEqual('2', response.data['count'])
-
-
-class SSCPresentInParentTests(APITestCase):
+            
     def test_present_in_parent_all(self):
         data = {
             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A,WRAP73,VWA5B1",
@@ -394,53 +345,25 @@ class SSCPresentInParentTests(APITestCase):
         self.assertEqual('19', response.data['count'])
 
 
-    def test_present_in_parent_father(self):
+    def test_ssc_phenotype_CACNA1S(self):
         data = {
-            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A,WRAP73,VWA5B1",
-            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "geneSyms": "CACNA1S",
             "denovoStudies": "ALL SSC",
+            "transmittedStudies": "w1202s766e611",
+            "rarity": "ultraRare",
             "presentInChild": "autism only,unaffected only,autism and unaffected,neither",
-            "presentInParent": "father only",
-            "gender": "male,female",
-            "rarity": "ultraRare",
-            "transmittedStudies": "w1202s766e611",
-            "variantTypes": "sub,ins,del,CNV",
+            "presentInParent": 'mother only,father only,mother and father,neither',
         }
-
         
         url = '/api/ssc_query_variants_preview'
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # logger.info("result data: %s", response.data)
-        self.assertEqual('9', response.data['count'])
+        self.assertEqual('203', response.data['count'])
 
-
-    def test_present_in_child_autism_only_parent_father(self):
-        data = {
-            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A,WRAP73,VWA5B1",
-            "effectTypes": "Nonsense,Frame-shift,Splice-site",
-            "denovoStudies": "ALL SSC",
-            "transmittedStudies": "None",
-            "presentInChild": "autism only",
-            "presentInParent": "father only",
-            "gender": "male,female",
-            "rarity": "ultraRare",
-            "transmittedStudies": "w1202s766e611",
-            "variantTypes": "sub,ins,del,CNV",
-        }
-
-        
-        url = '/api/ssc_query_variants_preview'
-
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
-        self.assertEqual('4', response.data['count'])
-
-
-class SSCPresentInChildDownloadTests(APITestCase):
     def test_rec_lgds_preview(self):
+        
         data = {
             'geneRegionType': 'on',
             'familyIds': '',
@@ -472,6 +395,115 @@ class SSCPresentInChildDownloadTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # logger.info("result data: %s", response.data)
         self.assertEqual('77', response.data['count'])
+
+
+    def test_present_in_child_all(self):
+        self.client.login(email='admin@example.com', password='secret')
+
+        data = {
+            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
+            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "None",
+            "presentInChild": "autism only,unaffected only,autism and unaffected",
+            "gender": "male,female",
+            # "phenoType": "autism",
+        }
+
+        
+        url = '/api/ssc_query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print response.data['cols']
+        for c,r in enumerate(response.data['rows']):
+            print c,":",r
+
+        self.assertEqual('5', response.data['count'])
+
+    def test_present_in_parent_father(self):
+        data = {
+            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A,WRAP73,VWA5B1",
+            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "denovoStudies": "ALL SSC",
+            "presentInChild": "autism only,unaffected only,autism and unaffected,neither",
+            "presentInParent": "father only",
+            "gender": "male,female",
+            "rarity": "ultraRare",
+            "transmittedStudies": "w1202s766e611",
+            "variantTypes": "sub,ins,del,CNV",
+        }
+
+        
+        url = '/api/ssc_query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # logger.info("result data: %s", response.data)
+        self.assertEqual('9', response.data['count'])
+
+    def test_ssc_phenotype_CCDC171(self):
+        data = {
+            "geneSyms": "CCDC171",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "w1202s766e611",
+            "rarity": "ultraRare",
+            "presentInChild": "autism only,unaffected only,autism and unaffected,neither",
+            "presentInParent": 'mother only,father only,mother and father,neither',
+        }
+
+        
+        url = '/api/ssc_query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # logger.info("result data: %s", response.data)
+        self.assertEqual('147', response.data['count'])
+
+    def test_present_in_child_autism_only_parent_father(self):
+        data = {
+            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A,WRAP73,VWA5B1",
+            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "None",
+            "presentInChild": "autism only",
+            "presentInParent": "father only",
+            "gender": "male,female",
+            "rarity": "ultraRare",
+            "transmittedStudies": "w1202s766e611",
+            "variantTypes": "sub,ins,del,CNV",
+        }
+
+        
+        url = '/api/ssc_query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # logger.info("result data: %s", response.data)
+        self.assertEqual('4', response.data['count'])
+
+    def test_present_in_child_autism_and_unaffected(self):
+        data = {
+            "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
+            "effectTypes": "Nonsense,Frame-shift,Splice-site",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "None",
+            "presentInChild": "autism and unaffected",
+            "gender": "male,female",
+            # "phenoType": "autism",
+        }
+
+        
+        url = '/api/ssc_query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # logger.info("result data: %s", response.data)
+        self.assertEqual('2', response.data['count'])
+        
+        
+class SSCPresentInChildDownloadTests(APITestCase):
+
 
 
     def test_rec_lgds_download(self):
