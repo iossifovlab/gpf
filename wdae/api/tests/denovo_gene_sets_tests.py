@@ -10,6 +10,7 @@ from denovo_gene_sets import set_genes, get_measure, \
     get_all_denovo_studies,\
     build_prb_test_by_phenotype, build_sib_test, build_denovo_gene_sets
 from DAE import vDB
+from bg_loader import preload_background, get_background
 
 class Test(unittest.TestCase):
 
@@ -209,4 +210,15 @@ class Test(unittest.TestCase):
         self.assertIn('unaffected', res)
         
         
+    def test_preload_denovo_gene_sets(self):
+        builders = [(build_denovo_gene_sets,
+                     [],
+                     'Denovo')]
+        
+        preload_background(builders)
+        
+        gs = get_background('Denovo')
+        self.assertTrue(gs)
+        print("denovo gene sets ---------------------------------")
+        print(gs)
         

@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, url, include
 from django.contrib import admin
+from denovo_gene_sets import build_denovo_gene_sets
 
 # import api.views
 # router = routers.DefaultRouter()
@@ -37,6 +38,10 @@ try:
                 (gene_set_bgloader,
                  ['MSigDB.curated'],
                  'MSigDB.curated'),
+
+                (build_denovo_gene_sets,
+                 [],
+                 'Denovo'),
 
                 (build_transmitted_background,
                  transmitted,
