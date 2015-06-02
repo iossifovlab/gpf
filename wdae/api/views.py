@@ -774,12 +774,12 @@ def register(request):
     serialized = UserSerializer(data=request.DATA)
     if serialized.is_valid():
         user = get_user_model()
-        researcher_id = serialized.init_data['researcher_id']
-        email = serialized.init_data['email']
+        researcher_id = serialized.validated_data['researcher_id']
+        email = serialized.validated_data['email']
 
         created_user = user.objects.create_user(email, researcher_id)
-        created_user.first_name = serialized.init_data['first_name']
-        created_user.last_name = serialized.init_data['last_name']
+        created_user.first_name = serialized.validated_data['first_name']
+        created_user.last_name = serialized.validated_data['last_name']
 
         created_user.save()
         return Response(serialized.data, status=status.HTTP_201_CREATED)

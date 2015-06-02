@@ -172,46 +172,7 @@ class ApiTest(APITestCase):
         for family in data['families']:
             self.assertTrue(family.startswith('AU'))
 
-    def test_fail_register(self):
-        data = {
-            'email': 'faulthymail@faulthy.com',
-            'first_name': 'bad_first_name',
-            'last_name': 'bad_last_name'
-        }
 
-        response = self.client.post('/api/users/register', data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_successful_register(self):
-        res = Researcher()
-        res.first_name = 'fname'
-        res.last_name = 'lname'
-        res.unique_number = '11aa--bb'
-        res.email = 'fake@fake.com'
-        res.save()
-
-        data = {
-            'first_name': res.first_name,
-            'last_name': res.last_name,
-            'researcher_id': res.unique_number,
-            'email': res.email
-        }
-
-        response = self.client.post('/api/users/register', data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['researcher_id'], res.unique_number)
-        self.assertEqual(response.data['email'], res.email)
-
-#     def test_ssc_query_variants_preview_security(self):
-#         response = self.client.post('/api/ssc_query_variants_preview', {}, format="json")
-#         # FIXME: unauthorized test
-#         # self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_query_variants_full_security(self):
-        pass
-
-    def test_query_variants_preview_full_security(self):
-        pass
 #     def test_families_post(self):
 #         data={'studies':['DalyWE2012','EichlerTG2012']}
 #         response=self.client.post('/api/families?filter="A"', data, format='json')
