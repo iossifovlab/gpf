@@ -418,20 +418,37 @@ def gene_set_list(request):
 
 @api_view(['GET'])
 def gene_set_list2(request):
+    """
+    Returns list of gene set.
+    
+    Expected parameters are:
+    
+    * `gene_set` - the name of the gene set group;
+    * `gene_set_phenotype` - if the gene set is `denovo`, we have to
+        pass the gene set phenotype.
+        
+    """
     query_params = prepare_query_dict(request.QUERY_PARAMS)
     if 'gene_set' not in query_params:
         return Response({})
     gene_set = query_params['gene_set']
-    gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
     gene_set_phenotype = str(query_params['gene_set_phenotype']) \
                         if 'gene_set_phenotype' in query_params else None
 
     gts = load_gene_set2(gene_set, gene_set_phenotype)
 
     if gts:
-        return __gene_set_response(query_params, gts, gene_name)
+        return __gene_set_response(query_params, gts, None)
     else:
         return Response()
+
+@api_view(['GET'])
+def gene_set_phenotypes(request):
+    return Response(['autism', 
+                     'congenital heart disease', 
+                     "epilepsy", 
+                     'intelectual disability', 
+                     'schizophrenia'])
 
 
 def prepare_query_dict(data):
