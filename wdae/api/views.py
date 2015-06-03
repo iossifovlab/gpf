@@ -448,7 +448,8 @@ def gene_set_phenotypes(request):
                      'congenital heart disease', 
                      "epilepsy", 
                      'intelectual disability', 
-                     'schizophrenia'])
+                     'schizophrenia',
+                     'unaffected'])
 
 
 def prepare_query_dict(data):
