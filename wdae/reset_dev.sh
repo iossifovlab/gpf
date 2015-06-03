@@ -2,8 +2,9 @@
 
 rm -rf wdae.sql
 
-python manage.py syncdb
+# python manage.py syncdb
 python manage.py migrate
 
-python setup_dev_users.py
+python manage.py devusers
+
 

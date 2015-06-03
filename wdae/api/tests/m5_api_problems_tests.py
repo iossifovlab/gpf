@@ -252,6 +252,8 @@ class SSCPresentInParentTests(APITestCase):
     
     @classmethod
     def setUpClass(cls):
+        super(SSCPresentInParentTests, cls).setUpClass()
+        
         from django.contrib.auth import get_user_model
         from rest_framework.authtoken.models import Token
         
