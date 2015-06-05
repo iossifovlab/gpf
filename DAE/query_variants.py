@@ -720,9 +720,18 @@ def generate_response(vs, atts=[], sep='\t'):
                     mavs.append(str(getattr(v, att)))
             except:
                 mavs.append("")
-
-        yield (mavs + [str(v.atts[a]).replace(sep, ';').replace("'", '"')
-                       if a in v.atts else str(getattr(v, a, '')) for a in atts])
+        hack = []
+        for a in atts:
+            if a in ['SSCfreq', 'EVSfreq', 'E65freq',] and a not in v.atts:
+                a = a[:3]+'-'+a[3:]
+            if a in v.atts:
+                hack.append(str(v.atts[a]).replace(sep, ';').replace("'", '"'))
+            else:
+                hack.append(getattr(v, a, ''))
+        yield (mavs + hack)
+                
+#         yield (mavs + [str(v.atts[a]).replace(sep, ';').replace("'", '"')
+#                        if a in v.atts else str(getattr(v, a, '')) for a in atts])
 
 
 def join_line(l, sep=','):
