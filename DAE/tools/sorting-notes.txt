@@ -1,0 +1,4 @@
+zcat EVS.format.Both.annot.txt.bgz | addSortCols.py trm | sort -k1,1n -k2,2n -k3,3 | rmSortCols.py | bgzip -c > sss.bgz
+
+zcat sss.bgz |  cut -f 1 | uniq
+
