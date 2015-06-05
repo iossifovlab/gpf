@@ -274,7 +274,7 @@ class Study:
             # print "line:", l
             if l[0] == '#':
                 continue
-            vls = l.split("\t")
+            vls = l.strip("\r\n").split("\t")
             # FIXME: empty strings for additional frequences: 'EVS-freq', 'E65-freq'
             if len(colNms) != len(vls):
                 print("colNms len: %d; variant col: %d" % (len(colNms), len(vls)))

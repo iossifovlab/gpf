@@ -9,8 +9,7 @@ proj_dir = os.path.expanduser('./wdae')
 
 sys.path.append(proj_dir)
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
-
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
 
 from django.contrib.auth import get_user_model
 
