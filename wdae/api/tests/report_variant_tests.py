@@ -1,6 +1,6 @@
 import unittest
 
-from api.report_variant import prcnt_str, ratio_str
+from api.report_variants import prcnt_str, ratio_str
 
 
 class UtilsTest(unittest.TestCase):

@@ -25,25 +25,30 @@ class VariantsTests(unittest.TestCase):
         vs = dae_query_variants({'denovoStudies': ["DalyWE2012"]})
         self.assertEqual(len(vs), 1)
 
-        vs = dae_query_variants({'transmittedStudies': ["wig683"]})
+        vs = dae_query_variants({'transmittedStudies': ["w1202s766e611"]})
         self.assertEqual(len(vs), 1)
 
     def test_variant_filters(self):
         vs = dae_query_variants({"denovoStudies": ["DalyWE2012"],
-                                 "transmittedStudies": ["wig683"],
+                                 "transmittedStudies": ["w1202s766e611"],
                                  "inChild": "sibF",
                                  "effectTypes": "frame-shift",
                                  "variantTypes": "del",
                                  "ultraRareOnly": "True"})
 
         self.assertEqual(len(vs), 2)
+        fail = False
         for v in itertools.chain(*vs):
             self.assertTrue('sibF' in v.inChS)
-            self.assertEqual(v.atts['effectType'], 'frame-shift')
+            # print(v.atts['effectType'])
+            if 'frame-shift' not in v.atts['effectGene']:
+                fail=True
 
+        # self.assertEqual(v.atts['effectType'], 'frame-shift')
+        self.assertFalse(fail)
 
 class CombinedTests(unittest.TestCase):
-    TEST_DATA_1 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_1 = {"denovoStudies": ["ALL WHOLE EXOME"],
                    "transmittedStudies": ["none"],
                    "inChild": "prbM",
                    "effectTypes": "frame-shift",
@@ -53,7 +58,7 @@ class CombinedTests(unittest.TestCase):
                    "geneSyms": ""}
 
     TEST_DATA_2 = {"denovoStudies": [],
-                   "transmittedStudies": ["w873e374s322"],
+                   "transmittedStudies": ["w1202s766e611"],
                    "inChild": "prbF",
                    "effectTypes": "LoF",
                    "variantTypes": "All",
@@ -81,12 +86,12 @@ class CombinedTests(unittest.TestCase):
             self.assertTrue('frame-shift' in v[10])
             self.assertTrue('frame-shift' in v[11])
             self.assertTrue('frame-shift' in v[13])
-            self.assertTrue('prbM' in v[19])
+            self.assertTrue('prbM' in v[22])
 
         self.assertTrue(count > 0)
 
-    TEST_DATA_3 = {"denovoStudies": ["allWEAndTG"],
-                   "transmittedStudies": ["wigEichler374"],
+    TEST_DATA_3 = {"denovoStudies": ["ALL WHOLE EXOME"],
+                   "transmittedStudies": [],
                    "inChild": "prbF",
                    "effectTypes": "frame-shift",
                    "variantTypes": "del",
@@ -103,13 +108,14 @@ class CombinedTests(unittest.TestCase):
             self.assertTrue('prbF' in v[6])
             self.assertTrue('frame-shift' in v[10])
             self.assertTrue('frame-shift' in v[11])
+#             print(v)
             self.assertTrue('frame-shift' in v[13])
-            self.assertTrue('prbF' in v[19])
+            self.assertTrue('prbF' in v[22])
 
 
 class GeneRegionCombinedTests(unittest.TestCase):
     TEST_DATA = {"denovoStudies": [],
-                 "transmittedStudies": ["wigEichler374"],
+                 "transmittedStudies": ["w1202s766e611"],
                  "inChild": "All",
                  "effectTypes": "All",
                  "variantTypes": "All",
@@ -149,7 +155,7 @@ class IvanchoSubmittedQueryTests(unittest.TestCase):
                  'transmittedStudies': 'w1202s766e611',
                  'familyVerbalIqHi': '',
                  'familyRace': 'All',
-                 'denovoStudies': 'cshlSSCWE'}
+                 'denovoStudies': "ALL WHOLE EXOME"}
 
     def test_gene_region_filter(self):
         vs = do_query_variants(self.TEST_DATA)
@@ -173,7 +179,7 @@ class PreviewQueryTests(unittest.TestCase):
                       "geneTerm": "",
                       "geneSyms": "",
                       "geneRegion": "",
-                      "denovoStudies": "allWE",
+                      "denovoStudies": "ALL WHOLE EXOME",
                       "transmittedStudies": "none",
                       "rarity": "ultraRare",
                       "inChild": "prbF",
@@ -192,7 +198,7 @@ class PreviewQueryTests(unittest.TestCase):
         vs = do_query_variants(self.PREVIEW_TEST_1)
         vs.next()
         count = 0
-        for v in vs:
+        for _v in vs:
             count += 1
         self.assertTrue(count > 0)
 

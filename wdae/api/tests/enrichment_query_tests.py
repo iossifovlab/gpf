@@ -14,8 +14,8 @@ class EnrichmentPrepareTests(unittest.TestCase):
         data = enrichment_prepare({'denovoStudies': []})
         self.assertIsNone(data)
 
-    TEST_DATA_MAIN = {'denovoStudies': ['allWEAndTG'],
-                      'transmittedStudies': ['w873e374s322'],
+    TEST_DATA_MAIN = {'denovoStudies': ['IossifovWE2012'],
+                      'transmittedStudies': ['w1202s766e611'],
                       'geneSet': 'main',
                       'geneTerm': 'ChromatinModifiers'}
 
@@ -37,8 +37,8 @@ class EnrichmentPrepareTests(unittest.TestCase):
         data = enrichment_prepare(self.TEST_DATA_MAIN)
         assert_that(data, has_key('geneSyms'))
 
-    TEST_DATA_BAD_GENE_SET = {'denovoStudies': ['allWEAndTG'],
-                              'transmittedStudies': ['w873e374s322'],
+    TEST_DATA_BAD_GENE_SET = {'denovoStudies': ['IossifovWE2012'],
+                              'transmittedStudies': ['w1202s766e611'],
                               'geneSet': 'BAD_GENE_SET',
                               'geneTerm': 'ChromatinModifiers'}
 
@@ -46,8 +46,8 @@ class EnrichmentPrepareTests(unittest.TestCase):
         data = enrichment_prepare(self.TEST_DATA_BAD_GENE_SET)
         assert_that(data, is_(none()))
 
-    TEST_DATA_BAD_GENE_TERM = {'denovoStudies': ['allWEAndTG'],
-                               'transmittedStudies': ['w873e374s322'],
+    TEST_DATA_BAD_GENE_TERM = {'denovoStudies': ['IossifovWE2012'],
+                               'transmittedStudies': ['w1202s766e611'],
                                'geneSet': 'main',
                                'geneTerm': 'BAD_GENE_TERM'}
 
@@ -55,8 +55,8 @@ class EnrichmentPrepareTests(unittest.TestCase):
         data = enrichment_prepare(self.TEST_DATA_BAD_GENE_TERM)
         assert_that(data, is_(none()))
 
-    TEST_DATA_GENE_SYMS = {'denovoStudies': ['allWEAndTG'],
-                           'transmittedStudies': ['w873e374s322'],
+    TEST_DATA_GENE_SYMS = {'denovoStudies': ['IossifovWE2012'],
+                           'transmittedStudies': ['w1202s766e611'],
                            'geneSyms': ['POGZ']}
 
     def test_gene_syms(self):
@@ -65,8 +65,8 @@ class EnrichmentPrepareTests(unittest.TestCase):
         assert_that(data, has_key('geneSyms'))
 
     TEST_DATA_DENOVO_GENE_SET_NO_GENE_STUDY = \
-        {'denovoStudies': ['allWEAndTG'],
-         'transmittedStudies': ['w873e374s322'],
+        {'denovoStudies': ['IossifovWE2012'],
+         'transmittedStudies': ['w1202s766e611'],
          'geneSet': 'denovo',
          'geneTerm': 'prb.LoF'}
 
@@ -76,22 +76,22 @@ class EnrichmentPrepareTests(unittest.TestCase):
         assert_that(data, is_(none()))
 
     TEST_DATA_DENOVO_GENE_SET = \
-        {'denovoStudies': ['allWEAndTG'],
-         'transmittedStudies': ['w873e374s322'],
+        {'denovoStudies': ['IossifovWE2012'],
+         'transmittedStudies': ['w1202s766e611'],
          'geneSet': 'denovo',
          'geneTerm': 'prb.LoF',
-         'geneStudy': 'DalyWE2012'}
+         'geneStudy': 'IossifovWE2012'}
 
     def test_denovo_gene_set(self):
         data = enrichment_prepare(self.TEST_DATA_DENOVO_GENE_SET)
 
-        assert_that(data, has_entry('geneStudy', 'DalyWE2012'))
+        assert_that(data, has_entry('geneStudy', 'IossifovWE2012'))
         assert_that(data, has_entry('geneSet', 'denovo'))
         assert_that(data, has_entry('geneTerm', 'prb.LoF'))
         assert_that(data, has_key('geneSyms'))
 
     TEST_DATA_MAIN_BAD_DENOVO_STUDY = {'denovoStudies': ['BAD_STUDY'],
-                                       'transmittedStudies': ['w873e374s322'],
+                                       'transmittedStudies': ['w1202s766e611'],
                                        'geneSet': 'main',
                                        'geneTerm': 'ChromatinModifiers'}
 

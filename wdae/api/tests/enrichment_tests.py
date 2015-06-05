@@ -14,8 +14,8 @@ from bg_loader import preload_background
 class EnrichmentHelpersTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.dsts = vDB.get_studies('allWE')
-        cls.tsts = vDB.get_study('w873e374s322')
+        cls.dsts = vDB.get_studies('ALL WHOLE EXOME')
+        cls.tsts = vDB.get_study('w1202s766e611')
         cls.gene_terms = get_gene_sets_symNS('main')
         logger.debug("calculating original enrichment test values...")
         cls.original = api.tests.enrichment_test_orig.main(cls.dsts,

@@ -2,10 +2,11 @@ import itertools
 import re
 import logging
 from query_prepare import combine_gene_syms, \
-    prepare_denovo_studies, prepare_transmitted_studies
+    prepare_denovo_studies, prepare_transmitted_studies, \
+    prepare_denovo_phenotype, prepare_gender_filter, prepare_denovo_pheno_filter
 
 
-from VariantAnnotation import get_effect_types
+from VariantAnnotation import get_effect_types_set, get_effect_types
 from VariantsDB import mat2Str
 from DAE import phDB
 
@@ -246,14 +247,84 @@ def prepare_inchild(data):
         return None
 
     inChild = data['inChild']
+    if not inChild:
+        return None
+
     if inChild == 'All' or inChild == 'none' or inChild == 'None':
         return None
+    if isinstance(inChild, str):
+        inChild = inChild.split(',')
 
-    if inChild not in get_child_types():
+    res = [ic for ic in inChild if ic in get_child_types()]
+    if not res:
         return None
+    if len(res) != 1:
+        logger.error("inChild format wrong: %s, %s", inChild, res)
+        return None
+    return res[0]
 
-    return inChild
 
+def prepare_present_in_child(data):
+    if "presentInChild" in data:
+        present_in_child = set(data['presentInChild'].split(','))
+
+        gender = None
+        if 'gender' in data:
+            gender = data['gender']
+
+        pheno_filter = []
+        if 'autism only' in present_in_child:
+            pheno_filter.append( lambda inCh: (len(inCh)==4 and 'p' == inCh[0]) )
+        if 'unaffected only' in present_in_child:
+            pheno_filter.append( lambda inCh: (len(inCh)==4 and 's' == inCh[0]) )
+        if 'autism and unaffected' in present_in_child:
+            pheno_filter.append( lambda inCh: (len(inCh)==8) )
+        if 'neither' in present_in_child:
+            pheno_filter.append( lambda inCh: len(inCh) == 0 )
+
+        comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
+
+        if ['F'] == gender:
+            gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'F'
+            comp.append(gender_filter)
+        elif ['M'] == gender:
+            gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'M'
+            comp.append(gender_filter)
+
+        # print "comp: ", comp
+        if len(comp)==1:
+            return comp[0]
+
+        return lambda inCh: all([f(inCh) for f in comp])
+
+    return None
+
+def prepare_present_in_parent(data):
+    if "presentInParent" in data:
+        present_in_parent = set(data['presentInParent'].split(','))
+        print "presentInParent:", present_in_parent
+        if set(['father only']) == present_in_parent:
+            return lambda fromParent: (len(fromParent)==3 and 'd' == fromParent[0])
+        if set(['mother only']) == present_in_parent:
+            return lambda fromParent: (len(fromParent)==3 and 'm' == fromParent[0])
+        if set(['mother and father']) == present_in_parent:
+            return lambda fromParent: len(fromParent)==6
+        if set(['mother only','father only']) == present_in_parent:
+            return lambda fromParent: len(fromParent)==3
+
+        if set(['mother only','mother and father']) == present_in_parent:
+            return lambda fromParent: ( (len(fromParent)==3 and 'm' == fromParent[0])
+                                        or len(fromParent) == 6 )
+        if set(['father only','mother and father']) == present_in_parent:
+            return lambda fromParent: ( (len(fromParent)==3 and 'd' == fromParent[0])
+                                        or len(fromParent) == 6 )
+        if set(['father only','mother only','mother and father']) == present_in_parent:
+            return lambda fromParent: ( len(fromParent) > 0 )
+        if set(['neither']) == present_in_parent:
+            return lambda fromParent: ( len(fromParent) == 0)
+
+        return lambda fromParent: True
+    return None
 
 def prepare_effect_types(data):
     if 'effectTypes' not in data:
@@ -264,10 +335,22 @@ def prepare_effect_types(data):
        effect_type is None or effect_type == 'All':
         return None
 
-    if effect_type not in get_effect_types(types=True, groups=True):
-        return None
+    effect_type_list = [et for et in effect_type.split(',')
+                        if et in get_effect_types(types=True, groups=True)]
 
-    return effect_type
+    if not effect_type_list:
+        return None
+    return get_effect_types_set(','.join(effect_type_list))
+    # print("effect_types: %s" % effect_type)
+    # effect_types = effect_type.split(',')
+    # result = [et for et in effect_types if et in get_effect_types(types=True, groups=True)]
+    # print("effect types: %s" % result)
+
+    # return set(result)
+    # if effect_type not in get_effect_types(types=True, groups=True):
+    #     return None
+
+    # return effect_type
 
 
 def prepare_variant_types(data):
@@ -282,10 +365,14 @@ def prepare_variant_types(data):
     if variant_types == 'All':
         return None
 
-    if variant_types not in get_variant_types():
-        return None
+    variant_types_set= set(get_variant_types())
+    variant_types_list = variant_types.split(',')
+    result = [vt for vt in variant_types_list if vt in variant_types_set]
+    logger.info("variant types: %s", result)
+    if result:
+        return ','.join(result)
 
-    return variant_types
+    return None
 
 
 def prepare_family_ids(data):
@@ -441,23 +528,31 @@ def prepare_transmitted_filters(data,
 def prepare_denovo_filters(data):
 
     filters = {'inChild': prepare_inchild(data),
+               'presentInChild': prepare_present_in_child(data),
+               'presentInParent': prepare_present_in_parent(data),
                'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
                'familyIds': prepare_family_ids(data),
                'geneSyms': combine_gene_syms(data),
                # 'geneIds': prepare_gene_ids(data),
                'regionS': prepare_gene_region(data)}
+
     return filters
 
 
 def get_denovo_variants(studies, family_filters, **filters):
     seenVs = set()
-    for study in studies:
+    for (study, phenoFilter) in studies:
         if family_filters is not None:
             families = family_filters(study).keys()
             filters['familyIds'] = families if len(families) > 0 else [None]
-            #logger.debug("study: %s, families: %s", study.name, str(families))
-        for v in study.get_denovo_variants(**filters):
+
+        if phenoFilter:
+            all_filters = dict(filters, **phenoFilter)
+        else:
+            all_filters = filters
+
+        for v in study.get_denovo_variants(**all_filters):
             vKey = v.familyId + v.location + v.variant
             if vKey in seenVs:
                 continue
@@ -466,7 +561,8 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 
 def dae_query_variants(data):
-    logger.info("query received: %s", str(data))
+    prepare_denovo_phenotype(data)
+    prepare_gender_filter(data)
 
     dstudies = prepare_denovo_studies(data)
     tstudies = prepare_transmitted_studies(data)
@@ -476,9 +572,11 @@ def dae_query_variants(data):
     denovo_filters = prepare_denovo_filters(data)
     family_filters = advanced_family_filter(data, denovo_filters)
 
+
     variants = []
     if dstudies is not None:
-        dvs = get_denovo_variants(dstudies, family_filters, **denovo_filters)
+        denovo_filtered_studies = prepare_denovo_pheno_filter(data, dstudies)
+        dvs = get_denovo_variants(denovo_filtered_studies, family_filters, **denovo_filters)
         variants.append(dvs)
 
     if tstudies is not None:
@@ -495,29 +593,8 @@ def dae_query_variants(data):
     return variants
 
 def pedigree_data(v):
-    m = getattr(v, 'bestSt')
-    res = None
-    if m.ndim==2 and m.shape[0]==2:
-        res = [v.study.get_attr('study.phenotype'),
-               [[p.role, p.gender, n] for (p, n) in zip(v.memberInOrder, m[1])]]
-    elif m.ndim == 2 and m.shape[0]==1:
-        # CNVs
-        base = {'F': m[0][0], 'M': m[0][1]}
-        res = [v.study.get_attr('study.phenotype'),
-               [[p.role, p.gender, abs(n - base[p.gender])]
-                for (p, n) in zip(v.memberInOrder, m[0])]]
-    else:
-        raise Exception
+    return [v.study.get_attr('study.phenotype'), v.pedigree]
 
-    if v.fromParentS == "mom" and res[1][0][2] == 0:
-        res[1][0][2] = 1
-        res[1][0].append(1)
-    elif v.fromParentS == "dad" and res[1][1][2] == 0:
-        res[1][1][2] = 1
-        res[1][1].append(1)
-    # print m, res
-    return res
-    
 def __augment_vars(v):
     fmId = v.familyId
     parRaces = get_parents_race()[fmId] \
@@ -532,10 +609,11 @@ def __augment_vars(v):
 
     v.atts["_par_races_"] = parRaces
     v.atts["_ch_prof_"] = chProf
-    v.atts["_prb_viq_"] = viq 
+    v.atts["_prb_viq_"] = viq
     v.atts["_prb_nviq_"] = nviq
     v.atts["_pedigree_"] = pedigree_data(v)
-    
+    # v.atts["phenoInChS"] = v.phenoInChS()
+
     return v
 
 
@@ -548,12 +626,17 @@ def do_query_variants(data, atts=[]):
                               'effectDetails',
                               'all.altFreq',
                               'all.nAltAlls',
+                              'SSCfreq',
+                              'EVSfreq',
+                              'E65freq',
                               'all.nParCalled',
                               '_par_races_',
                               '_ch_prof_',
                               '_prb_viq_',
                               '_prb_nviq_',
-                              'valstatus'] + atts)
+                              'valstatus']
+                            +
+                            atts)
 
 def __gene_effect_get_worst_effect(gs):
     if len(gs) == 0:
@@ -564,7 +647,7 @@ def __gene_effect_get_worst_effect(gs):
 def __gene_effect_get_genes(gs):
     genes_set = set([g['sym'] for g in gs])
     genes = list(genes_set)
-    
+
     return ';'.join(genes)
 
 
@@ -595,7 +678,7 @@ COLUMN_TITLES = {'familyId': 'family id',
 
 def attr_title(attr_key):
     return COLUMN_TITLES.get(attr_key, attr_key)
-    
+
 def generate_response(vs, atts=[], sep='\t'):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
@@ -619,11 +702,9 @@ def generate_response(vs, atts=[], sep='\t'):
                    "geneEffect": ge2Str,
                    "requestedGeneEffects": ge2Str,
     }
-    
+
     specialGeneEffects = {"genes": __gene_effect_get_genes,
                           "worstEffect": __gene_effect_get_worst_effect}
-
-    print "atts=", atts
 
     yield [attr_title(attr) for attr in mainAtts + atts]
 
@@ -641,7 +722,7 @@ def generate_response(vs, atts=[], sep='\t'):
                 mavs.append("")
 
         yield (mavs + [str(v.atts[a]).replace(sep, ';').replace("'", '"')
-                       if a in v.atts else "" for a in atts])
+                       if a in v.atts else str(getattr(v, a, '')) for a in atts])
 
 
 def join_line(l, sep=','):

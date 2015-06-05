@@ -12,7 +12,7 @@ import numpy as np
 from scipy.stats import ttest_ind
 
 logger = logging.getLogger(__name__)
-SUPPORTED_PHENO_STUDIES = {'combSSCWE', 'cshlSSCWE', 'yaleSSCWE', 'udapSSCWE'}
+SUPPORTED_PHENO_STUDIES = {'ALL SSC'}
 
 def get_supported_measures():
     return [('vIQ', 'verbal IQ'),
@@ -53,16 +53,19 @@ def pheno_query_variants(data):
     rec_lgds = filter_var_in_recurent_genes(lgds)
     missense = _pheno_query_variants(data, 'missense')
     synonymous = _pheno_query_variants(data, 'synonymous')
+    cnvs = _pheno_query_variants(data, 'CNV+,CNV-')
 
     families_with_lgds = Counter([v.familyId for v in lgds])
     families_with_rec_lgds = Counter([v.familyId for v in rec_lgds])
     families_with_missense = Counter([v.familyId for v in missense])
     families_with_synonymous = Counter([v.familyId for v in synonymous])
+    families_with_cnvs = Counter([v.familyId for v in cnvs])
 
     return (families_with_lgds,
             families_with_rec_lgds,
             families_with_missense,
-            families_with_synonymous)
+            families_with_synonymous,
+            families_with_cnvs)
 
 
 def pheno_prepare_families_data(data):
@@ -87,12 +90,14 @@ def pheno_query(data):
     (families_with_lgds,
      families_with_rec_lgds,
      families_with_missense,
-     families_with_synonymous) = pheno_query_variants(data)
+     families_with_synonymous,
+     families_with_cnvs) = pheno_query_variants(data)
     seq_prbs, all_families = pheno_prepare_families_data(data)
 
     (measure_name, measure) = prepare_pheno_measure(data)
 
-    yield ['family id', 'gender', 'LGDs', 'recLGDs', 'missense', 'synonymous', measure_name]
+    yield ['family id', 'gender', 'LGDs', 'recLGDs', 'missense',
+           'synonymous', 'CNV', measure_name]
     for fid, gender in seq_prbs.items():
         row = [
             fid,
@@ -101,6 +106,7 @@ def pheno_query(data):
             families_with_rec_lgds.get(fid, 0),
             families_with_missense.get(fid, 0),
             families_with_synonymous.get(fid, 0),
+            families_with_cnvs.get(fid, 0),
             measure[fid] if fid in measure else 'NA']
         yield row
 
@@ -155,12 +161,13 @@ def pheno_calc(ps):
                       ('recLGDs', '<i4'),
                       ('missense', '<i4'),
                       ('synonymous', '<i4'),
+                      ('CNV', '<i4'),
                       ('m', 'f')])
     data = np.array(rows, dtype=dtype)
     data = data[~np.isnan(data['m'])]
     res = []
     
-    for (effect_type, gender) in itertools.product(*[['LGDs', 'recLGDs', 'missense', 'synonymous'],
+    for (effect_type, gender) in itertools.product(*[['LGDs', 'recLGDs', 'missense', 'synonymous', 'CNV'],
                                                      ['M', 'F']]):
         
         positive = data[np.logical_and(data['gender'] == gender,

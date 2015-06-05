@@ -1,10 +1,10 @@
-
+from collections import defaultdict
 from DAE import vDB
 
 import itertools
 import logging
-# import hashlib
-# from api.wdae_cache import store, retrieve
+from scipy import stats
+
 from bg_loader import get_background
 
 logger = logging.getLogger(__name__)
@@ -54,20 +54,170 @@ def build_transmitted_background(tstd):
 #     thread.start()
 
 
-PRB_TESTS = ['prb|Rec LGDs',                       # 0
-             'prb|LGDs|prb|LGD',                   # 1
-             'prb|Male LGDs|prbM|LGD',             # 2
-             'prb|Female LGDs|prbF|LGD',           # 3
-             'prb|Missense|prb|missense',          # 4
-             'prb|Male Missense|prbM|missense',    # 5
-             'prb|Female Missense|prbF|missense',  # 6
-             'prb|Synonymous|prb|synonymous']      # 7
+PRB_TESTS = [
+    'prb|Rec LGDs',                                                   # 0
+    'prb|LGDs|prb|male,female|Nonsense,Frame-shift,Splice-site',      # 1
+    'prb|Male LGDs|prb|male|Nonsense,Frame-shift,Splice-site',        # 2
+    'prb|Female LGDs|prb|female|Nonsense,Frame-shift,Splice-site',    # 3
+    'prb|Rec Missense',                                               # 4
+    'prb|Missense|prb|male,female|Missense',                          # 5
+    'prb|Male Missense|prb|male|Missense',                            # 6
+    'prb|Female Missense|prb|female|Missense',                        # 7
+    'prb|Rec Synonymous',                                             # 8
+    'prb|Synonymous|prb|male,female|Synonymous',                      # 9
+    'prb|Male Synonymous|prb|male|Synonymous',                        # 10
+    'prb|Female Synonymous|prb|female|Synonymous',                    # 11
+]
 
-SIB_TESTS = ['sib|LGDs|sib|LGD',                   # 0
-             'sib|Male LGDs|sibM|LGD',             # 1
-             'sib|Female LGDs|sibF|LGD',           # 2
-             'sib|Missense|sib|missense',          # 3
-             'sib|Synonymous|sib|synonymous']      # 4
+SIB_TESTS = [
+    'sib|Rec LGDs',                                                   # 0
+    'sib|LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site',      # 1
+    'sib|Male LGDs|sib|male|Nonsense,Frame-shift,Splice-site',        # 2
+    'sib|Female LGDs|sib|female|Nonsense,Frame-shift,Splice-site',    # 3
+    'sib|Rec Missense',                                               # 4
+    'sib|Missense|sib|male,female|Missense',                          # 5
+    'sib|Male Missense|sib|male|Missense',                            # 6
+    'sib|Female Missense|sib|female|Missense',                        # 7
+    'sib|Rec Synonymous',                                             # 8
+    'sib|Synonymous|sib|male,female|Synonymous',                      # 9
+    'sib|Male Synonymous|sib|male|Synonymous',                        # 10
+    'sib|Female Synonymous|sib|female|Synonymous',                    # 11
+    ]
+
+PRB_TESTS_VARS = [
+    ('prb|Rec LGDs', 'prb', 'LGDs'),                                # 0
+    ('prb|LGDs|prb|LGD', 'prb', 'LGDs'),                            # 1
+    ('prb|Male LGDs|prbM|LGD', 'prbM', 'LGDs'),                     # 2
+    ('prb|Female LGDs|prbF|LGD', 'prbF', 'LGDs'),                   # 3
+    ('prb|Rec Missense', 'prb', 'missense'),                        # 4
+    ('prb|Missense|prb|missense', 'prb', 'missense'),               # 5
+    ('prb|Male Missense|prbM|missense', 'prbM', 'missense'),        # 6
+    ('prb|Female Missense|prbF|missense', 'prbF', 'missense'),      # 7
+    ('prb|Rec Synonymous', 'prb', 'synonymous'),                    # 8
+    ('prb|Synonymous|prb|synonymous', 'prb', 'synonymous'),         # 9
+    ('prb|Male Synonymous|prb|synonymous', 'prbM', 'synonymous'),   # 10
+    ('prb|Female Synonymous|prb|synonymous', 'prbF', 'synonymous'), # 11
+]
+
+SIB_TESTS_VARS = [
+    ('sib|Rec LGDs', 'sib', 'LGDs'),                                # 0
+    ('sib|LGDs|sib|LGD', 'sib', 'LGDs'),                            # 1
+    ('sib|Male LGDs|sibM|LGD', 'sibM', 'LGDs'),                     # 3
+    ('sib|Female LGDs|sibF|LGD', 'sibF', 'LGDs'),                   # 3
+    ('sib|Rec Missense', 'sib', 'missense'),                        # 4
+    ('sib|Missense|sib|missense', 'sib', 'missense'),               # 5
+    ('sib|Male Missense|sibM|missense', 'sibM', 'missense'),        # 6
+    ('sib|Female Missense|sibF|missense', 'sibF', 'missense'),      # 7
+    ('sib|Rec Synonymous', 'sib', 'synonymous'),                    # 8
+    ('sib|Synonymous|sib|synonymous', 'sib', 'synonymous'),         # 9
+    ('sib|Male Synonymous|sib|synonymous', 'sibM', 'synonymous'),   # 10
+    ('sib|Female Synonymous|sib|synonymous', 'sibF', 'synonymous'), # 11
+]
+
+def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
+    collector = defaultdict(lambda: [[],[],[],[],[],[],[],[],[],[],[],[],])
+    for dst in dsts:
+        phenotype = dst.get_attr('study.phenotype')
+        for n, (label, in_child, effect_types) in enumerate(PRB_TESTS_VARS):
+            print("enrichment collector prb label: %s" % label)
+            collector[phenotype][n].append(
+                dst.get_denovo_variants(inChild=in_child,
+                                        effectTypes=effect_types,
+                                        geneSyms=gene_syms))
+
+    res = {}
+    for key, evars in collector.items():
+        res[key] = [itertools.chain.from_iterable(vgen) for vgen in evars]
+    return res
+
+def collect_sib_enrichment_variants_by_phenotype(dsts, gene_syms=None):
+    collector = [[],[],[],[],[],[],[],[],[],[],[],[],]
+    for dst in dsts:
+        for n, (label, in_child, effect_types) in enumerate(SIB_TESTS_VARS):
+            print("enrichment collector sib label: %s" % label)
+            collector[n].append(
+                dst.get_denovo_variants(inChild=in_child,
+                                        effectTypes=effect_types,
+                                        geneSyms=gene_syms))
+
+    res = [itertools.chain.from_iterable(vgen) for vgen in collector]
+    return res
+
+def filter_prb_enrichment_variants_by_phenotype(pheno_evars):
+    res = {}
+    for phenotype, evars in pheno_evars.items():
+        gen = zip(PRB_TESTS, evars)
+        print("generator: %s" % gen)
+        pheno_res = []
+        for test, vs in gen:
+            if "Rec" in test:
+                pheno_res.append(one_variant_per_recurrent(vs))
+            else:
+                pheno_res.append(filter_denovo(vs))
+#         gen = iter(evars)
+#         rec_vars = gen.next()
+#         pheno_res = [one_variant_per_recurrent(rec_vars)]
+#         for vs in gen:
+#             pheno_res.append(filter_denovo(vs))
+        res[phenotype] = zip(PRB_TESTS, pheno_res)
+    return res
+
+def filter_sib_enrichment_variants_by_phenotype(evars):
+
+    gen = zip(SIB_TESTS, evars)
+    print("generator: %s" % gen)
+    res = []
+    for test, vs in gen:
+        if "Rec" in test:
+            res.append(one_variant_per_recurrent(vs))
+        else:
+            res.append(filter_denovo(vs))
+
+#     gen = iter(evars)
+#
+#     rec_vars = gen.next()
+#     res = [one_variant_per_recurrent(rec_vars)]
+#     for vs in gen:
+#         res.append(filter_denovo(vs))
+    return zip(SIB_TESTS, res)
+
+def build_enrichment_variants_genes_dict_by_phenotype(dsts, geneSyms=None):
+    genes_dict = filter_prb_enrichment_variants_by_phenotype(
+        collect_prb_enrichment_variants_by_phenotype(dsts, geneSyms))
+    genes_dict['unaffected'] = filter_sib_enrichment_variants_by_phenotype(
+        collect_sib_enrichment_variants_by_phenotype(dsts, geneSyms))
+    return genes_dict
+
+def count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set):
+    all_res = defaultdict(dict)
+    for phenotype, genes_dict in genes_dict_by_pheno.items():
+        pheno_res = {}
+        for test_name, gene_syms in genes_dict:
+            pheno_res[test_name] = EnrichmentTestRes()
+
+            for gene_sym_list in gene_syms:
+                touched_gene_sets = False
+                for gene_sym in gene_sym_list:
+                    if gene_sym in gene_syms_set:
+                        touched_gene_sets = True
+                if touched_gene_sets:
+                    pheno_res[test_name].cnt += 1
+        all_res[phenotype] = pheno_res
+    return all_res
+
+
+def count_background(gene_syms_set):
+    gene_syms = get_background('enrichment_background')
+    res = EnrichmentTestRes()
+
+    for gene_sym_list in gene_syms:
+        touched_gene_sets = False
+        for gene_sym in gene_sym_list:
+            if gene_sym in gene_syms_set:
+                touched_gene_sets = True
+        if touched_gene_sets:
+            res.cnt += 1
+    return res
 
 
 def __build_variants_genes_dict(denovo, geneSyms=None):
@@ -172,9 +322,6 @@ class EnrichmentTestRes:
     def __repr__(self):
         return self.__str__()
 
-from scipy import stats
-
-
 def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
     all_res = {}
     for test_name, gene_syms in var_genes_dict:
@@ -193,6 +340,7 @@ def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
 
 
 def enrichment_test(dsts, gene_syms_set):
+
     var_genes_dict = __build_variants_genes_dict(dsts)
 
     all_res = __count_gene_set_enrichment(var_genes_dict, gene_syms_set)
@@ -212,3 +360,34 @@ def enrichment_test(dsts, gene_syms_set):
         res.expected = round(bg_prob*total, 4)
 
     return all_res, totals
+
+def enrichment_test_by_phenotype(dsts, gene_syms_set):
+    genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(dsts)
+
+    count_res_by_pheno = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
+
+    ###########
+    count_bg = count_background(gene_syms_set)
+    if count_bg.cnt == 0:
+        count_bg.cnt = 0.5
+
+    total_bg = len(get_background('enrichment_background'))
+    prob_bg = float(count_bg.cnt) / total_bg
+    ###########
+
+    totals_by_pheno = {}
+    for phenotype, genes_dict in genes_dict_by_pheno.items():
+        totals = {testname: len(gene_syms) for testname, gene_syms in genes_dict}
+        totals_by_pheno[phenotype] = totals
+
+        all_res = count_res_by_pheno[phenotype]
+
+        for testname, gene_syms in genes_dict:
+            res = all_res[testname]
+            total = totals[testname]
+
+            res.p_val = stats.binom_test(res.cnt, total, p=prob_bg)
+            res.expected = round(prob_bg * total, 4)
+
+    return (count_res_by_pheno, totals_by_pheno,
+            {phenotype: dict(genes_dict) for phenotype, genes_dict in genes_dict_by_pheno.items()})

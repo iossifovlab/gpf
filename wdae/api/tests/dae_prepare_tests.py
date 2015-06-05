@@ -52,36 +52,45 @@ class EffectTypesTests(unittest.TestCase):
 
     def test_effect_types_correct(self):
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'LGDs'}), 'LGDs')
+            prepare_effect_types({'effectTypes': 'LGDs'}),
+            set(['no-frame-shift-newStop', 'frame-shift', 'nonsense', 'splice-site']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'CNVs'}), 'CNVs')
+            prepare_effect_types({'effectTypes': 'CNVs'}),
+            set(['CNV-', 'CNV+']))
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'nonsynonymous'}),
-            'nonsynonymous')
+            set(['noStart', 'frame-shift', 'noEnd', 'nonsense', 'no-frame-shift-newStop', 'no-frame-shift', 'missense', 'CDS', 'splice-site']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'CNV-'}), 'CNV-')
+            prepare_effect_types({'effectTypes': 'CNV-'}), set(['CNV-']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'CNV+'}), 'CNV+')
+            prepare_effect_types({'effectTypes': 'CNV+'}), set(['CNV+']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'frame-shift'}), 'frame-shift')
+            prepare_effect_types({'effectTypes': 'frame-shift'}),
+            set(['frame-shift']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'intron'}), 'intron')
+            prepare_effect_types({'effectTypes': 'intron'}),
+            set(['intron']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'synonymous'}), 'synonymous')
+            prepare_effect_types({'effectTypes': 'synonymous'}),
+            set(['synonymous']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'nonsense'}), 'nonsense')
+            prepare_effect_types({'effectTypes': 'nonsense'}),
+            set(['nonsense']))
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'no-frame-shift'}),
-            'no-frame-shift')
+            set(['no-frame-shift']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'missense'}), 'missense')
+            prepare_effect_types({'effectTypes': 'missense'}),
+            set(['missense']))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': "3'UTR"}), "3'UTR")
+            prepare_effect_types({'effectTypes': "3'UTR"}),
+            set(["3'UTR"]))
         self.assertEqual(
-            prepare_effect_types({'effectTypes': "5'UTR"}), "5'UTR")
+            prepare_effect_types({'effectTypes': "5'UTR"}),
+            set(["5'UTR"]))
         self.assertEqual(
             prepare_effect_types({'effectTypes': "splice-site"}),
-            "splice-site")
+            set(["splice-site"]))
 
     def test_effect_types_not_correct(self):
         self.assertEqual(
@@ -294,22 +303,23 @@ class StudiesTests(unittest.TestCase):
 
     def test_transmitted_studies_single(self):
         dsl = prepare_transmitted_studies({'transmittedStudies':
-                                           ["w873e374s322"]})
+                                           ["w1202s766e611"]})
+
         self.assertEquals(len(dsl), 1)
-        self.assertEqual(dsl[0].name, "w873e374s322")
+        self.assertEqual(dsl[0].name, "w1202s766e611")
 
-        dsl = prepare_transmitted_studies({'transmittedStudies':
-                                           ["wig683"]})
-        self.assertEquals(len(dsl), 1)
-        self.assertEqual(dsl[0].name, "wig683")
+#         dsl = prepare_transmitted_studies({'transmittedStudies':
+#                                            ["wig683"]})
+#         self.assertEquals(len(dsl), 1)
+#         self.assertEqual(dsl[0].name, "wig683")
 
-    def test_transmitted_studies_double(self):
-        dsl = prepare_transmitted_studies({'transmittedStudies':
-                                           ["w873e374s322", "wig683"]})
-        self.assertEquals(len(dsl), 2)
-
-        self.assertEqual(dsl[0].name, "w873e374s322")
-        self.assertEqual(dsl[1].name, "wig683")
+#     def test_transmitted_studies_double(self):
+#         dsl = prepare_transmitted_studies({'transmittedStudies':
+#                                            ["w873e374s322", "wig683"]})
+#         self.assertEquals(len(dsl), 2)
+#
+#         self.assertEqual(dsl[0].name, "w873e374s322")
+#         self.assertEqual(dsl[1].name, "wig683")
 
     def test_transmitted_studies_not_found(self):
         dsl = prepare_transmitted_studies({'transmittedStudies':

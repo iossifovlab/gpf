@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class AdvancedFamilyFilterTests(unittest.TestCase):
-    TEST_DATA_1 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_1 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -26,12 +26,12 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         for v in vs:
             count += 1
             #self.assertEqual('african-amer;african-amer', v[16])
-            if v[18] != 'african-amer:african-amer':
+            if v[21] != 'african-amer:african-amer':
                 fail = True
         self.assertFalse(fail)
         self.assertTrue(count > 0)
 
-    TEST_DATA_1_1 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_1_1 = {"denovoStudies": ["ALL SSC"],
                      "transmittedStudies": 'None',
                      "inChild": "All",
                      "effectTypes": "All",
@@ -49,12 +49,12 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         fail = False
         for v in vs:
             count += 1
-            if v[18] != 'white:white':
+            if v[21] != 'white:white':
                 fail = True
         self.assertFalse(fail)
         self.assertTrue(count > 0)
 
-    TEST_DATA_2 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_2 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -76,7 +76,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         self.assertFalse(fail)
         self.assertTrue(count > 0)
 
-    TEST_DATA_3 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_3 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -96,7 +96,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
             self.assertEqual(3, len(v[4].split('/')[0].split(' ')), str(v[4]))
         self.assertTrue(count > 0)
 
-    TEST_DATA_4 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_4 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -116,7 +116,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
             count += 1
         self.assertTrue(count > 0)
 
-    TEST_DATA_5 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_5 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -136,7 +136,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
             count += 1
         self.assertTrue(count > 0)
 
-    TEST_DATA_6 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_6 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -160,7 +160,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
         self.assertTrue(count > 0)
 
-    TEST_DATA_7 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_7 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -181,7 +181,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
         self.assertTrue(count > 0)
 
-    TEST_DATA_8 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_8 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -200,7 +200,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
         self.assertEqual(0, count)
 
-    TEST_DATA_9_1 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_9_1 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -209,7 +209,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "geneSyms": "",
                    "ultraRareOnly": True}
 
-    TEST_DATA_9_2 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_9_2 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -239,7 +239,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
       self.assertTrue(count_with_iq_lo < count)
 
       # Testing the familyVerbalIqHi filter compared to base data
-      self.TEST_DATA_9_2['familyVerbalIqLo'] = "";      
+      self.TEST_DATA_9_2['familyVerbalIqLo'] = "";
       self.TEST_DATA_9_2['familyVerbalIqHi'] = 23;
       count_with_iq_hi = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
       self.assertNotEqual(0, count_with_iq_hi)
@@ -260,7 +260,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
       count_with_iq_hi_wrong = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
       self.assertNotEqual(0, count_with_iq_hi_wrong)
 
-    TEST_DATA_10 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_10 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "prb",
                    "effectTypes": "All",
@@ -270,16 +270,16 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "ultraRareOnly": True}
 
     def test_in_child(self):
-      vs = do_query_variants(self.TEST_DATA_10)
-      cols = vs.next()
-      count = 0
-      for v in vs:
-          count += 1
-          self.assertIn('prb', v[6], str(v[6]))
+        vs = do_query_variants(self.TEST_DATA_10)
+        cols = vs.next()
+        count = 0
+        for v in vs:
+            count += 1
+            self.assertIn('prb', v[6], str(v[6]))
 
-      self.assertTrue(count > 0)
+        self.assertTrue(count > 0)
 
-    TEST_DATA_11 = {"denovoStudies": ["allWEAndTG"],
+    TEST_DATA_11 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
                    "inChild": "All",
                    "effectTypes": "All",
@@ -297,7 +297,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
           count += 1
           self.assertIn('del', v[3], str(v[3]))
 
-      self.assertTrue(count > 0)      
+      self.assertTrue(count > 0)
 
 
 

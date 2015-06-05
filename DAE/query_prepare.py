@@ -83,7 +83,7 @@ def prepare_gene_ids(data):
 
 
 def gene_set_loader(gene_set_label, study_name=None):
-    print("gene set label: %s" % gene_set_label)
+    # print("gene set label: %s" % gene_set_label)
 
     if 'denovo' == gene_set_label:
         dsts = vDB.get_studies(study_name)
@@ -92,7 +92,7 @@ def gene_set_loader(gene_set_label, study_name=None):
         gene_term = get_background(gene_set_label)
         if not gene_term:
             gene_term = get_gene_sets_symNS(gene_set_label)
-        print("gene_term: %s" % gene_term)
+        # print("gene_term: %s" % gene_term)
 
     return gene_term
 
@@ -165,6 +165,91 @@ def prepare_gene_sets(data, gene_set_loader=gene_set_loader):
                            gene_set_loader)
 
 
+def prepare_denovo_phenotype_gender_filter1(data, studyPhenoType):
+    pheno_types = data['phenoType']
+    gender = None
+    if 'gender' in data:
+        gender = data['gender']
+    
+    pheno_filter = []
+    
+    if studyPhenoType in pheno_types:
+        pf = lambda inCh: len(inCh) > 0 and inCh[0] == 'p'
+        if ['F'] == gender:
+            pf = lambda inCh: 'prbF' in inCh
+        elif ['M'] == gender:
+            pf = lambda inCh: 'prbM' in inCh
+        pheno_filter.append(pf)
+        
+    if 'unaffected' in pheno_types:
+        pf = lambda inCh: ('sib' in inCh) 
+        if ['F'] == gender:
+            pf = lambda inCh: 'sibF' in inCh
+        elif ['M'] == gender:
+            pf = lambda inCh: 'sibM' in inCh
+        pheno_filter.append(pf)
+        
+    if not pheno_filter:
+        return None
+
+    if len(pheno_filter) == 1:
+        return pheno_filter[0]
+    return lambda inCh: any([f(inCh) for f in pheno_filter])
+
+
+# def prepare_denovo_phenotype_gender_filter(phenoType, gender, studyPhenoType):
+#     print "phenoType:", phenoType
+    
+#     if studyPhenoType in phenoType:
+#         if len(gender)==2 or len(gender)==0:
+#             if 'unaffected' in phenoType:
+#                 return  {'inChild': set(['prb', 'sib'])}
+#             else:
+#                 return {'inChild': set(['prb'])}
+#         else:
+#             if 'unaffected' in phenoType:
+#                 return {'inChild': set(['prb' + gender[0], 'sib' + gender[0]])}
+#             else:
+#                 return {'inChild': set(['prb' + gender[0]])}
+        
+#     elif 'unaffected' in phenoType:
+#         if len(gender)==2:
+#             return {'inChild': set(['sib'])}
+#         else:
+#             return {'inChild': set(['sib' + gender[0]])}
+#     else:
+#         return None
+    
+def prepare_denovo_phenotype(data):
+    if 'phenoType' not in data:
+        return
+        
+    phenoType = data['phenoType']
+    print("phenoType: %s" % phenoType)
+
+    if phenoType is None or phenoType.lower() == 'none':
+        del data['phenoType']
+        return
+        
+    phenoType = set(data['phenoType'].split(','))
+    data['phenoType'] = phenoType
+
+
+def prepare_gender_filter(data):
+    if 'gender' in data:
+        genderFilter = data['gender'].split(',')
+        res = []
+        if 'female' in genderFilter:
+            res.append('F')
+        if 'male' in genderFilter:
+            res.append('M')
+        if res:
+            data['gender'] = res
+        else:
+            del data['gender']
+            
+    
+    
 def prepare_denovo_studies(data):
     if 'denovoStudies' not in data:
         return None
@@ -183,6 +268,23 @@ def prepare_denovo_studies(data):
     return res
 
 
+def prepare_denovo_pheno_filter(data, dstudies):
+    if 'phenoType' not in data or 'gender' not in data:
+        return [(st, None) for st in dstudies]
+    
+    
+    print "denovo pheno type filter:", data
+    res = []
+    for st in dstudies:
+        f = prepare_denovo_phenotype_gender_filter1(data, st.get_attr('study.phenotype'))
+        if not f:
+            continue
+        res.append((st, {'presentInChild': f}))
+
+    print "res:", res
+    return res
+
+    
 def prepare_transmitted_studies(data):
     if 'transmittedStudies' not in data and 'transmittedStudy' not in data:
         return None
@@ -216,3 +318,26 @@ def combine_gene_syms(data, gene_set_loader=gene_set_loader):
             return gene_syms
         else:
             return gene_sets.union(gene_syms)
+
+
+def prepare_ssc_filter(data):
+    if 'presentInParent' not in data:
+        data['presentInParent']='neither'
+
+    if 'presentInChild' not in data:
+        data['presentInChild'] = 'neither'
+        
+    if data['presentInParent'] == 'neither':
+        data['transmittedStudies']='None'
+    else:
+        data['transmittedStudies']='w1202s766e611'
+
+    if data['presentInChild'] == 'neither':
+        data['denovoStudies'] = 'None'
+    else:
+        data['denovoStudies'] = 'ALL SSC'
+
+    if 'phenoType' in data:
+        del data['phenoType']
+
+    return data

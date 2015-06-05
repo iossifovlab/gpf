@@ -1,5 +1,5 @@
 from rest_framework.test import APIClient
-
+from django.contrib.auth import get_user_model
 from django.core.urlresolvers import resolve
 
 from django.shortcuts import render
@@ -7,6 +7,7 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from api.models import Researcher
 from api.studies import get_denovo_studies_names, get_transmitted_studies_names
 from api.enrichment_query import enrichment_results
 from VariantAnnotation import get_effect_types
@@ -53,7 +54,7 @@ class ApiTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # self.assertEqual(len(response.data), 31)
 
-        # Test with no gene_set provided 
+        # Test with no gene_set provided
         url_no_gs = '/api/gene_set_list'
         response = self.client.get(url_no_gs)
         self.assertEqual(response.data, {})
@@ -148,7 +149,7 @@ class ApiTest(APITestCase):
     #                 {'label' : 'Denovo', 'val' : 'denovo' ,'conf' : ['---', 'key', '---', 'desc', '---', 'count']}]}
 
     #     response = self.client.get('/api/gene_sets')
-    #     self.assertEqual(response.data, TEST_DATA)        
+    #     self.assertEqual(response.data, TEST_DATA)
 
     def test_denovo_studies_list(self):
         data = get_denovo_studies_names()
@@ -170,6 +171,7 @@ class ApiTest(APITestCase):
         self.assertEqual(data['study'], 'DalyWE2012')
         for family in data['families']:
             self.assertTrue(family.startswith('AU'))
+
 
 #     def test_families_post(self):
 #         data={'studies':['DalyWE2012','EichlerTG2012']}

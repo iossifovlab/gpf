@@ -9,7 +9,7 @@ import SfariVariable
 
 import csv
 import locale
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, 'C')
 import phenoDBUtils
 
 from time import clock, time
