@@ -324,9 +324,14 @@ class Study:
             yield v
 
 
-    def get_transmitted_summary_variants(self,minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,variantTypes=None, effectTypes=None,ultraRareOnly=False, geneSyms=None, regionS=None):
+    def get_transmitted_summary_variants(self,minParentsCalled=600,
+                                         maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,
+                                         variantTypes=None, effectTypes=None,
+                                         ultraRareOnly=False, geneSyms=None, 
+                                         regionS=None):
 
-        transmittedVariantsFile = self.vdb._config.get(self._configSection, 'transmittedVariants.indexFile' ) + ".txt.bgz"
+        transmittedVariantsFile = self.vdb._config.get(self._configSection,
+                            'transmittedVariants.indexFile' ) + ".txt.bgz"
         print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile
 
         if isinstance(effectTypes, str):
@@ -383,10 +388,14 @@ class Study:
             f.close()
 
 
-    def get_transmitted_variants(self, inChild=None, presentInChild=None, presentInParent=None,
-                                 minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,
-                                 variantTypes=None, effectTypes=None, ultraRareOnly=False,
-                                 geneSyms=None, familyIds=None, regionS=None, TMM_ALL=False):
+    def get_transmitted_variants(self, inChild=None, 
+                                 presentInChild=None, presentInParent=None,
+                                 minParentsCalled=600,maxAltFreqPrcnt=5.0,
+                                 minAltFreqPrcnt=-1,
+                                 variantTypes=None, effectTypes=None, 
+                                 ultraRareOnly=False,
+                                 geneSyms=None, familyIds=None, 
+                                 regionS=None, TMM_ALL=False):
 
         transmittedVariantsTOOMANYFile = \
             self.vdb._config.get(self._configSection,
@@ -397,7 +406,13 @@ class Study:
         else:
             tbf = pysam.Tabixfile(transmittedVariantsTOOMANYFile)
 
-        for vs in self.get_transmitted_summary_variants(minParentsCalled,maxAltFreqPrcnt,minAltFreqPrcnt,variantTypes,effectTypes,ultraRareOnly, geneSyms, regionS):
+        for vs in self.get_transmitted_summary_variants(minParentsCalled,
+                                                        maxAltFreqPrcnt,
+                                                        minAltFreqPrcnt,
+                                                        variantTypes,
+                                                        effectTypes,
+                                                        ultraRareOnly, 
+                                                        geneSyms, regionS):
             if not vs:
                 continue
 

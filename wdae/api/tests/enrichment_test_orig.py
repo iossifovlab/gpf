@@ -244,13 +244,13 @@ if __name__ == "__main__":
                         return giDB.genes[x].sym
                 geneTerms.renameGenes("sym", rF)
             if geneTerms.geneNS!='sym':
-                raise Excpetion('Only work with id or sym namespace')
+                raise Exception('Only work with id or sym namespace')
 
     transmStdy = vDB.get_study(transmittedStudy)
     dnvSts = vDB.get_studies(denovoStudies)
 
     testVarGenesDict, allRes, total = main(dnvSts, transmStdy, geneTerms)
     print >> sys.stderr, "Preparing the summary table..."
-    printSummaryTable(testVarGenesDict, geneTerms, allRes, totals)
+    printSummaryTable(testVarGenesDict, geneTerms, allRes, total)
 
     print >> sys.stderr, "Done!"
