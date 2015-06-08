@@ -46,10 +46,12 @@ class WdaeUserManager(BaseUserManager):
 		user.set_password(password)
 		user.is_staff = is_staff
 		user.is_active = is_active
+
 		if(not user.is_staff):
 			user.verification_path = _create_verif_path()
 			user.researcher_id = researcher_id
 		user.save(using=self._db)
+
 		return user
 
 	def create_user(self, email, researcher_id, password=None,):
@@ -76,7 +78,6 @@ class WdaeUser(AbstractBaseUser):
 		unique=True,
 		blank=True,
 		null=True) 
-	
 	verification_path = models.OneToOneField(
 			VerificationPath,
 			blank=True, null=True)
