@@ -8,9 +8,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
 from django.conf import settings
 
-# from rest_framework.authtoken.models import Token
-
-# TODO: add south
 EMAIL_VERIFICATION_PATH = '/static/variants/index.html#/users/validate/'
 
 class Researcher(models.Model):
@@ -78,7 +75,7 @@ class WdaeUser(AbstractBaseUser):
 		max_length='100',
 		unique=True,
 		blank=True,
-		null=True)  # CHECK
+		null=True) 
 	
 	verification_path = models.OneToOneField(
 			VerificationPath,
