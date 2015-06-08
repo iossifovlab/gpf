@@ -34,7 +34,7 @@ from query_prepare import prepare_ssc_filter
 from dae_query import prepare_summary, load_gene_set, load_gene_set2
 
 from report_variants import build_stats
-from enrichment_query import \
+from api.enrichment.enrichment_query import \
     enrichment_results_by_phenotype, \
     enrichment_prepare
 

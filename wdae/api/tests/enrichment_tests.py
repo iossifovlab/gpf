@@ -1,7 +1,8 @@
 import unittest
 import logging
 
-from api.enrichment import enrichment_test, build_transmitted_background
+from api.enrichment.enrichment import enrichment_test, \
+    build_transmitted_background
 
 from DAE import vDB, get_gene_sets_symNS
 

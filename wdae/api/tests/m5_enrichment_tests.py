@@ -4,13 +4,13 @@ import logging
 
 from DAE import vDB
 from query_prepare import prepare_denovo_studies
-from api.enrichment_query import enrichment_prepare, \
+from api.enrichment.enrichment_query import enrichment_prepare, \
     enrichment_results_by_phenotype
-from api.enrichment import build_transmitted_background
+from api.enrichment.enrichment import build_transmitted_background
 
 from bg_loader import preload_background
 
-from api.enrichment import collect_prb_enrichment_variants_by_phenotype, \
+from api.enrichment.enrichment import collect_prb_enrichment_variants_by_phenotype, \
     collect_sib_enrichment_variants_by_phenotype, \
     filter_prb_enrichment_variants_by_phenotype, \
     filter_sib_enrichment_variants_by_phenotype, \

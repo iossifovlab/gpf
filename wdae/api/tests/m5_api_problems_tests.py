@@ -1,15 +1,15 @@
-import unittest
+# import unittest
 import logging
 import urllib
 import urlparse
-import itertools
+# import itertools
 
-from VariantAnnotation import get_effect_types, get_effect_types_set
-from VariantsDB import mat2Str
+# from VariantAnnotation import get_effect_types, get_effect_types_set
+# from VariantsDB import mat2Str
 
 from DAE import vDB
 from query_prepare import prepare_ssc_filter
-from query_variants import dae_query_variants, pedigree_data
+# from query_variants import dae_query_variants, pedigree_data
 
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -31,7 +31,7 @@ class RecurrentLGDsGenesTests(APITestCase):
 
 
 def count_iterable(iterable):
-    for num, it in enumerate(iterable):
+    for num, _it in enumerate(iterable):
         pass
     return num + 1
     

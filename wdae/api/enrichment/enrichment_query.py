@@ -1,8 +1,8 @@
 # from DAE import vDB
-from enrichment import enrichment_test, PRB_TESTS, SIB_TESTS, \
+from api.enrichment.enrichment import enrichment_test, PRB_TESTS, SIB_TESTS, \
     enrichment_test_by_phenotype
 
-from dae_query import load_gene_set
+from api.dae_query import load_gene_set
 import numpy as np
 from query_prepare import prepare_denovo_studies, prepare_transmitted_studies, \
     combine_gene_syms, prepare_string_value

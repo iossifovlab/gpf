@@ -1,7 +1,8 @@
 #!/bin/env python
 
-from DAE import *
-from GeneTerms import *
+from DAE import vDB, giDB
+from GeneTerms import loadGeneTerm
+
 from scipy import stats
 import sys
 from itertools import groupby
@@ -41,7 +42,7 @@ def enrichmentTest(testVarGenesDict, geneTerms):
             res = allRes[s][tName]
             total = totals[tName]
 
-            res.pVal = p = stats.binom_test(res.cnt, total, p=backProb)
+            res.pVal = stats.binom_test(res.cnt, total, p=backProb)
             res.expected = round(backProb*total, 4)
 
     for tName, gSyms in testVarGenesDict:
@@ -63,11 +64,11 @@ def computeQVals(pVals):
             qVals[i] = prevQVal
         else:
             prevQVal = qVals[i]
-    return [q  for d, q in sorted(zip(ss,qVals), key=lambda x: x[0][0])]
+    return [q  for _d, q in sorted(zip(ss,qVals), key=lambda x: x[0][0])]
 
 
 def printSummaryTable(testVarGenesDict, geneTerms, allRes, totals):
-    tTests = [tn for tn, vs in testVarGenesDict if tn != "BACKGROUND"]
+    tTests = [tn for tn, _vs in testVarGenesDict if tn != "BACKGROUND"]
     print "\t\t\tBACKGROUND (UR syn.)\t\t" + "\t\t\t\t\t".join(tTests)
     bcgTotal = totals['BACKGROUND'];
     hcols = []
@@ -139,7 +140,7 @@ def oneVariantPerRecurrent(vs):
               for sym, vs in sym2Vars.items()}
     return [[gs] for gs, fn in sym2FN.items() if fn > 1]
 
-from api.enrichment import PRB_TESTS, SIB_TESTS
+from api.enrichment.enrichment import PRB_TESTS, SIB_TESTS
 
 
 def main(dnvSts, transmStdy, geneTerms):

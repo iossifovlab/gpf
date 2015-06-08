@@ -2,7 +2,7 @@ import unittest
 
 # from query_prepare import prepare_gene_sets
 import logging
-from api.enrichment_query import enrichment_prepare
+from api.enrichment.enrichment_query import enrichment_prepare
 from hamcrest import assert_that, has_entry, has_key, is_, none
 
 logger = logging.getLogger(__name__)
