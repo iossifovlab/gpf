@@ -114,7 +114,7 @@ SIB_TESTS_VARS = [
     ('sib|Female Synonymous|sib|synonymous', 'sibF', 'synonymous'), # 11
 ]
 
-def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
+def collect_prb_enrichment_variants_by_phenotype(dsts):
     collector = defaultdict(lambda: [[],[],[],[],[],[],[],[],[],[],[],[],])
     for dst in dsts:
         phenotype = dst.get_attr('study.phenotype')
@@ -122,23 +122,21 @@ def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
             # print("enrichment collector prb label: %s" % label)
             collector[phenotype][n].append(
                 dst.get_denovo_variants(inChild=in_child,
-                                        effectTypes=effect_types,
-                                        geneSyms=gene_syms))
+                                        effectTypes=effect_types))
 
     res = {}
     for key, evars in collector.items():
         res[key] = [itertools.chain.from_iterable(vgen) for vgen in evars]
     return res
 
-def collect_sib_enrichment_variants_by_phenotype(dsts, gene_syms=None):
+def collect_sib_enrichment_variants_by_phenotype(dsts):
     collector = [[],[],[],[],[],[],[],[],[],[],[],[],]
     for dst in dsts:
         for n, (_label, in_child, effect_types) in enumerate(SIB_TESTS_VARS):
             # print("enrichment collector sib label: %s" % label)
             collector[n].append(
                 dst.get_denovo_variants(inChild=in_child,
-                                        effectTypes=effect_types,
-                                        geneSyms=gene_syms))
+                                        effectTypes=effect_types))
 
     res = [itertools.chain.from_iterable(vgen) for vgen in collector]
     return res
@@ -181,11 +179,11 @@ def filter_sib_enrichment_variants_by_phenotype(evars):
 #         res.append(filter_denovo(vs))
     return zip(SIB_TESTS, res)
 
-def build_enrichment_variants_genes_dict_by_phenotype(dsts, geneSyms=None):
+def build_enrichment_variants_genes_dict_by_phenotype(dsts):
     genes_dict = filter_prb_enrichment_variants_by_phenotype(
-        collect_prb_enrichment_variants_by_phenotype(dsts, geneSyms))
+        collect_prb_enrichment_variants_by_phenotype(dsts))
     genes_dict['unaffected'] = filter_sib_enrichment_variants_by_phenotype(
-        collect_sib_enrichment_variants_by_phenotype(dsts, geneSyms))
+        collect_sib_enrichment_variants_by_phenotype(dsts))
     return genes_dict
 
 def count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set):
