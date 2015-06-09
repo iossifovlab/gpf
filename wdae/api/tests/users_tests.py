@@ -152,3 +152,51 @@ class UserRegistrationTest(APITestCase):
 
     def test_query_variants_preview_full_security(self):
         pass    
+
+class UserAuthenticationTest(APITestCase):
+    def setUp(self):
+        self.user = WdaeUser.objects.create(email="test@example.com",
+            first_name="Ivan",
+            last_name="Testov",
+            researcher_id="ala bala")
+        self.user.set_password("pass")
+        self.user.is_active = True
+        self.user.save()
+
+    def test_successful_auth(self):
+        data = {
+            'username': 'test@example.com',
+            'password': 'pass',
+        }
+
+        response = self.client.post('/api/users/api-token-auth', data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_failed_auth(self):
+        data = {
+            'username': 'bad@example.com',
+            'password': 'pass'
+        }
+
+        response = self.client.post('/api/users/api-token-auth', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_admin_auth(self):
+        self.user.is_staff = True
+        self.user.save()
+        
+        data = {
+            'username': 'test@example.com',
+            'password': 'pass',
+        }
+
+        response = self.client.post('/api/users/api-token-auth', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = {
+            'token': response.data['token']
+        }
+
+        response = self.client.post('/api/users/get_user_info', data, format='json')
+        self.assertEqual(response.data['userType'], 'admin')

@@ -8,9 +8,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
 from django.conf import settings
 
-# from rest_framework.authtoken.models import Token
-
-# TODO: add south
 EMAIL_VERIFICATION_PATH = '/static/variants/index.html#/users/validate/'
 
 class Researcher(models.Model):
@@ -49,10 +46,12 @@ class WdaeUserManager(BaseUserManager):
 		user.set_password(password)
 		user.is_staff = is_staff
 		user.is_active = is_active
+
 		if(not user.is_staff):
 			user.verification_path = _create_verif_path()
 			user.researcher_id = researcher_id
 		user.save(using=self._db)
+
 		return user
 
 	def create_user(self, email, researcher_id, password=None,):
@@ -78,8 +77,7 @@ class WdaeUser(AbstractBaseUser):
 		max_length='100',
 		unique=True,
 		blank=True,
-		null=True)  # CHECK
-	
+		null=True) 
 	verification_path = models.OneToOneField(
 			VerificationPath,
 			blank=True, null=True)
