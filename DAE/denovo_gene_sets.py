@@ -233,6 +233,10 @@ def sib_tests(denovo_studies):
                         denovo_studies,
                         in_child='sib',
                         effect_types='LGDs'),
+        "LoF.Recurrent": genes_test_recurrent(
+                        denovo_studies,
+                        in_child="sib",
+                        effect_types="LGDs"),
         "Missense": genes_test(
                         denovo_studies,
                         in_child='sib',
