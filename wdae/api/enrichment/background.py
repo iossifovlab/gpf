@@ -10,8 +10,7 @@ import zlib
 from DAE import vDB
 from collections import Counter
 
-class Background:
-    pass
+
 
 
 def _collect_affected_gene_sets(vs):
@@ -50,16 +49,10 @@ def _build_synonymous_background(transmitted_study_name):
     return b
 
 
-class SynonymousBackground(Background):
-    TRANSMITTED_STUDY_NAME = 'w1202s766e611'
-    
+class Background:
     def __init__(self):
         self.background = None
 
-    def precompute(self):
-        self.background = _build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
-        return self.background
-    
     def serialize(self):
         fout = cStringIO.StringIO()
         np.save(fout, self.background)
@@ -69,4 +62,20 @@ class SynonymousBackground(Background):
         fin = cStringIO.StringIO(zlib.decompress(data))
         self.background = np.load(fin)
         
+    def prob(self, gen_set):
+        vpred = np.vectorize(lambda sym: sym in gen_set)
+        index = vpred(self.background['sym'])
+        return np.sum(self.background['weight'][index])
+    
+
+class SynonymousBackground(Background):
+    TRANSMITTED_STUDY_NAME = 'w1202s766e611'
+    
+    def __init__(self):
+        super(SynonymousBackground, self).__init__()
         
+    def precompute(self):
+        self.background = _build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
+        return self.background
+    
+    

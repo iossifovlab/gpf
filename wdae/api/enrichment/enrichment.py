@@ -118,8 +118,8 @@ def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
     collector = defaultdict(lambda: [[],[],[],[],[],[],[],[],[],[],[],[],])
     for dst in dsts:
         phenotype = dst.get_attr('study.phenotype')
-        for n, (label, in_child, effect_types) in enumerate(PRB_TESTS_VARS):
-            print("enrichment collector prb label: %s" % label)
+        for n, (_label, in_child, effect_types) in enumerate(PRB_TESTS_VARS):
+            # print("enrichment collector prb label: %s" % label)
             collector[phenotype][n].append(
                 dst.get_denovo_variants(inChild=in_child,
                                         effectTypes=effect_types,
@@ -133,8 +133,8 @@ def collect_prb_enrichment_variants_by_phenotype(dsts, gene_syms=None):
 def collect_sib_enrichment_variants_by_phenotype(dsts, gene_syms=None):
     collector = [[],[],[],[],[],[],[],[],[],[],[],[],]
     for dst in dsts:
-        for n, (label, in_child, effect_types) in enumerate(SIB_TESTS_VARS):
-            print("enrichment collector sib label: %s" % label)
+        for n, (_label, in_child, effect_types) in enumerate(SIB_TESTS_VARS):
+            # print("enrichment collector sib label: %s" % label)
             collector[n].append(
                 dst.get_denovo_variants(inChild=in_child,
                                         effectTypes=effect_types,
@@ -147,7 +147,7 @@ def filter_prb_enrichment_variants_by_phenotype(pheno_evars):
     res = {}
     for phenotype, evars in pheno_evars.items():
         gen = zip(PRB_TESTS, evars)
-        print("generator: %s" % gen)
+        # print("generator: %s" % gen)
         pheno_res = []
         for test, vs in gen:
             if "Rec" in test:
@@ -165,7 +165,7 @@ def filter_prb_enrichment_variants_by_phenotype(pheno_evars):
 def filter_sib_enrichment_variants_by_phenotype(evars):
 
     gen = zip(SIB_TESTS, evars)
-    print("generator: %s" % gen)
+    # print("generator: %s" % gen)
     res = []
     for test, vs in gen:
         if "Rec" in test:
@@ -202,6 +202,10 @@ def count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set):
                         touched_gene_sets = True
                 if touched_gene_sets:
                     pheno_res[test_name].cnt += 1
+#                 else:
+#                     raise Exception("this should not happend", 
+#                                     gene_sym_list, gene_syms_set)
+                    
         all_res[phenotype] = pheno_res
     return all_res
 
@@ -336,6 +340,13 @@ def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
                     touched_gene_sets = True
             if touched_gene_sets:
                 all_res[test_name].cnt += 1
+#             elif test_name=='BACKGROUND':
+#                 # in background we have all kinds of gene variants
+#                 pass
+#             else:
+#                 raise Exception("this should not happend",
+#                                 test_name, 
+#                                 gene_sym_list, gene_syms_set)
     return all_res
 
 
@@ -362,9 +373,11 @@ def enrichment_test(dsts, gene_syms_set):
     return all_res, totals
 
 def enrichment_test_by_phenotype(dsts, gene_syms_set):
-    genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(dsts)
+    genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(
+            dsts)
 
-    count_res_by_pheno = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
+    count_res_by_pheno = count_gene_set_enrichment_by_phenotype(
+                            genes_dict_by_pheno, gene_syms_set)
 
     ###########
     count_bg = count_background(gene_syms_set)
@@ -390,4 +403,5 @@ def enrichment_test_by_phenotype(dsts, gene_syms_set):
             res.expected = round(prob_bg * total, 4)
 
     return (count_res_by_pheno, totals_by_pheno,
-            {phenotype: dict(genes_dict) for phenotype, genes_dict in genes_dict_by_pheno.items()})
+            {phenotype: dict(genes_dict) 
+             for phenotype, genes_dict in genes_dict_by_pheno.items()})

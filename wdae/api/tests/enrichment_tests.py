@@ -38,9 +38,10 @@ class EnrichmentHelpersTests(unittest.TestCase):
         fail = False
         for gene_set_name in all_res_orig:
 
-            logger.debug("calculating new enrichment test values...")
+            #logger.debug("calculating new enrichment test values...")
             gene_syms_set = set(self.gene_terms.t2G[gene_set_name].keys())
-
+            # print gene_set_name, "gene_syms_set:", gene_syms_set
+            
             res, totals = enrichment_test(self.dsts,
                                           gene_syms_set)
 
