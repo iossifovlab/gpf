@@ -725,7 +725,8 @@ def generate_response(vs, atts=[], sep='\t'):
             if a in ['SSCfreq', 'EVSfreq', 'E65freq',] and a not in v.atts:
                 a = a[:3]+'-'+a[3:]
             if a in v.atts:
-                hack.append(str(v.atts[a]).replace(sep, ';').replace("'", '"'))
+                val = str(v.atts[a]).replace(sep, ';').replace("'", '"')
+                hack.append(val if val!='False' else "")
             else:
                 hack.append(getattr(v, a, ''))
         yield (mavs + hack)
