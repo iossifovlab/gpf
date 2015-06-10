@@ -84,7 +84,7 @@ def prepare_gene_ids(data):
 
 def gene_set_loader(gene_set_label, study_name=None):
     # print("gene set label: %s" % gene_set_label)
-
+ 
     if 'denovo' == gene_set_label:
         dsts = vDB.get_studies(study_name)
         gene_term = get_gene_sets_symNS(gene_set_label, dsts)
@@ -93,76 +93,101 @@ def gene_set_loader(gene_set_label, study_name=None):
         if not gene_term:
             gene_term = get_gene_sets_symNS(gene_set_label)
         # print("gene_term: %s" % gene_term)
-
+ 
     return gene_term
 
+
+def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
+    gene_term = None
+    if gene_set_label!= 'denovo':
+        gene_term = get_background(gene_set_label)
+        if not gene_term:
+            gene_term = get_gene_sets_symNS(gene_set_label)
+            print "gene term loaded for: ", gene_set_label
+    else:
+        denovo_gene_sets = get_background('Denovo')
+        if gene_set_phenotype in denovo_gene_sets:
+            gene_term = denovo_gene_sets[gene_set_phenotype]
+    
+    return gene_term
 
 def gene_set_bgloader(gene_set_label):
     if 'denovo' == gene_set_label:
         return None
     else:
         gene_term = get_gene_sets_symNS(gene_set_label)
-
+ 
     return gene_term
 
 
-def __load_gene_set(gene_set, gene_term, gene_study,
-                    gene_set_loader=gene_set_loader):
+# def __load_gene_set(gene_set, gene_term, gene_study,
+#                     gene_set_loader=gene_set_loader):
+# 
+#     if 'denovo' == gene_set:
+#         if not gene_study:
+#             return None
+#         gs = gene_set_loader('denovo', gene_study)
+#     else:
+#         gs = gene_set_loader(gene_set)
+# 
+#     if gene_term not in gs.tDesc:
+#         return None
+# 
+#     gl = gs.t2G[gene_term].keys()
+# 
+#     if not gl:
+#         return None
+# 
+#     return set(gl)
 
-    if 'denovo' == gene_set:
-        if not gene_study:
-            return None
-        gs = gene_set_loader('denovo', gene_study)
-    else:
-        gs = gene_set_loader(gene_set)
 
-    if gene_term not in gs.tDesc:
+# def __prepare_cli_gene_sets(data):
+#     gene_set = data['geneSet'].strip()
+#     if ":" in gene_set:
+#         ci = gene_set.index(":")
+#         collection = gene_set[0:ci]
+#         setId = gene_set[ci+1:]
+#     else:
+#         collection = "main"
+#         setId = gene_set
+#     if collection.lower() == 'denovo':
+#         study = data['denovoStudies']
+#     else:
+#         study = None
+#     return (collection, setId, study)
+
+
+# def __prepare_web_gene_sets(data):
+#     gene_set = data['geneSet']
+#     gene_term = data['geneTerm']
+#     
+#     gene_set_phenotype = data['gene_set_phenotype'] \
+#         if 'gene_set_phenotype' in data else None
+#     return (gene_set, gene_term, gene_set_phenotype)
+
+
+
+def prepare_gene_sets(data):
+    if 'geneSet' not in data or not data['geneSet'] \
+        or not data['geneSet'].strip():
         return None
 
-    gl = gs.t2G[gene_term].keys()
-
-    if not gl:
+    if 'geneTerm' not in data or not data['geneTerm'] \
+        or not data['geneTerm'].strip():
         return None
 
-    return set(gl)
-
-
-def __prepare_cli_gene_sets(data):
-    gene_set = data['geneSet'].strip()
-    if ":" in gene_set:
-        ci = gene_set.index(":")
-        collection = gene_set[0:ci]
-        setId = gene_set[ci+1:]
-    else:
-        collection = "main"
-        setId = gene_set
-    if collection.lower() == 'denovo':
-        study = data['denovoStudies']
-    else:
-        study = None
-    return (collection, setId, study)
-
-
-def __prepare_web_gene_sets(data):
     gene_set = data['geneSet']
     gene_term = data['geneTerm']
-    gene_study = data['geneStudy'] if 'geneStudy' in data else None
-    return (gene_set, gene_term, gene_study)
+    
+    gene_set_phenotype = data['gene_set_phenotype'] \
+        if 'gene_set_phenotype' in data else None
 
+    gt = gene_set_loader2(gene_set, gene_set_phenotype)
+    
+    if gt and gene_term in gt.t2G:
+            return set(gt.t2G[gene_term].keys())
 
-def prepare_gene_sets(data, gene_set_loader=gene_set_loader):
-    if 'geneSet' not in data or not data['geneSet'] or not data['geneSet'].strip():
-        return None
-
-    if 'geneTerm' in data:
-        # web interface
-        (gene_set, gene_term, gene_study) = __prepare_web_gene_sets(data)
-    else:
-        # CLI
-        (gene_set, gene_term, gene_study) = __prepare_cli_gene_sets(data)
-
-    return __load_gene_set(gene_set, gene_term, gene_study,
-                           gene_set_loader)
+    return None
 
 
 def prepare_denovo_phenotype_gender_filter1(data, studyPhenoType):
@@ -307,9 +332,9 @@ def prepare_transmitted_studies(data):
     return res
 
 
-def combine_gene_syms(data, gene_set_loader=gene_set_loader):
+def combine_gene_syms(data):
     gene_syms = prepare_gene_syms(data)
-    gene_sets = prepare_gene_sets(data, gene_set_loader)
+    gene_sets = prepare_gene_sets(data)
 
     if gene_syms is None:
         return gene_sets

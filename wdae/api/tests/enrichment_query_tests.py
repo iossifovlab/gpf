@@ -4,12 +4,34 @@ import unittest
 import logging
 from api.enrichment.enrichment_query import enrichment_prepare
 from hamcrest import assert_that, has_entry, has_key, is_, none
+from query_prepare import gene_set_bgloader
+from denovo_gene_sets import build_denovo_gene_sets
+from bg_loader import preload_background
 
 logger = logging.getLogger(__name__)
 
 
 class EnrichmentPrepareTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(EnrichmentPrepareTests, cls).setUpClass()
 
+        builders = [
+                (gene_set_bgloader,
+                 ['GO'],
+                 'GO'),
+
+                (gene_set_bgloader,
+                 ['MSigDB.curated'],
+                 'MSigDB.curated'),
+
+                (build_denovo_gene_sets,
+                 [],
+                 'Denovo'),
+        ]
+        
+        preload_background(builders)
+        
     def test_empty_denovo_study(self):
         data = enrichment_prepare({'denovoStudies': []})
         self.assertIsNone(data)
@@ -79,15 +101,15 @@ class EnrichmentPrepareTests(unittest.TestCase):
         {'denovoStudies': ['IossifovWE2012'],
          'transmittedStudies': ['w1202s766e611'],
          'geneSet': 'denovo',
-         'geneTerm': 'prb.LoF',
-         'geneStudy': 'IossifovWE2012'}
+         'geneTerm': 'LoF',
+         'gene_set_phenotype': 'autism'}
 
     def test_denovo_gene_set(self):
         data = enrichment_prepare(self.TEST_DATA_DENOVO_GENE_SET)
 
-        assert_that(data, has_entry('geneStudy', 'IossifovWE2012'))
+        assert_that(data, has_entry('gene_set_phenotype', 'autism'))
         assert_that(data, has_entry('geneSet', 'denovo'))
-        assert_that(data, has_entry('geneTerm', 'prb.LoF'))
+        assert_that(data, has_entry('geneTerm', 'LoF'))
         assert_that(data, has_key('geneSyms'))
 
     TEST_DATA_MAIN_BAD_DENOVO_STUDY = {'denovoStudies': ['BAD_STUDY'],

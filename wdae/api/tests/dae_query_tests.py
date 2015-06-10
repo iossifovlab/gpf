@@ -40,7 +40,6 @@ class VariantsTests(unittest.TestCase):
         fail = False
         for v in itertools.chain(*vs):
             self.assertTrue('sibF' in v.inChS)
-            # print(v.atts['effectType'])
             if 'frame-shift' not in v.atts['effectGene']:
                 fail=True
 
@@ -108,7 +107,6 @@ class CombinedTests(unittest.TestCase):
             self.assertTrue('prbF' in v[6])
             self.assertTrue('frame-shift' in v[10])
             self.assertTrue('frame-shift' in v[11])
-#             print(v)
             self.assertTrue('frame-shift' in v[13])
             self.assertTrue('prbF' in v[22])
 
@@ -160,9 +158,10 @@ class IvanchoSubmittedQueryTests(unittest.TestCase):
     def test_gene_region_filter(self):
         vs = do_query_variants(self.TEST_DATA)
         # vs.next()
-
+        count = 0
         for v in vs:
-            print v
+            count += 1
+        self.assertTrue(count>0)
 
 
 

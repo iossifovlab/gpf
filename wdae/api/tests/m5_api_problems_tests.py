@@ -373,7 +373,7 @@ class SSCPresentInParentTests(APITestCase):
             'families': 'all',
             'geneSyms': '',
             'familyVerbalIqLo': '',
-            'geneStudy': 'AUTISM',
+            'gene_set_phenotype': 'autism',
             'familySibGender': 'All',
             'rarity': 'ultraRare',
             'familyRace': 'All',
@@ -382,7 +382,7 @@ class SSCPresentInParentTests(APITestCase):
             'presentInChild': 'autism only,autism and unaffected',
             'variantTypes': 'sub,ins,del,CNV',
             'gender': 'male,female',
-            'geneTerm': 'prb.LoF.Recurrent',
+            'geneTerm': 'LoF.Recurrent',
             'presentInParent': 'neither',
             'familyVerbalIqHi': '',
             'geneRegion': '',
@@ -516,7 +516,7 @@ class SSCPresentInChildDownloadTests(APITestCase):
             'families': 'all',
             'geneSyms': '',
             'familyVerbalIqLo': '',
-            'geneStudy': 'AUTISM',
+            'gene_set_phenotype': 'autism',
             'familySibGender': 'All',
             'rarity': 'ultraRare',
             'familyRace': 'All',
@@ -525,7 +525,7 @@ class SSCPresentInChildDownloadTests(APITestCase):
             'presentInChild': 'autism only,autism and unaffected',
             'variantTypes': 'sub,ins,del,CNV',
             'gender': 'male,female',
-            'geneTerm': 'prb.LoF.Recurrent',
+            'geneTerm': 'LoF.Recurrent',
             'presentInParent': 'neither',
             'familyVerbalIqHi': '',
             'geneRegion': '',
@@ -541,7 +541,7 @@ class SSCPresentInChildDownloadTests(APITestCase):
         self.assertEqual(79, count_iterable(response.streaming_content))
 
     def test_rec_lgds_download_urlencoded(self):
-        data = 'genes=Gene+Sets&geneSet=denovo&geneStudy=AUTISM&geneTerm=prb.LoF.Recurrent&geneSyms=&geneRegionType=on&geneRegion=&presentInChild=autism+only&presentInChild=autism+and+unaffected&presentInParent=neither&gender=male&gender=female&variantTypes=sub&variantTypes=ins&variantTypes=del&variantTypes=CNV&effectTypes=Nonsense&effectTypes=Frame-shift&effectTypes=Splice-site&rarity=ultraRare&families=all&familyIds=&familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&familyPrbGender=All&familySibGender=All'
+        data = 'genes=Gene+Sets&geneSet=denovo&gene_set_phenotype=autism&geneTerm=LoF.Recurrent&geneSyms=&geneRegionType=on&geneRegion=&presentInChild=autism+only&presentInChild=autism+and+unaffected&presentInParent=neither&gender=male&gender=female&variantTypes=sub&variantTypes=ins&variantTypes=del&variantTypes=CNV&effectTypes=Nonsense&effectTypes=Frame-shift&effectTypes=Splice-site&rarity=ultraRare&families=all&familyIds=&familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&familyPrbGender=All&familySibGender=All'
 
         logger.info("urldecoded: %s", urlparse.parse_qs(data))
         url = '/api/ssc_query_variants'

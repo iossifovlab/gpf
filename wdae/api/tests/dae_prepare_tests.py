@@ -2,15 +2,17 @@ import unittest
 
 from query_prepare import prepare_gene_syms, \
     prepare_gene_sets, prepare_denovo_studies, \
-    prepare_transmitted_studies
+    prepare_transmitted_studies, gene_set_bgloader
 from query_variants import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids
 #, prepare_family_file
 
-from api.dae_query import load_gene_set
+from api.dae_query import load_gene_set, load_gene_set2
 
 import logging
 import itertools
+from denovo_gene_sets import build_denovo_gene_sets
+from bg_loader import preload_background
 
 logger = logging.getLogger(__name__)
 
@@ -203,6 +205,7 @@ class GeneSymsTests(unittest.TestCase):
 
 
 class GeneSetsTests(unittest.TestCase):
+    
     DISEASE_AIDS = set(['IFNG', 'KIR3DL1', 'CXCL12'])
     GO_GO_2001293 = set(['ACACA', 'ACACB'])
     MAIN_mPFC_maternal = set(['RAD23B', 'ADD2', 'NCOR2', 'CERS4',
@@ -214,6 +217,27 @@ class GeneSetsTests(unittest.TestCase):
                               'ZNF157', 'AKAP2', 'DOPEY2', 'SCN1B',
                               'LIMCH1'])
 
+    @classmethod
+    def setUpClass(cls):
+        super(GeneSetsTests, cls).setUpClass()
+
+        builders = [
+                (gene_set_bgloader,
+                 ['GO'],
+                 'GO'),
+
+                (gene_set_bgloader,
+                 ['MSigDB.curated'],
+                 'MSigDB.curated'),
+
+                (build_denovo_gene_sets,
+                 [],
+                 'Denovo'),
+        ]
+        
+        preload_background(builders)
+        
+        
     def test_gene_sets_empty(self):
         self.assertIsNone(prepare_gene_sets({}))
 
@@ -234,35 +258,35 @@ class GeneSetsTests(unittest.TestCase):
         self.assertTrue(isinstance(gs, set))
 
     DENOVO_GENE_SET_1 = {'geneSet': 'denovo',
-                         'geneStudy': 'StateWE2012',
-                         'geneTerm': 'prb.Missense'}
+                         'gene_set_phenotype': 'autism',
+                         'geneTerm': 'Missense'}
 
     def test_denovo_gene_set(self):
         gs = prepare_gene_sets(self.DENOVO_GENE_SET_1)
         logger.debug("denovo gene sets: %s", str(gs))
         self.assertIsNotNone(gs)
-        gt = load_gene_set('denovo', 'StateWE2012')
-        self.assertSetEqual(set(gt.t2G['prb.Missense'].keys()), gs)
+        gt = load_gene_set2('denovo', 'autism')
+        self.assertSetEqual(set(gt.t2G['Missense'].keys()), gs)
 
     DENOVO_GENE_SET_2 = {'geneSet': 'ala-bala',
-                         'geneStudy': 'StateWE2012',
+                         'gene_set_phenotype': 'ala-bala',
                          'geneTerm': 'portokala'}
 
     def test_none_gene_set(self):
         gs = prepare_gene_sets(self.DENOVO_GENE_SET_2)
-        logger.debug("denovo gene sets: %s", str(gs))
+        logger.info("denovo gene sets: %s", str(gs))
         self.assertIsNone(gs)
         self.assertIsNone(prepare_gene_sets({'geneSet': 'denovo',
-                                             'geneStudy': 'StateWE2012',
+                                             'gene_set_phenotype': 'autism',
                                              'geneTerm': 'portokala'}))
 
         self.assertIsNone(prepare_gene_sets({'geneSet': 'main',
-                                             'geneStudy': 'StateWE2012',
+                                             'gene_set_phenotype': 'autism',
                                              'geneTerm': 'ala-bala'}))
 
     def test_main_does_not_depend_on_study_name(self):
         self.assertIsNotNone(prepare_gene_sets({'geneSet': 'main',
-                                                'geneStudy': 'ala-bala',
+                                                'gene_set_phenotype': 'ala-bala',
                                                 'geneTerm': 'E15-maternal'}))
 class StudiesTests(unittest.TestCase):
 

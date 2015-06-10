@@ -28,6 +28,7 @@ try:
     from api.enrichment.enrichment import build_transmitted_background
     from bg_loader import preload_background
 
+
     transmitted = prepare_transmitted_studies(
         {"transmittedStudies": 'w1202s766e611'})
 

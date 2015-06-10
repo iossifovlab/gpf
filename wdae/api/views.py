@@ -462,9 +462,7 @@ def prepare_query_dict(data):
     for (key, val) in items:
         key = str(key)
         if isinstance(val, list):
-            print "value:", val,
             value = ','.join([str(s).strip() for s in val])
-            print "after: ", value
         else:
             value = str(val)
 

@@ -17,17 +17,17 @@ def enrichment_prepare(data):
               'transmittedStudies': prepare_transmitted_studies(data),
               'geneSet': prepare_string_value(data, 'geneSet'),
               'geneTerm': prepare_string_value(data, 'geneTerm'),
-              'geneStudy': prepare_string_value(data, 'geneStudy'),
+              'gene_set_phenotype': prepare_string_value(data, 'gene_set_phenotype'),
               'geneSyms': combine_gene_syms(data)}
 
     if 'geneSet' not in result or result['geneSet'] is None or \
        'geneTerm' not in result or result['geneTerm'] is None:
         del result['geneSet']
         del result['geneTerm']
-        del result['geneStudy']
+        del result['gene_set_phenotype']
 
     if 'geneSet' in result and result['geneSet'] != 'denovo':
-        del result['geneStudy']
+        del result['gene_set_phenotype']
 
     if not all(result.values()):
         return None

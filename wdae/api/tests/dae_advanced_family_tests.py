@@ -150,12 +150,10 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         vs = do_query_variants(self.TEST_DATA_6)
         cols = vs.next()
         logger.info("cols: %s", str(cols))
-        print(cols)
 
         count = 0
         for v in vs:
             count += 1
-            # print(v)
             # self.assertIn('prbF', v[17], str(v[17]))
 
         self.assertTrue(count > 0)
@@ -293,7 +291,6 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
       cols = vs.next()
       count = 0
       for v in vs:
-	  print(v)
           count += 1
           self.assertIn('del', v[3], str(v[3]))
 
