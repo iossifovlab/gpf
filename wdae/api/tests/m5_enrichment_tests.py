@@ -16,9 +16,8 @@ from api.enrichment.enrichment import collect_prb_enrichment_variants_by_phenoty
     filter_sib_enrichment_variants_by_phenotype, \
     build_enrichment_variants_genes_dict_by_phenotype, \
     count_gene_set_enrichment_by_phenotype, \
-    count_background, \
-    enrichment_test_by_phenotype
-
+    count_background
+    
 logger = logging.getLogger(__name__)
 
 
@@ -123,7 +122,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         gene_syms_set = data['geneSyms']
 
         genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(
-                dsts, gene_syms_set)
+                dsts)
         # logger.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
 
         count_res = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
@@ -145,7 +144,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         gene_syms_set = data['geneSyms']
 
         genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(
-                dsts, gene_syms_set)
+                dsts)
         
         # logger.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
 
