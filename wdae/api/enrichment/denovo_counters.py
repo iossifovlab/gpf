@@ -166,12 +166,12 @@ def filter_denovo_studies_by_phenotype(dsts, phenotype):
     return [st for st in dsts if st.get_attr('study.phenotype') == phenotype]
 
 
-def count_denovo_variant_events(affected_gene_syms, gene_set):
+def count_denovo_variant_events(affected_gene_syms, gene_syms):
     count = 0
     for variant_gene_syms in affected_gene_syms:
         touched_gene_set = False
         for sym in variant_gene_syms:
-            if sym in gene_set:
+            if sym in gene_syms:
                 touched_gene_set=True
         if touched_gene_set:
             count += 1

@@ -13,7 +13,7 @@ from collections import Counter
 
 
 
-def _collect_affected_gene_sets(vs):
+def _collect_affected_gene_syms(vs):
     return [set([ge['sym'] for ge in v.requestedGeneEffects])
             for v in vs]
 
@@ -35,18 +35,20 @@ def _build_synonymous_background(transmitted_study_name):
     vs = transmitted_study.get_transmitted_summary_variants(
                 ultraRareOnly=True,
                 effectTypes="synonymous")
-    affected_gene_sets = _collect_affected_gene_sets(vs)
-    bg_counts = _count_gene_syms(affected_gene_sets)
+    affected_gene_syms = _collect_affected_gene_syms(vs)
     
-    bg_sorted = sorted(zip(bg_counts.keys(),
-                           bg_counts.values(), 
-                           np.zeros(len(bg_counts.keys()))))
+    base = [gs for gs in affected_gene_syms if len(gs)==1]
+    foreground = [gs for gs in affected_gene_syms if len(gs)>1]
     
-    b = np.array(bg_sorted, 
-                 dtype=[('sym','|S32'), ('raw','>i4'), ('weight', '>f8')])
-    b['weight']=b['raw'] / (1.0 * np.sum(b['raw']))
+    base_counts = _count_gene_syms(base)
     
-    return b
+    base_sorted = sorted(zip(base_counts.keys(),
+                           base_counts.values()))
+    
+    b = np.array(base_sorted, 
+                 dtype=[('sym','|S32'), ('raw','>i4')])
+    
+    return (b, foreground)
 
 
 class Background(object):
@@ -57,19 +59,22 @@ class Background(object):
     def is_ready(self):
         return self.background
     
-    def serialize(self):
-        fout = cStringIO.StringIO()
-        np.save(fout, self.background)
-        return zlib.compress(fout.getvalue())
-    
-    def deserialize(self, data):
-        fin = cStringIO.StringIO(zlib.decompress(data))
-        self.background = np.load(fin)
+#     def serialize(self):
+#         fout = cStringIO.StringIO()
+#         np.save(fout, self.background)
+#         return zlib.compress(fout.getvalue())
+#     
+#     def deserialize(self, data):
+#         fin = cStringIO.StringIO(zlib.decompress(data))
+#         self.background = np.load(fin)
         
-    def prob(self, gen_set):
-        vpred = np.vectorize(lambda sym: sym in gen_set)
+    def prob(self, gene_syms):
+        return 1.0*self.count(gene_syms)/self.total
+    
+    def count(self, gen_syms):
+        vpred = np.vectorize(lambda sym: sym in gen_syms)
         index = vpred(self.background['sym'])
-        return np.sum(self.background['weight'][index])
+        return np.sum(self.background['raw'][index])
     
 
 class SynonymousBackground(Background):
@@ -79,7 +84,30 @@ class SynonymousBackground(Background):
         super(SynonymousBackground, self).__init__()
         
     def precompute(self):
-        self.background = _build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
+        self.background, self.foreground = \
+            _build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
         return self.background
     
+    def count_foreground_events(self, gene_syms):
+        count = 0
+        for gs in self.foreground:
+            touch = False
+            for sym in gs:
+                if sym in gene_syms:
+                    touch = True
+                    break
+            if touch:
+                count += 1
+        return count
+    
+    def count(self, gene_syms):
+        vpred = np.vectorize(lambda sym: sym in gene_syms)
+        index = vpred(self.background['sym'])
+        base = np.sum(self.background['raw'][index])
+        foreground = self.count_foreground_events(gene_syms)
+        return base + foreground
+    
+    @property
+    def total(self):
+        return np.sum(self.background['raw'])+len(self.foreground)
     
