@@ -49,10 +49,14 @@ def _build_synonymous_background(transmitted_study_name):
     return b
 
 
-class Background:
+class Background(object):
     def __init__(self):
         self.background = None
 
+    @property
+    def is_ready(self):
+        return self.background
+    
     def serialize(self):
         fout = cStringIO.StringIO()
         np.save(fout, self.background)

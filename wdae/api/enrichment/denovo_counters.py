@@ -5,8 +5,6 @@ Created on Jun 9, 2015
 '''
 import itertools
 
-
-
 PRB_TESTS_SPECS = [
     # 0
     {'label': 'prb|Rec LGDs', 
@@ -109,10 +107,6 @@ SIB_TESTS_SPECS = [
      'effect': 'synonymous'},
 ]
 
-class DenovoCounter(object):
-    '''
-    Denovo Variants Counters
-    '''
 
 
 def filter_denovo_one_event_per_family(vs):
@@ -138,6 +132,18 @@ def filter_denovo_one_event_per_family(vs):
         res.append(not_seen)
 
     return res
+
+
+def filter_denovo_one_gene_per_recurrent_events(vs):
+    gn_sorted = sorted([[ge['sym'], v] for v in vs
+                       for ge in v.requestedGeneEffects])
+    sym_2_vars = {sym: [t[1] for t in tpi]
+                  for sym, tpi in itertools.groupby(gn_sorted,
+                                                    key=lambda x: x[0])}
+    sym_2_fn = {sym: len(set([v.familyId for v in vs]))
+                for sym, vs in sym_2_vars.items()}
+    return [[gs] for gs, fn in sym_2_fn.items() if fn > 1]
+
 
 def collect_denovo_variants(dsts, inchild, effect, label):
     """
@@ -171,3 +177,47 @@ def count_denovo_variant_events(affected_gene_syms, gene_set):
             count += 1
 
     return count
+
+
+class DenovoCounter(object):
+    '''
+    Represents results for Denovo Variants counters classes
+    '''
+    def __init__(self, spec):
+        self.spec = spec
+        self.count = 0
+        self.affected_gene_syms = []
+        self.dsts = []
+
+    @property
+    def total(self):
+        return len(self.affected_gene_syms)
+    
+class DenovoEventsCounter:
+    
+    def __init__(self, spec):
+        self.spec = spec
+        
+    def count(self, dsts, gene_set):
+        res = DenovoCounter(self.spec)
+        res.dsts = dsts
+        vs = collect_denovo_variants(dsts, **self.spec)
+        res.affected_gene_syms = filter_denovo_one_event_per_family(vs)
+        res.count = count_denovo_variant_events(res.affected_gene_syms, 
+                                                gene_set)
+        return res
+
+class DenovoRecurrentGenesCounter:
+
+    def __init__(self, spec):
+        self.spec = spec
+
+    def count(self, dsts, gene_set):
+        res = DenovoCounter(self.spec)
+        res.dsts = dsts
+        vs = collect_denovo_variants(dsts, **self.spec)
+        res.affected_gene_syms = filter_denovo_one_gene_per_recurrent_events(vs)
+        res.count = count_denovo_variant_events(res.affected_gene_syms, 
+                                                gene_set)
+        return res
+    
