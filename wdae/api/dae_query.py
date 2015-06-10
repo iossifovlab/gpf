@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 from query_prepare import gene_set_loader
 
 
-from DAE import get_gene_sets_symNS, vDB
+from DAE import get_gene_sets_symNS
 from bg_loader import get_background
 
 def load_gene_set(gene_set_label, study_name=None):

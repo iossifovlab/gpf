@@ -159,7 +159,7 @@ class IvanchoSubmittedQueryTests(unittest.TestCase):
         vs = do_query_variants(self.TEST_DATA)
         # vs.next()
         count = 0
-        for v in vs:
+        for _v in vs:
             count += 1
         self.assertTrue(count>0)
 

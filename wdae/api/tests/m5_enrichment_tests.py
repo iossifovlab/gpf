@@ -105,7 +105,7 @@ class EnrichmentBasicTest(unittest.TestCase):
 
         dsts = prepare_denovo_studies(data)
         genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(dsts)
-        # logger.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
+        logger.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
 
 
     def test_count_gene_set_enrichment_by_phenotype_whole_exome(self):

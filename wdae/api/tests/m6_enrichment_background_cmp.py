@@ -10,7 +10,6 @@ from api.enrichment.enrichment import count_background,\
     build_transmitted_background
 from query_prepare import prepare_transmitted_studies
 from bg_loader import preload_background
-from api.enrichment.denovo_counters import PRB_TESTS_SPECS
 
 
 class Test(unittest.TestCase):

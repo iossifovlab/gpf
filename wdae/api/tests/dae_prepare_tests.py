@@ -7,10 +7,9 @@ from query_variants import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids
 #, prepare_family_file
 
-from api.dae_query import load_gene_set, load_gene_set2
+from api.dae_query import load_gene_set2
 
 import logging
-import itertools
 from denovo_gene_sets import build_denovo_gene_sets
 from bg_loader import preload_background
 
