@@ -2,7 +2,7 @@
 from api.enrichment.enrichment import enrichment_test, PRB_TESTS, SIB_TESTS, \
     enrichment_test_by_phenotype
 
-from api.dae_query import load_gene_set
+from api.dae_query import load_gene_set2
 import numpy as np
 from query_prepare import prepare_denovo_studies, prepare_transmitted_studies, \
     combine_gene_syms, prepare_string_value
@@ -70,7 +70,7 @@ def enrichment_results(denovoStudies=None,
     if geneSet is None:
         gene_terms = None
     else:
-        gene_terms = load_gene_set(geneSet, geneStudy)
+        gene_terms = load_gene_set2(geneSet, geneStudy)
 
     all_res, totals = enrichment_test(denovoStudies,
                                       geneSyms)
@@ -174,7 +174,7 @@ def enrichment_results_by_phenotype(
         transmittedStudies=None,
         geneSet=None,
         geneTerm=None,
-        geneStudy=None,
+        gene_set_phenotype=None,
         geneSyms=None):
 
     count_res_by_pheno, totals_by_pheno, genes_dict_by_pheno = \
@@ -186,7 +186,7 @@ def enrichment_results_by_phenotype(
     if geneSet is None:
         gene_terms = None
     else:
-        gene_terms = load_gene_set(geneSet, geneStudy)
+        gene_terms = load_gene_set2(geneSet, gene_set_phenotype)
 
     if geneSet and geneTerm:
         res['gs_desc'] = "%s: %s" % (geneTerm,
