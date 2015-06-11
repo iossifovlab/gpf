@@ -24,7 +24,7 @@ class EnrichmentResult:
         return self.__str__()
     
     
-class Enrichment:
+class EnrichmentTest(object):
     SYNONYMOUS_BACKGROUND = background.SynonymousBackground()
     
     def __init__(self, spec):
@@ -33,18 +33,18 @@ class Enrichment:
         self.counter = None
 
     @classmethod
-    def make_variant_events_enrichment(cls, spec):
+    def make_variant_events_enrichment(cls, spec, background=SYNONYMOUS_BACKGROUND):
         res = cls(spec)
-        res.background = cls.SYNONYMOUS_BACKGROUND
+        res.background = background
         if not res.background.is_ready:
             res.background.precompute()
         res.counter = DenovoEventsCounter(spec)
         return res
     
     @classmethod
-    def make_recurrent_genes_enrichment(cls, spec):
+    def make_recurrent_genes_enrichment(cls, spec, background=SYNONYMOUS_BACKGROUND):
         res = cls(spec)
-        res.background = cls.SYNONYMOUS_BACKGROUND
+        res.background = background
         if not res.background.is_ready:
             res.background.precompute()
         res.counter = DenovoRecurrentGenesCounter(spec)
@@ -62,4 +62,5 @@ class Enrichment:
         
         return res
     
-    
+class EnrichmentTestBuilder(object):
+    pass

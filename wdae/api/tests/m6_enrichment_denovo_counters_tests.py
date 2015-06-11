@@ -7,7 +7,8 @@ import unittest
 from DAE import vDB, get_gene_sets_symNS
 from api.enrichment.denovo_counters import collect_denovo_variants,\
     filter_denovo_one_event_per_family, filter_denovo_studies_by_phenotype,\
-    count_denovo_variant_events, PRB_TESTS_SPECS, SIB_TESTS_SPECS
+    count_denovo_variant_events
+from api.enrichment.config import PRB_TESTS_SPECS, SIB_TESTS_SPECS
 
 class DenovoCountersTest(unittest.TestCase):
     TEST_SPEC = {

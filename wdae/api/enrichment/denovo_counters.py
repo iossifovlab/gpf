@@ -5,108 +5,6 @@ Created on Jun 9, 2015
 '''
 import itertools
 
-PRB_TESTS_SPECS = [
-    # 0
-    {'label': 'prb|Rec LGDs', 
-     'inchild': 'prb',
-     'effect': 'LGDs'},
-    # 1
-    {'label': 'prb|LGDs|prb|male,female|Nonsense,Frame-shift,Splice-site',
-     'inchild': 'prb', 
-     'effect': 'LGDs'},
-    # 2
-    {'label': 'prb|Male LGDs|prb|male|Nonsense,Frame-shift,Splice-site', 
-     'inchild': 'prbM', 
-     'effect': 'LGDs'},
-    # 3
-    {'label': 'prb|Female LGDs|prb|female|Nonsense,Frame-shift,Splice-site', 
-     'inchild': 'prbF', 
-     'effect': 'LGDs'},
-    # 4
-    {'label': 'prb|Rec Missense', 
-     'inchild': 'prb',
-     'effect': 'missense'},
-    # 5
-    {'label': 'prb|Missense|prb|male,female|Missense', 
-     'inchild': 'prb',
-     'effect': 'missense'},
-    # 6
-    {'label': 'prb|Male Missense|prb|male|Missense', 
-     'inchild': 'prbM', 
-     'effect': 'missense'},
-    # 7
-    {'label': 'prb|Female Missense|prb|female|Missense', 
-     'inchild': 'prbF', 
-     'effect': 'missense'},
-    # 8
-    {'label': 'prb|Rec Synonymous', 
-     'inchild': 'prb', 
-     'effect': 'synonymous'},
-    # 9
-    {'label': 'prb|Synonymous|prb|male,female|Synonymous', 
-     'inchild': 'prb', 
-     'effect': 'synonymous'},
-    # 10
-    {'label': 'prb|Male Synonymous|prb|male|Synonymous', 
-     'inchild': 'prbM', 
-     'effect': 'synonymous'},
-    # 11
-    {'label': 'prb|Female Synonymous|prb|female|Synonymous', 
-     'inchild': 'prbF', 
-     'effect': 'synonymous'},
-]
-
-SIB_TESTS_SPECS = [
-    # 0
-    {'label': 'sib|Rec LGDs', 
-     'inchild': 'sib', 
-     'effect': 'LGDs'},
-    # 1
-    {'label': 'sib|LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site', 
-     'inchild': 'sib', 
-     'effect': 'LGDs'},
-    # 2
-    {'label': 'sib|Male LGDs|sib|male|Nonsense,Frame-shift,Splice-site', 
-     'inchild': 'sibM', 
-     'effect': 'LGDs'},
-    # 3
-    {'label': 'sib|Female LGDs|sib|female|Nonsense,Frame-shift,Splice-site', 
-     'inchild': 'sibF', 
-     'effect': 'LGDs'},
-    # 4
-    {'label': 'sib|Rec Missense', 
-     'inchild': 'sib', 
-     'effect': 'missense'},
-    # 5
-    {'label': 'sib|Missense|sib|male,female|Missense', 
-     'inchild': 'sib', 
-     'effect': 'missense'},
-    # 6
-    {'label': 'sib|Male Missense|sib|male|Missense', 
-     'inchild': 'sibM', 
-     'effect': 'missense'},
-    # 7
-    {'label': 'sib|Female Missense|sib|female|Missense', 
-     'inchild': 'sibF', 
-     'effect': 'missense'},
-    # 8
-    {'label': 'sib|Rec Synonymous', 
-     'inchild': 'sib', 
-     'effect': 'synonymous'},
-    # 9
-    {'label': 'sib|Synonymous|sib|male,female|Synonymous', 
-     'inchild': 'sib', 
-     'effect': 'synonymous'},
-    # 10
-    {'label': 'sib|Male Synonymous|sib|male|Synonymous', 
-     'inchild': 'sibM', 
-     'effect': 'synonymous'},
-    # 11
-    {'label': 'sib|Female Synonymous|sib|female|Synonymous', 
-     'inchild': 'sibF', 
-     'effect': 'synonymous'},
-]
-
 
 
 def filter_denovo_one_event_per_family(vs):
@@ -145,7 +43,7 @@ def filter_denovo_one_gene_per_recurrent_events(vs):
     return [[gs] for gs, fn in sym_2_fn.items() if fn > 1]
 
 
-def collect_denovo_variants(dsts, inchild, effect, label):
+def collect_denovo_variants(dsts, inchild, effect, **kwargs):
     """
     Selects denovo variants according given test spec.
     

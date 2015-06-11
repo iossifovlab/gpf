@@ -403,3 +403,8 @@ def enrichment_test_by_phenotype(dsts, gene_syms_set):
     return (count_res_by_pheno, totals_by_pheno,
             {phenotype: dict(genes_dict) 
              for phenotype, genes_dict in genes_dict_by_pheno.items()})
+
+
+
+class Enrichment(object):
+    pass
