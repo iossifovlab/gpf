@@ -9,6 +9,7 @@ import zlib
 
 from DAE import vDB
 from collections import Counter
+import cPickle
 
 
 
@@ -59,14 +60,14 @@ class Background(object):
     def is_ready(self):
         return self.background
     
-#     def serialize(self):
-#         fout = cStringIO.StringIO()
-#         np.save(fout, self.background)
-#         return zlib.compress(fout.getvalue())
-#     
-#     def deserialize(self, data):
-#         fin = cStringIO.StringIO(zlib.decompress(data))
-#         self.background = np.load(fin)
+    def serialize(self):
+        fout = cStringIO.StringIO()
+        np.save(fout, self.background)
+        return zlib.compress(fout.getvalue())
+     
+    def deserialize(self, data):
+        fin = cStringIO.StringIO(zlib.decompress(data))
+        self.background = np.load(fin)
         
     def prob(self, gene_syms):
         return 1.0*self.count(gene_syms)/self.total
@@ -110,4 +111,22 @@ class SynonymousBackground(Background):
     @property
     def total(self):
         return np.sum(self.background['raw'])+len(self.foreground)
+
+    def serialize(self):
+        fout = cStringIO.StringIO()
+        np.save(fout, self.background)
+        
+        b = zlib.compress(fout.getvalue())
+        f = zlib.compress(cPickle.dumps(self.foreground))
+        return {'background': b,
+                'foreground': f}
+     
+    def deserialize(self, data):
+        b = data['background']
+        fin = cStringIO.StringIO(zlib.decompress(b))
+        self.background = np.load(fin)
+        
+        f = data['foreground']
+        self.foreground = cPickle.loads(zlib.decompress(f))
+        
     
