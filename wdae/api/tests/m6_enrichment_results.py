@@ -26,7 +26,7 @@ class Test(unittest.TestCase):
         spec = PRB_TESTS_SPECS[1]
         eres = EnrichmentTest.make_variant_events_enrichment(spec)
         adsts = filter_denovo_studies_by_phenotype(self.dsts, 'autism')
-        res = eres.build(adsts, self.gene_syms)
+        res = eres.calc(adsts, self.gene_syms)
         print res
         self.assertTrue(res)
         

@@ -5,25 +5,11 @@ Created on Jun 10, 2015
 '''
 from api.enrichment import background
 from api.enrichment.denovo_counters import DenovoEventsCounter,\
-    DenovoRecurrentGenesCounter
+    DenovoRecurrentGenesCounter, filter_denovo_studies_by_phenotype
 from scipy import stats
+from api.enrichment.config import PHENOTYPES, PRB_TESTS_SPECS, SIB_TESTS_SPECS
 
 
-class EnrichmentResult:
-    def __init__(self, spec):
-        self.spec = spec
-        self.count = 0
-        self.p_val = 0.0
-        self.expected = 0.0
-
-    def __str__(self):
-        return "ET(%d (%0.4f), p_val=%f)" % \
-            (self.count, self.expected, self.p_val)
-
-    def __repr__(self):
-        return self.__str__()
-    
-    
 class EnrichmentTest(object):
     SYNONYMOUS_BACKGROUND = background.SynonymousBackground()
     
@@ -50,17 +36,85 @@ class EnrichmentTest(object):
         res.counter = DenovoRecurrentGenesCounter(spec)
         return res
         
-    def build(self, dsts, gene_syms):
-        counter = self.counter.count(dsts, gene_syms)
+    def calc(self, dsts, gene_syms):
+        res = self.counter.count(dsts, gene_syms)
         bg_prob = self.background.prob(gene_syms)
         
-        res = EnrichmentResult(self.spec)
-        res.count = counter.count
-        res.total = counter.total
         res.expected = round(bg_prob * res.total, 4)
         res.p_val = stats.binom_test(res.count, res.total, p=bg_prob)
-        
+        if self.spec['type'] == 'rec':
+            pass
         return res
     
 class EnrichmentTestBuilder(object):
-    pass
+    SYNONYMOUS_BACKGROUND = background.SynonymousBackground()
+    
+    def _build_test(self, background, spec):
+        spec_type = spec['type']
+        if spec_type == 'event':
+            test = EnrichmentTest.make_variant_events_enrichment(spec, background)
+        elif spec_type == 'rec':
+            test = EnrichmentTest.make_variant_events_enrichment(spec, background)
+        else:
+            raise ValueError("bad enrichment test type {}".format(spec_type))
+        return test
+
+    def _prb_build(self, background):
+        self.prb_tests = []
+        for spec in PRB_TESTS_SPECS:
+            test = self._build_test(background, spec)
+            self.prb_tests.append(test)
+            
+        return self.prb_tests
+    
+    def _sib_build(self, background):
+        self.sib_tests = []
+        for spec in SIB_TESTS_SPECS:
+            test = self._build_test(background, spec)
+            self.sib_tests.append(test)
+        
+        return self.sib_tests
+    
+    def _prb_calc(self, dsts, gene_syms):
+        res = []
+        for test in self.prb_tests:
+            r = test.calc(dsts, gene_syms)
+            res.append(r)
+        return res
+    
+    def _sib_calc(self, dsts, gene_syms):
+        res = []
+        for test in self.sib_tests:
+            r = test.calc(dsts, gene_syms)
+            res.append(r)
+        return res
+    
+    def build(self, background=SYNONYMOUS_BACKGROUND):
+        self._prb_build(background)
+        self._sib_build(background)
+        
+    def _calc_by_phenotype(self, dsts, phenotype, gene_syms):
+        if phenotype == 'unaffected':
+            res = self._sib_calc(dsts, gene_syms)
+            return ('unaffected', res)
+
+        pdsts = filter_denovo_studies_by_phenotype(dsts, phenotype)
+        if not pdsts:
+            return None
+        
+        res = self._prb_calc(dsts, gene_syms)
+        return (phenotype, res)
+    
+    def calc(self, dsts, gene_syms):
+        res = {}
+        for phenotype in PHENOTYPES:
+            (ph, tests) = self._calc_by_phenotype(
+                    dsts,
+                    phenotype, 
+                    gene_syms)
+
+            assert ph == phenotype
+            
+            res[phenotype] = tests
+        return res
+    

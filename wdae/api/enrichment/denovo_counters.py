@@ -77,27 +77,41 @@ def count_denovo_variant_events(affected_gene_syms, gene_syms):
     return count
 
 
-class DenovoCounter(object):
-    '''
-    Represents results for Denovo Variants counters classes
-    '''
+class EnrichmentResult(object):
     def __init__(self, spec):
         self.spec = spec
+        
         self.count = 0
         self.affected_gene_syms = []
         self.dsts = []
+
+        self.count = 0
+        self.p_val = 0.0
+        self.expected = 0.0
+
+    def __str__(self):
+        return "ET(%d (%0.4f), p_val=%f)" % \
+            (self.count, self.expected, self.p_val)
+
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def total(self):
         return len(self.affected_gene_syms)
     
+    @property
+    def gene_syms(self):
+        return set(itertools.chain.from_iterable(self.affected_gene_syms))
+    
+
 class DenovoEventsCounter:
     
     def __init__(self, spec):
         self.spec = spec
         
     def count(self, dsts, gene_set):
-        res = DenovoCounter(self.spec)
+        res = EnrichmentResult(self.spec)
         res.dsts = dsts
         vs = collect_denovo_variants(dsts, **self.spec)
         res.affected_gene_syms = filter_denovo_one_event_per_family(vs)
@@ -111,7 +125,7 @@ class DenovoRecurrentGenesCounter:
         self.spec = spec
 
     def count(self, dsts, gene_set):
-        res = DenovoCounter(self.spec)
+        res = EnrichmentResult(self.spec)
         res.dsts = dsts
         vs = collect_denovo_variants(dsts, **self.spec)
         res.affected_gene_syms = filter_denovo_one_gene_per_recurrent_events(vs)
