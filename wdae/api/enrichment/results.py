@@ -54,7 +54,7 @@ class EnrichmentTestBuilder(object):
         if spec_type == 'event':
             test = EnrichmentTest.make_variant_events_enrichment(spec, background)
         elif spec_type == 'rec':
-            test = EnrichmentTest.make_variant_events_enrichment(spec, background)
+            test = EnrichmentTest.make_recurrent_genes_enrichment(spec, background)
         else:
             raise ValueError("bad enrichment test type {}".format(spec_type))
         return test
@@ -102,19 +102,19 @@ class EnrichmentTestBuilder(object):
         if not pdsts:
             return None
         
-        res = self._prb_calc(dsts, gene_syms)
+        res = self._prb_calc(pdsts, gene_syms)
         return (phenotype, res)
     
     def calc(self, dsts, gene_syms):
         res = {}
         for phenotype in PHENOTYPES:
-            (ph, tests) = self._calc_by_phenotype(
+            (ph, er) = self._calc_by_phenotype(
                     dsts,
                     phenotype, 
                     gene_syms)
 
             assert ph == phenotype
             
-            res[phenotype] = tests
+            res[phenotype] = er
         return res
     

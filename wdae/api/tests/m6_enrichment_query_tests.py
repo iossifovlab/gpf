@@ -16,6 +16,7 @@ class Test(unittest.TestCase):
         cls.background = background.SynonymousBackground()
         cls.background.precompute()
         
+                
     def setUp(self):
         pass
 

@@ -700,7 +700,7 @@ Examples:
 #     query_data = prepare_query_dict(request.QUERY_PARAMS)
 #     logger.info(log_filter(request, "enrichment query: %s" % str(query_data)))
 # 
-#     data = enrichment_prepare(query_data)
+#     data = _enrichment_prepare(query_data)
 #     # if isinstance(data, QueryDict):
 #     #     data = prepare_query_dict(data)
 # 

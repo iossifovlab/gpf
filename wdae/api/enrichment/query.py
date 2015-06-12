@@ -8,7 +8,7 @@ from query_prepare import prepare_denovo_studies, \
 from api.enrichment.results import EnrichmentTestBuilder
 
 
-def enrichment_prepare(data):
+def _enrichment_prepare(data):
     result = {'denovoStudies': prepare_denovo_studies(data),
               'geneSet': prepare_string_value(data, 'geneSet'),
               'geneTerm': prepare_string_value(data, 'geneTerm'),
@@ -36,7 +36,7 @@ class Query(object):
     
     @classmethod
     def make_query(cls, request, background):
-        query = enrichment_prepare(request)
+        query = _enrichment_prepare(request)
         if not query:
             return None
         return Query(query, background)

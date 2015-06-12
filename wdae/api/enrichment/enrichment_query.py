@@ -4,7 +4,7 @@ from api.enrichment.enrichment import enrichment_test, PRB_TESTS, SIB_TESTS, \
 
 from api.dae_query import load_gene_set2
 import numpy as np
-from query_prepare import prepare_denovo_studies, prepare_transmitted_studies, \
+from query_prepare import prepare_denovo_studies, \
     combine_gene_syms, prepare_string_value
 import logging
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def enrichment_prepare(data):
     result = {'denovoStudies': prepare_denovo_studies(data),
-              'transmittedStudies': prepare_transmitted_studies(data),
+#               'transmittedStudies': prepare_transmitted_studies(data),
               'geneSet': prepare_string_value(data, 'geneSet'),
               'geneTerm': prepare_string_value(data, 'geneTerm'),
               'gene_set_phenotype': prepare_string_value(data, 'gene_set_phenotype'),
@@ -31,7 +31,6 @@ def enrichment_prepare(data):
 
     if not all(result.values()):
         return None
-
     return result
 
 

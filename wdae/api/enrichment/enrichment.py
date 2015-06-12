@@ -115,6 +115,7 @@ SIB_TESTS_VARS = [
 ]
 
 def collect_prb_enrichment_variants_by_phenotype(dsts):
+    print(dsts)
     collector = defaultdict(lambda: [[],[],[],[],[],[],[],[],[],[],[],[],])
     for dst in dsts:
         phenotype = dst.get_attr('study.phenotype')
@@ -130,6 +131,7 @@ def collect_prb_enrichment_variants_by_phenotype(dsts):
     return res
 
 def collect_sib_enrichment_variants_by_phenotype(dsts):
+    print(dsts)
     collector = [[],[],[],[],[],[],[],[],[],[],[],[],]
     for dst in dsts:
         for n, (_label, in_child, effect_types) in enumerate(SIB_TESTS_VARS):

@@ -185,7 +185,7 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
         self.assertEqual(6890, background_count.cnt)
 
 #     def test_enrichment_test_by_phenotype_whole_exome(self):
-#         data = enrichment_prepare({
+#         data = _enrichment_prepare({
 #             "denovoStudies":"ALL WHOLE EXOME",
 #             'geneSyms': '',
 #             'geneStudy': '',
@@ -205,7 +205,7 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
 #         # logger.info('autism rec lgds: %s', genes_dict_by_pheno['autism']['prb|Rec LGDs'])
 
 #     def test_enrichment_results_by_phenotype_whole_exome(self):
-#         data = enrichment_prepare({
+#         data = _enrichment_prepare({
 #             "denovoStudies":"ALL WHOLE EXOME",
 #             'geneSyms': '',
 #             'geneStudy': '',

@@ -57,6 +57,7 @@ def collect_denovo_variants(dsts, inchild, effect, **kwargs):
     for dst in dsts:
         vsres.append(dst.get_denovo_variants(inChild=inchild,
                                              effectTypes=effect))
+    print("collect_denovo_variants", inchild, effect, dsts)
     return itertools.chain.from_iterable(vsres)
 
 
@@ -85,7 +86,6 @@ class EnrichmentResult(object):
         self.affected_gene_syms = []
         self.dsts = []
 
-        self.count = 0
         self.p_val = 0.0
         self.expected = 0.0
 
@@ -132,12 +132,12 @@ class DenovoRecurrentGenesCounter:
     def __init__(self, spec):
         self.spec = spec
 
-    def count(self, dsts, gene_set):
+    def count(self, dsts, gene_syms):
         res = EnrichmentResult(self.spec)
         res.dsts = dsts
         vs = collect_denovo_variants(dsts, **self.spec)
         res.affected_gene_syms = filter_denovo_one_gene_per_recurrent_events(vs)
         res.count = count_denovo_variant_events(res.affected_gene_syms, 
-                                                gene_set)
+                                                gene_syms)
         return res
     
