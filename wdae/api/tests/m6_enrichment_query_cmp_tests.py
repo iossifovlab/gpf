@@ -72,7 +72,9 @@ class Test(unittest.TestCase):
                     continue
                 
                 self.assertEquals(r.count, r_old['count'])
-                self.assertAlmostEquals(r.expected, float(r_old['expected']))
+                self.assertAlmostEquals(r.expected, float(r_old['expected']), places=4)
+                self.assertAlmostEquals(r.p_val, float(r_old['p_val']), places=4)
+                self.assertEquals(r.total, r_old['overlap'])
         
 
 if __name__ == "__main__":
