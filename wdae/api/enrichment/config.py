@@ -80,50 +80,62 @@ PRB_TESTS_SPECS = [
 SIB_TESTS_SPECS = [
     # 0
     {'label': 'sib|Rec LGDs', 
+     'type': 'rec',
      'inchild': 'sib', 
      'effect': 'LGDs'},
     # 1
     {'label': 'sib|LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site', 
+     'type': 'event',
      'inchild': 'sib', 
      'effect': 'LGDs'},
     # 2
     {'label': 'sib|Male LGDs|sib|male|Nonsense,Frame-shift,Splice-site', 
+     'type': 'event',
      'inchild': 'sibM', 
      'effect': 'LGDs'},
     # 3
     {'label': 'sib|Female LGDs|sib|female|Nonsense,Frame-shift,Splice-site', 
+     'type': 'event',
      'inchild': 'sibF', 
      'effect': 'LGDs'},
     # 4
     {'label': 'sib|Rec Missense', 
+     'type': 'rec',
      'inchild': 'sib', 
      'effect': 'missense'},
     # 5
     {'label': 'sib|Missense|sib|male,female|Missense', 
+     'type': 'event',
      'inchild': 'sib', 
      'effect': 'missense'},
     # 6
     {'label': 'sib|Male Missense|sib|male|Missense', 
+     'type': 'event',
      'inchild': 'sibM', 
      'effect': 'missense'},
     # 7
     {'label': 'sib|Female Missense|sib|female|Missense', 
+     'type': 'event',
      'inchild': 'sibF', 
      'effect': 'missense'},
     # 8
     {'label': 'sib|Rec Synonymous', 
+     'type': 'rec',
      'inchild': 'sib', 
      'effect': 'synonymous'},
     # 9
     {'label': 'sib|Synonymous|sib|male,female|Synonymous', 
+     'type': 'event',
      'inchild': 'sib', 
      'effect': 'synonymous'},
     # 10
     {'label': 'sib|Male Synonymous|sib|male|Synonymous', 
+     'type': 'event',
      'inchild': 'sibM', 
      'effect': 'synonymous'},
     # 11
     {'label': 'sib|Female Synonymous|sib|female|Synonymous', 
+     'type': 'event',
      'inchild': 'sibF', 
      'effect': 'synonymous'},
 ]

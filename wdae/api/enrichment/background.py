@@ -58,16 +58,7 @@ class Background(object):
 
     @property
     def is_ready(self):
-        return self.background
-    
-    def serialize(self):
-        fout = cStringIO.StringIO()
-        np.save(fout, self.background)
-        return zlib.compress(fout.getvalue())
-     
-    def deserialize(self, data):
-        fin = cStringIO.StringIO(zlib.decompress(data))
-        self.background = np.load(fin)
+        return self.background is not None
         
     def prob(self, gene_syms):
         return 1.0*self.count(gene_syms)/self.total

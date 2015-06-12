@@ -90,8 +90,8 @@ class EnrichmentResult(object):
         self.expected = 0.0
 
     def __str__(self):
-        return "ET(%d (%0.4f), p_val=%f)" % \
-            (self.count, self.expected, self.p_val)
+        return "ET(%s: %d (%0.4f), p_val=%f)" % \
+            (self.name, self.count, self.expected, self.p_val)
 
     def __repr__(self):
         return self.__str__()
@@ -103,6 +103,14 @@ class EnrichmentResult(object):
     @property
     def gene_syms(self):
         return set(itertools.chain.from_iterable(self.affected_gene_syms))
+    
+    @property
+    def label(self):
+        return self.spec['label']
+    
+    @property
+    def name(self):
+        return "|".join(self.label.split('|')[0:2])
     
 
 class DenovoEventsCounter:
