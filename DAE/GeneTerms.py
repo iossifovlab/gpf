@@ -1,21 +1,24 @@
 #!/bin/env python
 
 from collections import defaultdict
+from functools import partial
 import glob
 import os
 
+def dd():
+    return defaultdict(int)
 
 class GeneTerms:
     def __init__(self):
-        self.g2T = defaultdict(lambda : defaultdict(int)) 
-        self.t2G = defaultdict(lambda : defaultdict(int)) 
+        self.g2T = defaultdict(dd) 
+        self.t2G = defaultdict(dd) 
         self.tDesc = {}
         self.geneNS = None
 
     def filterGenes(self, filterF):
         keepGs = filterF(self.g2T.keys())
         self.g2T = {g:ts for g,ts in self.g2T.items() if g in keepGs}
-        self.t2G = defaultdict(lambda : defaultdict(int))
+        self.t2G = defaultdict(dd)
         for g,ts in self.g2T.items():
             for t, n in ts.items():
                 self.t2G[t][g] = n
@@ -24,8 +27,8 @@ class GeneTerms:
 
     def renameGenes(self, geneNS, renameF):
         g2T = self.g2T
-        self.g2T = defaultdict(lambda : defaultdict(int))
-        self.t2G = defaultdict(lambda : defaultdict(int))
+        self.g2T = defaultdict(dd)
+        self.t2G = defaultdict(dd)
         for g,ts in g2T.items():
             ng = renameF(g)
             if ng:
