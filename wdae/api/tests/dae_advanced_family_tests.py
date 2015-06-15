@@ -4,7 +4,7 @@ from query_variants import do_query_variants
 
 import logging
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class AdvancedFamilyFilterTests(unittest.TestCase):
@@ -149,7 +149,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
     def test_family_proband_gender_female(self):
         vs = do_query_variants(self.TEST_DATA_6)
         cols = vs.next()
-        logger.info("cols: %s", str(cols))
+        LOGGER.info("cols: %s", str(cols))
 
         count = 0
         for v in vs:
@@ -171,7 +171,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
     def test_family_proband_gender_male(self):
         vs = do_query_variants(self.TEST_DATA_7)
         cols = vs.next()
-        logger.debug("cols: %s", str(cols))
+        LOGGER.debug("cols: %s", str(cols))
         count = 0
         for v in vs:
             count += 1

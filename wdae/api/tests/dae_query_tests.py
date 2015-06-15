@@ -8,7 +8,7 @@ from query_prepare import prepare_gene_sets
 import logging
 import itertools
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class VariantsTests(unittest.TestCase):

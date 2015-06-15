@@ -13,7 +13,7 @@ import logging
 from denovo_gene_sets import build_denovo_gene_sets
 from bg_loader import preload_background
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class InChildTests(unittest.TestCase):
@@ -262,7 +262,7 @@ class GeneSetsTests(unittest.TestCase):
 
     def test_denovo_gene_set(self):
         gs = prepare_gene_sets(self.DENOVO_GENE_SET_1)
-        logger.debug("denovo gene sets: %s", str(gs))
+        LOGGER.debug("denovo gene sets: %s", str(gs))
         self.assertIsNotNone(gs)
         gt = load_gene_set2('denovo', 'autism')
         self.assertSetEqual(set(gt.t2G['Missense'].keys()), gs)
@@ -273,7 +273,7 @@ class GeneSetsTests(unittest.TestCase):
 
     def test_none_gene_set(self):
         gs = prepare_gene_sets(self.DENOVO_GENE_SET_2)
-        logger.info("denovo gene sets: %s", str(gs))
+        LOGGER.info("denovo gene sets: %s", str(gs))
         self.assertIsNone(gs)
         self.assertIsNone(prepare_gene_sets({'geneSet': 'denovo',
                                              'gene_set_phenotype': 'autism',

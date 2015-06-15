@@ -3,7 +3,7 @@ import logging
 from DAE import get_gene_sets_symNS, vDB
 from bg_loader import get_background
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def __load_text_column(colSpec):

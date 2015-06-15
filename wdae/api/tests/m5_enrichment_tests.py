@@ -18,7 +18,7 @@ from api.enrichment.enrichment import collect_prb_enrichment_variants_by_phenoty
     count_gene_set_enrichment_by_phenotype, \
     count_background
     
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class EnrichmentBasicTest(unittest.TestCase):
@@ -30,8 +30,8 @@ class EnrichmentBasicTest(unittest.TestCase):
         dsts = prepare_denovo_studies(data)
         res = collect_prb_enrichment_variants_by_phenotype(dsts)
 
-        # logger.info("collected variants: %s", res)
-        # logger.info("collected variants phenotypes: %s", len(res.keys()))
+        # LOGGER.info("collected variants: %s", res)
+        # LOGGER.info("collected variants phenotypes: %s", len(res.keys()))
         self.assertEqual(5, len(res.keys()))
 
     def test_collect_prb_variants_by_phenotype_autism(self):
@@ -42,8 +42,8 @@ class EnrichmentBasicTest(unittest.TestCase):
         dsts = prepare_denovo_studies(data)
         res = collect_prb_enrichment_variants_by_phenotype(dsts)
 
-        # logger.info("collected variants: %s", res)
-        # logger.info("collected variants phenotypes: %s", len(res.keys()))
+        # LOGGER.info("collected variants: %s", res)
+        # LOGGER.info("collected variants phenotypes: %s", len(res.keys()))
         self.assertEqual(1, len(res.keys()))
 
     def test_collect_sib_variants_by_phenotype_whole_exome(self):
@@ -54,7 +54,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         dsts = prepare_denovo_studies(data)
         res = collect_sib_enrichment_variants_by_phenotype(dsts)
 
-        # logger.info("collected SIB variants: %s", res)
+        # LOGGER.info("collected SIB variants: %s", res)
         self.assertEqual(12, len(res))
 
     def test_filter_prb_variants_by_phenotype_whole_exome(self):
@@ -66,7 +66,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         evars = collect_prb_enrichment_variants_by_phenotype(dsts)
 
         res = filter_prb_enrichment_variants_by_phenotype(evars)
-        # logger.info("filtered enrichment variants phenotypes: %s", res.keys())
+        # LOGGER.info("filtered enrichment variants phenotypes: %s", res.keys())
         self.assertEqual(5, len(res.keys()))
         for _phenotype, fevars in res.items():
             self.assertEqual(12, len(fevars))
@@ -81,7 +81,7 @@ class EnrichmentBasicTest(unittest.TestCase):
         evars = collect_prb_enrichment_variants_by_phenotype(dsts)
 
         res = filter_prb_enrichment_variants_by_phenotype(evars)
-        # logger.info("filtered enrichment variants phenotypes: %s", res.keys())
+        # LOGGER.info("filtered enrichment variants phenotypes: %s", res.keys())
         self.assertEqual(1, len(res.keys()))
 
         for _phenotype, fevars in res.items():
@@ -105,7 +105,7 @@ class EnrichmentBasicTest(unittest.TestCase):
 
         dsts = prepare_denovo_studies(data)
         genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(dsts)
-        logger.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
+        LOGGER.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
 
 
     def test_count_gene_set_enrichment_by_phenotype_whole_exome(self):
@@ -123,11 +123,11 @@ class EnrichmentBasicTest(unittest.TestCase):
 
         genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(
                 dsts)
-        # logger.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
+        # LOGGER.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
 
         count_res = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
-        # logger.info("count res: %s", count_res)
-        # logger.info("count res keys: %s", sorted(count_res.keys()))
+        # LOGGER.info("count res: %s", count_res)
+        # LOGGER.info("count res keys: %s", sorted(count_res.keys()))
         self.assertEqual(5 + 1, len(count_res.keys()))
 
     def test_count_gene_set_enrichment_by_phenotype_whole_exome_FMR1_targets(self):
@@ -146,11 +146,11 @@ class EnrichmentBasicTest(unittest.TestCase):
         genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(
                 dsts)
         
-        # logger.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
+        # LOGGER.info("genes dict by pheno: %s", sorted(genes_dict_by_pheno.keys()))
 
         count_res = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
-        # logger.info("count res: %s", count_res)
-        # logger.info("count res keys: %s", sorted(count_res.keys()))
+        # LOGGER.info("count res: %s", count_res)
+        # LOGGER.info("count res keys: %s", sorted(count_res.keys()))
         self.assertEqual(5 + 1, len(count_res.keys()))
 
 
@@ -181,7 +181,7 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
         gene_syms_set = data['geneSyms']
 
         background_count = count_background(gene_syms_set)
-        # logger.info("background_count: %s", background_count)
+        # LOGGER.info("background_count: %s", background_count)
         self.assertEqual(6890, background_count.cnt)
 
 #     def test_enrichment_test_by_phenotype_whole_exome(self):
@@ -200,9 +200,9 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
 #         count_res_by_pheno, totals_by_pheno, genes_dict_by_pheno = \
 #             enrichment_test_by_phenotype(dsts, gene_syms_set)
 # 
-#         # logger.info("count_res_by_pheno=%s", count_res_by_pheno)
-#         # logger.info("totals_by_pheno=%s", totals_by_pheno)
-#         # logger.info('autism rec lgds: %s', genes_dict_by_pheno['autism']['prb|Rec LGDs'])
+#         # LOGGER.info("count_res_by_pheno=%s", count_res_by_pheno)
+#         # LOGGER.info("totals_by_pheno=%s", totals_by_pheno)
+#         # LOGGER.info('autism rec lgds: %s', genes_dict_by_pheno['autism']['prb|Rec LGDs'])
 
 #     def test_enrichment_results_by_phenotype_whole_exome(self):
 #         data = _enrichment_prepare({
@@ -215,7 +215,7 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
 #         })
 #
 #         res = enrichment_results_by_phenotype(**data)
-#         logger.info("enrichment results by phenotype: %s", res)
+#         LOGGER.info("enrichment results by phenotype: %s", res)
 #
 #         import pprint
 #         pprint.pprint(res)
@@ -231,7 +231,7 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
         })
 
         res = enrichment_results_by_phenotype(**data)
-        logger.info("enrichment results by phenotype: %s", res)
+        LOGGER.info("enrichment results by phenotype: %s", res)
 
 #         import pprint
 #         pprint.pprint(res)
@@ -251,7 +251,7 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
         print "geneSyms:", data['geneSyms']
         
         res = enrichment_results_by_phenotype(**data)
-        # logger.info("enrichment results by phenotype: %s", res)
+        # LOGGER.info("enrichment results by phenotype: %s", res)
 
 #         import pprint
 #         pprint.pprint(res)
@@ -270,7 +270,7 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
         })
 
         res = enrichment_results_by_phenotype(**data)
-        # logger.info("enrichment results by phenotype: %s", res)
+        # LOGGER.info("enrichment results by phenotype: %s", res)
 
         rec_synonymous=res['autism'][4]
         self.assertEquals(rec_synonymous['label'], 'Rec Missense')

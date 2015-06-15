@@ -3,7 +3,7 @@ import logging
 import urllib
 import itertools
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 from query_variants import prepare_present_in_parent
 

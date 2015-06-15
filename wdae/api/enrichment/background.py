@@ -10,6 +10,7 @@ import zlib
 from DAE import vDB
 from collections import Counter
 import cPickle
+from api.precompute.register import Precompute
 
 
 
@@ -52,7 +53,7 @@ def _build_synonymous_background(transmitted_study_name):
     return (b, foreground)
 
 
-class Background(object):
+class Background(Precompute):
     def __init__(self):
         self.background = None
 

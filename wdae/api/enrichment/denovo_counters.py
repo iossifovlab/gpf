@@ -112,6 +112,13 @@ class EnrichmentResult(object):
     def name(self):
         return "|".join(self.label.split('|')[0:2])
     
+    @property
+    def filter(self):
+        return self.label.split('|')[2:]
+    
+    @property
+    def type(self):
+        return self.spec['type']
 
 class DenovoEventsCounter:
     

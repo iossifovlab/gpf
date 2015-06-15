@@ -8,7 +8,7 @@ from query_prepare import prepare_gene_sets
 import logging
 import itertools
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 class IvanchoSubmittedDoubleGenesQueryTests(unittest.TestCase):
     TEST_DATA = {'geneRegionType': 'on',

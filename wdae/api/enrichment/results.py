@@ -42,8 +42,7 @@ class EnrichmentTest(object):
         
         res.expected = round(bg_prob * res.total, 4)
         res.p_val = stats.binom_test(res.count, res.total, p=bg_prob)
-        if self.spec['type'] == 'rec':
-            pass
+
         return res
     
 class EnrichmentTestBuilder(object):

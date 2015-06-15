@@ -20,7 +20,6 @@ from DAE import giDB
 from VariantAnnotation import get_effect_types
 
 import itertools
-import logging
 import string
 import operator
 # import uuid
@@ -43,6 +42,7 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names, \
 
 from models import VerificationPath
 from serializers import UserSerializer
+from api.logger import LOGGER, log_filter
 
 @receiver(post_save, sender=get_user_model())
 def create_auth_token(sender, instance=None, created=False, **kwargs):
@@ -62,20 +62,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 #             headers['Access-Control-Allow-Origin']='*'
 #         RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
 
-logger = logging.getLogger('wdae.api')
 
-def log_filter(request, message):
-    request_method = getattr(request, 'method', '-')
-    path_info = getattr(request, 'path_info', '-')
-    # Headers
-    META = getattr(request, 'META', {})
-    remote_addr = META.get('REMOTE_ADDR', '-')
-    # server_protocol = META.get('SERVER_PROTOCOL', '-')
-    # http_user_agent = META.get('HTTP_USER_AGENT', '-')
-    return "remote addr: %s; method: %s; path: %s; %s" % (remote_addr,
-                                                          request_method,
-                                                          path_info,
-                                                          message)
 
 @api_view(['GET'])
 def report_studies(request):
@@ -214,7 +201,7 @@ Example:
         effect_filter = 'all'
     else:
         effect_filter = string.lower(query_params['effectFilter'])
-    logger.info("effect_filter: %s", effect_filter)
+    LOGGER.info("effect_filter: %s", effect_filter)
     result = []
     if effect_filter == 'all':
         result = __EFFECT_GROUPS['coding'] + __EFFECT_GROUPS['noncoding']
@@ -274,7 +261,7 @@ Example:
         return Response({'variant_filters': all_var_types})
 
     variant_filter = string.upper(query_params['variantFilter'])
-    logger.info("variant_filter: %s", variant_filter)
+    LOGGER.info("variant_filter: %s", variant_filter)
 
     all_var_types = ['sub', 'ins', 'del', 'CNV']
     result = all_var_types
@@ -309,7 +296,7 @@ def pheno_types_filters(request):
         return Response({'pheno_type_filters': all_result})
 
     phenotype_filter = string.upper(query_params['phenotypeFilter'])
-    logger.info("pheno_type_filters: %s", phenotype_filter)
+    LOGGER.info("pheno_type_filters: %s", phenotype_filter)
 
     if phenotype_filter == 'WHOLE EXOME':
         result = all_result
@@ -509,7 +496,7 @@ All fields are same as in query_variants request
     # else:
     #     data = prepare_query_dict(data)
 
-    logger.info(log_filter(request, "preview query variants: " + str(data)))
+    LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
 
     generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
@@ -584,7 +571,7 @@ Advanced family filter expects following fields:
     data = prepare_query_dict(request.DATA)
     build_effect_type_filter(data)
 
-    logger.info(log_filter(request, "query variants request: " + str(data)))
+    LOGGER.info(log_filter(request, "query variants request: " + str(data)))
 
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
 
@@ -611,7 +598,7 @@ def ssc_query_variants_preview(request):
     data = prepare_ssc_filter(data)
     build_effect_type_filter(data)
 
-    logger.info(log_filter(request, "preview query variants: " + str(data)))
+    LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
 
     generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
@@ -627,7 +614,7 @@ def ssc_query_variants(request):
     data = prepare_ssc_filter(data)
     build_effect_type_filter(data)
 
-    logger.info(log_filter(request, "query variants request: " + str(data)))
+    LOGGER.info(log_filter(request, "query variants request: " + str(data)))
 
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
 
@@ -698,7 +685,7 @@ Examples:
 # 
 #     GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
 #     query_data = prepare_query_dict(request.QUERY_PARAMS)
-#     logger.info(log_filter(request, "enrichment query: %s" % str(query_data)))
+#     LOGGER.info(log_filter(request, "enrichment query: %s" % str(query_data)))
 # 
 #     data = _enrichment_prepare(query_data)
 #     # if isinstance(data, QueryDict):
@@ -742,7 +729,7 @@ Examples:
     """
 
     query_data = prepare_query_dict(request.QUERY_PARAMS)
-    logger.info(log_filter(request, "enrichment query by phenotype: %s" % str(query_data)))
+    LOGGER.info(log_filter(request, "enrichment query by phenotype: %s" % str(query_data)))
 
     data = enrichment_prepare(query_data)
     # if isinstance(data, QueryDict):
@@ -773,7 +760,7 @@ def pheno_report_preview(request):
         return Response()
 
     data = prepare_query_dict(request.DATA)
-    logger.info(log_filter(request, "preview pheno report: " + str(data)))
+    LOGGER.info(log_filter(request, "preview pheno report: " + str(data)))
     ps = pheno_query(data)
     res = pheno_calc(ps)
 
@@ -791,7 +778,7 @@ def pheno_report_download(request):
         return Response()
 
     data = prepare_query_dict(request.DATA)
-    logger.info(log_filter(request, "preview pheno download: " + str(data)))
+    LOGGER.info(log_filter(request, "preview pheno download: " + str(data)))
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
 
     ps = pheno_query(data)

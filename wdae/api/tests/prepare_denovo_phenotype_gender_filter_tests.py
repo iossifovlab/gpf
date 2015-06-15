@@ -1,7 +1,7 @@
 import unittest
 import logging
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 from query_prepare import prepare_denovo_phenotype_gender_filter1
 

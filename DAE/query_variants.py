@@ -10,7 +10,7 @@ from VariantAnnotation import get_effect_types_set, get_effect_types
 from VariantsDB import mat2Str
 from DAE import phDB
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def get_child_types():
@@ -108,7 +108,7 @@ def family_filter_by_race(families, race):
     races = __get_parents_race_filter()
     res = dict([(key, val) for (key, val) in families.items()
                 if key in races and races[key] == race])
-    # logger.debug("family_filter_by_race: %s", str(res))
+    # LOGGER.debug("family_filter_by_race: %s", str(res))
     return res
 
 
@@ -203,12 +203,12 @@ def family_filter_by_trio_quad(families, trio_quad):
 def __bind_family_filter_by_trio_quad(data, family_filters):
     if 'familyQuadTrio' in data and data['familyQuadTrio']:
         if data['familyQuadTrio'].lower() == 'trio':
-            logger.debug("filtering trio families...")
+            LOGGER.debug("filtering trio families...")
             family_filters.append(
                 lambda fs: family_filter_by_trio_quad(fs, 3)
             )
         elif data['familyQuadTrio'].lower() == 'quad':
-            logger.debug("filtering quad families...")
+            LOGGER.debug("filtering quad families...")
             family_filters.append(
                 lambda fs: family_filter_by_trio_quad(fs, 4)
             )
@@ -234,7 +234,7 @@ def advanced_family_filter(data, filters):
     __bind_family_filter_by_trio_quad(data, family_filters)
     __bind_family_filter_by_prb_gender(data, family_filters)
     __bind_family_filter_by_sib_gender(data, family_filters)
-    # logger.debug("family filters: %d", len(family_filters))
+    # LOGGER.debug("family filters: %d", len(family_filters))
 
     if len(family_filters) == 0:
         return None
@@ -259,7 +259,7 @@ def prepare_inchild(data):
     if not res:
         return None
     if len(res) != 1:
-        logger.error("inChild format wrong: %s, %s", inChild, res)
+        LOGGER.error("inChild format wrong: %s, %s", inChild, res)
         return None
     return res[0]
 
@@ -368,7 +368,7 @@ def prepare_variant_types(data):
     variant_types_set= set(get_variant_types())
     variant_types_list = variant_types.split(',')
     result = [vt for vt in variant_types_list if vt in variant_types_set]
-    logger.info("variant types: %s", result)
+    LOGGER.info("variant types: %s", result)
     if result:
         return ','.join(result)
 

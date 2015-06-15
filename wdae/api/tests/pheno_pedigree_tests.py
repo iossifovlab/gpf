@@ -6,7 +6,7 @@ from query_variants import do_query_variants
 import logging
 # import itertools
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class PedigreeTests(unittest.TestCase):

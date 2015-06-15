@@ -14,19 +14,19 @@ from query_prepare import prepare_ssc_filter
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 class RecurrentLGDsGenesTests(APITestCase):
     def test_load_gene_set(self):
         geneTerms = vDB.get_denovo_sets("AUTISM")
-        logger.info("gene terms: %s", geneTerms.t2G.keys())
+        LOGGER.info("gene terms: %s", geneTerms.t2G.keys())
         self.assertEqual(15, len(geneTerms.t2G.keys()))
 
     def test_rec_lgds_count(self):
         geneTerms = vDB.get_denovo_sets("AUTISM")
-        logger.info("gene terms: %s", geneTerms.t2G.keys())
-        logger.info("rec lgds: %s", geneTerms.t2G["prb.LoF.Recurrent"])
-        logger.info("rec lgds: %s", len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
+        LOGGER.info("gene terms: %s", geneTerms.t2G.keys())
+        LOGGER.info("rec lgds: %s", geneTerms.t2G["prb.LoF.Recurrent"])
+        LOGGER.info("rec lgds: %s", len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
         self.assertEqual(39, len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
 
 
@@ -47,11 +47,11 @@ class PhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        logger.info("result: %s", response)
+        LOGGER.info("result: %s", response)
         for num, it in enumerate(response.streaming_content):
-            logger.info("line: %s: %s", num, it)
+            LOGGER.info("line: %s: %s", num, it)
 
-        logger.info("len: %s", num)
+        LOGGER.info("len: %s", num)
         self.assertEqual(3, num)
 
     def test_phenotype_BTN1A1_BTNL2_schizophrenia(self):
@@ -150,7 +150,7 @@ class PhenotypeFilterTests(APITestCase):
         
     def test_phenotype_ATRX_SPEG_schizophrenia_autisim_unaffected_urlencoded(self):
         data = "genes=Gene+Symbols&geneSet=main&geneTerm=&geneSyms=ATRX%2C+SPEG&geneRegionType=on&geneRegion=&denovoStudies=ALL+WHOLE+EXOME&transmittedStudies=none&rarity=ultraRare&phenoType=autism&phenoType=schizophrenia&phenoType=unaffected&gender=male&gender=female&variantTypes=sub&variantTypes=ins&variantTypes=del&effectTypes=Nonsense&effectTypes=Frame-shift&effectTypes=Splice-site&effectTypes=Missense&effectTypes=Non-frame-shift&effectTypes=noStart&effectTypes=noEnd&effectTypes=Synonymous&effectTypes=Non+coding&effectTypes=Intron&effectTypes=Intergenic&effectTypes=3%27-UTR&effectTypes=5%27-UTR&families=all&familyIds=&familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&familyPrbGender=All&familySibGender=All"
-        logger.info("urldecoded: %s", urlparse.parse_qs(data))
+        LOGGER.info("urldecoded: %s", urlparse.parse_qs(data))
         url = '/api/query_variants'
 
         response = self.client.post(url, data,
@@ -321,7 +321,7 @@ class SSCPresentInParentTests(APITestCase):
         # for c,r in enumerate(response.data['rows']):
         #     print c,":",r
 
-        # logger.info("result data: %s", response.data)
+        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
             
     def test_present_in_parent_all(self):
@@ -343,7 +343,7 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
+        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('19', response.data['count'])
 
 
@@ -361,7 +361,7 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
+        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('203', response.data['count'])
 
     def test_rec_lgds_preview(self):
@@ -395,7 +395,7 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
+        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('77', response.data['count'])
 
 
@@ -441,7 +441,7 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
+        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('9', response.data['count'])
 
     def test_ssc_phenotype_CCDC171(self):
@@ -459,7 +459,7 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
+        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('147', response.data['count'])
 
     def test_present_in_child_autism_only_parent_father(self):
@@ -481,7 +481,7 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
+        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('4', response.data['count'])
 
     def test_present_in_child_autism_and_unaffected(self):
@@ -500,7 +500,7 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # logger.info("result data: %s", response.data)
+        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('2', response.data['count'])
         
         
@@ -543,7 +543,7 @@ class SSCPresentInChildDownloadTests(APITestCase):
     def test_rec_lgds_download_urlencoded(self):
         data = 'genes=Gene+Sets&geneSet=denovo&gene_set_phenotype=autism&geneTerm=LoF.Recurrent&geneSyms=&geneRegionType=on&geneRegion=&presentInChild=autism+only&presentInChild=autism+and+unaffected&presentInParent=neither&gender=male&gender=female&variantTypes=sub&variantTypes=ins&variantTypes=del&variantTypes=CNV&effectTypes=Nonsense&effectTypes=Frame-shift&effectTypes=Splice-site&rarity=ultraRare&families=all&familyIds=&familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&familyPrbGender=All&familySibGender=All'
 
-        logger.info("urldecoded: %s", urlparse.parse_qs(data))
+        LOGGER.info("urldecoded: %s", urlparse.parse_qs(data))
         url = '/api/ssc_query_variants'
 
         response = self.client.post(url, data,

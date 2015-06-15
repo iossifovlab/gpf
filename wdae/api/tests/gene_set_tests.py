@@ -2,7 +2,7 @@ import unittest
 import logging
 from DAE import giDB
 from collections import defaultdict
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class GeneSetTests(unittest.TestCase):
@@ -18,7 +18,7 @@ class GeneSetTests(unittest.TestCase):
             gene_set_syms = set(gene_terms.t2G[gene_set_name].keys())
             gene_set_syms1 = all_res[gene_set_name]
             res = gene_set_syms1.difference(gene_set_syms)
-            logger.debug("difference for %s: %s", gene_set_name, str(res))
+            LOGGER.debug("difference for %s: %s", gene_set_name, str(res))
             self.assertEquals(0, len(res))
 
     def test_gene_terms_main_reverse(self):

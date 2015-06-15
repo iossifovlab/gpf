@@ -53,3 +53,12 @@ try:
 
 except Exception, ex:
     print "Missing import", ex
+
+
+# try:
+#     register = PrecomputeRegister({
+#         'enrichment_background': SynonymousBackground()
+#     })
+#     
+# except Exception, ex:
+#     print "Exception", ex

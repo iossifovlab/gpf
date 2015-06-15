@@ -5,7 +5,7 @@ Created on Jun 12, 2015
 '''
 import unittest
 from api.enrichment import background
-from api.enrichment.query import Query
+from api.enrichment.query import EnrichmentQuery
 from query_prepare import prepare_transmitted_studies
 from api.enrichment.enrichment import build_transmitted_background
 from bg_loader import preload_background
@@ -40,13 +40,9 @@ class Test(unittest.TestCase):
 
     def tearDown(self):
         pass
-
-    FULL_QUERY = {'denovoStudies': 'ALL WHOLE EXOME',
-                  'geneSet':'main',
-                  'geneTerm': 'FMR1-targets-1006genes'}
     
-    def test_full_query(self):
-        enrichment_query = Query.make_query(self.FULL_QUERY, self.background)
+    def test_all_query(self):
+        enrichment_query = EnrichmentQuery(self.FULL_QUERY, self.background)
         enrichment_query.build()
         
         res = enrichment_query.calc()
@@ -60,9 +56,6 @@ class Test(unittest.TestCase):
             print("--------------------------------------------------")
             print(phenotype)
             print("--------------------------------------------------")
-            pprint.pprint(er)
-            pprint.pprint(er_old)
-            print("--------------------------------------------------")
             for r, r_old in zip(er, er_old):
                 print(phenotype, r.spec)
                 print("--------------------------------------------------")
@@ -72,8 +65,10 @@ class Test(unittest.TestCase):
                     continue
                 
                 self.assertEquals(r.count, r_old['count'])
-                self.assertAlmostEquals(r.expected, float(r_old['expected']), places=4)
-                self.assertAlmostEquals(r.p_val, float(r_old['p_val']), places=4)
+                self.assertAlmostEquals(r.expected, float(r_old['expected']),
+                                        places=4)
+                self.assertAlmostEquals(r.p_val, float(r_old['p_val']),
+                                        places=4)
                 self.assertEquals(r.total, r_old['overlap'])
         
 

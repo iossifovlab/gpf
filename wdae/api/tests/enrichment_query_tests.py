@@ -8,7 +8,7 @@ from query_prepare import gene_set_bgloader
 from denovo_gene_sets import build_denovo_gene_sets
 from bg_loader import preload_background
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class EnrichmentPrepareTests(unittest.TestCase):
@@ -121,11 +121,12 @@ class EnrichmentPrepareTests(unittest.TestCase):
         data = enrichment_prepare(self.TEST_DATA_MAIN_BAD_DENOVO_STUDY)
         assert_that(data, is_(none()))
 
-    TEST_DATA_MAIN_BAD_TRANSMITTED_STUDY = {'denovoStudies': ['DalyWE2012'],
-                                            'transmittedStudies': ['BAD_STUDY'],
-                                            'geneSet': 'main',
-                                            'geneTerm': 'ChromatinModifiers'}
 
-    def test_bad_transmitted_study(self):
-        data = enrichment_prepare(self.TEST_DATA_MAIN_BAD_TRANSMITTED_STUDY)
-        assert_that(data, is_(none()))
+#     TEST_DATA_MAIN_BAD_TRANSMITTED_STUDY = {'denovoStudies': ['DalyWE2012'],
+#                                             'transmittedStudies': ['BAD_STUDY'],
+#                                             'geneSet': 'main',
+#                                             'geneTerm': 'ChromatinModifiers'}
+# 
+#     def test_bad_transmitted_study(self):
+#         data = enrichment_prepare(self.TEST_DATA_MAIN_BAD_TRANSMITTED_STUDY)
+#         assert_that(data, is_(none()))

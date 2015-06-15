@@ -3,44 +3,11 @@ Created on Jun 12, 2015
 
 @author: lubo
 '''
-from query_prepare import prepare_denovo_studies, \
-    prepare_string_value, combine_gene_syms
 from api.enrichment.results import EnrichmentTestBuilder
 
 
-def _enrichment_prepare(data):
-    result = {'denovoStudies': prepare_denovo_studies(data),
-              'geneSet': prepare_string_value(data, 'geneSet'),
-              'geneTerm': prepare_string_value(data, 'geneTerm'),
-              'gene_set_phenotype': prepare_string_value(data, 'gene_set_phenotype'),
-              'geneSyms': combine_gene_syms(data)}
-
-    if 'geneSet' not in result or result['geneSet'] is None or \
-       'geneTerm' not in result or result['geneTerm'] is None:
-        del result['geneSet']
-        del result['geneTerm']
-        del result['gene_set_phenotype']
-
-    if 'geneSet' in result and result['geneSet'] != 'denovo':
-        del result['gene_set_phenotype']
-
-    if not all(result.values()):
-        return None
-
-    return result
-
-
-
-class Query(object):
-    
-    
-    @classmethod
-    def make_query(cls, request, background):
-        query = _enrichment_prepare(request)
-        if not query:
-            return None
-        return Query(query, background)
-    
+class EnrichmentQuery(object):
+        
     def __init__(self, query, background):
         self.query = query
         self.background = background
@@ -56,4 +23,4 @@ class Query(object):
         
         return self.result
     
-        
+    

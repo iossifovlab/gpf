@@ -8,7 +8,7 @@ from query_prepare import prepare_denovo_studies, \
     combine_gene_syms, prepare_string_value
 import logging
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 
@@ -201,7 +201,7 @@ def enrichment_results_by_phenotype(
     res['phenotypes'] = sorted(count_res_by_pheno.keys())
 
     for phenotype in count_res_by_pheno.keys():
-        logger.info("calculating enrichment for phenotype: %s", phenotype)
+        LOGGER.info("calculating enrichment for phenotype: %s", phenotype)
 
         all_res = count_res_by_pheno[phenotype]
         totals = totals_by_pheno[phenotype]

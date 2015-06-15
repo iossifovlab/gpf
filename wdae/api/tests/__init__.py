@@ -14,9 +14,14 @@ from .m5_api_experiments_tests import *
 from .m5_api_problems_tests import *
 from .m5_enrichment_tests import *
 from .m6_enrichment_background_cmp import *
+from .m6_enrichment_denovo_counters_tests import *
+from .m6_enrichment_query_cmp_tests import *
+from .m6_enrichment_query_tests import *
 from .m6_enrichment_results import *
+
 from .m6_frequencies_test import *
 from .m6_precompute_store_tests import *
+
 from .pheno_pedigree_tests import *
 from .prepare_denovo_phenotype_gender_filter_tests import *
 from .present_in_child_filters_tests import *

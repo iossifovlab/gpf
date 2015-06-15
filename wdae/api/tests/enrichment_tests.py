@@ -6,7 +6,7 @@ from api.enrichment.enrichment import enrichment_test, \
 
 from DAE import vDB, get_gene_sets_symNS
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 import api.tests.enrichment_test_orig
 from bg_loader import preload_background
@@ -18,7 +18,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
         cls.dsts = vDB.get_studies('ALL WHOLE EXOME')
         cls.tsts = vDB.get_study('w1202s766e611')
         cls.gene_terms = get_gene_sets_symNS('main')
-        logger.debug("calculating original enrichment test values...")
+        LOGGER.debug("calculating original enrichment test values...")
         cls.original = api.tests.enrichment_test_orig.main(cls.dsts,
                                                            cls.tsts,
                                                            cls.gene_terms)
@@ -38,7 +38,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
         fail = False
         for gene_set_name in all_res_orig:
 
-            #logger.debug("calculating new enrichment test values...")
+            #LOGGER.debug("calculating new enrichment test values...")
             gene_syms_set = set(self.gene_terms.t2G[gene_set_name].keys())
             # print gene_set_name, "gene_syms_set:", gene_syms_set
             
@@ -49,7 +49,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
                 r = res[test_name]
                 o = all_res_orig[gene_set_name][test_name]
                 if o.cnt != r.cnt:
-                    logger.error("wrong count numbers: %s != %s for %s:%s",
+                    LOGGER.error("wrong count numbers: %s != %s for %s:%s",
                                  str(o.cnt), str(r.cnt),
                                  test_name,
                                  gene_set_name)
@@ -58,7 +58,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
                     print '.',
 
                 if o.pVal != r.p_val:
-                    logger.error("wrong pVal: %s != %s for %s:%s",
+                    LOGGER.error("wrong pVal: %s != %s for %s:%s",
                                  str(o.pVal), str(r.p_val),
                                  test_name,
                                  gene_set_name)
@@ -67,7 +67,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
                     print '.',
 
                 if o.expected != r.expected:
-                    logger.error("wrong expected: %s != %s for %s:%s",
+                    LOGGER.error("wrong expected: %s != %s for %s:%s",
                                  str(o.expected), str(r.expected),
                                  test_name,
                                  gene_set_name)
@@ -78,7 +78,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
                 r = totals[test_name][0]
                 o = totals_orig[test_name]
                 if o != r:
-                    logger.error("wrong totals numbers: %s != %s for %s",
+                    LOGGER.error("wrong totals numbers: %s != %s for %s",
                                  str(o), str(r),
                                  test_name)
                     fail = True

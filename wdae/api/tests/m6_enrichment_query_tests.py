@@ -5,7 +5,7 @@ Created on Jun 12, 2015
 '''
 import unittest
 from api.enrichment import background
-from api.enrichment.query import Query
+from api.enrichment.query import EnrichmentQuery
 
 
 class Test(unittest.TestCase):
@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
                   'geneTerm': 'FMR1-targets-1006genes'}
     
     def test_full_query(self):
-        enrichment_query = Query.make_query(self.FULL_QUERY, self.background)
+        enrichment_query = EnrichmentQuery(self.FULL_QUERY, self.background)
         enrichment_query.build()
         
         res = enrichment_query.calc()

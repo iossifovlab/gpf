@@ -11,7 +11,7 @@ from collections import Counter
 import numpy as np
 from scipy.stats import ttest_ind
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 SUPPORTED_PHENO_STUDIES = {'ALL SSC'}
 
 def get_supported_measures():
@@ -112,7 +112,7 @@ def pheno_query(data):
 
 def prepare_pheno_measure(data):
     if 'phenoMeasure' not in data:
-        logger.error("no measure name in request. returning NvIQ")
+        LOGGER.error("no measure name in request. returning NvIQ")
         return ('NvIQ', get_non_verbal_iq())
     measure = data['phenoMeasure']
     if measure =='NvIQ':
@@ -120,7 +120,7 @@ def prepare_pheno_measure(data):
     elif measure == 'vIQ':
         return ('vIQ', get_verbal_iq())
     else:
-        logger.error("strange measure name (%s) in request. returning NvIQ" % measure)
+        LOGGER.error("strange measure name (%s) in request. returning NvIQ" % measure)
         return ('NvIQ', get_non_verbal_iq())
 
 def get_pheno_measure(measure_name, conv_func=str):

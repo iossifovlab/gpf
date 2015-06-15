@@ -7,7 +7,7 @@ from scipy import stats
 
 from bg_loader import get_background
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def one_variant_per_recurrent(vs):

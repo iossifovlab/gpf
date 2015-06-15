@@ -2,6 +2,7 @@ from django.conf.urls import patterns, url
 
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.authtoken import views as rest_views
+from api.enrichment.view import EnrichmentView
 
 urlpatterns = patterns(
     'api.views',
@@ -31,8 +32,8 @@ urlpatterns = patterns(
     url(r'^gene_set_phenotypes$', 'gene_set_phenotypes'),
     
     url(r'^report_studies$', 'report_studies'),
-#     url(r'^enrichment_test$', 'enrichment_test'),
-    url(r'^enrichment_test_by_phenotype$', 'enrichment_test_by_phenotype'),
+    url(r'^enrichment_test_by_phenotype$', EnrichmentView.as_view()),
+    # url(r'^enrichment_test_by_phenotype$', 'enrichment_test_by_phenotype'),
     url(r'^child_types$', 'child_type_list'),
     url(r'^studies_summaries$', 'studies_summaries'),
     url(r'^pheno_supported_studies$', 'pheno_supported_studies'),
@@ -45,6 +46,8 @@ urlpatterns = patterns(
     url(r'^users/change_password', 'change_password'),
     url(r'^users/reset_password', 'reset_password'),
     url(r'^users/api-token-auth$', rest_views.obtain_auth_token),
+    
+    
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)
