@@ -46,15 +46,13 @@ class DenovoCountersTest(unittest.TestCase):
         for spec in PRB_TESTS_SPECS:
             vs = collect_denovo_variants(dsts, **spec)
             affected_gene_syms = filter_denovo_one_event_per_family(vs)
-            count = count_denovo_variant_events(affected_gene_syms, self.gene_syms)
-            print spec['label'], count
+            _count = count_denovo_variant_events(affected_gene_syms, self.gene_syms)
         
         dsts = self.dsts
         for spec in SIB_TESTS_SPECS:
             vs = collect_denovo_variants(dsts, **spec)
             affected_gene_syms = filter_denovo_one_event_per_family(vs)
-            count = count_denovo_variant_events(affected_gene_syms, self.gene_syms)
-            print spec['label'], count
+            _count = count_denovo_variant_events(affected_gene_syms, self.gene_syms)
             
 
 if __name__ == "__main__":

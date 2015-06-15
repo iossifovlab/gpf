@@ -24,7 +24,6 @@ class Test(TestCase):
         store.store("my_data", data)
 
         data1 = store.retrieve("my_data")
-        print data1
         
         self.assertEquals(data, data1)
         

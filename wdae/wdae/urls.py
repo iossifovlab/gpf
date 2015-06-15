@@ -25,7 +25,7 @@ urlpatterns = patterns(
 
 try:
     from query_prepare import prepare_transmitted_studies, gene_set_bgloader
-    from api.enrichment.enrichment import build_transmitted_background
+    # from api.enrichment.enrichment import build_transmitted_background
     from bg_loader import preload_background
 
 
@@ -40,13 +40,13 @@ try:
                  ['MSigDB.curated'],
                  'MSigDB.curated'),
 
-                (build_denovo_gene_sets,
-                 [],
-                 'Denovo'),
+#                 (build_denovo_gene_sets,
+#                  [],
+#                  'Denovo'),
 
-                (build_transmitted_background,
-                 transmitted,
-                 'enrichment_background')
+#                 (build_transmitted_background,
+#                  transmitted,
+#                  'enrichment_background')
                 ]
 
     preload_background(builders)

@@ -1,17 +1,17 @@
 import logging
 import api.GeneTerm
+from django.conf import settings
 
 LOGGER = logging.getLogger(__name__)
-from query_prepare import gene_set_loader
 
 
 from DAE import get_gene_sets_symNS
 from bg_loader import get_background
 
-def load_gene_set(gene_set_label, study_name=None):
-    gene_term = gene_set_loader(gene_set_label, study_name)
-    gs = api.GeneTerm.GeneTerm(gene_term)
-    return gs
+# def load_gene_set(gene_set_label, study_name=None):
+#     gene_term = gene_set_loader(gene_set_label, study_name)
+#     gs = api.GeneTerm.GeneTerm(gene_term)
+#     return gs
 
 
 def load_gene_set2(gene_set_label, gene_set_phenotype=None):
@@ -21,7 +21,10 @@ def load_gene_set2(gene_set_label, gene_set_phenotype=None):
         if not gene_term:
             gene_term = get_gene_sets_symNS(gene_set_label)
     else:
-        denovo_gene_sets = get_background('Denovo')
+        precompute_register = settings.PRECOMPUTE_REGISTER
+        
+        denovo_gene_sets = precompute_register.get('denovo_gene_sets').denovo_gene_sets
+        
         if gene_set_phenotype in denovo_gene_sets:
             gene_term = denovo_gene_sets[gene_set_phenotype]
     

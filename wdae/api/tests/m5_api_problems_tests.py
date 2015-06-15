@@ -317,11 +317,6 @@ class SSCPresentInParentTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # print response.data['cols']
-        # for c,r in enumerate(response.data['rows']):
-        #     print c,":",r
-
-        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
             
     def test_present_in_parent_all(self):
@@ -417,9 +412,6 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print response.data['cols']
-        for c,r in enumerate(response.data['rows']):
-            print c,":",r
 
         self.assertEqual('5', response.data['count'])
 

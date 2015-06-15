@@ -35,8 +35,6 @@ class Test(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('1', response.data['count'])
         
-        print(response.data)
-        
         cols = response.data['cols']
         ssc_freq = cols.index('SSCfreq')
         self.assertTrue(ssc_freq > 0)

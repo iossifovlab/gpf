@@ -9,7 +9,7 @@ from DAE import vDB, get_gene_sets_symNS
 LOGGER = logging.getLogger(__name__)
 
 import api.tests.enrichment_test_orig
-from bg_loader import preload_background
+from bg_loader import preload_background, get_background
 
 
 class EnrichmentHelpersTests(unittest.TestCase):
@@ -32,16 +32,20 @@ class EnrichmentHelpersTests(unittest.TestCase):
     def tearDownClass(cls):
         pass
 
+
+    def seUp(self):
+        self.assertNotNone(get_background('enrichment_background'))
+        
     def test_enrichment_full_count_original(self):
         all_res_orig = self.original[1]
         totals_orig = self.original[2]
         fail = False
         for gene_set_name in all_res_orig:
-
+            self.assertTrue(get_background('enrichment_background') is not None)
             #LOGGER.debug("calculating new enrichment test values...")
             gene_syms_set = set(self.gene_terms.t2G[gene_set_name].keys())
-            # print gene_set_name, "gene_syms_set:", gene_syms_set
             
+            self.assertTrue(get_background('enrichment_background') is not None)
             res, totals = enrichment_test(self.dsts,
                                           gene_syms_set)
 

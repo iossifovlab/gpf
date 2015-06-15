@@ -101,5 +101,4 @@ class Test(APITestCase):
         response = self.client.get(url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-        print response.data
         

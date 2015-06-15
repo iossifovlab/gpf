@@ -27,7 +27,7 @@ urlpatterns = patterns(
 
     url(r'^report_variants$', 'report_variants'),
     url(r'^gene_sets$', 'gene_sets_list'),
-    url(r'^gene_set_list$', 'gene_set_list'),
+#     url(r'^gene_set_list$', 'gene_set_list'),
     url(r'^gene_set_list2$', 'gene_set_list2'),
     url(r'^gene_set_phenotypes$', 'gene_set_phenotypes'),
     

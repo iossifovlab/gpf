@@ -9,11 +9,9 @@ from query_prepare import prepare_denovo_studies, prepare_string_value,\
 from api.views import prepare_query_dict, log_filter
 from rest_framework.response import Response
 from api.logger import LOGGER
-from api.enrichment import background
-from api.enrichment.query import EnrichmentQuery
 
 import numpy as np
-from api.enrichment.config import PRB_TESTS_SPECS, SIB_TESTS_SPECS, PHENOTYPES
+from api.enrichment.config import PHENOTYPES
 from api.dae_query import load_gene_set2
 from django.conf import settings
 from api.enrichment.results import EnrichmentTestBuilder
@@ -195,7 +193,6 @@ class EnrichmentView(APIView):
         
         self.result = self.enrichment_test.calc(self.denovo_studies,
                                                 self.gene_syms)
-        print self.result
         response = self.serialize()
         
         return Response(response)

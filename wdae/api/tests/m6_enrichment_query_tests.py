@@ -32,8 +32,7 @@ class Test(unittest.TestCase):
         enrichment_query = EnrichmentQuery(self.FULL_QUERY, self.background)
         enrichment_query.build()
         
-        res = enrichment_query.calc()
-        print(res)
+        _res = enrichment_query.calc()
 
 
 if __name__ == "__main__":

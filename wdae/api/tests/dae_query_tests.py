@@ -1,10 +1,10 @@
 import unittest
 
-from query_variants import prepare_inchild, \
+from api.query.query_variants import prepare_inchild, \
     dae_query_variants, \
     do_query_variants
 
-from query_prepare import prepare_gene_sets
+from api.query.query_prepare import prepare_gene_sets
 import logging
 import itertools
 

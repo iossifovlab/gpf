@@ -21,12 +21,12 @@ class PrecomputeRegister(object):
 
     def __init__(self, register={}):
         self.store = PrecomputeStore()
-        self.register = {}
+        self.reg = {}
         for key, precompute in register.items():
-            self.register[key] = precompute
+            self.register(key, precompute)
         
     def register(self, key, precompute):
-        if key in self.register:
+        if key in self.reg:
             raise KeyError("precompute object <%s> already registered" % key)
         
         data = self.store.retrieve(key)
@@ -37,7 +37,7 @@ class PrecomputeRegister(object):
             data = precompute.serialize()
             self.store.store(key, data)
         
-        self.register[key] = precompute
+        self.reg[key] = precompute
         
     
     def recompute(self):
@@ -47,4 +47,6 @@ class PrecomputeRegister(object):
             self.store.store(key, data)
     
     def get(self, key):
-        return self.register[key]
+        return self.reg[key]
+    
+    

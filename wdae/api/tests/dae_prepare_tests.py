@@ -1,22 +1,21 @@
-import unittest
 
-from query_prepare import prepare_gene_syms, \
+from api.query.query_prepare import prepare_gene_syms, \
     prepare_gene_sets, prepare_denovo_studies, \
     prepare_transmitted_studies, gene_set_bgloader
-from query_variants import prepare_inchild, prepare_effect_types, \
+from api.query.query_variants import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids
 #, prepare_family_file
 
 from api.dae_query import load_gene_set2
 
 import logging
-from denovo_gene_sets import build_denovo_gene_sets
 from bg_loader import preload_background
+from rest_framework.test import APITestCase
 
 LOGGER = logging.getLogger(__name__)
 
 
-class InChildTests(unittest.TestCase):
+class InChildTests(APITestCase):
     def test_inchild_empty(self):
         self.assertIsNone(prepare_inchild({}))
         self.assertIsNone(prepare_inchild({'inChild': None}))
@@ -38,7 +37,7 @@ class InChildTests(unittest.TestCase):
         self.assertIsNone(prepare_inchild({'inChild': 'ala-bala'}))
 
 
-class EffectTypesTests(unittest.TestCase):
+class EffectTypesTests(APITestCase):
     ALL = """LGDs,CNVs,nonsynonymous,CNV-,CNV+,frame-shift,intron,no-frame-shift-new-stop,synonymous,nonsense,no-frame-shift,missense,3'UTR,5'UTR,splice-site"""
 
     def test_effect_types_all(self):
@@ -98,7 +97,7 @@ class EffectTypesTests(unittest.TestCase):
             prepare_effect_types({'effectTypes': 'ala-bala'}), None)
 
 
-class VariantTypesTests(unittest.TestCase):
+class VariantTypesTests(APITestCase):
 
     def test_variant_types_all(self):
         self.assertIsNone(
@@ -125,7 +124,8 @@ class VariantTypesTests(unittest.TestCase):
             prepare_variant_types({'variantTypes': 'ala'}))
         self.assertIsNone(
             prepare_variant_types({'variantTypes': 'bala'}))
-class FamilesTests(unittest.TestCase):
+
+class FamilesTests(APITestCase):
 
     def test_families_empty(self):
         self.assertIsNone(prepare_family_ids({}))
@@ -163,7 +163,7 @@ class FamilesTests(unittest.TestCase):
             prepare_family_ids({'familyIds': ['111', '222']}),
             ['111', '222'])
 
-class GeneSymsTests(unittest.TestCase):
+class GeneSymsTests(APITestCase):
 
     def test_gen_syms_empty(self):
         self.assertIsNone(prepare_gene_syms({}))
@@ -203,7 +203,7 @@ class GeneSymsTests(unittest.TestCase):
             set(['CDH1', 'SCO2']))
 
 
-class GeneSetsTests(unittest.TestCase):
+class GeneSetsTests(APITestCase):
     
     DISEASE_AIDS = set(['IFNG', 'KIR3DL1', 'CXCL12'])
     GO_GO_2001293 = set(['ACACA', 'ACACB'])
@@ -229,9 +229,9 @@ class GeneSetsTests(unittest.TestCase):
                  ['MSigDB.curated'],
                  'MSigDB.curated'),
 
-                (build_denovo_gene_sets,
-                 [],
-                 'Denovo'),
+#                 (build_denovo_gene_sets,
+#                  [],
+#                  'Denovo'),
         ]
         
         preload_background(builders)
@@ -287,7 +287,7 @@ class GeneSetsTests(unittest.TestCase):
         self.assertIsNotNone(prepare_gene_sets({'geneSet': 'main',
                                                 'gene_set_phenotype': 'ala-bala',
                                                 'geneTerm': 'E15-maternal'}))
-class StudiesTests(unittest.TestCase):
+class StudiesTests(APITestCase):
 
     def test_denovo_studies_empty(self):
         dsl = prepare_denovo_studies({'denovoStudies': []})

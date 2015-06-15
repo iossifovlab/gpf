@@ -115,12 +115,10 @@ SIB_TESTS_VARS = [
 ]
 
 def collect_prb_enrichment_variants_by_phenotype(dsts):
-    print(dsts)
     collector = defaultdict(lambda: [[],[],[],[],[],[],[],[],[],[],[],[],])
     for dst in dsts:
         phenotype = dst.get_attr('study.phenotype')
         for n, (_label, in_child, effect_types) in enumerate(PRB_TESTS_VARS):
-            # print("enrichment collector prb label: %s" % label)
             collector[phenotype][n].append(
                 dst.get_denovo_variants(inChild=in_child,
                                         effectTypes=effect_types))
@@ -131,11 +129,9 @@ def collect_prb_enrichment_variants_by_phenotype(dsts):
     return res
 
 def collect_sib_enrichment_variants_by_phenotype(dsts):
-    print(dsts)
     collector = [[],[],[],[],[],[],[],[],[],[],[],[],]
     for dst in dsts:
         for n, (_label, in_child, effect_types) in enumerate(SIB_TESTS_VARS):
-            # print("enrichment collector sib label: %s" % label)
             collector[n].append(
                 dst.get_denovo_variants(inChild=in_child,
                                         effectTypes=effect_types))
@@ -147,7 +143,6 @@ def filter_prb_enrichment_variants_by_phenotype(pheno_evars):
     res = {}
     for phenotype, evars in pheno_evars.items():
         gen = zip(PRB_TESTS, evars)
-        # print("generator: %s" % gen)
         pheno_res = []
         for test, vs in gen:
             if "Rec" in test:
@@ -165,7 +160,6 @@ def filter_prb_enrichment_variants_by_phenotype(pheno_evars):
 def filter_sib_enrichment_variants_by_phenotype(evars):
 
     gen = zip(SIB_TESTS, evars)
-    # print("generator: %s" % gen)
     res = []
     for test, vs in gen:
         if "Rec" in test:

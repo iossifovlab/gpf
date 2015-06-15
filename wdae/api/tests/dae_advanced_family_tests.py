@@ -1,10 +1,10 @@
 import unittest
 
-from query_variants import do_query_variants
+from api.query.query_variants import do_query_variants
 
-import logging
+# import logging
 
-LOGGER = logging.getLogger(__name__)
+# LOGGER = logging.getLogger(__name__)
 
 
 class AdvancedFamilyFilterTests(unittest.TestCase):
@@ -111,7 +111,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         vs.next()
 
         count = 0
-        for v in vs:
+        for _v in vs:
             # self.assertIn('sibF', v[17], str(v[17]))
             count += 1
         self.assertTrue(count > 0)
@@ -131,7 +131,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         vs.next()
 
         count = 0
-        for v in vs:
+        for _v in vs:
             # self.assertIn('sibM', v[17], str(v[17]))
             count += 1
         self.assertTrue(count > 0)
@@ -148,11 +148,10 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_proband_gender_female(self):
         vs = do_query_variants(self.TEST_DATA_6)
-        cols = vs.next()
-        LOGGER.info("cols: %s", str(cols))
+        _cols = vs.next()
 
         count = 0
-        for v in vs:
+        for _v in vs:
             count += 1
             # self.assertIn('prbF', v[17], str(v[17]))
 
@@ -170,10 +169,9 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_proband_gender_male(self):
         vs = do_query_variants(self.TEST_DATA_7)
-        cols = vs.next()
-        LOGGER.debug("cols: %s", str(cols))
+        _cols = vs.next()
         count = 0
-        for v in vs:
+        for _v in vs:
             count += 1
             # self.assertIn('prbM', v[17], str(v[17]))
 
@@ -193,7 +191,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         vs = do_query_variants(self.TEST_DATA_8)
         vs.next()
         count = 0
-        for v in vs:
+        for _v in vs:
             count += 1
 
         self.assertEqual(0, count)
@@ -217,46 +215,46 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "ultraRareOnly": True}
 
     def family_verbal_iq_test_count(self, data):
-      vs = do_query_variants(data)
-      vs.next()
-      count = 0
-      for v in vs:
-        count += 1
-      return count
+        vs = do_query_variants(data)
+        vs.next()
+        count = 0
+        for _v in vs:
+            count += 1
+        return count
 
     def test_family_verbal_iq(self):
 
-      # Testing the base data with default filters
-      count = self.family_verbal_iq_test_count(self.TEST_DATA_9_1)
-      self.assertNotEqual(0, count)
-
-      # Testing the familyVerbalIqLo filter compared to base data
-      self.TEST_DATA_9_2['familyVerbalIqLo'] = 23;
-      count_with_iq_lo = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
-      self.assertNotEqual(0, count_with_iq_lo)
-      self.assertTrue(count_with_iq_lo < count)
-
-      # Testing the familyVerbalIqHi filter compared to base data
-      self.TEST_DATA_9_2['familyVerbalIqLo'] = "";
-      self.TEST_DATA_9_2['familyVerbalIqHi'] = 23;
-      count_with_iq_hi = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
-      self.assertNotEqual(0, count_with_iq_hi)
-      self.assertTrue(count_with_iq_hi < count)
-
-      # Testing the familyVerbalIqLo filter with wrong data compared to 0.0
-      self.TEST_DATA_9_2['familyVerbalIqHi'] = "";
-      self.TEST_DATA_9_2['familyVerbalIqLo'] = 'foo'
-      count_with_iq_lo_wrong = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
-      self.assertNotEqual(0, count_with_iq_lo_wrong)
-      # self.TEST_DATA_9_2['familyVerbalIqLo'] = '0.0'
-      # count_with_iq_lo_ok = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
-      # self.assertEqual(count_with_iq_lo_wrong, count_with_iq_lo_ok)
-
-      # Testing the familyVerbalIqHi filter with wrong data
-      self.TEST_DATA_9_2['familyVerbalIqHi'] = 'foo';
-      self.TEST_DATA_9_2['familyVerbalIqLo'] = ''
-      count_with_iq_hi_wrong = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
-      self.assertNotEqual(0, count_with_iq_hi_wrong)
+        # Testing the base data with default filters
+        count = self.family_verbal_iq_test_count(self.TEST_DATA_9_1)
+        self.assertNotEqual(0, count)
+        
+        # Testing the familyVerbalIqLo filter compared to base data
+        self.TEST_DATA_9_2['familyVerbalIqLo'] = 23;
+        count_with_iq_lo = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        self.assertNotEqual(0, count_with_iq_lo)
+        self.assertTrue(count_with_iq_lo < count)
+        
+        # Testing the familyVerbalIqHi filter compared to base data
+        self.TEST_DATA_9_2['familyVerbalIqLo'] = "";
+        self.TEST_DATA_9_2['familyVerbalIqHi'] = 23;
+        count_with_iq_hi = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        self.assertNotEqual(0, count_with_iq_hi)
+        self.assertTrue(count_with_iq_hi < count)
+        
+        # Testing the familyVerbalIqLo filter with wrong data compared to 0.0
+        self.TEST_DATA_9_2['familyVerbalIqHi'] = "";
+        self.TEST_DATA_9_2['familyVerbalIqLo'] = 'foo'
+        count_with_iq_lo_wrong = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        self.assertNotEqual(0, count_with_iq_lo_wrong)
+        # self.TEST_DATA_9_2['familyVerbalIqLo'] = '0.0'
+        # count_with_iq_lo_ok = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        # self.assertEqual(count_with_iq_lo_wrong, count_with_iq_lo_ok)
+        
+        # Testing the familyVerbalIqHi filter with wrong data
+        self.TEST_DATA_9_2['familyVerbalIqHi'] = 'foo';
+        self.TEST_DATA_9_2['familyVerbalIqLo'] = ''
+        count_with_iq_hi_wrong = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        self.assertNotEqual(0, count_with_iq_hi_wrong)
 
     TEST_DATA_10 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',
@@ -269,7 +267,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_in_child(self):
         vs = do_query_variants(self.TEST_DATA_10)
-        cols = vs.next()
+        _cols = vs.next()
         count = 0
         for v in vs:
             count += 1
@@ -287,14 +285,14 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "ultraRareOnly": True}
 
     def test_variant_types(self):
-      vs = do_query_variants(self.TEST_DATA_11)
-      cols = vs.next()
-      count = 0
-      for v in vs:
-          count += 1
-          self.assertIn('del', v[3], str(v[3]))
-
-      self.assertTrue(count > 0)
+        vs = do_query_variants(self.TEST_DATA_11)
+        _cols = vs.next()
+        count = 0
+        for v in vs:
+            count += 1
+            self.assertIn('del', v[3], str(v[3]))
+        
+        self.assertTrue(count > 0)
 
 
 

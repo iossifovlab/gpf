@@ -57,7 +57,6 @@ def collect_denovo_variants(dsts, inchild, effect, **kwargs):
     for dst in dsts:
         vsres.append(dst.get_denovo_variants(inChild=inchild,
                                              effectTypes=effect))
-    print("collect_denovo_variants", inchild, effect, dsts)
     return itertools.chain.from_iterable(vsres)
 
 

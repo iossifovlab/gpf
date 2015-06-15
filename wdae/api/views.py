@@ -24,13 +24,13 @@ import string
 import operator
 # import uuid
 
-from query_variants import do_query_variants, \
+from api.query.query_variants import do_query_variants, \
     get_child_types, get_variant_types, \
     join_line
 
-from query_prepare import prepare_ssc_filter
+from api.query.query_prepare import prepare_ssc_filter
 
-from dae_query import prepare_summary, load_gene_set, load_gene_set2
+from dae_query import prepare_summary, load_gene_set2
 
 from report_variants import build_stats
 from api.enrichment.enrichment_query import \
@@ -386,21 +386,21 @@ def __gene_set_response(query_params, gts, gt):
     return Response({"gene_count": len(gl), "key": gt, "desc": gts.tDesc[gt]})
 
 
-@api_view(['GET'])
-def gene_set_list(request):
-    query_params = prepare_query_dict(request.QUERY_PARAMS)
-    if 'gene_set' not in query_params:
-        return Response({})
-    gene_set = query_params['gene_set']
-    gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
-    study_name = str(query_params['study']) if 'study' in query_params else None
-
-    gts = load_gene_set(gene_set, study_name)
-
-    if gts:
-        return __gene_set_response(query_params, gts, gene_name)
-    else:
-        return Response()
+# @api_view(['GET'])
+# def gene_set_list(request):
+#     query_params = prepare_query_dict(request.QUERY_PARAMS)
+#     if 'gene_set' not in query_params:
+#         return Response({})
+#     gene_set = query_params['gene_set']
+#     gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
+#     study_name = str(query_params['study']) if 'study' in query_params else None
+# 
+#     gts = load_gene_set(gene_set, study_name)
+# 
+#     if gts:
+#         return __gene_set_response(query_params, gts, gene_name)
+#     else:
+#         return Response()
 
 
 @api_view(['GET'])
@@ -422,10 +422,12 @@ def gene_set_list2(request):
     gene_set_phenotype = str(query_params['gene_set_phenotype']) \
                         if 'gene_set_phenotype' in query_params else None
 
+    gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
+    
     gts = load_gene_set2(gene_set, gene_set_phenotype)
 
     if gts:
-        return __gene_set_response(query_params, gts, None)
+        return __gene_set_response(query_params, gts, gene_name)
     else:
         return Response()
 

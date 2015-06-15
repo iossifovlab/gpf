@@ -4,11 +4,11 @@ import urllib
 import itertools
 
 from VariantAnnotation import get_effect_types, get_effect_types_set
-from VariantsDB import mat2Str
+# from VariantsDB import mat2Str
 
 # from DAE import vDB
-from query_prepare import prepare_denovo_studies
-from query_variants import dae_query_variants, pedigree_data
+from api.query.query_prepare import prepare_denovo_studies
+from api.query.query_variants import dae_query_variants #, pedigree_data
 
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -65,11 +65,11 @@ class EffectTypesFiltersTests(APITestCase):
     def test_effect_filters_ARHGAP30_nonsense(self):
         url = '/api/query_variants_preview'
 
-        data = {"geneSyms":"ARHGAP30",
-                "denovoStudies":'ALL WHOLE EXOME',
-                "variantTypes":"All",
-                "effectTypes":  "nonsense,frame-shift,splice-site",
-        }
+#         data = {"geneSyms":"ARHGAP30",
+#                 "denovoStudies":'ALL WHOLE EXOME',
+#                 "variantTypes":"All",
+#                 "effectTypes":  "nonsense,frame-shift,splice-site",
+#         }
 
         data = {"geneSyms":"ARHGAP30",
                 "denovoStudies":'ALL WHOLE EXOME',
@@ -81,7 +81,6 @@ class EffectTypesFiltersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.data
 
-        LOGGER.info("result: %s", result)
         self.assertEqual('1', result['count'])
 
 
@@ -98,7 +97,6 @@ class EffectTypesFiltersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.data
 
-        LOGGER.info("result: %s", result)
         self.assertEqual('1', result['count'])
 
         
@@ -132,7 +130,6 @@ class VariantTypesFiltersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.data
 
-        LOGGER.info("result: %s", result)
         self.assertEqual('3', result['count'])
 
         data = {"geneSyms":"CHD2",
@@ -144,7 +141,6 @@ class VariantTypesFiltersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.data
 
-        LOGGER.info("result: %s", result)
         self.assertEqual('1', result['count'])
 
         data = {"geneSyms":"CHD2",
@@ -156,7 +152,6 @@ class VariantTypesFiltersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.data
 
-        LOGGER.info("result: %s", result)
         self.assertEqual('2', result['count'])
 
         data = {"geneSyms":"CHD2",
@@ -183,7 +178,6 @@ class VariantTypesFiltersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.data
 
-        LOGGER.info("result: %s", result)
         self.assertEqual('10', result['count'])
 
 class PhenotypeFiltersTests(APITestCase):
@@ -194,7 +188,6 @@ class PhenotypeFiltersTests(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
 
     def test_variant_filters(self):
         url = '/api/query_variants_preview'
@@ -206,7 +199,6 @@ class PhenotypeFiltersTests(APITestCase):
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('2', response.data['count'])
 
     def test_phenotype_filters(self):
@@ -221,7 +213,6 @@ class PhenotypeFiltersTests(APITestCase):
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
 
@@ -239,11 +230,9 @@ class VariantPedigreeTests(unittest.TestCase):
         variants = itertools.chain(*vsl)
         
         for v in variants:
-            print "v.atts=", v.atts
             
-            LOGGER.info("v.inChS=%s; v.bestSt=%s", v.inChS, mat2Str(v.bestSt))
-            for m in v.memberInOrder:
-                LOGGER.info("m.role=%s; m.gender=%s; ", m.role, m.gender)
+            for _m in v.memberInOrder:
+                pass
 
     def test_pedigree_ALK(self):
         data = {
@@ -257,13 +246,8 @@ class VariantPedigreeTests(unittest.TestCase):
         vsl = dae_query_variants(data)
         variants = itertools.chain(*vsl)
         
-        for v in variants:
-            print "v.atts=", v.atts
-
-            LOGGER.info("v.inChS=%s; v.bestSt=%s", v.inChS, mat2Str(v.bestSt))
-            LOGGER.info("pedigree=%s", pedigree_data(v))
-            LOGGER.info('v.popType=%s; v.atts=%s', v.popType, v.atts)
-            LOGGER.info('v.pedigree=%s', v.pedigree)
+        for _v in variants:
+            pass
 
 
 class PhenotypeFilterTests(APITestCase):
@@ -278,7 +262,6 @@ class PhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('2', response.data['count'])
 
 
@@ -295,7 +278,6 @@ class PhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
     def test_phenotype_ATRX_SPEG(self):
@@ -309,7 +291,6 @@ class PhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('8', response.data['count'])
 
     def test_phenotype_ATRX_SPEG_unaffected(self):
@@ -325,7 +306,6 @@ class PhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('3', response.data['count'])
 
     def test_phenotype_ATRX_SPEG_schizophrenia(self):
@@ -340,7 +320,6 @@ class PhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
     def test_phenotype_ATRX_SPEG_schizophrenia_autisim_unaffected(self):
@@ -354,7 +333,6 @@ class PhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('8', response.data['count'])
         
 
@@ -369,7 +347,6 @@ class GenderFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('8', response.data['count'])
 
     def test_gender_ATRX_SPEG_female(self):
@@ -384,7 +361,6 @@ class GenderFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('3', response.data['count'])
 
     def test_gender_ATRX_SPEG_male(self):
@@ -399,7 +375,6 @@ class GenderFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('5', response.data['count'])
 
     def test_gender_ATRX_SPEG_autism_male(self):
@@ -414,7 +389,6 @@ class GenderFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('4', response.data['count'])
 
     def test_gender_ATRX_SPEG_autism_female(self):
@@ -429,7 +403,6 @@ class GenderFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('0', response.data['count'])
 
 class SSCPhenotypeFilterTests(APITestCase):
@@ -446,7 +419,6 @@ class SSCPhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('147', response.data['count'])
 
     def test_ssc_phenotype_CACNA1S(self):
@@ -462,7 +434,6 @@ class SSCPhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('203', response.data['count'])
 
 
@@ -487,11 +458,9 @@ class SSCPresentInChildTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        print response.data['cols']
 
-        for c,r in enumerate(response.data['rows']):
-            print c,":",r
-        
+        for _c,_r in enumerate(response.data['rows']):
+            pass
         self.assertEqual('5', response.data['count'])
 
     def test_present_in_child_autism_only(self):
@@ -510,7 +479,6 @@ class SSCPresentInChildTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('2', response.data['count'])
 
     def test_present_in_child_unaffected_only(self):
@@ -529,7 +497,6 @@ class SSCPresentInChildTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
     def test_present_in_child_autism_and_unaffected(self):
@@ -548,7 +515,6 @@ class SSCPresentInChildTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('2', response.data['count'])
 
 class SSCPresentInParentTests(APITestCase):
@@ -572,7 +538,6 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('19', response.data['count'])
 
 
@@ -595,7 +560,6 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('9', response.data['count'])
 
 
@@ -619,7 +583,6 @@ class SSCPresentInParentTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # LOGGER.info("result data: %s", response.data)
         self.assertEqual('4', response.data['count'])
 
 
@@ -627,7 +590,6 @@ class SSCPresentInParentTests(APITestCase):
 class PhenotypeFilterTestsSRI(APITestCase):
     
     def test_phenotype_SRI(self):
-        import pprint
         
         data = {
             "geneSyms": "SRI",
@@ -641,12 +603,9 @@ class PhenotypeFilterTestsSRI(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
         pedigree_data = response.data['rows'][0][26]
-        pprint.pprint(pedigree_data)
-        LOGGER.info("pedigree data: %s" % pedigree_data)
         self.assertEqual('["schizophrenia", [["mom", "F", 0], ["dad", "M", 0], ["sib", "M", 1]]]',
                          pedigree_data)
 
@@ -669,7 +628,6 @@ class SSCPresentInChildGenderTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('3', response.data['count'])
 
 
@@ -688,7 +646,6 @@ class SSCPresentInChildGenderTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('0', response.data['count'])
 
     def test_present_in_child_male_unaffected_only(self):
@@ -707,7 +664,6 @@ class SSCPresentInChildGenderTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('1', response.data['count'])
 
     def test_present_in_child_male_autism_and_unaffected(self):
@@ -726,6 +682,5 @@ class SSCPresentInChildGenderTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        LOGGER.info("result data: %s", response.data)
         self.assertEqual('2', response.data['count'])
 

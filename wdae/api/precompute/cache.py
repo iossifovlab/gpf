@@ -37,7 +37,8 @@ class PrecomputeStore(object):
     def retrieve(self, key):
         dkey = self.hash_key("{}.description".format(key))
         description = self.cache.get(dkey)
-        
+        if not description:
+            return None
         
         vkeys = {self.hash_key("{}.{}".format(key, k)): k
                  for k in description['keys']}

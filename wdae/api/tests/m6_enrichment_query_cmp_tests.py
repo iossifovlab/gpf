@@ -11,7 +11,6 @@ from api.enrichment.enrichment import build_transmitted_background
 from bg_loader import preload_background
 from api.enrichment.enrichment_query import enrichment_results_by_phenotype,\
     enrichment_prepare
-import pprint
 
 
 class Test(unittest.TestCase):
@@ -53,16 +52,7 @@ class Test(unittest.TestCase):
         for phenotype in res.keys():
             er = res[phenotype]
             er_old = res_old[phenotype]
-            print("--------------------------------------------------")
-            print(phenotype)
-            print("--------------------------------------------------")
             for r, r_old in zip(er, er_old):
-                print(phenotype, r.spec)
-                print("--------------------------------------------------")
-                pprint.pprint(r)
-                pprint.pprint(r_old)
-                if r.spec['type'] == 'rec':
-                    continue
                 
                 self.assertEquals(r.count, r_old['count'])
                 self.assertAlmostEquals(r.expected, float(r_old['expected']),

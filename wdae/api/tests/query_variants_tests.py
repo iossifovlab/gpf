@@ -1,14 +1,11 @@
 import unittest
 
-from query_variants import prepare_inchild, \
-    dae_query_variants, \
+from query_variants import \
     do_query_variants
 
-from query_prepare import prepare_gene_sets
-import logging
-import itertools
+# import logging
 
-LOGGER = logging.getLogger(__name__)
+# LOGGER = logging.getLogger(__name__)
 
 class IvanchoSubmittedDoubleGenesQueryTests(unittest.TestCase):
     TEST_DATA = {'geneRegionType': 'on',
@@ -37,7 +34,6 @@ class IvanchoSubmittedDoubleGenesQueryTests(unittest.TestCase):
 
         for v in vs:
             gl = v[8].split(';')
-            print(v[8], gl, gl.count('FMR1'))
             self.assertEqual(1, gl.count('FMR1'))
 
 

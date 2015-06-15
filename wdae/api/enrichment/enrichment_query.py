@@ -4,7 +4,7 @@ from api.enrichment.enrichment import enrichment_test, PRB_TESTS, SIB_TESTS, \
 
 from api.dae_query import load_gene_set2
 import numpy as np
-from query_prepare import prepare_denovo_studies, \
+from api.query.query_prepare import prepare_denovo_studies, \
     combine_gene_syms, prepare_string_value
 import logging
 

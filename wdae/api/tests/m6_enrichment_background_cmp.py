@@ -54,8 +54,6 @@ class Test(unittest.TestCase):
             
             countnew = self.background.count(gene_syms)
             count = count_background(gene_syms)
-            print(gene_set, count.cnt, countnew, countnew - count.cnt,
-                  (countnew - count.cnt)*1.0/count.cnt)
             
             self.assertEquals(count.cnt, countnew)
 

@@ -27,7 +27,6 @@ class WdaeUserTestCase(TestCase):
     def test_verification_email(self):
         msg = self.user.email_user("Just Test", "Testing... Testing...")
         self.assertTrue(msg)
-        print(type(msg))
 
 #     def test_create_superuser(self):
 #         u = WdaeUser.objects.create(

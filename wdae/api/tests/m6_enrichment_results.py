@@ -27,7 +27,6 @@ class Test(unittest.TestCase):
         eres = EnrichmentTest.make_variant_events_enrichment(spec)
         adsts = filter_denovo_studies_by_phenotype(self.dsts, 'autism')
         res = eres.calc(adsts, self.gene_syms)
-        print res
         self.assertTrue(res)
         
 
