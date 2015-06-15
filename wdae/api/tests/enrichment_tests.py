@@ -5,6 +5,7 @@ from api.enrichment.enrichment import enrichment_test, \
     build_transmitted_background
 
 from DAE import vDB, get_gene_sets_symNS
+import time
 
 LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
                      'enrichment_background')]
 
         preload_background(builders)
+        time.sleep(10)
 
     @classmethod
     def tearDownClass(cls):
@@ -34,6 +36,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
 
 
     def seUp(self):
+        time.sleep(10)
         self.assertNotNone(get_background('enrichment_background'))
         
     def test_enrichment_full_count_original(self):

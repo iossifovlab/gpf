@@ -8,7 +8,7 @@ from DAE import vDB, get_gene_sets_symNS
 from api.enrichment import background
 from api.enrichment.enrichment import count_background,\
     build_transmitted_background
-from query_prepare import prepare_transmitted_studies
+from api.query.query_prepare import prepare_transmitted_studies
 from bg_loader import preload_background
 
 

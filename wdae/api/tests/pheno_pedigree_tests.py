@@ -1,6 +1,6 @@
 import unittest
 
-from query_variants import do_query_variants
+from api.query.query_variants import do_query_variants
 
 # from query_prepare import prepare_gene_sets
 import logging

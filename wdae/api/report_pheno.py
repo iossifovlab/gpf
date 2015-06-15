@@ -3,9 +3,9 @@ import logging
 
 from DAE import phDB
 from api.studies import get_denovo_studies_names
-from query_variants import dae_query_variants
+from api.query.query_variants import dae_query_variants
 
-from query_prepare import prepare_denovo_studies
+from api.query.query_prepare import prepare_denovo_studies
 
 from collections import Counter
 import numpy as np

@@ -18,9 +18,9 @@ class BackgroundBuilderTask (threading.Thread):
             print("Background builder already started...")
             return
         else:
-            if _builder_started:
-                _lock.release()
-                return
+#             if _builder_started:
+#                 _lock.release()
+#                 return
             _builder_started = True
 
             try:

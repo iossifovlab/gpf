@@ -3,7 +3,7 @@ import unittest
 # import itertools
 
 from DAE import vDB
-from query_prepare import prepare_denovo_studies
+from api.query.query_prepare import prepare_denovo_studies
 from api.enrichment.enrichment_query import enrichment_prepare, \
     enrichment_results_by_phenotype
 from api.enrichment.enrichment import build_transmitted_background
@@ -17,6 +17,7 @@ from api.enrichment.enrichment import collect_prb_enrichment_variants_by_phenoty
     build_enrichment_variants_genes_dict_by_phenotype, \
     count_gene_set_enrichment_by_phenotype, \
     count_background
+import time
     
 # LOGGER = logging.getLogger(__name__)
 
@@ -148,6 +149,7 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
                      'enrichment_background')]
 
         preload_background(builders)
+        time.sleep(10)
 
     @classmethod
     def tearDownClass(cls):

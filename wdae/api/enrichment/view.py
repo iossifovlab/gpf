@@ -4,7 +4,7 @@ Created on Jun 12, 2015
 @author: lubo
 '''
 from rest_framework.views import APIView
-from query_prepare import prepare_denovo_studies, prepare_string_value,\
+from api.query.query_prepare import prepare_denovo_studies, prepare_string_value,\
     combine_gene_syms
 from api.views import prepare_query_dict, log_filter
 from rest_framework.response import Response

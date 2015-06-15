@@ -3,7 +3,7 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
-from query_prepare import prepare_denovo_phenotype_gender_filter1
+from api.query.query_prepare import prepare_denovo_phenotype_gender_filter1
 
 class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
 

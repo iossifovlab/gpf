@@ -1,6 +1,6 @@
 import unittest
 
-from query_variants import \
+from api.query.query_variants import \
     do_query_variants
 
 # import logging

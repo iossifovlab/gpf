@@ -5,7 +5,7 @@ import itertools
 
 LOGGER = logging.getLogger(__name__)
 
-from query_variants import prepare_present_in_parent
+from api.query.query_variants import prepare_present_in_parent
 
 class PresentInParentTests(unittest.TestCase):
 

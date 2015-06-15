@@ -8,7 +8,7 @@ import urlparse
 # from VariantsDB import mat2Str
 
 from DAE import vDB
-from query_prepare import prepare_ssc_filter
+from api.query.query_prepare import prepare_ssc_filter
 # from query_variants import dae_query_variants, pedigree_data
 
 from rest_framework import status

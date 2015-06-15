@@ -5,7 +5,7 @@ from api.report_pheno import pheno_query_variants, pheno_query, \
     get_supported_measures, get_supported_studies, \
     pheno_calc
 
-from query_prepare import prepare_denovo_studies
+from api.query.query_prepare import prepare_denovo_studies
 
 class PhenoTest(unittest.TestCase):
     TEST_DATA = {"denovoStudies": "ALL SSC",
