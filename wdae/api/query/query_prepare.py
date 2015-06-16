@@ -2,7 +2,7 @@ import itertools
 import logging
 from DAE import get_gene_sets_symNS, vDB
 from bg_loader import get_background
-from wdae.settings import PRECOMPUTE_REGISTER
+from api.precompute import register
 
 LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
         if not gene_term:
             gene_term = get_gene_sets_symNS(gene_set_label)
     else:
-        denovo_gene_sets = PRECOMPUTE_REGISTER.get('denovo_gene_sets').denovo_gene_sets
+        denovo_gene_sets = register.get('denovo_gene_sets').denovo_gene_sets
         if denovo_gene_sets is None:
             return None
         if gene_set_phenotype in denovo_gene_sets:

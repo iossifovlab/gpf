@@ -1,6 +1,7 @@
 import logging
 import api.GeneTerm
 from django.conf import settings
+from api.precompute import register
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,9 +22,8 @@ def load_gene_set2(gene_set_label, gene_set_phenotype=None):
         if not gene_term:
             gene_term = get_gene_sets_symNS(gene_set_label)
     else:
-        precompute_register = settings.PRECOMPUTE_REGISTER
-        
-        denovo_gene_sets = precompute_register.get('denovo_gene_sets').denovo_gene_sets
+        precomputed = register.get('denovo_gene_sets')
+        denovo_gene_sets = precomputed.denovo_gene_sets
         
         if gene_set_phenotype in denovo_gene_sets:
             gene_term = denovo_gene_sets[gene_set_phenotype]

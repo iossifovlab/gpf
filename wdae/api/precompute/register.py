@@ -49,4 +49,32 @@ class PrecomputeRegister(object):
     def get(self, key):
         return self.reg[key]
     
+    def keys(self):
+        return self.reg.keys()
+    
+
+
+_REGISTER = PrecomputeRegister()
+
+def get_register():
+    global _REGISTER
+    return _REGISTER
+
+def register(key, precompute):
+    global _REGISTER
+    print("register keys: %s" % _REGISTER.reg.keys())
+    _REGISTER.register(key, precompute)
+
+def get(key):
+    global _REGISTER
+    print("keys: %s" % _REGISTER.reg.keys())
+    print("reg: %s" % _REGISTER.reg)
+
+    try:
+        value = _REGISTER.get(key)
+    finally:
+        pass
+    
+    print("value: %s" % value)
+    return value
     

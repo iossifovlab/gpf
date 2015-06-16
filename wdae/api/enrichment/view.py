@@ -15,6 +15,7 @@ from api.enrichment.config import PHENOTYPES
 from api.dae_query import load_gene_set2
 from django.conf import settings
 from api.enrichment.results import EnrichmentTestBuilder
+from api.precompute import register
 
 class EnrichmentView(APIView):
     def __init__(self):
@@ -186,7 +187,7 @@ class EnrichmentView(APIView):
         if self.data is None:
             return Response(None)
         
-        background = settings.PRECOMPUTE_REGISTER.get('enrichment_background')
+        background = register.get('enrichment_background')
         
         self.enrichment_test = EnrichmentTestBuilder()
         self.enrichment_test.build(background)
