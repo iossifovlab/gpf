@@ -3,9 +3,8 @@
 import logging
 from api.enrichment.enrichment_query import enrichment_prepare
 from hamcrest import assert_that, has_entry, has_key, is_, none
-from api.query.query_prepare import gene_set_bgloader
 from denovo_gene_sets import build_denovo_gene_sets
-from bg_loader import preload_background
+from api.deprecated.bg_loader import preload_background
 from rest_framework.test import APITestCase
 
 LOGGER = logging.getLogger(__name__)
@@ -17,14 +16,6 @@ class EnrichmentPrepareTests(APITestCase):
         super(EnrichmentPrepareTests, cls).setUpClass()
 
         builders = [
-                (gene_set_bgloader,
-                 ['GO'],
-                 'GO'),
-
-                (gene_set_bgloader,
-                 ['MSigDB.curated'],
-                 'MSigDB.curated'),
-
                 (build_denovo_gene_sets,
                  [],
                  'Denovo'),

@@ -1,7 +1,8 @@
 
 from api.query.query_prepare import prepare_gene_syms, \
     prepare_gene_sets, prepare_denovo_studies, \
-    prepare_transmitted_studies, gene_set_bgloader
+    prepare_transmitted_studies
+from api.deprecated.bg_loader import gene_set_bgloader
 from api.query.query_variants import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids
 #, prepare_family_file
@@ -9,7 +10,7 @@ from api.query.query_variants import prepare_inchild, prepare_effect_types, \
 from api.dae_query import load_gene_set2
 
 import logging
-from bg_loader import preload_background
+from api.deprecated.bg_loader import preload_background
 from rest_framework.test import APITestCase
 
 LOGGER = logging.getLogger(__name__)

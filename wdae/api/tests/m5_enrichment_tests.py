@@ -8,7 +8,7 @@ from api.enrichment.enrichment_query import enrichment_prepare, \
     enrichment_results_by_phenotype
 from api.enrichment.enrichment import build_transmitted_background
 
-from bg_loader import preload_background, get_background
+from api.deprecated.bg_loader import preload_background, get_background
 
 from api.enrichment.enrichment import collect_prb_enrichment_variants_by_phenotype, \
     collect_sib_enrichment_variants_by_phenotype, \

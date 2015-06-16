@@ -10,7 +10,7 @@ import time
 LOGGER = logging.getLogger(__name__)
 
 import api.tests.enrichment_test_orig
-from bg_loader import preload_background, get_background
+from api.deprecated.bg_loader import preload_background, get_background
 
 
 class EnrichmentHelpersTests(unittest.TestCase):

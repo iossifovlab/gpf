@@ -1,7 +1,6 @@
 import itertools
 import logging
 from DAE import get_gene_sets_symNS, vDB
-from bg_loader import get_background
 from api.precompute import register
 
 LOGGER = logging.getLogger(__name__)
@@ -87,9 +86,7 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
     
     gene_term = None
     if gene_set_label!= 'denovo':
-        gene_term = get_background(gene_set_label)
-        if not gene_term:
-            gene_term = get_gene_sets_symNS(gene_set_label)
+        gene_term = get_gene_sets_symNS(gene_set_label)
     else:
         denovo_gene_sets = register.get('denovo_gene_sets').denovo_gene_sets
         if denovo_gene_sets is None:
@@ -98,15 +95,6 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
             gene_term = denovo_gene_sets[gene_set_phenotype]
     
     return gene_term
-
-def gene_set_bgloader(gene_set_label):
-    if 'denovo' == gene_set_label:
-        return None
-    else:
-        gene_term = get_gene_sets_symNS(gene_set_label)
- 
-    return gene_term
-
 
 # def __load_gene_set(gene_set, gene_term, gene_study,
 #                     gene_set_loader=gene_set_loader):

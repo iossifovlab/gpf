@@ -9,7 +9,7 @@ from api.enrichment import background
 from api.enrichment.enrichment import count_background,\
     build_transmitted_background
 from api.query.query_prepare import prepare_transmitted_studies
-from bg_loader import preload_background
+from api.deprecated.bg_loader import preload_background
 
 
 class Test(unittest.TestCase):

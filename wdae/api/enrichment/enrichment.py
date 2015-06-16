@@ -5,7 +5,7 @@ import itertools
 import logging
 from scipy import stats
 
-from bg_loader import get_background
+from api.deprecated.bg_loader import get_background
 
 LOGGER = logging.getLogger(__name__)
 
