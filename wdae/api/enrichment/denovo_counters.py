@@ -61,8 +61,8 @@ def collect_denovo_variants(dsts, inchild, effect, **kwargs):
 
 
 def filter_denovo_studies_by_phenotype(dsts, phenotype):
-    return [st for st in dsts 
-            if st and st.get_attr('study.phenotype') == phenotype]
+    print("denovo studies: %s" % dsts)
+    return [st for st in dsts if st and st.get_attr('study.phenotype') == phenotype]
 
 
 def count_denovo_variant_events(affected_gene_syms, gene_syms):
