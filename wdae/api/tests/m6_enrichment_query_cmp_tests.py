@@ -5,13 +5,29 @@ Created on Jun 12, 2015
 '''
 import unittest
 from api.enrichment import background
-from api.enrichment.query import EnrichmentQuery
 from api.query.query_prepare import prepare_transmitted_studies
 from api.enrichment.enrichment import build_transmitted_background
 from api.deprecated.bg_loader import preload_background
 from api.enrichment.enrichment_query import enrichment_results_by_phenotype,\
     enrichment_prepare
+from api.enrichment.results import EnrichmentTestBuilder
 
+class EnrichmentQuery(object):
+        
+    def __init__(self, query, background):
+        self.query = query
+        self.background = background
+        
+    def build(self):
+        self.enrichment_test = EnrichmentTestBuilder()
+        self.enrichment_test.build(self.background)
+        
+    def calc(self):
+        dsts = self.query['denovoStudies']
+        gene_syms = self.query['geneSyms']
+        self.result = self.enrichment_test.calc(dsts, gene_syms)
+        
+        return self.result
 
 class Test(unittest.TestCase):
 
@@ -39,7 +55,17 @@ class Test(unittest.TestCase):
 
     def tearDown(self):
         pass
+
+    FULL_QUERY = {'denovoStudies': 'ALL WHOLE EXOME',
+                  'geneSet':'main',
+                  'geneTerm': 'FMR1-targets-1006genes'}
     
+    def test_full_query(self):
+        enrichment_query = EnrichmentQuery(self.FULL_QUERY, self.background)
+        enrichment_query.build()
+        
+        _res = enrichment_query.calc()
+            
     def test_all_query(self):
         enrichment_query = EnrichmentQuery(self.FULL_QUERY, self.background)
         enrichment_query.build()

@@ -291,7 +291,6 @@ def prepare_present_in_child(data):
             gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'M'
             comp.append(gender_filter)
 
-        # print "comp: ", comp
         if len(comp)==1:
             return comp[0]
 
@@ -302,7 +301,6 @@ def prepare_present_in_child(data):
 def prepare_present_in_parent(data):
     if "presentInParent" in data:
         present_in_parent = set(data['presentInParent'].split(','))
-        print "presentInParent:", present_in_parent
         if set(['father only']) == present_in_parent:
             return lambda fromParent: (len(fromParent)==3 and 'd' == fromParent[0])
         if set(['mother only']) == present_in_parent:
@@ -341,10 +339,8 @@ def prepare_effect_types(data):
     if not effect_type_list:
         return None
     return get_effect_types_set(','.join(effect_type_list))
-    # print("effect_types: %s" % effect_type)
     # effect_types = effect_type.split(',')
     # result = [et for et in effect_types if et in get_effect_types(types=True, groups=True)]
-    # print("effect types: %s" % result)
 
     # return set(result)
     # if effect_type not in get_effect_types(types=True, groups=True):

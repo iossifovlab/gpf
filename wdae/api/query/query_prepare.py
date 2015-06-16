@@ -199,7 +199,6 @@ def prepare_denovo_phenotype_gender_filter1(data, studyPhenoType):
 
 
 # def prepare_denovo_phenotype_gender_filter(phenoType, gender, studyPhenoType):
-#     print "phenoType:", phenoType
     
 #     if studyPhenoType in phenoType:
 #         if len(gender)==2 or len(gender)==0:
@@ -226,7 +225,6 @@ def prepare_denovo_phenotype(data):
         return
         
     phenoType = data['phenoType']
-    print("phenoType: %s" % phenoType)
 
     if phenoType is None or phenoType.lower() == 'none':
         del data['phenoType']
@@ -274,7 +272,6 @@ def prepare_denovo_pheno_filter(data, dstudies):
         return [(st, None) for st in dstudies]
     
     
-    print "denovo pheno type filter:", data
     res = []
     for st in dstudies:
         f = prepare_denovo_phenotype_gender_filter1(data, st.get_attr('study.phenotype'))

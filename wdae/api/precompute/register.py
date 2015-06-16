@@ -41,7 +41,7 @@ class PrecomputeRegister(object):
         
     
     def recompute(self):
-        for key, precompute in self.register.items():
+        for key, precompute in self.reg.items():
             precompute.precompute()
             data = precompute.serialize()
             self.store.store(key, data)
@@ -53,7 +53,6 @@ class PrecomputeRegister(object):
         return self.reg.keys()
     
 
-
 _REGISTER = PrecomputeRegister()
 
 def get_register():
@@ -62,19 +61,15 @@ def get_register():
 
 def register(key, precompute):
     global _REGISTER
-    print("register keys: %s" % _REGISTER.reg.keys())
     _REGISTER.register(key, precompute)
 
 def get(key):
     global _REGISTER
-    print("keys: %s" % _REGISTER.reg.keys())
-    print("reg: %s" % _REGISTER.reg)
 
     try:
         value = _REGISTER.get(key)
     finally:
         pass
-    
-    print("value: %s" % value)
+
     return value
     

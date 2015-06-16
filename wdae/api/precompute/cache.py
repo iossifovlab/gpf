@@ -8,6 +8,7 @@ import hashlib
 from django.core.cache import caches
 from datetime import datetime
 
+from api.logger import LOGGER
 
 class PrecomputeStore(object):
 
@@ -27,6 +28,10 @@ class PrecomputeStore(object):
         description = {"name": key,
                        "keys": data.keys(),
                        "timestamp": datetime.now()}
+        
+        LOGGER.info("storing cache value: for %s at %s" % 
+                    (description['name'],
+                     description['timestamp'],))
         
         values = {"{}.{}".format(key, k):v for k,v in data.items()}
         values ["{}.description".format(key)] = description

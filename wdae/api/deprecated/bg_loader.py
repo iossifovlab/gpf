@@ -1,10 +1,14 @@
 import threading
 from DAE import get_gene_sets_symNS
 
+
 _background = {}
 _lock = threading.Lock()
 _builder_started = False
 
+import warnings
+
+warnings.warn("bg_loader module is deprecated", FutureWarning)
 
 class BackgroundBuilderTask (threading.Thread):
 

@@ -23,7 +23,6 @@ class WdaeApiConfig(AppConfig):
         m = '.'.join(spl[:-1])
         [c] = spl[-1:]
         
-        print((m,c))
         return m,c
             
     def ready(self):
@@ -31,7 +30,6 @@ class WdaeApiConfig(AppConfig):
         
         register = get_register()
         for key, cls_name in settings.PRECOMPUTE_CONFIG.items():
-            print(cls_name)
             m,c = self._split_class_name(cls_name)
             module = import_module(m)
             cls = getattr(module, c)
