@@ -589,8 +589,8 @@ Advanced family filter expects following fields:
     return response
 
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
+# @authentication_classes((TokenAuthentication,))
+# @permission_classes((IsAuthenticated,))
 def ssc_query_variants_preview(request):
 
     if request.method == 'OPTIONS':
