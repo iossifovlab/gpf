@@ -42,6 +42,10 @@ class EnrichmentView(APIView):
     
         if not all(result.values()):
             return None
+        
+        dsts = result['denovoStudies']
+        result['denovoStudies'] = [st for st in dsts if st.get_attr('study.type')=='WE']
+        
         self.data.update(result)
 
     
