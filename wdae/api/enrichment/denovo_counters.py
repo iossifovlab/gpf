@@ -110,7 +110,7 @@ class EnrichmentResult(object):
     
     @property
     def name(self):
-        return "|".join(self.label.split('|')[0:2])
+        return self.label.split('|')[1]
     
     @property
     def filter(self):
