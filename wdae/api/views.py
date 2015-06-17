@@ -826,7 +826,12 @@ def check_verif_path(request):
 @api_view(['POST'])
 def change_password(request):
     password = request.DATA['password']
+    confirm_password = request.DATA['confirm-password']
     verif_path = request.DATA['verif_path']
+    if password != confirm_password:
+        return Response({
+                'errors': 'Passwords do not match.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     user = get_user_model().change_password(verif_path, password)
 
