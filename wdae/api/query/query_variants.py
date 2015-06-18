@@ -9,6 +9,7 @@ from query_prepare import combine_gene_syms, \
 from VariantAnnotation import get_effect_types_set, get_effect_types
 from VariantsDB import mat2Str
 from DAE import phDB
+from api.query.query_prepare import prepare_denovo_study_type
 
 LOGGER = logging.getLogger(__name__)
 
@@ -558,6 +559,7 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 def dae_query_variants(data):
     prepare_denovo_phenotype(data)
+    prepare_denovo_study_type(data)
     prepare_gender_filter(data)
 
     dstudies = prepare_denovo_studies(data)

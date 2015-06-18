@@ -220,6 +220,21 @@ def prepare_denovo_phenotype_gender_filter1(data, studyPhenoType):
 #     else:
 #         return None
     
+def prepare_denovo_study_type(data):
+    if 'studyType' not in data:
+        return
+    
+    study_type = data['studyType']
+    if study_type is None or study_type.lower() == 'none':
+        del data['studyType']
+        
+    study_type = [st for st in data['studyType'].split(',') 
+                  if st in set(['WE','TG','CNV'])]
+    if study_type:
+        data['studyType'] = set(study_type)
+    else:
+        del data['studyType']
+    
 def prepare_denovo_phenotype(data):
     if 'phenoType' not in data:
         return

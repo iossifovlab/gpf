@@ -14,14 +14,21 @@ import itertools
 from rest_framework.parsers import JSONParser, FormParser
 
 
-class WholeExomePreview(APIView):
+class WholeExomePrepare(APIView):
+    
+    def prepare(self, request):
+        data = prepare_query_dict(request.DATA)
+        build_effect_type_filter(data)
+        return data
+        
+
+class WholeExomePreview(WholeExomePrepare):
     
     def post(self,request):
         if request.method == 'OPTIONS':
             return Response()
     
-        data = prepare_query_dict(request.DATA)
-        build_effect_type_filter(data)
+        data = self.prepare(request)
     
         LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
     
@@ -30,7 +37,7 @@ class WholeExomePreview(APIView):
     
         return Response(summary)
     
-class WholeExomeDownload(APIView):
+class WholeExomeDownload(WholeExomePrepare):
     
     parser_classes = (JSONParser, FormParser,)
     
@@ -39,9 +46,8 @@ class WholeExomeDownload(APIView):
         if request.method == 'OPTIONS':
             return Response()
     
-        data = prepare_query_dict(request.DATA)
-        build_effect_type_filter(data)
-    
+        data = self.prepare(request)
+            
         LOGGER.info(log_filter(request, "query variants request: " + str(data)))
     
         comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
