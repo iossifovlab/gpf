@@ -1,20 +1,23 @@
 import unittest
-import logging
-
-LOGGER = logging.getLogger(__name__)
 
 from api.query.query_prepare import prepare_denovo_phenotype_gender_filter1
+from DAE import vDB
 
 class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(PrepareDenovoPhenotypeGenderFilterAutismStudyTests, cls).setUpClass()
+        cls.STUDY = vDB.get_study('IossifovWE2014')
 
     def test_autism_gender_female(self):
         data = {
             'phenoType': set(['autism']),
             'gender': ['F']
         }
-        studyPhenoType = 'autism'
+        # studyPhenoType = 'autism'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
 
         self.assertTrue(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -31,9 +34,9 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             'phenoType': set(['autism']),
             'gender': ['M']
         }
-        studyPhenoType = 'autism'
+        # studyPhenoType = 'autism'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
 
         self.assertFalse(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -50,9 +53,9 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             'phenoType': set(['autism']),
             'gender': ['F', 'M']
         }
-        studyPhenoType = 'autism'
+        # studyPhenoType = 'autism'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
 
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -69,9 +72,9 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             'phenoType': set(['autism', 'unaffected']),
             'gender': ['M']
         }
-        studyPhenoType = 'autism'
+        # studyPhenoType = 'autism'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
 
         self.assertFalse(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -88,9 +91,9 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             'phenoType': set(['autism', 'unaffected']),
             'gender': ['F']
         }
-        studyPhenoType = 'autism'
+        # studyPhenoType = 'autism'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
 
         self.assertTrue(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -107,9 +110,9 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             'phenoType': set(['autism', 'unaffected']),
             'gender': ['F', 'M']
         }
-        studyPhenoType = 'autism'
+        # studyPhenoType = 'autism'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
 
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -123,14 +126,20 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
 
 class PrepareDenovoPhenotypeGenderFilterSchizophreniaStudyTests(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        super(PrepareDenovoPhenotypeGenderFilterSchizophreniaStudyTests, cls).setUpClass()
+        cls.STUDY = vDB.get_study('KarayiorgouWE2012')
+
+
     def test_autism_gender_female(self):
         data = {
             'phenoType': set(['autism']),
             'gender': ['F']
         }
-        studyPhenoType = 'schizophrenia'
+        # studyPhenoType = 'schizophrenia'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
         self.assertIsNone(f)
         
         # self.assertTrue(f('prbF'))
@@ -148,9 +157,9 @@ class PrepareDenovoPhenotypeGenderFilterSchizophreniaStudyTests(unittest.TestCas
             'phenoType': set(['autism']),
             'gender': ['M']
         }
-        studyPhenoType = 'schizophrenia'
+        # studyPhenoType = 'schizophrenia'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
         self.assertIsNone(f)
 
     def test_autism_gender_female_and_male(self):
@@ -158,9 +167,9 @@ class PrepareDenovoPhenotypeGenderFilterSchizophreniaStudyTests(unittest.TestCas
             'phenoType': set(['autism']),
             'gender': ['F', 'M']
         }
-        studyPhenoType = 'schizophrenia'
+        # studyPhenoType = 'schizophrenia'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
         self.assertIsNone(f)
 
     def test_autism_unaffected_gender_male(self):
@@ -168,9 +177,9 @@ class PrepareDenovoPhenotypeGenderFilterSchizophreniaStudyTests(unittest.TestCas
             'phenoType': set(['autism', 'unaffected']),
             'gender': ['M']
         }
-        studyPhenoType = 'schizophrenia'
+        # studyPhenoType = 'schizophrenia'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -183,13 +192,13 @@ class PrepareDenovoPhenotypeGenderFilterSchizophreniaStudyTests(unittest.TestCas
         self.assertFalse(f(''))
 
     def test_autism_unaffected_gender_female(self):
-        studyPhenoType = 'schizophrenia'
+        # studyPhenoType = 'schizophrenia'
         data = {
             'phenoType': set(['autism', 'unaffected']),
             'gender': ['F']
         }
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -206,9 +215,9 @@ class PrepareDenovoPhenotypeGenderFilterSchizophreniaStudyTests(unittest.TestCas
             'phenoType': set(['autism', 'unaffected']),
             'gender': ['F', 'M']
         }
-        studyPhenoType = 'schizophrenia'
+        # studyPhenoType = 'schizophrenia'
         
-        f = prepare_denovo_phenotype_gender_filter1(data, studyPhenoType)
+        f = prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))

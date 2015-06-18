@@ -13,6 +13,8 @@ from .gene_set_tests import *
 from .m5_api_experiments_tests import *
 from .m5_api_problems_tests import *
 from .m5_enrichment_tests import *
+
+from .m6_denovo_study_type_tests import *
 from .m6_enrichment_background_cmp import *
 from .m6_enrichment_denovo_counters_tests import *
 from .m6_enrichment_query_cmp_tests import *

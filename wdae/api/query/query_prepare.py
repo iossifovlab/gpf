@@ -166,15 +166,23 @@ def prepare_gene_sets(data):
     return None
 
 
-def prepare_denovo_phenotype_gender_filter1(data, studyPhenoType):
+def prepare_denovo_phenotype_gender_filter1(data, st):
+    study_pheno_type = st.get_attr('study.phenotype')
+    study_type = st.get_attr('study.type')
+    
     pheno_types = data['phenoType']
+    if 'studyType' in data:
+        study_types=data['studyType']
+    else:
+        study_types=set(['WE','TG','CNV'])
+        
     gender = None
     if 'gender' in data:
         gender = data['gender']
     
     pheno_filter = []
     
-    if studyPhenoType in pheno_types:
+    if study_pheno_type in pheno_types and study_type in study_types:
         pf = lambda inCh: len(inCh) > 0 and inCh[0] == 'p'
         if ['F'] == gender:
             pf = lambda inCh: 'prbF' in inCh
@@ -182,7 +190,7 @@ def prepare_denovo_phenotype_gender_filter1(data, studyPhenoType):
             pf = lambda inCh: 'prbM' in inCh
         pheno_filter.append(pf)
         
-    if 'unaffected' in pheno_types:
+    if 'unaffected' in pheno_types and study_type in study_types:
         pf = lambda inCh: ('sib' in inCh) 
         if ['F'] == gender:
             pf = lambda inCh: 'sibF' in inCh
@@ -289,7 +297,7 @@ def prepare_denovo_pheno_filter(data, dstudies):
     
     res = []
     for st in dstudies:
-        f = prepare_denovo_phenotype_gender_filter1(data, st.get_attr('study.phenotype'))
+        f = prepare_denovo_phenotype_gender_filter1(data, st)
         if not f:
             continue
         res.append((st, {'presentInChild': f}))
