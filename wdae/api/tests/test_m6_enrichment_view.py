@@ -27,7 +27,7 @@ class Test(APITestCase):
             'geneSet': 'main',
         }
         view = EnrichmentView()
-        view.enrichment_prepare(data)
+        view.data = EnrichmentView.enrichment_prepare(data)
         
         self.assertEquals('main', view.gene_set)
         self.assertEquals('ChromatinModifiers', view.gene_term)
@@ -42,7 +42,7 @@ class Test(APITestCase):
             'geneSet': '',
         }
         view = EnrichmentView()
-        view.enrichment_prepare(data)
+        view.data = EnrichmentView.enrichment_prepare(data)
         
         self.assertIsNone(view.gene_set)
         self.assertIsNone(view.gene_term)
@@ -58,7 +58,7 @@ class Test(APITestCase):
             'geneSet': 'main',
         }
         view = EnrichmentView()
-        view.enrichment_prepare(data)
+        view.data = EnrichmentView.enrichment_prepare(data)
         
         res = view.serialize_response_common_data()
         
@@ -76,7 +76,7 @@ class Test(APITestCase):
             'geneSet': '',
         }
         view = EnrichmentView()
-        view.enrichment_prepare(data)
+        view.data = EnrichmentView.enrichment_prepare(data)
         
         res = view.serialize_response_common_data()
         
