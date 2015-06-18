@@ -20,7 +20,8 @@ class EnrichmentView(APIView):
     def __init__(self):
         self.data={}
 
-    def enrichment_prepare(self, data):
+    @staticmethod
+    def enrichment_prepare(data):
         if data['denovoStudies']:
             del data['denovoStudies']
         data['denovoStudies'] = 'ALL WHOLE EXOME'
@@ -46,7 +47,7 @@ class EnrichmentView(APIView):
         dsts = result['denovoStudies']
         result['denovoStudies'] = [st for st in dsts if st.get_attr('study.type')=='WE']
         
-        self.data.update(result)
+        return result
 
     
     def colormap_value(self, p_val, lessmore):
@@ -185,7 +186,7 @@ class EnrichmentView(APIView):
                 request, 
                 "enrichment query by phenotype: %s" % str(query_data)))
 
-        self.enrichment_prepare(query_data)
+        self.data = self.enrichment_prepare(query_data)
 
         if self.data is None:
             return Response(None)

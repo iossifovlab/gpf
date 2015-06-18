@@ -11,6 +11,7 @@ from api.deprecated.bg_loader import preload_background
 from api.enrichment.enrichment_query import enrichment_results_by_phenotype,\
     enrichment_prepare
 from api.enrichment.results import EnrichmentTestBuilder
+from api.enrichment.views import EnrichmentView
 
 class EnrichmentQuery(object):
         
@@ -60,14 +61,18 @@ class Test(unittest.TestCase):
                   'geneSet':'main',
                   'geneTerm': 'FMR1-targets-1006genes'}
     
-    def test_full_query(self):
-        enrichment_query = EnrichmentQuery(self.FULL_QUERY, self.background)
-        enrichment_query.build()
-        
-        _res = enrichment_query.calc()
+#     def test_full_query(self):
+#         
+#         data = EnrichmentView.enrichment_prepare(self.FULL_QUERY)
+#         enrichment_query = EnrichmentQuery(data, self.background)
+#         enrichment_query.build()
+#         
+#         _res = enrichment_query.calc()
             
     def test_all_query(self):
-        enrichment_query = EnrichmentQuery(self.FULL_QUERY, self.background)
+        data = EnrichmentView.enrichment_prepare(self.FULL_QUERY)
+        enrichment_query = EnrichmentQuery(data, self.background)
+
         enrichment_query.build()
         
         res = enrichment_query.calc()

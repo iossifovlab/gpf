@@ -176,6 +176,9 @@ def enrichment_results_by_phenotype(
         gene_set_phenotype=None,
         geneSyms=None):
 
+
+    denovoStudies = [st for st in denovoStudies if st.get_attr('study.type') == 'WE']
+    
     count_res_by_pheno, totals_by_pheno, genes_dict_by_pheno = \
         enrichment_test_by_phenotype(denovoStudies, geneSyms)
 
