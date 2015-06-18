@@ -3,7 +3,7 @@ Created on Jun 15, 2015
 
 @author: lubo
 '''
-from api.enrichment.view import EnrichmentView
+from api.enrichment.views import EnrichmentView
 from rest_framework.test import APITestCase
 from rest_framework import status
 

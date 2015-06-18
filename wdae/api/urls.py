@@ -2,7 +2,8 @@ from django.conf.urls import patterns, url
 
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.authtoken import views as rest_views
-from api.enrichment.view import EnrichmentView
+from api.enrichment.views import EnrichmentView
+from api.we.views import WholeExomePreview, WholeExomeDownload
 
 urlpatterns = patterns(
     'api.views',
@@ -24,6 +25,9 @@ urlpatterns = patterns(
 
     url(r'^ssc_query_variants_preview$', 'ssc_query_variants_preview'),
     url(r'^ssc_query_variants$', 'ssc_query_variants'),
+
+    url(r'^we_query_variants_preview$', WholeExomePreview.as_view()),
+    url(r'^we_query_variants$', WholeExomeDownload.as_view() ),
 
     url(r'^report_variants$', 'report_variants'),
     url(r'^gene_sets$', 'gene_sets_list'),
