@@ -5,13 +5,17 @@ Created on Jun 19, 2015
 '''
 import unittest
 from api.enrichment.background import CodingLenBackground
+from DAE import get_gene_sets_symNS
+
+import numpy as np
 
 
 class Test(unittest.TestCase):
 
 
     def setUp(self):
-        pass
+        self.gene_term = get_gene_sets_symNS('main')
+        self.gene_syms = self.gene_term.t2G['FMR1-targets-1006genes'].keys()
 
 
     def tearDown(self):
@@ -43,6 +47,28 @@ class Test(unittest.TestCase):
         background = CodingLenBackground()
         background.precompute()
         self.assertEquals(33100101, background.total)    
+        
+    def test_count(self):
+        background = CodingLenBackground()
+        background.precompute()
+        self.assertEquals(3810185, background.count(self.gene_syms))
+    
+    def test_prob(self):
+        background = CodingLenBackground()
+        background.precompute()
+        self.assertAlmostEqual(0.11511, background.prob(self.gene_syms), 4)
+    
+    def test_serialize_deserialize(self):
+        background = CodingLenBackground()
+        background.precompute()
+    
+        data = background.serialize()
+        
+        b2 = CodingLenBackground()
+        b2.deserialize(data)
+        
+        np.testing.assert_array_equal(background.background, b2.background)
+
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

@@ -34,7 +34,6 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.dsts = vDB.get_studies('ALL WHOLE EXOME')
         self.gene_term = get_gene_sets_symNS('main')
-        
         self.gene_syms = self.gene_term.t2G['FMR1-targets-1006genes'].keys()
 
 

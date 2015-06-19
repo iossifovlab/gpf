@@ -144,6 +144,26 @@ class CodingLenBackground(Background):
                 dtype=[('sym','|S32'), ('raw','>i4')])
         return self.background
     
+    def serialize(self):
+        fout = cStringIO.StringIO()
+        np.save(fout, self.background)
+        
+        b = zlib.compress(fout.getvalue())
+        return {'background': b}
+    
+    def deserialize(self, data):
+        b = data['background']
+        fin = cStringIO.StringIO(zlib.decompress(b))
+        self.background = np.load(fin)
+
+    def count(self, gene_syms):
+        vpred = np.vectorize(lambda sym: sym in gene_syms)
+        index = vpred(self.background['sym'])
+        base = np.sum(self.background['raw'][index])
+        return base
+
     @property
     def total(self):
         return np.sum(self.background['raw'])
+    
+    
