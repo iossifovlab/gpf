@@ -191,7 +191,7 @@ class EnrichmentView(APIView):
         if self.data is None:
             return Response(None)
         
-        background = register.get('enrichment_background')
+        background = register.get('synonymous_background')
         
         self.enrichment = EnrichmentTestBuilder()
         self.enrichment.build(background)

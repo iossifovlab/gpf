@@ -11,15 +11,14 @@ from api.enrichment.config import PHENOTYPES, PRB_TESTS_SPECS, SIB_TESTS_SPECS
 
 
 class EnrichmentTest(object):
-    SYNONYMOUS_BACKGROUND = background.SynonymousBackground()
-    
+
     def __init__(self, spec):
         self.spec = spec
         self.background = None
         self.counter = None
 
     @classmethod
-    def make_variant_events_enrichment(cls, spec, background=SYNONYMOUS_BACKGROUND):
+    def make_variant_events_enrichment(cls, spec):
         res = cls(spec)
         res.background = background
         if not res.background.is_ready:
@@ -28,7 +27,7 @@ class EnrichmentTest(object):
         return res
     
     @classmethod
-    def make_recurrent_genes_enrichment(cls, spec, background=SYNONYMOUS_BACKGROUND):
+    def make_recurrent_genes_enrichment(cls, spec):
         res = cls(spec)
         res.background = background
         if not res.background.is_ready:
@@ -46,7 +45,6 @@ class EnrichmentTest(object):
         return res
     
 class EnrichmentTestBuilder(object):
-    SYNONYMOUS_BACKGROUND = background.SynonymousBackground()
     
     def _build_test(self, background, spec):
         spec_type = spec['type']
@@ -88,7 +86,7 @@ class EnrichmentTestBuilder(object):
             res.append(r)
         return res
     
-    def build(self, background=SYNONYMOUS_BACKGROUND):
+    def build(self, background):
         self._prb_build(background)
         self._sib_build(background)
         

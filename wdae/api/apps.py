@@ -18,6 +18,7 @@ from importlib import import_module
 
 class WdaeApiConfig(AppConfig):
     name = "api"
+    
     def _split_class_name(self, cls_name):
         spl = cls_name.split('.')
         m = '.'.join(spl[:-1])
