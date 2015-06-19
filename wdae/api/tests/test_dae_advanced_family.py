@@ -214,7 +214,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "geneSyms": "",
                    "ultraRareOnly": True}
 
-    def family_verbal_iq_test_count(self, data):
+    def family_verbal_iq_count(self, data):
         vs = do_query_variants(data)
         vs.next()
         count = 0
@@ -225,35 +225,35 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
     def test_family_verbal_iq(self):
 
         # Testing the base data with default filters
-        count = self.family_verbal_iq_test_count(self.TEST_DATA_9_1)
+        count = self.family_verbal_iq_count(self.TEST_DATA_9_1)
         self.assertNotEqual(0, count)
         
         # Testing the familyVerbalIqLo filter compared to base data
         self.TEST_DATA_9_2['familyVerbalIqLo'] = 23;
-        count_with_iq_lo = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        count_with_iq_lo = self.family_verbal_iq_count(self.TEST_DATA_9_2)
         self.assertNotEqual(0, count_with_iq_lo)
         self.assertTrue(count_with_iq_lo < count)
         
         # Testing the familyVerbalIqHi filter compared to base data
         self.TEST_DATA_9_2['familyVerbalIqLo'] = "";
         self.TEST_DATA_9_2['familyVerbalIqHi'] = 23;
-        count_with_iq_hi = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        count_with_iq_hi = self.family_verbal_iq_count(self.TEST_DATA_9_2)
         self.assertNotEqual(0, count_with_iq_hi)
         self.assertTrue(count_with_iq_hi < count)
         
         # Testing the familyVerbalIqLo filter with wrong data compared to 0.0
         self.TEST_DATA_9_2['familyVerbalIqHi'] = "";
         self.TEST_DATA_9_2['familyVerbalIqLo'] = 'foo'
-        count_with_iq_lo_wrong = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        count_with_iq_lo_wrong = self.family_verbal_iq_count(self.TEST_DATA_9_2)
         self.assertNotEqual(0, count_with_iq_lo_wrong)
         # self.TEST_DATA_9_2['familyVerbalIqLo'] = '0.0'
-        # count_with_iq_lo_ok = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        # count_with_iq_lo_ok = self.family_verbal_iq_count(self.TEST_DATA_9_2)
         # self.assertEqual(count_with_iq_lo_wrong, count_with_iq_lo_ok)
         
         # Testing the familyVerbalIqHi filter with wrong data
         self.TEST_DATA_9_2['familyVerbalIqHi'] = 'foo';
         self.TEST_DATA_9_2['familyVerbalIqLo'] = ''
-        count_with_iq_hi_wrong = self.family_verbal_iq_test_count(self.TEST_DATA_9_2)
+        count_with_iq_hi_wrong = self.family_verbal_iq_count(self.TEST_DATA_9_2)
         self.assertNotEqual(0, count_with_iq_hi_wrong)
 
     TEST_DATA_10 = {"denovoStudies": ["ALL SSC"],

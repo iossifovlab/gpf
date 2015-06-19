@@ -67,12 +67,12 @@ class EnrichmentTestBuilder(object):
         return self.prb_tests
     
     def _sib_build(self, background):
-        self.sib_tests = []
+        self.sib_sets = []
         for spec in SIB_TESTS_SPECS:
             test = self._build_test(background, spec)
-            self.sib_tests.append(test)
+            self.sib_sets.append(test)
         
-        return self.sib_tests
+        return self.sib_sets
     
     def _prb_calc(self, dsts, gene_syms):
         res = []
@@ -83,7 +83,7 @@ class EnrichmentTestBuilder(object):
     
     def _sib_calc(self, dsts, gene_syms):
         res = []
-        for test in self.sib_tests:
+        for test in self.sib_sets:
             r = test.calc(dsts, gene_syms)
             res.append(r)
         return res

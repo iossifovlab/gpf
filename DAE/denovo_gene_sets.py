@@ -13,7 +13,7 @@ def set_genes(geneSetDef):
     gtId, tmId = geneSetDef.split(":")
     return set(giDB.getGeneTerms(gtId).t2G[tmId].keys())
 
-def genes_test(denovo_studies,
+def genes_sets(denovo_studies,
                in_child=None,
                effect_types=None,
                gene_syms=None,
@@ -38,7 +38,7 @@ def genes_test(denovo_studies,
                     if v.familyId in measure and measure[v.familyId] < mmax }
     return None
 
-def genes_test_prepare_counting(
+def genes_set_prepare_counting(
             denovo_studies,
             in_child=None,
             effect_types=None,
@@ -56,23 +56,23 @@ def genes_test_prepare_counting(
         for sym, vs in sym2Vars.items() }
     return sym2FN
 
-def genes_test_recurrent(
+def genes_set_recurrent(
             denovo_studies,
             in_child=None,
             effect_types=None,
             gene_set=None):
     
-    sym2FN = genes_test_prepare_counting(denovo_studies, in_child,
+    sym2FN = genes_set_prepare_counting(denovo_studies, in_child,
                                          effect_types, gene_set)
     return {g for g, nf in sym2FN.items() if nf > 1 }
 
-def genes_test_single(
+def genes_set_single(
             denovo_studies,
             in_child=None,
             effect_types=None,
             gene_set=None):
     
-    sym2FN = genes_test_prepare_counting(denovo_studies, in_child,
+    sym2FN = genes_set_prepare_counting(denovo_studies, in_child,
                                          effect_types, gene_set)
     return {g for g, nf in sym2FN.items() if nf == 1 }
 
@@ -109,89 +109,89 @@ def filter_denovo_studies_by_phenotype(denovo_studies, phenotype):
     return result
 
 
-def prb_tests_per_phenotype():
+def prb_set_per_phenotype():
     nvIQ = get_measure('pcdv.ssc_diagnosis_nonverbal_iq')
     
     prb_tests = {
-        "LoF": lambda studies: genes_test(
+        "LoF": lambda studies: genes_sets(
                                         studies,
                                         in_child='prb',
                                         effect_types='LGDs'),
-        "LoF.Male": lambda studies: genes_test(
+        "LoF.Male": lambda studies: genes_sets(
                                         studies,
                                         in_child='prbM',
                                         effect_types='LGDs'),
         
-        "LoF.Female": lambda studies: genes_test(
+        "LoF.Female": lambda studies: genes_sets(
                                         studies,
                                         in_child='prbF',
                                         effect_types='LGDs'),
         
-        "LoF.Recurrent": lambda studies: genes_test_recurrent(
+        "LoF.Recurrent": lambda studies: genes_set_recurrent(
                                         studies,
                                         in_child="prb",
                                         effect_types="LGDs"),
                  
-        "LoF.Single": lambda studies: genes_test_single(
+        "LoF.Single": lambda studies: genes_set_single(
                                         studies,
                                         in_child="prb",
                                         effect_types="LGDs"),
         
-        "LoF.LowIQ": lambda studies: genes_test(
+        "LoF.LowIQ": lambda studies: genes_sets(
                                         studies,
                                         in_child='prb',
                                         effect_types='LGDs',
                                         measure=nvIQ,
                                         mmax=90),
                  
-        "LoF.HighIQ": lambda studies: genes_test(
+        "LoF.HighIQ": lambda studies: genes_sets(
                                         studies,
                                         in_child='prb',
                                         effect_types='LGDs',
                                         measure=nvIQ,
                                         mmin=90),
         
-        "LoF.FMRP": lambda studies: genes_test(
+        "LoF.FMRP": lambda studies: genes_sets(
                                         studies,
                                         in_child='prb',
                                         effect_types='LGDs',
                                         gene_syms=set_genes("main:FMR1-targets")),
         
-        "Missense": lambda studies: genes_test(
+        "Missense": lambda studies: genes_sets(
                                         studies,
                                         in_child="prb",
                                         effect_types="missense"),
                  
-        "Missense.Male": lambda studies: genes_test(
+        "Missense.Male": lambda studies: genes_sets(
                                         studies,
                                         in_child="prbM",
                                         effect_types="missense"),
                  
-        "Missense.Female": lambda studies: genes_test(
+        "Missense.Female": lambda studies: genes_sets(
                                         studies,
                                         in_child="prbF",
                                         effect_types="missense"),
         
-        "Synonymous": lambda studies: genes_test(
+        "Synonymous": lambda studies: genes_sets(
                                         studies,
                                         in_child="prb",
                                         effect_types="synonymous"),
         
-        "CNV": lambda studies: genes_test(
+        "CNV": lambda studies: genes_sets(
                                         studies,
                                         in_child="prb",
                                         effect_types="CNVs"),
 
-        "CNV.Recurrent": lambda studies: genes_test_recurrent(
+        "CNV.Recurrent": lambda studies: genes_set_recurrent(
                                         studies,
                                         in_child="prb",
                                         effect_types="CNVs"),
         
-        "Dup": lambda studies: genes_test(
+        "Dup": lambda studies: genes_sets(
                                         studies,
                                         in_child="prb",
                                         effect_types="CNV+"),
-        "Del": lambda studies: genes_test(
+        "Del": lambda studies: genes_sets(
                                         studies,
                                         in_child="prb",
                                         effect_types="CNV-"),
@@ -212,10 +212,10 @@ def add_set(gene_terms, setname, genes, desc=None):
         gene_terms.g2T[gsym][setname] += 1
 
 
-def build_prb_test_by_phenotype(denovo_studies, phenotype):
+def build_prb_set_by_phenotype(denovo_studies, phenotype):
     phenotype_studies = filter_denovo_studies_by_phenotype(
                 denovo_studies, phenotype)
-    prb_tests = prb_tests_per_phenotype()
+    prb_tests = prb_set_per_phenotype()
     
     gene_terms = GeneTerms()
     
@@ -225,35 +225,35 @@ def build_prb_test_by_phenotype(denovo_studies, phenotype):
     return gene_terms
 
 
-def sib_tests(denovo_studies):
+def sib_sets(denovo_studies):
     
     
     res = {
-        "LoF": genes_test(
+        "LoF": genes_sets(
                         denovo_studies,
                         in_child='sib',
                         effect_types='LGDs'),
-        "LoF.Recurrent": genes_test_recurrent(
+        "LoF.Recurrent": genes_set_recurrent(
                         denovo_studies,
                         in_child="sib",
                         effect_types="LGDs"),
-        "Missense": genes_test(
+        "Missense": genes_sets(
                         denovo_studies,
                         in_child='sib',
                         effect_types='missense'),
-        "Synonymous": genes_test(
+        "Synonymous": genes_sets(
                         denovo_studies,
                         in_child='sib',
                         effect_types='synonymous'),
-        "CNV": genes_test(
+        "CNV": genes_sets(
                         denovo_studies,
                         in_child='sib',
                         effect_types='CNVs'),
-        "Dup": genes_test(
+        "Dup": genes_sets(
                         denovo_studies,
                         in_child='sib',
                         effect_types='CNV+'),
-        "Del": genes_test(
+        "Del": genes_sets(
                         denovo_studies,
                         in_child='sib',
                         effect_types='CNV-'),
@@ -261,8 +261,8 @@ def sib_tests(denovo_studies):
         
     return res
 
-def build_sib_test(denovo_studies):
-    gene_syms = sib_tests(denovo_studies)
+def build_sib_set(denovo_studies):
+    gene_syms = sib_sets(denovo_studies)
     
     gene_terms = GeneTerms()
     
@@ -278,9 +278,9 @@ def build_denovo_gene_sets():
     all_phenotypes = ['autism', 'congenital heart disease',
                        "epilepsy", 'intelectual disability', 'schizophrenia']
     for phenotype in all_phenotypes:
-        gene_terms = build_prb_test_by_phenotype(denovo_studies, phenotype)
+        gene_terms = build_prb_set_by_phenotype(denovo_studies, phenotype)
         result[phenotype]=gene_terms
         
-    result['unaffected'] = build_sib_test(denovo_studies)
+    result['unaffected'] = build_sib_set(denovo_studies)
     
     return result

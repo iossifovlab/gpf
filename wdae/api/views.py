@@ -703,7 +703,7 @@ Examples:
 
 
 @api_view(['GET'])
-def enrichment_test_by_phenotype(request):
+def enrichment_by_phenotype(request):
     """
 Performs enrichment test. Expected parameters are:
 
@@ -726,7 +726,7 @@ Performs enrichment test. Expected parameters are:
     * gs_name - gene set name;
 
 Examples:
-    GET /api/enrichment_test_by_phenotype?denovoStudies=ALL+WHOLE+EXOME&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main
+    GET /api/enrichment_by_phenotype?denovoStudies=ALL+WHOLE+EXOME&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main
 
     """
 

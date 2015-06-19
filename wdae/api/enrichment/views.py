@@ -193,10 +193,10 @@ class EnrichmentView(APIView):
         
         background = register.get('enrichment_background')
         
-        self.enrichment_test = EnrichmentTestBuilder()
-        self.enrichment_test.build(background)
+        self.enrichment = EnrichmentTestBuilder()
+        self.enrichment.build(background)
         
-        self.result = self.enrichment_test.calc(self.denovo_studies,
+        self.result = self.enrichment.calc(self.denovo_studies,
                                                 self.gene_syms)
         response = self.serialize()
         

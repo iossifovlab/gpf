@@ -344,7 +344,7 @@ def __count_gene_set_enrichment(var_genes_dict, gene_syms_set):
     return all_res
 
 
-def enrichment_test(dsts, gene_syms_set):
+def enrichment(dsts, gene_syms_set):
 
     var_genes_dict = __build_variants_genes_dict(dsts)
 
@@ -366,7 +366,7 @@ def enrichment_test(dsts, gene_syms_set):
 
     return all_res, totals
 
-def enrichment_test_by_phenotype(dsts, gene_syms_set):
+def enrichment_by_phenotype(dsts, gene_syms_set):
     genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(
             dsts)
 

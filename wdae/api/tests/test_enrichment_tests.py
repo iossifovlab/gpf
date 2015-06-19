@@ -1,7 +1,7 @@
 import unittest
 import logging
 
-from api.enrichment.enrichment import enrichment_test, \
+from api.enrichment.enrichment import enrichment, \
     build_transmitted_background
 
 from DAE import vDB, get_gene_sets_symNS
@@ -49,7 +49,7 @@ class EnrichmentHelpersTests(unittest.TestCase):
             gene_syms_set = set(self.gene_terms.t2G[gene_set_name].keys())
             
             self.assertTrue(get_background('enrichment_background') is not None)
-            res, totals = enrichment_test(self.dsts,
+            res, totals = enrichment(self.dsts,
                                           gene_syms_set)
 
             for test_name in res:

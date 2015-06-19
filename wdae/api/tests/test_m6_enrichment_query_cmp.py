@@ -20,13 +20,13 @@ class EnrichmentQuery(object):
         self.background = background
         
     def build(self):
-        self.enrichment_test = EnrichmentTestBuilder()
-        self.enrichment_test.build(self.background)
+        self.enrichment = EnrichmentTestBuilder()
+        self.enrichment.build(self.background)
         
     def calc(self):
         dsts = self.query['denovoStudies']
         gene_syms = self.query['geneSyms']
-        self.result = self.enrichment_test.calc(dsts, gene_syms)
+        self.result = self.enrichment.calc(dsts, gene_syms)
         
         return self.result
 

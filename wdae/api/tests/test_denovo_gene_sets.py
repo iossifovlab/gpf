@@ -6,9 +6,9 @@ Created on May 27, 2015
 import unittest
 
 from denovo_gene_sets import set_genes, get_measure, \
-    genes_test, prb_tests_per_phenotype, \
+    genes_sets, prb_set_per_phenotype, \
     get_all_denovo_studies,\
-    build_prb_test_by_phenotype, build_sib_test, build_denovo_gene_sets
+    build_prb_set_by_phenotype, build_sib_set, build_denovo_gene_sets
 from DAE import vDB
 from api.deprecated.bg_loader import preload_background, get_background
 
@@ -35,7 +35,7 @@ class Test(unittest.TestCase):
         
     def test_cnv_genes(self):
         cnv_studies = vDB.get_studies("LevyCNV2011")
-        gene_set = genes_test(cnv_studies,
+        gene_set = genes_sets(cnv_studies,
                                       in_child="prb",
                                       effect_types="CNVs")
         
@@ -43,7 +43,7 @@ class Test(unittest.TestCase):
         
 
     def test_apply_cnv_recurrent_test(self):
-        all_tests = prb_tests_per_phenotype()
+        all_tests = prb_set_per_phenotype()
         cnv_test = all_tests['CNV.Recurrent']
         cnv_studies = vDB.get_studies("LevyCNV2011")
         cnv_genes = cnv_test(cnv_studies)
@@ -57,20 +57,20 @@ class Test(unittest.TestCase):
     def test_build_prb_test_by_phenotype(self):
         all_denovo_studies = get_all_denovo_studies()
         
-        gene_terms = build_prb_test_by_phenotype(all_denovo_studies, 'autism')
+        gene_terms = build_prb_set_by_phenotype(all_denovo_studies, 'autism')
         self.assertTrue(gene_terms)
     
     def test_clean_prb_tests_by_phenotype(self):
         all_denovo_studies = get_all_denovo_studies()
         
         for phenotype in ['autism', 'congenital heart disease', "epilepsy", 'intelectual disability', 'schizophrenia']:
-            gene_terms = build_prb_test_by_phenotype(all_denovo_studies, phenotype)
+            gene_terms = build_prb_set_by_phenotype(all_denovo_studies, phenotype)
             for _key, value in gene_terms.t2G.items():
                 self.assertTrue(len(value)>0)
                 
     def test_build_sib_tests(self):
         denovo_studies = get_all_denovo_studies()
-        gene_terms = build_sib_test(denovo_studies)
+        gene_terms = build_sib_set(denovo_studies)
         
         for _key, value in gene_terms.t2G.items():
             self.assertTrue(len(value)>0)

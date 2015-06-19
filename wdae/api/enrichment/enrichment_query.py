@@ -1,6 +1,6 @@
 # from DAE import vDB
-from api.enrichment.enrichment import enrichment_test, PRB_TESTS, SIB_TESTS, \
-    enrichment_test_by_phenotype
+from api.enrichment.enrichment import enrichment, PRB_TESTS, SIB_TESTS, \
+    enrichment_by_phenotype
 
 from api.dae_query import load_gene_set2
 import numpy as np
@@ -71,7 +71,7 @@ def enrichment_results(denovoStudies=None,
     else:
         gene_terms = load_gene_set2(geneSet, geneStudy)
 
-    all_res, totals = enrichment_test(denovoStudies,
+    all_res, totals = enrichment(denovoStudies,
                                       geneSyms)
     bg_total = totals['BACKGROUND'][0]
     bg_cnt = all_res['BACKGROUND'].cnt
@@ -180,7 +180,7 @@ def enrichment_results_by_phenotype(
     denovoStudies = [st for st in denovoStudies if st.get_attr('study.type') == 'WE']
     
     count_res_by_pheno, totals_by_pheno, genes_dict_by_pheno = \
-        enrichment_test_by_phenotype(denovoStudies, geneSyms)
+        enrichment_by_phenotype(denovoStudies, geneSyms)
 
     res = {}
     res['gs_id'] = geneSet
