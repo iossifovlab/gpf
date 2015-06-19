@@ -11,6 +11,7 @@ from DAE import vDB
 from collections import Counter
 import cPickle
 from api.precompute.register import Precompute
+import csv
 
 
 
@@ -122,3 +123,27 @@ class SynonymousBackground(Background):
         self.foreground = cPickle.loads(zlib.decompress(f))
         
     
+class CodingLenBackground(Background):
+    FILENAME = 'data/enrichment/background-model-conding-len-in-target.csv'
+    
+    def _load_and_prepare_build(self):
+        back = []
+        with open(self.FILENAME, 'r') as f:
+            reader = csv.reader(f)
+            reader.next()
+            for row in reader:
+                back.append((str(row[0]), int(row[1])))
+        return back
+    
+    def __init__(self):
+        super(CodingLenBackground, self).__init__()
+        
+    def precompute(self):
+        back = self._load_and_prepare_build()
+        self.background = np.array(back, 
+                dtype=[('sym','|S32'), ('raw','>i4')])
+        return self.background
+    
+    @property
+    def total(self):
+        return np.sum(self.background['raw'])
