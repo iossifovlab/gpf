@@ -132,7 +132,7 @@ def enrichment_results(denovoStudies=None,
     return res
 
 
-def enrichment_test_helper(all_res, totals, genes_dict, gene_syms, tests):
+def enrichment_helper(all_res, totals, genes_dict, gene_syms, tests):
     res = []
     for testname in tests:
         tres = {}
@@ -212,6 +212,6 @@ def enrichment_results_by_phenotype(
         tests = PRB_TESTS
         if phenotype == 'unaffected':
             tests = SIB_TESTS
-        res[phenotype] = enrichment_test_helper(all_res, totals, genes_dict, geneSyms, tests)
+        res[phenotype] = enrichment_helper(all_res, totals, genes_dict, geneSyms, tests)
 
     return res
