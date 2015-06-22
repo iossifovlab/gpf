@@ -12,6 +12,8 @@ from collections import Counter
 import cPickle
 from api.precompute.register import Precompute
 import csv
+import os
+from django.conf import settings
 
 
 
@@ -124,7 +126,9 @@ class SynonymousBackground(Background):
         
     
 class CodingLenBackground(Background):
-    FILENAME = 'data/enrichment/background-model-conding-len-in-target.csv'
+    FILENAME = os.path.join(settings.BASE_DIR, 
+                            '..',
+                            'data/enrichment/background-model-conding-len-in-target.csv')
     
     def _load_and_prepare_build(self):
         back = []
