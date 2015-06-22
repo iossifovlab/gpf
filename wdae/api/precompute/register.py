@@ -48,6 +48,9 @@ class PrecomputeRegister(object):
     
     def get(self, key):
         return self.reg[key]
+
+    def has_key(self, key):
+        return self.reg.has_key(key)
     
     def keys(self):
         return self.reg.keys()
@@ -68,6 +71,16 @@ def get(key):
 
     try:
         value = _REGISTER.get(key)
+    finally:
+        pass
+
+    return value
+    
+def has_key(key):
+    global _REGISTER
+
+    try:
+        value = _REGISTER.has_key(key)
     finally:
         pass
 

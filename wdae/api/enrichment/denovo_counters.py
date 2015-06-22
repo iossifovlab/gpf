@@ -43,6 +43,17 @@ def filter_denovo_one_gene_per_recurrent_events(vs):
     return [[gs] for gs, fn in sym_2_fn.items() if fn > 1]
 
 
+def filter_denovo_one_gene_per_events(vs):
+    gn_sorted = sorted([[ge['sym'], v] for v in vs
+                       for ge in v.requestedGeneEffects])
+    sym_2_vars = {sym: [t[1] for t in tpi]
+                  for sym, tpi in itertools.groupby(gn_sorted,
+                                                    key=lambda x: x[0])}
+    sym_2_fn = {sym: len(set([v.familyId for v in vs]))
+                for sym, vs in sym_2_vars.items()}
+    return [[gs] for gs, _fn in sym_2_fn.items()]
+
+
 def collect_denovo_variants(dsts, inchild, effect, **kwargs):
     """
     Selects denovo variants according given test spec.
@@ -133,6 +144,21 @@ class DenovoEventsCounter:
         res.count = count_denovo_variant_events(res.affected_gene_syms, 
                                                 gene_set)
         return res
+
+class DenovoGenesEventCounter(object):
+
+    def __init__(self, spec):
+        self.spec = spec
+        
+    def count(self, dsts, gene_set):
+        res = EnrichmentResult(self.spec)
+        res.dsts = dsts
+        vs = collect_denovo_variants(dsts, **self.spec)
+        res.affected_gene_syms = filter_denovo_one_gene_per_events(vs)
+        res.count = count_denovo_variant_events(res.affected_gene_syms, 
+                                                gene_set)
+        return res
+
 
 class DenovoRecurrentGenesCounter:
 

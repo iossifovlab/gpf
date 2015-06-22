@@ -15,6 +15,9 @@ from api.enrichment.config import PHENOTYPES
 from api.dae_query import load_gene_set2
 from api.enrichment.results import EnrichmentTestBuilder
 from api.precompute import register
+from django.conf import settings
+from api.enrichment.denovo_counters import DenovoEventsCounter,\
+    DenovoGenesEventCounter
 
 class EnrichmentView(APIView):
     def __init__(self):
@@ -93,28 +96,6 @@ class EnrichmentView(APIView):
         res['phenotypes'] = PHENOTYPES
         return res
     
-    """
-        {"gs_desc":"ChromatinModifiers: from Ivan",
-        "gs_id":"main",
-        "congenital heart disease":[
-        {"count":0,
-        "bg":"rgba(255,255,255,180)",
-        "overlap":1,
-        "label":"Rec LGDs",
-        "syms":[],
-        "expected":"0.0324",
-        "p_val":1.0,
-        "lessmore":"less"},
-        {"count":2,
-        "bg":"rgba(255,255,255,180)",
-        "overlap":25,
-        "label":"LGDs",
-        "filter":["prb","male,female","Nonsense,Frame-shift,Splice-site"],
-        "expected":"0.8107",
-        "p_val":0.1939,
-        "lessmore":"more"},
-    """    
-    
     def serialize_response_test(self, t):
         tres = {}
         tres['overlap'] = t.total
@@ -180,6 +161,27 @@ class EnrichmentView(APIView):
     def denovo_studies(self):
         return self.data.get('denovoStudies', None)
     
+    @property
+    def enrichment_config(self):
+        config = settings.ENRICHMENT_CONFIG
+        background_name = config['background']
+        counter_name = config['denovo_counter']
+        
+        if register.has_key(background_name):
+            background = register.get(background_name)
+        else:
+            background = register.get('synonymous_background')
+        
+        if counter_name == 'events_counter':
+            counter_cls = DenovoEventsCounter
+        elif counter_name == 'genes_counter':
+            counter_cls = DenovoGenesEventCounter
+        else:
+            raise KeyError('wrong denovo counter type: {}'.format(counter_name))
+        
+        return {'background': background,
+                'denovo_counter': counter_cls}
+    
     def get(self, request):
         query_data = prepare_query_dict(request.QUERY_PARAMS)
         LOGGER.info(log_filter(
@@ -191,10 +193,10 @@ class EnrichmentView(APIView):
         if self.data is None:
             return Response(None)
         
-        background = register.get('synonymous_background')
+        config = self.enrichment_config
         
         self.enrichment = EnrichmentTestBuilder()
-        self.enrichment.build(background)
+        self.enrichment.build(**config)
         
         self.result = self.enrichment.calc(self.denovo_studies,
                                                 self.gene_syms)
