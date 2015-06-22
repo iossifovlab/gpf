@@ -27,8 +27,6 @@ class EnrichmentTest(object):
     def make_recurrent_genes_enrichment(cls, spec, background):
         res = cls(spec)
         res.background = background
-        if not res.background.is_ready:
-            res.background.precompute()
         res.counter = DenovoRecurrentGenesCounter(spec)
         return res
         
