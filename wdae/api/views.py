@@ -631,6 +631,8 @@ def ssc_query_variants_preview(request):
 
 @api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
 def ssc_query_variants(request):
     if request.method == 'OPTIONS':
         return Response()
@@ -777,7 +779,6 @@ def get_user_info(request):
     token = request.DATA['token']
     try:
         user = Token.objects.get(key=token).user
-        print user
         if (user.is_staff):
             userType = 'admin'
         else:
