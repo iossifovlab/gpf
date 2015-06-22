@@ -33,6 +33,8 @@ urlpatterns = patterns(
     url(r'^gene_sets$', 'gene_sets_list'),
 #     url(r'^gene_set_list$', 'gene_set_list'),
     url(r'^gene_set_list2$', 'gene_set_list2'),
+    
+    url(r'^study_tab_phenotypes/(?P<study_tab>.+)$', 'study_tab_phenotypes'),
     url(r'^gene_set_phenotypes$', 'gene_set_phenotypes'),
     
     url(r'^report_studies$', 'report_studies'),

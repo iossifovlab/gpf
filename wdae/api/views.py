@@ -33,9 +33,6 @@ from api.query.query_prepare import prepare_ssc_filter
 from dae_query import prepare_summary, load_gene_set2
 
 from report_variants import build_stats
-from api.enrichment.enrichment_query import \
-    enrichment_results_by_phenotype, \
-    enrichment_prepare
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names, \
     get_studies_summaries
@@ -440,6 +437,32 @@ def gene_set_phenotypes(request):
                      'schizophrenia',
                      'unaffected'])
 
+@api_view(['GET'])
+def study_tab_phenotypes(request, study_tab):
+    """
+    Returns phenotypes to use in study tab legend table.
+    
+    Accepts `study_tab` name as a URL parameter.
+    
+    Examples:
+    
+        GET /api/study_tab_phenotypes/ssc
+        GET /api/study_tab_phenotypes/whole_exome
+        GET /api/study_tab_phenotypes/variants
+        
+    """
+    if study_tab == 'ssc':
+        return Response(['autism',
+                         'unaffected'])
+        
+    if study_tab == 'whole_exome' or study_tab == 'variants':
+        return Response(['autism', 
+                         'congenital heart disease', 
+                         "epilepsy", 
+                         'intelectual disability', 
+                         'schizophrenia',
+                         'unaffected'])
+    return Response()
 
 def prepare_query_dict(data):
     res = []
@@ -659,89 +682,6 @@ Examples:
 
     return Response(stats)
 
-
-# @api_view(['GET'])
-# def enrichment_test(request):
-#     """
-# Performs enrichment test. Expected parameters are:
-# 
-# * "denovoStudies" -- expects list of denovo studies
-# * "transmittedStudies" --- expects list of transmitted studies
-# 
-# * "geneSyms" --- comma separated list of gene symbols or list of gene symbols
-# 
-# 
-# * "geneSet" --- contains gene set name (one of 'main','GO' or 'disease')
-# * "geneTerm" --- contains gene set term. Example:  'GO:2001293' (from GO),
-# 'mPFC_maternal' (from main).
-# * "geneStudy --- if geneSet is 'denovo', then we expect this additional parameter, to
-#     specify which denovo study to use
-# 
-# 
-#     * dst_name - denovo study name;
-#     * tst_name - transmitted study name;
-#     * gt_name - gene term name;
-#     * gs_name - gene set name;
-# 
-# Examples:
-# 
-#     GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
-#     query_data = prepare_query_dict(request.QUERY_PARAMS)
-#     LOGGER.info(log_filter(request, "enrichment query: %s" % str(query_data)))
-# 
-#     data = _enrichment_prepare(query_data)
-#     # if isinstance(data, QueryDict):
-#     #     data = prepare_query_dict(data)
-# 
-#     print "enrichment query:", data
-# 
-#     if data is None:
-#         return Response(None)
-# 
-#     res = enrichment_results(**data)
-#     return Response(res)
-
-
-@api_view(['GET'])
-def enrichment_by_phenotype(request):
-    """
-Performs enrichment test. Expected parameters are:
-
-* "denovoStudies" -- expects list of denovo studies
-* "transmittedStudies" --- expects list of transmitted studies
-
-* "geneSyms" --- comma separated list of gene symbols or list of gene symbols
-
-
-* "geneSet" --- contains gene set name (one of 'main','GO' or 'disease')
-* "geneTerm" --- contains gene set term. Example:  'GO:2001293' (from GO),
-'mPFC_maternal' (from main).
-* "geneStudy --- if geneSet is 'denovo', then we expect this additional parameter, to
-    specify which denovo study to use
-
-
-    * dst_name - denovo study name;
-    * tst_name - transmitted study name;
-    * gt_name - gene term name;
-    * gs_name - gene set name;
-
-Examples:
-    GET /api/enrichment_by_phenotype?denovoStudies=ALL+WHOLE+EXOME&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main
-
-    """
-
-    query_data = prepare_query_dict(request.QUERY_PARAMS)
-    LOGGER.info(log_filter(request, "enrichment query by phenotype: %s" % str(query_data)))
-
-    data = enrichment_prepare(query_data)
-    # if isinstance(data, QueryDict):
-    #     data = prepare_query_dict(data)
-
-    if data is None:
-        return Response(None)
-
-    res = enrichment_results_by_phenotype(**data)
-    return Response(res)
 
 from api.report_pheno import get_supported_studies, get_supported_measures, \
     pheno_calc, pheno_query
