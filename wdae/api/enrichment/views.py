@@ -18,6 +18,7 @@ from api.precompute import register
 from django.conf import settings
 from api.enrichment.denovo_counters import DenovoEventsCounter,\
     DenovoGenesEventCounter
+from api.enrichment.families import ChildrenStats
 
 class EnrichmentView(APIView):
     def __init__(self):
@@ -199,7 +200,9 @@ class EnrichmentView(APIView):
         self.enrichment.build(**config)
         
         self.result = self.enrichment.calc(self.denovo_studies,
-                                                self.gene_syms)
+                                           self.gene_syms)
+        
         response = self.serialize()
+        response['children_stats'] = ChildrenStats.build(self.denovo_studies)
         
         return Response(response)

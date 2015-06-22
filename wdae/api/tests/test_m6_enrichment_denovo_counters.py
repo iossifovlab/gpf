@@ -31,10 +31,10 @@ class DenovoCountersTest(unittest.TestCase):
         vs = collect_denovo_variants(dsts,
                                      **self.TEST_SPEC)
         res = filter_denovo_one_event_per_family(vs)
-        self.assertEquals(574, len(res))
+        self.assertEquals(571, len(res))
         
         count = count_denovo_variant_events(res, self.gene_syms)
-        self.assertEquals(137, count)
+        self.assertEquals(134, count)
 
     def test_count_denovo_variant_events_zero(self):
         count = count_denovo_variant_events([], self.gene_syms)
