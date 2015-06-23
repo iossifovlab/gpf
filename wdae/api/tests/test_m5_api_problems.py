@@ -498,6 +498,35 @@ class SSCPresentInParentTests(APITestCase):
         
 class SSCPresentInChildDownloadTests(APITestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        super(SSCPresentInChildDownloadTests, cls).setUpClass()
+        
+        from django.contrib.auth import get_user_model
+        from rest_framework.authtoken.models import Token
+        
+        User = get_user_model()
+        u = User.objects.create(email="admin@example.com",
+                                     first_name="First",
+                                     last_name="Last",
+                                     is_staff=True,
+                                     is_active=True,
+                                     researcher_id="0001000")
+        u.set_password("secret")
+        u.save()
+
+        cls.user = u
+        _token = Token.objects.get_or_create(user=u)
+        cls.user.save()
+        
+    def setUp(self):
+        from rest_framework.authtoken.models import Token
+
+        APITestCase.setUp(self)
+
+        self.client.login(email='admin@example.com', password='secret')
+        token = Token.objects.get(user__email='admin@example.com')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
 
     def test_rec_lgds_download(self):
