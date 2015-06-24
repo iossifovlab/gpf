@@ -10,7 +10,7 @@ import pandas as pd
 from api.variants.transmitted_variants import read_summary_df, regions_matcher,\
     regions_splitter, filter_summary_regions_df, filter_summary_parents_called,\
     filter_summary_alt_freq_prcnt, filter_summary_ultra_rare,\
-    filter_summary_variant_types
+    filter_summary_variant_types, filter_summary_gene_effect
 
 
 class Test(unittest.TestCase):
@@ -114,7 +114,46 @@ class Test(unittest.TestCase):
         df = filter_summary_variant_types(self.df, set(['sub', 'del']))
         self.assertTrue(np.all(np.vectorize(lambda v: v[0:3]=='del' or v[0:3]=='sub')(df.variant)))
         
+    def test_transmitted_filter_gene_syms(self):
+        df = filter_summary_gene_effect(self.df, 
+                                        effectTypes=None, 
+                                        geneSyms=set(['POGZ']))
+        self.assertEquals(156, len(df))
+        vf = np.vectorize(lambda v: any([x['sym']=='POGZ' for x in v]))
+        self.assertTrue(np.any(vf(df.effectGene)))
     
+    def test_transmitted_filter_effect_types(self):
+        df = filter_summary_gene_effect(self.df, 
+                                        effectTypes=set(["3'UTR"]),
+                                        geneSyms=None)
+        self.assertEquals(31536, len(df))
+        vf = np.vectorize(lambda v: any([x['eff']=="3'UTR" for x in v]))
+        self.assertTrue(np.any(vf(df.effectGene)))
+        
+    def test_transmitted_filter_gene_syms_and_effect_types(self):
+        df = filter_summary_gene_effect(self.df, 
+                                        effectTypes=set(["3'UTR"]), 
+                                        geneSyms=set(['POGZ']))
+        self.assertEquals(1, len(df))
+        vf = np.vectorize(lambda v: any([x['sym']=='POGZ' 
+                                         and x['eff'] == "3'UTR" 
+                                         for x in v]))
+        self.assertTrue(np.any(vf(df.effectGene)))
+
+
+    def test_transmitted_filter_gene_syms_and_effect_types_again(self):
+        df = filter_summary_gene_effect(self.df, 
+                                        effectTypes=set(["synonymous"]), 
+                                        geneSyms=set(['POGZ']))
+        self.assertEquals(50, len(df))
+        vf = np.vectorize(lambda v: any([x['sym']=='POGZ' 
+                                         and x['eff'] == "synonymous" 
+                                         for x in v]))
+        self.assertTrue(np.any(vf(df.effectGene)))
+
+
+
+        
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.test_filter_regions']
     unittest.main()

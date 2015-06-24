@@ -130,6 +130,7 @@ def filter_summary_alt_freq_prcnt(df, minAltFreqPercnt=-1, maxAltFreqPrcnt=5):
         return df[idf]
     else:
         return df
+
     
 def filter_summary_ultra_rare(df, ultraRareOnly=False):
     return df[df['all.nAltAlls'] == 1]
@@ -140,4 +141,39 @@ def filter_summary_variant_types(df, variantTypes):
     idf = vf(df.variant)
     return df[idf]
 
+
+
+
+def build_gene_effect_filter(effectTypes, geneSyms):
+    if effectTypes and geneSyms:
+        def _filter_gene_effs_and_syms(geneEffects):
+            res = [x for x in geneEffects 
+                   if x['eff'] in effectTypes and
+                   x['sym'] in geneSyms]
+            return res if res else False
+
+        return _filter_gene_effs_and_syms
+    
+    elif effectTypes:
+        def _filter_gene_effs(geneEffects):
+            res = [x for x in geneEffects if x['eff'] in effectTypes]
+            return res if res else False
+        
+        return _filter_gene_effs
+    
+    elif geneSyms:
+        def _filter_gene_syms(geneEffects):
+            res = [x for x in geneEffects if x['sym'] in geneSyms]
+            return res if res else False
+        
+        return _filter_gene_syms
+    else:
+        return (lambda _: False)
+    
+def filter_summary_gene_effect(df, effectTypes, geneSyms):
+    f = build_gene_effect_filter(effectTypes, geneSyms)
+    vf = np.vectorize(f)
+    idf = np.apply_along_axis(vf, 0, df.effectGene)
+    
+    return df[idf]
 
