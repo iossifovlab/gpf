@@ -92,12 +92,6 @@ def regions_splitter(regions):
         
     return reg_defs
 
-def regions_matcher(regions):
-    reg_defs = regions_splitter(regions)
-    return lambda v: any([(chrom == v[0]
-                           and v[1] >= beg
-                           and v[1] <= end)
-                                   for(chrom, beg, end) in reg_defs])
 
 def filter_summary_regions_df(df, regions):
     regs = regions_splitter(regions)
@@ -142,8 +136,6 @@ def filter_summary_variant_types(df, variantTypes):
     return df[idf]
 
 
-
-
 def build_gene_effect_filter(effectTypes, geneSyms):
     if effectTypes and geneSyms:
         def _filter_gene_effs_and_syms(geneEffects):
@@ -169,6 +161,7 @@ def build_gene_effect_filter(effectTypes, geneSyms):
         return _filter_gene_syms
     else:
         return (lambda _: False)
+
     
 def filter_summary_gene_effect(df, effectTypes, geneSyms):
     f = build_gene_effect_filter(effectTypes, geneSyms)
@@ -176,4 +169,5 @@ def filter_summary_gene_effect(df, effectTypes, geneSyms):
     idf = np.apply_along_axis(vf, 0, df.effectGene)
     
     return df[idf]
+
 
