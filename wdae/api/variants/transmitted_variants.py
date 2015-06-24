@@ -107,9 +107,33 @@ def filter_summary_regions_df(df, regions):
     res = []
     for (chrome, beg, end) in regs:
         cdf = df[df.chr == chrome]
-        idf = np.all([cdf.position > beg, cdf.position < end],0)
+        idf = np.all([cdf.position >= beg, cdf.position <= end],0)
         pdf = cdf[idf]
         res.append(pdf)
         
     return pd.concat(res)
+
+def filter_summary_parents_called(df, minParentsCalled=600):
+    if minParentsCalled and minParentsCalled!=-1:
+        return df[df['all.nParCalled']>=minParentsCalled]
+    else:
+        return df
+
+
+def filter_summary_alt_freq_prcnt(df, minAltFreqPercnt=-1, maxAltFreqPrcnt=5):
+    if minAltFreqPercnt != -1 and maxAltFreqPrcnt != -1:
+        idf = np.all([df['all.altFreq'] > minAltFreqPercnt, 
+                      df['all.altFreq'] < maxAltFreqPrcnt], 0)
+        return df[idf]
+    elif minAltFreqPercnt != -1:
+        idf = df['all.altFreq'] > minAltFreqPercnt
+        return df[idf]
+    elif maxAltFreqPrcnt != -1:
+        idf = df['all.altFreq'] < maxAltFreqPrcnt
+        return df[idf]
+    else:
+        return df
+    
+def filter_summary_ultra_rare(df, ultraRareOnly=False):
+    return df[df['all.nAltAlls'] == 1]
 

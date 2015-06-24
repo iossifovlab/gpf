@@ -8,7 +8,8 @@ import numpy as np
 import pandas as pd
 
 from api.variants.transmitted_variants import read_summary_df, regions_matcher,\
-    regions_splitter, filter_summary_regions_df
+    regions_splitter, filter_summary_regions_df, filter_summary_parents_called,\
+    filter_summary_alt_freq_prcnt
 
 
 class Test(unittest.TestCase):
@@ -85,6 +86,17 @@ class Test(unittest.TestCase):
         
         self.assertTrue(len(df), len(df1)+len(df2))
 
+    def test_transmitted_filter_parents_called(self):
+        df = filter_summary_parents_called(self.df, minParentsCalled=200)
+        self.assertTrue(np.all(df['all.nParCalled']>=200))
+        
+    def test_transmitted_filter_alt_freq_prcnt(self):
+        df = filter_summary_alt_freq_prcnt(self.df, 
+                                           minAltFreqPercnt=5, 
+                                           maxAltFreqPrcnt=10)
+        self.assertTrue(np.all(df['all.altFreq']>=5))
+        self.assertTrue(np.all(df['all.altFreq']<=10))
+        
         
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.test_filter_regions']
