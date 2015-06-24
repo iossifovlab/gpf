@@ -7,6 +7,7 @@ from DAE import vDB
 import gzip
 import pandas as pd
 import numpy as np
+from VariantsDB import parseGeneEffect
 
 
 def just_test():
@@ -51,16 +52,7 @@ dt = dict(
 
 
 def read_df():
-    global dt
-
-    ts = vDB.get_study('w1202s766e611')
-    fname = ts.vdb._config.get(ts._configSection,
-                    'transmittedVariants.indexFile' ) + ".txt.bgz"
-    
-    f = gzip.open(fname)
-    df = pd.read_csv(f, sep='\t', dtype=dt)
-    f.close()
-    
+    df = read_summary_df('w1202s766e611')
     return df
 
 
@@ -68,13 +60,18 @@ def read_summary_df(study_name):
 
     global dt
     
-    ts = vDB.get_study('w1202s766e611')
+    ts = vDB.get_study(study_name)
     fname = ts.vdb._config.get(ts._configSection,
                     'transmittedVariants.indexFile' ) + ".txt.bgz"
     
     f = gzip.open(fname)
     df = pd.read_csv(f, sep='\t', dtype=dt)
     f.close()
+    
+    vec_parse_gene_effect = np.vectorize(parseGeneEffect)
+    df.effectGene = np.apply_along_axis(vec_parse_gene_effect,
+                                        0, 
+                                        df.effectGene)
     
     return df
 
@@ -136,4 +133,11 @@ def filter_summary_alt_freq_prcnt(df, minAltFreqPercnt=-1, maxAltFreqPrcnt=5):
     
 def filter_summary_ultra_rare(df, ultraRareOnly=False):
     return df[df['all.nAltAlls'] == 1]
+
+
+def filter_summary_variant_types(df, variantTypes):
+    vf = np.vectorize(lambda v: v[0:3] in variantTypes)
+    idf = vf(df.variant)
+    return df[idf]
+
 

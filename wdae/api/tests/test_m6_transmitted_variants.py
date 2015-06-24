@@ -9,7 +9,8 @@ import pandas as pd
 
 from api.variants.transmitted_variants import read_summary_df, regions_matcher,\
     regions_splitter, filter_summary_regions_df, filter_summary_parents_called,\
-    filter_summary_alt_freq_prcnt
+    filter_summary_alt_freq_prcnt, filter_summary_ultra_rare,\
+    filter_summary_variant_types
 
 
 class Test(unittest.TestCase):
@@ -86,9 +87,11 @@ class Test(unittest.TestCase):
         
         self.assertTrue(len(df), len(df1)+len(df2))
 
+
     def test_transmitted_filter_parents_called(self):
         df = filter_summary_parents_called(self.df, minParentsCalled=200)
         self.assertTrue(np.all(df['all.nParCalled']>=200))
+
         
     def test_transmitted_filter_alt_freq_prcnt(self):
         df = filter_summary_alt_freq_prcnt(self.df, 
@@ -96,8 +99,22 @@ class Test(unittest.TestCase):
                                            maxAltFreqPrcnt=10)
         self.assertTrue(np.all(df['all.altFreq']>=5))
         self.assertTrue(np.all(df['all.altFreq']<=10))
+
+
+    def test_transmitted_filter_ultra_rare(self):
+        df = filter_summary_ultra_rare(self.df, ultraRareOnly=True)
+        self.assertTrue(np.all(df['all.nAltAlls'] == 1))
+
+    
+    def test_transmitted_filter_variant_types(self):
+        df = filter_summary_variant_types(self.df, set(['del']))
+        self.assertTrue(np.all(np.vectorize(lambda v: v[0:3]=='del')(df.variant)))
+        df = filter_summary_variant_types(self.df, set(['ins']))
+        self.assertTrue(np.all(np.vectorize(lambda v: v[0:3]=='ins')(df.variant)))
+        df = filter_summary_variant_types(self.df, set(['sub', 'del']))
+        self.assertTrue(np.all(np.vectorize(lambda v: v[0:3]=='del' or v[0:3]=='sub')(df.variant)))
         
-        
+    
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.test_filter_regions']
     unittest.main()
