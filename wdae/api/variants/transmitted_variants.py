@@ -8,6 +8,8 @@ import gzip
 import pandas as pd
 import numpy as np
 from VariantsDB import parseGeneEffect
+import pysam
+#import numba
 
 
 def just_test():
@@ -171,3 +173,55 @@ def filter_summary_gene_effect(df, effectTypes, geneSyms):
     return df[idf]
 
 
+def read_toomany_df(study_name):
+    ts = vDB.get_study(study_name)
+    fname = ts.vdb._config.get(ts._configSection, 
+                'transmittedVariants.indexFile' ) \
+                + "-TOOMANY.txt.bgz"
+
+    tbf = pysam.Tabixfile(fname)
+    
+    return tbf
+
+CN_CHROME = 0
+CN_POSITION = 1
+CN_VARIANT = 2
+CN_FAMILY_DATA = 3
+
+
+def load_toomany_family_data(tbf, row):
+    chrome = row[CN_CHROME]
+    position = row[CN_POSITION]
+    variant = row[CN_VARIANT]
+    
+    l = tbf.fetch(chrome, position-1, position)
+    l = l.next()
+    # print("tbf fetch result: {}".format(l))
+    l = l.strip().split('\t')
+    # print("tbf fetch split: {}".format(l))
+    tm_chrome, tm_pos, tm_variant, tm_families_data = l 
+    if tm_chrome != chrome:
+        raise ValueError("chomes doesn't match: {}, {}".format(chrome, tm_chrome))
+    if int(tm_pos) != position:
+        raise ValueError("position doesn't match: {}, {}".format(position, tm_pos))
+    if tm_variant != variant:
+        raise ValueError("chomes doesn't match: {}, {}".format(chrome, tm_chrome))
+    return parse_family_data(tm_families_data)
+
+
+#@numba.jit
+def parse_family_data(fmsData):
+    res = []
+    for fmData in fmsData.split(';'):
+        cs = fmData.split(':')
+        if len(cs) != 3:
+            raise ValueError("Wrong family data format {}".format(fmData))
+        res.append(cs)
+    return res
+
+
+def parse_toomany_data(tbf, row):
+    if row[CN_FAMILY_DATA]!='TOOMANY':
+        raise ValueError("parse toomany row expects 'TOOMANY' in familyData")
+    
+    
