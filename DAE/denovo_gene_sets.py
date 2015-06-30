@@ -113,45 +113,45 @@ def prb_set_per_phenotype():
     nvIQ = get_measure('pcdv.ssc_diagnosis_nonverbal_iq')
     
     prb_tests = {
-        "LoF": lambda studies: genes_sets(
+        "LGDs": lambda studies: genes_sets(
                                         studies,
                                         in_child='prb',
                                         effect_types='LGDs'),
-        "LoF.Male": lambda studies: genes_sets(
+        "LGDs.Male": lambda studies: genes_sets(
                                         studies,
                                         in_child='prbM',
                                         effect_types='LGDs'),
         
-        "LoF.Female": lambda studies: genes_sets(
+        "LGDs.Female": lambda studies: genes_sets(
                                         studies,
                                         in_child='prbF',
                                         effect_types='LGDs'),
         
-        "LoF.Recurrent": lambda studies: genes_set_recurrent(
+        "LGDs.Recurrent": lambda studies: genes_set_recurrent(
                                         studies,
                                         in_child="prb",
                                         effect_types="LGDs"),
                  
-        "LoF.Single": lambda studies: genes_set_single(
+        "LGDs.Single": lambda studies: genes_set_single(
                                         studies,
                                         in_child="prb",
                                         effect_types="LGDs"),
         
-        "LoF.LowIQ": lambda studies: genes_sets(
+        "LGDs.LowIQ": lambda studies: genes_sets(
                                         studies,
                                         in_child='prb',
                                         effect_types='LGDs',
                                         measure=nvIQ,
                                         mmax=90),
                  
-        "LoF.HighIQ": lambda studies: genes_sets(
+        "LGDs.HighIQ": lambda studies: genes_sets(
                                         studies,
                                         in_child='prb',
                                         effect_types='LGDs',
                                         measure=nvIQ,
                                         mmin=90),
         
-        "LoF.FMRP": lambda studies: genes_sets(
+        "LGDs.FMRP": lambda studies: genes_sets(
                                         studies,
                                         in_child='prb',
                                         effect_types='LGDs',
