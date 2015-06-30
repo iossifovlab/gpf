@@ -12,18 +12,38 @@ from DAE import get_gene_sets_symNS
 #     gs = api.GeneTerm.GeneTerm(gene_term)
 #     return gs
 
+def gene_terms_union(gene_terms):
+    if len(gene_terms)==1:
+        return gene_terms[0]
+    
+    result = api.GeneTerm.GeneTerm(gene_terms[0])
+    
+    for gt in gene_terms[1:]:
+        result.tDesc.update(gt.tDesc)
+    
+
+    return result
+    
+def collect_denovo_gene_sets(gene_set_phenotype):
+    precomputed = register.get('denovo_gene_sets')
+    denovo_gene_sets = precomputed.denovo_gene_sets
+
+    phenotypes = gene_set_phenotype.split(',')
+    gene_terms = [denovo_gene_sets[pheno] for pheno in phenotypes 
+                  if pheno in denovo_gene_sets]
+    return gene_terms
+    
+def combine_denovo_gene_sets(gene_set_phenotype):
+    gene_terms = collect_denovo_gene_sets(gene_set_phenotype)
+    return gene_terms_union(gene_terms)
 
 def load_gene_set2(gene_set_label, gene_set_phenotype=None):
     gene_term = None
     if gene_set_label!= 'denovo':
         gene_term = get_gene_sets_symNS(gene_set_label)
     else:
-        precomputed = register.get('denovo_gene_sets')
-        denovo_gene_sets = precomputed.denovo_gene_sets
-        
-        if gene_set_phenotype in denovo_gene_sets:
-            gene_term = denovo_gene_sets[gene_set_phenotype]
-    
+        gene_term = combine_denovo_gene_sets(gene_set_phenotype)
+
     if gene_term:
         gs = api.GeneTerm.GeneTerm(gene_term)
         return gs
