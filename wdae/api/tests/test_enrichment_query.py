@@ -92,7 +92,7 @@ class EnrichmentPrepareTests(APITestCase):
         {'denovoStudies': ['IossifovWE2012'],
          'transmittedStudies': ['w1202s766e611'],
          'geneSet': 'denovo',
-         'geneTerm': 'LoF',
+         'geneTerm': 'LGDs',
          'gene_set_phenotype': 'autism'}
 
     def test_denovo_gene_set(self):
@@ -100,7 +100,7 @@ class EnrichmentPrepareTests(APITestCase):
 
         assert_that(data, has_entry('gene_set_phenotype', 'autism'))
         assert_that(data, has_entry('geneSet', 'denovo'))
-        assert_that(data, has_entry('geneTerm', 'LoF'))
+        assert_that(data, has_entry('geneTerm', 'LGDs'))
         assert_that(data, has_key('geneSyms'))
 
     TEST_DATA_MAIN_BAD_DENOVO_STUDY = {'denovoStudies': ['BAD_STUDY'],
