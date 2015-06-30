@@ -229,11 +229,11 @@ def sib_sets(denovo_studies):
     
     
     res = {
-        "LoF": genes_sets(
+        "LGDs": genes_sets(
                         denovo_studies,
                         in_child='sib',
                         effect_types='LGDs'),
-        "LoF.Recurrent": genes_set_recurrent(
+        "LGDs.Recurrent": genes_set_recurrent(
                         denovo_studies,
                         in_child="sib",
                         effect_types="LGDs"),
