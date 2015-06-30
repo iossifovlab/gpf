@@ -32,15 +32,41 @@ class ChildrenStats(object):
         return dict(child_type_cnt.items())
 
     @staticmethod
+    def probands(studies):
+        child_type_cnt = Counter()
+    
+        fam_buff = ChildrenStats.prepare_families(studies)
+        for fmd in fam_buff.values():
+            for p in fmd.values():
+                if p.role=='prb':
+                    child_type_cnt[p.gender] += 1
+    
+        return dict(child_type_cnt.items())
+
+    @staticmethod
+    def siblings(studies):
+        child_type_cnt = Counter()
+    
+        fam_buff = ChildrenStats.prepare_families(studies)
+        for fmd in fam_buff.values():
+            for p in fmd.values():
+                if p.role=='sib':
+                    child_type_cnt[p.gender] += 1
+    
+        return dict(child_type_cnt.items())
+
+
+    @staticmethod
     def build(dsts):
         res = {}
         for phenotype in PHENOTYPES:
             if phenotype != 'unaffected':
                 studies = filter_denovo_studies_by_phenotype(dsts, phenotype)
+                stats = ChildrenStats.probands(studies)
+                res[phenotype] = stats
             else:
                 studies = [st for st in dsts if st.get_attr('study.type') == 'WE']
-                
-            stats = ChildrenStats.probands_and_siblings(studies)
-            res[phenotype] = stats
+                stats = ChildrenStats.siblings(studies)
+                res[phenotype] = stats
         
         return res
