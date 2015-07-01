@@ -456,6 +456,10 @@ def gene_set_download(request):
         gene_name = query_params['gene_name']
         gts = load_gene_set2(gene_set, gene_set_phenotype)
         if gts and gene_name in gts.t2G:
+            title = "{}:{}".format(gene_set, gene_name)
+            if gene_set_phenotype:
+                title += " ({})".format(gene_set_phenotype)
+            gene_syms.append("{}\r\n".format(title)) 
             gene_syms.extend(gts.t2G[gene_name].keys())
     res = map(lambda s: "{}\r\n".format(s), gene_syms)
     print(res)
