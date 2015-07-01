@@ -428,6 +428,34 @@ def gene_set_list2(request):
     else:
         return Response()
 
+
+@api_view(['GET'])
+def gene_set_download(request):
+    
+    gene_syms = []
+
+    query_params = prepare_query_dict(request.QUERY_PARAMS)
+    if 'gene_set' in query_params and 'gene_name' in query_params:
+        gene_set = query_params['gene_set']
+        gene_set_phenotype = str(query_params['gene_set_phenotype']) \
+                    if 'gene_set_phenotype' in query_params else None
+
+        gene_name = query_params['gene_name']
+        gts = load_gene_set2(gene_set, gene_set_phenotype)
+        if gts and gene_name in gts.t2G:
+            gene_syms.extend(gts.t2G[gene_name].keys())
+    
+    
+    response = StreamingHttpResponse(
+        gene_syms,
+        content_type='text/csv')
+    
+    response['Content-Disposition'] = 'attachment; filename=geneset.csv'
+    response['Expires'] = '0'
+
+    return response
+           
+
 @api_view(['GET'])
 def gene_set_phenotypes(request):
     return Response(['autism', 
