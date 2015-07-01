@@ -104,6 +104,29 @@ class Test(APITestCase):
         self.assertEqual(0, count)
 
 
+    def test_gene_set_download_title(self):
+        data = {'gene_set':'main', 'gene_name': 'ChromatinModifiers'}
+        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        response = self.client.get(url)
+        
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = list(response.streaming_content)
+        title = res[0]
+        self.assertEqual('main:ChromatinModifiers', title.strip())
+    
+    def test_gene_set_download_denovo_title(self):
+        data = {'gene_set':'denovo', 
+                'gene_set_phenotype': 'autism,epilepsy,unaffected',
+                'gene_name': 'LGDs'}
+        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        response = self.client.get(url)
+        
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = list(response.streaming_content)
+        title = res[0]
+        self.assertEqual('denovo:LGDs (autism,epilepsy,unaffected)', title.strip())
+
+
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
