@@ -431,7 +431,6 @@ def gene_set_list2(request):
 
 @api_view(['GET'])
 def gene_set_download(request):
-    
     gene_syms = []
 
     query_params = prepare_query_dict(request.QUERY_PARAMS)
@@ -444,7 +443,6 @@ def gene_set_download(request):
         gts = load_gene_set2(gene_set, gene_set_phenotype)
         if gts and gene_name in gts.t2G:
             gene_syms.extend(gts.t2G[gene_name].keys())
-    
     
     response = StreamingHttpResponse(
         gene_syms,

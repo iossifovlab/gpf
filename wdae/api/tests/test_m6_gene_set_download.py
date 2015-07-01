@@ -70,6 +70,39 @@ class Test(APITestCase):
         count = len(list(response.streaming_content))
         self.assertEqual(719, count)
 
+    def test_gene_set_download_bad_gene_set(self):
+        data = {'gene_set':'ala-bala', 
+                'gene_name': 'portokala'}
+        
+        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        response = self.client.get(url)
+        
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        count = len(list(response.streaming_content))
+        self.assertEqual(0, count)
+
+    def test_gene_set_download_bad_gene_name(self):
+        data = {'gene_set':'main', 
+                'gene_name': 'portokala'}
+        
+        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        response = self.client.get(url)
+        
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        count = len(list(response.streaming_content))
+        self.assertEqual(0, count)
+
+    def test_gene_set_download_bad_params(self):
+        data = {'ala':'main', 
+                'bala': 'ChromatinModifiers'}
+        
+        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        response = self.client.get(url)
+        
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        count = len(list(response.streaming_content))
+        self.assertEqual(0, count)
+
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
