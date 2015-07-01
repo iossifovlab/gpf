@@ -15,7 +15,7 @@ PHENOTYPES = [
 
 PRB_TESTS_SPECS = [
     # 0
-    {'label': 'prb|Rec LGDs',
+    {'label': 'prb|Rec LGDs|prb|male,female|Nonsense,Frame-shift,Splice-site',
      'type': 'rec',
      'inchild': 'prb',
      'effect': 'LGDs'},
@@ -35,7 +35,7 @@ PRB_TESTS_SPECS = [
      'inchild': 'prbF', 
      'effect': 'LGDs'},
     # 4
-    {'label': 'prb|Rec Missense', 
+    {'label': 'prb|Rec Missense|prb|male,female|Missense', 
      'type': 'rec',
      'inchild': 'prb',
      'effect': 'missense'},
@@ -55,7 +55,7 @@ PRB_TESTS_SPECS = [
      'inchild': 'prbF', 
      'effect': 'missense'},
     # 8
-    {'label': 'prb|Rec Synonymous', 
+    {'label': 'prb|Rec Synonymous|prb|male,female|Synonymous', 
      'type': 'rec',
      'inchild': 'prb', 
      'effect': 'synonymous'},
@@ -79,7 +79,7 @@ PRB_TESTS_SPECS = [
 
 SIB_TESTS_SPECS = [
     # 0
-    {'label': 'sib|Rec LGDs', 
+    {'label': 'sib|Rec LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site', 
      'type': 'rec',
      'inchild': 'sib', 
      'effect': 'LGDs'},
@@ -99,7 +99,7 @@ SIB_TESTS_SPECS = [
      'inchild': 'sibF', 
      'effect': 'LGDs'},
     # 4
-    {'label': 'sib|Rec Missense', 
+    {'label': 'sib|Rec Missense|sib|male,female|Missense', 
      'type': 'rec',
      'inchild': 'sib', 
      'effect': 'missense'},
@@ -119,7 +119,7 @@ SIB_TESTS_SPECS = [
      'inchild': 'sibF', 
      'effect': 'missense'},
     # 8
-    {'label': 'sib|Rec Synonymous', 
+    {'label': 'sib|Rec Synonymous|sib|male,female|Synonymous', 
      'type': 'rec',
      'inchild': 'sib', 
      'effect': 'synonymous'},

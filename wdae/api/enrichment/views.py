@@ -105,8 +105,7 @@ class EnrichmentView(APIView):
         tres['label'] = t.name
         if t.type == 'rec':
             tres['syms'] = t.gene_syms.intersection(self.gene_syms)
-        else:
-            tres['filter'] = t.filter
+        tres['filter'] = t.filter
         
         if t.p_val >= 0.0001:
             tres['p_val'] = round(t.p_val, 4)
