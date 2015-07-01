@@ -431,6 +431,20 @@ def gene_set_list2(request):
 
 @api_view(['GET'])
 def gene_set_download(request):
+    """
+    Returns list of gene symbols for given gene set.
+    
+    Expected parameters are:
+    
+    * `gene_set` - the name of the gene set group;
+    * `gene_set_phenotype` - if the gene set is `denovo`, we have to
+        pass the gene set phenotype;
+    * `gene_name` - the gene set name.
+    
+    Returns:
+    Single column comma separated file to download.
+    
+    """
     gene_syms = []
 
     query_params = prepare_query_dict(request.QUERY_PARAMS)
@@ -443,9 +457,10 @@ def gene_set_download(request):
         gts = load_gene_set2(gene_set, gene_set_phenotype)
         if gts and gene_name in gts.t2G:
             gene_syms.extend(gts.t2G[gene_name].keys())
-    
+    res = map(lambda s: "{}\r\n".format(s), gene_syms)
+    print(res)
     response = StreamingHttpResponse(
-        gene_syms,
+        res,
         content_type='text/csv')
     
     response['Content-Disposition'] = 'attachment; filename=geneset.csv'
