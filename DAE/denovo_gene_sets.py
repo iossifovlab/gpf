@@ -92,8 +92,9 @@ def get_measure(measure_name):
 
 
 def get_all_denovo_studies():
-    whole_exome_studies = vDB.get_studies("ALL WHOLE EXOME")
-    ssc_studies = vDB.get_studies("ALL SSC")
+    whole_exome_studies = [st for st in vDB.get_studies("ALL WHOLE EXOME") 
+                           if st.get_attr('study.type') == 'WE']
+    ssc_studies = [] # vDB.get_studies("ALL SSC")
     
     all_denovo_studies = whole_exome_studies[:]
 
@@ -157,6 +158,11 @@ def prb_set_per_phenotype():
                                         effect_types='LGDs',
                                         gene_syms=set_genes("main:FMR1-targets")),
         
+        "Missense.Recurrent": lambda studies: genes_set_recurrent(
+                                        studies,
+                                        in_child="prb",
+                                        effect_types="missense"),
+                 
         "Missense": lambda studies: genes_sets(
                                         studies,
                                         in_child="prb",
@@ -172,6 +178,11 @@ def prb_set_per_phenotype():
                                         in_child="prbF",
                                         effect_types="missense"),
         
+        "Synonymous.Recurrent": lambda studies: genes_set_recurrent(
+                                        studies,
+                                        in_child="prb",
+                                        effect_types="synonymous"),
+
         "Synonymous": lambda studies: genes_sets(
                                         studies,
                                         in_child="prb",
@@ -237,14 +248,27 @@ def sib_sets(denovo_studies):
                         denovo_studies,
                         in_child="sib",
                         effect_types="LGDs"),
+
+        "Missense.Recurrent": genes_set_recurrent(
+                        denovo_studies,
+                        in_child='sib',
+                        effect_types='missense'),
+
         "Missense": genes_sets(
                         denovo_studies,
                         in_child='sib',
                         effect_types='missense'),
+           
         "Synonymous": genes_sets(
                         denovo_studies,
                         in_child='sib',
                         effect_types='synonymous'),
+
+        "Synonymous.Recurrent": genes_set_recurrent(
+                        denovo_studies,
+                        in_child='sib',
+                        effect_types='synonymous'),
+
         "CNV": genes_sets(
                         denovo_studies,
                         in_child='sib',
