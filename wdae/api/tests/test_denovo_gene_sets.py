@@ -52,7 +52,8 @@ class Test(unittest.TestCase):
                 
     def test_get_all_denovo_studies(self):
         all_denovo_studies = get_all_denovo_studies()
-        self.assertEquals(11, len(all_denovo_studies))
+        # self.assertEquals(11, len(all_denovo_studies))
+        self.assertEquals(9, len(all_denovo_studies))
         
     def test_build_prb_test_by_phenotype(self):
         all_denovo_studies = get_all_denovo_studies()
