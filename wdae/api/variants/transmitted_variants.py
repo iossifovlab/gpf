@@ -194,19 +194,24 @@ def load_toomany_family_data(tbf, row):
     position = row[CN_POSITION]
     variant = row[CN_VARIANT]
     
-    l = tbf.fetch(chrome, position-1, position)
-    l = l.next()
-    # print("tbf fetch result: {}".format(l))
-    l = l.strip().split('\t')
-    # print("tbf fetch split: {}".format(l))
-    tm_chrome, tm_pos, tm_variant, tm_families_data = l 
-    if tm_chrome != chrome:
-        raise ValueError("chomes doesn't match: {}, {}".format(chrome, tm_chrome))
-    if int(tm_pos) != position:
-        raise ValueError("position doesn't match: {}, {}".format(position, tm_pos))
-    if tm_variant != variant:
-        raise ValueError("chomes doesn't match: {}, {}".format(chrome, tm_chrome))
-    return parse_family_data(tm_families_data)
+    r = tbf.fetch(chrome, position-1, position)
+    ln = r.next()
+    while ln:
+        l = ln.strip().split('\t')
+        tm_chrome, tm_pos, tm_variant, tm_families_data = l 
+        
+        if tm_chrome != str(chrome):
+            raise ValueError("chromes doesn't match: {}, {}".format(chrome, tm_chrome))
+        if int(tm_pos) != position:
+            raise ValueError("position doesn't match: {}, {}".format(position, tm_pos))
+        if tm_variant != variant:
+            # LOGGER.error("chrome %s; pos: %s, variant: %s", chrome, position, variant)
+            ln = r.next()
+            # LOGGER.error("too many next line: %s", l)
+            continue
+            # raise ValueError("variants doesn't match: {}, {}".format(variant, tm_variant))
+        return parse_family_data(tm_families_data)
+    return []
 
 
 #@numba.jit

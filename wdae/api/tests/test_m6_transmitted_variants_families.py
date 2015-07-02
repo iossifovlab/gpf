@@ -35,6 +35,15 @@ class Test(unittest.TestCase):
         
         res = load_toomany_family_data(self.tbf, row)
         self.assertEquals(147, len(res))
+        
+#     def test_count_all_toomany(self):
+#         df = self.df[self.df.familyData == 'TOOMANY']
+#         count = 0
+#         for i in xrange(len(df)):
+#             row = df.irow(i)
+#             res = load_toomany_family_data(self.tbf, row)
+#             count += len(res)
+#         self.assertEqual(67897382, count)
     
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.test_parse_family_data']
