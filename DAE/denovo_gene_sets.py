@@ -256,7 +256,6 @@ def build_prb_set_by_phenotype(denovo_studies, phenotype):
 
 def sib_sets(studies):
     
-    
     res = {
         "LGDs": genes_sets(
                         studies,
@@ -283,7 +282,6 @@ def sib_sets(studies):
                          if st.get_attr('study.type') == 'WE'],
                         in_child="sib",
                         effect_types="missense"),
-
 
         "Missense": genes_sets(
                         studies,
