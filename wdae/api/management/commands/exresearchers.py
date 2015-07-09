@@ -29,3 +29,10 @@ class Command(BaseCommand):
         u.researcher_id = '10021'
         u.set_password('pasivan')
         u.save()
+
+        u, _ = User.objects.get_or_create(email='researcher@iossifovlab.com')
+        u.is_staff = False
+        u.is_active = True
+        u.researcher_id = '10022'
+        u.set_password('passecret')
+        u.save()
