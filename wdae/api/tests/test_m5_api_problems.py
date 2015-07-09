@@ -391,8 +391,7 @@ class SSCPresentInParentTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # LOGGER.info("result data: %s", response.data)
-        # self.assertEqual('77', response.data['count'])
-        self.assertEqual('76', response.data['count'])
+        self.assertEqual('77', response.data['count'])
 
 
     def test_present_in_child_all(self):
@@ -560,8 +559,7 @@ class SSCPresentInChildDownloadTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # self.assertEqual(79, count_iterable(response.streaming_content))
-        self.assertEqual(78, count_iterable(response.streaming_content))
+        self.assertEqual(79, count_iterable(response.streaming_content))
 
     def test_rec_lgds_download_urlencoded(self):
         data = 'genes=Gene+Sets&geneSet=denovo&gene_set_phenotype=autism&geneTerm=LGDs.Recurrent&geneSyms=&geneRegionType=on&geneRegion=&presentInChild=autism+only&presentInChild=autism+and+unaffected&presentInParent=neither&gender=male&gender=female&variantTypes=sub&variantTypes=ins&variantTypes=del&variantTypes=CNV&effectTypes=Nonsense&effectTypes=Frame-shift&effectTypes=Splice-site&rarity=ultraRare&families=all&familyIds=&familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&familyPrbGender=All&familySibGender=All'
@@ -572,6 +570,5 @@ class SSCPresentInChildDownloadTests(APITestCase):
         response = self.client.post(url, data,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # self.assertEqual(79, count_iterable(response.streaming_content))
-        self.assertEqual(78, count_iterable(response.streaming_content))
+        self.assertEqual(79, count_iterable(response.streaming_content))
         
