@@ -85,10 +85,35 @@ def build_toomany(fh, study_name):
 
 import tables
 
+EFFECT_TYPES = tables.Enum([ 
+        "3'UTR", 
+        "3'UTR-intron", 
+        "5'UTR", 
+        "5'UTR-intron", 
+        'frame-shift',
+        'intergenic', 
+        'intron', 
+        'missense', 
+        'no-frame-shift',
+        'no-frame-shift-newStop', 
+        'noEnd', 
+        'noStart', 
+        'non-coding',
+        'non-coding-intron', 
+        'nonsense', 
+        'splice-site', 
+        'synonymous'])
+
+VARIANT_TYPES = tables.Enum(['del', 'ins', 'sub', 'CNV'])
+
 class SummaryVariants(tables.IsDescription):
     chrome = tables.StringCol(3)
     position = tables.Int64Col()
     variant = tables.StringCol(45)
+    variant_type = tables.EnumCol(VARIANT_TYPES,
+                                  'sub', base='uint8')
+    effect_type = tables.EnumCol(EFFECT_TYPES,
+                                 'intergenic', base='uint8')
     fbegin = tables.Int64Col()
     fend = tables.Int64Col()
     
@@ -108,10 +133,11 @@ def build_summary(study_name):
     tfname = ts.vdb._config.get(ts._configSection, 
                 'transmittedVariants.indexFile' ) \
                 + "-TOOMANY.txt.bgz"
+    filters = tables.Filters(complevel=1)
                            
     with gzip.open(fname, 'r') as f, \
         gzip.open(tfname, 'r') as tf, \
-        tables.open_file("experiment.hdf5", "w") as h5f:
+        tables.open_file("experiment.hdf5", "w", filters=filters) as h5f:
         
         sgroup = h5f.create_group('/', 'summary', 'Summary Variants')
         stable = h5f.create_table(sgroup, 'variants', 
@@ -136,6 +162,12 @@ def build_summary(study_name):
             srow['chrome'] = vals['chr']
             srow['position'] = int(vals['position'])
             srow['variant'] = vals['variant']
+            vt = vals['variant'][0:3]
+            et = vals['effectType']
+            
+            srow['variant_type'] = VARIANT_TYPES[vt] 
+            srow['effect_type'] = EFFECT_TYPES[et]
+            
             snrow = ln
 
             family_data = vals['familyData']
