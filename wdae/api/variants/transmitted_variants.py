@@ -71,7 +71,7 @@ def read_summary_df(study_name):
     f.close()
     
     vec_parse_gene_effect = np.vectorize(parseGeneEffect)
-    df.effectGene = np.apply_along_axis(vec_parse_gene_effect,
+    df.effectGeneParsed = np.apply_along_axis(vec_parse_gene_effect,
                                         0, 
                                         df.effectGene)
     

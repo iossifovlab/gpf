@@ -10,6 +10,7 @@ import collections
 from api.variants.transmitted_variants import parse_family_data
 from DAE import vDB
 import gzip
+from VariantsDB import parseGeneEffect
 
 
 def build_position(fh, df):
@@ -116,6 +117,8 @@ class SummaryVariants(tables.IsDescription):
                                  'intergenic', base='uint8')
     fbegin = tables.Int64Col()
     fend = tables.Int64Col()
+    ebegin = tables.Int64Col()
+    eend = tables.Int64Col()
     
 class FamilyVariants(tables.IsDescription):
     fid = tables.StringCol(16)
@@ -123,6 +126,141 @@ class FamilyVariants(tables.IsDescription):
     counts = tables.StringCol(64)
     vrow = tables.Int64Col()
     
+class GeneEffectVariants(tables.IsDescription):
+    symbol = tables.StringCol(32)
+    effect = tables.StringCol(32)
+    vrow = tables.Int64Col()
+
+class TransmissionIndexBuilder(object):
+    def __init__(self, study_name):
+        self.study_name = study_name
+
+        self.study = vDB.get_study(self.study_name)
+        
+        self.summary_filename = self.study.vdb._config.get(
+                    self.study._configSection,
+                    'transmittedVariants.indexFile' ) + ".txt.bgz"
+        self.tm_filename = self.study.vdb._config.get(
+                self.study._configSection, 
+                'transmittedVariants.indexFile' ) \
+                + "-TOOMANY.txt.bgz"
+
+        self.h5_filename = "{}.hdf5".format(self.study_name)
+
+
+    def build(self):
+        filters = tables.Filters(complevel=1)
+
+
+        with gzip.open(self.summary_filename, 'r') as sfh, \
+            gzip.open(self.tm_filename, 'r') as tfh, \
+            tables.open_file(self.h5_filename, "w", filters=filters) as h5fh:
+            
+            self.sfh = sfh
+            self.tfh = tfh
+            self.h5fh = h5fh
+        
+            self.summary_group = self.h5fh.create_group('/', 'summary', 
+                                'Summary Variants')
+            self.summary_table = self.h5fh.create_table(
+                                self.summary_group, 'variants', 
+                                SummaryVariants, 'Summary Variants Table')
+        
+            self.family_group = self.h5fh.create_group('/', 'family', 
+                                'Family Data')
+            self.family_table = self.h5fh.create_table(
+                                self.family_group, 'variant',
+                                FamilyVariants, 'Family Variants Table')
+
+            self.effect_group = self.h5fh.create_group('/', 'effect', 
+                                'Effect Data')
+            self.effect_table = self.h5fh.create_table(
+                                self.effect_group, 'effect',
+                                GeneEffectVariants, 'Gene Effects Table')
+        
+            self.column_names = self.sfh.readline().rstrip().split('\t')
+            self.summary_row = self.summary_table.row
+            self.family_row = self.family_table.row
+            self.effect_row = self.effect_table.row
+
+            self.snrow = 0
+            self.fnrow = 0
+            self.enrow = 0
+
+            self.tfh.readline() # skip file header  
+
+            self.build_mainloop()
+    
+    def load_parse_family_data(self, family_data):
+        if family_data != 'TOOMANY':
+            pfd = parse_family_data(family_data)
+        else:
+            fline = self.tfh.readline()
+            ch, pos, var, families_data = fline.strip().split('\t')
+            pos = int(pos)
+            pfd = parse_family_data(families_data)
+            assert ch == self.summary_row['chrome'] and pos == self.summary_row['position'] and var == self.summary_row['variant']
+        return pfd
+    
+    def build_family_table(self, vals):
+        family_data = vals['familyData']
+        pfd = self.load_parse_family_data(family_data)
+
+        fbegin = self.fnrow
+        for fid, bs, c in pfd:
+            self.family_row['fid'] = fid
+            self.family_row['best'] = bs
+            self.family_row['counts'] = c
+            self.family_row['vrow'] = self.snrow
+            self.family_row.append()
+            self.fnrow += 1
+        
+        fend = self.fnrow
+        return fbegin, fend
+
+
+    def build_effect_table(self, vals):
+        gene_effects = parseGeneEffect(vals['effectGene'])
+        ebegin = self.enrow
+        for ge in gene_effects:
+            self.effect_row['symbol'] = ge['sym']
+            self.effect_row['effect'] = ge['eff']
+            self.effect_row['vrow'] = self.snrow
+            self.effect_row.append()
+            self.enrow += 1
+        eend = self.enrow
+        return ebegin, eend
+    
+    def build_mainloop(self):
+        for line in self.sfh:
+            data = line.strip("\r\n").split("\t")
+            vals = dict(zip(self.column_names, data))
+            
+            self.summary_row['chrome'] = vals['chr']
+            self.summary_row['position'] = int(vals['position'])
+            self.summary_row['variant'] = vals['variant']
+            vt = vals['variant'][0:3]
+            et = vals['effectType']
+            
+            self.summary_row['variant_type'] = VARIANT_TYPES[vt] 
+            self.summary_row['effect_type'] = EFFECT_TYPES[et]
+
+            fbegin, fend = self.build_family_table(vals)
+            self.summary_row['fbegin'] = fbegin
+            self.summary_row['fend'] = fend
+
+            ebegin, eend = self.build_effect_table(vals)
+            self.summary_row['ebegin'] = ebegin
+            self.summary_row['eend'] = eend
+
+            self.summary_row.append()
+            
+            if self.snrow % 1000==0:
+                self.summary_table.flush()
+                self.family_table.flush()
+                print self.snrow, 
+            self.snrow += 1            
+
 
 def build_summary(study_name):
     ts = vDB.get_study('w1202s766e611')
@@ -208,7 +346,11 @@ def build_summary(study_name):
 
 if __name__ == '__main__':
 
-    build_summary('w1202s766e611')
+    # build_summary('w1202s766e611')
+
+    builder = TransmissionIndexBuilder('w1202s766e611')
+    builder.build()
+
     
 
 
