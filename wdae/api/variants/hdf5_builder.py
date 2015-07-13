@@ -120,6 +120,18 @@ class SummaryVariants(tables.IsDescription):
     ebegin = tables.Int64Col()
     eend = tables.Int64Col()
     
+    n_par_called = tables.Int16Col() #'all.nParCalled'
+    prcnt_par_called = tables.Float16Col() # 'all.prcntParCalled'
+    n_alt_alls = tables.Int16Col() # 'all.nAltAlls'
+    alt_freq = tables.Float16Col() # 'all.altFreq'
+    seg_dups = tables.Int16Col() # 'segDups
+    hw = tables.Float16Col() # 'HW'
+    ssc_freq = tables.Float16Col() # 'SSC-freq'
+    evs_freq = tables.Float16Col() # 'EVS-freq'
+    e65_freq = tables.Float16Col() # 'E65-freq'
+
+    
+    
 class FamilyVariants(tables.IsDescription):
     fid = tables.StringCol(16)
     best = tables.StringCol(16)
@@ -132,6 +144,7 @@ class GeneEffectVariants(tables.IsDescription):
     vrow = tables.Int64Col()
 
 class TransmissionIndexBuilder(object):
+    
     def __init__(self, study_name):
         self.study_name = study_name
 
@@ -230,6 +243,24 @@ class TransmissionIndexBuilder(object):
             self.enrow += 1
         eend = self.enrow
         return ebegin, eend
+
+    @staticmethod
+    def safe_float(s):
+        if s.strip() == '':
+            return float('NaN')
+        else:
+            return float(s)
+
+    def build_summary_frequencies(self, vals):
+        self.summary_row['n_par_called'] = int(vals['all.nParCalled'])
+        self.summary_row['prcnt_par_called'] = float(vals['all.prcntParCalled'])
+        self.summary_row['n_alt_alls'] = int(vals['all.nAltAlls'])
+        self.summary_row['alt_freq'] = float(vals['all.altFreq'])
+        self.summary_row['seg_dups'] = int(vals['segDups'])
+        self.summary_row['hw'] = float(vals['HW'])
+        self.summary_row['ssc_freq'] = self.safe_float(vals['SSC-freq'])
+        self.summary_row['evs_freq'] = self.safe_float(vals['EVS-freq'])
+        self.summary_row['e65_freq'] = self.safe_float(vals['E65-freq'])
     
     def build_mainloop(self):
         for line in self.sfh:
@@ -253,9 +284,11 @@ class TransmissionIndexBuilder(object):
             self.summary_row['ebegin'] = ebegin
             self.summary_row['eend'] = eend
 
+            self.build_summary_frequencies(vals)
+            
             self.summary_row.append()
             
-            if self.snrow % 1000==0:
+            if self.snrow % 10000==0:
                 self.summary_table.flush()
                 self.family_table.flush()
                 print self.snrow, 
