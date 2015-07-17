@@ -11,6 +11,7 @@ from api.variants.transmitted_variants import parse_family_data
 from DAE import vDB
 import gzip
 from VariantsDB import parseGeneEffect
+import itertools
 
 
 def build_position(fh, df):
@@ -115,10 +116,15 @@ class SummaryVariants(tables.IsDescription):
                                   'sub', base='uint8')
     effect_type = tables.EnumCol(EFFECT_TYPES,
                                  'intergenic', base='uint8')
+    effect_gene = tables.StringCol(32)
+    
+    # all_effect_types = tables.Int32Col()
+    
     fbegin = tables.Int64Col()
     fend = tables.Int64Col()
     ebegin = tables.Int64Col()
     eend = tables.Int64Col()
+    elen = tables.Int32Col()
     
     n_par_called = tables.Int16Col() #'all.nParCalled'
     prcnt_par_called = tables.Float16Col() # 'all.prcntParCalled'
@@ -140,7 +146,8 @@ class FamilyVariants(tables.IsDescription):
     
 class GeneEffectVariants(tables.IsDescription):
     symbol = tables.StringCol(32)
-    effect = tables.StringCol(32)
+    effect = tables.EnumCol(EFFECT_TYPES,
+                            'intergenic', base='uint8')
     vrow = tables.Int64Col()
 
 class TransmissionIndexBuilder(object):
@@ -204,6 +211,12 @@ class TransmissionIndexBuilder(object):
 
             self.build_mainloop()
     
+            # self.summary_table.cols.chrome.create_index()
+            # self.summary_table.cols.position.create_index()
+            
+            # self.summary_table.cols.variant_type.create_index()
+            # self.summary_table.cols.effect_type.create_index()
+            
     def load_parse_family_data(self, family_data):
         if family_data != 'TOOMANY':
             pfd = parse_family_data(family_data)
@@ -235,9 +248,15 @@ class TransmissionIndexBuilder(object):
     def build_effect_table(self, vals):
         gene_effects = parseGeneEffect(vals['effectGene'])
         ebegin = self.enrow
-        for ge in gene_effects:
+        
+        for index, ge in enumerate(gene_effects):
+            if index == 0:
+                self.summary_row['effect_gene'] = ge['sym']
+
             self.effect_row['symbol'] = ge['sym']
-            self.effect_row['effect'] = ge['eff']
+            et = EFFECT_TYPES[ge['eff']]
+            self.effect_row['effect'] = et
+            
             self.effect_row['vrow'] = self.snrow
             self.effect_row.append()
             self.enrow += 1
@@ -283,6 +302,7 @@ class TransmissionIndexBuilder(object):
             ebegin, eend = self.build_effect_table(vals)
             self.summary_row['ebegin'] = ebegin
             self.summary_row['eend'] = eend
+            self.summary_row['elen'] = eend - ebegin
 
             self.build_summary_frequencies(vals)
             
@@ -295,87 +315,52 @@ class TransmissionIndexBuilder(object):
             self.snrow += 1            
 
 
-def build_summary(study_name):
-    ts = vDB.get_study('w1202s766e611')
-    
-    fname = ts.vdb._config.get(ts._configSection,
-                    'transmittedVariants.indexFile' ) + ".txt.bgz"
-
-    tfname = ts.vdb._config.get(ts._configSection, 
-                'transmittedVariants.indexFile' ) \
-                + "-TOOMANY.txt.bgz"
+class TransmissionStudyQuery(object):
     filters = tables.Filters(complevel=1)
-                           
-    with gzip.open(fname, 'r') as f, \
-        gzip.open(tfname, 'r') as tf, \
-        tables.open_file("experiment.hdf5", "w", filters=filters) as h5f:
-        
-        sgroup = h5f.create_group('/', 'summary', 'Summary Variants')
-        stable = h5f.create_table(sgroup, 'variants', 
-                                  SummaryVariants, 'Summary Variants Table')
-        
-        fgroup = h5f.create_group('/', 'family', 'Family Data')
-        ftable = h5f.create_table(fgroup, 'variant',
-                                  FamilyVariants, 'Family Variants Table')
-        
-        cols_names = f.readline().rstrip().split('\t')
-        ln = 0
-        srow = stable.row
-        frow = ftable.row
-        fnrow = 0
-        
-        tf.readline() # skip file header
-        
-        for line in f:
-            
-            data = line.strip("\r\n").split("\t")
-            vals = dict(zip(cols_names, data))
-            srow['chrome'] = vals['chr']
-            srow['position'] = int(vals['position'])
-            srow['variant'] = vals['variant']
-            vt = vals['variant'][0:3]
-            et = vals['effectType']
-            
-            srow['variant_type'] = VARIANT_TYPES[vt] 
-            srow['effect_type'] = EFFECT_TYPES[et]
-            
-            snrow = ln
 
-            family_data = vals['familyData']
-            if family_data != 'TOOMANY':
-                pfd = parse_family_data(family_data)
-            else:
-                fline = tf.readline()
-                
-                ch, pos, var, families_data = fline.strip().split('\t')
-                pos = int(pos)
-                pfd = parse_family_data(families_data)
-                assert ch == srow['chrome'] and \
-                    pos == srow['position'] and \
-                    var == srow['variant']
+    def __init__(self, study_name):
+        self.study_name = study_name
+        self.h5_filename = "{}.hdf5".format(self.study_name)
+        self.h5fh = tables.open_file(self.h5_filename, "r", 
+                                     filters=self.filters)
+    
+    def close(self):
+        self.h5fh.close()
+        
+    def h5f_load_synonymous_test(self):
+        table = self.h5fh.root.summary.variants
+        etable = self.h5fh.root.effect.effect
 
-                
-            fbegin = fnrow
-            for (fid, bs, c) in pfd:
-                frow['fid'] = fid
-                frow['best'] = bs
-                frow['counts'] = c
-                frow['vrow'] = snrow
-                frow.append()
-                fnrow += 1
-            fend = fnrow
-            
-            srow['fbegin'] = fbegin
-            srow['fend'] = fend
-            srow.append()
-            
-            if ln % 1000==0:
-                srow.table.flush()
-                frow.table.flush()
-                print ln, 
-            ln += 1
+        et = EFFECT_TYPES.synonymous
+        where = '(effect_type == {}) & (n_alt_alls == 1) & (elen == 1)'.format(et)
+        res = [set(x['effect_gene']) for x in table.where(where)]
+        
+        where = '(n_alt_alls == 1) & (elen > 1)'
+        mres = table.read_where(where)
+        for ms in mres:
+            effect_genes = [sym for (et, sym, _) in  etable[ms['ebegin']: ms['eend']]
+                            if et == EFFECT_TYPES.synonymous]
+            if effect_genes:
+                res.append(set(effect_genes))
+        return res
 
+    def dae_load_synonymous_test(self):
+        transmitted_study = vDB.get_study(self.study_name)
+        vs = transmitted_study.get_transmitted_summary_variants(
+                ultraRareOnly=True,
+                effectTypes="synonymous")
+        return [v for v in vs]
 
+    def h5f_load_synonymous_test2(self):
+        etable = self.h5fh.root.effect.effect
+        evar = etable.read_where('(effect == 16)')
+        vrows = [er[0] for er in itertools.groupby(evar, lambda r: r[2])]
+        vtable = self.h5fh.root.summary.variants
+        vs = vtable[vrows]
+        ur = vs[np.all([vs['n_par_called']> 600,  
+                        vs['n_alt_alls'] == 1, 
+                        vs['alt_freq']<5], axis=0)]
+        return ur
 
 if __name__ == '__main__':
 
@@ -383,7 +368,11 @@ if __name__ == '__main__':
 
     builder = TransmissionIndexBuilder('w1202s766e611')
     builder.build()
-
     
+    # query = TransmissionStudyQuery('w1202s766e611')
+    # print (len(query.h5f_load_synonymous_test()))
+    # print (len(query.dae_load_synonymous_test()))
+    
+
 
 
