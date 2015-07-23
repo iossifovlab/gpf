@@ -28,8 +28,6 @@ from api.query.query_variants import do_query_variants, \
     get_child_types, get_variant_types, \
     join_line
 
-from api.query.query_prepare import prepare_ssc_filter
-
 from dae_query import prepare_summary, load_gene_set2
 
 from report_variants import build_stats
