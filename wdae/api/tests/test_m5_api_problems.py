@@ -270,7 +270,14 @@ class SSCPresentInParentTests(APITestCase):
         cls.user = u
         _token = Token.objects.get_or_create(user=u)
         cls.user.save()
-        
+    
+    
+    @classmethod
+    def tearDownClass(cls):
+        super(SSCPresentInParentTests, cls).tearDownClass()
+        cls.user.delete()
+    
+    
     def setUp(self):
         from rest_framework.authtoken.models import Token
 
@@ -518,6 +525,11 @@ class SSCPresentInChildDownloadTests(APITestCase):
         cls.user = u
         _token = Token.objects.get_or_create(user=u)
         cls.user.save()
+    
+    @classmethod
+    def tearDownClass(cls):
+        super(SSCPresentInChildDownloadTests, cls).tearDownClass()
+        cls.user.delete()
         
     def setUp(self):
         from rest_framework.authtoken.models import Token

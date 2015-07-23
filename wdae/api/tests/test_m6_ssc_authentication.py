@@ -31,10 +31,13 @@ class Test(APITestCase):
         _token = Token.objects.get_or_create(user=u)
         cls.user.save()
         
+    @classmethod
+    def tearDownClass(cls):
+        super(Test, cls).tearDownClass()
+        cls.user.delete()
+
     def setUp(self):
         super(Test, self).setUpClass()
-
-
 
     def tearDown(self):
         pass

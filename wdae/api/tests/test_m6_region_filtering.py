@@ -30,6 +30,11 @@ class Test(APITestCase):
         cls.user = u
         _token = Token.objects.get_or_create(user=u)
         cls.user.save()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(Test, cls).tearDownClass()
+        cls.user.delete()
         
     def setUp(self):
         super(Test, self).setUpClass()
