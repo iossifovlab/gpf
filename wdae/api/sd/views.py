@@ -33,7 +33,7 @@ class SequencingDenovoPreview(SequencingDenovoPrepare):
     
         data = self.prepare(request)
         
-        LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
+        LOGGER.info(log_filter(request, "sd preview query variants: " + str(data)))
     
         generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
         summary = prepare_summary(generator)
@@ -52,7 +52,7 @@ class SequencingDenovoDownload(SequencingDenovoPrepare):
     
         data = self.prepare(request)
             
-        LOGGER.info(log_filter(request, "query variants request: " + str(data)))
+        LOGGER.info(log_filter(request, "sd query variants request: " + str(data)))
     
         comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
     

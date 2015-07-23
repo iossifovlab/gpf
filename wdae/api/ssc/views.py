@@ -38,7 +38,7 @@ class SSCPreview(SSCPrepare):
     
         data = self.prepare(request)
         
-        LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
+        LOGGER.info(log_filter(request, "ssc preview query variants: " + str(data)))
     
         generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
         summary = prepare_summary(generator)
@@ -59,7 +59,7 @@ class SSCDownload(SSCPrepare):
     
         data = self.prepare(request)
             
-        LOGGER.info(log_filter(request, "query variants request: " + str(data)))
+        LOGGER.info(log_filter(request, "ssc query variants request: " + str(data)))
     
         comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
     
