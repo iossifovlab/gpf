@@ -29,7 +29,9 @@ class WholeExomePreview(WholeExomePrepare):
             return Response()
     
         data = self.prepare(request)
-    
+        data['denovoStudies'] = "ALL WHOLE EXOME"
+        data['transmittedStudies'] = None
+        
         LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
     
         generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
@@ -47,6 +49,8 @@ class WholeExomeDownload(WholeExomePrepare):
             return Response()
     
         data = self.prepare(request)
+        data['denovoStudies'] = "ALL WHOLE EXOME"
+        data['transmittedStudies'] = None
             
         LOGGER.info(log_filter(request, "query variants request: " + str(data)))
     
