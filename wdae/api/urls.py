@@ -4,6 +4,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.authtoken import views as rest_views
 from api.enrichment.views import EnrichmentView
 from api.sd.views import SequencingDenovoPreview, SequencingDenovoDownload
+from api.ssc.views import SSCPreview, SSCDownload
 
 urlpatterns = patterns(
     'api.views',
@@ -23,8 +24,8 @@ urlpatterns = patterns(
     url(r'^query_variants_preview$', 'query_variants_preview'),
     url(r'^query_variants$', 'query_variants'),
 
-    url(r'^ssc_query_variants_preview$', 'ssc_query_variants_preview'),
-    url(r'^ssc_query_variants$', 'ssc_query_variants'),
+    url(r'^ssc_query_variants_preview$', SSCPreview.as_view()),
+    url(r'^ssc_query_variants$', SSCDownload.as_view()),
 
     url(r'^we_query_variants_preview$', SequencingDenovoPreview.as_view()),
     url(r'^we_query_variants$', SequencingDenovoDownload.as_view() ),

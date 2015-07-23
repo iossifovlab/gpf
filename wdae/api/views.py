@@ -656,51 +656,51 @@ Advanced family filter expects following fields:
 
     return response
 
-@api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
-def ssc_query_variants_preview(request):
-
-    if request.method == 'OPTIONS':
-        return Response()
-
-    data = prepare_query_dict(request.DATA)
-    data = prepare_ssc_filter(data)
-    build_effect_type_filter(data)
-
-    LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
-
-    generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
-    summary = prepare_summary(generator)
-    return Response(summary)
-
-@api_view(['POST'])
-@parser_classes([JSONParser, FormParser])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
-def ssc_query_variants(request):
-    if request.method == 'OPTIONS':
-        return Response()
-
-    data = prepare_query_dict(request.DATA)
-    data = prepare_ssc_filter(data)
-    build_effect_type_filter(data)
-
-    LOGGER.info(log_filter(request, "query variants request: " + str(data)))
-
-    comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
-
-    generator = do_query_variants(data)
-    response = StreamingHttpResponse(
-        itertools.chain(
-            itertools.imap(join_line, generator),
-            ['# %s' % comment]),
-        content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename=unruly.csv'
-    response['Expires'] = '0'
-
-
-    return response
+# @api_view(['POST'])
+# @authentication_classes((TokenAuthentication,))
+# @permission_classes((IsAuthenticated,))
+# def ssc_query_variants_preview(request):
+# 
+#     if request.method == 'OPTIONS':
+#         return Response()
+# 
+#     data = prepare_query_dict(request.DATA)
+#     data = prepare_ssc_filter(data)
+#     build_effect_type_filter(data)
+# 
+#     LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
+# 
+#     generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
+#     summary = prepare_summary(generator)
+#     return Response(summary)
+# 
+# @api_view(['POST'])
+# @parser_classes([JSONParser, FormParser])
+# @authentication_classes((TokenAuthentication,))
+# @permission_classes((IsAuthenticated,))
+# def ssc_query_variants(request):
+#     if request.method == 'OPTIONS':
+#         return Response()
+# 
+#     data = prepare_query_dict(request.DATA)
+#     data = prepare_ssc_filter(data)
+#     build_effect_type_filter(data)
+# 
+#     LOGGER.info(log_filter(request, "query variants request: " + str(data)))
+# 
+#     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
+# 
+#     generator = do_query_variants(data)
+#     response = StreamingHttpResponse(
+#         itertools.chain(
+#             itertools.imap(join_line, generator),
+#             ['# %s' % comment]),
+#         content_type='text/csv')
+#     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
+#     response['Expires'] = '0'
+# 
+# 
+#     return response
 
 
 @api_view(['GET'])
