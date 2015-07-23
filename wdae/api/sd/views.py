@@ -14,23 +14,24 @@ import itertools
 from rest_framework.parsers import JSONParser, FormParser
 
 
-class WholeExomePrepare(APIView):
+class SequencingDenovoPrepare(APIView):
     
     def prepare(self, request):
         data = prepare_query_dict(request.DATA)
+        data['denovoStudies'] = "ALL WHOLE EXOME"
+        data['transmittedStudies'] = None
+
         build_effect_type_filter(data)
         return data
-        
 
-class WholeExomePreview(WholeExomePrepare):
+
+class SequencingDenovoPreview(SequencingDenovoPrepare):
     
     def post(self,request):
         if request.method == 'OPTIONS':
             return Response()
     
         data = self.prepare(request)
-        data['denovoStudies'] = "ALL WHOLE EXOME"
-        data['transmittedStudies'] = None
         
         LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
     
@@ -38,8 +39,9 @@ class WholeExomePreview(WholeExomePrepare):
         summary = prepare_summary(generator)
     
         return Response(summary)
+
     
-class WholeExomeDownload(WholeExomePrepare):
+class SequencingDenovoDownload(SequencingDenovoPrepare):
     
     parser_classes = (JSONParser, FormParser,)
     
@@ -49,8 +51,6 @@ class WholeExomeDownload(WholeExomePrepare):
             return Response()
     
         data = self.prepare(request)
-        data['denovoStudies'] = "ALL WHOLE EXOME"
-        data['transmittedStudies'] = None
             
         LOGGER.info(log_filter(request, "query variants request: " + str(data)))
     
