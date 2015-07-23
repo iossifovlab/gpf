@@ -6,85 +6,11 @@ Created on Jul 7, 2015
 
 # import h5py
 import numpy as np
-import collections
 from api.variants.transmitted_variants import parse_family_data
 from DAE import vDB
 import gzip
 from VariantsDB import parseGeneEffect
 import itertools
-
-
-def build_position(fh, df):
-    for chrome in np.unique(df.chr):
-        dc = df[df.chr == chrome]
-
-        dt = np.dtype([("position", np.int64), ("variant", np.dtype('S64'))])
-        data = np.array(zip(dc.position.values, 
-                         np.vectorize(np.str)(dc.variant.values)), dtype=dt)
-        
-        dset_name = "/position/{}".format(chrome)
-        fh.create_dataset(dset_name, 
-                          data=data,
-                          chunks=True,
-                          compression='gzip',
-                          shuffle=True)
-
-
-def build_family(fh, df):
-    counter = collections.Counter()
-    for fd in df.familyData:
-        if fd == 'TOOMANY':
-            continue
-        pdf = parse_family_data(fd)
-        for (fid, _bs, _c) in pdf:
-            counter[fid] += 1
-    print counter
-    return counter
-
-
-def build_toomany(fh, study_name):
-    ts = vDB.get_study(study_name)
-    fname = ts.vdb._config.get(ts._configSection, 
-                'transmittedVariants.indexFile' ) \
-                + "-TOOMANY.txt.bgz"
-    f = gzip.open(fname,'r')
-    fdsets = {}
-    dt = np.dtype([('chr', np.dtype('S4')), 
-                   ('position', np.int64),
-                   ('variant', np.dtype('S64')),
-                   ('best', np.dtype('S16')),
-                   ('counts', np.dtype('S64'))])
-    
-    f.readline()
-    ln = 0
-    for line in f:
-        print '.',
-        ln += 1
-        if ln % 100 == 0:
-            print "\nline: ", ln, 
-        if ln % 1000 == 0:
-            print "\nline: flushing....", ln 
-            fh.flush()
-            
-            
-        row = line.strip().split('\t')
-        chrome, pos, variant, families_data = row
-        pos = int(pos)
-        pfd = parse_family_data(families_data)
-        for (fid, best, counts) in pfd:
-            if fid not in fdsets:
-                setname = "/family/{}".format(fid)
-                dset = fh.create_dataset(setname, 
-                                         dtype=dt, 
-                                         shape=(1, 5), 
-                                         maxshape=(None, 5))
-                fdsets[fid] = dset
-            else:
-                dset = fdsets[fid]
-                dset.resize( (dset.shape[0]+1, 5) )
-            dset[-1] = (chrome, pos, variant, best, counts)
-        
-
 import tables
 
 EFFECT_TYPES = tables.Enum([ 
@@ -108,7 +34,10 @@ EFFECT_TYPES = tables.Enum([
 
 VARIANT_TYPES = tables.Enum(['del', 'ins', 'sub', 'CNV'])
 
+
 class SummaryVariants(tables.IsDescription):
+    line_number = tables.Int64Col()
+    
     chrome = tables.StringCol(3)
     position = tables.Int64Col()
     variant = tables.StringCol(45)
@@ -118,8 +47,6 @@ class SummaryVariants(tables.IsDescription):
                                  'intergenic', base='uint8')
     effect_gene = tables.StringCol(32)
     
-    # all_effect_types = tables.Int32Col()
-    
     fbegin = tables.Int64Col()
     fend = tables.Int64Col()
     ebegin = tables.Int64Col()
@@ -127,28 +54,34 @@ class SummaryVariants(tables.IsDescription):
     elen = tables.Int32Col()
     
     n_par_called = tables.Int16Col() #'all.nParCalled'
-    prcnt_par_called = tables.Float16Col() # 'all.prcntParCalled'
     n_alt_alls = tables.Int16Col() # 'all.nAltAlls'
     alt_freq = tables.Float16Col() # 'all.altFreq'
+
+    prcnt_par_called = tables.Float16Col() # 'all.prcntParCalled'
     seg_dups = tables.Int16Col() # 'segDups
     hw = tables.Float16Col() # 'HW'
     ssc_freq = tables.Float16Col() # 'SSC-freq'
     evs_freq = tables.Float16Col() # 'EVS-freq'
     e65_freq = tables.Float16Col() # 'E65-freq'
 
-    
-    
+
 class FamilyVariants(tables.IsDescription):
     fid = tables.StringCol(16)
     best = tables.StringCol(16)
     counts = tables.StringCol(64)
     vrow = tables.Int64Col()
+
     
 class GeneEffectVariants(tables.IsDescription):
     symbol = tables.StringCol(32)
     effect = tables.EnumCol(EFFECT_TYPES,
                             'intergenic', base='uint8')
     vrow = tables.Int64Col()
+
+    n_par_called = tables.Int16Col() #'all.nParCalled'
+    n_alt_alls = tables.Int16Col() # 'all.nAltAlls'
+    alt_freq = tables.Float16Col() # 'all.altFreq'
+
 
 class TransmissionIndexBuilder(object):
     
@@ -210,6 +143,8 @@ class TransmissionIndexBuilder(object):
             self.tfh.readline() # skip file header  
 
             self.build_mainloop()
+
+            self.summary_table.cols.line_number.create_index()
     
             # self.summary_table.cols.chrome.create_index()
             # self.summary_table.cols.position.create_index()
@@ -258,6 +193,11 @@ class TransmissionIndexBuilder(object):
             self.effect_row['effect'] = et
             
             self.effect_row['vrow'] = self.snrow
+            
+            self.effect_row['n_par_called'] = int(vals['all.nParCalled'])
+            self.effect_row['n_alt_alls'] = int(vals['all.nAltAlls'])
+            self.effect_row['alt_freq'] = float(vals['all.altFreq'])
+            
             self.effect_row.append()
             self.enrow += 1
         eend = self.enrow
@@ -272,9 +212,10 @@ class TransmissionIndexBuilder(object):
 
     def build_summary_frequencies(self, vals):
         self.summary_row['n_par_called'] = int(vals['all.nParCalled'])
-        self.summary_row['prcnt_par_called'] = float(vals['all.prcntParCalled'])
         self.summary_row['n_alt_alls'] = int(vals['all.nAltAlls'])
         self.summary_row['alt_freq'] = float(vals['all.altFreq'])
+
+        self.summary_row['prcnt_par_called'] = float(vals['all.prcntParCalled'])
         self.summary_row['seg_dups'] = int(vals['segDups'])
         self.summary_row['hw'] = float(vals['HW'])
         self.summary_row['ssc_freq'] = self.safe_float(vals['SSC-freq'])
@@ -286,6 +227,7 @@ class TransmissionIndexBuilder(object):
             data = line.strip("\r\n").split("\t")
             vals = dict(zip(self.column_names, data))
             
+            self.summary_row['line_number'] = self.snrow
             self.summary_row['chrome'] = vals['chr']
             self.summary_row['position'] = int(vals['position'])
             self.summary_row['variant'] = vals['variant']
@@ -361,6 +303,17 @@ class TransmissionStudyQuery(object):
                         vs['n_alt_alls'] == 1, 
                         vs['alt_freq']<5], axis=0)]
         return ur
+
+
+    def h5f_load_synonymous_test3(self):
+        etable = self.h5fh.root.effect.effect
+        where = '(effect == 16) & (n_par_called > 600) & (n_alt_alls == 1) & (alt_freq < 5)'
+        evar = etable.read_where(where)
+        vrows = np.unique(evar['vrow'])
+        vtable = self.h5fh.root.summary.variants
+        vs = vtable[vrows]
+        return vs
+
 
 if __name__ == '__main__':
 
