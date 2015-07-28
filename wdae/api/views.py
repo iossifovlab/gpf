@@ -21,7 +21,6 @@ from VariantAnnotation import get_effect_types
 
 import itertools
 import string
-import operator
 # import uuid
 
 from api.query.query_variants import do_query_variants, \
@@ -38,6 +37,7 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names, \
 from models import VerificationPath
 from serializers import UserSerializer
 from api.logger import LOGGER, log_filter
+from api.common.effect_types import EFFECT_GROUPS, build_effect_type_filter
 
 @receiver(post_save, sender=get_user_model())
 def create_auth_token(sender, instance=None, created=False, **kwargs):
@@ -97,77 +97,6 @@ def transmitted_studies_list(request):
     return Response({"transmitted_studies": r})
 
 
-__EFFECT_TYPES = {
-    "Nonsense": ["nonsense"],
-    "Frame-shift": ["frame-shift"],
-    "Splice-site": ["splice-site"],
-    "Missense": ["missense"],
-    "Non-frame-shift": ["no-frame-shift"],
-    "noStart": ["noStart"],
-    "noEnd": ["noEnd"],
-    "Synonymous": ["synonymous"],
-    "Non coding": ["non-coding"],
-    "Intron": ["intron"],
-    "Intergenic": ["intergenic"],
-    "3'-UTR": ["3'UTR", "3'UTR-intron"],
-    "5'-UTR": ["5'UTR", "5'UTR-intron"],
-    "CNV": ["CNV+", "CNV-"],
-
-}
-
-
-__EFFECT_GROUPS = {
-    "coding":[
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-        "Missense",
-        "Non-frame-shift",
-        "noStart",
-        "noEnd",
-        "Synonymous",
-    ],
-    "noncoding": [
-        "Non coding",
-        "Intron",
-        "Intergenic",
-        "3'-UTR",
-        "5'-UTR",
-    ],
-    "cnv": [
-        "CNV+",
-        "CNV-"
-    ],
-    "lgds": [
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-    ],
-    "nonsynonymous": [
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-        "Missense",
-        "Non-frame-shift",
-        "noStart",
-        "noEnd",
-    ],
-    "utrs": [
-        "3'-UTR",
-        "5'-UTR",
-    ]
-
-}
-
-
-def build_effect_type_filter(data):
-    if "effectTypes" not in data:
-        return
-    effects_string = data['effectTypes']
-    effects = effects_string.split(',')
-    result_effects = reduce(operator.add,
-                            [__EFFECT_TYPES[et]  if et in __EFFECT_TYPES else [et] for et in effects])
-    data["effectTypes"] = ','.join(result_effects)
 
 
 @api_view(['GET'])
@@ -199,21 +128,21 @@ Example:
     LOGGER.info("effect_filter: %s", effect_filter)
     result = []
     if effect_filter == 'all':
-        result = __EFFECT_GROUPS['coding'] + __EFFECT_GROUPS['noncoding']
+        result = EFFECT_GROUPS['coding'] + EFFECT_GROUPS['noncoding']
     elif effect_filter == 'none':
         result = []
     elif effect_filter == 'lgds':
-        result = __EFFECT_GROUPS['lgds']
+        result = EFFECT_GROUPS['lgds']
     elif effect_filter == 'coding':
-        result = __EFFECT_GROUPS['coding']
+        result = EFFECT_GROUPS['coding']
     elif effect_filter == 'nonsynonymous':
-        result = __EFFECT_GROUPS['nonsynonymous']
+        result = EFFECT_GROUPS['nonsynonymous']
     elif effect_filter == 'utrs':
-        result = __EFFECT_GROUPS['utrs']
+        result = EFFECT_GROUPS['utrs']
     elif effect_filter == 'noncoding':
-        result = __EFFECT_GROUPS['noncoding']
+        result = EFFECT_GROUPS['noncoding']
     elif effect_filter == 'cnv':
-        result = __EFFECT_GROUPS['cnv']
+        result = EFFECT_GROUPS['cnv']
     else:
         result = "error: unsupported filter set name"
         return Response({'effect_filter': result}, status=status.HTTP_400_BAD_REQUEST)
@@ -285,7 +214,7 @@ def variant_types_list(request):
 def pheno_types_filters(request):
     query_params = request.QUERY_PARAMS
     all_result = ['autism', 'congenital heart disease', 'epilepsy', 'intelectual disability',
-                  'schizophrenia','unaffected']
+                  'schizophrenia', 'unaffected']
 
     if 'phenotypeFilter' not in query_params:
         return Response({'pheno_type_filters': all_result})
@@ -389,9 +318,9 @@ def __gene_set_response(query_params, gts, gt):
 #     gene_set = query_params['gene_set']
 #     gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
 #     study_name = str(query_params['study']) if 'study' in query_params else None
-# 
+#
 #     gts = load_gene_set(gene_set, study_name)
-# 
+#
 #     if gts:
 #         return __gene_set_response(query_params, gts, gene_name)
 #     else:
@@ -418,7 +347,7 @@ def gene_set_list2(request):
                         if 'gene_set_phenotype' in query_params else None
 
     gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
-    
+
     gts = load_gene_set2(gene_set, gene_set_phenotype)
 
     if gts:
@@ -457,26 +386,26 @@ def gene_set_download(request):
             title = "{}:{}".format(gene_set, gene_name)
             if gene_set_phenotype:
                 title += " ({})".format(gene_set_phenotype)
-            gene_syms.append("{}\r\n".format(title)) 
+            gene_syms.append("{}\r\n".format(title))
             gene_syms.extend(gts.t2G[gene_name].keys())
     res = map(lambda s: "{}\r\n".format(s), gene_syms)
     print(res)
     response = StreamingHttpResponse(
         res,
         content_type='text/csv')
-    
+
     response['Content-Disposition'] = 'attachment; filename=geneset.csv'
     response['Expires'] = '0'
 
     return response
-           
+
 
 @api_view(['GET'])
 def gene_set_phenotypes(request):
-    return Response(['autism', 
-                     'congenital heart disease', 
-                     "epilepsy", 
-                     'intelectual disability', 
+    return Response(['autism',
+                     'congenital heart disease',
+                     "epilepsy",
+                     'intelectual disability',
                      'schizophrenia',
                      'unaffected'])
 
@@ -497,12 +426,12 @@ def study_tab_phenotypes(request, study_tab):
     if study_tab == 'ssc':
         return Response(['autism',
                          'unaffected'])
-        
+
     if study_tab == 'whole_exome' or study_tab == 'variants':
-        return Response(['autism', 
-                         'congenital heart disease', 
-                         "epilepsy", 
-                         'intelectual disability', 
+        return Response(['autism',
+                         'congenital heart disease',
+                         "epilepsy",
+                         'intelectual disability',
                          'schizophrenia',
                          'unaffected'])
     return Response()
@@ -658,20 +587,20 @@ Advanced family filter expects following fields:
 # @authentication_classes((TokenAuthentication,))
 # @permission_classes((IsAuthenticated,))
 # def ssc_query_variants_preview(request):
-# 
+#
 #     if request.method == 'OPTIONS':
 #         return Response()
-# 
+#
 #     data = prepare_query_dict(request.DATA)
 #     data = prepare_ssc_filter(data)
 #     build_effect_type_filter(data)
-# 
+#
 #     LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
-# 
+#
 #     generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
 #     summary = prepare_summary(generator)
 #     return Response(summary)
-# 
+#
 # @api_view(['POST'])
 # @parser_classes([JSONParser, FormParser])
 # @authentication_classes((TokenAuthentication,))
@@ -679,15 +608,15 @@ Advanced family filter expects following fields:
 # def ssc_query_variants(request):
 #     if request.method == 'OPTIONS':
 #         return Response()
-# 
+#
 #     data = prepare_query_dict(request.DATA)
 #     data = prepare_ssc_filter(data)
 #     build_effect_type_filter(data)
-# 
+#
 #     LOGGER.info(log_filter(request, "query variants request: " + str(data)))
-# 
+#
 #     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
-# 
+#
 #     generator = do_query_variants(data)
 #     response = StreamingHttpResponse(
 #         itertools.chain(
@@ -696,8 +625,8 @@ Advanced family filter expects following fields:
 #         content_type='text/csv')
 #     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
 #     response['Expires'] = '0'
-# 
-# 
+#
+#
 #     return response
 
 
