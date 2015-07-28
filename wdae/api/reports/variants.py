@@ -33,22 +33,14 @@ class ReportBase(object):
                 'schizophrenia',
                 'unaffected']
 
+    @staticmethod
+    def family_configuration(family):
+        return "".join([family[pid].role + family[pid].gender
+                        for pid in sorted(family.keys(),
+                                          key=lambda x: (family[x].role, x))])
 
-class FamiliesCounter(ReportBase):
-    def __init__(self, phenotype):
-        super(FamiliesCounter, self).__init__()
-        if phenotype not in self.phenotypes():
-            raise ValueError("unexpected phenotype '{}'".format(phenotype))
-
-        self.phenotype = phenotype
-        self.children_male = 0
-        self.children_female = 0
-
-    @property
-    def children_total(self):
-        return self.male + self.female
-
-    def _build_families_buffer(self, studies):
+    @staticmethod
+    def build_families_buffer(studies):
         families_buffer = defaultdict(dict)
         for st in studies:
             for f in st.families.values():
@@ -61,16 +53,27 @@ class FamiliesCounter(ReportBase):
                         families_buffer[f.familyId][p.personId] = p
         return families_buffer
 
+
+class ChildrenCounter(ReportBase):
+    def __init__(self, phenotype):
+        super(ChildrenCounter, self).__init__()
+        if phenotype not in self.phenotypes():
+            raise ValueError("unexpected phenotype '{}'".format(phenotype))
+
+        self.phenotype = phenotype
+        self.children_male = 0
+        self.children_female = 0
+
+    @property
+    def children_total(self):
+        return self.male + self.female
+
     def filter_studies(self, all_studies):
         if self.phenotype == 'unaffected':
             return all_studies
         studies = [st for st in all_studies
                    if st.get_attr('study.phenotype') == self.phenotype]
         return studies
-
-    def build_families_buffer(self, all_studies):
-        studies = self.filter_studies(all_studies)
-        return self._build_families_buffer(studies)
 
     def check_phenotype(self, person):
         if self.phenotype == 'unaffected':
@@ -79,8 +82,11 @@ class FamiliesCounter(ReportBase):
             return person.role == 'prb'
 
     def build(self, all_studies):
-        families_buffer = self.build_families_buffer(all_studies)
+        studies = self.filter_studies(all_studies)
+        families_buffer = self.build_families_buffer(studies)
+
         children_counter = Counter()
+
         for family in families_buffer.values():
             for person in family.values():
                 if self.check_phenotype(person):
