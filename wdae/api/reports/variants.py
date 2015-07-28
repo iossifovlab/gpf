@@ -24,9 +24,22 @@ class ReportBase(object):
     def effect_groups():
         return ['LGDs', 'nonsynonymous', 'UTRs']
 
+    @staticmethod
+    def phenotypes():
+        return ['autism',
+                'congenital heart disease',
+                'epilepsy',
+                'intelectual disability',
+                'schizophrenia',
+                'unaffected']
 
-class FamiliesCounter(object):
+
+class FamiliesCounter(ReportBase):
     def __init__(self, phenotype):
+        super(FamiliesCounter, self).__init__()
+        if phenotype not in self.phenotypes():
+            raise ValueError("unexpected phenotype '{}'".format(phenotype))
+
         self.phenotype = phenotype
         self.children_male = 0
         self.children_female = 0

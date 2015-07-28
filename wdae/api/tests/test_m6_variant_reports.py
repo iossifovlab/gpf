@@ -66,6 +66,10 @@ class Test(unittest.TestCase):
         self.assertEqual(161, fc.children_male)
         self.assertEqual(182, fc.children_female)
 
+    def test_family_counters_bad_phenotype(self):
+        with self.assertRaises(ValueError):
+            FamiliesCounter('ala-bala-portokala')
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
