@@ -121,6 +121,38 @@ class Test(unittest.TestCase):
         self.assertTrue(fr.families_counters)
         self.assertTrue(fr.children_counters)
 
+    def test_family_reports_serialize_deserialize_we(self):
+        fr = FamiliesReport('ALL WHOLE EXOME')
+        fr.precompute()
+
+        data = fr.serialize()
+
+        fr1 = FamiliesReport('ALL WHOLE EXOME')
+        self.assertFalse(fr1.families_counters)
+        self.assertFalse(fr1.children_counters)
+
+        fr1.deserialize(data)
+
+        self.assertTrue(fr1.families_counters)
+        self.assertTrue(fr1.children_counters)
+
+    def test_family_reports_serialize_deserialize_ssc_family_counters(self):
+        fr = FamiliesReport('ALL SSC')
+        fr.precompute()
+
+        data = fr.serialize()
+
+        fr1 = FamiliesReport('ALL SSC')
+        fr1.deserialize(data)
+
+        self.assertTrue(fr.get_families_counters('autism'))
+        fc = fr.get_families_counters('autism')
+        fc1 = fr1.get_families_counters('autism')
+
+        print(fc1.type_counters())
+
+        self.assertEquals(fc.type_counters(),
+                          fc1.type_counters())
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

@@ -10,16 +10,17 @@ from datetime import datetime
 
 from api.logger import LOGGER
 
+
 class PrecomputeStore(object):
 
-    MAX_CHUNK_SIZE = 1024*1024
+    MAX_CHUNK_SIZE = 1024 * 1024
+
     def __init__(self):
         self.cache = caches['pre']
-        
+
     def hash_key(self, key):
         return hashlib.sha1(key).hexdigest()
-    
-    
+
     def store(self, key, data):
         for v in data.values():
             assert isinstance(v, str)
@@ -28,25 +29,24 @@ class PrecomputeStore(object):
         description = {"name": key,
                        "keys": data.keys(),
                        "timestamp": datetime.now()}
-        
-        LOGGER.info("storing cache value: for %s at %s" % 
+
+        LOGGER.info("storing cache value: for %s at %s" %
                     (description['name'],
                      description['timestamp'],))
-        
-        values = {"{}.{}".format(key, k):v for k,v in data.items()}
-        values ["{}.description".format(key)] = description
-        
-        self.cache.set_many({self.hash_key(k): v for k,v in values.items()})
-    
-    
+
+        values = {"{}.{}".format(key, k): v for k, v in data.items()}
+        values["{}.description".format(key)] = description
+
+        self.cache.set_many({self.hash_key(k): v for k, v in values.items()})
+
     def retrieve(self, key):
         dkey = self.hash_key("{}.description".format(key))
         description = self.cache.get(dkey)
         if not description:
             return None
-        
+
         vkeys = {self.hash_key("{}.{}".format(key, k)): k
                  for k in description['keys']}
         result = self.cache.get_many(vkeys.keys())
-        
-        return {vkeys[k]: v for k,v in result.items()}
+
+        return {vkeys[k]: v for k, v in result.items()}

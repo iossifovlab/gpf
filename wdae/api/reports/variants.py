@@ -7,6 +7,9 @@ from collections import defaultdict, Counter
 
 from api.common.effect_types import EFFECT_GROUPS
 from DAE import vDB
+from api.precompute.register import Precompute
+import cPickle
+import zlib
 
 
 class ReportBase(object):
@@ -135,7 +138,7 @@ class FamiliesCounters(CounterBase):
         self.data.values()
 
 
-class FamiliesReport(ReportBase):
+class FamiliesReport(ReportBase, Precompute):
 
     def __init__(self, study_name):
         super(FamiliesReport, self).__init__()
@@ -176,3 +179,18 @@ class FamiliesReport(ReportBase):
             if phenotype == fc.phenotype:
                 return fc
         return None
+
+    def precompute(self):
+        self.build()
+
+    def serialize(self):
+        fc = zlib.compress(cPickle.dumps(self.families_counters))
+        cc = zlib.compress(cPickle.dumps(self.children_counters))
+        return {'families_counters': fc,
+                'children_counters': cc}
+
+    def deserialize(self, data):
+        fc = data['families_counters']
+        self.families_counters = cPickle.loads(zlib.decompress(fc))
+        cc = data['children_counters']
+        self.children_counters = cPickle.loads(zlib.decompress(cc))
