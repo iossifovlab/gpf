@@ -4,7 +4,7 @@ Created on Jul 28, 2015
 @author: lubo
 '''
 import unittest
-from api.reports.variants import ReportBase
+from api.reports.variants import ReportBase, FamilyReport
 
 
 class Test(unittest.TestCase):
@@ -23,6 +23,32 @@ class Test(unittest.TestCase):
     def test_effect_groups_base(self):
         eg = ReportBase.effect_groups()
         self.assertEqual(3, len(eg), "wrong number of effect groups")
+
+    def test_family_report_we_studies(self):
+        fr = FamilyReport('ALL WHOLE EXOME')
+        self.assertEqual(10, len(fr.studies))
+
+    def test_family_report_we_phenotypes(self):
+        fr = FamilyReport('ALL WHOLE EXOME')
+
+        self.assertEqual(6, len(fr.phenotypes))
+        self.assertEquals(['autism',
+                           'congenital heart disease',
+                           'epilepsy',
+                           'intelectual disability',
+                           'schizophrenia',
+                           'unaffected'], fr.phenotypes)
+
+    def test_family_report_ssc_studies(self):
+        fr = FamilyReport('ALL SSC')
+        self.assertEqual(3, len(fr.studies))
+
+    def test_family_report_ssc_phenotypes(self):
+        fr = FamilyReport('ALL SSC')
+
+        self.assertEqual(2, len(fr.phenotypes))
+        self.assertEquals(['autism',
+                           'unaffected'], fr.phenotypes)
 
 
 if __name__ == "__main__":
