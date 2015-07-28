@@ -4,7 +4,7 @@ Created on Jul 28, 2015
 @author: lubo
 '''
 import unittest
-from api.reports.variants import ReportBase, FamilyReport
+from api.reports.variants import ReportBase, FamilyReport, FamiliesCounter
 
 
 class Test(unittest.TestCase):
@@ -49,6 +49,22 @@ class Test(unittest.TestCase):
         self.assertEqual(2, len(fr.phenotypes))
         self.assertEquals(['autism',
                            'unaffected'], fr.phenotypes)
+
+    def test_family_counters_autism_iossifov(self):
+        fr = FamilyReport('IossifovWE2012')
+        fc = FamiliesCounter('autism')
+        fc.build(fr.studies)
+
+        self.assertEqual(314, fc.children_male)
+        self.assertEqual(29, fc.children_female)
+
+    def test_family_counters_uaffected_iossifov(self):
+        fr = FamilyReport('IossifovWE2012')
+        fc = FamiliesCounter('unaffected')
+        fc.build(fr.studies)
+
+        self.assertEqual(161, fc.children_male)
+        self.assertEqual(182, fc.children_female)
 
 
 if __name__ == "__main__":
