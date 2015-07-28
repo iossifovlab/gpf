@@ -4,7 +4,8 @@ Created on Jul 28, 2015
 @author: lubo
 '''
 import unittest
-from api.reports.variants import ReportBase, FamilyReport, ChildrenCounter
+from api.reports.variants import ReportBase, ChildrenCounter, \
+    FamiliesReport, FamiliesCounters
 
 
 class Test(unittest.TestCase):
@@ -25,11 +26,11 @@ class Test(unittest.TestCase):
         self.assertEqual(3, len(eg), "wrong number of effect groups")
 
     def test_family_report_we_studies(self):
-        fr = FamilyReport('ALL WHOLE EXOME')
+        fr = FamiliesReport('ALL WHOLE EXOME')
         self.assertEqual(10, len(fr.studies))
 
     def test_family_report_we_phenotypes(self):
-        fr = FamilyReport('ALL WHOLE EXOME')
+        fr = FamiliesReport('ALL WHOLE EXOME')
 
         self.assertEqual(6, len(fr.phenotypes))
         self.assertEquals(['autism',
@@ -40,18 +41,18 @@ class Test(unittest.TestCase):
                            'unaffected'], fr.phenotypes)
 
     def test_family_report_ssc_studies(self):
-        fr = FamilyReport('ALL SSC')
+        fr = FamiliesReport('ALL SSC')
         self.assertEqual(3, len(fr.studies))
 
     def test_family_report_ssc_phenotypes(self):
-        fr = FamilyReport('ALL SSC')
+        fr = FamiliesReport('ALL SSC')
 
         self.assertEqual(2, len(fr.phenotypes))
         self.assertEquals(['autism',
                            'unaffected'], fr.phenotypes)
 
     def test_family_counters_autism_iossifov(self):
-        fr = FamilyReport('IossifovWE2012')
+        fr = FamiliesReport('IossifovWE2012')
         fc = ChildrenCounter('autism')
         fc.build(fr.studies)
 
@@ -59,7 +60,7 @@ class Test(unittest.TestCase):
         self.assertEqual(29, fc.children_female)
 
     def test_family_counters_uaffected_iossifov(self):
-        fr = FamilyReport('IossifovWE2012')
+        fr = FamiliesReport('IossifovWE2012')
         fc = ChildrenCounter('unaffected')
         fc.build(fr.studies)
 
@@ -69,6 +70,56 @@ class Test(unittest.TestCase):
     def test_family_counters_bad_phenotype(self):
         with self.assertRaises(ValueError):
             ChildrenCounter('ala-bala-portokala')
+
+    def test_families_report_we_build_does_not_raise(self):
+        fr = FamiliesReport('ALL WHOLE EXOME')
+        self.assertTrue(fr)
+
+    def test_families_counters_phenotype_test(self):
+        fc = FamiliesCounters('autism')
+        self.assertTrue(fc)
+
+    def test_families_counters_phenotype_unaffected(self):
+        with self.assertRaises(ValueError):
+            FamiliesCounters('unaffected')
+
+    def test_families_counters_phenotype_wrong(self):
+        with self.assertRaises(ValueError):
+            FamiliesCounters('ala-bala-portokala')
+
+    def test_family_configuration_to_pedigree_prbF(self):
+        prbF = [["mom", "F", 0],
+                ["dad", "M", 0],
+                ["prb", "F", 0]]
+        pedigree = ReportBase.family_configuration_to_pedigree('prbF')
+        self.assertTrue(prbF, pedigree)
+
+    def test_family_configuration_to_pedigree_prbMsibF(self):
+        prbMsibF = [["mom", "F", 0],
+                    ["dad", "M", 0],
+                    ["prb", "M", 0],
+                    ["sib", "F", 0]]
+        pedigree = ReportBase.family_configuration_to_pedigree('prbMsibF')
+        self.assertTrue(prbMsibF, pedigree)
+
+    def test_family_configuration_to_pedigree_prbMsibMsibF(self):
+        prbMsibMsibF = [["mom", "F", 0],
+                        ["dad", "M", 0],
+                        ["prb", "M", 0],
+                        ["sib", "M", 0],
+                        ["sib", "F", 0]]
+        pedigree = ReportBase.family_configuration_to_pedigree('prbMsibMsibF')
+        self.assertTrue(prbMsibMsibF, pedigree)
+
+    def test_family_reports_build(self):
+        fr = FamiliesReport('ALL SSC')
+        self.assertFalse(fr.families_counters)
+        self.assertFalse(fr.children_counters)
+
+        fr.build()
+
+        self.assertTrue(fr.families_counters)
+        self.assertTrue(fr.children_counters)
 
 
 if __name__ == "__main__":

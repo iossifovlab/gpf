@@ -40,9 +40,18 @@ class ReportBase(object):
                                           key=lambda x: (family[x].role, x))])
 
     @staticmethod
+    def family_configuration_to_pedigree(family_configuration):
+        pedigree = [[family_configuration[i: i + 3],
+                     family_configuration[i + 3: i + 4],
+                     0] for i in range(0, len(family_configuration), 4)]
+        return [['mom', 'F', 0], ['dad', 'M', 0]].extend(pedigree)
+
+
+class CounterBase(ReportBase):
+    @staticmethod
     def build_families_buffer(studies):
-        families_buffer = defaultdict(dict)
         for st in studies:
+            families_buffer = defaultdict(dict)
             for f in st.families.values():
                 children = [f.memberInOrder[c]
                             for c in range(2, len(f.memberInOrder))]
@@ -53,20 +62,11 @@ class ReportBase(object):
                         families_buffer[f.familyId][p.personId] = p
         return families_buffer
 
-
-class ChildrenCounter(ReportBase):
     def __init__(self, phenotype):
-        super(ChildrenCounter, self).__init__()
+        super(ReportBase, self).__init__()
+        self.phenotype = phenotype
         if phenotype not in self.phenotypes():
             raise ValueError("unexpected phenotype '{}'".format(phenotype))
-
-        self.phenotype = phenotype
-        self.children_male = 0
-        self.children_female = 0
-
-    @property
-    def children_total(self):
-        return self.male + self.female
 
     def filter_studies(self, all_studies):
         if self.phenotype == 'unaffected':
@@ -74,6 +74,18 @@ class ChildrenCounter(ReportBase):
         studies = [st for st in all_studies
                    if st.get_attr('study.phenotype') == self.phenotype]
         return studies
+
+
+class ChildrenCounter(CounterBase):
+    def __init__(self, phenotype):
+        super(ChildrenCounter, self).__init__(phenotype)
+
+        self.children_male = 0
+        self.children_female = 0
+
+    @property
+    def children_total(self):
+        return self.male + self.female
 
     def check_phenotype(self, person):
         if self.phenotype == 'unaffected':
@@ -84,7 +96,6 @@ class ChildrenCounter(ReportBase):
     def build(self, all_studies):
         studies = self.filter_studies(all_studies)
         families_buffer = self.build_families_buffer(studies)
-
         children_counter = Counter()
 
         for family in families_buffer.values():
@@ -96,11 +107,42 @@ class ChildrenCounter(ReportBase):
         self.children_male = children_counter['M']
 
 
-class FamilyReport(ReportBase):
+class FamiliesCounters(CounterBase):
+    def __init__(self, phenotype):
+        super(FamiliesCounters, self).__init__(phenotype)
+        if phenotype == 'unaffected':
+            raise ValueError("unexpected phenotype '{}'".format(phenotype))
+
+    def build(self, all_studies):
+        studies = self.filter_studies(all_studies)
+        families_buffer = self.build_families_buffer(studies)
+        family_type_counter = Counter()
+
+        for family in families_buffer.values():
+            family_configuration = self.family_configuration(family)
+            family_type_counter[family_configuration] += 1
+
+        self.data = {}
+        for (fconf, count) in family_type_counter.items():
+            pedigree = [self.phenotype,
+                        self.family_configuration_to_pedigree(fconf)]
+            self.data[fconf] = (pedigree, count)
+
+    def get_counter(self, fconf):
+        self.data.get(fconf, 0)
+
+    def type_counters(self):
+        self.data.values()
+
+
+class FamiliesReport(ReportBase):
 
     def __init__(self, study_name):
+        super(FamiliesReport, self).__init__()
         self.study_name = study_name
         self.studies = vDB.get_studies(self.study_name)
+        self.families_counters = []
+        self.children_counters = []
 
     @property
     def phenotypes(self):
@@ -111,5 +153,26 @@ class FamilyReport(ReportBase):
         phenotypes.append('unaffected')
         return phenotypes
 
-    def _calc_child_counters(self):
-        pass
+    def build(self):
+        for phenotype in self.phenotypes[:-1]:
+            assert phenotype != 'unaffected'
+            fc = FamiliesCounters(phenotype)
+            fc.build(self.studies)
+            self.families_counters.append(fc)
+
+        for phenotype in self.phenotypes:
+            cc = ChildrenCounter(phenotype)
+            cc.build(self.studies)
+            self.children_counters.append(cc)
+
+    def get_children_counters(self, phenotype):
+        for cc in self.children_counters:
+            if phenotype == cc.phenotype:
+                return cc
+        return None
+
+    def get_families_counters(self, phenotype):
+        for fc in self.families_counters:
+            if phenotype == fc.phenotype:
+                return fc
+        return None
