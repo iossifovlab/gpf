@@ -283,3 +283,22 @@ class DenovoEventsReport(ReportBase):
         for effect_type in self.effect_types():
             rows[effect_type] = self.build_row(effect_type)
         self.rows['effect_types'] = rows
+
+
+class StudyVariantReports(ReportBase, Precompute):
+    def __init__(self, study_name):
+        super(StudyVariantReports, self).__init__(study_name)
+        self.families_report = None
+        self.denovo_report = None
+
+    def build(self):
+        self.families_report = FamiliesReport(self.study_name)
+        self.families_report.build()
+
+        self.denovo_report = DenovoEventsReport(
+            self.study_name,
+            self.families_report)
+        self.denovo_report.build()
+
+    def precompute(self):
+        self.build()

@@ -5,7 +5,8 @@ Created on Jul 28, 2015
 '''
 import unittest
 from api.reports.variants import CommonBase, ChildrenCounter, \
-    FamiliesReport, FamiliesCounters, DenovoEventsCounter, DenovoEventsReport
+    FamiliesReport, FamiliesCounters, DenovoEventsCounter, DenovoEventsReport, \
+    StudyVariantReports
 
 
 class Test(unittest.TestCase):
@@ -189,6 +190,15 @@ class Test(unittest.TestCase):
         self.assertIn('LGDs', dr.rows['effect_groups'])
         self.assertIn('effect_types', dr.rows)
         self.assertIn('Nonsense', dr.rows['effect_types'])
+
+    def test_study_variant_reports(self):
+        vr = StudyVariantReports('IossifovWE2014')
+        self.assertFalse(vr.families_report)
+        self.assertFalse(vr.denovo_report)
+
+        vr.build()
+        self.assertTrue(vr.families_report)
+        self.assertTrue(vr.denovo_report)
 
 
 if __name__ == "__main__":
