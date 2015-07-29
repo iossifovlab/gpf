@@ -4,8 +4,8 @@ Created on Jul 28, 2015
 @author: lubo
 '''
 import unittest
-from api.reports.variants import ReportBase, ChildrenCounter, \
-    FamiliesReport, FamiliesCounters, DenovoEventsCounter
+from api.reports.variants import CommonBase, ChildrenCounter, \
+    FamiliesReport, FamiliesCounters, DenovoEventsCounter, DenovoEventsReport
 
 
 class Test(unittest.TestCase):
@@ -17,12 +17,12 @@ class Test(unittest.TestCase):
         pass
 
     def test_effect_types_base(self):
-        et = ReportBase.effect_types()
+        et = CommonBase.effect_types()
         self.assertEqual(15, len(et),
                          "wrong number of effect types {}".format(len(et)))
 
     def test_effect_groups_base(self):
-        eg = ReportBase.effect_groups()
+        eg = CommonBase.effect_groups()
         self.assertEqual(3, len(eg), "wrong number of effect groups")
 
     def test_family_report_we_studies(self):
@@ -91,7 +91,7 @@ class Test(unittest.TestCase):
         prbF = [["mom", "F", 0],
                 ["dad", "M", 0],
                 ["prb", "F", 0]]
-        pedigree = ReportBase.family_configuration_to_pedigree('prbF')
+        pedigree = CommonBase.family_configuration_to_pedigree('prbF')
         self.assertTrue(prbF, pedigree)
 
     def test_family_configuration_to_pedigree_prbMsibF(self):
@@ -99,7 +99,7 @@ class Test(unittest.TestCase):
                     ["dad", "M", 0],
                     ["prb", "M", 0],
                     ["sib", "F", 0]]
-        pedigree = ReportBase.family_configuration_to_pedigree('prbMsibF')
+        pedigree = CommonBase.family_configuration_to_pedigree('prbMsibF')
         self.assertTrue(prbMsibF, pedigree)
 
     def test_family_configuration_to_pedigree_prbMsibMsibF(self):
@@ -108,7 +108,7 @@ class Test(unittest.TestCase):
                         ["prb", "M", 0],
                         ["sib", "M", 0],
                         ["sib", "F", 0]]
-        pedigree = ReportBase.family_configuration_to_pedigree('prbMsibMsibF')
+        pedigree = CommonBase.family_configuration_to_pedigree('prbMsibMsibF')
         self.assertTrue(prbMsibMsibF, pedigree)
 
     def test_family_reports_build(self):
@@ -177,6 +177,18 @@ class Test(unittest.TestCase):
         self.assertEqual(169, dc.events_children_count)
         self.assertAlmostEqual(0.093, dc.events_rate_per_child, 3)
         self.assertAlmostEqual(0.088, dc.events_children_percent, 3)
+
+    def test_denovo_events_report_iossifov(self):
+        fr = FamiliesReport('IossifovWE2014')
+        fr.build()
+
+        dr = DenovoEventsReport('IossifovWE2014', fr)
+        dr.build()
+        self.assertTrue(dr.rows)
+        self.assertIn('effect_groups', dr.rows)
+        self.assertIn('LGDs', dr.rows['effect_groups'])
+        self.assertIn('effect_types', dr.rows)
+        self.assertIn('Nonsense', dr.rows['effect_types'])
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ import cPickle
 import zlib
 
 
-class ReportBase(object):
+class CommonBase(object):
 
     @staticmethod
     def effect_types():
@@ -52,7 +52,7 @@ class ReportBase(object):
         return result
 
 
-class CounterBase(ReportBase):
+class CounterBase(CommonBase):
     @staticmethod
     def build_families_buffer(studies):
         for st in studies:
@@ -68,7 +68,7 @@ class CounterBase(ReportBase):
         return families_buffer
 
     def __init__(self, phenotype):
-        super(ReportBase, self).__init__()
+        super(CommonBase, self).__init__()
         self.phenotype = phenotype
         if phenotype not in self.phenotypes():
             raise ValueError("unexpected phenotype '{}'".format(phenotype))
@@ -140,14 +140,11 @@ class FamiliesCounters(CounterBase):
         self.data.values()
 
 
-class FamiliesReport(ReportBase, Precompute):
-
+class ReportBase(CommonBase):
     def __init__(self, study_name):
-        super(FamiliesReport, self).__init__()
+        super(ReportBase, self).__init__()
         self.study_name = study_name
         self.studies = vDB.get_studies(self.study_name)
-        self.families_counters = []
-        self.children_counters = []
 
     @property
     def phenotypes(self):
@@ -157,6 +154,14 @@ class FamiliesReport(ReportBase, Precompute):
         phenotypes.sort()
         phenotypes.append('unaffected')
         return phenotypes
+
+
+class FamiliesReport(ReportBase, Precompute):
+
+    def __init__(self, study_name):
+        super(FamiliesReport, self).__init__(study_name)
+        self.families_counters = []
+        self.children_counters = []
 
     def build(self):
         for phenotype in self.phenotypes[:-1]:
@@ -251,3 +256,30 @@ class DenovoEventsCounter(CounterBase):
         self.events_rate_per_child = \
             round((1.0 * self.events_count) /
                   self.chidren_counter.children_total, 3)
+
+
+class DenovoEventsReport(ReportBase):
+
+    def __init__(self, study_name, families_report):
+        super(DenovoEventsReport, self).__init__(study_name)
+        self.families_report = families_report
+        self.rows = {}
+
+    def build_row(self, effect_type):
+        row = {}
+        for pheno in self.phenotypes:
+            cc = self.families_report.get_children_counters(pheno)
+            ec = DenovoEventsCounter(pheno, cc, effect_type)
+            ec.build(self.studies)
+            row[pheno] = ec
+
+    def build(self):
+        rows = {}
+        for effect_type in self.effect_groups():
+            rows[effect_type] = self.build_row(effect_type)
+        self.rows['effect_groups'] = rows
+
+        rows = {}
+        for effect_type in self.effect_types():
+            rows[effect_type] = self.build_row(effect_type)
+        self.rows['effect_types'] = rows
