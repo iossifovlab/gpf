@@ -68,13 +68,18 @@ EFFECT_GROUPS = {
 }
 
 
+def build_effect_types(effects_string):
+    effects = effects_string.split(',')
+    result_effects = reduce(
+        operator.add,
+        [EFFECT_TYPES[et] if et in EFFECT_TYPES else [et] for
+         et in effects])
+    return ','.join(result_effects)
+
+
 def build_effect_type_filter(data):
     if "effectTypes" not in data:
         return
     effects_string = data['effectTypes']
-    effects = effects_string.split(',')
-    result_effects = \
-        reduce(operator.add,
-               [EFFECT_TYPES[et] if et in EFFECT_TYPES else [et]
-                for et in effects])
-    data["effectTypes"] = ','.join(result_effects)
+    result_effects = build_effect_types(effects_string)
+    data["effectTypes"] = result_effects

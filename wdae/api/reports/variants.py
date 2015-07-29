@@ -5,7 +5,7 @@ Created on Jul 27, 2015
 '''
 from collections import defaultdict, Counter
 
-from api.common.effect_types import EFFECT_GROUPS
+from api.common.effect_types import EFFECT_GROUPS, build_effect_types
 from DAE import vDB
 from api.precompute.register import Precompute
 import cPickle
@@ -90,7 +90,7 @@ class ChildrenCounter(CounterBase):
 
     @property
     def children_total(self):
-        return self.male + self.female
+        return self.children_male + self.children_female
 
     def check_phenotype(self, person):
         if self.phenotype == 'unaffected':
@@ -196,3 +196,58 @@ class FamiliesReport(ReportBase, Precompute):
         self.families_counters = cPickle.loads(zlib.decompress(fc))
         cc = data['children_counters']
         self.children_counters = cPickle.loads(zlib.decompress(cc))
+
+
+class DenovoEventsCounter(CounterBase):
+    def __init__(self, phenotype, children_counter, effect_type):
+        super(DenovoEventsCounter, self).__init__(phenotype)
+        self.effect_type = effect_type
+        if self.phenotype != children_counter.phenotype:
+            raise ValueError("wrong phenotype in children counter")
+        self.chidren_counter = children_counter
+
+        self.events_count = 0
+        self.events_rate_per_child = 0
+        self.events_children_count = 0
+        self.events_children_percent = 0
+
+    @property
+    def child_type(self):
+        if self.phenotype == 'unaffected':
+            return 'sib'
+        else:
+            return 'prb'
+
+    @property
+    def effect_types_filter(self):
+        return build_effect_types(self.effect_type)
+
+    def filter_vs(self, vs):
+        ret = []
+        seen = set()
+        for v in vs:
+            hasNew = False
+            for ge in v.requestedGeneEffects:
+                sym = ge['sym']
+                kk = v.familyId + "." + sym
+                if kk not in seen:
+                    hasNew = True
+                    seen.add(kk)
+            if hasNew:
+                ret.append(v)
+        return ret
+
+    def build(self, all_studies):
+        studies = self.filter_studies(all_studies)
+        vs = vDB.get_denovo_variants(studies,
+                                     inChild=self.child_type,
+                                     effectTypes=self.effect_types_filter)
+        vs = self.filter_vs(vs)
+        self.events_count = len(vs)
+        self.events_children_count = len(set(v.familyId for v in vs))
+        self.events_children_percent = \
+            round((1.0 * self.events_children_count) /
+                  self.chidren_counter.children_total, 3)
+        self.events_rate_per_child = \
+            round((1.0 * self.events_count) /
+                  self.chidren_counter.children_total, 3)

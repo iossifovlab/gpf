@@ -5,7 +5,7 @@ Created on Jul 28, 2015
 '''
 import unittest
 from api.reports.variants import ReportBase, ChildrenCounter, \
-    FamiliesReport, FamiliesCounters
+    FamiliesReport, FamiliesCounters, DenovoEventsCounter
 
 
 class Test(unittest.TestCase):
@@ -151,6 +151,33 @@ class Test(unittest.TestCase):
 
         self.assertEquals(fc.type_counters(),
                           fc1.type_counters())
+
+    def test_denovo_counter_autism_iossifov(self):
+        fr = FamiliesReport('IossifovWE2014')
+        cc = ChildrenCounter('autism')
+        cc.build(fr.studies)
+
+        dc = DenovoEventsCounter('autism', cc, 'LGDs')
+        dc.build(fr.studies)
+
+        self.assertEqual(383, dc.events_count)
+        self.assertEqual(357, dc.events_children_count)
+        self.assertAlmostEqual(0.153, dc.events_rate_per_child, 3)
+        self.assertAlmostEqual(0.142, dc.events_children_percent, 3)
+
+    def test_denovo_counter_unaffected_iossifov(self):
+        fr = FamiliesReport('IossifovWE2014')
+        cc = ChildrenCounter('unaffected')
+        cc.build(fr.studies)
+
+        dc = DenovoEventsCounter('unaffected', cc, 'LGDs')
+        dc.build(fr.studies)
+
+        self.assertEqual(178, dc.events_count)
+        self.assertEqual(169, dc.events_children_count)
+        self.assertAlmostEqual(0.093, dc.events_rate_per_child, 3)
+        self.assertAlmostEqual(0.088, dc.events_children_percent, 3)
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
