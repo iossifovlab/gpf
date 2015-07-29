@@ -47,7 +47,9 @@ class ReportBase(object):
         pedigree = [[family_configuration[i: i + 3],
                      family_configuration[i + 3: i + 4],
                      0] for i in range(0, len(family_configuration), 4)]
-        return [['mom', 'F', 0], ['dad', 'M', 0]].extend(pedigree)
+        result = [['mom', 'F', 0], ['dad', 'M', 0]]
+        result.extend(pedigree)
+        return result
 
 
 class CounterBase(ReportBase):
