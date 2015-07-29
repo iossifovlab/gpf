@@ -85,7 +85,7 @@ def has_key(key):
     value = False
 
     try:
-        value = key in _REGISTER
+        value = _REGISTER.has_key(key)  # @IgnorePep8
     finally:
         pass
 

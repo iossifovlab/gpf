@@ -127,9 +127,10 @@ class SynonymousBackground(Background):
 
 
 class CodingLenBackground(Background):
-    FILENAME = os.path.join(settings.BASE_DIR,
-                            '..',
-                            'data/enrichment/background-model-conding-len-in-target.csv')
+    FILENAME = os.path.join(
+        settings.BASE_DIR,
+        '..',
+        'data/enrichment/background-model-conding-len-in-target.csv')
 
     def _load_and_prepare_build(self):
         back = []
@@ -145,7 +146,8 @@ class CodingLenBackground(Background):
 
     def precompute(self):
         back = self._load_and_prepare_build()
-        self.background = np.array(back,
+        self.background = np.array(
+                back,
                 dtype=[('sym', '|S32'), ('raw', '>i4')])
         return self.background
 
@@ -170,4 +172,3 @@ class CodingLenBackground(Background):
     @property
     def total(self):
         return np.sum(self.background['raw'])
-

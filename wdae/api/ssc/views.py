@@ -18,7 +18,7 @@ from api.query.query_prepare import prepare_ssc_filter
 
 
 class SSCPrepare(APIView):
-    
+
     def prepare(self, request):
         data = prepare_query_dict(request.DATA)
         data = prepare_ssc_filter(data)
@@ -29,40 +29,43 @@ class SSCPrepare(APIView):
 
 
 class SSCPreview(SSCPrepare):
-    authentication_classes = (TokenAuthentication, )
-    permission_classes = (IsAuthenticated, )
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
-    def post(self,request):
+    def post(self, request):
         if request.method == 'OPTIONS':
             return Response()
-    
+
         data = self.prepare(request)
-        
-        LOGGER.info(log_filter(request, "ssc preview query variants: " + str(data)))
-    
+
+        LOGGER.info(log_filter(request,
+                               "ssc preview query variants: " + str(data)))
+
         generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
         summary = prepare_summary(generator)
-    
+
         return Response(summary)
 
-    
+
 class SSCDownload(SSCPrepare):
-    authentication_classes = (TokenAuthentication, )
-    permission_classes = (IsAuthenticated, )
-    
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
     parser_classes = (JSONParser, FormParser,)
-    
+
     def post(self, request):
-        
+
         if request.method == 'OPTIONS':
             return Response()
-    
+
         data = self.prepare(request)
-            
-        LOGGER.info(log_filter(request, "ssc query variants request: " + str(data)))
-    
-        comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
-    
+
+        LOGGER.info(log_filter(request,
+                               "ssc query variants request: " + str(data)))
+
+        comment = ', '.join([': '.join([k, str(v)])
+                             for (k, v) in data.items()])
+
         generator = do_query_variants(data)
         response = StreamingHttpResponse(
             itertools.chain(
@@ -71,5 +74,5 @@ class SSCDownload(SSCPrepare):
             content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=unruly.csv'
         response['Expires'] = '0'
-    
+
         return response
