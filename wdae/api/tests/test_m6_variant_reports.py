@@ -5,8 +5,8 @@ Created on Jul 28, 2015
 '''
 import unittest
 from api.reports.variants import CommonBase, ChildrenCounter, \
-    FamiliesReport, FamiliesCounters, DenovoEventsCounter, DenovoEventsReport, \
-    StudyVariantReports
+    FamiliesReport, FamiliesCounters, DenovoEventsCounter, \
+    DenovoEventsReport, StudyVariantReports
 
 
 class Test(unittest.TestCase):

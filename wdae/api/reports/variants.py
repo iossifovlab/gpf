@@ -134,10 +134,10 @@ class FamiliesCounters(CounterBase):
             self.data[fconf] = (pedigree, count)
 
     def get_counter(self, fconf):
-        self.data.get(fconf, 0)
+        return self.data.get(fconf, 0)
 
     def type_counters(self):
-        self.data.values()
+        return self.data.values()
 
 
 class ReportBase(CommonBase):
@@ -258,7 +258,7 @@ class DenovoEventsCounter(CounterBase):
                   self.chidren_counter.children_total, 3)
 
 
-class DenovoEventsReport(ReportBase):
+class DenovoEventsReport(ReportBase, Precompute):
 
     def __init__(self, study_name, families_report):
         super(DenovoEventsReport, self).__init__(study_name)
@@ -272,6 +272,7 @@ class DenovoEventsReport(ReportBase):
             ec = DenovoEventsCounter(pheno, cc, effect_type)
             ec.build(self.studies)
             row[pheno] = ec
+        return row
 
     def build(self):
         rows = {}
@@ -283,6 +284,17 @@ class DenovoEventsReport(ReportBase):
         for effect_type in self.effect_types():
             rows[effect_type] = self.build_row(effect_type)
         self.rows['effect_types'] = rows
+
+    def precompute(self):
+        self.build()
+
+    def serialize(self):
+        rows = zlib.compress(cPickle.dumps(self.rows))
+        return {'rows': rows}
+
+    def deserialize(self, data):
+        rows = data['rows']
+        self.rows = cPickle.loads(zlib.decompress(rows))
 
 
 class StudyVariantReports(ReportBase, Precompute):
@@ -302,3 +314,16 @@ class StudyVariantReports(ReportBase, Precompute):
 
     def precompute(self):
         self.build()
+
+    def serialize(self):
+        return {'study_name': self.study_name,
+                'families_report': self.families_report.serialize(),
+                'denovo_report': self.denovo_report.serialize()}
+
+    def deserialize(self, data):
+        assert self.study_name == data['study_name']
+        self.families_report = FamiliesReport(self.study_name)
+        self.families_report.deserialize(data['families_report'])
+        self.denovo_report = DenovoEventsReport(self.study_name,
+                                                self.families_report)
+        self.denovo_report.deserialize(data['denovo_report'])
