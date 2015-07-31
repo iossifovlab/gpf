@@ -10,6 +10,8 @@ from DAE import vDB
 from api.precompute.register import Precompute
 import cPickle
 import zlib
+from api.studies import get_denovo_studies_names
+# get_transmitted_studies_names
 
 
 class CommonBase(object):
@@ -55,8 +57,8 @@ class CommonBase(object):
 class CounterBase(CommonBase):
     @staticmethod
     def build_families_buffer(studies):
+        families_buffer = defaultdict(dict)
         for st in studies:
-            families_buffer = defaultdict(dict)
             for f in st.families.values():
                 children = [f.memberInOrder[c]
                             for c in range(2, len(f.memberInOrder))]
@@ -209,12 +211,12 @@ class DenovoEventsCounter(CounterBase):
         self.effect_type = effect_type
         if self.phenotype != children_counter.phenotype:
             raise ValueError("wrong phenotype in children counter")
-        self.chidren_counter = children_counter
+        self.children_counter = children_counter
 
         self.events_count = 0
-        self.events_rate_per_child = 0
+        self.events_rate_per_child = 0.0
         self.events_children_count = 0
-        self.events_children_percent = 0
+        self.events_children_percent = 0.0
 
     @property
     def child_type(self):
@@ -250,12 +252,18 @@ class DenovoEventsCounter(CounterBase):
         vs = self.filter_vs(vs)
         self.events_count = len(vs)
         self.events_children_count = len(set(v.familyId for v in vs))
-        self.events_children_percent = \
-            round((1.0 * self.events_children_count) /
-                  self.chidren_counter.children_total, 3)
-        self.events_rate_per_child = \
-            round((1.0 * self.events_count) /
-                  self.chidren_counter.children_total, 3)
+        if self.events_count != 0 and \
+                self.children_counter.children_total != 0:
+
+            self.events_children_percent = \
+                round((1.0 * self.events_children_count) /
+                      self.children_counter.children_total, 3)
+
+            self.events_rate_per_child = \
+                round((1.0 * self.events_count) /
+                      self.children_counter.children_total, 3)
+        else:
+            print(self.children_counter)
 
 
 class DenovoEventsReport(ReportBase, Precompute):
@@ -331,7 +339,34 @@ class StudyVariantReports(ReportBase, Precompute):
 
 class VariantReports(Precompute):
     def __init__(self):
-        pass
+        self.data = None
+
+    @property
+    def studies(self):
+        return get_denovo_studies_names() + \
+            []
+    # get_transmitted_studies_names()
 
     def precompute(self):
-        
+        data = {}
+        for (study_name, _) in self.studies:
+            sr = StudyVariantReports(study_name)
+            sr.precompute()
+            data[study_name] = sr
+        self.data = data
+
+    def serialize(self):
+        data = {}
+        for (study_name, _) in self.studies:
+            sr = self.data[study_name]
+            data[study_name] = sr.serialize()
+        return data
+
+    def deserialize(self, data):
+        res = {}
+        for (study_name, _) in self.studies:
+            assert study_name in data
+            sr = StudyVariantReports(study_name)
+            sr.deserialize(data[study_name])
+            res[study_name] = sr
+        self.data = res

@@ -200,6 +200,13 @@ class Test(unittest.TestCase):
         self.assertTrue(vr.families_report)
         self.assertTrue(vr.denovo_report)
 
+    def test_children_counters_we_studies(self):
+        fr = FamiliesReport('ALL WHOLE EXOME')
+        fr.build()
+        cc = fr.get_children_counters('unaffected')
+        self.assertEquals(971, cc.children_male)
+        self.assertEquals(1058, cc.children_female)
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
