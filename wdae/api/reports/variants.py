@@ -356,7 +356,8 @@ class VariantReports(Precompute):
         data = {}
         for (study_name, _) in self.studies:
             sr = self.data[study_name]
-            data[study_name] = sr.serialize()
+            sdict = sr.serialize()
+            data[study_name] = zlib.compress(cPickle.dumps(sdict))
         return data
 
     def deserialize(self, data):
@@ -364,7 +365,8 @@ class VariantReports(Precompute):
         for (study_name, _) in self.studies:
             assert study_name in data
             sr = StudyVariantReports(study_name)
-            sr.deserialize(data[study_name])
+            sdict = cPickle.loads(zlib.decompress(data[study_name]))
+            sr.deserialize(sdict)
             res[study_name] = sr
         self.data = res
 

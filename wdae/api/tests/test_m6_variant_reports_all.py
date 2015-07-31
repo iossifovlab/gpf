@@ -5,6 +5,7 @@ Created on Jul 31, 2015
 '''
 import unittest
 from api.reports.variants import VariantReports
+from api.management.commands import recompute
 
 
 class Test(unittest.TestCase):
@@ -39,6 +40,11 @@ class Test(unittest.TestCase):
         self.assertIsNotNone(sr)
         self.assertIsNotNone(sr.families_report)
         self.assertIsNotNone(sr.denovo_report)
+
+    def test_recompute(self):
+        cmd = recompute.Command()
+        cmd.handle()
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.test_']
