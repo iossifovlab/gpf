@@ -252,8 +252,7 @@ class DenovoEventsCounter(CounterBase):
         vs = self.filter_vs(vs)
         self.events_count = len(vs)
         self.events_children_count = len(set(v.familyId for v in vs))
-        if self.events_count != 0 and \
-                self.children_counter.children_total != 0:
+        if self.children_counter.children_total != 0:
 
             self.events_children_percent = \
                 round((1.0 * self.events_children_count) /
@@ -262,8 +261,6 @@ class DenovoEventsCounter(CounterBase):
             self.events_rate_per_child = \
                 round((1.0 * self.events_count) /
                       self.children_counter.children_total, 3)
-        else:
-            print(self.children_counter)
 
 
 class DenovoEventsReport(ReportBase, Precompute):
@@ -370,3 +367,6 @@ class VariantReports(Precompute):
             sr.deserialize(data[study_name])
             res[study_name] = sr
         self.data = res
+
+    def __getitem__(self, study_name):
+        return self.data[study_name]

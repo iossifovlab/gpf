@@ -207,6 +207,13 @@ class Test(unittest.TestCase):
         self.assertEquals(971, cc.children_male)
         self.assertEquals(1058, cc.children_female)
 
+    def test_children_counters_lifton_studies(self):
+        fr = FamiliesReport('Lifton2013CHD')
+        fr.build()
+        cc = fr.get_children_counters('unaffected')
+        self.assertEquals(0, cc.children_male)
+        self.assertEquals(0, cc.children_female)
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
