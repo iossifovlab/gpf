@@ -327,3 +327,11 @@ class StudyVariantReports(ReportBase, Precompute):
         self.denovo_report = DenovoEventsReport(self.study_name,
                                                 self.families_report)
         self.denovo_report.deserialize(data['denovo_report'])
+
+
+class VariantReports(Precompute):
+    def __init__(self):
+        pass
+
+    def precompute(self):
+        
