@@ -287,12 +287,12 @@ class DenovoEventsReport(ReportBase, Precompute):
         rows = {}
         for effect_type in self.effect_groups():
             rows[effect_type] = self.build_row(effect_type)
-        self.rows['effect_groups'] = rows
+        self.rows = rows
 
         rows = {}
         for effect_type in self.effect_types():
             rows[effect_type] = self.build_row(effect_type)
-        self.rows['effect_types'] = rows
+        self.rows.update(rows)
 
     def precompute(self):
         self.build()

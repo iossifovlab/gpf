@@ -186,10 +186,8 @@ class Test(unittest.TestCase):
         dr = DenovoEventsReport('IossifovWE2014', fr)
         dr.build()
         self.assertTrue(dr.rows)
-        self.assertIn('effect_groups', dr.rows)
-        self.assertIn('LGDs', dr.rows['effect_groups'])
-        self.assertIn('effect_types', dr.rows)
-        self.assertIn('Nonsense', dr.rows['effect_types'])
+        self.assertIn('LGDs', dr.rows)
+        self.assertIn('Nonsense', dr.rows)
 
     def test_study_variant_reports(self):
         vr = StudyVariantReports('IossifovWE2014')

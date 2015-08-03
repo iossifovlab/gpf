@@ -85,8 +85,8 @@ class Test(unittest.TestCase):
         vr.deserialize(self.data)
         dr = vr.denovo_report
         self.assertTrue(dr)
-        self.assertIn('effect_groups', dr.rows)
-        self.assertIn('effect_types', dr.rows)
+        self.assertIn('LGDs', dr.rows)
+        self.assertIn('Synonymous', dr.rows)
 
     def test_deserialize_denovo_reports_phenotypes(self):
         vr = StudyVariantReports('IossifovWE2014')
@@ -98,7 +98,7 @@ class Test(unittest.TestCase):
         vr.deserialize(self.data)
         dr = vr.denovo_report
 
-        effect_groups = dr.rows['effect_groups']
+        effect_groups = dr.rows
         de = effect_groups['LGDs']['autism']
         self.assertEquals(383, de.events_count)
         self.assertEquals(357, de.events_children_count)
