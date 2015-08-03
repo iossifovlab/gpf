@@ -371,4 +371,4 @@ class VariantReports(Precompute):
         self.data = res
 
     def __getitem__(self, study_name):
-        return self.data[study_name]
+        return self.data.get(study_name, None)

@@ -5,6 +5,7 @@ from rest_framework.authtoken import views as rest_views
 from api.enrichment.views import EnrichmentView
 from api.sd.views import SequencingDenovoPreview, SequencingDenovoDownload
 from api.ssc.views import SSCPreview, SSCDownload
+from api.reports.views import VariantReportsView
 
 urlpatterns = patterns(
     'api.views',
@@ -34,6 +35,10 @@ urlpatterns = patterns(
     url(r'^sd_query_variants$', SequencingDenovoDownload.as_view()),
 
     url(r'^report_variants$', 'report_variants'),
+
+    url(r'^reports/variant_reports/(?P<study_name>.+)$',
+        VariantReportsView.as_view()),
+
     url(r'^gene_sets$', 'gene_sets_list'),
     # url(r'^gene_set_list$', 'gene_set_list'),
     url(r'^gene_set_list2$', 'gene_set_list2'),
