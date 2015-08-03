@@ -141,6 +141,10 @@ class FamiliesCounters(CounterBase):
     def type_counters(self):
         return self.data.values()
 
+    @property
+    def counters(self):
+        return self.data.values()
+
 
 class ReportBase(CommonBase):
     def __init__(self, study_name):
