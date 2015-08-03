@@ -36,9 +36,13 @@ class DenovoReportSerializer(serializers.Serializer):
     effect_groups = serializers.ListField()
     effect_types = serializers.ListField()
 
-    rows = serializers.DictField()
+    rows = serializers.DictField(
+        child=serializers.DictField(
+            child=DenovoEventsCounterSerializer()))
 
 
 class StudyVariantReportsSerializer(serializers.Serializer):
+    study_name = serializers.CharField()
+    study_description = serializers.CharField()
     families_report = FamilyReportSerializer()
     denovo_report = DenovoReportSerializer()

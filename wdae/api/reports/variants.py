@@ -150,6 +150,7 @@ class ReportBase(CommonBase):
     def __init__(self, study_name):
         super(ReportBase, self).__init__()
         self.study_name = study_name
+        self.study_description = None
         self.studies = vDB.get_studies(self.study_name)
 
     @property
@@ -307,8 +308,9 @@ class DenovoEventsReport(ReportBase, Precompute):
 
 
 class StudyVariantReports(ReportBase, Precompute):
-    def __init__(self, study_name):
+    def __init__(self, study_name, study_description=None):
         super(StudyVariantReports, self).__init__(study_name)
+        self.study_description = study_description
         self.families_report = None
         self.denovo_report = None
 
@@ -366,9 +368,9 @@ class VariantReports(Precompute):
 
     def deserialize(self, data):
         res = {}
-        for (study_name, _) in self.studies:
+        for (study_name, study_description) in self.studies:
             assert study_name in data
-            sr = StudyVariantReports(study_name)
+            sr = StudyVariantReports(study_name, study_description)
             sdict = cPickle.loads(zlib.decompress(data[study_name]))
             sr.deserialize(sdict)
             res[study_name] = sr

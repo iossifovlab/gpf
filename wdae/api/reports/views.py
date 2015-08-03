@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from api.precompute import register
 from rest_framework.response import Response
 from rest_framework import status
+from api.reports.serializers import StudyVariantReportsSerializer
 
 
 class VariantReportsView(APIView):
@@ -17,4 +18,5 @@ class VariantReportsView(APIView):
         report = self.variant_reports[study_name]
         if not report:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response({})
+        serializer = StudyVariantReportsSerializer(report)
+        return Response(serializer.data)
