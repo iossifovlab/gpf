@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from api.reports.serializers import StudyVariantReportsSerializer
 from django.http.response import StreamingHttpResponse
-from api.reports.families import FamiliesData
+from api.reports.families import FamiliesDataCSV
 
 
 class VariantReportsView(APIView):
@@ -33,9 +33,9 @@ class FamiliesDataDownloadView(APIView):
         if not report:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        families_data = FamiliesData(report.studies)
+        families_data = FamiliesDataCSV(report.studies)
         response = StreamingHttpResponse(
-            families_data.build(),
+            families_data.serialize(),
             content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=families.csv'
         response['Expires'] = '0'

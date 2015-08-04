@@ -5,20 +5,17 @@ Created on Aug 3, 2015
 '''
 
 
-def sfun(f):
-    return f.familyId
-
-
-class FamiliesData(object):
+class FamiliesDataCSV(object):
     def __init__(self, studies):
         self.studies = studies
 
-    def build(self):
+    def serialize(self):
         seen = set()
         self.data = []
+        self.data.append('familyId,personId,role,gender,orderInFamily\n')
         for st in self.studies:
             families = st.families.values()
-            families.sort(key=sfun)
+            families.sort(key=lambda f: f.familyId)
             for f in families:
                 if f.familyId in seen:
                     continue

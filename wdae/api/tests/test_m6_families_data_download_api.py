@@ -33,7 +33,7 @@ class Test(APITestCase):
 
         for num, _line in enumerate(response.streaming_content):
             pass
-        self.assertEqual(9452, num)
+        self.assertEqual(9452 + 1, num)
 
 
 if __name__ == "__main__":
