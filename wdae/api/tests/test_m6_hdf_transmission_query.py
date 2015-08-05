@@ -16,6 +16,14 @@ def dae_summary_by_gene_syms(gene_syms):
     return res
 
 
+def dae_summary_by_effect_types(effect_types):
+    transmitted_study = vDB.get_study("w1202s766e611")
+    vs = transmitted_study.get_transmitted_summary_variants(
+        effectTypes=effect_types)
+    res = [v for v in vs]
+    return res
+
+
 class Test(unittest.TestCase):
 
     @classmethod
@@ -114,6 +122,16 @@ class Test(unittest.TestCase):
         pattern = ' ( effect_type == 14 ) '
 
         self.assertEquals(pattern, where)
+
+    def test_hdf_effect_type_query_lgds(self):
+        lgds = ['nonsense', 'frame-shift', 'splice-site']
+        tq = self.tquery
+        tq['effect_types'] = lgds
+        vs = tq.execute_effect_query()
+        self.assertIsNotNone(vs)
+
+        res = dae_summary_by_effect_types(lgds)
+        self.assertEquals(len(res), len(vs))
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
