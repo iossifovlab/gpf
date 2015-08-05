@@ -98,8 +98,22 @@ class Test(unittest.TestCase):
     def test_hdf_build_effect_type_query(self):
         tq = self.tquery
         tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
-        where = tq.build_effect_types_query()
+        where = tq.build_effect_types_where()
         self.assertIsNotNone(where)
+        pattern = ' ( effect_type == 14 )  | '
+        pattern += ' ( effect_type == 4 )  | '
+        pattern += ' ( effect_type == 15 ) '
+
+        self.assertEquals(pattern, where)
+
+    def test_hdf_build_effect_type_query_single(self):
+        tq = self.tquery
+        tq['effect_types'] = ['nonsense']
+        where = tq.build_effect_types_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( effect_type == 14 ) '
+
+        self.assertEquals(pattern, where)
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

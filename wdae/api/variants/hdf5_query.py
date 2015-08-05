@@ -89,8 +89,13 @@ class TransmissionQuery(object):
         return vtable[vrow]
 
     def build_effect_query_where(self):
+        assert self['effect_types'] or self['gene_syms']
+
         where = []
-        where.append(self.build_query_by_gene_syms())
+        if self['gene_syms']:
+            where.append(self.build_query_by_gene_syms())
+        if self['effect_types']:
+            where.append(self.build_effect_types_where())
         where.append(self.build_query_alt_freq())
 
         where = map(lambda s: ' ( {} ) '.format(s), where)
@@ -124,9 +129,12 @@ class TransmissionQuery(object):
         where = ' | '.join(symbols)
         return where
 
-    def build_effect_types_query(self):
+    def build_effect_types_where(self):
         assert self['effect_types']
         assert isinstance(self['effect_types'], list)
         assert reduce(operator.and_,
                       map(lambda et: et in EFFECT_TYPES, self['effect_types']))
-        return True
+        where = map(lambda et: ' ( effect_type == {} ) '.format(
+            EFFECT_TYPES[et]), self['effect_types'])
+        where = ' | '.join(where)
+        return where
