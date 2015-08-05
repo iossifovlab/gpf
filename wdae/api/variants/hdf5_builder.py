@@ -3,85 +3,15 @@ Created on Jul 7, 2015
 
 @author: lubo
 '''
-
-# import h5py
-import numpy as np
-from api.variants.transmitted_variants import parse_family_data
 from DAE import vDB
+import tables
 import gzip
+from api.variants.hdf5_query import SummaryVariants, FamilyVariants, \
+    GeneEffectVariants, EFFECT_TYPES, VARIANT_TYPES
+from api.variants.transmitted_variants import parse_family_data
 from VariantsDB import parseGeneEffect
 import itertools
-import tables
-
-
-EFFECT_TYPES = tables.Enum([
-        "3'UTR",
-        "3'UTR-intron",
-        "5'UTR",
-        "5'UTR-intron",
-        'frame-shift',
-        'intergenic',
-        'intron',
-        'missense',
-        'no-frame-shift',
-        'no-frame-shift-newStop',
-        'noEnd',
-        'noStart',
-        'non-coding',
-        'non-coding-intron',
-        'nonsense',
-        'splice-site',
-        'synonymous'])
-
-VARIANT_TYPES = tables.Enum(['del', 'ins', 'sub', 'CNV'])
-
-
-class SummaryVariants(tables.IsDescription):
-    line_number = tables.Int64Col()
-
-    chrome = tables.StringCol(3)
-    position = tables.Int64Col()
-    variant = tables.StringCol(45)
-    variant_type = tables.EnumCol(VARIANT_TYPES,
-                                  'sub', base='uint8')
-    effect_type = tables.EnumCol(EFFECT_TYPES,
-                                 'intergenic', base='uint8')
-    effect_gene = tables.StringCol(32)
-
-    fbegin = tables.Int64Col()
-    fend = tables.Int64Col()
-    ebegin = tables.Int64Col()
-    eend = tables.Int64Col()
-    elen = tables.Int32Col()
-
-    n_par_called = tables.Int16Col()  # 'all.nParCalled'
-    n_alt_alls = tables.Int16Col()  # 'all.nAltAlls'
-    alt_freq = tables.Float16Col()  # 'all.altFreq'
-
-    prcnt_par_called = tables.Float16Col()  # 'all.prcntParCalled'
-    seg_dups = tables.Int16Col()  # 'segDups
-    hw = tables.Float16Col()  # 'HW'
-    ssc_freq = tables.Float16Col()  # 'SSC-freq'
-    evs_freq = tables.Float16Col()  # 'EVS-freq'
-    e65_freq = tables.Float16Col()  # 'E65-freq'
-
-
-class FamilyVariants(tables.IsDescription):
-    fid = tables.StringCol(16)
-    best = tables.StringCol(16)
-    counts = tables.StringCol(64)
-    vrow = tables.Int64Col()
-
-
-class GeneEffectVariants(tables.IsDescription):
-    symbol = tables.StringCol(32)
-    effect = tables.EnumCol(EFFECT_TYPES,
-                            'intergenic', base='uint8')
-    vrow = tables.Int64Col()
-
-    n_par_called = tables.Int16Col()  # 'all.nParCalled'
-    n_alt_alls = tables.Int16Col()  # 'all.nAltAlls'
-    alt_freq = tables.Float16Col()  # 'all.altFreq'
+import numpy as np
 
 
 class TransmissionIndexBuilder(object):
