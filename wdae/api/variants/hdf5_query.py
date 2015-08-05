@@ -4,11 +4,7 @@ Created on Jul 16, 2015
 @author: lubo
 '''
 import numpy as np
-from api.variants.transmitted_variants import parse_family_data
 from DAE import vDB
-import gzip
-from VariantsDB import parseGeneEffect
-import itertools
 import tables
 import copy
 

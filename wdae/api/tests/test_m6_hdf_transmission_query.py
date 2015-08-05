@@ -5,6 +5,15 @@ Created on Aug 4, 2015
 '''
 import unittest
 from api.variants.hdf5_query import TransmissionQuery
+from DAE import vDB
+
+
+def dae_summary_by_gene_syms(gene_syms):
+    transmitted_study = vDB.get_study("w1202s766e611")
+    vs = transmitted_study.get_transmitted_summary_variants(
+        geneSyms=gene_syms)
+    res = [v for v in vs]
+    return res
 
 
 class Test(unittest.TestCase):
@@ -69,12 +78,23 @@ class Test(unittest.TestCase):
         pattern += ' (  ( n_par_called > 600 )  &  ( alt_freq <= 5.0 )  ) '
         self.assertEquals(pattern, where)
 
-    def test_hdf_execute_effect_query(self):
+    def test_hdf_execute_effect_query_2_gene_syms(self):
         tq = self.tquery
         tq['gene_syms'] = ['POGZ', 'SCNN1D']
         vs = tq.execute_effect_query()
         self.assertIsNotNone(vs)
         self.assertEquals(333, len(vs))
+        res = dae_summary_by_gene_syms(["POGZ", "SCNN1D"])
+        self.assertEqual(len(res), len(vs))
+
+    def test_hdf_execute_effect_query_1_gene_syms(self):
+        tq = self.tquery
+        tq['gene_syms'] = ['POGZ']
+        vs = tq.execute_effect_query()
+        self.assertIsNotNone(vs)
+        res = dae_summary_by_gene_syms(["POGZ"])
+        self.assertEqual(len(res), len(vs))
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
