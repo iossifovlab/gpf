@@ -6,12 +6,61 @@ Created on Jul 7, 2015
 from DAE import vDB
 import tables
 import gzip
-from api.variants.hdf5_query import SummaryVariants, FamilyVariants, \
-    GeneEffectVariants, EFFECT_TYPES, VARIANT_TYPES
+from api.variants.hdf5_query import EFFECT_TYPES, VARIANT_TYPES
 from api.variants.transmitted_variants import parse_family_data
 from VariantsDB import parseGeneEffect
 import itertools
 import numpy as np
+
+
+class SummaryVariants(tables.IsDescription):
+    line_number = tables.Int64Col()
+
+    chrome = tables.StringCol(3)
+    position = tables.Int64Col()
+    variant = tables.StringCol(45)
+    variant_type = tables.EnumCol(VARIANT_TYPES,
+                                  'sub', base='uint8')
+    effect_type = tables.EnumCol(EFFECT_TYPES,
+                                 'intergenic', base='uint8')
+    effect_gene = tables.StringCol(32)
+
+    fbegin = tables.Int64Col()
+    fend = tables.Int64Col()
+    ebegin = tables.Int64Col()
+    eend = tables.Int64Col()
+    elen = tables.Int32Col()
+
+    n_par_called = tables.Int16Col()  # 'all.nParCalled'
+    n_alt_alls = tables.Int16Col()  # 'all.nAltAlls'
+    alt_freq = tables.Float16Col()  # 'all.altFreq'
+
+    prcnt_par_called = tables.Float16Col()  # 'all.prcntParCalled'
+    seg_dups = tables.Int16Col()  # 'segDups
+    hw = tables.Float16Col()  # 'HW'
+    ssc_freq = tables.Float16Col()  # 'SSC-freq'
+    evs_freq = tables.Float16Col()  # 'EVS-freq'
+    e65_freq = tables.Float16Col()  # 'E65-freq'
+
+
+class FamilyVariants(tables.IsDescription):
+    fid = tables.StringCol(16)
+    best = tables.StringCol(16)
+    counts = tables.StringCol(64)
+    vrow = tables.Int64Col()
+
+
+class GeneEffectVariants(tables.IsDescription):
+    symbol = tables.StringCol(32)
+    effect_type = tables.EnumCol(EFFECT_TYPES,
+                                 'intergenic', base='uint8')
+    variant_type = tables.EnumCol(VARIANT_TYPES,
+                                  'sub', base='uint8')
+    vrow = tables.Int64Col()
+
+    n_par_called = tables.Int16Col()  # 'all.nParCalled'
+    n_alt_alls = tables.Int16Col()  # 'all.nAltAlls'
+    alt_freq = tables.Float16Col()  # 'all.altFreq'
 
 
 class TransmissionIndexBuilder(object):
@@ -113,6 +162,7 @@ class TransmissionIndexBuilder(object):
     def build_effect_table(self, vals):
         gene_effects = parseGeneEffect(vals['effectGene'])
         ebegin = self.enrow
+        vt = vals['variant'][0:3]
 
         for index, ge in enumerate(gene_effects):
             if index == 0:
@@ -120,10 +170,10 @@ class TransmissionIndexBuilder(object):
 
             self.effect_row['symbol'] = ge['sym']
             et = EFFECT_TYPES[ge['eff']]
-            self.effect_row['effect'] = et
+            self.effect_row['effect_type'] = et
 
             self.effect_row['vrow'] = self.snrow
-
+            self.effect_row['variant_type'] = VARIANT_TYPES[vt]
             self.effect_row['n_par_called'] = int(vals['all.nParCalled'])
             self.effect_row['n_alt_alls'] = int(vals['all.nAltAlls'])
             self.effect_row['alt_freq'] = float(vals['all.altFreq'])

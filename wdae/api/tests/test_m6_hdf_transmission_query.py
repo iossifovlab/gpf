@@ -95,6 +95,11 @@ class Test(unittest.TestCase):
         res = dae_summary_by_gene_syms(["POGZ"])
         self.assertEqual(len(res), len(vs))
 
+    def test_hdf_build_effect_type_query(self):
+        tq = self.tquery
+        tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
+        where = tq.build_effect_types_query()
+        self.assertIsNotNone(where)
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
