@@ -5,23 +5,6 @@ Created on Aug 4, 2015
 '''
 import unittest
 from api.variants.hdf5_query import TransmissionQuery
-from DAE import vDB
-
-
-def dae_summary_by_gene_syms(gene_syms):
-    transmitted_study = vDB.get_study("w1202s766e611")
-    vs = transmitted_study.get_transmitted_summary_variants(
-        geneSyms=gene_syms)
-    res = [v for v in vs]
-    return res
-
-
-def dae_summary_by_effect_types(effect_types):
-    transmitted_study = vDB.get_study("w1202s766e611")
-    vs = transmitted_study.get_transmitted_summary_variants(
-        effectTypes=effect_types)
-    res = [v for v in vs]
-    return res
 
 
 class Test(unittest.TestCase):
@@ -45,14 +28,14 @@ class Test(unittest.TestCase):
     def test_hdf_ewhere_by_genes_single_sym(self):
         tq = self.tquery
         tq['gene_syms'] = ['POGZ']
-        where = tq.build_query_by_gene_syms()
+        where = tq.build_gene_syms_where()
         self.assertTrue(where)
         self.assertEquals(' ( symbol == "POGZ" ) ', where)
 
     def test_hdf_ewhere_by_genes_two_sym(self):
         tq = self.tquery
         tq['gene_syms'] = ['POGZ', 'SCNN1D']
-        where = tq.build_query_by_gene_syms()
+        where = tq.build_gene_syms_where()
         self.assertTrue(where)
         self.assertEquals(' ( symbol == "POGZ" )  |  ( symbol == "SCNN1D" ) ',
                           where)
@@ -86,23 +69,6 @@ class Test(unittest.TestCase):
         pattern += ' (  ( n_par_called > 600 )  &  ( alt_freq <= 5.0 )  ) '
         self.assertEquals(pattern, where)
 
-    def test_hdf_execute_effect_query_2_gene_syms(self):
-        tq = self.tquery
-        tq['gene_syms'] = ['POGZ', 'SCNN1D']
-        vs = tq.execute_effect_query()
-        self.assertIsNotNone(vs)
-        self.assertEquals(333, len(vs))
-        res = dae_summary_by_gene_syms(["POGZ", "SCNN1D"])
-        self.assertEqual(len(res), len(vs))
-
-    def test_hdf_execute_effect_query_1_gene_syms(self):
-        tq = self.tquery
-        tq['gene_syms'] = ['POGZ']
-        vs = tq.execute_effect_query()
-        self.assertIsNotNone(vs)
-        res = dae_summary_by_gene_syms(["POGZ"])
-        self.assertEqual(len(res), len(vs))
-
     def test_hdf_build_effect_type_query(self):
         tq = self.tquery
         tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
@@ -123,15 +89,24 @@ class Test(unittest.TestCase):
 
         self.assertEquals(pattern, where)
 
-    def test_hdf_effect_type_query_lgds(self):
-        lgds = ['nonsense', 'frame-shift', 'splice-site']
+    def test_hdf_build_variant_type_query_single(self):
         tq = self.tquery
-        tq['effect_types'] = lgds
-        vs = tq.execute_effect_query()
-        self.assertIsNotNone(vs)
+        tq['variant_types'] = ['del']
+        where = tq.build_variant_types_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( variant_type == 0 ) '
 
-        res = dae_summary_by_effect_types(lgds)
-        self.assertEquals(len(res), len(vs))
+        self.assertEquals(pattern, where)
+
+    def test_hdf_build_variant_type_query_double(self):
+        tq = self.tquery
+        tq['variant_types'] = ['del', 'ins']
+        where = tq.build_variant_types_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( variant_type == 0 )  |  ( variant_type == 1 ) '
+
+        self.assertEquals(pattern, where)
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

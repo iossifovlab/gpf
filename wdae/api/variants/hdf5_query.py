@@ -93,7 +93,7 @@ class TransmissionQuery(object):
 
         where = []
         if self['gene_syms']:
-            where.append(self.build_query_by_gene_syms())
+            where.append(self.build_gene_syms_where())
         if self['effect_types']:
             where.append(self.build_effect_types_where())
         where.append(self.build_query_alt_freq())
@@ -120,7 +120,7 @@ class TransmissionQuery(object):
         res = ' & '.join(where)
         return res
 
-    def build_query_by_gene_syms(self):
+    def build_gene_syms_where(self):
         assert self['gene_syms']
         assert isinstance(self['gene_syms'], list)
 
@@ -136,5 +136,16 @@ class TransmissionQuery(object):
                       map(lambda et: et in EFFECT_TYPES, self['effect_types']))
         where = map(lambda et: ' ( effect_type == {} ) '.format(
             EFFECT_TYPES[et]), self['effect_types'])
+        where = ' | '.join(where)
+        return where
+
+    def build_variant_types_where(self):
+        assert self['variant_types']
+        assert isinstance(self['variant_types'], list)
+        assert reduce(operator.and_,
+                      map(lambda et: et in VARIANT_TYPES,
+                          self['variant_types']))
+        where = map(lambda et: ' ( variant_type == {} ) '.format(
+            VARIANT_TYPES[et]), self['variant_types'])
         where = ' | '.join(where)
         return where
