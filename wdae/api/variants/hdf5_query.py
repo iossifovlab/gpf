@@ -30,6 +30,7 @@ EFFECT_TYPES = tables.Enum([
         'synonymous'])
 
 VARIANT_TYPES = tables.Enum(['del', 'ins', 'sub', 'CNV'])
+GENDER_TYPES = tables.Enum(['M', 'F'])
 
 
 class TransmissionQuery(object):
@@ -79,8 +80,8 @@ class TransmissionQuery(object):
         self.query = copy.deepcopy(self.default_query)
 
     def execute_effect_query(self):
-        etable = self.hdf5_fh.root.effect.effect
-        vtable = self.hdf5_fh.root.summary.variants
+        etable = self.hdf5_fh.root.variants.effect
+        vtable = self.hdf5_fh.root.variants.summary
 
         where = self.build_effect_query_where()
         where = where.strip()

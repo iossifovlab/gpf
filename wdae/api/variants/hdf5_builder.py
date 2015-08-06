@@ -6,11 +6,13 @@ Created on Jul 7, 2015
 from DAE import vDB
 import tables
 import gzip
-from api.variants.hdf5_query import EFFECT_TYPES, VARIANT_TYPES
+from api.variants.hdf5_query import EFFECT_TYPES, VARIANT_TYPES, GENDER_TYPES
 from api.variants.transmitted_variants import parse_family_data
-from VariantsDB import parseGeneEffect
+from VariantsDB import parseGeneEffect, Variant
 import itertools
 import numpy as np
+import copy
+# from query_variants import augment_vars
 
 
 class SummaryVariants(tables.IsDescription):
@@ -62,6 +64,16 @@ class FamilyVariants(tables.IsDescription):
     eend = tables.Int64Col()
     elen = tables.Int32Col()
 
+    in_mom = tables.BoolCol()
+    in_dad = tables.BoolCol()
+
+    in_prb = tables.BoolCol()
+    in_prb_gender = tables.EnumCol(GENDER_TYPES,
+                                   'M', base='uint8')
+    in_sib = tables.BoolCol()
+    in_sib_gender = tables.EnumCol(GENDER_TYPES,
+                                   'M', base='uint8')
+
 
 class GeneEffectVariants(tables.IsDescription):
     symbol = tables.StringCol(32)
@@ -92,6 +104,27 @@ class TransmissionIndexBuilder(object):
 
         self.h5_filename = "{}.hdf5".format(self.study_name)
 
+    def build_variants_structure(self):
+        self.variants_group = self.h5fh.create_group('/', 'variants',
+                                                     'Variants Group')
+        self.summary_table = self.h5fh.create_table(
+            self.variants_group, 'summary',
+            SummaryVariants, 'Summary Variants Table')
+        self.family_table = self.h5fh.create_table(
+            self.variants_group, 'family',
+            FamilyVariants, 'Family Variants Table')
+        self.effect_table = self.h5fh.create_table(
+            self.variants_group, 'effect',
+            GeneEffectVariants, 'Gene Effects Table')
+
+        self.summary_row = self.summary_table.row
+        self.family_row = self.family_table.row
+        self.effect_row = self.effect_table.row
+
+        self.snrow = 0
+        self.fnrow = 0
+        self.enrow = 0
+
     def build(self):
         filters = tables.Filters(complevel=1)
 
@@ -104,32 +137,9 @@ class TransmissionIndexBuilder(object):
             self.tfh = tfh
             self.h5fh = h5fh
 
-            self.summary_group = self.h5fh.create_group('/', 'summary',
-                                                        'Summary Variants')
-            self.summary_table = self.h5fh.create_table(
-                                self.summary_group, 'variants',
-                                SummaryVariants, 'Summary Variants Table')
-
-            self.family_group = self.h5fh.create_group('/', 'family',
-                                                       'Family Data')
-            self.family_table = self.h5fh.create_table(
-                                self.family_group, 'variant',
-                                FamilyVariants, 'Family Variants Table')
-
-            self.effect_group = self.h5fh.create_group('/', 'effect',
-                                                       'Effect Data')
-            self.effect_table = self.h5fh.create_table(
-                                self.effect_group, 'effect',
-                                GeneEffectVariants, 'Gene Effects Table')
+            self.build_variants_structure()
 
             self.column_names = self.sfh.readline().rstrip().split('\t')
-            self.summary_row = self.summary_table.row
-            self.family_row = self.family_table.row
-            self.effect_row = self.effect_table.row
-
-            self.snrow = 0
-            self.fnrow = 0
-            self.enrow = 0
 
             self.tfh.readline()  # skip file header
 
@@ -156,12 +166,37 @@ class TransmissionIndexBuilder(object):
                 var == self.summary_row['variant']
         return pfd
 
-    def build_family_table(self, vals):
+    def build_inparent(self, vs):
+        from_parent = vs.fromParentS
+        if 'mom' in from_parent:
+            self.family_row['in_mom'] = 1
+        if 'dad' in from_parent:
+            self.family_row['in_dad'] = 1
+
+    def build_inchild(self, vs):
+        in_child = vs.inChS
+        if 'prb' in in_child:
+            self.family_row['in_prb'] = 1
+            self.family_row['in_prb_gender'] = GENDER_TYPES[in_child[3]]
+        if 'sib' in in_child:
+            self.family_row['in_sib'] = 1
+            gender = None
+            if in_child.startswith('sib'):
+                gender = GENDER_TYPES[in_child[3]]
+            else:
+                gender = GENDER_TYPES[in_child[7]]
+            assert gender is not None
+            self.family_row['in_sib_gender'] = gender
+
+    def build_family_table(self, vals, summary_variant):
         family_data = vals['familyData']
         pfd = self.load_parse_family_data(family_data)
 
         fbegin = self.fnrow
         for fid, bs, c in pfd:
+            vs = self.create_family_variant(summary_variant, (fid, bs, c))
+            # augment_vars(vs)
+
             self.family_row['fid'] = fid
             self.family_row['best'] = bs
             self.family_row['counts'] = c
@@ -178,6 +213,9 @@ class TransmissionIndexBuilder(object):
 
             self.family_row['variant_type'] = VARIANT_TYPES[vt]
             self.family_row['effect_type'] = EFFECT_TYPES[et]
+
+            self.build_inchild(vs)
+            self.build_inparent(vs)
 
             self.family_row.append()
             self.fnrow += 1
@@ -230,11 +268,30 @@ class TransmissionIndexBuilder(object):
         self.summary_row['evs_freq'] = self.safe_float(vals['EVS-freq'])
         self.summary_row['e65_freq'] = self.safe_float(vals['E65-freq'])
 
+    def create_summary_variant(self, vals):
+        vals["location"] = vals["chr"] + ":" + vals["position"]
+        v = Variant(vals)
+        v.study = self.study
+        if self.summary_row['n_alt_alls'] == 1:
+            v.popType = 'ultraRare'
+        else:
+            v.popType = 'common'
+        return v
+
+    def create_family_variant(self, vs, family_data):
+        v = copy.copy(vs)
+        v.atts = {kk: vv for kk, vv in vs.atts.items()}
+        fid, bs, counts = family_data
+        v.atts['familyId'] = fid
+        v.atts['bestState'] = bs
+        v.atts['counts'] = counts
+
+        return v
+
     def build_mainloop(self):
         for line in self.sfh:
             data = line.strip("\r\n").split("\t")
             vals = dict(zip(self.column_names, data))
-
             self.summary_row['line_number'] = self.snrow
             self.summary_row['chrome'] = vals['chr']
             self.summary_row['position'] = int(vals['position'])
@@ -244,8 +301,11 @@ class TransmissionIndexBuilder(object):
 
             self.summary_row['variant_type'] = VARIANT_TYPES[vt]
             self.summary_row['effect_type'] = EFFECT_TYPES[et]
+            self.build_summary_frequencies(vals)
 
-            fbegin, fend = self.build_family_table(vals)
+            vs = self.create_summary_variant(vals)
+
+            fbegin, fend = self.build_family_table(vals, vs)
             self.summary_row['fbegin'] = fbegin
             self.summary_row['fend'] = fend
 
@@ -257,8 +317,6 @@ class TransmissionIndexBuilder(object):
             self.family_row['ebegin'] = ebegin
             self.family_row['eend'] = eend
             self.family_row['elen'] = eend - ebegin
-
-            self.build_summary_frequencies(vals)
 
             self.summary_row.append()
 
