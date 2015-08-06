@@ -593,7 +593,7 @@ def dae_query_variants(data):
 def pedigree_data(v):
     return [v.study.get_attr('study.phenotype'), v.pedigree]
 
-def __augment_vars(v):
+def augment_vars(v):
     fmId = v.familyId
     parRaces = get_parents_race()[fmId] \
         if fmId in get_parents_race() else "NA:NA"
@@ -619,7 +619,7 @@ def do_query_variants(data, atts=[]):
     vsl = dae_query_variants(data)
 
     res_variants = itertools.chain(*vsl)
-    return generate_response(itertools.imap(__augment_vars, res_variants),
+    return generate_response(itertools.imap(augment_vars, res_variants),
                              ['effectType',
                               'effectDetails',
                               'all.altFreq',

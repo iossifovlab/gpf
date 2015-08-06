@@ -31,6 +31,8 @@ EFFECT_TYPES = tables.Enum([
 
 VARIANT_TYPES = tables.Enum(['del', 'ins', 'sub', 'CNV'])
 GENDER_TYPES = tables.Enum(['M', 'F'])
+PARENT_TYPES = tables.Enum(['mom', 'dad'])
+CHILD_TYPES = tables.Enum(['prb', 'sib'])
 
 
 class TransmissionQuery(object):
@@ -42,7 +44,11 @@ class TransmissionQuery(object):
             'min_parents_called': int,
             'max_alt_freq_prcnt': float,
             'min_alt_freq_prcnt': float,
-            'region': str}
+            'region': str,
+            'family_ids': list,
+            'present_in_parent': list,
+            'present_in_child': list,
+            }
 
     default_query = {'variant_types': None,
                      'effect_types': None,
@@ -51,7 +57,11 @@ class TransmissionQuery(object):
                      'min_parents_called': 600,
                      'max_alt_freq_prcnt': 5.0,
                      'min_alt_freq_prcnt': None,
-                     'region': None}
+                     'region': None,
+                     'family_ids': None,
+                     'present_in_parent': None,
+                     'present_in_child': None,
+                     }
 
     def __init__(self, study_name):
         self.study_name = study_name
@@ -152,4 +162,62 @@ class TransmissionQuery(object):
         where = map(lambda et: ' ( variant_type == {} ) '.format(
             VARIANT_TYPES[et]), self['variant_types'])
         where = ' | '.join(where)
+        return where
+
+    def build_family_ids_where(self):
+        assert self['family_ids']
+        assert isinstance(self['family_ids'], list)
+        where = map(lambda fid: ' ( family_id == "{}" ) '.format(fid),
+                    self['family_ids'])
+        where = ' | '.join(where)
+        return where
+
+    def build_present_in_parent_where(self):
+        assert self['present_in_parent']
+        assert isinstance(self['present_in_parent'], list)
+        assert reduce(operator.and_,
+                      map(lambda p: p in PARENT_TYPES,
+                          self['present_in_parent']))
+        where = map(lambda p: ' ( in_{} == 1 ) '.format(p),
+                    self['present_in_parent'])
+        where = ' & '.join(where)
+        return where
+
+    def build_present_in_child_where(self):
+        assert self['present_in_child']
+        assert isinstance(self['present_in_child'], list)
+        assert reduce(operator.and_,
+                      map(lambda ch: ch in CHILD_TYPES,
+                          self['present_in_child']))
+        where = map(lambda p: ' ( in_{} == 1 ) '.format(p),
+                    self['present_in_child'])
+        where = ' & '.join(where)
+        return where
+
+    def execute_family_query(self):
+        ftable = self.hdf5_fh.root.variants.family
+        vtable = self.hdf5_fh.root.variants.summary
+
+        where = self.build_family_query_where()
+        where = where.strip()
+        frow = ftable.read_where(where)
+        # vrow = np.unique(fres['vrow'])
+        return vtable[frow]
+
+    def build_family_query_where(self):
+        assert self['family_ids'] or self['present_in_parent'] or \
+            self['present_in_child']
+
+        where = []
+        if self['family_ids']:
+            where.append(self.build_family_ids_where())
+        if self['present_in_parent']:
+            where.append(self.build_present_in_parent_where())
+        if self['present_in_child']:
+            where.append(self.build_present_in_child_where())
+
+        where.append(self.build_query_alt_freq())
+
+        where = map(lambda s: ' ( {} ) '.format(s), where)
+        where = ' & '.join(where)
         return where

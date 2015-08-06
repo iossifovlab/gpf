@@ -46,7 +46,7 @@ class SummaryVariants(tables.IsDescription):
 
 
 class FamilyVariants(tables.IsDescription):
-    fid = tables.StringCol(16)
+    family_id = tables.StringCol(16)
     best = tables.StringCol(16)
     counts = tables.StringCol(64)
     vrow = tables.Int64Col()
@@ -197,7 +197,7 @@ class TransmissionIndexBuilder(object):
             vs = self.create_family_variant(summary_variant, (fid, bs, c))
             # augment_vars(vs)
 
-            self.family_row['fid'] = fid
+            self.family_row['family_id'] = fid
             self.family_row['best'] = bs
             self.family_row['counts'] = c
             self.family_row['vrow'] = self.snrow
@@ -320,9 +320,10 @@ class TransmissionIndexBuilder(object):
 
             self.summary_row.append()
 
-            if self.snrow % 10000 == 0:
+            if self.snrow % 100000 == 0:
                 self.summary_table.flush()
                 self.family_table.flush()
+                self.effect_table.flush()
                 print self.snrow,
             self.snrow += 1
 

@@ -107,16 +107,71 @@ class Test(unittest.TestCase):
 
         self.assertEquals(pattern, where)
 
-    def test_hdf_effect_query_combined(self):
-        tq = self.tquery
-        tq['gene_syms'] = ['POGZ', 'SCNN1D']
-        lgds = ['nonsense', 'frame-shift', 'splice-site']
-        tq['effect_types'] = lgds
-        tq['variant_types'] = ['ins', 'sub']
-        vs = tq.execute_effect_query()
-        self.assertIsNotNone(vs)
-        self.assertEquals(2, len(vs))
+#     def test_hdf_effect_query_combined(self):
+#         tq = self.tquery
+#         tq['gene_syms'] = ['POGZ', 'SCNN1D']
+#         lgds = ['nonsense', 'frame-shift', 'splice-site']
+#         tq['effect_types'] = lgds
+#         tq['variant_types'] = ['ins', 'sub']
+#         vs = tq.execute_effect_query()
+#         self.assertIsNotNone(vs)
+#         self.assertEquals(2, len(vs))
 
+    def test_hdf_family_ids_where_single(self):
+        tq = self.tquery
+        tq['family_ids'] = ['ala', 'bala']
+        where = tq.build_family_ids_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( family_id == "ala" )  |  ( family_id == "bala" ) '
+        self.assertEquals(pattern, where)
+
+    def test_hdf_present_in_parent_mom(self):
+        tq = self.tquery
+        tq['present_in_parent'] = ['mom']
+        where = tq.build_present_in_parent_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( in_mom == 1 ) '
+        self.assertEquals(pattern, where)
+
+    def test_hdf_present_in_parent_dad(self):
+        tq = self.tquery
+        tq['present_in_parent'] = ['dad']
+        where = tq.build_present_in_parent_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( in_dad == 1 ) '
+        self.assertEquals(pattern, where)
+
+    def test_hdf_present_in_parent_mom_and_dad(self):
+        tq = self.tquery
+        tq['present_in_parent'] = ['mom', 'dad']
+        where = tq.build_present_in_parent_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( in_mom == 1 )  &  ( in_dad == 1 ) '
+        self.assertEquals(pattern, where)
+
+    def test_hdf_present_in_child_prb(self):
+        tq = self.tquery
+        tq['present_in_child'] = ['prb']
+        where = tq.build_present_in_child_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( in_prb == 1 ) '
+        self.assertEquals(pattern, where)
+
+    def test_hdf_present_in_child_sib(self):
+        tq = self.tquery
+        tq['present_in_child'] = ['sib']
+        where = tq.build_present_in_child_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( in_sib == 1 ) '
+        self.assertEquals(pattern, where)
+
+    def test_hdf_present_in_child_prb_and_sib(self):
+        tq = self.tquery
+        tq['present_in_child'] = ['prb', 'sib']
+        where = tq.build_present_in_child_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( in_prb == 1 )  &  ( in_sib == 1 ) '
+        self.assertEquals(pattern, where)
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
