@@ -107,15 +107,15 @@ class Test(unittest.TestCase):
 
         self.assertEquals(pattern, where)
 
-#     def test_hdf_effect_query_combined(self):
-#         tq = self.tquery
-#         tq['gene_syms'] = ['POGZ', 'SCNN1D']
-#         lgds = ['nonsense', 'frame-shift', 'splice-site']
-#         tq['effect_types'] = lgds
-#         tq['variant_types'] = ['ins', 'sub']
-#         vs = tq.execute_effect_query()
-#         self.assertIsNotNone(vs)
-#         self.assertEquals(2, len(vs))
+    def test_hdf_effect_query_combined(self):
+        tq = self.tquery
+        tq['gene_syms'] = ['POGZ', 'SCNN1D']
+        lgds = ['nonsense', 'frame-shift', 'splice-site']
+        tq['effect_types'] = lgds
+        tq['variant_types'] = ['ins', 'sub']
+        vs = tq.execute_effect_query()
+        self.assertIsNotNone(vs)
+        self.assertEquals(2, len(vs))
 
     def test_hdf_family_ids_where_single(self):
         tq = self.tquery
@@ -172,6 +172,28 @@ class Test(unittest.TestCase):
         self.assertIsNotNone(where)
         pattern = ' ( in_prb == 1 )  &  ( in_sib == 1 ) '
         self.assertEquals(pattern, where)
+
+    def test_hdf_present_in_child_gender_male(self):
+        tq = self.tquery
+        tq['present_in_child_gender'] = ['M']
+        where = tq.build_present_in_child_gender_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( in_prb_gender == 0 ) | ( in_sib_gender == 0 ) '
+        self.assertEquals(pattern, where)
+
+    def test_hdf_present_in_child_gender_female(self):
+        tq = self.tquery
+        tq['present_in_child_gender'] = ['F']
+        where = tq.build_present_in_child_gender_where()
+        self.assertIsNotNone(where)
+        pattern = ' ( in_prb_gender == 1 ) | ( in_sib_gender == 1 ) '
+        self.assertEquals(pattern, where)
+
+    def test_hdf_present_in_child_gender_male_or_female(self):
+        tq = self.tquery
+        tq['present_in_child_gender'] = ['F', 'M']
+        where = tq.build_present_in_child_gender_where()
+        self.assertIsNone(where)
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

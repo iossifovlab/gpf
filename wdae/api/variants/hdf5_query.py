@@ -48,6 +48,7 @@ class TransmissionQuery(object):
             'family_ids': list,
             'present_in_parent': list,
             'present_in_child': list,
+            'present_in_child_gender': list,
             }
 
     default_query = {'variant_types': None,
@@ -61,6 +62,7 @@ class TransmissionQuery(object):
                      'family_ids': None,
                      'present_in_parent': None,
                      'present_in_child': None,
+                     'present_in_child_gender': None,
                      }
 
     def __init__(self, study_name):
@@ -194,6 +196,27 @@ class TransmissionQuery(object):
         where = ' & '.join(where)
         return where
 
+    def build_present_in_child_gender_where(self):
+        assert self['present_in_child_gender']
+        assert isinstance(self['present_in_child_gender'], list)
+        assert reduce(operator.and_,
+                      map(lambda g: g in GENDER_TYPES,
+                          self['present_in_child_gender']))
+        where = []
+        if 'M' in self['present_in_child_gender']:
+            where.append(
+                ' ( in_prb_gender == {} ) | ( in_sib_gender == {} ) '
+                .format(GENDER_TYPES['M'], GENDER_TYPES['M']))
+        if 'F' in self['present_in_child_gender']:
+            where.append(
+                ' ( in_prb_gender == {} ) | ( in_sib_gender == {} ) '
+                .format(GENDER_TYPES['F'], GENDER_TYPES['F']))
+        if len(where) == 2:
+            where = None
+        else:
+            where = where[0]
+        return where
+
     def execute_family_query(self):
         ftable = self.hdf5_fh.root.variants.family
         vtable = self.hdf5_fh.root.variants.summary
@@ -215,6 +238,10 @@ class TransmissionQuery(object):
             where.append(self.build_present_in_parent_where())
         if self['present_in_child']:
             where.append(self.build_present_in_child_where())
+        if self['present_in_child_gender']:
+            clause = self.build_present_in_child_gender_where()
+            if clause:
+                where.append(clause)
 
         where.append(self.build_query_alt_freq())
 
