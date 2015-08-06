@@ -96,6 +96,9 @@ class TransmissionQuery(object):
             where.append(self.build_gene_syms_where())
         if self['effect_types']:
             where.append(self.build_effect_types_where())
+        if self['variant_types']:
+            where.append(self.build_variant_types_where())
+
         where.append(self.build_query_alt_freq())
 
         where = map(lambda s: ' ( {} ) '.format(s), where)

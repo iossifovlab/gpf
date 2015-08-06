@@ -49,6 +49,12 @@ class FamilyVariants(tables.IsDescription):
     counts = tables.StringCol(64)
     vrow = tables.Int64Col()
 
+    variant_type = tables.EnumCol(VARIANT_TYPES,
+                                  'sub', base='uint8')
+    n_par_called = tables.Int16Col()  # 'all.nParCalled'
+    n_alt_alls = tables.Int16Col()  # 'all.nAltAlls'
+    alt_freq = tables.Float16Col()  # 'all.altFreq'
+
 
 class GeneEffectVariants(tables.IsDescription):
     symbol = tables.StringCol(32)
@@ -153,6 +159,13 @@ class TransmissionIndexBuilder(object):
             self.family_row['best'] = bs
             self.family_row['counts'] = c
             self.family_row['vrow'] = self.snrow
+
+            vt = vals['variant'][0:3]
+            self.family_row['variant_type'] = VARIANT_TYPES[vt]
+            self.family_row['n_par_called'] = int(vals['all.nParCalled'])
+            self.family_row['n_alt_alls'] = int(vals['all.nAltAlls'])
+            self.family_row['alt_freq'] = float(vals['all.altFreq'])
+
             self.family_row.append()
             self.fnrow += 1
 

@@ -107,6 +107,16 @@ class Test(unittest.TestCase):
 
         self.assertEquals(pattern, where)
 
+    def test_hdf_effect_query_combined(self):
+        tq = self.tquery
+        tq['gene_syms'] = ['POGZ', 'SCNN1D']
+        lgds = ['nonsense', 'frame-shift', 'splice-site']
+        tq['effect_types'] = lgds
+        tq['variant_types'] = ['ins', 'sub']
+        vs = tq.execute_effect_query()
+        self.assertIsNotNone(vs)
+        self.assertEquals(2, len(vs))
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

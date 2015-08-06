@@ -64,6 +64,24 @@ class Test(unittest.TestCase):
         res = dae_summary_by_effect_types(lgds)
         self.assertEquals(len(res), len(vs))
 
+    def test_hdf_effect_query_combined(self):
+        tq = self.tquery
+        tq['gene_syms'] = ['POGZ', 'SCNN1D']
+        tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
+        tq['variant_types'] = ['ins', 'sub']
+        vs = tq.execute_effect_query()
+        self.assertIsNotNone(vs)
+        self.assertEquals(2, len(vs))
+
+        transmitted_study = vDB.get_study("w1202s766e611")
+        tvs = transmitted_study.get_transmitted_summary_variants(
+            effectTypes=['nonsense', 'frame-shift', 'splice-site'],
+            geneSyms=['POGZ', 'SCNN1D'],
+            variantTypes=['ins', 'sub'])
+        res = [v for v in tvs]
+        self.assertEquals(len(res), len(vs))
+
+
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
