@@ -55,6 +55,13 @@ class FamilyVariants(tables.IsDescription):
     n_alt_alls = tables.Int16Col()  # 'all.nAltAlls'
     alt_freq = tables.Float16Col()  # 'all.altFreq'
 
+    effect_type = tables.EnumCol(EFFECT_TYPES,
+                                 'intergenic', base='uint8')
+    effect_gene = tables.StringCol(32)
+    ebegin = tables.Int64Col()
+    eend = tables.Int64Col()
+    elen = tables.Int32Col()
+
 
 class GeneEffectVariants(tables.IsDescription):
     symbol = tables.StringCol(32)
@@ -166,6 +173,12 @@ class TransmissionIndexBuilder(object):
             self.family_row['n_alt_alls'] = int(vals['all.nAltAlls'])
             self.family_row['alt_freq'] = float(vals['all.altFreq'])
 
+            vt = vals['variant'][0:3]
+            et = vals['effectType']
+
+            self.family_row['variant_type'] = VARIANT_TYPES[vt]
+            self.family_row['effect_type'] = EFFECT_TYPES[et]
+
             self.family_row.append()
             self.fnrow += 1
 
@@ -180,6 +193,7 @@ class TransmissionIndexBuilder(object):
         for index, ge in enumerate(gene_effects):
             if index == 0:
                 self.summary_row['effect_gene'] = ge['sym']
+                self.family_row['effect_gene'] = ge['sym']
 
             self.effect_row['symbol'] = ge['sym']
             et = EFFECT_TYPES[ge['eff']]
@@ -239,6 +253,10 @@ class TransmissionIndexBuilder(object):
             self.summary_row['ebegin'] = ebegin
             self.summary_row['eend'] = eend
             self.summary_row['elen'] = eend - ebegin
+
+            self.family_row['ebegin'] = ebegin
+            self.family_row['eend'] = eend
+            self.family_row['elen'] = eend - ebegin
 
             self.build_summary_frequencies(vals)
 
