@@ -44,12 +44,12 @@ class Test(unittest.TestCase):
         tq = self.tquery
         tq['ultra_rare_only'] = True
         tq['min_parents_called'] = None
-        where = tq.build_query_alt_freq()
+        where = tq.build_freq_where()
         self.assertTrue(' ( n_alt_alls == 1 ) ', where)
 
     def test_hdf_freq_default(self):
         tq = self.tquery
-        where = tq.build_query_alt_freq()
+        where = tq.build_freq_where()
         self.assertTrue(' ( n_par_called > 600 )  &  ( alt_freq <= 5.0 ) ',
                         where)
 
@@ -58,7 +58,7 @@ class Test(unittest.TestCase):
         tq['max_alt_freq_prcnt'] = 15.0
         tq['min_alt_freq_prcnt'] = 1.0
         tq['min_parents_called'] = None
-        where = tq.build_query_alt_freq()
+        where = tq.build_freq_where()
         self.assertTrue(' ( alt_freq <= 15.0 )  &  ( alt_freq >= 1.0 )', where)
 
     def test_hdf_effect_query_gene_syms(self):
@@ -194,6 +194,31 @@ class Test(unittest.TestCase):
         tq['present_in_child_gender'] = ['F', 'M']
         where = tq.build_present_in_child_gender_where()
         self.assertIsNone(where)
+
+    def test_hdf_is_effect_query_gene_syms(self):
+        tq = self.tquery
+        tq['gene_syms'] = ['POGZ']
+        self.assertTrue(tq.is_effect_query())
+
+    def test_hdf_is_effect_query_effect_types(self):
+        tq = self.tquery
+        tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
+        self.assertTrue(tq.is_effect_query())
+
+    def test_hdf_is_effect_query_both(self):
+        tq = self.tquery
+        tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
+        tq['gene_syms'] = ['POGZ']
+        self.assertTrue(tq.is_effect_query())
+
+    def test_hdf_is_effect_query_not(self):
+        tq = self.tquery
+        self.assertFalse(tq.is_effect_query())
+
+        tq['family_ids'] = ['ala', 'bala']
+        self.assertFalse(tq.is_effect_query())
+
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

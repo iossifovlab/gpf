@@ -24,6 +24,14 @@ def dae_summary_by_effect_types(effect_types):
     return res
 
 
+def dae_query_by_family_ids(family_ids):
+    transmitted_study = vDB.get_study("w1202s766e611")
+    tvs = transmitted_study.get_transmitted_variants(
+        familyIds=family_ids)
+    res = [v for v in tvs]
+    return res
+
+
 class Test(unittest.TestCase):
 
     @classmethod
@@ -37,49 +45,62 @@ class Test(unittest.TestCase):
     def tearDown(self):
         self.tquery.clear_query()
 
-    def test_hdf_execute_effect_query_2_gene_syms(self):
+#     def test_hdf_execute_effect_query_2_gene_syms(self):
+#         tq = self.tquery
+#         tq['gene_syms'] = ['POGZ', 'SCNN1D']
+#         vs = tq.execute_effect_query()
+#         self.assertIsNotNone(vs)
+#         self.assertEquals(333, len(vs))
+#         res = dae_summary_by_gene_syms(["POGZ", "SCNN1D"])
+#         self.assertEqual(len(res), len(vs))
+#
+#     def test_hdf_execute_effect_query_1_gene_syms(self):
+#         tq = self.tquery
+#         tq['gene_syms'] = ['POGZ']
+#         vs = tq.execute_effect_query()
+#         self.assertIsNotNone(vs)
+#         res = dae_summary_by_gene_syms(["POGZ"])
+#         self.assertEqual(len(res), len(vs))
+#
+#     def test_hdf_effect_type_query_lgds(self):
+#         lgds = ['nonsense', 'frame-shift', 'splice-site']
+#         tq = self.tquery
+#         tq['effect_types'] = lgds
+#         vs = tq.execute_effect_query()
+#         self.assertIsNotNone(vs)
+#
+#         res = dae_summary_by_effect_types(lgds)
+#         self.assertEquals(len(res), len(vs))
+#
+#     def test_hdf_effect_query_combined(self):
+#         tq = self.tquery
+#         tq['gene_syms'] = ['POGZ', 'SCNN1D']
+#         tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
+#         tq['variant_types'] = ['ins', 'sub']
+#         vs = tq.execute_effect_query()
+#         self.assertIsNotNone(vs)
+#         self.assertEquals(2, len(vs))
+#
+#         transmitted_study = vDB.get_study("w1202s766e611")
+#         tvs = transmitted_study.get_transmitted_summary_variants(
+#             effectTypes=['nonsense', 'frame-shift', 'splice-site'],
+#             geneSyms=['POGZ', 'SCNN1D'],
+#             variantTypes=['ins', 'sub'])
+#         res = [v for v in tvs]
+#         self.assertEquals(len(res), len(vs))
+
+    def test_hdf_family_query_family_ids(self):
         tq = self.tquery
-        tq['gene_syms'] = ['POGZ', 'SCNN1D']
-        vs = tq.execute_effect_query()
+        tq['family_ids'] = ['14474', '14346']
+        vs = tq.execute_family_query()
         self.assertIsNotNone(vs)
-        self.assertEquals(333, len(vs))
-        res = dae_summary_by_gene_syms(["POGZ", "SCNN1D"])
-        self.assertEqual(len(res), len(vs))
+        self.assertEquals(6727, len(vs))
 
-    def test_hdf_execute_effect_query_1_gene_syms(self):
-        tq = self.tquery
-        tq['gene_syms'] = ['POGZ']
-        vs = tq.execute_effect_query()
-        self.assertIsNotNone(vs)
-        res = dae_summary_by_gene_syms(["POGZ"])
-        self.assertEqual(len(res), len(vs))
-
-    def test_hdf_effect_type_query_lgds(self):
-        lgds = ['nonsense', 'frame-shift', 'splice-site']
-        tq = self.tquery
-        tq['effect_types'] = lgds
-        vs = tq.execute_effect_query()
-        self.assertIsNotNone(vs)
-
-        res = dae_summary_by_effect_types(lgds)
-        self.assertEquals(len(res), len(vs))
-
-    def test_hdf_effect_query_combined(self):
-        tq = self.tquery
-        tq['gene_syms'] = ['POGZ', 'SCNN1D']
-        tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
-        tq['variant_types'] = ['ins', 'sub']
-        vs = tq.execute_effect_query()
-        self.assertIsNotNone(vs)
-        self.assertEquals(2, len(vs))
-
-        transmitted_study = vDB.get_study("w1202s766e611")
-        tvs = transmitted_study.get_transmitted_summary_variants(
-            effectTypes=['nonsense', 'frame-shift', 'splice-site'],
-            geneSyms=['POGZ', 'SCNN1D'],
-            variantTypes=['ins', 'sub'])
-        res = [v for v in tvs]
-        self.assertEquals(len(res), len(vs))
+#         transmitted_study = vDB.get_study("w1202s766e611")
+#         tvs = transmitted_study.get_transmitted_variants(
+#             familyIds=['14474', '14346'])
+#         res = [v for v in tvs]
+#         self.assertEquals(len(res), len(vs))
 
 
 if __name__ == "__main__":

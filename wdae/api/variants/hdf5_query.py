@@ -112,13 +112,13 @@ class TransmissionQuery(object):
         if self['variant_types']:
             where.append(self.build_variant_types_where())
 
-        where.append(self.build_query_alt_freq())
+        where.append(self.build_freq_where())
 
         where = map(lambda s: ' ( {} ) '.format(s), where)
         where = ' & '.join(where)
         return where
 
-    def build_query_alt_freq(self):
+    def build_freq_where(self):
         where = []
         if self['min_parents_called']:
             where.append(
@@ -225,7 +225,7 @@ class TransmissionQuery(object):
         where = where.strip()
         frow = ftable.read_where(where)
         # vrow = np.unique(fres['vrow'])
-        return vtable[frow]
+        return frow
 
     def build_family_query_where(self):
         assert self['family_ids'] or self['present_in_parent'] or \
@@ -243,8 +243,26 @@ class TransmissionQuery(object):
             if clause:
                 where.append(clause)
 
-        where.append(self.build_query_alt_freq())
+        where.append(self.build_freq_where())
 
         where = map(lambda s: ' ( {} ) '.format(s), where)
         where = ' & '.join(where)
         return where
+
+    def is_family_query(self):
+        if self['family_ids']:
+            return True
+        return False
+
+    def is_effect_query(self):
+        if self['gene_syms'] or self['effect_types']:
+            return True
+        return False
+
+    def get_summary_variants(self):
+        if self.is_family_query():
+            raise NotImplemented('query by family ids not implemented yet')
+        elif self.is_effect_query():
+            pass
+        else:  # summary query
+            pass
