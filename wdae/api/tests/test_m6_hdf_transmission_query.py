@@ -218,8 +218,6 @@ class Test(unittest.TestCase):
         tq['family_ids'] = ['ala', 'bala']
         self.assertFalse(tq.is_effect_query())
 
-
-
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

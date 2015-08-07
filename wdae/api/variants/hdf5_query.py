@@ -219,7 +219,7 @@ class TransmissionQuery(object):
 
     def execute_family_query(self):
         ftable = self.hdf5_fh.root.variants.family
-        vtable = self.hdf5_fh.root.variants.summary
+        # vtable = self.hdf5_fh.root.variants.summary
 
         where = self.build_family_query_where()
         where = where.strip()
