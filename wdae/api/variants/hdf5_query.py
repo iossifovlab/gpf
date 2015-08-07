@@ -8,6 +8,8 @@ from DAE import vDB
 import tables
 import copy
 import operator
+import itertools
+import numba
 
 
 EFFECT_TYPES = tables.Enum([
@@ -49,6 +51,7 @@ class TransmissionQuery(object):
             'present_in_parent': list,
             'present_in_child': list,
             'present_in_child_gender': list,
+            'regions': list,
             }
 
     default_query = {'variant_types': None,
@@ -63,6 +66,7 @@ class TransmissionQuery(object):
                      'present_in_parent': None,
                      'present_in_child': None,
                      'present_in_child_gender': None,
+                     'regions': None,
                      }
 
     def __init__(self, study_name):
@@ -260,9 +264,64 @@ class TransmissionQuery(object):
         return False
 
     def get_summary_variants(self):
+        vrows = []
         if self.is_family_query():
             raise NotImplemented('query by family ids not implemented yet')
         elif self.is_effect_query():
             pass
         else:  # summary query
-            pass
+            vrows = self.execute_summary_variants_query()
+        return vrows
+
+    def build_regions_where(self):
+        assert self['regions']
+        assert isinstance(self['regions'], list)
+
+        def region_where(chrome, beg, end):
+            p = '((chrome == "{}") & (position >= {}) & (position <= {}))'
+            return p.format(chrome, beg, end)
+
+        regions = self['regions']
+        where = []
+        for r in regions:
+            col_pos = r.find(":")
+            chrome = r[0:col_pos]
+
+            dash_pos = r.find("-")
+            beg = int(r[col_pos + 1:dash_pos])
+            end = int(r[dash_pos + 1:])
+
+            where.append(region_where(chrome, beg, end))
+
+        return ' | '.join(where)
+
+    def build_summary_query_where(self):
+        where = []
+        if self['regions']:
+            where.append(self.build_regions_where())
+
+        where.append(self.build_freq_where())
+
+        where = map(lambda s: ' ( {} ) '.format(s), where)
+        where = ' & '.join(where)
+        return where
+
+    def execute_summary_variants_query(self):
+        vtable = self.hdf5_fh.root.variants.summary
+
+        where = self.build_summary_query_where()
+        where = where.strip()
+        vrow = vtable.read_where(where)
+        return vrow
+
+    def get_variants(self):
+        vrows = self.execute_effect_query()
+        ftable = self.hdf5_fh.root.variants.family
+        res = []
+        for v in vrows:
+            frows = ftable[v['fbegin']:v['fend']]
+            vf = np.vectorize(lambda f: f)
+            idx = np.apply_along_axis(vf, 0, frows['in_prb'])
+            res.append(frows[idx])
+        return np.concatenate(res, axis=0)
+        # return itertools.chain(*res)

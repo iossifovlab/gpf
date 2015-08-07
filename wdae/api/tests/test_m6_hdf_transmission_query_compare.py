@@ -32,6 +32,35 @@ def dae_query_by_family_ids(family_ids):
     return res
 
 
+def dae_summary_by_regions(regions):
+    transmitted_study = vDB.get_study("w1202s766e611")
+    tvs = transmitted_study.get_transmitted_summary_variants(
+        regionS=regions)
+    res = [v for v in tvs]
+    return res
+
+
+def dae_lgds_in_prb():
+    transmitted_study = vDB.get_study("w1202s766e611")
+    tvs = transmitted_study.get_transmitted_variants(
+        effectTypes=['nonsense', 'frame-shift', 'splice-site'],
+        inChild='prb')
+
+    res = [v for v in tvs]
+    return res
+
+
+def dae_ultra_rare_lgds_in_prb():
+    transmitted_study = vDB.get_study("w1202s766e611")
+    tvs = transmitted_study.get_transmitted_variants(
+        effectTypes=['nonsense', 'frame-shift', 'splice-site'],
+        ultraRareOnly=True,
+        inChild='prb')
+
+    res = [v for v in tvs]
+    return res
+
+
 class Test(unittest.TestCase):
 
     @classmethod
@@ -89,19 +118,65 @@ class Test(unittest.TestCase):
 #         res = [v for v in tvs]
 #         self.assertEquals(len(res), len(vs))
 
-    def test_hdf_family_query_family_ids(self):
-        tq = self.tquery
-        tq['family_ids'] = ['14474', '14346']
-        vs = tq.execute_family_query()
-        self.assertIsNotNone(vs)
-        self.assertEquals(6727, len(vs))
-
+#     def test_hdf_family_query_family_ids(self):
+#         tq = self.tquery
+#         tq['family_ids'] = ['14474', '14346']
+#         vs = tq.execute_family_query()
+#         self.assertIsNotNone(vs)
+#         self.assertEquals(6727, len(vs))
+#
 #         transmitted_study = vDB.get_study("w1202s766e611")
 #         tvs = transmitted_study.get_transmitted_variants(
 #             familyIds=['14474', '14346'])
 #         res = [v for v in tvs]
 #         self.assertEquals(len(res), len(vs))
 
+#     def test_hdf_regions_search(self):
+#         tq = self.tquery
+#         tq['regions'] = ["12:76770000-76890000"]
+#         vs = tq.execute_summary_variants_query()
+#         self.assertIsNotNone(vs)
+#         self.assertEquals(70, len(vs))
+#
+#         transmitted_study = vDB.get_study("w1202s766e611")
+#         tvs = transmitted_study.get_transmitted_summary_variants(
+#             regionS=["12:76770000-76890000"])
+#         res = [v for v in tvs]
+#         self.assertEquals(len(res), len(vs))
+
+    def test_hdf_prb_lgds(self):
+        tq = self.tquery
+        tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
+        tq['present_in_child'] = ['prb']
+        vs = tq.get_variants()
+        self.assertIsNotNone(vs)
+        self.assertEquals(71596, len(vs))
+
+#         transmitted_study = vDB.get_study("w1202s766e611")
+#         tvs = transmitted_study.get_transmitted_variants(
+#             effectTypes=['nonsense', 'frame-shift', 'splice-site'],
+#             inChild='prb')
+#
+#         res = [v for v in tvs]
+#         self.assertEquals(71596, len(res))
+
+    def test_hdf_ultra_rare_lgds_in_prb(self):
+        tq = self.tquery
+        tq['effect_types'] = ['nonsense', 'frame-shift', 'splice-site']
+        tq['present_in_child'] = ['prb']
+        tq['ultra_rare_only'] = True
+        vs = tq.get_variants()
+        self.assertIsNotNone(vs)
+        self.assertEquals(14401, len(vs))
+
+#         transmitted_study = vDB.get_study("w1202s766e611")
+#         tvs = transmitted_study.get_transmitted_variants(
+#             effectTypes=['nonsense', 'frame-shift', 'splice-site'],
+#             ultraRareOnly=True,
+#             inChild='prb')
+#
+#         res = [v for v in tvs]
+#         self.assertEquals(14401, len(res))
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

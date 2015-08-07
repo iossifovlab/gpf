@@ -218,6 +218,26 @@ class Test(unittest.TestCase):
         tq['family_ids'] = ['ala', 'bala']
         self.assertFalse(tq.is_effect_query())
 
+    def test_hdf_is_family_query(self):
+        tq = self.tquery
+        tq['family_ids'] = ['ala', 'bala']
+        self.assertTrue(tq.is_family_query())
+
+    def test_hdf_is_family_query_not(self):
+        tq = self.tquery
+        self.assertFalse(tq.is_family_query())
+
+    def test_hdf_regions_where_single_region(self):
+        tq = self.tquery
+        tq['regions'] = ["12:76770000-76890000"]
+        where = tq.build_regions_where()
+        self.assertIsNotNone(where)
+
+        pattern = '((chrome == "12") & (position >= 76770000) & '
+        pattern += '(position <= 76890000))'
+        self.assertEquals(pattern, where)
+
+
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
