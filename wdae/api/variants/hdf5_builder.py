@@ -136,7 +136,7 @@ class TransmissionIndexBuilder(object):
                                    'Per Family Variants Table')
 
     def build(self):
-        filters = tables.Filters(complevel=1, complib='blosc:zlib')
+        filters = tables.Filters(complevel=1)
 
         with gzip.open(self.summary_filename, 'r') as sfh, \
             gzip.open(self.tm_filename, 'r') as tfh, \
