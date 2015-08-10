@@ -8,12 +8,13 @@ from VariantAnnotation import get_effect_types, get_effect_types_set
 
 # from DAE import vDB
 from api.query.query_prepare import prepare_denovo_studies
-from api.query.query_variants import dae_query_variants #, pedigree_data
+from api.query.query_variants import dae_query_variants  # , pedigree_data
 
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 LOGGER = logging.getLogger(__name__)
+
 
 class EffectTypesFiltersTests(APITestCase):
     def test_effect_types(self):
@@ -49,18 +50,17 @@ class EffectTypesFiltersTests(APITestCase):
     def test_effect_filters(self):
         url = '/api/query_variants_preview'
 
-        data = {"geneSyms":"SCNN1D",
-                "denovoStudies":"IossifovWE2014",
-                "variantTypes":"All",
+        data = {"geneSyms": "SCNN1D",
+                "denovoStudies": "IossifovWE2014",
+                "variantTypes": "All",
                 "effectTypes": "Nonsense,Missense",
-        }
+                }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.data
 
         LOGGER.info("result: %s", result)
         self.assertEqual('2', result['count'])
-
 
     def test_effect_filters_ARHGAP30_nonsense(self):
         url = '/api/query_variants_preview'
@@ -71,18 +71,17 @@ class EffectTypesFiltersTests(APITestCase):
 #                 "effectTypes":  "nonsense,frame-shift,splice-site",
 #         }
 
-        data = {"geneSyms":"ARHGAP30",
-                "denovoStudies":'ALL WHOLE EXOME',
-                "variantTypes":"All",
-                "effectTypes":  "nonsense",
-        }
-        
+        data = {"geneSyms": "ARHGAP30",
+                "denovoStudies": 'ALL WHOLE EXOME',
+                "variantTypes": "All",
+                "effectTypes": "nonsense",
+                }
+
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = response.data
 
         self.assertEqual('1', result['count'])
-
 
     def test_effect_filters_ARHGAP30_nonsense_frame_shift(self):
         url = '/api/query_variants_preview'
@@ -99,7 +98,7 @@ class EffectTypesFiltersTests(APITestCase):
 
         self.assertEqual('1', result['count'])
 
-        
+
 class VariantTypesFiltersTests(APITestCase):
 
     def test_variant_types_whole_exome(self):
@@ -223,14 +222,14 @@ class VariantPedigreeTests(unittest.TestCase):
             "denovoStudies":"ALL WHOLE EXOME",
         }
 
-        
+
         dst = prepare_denovo_studies(data)
         self.assertFalse(dst is None)
         vsl = dae_query_variants(data)
         variants = itertools.chain(*vsl)
-        
+
         for v in variants:
-            
+
             for _m in v.memberInOrder:
                 pass
 
@@ -240,12 +239,12 @@ class VariantPedigreeTests(unittest.TestCase):
             "denovoStudies":"ALL WHOLE EXOME",
         }
 
-        
+
         dst = prepare_denovo_studies(data)
         self.assertFalse(dst is None)
         vsl = dae_query_variants(data)
         variants = itertools.chain(*vsl)
-        
+
         for _v in variants:
             pass
 
@@ -257,7 +256,7 @@ class PhenotypeFilterTests(APITestCase):
             "denovoStudies":"ALL WHOLE EXOME",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -273,7 +272,7 @@ class PhenotypeFilterTests(APITestCase):
             "gender": "female,male",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -286,7 +285,7 @@ class PhenotypeFilterTests(APITestCase):
             "denovoStudies":"ALL WHOLE EXOME",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -301,7 +300,7 @@ class PhenotypeFilterTests(APITestCase):
             "gender": "female,male"
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -334,7 +333,7 @@ class PhenotypeFilterTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('8', response.data['count'])
-        
+
 
 class GenderFilterTests(APITestCase):
     def test_gender_ATRX_SPEG(self):
@@ -414,7 +413,7 @@ class SSCPhenotypeFilterTests(APITestCase):
             "rarity": "ultraRare",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -429,7 +428,7 @@ class SSCPhenotypeFilterTests(APITestCase):
             "rarity": "ultraRare",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -448,18 +447,18 @@ class SSCPresentInChildTests(APITestCase):
             'presentInParent': 'neither',
             "gender": "male,female",
             'inChild': "None",
-            
+
             # "phenoType": "autism",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-        for _c,_r in enumerate(response.data['rows']):
+        for _c, _r in enumerate(response.data['rows']):
             pass
         self.assertEqual('5', response.data['count'])
 
@@ -474,7 +473,7 @@ class SSCPresentInChildTests(APITestCase):
             # "phenoType": "autism",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -492,7 +491,7 @@ class SSCPresentInChildTests(APITestCase):
             # "phenoType": "autism",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -510,7 +509,7 @@ class SSCPresentInChildTests(APITestCase):
             # "phenoType": "autism",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -533,7 +532,7 @@ class SSCPresentInParentTests(APITestCase):
             "variantTypes": "sub,ins,del,CNV",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -555,7 +554,7 @@ class SSCPresentInParentTests(APITestCase):
             "variantTypes": "sub,ins,del,CNV",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -578,7 +577,7 @@ class SSCPresentInParentTests(APITestCase):
             "variantTypes": "sub,ins,del,CNV",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -588,9 +587,9 @@ class SSCPresentInParentTests(APITestCase):
 
 
 class PhenotypeFilterTestsSRI(APITestCase):
-    
+
     def test_phenotype_SRI(self):
-        
+
         data = {
             "geneSyms": "SRI",
             "denovoStudies":"ALL WHOLE EXOME",
@@ -598,7 +597,7 @@ class PhenotypeFilterTestsSRI(APITestCase):
             "gender": "male",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -610,7 +609,7 @@ class PhenotypeFilterTestsSRI(APITestCase):
                          pedigree_data)
 
 
-        
+
 class SSCPresentInChildGenderTests(APITestCase):
     def test_present_in_child_male_all(self):
         data = {
@@ -623,7 +622,7 @@ class SSCPresentInChildGenderTests(APITestCase):
             # "phenoType": "autism",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -641,7 +640,7 @@ class SSCPresentInChildGenderTests(APITestCase):
             "gender": "male",
             # "phenoType": "autism",
         }
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -659,7 +658,7 @@ class SSCPresentInChildGenderTests(APITestCase):
             # "phenoType": "autism",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
@@ -677,7 +676,7 @@ class SSCPresentInChildGenderTests(APITestCase):
             # "phenoType": "autism",
         }
 
-        
+
         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')

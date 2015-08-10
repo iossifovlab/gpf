@@ -52,7 +52,7 @@ class Test(unittest.TestCase):
                 
     def test_get_all_denovo_studies(self):
         all_denovo_studies = get_all_denovo_studies()
-        self.assertEquals(11, len(all_denovo_studies))
+        self.assertEquals(10, len(all_denovo_studies))
         
     def test_build_prb_test_by_phenotype(self):
         all_denovo_studies = get_all_denovo_studies()
@@ -63,8 +63,13 @@ class Test(unittest.TestCase):
     def test_clean_prb_tests_by_phenotype(self):
         all_denovo_studies = get_all_denovo_studies()
         
-        for phenotype in ['autism', 'congenital heart disease', "epilepsy", 'intelectual disability', 'schizophrenia']:
-            gene_terms = build_prb_set_by_phenotype(all_denovo_studies, phenotype)
+        for phenotype in ['autism', 
+                          'congenital heart disease', 
+                          "epilepsy", 
+                          'intelectual disability', 
+                          'schizophrenia']:
+            gene_terms = build_prb_set_by_phenotype(all_denovo_studies,
+                                                    phenotype)
             for _key, value in gene_terms.t2G.items():
                 self.assertTrue(len(value)>0)
                 

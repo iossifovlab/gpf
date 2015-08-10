@@ -12,46 +12,60 @@ from api.dae_query import prepare_summary
 from django.http.response import StreamingHttpResponse
 import itertools
 from rest_framework.parsers import JSONParser, FormParser
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from api.query.query_prepare import prepare_ssc_filter
 
 
-class WholeExomePrepare(APIView):
-    
+class SSCPrepare(APIView):
+
     def prepare(self, request):
         data = prepare_query_dict(request.DATA)
+        data = prepare_ssc_filter(data)
+        build_effect_type_filter(data)
+
         build_effect_type_filter(data)
         return data
-        
 
-class WholeExomePreview(WholeExomePrepare):
-    
-    def post(self,request):
+
+class SSCPreview(SSCPrepare):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
         if request.method == 'OPTIONS':
             return Response()
-    
+
         data = self.prepare(request)
-    
-        LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
-    
+
+        LOGGER.info(log_filter(request,
+                               "ssc preview query variants: " + str(data)))
+
         generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
         summary = prepare_summary(generator)
-    
+
         return Response(summary)
-    
-class WholeExomeDownload(WholeExomePrepare):
-    
+
+
+class SSCDownload(SSCPrepare):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
     parser_classes = (JSONParser, FormParser,)
-    
+
     def post(self, request):
-        
+
         if request.method == 'OPTIONS':
             return Response()
-    
+
         data = self.prepare(request)
-            
-        LOGGER.info(log_filter(request, "query variants request: " + str(data)))
-    
-        comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
-    
+
+        LOGGER.info(log_filter(request,
+                               "ssc query variants request: " + str(data)))
+
+        comment = ', '.join([': '.join([k, str(v)])
+                             for (k, v) in data.items()])
+
         generator = do_query_variants(data)
         response = StreamingHttpResponse(
             itertools.chain(
@@ -60,5 +74,5 @@ class WholeExomeDownload(WholeExomePrepare):
             content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=unruly.csv'
         response['Expires'] = '0'
-    
+
         return response

@@ -24,11 +24,11 @@ class Test(unittest.TestCase):
         stats = ChildrenStats.build(self.dsts)
         
         LOGGER.info('enrichment children stats: {}'.format(stats))
-        self.assertEquals(3953, stats['autism']['prb'])
-        self.assertEquals(1911, stats['autism']['sib'])
+        self.assertEquals(593, stats['autism']['F'])
+        self.assertEquals(3360, stats['autism']['M'])
         
-        self.assertEquals(5694, stats['unaffected']['prb'])
-        self.assertEquals(2029, stats['unaffected']['sib'])
+        self.assertEquals(1058, stats['unaffected']['F'])
+        self.assertEquals(971, stats['unaffected']['M'])
 
 
 if __name__ == "__main__":

@@ -6,5 +6,5 @@ rm -rf wdae.sql
 python manage.py migrate
 
 python manage.py devusers
-
+python manage.py recompute
 

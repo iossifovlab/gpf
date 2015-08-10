@@ -270,7 +270,14 @@ class SSCPresentInParentTests(APITestCase):
         cls.user = u
         _token = Token.objects.get_or_create(user=u)
         cls.user.save()
-        
+    
+    
+    @classmethod
+    def tearDownClass(cls):
+        super(SSCPresentInParentTests, cls).tearDownClass()
+        cls.user.delete()
+    
+    
     def setUp(self):
         from rest_framework.authtoken.models import Token
 
@@ -377,7 +384,7 @@ class SSCPresentInParentTests(APITestCase):
             'presentInChild': 'autism only,autism and unaffected',
             'variantTypes': 'sub,ins,del,CNV',
             'gender': 'male,female',
-            'geneTerm': 'LoF.Recurrent',
+            'geneTerm': 'LGDs.Recurrent',
             'presentInParent': 'neither',
             'familyVerbalIqHi': '',
             'geneRegion': '',
@@ -498,6 +505,40 @@ class SSCPresentInParentTests(APITestCase):
         
 class SSCPresentInChildDownloadTests(APITestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        super(SSCPresentInChildDownloadTests, cls).setUpClass()
+        
+        from django.contrib.auth import get_user_model
+        from rest_framework.authtoken.models import Token
+        
+        User = get_user_model()
+        u = User.objects.create(email="admin@example.com",
+                                     first_name="First",
+                                     last_name="Last",
+                                     is_staff=True,
+                                     is_active=True,
+                                     researcher_id="0001000")
+        u.set_password("secret")
+        u.save()
+
+        cls.user = u
+        _token = Token.objects.get_or_create(user=u)
+        cls.user.save()
+    
+    @classmethod
+    def tearDownClass(cls):
+        super(SSCPresentInChildDownloadTests, cls).tearDownClass()
+        cls.user.delete()
+        
+    def setUp(self):
+        from rest_framework.authtoken.models import Token
+
+        APITestCase.setUp(self)
+
+        self.client.login(email='admin@example.com', password='secret')
+        token = Token.objects.get(user__email='admin@example.com')
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
 
     def test_rec_lgds_download(self):
@@ -517,7 +558,7 @@ class SSCPresentInChildDownloadTests(APITestCase):
             'presentInChild': 'autism only,autism and unaffected',
             'variantTypes': 'sub,ins,del,CNV',
             'gender': 'male,female',
-            'geneTerm': 'LoF.Recurrent',
+            'geneTerm': 'LGDs.Recurrent',
             'presentInParent': 'neither',
             'familyVerbalIqHi': '',
             'geneRegion': '',
@@ -533,7 +574,7 @@ class SSCPresentInChildDownloadTests(APITestCase):
         self.assertEqual(79, count_iterable(response.streaming_content))
 
     def test_rec_lgds_download_urlencoded(self):
-        data = 'genes=Gene+Sets&geneSet=denovo&gene_set_phenotype=autism&geneTerm=LoF.Recurrent&geneSyms=&geneRegionType=on&geneRegion=&presentInChild=autism+only&presentInChild=autism+and+unaffected&presentInParent=neither&gender=male&gender=female&variantTypes=sub&variantTypes=ins&variantTypes=del&variantTypes=CNV&effectTypes=Nonsense&effectTypes=Frame-shift&effectTypes=Splice-site&rarity=ultraRare&families=all&familyIds=&familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&familyPrbGender=All&familySibGender=All'
+        data = 'genes=Gene+Sets&geneSet=denovo&gene_set_phenotype=autism&geneTerm=LGDs.Recurrent&geneSyms=&geneRegionType=on&geneRegion=&presentInChild=autism+only&presentInChild=autism+and+unaffected&presentInParent=neither&gender=male&gender=female&variantTypes=sub&variantTypes=ins&variantTypes=del&variantTypes=CNV&effectTypes=Nonsense&effectTypes=Frame-shift&effectTypes=Splice-site&rarity=ultraRare&families=all&familyIds=&familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&familyPrbGender=All&familySibGender=All'
 
         LOGGER.info("urldecoded: %s", urlparse.parse_qs(data))
         url = '/api/ssc_query_variants'

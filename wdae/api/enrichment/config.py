@@ -5,138 +5,137 @@ Created on Jun 11, 2015
 '''
 
 PHENOTYPES = [
-    'autism', 
-    'congenital heart disease', 
-    'epilepsy', 
-    'intelectual disability', 
-    'schizophrenia', 
+    'autism',
+    'congenital heart disease',
+    'epilepsy',
+    'intelectual disability',
+    'schizophrenia',
     'unaffected',
 ]
 
 PRB_TESTS_SPECS = [
     # 0
-    {'label': 'prb|Rec LGDs',
+    {'label': 'prb|Rec LGDs|prb|male,female|Nonsense,Frame-shift,Splice-site',
      'type': 'rec',
      'inchild': 'prb',
      'effect': 'LGDs'},
     # 1
     {'label': 'prb|LGDs|prb|male,female|Nonsense,Frame-shift,Splice-site',
      'type': 'event',
-     'inchild': 'prb', 
+     'inchild': 'prb',
      'effect': 'LGDs'},
     # 2
-    {'label': 'prb|Male LGDs|prb|male|Nonsense,Frame-shift,Splice-site', 
+    {'label': 'prb|Male LGDs|prb|male|Nonsense,Frame-shift,Splice-site',
      'type': 'event',
-     'inchild': 'prbM', 
+     'inchild': 'prbM',
      'effect': 'LGDs'},
     # 3
-    {'label': 'prb|Female LGDs|prb|female|Nonsense,Frame-shift,Splice-site', 
+    {'label': 'prb|Female LGDs|prb|female|Nonsense,Frame-shift,Splice-site',
      'type': 'event',
-     'inchild': 'prbF', 
+     'inchild': 'prbF',
      'effect': 'LGDs'},
     # 4
-    {'label': 'prb|Rec Missense', 
+    {'label': 'prb|Rec Missense|prb|male,female|Missense',
      'type': 'rec',
      'inchild': 'prb',
      'effect': 'missense'},
     # 5
-    {'label': 'prb|Missense|prb|male,female|Missense', 
+    {'label': 'prb|Missense|prb|male,female|Missense',
      'type': 'event',
      'inchild': 'prb',
      'effect': 'missense'},
     # 6
-    {'label': 'prb|Male Missense|prb|male|Missense', 
+    {'label': 'prb|Male Missense|prb|male|Missense',
      'type': 'event',
-     'inchild': 'prbM', 
+     'inchild': 'prbM',
      'effect': 'missense'},
     # 7
-    {'label': 'prb|Female Missense|prb|female|Missense', 
+    {'label': 'prb|Female Missense|prb|female|Missense',
      'type': 'event',
-     'inchild': 'prbF', 
+     'inchild': 'prbF',
      'effect': 'missense'},
     # 8
-    {'label': 'prb|Rec Synonymous', 
+    {'label': 'prb|Rec Synonymous|prb|male,female|Synonymous',
      'type': 'rec',
-     'inchild': 'prb', 
+     'inchild': 'prb',
      'effect': 'synonymous'},
     # 9
-    {'label': 'prb|Synonymous|prb|male,female|Synonymous', 
+    {'label': 'prb|Synonymous|prb|male,female|Synonymous',
      'type': 'event',
-     'inchild': 'prb', 
+     'inchild': 'prb',
      'effect': 'synonymous'},
     # 10
-    {'label': 'prb|Male Synonymous|prb|male|Synonymous', 
+    {'label': 'prb|Male Synonymous|prb|male|Synonymous',
      'type': 'event',
-     'inchild': 'prbM', 
+     'inchild': 'prbM',
      'effect': 'synonymous'},
     # 11
-    {'label': 'prb|Female Synonymous|prb|female|Synonymous', 
+    {'label': 'prb|Female Synonymous|prb|female|Synonymous',
      'type': 'event',
-     'inchild': 'prbF', 
+     'inchild': 'prbF',
      'effect': 'synonymous'},
 
 ]
 
 SIB_TESTS_SPECS = [
     # 0
-    {'label': 'sib|Rec LGDs', 
+    {'label': 'sib|Rec LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site',
      'type': 'rec',
-     'inchild': 'sib', 
+     'inchild': 'sib',
      'effect': 'LGDs'},
     # 1
-    {'label': 'sib|LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site', 
+    {'label': 'sib|LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site',
      'type': 'event',
-     'inchild': 'sib', 
+     'inchild': 'sib',
      'effect': 'LGDs'},
     # 2
-    {'label': 'sib|Male LGDs|sib|male|Nonsense,Frame-shift,Splice-site', 
+    {'label': 'sib|Male LGDs|sib|male|Nonsense,Frame-shift,Splice-site',
      'type': 'event',
-     'inchild': 'sibM', 
+     'inchild': 'sibM',
      'effect': 'LGDs'},
     # 3
-    {'label': 'sib|Female LGDs|sib|female|Nonsense,Frame-shift,Splice-site', 
+    {'label': 'sib|Female LGDs|sib|female|Nonsense,Frame-shift,Splice-site',
      'type': 'event',
-     'inchild': 'sibF', 
+     'inchild': 'sibF',
      'effect': 'LGDs'},
     # 4
-    {'label': 'sib|Rec Missense', 
+    {'label': 'sib|Rec Missense|sib|male,female|Missense',
      'type': 'rec',
-     'inchild': 'sib', 
+     'inchild': 'sib',
      'effect': 'missense'},
     # 5
-    {'label': 'sib|Missense|sib|male,female|Missense', 
+    {'label': 'sib|Missense|sib|male,female|Missense',
      'type': 'event',
-     'inchild': 'sib', 
+     'inchild': 'sib',
      'effect': 'missense'},
     # 6
-    {'label': 'sib|Male Missense|sib|male|Missense', 
+    {'label': 'sib|Male Missense|sib|male|Missense',
      'type': 'event',
-     'inchild': 'sibM', 
+     'inchild': 'sibM',
      'effect': 'missense'},
     # 7
-    {'label': 'sib|Female Missense|sib|female|Missense', 
+    {'label': 'sib|Female Missense|sib|female|Missense',
      'type': 'event',
-     'inchild': 'sibF', 
+     'inchild': 'sibF',
      'effect': 'missense'},
     # 8
-    {'label': 'sib|Rec Synonymous', 
+    {'label': 'sib|Rec Synonymous|sib|male,female|Synonymous',
      'type': 'rec',
-     'inchild': 'sib', 
+     'inchild': 'sib',
      'effect': 'synonymous'},
     # 9
-    {'label': 'sib|Synonymous|sib|male,female|Synonymous', 
+    {'label': 'sib|Synonymous|sib|male,female|Synonymous',
      'type': 'event',
-     'inchild': 'sib', 
+     'inchild': 'sib',
      'effect': 'synonymous'},
     # 10
-    {'label': 'sib|Male Synonymous|sib|male|Synonymous', 
+    {'label': 'sib|Male Synonymous|sib|male|Synonymous',
      'type': 'event',
-     'inchild': 'sibM', 
+     'inchild': 'sibM',
      'effect': 'synonymous'},
     # 11
-    {'label': 'sib|Female Synonymous|sib|female|Synonymous', 
+    {'label': 'sib|Female Synonymous|sib|female|Synonymous',
      'type': 'event',
-     'inchild': 'sibF', 
+     'inchild': 'sibF',
      'effect': 'synonymous'},
 ]
-
