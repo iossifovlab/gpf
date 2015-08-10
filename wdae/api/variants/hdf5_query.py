@@ -8,8 +8,6 @@ from DAE import vDB
 import tables
 import copy
 import operator
-import itertools
-import numba
 
 
 EFFECT_TYPES = tables.Enum([

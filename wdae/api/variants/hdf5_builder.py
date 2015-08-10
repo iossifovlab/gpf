@@ -12,7 +12,7 @@ from VariantsDB import parseGeneEffect, Variant
 import itertools
 import numpy as np
 import copy
-from query_variants import augment_vars
+# from query_variants import augment_vars
 # from query_variants import augment_vars
 
 
@@ -52,18 +52,18 @@ class FamilyVariants(tables.IsDescription):
     counts = tables.StringCol(64)
     vrow = tables.Int64Col()
 
-    variant_type = tables.EnumCol(VARIANT_TYPES,
-                                  'sub', base='uint8')
-    n_par_called = tables.Int16Col()  # 'all.nParCalled'
-    n_alt_alls = tables.Int16Col()  # 'all.nAltAlls'
-    alt_freq = tables.Float16Col()  # 'all.altFreq'
-
-    effect_type = tables.EnumCol(EFFECT_TYPES,
-                                 'intergenic', base='uint8')
-    effect_gene = tables.StringCol(32)
-    ebegin = tables.Int64Col()
-    eend = tables.Int64Col()
-    elen = tables.Int32Col()
+#     variant_type = tables.EnumCol(VARIANT_TYPES,
+#                                   'sub', base='uint8')
+#     n_par_called = tables.Int16Col()  # 'all.nParCalled'
+#     n_alt_alls = tables.Int16Col()  # 'all.nAltAlls'
+#     alt_freq = tables.Float16Col()  # 'all.altFreq'
+#
+#     effect_type = tables.EnumCol(EFFECT_TYPES,
+#                                  'intergenic', base='uint8')
+#     effect_gene = tables.StringCol(32)
+#     ebegin = tables.Int64Col()
+#     eend = tables.Int64Col()
+#     elen = tables.Int32Col()
 
     in_mom = tables.BoolCol()
     in_dad = tables.BoolCol()
@@ -136,7 +136,7 @@ class TransmissionIndexBuilder(object):
                                    'Per Family Variants Table')
 
     def build(self):
-        filters = tables.Filters(complevel=1)
+        filters = tables.Filters(complevel=1, complib='blosc:zlib')
 
         with gzip.open(self.summary_filename, 'r') as sfh, \
             gzip.open(self.tm_filename, 'r') as tfh, \
@@ -148,13 +148,13 @@ class TransmissionIndexBuilder(object):
             self.h5fh = h5fh
 
             self.build_variants_structure()
-            self.build_families_structure()
+            # self.build_families_structure()
 
             self.column_names = self.sfh.readline().rstrip().split('\t')
             self.tfh.readline()  # skip file header
 
             # self.summary_table.cols.line_number.create_index()
-            self.family_table.cols.family_id.create_index()
+            # self.family_table.cols.family_id.create_index()
 
             self.build_mainloop()
 
@@ -205,14 +205,14 @@ class TransmissionIndexBuilder(object):
         row['counts'] = vs.countsStr
         row['vrow'] = self.snrow
 
-        vt = vals['variant'][0:3]
-        row['variant_type'] = VARIANT_TYPES[vt]
-        row['n_par_called'] = int(vals['all.nParCalled'])
-        row['n_alt_alls'] = int(vals['all.nAltAlls'])
-        row['alt_freq'] = float(vals['all.altFreq'])
-
-        et = vals['effectType']
-        row['effect_type'] = EFFECT_TYPES[et]
+        #         vt = vals['variant'][0:3]
+        #         row['variant_type'] = VARIANT_TYPES[vt]
+        #         row['n_par_called'] = int(vals['all.nParCalled'])
+        #         row['n_alt_alls'] = int(vals['all.nAltAlls'])
+        #         row['alt_freq'] = float(vals['all.altFreq'])
+        #
+        #         et = vals['effectType']
+        #         row['effect_type'] = EFFECT_TYPES[et]
 
         self.build_inchild(row, vs)
         self.build_inparent(row, vs)
@@ -226,7 +226,7 @@ class TransmissionIndexBuilder(object):
         fbegin = self.fnrow
         for fid, bs, c in pfd:
             vs = self.create_family_variant(summary_variant, (fid, bs, c))
-            augment_vars(vs)
+            # augment_vars(vs)
             self.build_family_row(self.family_row, vals, vs)
             # ftable = self.h5fh.root.families._f_get_child('f{}'.format(fid))
             # self.build_family_row(ftable.row, vals, vs)
@@ -244,7 +244,7 @@ class TransmissionIndexBuilder(object):
         for index, ge in enumerate(gene_effects):
             if index == 0:
                 self.summary_row['effect_gene'] = ge['sym']
-                self.family_row['effect_gene'] = ge['sym']
+                # self.family_row['effect_gene'] = ge['sym']
 
             self.effect_row['symbol'] = ge['sym']
             et = EFFECT_TYPES[ge['eff']]
@@ -327,17 +327,17 @@ class TransmissionIndexBuilder(object):
             self.summary_row['eend'] = eend
             self.summary_row['elen'] = eend - ebegin
 
-            self.family_row['ebegin'] = ebegin
-            self.family_row['eend'] = eend
-            self.family_row['elen'] = eend - ebegin
+#             self.family_row['ebegin'] = ebegin
+#             self.family_row['eend'] = eend
+#             self.family_row['elen'] = eend - ebegin
 
             self.summary_row.append()
-            print self.snrow
-            if self.snrow % 100000 == 0:
+            # print self.snrow
+            if self.snrow % 10000 == 0:
                 self.summary_table.flush()
                 self.family_table.flush()
                 self.effect_table.flush()
-                print self.snrow,
+                print self.snrow
             self.snrow += 1
 
 
