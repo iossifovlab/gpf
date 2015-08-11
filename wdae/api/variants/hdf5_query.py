@@ -36,7 +36,7 @@ CHILD_TYPES = tables.Enum(['prb', 'sib'])
 
 
 class TransmissionQuery(object):
-    filters = tables.Filters(complevel=1)
+    filters = tables.Filters(complevel=0)
     keys = {'variant_types': list,
             'effect_types': list,
             'gene_syms': list,
@@ -99,6 +99,7 @@ class TransmissionQuery(object):
 
         where = self.build_effect_query_where()
         where = where.strip()
+        print "EFFECT:", where
         eres = etable.read_where(where)
         vrow = np.unique(eres['vrow'])
         return vtable[vrow]
@@ -114,7 +115,9 @@ class TransmissionQuery(object):
         if self['variant_types']:
             where.append(self.build_variant_types_where())
 
-        where.append(self.build_freq_where())
+        freq_where = self.build_freq_where()
+        if freq_where:
+            where.append(freq_where)
 
         where = map(lambda s: ' ( {} ) '.format(s), where)
         where = ' & '.join(where)
@@ -321,5 +324,6 @@ class TransmissionQuery(object):
             vf = np.vectorize(lambda f: f)
             idx = np.apply_along_axis(vf, 0, frows['in_prb'])
             res.append(frows[idx])
+            # res.append(frows)
         return np.concatenate(res, axis=0)
         # return itertools.chain(*res)
