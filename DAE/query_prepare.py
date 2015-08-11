@@ -275,7 +275,6 @@ def prepare_gender_filter(data):
             del data['gender']
 
 
-
 def prepare_denovo_studies(data):
     if 'denovoStudies' not in data:
         return None
