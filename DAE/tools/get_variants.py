@@ -4,6 +4,7 @@ import argparse
 import sys
 
 from query_variants import do_query_variants, join_line
+from query_prepare import prepare_gene_sets
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):
@@ -104,6 +105,10 @@ LGDs by default. none for all variants''')
         gene_set, gene_term = args_dict['geneSet'].split(':')
         args_dict['geneSet'] = gene_set
         args_dict['geneTerm'] = gene_term
+        gs = prepare_gene_sets(args_dict)
+        if not gs:
+            raise ValueError("wrong gene set: {}:{}".format(gene_set,
+                                                            gene_term))
 
     print >>sys.stderr, args_dict
     return args_dict
@@ -112,8 +117,11 @@ LGDs by default. none for all variants''')
 if __name__ == "__main__":
 
     print >>sys.stderr, sys.argv
-    args_dict = parse_cli_arguments(sys.argv[1:])
-    print args_dict
-    generator = do_query_variants(args_dict)
-    for l in generator:
-        sys.stdout.write(join_line(l, '\t'))
+    try:
+        args_dict = parse_cli_arguments(sys.argv[1:])
+        generator = do_query_variants(args_dict)
+        for l in generator:
+            sys.stdout.write(join_line(l, '\t'))
+    except ValueError, ex:
+        print >> sys.stderr, "ERROR:", ex
+        sys.exit(1)
