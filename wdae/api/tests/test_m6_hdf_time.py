@@ -15,7 +15,7 @@ def dae_query_q101():
         minParentsCalled=-1,
         maxAltFreqPrcnt=-1,
         minAltFreqPrcnt=-1,
-        geneSyms='CHD8')
+        geneSyms=['CHD8'])
 
     res = [v for v in tvs]
     return res
