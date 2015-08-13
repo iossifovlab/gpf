@@ -4,7 +4,7 @@ Created on Jul 16, 2015
 @author: lubo
 '''
 import numpy as np
-from DAE import vDB
+# from DAE import vDB
 import tables
 import copy
 import operator
@@ -69,9 +69,10 @@ class TransmissionQuery(object):
 
     def __init__(self, study_name):
         self.study_name = study_name
-        self.hdf5_filename = vDB._config.get(
-                    'study.' + self.study_name,
-                    'transmittedVariants.hdf5')
+        # self.hdf5_filename = vDB._config.get(
+        #             'study.' + self.study_name,
+        #             'transmittedVariants.hdf5')
+        self.hdf5_filename = '{}.hdf5'.format(study_name)
         self.hdf5_fh = tables.open_file(self.hdf5_filename, "r",
                                         filters=self.filters)
 
