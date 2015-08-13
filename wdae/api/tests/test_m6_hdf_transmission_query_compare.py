@@ -123,11 +123,16 @@ class Test(unittest.TestCase):
         tq['family_ids'] = ['14474', '14346']
         vs = tq.execute_family_query()
         self.assertIsNotNone(vs)
-        self.assertEquals(6727, len(vs))
+        self.assertEquals(57839, len(vs))
 
         transmitted_study = vDB.get_study("w1202s766e611")
         tvs = transmitted_study.get_transmitted_variants(
-            familyIds=['14474', '14346'])
+            familyIds=['14474', '14346'],
+            minParentsCalled=-1,
+            maxAltFreqPrcnt=-1,
+            minAltFreqPrcnt=-1,
+            effectTypes=None
+            )
         res = [v for v in tvs]
         self.assertEquals(len(res), len(vs))
 

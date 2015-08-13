@@ -36,7 +36,7 @@ CHILD_TYPES = tables.Enum(['prb', 'sib'])
 
 
 class TransmissionQuery(object):
-    filters = tables.Filters(complevel=0)
+    filters = tables.Filters(complevel=1)
     keys = {'variant_types': list,
             'effect_types': list,
             'gene_syms': list,
@@ -78,8 +78,6 @@ class TransmissionQuery(object):
 
         self.query = copy.deepcopy(self.default_query)
 
-        self.ewhere = []
-
     def __getitem__(self, key):
         if key not in self.keys:
             raise KeyError('unexpected key: {}'.format(key))
@@ -91,7 +89,6 @@ class TransmissionQuery(object):
         self.query[key] = value
 
     def clear_query(self):
-        self.ewhere = []
         self.query = copy.deepcopy(self.default_query)
 
     def execute_effect_query(self):
@@ -249,7 +246,7 @@ class TransmissionQuery(object):
             if clause:
                 where.append(clause)
 
-        where.append(self.build_freq_where())
+        # where.append(self.build_freq_where())
 
         where = map(lambda s: ' ( {} ) '.format(s), where)
         where = ' & '.join(where)

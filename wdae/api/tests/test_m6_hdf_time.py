@@ -38,7 +38,7 @@ def dae_query_q201():
         minParentsCalled=-1,
         maxAltFreqPrcnt=-1,
         minAltFreqPrcnt=-1,
-        familyIds='13785')
+        familyIds=['13785'])
 
     res = [v for v in tvs]
     return res
@@ -50,7 +50,7 @@ def dae_query_q202():
         minParentsCalled=-1,
         maxAltFreqPrcnt=-1,
         minAltFreqPrcnt=-1,
-        familyIds='13785',
+        familyIds=['13785'],
         TMM_ALL=True)
 
     res = [v for v in tvs]
@@ -66,7 +66,7 @@ def dae_query_q301():
         effectTypes=['splice-site', 'frame-shift', 'nonsense',
                      'no-frame-shift-newStop',
                      'noStart', 'noEnd', 'missense', 'no-frame-shift', 'CDS'],
-        familyIds='13785')
+        familyIds=['13785'])
 
     res = [v for v in tvs]
     return res
