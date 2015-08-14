@@ -197,11 +197,7 @@ class TransmissionIndexBuilder(object):
         fbegin = self.fnrow
         for fid, bs, c in pfd:
             vs = self.create_family_variant(summary_variant, (fid, bs, c))
-            # augment_vars(vs)
             self.build_family_row(self.family_row, vals, vs)
-            # ftable = self.h5fh.root.families._f_get_child('f{}'.format(fid))
-            # self.build_family_row(ftable.row, vals, vs)
-            # ftable.flush()
             self.fnrow += 1
 
         fend = self.fnrow
