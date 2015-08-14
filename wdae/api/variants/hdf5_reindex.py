@@ -5,6 +5,7 @@ Created on Aug 13, 2015
 '''
 import tables
 from api.variants.hdf5_builder import FamilyVariants
+from DAE import vDB
 
 
 class FamilyIndex(tables.IsDescription):
@@ -18,6 +19,7 @@ class TransmissionQueryReindex(object):
 
     def __init__(self, study_name):
         self.study_name = study_name
+        self.study = vDB.get_study(self.study_name)
         # self.hdf5_filename = vDB._config.get(
         #             'study.' + self.study_name,
         #             'transmittedVariants.hdf5')
@@ -42,48 +44,20 @@ class TransmissionQueryReindex(object):
         frows = ftable.read_where('family_id == "13785"')
         return frows
 
-#     def build_index_family_row(self, family_id, index):
-#         if 'families' not in self.hdf5_fh.root:
-#             fgroup = self.hdf5_fh.create_group('/', 'families',
-#                                                'Families Index')
-#         else:
-#             fgroup = self.hdf5_fh.root.families
-#
-#         fid = "i{}".format(family_id)
-#         if fid not in fgroup:
-#             print "create family index table"
-#             findex = self.hdf5_fh.create_table(fgroup, fid,
-#                                                FamilyIndex, 'Family Index')
-#         else:
-#             findex = self.hdf5_fh.root.families._f_get_child(fid)
-#         row = findex.row
-#         row['family_id'] = family_id
-#         row['index'] = index
-#         row.append()
-#         # findex.flush()
-
     def build_index_for_family_variants(self):
-        ftable = self.hdf5_fh.root.variants.family
-        for (n, frow) in enumerate(ftable):
-            family_id = frow['family_id']
-            self.build_index_family_row(family_id, n)
-            if n % 10000 == 0:
-                print "index", n
-
-        for f in self.hdf5_fh.root.families:
-            f.flush()
-
-    def build_single_family_index(self, family_id):
         if 'families' not in self.hdf5_fh.root:
             fgroup = self.hdf5_fh.create_group('/', 'families',
                                                'Families Index')
         else:
             fgroup = self.hdf5_fh.root.families
+        for family_id in self.study.families.keys():
+            print "building index for ", family_id
+            self.build_single_family_index(fgroup, family_id)
+
+    def build_single_family_index(self, fgroup, family_id):
         fname = 'f{}'.format(family_id)
         if fname in fgroup:
             findex = fgroup._f_get_child(fname)
-            # for f in findex:
-            #     f._f_remove()
             findex._f_remove()
 
         ftable = self.hdf5_fh.root.variants.family
@@ -96,4 +70,4 @@ class TransmissionQueryReindex(object):
 
 if __name__ == "__main__":
     tqr = TransmissionQueryReindex('w1202s766e611')
-    tqr.build_single_family_index('13785')
+    tqr.build_index_for_family_variants()
