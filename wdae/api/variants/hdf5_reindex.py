@@ -4,7 +4,7 @@ Created on Aug 13, 2015
 @author: lubo
 '''
 import tables
-from api.variants.hdf5_builder import FamilyVariants
+from api.variants.hdf5_builder import FamilyVariants, SummaryVariants
 from DAE import vDB
 
 
@@ -67,7 +67,36 @@ class TransmissionQueryReindex(object):
         findex.append(frows)
         findex.flush()
 
+    chromes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
+               '11', '12', '13', '14', '15', '16', '17', '18', '19', '20',
+               '21', '22', 'X']
+
+    def build_index_for_chromes(self):
+        if 'chromes' not in self.hdf5_fh.root:
+            chgroup = self.hdf5_fh.create_group('/', 'chromes',
+                                                'chromes Index')
+        else:
+            chgroup = self.hdf5_fh.root.chromes
+
+        stable = self.hdf5_fh.root.variants.summary
+
+        for chrome in self.chromes:
+            print "building index for chrome ", chrome
+            chname = "ch{}".format(chrome)
+            if chname in chgroup:
+                chindex = chgroup._f_get_child(chname)
+                chindex._f_remove()
+
+            chindex = self.hdf5_fh.create_table(
+                chgroup, chname,
+                SummaryVariants, 'Chrome {} Index'.format(chrome))
+
+            srows = stable.read_where('chrome == "{}"'.format(chrome))
+            chindex.append(srows)
+            chindex.flush()
+
 
 if __name__ == "__main__":
     tqr = TransmissionQueryReindex('w1202s766e611')
-    tqr.build_index_for_family_variants()
+    # tqr.build_index_for_family_variants()
+    tqr.build_index_for_chromes()
