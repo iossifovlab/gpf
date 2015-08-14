@@ -150,7 +150,7 @@ class TransmissionQueryReindex(object):
         else:
             ggroup = self.hdf5_fh.root.genes
         self.build_index_for_gene_names(ggroup)
-        self.build_index_for_gene_variants(ggroup)
+        # self.build_index_for_gene_variants(ggroup)
 
 
 if __name__ == "__main__":
