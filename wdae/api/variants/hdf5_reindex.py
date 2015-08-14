@@ -98,5 +98,5 @@ class TransmissionQueryReindex(object):
 
 if __name__ == "__main__":
     tqr = TransmissionQueryReindex('w1202s766e611')
-    # tqr.build_index_for_family_variants()
+    tqr.build_index_for_family_variants()
     tqr.build_index_for_chromes()
