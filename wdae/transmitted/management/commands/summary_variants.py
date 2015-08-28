@@ -6,7 +6,7 @@ Created on Aug 28, 2015
 from django.core.management.base import BaseCommand, CommandError
 from DAE import vDB
 import gzip
-from transmitted.models import SummaryVariant
+from transmitted.models import SummaryVariant, GeneEffectVariant
 from VariantsDB import Variant, parseGeneEffect
 
 
@@ -96,8 +96,11 @@ class Command(BaseCommand):
                 evvals = self.create_effect_variant_dict(vals)
                 svvals = self.create_summary_variant_dict(nrow, vals, evvals)
                 sv = SummaryVariant.objects.create(**svvals)
-
                 sv.save()
+                for ev in evvals:
+                    gev = GeneEffectVariant.objects.create(
+                        summary_variant=sv, **ev)
+                    gev.save()
 
                 nrow += 1
                 if nrow % 100 == 0:
