@@ -40,11 +40,11 @@ class SummaryVariant(models.Model):
     variant_type = models.CharField(max_length=4,
                                     choices=VARIANT_CHOICES)
 
-#     effect_type = models.CharField(max_length=3,
-#                                    choices=EFFECT_CHOICES)
-#     effect_gene = models.CharField(max_length=32, db_index=True)
-#
-#     effect_count = models.IntegerField()
+    effect_type = models.CharField(max_length=3,
+                                   choices=EFFECT_CHOICES, null=True)
+    effect_gene = models.CharField(max_length=32, db_index=True, null=True)
+
+    effect_count = models.IntegerField(default=0)
 
     n_par_called = models.IntegerField()
     n_alt_alls = models.IntegerField()

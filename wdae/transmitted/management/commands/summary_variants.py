@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 from DAE import vDB
 import gzip
 from transmitted.models import SummaryVariant
-from VariantsDB import Variant
+from VariantsDB import Variant, parseGeneEffect
 
 
 class Command(BaseCommand):
@@ -40,6 +40,45 @@ class Command(BaseCommand):
             v.popType = 'common'
         return v
 
+    def create_summary_variant_dict(self, nrow, vals, evvals):
+        res = {
+            'ln': nrow,
+            'chrome': vals['chr'],
+            'position': int(vals['position']),
+            'variant': vals['variant'],
+            'variant_type': vals['variant'][:3],
+            'effect_type': evvals[0]['effect_type'] if evvals else None,
+            'effect_gene': evvals[0]['symbol'] if evvals else None,
+            'effect_count': len(evvals),
+            'n_par_called': int(vals['all.nParCalled']),
+            'n_alt_alls': int(vals['all.nAltAlls']),
+            'alt_freq': float(vals['all.altFreq']),
+            'prcnt_par_called': float(vals['all.prcntParCalled']),
+            'seg_dups': int(vals['segDups']),
+            'hw': float(vals['HW']),
+            'ssc_freq': self.safe_float(vals['SSC-freq']),
+            'evs_freq': self.safe_float(vals['EVS-freq']),
+            'e65_freq': self.safe_float(vals['E65-freq']),
+        }
+        return res
+
+    def create_effect_variant_dict(self, vals):
+        gene_effects = parseGeneEffect(vals['effectGene'])
+        variant_type = vals['variant'][0:3]
+
+        res = []
+        for ge in gene_effects:
+            eres = {
+                'symbol': ge['sym'],
+                'effect_type': ge['eff'],
+                'variant_type': variant_type,
+                'n_par_called': int(vals['all.nParCalled']),
+                'n_alt_alls': int(vals['all.nAltAlls']),
+                'alt_freq': float(vals['all.altFreq']),
+            }
+            res.append(eres)
+        return res
+
     def handle(self, *args, **options):
         if(len(args) != 1):
             raise CommandError('Exactly one argument expected')
@@ -54,26 +93,12 @@ class Command(BaseCommand):
             for line in fh:
                 data = line.strip("\r\n").split("\t")
                 vals = dict(zip(column_names, data))
-                sv = SummaryVariant.objects.create(
-                    ln=nrow,
-                    chrome=vals['chr'],
-                    position=int(vals['position']),
-                    variant=vals['variant'],
-                    variant_type=vals['variant'][:3],
-                    # effect_type=vals['effectType'],
-                    n_par_called=int(vals['all.nParCalled']),
-                    n_alt_alls=int(vals['all.nAltAlls']),
-                    alt_freq=float(vals['all.altFreq']),
+                evvals = self.create_effect_variant_dict(vals)
+                svvals = self.create_summary_variant_dict(nrow, vals, evvals)
+                sv = SummaryVariant.objects.create(**svvals)
 
-                    prcnt_par_called=float(vals['all.prcntParCalled']),
-                    seg_dups=int(vals['segDups']),
-                    hw=float(vals['HW']),
-
-                    ssc_freq=self.safe_float(vals['SSC-freq']),
-                    evs_freq=self.safe_float(vals['EVS-freq']),
-                    e65_freq=self.safe_float(vals['E65-freq']),
-                )
                 sv.save()
+
                 nrow += 1
                 if nrow % 100 == 0:
                     print("line: {}".format(nrow))
