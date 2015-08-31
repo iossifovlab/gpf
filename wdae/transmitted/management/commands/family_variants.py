@@ -177,7 +177,7 @@ class Command(BaseCommand):
             column_names = fh.readline().rstrip().split('\t')
             tmfh.readline()  # skip column names in too may family file
 
-            nrow = 0
+            nrow = 1
             for line in fh:
                 data = line.strip("\r\n").split("\t")
                 vals = dict(zip(column_names, data))
