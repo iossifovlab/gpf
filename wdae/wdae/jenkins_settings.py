@@ -7,7 +7,6 @@ from .settings import *  # @UnusedWildImport
 
 
 INSTALLED_APPS += [
-    'transmitted',
     'django_nose',
 ]
 
