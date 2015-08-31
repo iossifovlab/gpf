@@ -189,14 +189,20 @@ class Command(BaseCommand):
 
                 sv = SummaryVariant.objects.create(**svvals)
                 sv.save()
+
+                evs = []
                 for ev in evvals:
-                    gev = GeneEffectVariant.objects.create(
+                    gev = GeneEffectVariant(
                         summary_variant=sv, **ev)
-                    gev.save()
+                    evs.append(gev)
+                GeneEffectVariant.objects.bulk_create(evs)
+
+                fvs = []
                 for f in fvvals:
-                    fv = FamilyVariant.objects.create(
+                    fv = FamilyVariant(
                         summary_variant=sv, **f)
-                    fv.save()
+                    fvs.append(fv)
+                FamilyVariant.objects.bulk_create(fvs)
 
                 nrow += 1
                 if nrow % 100 == 0:
