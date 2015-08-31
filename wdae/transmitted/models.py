@@ -3,45 +3,15 @@ from django.db import models
 # Create your models here.
 
 
-EFFECT_CHOICES = (
-    ('1', "3'UTR",),
-    ('2', "3'UTR-intron",),
-    ('3', "5'UTR",),
-    ('4', "5'UTR-intron",),
-    ('5', "frame-shift",),
-    ('6', "intergenic",),
-    ('7', "intron",),
-    ('7', "missense",),
-    ('9', "no-frame-shift",),
-    ('10', "no-frame-shift-newStop",),
-    ('11', "noEnd",),
-    ('12', "noStart",),
-    ('13', "non-coding",),
-    ('14', "non-coding-intron",),
-    ('15', "nonsense",),
-    ('16', "splice-site",),
-    ('17', "synonymous",),
-)
-
-VARIANT_CHOICES = (
-    ('del', 'del'),
-    ('ins', 'ins'),
-    ('sub', 'sub'),
-    ('cnv', 'CNV'),
-)
-
-
 class SummaryVariant(models.Model):
     ln = models.IntegerField(db_index=True)
 
     chrome = models.CharField(max_length=3, db_index=True)
     position = models.IntegerField()
     variant = models.CharField(max_length=45)
-    variant_type = models.CharField(max_length=4,
-                                    choices=VARIANT_CHOICES)
+    variant_type = models.CharField(max_length=4)
 
-    effect_type = models.CharField(max_length=3,
-                                   choices=EFFECT_CHOICES, null=True)
+    effect_type = models.CharField(max_length=32, null=True, db_index=True)
     effect_gene = models.CharField(max_length=32, db_index=True, null=True)
 
     effect_count = models.IntegerField(default=0)
@@ -63,11 +33,9 @@ class GeneEffectVariant(models.Model):
     summary_variant = models.ForeignKey(SummaryVariant,
                                         related_name="effects")
 
-    symbol = models.CharField(max_length=32, db_index=True)
-    effect_type = models.CharField(max_length=3,
-                                   choices=EFFECT_CHOICES)
-    variant_type = models.CharField(max_length=4,
-                                    choices=VARIANT_CHOICES)
+    symbol = models.CharField(max_length=32, db_index=True, null=True)
+    effect_type = models.CharField(max_length=32, db_index=True)
+    variant_type = models.CharField(max_length=4)
 
     n_par_called = models.IntegerField()
     n_alt_alls = models.IntegerField()

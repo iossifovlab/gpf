@@ -18,7 +18,7 @@ class Command(BaseCommand):
     @staticmethod
     def safe_float(s):
         if s.strip() == '':
-            return float('NaN')
+            return None
         else:
             return float(s)
 
@@ -65,6 +65,16 @@ class Command(BaseCommand):
     def create_effect_variant_dict(self, vals):
         gene_effects = parseGeneEffect(vals['effectGene'])
         variant_type = vals['variant'][0:3]
+
+        if len(gene_effects) == 0 and vals['effectGene'] == 'intergenic':
+            return [{
+                'symbol': None,
+                'effect_type': 'intergenic',
+                'variant_type': variant_type,
+                'n_par_called': int(vals['all.nParCalled']),
+                'n_alt_alls': int(vals['all.nAltAlls']),
+                'alt_freq': float(vals['all.altFreq']),
+            }]
 
         res = []
         for ge in gene_effects:
