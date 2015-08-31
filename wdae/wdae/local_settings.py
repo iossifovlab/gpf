@@ -1,5 +1,4 @@
 from django.conf import settings
-import os
 
 settings.INSTALLED_APPS += [
     'transmitted',
@@ -16,13 +15,14 @@ NOSE_ARGS = [
              '--verbosity=2',
 ]
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        "NAME": os.environ.get("DB_NAME", "seqpipe"),
-        'USER': os.environ.get("DB_USER", 'seqpipe'),
-        'PASSWORD': os.environ.get("DB_PASS", 'lae0suNu'),
-        'HOST': os.environ.get("DB_HOST", '127.0.0.1'),
-        'PORT': os.environ.get("DB_PORT", '3306'),
-    }
-}
+# import os
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         "NAME": os.environ.get("DB_NAME", "seqpipe"),
+#         'USER': os.environ.get("DB_USER", 'seqpipe'),
+#         'PASSWORD': os.environ.get("DB_PASS", 'lae0suNu'),
+#         'HOST': os.environ.get("DB_HOST", '127.0.0.1'),
+#         'PORT': os.environ.get("DB_PORT", '3306'),
+#     }
+# }
