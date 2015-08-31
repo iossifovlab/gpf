@@ -40,3 +40,20 @@ class GeneEffectVariant(models.Model):
     n_par_called = models.IntegerField()
     n_alt_alls = models.IntegerField()
     alt_freq = models.FloatField()
+
+
+class FamilyVariant(models.Model):
+    summary_variant = models.ForeignKey(SummaryVariant,
+                                        related_name="family_variants")
+    family_id = models.CharField(max_length=16, db_index=True)
+
+    best = models.CharField(max_length=16)
+    counts = models.CharField(max_length=64)
+
+    in_mom = models.BooleanField(default=False)
+    in_dad = models.BooleanField(default=False)
+
+    in_prb = models.BooleanField(default=False)
+    in_prb_gender = models.CharField(max_length=1, null=True)
+    in_sib = models.BooleanField(default=False)
+    in_sib_gender = models.CharField(max_length=1, null=True)
