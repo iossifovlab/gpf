@@ -99,7 +99,7 @@ class Command(BaseCommand):
         summary_filename = self.get_summary_filename(study_name)
         with gzip.open(summary_filename, 'r') as fh:
             column_names = fh.readline().rstrip().split('\t')
-            nrow = 0
+            nrow = 1
             for line in fh:
                 data = line.strip("\r\n").split("\t")
                 vals = dict(zip(column_names, data))
