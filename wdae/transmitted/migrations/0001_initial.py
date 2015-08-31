@@ -11,6 +11,21 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+            name='FamilyVariant',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('family_id', models.CharField(max_length=16, db_index=True)),
+                ('best', models.CharField(max_length=16)),
+                ('counts', models.CharField(max_length=64)),
+                ('in_mom', models.BooleanField(default=False)),
+                ('in_dad', models.BooleanField(default=False)),
+                ('in_prb', models.BooleanField(default=False)),
+                ('in_prb_gender', models.CharField(max_length=1, null=True)),
+                ('in_sib', models.BooleanField(default=False)),
+                ('in_sib_gender', models.CharField(max_length=1, null=True)),
+            ],
+        ),
+        migrations.CreateModel(
             name='GeneEffectVariant',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
@@ -49,5 +64,10 @@ class Migration(migrations.Migration):
             model_name='geneeffectvariant',
             name='summary_variant',
             field=models.ForeignKey(related_name='effects', to='transmitted.SummaryVariant'),
+        ),
+        migrations.AddField(
+            model_name='familyvariant',
+            name='summary_variant',
+            field=models.ForeignKey(related_name='family_variants', to='transmitted.SummaryVariant'),
         ),
     ]
