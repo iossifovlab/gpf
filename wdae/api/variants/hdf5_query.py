@@ -4,10 +4,10 @@ Created on Jul 16, 2015
 @author: lubo
 '''
 import numpy as np
-from DAE import vDB
 import tables
 import copy
 import operator
+from DAE import vDB
 
 
 EFFECT_TYPES = tables.Enum([
@@ -72,12 +72,11 @@ class TransmissionQuery(object):
         self.hdf5_filename = vDB._config.get(
                     'study.' + self.study_name,
                     'transmittedVariants.hdf5')
+        # self.hdf5_filename = '{}.hdf5'.format(study_name)
         self.hdf5_fh = tables.open_file(self.hdf5_filename, "r",
                                         filters=self.filters)
 
         self.query = copy.deepcopy(self.default_query)
-
-        self.ewhere = []
 
     def __getitem__(self, key):
         if key not in self.keys:
@@ -90,7 +89,6 @@ class TransmissionQuery(object):
         self.query[key] = value
 
     def clear_query(self):
-        self.ewhere = []
         self.query = copy.deepcopy(self.default_query)
 
     def execute_effect_query(self):
@@ -99,6 +97,7 @@ class TransmissionQuery(object):
 
         where = self.build_effect_query_where()
         where = where.strip()
+        print "EFFECT:", where
         eres = etable.read_where(where)
         vrow = np.unique(eres['vrow'])
         return vtable[vrow]
@@ -114,7 +113,9 @@ class TransmissionQuery(object):
         if self['variant_types']:
             where.append(self.build_variant_types_where())
 
-        where.append(self.build_freq_where())
+        freq_where = self.build_freq_where()
+        if freq_where:
+            where.append(freq_where)
 
         where = map(lambda s: ' ( {} ) '.format(s), where)
         where = ' & '.join(where)
@@ -245,7 +246,7 @@ class TransmissionQuery(object):
             if clause:
                 where.append(clause)
 
-        where.append(self.build_freq_where())
+        # where.append(self.build_freq_where())
 
         where = map(lambda s: ' ( {} ) '.format(s), where)
         where = ' & '.join(where)
@@ -321,5 +322,6 @@ class TransmissionQuery(object):
             vf = np.vectorize(lambda f: f)
             idx = np.apply_along_axis(vf, 0, frows['in_prb'])
             res.append(frows[idx])
+            # res.append(frows)
         return np.concatenate(res, axis=0)
         # return itertools.chain(*res)
