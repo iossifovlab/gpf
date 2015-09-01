@@ -18,10 +18,10 @@ from django.contrib import admin
 admin.autodiscover()
 urlpatterns = patterns(
     '',
-    url(r'^old$', 'variants.views.index'),
+    url(r'^$', 'variants.views.index'),
     url(r'^api/', include('api.urls')),
-    # url(r'^admin/', include(admin.site.urls) ),
-    # url(r'^angular/', 'variants_angular.views.index'),
+    url(r'^admin/', include(admin.site.urls)),
+    url(r'^angular/', 'variants_angular.views.index'),
 )
 
 # try:
