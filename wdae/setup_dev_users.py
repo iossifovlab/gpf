@@ -2,6 +2,7 @@
 
 import os
 import sys
+from django.contrib.auth import get_user_model
 
 
 # Add the project directory to system path
@@ -9,9 +10,8 @@ proj_dir = os.path.expanduser('./wdae')
 
 sys.path.append(proj_dir)
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.default_settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.settings")
 
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 u, _ = User.objects.get_or_create(email='admin@iossifovlab.com')
