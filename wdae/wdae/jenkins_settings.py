@@ -3,7 +3,7 @@ Created on Aug 31, 2015
 
 @author: lubo
 '''
-from .settings import *  # @UnusedWildImport
+from wdae.default_settings import *  # @UnusedWildImport
 
 
 INSTALLED_APPS += [
