@@ -59,6 +59,7 @@ class Test(APITestCase):
         self.assertIn('phenotypes', data)
         self.assertIn('children_counters', data)
         self.assertIn('families_counters', data)
+        self.assertIn('families_total', data)
 
     def test_study_variant_report_iossifov2014_denovo_report(self):
         url = '/api/reports/variant_reports/IossifovWE2014'
