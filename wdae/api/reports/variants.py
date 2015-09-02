@@ -119,6 +119,7 @@ class FamiliesCounters(CounterBase):
         super(FamiliesCounters, self).__init__(phenotype)
         if phenotype == 'unaffected':
             raise ValueError("unexpected phenotype '{}'".format(phenotype))
+        self.total = 0
 
     def build(self, all_studies):
         studies = self.filter_studies(all_studies)
@@ -134,6 +135,7 @@ class FamiliesCounters(CounterBase):
             pedigree = [self.phenotype,
                         self.family_configuration_to_pedigree(fconf)]
             self.data[fconf] = (pedigree, count)
+            self.total += count
 
     def get_counter(self, fconf):
         return self.data.get(fconf, 0)
@@ -169,13 +171,16 @@ class FamiliesReport(ReportBase, Precompute):
         super(FamiliesReport, self).__init__(study_name)
         self.families_counters = []
         self.children_counters = []
+        self.families_total = 0
 
     def build(self):
+        self.families_total = 0
         for phenotype in self.phenotypes[:-1]:
             assert phenotype != 'unaffected'
             fc = FamiliesCounters(phenotype)
             fc.build(self.studies)
             self.families_counters.append(fc)
+            self.families_total += fc.total
 
         for phenotype in self.phenotypes:
             cc = ChildrenCounter(phenotype)
@@ -200,12 +205,16 @@ class FamiliesReport(ReportBase, Precompute):
     def serialize(self):
         fc = zlib.compress(cPickle.dumps(self.families_counters))
         cc = zlib.compress(cPickle.dumps(self.children_counters))
+        ft = zlib.compress(cPickle.dumps(self.families_total))
         return {'families_counters': fc,
+                'families_total': ft,
                 'children_counters': cc}
 
     def deserialize(self, data):
         fc = data['families_counters']
         self.families_counters = cPickle.loads(zlib.decompress(fc))
+        ft = data['families_total']
+        self.families_total = cPickle.loads(zlib.decompress(ft))
         cc = data['children_counters']
         self.children_counters = cPickle.loads(zlib.decompress(cc))
 

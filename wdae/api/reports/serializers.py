@@ -29,6 +29,7 @@ class FamilyReportSerializer(serializers.Serializer):
     phenotypes = serializers.ListField()
     children_counters = ChildrenCounterSerializer(many=True)
     families_counters = FamiliesCountersSerializer(many=True)
+    families_total = serializers.IntegerField()
 
 
 class DenovoReportSerializer(serializers.Serializer):
