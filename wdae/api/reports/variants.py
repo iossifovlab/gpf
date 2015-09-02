@@ -258,6 +258,9 @@ class DenovoEventsCounter(CounterBase):
                 ret.append(v)
         return ret
 
+    def is_zeroes(self):
+        return self.events_count == 0 and self.events_children_count == 0
+
     def build(self, all_studies):
         studies = self.filter_studies(all_studies)
         vs = vDB.get_denovo_variants(studies,
@@ -283,6 +286,14 @@ class DenovoEventsReport(ReportBase, Precompute):
         super(DenovoEventsReport, self).__init__(study_name)
         self.families_report = families_report
         self.rows = {}
+        self._effect_groups = super(DenovoEventsReport, self).effect_groups()
+        self._effect_types = super(DenovoEventsReport, self).effect_types()
+
+    def effect_groups(self):
+        return self._effect_groups
+
+    def effect_types(self):
+        return self._effect_types
 
     def build_row(self, effect_type):
         row = {}
@@ -292,6 +303,23 @@ class DenovoEventsReport(ReportBase, Precompute):
             ec.build(self.studies)
             row[pheno] = ec
         return row
+
+    def clear_empty_rows(self):
+        effect_groups = self.effect_groups()
+        effect_types = self.effect_types()
+        for et, row in self.rows.items():
+            all_zeroes = True
+            for ec in row.values():
+                if not ec.is_zeroes():
+                    all_zeroes = False
+                    break
+            if all_zeroes:
+                if et in effect_groups:
+                    effect_groups.remove(et)
+                elif et in effect_types:
+                    effect_types.remove(et)
+        self.effect_groups = effect_groups
+        self.effect_types = effect_types
 
     def build(self):
         rows = {}
@@ -303,6 +331,7 @@ class DenovoEventsReport(ReportBase, Precompute):
         for effect_type in self.effect_types():
             rows[effect_type] = self.build_row(effect_type)
         self.rows.update(rows)
+        self.clear_empty_rows()
 
     def precompute(self):
         self.build()
@@ -314,6 +343,7 @@ class DenovoEventsReport(ReportBase, Precompute):
     def deserialize(self, data):
         rows = data['rows']
         self.rows = cPickle.loads(zlib.decompress(rows))
+        self.clear_empty_rows()
 
 
 class StudyVariantReports(ReportBase, Precompute):
