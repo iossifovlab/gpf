@@ -10,8 +10,7 @@ from DAE import vDB
 from api.precompute.register import Precompute
 import cPickle
 import zlib
-from api.studies import get_denovo_studies_names
-# get_transmitted_studies_names
+from api.studies import get_denovo_studies_names, get_transmitted_studies_names
 
 
 class CommonBase(object):
@@ -353,14 +352,20 @@ class StudyVariantReports(ReportBase, Precompute):
         self.families_report = None
         self.denovo_report = None
 
+    def has_denovo(self):
+        return any([st.has_denovo for st in self.studies])
+
     def build(self):
         self.families_report = FamiliesReport(self.study_name)
         self.families_report.build()
 
-        self.denovo_report = DenovoEventsReport(
-            self.study_name,
-            self.families_report)
-        self.denovo_report.build()
+        if self.has_denovo():
+            self.denovo_report = DenovoEventsReport(
+                self.study_name,
+                self.families_report)
+            self.denovo_report.build()
+        else:
+            self.denovo_report = None
 
     def precompute(self):
         self.build()
@@ -368,16 +373,18 @@ class StudyVariantReports(ReportBase, Precompute):
     def serialize(self):
         return {'study_name': self.study_name,
                 'families_report': self.families_report.serialize(),
-                'denovo_report': self.denovo_report.serialize()}
+                'denovo_report': self.denovo_report.serialize() if self.denovo_report else None}
 
     def deserialize(self, data):
         assert self.study_name == data['study_name']
         self.families_report = FamiliesReport(self.study_name)
         self.families_report.deserialize(data['families_report'])
-        self.denovo_report = DenovoEventsReport(self.study_name,
-                                                self.families_report)
-        self.denovo_report.deserialize(data['denovo_report'])
-
+        if 'denovo_report' in data and data['denovo_report']:
+            self.denovo_report = DenovoEventsReport(self.study_name,
+                                                    self.families_report)
+            self.denovo_report.deserialize(data['denovo_report'])
+        else:
+            self.denovo_report = None
 
 class VariantReports(Precompute):
     def __init__(self):
@@ -385,9 +392,7 @@ class VariantReports(Precompute):
 
     @property
     def studies(self):
-        return get_denovo_studies_names() + \
-            []
-    # get_transmitted_studies_names()
+        return get_denovo_studies_names() + get_transmitted_studies_names()
 
     def precompute(self):
         data = {}
