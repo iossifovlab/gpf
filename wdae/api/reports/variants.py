@@ -144,7 +144,9 @@ class FamiliesCounters(CounterBase):
 
     @property
     def counters(self):
-        return self.data.values()
+        res = self.data.values()[:]
+        res = sorted(res, key=lambda v: (-v[1]))
+        return res
 
 
 class ReportBase(CommonBase):
@@ -385,6 +387,7 @@ class StudyVariantReports(ReportBase, Precompute):
             self.denovo_report.deserialize(data['denovo_report'])
         else:
             self.denovo_report = None
+
 
 class VariantReports(Precompute):
     def __init__(self):
