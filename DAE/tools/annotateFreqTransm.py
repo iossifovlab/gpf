@@ -5,6 +5,7 @@ from heapq import heappush,heappop
 import pysam
 import os
 import sys
+from DAE import *
 
 # tF = "/home/iossifov/work/T115/data-dev/bbbb/w1202s766e611/transmissionIndex-HW-DNRM.txt.bgz"
 fF = "/home/iossifov/work/T115/data-dev/bbbb/EVS/EVS.format.Both.txt.bgz"
@@ -291,15 +292,13 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         tFN = sys.argv[1]
 
-    accessMode = "iterative"
+    accessMode = "direct"
     if len(sys.argv) > 2:
         accessMode = sys.argv[2]
 
-    freqAttFN = "freqAtts.txt" 
+    freqAttFN = vDB._config.get("DEFAULT","wd") + "/freqAtts.txt" 
     if len(sys.argv) > 3:
         freqAttFN = sys.argv[3]
-
-    dbDir = os.environ["DAE_DB_DIR"]
 
 
     modeConstructor = {"direct": DirectAccess, "iterative":IterativeAccess} 
@@ -318,7 +317,7 @@ if __name__ == "__main__":
             tANI = -1
             outHdr.append(tAN)
         
-        AF = modeConstructor[accessMode](dbDir + "/" + ffN,fAT)
+        AF = modeConstructor[accessMode](vDB._config.get("DEFAULT","studyDir") + "/" + ffN,fAT)
         fFS.append((AF,tANI))
 
     print "\t".join(outHdr)

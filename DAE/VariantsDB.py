@@ -22,6 +22,7 @@ from VariantAnnotation import get_effect_types_set
 # import itertools
 from RegionOperations import Region,collapse
 import operator
+import pickle
 
 def regions_matcher(regions):
     regs = regions.split(',')
@@ -565,6 +566,7 @@ class Study:
         fmMethod = {
             "quadReportSSC": self._load_family_data_from_quad_report,
             "simple": self._load_family_data_from_simple,
+            "pickle": self._load_family_data_from_pickle,
             "StateWE2012-data1-format": self._load_family_data_from_StateWE2012_data1,
             "EichlerWE2012-SupTab1-format": self._load_family_data_from_EichlerWE2012_SupTab1,
             "DalyWE2012-SD-Trios": self._load_family_data_from_DalyWE2012_SD_Trios,
@@ -575,7 +577,7 @@ class Study:
 
 
         if fdFormat not in fmMethod:
-            raise Exception("Unknown Family Fdef __init__(self,vdb,name):ile Format: " + fdFormat)
+            raise Exception("Unknown Family File Format: " + fdFormat)
 
         self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
 
@@ -627,6 +629,9 @@ class Study:
             families[f.familyId] = f
         return families,{}
 
+    def _load_family_data_from_pickle(self,fn):
+        return pickle.load(open(fn,"rb")) 
+        
 
     def _load_family_data_from_simple(self,reportF):
         dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments="asdgasdgasdga")
