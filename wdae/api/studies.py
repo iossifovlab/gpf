@@ -1,6 +1,7 @@
 from DAE import vDB
 from report_variants import build_header_summary
 
+
 def get_transmitted_studies_names():
     r = []
     for stN in vDB.get_study_names():
@@ -12,7 +13,7 @@ def get_transmitted_studies_names():
             continue
         r.append((int(order), stN, st.description))
 
-    r = [(stN, dsc) for o, stN, dsc in sorted(r)]
+    r = [(stN, dsc) for _o, stN, dsc in sorted(r)]
     return r
 
 
@@ -35,26 +36,15 @@ def get_denovo_studies_names():
             continue
         r.append((int(order), stN, st.description))
 
-    r = [(stN, dsc) for o, stN, dsc in sorted(r)]
+    r = [(stN, dsc) for _o, stN, dsc in sorted(r)]
     return r
-
-    
-# def __build_studies_family_stats(fams):
-    
-#     fam_buff = defaultdict(dict)
-#     for study in studies:
-#         for f in study.families.values():
-#             for p in [f.memberInOrder[c] for c in xrange(2, len(f.memberInOrder))]:
-#                 if p.personId not in fam_buff[f.familyId]:
-#                     fam_buff[f.familyId][p.personId] = p
-#     return fam_buff
 
 
 def __build_studies_summaries(studies):
     phenotype = set()
     study_type = set()
     study_year = set()
-    pmids = list()
+    # pmids = list()
 
     # fams = set()
     # prbs = set()
@@ -62,7 +52,7 @@ def __build_studies_summaries(studies):
 
     has_denovo = False
     has_transmitted = False
-    
+
     for study in studies:
         if study.get_attr('study.phenotype'):
             phenotype.add(study.get_attr('study.phenotype'))
@@ -70,7 +60,7 @@ def __build_studies_summaries(studies):
             study_type.add(study.get_attr('study.type'))
         if study.get_attr('study.year'):
             study_year.add(study.get_attr('study.year'))
-        
+
         # fams = fams.union(study.families.keys())
         has_denovo = has_denovo or study.has_denovo
         has_transmitted = has_transmitted or study.has_transmitted
@@ -87,9 +77,8 @@ def __build_studies_summaries(studies):
         study = studies[0]
         if study.get_attr('study.pmid'):
             pub_med = study.get_attr('study.pmid')
-        
-    fams_stat = build_header_summary(studies)
 
+    fams_stat = build_header_summary(studies)
 
     return [', '.join(phenotype),
             ', '.join(study_type),
@@ -100,6 +89,7 @@ def __build_studies_summaries(studies):
             fams_stat[2]['sib'],
             has_denovo,
             has_transmitted]
+
 
 def __build_denovo_studies_summaries():
     r = []
@@ -112,10 +102,10 @@ def __build_denovo_studies_summaries():
         studies_names = ','.join(group.studyNames)
         studies = vDB.get_studies(studies_names)
         summary = [study_group_name,
-                   "%s (%s)" % (group.description, 
+                   "%s (%s)" % (group.description,
                                 studies_names.replace(',', ', '))]
         summary.extend(__build_studies_summaries(studies))
-        
+
         r.append((int(order), summary))
 
     for study_name in vDB.get_study_names():
@@ -130,9 +120,9 @@ def __build_denovo_studies_summaries():
 
         r.append((int(order), summary))
 
-    r = [s for o, s in sorted(r)]
+    r = [s for _o, s in sorted(r)]
     return r
-    
+
 
 def __build_transmitted_studies_summaries():
     r = []
@@ -150,7 +140,7 @@ def __build_transmitted_studies_summaries():
 
         r.append((int(order), summary))
 
-    r = [s for o, s in sorted(r)]
+    r = [s for _o, s in sorted(r)]
     return r
 
 
@@ -170,4 +160,3 @@ def get_studies_summaries():
                         "denovo",
                         "transmitted"],
             "summaries": summaries}
-

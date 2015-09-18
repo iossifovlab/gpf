@@ -10,39 +10,38 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.decorators import api_view, parser_classes, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, parser_classes, \
+    authentication_classes, permission_classes
 from rest_framework.parsers import JSONParser, FormParser
 # from rest_framework import serializers
 from rest_framework import status
+from api.report_pheno import get_supported_studies, get_supported_measures, \
+    pheno_calc, pheno_query
 
 from DAE import vDB
 from DAE import giDB
 from VariantAnnotation import get_effect_types
 
 import itertools
-import logging
 import string
-import operator
 # import uuid
 
-from query_variants import do_query_variants, \
+from api.query.query_variants import do_query_variants, \
     get_child_types, get_variant_types, \
     join_line
 
-from query_prepare import prepare_ssc_filter
-
-from dae_query import prepare_summary, load_gene_set, load_gene_set2
+from dae_query import prepare_summary, load_gene_set2
 
 from report_variants import build_stats
-from enrichment_query import \
-    enrichment_results_by_phenotype, \
-    enrichment_prepare
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names, \
     get_studies_summaries
 
 from models import VerificationPath
 from serializers import UserSerializer
+from api.logger import LOGGER, log_filter
+from api.common.effect_types import EFFECT_GROUPS, build_effect_type_filter
+
 
 @receiver(post_save, sender=get_user_model())
 def create_auth_token(sender, instance=None, created=False, **kwargs):
@@ -62,20 +61,6 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 #             headers['Access-Control-Allow-Origin']='*'
 #         RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
 
-logger = logging.getLogger('wdae.api')
-
-def log_filter(request, message):
-    request_method = getattr(request, 'method', '-')
-    path_info = getattr(request, 'path_info', '-')
-    # Headers
-    META = getattr(request, 'META', {})
-    remote_addr = META.get('REMOTE_ADDR', '-')
-    # server_protocol = META.get('SERVER_PROTOCOL', '-')
-    # http_user_agent = META.get('HTTP_USER_AGENT', '-')
-    return "remote addr: %s; method: %s; path: %s; %s" % (remote_addr,
-                                                          request_method,
-                                                          path_info,
-                                                          message)
 
 @api_view(['GET'])
 def report_studies(request):
@@ -86,7 +71,6 @@ def report_studies(request):
 @api_view(['GET'])
 def studies_summaries(request):
     return Response(get_studies_summaries())
-
 
 
 @api_view(['GET'])
@@ -115,79 +99,6 @@ def transmitted_studies_list(request):
     return Response({"transmitted_studies": r})
 
 
-__EFFECT_TYPES = {
-    "Nonsense": ["nonsense"],
-    "Frame-shift": ["frame-shift"],
-    "Splice-site": ["splice-site"],
-    "Missense": ["missense"],
-    "Non-frame-shift": ["no-frame-shift"],
-    "noStart": ["noStart"],
-    "noEnd": ["noEnd"],
-    "Synonymous": ["synonymous"],
-    "Non coding": ["non-coding"],
-    "Intron": ["intron"],
-    "Intergenic": ["intergenic"],
-    "3'-UTR": ["3'UTR", "3'UTR-intron"],
-    "5'-UTR": ["5'UTR", "5'UTR-intron"],
-    "CNV": ["CNV+", "CNV-"],
-
-}
-
-
-__EFFECT_GROUPS = {
-    "coding":[
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-        "Missense",
-        "Non-frame-shift",
-        "noStart",
-        "noEnd",
-        "Synonymous",
-    ],
-    "noncoding": [
-        "Non coding",
-        "Intron",
-        "Intergenic",
-        "3'-UTR",
-        "5'-UTR",
-    ],
-    "cnv": [
-        "CNV+",
-        "CNV-"
-    ],
-    "lgds": [
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-    ],
-    "nonsynonymous": [
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-        "Missense",
-        "Non-frame-shift",
-        "noStart",
-        "noEnd",
-    ],
-    "utrs": [
-        "3'-UTR",
-        "5'-UTR",
-    ]
-
-}
-
-
-def build_effect_type_filter(data):
-    if "effectTypes" not in data:
-        return
-    effects_string = data['effectTypes']
-    effects = effects_string.split(',')
-    result_effects = reduce(operator.add,
-                            [__EFFECT_TYPES[et]  if et in __EFFECT_TYPES else [et] for et in effects])
-    data["effectTypes"] = ','.join(result_effects)
-
-
 @api_view(['GET'])
 def effect_types_filters(request):
     """
@@ -214,27 +125,28 @@ Example:
         effect_filter = 'all'
     else:
         effect_filter = string.lower(query_params['effectFilter'])
-    logger.info("effect_filter: %s", effect_filter)
+    LOGGER.info("effect_filter: %s", effect_filter)
     result = []
     if effect_filter == 'all':
-        result = __EFFECT_GROUPS['coding'] + __EFFECT_GROUPS['noncoding']
+        result = EFFECT_GROUPS['coding'] + EFFECT_GROUPS['noncoding']
     elif effect_filter == 'none':
         result = []
     elif effect_filter == 'lgds':
-        result = __EFFECT_GROUPS['lgds']
+        result = EFFECT_GROUPS['lgds']
     elif effect_filter == 'coding':
-        result = __EFFECT_GROUPS['coding']
+        result = EFFECT_GROUPS['coding']
     elif effect_filter == 'nonsynonymous':
-        result = __EFFECT_GROUPS['nonsynonymous']
+        result = EFFECT_GROUPS['nonsynonymous']
     elif effect_filter == 'utrs':
-        result = __EFFECT_GROUPS['utrs']
+        result = EFFECT_GROUPS['utrs']
     elif effect_filter == 'noncoding':
-        result = __EFFECT_GROUPS['noncoding']
+        result = EFFECT_GROUPS['noncoding']
     elif effect_filter == 'cnv':
-        result = __EFFECT_GROUPS['cnv']
+        result = EFFECT_GROUPS['cnv']
     else:
         result = "error: unsupported filter set name"
-        return Response({'effect_filter': result}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'effect_filter': result},
+                        status=status.HTTP_400_BAD_REQUEST)
     return Response({'effect_filter': result})
 
 
@@ -250,6 +162,7 @@ def chromes_effect_types(request):
     from VariantAnnotation import LOF, nonsyn
     return Response({"LoF": LOF,
                      "nonsyn": nonsyn})
+
 
 @api_view(['GET'])
 def variant_types_filters(request):
@@ -274,7 +187,7 @@ Example:
         return Response({'variant_filters': all_var_types})
 
     variant_filter = string.upper(query_params['variantFilter'])
-    logger.info("variant_filter: %s", variant_filter)
+    LOGGER.info("variant_filter: %s", variant_filter)
 
     all_var_types = ['sub', 'ins', 'del', 'CNV']
     result = all_var_types
@@ -285,10 +198,12 @@ Example:
     elif not variant_filter or variant_filter == "ALL":
         result = all_var_types
     else:
-        return Response({'variant_filters': "error: unsuported tab name (%s)" % variant_filter},
+        return Response({'variant_filters': "error: unsuported tab name (%s)" %
+                         variant_filter},
                         status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'variant_filters': result})
+
 
 @api_view(['GET'])
 def variant_types_list(request):
@@ -299,17 +214,22 @@ def variant_types_list(request):
     var_types = get_variant_types()
     return Response({'variant_types': var_types})
 
+
 @api_view(['GET'])
 def pheno_types_filters(request):
     query_params = request.QUERY_PARAMS
-    all_result = ['autism', 'congenital heart disease', 'epilepsy', 'intelectual disability',
-                  'schizophrenia','unaffected']
+    all_result = ['autism',
+                  'congenital heart disease',
+                  'epilepsy',
+                  'intelectual disability',
+                  'schizophrenia',
+                  'unaffected']
 
     if 'phenotypeFilter' not in query_params:
         return Response({'pheno_type_filters': all_result})
 
     phenotype_filter = string.upper(query_params['phenotypeFilter'])
-    logger.info("pheno_type_filters: %s", phenotype_filter)
+    LOGGER.info("pheno_type_filters: %s", phenotype_filter)
 
     if phenotype_filter == 'WHOLE EXOME':
         result = all_result
@@ -318,11 +238,12 @@ def pheno_types_filters(request):
     elif not phenotype_filter or phenotype_filter == "ALL":
         result = all_result
     else:
-        return Response({'pheno_type_filters': "error: unsuported pheno group name (%s)" % phenotype_filter},
+        return Response({'pheno_type_filters':
+                         "error: unsuported pheno group name (%s)" %
+                         phenotype_filter},
                         status=status.HTTP_400_BAD_REQUEST)
 
     return Response({'pheno_type_filters': result})
-
 
 
 @api_view(['GET'])
@@ -400,15 +321,27 @@ def __gene_set_response(query_params, gts, gt):
 
 
 @api_view(['GET'])
-def gene_set_list(request):
+def gene_set_list2(request):
+    """
+    Returns list of gene set.
+
+    Expected parameters are:
+
+    * `gene_set` - the name of the gene set group;
+    * `gene_set_phenotype` - if the gene set is `denovo`, we have to
+        pass the gene set phenotype.
+    """
     query_params = prepare_query_dict(request.QUERY_PARAMS)
     if 'gene_set' not in query_params:
         return Response({})
     gene_set = query_params['gene_set']
-    gene_name = query_params['gene_name'] if 'gene_name' in query_params else None
-    study_name = str(query_params['study']) if 'study' in query_params else None
+    gene_set_phenotype = str(query_params['gene_set_phenotype']) \
+        if 'gene_set_phenotype' in query_params else None
 
-    gts = load_gene_set(gene_set, study_name)
+    gene_name = query_params['gene_name'] \
+        if 'gene_name' in query_params else None
+
+    gts = load_gene_set2(gene_set, gene_set_phenotype)
 
     if gts:
         return __gene_set_response(query_params, gts, gene_name)
@@ -417,39 +350,83 @@ def gene_set_list(request):
 
 
 @api_view(['GET'])
-def gene_set_list2(request):
+def gene_set_download(request):
     """
-    Returns list of gene set.
-    
+    Returns list of gene symbols for given gene set.
+
     Expected parameters are:
-    
+
     * `gene_set` - the name of the gene set group;
     * `gene_set_phenotype` - if the gene set is `denovo`, we have to
-        pass the gene set phenotype.
-        
+        pass the gene set phenotype;
+    * `gene_name` - the gene set name.
+
+    Returns:
+    Single column comma separated file to download.
     """
+    gene_syms = []
+
     query_params = prepare_query_dict(request.QUERY_PARAMS)
-    if 'gene_set' not in query_params:
-        return Response({})
-    gene_set = query_params['gene_set']
-    gene_set_phenotype = str(query_params['gene_set_phenotype']) \
-                        if 'gene_set_phenotype' in query_params else None
+    if 'gene_set' in query_params and 'gene_name' in query_params:
+        gene_set = query_params['gene_set']
+        gene_set_phenotype = str(query_params['gene_set_phenotype']) \
+            if 'gene_set_phenotype' in query_params else None
 
-    gts = load_gene_set2(gene_set, gene_set_phenotype)
+        gene_name = query_params['gene_name']
+        gts = load_gene_set2(gene_set, gene_set_phenotype)
+        if gts and gene_name in gts.t2G:
+            title = "{}:{}".format(gene_set, gene_name)
+            if gene_set_phenotype:
+                title += " ({})".format(gene_set_phenotype)
+            gene_syms.append("{}\r\n".format(title))
+            gene_syms.extend(gts.t2G[gene_name].keys())
+    res = map(lambda s: "{}\r\n".format(s), gene_syms)
+    print(res)
+    response = StreamingHttpResponse(
+        res,
+        content_type='text/csv')
 
-    if gts:
-        return __gene_set_response(query_params, gts, None)
-    else:
-        return Response()
+    response['Content-Disposition'] = 'attachment; filename=geneset.csv'
+    response['Expires'] = '0'
+
+    return response
+
 
 @api_view(['GET'])
 def gene_set_phenotypes(request):
-    return Response(['autism', 
-                     'congenital heart disease', 
-                     "epilepsy", 
-                     'intelectual disability', 
+    return Response(['autism',
+                     'congenital heart disease',
+                     "epilepsy",
+                     'intelectual disability',
                      'schizophrenia',
                      'unaffected'])
+
+
+@api_view(['GET'])
+def study_tab_phenotypes(request, study_tab):
+    """
+    Returns phenotypes to use in study tab legend table.
+
+    Accepts `study_tab` name as a URL parameter.
+
+    Examples:
+
+        GET /api/study_tab_phenotypes/ssc
+        GET /api/study_tab_phenotypes/whole_exome
+        GET /api/study_tab_phenotypes/variants
+    """
+    if study_tab == 'ssc':
+        return Response(['autism',
+                         'unaffected'])
+
+    if study_tab == 'whole_exome' or study_tab == 'variants':
+        return Response(['autism',
+                         'congenital heart disease',
+                         "epilepsy",
+                         'intelectual disability',
+                         'schizophrenia',
+                         'unaffected'])
+    return Response()
 
 
 def prepare_query_dict(data):
@@ -462,9 +439,7 @@ def prepare_query_dict(data):
     for (key, val) in items:
         key = str(key)
         if isinstance(val, list):
-            print "value:", val,
             value = ','.join([str(s).strip() for s in val])
-            print "after: ", value
         else:
             value = str(val)
 
@@ -479,11 +454,12 @@ def prepare_query_dict(data):
 def query_variants_preview_full(request):
     query_variants_preview(request)
 
+
 @api_view(['POST'])
 def query_variants_preview(request):
     """
-Performs a query to DAE. The body of the request should be JSON formatted object
-containing all the parameters for the query.
+Performs a query to DAE. The body of the request should be JSON
+formatted object containing all the parameters for the query.
 
 Example JSON object describing the query is following:
 
@@ -511,7 +487,7 @@ All fields are same as in query_variants request
     # else:
     #     data = prepare_query_dict(data)
 
-    logger.info(log_filter(request, "preview query variants: " + str(data)))
+    LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
 
     generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
@@ -531,8 +507,8 @@ def query_variants_full(request):
 @parser_classes([JSONParser, FormParser])
 def query_variants(request):
     """
-Performs a query to DAE. The body of the request should be JSON formatted object
-containing all the parameters for the query.
+Performs a query to DAE. The body of the request should be JSON formatted
+object containing all the parameters for the query.
 
 Example JSON object describing the query is following:
 
@@ -576,8 +552,6 @@ Advanced family filter expects following fields:
 * 'familyVerbalIqHi' --- verbal IQ high limit (default is inf)
 * 'familyVerbalIqLo' --- verbal IQ low limit (default is 0)
 * 'familyQuadTrio' --- Trio/Quad family; possible values are: 'trio' and 'quad'
-
-
     """
 
     if request.method == 'OPTIONS':
@@ -586,7 +560,7 @@ Advanced family filter expects following fields:
     data = prepare_query_dict(request.DATA)
     build_effect_type_filter(data)
 
-    logger.info(log_filter(request, "query variants request: " + str(data)))
+    LOGGER.info(log_filter(request, "query variants request: " + str(data)))
 
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
 
@@ -598,50 +572,6 @@ Advanced family filter expects following fields:
         content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
     response['Expires'] = '0'
-
-    return response
-
-@api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
-def ssc_query_variants_preview(request):
-
-    if request.method == 'OPTIONS':
-        return Response()
-
-    data = prepare_query_dict(request.DATA)
-    data = prepare_ssc_filter(data)
-    build_effect_type_filter(data)
-
-    logger.info(log_filter(request, "preview query variants: " + str(data)))
-
-    generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
-    summary = prepare_summary(generator)
-    return Response(summary)
-
-@api_view(['POST'])
-@parser_classes([JSONParser, FormParser])
-def ssc_query_variants(request):
-    if request.method == 'OPTIONS':
-        return Response()
-
-    data = prepare_query_dict(request.DATA)
-    data = prepare_ssc_filter(data)
-    build_effect_type_filter(data)
-
-    logger.info(log_filter(request, "query variants request: " + str(data)))
-
-    comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
-
-    generator = do_query_variants(data)
-    response = StreamingHttpResponse(
-        itertools.chain(
-            itertools.imap(join_line, generator),
-            ['# %s' % comment]),
-        content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename=unruly.csv'
-    response['Expires'] = '0'
-
 
     return response
 
@@ -673,100 +603,15 @@ Examples:
     return Response(stats)
 
 
-# @api_view(['GET'])
-# def enrichment_test(request):
-#     """
-# Performs enrichment test. Expected parameters are:
-# 
-# * "denovoStudies" -- expects list of denovo studies
-# * "transmittedStudies" --- expects list of transmitted studies
-# 
-# * "geneSyms" --- comma separated list of gene symbols or list of gene symbols
-# 
-# 
-# * "geneSet" --- contains gene set name (one of 'main','GO' or 'disease')
-# * "geneTerm" --- contains gene set term. Example:  'GO:2001293' (from GO),
-# 'mPFC_maternal' (from main).
-# * "geneStudy --- if geneSet is 'denovo', then we expect this additional parameter, to
-#     specify which denovo study to use
-# 
-# 
-#     * dst_name - denovo study name;
-#     * tst_name - transmitted study name;
-#     * gt_name - gene term name;
-#     * gs_name - gene set name;
-# 
-# Examples:
-# 
-#     GET /api/enrichment_test?denovoStudies=allWEAndTH&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main"""
-#     query_data = prepare_query_dict(request.QUERY_PARAMS)
-#     logger.info(log_filter(request, "enrichment query: %s" % str(query_data)))
-# 
-#     data = enrichment_prepare(query_data)
-#     # if isinstance(data, QueryDict):
-#     #     data = prepare_query_dict(data)
-# 
-#     print "enrichment query:", data
-# 
-#     if data is None:
-#         return Response(None)
-# 
-#     res = enrichment_results(**data)
-#     return Response(res)
-
-
-@api_view(['GET'])
-def enrichment_test_by_phenotype(request):
-    """
-Performs enrichment test. Expected parameters are:
-
-* "denovoStudies" -- expects list of denovo studies
-* "transmittedStudies" --- expects list of transmitted studies
-
-* "geneSyms" --- comma separated list of gene symbols or list of gene symbols
-
-
-* "geneSet" --- contains gene set name (one of 'main','GO' or 'disease')
-* "geneTerm" --- contains gene set term. Example:  'GO:2001293' (from GO),
-'mPFC_maternal' (from main).
-* "geneStudy --- if geneSet is 'denovo', then we expect this additional parameter, to
-    specify which denovo study to use
-
-
-    * dst_name - denovo study name;
-    * tst_name - transmitted study name;
-    * gt_name - gene term name;
-    * gs_name - gene set name;
-
-Examples:
-    GET /api/enrichment_test_by_phenotype?denovoStudies=ALL+WHOLE+EXOME&transmittedStudies=w873e374s322&geneTerm=ChromatinModifiers&geneSet=main
-
-    """
-
-    query_data = prepare_query_dict(request.QUERY_PARAMS)
-    logger.info(log_filter(request, "enrichment query by phenotype: %s" % str(query_data)))
-
-    data = enrichment_prepare(query_data)
-    # if isinstance(data, QueryDict):
-    #     data = prepare_query_dict(data)
-
-    if data is None:
-        return Response(None)
-
-    res = enrichment_results_by_phenotype(**data)
-    return Response(res)
-
-from api.report_pheno import get_supported_studies, get_supported_measures, \
-    pheno_calc, pheno_query
-
-
 @api_view(['GET'])
 def pheno_supported_studies(request):
     return Response({"pheno_supported_studies": get_supported_studies()})
 
+
 @api_view(['GET'])
 def pheno_supported_measures(request):
     return Response({"pheno_supported_measures": get_supported_measures()})
+
 
 @api_view(['POST'])
 def pheno_report_preview(request):
@@ -775,15 +620,17 @@ def pheno_report_preview(request):
         return Response()
 
     data = prepare_query_dict(request.DATA)
-    logger.info(log_filter(request, "preview pheno report: " + str(data)))
+    LOGGER.info(log_filter(request, "preview pheno report: " + str(data)))
     ps = pheno_query(data)
     res = pheno_calc(ps)
 
     return Response(res)
 
+
 def join_row(p, sep=','):
     r = [str(c) for c in p]
     return sep.join(r) + '\n'
+
 
 @api_view(['POST'])
 @parser_classes([JSONParser, FormParser])
@@ -793,7 +640,7 @@ def pheno_report_download(request):
         return Response()
 
     data = prepare_query_dict(request.DATA)
-    logger.info(log_filter(request, "preview pheno download: " + str(data)))
+    LOGGER.info(log_filter(request, "preview pheno download: " + str(data)))
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
 
     ps = pheno_query(data)
@@ -806,6 +653,7 @@ def pheno_report_download(request):
     response['Expires'] = '0'
 
     return response
+
 
 @api_view(['POST'])
 def register(request):
@@ -833,8 +681,9 @@ def check_verif_path(request):
         return Response({}, status=status.HTTP_200_OK)
     except VerificationPath.DoesNotExist:
         return Response({
-                        'errors': 'Verification path does not exist.'
-                    }, status=status.HTTP_400_BAD_REQUEST)
+            'errors': 'Verification path does not exist.'},
+            status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 def change_password(request):
@@ -843,22 +692,25 @@ def change_password(request):
 
     user = get_user_model().change_password(verif_path, password)
 
-    return Response({'username': user.email, 'password': password }, status.HTTP_201_CREATED)
+    return Response({'username': user.email, 'password': password},
+                    status.HTTP_201_CREATED)
+
 
 @api_view(['POST'])
 def get_user_info(request):
     token = request.DATA['token']
     try:
         user = Token.objects.get(key=token).user
-        print user
         if (user.is_staff):
             userType = 'admin'
         else:
             userType = 'registered'
 
-        return Response({ 'userType': userType, 'email': user.email }, status.HTTP_200_OK)
+        return Response({'userType': userType,
+                         'email': user.email}, status.HTTP_200_OK)
     except Token.DoesNotExist:
         return Response({}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 def reset_password(request):
@@ -870,6 +722,5 @@ def reset_password(request):
 
         return Response({}, status.HTTP_200_OK)
     except user_model.DoesNotExist:
-        return Response({
-                        'errors': 'User with this email not found'
-                    }, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'errors': 'User with this email not found'},
+                        status=status.HTTP_400_BAD_REQUEST)

@@ -502,9 +502,13 @@ class Study:
             if reg_matcher:
                 smcP = v.location.find(":")
                 vChr = v.location[0:smcP]
-                vPos = int(v.location[smcP+1:])
-                if not reg_matcher(vChr, vPos):
-                    continue
+                try:
+                    vPos = int(v.location[smcP+1:])
+                    if not reg_matcher(vChr, vPos):
+                        continue
+                except ValueError:
+                    # print >> sys.stderr, v.atts
+                    continue 
 
             if effectTypes or geneSyms:
                 requestedGeneEffects = filter_gene_effect(v.geneEffect, effectTypes, geneSyms)

@@ -10,7 +10,7 @@ from VariantAnnotation import get_effect_types_set, get_effect_types
 from VariantsDB import mat2Str
 from DAE import phDB
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def get_child_types():
@@ -76,7 +76,7 @@ def get_sib_gender():
 
 FATHER_RACE = get_focuv_race()
 MOTHER_RACE = get_mocuv_race()
-PROBAND_VIQ  = get_verbal_iq()
+PROBAND_VIQ = get_verbal_iq()
 PROBAND_NVIQ = get_non_verbal_iq()
 
 PARENTS_RACE = dict([(k, ':'.join([m, f])) for (k, m, f) in zip(phDB.families,
@@ -108,7 +108,7 @@ def family_filter_by_race(families, race):
     races = __get_parents_race_filter()
     res = dict([(key, val) for (key, val) in families.items()
                 if key in races and races[key] == race])
-    # logger.debug("family_filter_by_race: %s", str(res))
+    # LOGGER.debug("family_filter_by_race: %s", str(res))
     return res
 
 
@@ -203,12 +203,12 @@ def family_filter_by_trio_quad(families, trio_quad):
 def __bind_family_filter_by_trio_quad(data, family_filters):
     if 'familyQuadTrio' in data and data['familyQuadTrio']:
         if data['familyQuadTrio'].lower() == 'trio':
-            logger.debug("filtering trio families...")
+            LOGGER.debug("filtering trio families...")
             family_filters.append(
                 lambda fs: family_filter_by_trio_quad(fs, 3)
             )
         elif data['familyQuadTrio'].lower() == 'quad':
-            logger.debug("filtering quad families...")
+            LOGGER.debug("filtering quad families...")
             family_filters.append(
                 lambda fs: family_filter_by_trio_quad(fs, 4)
             )
@@ -234,7 +234,7 @@ def advanced_family_filter(data, filters):
     __bind_family_filter_by_trio_quad(data, family_filters)
     __bind_family_filter_by_prb_gender(data, family_filters)
     __bind_family_filter_by_sib_gender(data, family_filters)
-    # logger.debug("family filters: %d", len(family_filters))
+    # LOGGER.debug("family filters: %d", len(family_filters))
 
     if len(family_filters) == 0:
         return None
@@ -259,7 +259,7 @@ def prepare_inchild(data):
     if not res:
         return None
     if len(res) != 1:
-        logger.error("inChild format wrong: %s, %s", inChild, res)
+        LOGGER.error("inChild format wrong: %s, %s", inChild, res)
         return None
     return res[0]
 
@@ -274,13 +274,13 @@ def prepare_present_in_child(data):
 
         pheno_filter = []
         if 'autism only' in present_in_child:
-            pheno_filter.append( lambda inCh: (len(inCh)==4 and 'p' == inCh[0]) )
+            pheno_filter.append(lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]))
         if 'unaffected only' in present_in_child:
-            pheno_filter.append( lambda inCh: (len(inCh)==4 and 's' == inCh[0]) )
+            pheno_filter.append(lambda inCh: (len(inCh) == 4 and 's' == inCh[0]))
         if 'autism and unaffected' in present_in_child:
-            pheno_filter.append( lambda inCh: (len(inCh)==8) )
+            pheno_filter.append(lambda inCh: (len(inCh) == 8))
         if 'neither' in present_in_child:
-            pheno_filter.append( lambda inCh: len(inCh) == 0 )
+            pheno_filter.append(lambda inCh: len(inCh) == 0)
 
         comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
 
@@ -292,39 +292,41 @@ def prepare_present_in_child(data):
             comp.append(gender_filter)
 
         # print "comp: ", comp
-        if len(comp)==1:
+        if len(comp) == 1:
             return comp[0]
 
         return lambda inCh: all([f(inCh) for f in comp])
 
     return None
 
+
 def prepare_present_in_parent(data):
     if "presentInParent" in data:
         present_in_parent = set(data['presentInParent'].split(','))
         print "presentInParent:", present_in_parent
         if set(['father only']) == present_in_parent:
-            return lambda fromParent: (len(fromParent)==3 and 'd' == fromParent[0])
+            return lambda fromParent: (len(fromParent) == 3 and 'd' == fromParent[0])
         if set(['mother only']) == present_in_parent:
-            return lambda fromParent: (len(fromParent)==3 and 'm' == fromParent[0])
+            return lambda fromParent: (len(fromParent) == 3 and 'm' == fromParent[0])
         if set(['mother and father']) == present_in_parent:
-            return lambda fromParent: len(fromParent)==6
-        if set(['mother only','father only']) == present_in_parent:
-            return lambda fromParent: len(fromParent)==3
+            return lambda fromParent: len(fromParent) == 6
+        if set(['mother only', 'father only']) == present_in_parent:
+            return lambda fromParent: len(fromParent) == 3
 
-        if set(['mother only','mother and father']) == present_in_parent:
-            return lambda fromParent: ( (len(fromParent)==3 and 'm' == fromParent[0])
-                                        or len(fromParent) == 6 )
-        if set(['father only','mother and father']) == present_in_parent:
-            return lambda fromParent: ( (len(fromParent)==3 and 'd' == fromParent[0])
-                                        or len(fromParent) == 6 )
-        if set(['father only','mother only','mother and father']) == present_in_parent:
-            return lambda fromParent: ( len(fromParent) > 0 )
+        if set(['mother only', 'mother and father']) == present_in_parent:
+            return lambda fromParent: ((len(fromParent) == 3 and 'm' == fromParent[0])
+                                        or len(fromParent) == 6)
+        if set(['father only', 'mother and father']) == present_in_parent:
+            return lambda fromParent: ((len(fromParent) == 3 and 'd' == fromParent[0])
+                                        or len(fromParent) == 6)
+        if set(['father only', 'mother only', 'mother and father']) == present_in_parent:
+            return lambda fromParent: (len(fromParent) > 0)
         if set(['neither']) == present_in_parent:
-            return lambda fromParent: ( len(fromParent) == 0)
+            return lambda fromParent: (len(fromParent) == 0)
 
         return lambda fromParent: True
     return None
+
 
 def prepare_effect_types(data):
     if 'effectTypes' not in data:
@@ -365,10 +367,10 @@ def prepare_variant_types(data):
     if variant_types == 'All':
         return None
 
-    variant_types_set= set(get_variant_types())
+    variant_types_set = set(get_variant_types())
     variant_types_list = variant_types.split(',')
     result = [vt for vt in variant_types_list if vt in variant_types_set]
-    logger.info("variant types: %s", result)
+    LOGGER.info("variant types: %s", result)
     if result:
         return ','.join(result)
 
@@ -402,10 +404,6 @@ def prepare_family_ids(data):
         return None
 
 
-
-# "minParentsCalled=600,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1"
-
-
 def prepare_min_alt_freq_prcnt(data):
     minAltFreqPrcnt = -1.0
     if 'popFrequencyMin' in data:
@@ -435,10 +433,12 @@ def prepare_pop_min_parents_called(data):
             minParentsCalled = 600
     return minParentsCalled
 
+
 def prepare_TMM_ALL(data):
     if 'TMM_ALL' in data and data['TMM_ALL']:
         return True
     return False
+
 
 def prepare_ultra_rare(data):
     if 'rarity' in data:
@@ -521,7 +521,7 @@ def prepare_transmitted_filters(data,
                'minAltFreqPrcnt': prepare_min_alt_freq_prcnt(data),
                'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data),
                'TMM_ALL': prepare_TMM_ALL(data)
-    }
+               }
     return dict(filters, **denovo_filters)
 
 
@@ -572,11 +572,12 @@ def dae_query_variants(data):
     denovo_filters = prepare_denovo_filters(data)
     family_filters = advanced_family_filter(data, denovo_filters)
 
-
     variants = []
     if dstudies is not None:
         denovo_filtered_studies = prepare_denovo_pheno_filter(data, dstudies)
-        dvs = get_denovo_variants(denovo_filtered_studies, family_filters, **denovo_filters)
+        dvs = get_denovo_variants(denovo_filtered_studies,
+                                  family_filters,
+                                  **denovo_filters)
         variants.append(dvs)
 
     if tstudies is not None:
@@ -592,10 +593,12 @@ def dae_query_variants(data):
 
     return variants
 
+
 def pedigree_data(v):
     return [v.study.get_attr('study.phenotype'), v.pedigree]
 
-def __augment_vars(v):
+
+def augment_vars(v):
     fmId = v.familyId
     parRaces = get_parents_race()[fmId] \
         if fmId in get_parents_race() else "NA:NA"
@@ -621,7 +624,7 @@ def do_query_variants(data, atts=[]):
     vsl = dae_query_variants(data)
 
     res_variants = itertools.chain(*vsl)
-    return generate_response(itertools.imap(__augment_vars, res_variants),
+    return generate_response(itertools.imap(augment_vars, res_variants),
                              ['effectType',
                               'effectDetails',
                               'all.altFreq',
@@ -634,9 +637,9 @@ def do_query_variants(data, atts=[]):
                               '_ch_prof_',
                               '_prb_viq_',
                               '_prb_nviq_',
-                              'valstatus']
-                            +
-                            atts)
+                              'valstatus'] +
+                             atts)
+
 
 def __gene_effect_get_worst_effect(gs):
     if len(gs) == 0:
@@ -652,29 +655,29 @@ def __gene_effect_get_genes(gs):
 
 
 COLUMN_TITLES = {'familyId': 'family id',
-                'location': 'location',
-                'variant': 'variant',
-                'bestSt': 'family genotype',
-                'fromParentS': 'from parent',
-                'inChS': 'in child',
-                'effectType': 'effect type',
-                'worstEffect': 'worst effect',
-                'genes': 'genes',
-                'geneEffect': 'all effects',
-                'requestedGeneEffects': 'requested effects',
-                'popType': 'population type',
-                'effectDetails': 'effect details',
-                'all.altFreq': 'alternative allele frequency',
-                'all.nAltAlls': 'number of alternative alleles',
-                'all.nParCalled': 'number of genotyped parents',
-                '_par_races_': 'parent races',
-                '_ch_prof_': 'children description',
-                '_prb_viq_': 'proband verbal iq',
-                '_prb_nviq_': 'proband non-verbal iq',
-                'studyName': 'study',
-                'counts': 'count',
-                'valstatus': 'validation status',
-             }
+                 'location': 'location',
+                 'variant': 'variant',
+                 'bestSt': 'family genotype',
+                 'fromParentS': 'from parent',
+                 'inChS': 'in child',
+                 'effectType': 'effect type',
+                 'worstEffect': 'worst effect',
+                 'genes': 'genes',
+                 'geneEffect': 'all effects',
+                 'requestedGeneEffects': 'requested effects',
+                 'popType': 'population type',
+                 'effectDetails': 'effect details',
+                 'all.altFreq': 'alternative allele frequency',
+                 'all.nAltAlls': 'number of alternative alleles',
+                 'all.nParCalled': 'number of genotyped parents',
+                 '_par_races_': 'parent races',
+                 '_ch_prof_': 'children description',
+                 '_prb_viq_': 'proband verbal iq',
+                 '_prb_nviq_': 'proband non-verbal iq',
+                 'studyName': 'study',
+                 'counts': 'count',
+                 'valstatus': 'validation status',
+                 }
 
 def attr_title(attr_key):
     return COLUMN_TITLES.get(attr_key, attr_key)
@@ -722,14 +725,15 @@ def generate_response(vs, atts=[], sep='\t'):
                 mavs.append("")
         hack = []
         for a in atts:
-            if a in ['SSCfreq', 'EVSfreq', 'E65freq',] and a not in v.atts:
-                a = a[:3]+'-'+a[3:]
+            if a in ['SSCfreq', 'EVSfreq', 'E65freq', ] and a not in v.atts:
+                a = a[:3] + '-' + a[3:]
             if a in v.atts:
-                hack.append(str(v.atts[a]).replace(sep, ';').replace("'", '"'))
+                val = str(v.atts[a]).replace(sep, ';').replace("'", '"')
+                hack.append(val if val != 'False' else "")
             else:
                 hack.append(getattr(v, a, ''))
         yield (mavs + hack)
-                
+
 #         yield (mavs + [str(v.atts[a]).replace(sep, ';').replace("'", '"')
 #                        if a in v.atts else str(getattr(v, a, '')) for a in atts])
 

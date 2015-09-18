@@ -1,2 +1,0 @@
-13628 1:161023097 del(3) 2 2 1 2
-0 0 1 0 2 2 1 2 0 0 1 0  prbM no-frame-shift ARHGAP30 denovo

@@ -1,29 +1,52 @@
 import logging
 import api.GeneTerm
+from api.precompute import register
 
-logger = logging.getLogger(__name__)
-from query_prepare import gene_set_loader
+LOGGER = logging.getLogger(__name__)
 
-from DAE import get_gene_sets_symNS, vDB
-from bg_loader import get_background
 
-def load_gene_set(gene_set_label, study_name=None):
-    gene_term = gene_set_loader(gene_set_label, study_name)
-    gs = api.GeneTerm.GeneTerm(gene_term)
-    return gs
+from DAE import get_gene_sets_symNS
+
+# def load_gene_set(gene_set_label, study_name=None):
+#     gene_term = gene_set_loader(gene_set_label, study_name)
+#     gs = api.GeneTerm.GeneTerm(gene_term)
+#     return gs
+
+
+def gene_terms_union(gene_terms):
+    if len(gene_terms)==1:
+        return api.GeneTerm.GeneTerm(gene_terms[0])
+    
+    result = api.GeneTerm.GeneTerm(gene_terms[0])
+    
+    for gt in gene_terms[1:]:
+        result.union(gt)
+
+    return result
+
+    
+def collect_denovo_gene_sets(gene_set_phenotype):
+    precomputed = register.get('denovo_gene_sets')
+    denovo_gene_sets = precomputed.denovo_gene_sets
+
+    phenotypes = gene_set_phenotype.split(',')
+    gene_terms = [denovo_gene_sets[pheno] for pheno in phenotypes 
+                  if pheno in denovo_gene_sets]
+    return gene_terms
+
+    
+def combine_denovo_gene_sets(gene_set_phenotype):
+    gene_terms = collect_denovo_gene_sets(gene_set_phenotype)
+    return gene_terms_union(gene_terms)
 
 
 def load_gene_set2(gene_set_label, gene_set_phenotype=None):
     gene_term = None
     if gene_set_label!= 'denovo':
-        gene_term = get_background(gene_set_label)
-        if not gene_term:
-            gene_term = get_gene_sets_symNS(gene_set_label)
+        gene_term = get_gene_sets_symNS(gene_set_label)
     else:
-        denovo_gene_sets = get_background('Denovo')
-        if gene_set_phenotype in denovo_gene_sets:
-            gene_term = denovo_gene_sets[gene_set_phenotype]
-    
+        gene_term = combine_denovo_gene_sets(gene_set_phenotype)
+
     if gene_term:
         gs = api.GeneTerm.GeneTerm(gene_term)
         return gs

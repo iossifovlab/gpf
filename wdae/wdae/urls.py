@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url, include
 from django.contrib import admin
-from denovo_gene_sets import build_denovo_gene_sets
+# from denovo_gene_sets import build_denovo_gene_sets
 
 # import api.views
 # router = routers.DefaultRouter()
@@ -23,32 +23,42 @@ urlpatterns = patterns(
     url(r'^admin/', include(admin.site.urls) )
 )
 
-try:
-    from query_prepare import prepare_transmitted_studies, gene_set_bgloader
-    from api.enrichment import build_transmitted_background
-    from bg_loader import preload_background
+# try:
+#     from query_prepare import prepare_transmitted_studies, gene_set_bgloader
+#     # from api.enrichment.enrichment import build_transmitted_background
+#     from bg_loader import preload_background
+# 
+# 
+#     transmitted = prepare_transmitted_studies(
+#         {"transmittedStudies": 'w1202s766e611'})
 
-    transmitted = prepare_transmitted_studies(
-        {"transmittedStudies": 'w1202s766e611'})
+#     builders = [(gene_set_bgloader,
+#                  ['GO'],
+#                  'GO'),
+# 
+#                 (gene_set_bgloader,
+#                  ['MSigDB.curated'],
+#                  'MSigDB.curated'),
+# 
+# #                 (build_denovo_gene_sets,
+# #                  [],
+# #                  'Denovo'),
+# 
+# #                 (build_transmitted_background,
+# #                  transmitted,
+# #                  'enrichment_background')
+#                 ]
+# 
+#     preload_background(builders)
 
-    builders = [(gene_set_bgloader,
-                 ['GO'],
-                 'GO'),
+# except Exception, ex:
+#     print "Missing import", ex
 
-                (gene_set_bgloader,
-                 ['MSigDB.curated'],
-                 'MSigDB.curated'),
 
-                (build_denovo_gene_sets,
-                 [],
-                 'Denovo'),
-
-                (build_transmitted_background,
-                 transmitted,
-                 'enrichment_background')
-                ]
-
-    preload_background(builders)
-
-except Exception, ex:
-    print "Missing import", ex
+# try:
+#     register = PrecomputeRegister({
+#         'enrichment_background': SynonymousBackground()
+#     })
+#     
+# except Exception, ex:
+#     print "Exception", ex

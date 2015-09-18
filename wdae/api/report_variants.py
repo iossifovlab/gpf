@@ -42,7 +42,7 @@ CNVs RATES:
 
 """
 
-from query_variants import get_child_types
+from api.query.query_variants import get_child_types
 from DAE import vDB
 from collections import defaultdict
 from collections import Counter
@@ -50,7 +50,7 @@ import scipy.stats as stats
 from VariantAnnotation import get_effect_types
 import logging
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 def effect_types():
     res = []
@@ -80,7 +80,7 @@ def family_buffer(studies):
                 if p.personId in fam_buff[f.familyId]:
                     prev_p = fam_buff[f.familyId][p.personId]
                     if prev_p.role != p.role or prev_p.gender != p.gender:
-                        logger.error("study: (%s), familyId: (%s), personId: (%s), role: (%s), prev: (%s)",
+                        LOGGER.error("study: (%s), familyId: (%s), personId: (%s), role: (%s), prev: (%s)",
                                      study.name,
                                      f.familyId,
                                      p.personId,
