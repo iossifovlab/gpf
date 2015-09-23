@@ -29,7 +29,7 @@ CREATE TABLE `transmitted_familyvariant` (
   CONSTRAINT `D1b9d36c68906398c84f8ef06314d61c`
   FOREIGN KEY (`summary_variant_id`)
   REFERENCES `transmitted_summaryvariant` (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 '''
 
@@ -134,7 +134,7 @@ class Command(BaseCommand):
 
         with gzip.open(summary_filename, 'r') as fh, \
                 gzip.open(tm_filename, 'r') as tmfh, \
-                open('family_variants.sql', 'w') as outfile:
+                open('family_variants_innod.sql', 'w') as outfile:
 
             column_names = fh.readline().rstrip().split('\t')
             tmfh.readline()  # skip column names in too may family file
