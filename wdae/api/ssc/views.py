@@ -48,8 +48,8 @@ class SSCPreview(SSCPrepare):
 
 
 class SSCDownload(SSCPrepare):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = (IsAuthenticated,)
 
     parser_classes = (JSONParser, FormParser,)
 
