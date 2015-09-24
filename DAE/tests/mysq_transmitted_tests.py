@@ -21,8 +21,8 @@ class Test(unittest.TestCase):
 
     def test_has_default_query(self):
         self.assertIsNotNone(self.impl)
-        self.assertIn('min_parents_called', self.impl.query)
-        self.assertIn('max_alt_freq_prcnt', self.impl.query)
+        self.assertIn('minParentsCalled', self.impl.query)
+        self.assertIn('maxAltFreqPrcnt', self.impl.query)
 
     def test_connect(self):
         self.impl.connect()
@@ -31,8 +31,14 @@ class Test(unittest.TestCase):
     def test_default_freq_query(self):
         where = self.impl._build_freq_where()
         self.assertIsNotNone(where)
-        print(where)
+        self.assertEquals(' ( n_par_called > 600 )  &  ( alt_freq <= 5.0 ) ',
+                          where)
 
+    def test_default_query_len(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants()
+        # 1350367
+        self.assertEquals(1350367, len(res))
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

@@ -8,34 +8,32 @@ import copy
 
 
 class MysqlTransmittedQuery(object):
-    keys = {'variant_types': list,
-            'effect_types': list,
-            'gene_syms': list,
-            'ultra_rare_only': bool,
-            'min_parents_called': int,
-            'max_alt_freq_prcnt': float,
-            'min_alt_freq_prcnt': float,
-            'region': str,
+    keys = {'variantTypes': list,
+            'effectTypes': list,
+            'geneSyms': list,
+            'ultraRareOnly': bool,
+            'minParentsCalled': int,
+            'maxAltFreqPrcnt': float,
+            'minAltFreqPrcnt': float,
             'family_ids': list,
             'present_in_parent': list,
             'present_in_child': list,
             'present_in_child_gender': list,
-            'regions': list,
+            'regionS': list,
             }
 
-    default_query = {'variant_types': None,
-                     'effect_types': None,
-                     'gene_syms': None,
-                     'ultra_rare_only': False,
-                     'min_parents_called': 600,
-                     'max_alt_freq_prcnt': 5.0,
-                     'min_alt_freq_prcnt': None,
-                     'region': None,
+    default_query = {'variantTypes': None,
+                     'effectTypes': None,
+                     'geneSyms': None,
+                     'ultraRareOnly': False,
+                     'minParentsCalled': 600,
+                     'maxAltFreqPrcnt': 5.0,
+                     'minAltFreqPrcnt': None,
                      'family_ids': None,
                      'present_in_parent': None,
                      'present_in_child': None,
                      'present_in_child_gender': None,
-                     'regions': None,
+                     'regionS': None,
                      }
 
     def _get_config_property(self, name):
@@ -63,9 +61,9 @@ class MysqlTransmittedQuery(object):
                                       self.passwd,
                                       self.db)
 
-    def execute(self):
+    def execute(self, select):
         cursor = self.connection.cursor(mdb.cursors.DictCursor)
-        cursor.execute(self.query)
+        cursor.execute(select)
         return cursor.fetchall()
 
     def disconnect(self):
@@ -81,21 +79,25 @@ class MysqlTransmittedQuery(object):
 
     def _build_freq_where(self):
         where = []
-        if self['min_parents_called']:
+        if self['minParentsCalled']:
             where.append(
-                ' ( n_par_called > {} ) '.format(self['min_parents_called']))
-        if self['ultra_rare_only']:
+                ' ( n_par_called > {} ) '.format(self['minParentsCalled']))
+        if self['ultraRareOnly']:
             where.append(' ( n_alt_alls == 1 ) ')
         else:
-            if self['max_alt_freq_prcnt']:
+            if self['maxAltFreqPrcnt']:
                 where.append(
-                    ' ( alt_freq <= {} ) '.format(self['max_alt_freq_prcnt']))
-            if self['min_alt_freq_prcnt']:
+                    ' ( alt_freq <= {} ) '.format(self['maxAltFreqPrcnt']))
+            if self['minAltFreqPrcnt']:
                 where.append(
-                    ' ( alt_freq >= {} ) '.format(self['min_alt_freq_prcnt']))
+                    ' ( alt_freq >= {} ) '.format(self['minAltFreqPrcnt']))
 
         res = ' & '.join(where)
         return res
 
     def get_transmitted_summary_variants(self, **kwargs):
-        pass
+        where = self._build_freq_where()
+        select = 'select chrome, position, variant ' \
+            'from transmitted_summaryvariant where {}'.format(where)
+        print(select)
+        return self.execute(select)
