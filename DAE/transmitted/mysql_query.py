@@ -139,3 +139,16 @@ class MysqlTransmittedQuery(object):
             'from transmitted_summaryvariant where {}'.format(w)
         print(select)
         return self.execute(select)
+
+    def get_transmitted_summary_variants1(self, **kwargs):
+        select = \
+            "select tsv.id, " \
+            "group_concat(tge.symbol) as geneSyms, " \
+            "group_concat(tge.effect_type) as effectTypes " \
+            "from transmitted_summaryvariant as tsv " \
+            "left join transmitted_geneeffectvariant as tge " \
+            "on tsv.id = tge.summary_variant_id " \
+            "where tsv.alt_freq <= 5.0 and tsv.n_par_called > 600  and " \
+            "tge.effect_type = 'missense' " \
+            "group by tsv.id;"
+        return self.execute(select)

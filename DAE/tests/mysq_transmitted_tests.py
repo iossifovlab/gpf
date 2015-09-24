@@ -40,11 +40,12 @@ class Test(unittest.TestCase):
         # 1350367
         self.assertEquals(1350367, len(res))
 
-#     def test_missense_effect_type_len(self):
-#         self.impl.connect()
-#         res = self.impl.get_transmitted_summary_variants(
-#             effectTypes=['missense'])
-#         self.assertEquals(589907, len(res))
+    def test_missense_effect_type_len(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants1(
+            effectTypes=['missense'])
+        self.assertEquals(589907, len(res))
+        print(res[0:30])
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
