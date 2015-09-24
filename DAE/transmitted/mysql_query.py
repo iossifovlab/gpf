@@ -125,12 +125,23 @@ class MysqlTransmittedQuery(object):
         where = ' tge.effect_type in ( {} ) '.format(','.join(where))
         return where
 
+    def _build_gene_syms_where(self):
+        assert self['geneSyms']
+        assert isinstance(self['geneSyms'], list)
+        where = map(lambda sym: " '{}' ".format(sym), self['geneSyms'])
+        where = ' tge.symbol in ( {} ) '.format(','.join(where))
+        return where
 
     def _build_where(self, kwargs):
         where = []
         if 'effectTypes' in kwargs:
             self.query['effectTypes'] = kwargs['effectTypes']
             where.append(self._build_effect_type_where())
+
+        if 'geneSyms' in kwargs:
+            self.query['geneSyms'] = kwargs['geneSyms']
+            where.append(self._build_gene_syms_where())
+
         where.append(self._build_freq_where())
         w = ' AND '.join(where)
         return w

@@ -56,6 +56,12 @@ class Test(unittest.TestCase):
         self.assertEquals(36520, len(res))
         # print(res[0:30])
 
+    def test_gene_syms_pogz_len(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants1(
+            geneSyms=['POGZ'])
+        self.assertEquals(153, len(res))
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
