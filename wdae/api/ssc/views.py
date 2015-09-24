@@ -12,7 +12,8 @@ from api.dae_query import prepare_summary
 from django.http.response import StreamingHttpResponse
 import itertools
 from rest_framework.parsers import JSONParser, FormParser
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, \
+    BasicAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from api.query.query_prepare import prepare_ssc_filter
 
@@ -48,8 +49,10 @@ class SSCPreview(SSCPrepare):
 
 
 class SSCDownload(SSCPrepare):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = (IsAuthenticated,)
+    #     authentication_classes = (TokenAuthentication,
+    #                               SessionAuthentication,
+    #                               BasicAuthentication)
+    #     permission_classes = (IsAuthenticated,)
 
     parser_classes = (JSONParser, FormParser,)
 
