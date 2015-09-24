@@ -101,16 +101,16 @@ class MysqlTransmittedQuery(object):
         where = []
         if self['minParentsCalled']:
             where.append(
-                ' ( n_par_called > {} ) '.format(self['minParentsCalled']))
+                ' ( tsv.n_par_called > {} ) '.format(self['minParentsCalled']))
         if self['ultraRareOnly']:
-            where.append(' ( n_alt_alls == 1 ) ')
+            where.append(' ( tsv.n_alt_alls == 1 ) ')
         else:
             if self['maxAltFreqPrcnt']:
                 where.append(
-                    ' ( alt_freq <= {} ) '.format(self['maxAltFreqPrcnt']))
+                    ' ( tsv.alt_freq <= {} ) '.format(self['maxAltFreqPrcnt']))
             if self['minAltFreqPrcnt']:
                 where.append(
-                    ' ( alt_freq >= {} ) '.format(self['minAltFreqPrcnt']))
+                    ' ( tsv.alt_freq >= {} ) '.format(self['minAltFreqPrcnt']))
 
         res = ' AND '.join(where)
         return res
@@ -122,25 +122,29 @@ class MysqlTransmittedQuery(object):
                       map(lambda et: et in self.EFFECT_TYPES,
                           self['effectTypes']))
         where = map(lambda ef: " '{}' ".format(ef), self['effectTypes'])
-        where = ' effect_type in ( {} ) '.format(','.join(where))
+        where = ' tge.effect_type in ( {} ) '.format(','.join(where))
         return where
 
-    def get_transmitted_summary_variants(self, **kwargs):
+
+    def _build_where(self, kwargs):
         where = []
         if 'effectTypes' in kwargs:
             self.query['effectTypes'] = kwargs['effectTypes']
             where.append(self._build_effect_type_where())
-
         where.append(self._build_freq_where())
-
         w = ' AND '.join(where)
+        return w
+
+    def get_transmitted_summary_variants(self, **kwargs):
+        where = self._build_where(kwargs)
 
         select = 'select id ' \
-            'from transmitted_summaryvariant where {}'.format(w)
+            'from transmitted_summaryvariant as tsv where {}'.format(where)
         print(select)
         return self.execute(select)
 
     def get_transmitted_summary_variants1(self, **kwargs):
+        where = self._build_where(kwargs)
         select = \
             "select tsv.id, " \
             "group_concat(tge.symbol) as geneSyms, " \
@@ -148,7 +152,7 @@ class MysqlTransmittedQuery(object):
             "from transmitted_summaryvariant as tsv " \
             "left join transmitted_geneeffectvariant as tge " \
             "on tsv.id = tge.summary_variant_id " \
-            "where tsv.alt_freq <= 5.0 and tsv.n_par_called > 600  and " \
-            "tge.effect_type = 'missense' " \
-            "group by tsv.id;"
+            "where {} " \
+            "group by tsv.id".format(where)
+        print(select)
         return self.execute(select)

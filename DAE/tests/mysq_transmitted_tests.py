@@ -31,7 +31,8 @@ class Test(unittest.TestCase):
     def test_default_freq_query(self):
         where = self.impl._build_freq_where()
         self.assertIsNotNone(where)
-        self.assertEquals(' ( n_par_called > 600 )  AND  ( alt_freq <= 5.0 ) ',
+        self.assertEquals(' ( tsv.n_par_called > 600 ) '
+                          ' AND  ( tsv.alt_freq <= 5.0 ) ',
                           where)
 
     def test_default_query_len(self):
@@ -45,7 +46,16 @@ class Test(unittest.TestCase):
         res = self.impl.get_transmitted_summary_variants1(
             effectTypes=['missense'])
         self.assertEquals(589907, len(res))
-        print(res[0:30])
+        # print(res[0:30])
+
+    def test_lgds_effect_type_len(self):
+        self.impl.connect()
+        lgds = list(vDB.effectTypesSet('LGDs'))
+        res = self.impl.get_transmitted_summary_variants1(
+            effectTypes=lgds)
+        self.assertEquals(36520, len(res))
+        # print(res[0:30])
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
