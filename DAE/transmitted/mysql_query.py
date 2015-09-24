@@ -5,9 +5,29 @@ Created on Sep 24, 2015
 '''
 import MySQLdb as mdb
 import copy
+import operator
 
 
 class MysqlTransmittedQuery(object):
+    EFFECT_TYPES = [
+        "3'UTR",
+        "3'UTR-intron",
+        "5'UTR",
+        "5'UTR-intron",
+        'frame-shift',
+        'intergenic',
+        'intron',
+        'missense',
+        'no-frame-shift',
+        'no-frame-shift-newStop',
+        'noEnd',
+        'noStart',
+        'non-coding',
+        'non-coding-intron',
+        'nonsense',
+        'splice-site',
+        'synonymous']
+
     keys = {'variantTypes': list,
             'effectTypes': list,
             'geneSyms': list,
@@ -92,12 +112,30 @@ class MysqlTransmittedQuery(object):
                 where.append(
                     ' ( alt_freq >= {} ) '.format(self['minAltFreqPrcnt']))
 
-        res = ' & '.join(where)
+        res = ' AND '.join(where)
         return res
 
+    def _build_effect_type_where(self):
+        assert self['effectTypes']
+        assert isinstance(self['effectTypes'], list)
+        assert reduce(operator.and_,
+                      map(lambda et: et in self.EFFECT_TYPES,
+                          self['effectTypes']))
+        where = map(lambda ef: " '{}' ".format(ef), self['effectTypes'])
+        where = ' effect_type in ( {} ) '.format(','.join(where))
+        return where
+
     def get_transmitted_summary_variants(self, **kwargs):
-        where = self._build_freq_where()
-        select = 'select chrome, position, variant ' \
-            'from transmitted_summaryvariant where {}'.format(where)
+        where = []
+        if 'effectTypes' in kwargs:
+            self.query['effectTypes'] = kwargs['effectTypes']
+            where.append(self._build_effect_type_where())
+
+        where.append(self._build_freq_where())
+
+        w = ' AND '.join(where)
+
+        select = 'select id ' \
+            'from transmitted_summaryvariant where {}'.format(w)
         print(select)
         return self.execute(select)

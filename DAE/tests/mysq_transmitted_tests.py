@@ -31,7 +31,7 @@ class Test(unittest.TestCase):
     def test_default_freq_query(self):
         where = self.impl._build_freq_where()
         self.assertIsNotNone(where)
-        self.assertEquals(' ( n_par_called > 600 )  &  ( alt_freq <= 5.0 ) ',
+        self.assertEquals(' ( n_par_called > 600 )  AND  ( alt_freq <= 5.0 ) ',
                           where)
 
     def test_default_query_len(self):
@@ -39,6 +39,12 @@ class Test(unittest.TestCase):
         res = self.impl.get_transmitted_summary_variants()
         # 1350367
         self.assertEquals(1350367, len(res))
+
+#     def test_missense_effect_type_len(self):
+#         self.impl.connect()
+#         res = self.impl.get_transmitted_summary_variants(
+#             effectTypes=['missense'])
+#         self.assertEquals(589907, len(res))
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
