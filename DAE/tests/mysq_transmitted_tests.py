@@ -6,6 +6,7 @@ Created on Sep 24, 2015
 import unittest
 from transmitted.mysql_query import MysqlTransmittedQuery
 from DAE import vDB
+from query_prepare import prepare_gene_sets
 
 
 class Test(unittest.TestCase):
@@ -62,6 +63,42 @@ class Test(unittest.TestCase):
             geneSyms=['POGZ'])
         self.assertEquals(153, len(res))
 
+    def test_gene_syms_many1_len(self):
+        gene_syms = ['SMARCC2', 'PGM2L1', 'SYNPO', 'ZCCHC14',
+                     'CPE', 'HIPK3', 'HIPK2', 'HIPK1', 'GPM6A',
+                     'TULP4', 'JPH4', 'FAM190B', 'FKBP8', 'KIAA0090']
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants1(
+            geneSyms=gene_syms)
+        self.assertEquals(1100, len(res))
+
+    def test_gene_sym_gene_set(self):
+        gene_syms = list(prepare_gene_sets({'geneSet': 'main',
+                                            'geneTerm': 'FMR1-targets'}))
+        assert gene_syms
+        assert isinstance(gene_syms, list)
+
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants1(
+            geneSyms=gene_syms)
+        self.assertEquals(116195, len(res))
+
+#     def test_find_gene_syms_problem_len(self):
+#         gene_syms = list(prepare_gene_sets({'geneSet': 'main',
+#                                             'geneTerm': 'FMR1-targets'}))
+#         st = vDB.get_study('w1202s766e611')
+#         self.impl.connect()
+#         problems = []
+#         for sym in gene_syms:
+#             vs = st.get_transmitted_summary_variants(geneSyms=[sym])
+#             count = 0
+#             for _v in vs:
+#                 count += 1
+#             res = self.impl.get_transmitted_summary_variants1(geneSyms=[sym])
+#             if count != len(res):
+#                 problems.append((count, len(res),
+#                                  "gene sym: {}".format(sym)))
+#         self.assertFalse(problems, "{}".format(problems))
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']

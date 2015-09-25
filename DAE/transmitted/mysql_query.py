@@ -101,7 +101,8 @@ class MysqlTransmittedQuery(object):
         where = []
         if self['minParentsCalled']:
             where.append(
-                ' ( tsv.n_par_called > {} ) '.format(self['minParentsCalled']))
+                ' ( tsv.n_par_called > {} ) '.format(
+                    self['minParentsCalled']))
         if self['ultraRareOnly']:
             where.append(' ( tsv.n_alt_alls == 1 ) ')
         else:
@@ -157,9 +158,7 @@ class MysqlTransmittedQuery(object):
     def get_transmitted_summary_variants1(self, **kwargs):
         where = self._build_where(kwargs)
         select = \
-            "select tsv.id, " \
-            "group_concat(tge.symbol) as geneSyms, " \
-            "group_concat(tge.effect_type) as effectTypes " \
+            "select distinct tsv.id " \
             "from transmitted_summaryvariant as tsv " \
             "left join transmitted_geneeffectvariant as tge " \
             "on tsv.id = tge.summary_variant_id " \
