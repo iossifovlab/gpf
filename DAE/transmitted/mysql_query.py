@@ -6,6 +6,7 @@ Created on Sep 24, 2015
 import MySQLdb as mdb
 import copy
 import operator
+import re
 
 
 class MysqlTransmittedQuery(object):
@@ -148,6 +149,30 @@ class MysqlTransmittedQuery(object):
         where = ' tge.symbol in ( {} ) '.format(','.join(where))
         return where
 
+    REGION_REGEXP = re.compile("([1-9,X][0-9]?):(\d+)-(\d+)")
+
+    def _build_region_where(self, region):
+        m = self.REGION_REGEXP.match(region)
+        if not m:
+            return None
+
+        res = m.group(1), int(m.group(2)), int(m.group(3))
+        return " ( tsv.chrome = '{}' AND " \
+            "tsv.position > {} AND " \
+            "tsv.position < {} ) ".format(*res)
+
+    def _build_regions_where(self):
+        assert self['regionS']
+        assert isinstance(self['regionS'], list)
+        where = [self._build_region_where(region)
+                 for region in self['regionS']]
+        where = [w for w in where if w]
+
+        if not where:
+            return None
+        where = " ( {} ) ".format(" OR ".join(where))
+        return where
+
     def _build_where(self):
         where = []
         if self['effectTypes']:
@@ -160,6 +185,9 @@ class MysqlTransmittedQuery(object):
 
         if self['variantTypes']:
             where.append(self._build_variant_type_where())
+
+        if self['regionS']:
+            where.append(self._build_regions_where())
 
         where.append(self._build_freq_where())
         w = ' AND '.join(where)

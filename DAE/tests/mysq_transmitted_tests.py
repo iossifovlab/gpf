@@ -123,6 +123,38 @@ class Test(unittest.TestCase):
             ultraRareOnly=True)
         self.assertEquals(867513, len(res))
 
+    def test_ultra_rare_single_region(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            ultraRareOnly=True,
+            regionS=["1:0-60000000"])
+
+        self.assertEquals(32079, len(res))
+
+    def test_ultra_rare_multiple_regions(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            ultraRareOnly=True,
+            regionS=["1:0-60000000", "X:1000000-30000000"])
+
+        self.assertEquals(36299, len(res))
+
+    def test_region_matcher(self):
+        res = self.impl._build_region_where("1:1-2")
+        self.assertEquals(" ( tsv.chrome = '1' AND "
+                          "tsv.position > 1 AND "
+                          "tsv.position < 2 ) ",
+                          res)
+        res = self.impl._build_region_where("X:1-2")
+        self.assertEquals(" ( tsv.chrome = 'X' "
+                          "AND tsv.position > 1 "
+                          "AND tsv.position < 2 ) ",
+                          res)
+        res = self.impl._build_region_where("Y:1-2")
+        self.assertIsNone(res)
+        res = self.impl._build_region_where("X:a-2")
+        self.assertIsNone(res)
+
 
 #     def test_find_gene_syms_problem_len(self):
 #         gene_syms = list(prepare_gene_sets({'geneSet': 'main',
