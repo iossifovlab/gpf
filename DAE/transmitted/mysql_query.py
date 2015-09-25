@@ -187,7 +187,11 @@ class MysqlTransmittedQuery(object):
             where.append(self._build_variant_type_where())
 
         if self['regionS']:
-            where.append(self._build_regions_where())
+            w = self._build_regions_where()
+            if not w:
+                print("bad regions: {}".format(self['regionS']))
+            else:
+                where.append(w)
 
         where.append(self._build_freq_where())
         w = ' AND '.join(where)

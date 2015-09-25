@@ -155,6 +155,16 @@ class Test(unittest.TestCase):
         res = self.impl._build_region_where("X:a-2")
         self.assertIsNone(res)
 
+    def test_ultra_rare_single_region_lgds(self):
+        lgds = list(vDB.effectTypesSet('LGDs'))
+
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            effectTypes=lgds,
+            ultraRareOnly=True,
+            regionS=["1:0-60000000"])
+
+        self.assertEquals(1003, len(res))
 
 #     def test_find_gene_syms_problem_len(self):
 #         gene_syms = list(prepare_gene_sets({'geneSet': 'main',
