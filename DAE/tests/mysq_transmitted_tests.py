@@ -44,7 +44,7 @@ class Test(unittest.TestCase):
 
     def test_missense_effect_type_len(self):
         self.impl.connect()
-        res = self.impl.get_transmitted_summary_variants1(
+        res = self.impl.get_transmitted_summary_variants(
             effectTypes=['missense'])
         self.assertEquals(589907, len(res))
         # print(res[0:30])
@@ -52,14 +52,14 @@ class Test(unittest.TestCase):
     def test_lgds_effect_type_len(self):
         self.impl.connect()
         lgds = list(vDB.effectTypesSet('LGDs'))
-        res = self.impl.get_transmitted_summary_variants1(
+        res = self.impl.get_transmitted_summary_variants(
             effectTypes=lgds)
         self.assertEquals(36520, len(res))
         # print(res[0:30])
 
     def test_gene_syms_pogz_len(self):
         self.impl.connect()
-        res = self.impl.get_transmitted_summary_variants1(
+        res = self.impl.get_transmitted_summary_variants(
             geneSyms=['POGZ'])
         self.assertEquals(153, len(res))
 
@@ -68,7 +68,7 @@ class Test(unittest.TestCase):
                      'CPE', 'HIPK3', 'HIPK2', 'HIPK1', 'GPM6A',
                      'TULP4', 'JPH4', 'FAM190B', 'FKBP8', 'KIAA0090']
         self.impl.connect()
-        res = self.impl.get_transmitted_summary_variants1(
+        res = self.impl.get_transmitted_summary_variants(
             geneSyms=gene_syms)
         self.assertEquals(1100, len(res))
 
@@ -79,9 +79,20 @@ class Test(unittest.TestCase):
         assert isinstance(gene_syms, list)
 
         self.impl.connect()
-        res = self.impl.get_transmitted_summary_variants1(
+        res = self.impl.get_transmitted_summary_variants(
             geneSyms=gene_syms)
         self.assertEquals(116195, len(res))
+
+    def test_gene_sym_gene_set_lgds(self):
+        gene_syms = list(prepare_gene_sets({'geneSet': 'main',
+                                            'geneTerm': 'FMR1-targets'}))
+        lgds = list(vDB.effectTypesSet('LGDs'))
+
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            geneSyms=gene_syms,
+            effectTypes=lgds)
+        self.assertEquals(850, len(res))
 
 #     def test_find_gene_syms_problem_len(self):
 #         gene_syms = list(prepare_gene_sets({'geneSet': 'main',

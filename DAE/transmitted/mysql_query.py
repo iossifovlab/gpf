@@ -147,15 +147,15 @@ class MysqlTransmittedQuery(object):
         w = ' AND '.join(where)
         return w
 
+#     def get_transmitted_summary_variants(self, **kwargs):
+#         where = self._build_where(kwargs)
+#
+#         select = 'select id ' \
+#             'from transmitted_summaryvariant as tsv where {}'.format(where)
+#         # print(select)
+#         return self.execute(select)
+
     def get_transmitted_summary_variants(self, **kwargs):
-        where = self._build_where(kwargs)
-
-        select = 'select id ' \
-            'from transmitted_summaryvariant as tsv where {}'.format(where)
-        print(select)
-        return self.execute(select)
-
-    def get_transmitted_summary_variants1(self, **kwargs):
         where = self._build_where(kwargs)
         select = \
             "select distinct tsv.id " \
@@ -164,5 +164,5 @@ class MysqlTransmittedQuery(object):
             "on tsv.id = tge.summary_variant_id " \
             "where {} " \
             "group by tsv.id".format(where)
-        print(select)
+        # print(select)
         return self.execute(select)
