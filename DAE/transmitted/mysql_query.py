@@ -104,7 +104,7 @@ class MysqlTransmittedQuery(object):
                 ' ( tsv.n_par_called > {} ) '.format(
                     self['minParentsCalled']))
         if self['ultraRareOnly']:
-            where.append(' ( tsv.n_alt_alls == 1 ) ')
+            where.append(' ( tsv.n_alt_alls = 1 ) ')
         else:
             if self['maxAltFreqPrcnt']:
                 where.append(
@@ -133,19 +133,24 @@ class MysqlTransmittedQuery(object):
         where = ' tge.symbol in ( {} ) '.format(','.join(where))
         return where
 
-    def _build_where(self, kwargs):
+    def _build_where(self):
         where = []
-        if 'effectTypes' in kwargs:
-            self.query['effectTypes'] = kwargs['effectTypes']
+        if self['effectTypes']:
+            # self.query['effectTypes'] = kwargs['effectTypes']
             where.append(self._build_effect_type_where())
 
-        if 'geneSyms' in kwargs:
-            self.query['geneSyms'] = kwargs['geneSyms']
+        if self['geneSyms']:
+            # self.query['geneSyms'] = kwargs['geneSyms']
             where.append(self._build_gene_syms_where())
 
         where.append(self._build_freq_where())
         w = ' AND '.join(where)
         return w
+
+    def _copy_kwargs(self, kwargs):
+        for field in kwargs:
+            if field in self.keys:
+                self.query[field] = kwargs[field]
 
 #     def get_transmitted_summary_variants(self, **kwargs):
 #         where = self._build_where(kwargs)
@@ -156,7 +161,8 @@ class MysqlTransmittedQuery(object):
 #         return self.execute(select)
 
     def get_transmitted_summary_variants(self, **kwargs):
-        where = self._build_where(kwargs)
+        self._copy_kwargs(kwargs)
+        where = self._build_where()
         select = \
             "select distinct tsv.id " \
             "from transmitted_summaryvariant as tsv " \

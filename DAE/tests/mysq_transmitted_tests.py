@@ -94,6 +94,16 @@ class Test(unittest.TestCase):
             effectTypes=lgds)
         self.assertEquals(850, len(res))
 
+    def test_ultra_rare_lgds(self):
+        lgds = list(vDB.effectTypesSet('LGDs'))
+
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            effectTypes=lgds,
+            ultraRareOnly=True)
+        self.assertEquals(28265, len(res))
+
+
 #     def test_find_gene_syms_problem_len(self):
 #         gene_syms = list(prepare_gene_sets({'geneSet': 'main',
 #                                             'geneTerm': 'FMR1-targets'}))
