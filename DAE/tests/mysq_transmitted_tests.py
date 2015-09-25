@@ -94,7 +94,7 @@ class Test(unittest.TestCase):
             effectTypes=lgds)
         self.assertEquals(850, len(res))
 
-    def test_ultra_rare_lgds(self):
+    def test_ultra_rare_lgds_len(self):
         lgds = list(vDB.effectTypesSet('LGDs'))
 
         self.impl.connect()
@@ -102,6 +102,26 @@ class Test(unittest.TestCase):
             effectTypes=lgds,
             ultraRareOnly=True)
         self.assertEquals(28265, len(res))
+
+    def test_ultra_rare_ins_len(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            variantTypes=['ins'],
+            ultraRareOnly=True)
+        self.assertEquals(13530, len(res))
+
+    def test_all_ultra_rare_len(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            ultraRareOnly=True)
+        self.assertEquals(867513, len(res))
+
+    def test_ultra_rare_all_variant_types_len(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            variantTypes=['ins', 'del', 'sub'],
+            ultraRareOnly=True)
+        self.assertEquals(867513, len(res))
 
 
 #     def test_find_gene_syms_problem_len(self):

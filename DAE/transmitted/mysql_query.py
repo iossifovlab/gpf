@@ -28,33 +28,38 @@ class MysqlTransmittedQuery(object):
         'splice-site',
         'synonymous']
 
-    keys = {'variantTypes': list,
-            'effectTypes': list,
-            'geneSyms': list,
-            'ultraRareOnly': bool,
-            'minParentsCalled': int,
-            'maxAltFreqPrcnt': float,
-            'minAltFreqPrcnt': float,
-            'family_ids': list,
-            'present_in_parent': list,
-            'present_in_child': list,
-            'present_in_child_gender': list,
-            'regionS': list,
-            }
+    VARIANT_TYPES = [
+        'del', 'ins', 'sub', 'CNV']
 
-    default_query = {'variantTypes': None,
-                     'effectTypes': None,
-                     'geneSyms': None,
-                     'ultraRareOnly': False,
-                     'minParentsCalled': 600,
-                     'maxAltFreqPrcnt': 5.0,
-                     'minAltFreqPrcnt': None,
-                     'family_ids': None,
-                     'present_in_parent': None,
-                     'present_in_child': None,
-                     'present_in_child_gender': None,
-                     'regionS': None,
-                     }
+    keys = {
+        'variantTypes': list,
+        'effectTypes': list,
+        'geneSyms': list,
+        'ultraRareOnly': bool,
+        'minParentsCalled': int,
+        'maxAltFreqPrcnt': float,
+        'minAltFreqPrcnt': float,
+        'family_ids': list,
+        'present_in_parent': list,
+        'present_in_child': list,
+        'present_in_child_gender': list,
+        'regionS': list,
+        }
+
+    default_query = {
+        'variantTypes': None,
+        'effectTypes': None,
+        'geneSyms': None,
+        'ultraRareOnly': False,
+        'minParentsCalled': 600,
+        'maxAltFreqPrcnt': 5.0,
+        'minAltFreqPrcnt': None,
+        'family_ids': None,
+        'present_in_parent': None,
+        'present_in_child': None,
+        'present_in_child_gender': None,
+        'regionS': None,
+        }
 
     def _get_config_property(self, name):
         return self.vdb._config.get(self.config_section, name)
@@ -126,6 +131,16 @@ class MysqlTransmittedQuery(object):
         where = ' tge.effect_type in ( {} ) '.format(','.join(where))
         return where
 
+    def _build_variant_type_where(self):
+        assert self['variantTypes']
+        assert isinstance(self['variantTypes'], list)
+        assert reduce(operator.and_,
+                      map(lambda et: et in self.VARIANT_TYPES,
+                          self['variantTypes']))
+        where = map(lambda ef: " '{}' ".format(ef), self['variantTypes'])
+        where = ' tge.variant_type in ( {} ) '.format(','.join(where))
+        return where
+
     def _build_gene_syms_where(self):
         assert self['geneSyms']
         assert isinstance(self['geneSyms'], list)
@@ -142,6 +157,9 @@ class MysqlTransmittedQuery(object):
         if self['geneSyms']:
             # self.query['geneSyms'] = kwargs['geneSyms']
             where.append(self._build_gene_syms_where())
+
+        if self['variantTypes']:
+            where.append(self._build_variant_type_where())
 
         where.append(self._build_freq_where())
         w = ' AND '.join(where)
