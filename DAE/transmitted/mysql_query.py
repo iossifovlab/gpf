@@ -41,9 +41,10 @@ class MysqlTransmittedQuery(object):
         'maxAltFreqPrcnt': float,
         'minAltFreqPrcnt': float,
         'family_ids': list,
-        'present_in_parent': list,
-        'present_in_child': list,
-        'present_in_child_gender': list,
+        'presentInParent': list,
+        'inChild': str,
+        'presentInChild': list,
+        'gender': list,
         'regionS': list,
         }
 
@@ -56,9 +57,10 @@ class MysqlTransmittedQuery(object):
         'maxAltFreqPrcnt': 5.0,
         'minAltFreqPrcnt': None,
         'family_ids': None,
-        'present_in_parent': None,
-        'present_in_child': None,
-        'present_in_child_gender': None,
+        'presentInParent': None,
+        'inChild': None,
+        'presentInChild': None,
+        'gender': None,
         'regionS': None,
         }
 
