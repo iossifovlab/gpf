@@ -4,7 +4,6 @@ from api.precompute import register
 
 LOGGER = logging.getLogger(__name__)
 
-
 from DAE import get_gene_sets_symNS
 
 # def load_gene_set(gene_set_label, study_name=None):
@@ -14,27 +13,28 @@ from DAE import get_gene_sets_symNS
 
 
 def gene_terms_union(gene_terms):
-    if len(gene_terms)==1:
+    if len(gene_terms) == 1:
         return api.GeneTerm.GeneTerm(gene_terms[0])
-    
+
     result = api.GeneTerm.GeneTerm(gene_terms[0])
-    
+
     for gt in gene_terms[1:]:
         result.union(gt)
 
     return result
 
-    
+
 def collect_denovo_gene_sets(gene_set_phenotype):
     precomputed = register.get('denovo_gene_sets')
     denovo_gene_sets = precomputed.denovo_gene_sets
-
+    if gene_set_phenotype is None:
+        gene_set_phenotype = 'autism'
     phenotypes = gene_set_phenotype.split(',')
-    gene_terms = [denovo_gene_sets[pheno] for pheno in phenotypes 
+    gene_terms = [denovo_gene_sets[pheno] for pheno in phenotypes
                   if pheno in denovo_gene_sets]
     return gene_terms
 
-    
+
 def combine_denovo_gene_sets(gene_set_phenotype):
     gene_terms = collect_denovo_gene_sets(gene_set_phenotype)
     return gene_terms_union(gene_terms)
@@ -42,7 +42,7 @@ def combine_denovo_gene_sets(gene_set_phenotype):
 
 def load_gene_set2(gene_set_label, gene_set_phenotype=None):
     gene_term = None
-    if gene_set_label!= 'denovo':
+    if gene_set_label != 'denovo':
         gene_term = get_gene_sets_symNS(gene_set_label)
     else:
         gene_term = combine_denovo_gene_sets(gene_set_phenotype)
@@ -61,9 +61,9 @@ def load_gene_set2(gene_set_label, gene_set_phenotype=None):
 #     children_description_index=cols.index['children description']
 
 #     for row in rows:
-        
 #         pass
-    
+
+
 def prepare_summary(vs):
     rows = []
     cols = vs.next()

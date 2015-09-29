@@ -2,6 +2,7 @@ import itertools
 import logging
 from DAE import get_gene_sets_symNS, vDB
 from api.precompute import register
+from api.dae_query import combine_denovo_gene_sets
 
 LOGGER = logging.getLogger(__name__)
 
@@ -90,11 +91,7 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
     if gene_set_label != 'denovo':
         gene_term = get_gene_sets_symNS(gene_set_label)
     else:
-        denovo_gene_sets = register.get('denovo_gene_sets').denovo_gene_sets
-        if denovo_gene_sets is None:
-            return None
-        if gene_set_phenotype in denovo_gene_sets:
-            gene_term = denovo_gene_sets[gene_set_phenotype]
+        gene_term = combine_denovo_gene_sets(gene_set_phenotype)
 
     return gene_term
 
