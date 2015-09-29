@@ -155,15 +155,15 @@ class ReportBase(CommonBase):
         self.study_name = study_name
         self.study_description = None
         self.studies = vDB.get_studies(self.study_name)
+        self._calc_phenotypes()
 
-    @property
-    def phenotypes(self):
+    def _calc_phenotypes(self):
         phenotypes = set([st.get_attr('study.phenotype')
                           for st in self.studies])
         phenotypes = list(phenotypes)
         phenotypes.sort()
         phenotypes.append('unaffected')
-        return phenotypes
+        self.phenotypes = phenotypes
 
 
 class FamiliesReport(ReportBase, Precompute):
@@ -322,6 +322,23 @@ class DenovoEventsReport(ReportBase, Precompute):
         self.effect_groups = effect_groups
         self.effect_types = effect_types
 
+    def is_empty_column(self, phenotype):
+        all_zeroes = True
+        for row in self.rows.values():
+            ec = row[phenotype]
+            if not ec.is_zeroes():
+                all_zeroes = False
+                break
+        return all_zeroes
+
+    def clear_empty_columns(self):
+        remove_phenotypes = []
+        for phenotype in self.phenotypes:
+            if self.is_empty_column(phenotype):
+                remove_phenotypes.append(phenotype)
+        for to_remove in remove_phenotypes:
+            self.phenotypes.remove(to_remove)
+
     def build(self):
         rows = {}
         for effect_type in self.effect_groups():
@@ -345,6 +362,7 @@ class DenovoEventsReport(ReportBase, Precompute):
         rows = data['rows']
         self.rows = cPickle.loads(zlib.decompress(rows))
         self.clear_empty_rows()
+        self.clear_empty_columns()
 
 
 class StudyVariantReports(ReportBase, Precompute):
@@ -375,7 +393,9 @@ class StudyVariantReports(ReportBase, Precompute):
     def serialize(self):
         return {'study_name': self.study_name,
                 'families_report': self.families_report.serialize(),
-                'denovo_report': self.denovo_report.serialize() if self.denovo_report else None}
+                'denovo_report': self.denovo_report.serialize()
+                if self.denovo_report else None,
+                }
 
     def deserialize(self, data):
         assert self.study_name == data['study_name']
