@@ -224,3 +224,15 @@ class MysqlTransmittedQuery(object):
             "group by tsv.id".format(where)
         # print(select)
         return self.execute(select)
+
+    def get_transmitted_variants(self, **kwargs):
+        self._copy_kwargs(kwargs)
+        where = self._build_where()
+        select = \
+            "select tfv.family_id, tsv.id " \
+            "from transmitted_familyvariant as tfv " \
+            "left join transmitted_summaryvariant as tsv " \
+            "on tfv.summary_variant_id = tsv.id " \
+            "where {} ".format(where)
+        print(select)
+        return self.execute(select)

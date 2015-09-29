@@ -9,7 +9,7 @@ from DAE import vDB
 from query_prepare import prepare_gene_sets
 
 
-class Test(unittest.TestCase):
+class SummaryVariantsLenTest(unittest.TestCase):
 
     def setUp(self):
         self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
@@ -182,6 +182,26 @@ class Test(unittest.TestCase):
 #                 problems.append((count, len(res),
 #                                  "gene sym: {}".format(sym)))
 #         self.assertFalse(problems, "{}".format(problems))
+
+
+class VariantsLenTest(unittest.TestCase):
+
+    def setUp(self):
+        self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+
+    def tearDown(self):
+        self.impl.disconnect()
+
+    def test_ultra_rare_single_region_len(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            ultraRareOnly=True,
+            regionS=["1:0-60000000"])
+
+        self.assertEquals(32079, len(res))
+
+
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
