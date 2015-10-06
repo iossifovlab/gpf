@@ -378,7 +378,7 @@ def gene_set_download(request):
             title = "{}:{}".format(gene_set, gene_name)
             if gene_set_phenotype:
                 title += " ({})".format(gene_set_phenotype)
-            gene_syms.append("{}\r\n".format(title))
+            gene_syms.append('"{}"\r\n'.format(title))
             gene_syms.extend(gts.t2G[gene_name].keys())
     res = map(lambda s: "{}\r\n".format(s), gene_syms)
     print(res)
