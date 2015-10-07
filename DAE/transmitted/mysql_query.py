@@ -46,6 +46,7 @@ class MysqlTransmittedQuery(object):
         'presentInChild': list,
         'gender': list,
         'regionS': list,
+        'familyIds': list,
         }
 
     default_query = {
@@ -62,6 +63,7 @@ class MysqlTransmittedQuery(object):
         'presentInChild': None,
         'gender': None,
         'regionS': None,
+        'familyIds': None,
         }
 
     def _get_config_property(self, name):
@@ -134,6 +136,14 @@ class MysqlTransmittedQuery(object):
         where = ' tge.effect_type in ( {} ) '.format(','.join(where))
         return where
 
+    def _build_family_ids_where(self):
+        assert self['familyIds']
+        assert isinstance(self['familyIds'], list)
+
+        where = map(lambda fid: " '{}' ".format(fid), self['familyIds'])
+        where = ' tfv.family_id in ( {} ) '.format(','.join(where))
+        return where
+
     def _build_variant_type_where(self):
         assert self['variantTypes']
         assert isinstance(self['variantTypes'], list)
@@ -187,6 +197,9 @@ class MysqlTransmittedQuery(object):
 
         if self['variantTypes']:
             where.append(self._build_variant_type_where())
+
+        if self['familyIds']:
+            where.append(self._build_family_ids_where())
 
         if self['regionS']:
             w = self._build_regions_where()

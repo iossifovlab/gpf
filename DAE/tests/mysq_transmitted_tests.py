@@ -200,6 +200,13 @@ class VariantsLenTest(unittest.TestCase):
 
         self.assertEquals(32079, len(res))
 
+    def test_all_variants_in_family_id(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            familyIds=["11110"])
+
+        self.assertEquals(5701, len(res))
+
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
