@@ -201,8 +201,6 @@ class VariantsLenTest(unittest.TestCase):
         self.assertEquals(32079, len(res))
 
 
-
-
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

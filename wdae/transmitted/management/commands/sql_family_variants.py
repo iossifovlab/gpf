@@ -6,6 +6,8 @@ Created on Aug 28, 2015
 from django.core.management.base import BaseCommand, CommandError
 from DAE import vDB
 import gzip
+import copy
+from VariantsDB import Variant
 
 
 FAMILY_VARIANTS_CREATE_TABLE = '''
@@ -101,7 +103,58 @@ class Command(BaseCommand):
 
         return pfd
 
-    def create_family_variant_value(self, fid, bs, c, vrow):
+    def create_family_variant(self, vs, family_data):
+        v = copy.copy(vs)
+        v.atts = {kk: vv for kk, vv in vs.atts.items()}
+        fid, bs, counts = family_data
+        v.atts['familyId'] = fid
+        v.atts['bestState'] = bs
+        v.atts['counts'] = counts
+
+        return v
+
+    def create_family_variants_dict(self, tmfh, vals, variant):
+        family_data = vals['familyData']
+        pfd = self.load_parse_family_data(tmfh, family_data)
+        res = []
+        for fid, bs, c in pfd:
+            vs = self.create_family_variant(variant, (fid, bs, c))
+            fres = {
+                'family_id': vs.familyId,
+                'best': vs.bestStStr,
+                'counts': vs.countsStr,
+            }
+            self.build_inchild(fres, vs)
+            self.build_inparent(fres, vs)
+            res.append(fres)
+        return res
+
+    def build_inchild(self, res, vs):
+        in_child = vs.inChS
+        if 'prb' in in_child:
+            res['in_prb'] = 1
+            res['in_prb_gender'] = in_child[3]
+        if 'sib' in in_child:
+            res['in_sib'] = 1
+            gender = None
+            if in_child.startswith('sib'):
+                gender = in_child[3]
+            else:
+                gender = in_child[7]
+            assert gender is not None
+            res['in_sib_gender'] = gender
+        return res
+
+    def build_inparent(self, res, vs):
+        from_parent = vs.fromParentS
+        if 'mom' in from_parent:
+            res['in_mom'] = 1
+        if 'dad' in from_parent:
+            res['in_dad'] = 1
+
+    def create_family_variant_value(self, fid, bs, c, vrow, variant):
+        fvar = self.create_family_variant(variant, (fid, bs, c))
+
         res = {'summary_variant_id': vrow,
                'family_id': fid,
                'best': bs,
@@ -112,16 +165,30 @@ class Command(BaseCommand):
                'in_sib': 0,
                'in_prb_gender': 'M',
                'in_sib_gender': 'M'}
+        self.build_inchild(res, fvar)
+        self.build_inparent(res, fvar)
+
         return FAMILY_VARIANTS_VALUES % res
 
-    def create_family_variants_values(self, tmfh, vals, vrow):
+    def create_family_variants_values(self, tmfh, vals, vrow, variant):
         family_data = vals['familyData']
+
         pfd = self.load_parse_family_data(tmfh, family_data)
         res = []
         for fid, bs, c in pfd:
-            fin = self.create_family_variant_value(fid, bs, c, vrow)
+            fin = self.create_family_variant_value(fid, bs, c, vrow, variant)
             res.append(fin)
         return res
+
+    def create_summary_variant(self, vals):
+        vals["location"] = vals["chr"] + ":" + vals["position"]
+        v = Variant(vals)
+        v.study = self.study
+        if int(vals['all.nAltAlls']) == 1:
+            v.popType = 'ultraRare'
+        else:
+            v.popType = 'common'
+        return v
 
     def handle(self, *args, **options):
         if(len(args) != 1):
@@ -149,9 +216,12 @@ class Command(BaseCommand):
                 data = line.strip("\r\n").split("\t")
                 vals = dict(zip(column_names, data))
 
+                variant = self.create_summary_variant(vals)
+
                 fv_values = self.create_family_variants_values(tmfh,
                                                                vals,
-                                                               vrow)
+                                                               vrow,
+                                                               variant)
 
                 fv_insert = '%s %s;' % (FAMILY_VARIANTS_INSERT_BEGIN,
                                         ','.join(fv_values))
