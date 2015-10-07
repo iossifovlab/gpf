@@ -214,6 +214,17 @@ class VariantsLenTest(unittest.TestCase):
 
         self.assertEquals(9322, len(res))
 
+    #  get_variants.py --denovoStudies=none --effectTypes=none
+    # --transmittedStudy=w1202s766e611 --popMinParentsCalled=-1
+    # --popFrequencyMax=-1 --familiesList=13785
+    def test_all_variants_in_single_family_id(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            minParentsCalled=None,
+            maxAltFreqPrcnt=None,
+            familyIds=["13785"])
+        self.assertEquals(29375, len(res))
+
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

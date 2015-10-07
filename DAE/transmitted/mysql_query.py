@@ -208,7 +208,10 @@ class MysqlTransmittedQuery(object):
             else:
                 where.append(w)
 
-        where.append(self._build_freq_where())
+        fw = self._build_freq_where()
+        if fw:
+            where.append(self._build_freq_where())
+
         w = ' AND '.join(where)
         return w
 
