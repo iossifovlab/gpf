@@ -64,11 +64,11 @@ SUMMARY_VARIANTS_INSERT_BEGIN = \
     '''INSERT INTO `transmitted_summaryvariant` VALUES %s ;'''
 
 SUMMARY_VARIANTS_VALUES = \
-    '''( %(id)d, %(ln)d, '%(chrome)s', %(position)d, ''' \
-    ''' '%(variant)s', '%(variant_type)s', ''' \
-    ''' '%(effect_type)s', '%(effect_gene)s', '%(effect_gene_all)s', ''' \
-    ''' %(effect_count)d, '%(effect_details)s', ''' \
-    ''' %(n_par_called)d', %(n_alt_alls)d, %(alt_freq)d, ''' \
+    '''( %(id)d, %(ln)d, "%(chrome)s", %(position)d, ''' \
+    ''' "%(variant)s", "%(variant_type)s", ''' \
+    ''' "%(effect_type)s", "%(effect_gene)s", "%(effect_gene_all)s", ''' \
+    ''' %(effect_count)d, "%(effect_details)s", ''' \
+    ''' %(n_par_called)d, %(n_alt_alls)d, %(alt_freq)d, ''' \
     ''' %(prcnt_par_called)f, %(seg_dups)d, %(hw)f, ''' \
     ''' %(ssc_freq)s, %(evs_freq)s, %(e65_freq)s )'''
 
@@ -174,16 +174,21 @@ class Command(BaseCommand):
             outfile.write('\n')
 
             nrow = 1
-
+            ins_line = []
             for line in fh:
                 data = line.strip("\r\n").split("\t")
                 vals = dict(zip(column_names, data))
                 evvals = self.create_effect_variant_dict(vals)
                 svvals = self.create_summary_variant_dict(nrow, vals, evvals)
                 ins_values = SUMMARY_VARIANTS_VALUES % svvals
-                outfile.write(SUMMARY_VARIANTS_INSERT_BEGIN % ins_values)
-
-                outfile.write('\n')
+                ins_line.append(ins_values)
                 nrow += 1
-                if nrow % 1000 == 0:
+                if nrow % 100 == 0:
+                    outfile.write(SUMMARY_VARIANTS_INSERT_BEGIN %
+                                  ', '.join(ins_line))
+                    outfile.write('\n')
+                    ins_line = []
                     print("line: {}".format(nrow))
+
+            outfile.write(SUMMARY_VARIANTS_END_DUMPING_DATA)
+            outfile.write('\n')
