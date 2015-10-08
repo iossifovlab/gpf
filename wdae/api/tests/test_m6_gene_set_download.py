@@ -112,7 +112,7 @@ class Test(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = list(response.streaming_content)
         title = res[0]
-        self.assertEqual('main:ChromatinModifiers', title.strip())
+        self.assertEqual('"main:ChromatinModifiers"', title.strip())
     
     def test_gene_set_download_denovo_title(self):
         data = {'gene_set':'denovo', 
