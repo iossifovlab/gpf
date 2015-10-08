@@ -125,7 +125,7 @@ class Command(BaseCommand):
 
         summary_filename = self.get_summary_filename(study_name)
         with gzip.open(summary_filename, 'r') as fh, \
-                open('gene_effect_variants_innodb.sql', 'w') as outfile:
+                open('gene_effect_variants_myisam.sql', 'w') as outfile:
 
             column_names = fh.readline().rstrip().split('\t')
 

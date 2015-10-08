@@ -67,7 +67,7 @@ SUMMARY_VARIANTS_INSERT_BEGIN = \
 SUMMARY_VARIANTS_VALUES = \
     '''( %(id)d, %(ln)d, "%(chrome)s", %(position)d, ''' \
     ''' "%(variant)s", "%(variant_type)s", ''' \
-    ''' "%(effect_type)s", "%(effect_gene)s", "%(effect_gene_all)s", ''' \
+    ''' "%(effect_type)s", %(effect_gene)s, "%(effect_gene_all)s", ''' \
     ''' %(effect_count)d, "%(effect_details)s", ''' \
     ''' %(n_par_called)d, %(n_alt_alls)d, %(alt_freq)d, ''' \
     ''' %(prcnt_par_called)f, %(seg_dups)d, %(hw)f, ''' \
@@ -165,7 +165,7 @@ class Command(BaseCommand):
 
         summary_filename = self.get_summary_filename(study_name)
         with gzip.open(summary_filename, 'r') as fh, \
-                open('summary_variants_innod.sql', 'w') as outfile:
+                open('summary_variants_myisam.sql', 'w') as outfile:
 
             column_names = fh.readline().rstrip().split('\t')
 

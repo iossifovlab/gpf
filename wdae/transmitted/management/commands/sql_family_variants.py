@@ -201,7 +201,7 @@ class Command(BaseCommand):
 
         with gzip.open(summary_filename, 'r') as fh, \
                 gzip.open(tm_filename, 'r') as tmfh, \
-                open('family_variants_innodb.sql', 'w') as outfile:
+                open('family_variants_myisam.sql', 'w') as outfile:
 
             column_names = fh.readline().rstrip().split('\t')
             tmfh.readline()  # skip column names in too may family file
