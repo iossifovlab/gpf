@@ -69,7 +69,7 @@ SUMMARY_VARIANTS_VALUES = \
     ''' "%(variant)s", "%(variant_type)s", ''' \
     ''' "%(effect_type)s", %(effect_gene)s, "%(effect_gene_all)s", ''' \
     ''' %(effect_count)d, "%(effect_details)s", ''' \
-    ''' %(n_par_called)d, %(n_alt_alls)d, %(alt_freq)d, ''' \
+    ''' %(n_par_called)d, %(n_alt_alls)d, %(alt_freq)f, ''' \
     ''' %(prcnt_par_called)f, %(seg_dups)d, %(hw)f, ''' \
     ''' %(ssc_freq)s, %(evs_freq)s, %(e65_freq)s )'''
 

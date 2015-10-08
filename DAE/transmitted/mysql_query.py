@@ -250,5 +250,5 @@ class MysqlTransmittedQuery(object):
             "left join transmitted_summaryvariant as tsv " \
             "on tfv.summary_variant_id = tsv.id " \
             "where {} ".format(where)
-        # print(select)
+        print(select)
         return self.execute(select)
