@@ -152,6 +152,10 @@ class Command(BaseCommand):
                     outfile.write('\n')
                     ins_line = []
                     print("line: {}".format(vrow))
+            if ins_line:
+                outfile.write(GENE_EFFECT_VARIANTS_INSERT_BEGIN %
+                              ', '.join(ins_line))
+                outfile.write('\n')
 
             outfile.write(GENE_EFFECT_VARIANTS_END_DUMPING_DATA)
             outfile.write('\n')

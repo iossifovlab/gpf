@@ -190,6 +190,10 @@ class Command(BaseCommand):
                     outfile.write('\n')
                     ins_line = []
                     print("line: {}".format(nrow))
+            if ins_line:
+                outfile.write(SUMMARY_VARIANTS_INSERT_BEGIN %
+                              ', '.join(ins_line))
+                outfile.write('\n')
 
             outfile.write(SUMMARY_VARIANTS_END_DUMPING_DATA)
             outfile.write('\n')
