@@ -124,7 +124,8 @@ class Test(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = list(response.streaming_content)
         title = res[0]
-        self.assertEqual('denovo:LGDs (autism,epilepsy,unaffected)', title.strip())
+        self.assertEqual('"denovo:LGDs (autism,epilepsy,unaffected)"',
+                         title.strip())
 
 
 if __name__ == "__main__":
