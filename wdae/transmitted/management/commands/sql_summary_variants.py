@@ -42,7 +42,7 @@ CREATE TABLE `transmitted_summaryvariant` (
   KEY `transmitted_summaryvariant_554838a8` (`chrome`),
   KEY `transmitted_summaryvariant_91ca6089` (`effect_type`),
   KEY `transmitted_summaryvariant_7f96c587` (`effect_gene`)
-) ENGINE=InnoDB AUTO_INCREMENT=1415356 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 '''
 
@@ -58,6 +58,7 @@ LOCK TABLES `transmitted_summaryvariant` WRITE;
 SUMMARY_VARIANTS_END_DUMPING_DATA = '''
 /*!40000 ALTER TABLE `transmitted_summaryvariant` ENABLE KEYS */;
 UNLOCK TABLES;
+
 '''
 
 SUMMARY_VARIANTS_INSERT_BEGIN = \
@@ -134,7 +135,7 @@ class Command(BaseCommand):
 
         if len(gene_effects) == 0 and vals['effectGene'] == 'intergenic':
             return [{
-                'symbol': None,
+                'symbol': 'NULL',
                 'effect_type': 'intergenic',
                 'variant_type': variant_type,
                 'n_par_called': int(vals['all.nParCalled']),
@@ -145,7 +146,7 @@ class Command(BaseCommand):
         res = []
         for ge in gene_effects:
             eres = {
-                'symbol': ge['sym'],
+                'symbol': '"%s"' % ge['sym'],
                 'effect_type': ge['eff'],
                 'variant_type': variant_type,
                 'n_par_called': int(vals['all.nParCalled']),

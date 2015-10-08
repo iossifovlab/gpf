@@ -31,7 +31,7 @@ CREATE TABLE `transmitted_familyvariant` (
   CONSTRAINT `D1b9d36c68906398c84f8ef06314d61c`
   FOREIGN KEY (`summary_variant_id`)
   REFERENCES `transmitted_summaryvariant` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 '''
 
