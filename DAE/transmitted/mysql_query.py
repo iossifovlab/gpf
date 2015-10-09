@@ -232,7 +232,22 @@ class MysqlTransmittedQuery(object):
         self._copy_kwargs(kwargs)
         where = self._build_where()
         select = \
-            "select distinct tsv.id " \
+            "select distinct tsv.id, " \
+            "tsv.chrome as chrome, " \
+            "tsv.position as position, " \
+            "tsv.variant as variant, "\
+            "tsv.n_par_called as `all.nParCalled`, " \
+            "tsv.prcnt_par_called as `all.prcntParCalled`, " \
+            "tsv.n_alt_alls as `all.nAltAlls`, " \
+            "tsv.alt_freq as `all.altFreq`, " \
+            "tsv.effect_type as effectType, " \
+            "tsv.effect_gene_all as `effectGene`, " \
+            "tsv.effect_details as `effectDetails`, " \
+            "tsv.seg_dups as `segDups`, " \
+            "tsv.hw as `HW`, " \
+            "tsv.ssc_freq as `SSC-freq`, " \
+            "tsv.evs_freq as `EVS-freq`, " \
+            "tsv.e65_freq as `E65-freq` " \
             "from transmitted_summaryvariant as tsv " \
             "left join transmitted_geneeffectvariant as tge " \
             "on tsv.id = tge.summary_variant_id " \
@@ -245,10 +260,32 @@ class MysqlTransmittedQuery(object):
         self._copy_kwargs(kwargs)
         where = self._build_where()
         select = \
-            "select tfv.family_id, tsv.id " \
+            "select " \
+            "tsv.chrome as chrome, " \
+            "tsv.position as position, " \
+            "tsv.variant as variant, "\
+            "tsv.n_par_called as `all.nParCalled`, " \
+            "tsv.prcnt_par_called as `all.prcntParCalled`, " \
+            "tsv.n_alt_alls as `all.nAltAlls`, " \
+            "tsv.alt_freq as `all.altFreq`, " \
+            "tsv.effect_type as effectType, " \
+            "tsv.effect_gene_all as `effectGene`, " \
+            "tsv.effect_details as `effectDetails`, " \
+            "tsv.seg_dups as `segDups`, " \
+            "tsv.hw as `HW`, " \
+            "tsv.ssc_freq as `SSC-freq`, " \
+            "tsv.evs_freq as `EVS-freq`, " \
+            "tsv.e65_freq as `E65-freq`, " \
+            "tfv.family_id as `familyId`, " \
+            "tfv.best as `bestState`, " \
+            "tfv.counts as `counts` " \
             "from transmitted_familyvariant as tfv " \
             "left join transmitted_summaryvariant as tsv " \
             "on tfv.summary_variant_id = tsv.id " \
             "where {} ".format(where)
-        print(select)
+
+        # "left join transmitted_geneeffectvariant as tge " \
+        # "on tge.summary_variant_id = tsv.id " \
+
+        # print(select)
         return self.execute(select)
