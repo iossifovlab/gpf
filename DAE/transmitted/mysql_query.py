@@ -7,6 +7,7 @@ import MySQLdb as mdb
 import copy
 import operator
 import re
+from VariantsDB import Variant
 
 
 class MysqlTransmittedQuery(object):
@@ -245,7 +246,7 @@ class MysqlTransmittedQuery(object):
         where = self._build_where()
         select = \
             "select distinct tsv.id, " \
-            "tsv.chrome as chrome, " \
+            "tsv.chrome as chr, " \
             "tsv.position as position, " \
             "tsv.variant as variant, "\
             "tsv.n_par_called as `all.nParCalled`, " \
@@ -262,15 +263,17 @@ class MysqlTransmittedQuery(object):
             "tsv.e65_freq as `E65-freq` " \
             "from transmitted_summaryvariant as tsv " \
             "where {} ".format(where)
-        # print(select)
-        return self.execute(select)
+
+        for v in self.execute(select):
+            v["location"] = v["chr"] + ":" + str(v["position"])
+            yield Variant(v)
 
     def get_transmitted_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
         where = self._build_where()
         select = \
             "select " \
-            "tsv.chrome as chrome, " \
+            "tsv.chrome as chr, " \
             "tsv.position as position, " \
             "tsv.variant as variant, "\
             "tsv.n_par_called as `all.nParCalled`, " \
@@ -293,8 +296,6 @@ class MysqlTransmittedQuery(object):
             "on tfv.summary_variant_id = tsv.id " \
             "where {} ".format(where)
 
-        # "left join transmitted_geneeffectvariant as tge " \
-        # "on tge.summary_variant_id = tsv.id " \
-
-        # print(select)
-        return self.execute(select)
+        for v in self.execute(select):
+            v["location"] = v["chr"] + ":" + str(v["position"])
+            yield Variant(v)

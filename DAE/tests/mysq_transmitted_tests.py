@@ -9,6 +9,13 @@ from DAE import vDB
 from query_prepare import prepare_gene_sets
 
 
+def count(vs):
+    l = 0
+    for _ in vs:
+        l += 1
+    return l
+
+
 class SummaryVariantsLenTest(unittest.TestCase):
 
     def setUp(self):
@@ -40,13 +47,13 @@ class SummaryVariantsLenTest(unittest.TestCase):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants()
         # 1350367
-        self.assertEquals(1350367, len(res))
+        self.assertEquals(1350367, count(res))
 
     def test_missense_effect_type_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
             effectTypes=['missense'])
-        self.assertEquals(589907, len(res))
+        self.assertEquals(589907, count(res))
         # print(res[0:30])
 
     def test_lgds_effect_type_len(self):
@@ -54,14 +61,14 @@ class SummaryVariantsLenTest(unittest.TestCase):
         lgds = list(vDB.effectTypesSet('LGDs'))
         res = self.impl.get_transmitted_summary_variants(
             effectTypes=lgds)
-        self.assertEquals(36520, len(res))
+        self.assertEquals(36520, count(res))
         # print(res[0:30])
 
     def test_gene_syms_pogz_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
             geneSyms=['POGZ'])
-        self.assertEquals(153, len(res))
+        self.assertEquals(153, count(res))
 
     def test_gene_syms_many1_len(self):
         gene_syms = ['SMARCC2', 'PGM2L1', 'SYNPO', 'ZCCHC14',
@@ -70,7 +77,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
             geneSyms=gene_syms)
-        self.assertEquals(1100, len(res))
+        self.assertEquals(1100, count(res))
 
     def test_gene_sym_gene_set(self):
         gene_syms = list(prepare_gene_sets({'geneSet': 'main',
@@ -81,7 +88,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
             geneSyms=gene_syms)
-        self.assertEquals(116195, len(res))
+        self.assertEquals(116195, count(res))
 
     def test_gene_sym_gene_set_lgds(self):
         gene_syms = list(prepare_gene_sets({'geneSet': 'main',
@@ -92,7 +99,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
         res = self.impl.get_transmitted_summary_variants(
             geneSyms=gene_syms,
             effectTypes=lgds)
-        self.assertEquals(850, len(res))
+        self.assertEquals(850, count(res))
 
     def test_ultra_rare_lgds_len(self):
         lgds = list(vDB.effectTypesSet('LGDs'))
@@ -101,27 +108,27 @@ class SummaryVariantsLenTest(unittest.TestCase):
         res = self.impl.get_transmitted_summary_variants(
             effectTypes=lgds,
             ultraRareOnly=True)
-        self.assertEquals(28265, len(res))
+        self.assertEquals(28265, count(res))
 
     def test_ultra_rare_ins_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
             variantTypes=['ins'],
             ultraRareOnly=True)
-        self.assertEquals(13530, len(res))
+        self.assertEquals(13530, count(res))
 
     def test_all_ultra_rare_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
             ultraRareOnly=True)
-        self.assertEquals(867513, len(res))
+        self.assertEquals(867513, count(res))
 
     def test_ultra_rare_all_variant_types_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
             variantTypes=['ins', 'del', 'sub'],
             ultraRareOnly=True)
-        self.assertEquals(867513, len(res))
+        self.assertEquals(867513, count(res))
 
     def test_ultra_rare_single_region(self):
         self.impl.connect()
@@ -129,7 +136,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
             ultraRareOnly=True,
             regionS=["1:0-60000000"])
 
-        self.assertEquals(32079, len(res))
+        self.assertEquals(32079, count(res))
 
     def test_ultra_rare_multiple_regions(self):
         self.impl.connect()
@@ -137,7 +144,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
             ultraRareOnly=True,
             regionS=["1:0-60000000", "X:1000000-30000000"])
 
-        self.assertEquals(36299, len(res))
+        self.assertEquals(36299, count(res))
 
     def test_region_matcher(self):
         res = self.impl._build_region_where("1:1-2")
@@ -164,24 +171,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
             ultraRareOnly=True,
             regionS=["1:0-60000000"])
 
-        self.assertEquals(1003, len(res))
-
-#     def test_find_gene_syms_problem_len(self):
-#         gene_syms = list(prepare_gene_sets({'geneSet': 'main',
-#                                             'geneTerm': 'FMR1-targets'}))
-#         st = vDB.get_study('w1202s766e611')
-#         self.impl.connect()
-#         problems = []
-#         for sym in gene_syms:
-#             vs = st.get_transmitted_summary_variants(geneSyms=[sym])
-#             count = 0
-#             for _v in vs:
-#                 count += 1
-#             res = self.impl.get_transmitted_summary_variants1(geneSyms=[sym])
-#             if count != len(res):
-#                 problems.append((count, len(res),
-#                                  "gene sym: {}".format(sym)))
-#         self.assertFalse(problems, "{}".format(problems))
+        self.assertEquals(1003, count(res))
 
 
 class VariantsLenTest(unittest.TestCase):
@@ -198,21 +188,21 @@ class VariantsLenTest(unittest.TestCase):
             ultraRareOnly=True,
             regionS=["1:0-60000000"])
 
-        self.assertEquals(32079, len(res))
+        self.assertEquals(32079, count(res))
 
     def test_variants_in_single_family_id(self):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(
             familyIds=["11110"])
 
-        self.assertEquals(5701, len(res))
+        self.assertEquals(5701, count(res))
 
     def test_variants_in_two_family_ids(self):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(
             familyIds=["11110", "11111"])
 
-        self.assertEquals(9322, len(res))
+        self.assertEquals(9322, count(res))
 
     #  get_variants.py --denovoStudies=none --effectTypes=none
     # --transmittedStudy=w1202s766e611 --popMinParentsCalled=-1
@@ -223,7 +213,7 @@ class VariantsLenTest(unittest.TestCase):
             minParentsCalled=None,
             maxAltFreqPrcnt=None,
             familyIds=["13785"])
-        self.assertEquals(29375, len(res))
+        self.assertEquals(29375, count(res))
 
     def test_family_id_and_pogz(self):
         self.impl.connect()
@@ -231,8 +221,7 @@ class VariantsLenTest(unittest.TestCase):
             familyIds=['13983'],
             geneSyms=['POGZ'])
 
-        self.assertEquals(1, len(res))
-        print(res)
+        self.assertEquals(1, count(res))
 
     def test_family_id_and_pogz_all(self):
         self.impl.connect()
@@ -242,9 +231,31 @@ class VariantsLenTest(unittest.TestCase):
             minParentsCalled=None,
             maxAltFreqPrcnt=None)
 
-        self.assertEquals(3, len(res))
-        print(res)
+        self.assertEquals(3, count(res))
 
+
+class VariantsFullTest(unittest.TestCase):
+
+    def setUp(self):
+        self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+        self.st = vDB.get_study('w1202s766e611')
+
+    def tearDown(self):
+        self.impl.disconnect()
+
+    def test_family_id_and_pogz(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            familyIds=['13983'],
+            geneSyms=['POGZ'])
+        vs = self.st.get_transmitted_variants(
+            familyIds=['13983'],
+            geneSyms=['POGZ'])
+        v = vs.next()
+        r = res.next()
+        self.assertIsNotNone(v)
+        self.assertIsNotNone(r)
+        self.assertEquals(v.location, r.location)
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
