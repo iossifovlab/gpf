@@ -126,16 +126,6 @@ class MysqlTransmittedQuery(object):
         res = ' AND '.join(where)
         return res
 
-    def _build_effect_type_where(self):
-        assert self['effectTypes']
-        assert isinstance(self['effectTypes'], list)
-        assert reduce(operator.and_,
-                      map(lambda et: et in self.EFFECT_TYPES,
-                          self['effectTypes']))
-        where = map(lambda ef: " '{}' ".format(ef), self['effectTypes'])
-        where = ' tge.effect_type in ( {} ) '.format(','.join(where))
-        return where
-
     def _build_family_ids_where(self):
         assert self['familyIds']
         assert isinstance(self['familyIds'], list)
@@ -151,7 +141,7 @@ class MysqlTransmittedQuery(object):
                       map(lambda et: et in self.VARIANT_TYPES,
                           self['variantTypes']))
         where = map(lambda ef: " '{}' ".format(ef), self['variantTypes'])
-        where = ' tge.variant_type in ( {} ) '.format(','.join(where))
+        where = ' tsv.variant_type in ( {} ) '.format(','.join(where))
         return where
 
     def _build_gene_syms_where(self):
@@ -159,6 +149,33 @@ class MysqlTransmittedQuery(object):
         assert isinstance(self['geneSyms'], list)
         where = map(lambda sym: " '{}' ".format(sym), self['geneSyms'])
         where = ' tge.symbol in ( {} ) '.format(','.join(where))
+        return where
+
+    def _build_effect_type_where(self):
+        assert self['effectTypes']
+        assert isinstance(self['effectTypes'], list)
+        assert reduce(operator.and_,
+                      map(lambda et: et in self.EFFECT_TYPES,
+                          self['effectTypes']))
+        where = map(lambda ef: " '{}' ".format(ef), self['effectTypes'])
+        where = ' tge.effect_type in ( {} ) '.format(','.join(where))
+        return where
+
+    def _build_effect_where(self):
+        assert self['effectTypes'] or self['geneSyms']
+        where = []
+        if self['effectTypes']:
+            # self.query['effectTypes'] = kwargs['effectTypes']
+            where.append(self._build_effect_type_where())
+
+        if self['geneSyms']:
+            # self.query['geneSyms'] = kwargs['geneSyms']
+            where.append(self._build_gene_syms_where())
+
+        w = ' AND '.join(where)
+        where = "tsv.id in ( " \
+            "select distinct tge.summary_variant_id " \
+            "from transmitted_geneeffectvariant as tge where %s )" % w
         return where
 
     REGION_REGEXP = re.compile("([1-9,X][0-9]?):(\d+)-(\d+)")
@@ -187,13 +204,8 @@ class MysqlTransmittedQuery(object):
 
     def _build_where(self):
         where = []
-        if self['effectTypes']:
-            # self.query['effectTypes'] = kwargs['effectTypes']
-            where.append(self._build_effect_type_where())
-
-        if self['geneSyms']:
-            # self.query['geneSyms'] = kwargs['geneSyms']
-            where.append(self._build_gene_syms_where())
+        if self['effectTypes'] or self['geneSyms']:
+            where.append(self._build_effect_where())
 
         if self['variantTypes']:
             where.append(self._build_variant_type_where())
@@ -249,10 +261,7 @@ class MysqlTransmittedQuery(object):
             "tsv.evs_freq as `EVS-freq`, " \
             "tsv.e65_freq as `E65-freq` " \
             "from transmitted_summaryvariant as tsv " \
-            "left join transmitted_geneeffectvariant as tge " \
-            "on tsv.id = tge.summary_variant_id " \
-            "where {} " \
-            "group by tsv.id".format(where)
+            "where {} ".format(where)
         # print(select)
         return self.execute(select)
 

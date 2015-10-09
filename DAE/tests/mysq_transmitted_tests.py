@@ -225,14 +225,25 @@ class VariantsLenTest(unittest.TestCase):
             familyIds=["13785"])
         self.assertEquals(29375, len(res))
 
-#     def test_family_id_and_pogz(self):
-#         self.impl.connect()
-#         res = self.impl.get_transmitted_variants(
-#             familyIds=['13983'],
-#             geneSyms=['POGZ'])
-#
-#         self.assertEquals(1, len(res))
-#         print(res)
+    def test_family_id_and_pogz(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            familyIds=['13983'],
+            geneSyms=['POGZ'])
+
+        self.assertEquals(1, len(res))
+        print(res)
+
+    def test_family_id_and_pogz_all(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            familyIds=['13983'],
+            geneSyms=['POGZ'],
+            minParentsCalled=None,
+            maxAltFreqPrcnt=None)
+
+        self.assertEquals(3, len(res))
+        print(res)
 
 
 if __name__ == "__main__":
