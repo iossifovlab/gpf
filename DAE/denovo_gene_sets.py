@@ -235,7 +235,7 @@ def add_set(gene_terms, setname, genes, desc=None):
     if desc:
         gene_terms.tDesc[setname] = desc
     else:
-        gene_terms.tDesc[setname] = setname
+        gene_terms.tDesc[setname] = ''
     for gsym in genes:
         gene_terms.t2G[setname][gsym] += 1
         gene_terms.g2T[gsym][setname] += 1
