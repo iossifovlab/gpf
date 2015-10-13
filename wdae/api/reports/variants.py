@@ -26,7 +26,7 @@ class CommonBase(object):
 
     @staticmethod
     def effect_groups():
-        return ['LGDs', 'nonsynonymous', 'UTRs']
+        return ['LGDs', 'nonsynonymous', 'UTRs', 'CNV']
 
     @staticmethod
     def phenotypes():
