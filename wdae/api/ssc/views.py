@@ -24,8 +24,6 @@ class SSCPrepare(APIView):
         data = prepare_query_dict(request.DATA)
         data = prepare_ssc_filter(data)
         build_effect_type_filter(data)
-
-        build_effect_type_filter(data)
         return data
 
 
