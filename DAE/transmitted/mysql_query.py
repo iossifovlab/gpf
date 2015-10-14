@@ -33,6 +33,11 @@ class MysqlTransmittedQuery(object):
     VARIANT_TYPES = [
         'del', 'ins', 'sub', 'CNV']
 
+    PRESENT_IN_PARENT_TYPES = [
+        "mother only", "father only",
+        "mother and father", "neither",
+    ]
+
     keys = {
         'variantTypes': list,
         'effectTypes': list,
@@ -203,6 +208,24 @@ class MysqlTransmittedQuery(object):
         where = " ( {} ) ".format(" OR ".join(where))
         return where
 
+    PRESENT_IN_PARENT_MAPPING = {
+        "mother only": " tfv.in_mom = 1  and tfv.in_dad = 0 ",
+        "father only": " tfv.in_dad = 1  and tfv.in_mom = 0 ",
+        "mother and father": " tfv.in_mom = 1 and tfv.in_dad = 1 ",
+        "neither": " tfv.in_mom = 0 and tfv.in_dad = 0 ",
+    }
+
+    def _build_present_in_parent_where(self):
+        assert self['presentInParent']
+        assert isinstance(self['presentInParent'], list)
+        assert reduce(operator.and_,
+                      map(lambda p: p in self.PRESENT_IN_PARENT_TYPES,
+                          self['presentInParent']))
+        w = [self.PRESENT_IN_PARENT_MAPPING[pip]
+             for pip in self['presentInParent']]
+        where = " ( {} ) ".format(' OR '.join(w))
+        return where
+
     def _build_where(self):
         where = []
         if self['effectTypes'] or self['geneSyms']:
@@ -220,6 +243,9 @@ class MysqlTransmittedQuery(object):
                 print("bad regions: {}".format(self['regionS']))
             else:
                 where.append(w)
+        if self['presentInParent']:
+            w = self._build_present_in_parent_where()
+            where.append(w)
 
         fw = self._build_freq_where()
         if fw:
@@ -295,7 +321,7 @@ class MysqlTransmittedQuery(object):
             "left join transmitted_summaryvariant as tsv " \
             "on tfv.summary_variant_id = tsv.id " \
             "where {} ".format(where)
-
+        print(select)
         for v in self.execute(select):
             v["location"] = v["chr"] + ":" + str(v["position"])
             yield Variant(v)

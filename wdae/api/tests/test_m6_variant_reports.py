@@ -24,7 +24,7 @@ class Test(unittest.TestCase):
 
     def test_effect_groups_base(self):
         eg = CommonBase.effect_groups()
-        self.assertEqual(3, len(eg), "wrong number of effect groups")
+        self.assertEqual(4, len(eg), "wrong number of effect groups")
 
     def test_family_report_we_studies(self):
         fr = FamiliesReport('ALL WHOLE EXOME')

@@ -275,24 +275,24 @@ def prepare_present_in_child(data):
 
         pheno_filter = []
         if 'autism only' in present_in_child:
-            pheno_filter.append( lambda inCh: (len(inCh)==4 and 'p' == inCh[0]) )
+            pheno_filter.append(lambda inCh: (len(inCh) == 4 and
+                                              'p' == inCh[0]))
         if 'unaffected only' in present_in_child:
-            pheno_filter.append( lambda inCh: (len(inCh)==4 and 's' == inCh[0]) )
+            pheno_filter.append(lambda inCh: (len(inCh) == 4 and
+                                              's' == inCh[0]))
         if 'autism and unaffected' in present_in_child:
-            pheno_filter.append( lambda inCh: (len(inCh)==8) )
+            pheno_filter.append(lambda inCh: (len(inCh) == 8))
         if 'neither' in present_in_child:
-            pheno_filter.append( lambda inCh: len(inCh) == 0 )
+            pheno_filter.append(lambda inCh: len(inCh) == 0)
 
         comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
 
         if ['F'] == gender:
-            gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'F'
-            comp.append(gender_filter)
+            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'F')
         elif ['M'] == gender:
-            gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'M'
-            comp.append(gender_filter)
+            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'M')
 
-        if len(comp)==1:
+        if len(comp) == 1:
             return comp[0]
 
         return lambda inCh: all([f(inCh) for f in comp])
