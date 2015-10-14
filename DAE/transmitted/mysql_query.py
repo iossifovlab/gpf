@@ -244,6 +244,25 @@ class MysqlTransmittedQuery(object):
         "sibling only": " ( tfv.in_sib = 1 and tfv.in_prb = 0 ) ",
         "proband and sibling": " ( tfv.in_prb = 1 and tfv.in_sib = 1 ) ",
         "neither": " ( tfv.in_prb = 0 and tfv.in_sib = 0 ) ",
+        ("autism only", 'F'):
+            " ( tfv.in_prb = 1 and tfv.in_sib = 0 and "
+            " tfv.in_prb_gender = 'F' ) ",
+        ("autism only", 'M'):
+            " ( tfv.in_prb = 1 and tfv.in_sib = 0 and "
+            " tfv.in_prb_gender = 'M' ) ",
+        ("unaffected only", 'F'):
+            " ( tfv.in_sib = 1 and tfv.in_prb = 0 and "
+            " tfv.in_sib_gender = 'F' ) ",
+        ("unaffected only", 'M'):
+            " ( tfv.in_sib = 1 and tfv.in_prb = 0 and "
+            " tfv.in_sib_gender = 'M' ) ",
+        ("autism and unaffected", 'F'):
+            " ( tfv.in_prb = 1 and tfv.in_sib = 1 and "
+            " tfv.in_prb_gender = 'F' and tfv.in_sib_gender = 'F' ) ",
+        ("autism and unaffected", 'M'):
+            " ( tfv.in_prb = 1 and tfv.in_sib = 1 and "
+            " tfv.in_prb_gender = 'F' and tfv.in_sib_gender = 'F' ) ",
+
     }
 
     def _build_present_in_child_where(self):
