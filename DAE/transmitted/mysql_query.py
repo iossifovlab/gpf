@@ -38,6 +38,16 @@ class MysqlTransmittedQuery(object):
         "mother and father", "neither",
     ]
 
+    PRESENT_IN_CHILD_TYPES = [
+        "autism only",
+        "unaffected only",
+        "autism and unaffected",
+        "proband only",
+        "sibling only",
+        "proband and sibling",
+        "neither",
+    ]
+
     keys = {
         'variantTypes': list,
         'effectTypes': list,
@@ -226,6 +236,27 @@ class MysqlTransmittedQuery(object):
         where = " ( {} ) ".format(' OR '.join(w))
         return where
 
+    PRESENT_IN_CHILD_MAPPING = {
+        "autism only": " ( tfv.in_prb = 1 and tfv.in_sib = 0 ) ",
+        "unaffected only": " ( tfv.in_sib = 1 and tfv.in_prb = 0 ) ",
+        "autism and unaffected": " ( tfv.in_prb = 1 and tfv.in_sib = 1 ) ",
+        "proband only": " ( tfv.in_prb = 1 and tfv.in_sib = 0 ) ",
+        "sibling only": " ( tfv.in_sib = 1 and tfv.in_prb = 0 ) ",
+        "proband and sibling": " ( tfv.in_prb = 1 and tfv.in_sib = 1 ) ",
+        "neither": " ( tfv.in_prb = 0 and tfv.in_sib = 0 ) ",
+    }
+
+    def _build_present_in_child_where(self):
+        assert self['presentInChild']
+        assert isinstance(self['presentInChild'], list)
+        assert reduce(operator.and_,
+                      map(lambda p: p in self.PRESENT_IN_CHILD_TYPES,
+                          self['presentInChild']))
+        w = [self.PRESENT_IN_CHILD_MAPPING[pic]
+             for pic in self['presentInChild']]
+        where = " ( {} ) ".format(' OR '.join(w))
+        return where
+
     def _build_where(self):
         where = []
         if self['effectTypes'] or self['geneSyms']:
@@ -245,6 +276,10 @@ class MysqlTransmittedQuery(object):
                 where.append(w)
         if self['presentInParent']:
             w = self._build_present_in_parent_where()
+            where.append(w)
+
+        if self['presentInChild']:
+            w = self._build_present_in_child_where()
             where.append(w)
 
         fw = self._build_freq_where()
