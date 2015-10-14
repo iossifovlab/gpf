@@ -288,9 +288,11 @@ def prepare_present_in_child(data):
         comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
 
         if ['F'] == gender:
-            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'F')
+            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'F' or
+                        (len(inCh) == 6 and inCh[5] == 'F'))
         elif ['M'] == gender:
-            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'M')
+            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'M' or
+                        (len(inCh) == 6 and inCh[5] == 'M'))
 
         if len(comp) == 1:
             return comp[0]
@@ -299,31 +301,38 @@ def prepare_present_in_child(data):
 
     return None
 
+
 def prepare_present_in_parent(data):
     if "presentInParent" in data:
         present_in_parent = set(data['presentInParent'].split(','))
         if set(['father only']) == present_in_parent:
-            return lambda fromParent: (len(fromParent)==3 and 'd' == fromParent[0])
+            return lambda fromParent: (len(fromParent) == 3 and
+                                       'd' == fromParent[0])
         if set(['mother only']) == present_in_parent:
-            return lambda fromParent: (len(fromParent)==3 and 'm' == fromParent[0])
+            return lambda fromParent: (len(fromParent) == 3 and
+                                       'm' == fromParent[0])
         if set(['mother and father']) == present_in_parent:
-            return lambda fromParent: len(fromParent)==6
-        if set(['mother only','father only']) == present_in_parent:
-            return lambda fromParent: len(fromParent)==3
+            return lambda fromParent: len(fromParent) == 6
+        if set(['mother only', 'father only']) == present_in_parent:
+            return lambda fromParent: len(fromParent) == 3
 
-        if set(['mother only','mother and father']) == present_in_parent:
-            return lambda fromParent: ( (len(fromParent)==3 and 'm' == fromParent[0])
-                                        or len(fromParent) == 6 )
-        if set(['father only','mother and father']) == present_in_parent:
-            return lambda fromParent: ( (len(fromParent)==3 and 'd' == fromParent[0])
-                                        or len(fromParent) == 6 )
-        if set(['father only','mother only','mother and father']) == present_in_parent:
-            return lambda fromParent: ( len(fromParent) > 0 )
+        if set(['mother only', 'mother and father']) == present_in_parent:
+            return lambda fromParent: ((len(fromParent) == 3 and
+                                        'm' == fromParent[0]) or
+                                       len(fromParent) == 6)
+        if set(['father only', 'mother and father']) == present_in_parent:
+            return lambda fromParent: ((len(fromParent) == 3 and
+                                        'd' == fromParent[0]) or
+                                       len(fromParent) == 6)
+        if set(['father only', 'mother only', 'mother and father']) == \
+                present_in_parent:
+            return lambda fromParent: (len(fromParent) > 0)
         if set(['neither']) == present_in_parent:
-            return lambda fromParent: ( len(fromParent) == 0)
+            return lambda fromParent: (len(fromParent) == 0)
 
         return lambda fromParent: True
     return None
+
 
 def prepare_effect_types(data):
     if 'effectTypes' not in data:
