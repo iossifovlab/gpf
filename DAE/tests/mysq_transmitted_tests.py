@@ -337,6 +337,82 @@ class VariantsPresentInParentTest(unittest.TestCase):
         self.assertEquals(0, count(res))
 
 
+class VariantsPresentInChildTest(unittest.TestCase):
+
+    def setUp(self):
+        self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+        self.st = vDB.get_study('w1202s766e611')
+
+    def tearDown(self):
+        self.impl.disconnect()
+
+    def test_present_in_child_all(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["autism only", "unaffected only",
+                               "autism and unaffected", "neither", ]
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(82, count(res))
+
+    def test_present_in_child_autism_and_unaffected(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["autism and unaffected", ]
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(40, count(res))
+
+    def test_present_in_child_neither(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["neither", ]
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(6, count(res))
+
+    def test_present_in_autism_only(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["autism only", ]
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(28, count(res))
+
+    def test_present_in_unaffected_only(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["unaffected only", ]
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(8, count(res))
+
+    def test_present_in_autism_and_unaffected(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["autism and unaffected", ]
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(40, count(res))
+
 
 # class SSCPresentInChildTests(APITestCase):
 #     def test_present_in_child_all(self):
