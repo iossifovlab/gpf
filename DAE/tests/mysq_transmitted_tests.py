@@ -413,6 +413,17 @@ class VariantsPresentInChildTest(unittest.TestCase):
         res = self.impl.get_transmitted_variants(**request)
         self.assertEquals(40, count(res))
 
+    def test_present_in_autism_only_female(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["autism only", ],
+            'gender': ['F'],
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(6, count(res))
 
 # class SSCPresentInChildTests(APITestCase):
 #     def test_present_in_child_all(self):

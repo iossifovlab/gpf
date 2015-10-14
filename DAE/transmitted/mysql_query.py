@@ -258,11 +258,16 @@ class MysqlTransmittedQuery(object):
             " tfv.in_sib_gender = 'M' ) ",
         ("autism and unaffected", 'F'):
             " ( tfv.in_prb = 1 and tfv.in_sib = 1 and "
-            " tfv.in_prb_gender = 'F' and tfv.in_sib_gender = 'F' ) ",
+            " ( tfv.in_prb_gender = 'F' or tfv.in_sib_gender = 'F' ) ) ",
         ("autism and unaffected", 'M'):
             " ( tfv.in_prb = 1 and tfv.in_sib = 1 and "
-            " tfv.in_prb_gender = 'F' and tfv.in_sib_gender = 'F' ) ",
-
+            " ( tfv.in_prb_gender = 'M' or tfv.in_sib_gender = 'M' ) ) ",
+        ("neither", 'F'):
+            " ( tfv.in_prb = 0 and tfv.in_sib = 0 and "
+            " ( tfv.in_prb_gender = 'F' or tfv.in_sib_gender = 'F' ) ) ",
+        ("neither", 'M'):
+            " ( tfv.in_prb = 0 and tfv.in_sib = 0 and "
+            " ( tfv.in_prb_gender = 'M' or tfv.in_sib_gender = 'M' ) ) ",
     }
 
     def _build_present_in_child_where(self):
@@ -271,8 +276,15 @@ class MysqlTransmittedQuery(object):
         assert reduce(operator.and_,
                       map(lambda p: p in self.PRESENT_IN_CHILD_TYPES,
                           self['presentInChild']))
-        w = [self.PRESENT_IN_CHILD_MAPPING[pic]
-             for pic in self['presentInChild']]
+        if not self['gender'] or set(self['gender']) == set(['M', 'F']):
+            w = [self.PRESENT_IN_CHILD_MAPPING[pic]
+                 for pic in self['presentInChild']]
+        else:
+            assert len(self['gender']) == 1
+            g = self['gender'][0]
+            w = [self.PRESENT_IN_CHILD_MAPPING[(pic, g)]
+                 for pic in self['presentInChild']]
+
         where = " ( {} ) ".format(' OR '.join(w))
         return where
 
