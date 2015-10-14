@@ -325,14 +325,6 @@ class MysqlTransmittedQuery(object):
             if field in self.keys:
                 self.query[field] = kwargs[field]
 
-#     def get_transmitted_summary_variants(self, **kwargs):
-#         where = self._build_where(kwargs)
-#
-#         select = 'select id ' \
-#             'from transmitted_summaryvariant as tsv where {}'.format(where)
-#         # print(select)
-#         return self.execute(select)
-
     def get_transmitted_summary_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
         where = self._build_where()

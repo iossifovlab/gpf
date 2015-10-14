@@ -425,149 +425,65 @@ class VariantsPresentInChildTest(unittest.TestCase):
         res = self.impl.get_transmitted_variants(**request)
         self.assertEquals(6, count(res))
 
-# class SSCPresentInChildTests(APITestCase):
-#     def test_present_in_child_all(self):
-#         data = {
-#             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-#             "effectTypes": "Nonsense,Frame-shift,Splice-site",
-#             "denovoStudies": "ALL SSC",
-#             "transmittedStudies": "None",
-#             "presentInChild": "autism only,unaffected only,"
-#             "autism and unaffected",
-#             'presentInParent': 'neither',
-#             "gender": "male,female",
-#             'inChild': "None",
-#
-#             # "phenoType": "autism",
-#         }
-#
-#         url = '/api/query_variants_preview'
-#
-#         response = self.client.post(url, data, format='json')
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#
-#         for _c, _r in enumerate(response.data['rows']):
-#             pass
-#         self.assertEqual('5', response.data['count'])
-#
-#     def test_present_in_child_autism_only(self):
-#         data = {
-#             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-#             "effectTypes": "Nonsense,Frame-shift,Splice-site",
-#             "denovoStudies": "ALL SSC",
-#             "transmittedStudies": "None",
-#             "presentInChild": "autism only",
-#             "gender": "male,female",
-#             # "phenoType": "autism",
-#         }
-#
-#         url = '/api/query_variants_preview'
-#
-#         response = self.client.post(url, data, format='json')
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual('2', response.data['count'])
-#
-#     def test_present_in_child_unaffected_only(self):
-#         data = {
-#             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-#             "effectTypes": "Nonsense,Frame-shift,Splice-site",
-#             "denovoStudies": "ALL SSC",
-#             "transmittedStudies": "None",
-#             "presentInChild": "unaffected only",
-#             "gender": "male,female",
-#             # "phenoType": "autism",
-#         }
-#
-#         url = '/api/query_variants_preview'
-#
-#         response = self.client.post(url, data, format='json')
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual('1', response.data['count'])
-#
-#     def test_present_in_child_autism_and_unaffected(self):
-#         data = {
-#             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
-#             "effectTypes": "Nonsense,Frame-shift,Splice-site",
-#             "denovoStudies": "ALL SSC",
-#             "transmittedStudies": "None",
-#             "presentInChild": "autism and unaffected",
-#             "gender": "male,female",
-#             # "phenoType": "autism",
-#         }
-#
-#         url = '/api/query_variants_preview'
-#
-#         response = self.client.post(url, data, format='json')
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual('2', response.data['count'])
-#
-#
-# class SSCPresentInParentTests(APITestCase):
-#     def test_present_in_parent_all(self):
-#         data = {
-#             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A,WRAP73,VWA5B1",
-#             "effectTypes": "Nonsense,Frame-shift,Splice-site",
-#             "denovoStudies": "ALL SSC",
-#             "transmittedStudies": "None",
-#             "presentInChild": "autism only,unaffected only,"
-#             "autism and unaffected,neither",
-#             "presentInParent": "mother only,father only,"
-#             "mother and father,neither",
-#             "gender": "male,female",
-#             # "phenoType": "autism",
-#             "rarity": "ultraRare",
-#             "transmittedStudies": "w1202s766e611",
-#             "variantTypes": "sub,ins,del,CNV",
-#         }
-#
-#         url = '/api/query_variants_preview'
-#
-#         response = self.client.post(url, data, format='json')
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual('19', response.data['count'])
-#
-#     def test_present_in_parent_father(self):
-#         data = {
-#             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A,WRAP73,VWA5B1",
-#             "effectTypes": "Nonsense,Frame-shift,Splice-site",
-#             # "denovoStudies": "ALL SSC",
-#             "presentInChild": "autism only,unaffected only,"
-#             "autism and unaffected,neither",
-#             "presentInParent": "father only",
-#             "gender": "male,female",
-#             # "phenoType": "autism",
-#             "rarity": "ultraRare",
-#             "transmittedStudies": "w1202s766e611",
-#             "variantTypes": "sub,ins,del,CNV",
-#         }
-#
-#         url = '/api/query_variants_preview'
-#
-#         response = self.client.post(url, data, format='json')
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual('9', response.data['count'])
-#
-#     def test_present_in_child_autism_only_parent_father(self):
-#         data = {
-#             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A,WRAP73,VWA5B1",
-#             "effectTypes": "Nonsense,Frame-shift,Splice-site",
-#             # "denovoStudies": "ALL SSC",
-#             "transmittedStudies": "None",
-#             "presentInChild": "autism only",
-#             "presentInParent": "father only",
-#             "gender": "male,female",
-#             # "phenoType": "autism",
-#             "rarity": "ultraRare",
-#             "transmittedStudies": "w1202s766e611",
-#             "variantTypes": "sub,ins,del,CNV",
-#         }
-#
-#         url = '/api/query_variants_preview'
-#
-#         response = self.client.post(url, data, format='json')
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual('4', response.data['count'])
+    def test_present_in_autism_only_male(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["autism only", ],
+            'gender': ['M'],
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(22, count(res))
 
+    def test_present_in_unaffected_only_female(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["unaffected only", ],
+            'gender': ['F'],
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(4, count(res))
+
+    def test_present_in_unaffected_only_male(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["unaffected only", ],
+            'gender': ['M'],
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(4, count(res))
+
+    def test_present_in_autism_and_unaffected_female(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["autism and unaffected", ],
+            'gender': ['F'],
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(27, count(res))
+
+    def test_present_in_autism_and_unaffected_male(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "presentInChild": ["autism and unaffected", ],
+            'gender': ['M'],
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(38, count(res))
 
 
 if __name__ == "__main__":
