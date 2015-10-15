@@ -549,7 +549,7 @@ def main(argv=None):  # IGNORE:C0111
         (program_version, program_build_date)
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
     program_desc = '''%s
-
+%s
 USAGE
 ''' % (program_shortdesc, str(__date__))
 
