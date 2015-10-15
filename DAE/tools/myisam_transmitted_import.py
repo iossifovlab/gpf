@@ -17,6 +17,8 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 from DAE import vDB
 
+import MySQLdb as mdb
+
 __all__ = []
 __version__ = 0.1
 __date__ = '2015-10-15'
@@ -40,23 +42,103 @@ class CLIError(Exception):
         return self.msg
 
 
-class ImportBase(object):
-    pass
+class Tools(object):
 
+    def __init__(self, study_name):
+        self.study = vDB.get_study(study_name)
+        self.connection = None
 
-def get_sql_files(study_name):
-    study = vDB.get_study(study_name)
-    summary_filename = study.vdb._config.get(
-        study._configSection,
-        'transmittedVariants.sql.summary')
-    gene_effect_filename = study.vdb._config.get(
-        study._configSection,
-        'transmittedVariants.sql.gene_effect')
-    family_filename = study.vdb._config.get(
-        study._configSection,
-        'transmittedVariants.sql.family')
+    def get_sql_family_filename(self):
+        study = self.study
+        family_filename = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.sql.family')
+        return family_filename
 
-    return family_filename, gene_effect_filename, summary_filename
+    def get_sql_gene_effect_filename(self):
+        study = self.study
+        gene_effect_filename = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.sql.gene_effect')
+        return gene_effect_filename
+
+    def get_summary_filename(self):
+        study = self.study
+        summary_filename = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.sql.summary')
+        return summary_filename
+
+    def get_sql_files(self):
+        study = self.study
+        summary_filename = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.sql.summary')
+        gene_effect_filename = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.sql.gene_effect')
+        family_filename = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.sql.family')
+
+        return family_filename, gene_effect_filename, summary_filename
+
+    def get_db_conf(self):
+        study = self.study
+        user = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.mysql.user')
+        db = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.mysql.db')
+        password = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.mysql.pass')
+        host = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.mysql.host')
+        return host, user, password, db
+
+    def connect(self):
+        (host, user, password, db) = self.get_db_conf()
+        if not self.connection:
+            self.connection = mdb.connect(
+                host, user, password, db)
+        return self.connection
+
+    def drop_all_tables(self):
+        statement = """
+DROP TABLE IF EXISTS transmitted_familyvariant ;
+DROP TABLE IF EXISTS transmitted_geneeffectvariant ;
+DROP TABLE IF EXISTS transmitted_summaryvariant ;"""
+        connection = self.connect()
+        cursor = connection.cursor()
+        cursor.execute(statement)
+
+    def _import_sql_file(self, family_filename):
+        host, user, password, db = self.get_db_conf()
+        params = {
+            'filename': family_filename,
+            'host': host,
+            'user': user,
+            'password': password,
+            'db': db}
+        command = "gunzip -c %(filename)s | "\
+            "mysql -h%(host)s -u%(user)s -p%(password)s %(db)s" % params
+        print "executing command: %s" % command
+        os.system(command)
+
+    def import_family_variants(self):
+        family_filename = self.get_sql_family_filename()
+        self._import_sql_file(family_filename)
+
+    def import_gene_effect_variants(self):
+        gene_effect_filename = self.get_sql_gene_effect_filename()
+        self._import_sql_file(gene_effect_filename)
+
+    def import_summary_variants(self):
+        summary_filename = self.get_sql_summary_filename()
+        self._import_sql_file(summary_filename)
 
 
 def main(argv=None):  # IGNORE:C0111
@@ -97,13 +179,20 @@ USAGE
         args = parser.parse_args()
 
         study_name = args.study
+        tools = Tools(study_name)
+
         family_filename, gene_effect_filename, summary_filename = \
-            get_sql_files(study_name)
+            tools.get_sql_files()
 
         print("Working with sql files:")
         print(" - summary: %s" % summary_filename)
         print(" - effect:  %s" % gene_effect_filename)
         print(" - family:  %s" % family_filename)
+
+        tools.drop_all_tables()
+        tools.import_family_variants()
+        tools.import_gene_effect_variants()
+        tools.import_summary_variants()
 
         return 0
     except KeyboardInterrupt:
