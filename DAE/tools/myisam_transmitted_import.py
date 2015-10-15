@@ -3,18 +3,11 @@
 '''
 myisam_transmitted_import -- import transmitted variants into MySQL
 
-myisam_transmitted_import is a tool to import 
+myisam_transmitted_import is a tool to import transmitted variants SQL
+tables into MySQL.
 
-It defines classes_and_methods
-
-@author:     user_name
-
-@copyright:  2015 organization_name. All rights reserved.
-
-@license:    license
-
-@contact:    user_email
-@deffield    updated: Updated
+@author:     lubo
+@contact:    lchorbadjiev@setelis.com
 '''
 
 import sys
@@ -22,6 +15,7 @@ import os
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
+from DAE import vDB
 
 __all__ = []
 __version__ = 0.1
@@ -50,6 +44,21 @@ class ImportBase(object):
     pass
 
 
+def get_sql_files(study_name):
+    study = vDB.get_study(study_name)
+    summary_filename = study.vdb._config.get(
+        study._configSection,
+        'transmittedVariants.sql.summary')
+    gene_effect_filename = study.vdb._config.get(
+        study._configSection,
+        'transmittedVariants.sql.gene_effect')
+    family_filename = study.vdb._config.get(
+        study._configSection,
+        'transmittedVariants.sql.family')
+
+    return family_filename, gene_effect_filename, summary_filename
+
+
 def main(argv=None):  # IGNORE:C0111
     '''Command line options.'''
 
@@ -65,7 +74,7 @@ def main(argv=None):  # IGNORE:C0111
                                                      program_build_date)
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
     program_desc = '''%s
-
+%s
 USAGE
 ''' % (program_shortdesc, str(__date__))
 
@@ -82,16 +91,23 @@ USAGE
         parser.add_argument(
             dest="study",
             help="study name to process "
-            "[default: %(default)s]", metavar="study")
+            "[default: %(default)s]")
 
         # Process arguments
         args = parser.parse_args()
 
-        study = args.study
+        study_name = args.study
+        family_filename, gene_effect_filename, summary_filename = \
+            get_sql_files(study_name)
+
+        print("Working with sql files:")
+        print(" - summary: %s" % summary_filename)
+        print(" - effect:  %s" % gene_effect_filename)
+        print(" - family:  %s" % family_filename)
 
         return 0
     except KeyboardInterrupt:
-        ### handle keyboard interrupt ###
+        # handle keyboard interrupt
         return 0
     except Exception, e:
         if DEBUG or TESTRUN:
