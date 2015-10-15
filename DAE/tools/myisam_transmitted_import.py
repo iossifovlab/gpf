@@ -108,7 +108,7 @@ class Tools(object):
 
     def drop_all_tables(self):
         statement = "DROP TABLE IF EXISTS %s"
-        data = [('transmitted_geneeffectvariant',),
+        data = [('transmitted_familyvariant',),
                 ('transmitted_geneeffectvariant',),
                 ('transmitted_summaryvariant',)]
         for table in data:
