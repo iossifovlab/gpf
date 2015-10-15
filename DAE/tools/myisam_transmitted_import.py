@@ -107,13 +107,15 @@ class Tools(object):
         return self.connection
 
     def drop_all_tables(self):
-        statement = """
-DROP TABLE IF EXISTS transmitted_familyvariant ;
-DROP TABLE IF EXISTS transmitted_geneeffectvariant ;
-DROP TABLE IF EXISTS transmitted_summaryvariant ;"""
-        connection = self.connect()
-        cursor = connection.cursor()
-        cursor.execute(statement)
+        statement = "DROP TABLE IF EXISTS %s"
+        data = [('transmitted_geneeffectvariant',),
+                ('transmitted_geneeffectvariant',),
+                ('transmitted_summaryvariant',)]
+        for table in data:
+            connection = self.connect()
+            cursor = connection.cursor()
+            cursor.execute(statement % table)
+            cursor.close()
 
     def _import_sql_file(self, family_filename):
         host, user, password, db = self.get_db_conf()
