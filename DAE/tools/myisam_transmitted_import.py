@@ -128,7 +128,7 @@ class Tools(object):
         command = "gunzip -c %(filename)s | "\
             "mysql -h%(host)s -u%(user)s -p%(password)s %(db)s" % params
         print "executing command: %s" % command
-        # os.system(command)
+        os.system(command)
 
     def import_family_variants(self):
         family_filename = self.get_sql_family_filename()
