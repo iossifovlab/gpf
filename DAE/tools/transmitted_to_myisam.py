@@ -77,15 +77,6 @@ class VariantsBase(object):
         else:
             return s
 
-#     @staticmethod
-#     def get_summary_filename(study_name):
-#         study = vDB.get_study(study_name)
-#
-#         summary_filename = study.vdb._config.get(
-#             study._configSection,
-#             'transmittedVariants.indexFile') + ".txt.bgz"
-#         return summary_filename
-
     @staticmethod
     def get_study_filenames(study_name):
         study = vDB.get_study(study_name)
@@ -592,6 +583,12 @@ USAGE
             help="builds family variants table [default: %(default)s]")
 
         parser.add_argument(
+            "-a", "--all",
+            dest="all",
+            action="store_true",
+            help="builds all variants table [default: %(default)s]")
+
+        parser.add_argument(
             "-o", "--outdir",
             default='.',
             dest="outdir",
@@ -608,11 +605,17 @@ USAGE
         # Process arguments
         args = parser.parse_args()
 
-        summary = args.summary
         study_name = args.study
         outdir = args.outdir
+
+        summary = args.summary
         gene_effect = args.gene_effect
         family = args.family
+
+        if args.all:
+            summary = True
+            gene_effect = True
+            family = True
 
         study, summary_filename, tm_filename = \
             VariantsBase.get_study_filenames(study_name)
