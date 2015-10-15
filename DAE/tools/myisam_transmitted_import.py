@@ -62,7 +62,7 @@ class Tools(object):
             'transmittedVariants.sql.gene_effect')
         return gene_effect_filename
 
-    def get_summary_filename(self):
+    def get_sql_summary_filename(self):
         study = self.study
         summary_filename = study.vdb._config.get(
             study._configSection,
@@ -128,7 +128,7 @@ class Tools(object):
         command = "gunzip -c %(filename)s | "\
             "mysql -h%(host)s -u%(user)s -p%(password)s %(db)s" % params
         print "executing command: %s" % command
-        os.system(command)
+        # os.system(command)
 
     def import_family_variants(self):
         family_filename = self.get_sql_family_filename()
