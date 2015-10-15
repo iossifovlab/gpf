@@ -49,6 +49,15 @@ class MysqlTransmittedQuery(object):
         "neither",
     ]
 
+    IN_CHILD_TYPES = [
+        'prb',
+        'sib',
+        'prbM',
+        'prbF',
+        'sibM',
+        'sibF',
+    ]
+
     keys = {
         'variantTypes': list,
         'effectTypes': list,
@@ -57,7 +66,6 @@ class MysqlTransmittedQuery(object):
         'minParentsCalled': int,
         'maxAltFreqPrcnt': float,
         'minAltFreqPrcnt': float,
-        'family_ids': list,
         'presentInParent': list,
         'inChild': str,
         'presentInChild': list,
@@ -74,7 +82,6 @@ class MysqlTransmittedQuery(object):
         'minParentsCalled': 600,
         'maxAltFreqPrcnt': 5.0,
         'minAltFreqPrcnt': None,
-        'family_ids': None,
         'presentInParent': None,
         'inChild': None,
         'presentInChild': None,
@@ -289,6 +296,23 @@ class MysqlTransmittedQuery(object):
         where = " ( {} ) ".format(' OR '.join(w))
         return where
 
+    IN_CHILD_MAPPING = {
+        'prb': " ( tfv.in_prb = 1 ) ",
+        'sib': " ( tfv.in_sib = 1 ) ",
+        'prbM': " ( tfv.in_prb = 1 and tfv.in_prb_gender = 'M' ) ",
+        'prbF': " ( tfv.in_prb = 1 and tfv.in_prb_gender = 'F' ) ",
+        'sibM': " ( tfv.in_sib = 1 and tfv.in_sib_gender = 'M' ) ",
+        'sibF': " ( tfv.in_sib = 1 and tfv.in_sib_gender = 'F' ) ",
+    }
+
+    def _build_in_child_where(self):
+        assert self['inChild']
+        assert isinstance(self['inChild'], str)
+        assert self['inChild'] in self.IN_CHILD_TYPES
+
+        where = self.IN_CHILD_MAPPING[self['inChild']]
+        return where
+
     def _build_where(self):
         where = []
         if self['effectTypes'] or self['geneSyms']:
@@ -310,7 +334,10 @@ class MysqlTransmittedQuery(object):
             w = self._build_present_in_parent_where()
             where.append(w)
 
-        if self['presentInChild']:
+        if self['inChild']:
+            w = self._build_in_child_where()
+            where.append(w)
+        elif self['presentInChild']:
             w = self._build_present_in_child_where()
             where.append(w)
 
