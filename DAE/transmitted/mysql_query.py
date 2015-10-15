@@ -28,7 +28,8 @@ class MysqlTransmittedQuery(object):
         'non-coding-intron',
         'nonsense',
         'splice-site',
-        'synonymous']
+        'synonymous',
+        'CDS']
 
     VARIANT_TYPES = [
         'del', 'ins', 'sub', 'CNV']
@@ -379,7 +380,7 @@ class MysqlTransmittedQuery(object):
             "left join transmitted_summaryvariant as tsv " \
             "on tfv.summary_variant_id = tsv.id " \
             "where {} ".format(where)
-        print(select)
+
         for v in self.execute(select):
             v["location"] = v["chr"] + ":" + str(v["position"])
             yield Variant(v)
