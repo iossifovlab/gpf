@@ -39,19 +39,23 @@ class Test(unittest.TestCase):
         self.assertVariantStringAttribute(dv, mv, "location", msg)
         self.assertVariantStringAttribute(dv, mv, "chr", msg)
         self.assertVariantIntAttribute(dv, mv, "position", msg)
+        self.assertVariantStringAttribute(dv, mv, 'familyId', msg)
         self.assertVariantIntAttribute(dv, mv, "all.nParCalled", msg)
         self.assertVariantFloatAttribute(dv, mv, 'all.prcntParCalled', msg)
         self.assertVariantIntAttribute(dv, mv, "all.nAltAlls", msg)
         self.assertVariantFloatAttribute(dv, mv, 'all.altFreq', msg)
         self.assertVariantStringAttribute(dv, mv, 'variant', msg)
-        self.assertVariantStringAttribute(dv, mv, 'familyId', msg)
         self.assertVariantStringAttribute(dv, mv, 'bestState', msg)
         self.assertVariantStringAttribute(dv, mv, 'counts', msg)
         self.assertVariantStringAttribute(dv, mv, 'effectType', msg)
         # self.assertVariantStringAttribute(dv, mv, 'effectDetails', msg)
 
     def assertVariantsEquals(self, dvs, mvs, msg):
-        self.assertEqual(len(dvs), len(mvs), "{}: len differs".format(msg))
+        self.assertEqual(len(dvs), len(mvs), "{}: len: {}, {}".
+                         format(msg, len(dvs), len(mvs)))
+        dvs.sort(key=lambda v: (v.location, v.familyId))
+        mvs.sort(key=lambda v: (v.location, v.familyId))
+
         for i, dv in enumerate(dvs):
             mv = mvs[i]
             self.assertVariantEquals(dv, mv,

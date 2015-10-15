@@ -111,8 +111,9 @@ def mysql_query_q401():
 
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,
-        maxAltFreqPrcnt=1.0,
+        maxAltFreqPrcnt=None,
         minAltFreqPrcnt=None,
+        ultraRareOnly=True,
         effectTypes=['nonsense', 'frame-shift', 'splice-site'])
 
     res = [v for v in tvs]
@@ -147,8 +148,9 @@ def mysql_query_q501():
 
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,
-        maxAltFreqPrcnt=1.0,
+        maxAltFreqPrcnt=None,
         minAltFreqPrcnt=None,
+        ultraRareOnly=True,
         effectTypes=['nonsense', 'frame-shift', 'splice-site'],
         geneSyms=list(gene_syms))
 
@@ -176,9 +178,11 @@ def mysql_query_q601():
     m.connect()
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,
-        maxAltFreqPrcnt=1.0,
+        maxAltFreqPrcnt=None,
         minAltFreqPrcnt=None,
-        effectTypes=['nonsense', 'frame-shift', 'splice-site'],
+        ultraRareOnly=True,
+        effectTypes=['splice-site', 'frame-shift', 'nonsense',
+                     'no-frame-shift-newStop'],
         inChild='prb')
 
     res = [v for v in tvs]
