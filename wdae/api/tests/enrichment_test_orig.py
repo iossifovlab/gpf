@@ -208,6 +208,7 @@ def main(dnvSts, transmStdy, geneTerms):
          fltInh(
              transmStdy.get_transmitted_summary_variants(
                  ultraRareOnly=True,
+                 minParentsCalled=600,
                  effectTypes="synonymous"))]
     ]
 
