@@ -89,14 +89,3 @@ class Test(unittest.TestCase):
         self.assertIn('schizophrenia', res)
         self.assertIn('unaffected', res)
         
-        
-    def test_preload_denovo_gene_sets(self):
-        builders = [(build_denovo_gene_sets,
-                     [],
-                     'Denovo')]
-        
-        preload_background(builders)
-        
-        gs = get_background('Denovo')
-        self.assertTrue(gs)
-        
