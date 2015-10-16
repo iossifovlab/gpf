@@ -143,7 +143,7 @@ CREATE TABLE `transmitted_summaryvariant` (
   `effect_gene` varchar(32) DEFAULT NULL,
   `effect_gene_all` varchar(1024) DEFAULT NULL,
   `effect_count` int(11) NOT NULL,
-  `effect_details` varchar(255) DEFAULT NULL,
+  `effect_details` varchar(1024) DEFAULT NULL,
   `n_par_called` int(11) NOT NULL,
   `n_alt_alls` int(11) NOT NULL,
   `alt_freq` double NOT NULL,

@@ -48,7 +48,7 @@ class Test(unittest.TestCase):
         self.assertVariantStringAttribute(dv, mv, 'bestState', msg)
         self.assertVariantStringAttribute(dv, mv, 'counts', msg)
         self.assertVariantStringAttribute(dv, mv, 'effectType', msg)
-        # self.assertVariantStringAttribute(dv, mv, 'effectDetails', msg)
+        self.assertVariantStringAttribute(dv, mv, 'effectDetails', msg)
 
     def assertVariantsEquals(self, dvs, mvs, msg):
         self.assertEqual(len(dvs), len(mvs), "{}: len: {}, {}".
