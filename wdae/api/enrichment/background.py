@@ -40,6 +40,7 @@ def _build_synonymous_background(transmitted_study_name):
     transmitted_study = vDB.get_study(transmitted_study_name)
     vs = transmitted_study.get_transmitted_summary_variants(
                 ultraRareOnly=True,
+                minParentsCalled=600,
                 effectTypes="synonymous")
     affected_gene_syms = _collect_affected_gene_syms(vs)
 

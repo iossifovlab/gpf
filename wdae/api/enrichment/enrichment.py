@@ -44,6 +44,7 @@ def filter_transmitted(vs):
 def build_transmitted_background(tstd):
     return filter_transmitted(
         tstd.get_transmitted_summary_variants(ultraRareOnly=True,
+                                              minParentsCalled=600,
                                               effectTypes="synonymous"))
 
 
