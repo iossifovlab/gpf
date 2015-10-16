@@ -106,7 +106,7 @@ def filter_summary_regions_df(df, regions):
         
     return pd.concat(res)
 
-def filter_summary_parents_called(df, minParentsCalled=600):
+def filter_summary_parents_called(df, minParentsCalled=0):
     if minParentsCalled and minParentsCalled!=-1:
         return df[df['all.nParCalled']>=minParentsCalled]
     else:

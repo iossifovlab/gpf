@@ -264,7 +264,7 @@ class Study:
             return self.vdb._config.get(self._configSection,attName)
 
     def filter_transmitted_variants(self, f, colNms,
-                                    minParentsCalled=600,
+                                    minParentsCalled=0,
                                     maxAltFreqPrcnt=5.0,
                                     minAltFreqPrcnt=-1,
                                     variantTypes=None,
@@ -325,7 +325,7 @@ class Study:
             yield v
 
 
-    def get_transmitted_summary_variants(self,minParentsCalled=600,
+    def get_transmitted_summary_variants(self,minParentsCalled=0,
                                          maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,
                                          variantTypes=None, effectTypes=None,
                                          ultraRareOnly=False, geneSyms=None, 
@@ -392,7 +392,7 @@ class Study:
 
     def get_transmitted_variants(self, inChild=None, 
                                  presentInChild=None, presentInParent=None,
-                                 minParentsCalled=600,maxAltFreqPrcnt=5.0,
+                                 minParentsCalled=0,maxAltFreqPrcnt=5.0,
                                  minAltFreqPrcnt=-1,
                                  variantTypes=None, effectTypes=None, 
                                  ultraRareOnly=False,
@@ -1402,7 +1402,7 @@ def parseGeneEffect(effStr):
     for ge in effStr.split("|"):
         cs = ge.split(":");
         if len(cs) != 2:
-            raise Exception(ge + " doesn't agree with the <sym>:<effect> format");
+            raise Exception(ge + " doesn't agree with the <sym>:<effect> format:" + effStr);
         sym,eff = cs
         geneEffect.append({'sym':sym, 'eff':eff})
     return geneEffect
