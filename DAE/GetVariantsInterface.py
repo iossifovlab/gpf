@@ -80,7 +80,7 @@ def getVariantsInterface(args, response=None):
                     'popFrequencyMax':"1.0",
                     'variantTypes':None,
                     'inChild':None,
-                    'popMinParentsCalled':"600",
+                    'popMinParentsCalled':"0",
                     'popFrequencyMin':"-1",
                     'regionS':None}
 

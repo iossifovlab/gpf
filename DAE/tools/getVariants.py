@@ -21,8 +21,8 @@ parser.add_argument('--popFrequencyMax', type=str, default="1.0",
         help='maximum population frequency in percents. Can be 100 or -1 for no limit; ultraRare. 1.0 by default.')
 parser.add_argument('--popFrequencyMin', type=str, default="-1",
         help='minimum population frequency in percents. Can be -1 for no limit. -1 by default.')
-parser.add_argument('--popMinParentsCalled', type=str, default="600",
-        help='minimum number of genotyped parents. Can be -1 for no limit. 600 by default.')
+parser.add_argument('--popMinParentsCalled', type=str, default="0",
+        help='minimum number of genotyped parents. Can be -1 for no limit. 0 by default.')
 parser.add_argument('--inChild', type=str, 
         help='i.e. prb, sib, prbM, sibF')
 parser.add_argument('--familiesFile', type=str, 

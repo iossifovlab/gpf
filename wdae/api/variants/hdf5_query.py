@@ -56,7 +56,7 @@ class TransmissionQuery(object):
                      'effect_types': None,
                      'gene_syms': None,
                      'ultra_rare_only': False,
-                     'min_parents_called': 600,
+                     'min_parents_called': 0,
                      'max_alt_freq_prcnt': 5.0,
                      'min_alt_freq_prcnt': None,
                      'region': None,

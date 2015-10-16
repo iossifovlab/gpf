@@ -41,9 +41,9 @@ LGDs by default. none for all variants''')
         help='''minimum population frequency in percents. Can be -1 for no limit.
         -1 by default.''')
     parser.add_argument(
-        '--popMinParentsCalled', type=str, default="600",
+        '--popMinParentsCalled', type=str, default="0",
         help='''minimum number of genotyped parents. Can be -1 for no limit.
-        600 by default.''')
+        0 by default.''')
     parser.add_argument(
         '--TMM_ALL',
         help='Speeds up global transmitted data queries',

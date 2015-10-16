@@ -425,12 +425,12 @@ def prepare_max_alt_freq_prcnt(data):
 
 
 def prepare_pop_min_parents_called(data):
-    minParentsCalled = 600
+    minParentsCalled = 0
     if 'popMinParentsCalled' in data:
         try:
             minParentsCalled = float(str(data['popMinParentsCalled']))
         except:
-            minParentsCalled = 600
+            minParentsCalled = 0
     return minParentsCalled
 
 

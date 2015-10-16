@@ -104,7 +104,7 @@ class GetVariantsFacade:
 
         self.popFrequencyMin = None
         self.popFrequencyMax = None
-        self.popMinParentsCalled = 600
+        self.popMinParentsCalled = 0
         self.ultraRare = False
 
         self.setTransmittedParams(args["transmittedType"],
