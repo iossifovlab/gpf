@@ -8,12 +8,12 @@ import tables
 import gzip
 from api.variants.hdf5_query import EFFECT_TYPES, VARIANT_TYPES, GENDER_TYPES
 from api.variants.transmitted_variants import parse_family_data
-from VariantsDB import parseGeneEffect, Variant
+from Variant import parseGeneEffect, Variant
 # import itertools
 # import numpy as np
 import copy
-# from query_variants import augment_vars
-# from query_variants import augment_vars
+# from query_variants_bak import augment_vars
+# from query_variants_bak import augment_vars
 
 
 class SummaryVariants(tables.IsDescription):

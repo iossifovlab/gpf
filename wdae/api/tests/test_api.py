@@ -11,7 +11,7 @@ from api.models import Researcher
 from api.studies import get_denovo_studies_names, get_transmitted_studies_names
 from api.enrichment.enrichment_query import enrichment_results
 from VariantAnnotation import get_effect_types
-from api.query.query_variants import get_variant_types, get_child_types
+from query_variants import get_variant_types, get_child_types
 
 
 class ApiTest(APITestCase):

@@ -1,9 +1,5 @@
 import unittest
-
-from api.query.query_variants import \
-    do_query_variants
-
-# import logging
+from api.query.wdae_query_variants import wdae_query_wrapper
 
 # LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +25,7 @@ class IvanchoSubmittedDoubleGenesQueryTests(unittest.TestCase):
                  'denovoStudies': 'allWEandTG'}
 
     def test_double_genes(self):
-        vs = do_query_variants(self.TEST_DATA)
+        vs = wdae_query_wrapper(self.TEST_DATA)
         vs.next()
 
         for v in vs:
@@ -62,7 +58,7 @@ class AlexPopovSubmittedBadRegionQueryTests(unittest.TestCase):
 
     def test_bad_region_exception(self):
 
-        vs = do_query_variants(self.TEST_DATA)
+        vs = wdae_query_wrapper(self.TEST_DATA)
 
         vs.next()
 

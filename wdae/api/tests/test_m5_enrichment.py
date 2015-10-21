@@ -3,7 +3,7 @@ import unittest
 # import itertools
 
 from DAE import vDB
-from api.query.query_prepare import prepare_denovo_studies
+from query_prepare import prepare_denovo_studies
 from api.enrichment.enrichment_query import enrichment_prepare, \
     enrichment_results_by_phenotype
 from api.enrichment.enrichment import build_transmitted_background

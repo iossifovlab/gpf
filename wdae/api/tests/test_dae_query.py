@@ -1,12 +1,11 @@
 import unittest
 
-from api.query.query_variants import prepare_inchild, \
-    dae_query_variants, \
-    do_query_variants
+from query_variants import prepare_inchild, \
+    dae_query_variants
 
-from api.query.query_prepare import prepare_gene_sets
 import logging
 import itertools
+from api.query.wdae_query_variants import prepare_gene_sets, wdae_query_wrapper
 
 LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +74,7 @@ class CombinedTests(unittest.TestCase):
         # self.assertEqual(len(gs), 1747)
 
     def test_variants_gene_sets_1(self):
-        vs = do_query_variants(self.TEST_DATA_1)
+        vs = wdae_query_wrapper(self.TEST_DATA_1)
         vs.next()
         count = 0
         for v in vs:
@@ -99,7 +98,7 @@ class CombinedTests(unittest.TestCase):
                    "ultraRareOnly": True}
 
     def test_variants_gene_sets_3(self):
-        vs = do_query_variants(self.TEST_DATA_3)
+        vs = wdae_query_wrapper(self.TEST_DATA_3)
         vs.next()
 
         for v in vs:
@@ -123,7 +122,7 @@ class GeneRegionCombinedTests(unittest.TestCase):
                  "ultraRareOnly": True}
 
     def test_gene_region_filter(self):
-        vs = do_query_variants(self.TEST_DATA)
+        vs = wdae_query_wrapper(self.TEST_DATA)
         vs.next()
 
         for v in vs:
@@ -156,7 +155,7 @@ class IvanchoSubmittedQueryTests(unittest.TestCase):
                  'denovoStudies': "ALL WHOLE EXOME"}
 
     def test_gene_region_filter(self):
-        vs = do_query_variants(self.TEST_DATA)
+        vs = wdae_query_wrapper(self.TEST_DATA)
         # vs.next()
         count = 0
         for _v in vs:
@@ -194,7 +193,7 @@ class PreviewQueryTests(unittest.TestCase):
                       "familySibGender": "All"}
 
     def test_preview_1(self):
-        vs = do_query_variants(self.PREVIEW_TEST_1)
+        vs = wdae_query_wrapper(self.PREVIEW_TEST_1)
         vs.next()
         count = 0
         for _v in vs:
@@ -202,6 +201,6 @@ class PreviewQueryTests(unittest.TestCase):
         self.assertTrue(count > 0)
 
     def test_preview_1_summary(self):
-        vs = do_query_variants(self.PREVIEW_TEST_1)
+        vs = wdae_query_wrapper(self.PREVIEW_TEST_1)
         summary = prepare_summary(vs)
         self.assertTrue(int(summary["count"]) > 0)

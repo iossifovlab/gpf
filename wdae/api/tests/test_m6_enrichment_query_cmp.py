@@ -5,7 +5,7 @@ Created on Jun 12, 2015
 '''
 import unittest
 from api.enrichment import background
-from api.query.query_prepare import prepare_transmitted_studies
+from query_prepare import prepare_transmitted_studies
 from api.enrichment.enrichment import build_transmitted_background
 from api.deprecated.bg_loader import preload_background
 from api.enrichment.enrichment_query import enrichment_results_by_phenotype,\

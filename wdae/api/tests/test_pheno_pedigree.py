@@ -1,9 +1,8 @@
 import unittest
 
-from api.query.query_variants import do_query_variants
-
-# from query_prepare import prepare_gene_sets
+# from query_prepare_bak import prepare_gene_sets
 import logging
+from api.query.wdae_query_variants import wdae_query_wrapper
 # import itertools
 
 LOGGER = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ class PedigreeTests(unittest.TestCase):
                    'geneSet': 'main'}
 
     def test_pedigree_data_1(self):
-        _vs = do_query_variants(self.TEST_DATA_1, atts=["_pedigree_"])
+        _vs = wdae_query_wrapper(self.TEST_DATA_1, atts=["_pedigree_"])
         # vs.next()
 
 #         for v in vs:
@@ -60,7 +59,7 @@ class PedigreeTests(unittest.TestCase):
                    'geneSet': 'main'}
 
     def test_pedigree_data_2(self):
-        _vs = do_query_variants(self.TEST_DATA_2, atts=["_pedigree_"])
+        _vs = wdae_query_wrapper(self.TEST_DATA_2, atts=["_pedigree_"])
 
     TEST_DATA_3 = {'geneRegionType': 'on',
                    'denovoStudies': 'LevyCNV2011',
@@ -84,4 +83,4 @@ class PedigreeTests(unittest.TestCase):
                    'geneSet': 'main'}
 
     def test_pedigree_data_3(self):
-        _vs = do_query_variants(self.TEST_DATA_3, atts=["_pedigree_"])
+        _vs = wdae_query_wrapper(self.TEST_DATA_3, atts=["_pedigree_"])

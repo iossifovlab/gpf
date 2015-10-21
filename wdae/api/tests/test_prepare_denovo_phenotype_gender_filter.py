@@ -1,6 +1,6 @@
 import unittest
 
-from api.query.query_prepare import prepare_denovo_phenotype_gender_filter1
+from query_prepare import prepare_denovo_phenotype_gender_filter1
 from DAE import vDB
 
 class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):

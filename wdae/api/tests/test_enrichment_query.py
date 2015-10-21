@@ -1,5 +1,5 @@
 
-# from query_prepare import prepare_gene_sets
+# from query_prepare_bak import prepare_gene_sets
 import logging
 from api.enrichment.enrichment_query import enrichment_prepare
 from hamcrest import assert_that, has_entry, has_key, is_, none

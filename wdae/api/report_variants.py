@@ -42,7 +42,7 @@ CNVs RATES:
 
 """
 
-from api.query.query_variants import get_child_types
+from query_variants import get_child_types
 from DAE import vDB
 from collections import defaultdict
 from collections import Counter

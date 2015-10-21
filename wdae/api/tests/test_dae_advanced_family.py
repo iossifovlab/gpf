@@ -1,6 +1,6 @@
 import unittest
 
-from api.query.query_variants import do_query_variants
+from api.query.wdae_query_variants import wdae_query_wrapper
 
 # import logging
 
@@ -19,7 +19,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "familyRace": 'african-amer'}
 
     def test_family_race(self):
-        vs = do_query_variants(self.TEST_DATA_1)
+        vs = wdae_query_wrapper(self.TEST_DATA_1)
         vs.next()
         count = 0
         fail = False
@@ -42,7 +42,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                      "familyRace": 'white'}
 
     def test_family_race_1(self):
-        vs = do_query_variants(self.TEST_DATA_1_1)
+        vs = wdae_query_wrapper(self.TEST_DATA_1_1)
         vs.next()
 
         count = 0
@@ -65,7 +65,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "familyQuadTrio": 'Quad'}
 
     def test_family_quad(self):
-        vs = do_query_variants(self.TEST_DATA_2)
+        vs = wdae_query_wrapper(self.TEST_DATA_2)
         vs.next()
 
         count = 0
@@ -87,7 +87,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "familyQuadTrio": 'Trio'}
 
     def test_family_trio(self):
-        vs = do_query_variants(self.TEST_DATA_3)
+        vs = wdae_query_wrapper(self.TEST_DATA_3)
         vs.next()
 
         count = 0
@@ -107,7 +107,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "familySibGender": 'female'}
 
     def test_family_sibling_gender_female(self):
-        vs = do_query_variants(self.TEST_DATA_4)
+        vs = wdae_query_wrapper(self.TEST_DATA_4)
         vs.next()
 
         count = 0
@@ -127,7 +127,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "familySibGender": 'male'}
 
     def test_family_sibling_gender_male(self):
-        vs = do_query_variants(self.TEST_DATA_5)
+        vs = wdae_query_wrapper(self.TEST_DATA_5)
         vs.next()
 
         count = 0
@@ -147,7 +147,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "familyPrbGender": 'female'}
 
     def test_family_proband_gender_female(self):
-        vs = do_query_variants(self.TEST_DATA_6)
+        vs = wdae_query_wrapper(self.TEST_DATA_6)
         _cols = vs.next()
 
         count = 0
@@ -168,7 +168,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "familyPrbGender": 'male'}
 
     def test_family_proband_gender_male(self):
-        vs = do_query_variants(self.TEST_DATA_7)
+        vs = wdae_query_wrapper(self.TEST_DATA_7)
         _cols = vs.next()
         count = 0
         for _v in vs:
@@ -188,7 +188,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "familyRace": 'ala-bala'}
 
     def test_family_wrong_race(self):
-        vs = do_query_variants(self.TEST_DATA_8)
+        vs = wdae_query_wrapper(self.TEST_DATA_8)
         vs.next()
         count = 0
         for _v in vs:
@@ -215,7 +215,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "ultraRareOnly": True}
 
     def family_verbal_iq_count(self, data):
-        vs = do_query_variants(data)
+        vs = wdae_query_wrapper(data)
         vs.next()
         count = 0
         for _v in vs:
@@ -266,7 +266,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "ultraRareOnly": True}
 
     def test_in_child(self):
-        vs = do_query_variants(self.TEST_DATA_10)
+        vs = wdae_query_wrapper(self.TEST_DATA_10)
         _cols = vs.next()
         count = 0
         for v in vs:
@@ -285,7 +285,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
                    "ultraRareOnly": True}
 
     def test_variant_types(self):
-        vs = do_query_variants(self.TEST_DATA_11)
+        vs = wdae_query_wrapper(self.TEST_DATA_11)
         _cols = vs.next()
         count = 0
         for v in vs:

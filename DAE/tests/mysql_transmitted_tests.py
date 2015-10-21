@@ -6,7 +6,7 @@ Created on Sep 24, 2015
 import unittest
 from transmitted.mysql_query import MysqlTransmittedQuery
 from DAE import vDB
-from query_prepare import prepare_gene_sets
+from query_prepare_bak import prepare_gene_sets
 
 
 def count(vs):

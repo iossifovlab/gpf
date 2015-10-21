@@ -25,7 +25,7 @@ urlpatterns = patterns(
 )
 
 # try:
-#     from query_prepare import prepare_transmitted_studies, gene_set_bgloader
+#     from query_prepare_bak import prepare_transmitted_studies, gene_set_bgloader
 #     # from api.enrichment.enrichment import build_transmitted_background
 #     from bg_loader import preload_background
 # 

@@ -5,8 +5,8 @@ Created on Aug 11, 2015
 '''
 import unittest
 from DAE import vDB
-from query_prepare import prepare_gene_sets
 from api.variants.hdf5_query import TransmissionQuery
+from api.query.wdae_query_variants import prepare_gene_sets
 
 
 def dae_query_q101():

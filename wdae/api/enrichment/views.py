@@ -4,9 +4,9 @@ Created on Jun 12, 2015
 @author: lubo
 '''
 from rest_framework.views import APIView
-from api.query.query_prepare import prepare_denovo_studies, \
-    prepare_string_value, \
-    combine_gene_syms
+from query_prepare import prepare_denovo_studies, \
+    prepare_string_value
+
 from api.views import prepare_query_dict, log_filter
 from rest_framework.response import Response
 from api.logger import LOGGER
@@ -20,6 +20,7 @@ from django.conf import settings
 from api.enrichment.denovo_counters import DenovoEventsCounter, \
     DenovoGenesEventCounter
 from api.enrichment.families import ChildrenStats
+from api.query.wdae_query_variants import combine_gene_syms
 
 
 class EnrichmentView(APIView):

@@ -26,7 +26,8 @@ import itertools
 import string
 # import uuid
 
-from api.query.query_variants import do_query_variants, \
+
+from query_variants import \
     get_child_types, get_variant_types, \
     join_line
 
@@ -41,6 +42,7 @@ from models import VerificationPath
 from serializers import UserSerializer
 from api.logger import LOGGER, log_filter
 from api.common.effect_types import EFFECT_GROUPS, build_effect_type_filter
+from api.query.wdae_query_variants import wdae_query_wrapper
 
 
 @receiver(post_save, sender=get_user_model())
@@ -48,7 +50,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
 
-# from query_prepare import prepare_transmitted_studies
+# from query_prepare_bak import prepare_transmitted_studies
 
 
 # class Response(RestResponse):
@@ -472,7 +474,7 @@ Example JSON object describing the query is following:
          "ultraRareOnly":"True"
     }
 
-All fields are same as in query_variants request
+All fields are same as in query_variants_bak request
 
     """
 
@@ -489,7 +491,7 @@ All fields are same as in query_variants request
 
     LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
 
-    generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
+    generator = wdae_query_wrapper(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
 
     return Response(summary)
@@ -564,7 +566,7 @@ Advanced family filter expects following fields:
 
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
 
-    generator = do_query_variants(data)
+    generator = wdae_query_wrapper(data)
     response = StreamingHttpResponse(
         itertools.chain(
             itertools.imap(join_line, generator),

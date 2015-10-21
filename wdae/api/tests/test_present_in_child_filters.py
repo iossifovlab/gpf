@@ -5,8 +5,8 @@ import itertools
 
 LOGGER = logging.getLogger(__name__)
 
-from api.query.query_variants import prepare_present_in_child
-from api.query.query_prepare import prepare_gender_filter
+from query_variants import prepare_present_in_child
+from query_prepare import prepare_gender_filter
 
 class PresentInChildTests(unittest.TestCase):
     # denovo SSC

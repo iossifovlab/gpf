@@ -4,20 +4,23 @@ from api.enrichment.enrichment import enrichment, PRB_TESTS, SIB_TESTS, \
 
 from api.dae_query import load_gene_set2
 import numpy as np
-from api.query.query_prepare import prepare_denovo_studies, \
-    combine_gene_syms, prepare_string_value
+from query_prepare import prepare_denovo_studies, \
+    prepare_string_value
 import logging
+from api.query.wdae_query_variants import combine_gene_syms
+from itertools import chain
+
 
 LOGGER = logging.getLogger(__name__)
 
 
-
 def enrichment_prepare(data):
     result = {'denovoStudies': prepare_denovo_studies(data),
-#               'transmittedStudies': prepare_transmitted_studies(data),
+              # 'transmittedStudies': prepare_transmitted_studies(data),
               'geneSet': prepare_string_value(data, 'geneSet'),
               'geneTerm': prepare_string_value(data, 'geneTerm'),
-              'gene_set_phenotype': prepare_string_value(data, 'gene_set_phenotype'),
+              'gene_set_phenotype': prepare_string_value(data,
+                                                         'gene_set_phenotype'),
               'geneSyms': combine_gene_syms(data)}
 
     if 'geneSet' not in result or result['geneSet'] is None or \
@@ -55,8 +58,6 @@ def colormap_value(p_val, lessmore):
         color = "rgb(255,255,255)"
     return color
 
-from itertools import chain
-
 
 def enrichment_results(denovoStudies=None,
                        denovoStudiesName=None,
@@ -72,7 +73,7 @@ def enrichment_results(denovoStudies=None,
         gene_terms = load_gene_set2(geneSet, geneStudy)
 
     all_res, totals = enrichment(denovoStudies,
-                                      geneSyms)
+                                 geneSyms)
     bg_total = totals['BACKGROUND'][0]
     bg_cnt = all_res['BACKGROUND'].cnt
     bg_prop = round(float(bg_cnt) / bg_total, 3)
@@ -168,6 +169,7 @@ def enrichment_helper(all_res, totals, genes_dict, gene_syms, tests):
 
     return res
 
+
 def enrichment_results_by_phenotype(
         denovoStudies=None,
         transmittedStudies=None,
@@ -176,9 +178,9 @@ def enrichment_results_by_phenotype(
         gene_set_phenotype=None,
         geneSyms=None):
 
+    denovoStudies = [st for st in denovoStudies
+                     if st.get_attr('study.type') == 'WE']
 
-    denovoStudies = [st for st in denovoStudies if st.get_attr('study.type') == 'WE']
-    
     count_res_by_pheno, totals_by_pheno, genes_dict_by_pheno = \
         enrichment_by_phenotype(denovoStudies, geneSyms)
 
@@ -212,6 +214,7 @@ def enrichment_results_by_phenotype(
         tests = PRB_TESTS
         if phenotype == 'unaffected':
             tests = SIB_TESTS
-        res[phenotype] = enrichment_helper(all_res, totals, genes_dict, geneSyms, tests)
+        res[phenotype] = enrichment_helper(all_res, totals,
+                                           genes_dict, geneSyms, tests)
 
     return res

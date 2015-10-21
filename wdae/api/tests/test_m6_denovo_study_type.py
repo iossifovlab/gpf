@@ -4,7 +4,7 @@ Created on Jun 18, 2015
 @author: lubo
 '''
 import unittest
-from api.query.query_prepare import prepare_denovo_study_type,\
+from query_prepare import prepare_denovo_study_type, \
     prepare_denovo_phenotype_gender_filter1
 from DAE import vDB
 

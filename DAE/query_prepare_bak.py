@@ -1,7 +1,7 @@
 import itertools
 import logging
 from DAE import get_gene_sets_symNS, vDB
-from api.dae_query import combine_denovo_gene_sets
+from bg_loader import get_background
 
 LOGGER = logging.getLogger(__name__)
 
@@ -84,24 +84,97 @@ def prepare_gene_ids(data):
         return None
 
 
-def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
+def gene_set_loader(gene_set_label, study_name=None):
+    # print("gene set label: %s" % gene_set_label)
 
-    gene_term = None
-    if gene_set_label != 'denovo':
-        gene_term = get_gene_sets_symNS(gene_set_label)
+    if 'denovo' == gene_set_label:
+        dsts = vDB.get_studies(study_name)
+        gene_term = get_gene_sets_symNS(gene_set_label, dsts)
     else:
-        gene_term = combine_denovo_gene_sets(gene_set_phenotype)
+        gene_term = get_background(gene_set_label)
+        if not gene_term:
+            gene_term = get_gene_sets_symNS(gene_set_label)
+        # print("gene_term: %s" % gene_term)
 
     return gene_term
 
 
+def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
+    gene_term = None
+    if gene_set_label != 'denovo':
+        gene_term = get_background(gene_set_label)
+        if not gene_term:
+            gene_term = get_gene_sets_symNS(gene_set_label)
+            print "gene term loaded for: ", gene_set_label
+    else:
+        denovo_gene_sets = get_background('Denovo')
+        if gene_set_phenotype in denovo_gene_sets:
+            gene_term = denovo_gene_sets[gene_set_phenotype]
+
+    return gene_term
+
+
+def gene_set_bgloader(gene_set_label):
+    if 'denovo' == gene_set_label:
+        return None
+    else:
+        gene_term = get_gene_sets_symNS(gene_set_label)
+
+    return gene_term
+
+
+# def __load_gene_set(gene_set, gene_term, gene_study,
+#                     gene_set_loader=gene_set_loader):
+#
+#     if 'denovo' == gene_set:
+#         if not gene_study:
+#             return None
+#         gs = gene_set_loader('denovo', gene_study)
+#     else:
+#         gs = gene_set_loader(gene_set)
+#
+#     if gene_term not in gs.tDesc:
+#         return None
+#
+#     gl = gs.t2G[gene_term].keys()
+#
+#     if not gl:
+#         return None
+#
+#     return set(gl)
+
+
+# def __prepare_cli_gene_sets(data):
+#     gene_set = data['geneSet'].strip()
+#     if ":" in gene_set:
+#         ci = gene_set.index(":")
+#         collection = gene_set[0:ci]
+#         setId = gene_set[ci+1:]
+#     else:
+#         collection = "main"
+#         setId = gene_set
+#     if collection.lower() == 'denovo':
+#         study = data['denovoStudies']
+#     else:
+#         study = None
+#     return (collection, setId, study)
+
+
+# def __prepare_web_gene_sets(data):
+#     gene_set = data['geneSet']
+#     gene_term = data['geneTerm']
+#
+#     gene_set_phenotype = data['gene_set_phenotype'] \
+#         if 'gene_set_phenotype' in data else None
+#     return (gene_set, gene_term, gene_set_phenotype)
+
 def prepare_gene_sets(data):
-    if 'geneSet' not in data or not data['geneSet'] or \
-            not data['geneSet'].strip():
+    if 'geneSet' not in data or not data['geneSet'] \
+            or not data['geneSet'].strip():
         return None
 
-    if 'geneTerm' not in data or not data['geneTerm'] or \
-            not data['geneTerm'].strip():
+    if 'geneTerm' not in data or not data['geneTerm'] \
+            or not data['geneTerm'].strip():
         return None
 
     gene_set = data['geneSet']
@@ -118,23 +191,15 @@ def prepare_gene_sets(data):
     return None
 
 
-def prepare_denovo_phenotype_gender_filter1(data, st):
-    study_pheno_type = st.get_attr('study.phenotype')
-    study_type = st.get_attr('study.type')
-
+def prepare_denovo_phenotype_gender_filter1(data, studyPhenoType):
     pheno_types = data['phenoType']
-    if 'studyType' in data:
-        study_types = data['studyType']
-    else:
-        study_types = set(['WE', 'TG', 'CNV'])
-
     gender = None
     if 'gender' in data:
         gender = data['gender']
 
     pheno_filter = []
 
-    if study_pheno_type in pheno_types and study_type in study_types:
+    if studyPhenoType in pheno_types:
         pf = lambda inCh: len(inCh) > 0 and inCh[0] == 'p'
         if ['F'] == gender:
             pf = lambda inCh: 'prbF' in inCh
@@ -142,7 +207,7 @@ def prepare_denovo_phenotype_gender_filter1(data, st):
             pf = lambda inCh: 'prbM' in inCh
         pheno_filter.append(pf)
 
-    if 'unaffected' in pheno_types and study_type in study_types:
+    if 'unaffected' in pheno_types:
         pf = lambda inCh: ('sib' in inCh)
         if ['F'] == gender:
             pf = lambda inCh: 'sibF' in inCh
@@ -157,6 +222,29 @@ def prepare_denovo_phenotype_gender_filter1(data, st):
         return pheno_filter[0]
     return lambda inCh: any([f(inCh) for f in pheno_filter])
 
+
+# def prepare_denovo_phenotype_gender_filter(phenoType, gender, studyPhenoType):
+#     print "phenoType:", phenoType
+
+#     if studyPhenoType in phenoType:
+#         if len(gender)==2 or len(gender)==0:
+#             if 'unaffected' in phenoType:
+#                 return  {'inChild': set(['prb', 'sib'])}
+#             else:
+#                 return {'inChild': set(['prb'])}
+#         else:
+#             if 'unaffected' in phenoType:
+#                 return {'inChild': set(['prb' + gender[0], 'sib' + gender[0]])}
+#             else:
+#                 return {'inChild': set(['prb' + gender[0]])}
+
+#     elif 'unaffected' in phenoType:
+#         if len(gender)==2:
+#             return {'inChild': set(['sib'])}
+#         else:
+#             return {'inChild': set(['sib' + gender[0]])}
+#     else:
+#         return None
 
 def prepare_denovo_study_type(data):
     if 'studyType' not in data:
@@ -179,6 +267,7 @@ def prepare_denovo_phenotype(data):
         return
 
     phenoType = data['phenoType']
+    print("phenoType: %s" % phenoType)
 
     if phenoType is None or phenoType.lower() == 'none':
         del data['phenoType']
@@ -224,13 +313,16 @@ def prepare_denovo_pheno_filter(data, dstudies):
     if 'phenoType' not in data or 'gender' not in data:
         return [(st, None) for st in dstudies]
 
+    print "denovo pheno type filter:", data
     res = []
     for st in dstudies:
-        f = prepare_denovo_phenotype_gender_filter1(data, st)
+        f = prepare_denovo_phenotype_gender_filter1(
+            data, st.get_attr('study.phenotype'))
         if not f:
             continue
         res.append((st, {'presentInChild': f}))
 
+    print "res:", res
     return res
 
 

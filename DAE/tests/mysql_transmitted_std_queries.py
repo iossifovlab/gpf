@@ -5,7 +5,7 @@ Created on Oct 15, 2015
 '''
 from DAE import vDB
 from transmitted.mysql_query import MysqlTransmittedQuery
-from query_prepare import prepare_gene_sets
+from query_prepare_bak import prepare_gene_sets
 from transmitted.legacy_query import TransmissionLegacy
 
 

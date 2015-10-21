@@ -4,7 +4,7 @@ import argparse
 import sys
 
 from query_variants import do_query_variants, join_line
-from query_prepare import prepare_gene_sets
+from query_prepare_bak import prepare_gene_sets
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):

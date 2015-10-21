@@ -1,15 +1,15 @@
 import itertools
 import re
 import logging
-from query_prepare import combine_gene_syms, \
+from query_prepare_bak import combine_gene_syms, \
     prepare_denovo_studies, prepare_transmitted_studies, \
-    prepare_denovo_phenotype, prepare_gender_filter, prepare_denovo_pheno_filter
+    prepare_denovo_phenotype, prepare_gender_filter, prepare_denovo_pheno_filter, \
+    prepare_denovo_study_type
 
 
 from VariantAnnotation import get_effect_types_set, get_effect_types
 from VariantsDB import mat2Str
 from DAE import phDB
-from api.query.query_prepare import prepare_denovo_study_type
 
 LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ def get_sib_gender():
 
 FATHER_RACE = get_focuv_race()
 MOTHER_RACE = get_mocuv_race()
-PROBAND_VIQ  = get_verbal_iq()
+PROBAND_VIQ = get_verbal_iq()
 PROBAND_NVIQ = get_non_verbal_iq()
 
 PARENTS_RACE = dict([(k, ':'.join([m, f])) for (k, m, f) in zip(phDB.families,
@@ -275,11 +275,9 @@ def prepare_present_in_child(data):
 
         pheno_filter = []
         if 'autism only' in present_in_child:
-            pheno_filter.append(lambda inCh: (len(inCh) == 4 and
-                                              'p' == inCh[0]))
+            pheno_filter.append(lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]))
         if 'unaffected only' in present_in_child:
-            pheno_filter.append(lambda inCh: (len(inCh) == 4 and
-                                              's' == inCh[0]))
+            pheno_filter.append(lambda inCh: (len(inCh) == 4 and 's' == inCh[0]))
         if 'autism and unaffected' in present_in_child:
             pheno_filter.append(lambda inCh: (len(inCh) == 8))
         if 'neither' in present_in_child:
@@ -288,12 +286,13 @@ def prepare_present_in_child(data):
         comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
 
         if ['F'] == gender:
-            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'F' or
-                        (len(inCh) == 6 and inCh[5] == 'F'))
+            gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'F'
+            comp.append(gender_filter)
         elif ['M'] == gender:
-            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'M' or
-                        (len(inCh) == 6 and inCh[5] == 'M'))
+            gender_filter = lambda inCh: len(inCh) == 0 or inCh[3] == 'M'
+            comp.append(gender_filter)
 
+        # print "comp: ", comp
         if len(comp) == 1:
             return comp[0]
 
@@ -305,27 +304,23 @@ def prepare_present_in_child(data):
 def prepare_present_in_parent(data):
     if "presentInParent" in data:
         present_in_parent = set(data['presentInParent'].split(','))
+        print "presentInParent:", present_in_parent
         if set(['father only']) == present_in_parent:
-            return lambda fromParent: (len(fromParent) == 3 and
-                                       'd' == fromParent[0])
+            return lambda fromParent: (len(fromParent) == 3 and 'd' == fromParent[0])
         if set(['mother only']) == present_in_parent:
-            return lambda fromParent: (len(fromParent) == 3 and
-                                       'm' == fromParent[0])
+            return lambda fromParent: (len(fromParent) == 3 and 'm' == fromParent[0])
         if set(['mother and father']) == present_in_parent:
             return lambda fromParent: len(fromParent) == 6
         if set(['mother only', 'father only']) == present_in_parent:
             return lambda fromParent: len(fromParent) == 3
 
         if set(['mother only', 'mother and father']) == present_in_parent:
-            return lambda fromParent: ((len(fromParent) == 3 and
-                                        'm' == fromParent[0]) or
-                                       len(fromParent) == 6)
+            return lambda fromParent: ((len(fromParent) == 3 and 'm' == fromParent[0])
+                                        or len(fromParent) == 6)
         if set(['father only', 'mother and father']) == present_in_parent:
-            return lambda fromParent: ((len(fromParent) == 3 and
-                                        'd' == fromParent[0]) or
-                                       len(fromParent) == 6)
-        if set(['father only', 'mother only', 'mother and father']) == \
-                present_in_parent:
+            return lambda fromParent: ((len(fromParent) == 3 and 'd' == fromParent[0])
+                                        or len(fromParent) == 6)
+        if set(['father only', 'mother only', 'mother and father']) == present_in_parent:
             return lambda fromParent: (len(fromParent) > 0)
         if set(['neither']) == present_in_parent:
             return lambda fromParent: (len(fromParent) == 0)
@@ -349,8 +344,10 @@ def prepare_effect_types(data):
     if not effect_type_list:
         return None
     return get_effect_types_set(','.join(effect_type_list))
+    # print("effect_types: %s" % effect_type)
     # effect_types = effect_type.split(',')
     # result = [et for et in effect_types if et in get_effect_types(types=True, groups=True)]
+    # print("effect types: %s" % result)
 
     # return set(result)
     # if effect_type not in get_effect_types(types=True, groups=True):
@@ -371,7 +368,7 @@ def prepare_variant_types(data):
     if variant_types == 'All':
         return None
 
-    variant_types_set= set(get_variant_types())
+    variant_types_set = set(get_variant_types())
     variant_types_list = variant_types.split(',')
     result = [vt for vt in variant_types_list if vt in variant_types_set]
     LOGGER.info("variant types: %s", result)
@@ -408,10 +405,6 @@ def prepare_family_ids(data):
         return None
 
 
-
-# "minParentsCalled=0,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1"
-
-
 def prepare_min_alt_freq_prcnt(data):
     minAltFreqPrcnt = -1.0
     if 'popFrequencyMin' in data:
@@ -433,18 +426,20 @@ def prepare_max_alt_freq_prcnt(data):
 
 
 def prepare_pop_min_parents_called(data):
-    minParentsCalled = 0 
+    minParentsCalled = 0
     if 'popMinParentsCalled' in data:
         try:
             minParentsCalled = float(str(data['popMinParentsCalled']))
         except:
-            minParentsCalled = 0 
+            minParentsCalled = 0
     return minParentsCalled
+
 
 def prepare_TMM_ALL(data):
     if 'TMM_ALL' in data and data['TMM_ALL']:
         return True
     return False
+
 
 def prepare_ultra_rare(data):
     if 'rarity' in data:
@@ -527,7 +522,7 @@ def prepare_transmitted_filters(data,
                'minAltFreqPrcnt': prepare_min_alt_freq_prcnt(data),
                'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data),
                'TMM_ALL': prepare_TMM_ALL(data)
-    }
+               }
     return dict(filters, **denovo_filters)
 
 
@@ -567,6 +562,8 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 
 def dae_query_variants(data):
+    assert "geneSet" not in data
+
     prepare_denovo_phenotype(data)
     prepare_denovo_study_type(data)
     prepare_gender_filter(data)
@@ -579,11 +576,12 @@ def dae_query_variants(data):
     denovo_filters = prepare_denovo_filters(data)
     family_filters = advanced_family_filter(data, denovo_filters)
 
-
     variants = []
     if dstudies is not None:
         denovo_filtered_studies = prepare_denovo_pheno_filter(data, dstudies)
-        dvs = get_denovo_variants(denovo_filtered_studies, family_filters, **denovo_filters)
+        dvs = get_denovo_variants(denovo_filtered_studies,
+                                  family_filters,
+                                  **denovo_filters)
         variants.append(dvs)
 
     if tstudies is not None:
@@ -599,8 +597,10 @@ def dae_query_variants(data):
 
     return variants
 
+
 def pedigree_data(v):
     return [v.study.get_attr('study.phenotype'), v.pedigree]
+
 
 def augment_vars(v):
     fmId = v.familyId
@@ -641,9 +641,9 @@ def do_query_variants(data, atts=[]):
                               '_ch_prof_',
                               '_prb_viq_',
                               '_prb_nviq_',
-                              'valstatus']
-                            +
-                            atts)
+                              'valstatus'] +
+                             atts)
+
 
 def __gene_effect_get_worst_effect(gs):
     if len(gs) == 0:
@@ -659,29 +659,29 @@ def __gene_effect_get_genes(gs):
 
 
 COLUMN_TITLES = {'familyId': 'family id',
-                'location': 'location',
-                'variant': 'variant',
-                'bestSt': 'family genotype',
-                'fromParentS': 'from parent',
-                'inChS': 'in child',
-                'effectType': 'effect type',
-                'worstEffect': 'worst effect',
-                'genes': 'genes',
-                'geneEffect': 'all effects',
-                'requestedGeneEffects': 'requested effects',
-                'popType': 'population type',
-                'effectDetails': 'effect details',
-                'all.altFreq': 'alternative allele frequency',
-                'all.nAltAlls': 'number of alternative alleles',
-                'all.nParCalled': 'number of genotyped parents',
-                '_par_races_': 'parent races',
-                '_ch_prof_': 'children description',
-                '_prb_viq_': 'proband verbal iq',
-                '_prb_nviq_': 'proband non-verbal iq',
-                'studyName': 'study',
-                'counts': 'count',
-                'valstatus': 'validation status',
-             }
+                 'location': 'location',
+                 'variant': 'variant',
+                 'bestSt': 'family genotype',
+                 'fromParentS': 'from parent',
+                 'inChS': 'in child',
+                 'effectType': 'effect type',
+                 'worstEffect': 'worst effect',
+                 'genes': 'genes',
+                 'geneEffect': 'all effects',
+                 'requestedGeneEffects': 'requested effects',
+                 'popType': 'population type',
+                 'effectDetails': 'effect details',
+                 'all.altFreq': 'alternative allele frequency',
+                 'all.nAltAlls': 'number of alternative alleles',
+                 'all.nParCalled': 'number of genotyped parents',
+                 '_par_races_': 'parent races',
+                 '_ch_prof_': 'children description',
+                 '_prb_viq_': 'proband verbal iq',
+                 '_prb_nviq_': 'proband non-verbal iq',
+                 'studyName': 'study',
+                 'counts': 'count',
+                 'valstatus': 'validation status',
+                 }
 
 def attr_title(attr_key):
     return COLUMN_TITLES.get(attr_key, attr_key)
@@ -729,15 +729,15 @@ def generate_response(vs, atts=[], sep='\t'):
                 mavs.append("")
         hack = []
         for a in atts:
-            if a in ['SSCfreq', 'EVSfreq', 'E65freq',] and a not in v.atts:
-                a = a[:3]+'-'+a[3:]
+            if a in ['SSCfreq', 'EVSfreq', 'E65freq', ] and a not in v.atts:
+                a = a[:3] + '-' + a[3:]
             if a in v.atts:
                 val = str(v.atts[a]).replace(sep, ';').replace("'", '"')
-                hack.append(val if val!='False' else "")
+                hack.append(val if val != 'False' else "")
             else:
                 hack.append(getattr(v, a, ''))
         yield (mavs + hack)
-                
+
 #         yield (mavs + [str(v.atts[a]).replace(sep, ';').replace("'", '"')
 #                        if a in v.atts else str(getattr(v, a, '')) for a in atts])
 

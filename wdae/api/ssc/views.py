@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from api.views import prepare_query_dict, build_effect_type_filter
 from api.logger import log_filter, LOGGER
-from api.query.query_variants import do_query_variants, join_line
+from query_variants import do_query_variants, join_line
 from api.dae_query import prepare_summary
 from django.http.response import StreamingHttpResponse
 import itertools
@@ -15,7 +15,8 @@ from rest_framework.parsers import JSONParser, FormParser
 from rest_framework.authentication import TokenAuthentication, \
     BasicAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
-from api.query.query_prepare import prepare_ssc_filter
+from query_prepare import prepare_ssc_filter
+from api.query.wdae_query_variants import wdae_query_wrapper
 
 
 class SSCPrepare(APIView):
@@ -40,7 +41,7 @@ class SSCPreview(SSCPrepare):
         LOGGER.info(log_filter(request,
                                "ssc preview query variants: " + str(data)))
 
-        generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
+        generator = wdae_query_wrapper(data, atts=["_pedigree_", "phenoInChS"])
         summary = prepare_summary(generator)
 
         return Response(summary)
@@ -67,7 +68,7 @@ class SSCDownload(SSCPrepare):
         comment = ', '.join([': '.join([k, str(v)])
                              for (k, v) in data.items()])
 
-        generator = do_query_variants(data)
+        generator = wdae_query_wrapper(data)
         response = StreamingHttpResponse(
             itertools.chain(
                 itertools.imap(join_line, generator),
