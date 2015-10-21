@@ -112,11 +112,11 @@ class Study:
         for v in vs:
             yield v
 
-    def get_summary_transmitted_variants(self, callSet='default', **kwargs):
+    def get_transmitted_summary_variants(self, callSet='default', **kwargs):
         if callSet not in self.transmission_impl:
             self.transmission_impl[callSet] = TransmissionLegacy(self)
         impl = self.transmission_impl[callSet]
-        vs = impl.get_summary_transmitted_variants(**kwargs)
+        vs = impl.get_transmitted_summary_variants(**kwargs)
         for v in vs:
             yield v
 

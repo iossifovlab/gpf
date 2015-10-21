@@ -7,7 +7,7 @@ from DAE import vDB
 import gzip
 import pandas as pd
 import numpy as np
-from VariantsDB import parseGeneEffect
+from Variant import parseGeneEffect
 import pysam
 #import numba
 
