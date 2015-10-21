@@ -6,11 +6,14 @@ Created on Oct 15, 2015
 from DAE import vDB
 from transmitted.mysql_query import MysqlTransmittedQuery
 from query_prepare import prepare_gene_sets
+from transmitted.legacy_query import TransmissionLegacy
 
 
 def dae_query_q101():
     transmitted_study = vDB.get_study("w1202s766e611")
-    tvs = transmitted_study.get_transmitted_variants(
+    impl = TransmissionLegacy(transmitted_study)
+
+    tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
         maxAltFreqPrcnt=-1,
         minAltFreqPrcnt=-1,
@@ -21,7 +24,8 @@ def dae_query_q101():
 
 
 def mysql_query_q101():
-    m = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+    transmitted_study = vDB.get_study("w1202s766e611")
+    m = MysqlTransmittedQuery(transmitted_study)
     m.connect()
 
     tvs = m.get_transmitted_variants(
@@ -36,7 +40,9 @@ def mysql_query_q101():
 
 def dae_query_q201():
     transmitted_study = vDB.get_study("w1202s766e611")
-    tvs = transmitted_study.get_transmitted_variants(
+    impl = TransmissionLegacy(transmitted_study)
+
+    tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
         maxAltFreqPrcnt=-1,
         minAltFreqPrcnt=-1,
@@ -47,7 +53,8 @@ def dae_query_q201():
 
 
 def mysql_query_q201():
-    m = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+    transmitted_study = vDB.get_study("w1202s766e611")
+    m = MysqlTransmittedQuery(transmitted_study)
     m.connect()
 
     tvs = m.get_transmitted_variants(
@@ -62,7 +69,9 @@ def mysql_query_q201():
 
 def dae_query_q301():
     transmitted_study = vDB.get_study("w1202s766e611")
-    tvs = transmitted_study.get_transmitted_variants(
+    impl = TransmissionLegacy(transmitted_study)
+
+    tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
         maxAltFreqPrcnt=1.0,
         minAltFreqPrcnt=-1,
@@ -76,7 +85,8 @@ def dae_query_q301():
 
 
 def mysql_query_q301():
-    m = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+    transmitted_study = vDB.get_study("w1202s766e611")
+    m = MysqlTransmittedQuery(transmitted_study)
     m.connect()
 
     tvs = m.get_transmitted_variants(
@@ -94,7 +104,9 @@ def mysql_query_q301():
 
 def dae_query_q401():
     transmitted_study = vDB.get_study("w1202s766e611")
-    tvs = transmitted_study.get_transmitted_variants(
+    impl = TransmissionLegacy(transmitted_study)
+
+    tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
         maxAltFreqPrcnt=-1,
         minAltFreqPrcnt=-1,
@@ -106,7 +118,8 @@ def dae_query_q401():
 
 
 def mysql_query_q401():
-    m = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+    transmitted_study = vDB.get_study("w1202s766e611")
+    m = MysqlTransmittedQuery(transmitted_study)
     m.connect()
 
     tvs = m.get_transmitted_variants(
@@ -126,7 +139,9 @@ def dae_query_q501():
     assert gene_syms
 
     transmitted_study = vDB.get_study("w1202s766e611")
-    tvs = transmitted_study.get_transmitted_variants(
+    impl = TransmissionLegacy(transmitted_study)
+
+    tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
         maxAltFreqPrcnt=-1,
         minAltFreqPrcnt=-1,
@@ -143,7 +158,8 @@ def mysql_query_q501():
                                    'geneTerm': 'FMR1-targets'})
     assert gene_syms
 
-    m = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+    transmitted_study = vDB.get_study("w1202s766e611")
+    m = MysqlTransmittedQuery(transmitted_study)
     m.connect()
 
     tvs = m.get_transmitted_variants(
@@ -161,7 +177,9 @@ def mysql_query_q501():
 def dae_query_q601():
 
     transmitted_study = vDB.get_study("w1202s766e611")
-    tvs = transmitted_study.get_transmitted_variants(
+    impl = TransmissionLegacy(transmitted_study)
+
+    tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
         maxAltFreqPrcnt=-1,
         minAltFreqPrcnt=-1,
@@ -174,7 +192,9 @@ def dae_query_q601():
 
 
 def mysql_query_q601():
-    m = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+    transmitted_study = vDB.get_study("w1202s766e611")
+
+    m = MysqlTransmittedQuery(transmitted_study)
     m.connect()
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,

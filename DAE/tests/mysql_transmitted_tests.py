@@ -19,7 +19,8 @@ def count(vs):
 class SummaryVariantsLenTest(unittest.TestCase):
 
     def setUp(self):
-        self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+        transmitted_study = vDB.get_study("w1202s766e611")
+        self.impl = MysqlTransmittedQuery(transmitted_study)
 
     def tearDown(self):
         self.impl.disconnect()
@@ -177,7 +178,8 @@ class SummaryVariantsLenTest(unittest.TestCase):
 class VariantsLenTest(unittest.TestCase):
 
     def setUp(self):
-        self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
+        transmitted_study = vDB.get_study("w1202s766e611")
+        self.impl = MysqlTransmittedQuery(transmitted_study)
 
     def tearDown(self):
         self.impl.disconnect()
@@ -237,8 +239,8 @@ class VariantsLenTest(unittest.TestCase):
 class VariantsFullTest(unittest.TestCase):
 
     def setUp(self):
-        self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
         self.st = vDB.get_study('w1202s766e611')
+        self.impl = MysqlTransmittedQuery(self.st)
 
     def tearDown(self):
         self.impl.disconnect()
@@ -261,8 +263,8 @@ class VariantsFullTest(unittest.TestCase):
 class VariantsPresentInParentTest(unittest.TestCase):
 
     def setUp(self):
-        self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
         self.st = vDB.get_study('w1202s766e611')
+        self.impl = MysqlTransmittedQuery(self.st)
 
     def tearDown(self):
         self.impl.disconnect()
@@ -340,8 +342,8 @@ class VariantsPresentInParentTest(unittest.TestCase):
 class VariantsPresentInChildTest(unittest.TestCase):
 
     def setUp(self):
-        self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
         self.st = vDB.get_study('w1202s766e611')
+        self.impl = MysqlTransmittedQuery(self.st)
 
     def tearDown(self):
         self.impl.disconnect()
@@ -489,8 +491,8 @@ class VariantsPresentInChildTest(unittest.TestCase):
 class VariantsInChildTest(unittest.TestCase):
 
     def setUp(self):
-        self.impl = MysqlTransmittedQuery(vDB, 'w1202s766e611')
         self.st = vDB.get_study('w1202s766e611')
+        self.impl = MysqlTransmittedQuery(self.st)
 
     def tearDown(self):
         self.impl.disconnect()

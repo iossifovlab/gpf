@@ -93,10 +93,11 @@ class MysqlTransmittedQuery(object):
     def _get_config_property(self, name):
         return self.vdb._config.get(self.config_section, name)
 
-    def __init__(self, vdb, study_name):
-        self.study_name = study_name
-        self.vdb = vdb
-        self.config_section = 'study.' + study_name
+    def __init__(self, study):
+        self.study = study
+        self.study_name = self.study.name
+        self.vdb = study.vdb
+        self.config_section = 'study.' + self.study_name
         self.db = self._get_config_property('transmittedVariants.mysql.db')
         self.user = self._get_config_property('transmittedVariants.mysql.user')
         self.passwd = \
