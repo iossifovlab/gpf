@@ -3,7 +3,8 @@ import re
 import logging
 from query_prepare import combine_gene_syms, \
     prepare_denovo_studies, prepare_transmitted_studies, \
-    prepare_denovo_phenotype, prepare_gender_filter, prepare_denovo_pheno_filter
+    prepare_denovo_phenotype, prepare_gender_filter, prepare_denovo_pheno_filter, \
+    prepare_denovo_study_type
 
 
 from VariantAnnotation import get_effect_types_set, get_effect_types
@@ -562,6 +563,7 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 def dae_query_variants(data):
     prepare_denovo_phenotype(data)
+    prepare_denovo_study_type(data)
     prepare_gender_filter(data)
 
     dstudies = prepare_denovo_studies(data)

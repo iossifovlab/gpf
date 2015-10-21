@@ -1,7 +1,6 @@
 import itertools
 import logging
 from DAE import get_gene_sets_symNS, vDB
-from api.precompute import register
 from api.dae_query import combine_denovo_gene_sets
 
 LOGGER = logging.getLogger(__name__)
