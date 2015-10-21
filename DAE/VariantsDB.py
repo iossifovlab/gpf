@@ -23,6 +23,10 @@ from VariantAnnotation import get_effect_types_set
 from RegionOperations import Region,collapse
 import operator
 import pickle
+from transmitted.legacy_query import TransmissionLegacy
+
+from Variant import Variant, mat2Str, filter_gene_effect, str2Mat
+
 
 def regions_matcher(regions):
     regs = regions.split(',')
@@ -40,170 +44,6 @@ def regions_matcher(regions):
                                     and vpos >= beg
                                     and vpos <= end)
                                    for(chrom, beg, end) in reg_defs])
-class Variant:
-    def __init__(self,atts,familyIdAtt="familyId", locationAtt="location",
-                variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
-                countsAtt="counts", effectGeneAtt="effectGene", altFreqPrcntAtt="all.altFreq"):
-        self.atts = atts
-
-        self.familyIdAtt = familyIdAtt
-        self.locationAtt = locationAtt
-        self.variantAtt = variantAtt
-        self.bestStAtt = bestStAtt
-        self.bestStColSep = bestStColSep
-        self.countsAtt = countsAtt
-        self.effectGeneAtt = effectGeneAtt
-        self.altFreqPrcntAtt = altFreqPrcntAtt
-
-    @property
-    def familyId(self):
-        try:
-            return self._familyId
-        except AttributeError:
-            pass
-        self._familyId = str(self.atts[self.familyIdAtt])
-        return self._familyId
-
-    @property
-    def studyName(self):
-        return self.study.name
-
-    @property
-    def location(self):
-        return self.atts[self.locationAtt]
-
-    @property
-    def variant(self):
-        return self.atts[self.variantAtt]
-
-    @property
-    def bestStStr(self):
-        return self.atts[self.bestStAtt]
-
-    @property
-    def bestSt(self):
-        try:
-            return self._bestSt
-        except AttributeError:
-            pass
-        self._bestSt = str2Mat(self.atts[self.bestStAtt], colSep=self.bestStColSep)
-        return self._bestSt
-
-    @property
-    def countsStr(self):
-        return self.atts[self.countsAtt]
-
-    @property
-    def counts(self):
-        try:
-            return self._counts
-        except AttributeError:
-            pass
-        self._counts = str2Mat(self.atts[self.countsAtt], colSep=" ")
-        return self._counts
-
-    @property
-    def geneEffect(self):
-        try:
-            return self._geneEffect
-        except AttributeError:
-                self._geneEffect = parseGeneEffect(self.atts[self.effectGeneAtt])
-        return self._geneEffect
-
-    @property
-    def requestedGeneEffects(self):
-        try:
-            return self._requestedGeneEffect
-        except AttributeError:
-                self._requestedGeneEffect = self.geneEffect
-        return self._requestedGeneEffect
-
-    @property
-    def altFreqPrcnt(self):
-        try:
-            return self._altFreqPrcnt
-        except AttributeError:
-                self._altFreqPrcnt = 0.0
-                if self.altFreqPrcntAtt in self.atts:
-                    self._altFreqPrcnt = float(self.atts[self.altFreqPrcntAtt])
-        return self._altFreqPrcnt
-
-    @property
-    def memberInOrder(self):
-        try:
-            return self._memberInOrder
-        except AttributeError:
-            self._memberInOrder = self.study.families[self.familyId].memberInOrder
-        return self._memberInOrder
-
-    @property
-    def inChS(self):
-        mbrs = self.memberInOrder
-        # mbrs = elf.study.families[self.familyId].memberInOrder
-        bs = self.bestSt
-        childStr = ''
-        for c in xrange(2,len(mbrs)):
-            if isVariant(bs,c,self.location,mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
-        return childStr
-
-    @property
-    def phenoInChS(self):
-        mbrs = self.memberInOrder
-        # mbrs = elf.study.families[self.familyId].memberInOrder
-        bs = self.bestSt
-        childStr = ''
-        for c in xrange(2,len(mbrs)):
-            if isVariant(bs,c,self.location,mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
-        phenotype = self.study.get_attr('study.phenotype')
-        return childStr.replace('prb',phenotype)
-
-    @property
-    def fromParentS(self):
-        if self.popType == "denovo":
-            if 'fromParent' in self.atts:
-                return self.atts['fromParent']
-            else:
-                return ''
-        parentStr = ''
-        mbrs = self.memberInOrder
-        bs = self.bestSt
-        for c in xrange(2):
-            if isVariant(bs,c,self.location,mbrs[c].gender):
-                parentStr += mbrs[c].role
-        return parentStr
-
-    @property
-    def pedigree(self):
-        mbrs = self.memberInOrder
-        bs = self.bestSt
-        denovo_parent = self.denovo_parent()
-        res = [reduce(operator.add, [[m.role,
-                                      m.gender],
-                                     variantCount(bs, c, self.location, m.gender, denovo_parent)])
-               for (c, m) in enumerate(mbrs)]
-        return res
-
-    def denovo_parent(self):
-        denovo_parent = None
-        if self.popType == 'denovo':
-            if 'fromParent' in self.atts:
-                if self.atts['fromParent'] == 'mom':
-                    denovo_parent = 0
-                elif self.atts['fromParent'] == 'dad':
-                    denovo_parent = 1
-                else:
-                    # print("strange fromParent value: %s" % self.atts['fromParent'])
-                    denovo_parent = None
-        return denovo_parent
-
-# FIXME:
-#     def get_normal_refCN(self,c):
-#         return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
-
-    def is_variant_in_person(self,c):
-        return isVariant(self.bestSt,c,self.location,self.memberInOrder[c].gender)
 
 class Family:
     def __init__(self,atts=None):
@@ -242,6 +82,7 @@ class Study:
         self.name = name
         self._configSection = 'study.' + name
         self._dnvData = {}
+        self.transmission_impl = {}
 
         self.has_denovo = self.vdb._config.has_option(self._configSection,'denovoCalls.files')
         self.has_transmitted = self.vdb._config.has_option(self._configSection,'transmittedVariants.indexFile')
@@ -259,216 +100,25 @@ class Study:
         tGsF.close()
         return tgsS
 
-    def get_attr(self,attName):
-        if self.vdb._config.has_option(self._configSection,attName):
-            return self.vdb._config.get(self._configSection,attName)
+    def get_attr(self, attName):
+        if self.vdb._config.has_option(self._configSection, attName):
+            return self.vdb._config.get(self._configSection, attName)
 
-    def filter_transmitted_variants(self, f, colNms,
-                                    minParentsCalled=0,
-                                    maxAltFreqPrcnt=5.0,
-                                    minAltFreqPrcnt=-1,
-                                    variantTypes=None,
-                                    effectTypes=None,
-                                    ultraRareOnly=False,
-                                    geneSyms=None):
-        for l in f:
-            # print "line:", l
-            if l[0] == '#':
-                continue
-            vls = l.strip("\r\n").split("\t")
-            # FIXME: empty strings for additional frequences: 'EVS-freq', 'E65-freq'
-            if len(colNms) != len(vls):
-                print("colNms len: %d; variant col: %d" % (len(colNms), len(vls)))
-                raise Exception("Incorrect transmitted variants file: ")
-            mainAtts = dict(zip(colNms, vls))
-
-            mainAtts["location"] = mainAtts["chr"] + ":" + mainAtts["position"]
-
-            if minParentsCalled != -1:
-                parsCalled = int(mainAtts['all.nParCalled'])
-                if parsCalled <= minParentsCalled:
-                    continue
-
-            if maxAltFreqPrcnt != -1 or minAltFreqPrcnt != -1:
-                altPrcnt = float(mainAtts['all.altFreq'])
-                if maxAltFreqPrcnt != -1 and altPrcnt > maxAltFreqPrcnt:
-                    continue
-                if minAltFreqPrcnt != -1 and altPrcnt < minAltFreqPrcnt:
-                    continue
-
-            ultraRare = int(mainAtts['all.nAltAlls']) == 1
-            if ultraRareOnly and not ultraRare:
-                continue
-
-            geneEffect = None
-            if effectTypes or geneSyms:
-                geneEffect = parseGeneEffect(mainAtts['effectGene'])
-                requestedGeneEffects = filter_gene_effect(geneEffect,
-                                                          effectTypes,
-                                                          geneSyms)
-                if not requestedGeneEffects:
-                    continue
-            v = Variant(mainAtts)
-            v.study = self
-
-            if geneEffect:
-                v._geneEffect = geneEffect
-                v._requestedGeneEffect = requestedGeneEffects
-            if ultraRare:
-                v.popType = "ultraRare"
-            else:
-                # rethink
-                v.popType = "common"
-
-            if variantTypes and v.variant[0:3] not in variantTypes:
-                continue
+    def get_transmitted_variants(self, callSet='default', **kwargs):
+        if callSet not in self.transmission_impl:
+            self.transmission_impl[callSet] = TransmissionLegacy(self)
+        impl = self.transmission_impl[callSet]
+        vs = impl.get_transmitted_variants(**kwargs)
+        for v in vs:
             yield v
 
-
-    def get_transmitted_summary_variants(self,minParentsCalled=0,
-                                         maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,
-                                         variantTypes=None, effectTypes=None,
-                                         ultraRareOnly=False, geneSyms=None, 
-                                         regionS=None):
-
-        transmittedVariantsFile = self.vdb._config.get(self._configSection,
-                            'transmittedVariants.indexFile' ) + ".txt.bgz"
-        print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile
-
-        if isinstance(effectTypes, str):
-            effectTypes = self.vdb.effectTypesSet(effectTypes)
-
-        if isinstance(variantTypes, str):
-            variantTypes = set(variantTypes.split(","))
-
-        if not regionS and geneSyms and len(geneSyms) <= 10:
-            regionS = self.vdb.get_gene_regions(geneSyms)
-
-        if regionS:
-            f = gzip.open(transmittedVariantsFile)
-            colNms = f.readline().strip().split("\t")
-            f.close()
-            tbf = pysam.Tabixfile(transmittedVariantsFile)
-
-            if isinstance(regionS, str):
-                regionS = [regionS]
-
-            for reg in regionS:
-                try:
-                    f = tbf.fetch(reg)
-                    for v in self.filter_transmitted_variants(
-                            f, colNms,
-                            minParentsCalled,
-                            maxAltFreqPrcnt,
-                            minAltFreqPrcnt,
-                            variantTypes,
-                            effectTypes,
-                            ultraRareOnly,
-                            geneSyms):
-
-                        yield v
-                except ValueError as ex:
-                    print >> sys.stderr, "Bad region:", ex
-                    continue
-        else:
-            f = gzip.open(transmittedVariantsFile)
-            colNms = f.readline().strip().split("\t")
-            # print(colNms)
-            for v in self.filter_transmitted_variants(f, colNms,
-                                                      minParentsCalled,
-                                                      maxAltFreqPrcnt,
-                                                      minAltFreqPrcnt,
-                                                      variantTypes,
-                                                      effectTypes,
-                                                      ultraRareOnly,
-                                                      geneSyms):
-                yield v
-
-        if regionS:
-            tbf.close()
-        else:
-            f.close()
-
-
-    def get_transmitted_variants(self, inChild=None, 
-                                 presentInChild=None, presentInParent=None,
-                                 minParentsCalled=0,maxAltFreqPrcnt=5.0,
-                                 minAltFreqPrcnt=-1,
-                                 variantTypes=None, effectTypes=None, 
-                                 ultraRareOnly=False,
-                                 geneSyms=None, familyIds=None, 
-                                 regionS=None, TMM_ALL=False):
-
-        transmittedVariantsTOOMANYFile = \
-            self.vdb._config.get(self._configSection,
-                                 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
-
-        if TMM_ALL:
-            tbf = gzip.open(transmittedVariantsTOOMANYFile)
-        else:
-            tbf = pysam.Tabixfile(transmittedVariantsTOOMANYFile)
-
-        for vs in self.get_transmitted_summary_variants(minParentsCalled,
-                                                        maxAltFreqPrcnt,
-                                                        minAltFreqPrcnt,
-                                                        variantTypes,
-                                                        effectTypes,
-                                                        ultraRareOnly, 
-                                                        geneSyms, regionS):
-            if not vs:
-                continue
-
-            fmsData = vs.atts['familyData']
-            if not fmsData:
-                continue
-            if fmsData == "TOOMANY":
-                chrom = vs.atts['chr']
-                pos = vs.atts['position']
-                var = vs.atts['variant']
-                if TMM_ALL:
-                    for l in tbf:
-                        _chrL,posL,varL,fdL = l.strip().split("\t")
-                        if chrom==chrom and pos==posL and var==varL:
-                            fmsData = fdL
-                            break
-                    if fmsData == "TOOMANY":
-                        raise Exception('TOOMANY mismatch TMM_ALL')
-                else:
-                    flns = []
-                    posI = int(pos)
-                    for l in tbf.fetch(chrom, posI-1, posI):
-                        _chrL,posL,varL,fdL = l.strip().split("\t")
-
-                        if chrom==chrom and pos==posL and var==varL:
-                            flns.append(fdL)
-                    if len(flns)!=1:
-                        raise Exception('TOOMANY mismatch')
-                    fmsData = flns[0]
-
-            for fmData in fmsData.split(";"):
-                cs = fmData.split(":")
-                if len(cs) != 3:
-                    raise Exception("Wrong family data format: " + fmData)
-                familyId, bestStateS, cntsS = cs
-                if familyIds and familyId not in familyIds:
-                    continue
-                v = copy.copy(vs)
-                v.atts = { kk: vv for kk,vv in vs.atts.items() }
-                v.atts['familyId'] = familyId
-                v.atts['bestState'] = bestStateS
-                v.atts['counts'] = cntsS
-
-                if presentInChild:
-                    if not presentInChild(v.inChS):
-                        continue
-                elif inChild and inChild not in v.inChS:
-                    continue
-                if presentInParent:
-                    if not presentInParent(v.fromParentS):
-                        continue
-
-                yield v
-        tbf.close()
+    def get_summary_transmitted_variants(self, callSet='default', **kwargs):
+        if callSet not in self.transmission_impl:
+            self.transmission_impl[callSet] = TransmissionLegacy(self)
+        impl = self.transmission_impl[callSet]
+        vs = impl.get_summary_transmitted_variants(**kwargs)
+        for v in vs:
+            yield v
 
     def get_denovo_variants(self, inChild=None, presentInChild=None, presentInParent=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
@@ -1288,15 +938,6 @@ class VariantsDB:
         '''
 
 
-def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):
-    # print matS, colSep, rowSep, str2NumF
-    if colSep == -1:
-        return np.array([ [ str2NumF(c) for c in r ] for r in matS.split(rowSep) ])
-    return np.array([ [ str2NumF(v) for v in r.split(colSep) ] for r in matS.split(rowSep) ])
-
-def mat2Str(mat, colSep=" ", rowSep="/"):
-    return rowSep.join([ colSep.join([str(n) for n in mat[i,:]]) for i in xrange(mat.shape[0])  ])
-
 # added sep param in order to produce CSV outout for Web Site
 def _safeVs(tf,vs,atts=[],sep="\t"):
     def ge2Str(gs):
@@ -1337,82 +978,6 @@ def safeVs(vs,fn,atts=[]):
     if fn!="-":
         f.close()
 
-def normalRefCopyNumber(location,gender):
-    clnInd = location.find(":")
-    chr = location[0:clnInd]
-
-    if chr in ['chrX', 'X', '23', 'chr23']:
-        if '-' in location:
-            dshInd = location.find('-')
-            pos = int(location[clnInd+1:dshInd])
-        else:
-            pos = int(location[clnInd+1:])
-
-        # hg19 pseudo autosomes region: chrX:60001-2699520 and chrX:154931044-155260560
-        if pos < 60001 or (pos>2699520 and pos < 154931044) or pos > 155260560:
-            if gender=='M':
-                return 1
-            elif gender!='F':
-                raise Exception('weird gender ' + gender)
-    elif chr in ['chrY', 'Y', '24', 'chr24']:
-        if gender=='M':
-            return 1
-        elif gender=='F':
-            return 0
-        else:
-            raise Exception('gender needed')
-    return 2
-
-def variantCount(bs,c,location=None,gender=None, denovoParent=None):
-    normalRefCN=2
-    if location:
-        normalRefCN = normalRefCopyNumber(location,gender)
-
-        count = abs(bs[0,c] - normalRefCN)
-        if count == 0 and bs.shape[0]>1:
-            # print("bs=%s; bs.shape[0]=%s" % (bs, bs.shape[0]))
-            count = max([bs[o,c] for o in xrange(1,bs.shape[0])])
-        if c!=denovoParent:
-            return [count]
-        else:
-            return [1, 1]
-
-
-def isVariant(bs,c,location=None,gender=None):
-    normalRefCN=2
-
-    if location:
-        normalRefCN = normalRefCopyNumber(location,gender)
-
-    if bs[0,c] != normalRefCN or any([bs[o,c]!=0 for o in xrange(1,bs.shape[0])]):
-        return True
-    return False
-
-
-def parseGeneEffect(effStr):
-    geneEffect = []
-    if effStr == "intergenic":
-        return geneEffect
-
-    # HACK!!! To rethink
-    if effStr in ["CNV+", "CNV-"]:
-        geneEffect.append({'sym':"", 'eff':effStr})
-        return geneEffect
-
-    for ge in effStr.split("|"):
-        cs = ge.split(":");
-        if len(cs) != 2:
-            raise Exception(ge + " doesn't agree with the <sym>:<effect> format:" + effStr);
-        sym,eff = cs
-        geneEffect.append({'sym':sym, 'eff':eff})
-    return geneEffect
-
-def filter_gene_effect(geneEffects, effectTypes, geneSyms):
-    if not effectTypes:
-        return [x for x in geneEffects if x['sym'] in geneSyms]
-    if not geneSyms:
-        return [x for x in geneEffects if x['eff'] in effectTypes]
-    return [x for x in geneEffects if x['eff'] in effectTypes and  x['sym'] in geneSyms]
 
 if __name__ == "__main__":
     wd = os.environ['DAE_DB_DIR']

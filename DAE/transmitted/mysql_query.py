@@ -7,7 +7,7 @@ import MySQLdb as mdb
 import copy
 import operator
 import re
-from VariantsDB import Variant
+from Variant import Variant
 
 
 class MysqlTransmittedQuery(object):
