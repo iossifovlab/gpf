@@ -3,6 +3,9 @@ import unittest
 from query_variants import prepare_inchild, \
     dae_query_variants
 
+from api.dae_query import prepare_summary
+
+
 import logging
 import itertools
 from api.query.wdae_query_variants import prepare_gene_sets, wdae_query_wrapper
@@ -40,10 +43,11 @@ class VariantsTests(unittest.TestCase):
         for v in itertools.chain(*vs):
             self.assertTrue('sibF' in v.inChS)
             if 'frame-shift' not in v.atts['effectGene']:
-                fail=True
+                fail = True
 
         # self.assertEqual(v.atts['effectType'], 'frame-shift')
         self.assertFalse(fail)
+
 
 class CombinedTests(unittest.TestCase):
     TEST_DATA_1 = {"denovoStudies": ["ALL WHOLE EXOME"],
@@ -160,16 +164,7 @@ class IvanchoSubmittedQueryTests(unittest.TestCase):
         count = 0
         for _v in vs:
             count += 1
-        self.assertTrue(count>0)
-
-
-
-class QueryDictTests(unittest.TestCase):
-    TEST_DATA_1 = "geneSymbols=&geneSet=main&geneSetInput=&denovoStudies=allWEAndTG&transmittedStudies=none&rarity=ultraRare&inChild=prb&variants=All&effectType=All&families="
-
-
-
-from api.dae_query import prepare_summary
+        self.assertTrue(count > 0)
 
 
 class PreviewQueryTests(unittest.TestCase):

@@ -1,10 +1,10 @@
 import logging
 import api.GeneTerm
 from api.precompute import register
+from DAE import get_gene_sets_symNS
+
 
 LOGGER = logging.getLogger(__name__)
-
-from DAE import get_gene_sets_symNS
 
 # def load_gene_set(gene_set_label, study_name=None):
 #     gene_term = gene_set_loader(gene_set_label, study_name)

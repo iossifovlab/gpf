@@ -1,15 +1,7 @@
-from rest_framework.test import APIClient
-from django.contrib.auth import get_user_model
-from django.core.urlresolvers import resolve
-
-from django.shortcuts import render
-
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import Researcher
 from api.studies import get_denovo_studies_names, get_transmitted_studies_names
-from api.enrichment.enrichment_query import enrichment_results
 from VariantAnnotation import get_effect_types
 from query_variants import get_variant_types, get_child_types
 
@@ -18,13 +10,13 @@ class ApiTest(APITestCase):
 
     def test_query_variants(self):
         url = '/api/query_variants'
-        data = {"denovoStudies":["DalyWE2012"],
-        "transmittedStudies":["wig683"],
-        "inChild":"sibF",
-        "effectTypes":"frame-shift",
-        "variantTypes":"del",
-        "ultraRareOnly":"True"
-        }
+        data = {"denovoStudies": ["DalyWE2012"],
+                "transmittedStudies": ["wig683"],
+                "inChild": "sibF",
+                "effectTypes": "frame-shift",
+                "variantTypes": "del",
+                "ultraRareOnly": "True"
+                }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.streaming_content
@@ -60,29 +52,32 @@ class ApiTest(APITestCase):
         self.assertEqual(response.data, {})
 
         # Test with filter but not looking by key, nor desc
-        url_filter_empty = '/api/gene_set_list2?gene_set=main&filter=mike&key=false&desc=false'
+        url_filter_empty = "/api/gene_set_list2?gene_set=main&filter=mike&" \
+            "key=false&desc=false"
         response = self.client.get(url_filter_empty)
         self.assertEqual(response.data, {})
 
         # Test with filter looking by key
-        url_filter_key = '/api/gene_set_list2?gene_set=main&filter=mat&key=true&desc=false'
+        url_filter_key = '/api/gene_set_list2?gene_set=main&filter=mat&' \
+            'key=true&desc=false'
         response = self.client.get(url_filter_key)
         self.assertNotEqual(response.data, {})
         for g in response.data:
             self.assertIn('mat', g.lower())
 
         # Test with filter looking by desc
-        url_filter_desc = '/api/gene_set_list2?gene_set=main&filter=mike&key=false&desc=true'
+        url_filter_desc = '/api/gene_set_list2?gene_set=main&' \
+            'filter=mike&key=false&desc=true'
         response = self.client.get(url_filter_desc)
         self.assertNotEqual(response.data, {})
         for g in response.data:
             self.assertIn('mike', response.data[g]['desc'].lower())
 
         # Test with gene name
-        url_with_gn = '/api/gene_set_list2?gene_set=main&gene_name=E15-maternal'
+        url_with_gn = '/api/gene_set_list2?gene_set=main&' \
+            'gene_name=E15-maternal'
         response = self.client.get(url_with_gn)
         self.assertNotEqual(response.data, {})
-        #FIXME: self.assertIn('gene_count', response.data)
 
         # Test with wrong gene name
         url_with_wrong_gn = '/api/gene_set_list2?gene_set=main&gene_name=foo'
@@ -114,47 +109,25 @@ class ApiTest(APITestCase):
     def test_get_effect_types(self):
         response = self.client.get('/api/effect_types')
         eff = ['All'] + get_effect_types(types=False, groups=True) + \
-        get_effect_types(types=True, groups=False)
+            get_effect_types(types=True, groups=False)
         self.assertEqual(response.data, {"effect_types": eff})
 
     def test_transmitted_studies_list(self):
         response = self.client.get('/api/transmitted_studies')
-        self.assertEqual(response.data, {"transmitted_studies": get_transmitted_studies_names()})
+        self.assertEqual(
+            response.data,
+            {"transmitted_studies": get_transmitted_studies_names()})
 
     def test_report_studies(self):
         response = self.client.get('/api/report_studies')
-        data = {"report_studies" : get_denovo_studies_names() + get_transmitted_studies_names()}
+        data = {"report_studies": get_denovo_studies_names() +
+                get_transmitted_studies_names()}
         self.assertEqual(response.data, data)
-
-    # def test_enrichment_test(self):
-    #     # Testing the best case
-    #     TEST_DATA = enrichment_results('allWE', 'w873e374s322', 'main', 'ChromatinModifiers')
-    #     url = '/api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers'
-    #     self.assertEqual(self.client.get(url).data, TEST_DATA)
-    #     # Testing missing arguments
-    #     url_missing_dst_name = '/api/enrichment_test?tst_name=w873e374s322&gt_name=main&gs_name=ChromatinModifiers';
-    #     url_missing_tst_name = '/api/enrichment_test?dst_name=allWE&gt_name=main&gs_name=ChromatinModifiers'
-    #     url_missing_gt_name = '/api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gs_name=ChromatinModifiers'
-    #     url_missing_gs_name = '/api/enrichment_test?dst_name=allWE&tst_name=w873e374s322&gt_name=main'
-
-    #     self.assertEqual(self.client.get(url_missing_dst_name).data, None)
-    #     self.assertEqual(self.client.get(url_missing_tst_name).data, None)
-    #     self.assertEqual(self.client.get(url_missing_gt_name).data, None)
-    #     self.assertEqual(self.client.get(url_missing_gs_name).data, None)
-
-    # def test_gene_sets_list(self):
-    #     TEST_DATA = {"gene_sets" : [{'label' : 'Main', 'val' : 'main', 'conf' : ['[[[', 'key', ']]]', '(((' , 'count', '))):', "desc"]},
-    #                 {'label' : 'GO', 'val' : 'GO' ,'conf' : ['key', 'count']},
-    #                 {'label' : 'Disease', 'val' : 'disease' ,'conf' : ['key', 'count']},
-    #                 {'label' : 'Denovo', 'val' : 'denovo' ,'conf' : ['---', 'key', '---', 'desc', '---', 'count']}]}
-
-    #     response = self.client.get('/api/gene_sets')
-    #     self.assertEqual(response.data, TEST_DATA)
 
     def test_denovo_studies_list(self):
         data = get_denovo_studies_names()
         response = self.client.get('/api/denovo_studies')
-        self.assertEqual(response.data, {'denovo_studies' : data})
+        self.assertEqual(response.data, {'denovo_studies': data})
 
     def test_families_get(self):
         response = self.client.get('/api/families/DalyWE2012')
@@ -171,20 +144,3 @@ class ApiTest(APITestCase):
         self.assertEqual(data['study'], 'DalyWE2012')
         for family in data['families']:
             self.assertTrue(family.startswith('AU'))
-
-
-#     def test_families_post(self):
-#         data={'studies':['DalyWE2012','EichlerTG2012']}
-#         response=self.client.post('/api/families?filter="A"', data, format='json')
-#
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-
-# class GetVariantsTest(APITestCase):
-#     client = APIClient()
-#
-#     def test_get_denovo_simple(self):
-#         query={"denovoStudies":["DalyWE2012", "EichlerTG2012"]}
-#         response=self.client.post("/api/get_variants_csv/",data=query,content_type='application/json')
-#         self.assertEqual(response.status_code,status.HTTP_200_OK)
-#

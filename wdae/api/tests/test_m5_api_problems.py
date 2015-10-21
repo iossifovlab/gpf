@@ -483,7 +483,6 @@ class SSCPresentInChildDownloadTests(APITestCase):
         token = Token.objects.get(user__email='admin@example.com')
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
-
     def test_rec_lgds_download(self):
         data = {
             'geneRegionType': 'on',
@@ -509,7 +508,6 @@ class SSCPresentInChildDownloadTests(APITestCase):
             'familyPrbGender': 'All'
         }
 
-        
         url = '/api/ssc_query_variants'
 
         response = self.client.post(url, data, format='json')
@@ -517,13 +515,24 @@ class SSCPresentInChildDownloadTests(APITestCase):
         self.assertEqual(79, count_iterable(response.streaming_content))
 
     def test_rec_lgds_download_urlencoded(self):
-        data = 'genes=Gene+Sets&geneSet=denovo&gene_set_phenotype=autism&geneTerm=LGDs.Recurrent&geneSyms=&geneRegionType=on&geneRegion=&presentInChild=autism+only&presentInChild=autism+and+unaffected&presentInParent=neither&gender=male&gender=female&variantTypes=sub&variantTypes=ins&variantTypes=del&variantTypes=CNV&effectTypes=Nonsense&effectTypes=Frame-shift&effectTypes=Splice-site&rarity=ultraRare&families=all&familyIds=&familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&familyPrbGender=All&familySibGender=All'
+        data = 'genes=Gene+Sets&geneSet=denovo&' \
+            'gene_set_phenotype=autism&geneTerm=LGDs.Recurrent&' \
+            'geneSyms=&geneRegionType=on&geneRegion=&' \
+            'presentInChild=autism+only&' \
+            'presentInChild=autism+and+unaffected& ' \
+            'presentInParent=neither&gender=male&gender=female&' \
+            'variantTypes=sub&variantTypes=ins&variantTypes=del&' \
+            'variantTypes=CNV&effectTypes=Nonsense&' \
+            'effectTypes=Frame-shift&effectTypes=Splice-site&' \
+            'rarity=ultraRare&families=all&familyIds=&familyRace=All&' \
+            'familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&' \
+            'familyPrbGender=All&familySibGender=All'
 
         LOGGER.info("urldecoded: %s", urlparse.parse_qs(data))
         url = '/api/ssc_query_variants'
 
-        response = self.client.post(url, data,
-                                    content_type='application/x-www-form-urlencoded')
+        response = self.client.post(
+            url, data,
+            content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(79, count_iterable(response.streaming_content))
-        

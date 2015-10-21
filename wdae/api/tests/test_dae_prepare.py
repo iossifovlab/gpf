@@ -5,7 +5,6 @@ from query_prepare import prepare_gene_syms, \
 from api.deprecated.bg_loader import gene_set_bgloader
 from query_variants import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids
-#, prepare_family_file
 
 from api.dae_query import load_gene_set2
 
@@ -40,7 +39,9 @@ class InChildTests(APITestCase):
 
 
 class EffectTypesTests(APITestCase):
-    ALL = """LGDs,CNVs,nonsynonymous,CNV-,CNV+,frame-shift,intron,no-frame-shift-new-stop,synonymous,nonsense,no-frame-shift,missense,3'UTR,5'UTR,splice-site"""
+    ALL = """LGDs,CNVs,nonsynonymous,CNV-,CNV+,frame-shift,intron,""" \
+        """no-frame-shift-new-stop,synonymous,nonsense,no-frame-shift,""" \
+        """missense,3'UTR,5'UTR,splice-site"""
 
     def test_effect_types_all(self):
         self.assertEqual(prepare_effect_types({'effectTypes': 'All'}),
@@ -55,13 +56,16 @@ class EffectTypesTests(APITestCase):
     def test_effect_types_correct(self):
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'LGDs'}),
-            set(['no-frame-shift-newStop', 'frame-shift', 'nonsense', 'splice-site']))
+            set(['no-frame-shift-newStop', 'frame-shift',
+                 'nonsense', 'splice-site']))
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'CNVs'}),
             set(['CNV-', 'CNV+']))
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'nonsynonymous'}),
-            set(['noStart', 'frame-shift', 'noEnd', 'nonsense', 'no-frame-shift-newStop', 'no-frame-shift', 'missense', 'CDS', 'splice-site']))
+            set(['noStart', 'frame-shift', 'noEnd', 'nonsense',
+                 'no-frame-shift-newStop', 'no-frame-shift', 'missense',
+                 'CDS', 'splice-site']))
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'CNV-'}), set(['CNV-']))
         self.assertEqual(
@@ -127,6 +131,7 @@ class VariantTypesTests(APITestCase):
         self.assertIsNone(
             prepare_variant_types({'variantTypes': 'bala'}))
 
+
 class FamilesTests(APITestCase):
 
     def test_families_empty(self):
@@ -164,6 +169,7 @@ class FamilesTests(APITestCase):
         self.assertListEqual(
             prepare_family_ids({'familyIds': ['111', '222']}),
             ['111', '222'])
+
 
 class GeneSymsTests(APITestCase):
 
@@ -206,7 +212,7 @@ class GeneSymsTests(APITestCase):
 
 
 class GeneSetsTests(APITestCase):
-    
+
     DISEASE_AIDS = set(['IFNG', 'KIR3DL1', 'CXCL12'])
     GO_GO_2001293 = set(['ACACA', 'ACACB'])
     MAIN_mPFC_maternal = set(['RAD23B', 'ADD2', 'NCOR2', 'CERS4',
@@ -231,14 +237,9 @@ class GeneSetsTests(APITestCase):
                  ['MSigDB.curated'],
                  'MSigDB.curated'),
 
-#                 (build_denovo_gene_sets,
-#                  [],
-#                  'Denovo'),
         ]
-        
         preload_background(builders)
-        
-        
+
     def test_gene_sets_empty(self):
         self.assertIsNone(prepare_gene_sets({}))
 
@@ -286,9 +287,12 @@ class GeneSetsTests(APITestCase):
                                              'geneTerm': 'ala-bala'}))
 
     def test_main_does_not_depend_on_study_name(self):
-        self.assertIsNotNone(prepare_gene_sets({'geneSet': 'main',
-                                                'gene_set_phenotype': 'ala-bala',
-                                                'geneTerm': 'E15-maternal'}))
+        self.assertIsNotNone(prepare_gene_sets(
+            {'geneSet': 'main',
+             'gene_set_phenotype': 'ala-bala',
+             'geneTerm': 'E15-maternal'}))
+
+
 class StudiesTests(APITestCase):
 
     def test_denovo_studies_empty(self):
