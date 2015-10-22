@@ -1,6 +1,6 @@
 import itertools
 import logging
-from DAE import get_gene_sets_symNS, vDB
+from DAE import vDB
 
 LOGGER = logging.getLogger(__name__)
 

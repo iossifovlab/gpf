@@ -5,8 +5,7 @@ Created on Sep 24, 2015
 '''
 import unittest
 from transmitted.mysql_query import MysqlTransmittedQuery
-from DAE import vDB
-from query_prepare_bak import prepare_gene_sets
+from DAE import vDB, get_gene_sets_symNS
 
 
 def count(vs):
@@ -14,6 +13,12 @@ def count(vs):
     for _ in vs:
         l += 1
     return l
+
+
+def get_gene_set_syms(gene_set, gene_term):
+    gt = get_gene_sets_symNS(gene_set)
+    if gt and gene_term in gt.t2G:
+            return gt.t2G[gene_term].keys()
 
 
 class SummaryVariantsLenTest(unittest.TestCase):
@@ -81,8 +86,8 @@ class SummaryVariantsLenTest(unittest.TestCase):
         self.assertEquals(1100, count(res))
 
     def test_gene_sym_gene_set(self):
-        gene_syms = list(prepare_gene_sets({'geneSet': 'main',
-                                            'geneTerm': 'FMR1-targets'}))
+
+        gene_syms = get_gene_set_syms('main', 'FMR1-targets')
         assert gene_syms
         assert isinstance(gene_syms, list)
 
@@ -92,8 +97,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
         self.assertEquals(116195, count(res))
 
     def test_gene_sym_gene_set_lgds(self):
-        gene_syms = list(prepare_gene_sets({'geneSet': 'main',
-                                            'geneTerm': 'FMR1-targets'}))
+        gene_syms = get_gene_set_syms('main', 'FMR1-targets')
         lgds = list(vDB.effectTypesSet('LGDs'))
 
         self.impl.connect()

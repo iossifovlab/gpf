@@ -3,10 +3,15 @@ Created on Oct 15, 2015
 
 @author: lubo
 '''
-from DAE import vDB
+from DAE import vDB, get_gene_sets_symNS
 from transmitted.mysql_query import MysqlTransmittedQuery
-from query_prepare_bak import prepare_gene_sets
 from transmitted.legacy_query import TransmissionLegacy
+
+
+def get_gene_set_syms(gene_set, gene_term):
+    gt = get_gene_sets_symNS(gene_set)
+    if gt and gene_term in gt.t2G:
+            return gt.t2G[gene_term].keys()
 
 
 def dae_query_q101():
@@ -134,8 +139,7 @@ def mysql_query_q401():
 
 
 def dae_query_q501():
-    gene_syms = prepare_gene_sets({'geneSet': 'main',
-                                   'geneTerm': 'FMR1-targets'})
+    gene_syms = get_gene_set_syms('main', 'FMR1-targets')
     assert gene_syms
 
     transmitted_study = vDB.get_study("w1202s766e611")
@@ -154,8 +158,7 @@ def dae_query_q501():
 
 
 def mysql_query_q501():
-    gene_syms = prepare_gene_sets({'geneSet': 'main',
-                                   'geneTerm': 'FMR1-targets'})
+    gene_syms = get_gene_set_syms('main', 'FMR1-targets')
     assert gene_syms
 
     transmitted_study = vDB.get_study("w1202s766e611")
