@@ -45,19 +45,20 @@ class SummaryVariantsLenTest(unittest.TestCase):
     def test_default_freq_query(self):
         where = self.impl._build_freq_where()
         self.assertIsNotNone(where)
-        self.assertEquals(' ( tsv.n_par_called > 600 ) '
-                          ' AND  ( tsv.alt_freq <= 5.0 ) ',
+        self.assertEquals(' AND  ( tsv.alt_freq <= 5.0 ) ',
                           where)
 
     def test_default_query_len(self):
         self.impl.connect()
-        res = self.impl.get_transmitted_summary_variants()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600)
         # 1350367
         self.assertEquals(1350367, count(res))
 
     def test_missense_effect_type_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             effectTypes=['missense'])
         self.assertEquals(589907, count(res))
         # print(res[0:30])
@@ -66,6 +67,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
         self.impl.connect()
         lgds = list(vDB.effectTypesSet('LGDs'))
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             effectTypes=lgds)
         self.assertEquals(36520, count(res))
         # print(res[0:30])
@@ -73,6 +75,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
     def test_gene_syms_pogz_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             geneSyms=['POGZ'])
         self.assertEquals(153, count(res))
 
@@ -82,6 +85,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
                      'TULP4', 'JPH4', 'FAM190B', 'FKBP8', 'KIAA0090']
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             geneSyms=gene_syms)
         self.assertEquals(1100, count(res))
 
@@ -93,6 +97,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
 
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             geneSyms=gene_syms)
         self.assertEquals(116195, count(res))
 
@@ -102,6 +107,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
 
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             geneSyms=gene_syms,
             effectTypes=lgds)
         self.assertEquals(850, count(res))
@@ -111,6 +117,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
 
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             effectTypes=lgds,
             ultraRareOnly=True)
         self.assertEquals(28265, count(res))
@@ -118,6 +125,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
     def test_ultra_rare_ins_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             variantTypes=['ins'],
             ultraRareOnly=True)
         self.assertEquals(13530, count(res))
@@ -125,12 +133,14 @@ class SummaryVariantsLenTest(unittest.TestCase):
     def test_all_ultra_rare_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             ultraRareOnly=True)
         self.assertEquals(867513, count(res))
 
     def test_ultra_rare_all_variant_types_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             variantTypes=['ins', 'del', 'sub'],
             ultraRareOnly=True)
         self.assertEquals(867513, count(res))
@@ -138,6 +148,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
     def test_ultra_rare_single_region(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             ultraRareOnly=True,
             regionS=["1:0-60000000"])
 
@@ -146,6 +157,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
     def test_ultra_rare_multiple_regions(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             ultraRareOnly=True,
             regionS=["1:0-60000000", "X:1000000-30000000"])
 
@@ -172,6 +184,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
 
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
             effectTypes=lgds,
             ultraRareOnly=True,
             regionS=["1:0-60000000"])
@@ -191,6 +204,7 @@ class VariantsLenTest(unittest.TestCase):
     def test_ultra_rare_single_region_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(
+            minParentsCalled=600,
             ultraRareOnly=True,
             regionS=["1:0-60000000"])
 
@@ -199,6 +213,7 @@ class VariantsLenTest(unittest.TestCase):
     def test_variants_in_single_family_id(self):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(
+            minParentsCalled=600,
             familyIds=["11110"])
 
         self.assertEquals(5701, count(res))
@@ -206,6 +221,7 @@ class VariantsLenTest(unittest.TestCase):
     def test_variants_in_two_family_ids(self):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(
+            minParentsCalled=600,
             familyIds=["11110", "11111"])
 
         self.assertEquals(9322, count(res))
@@ -224,6 +240,7 @@ class VariantsLenTest(unittest.TestCase):
     def test_family_id_and_pogz(self):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(
+            minParentsCalled=600,
             familyIds=['13983'],
             geneSyms=['POGZ'])
 
@@ -252,9 +269,11 @@ class VariantsFullTest(unittest.TestCase):
     def test_family_id_and_pogz(self):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(
+            minParentsCalled=600,
             familyIds=['13983'],
             geneSyms=['POGZ'])
         vs = self.st.get_transmitted_variants(
+            minParentsCalled=600,
             familyIds=['13983'],
             geneSyms=['POGZ'])
         v = vs.next()
@@ -281,6 +300,7 @@ class VariantsPresentInParentTest(unittest.TestCase):
             "presentInParent": ["mother only", "father only",
                                 "mother and father", "neither"],
             "ultraRareOnly": True,
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -293,6 +313,7 @@ class VariantsPresentInParentTest(unittest.TestCase):
             "effectTypes": ["nonsense", "frame-shift", "splice-site"],
             "presentInParent": ["father only", ],
             "ultraRareOnly": True,
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -305,6 +326,7 @@ class VariantsPresentInParentTest(unittest.TestCase):
             "effectTypes": ["nonsense", "frame-shift", "splice-site"],
             "presentInParent": ["mother only", ],
             "ultraRareOnly": True,
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -317,6 +339,7 @@ class VariantsPresentInParentTest(unittest.TestCase):
             "effectTypes": ["nonsense", "frame-shift", "splice-site"],
             "presentInParent": ["mother only", "father only"],
             "ultraRareOnly": True,
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -327,6 +350,7 @@ class VariantsPresentInParentTest(unittest.TestCase):
             "geneSyms": ["SCNN1D"],
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -337,6 +361,7 @@ class VariantsPresentInParentTest(unittest.TestCase):
             "geneSyms": ["SCNN1D"],
             "effectTypes": ['missense'],
             "presentInParent": ["neither"],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -358,7 +383,8 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
             "presentInChild": ["autism only", "unaffected only",
-                               "autism and unaffected", "neither", ]
+                               "autism and unaffected", "neither", ],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -369,7 +395,8 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "geneSyms": ["SCNN1D"],
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
-            "presentInChild": ["autism and unaffected", ]
+            "presentInChild": ["autism and unaffected", ],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -380,7 +407,8 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "geneSyms": ["SCNN1D"],
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
-            "presentInChild": ["neither", ]
+            "presentInChild": ["neither", ],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -391,7 +419,8 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "geneSyms": ["SCNN1D"],
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
-            "presentInChild": ["autism only", ]
+            "presentInChild": ["autism only", ],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -402,7 +431,8 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "geneSyms": ["SCNN1D"],
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
-            "presentInChild": ["unaffected only", ]
+            "presentInChild": ["unaffected only", ],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -413,7 +443,8 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "geneSyms": ["SCNN1D"],
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
-            "presentInChild": ["autism and unaffected", ]
+            "presentInChild": ["autism and unaffected", ],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -426,6 +457,7 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "presentInParent": ["mother and father"],
             "presentInChild": ["autism only", ],
             'gender': ['F'],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -438,6 +470,7 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "presentInParent": ["mother and father"],
             "presentInChild": ["autism only", ],
             'gender': ['M'],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -450,6 +483,7 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "presentInParent": ["mother and father"],
             "presentInChild": ["unaffected only", ],
             'gender': ['F'],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -462,6 +496,7 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "presentInParent": ["mother and father"],
             "presentInChild": ["unaffected only", ],
             'gender': ['M'],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -474,6 +509,7 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "presentInParent": ["mother and father"],
             "presentInChild": ["autism and unaffected", ],
             'gender': ['F'],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -486,6 +522,7 @@ class VariantsPresentInChildTest(unittest.TestCase):
             "presentInParent": ["mother and father"],
             "presentInChild": ["autism and unaffected", ],
             'gender': ['M'],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -507,6 +544,7 @@ class VariantsInChildTest(unittest.TestCase):
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
             "inChild": "prb",
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -518,6 +556,7 @@ class VariantsInChildTest(unittest.TestCase):
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
             "presentInChild": ["autism only", "autism and unaffected"],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -529,6 +568,7 @@ class VariantsInChildTest(unittest.TestCase):
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
             "inChild": "prbM",
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -540,6 +580,7 @@ class VariantsInChildTest(unittest.TestCase):
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
             "inChild": "prbF",
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -551,6 +592,7 @@ class VariantsInChildTest(unittest.TestCase):
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
             "inChild": "sib",
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -562,6 +604,7 @@ class VariantsInChildTest(unittest.TestCase):
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
             "inChild": "sibM",
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -573,6 +616,7 @@ class VariantsInChildTest(unittest.TestCase):
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
             "inChild": "sibF",
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
@@ -584,6 +628,7 @@ class VariantsInChildTest(unittest.TestCase):
             "effectTypes": ['missense'],
             "presentInParent": ["mother and father"],
             "presentInChild": ["unaffected only", "autism and unaffected"],
+            "minParentsCalled": 600,
         }
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)

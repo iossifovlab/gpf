@@ -79,7 +79,7 @@ class MysqlTransmittedQuery(object):
         'effectTypes': None,
         'geneSyms': None,
         'ultraRareOnly': False,
-        'minParentsCalled': 600,
+        'minParentsCalled': 0,
         'maxAltFreqPrcnt': 5.0,
         'minAltFreqPrcnt': None,
         'presentInParent': None,
@@ -107,14 +107,14 @@ class MysqlTransmittedQuery(object):
         assert self.passwd
         self.connection = None
         self.query = copy.deepcopy(self.default_query)
+        self.connect()
 
     def connect(self):
-        assert not self.connection
-
-        self.connection = mdb.connect('127.0.0.1',
-                                      self.user,
-                                      self.passwd,
-                                      self.db)
+        if not self.connection:
+            self.connection = mdb.connect('127.0.0.1',
+                                          self.user,
+                                          self.passwd,
+                                          self.db)
 
     def execute(self, select):
         cursor = self.connection.cursor(mdb.cursors.DictCursor)
