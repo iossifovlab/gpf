@@ -375,7 +375,6 @@ class SSCPresentInParentTests(APITestCase):
             "denovoStudies": "ALL SSC",
             "presentInChild":
             "autism only,unaffected only,autism and unaffected,neither",
-            "presentInParent": "father only",
             "gender": "male,female",
             "rarity": "ultraRare",
             "transmittedStudies": "w1202s766e611",
@@ -387,7 +386,7 @@ class SSCPresentInParentTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # LOGGER.info("result data: %s", response.data)
-        self.assertEqual('9', response.data['count'])
+        self.assertEqual('5', response.data['count'])
 
     def test_ssc_phenotype_CCDC171(self):
         data = {
@@ -415,7 +414,6 @@ class SSCPresentInParentTests(APITestCase):
             "denovoStudies": "ALL SSC",
             "transmittedStudies": "None",
             "presentInChild": "autism only",
-            "presentInParent": "father only",
             "gender": "male,female",
             "rarity": "ultraRare",
             "transmittedStudies": "w1202s766e611",
@@ -427,7 +425,7 @@ class SSCPresentInParentTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # LOGGER.info("result data: %s", response.data)
-        self.assertEqual('4', response.data['count'])
+        self.assertEqual('2', response.data['count'])
 
     def test_present_in_child_autism_and_unaffected(self):
         data = {
