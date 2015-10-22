@@ -305,36 +305,18 @@ def prepare_present_in_child(data):
 
     return None
 
+PRESENT_IN_PARENT_TYPES = [
+    "mother only", "father only",
+    "mother and father", "neither",
+]
+
 
 def prepare_present_in_parent(data):
     if "presentInParent" in data:
         present_in_parent = set(data['presentInParent'].split(','))
-        if set(['father only']) == present_in_parent:
-            return lambda fromParent: (len(fromParent) == 3 and
-                                       'd' == fromParent[0])
-        if set(['mother only']) == present_in_parent:
-            return lambda fromParent: (len(fromParent) == 3 and
-                                       'm' == fromParent[0])
-        if set(['mother and father']) == present_in_parent:
-            return lambda fromParent: len(fromParent) == 6
-        if set(['mother only', 'father only']) == present_in_parent:
-            return lambda fromParent: len(fromParent) == 3
-
-        if set(['mother only', 'mother and father']) == present_in_parent:
-            return lambda fromParent: ((len(fromParent) == 3 and
-                                        'm' == fromParent[0]) or
-                                       len(fromParent) == 6)
-        if set(['father only', 'mother and father']) == present_in_parent:
-            return lambda fromParent: ((len(fromParent) == 3 and
-                                        'd' == fromParent[0]) or
-                                       len(fromParent) == 6)
-        if set(['father only', 'mother only', 'mother and father']) == \
-                present_in_parent:
-            return lambda fromParent: (len(fromParent) > 0)
-        if set(['neither']) == present_in_parent:
-            return lambda fromParent: (len(fromParent) == 0)
-
-        return lambda fromParent: True
+        assert all([pip in PRESENT_IN_PARENT_TYPES
+                    for pip in present_in_parent])
+        return list(present_in_parent)
     return None
 
 

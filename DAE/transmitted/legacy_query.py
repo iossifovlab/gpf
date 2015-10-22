@@ -11,6 +11,39 @@ import copy
 
 class TransmissionLegacy(object):
 
+    @staticmethod
+    def present_in_parent_filter(present_in_parent):
+        if present_in_parent is None:
+            return None
+        pip = set(present_in_parent)
+
+        if set(['father only']) == pip:
+            return lambda fromParent: (len(fromParent) == 3 and
+                                       'd' == fromParent[0])
+        if set(['mother only']) == pip:
+            return lambda fromParent: (len(fromParent) == 3 and
+                                       'm' == fromParent[0])
+        if set(['mother and father']) == pip:
+            return lambda fromParent: len(fromParent) == 6
+        if set(['mother only', 'father only']) == pip:
+            return lambda fromParent: len(fromParent) == 3
+
+        if set(['mother only', 'mother and father']) == pip:
+            return lambda fromParent: ((len(fromParent) == 3 and
+                                        'm' == fromParent[0]) or
+                                       len(fromParent) == 6)
+        if set(['father only', 'mother and father']) == pip:
+            return lambda fromParent: ((len(fromParent) == 3 and
+                                        'd' == fromParent[0]) or
+                                       len(fromParent) == 6)
+        if set(['father only', 'mother only', 'mother and father']) == \
+                pip:
+            return lambda fromParent: (len(fromParent) > 0)
+        if set(['neither']) == pip:
+            return lambda fromParent: (len(fromParent) == 0)
+
+        return None
+
     def __init__(self, study, call_set=None):
         self.study = study
 
@@ -164,6 +197,8 @@ class TransmissionLegacy(object):
                 self.study._configSection,
                 'transmittedVariants.indexFile') + "-TOOMANY.txt.bgz"
 
+        pipFilter = self.present_in_parent_filter(presentInParent)
+
         if TMM_ALL:
             tbf = gzip.open(transmittedVariantsTOOMANYFile)
         else:
@@ -224,8 +259,8 @@ class TransmissionLegacy(object):
                         continue
                 elif inChild and inChild not in v.inChS:
                     continue
-                if presentInParent:
-                    if not presentInParent(v.fromParentS):
+                if pipFilter:
+                    if not pipFilter(v.fromParentS):
                         continue
 
                 yield v

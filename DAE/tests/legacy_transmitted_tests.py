@@ -1,82 +1,88 @@
+'''
+Created on Oct 22, 2015
+
+@author: lubo
+'''
 import unittest
-import logging
-import urllib
-import itertools
+from transmitted.legacy_query import TransmissionLegacy
 
-LOGGER = logging.getLogger(__name__)
 
-from query_variants import prepare_present_in_parent
-
-class PresentInParentTests(unittest.TestCase):
+class PresentInParentFilterTest(unittest.TestCase):
 
     def test_father_only(self):
-        f = prepare_present_in_parent(
-            {'presentInParent':'father only'})
+        f = TransmissionLegacy.present_in_parent_filter(
+            ['father only'])
         self.assertTrue(f('dad'))
         self.assertFalse(f('mom'))
         self.assertFalse(f('momdad'))
         self.assertFalse(f(''))
 
     def test_mother_only(self):
-        f = prepare_present_in_parent(
-            {'presentInParent':'mother only'})
+        f = TransmissionLegacy.present_in_parent_filter(
+            ['mother only'])
         self.assertTrue(f('mom'))
         self.assertFalse(f('dad'))
         self.assertFalse(f('momdad'))
         self.assertFalse(f(''))
 
     def test_mother_only_and_father_only(self):
-        f = prepare_present_in_parent(
-            {'presentInParent':'mother only,father only'})
+        f = TransmissionLegacy.present_in_parent_filter(
+            ['mother only', 'father only'])
         self.assertTrue(f('mom'))
         self.assertTrue(f('dad'))
         self.assertFalse(f('momdad'))
         self.assertFalse(f(''))
-        
+
     def test_mother_and_father(self):
-        f = prepare_present_in_parent(
-            {'presentInParent':'mother and father'})
+        f = TransmissionLegacy.present_in_parent_filter(
+            ['mother and father'])
         self.assertFalse(f('mom'))
         self.assertFalse(f('dad'))
         self.assertTrue(f('momdad'))
         self.assertFalse(f(''))
 
     def test_mother_only_and_mother_and_father(self):
-        f = prepare_present_in_parent(
-            {'presentInParent':'mother only,mother and father'})
+        f = TransmissionLegacy.present_in_parent_filter(
+            ['mother only', 'mother and father'])
         self.assertTrue(f('mom'))
         self.assertFalse(f('dad'))
         self.assertTrue(f('momdad'))
         self.assertFalse(f(''))
 
     def test_father_only_and_mother_and_father(self):
-        f = prepare_present_in_parent(
-            {'presentInParent':'father only,mother and father'})
+        f = TransmissionLegacy.present_in_parent_filter(
+            ['father only', 'mother and father'])
         self.assertFalse(f('mom'))
         self.assertTrue(f('dad'))
         self.assertTrue(f('momdad'))
         self.assertFalse(f(''))
 
     def test_father_only_and_mother_only_and_mother_and_father(self):
-        f = prepare_present_in_parent(
-            {'presentInParent':'father only,mother only,mother and father'})
+        f = TransmissionLegacy.present_in_parent_filter(
+            ['father only', 'mother only', 'mother and father'])
         self.assertTrue(f('mom'))
         self.assertTrue(f('dad'))
         self.assertTrue(f('momdad'))
         self.assertFalse(f(''))
 
     def test_neither(self):
-        f = prepare_present_in_parent(
-            {'presentInParent':'neither'})
+        f = TransmissionLegacy.present_in_parent_filter(
+            ['neither'])
         self.assertFalse(f('dad'))
         self.assertFalse(f('mom'))
         self.assertFalse(f('momdad'))
         self.assertTrue(f(''))
 
     def test_all(self):
-        f = prepare_present_in_parent(
-            {'presentInParent':'father only,mother only,mother and father,neither'})
-        self.assertTrue(f('mom'))
-        self.assertTrue(f('dad'))
-        self.assertTrue(f('momdad'))
-        self.assertTrue(f(''))
+        f = TransmissionLegacy.present_in_parent_filter(
+            ['father only', 'mother only', 'mother and father', 'neither'])
+        self.assertIsNone(f)
+
+#         self.assertTrue(f('mom'))
+#         self.assertTrue(f('dad'))
+#         self.assertTrue(f('momdad'))
+#         self.assertTrue(f(''))
+
+if __name__ == "__main__":
+    # import sys;sys.argv = ['', 'Test.testName']
+    unittest.main()
