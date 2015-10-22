@@ -224,7 +224,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertFalse(f('sibM'))
         self.assertTrue(f('prbMsibM'))
         self.assertTrue(f('prbMsibF'))
-        self.assertFalse(f('prbFsibM'))
+        self.assertTrue(f('prbFsibM'))
         self.assertFalse(f('prbFsibF'))
         self.assertFalse(f(''))
 
@@ -242,7 +242,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertFalse(f('sibF'))
         self.assertFalse(f('sibM'))
         self.assertFalse(f('prbMsibM'))
-        self.assertFalse(f('prbMsibF'))
+        self.assertTrue(f('prbMsibF'))
         self.assertTrue(f('prbFsibM'))
         self.assertTrue(f('prbFsibF'))
         self.assertFalse(f(''))
@@ -261,7 +261,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertFalse(f('sibF'))
         self.assertFalse(f('sibM'))
         self.assertFalse(f('prbMsibM'))
-        self.assertFalse(f('prbMsibF'))
+        self.assertTrue(f('prbMsibF'))
         self.assertTrue(f('prbFsibM'))
         self.assertTrue(f('prbFsibF'))
         self.assertFalse(f(''))
@@ -396,7 +396,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertTrue(f('sibM'))
         self.assertTrue(f('prbMsibM'))
         self.assertTrue(f('prbMsibF'))
-        self.assertFalse(f('prbFsibM'))
+        self.assertTrue(f('prbFsibM'))
         self.assertFalse(f('prbFsibF'))
         self.assertFalse(f(''))
 
@@ -415,7 +415,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertTrue(f('sibF'))
         self.assertFalse(f('sibM'))
         self.assertFalse(f('prbMsibM'))
-        self.assertFalse(f('prbMsibF'))
+        self.assertTrue(f('prbMsibF'))
         self.assertTrue(f('prbFsibM'))
         self.assertTrue(f('prbFsibF'))
         self.assertFalse(f(''))
@@ -457,10 +457,10 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertTrue(f('sibM'))
         self.assertTrue(f('prbMsibM'))
         self.assertTrue(f('prbMsibF'))
-        self.assertFalse(f('prbFsibM'))
+        self.assertTrue(f('prbFsibM'))
         self.assertFalse(f('prbFsibF'))
 
-        self.assertTrue(f(''))
+        self.assertFalse(f(''))
 
     def test_pheno_all_gender_female(self):
         data = {
@@ -477,11 +477,9 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertTrue(f('sibF'))
         self.assertFalse(f('sibM'))
         self.assertFalse(f('prbMsibM'))
-        self.assertFalse(f('prbMsibF'))
+        self.assertTrue(f('prbMsibF'))
         self.assertTrue(f('prbFsibM'))
         self.assertTrue(f('prbFsibF'))
-
-        self.assertTrue(f(''))
 
     def test_pheno_all_gender_all(self):
         data = {

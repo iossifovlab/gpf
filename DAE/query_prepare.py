@@ -155,10 +155,15 @@ def prepare_gender_filter(data):
         if 'male' in genderFilter:
             res.append('M')
         if len(res) == 1:
+            data['gender'] = res
             return res
         else:
+            del data['gender']
             return None
     else:
+        if len(genderFilter) != 1:
+            del data['gender']
+            return None
         return genderFilter
 
 
@@ -181,7 +186,7 @@ def prepare_denovo_studies(data):
 
 
 def prepare_denovo_pheno_filter(data, dstudies):
-    if 'phenoType' not in data or 'gender' not in data:
+    if 'phenoType' not in data:
         return [(st, None) for st in dstudies]
 
     res = []

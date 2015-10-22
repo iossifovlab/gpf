@@ -104,44 +104,107 @@ class Study:
         if self.vdb._config.has_option(self._configSection, attName):
             return self.vdb._config.get(self._configSection, attName)
 
-    @staticmethod
-    def _present_in_child_filter(present_in_child=None, gender=None):
-        pheno_filter = []
-        # print(present_in_child)
-        if present_in_child is not None:
-            pic = set(present_in_child)
-            if 'autism only' in pic:
-                pheno_filter.append(lambda inCh: (len(inCh) == 4 and
-                                                  'p' == inCh[0]))
-            if 'unaffected only' in pic:
-                pheno_filter.append(lambda inCh: (len(inCh) == 4 and
-                                                  's' == inCh[0]))
-            if 'autism and unaffected' in pic:
-                pheno_filter.append(lambda inCh: (len(inCh) == 8))
-            if 'neither' in pic:
-                pheno_filter.append(lambda inCh: len(inCh) == 0)
 
-            if len(pheno_filter) == 4:
-                pheno_filter = []
+    FILTER_MAPPING = {
+        "autism only": 
+        lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
+        "unaffected only":
+        lambda inCh: (len(inCh) == 4 and 's' == inCh[0]),
+        "autism and unaffected":
+        lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
+        "neither":
+        lambda inCh: len(inCh) == 0,
 
-        comp = []
-        if pheno_filter:
-            comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
+        ("autism only", 'F'):
+        lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
+        ("unaffected only", 'F'):
+        lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
+        ("autism and unaffected", 'F'):
+        lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
+                      ('F' == inCh[3] or 'F' == inCh[7])),
+        ("neither", 'F'):
+        lambda inCh: (len(inCh) == 0),
 
-        if gender is not None:
-            if ['F'] == gender:
-                comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'F' or
-                            (len(inCh) == 6 and inCh[5] == 'F'))
-            elif ['M'] == gender:
-                comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'M' or
-                            (len(inCh) == 6 and inCh[5] == 'M'))
+        ("autism only", 'M'):
+        lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
+        ("unaffected only", 'M'):
+        lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
+        ("autism and unaffected", 'M'):
+        lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
+                      ('M' == inCh[3] or 'M' == inCh[7])),
+        ("neither", 'M'):
+        lambda inCh: (len(inCh) == 0),
+        'F':
+        lambda inCh: ('F' in inCh),
+        'M':
+        lambda inCh: ('M' in inCh),
+        }
 
-        if len(comp) == 0:
+    @classmethod
+    def _present_in_child_filter(cls, present_in_child=None, gender=None):
+        fall = []
+        if present_in_child and gender:
+            assert len(gender) == 1
+            g = gender[0]
+            if len(present_in_child) == 4:
+                fall = [cls.FILTER_MAPPING[g]]
+            else:
+                fall = [cls.FILTER_MAPPING[(pic, g)]
+                        for pic in present_in_child]
+        elif present_in_child:
+            if len(present_in_child) < 4:
+                fall = [cls.FILTER_MAPPING[pic] for pic in present_in_child]
+        elif gender:
+            assert len(gender) == 1
+            g = gender[0]
+            fall = [cls.FILTER_MAPPING[g]]
+
+        if len(fall) == 0:
             return None
-        elif len(comp) == 1:
-            return comp[0]
+        elif len(fall) == 1:
+            return fall[0]
         else:
-            return lambda inCh: all([f(inCh) for f in comp])
+            return lambda inCh: any([f(inCh) for f in fall])
+
+
+#     @staticmethod
+#     def _present_in_child_filter(present_in_child=None, gender=None):
+#         pheno_filter = []
+#         # print(present_in_child)
+#         if present_in_child is not None:
+#             pic = set(present_in_child)
+#             if 'autism only' in pic:
+#                 pheno_filter.append(lambda inCh: (len(inCh) == 4 and
+#                                                   'p' == inCh[0]))
+#             if 'unaffected only' in pic:
+#                 pheno_filter.append(lambda inCh: (len(inCh) == 4 and
+#                                                   's' == inCh[0]))
+#             if 'autism and unaffected' in pic:
+#                 pheno_filter.append(lambda inCh: (len(inCh) == 8))
+#             if 'neither' in pic:
+#                 pheno_filter.append(lambda inCh: len(inCh) == 0)
+#
+#             if len(pheno_filter) == 4:
+#                 pheno_filter = []
+#
+#         comp = []
+#         if pheno_filter:
+#             comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
+#
+#         if gender is not None:
+#             if ['F'] == gender:
+#                 comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'F' or
+#                             (len(inCh) == 6 and inCh[5] == 'F'))
+#             elif ['M'] == gender:
+#                 comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'M' or
+#                             (len(inCh) == 6 and inCh[5] == 'M'))
+#
+#         if len(comp) == 0:
+#             return None
+#         elif len(comp) == 1:
+#             return comp[0]
+#         else:
+#             return lambda inCh: all([f(inCh) for f in comp])
 
     def get_transmitted_variants(self, callSet='default', **kwargs):
         if callSet not in self.transmission_impl:
