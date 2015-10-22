@@ -94,34 +94,22 @@ def prepare_denovo_phenotype_gender_filter1(data, st):
     else:
         study_types = set(['WE', 'TG', 'CNV'])
 
-    gender = None
-    if 'gender' in data:
-        gender = data['gender']
-
     pheno_filter = []
-
     if study_pheno_type in pheno_types and study_type in study_types:
-        pf = lambda inCh: len(inCh) > 0 and inCh[0] == 'p'
-        if ['F'] == gender:
-            pf = lambda inCh: 'prbF' in inCh
-        elif ['M'] == gender:
-            pf = lambda inCh: 'prbM' in inCh
-        pheno_filter.append(pf)
+        pheno_filter.append('autism only')
+        pheno_filter.append('autism and unaffected')
 
     if 'unaffected' in pheno_types and study_type in study_types:
-        pf = lambda inCh: ('sib' in inCh)
-        if ['F'] == gender:
-            pf = lambda inCh: 'sibF' in inCh
-        elif ['M'] == gender:
-            pf = lambda inCh: 'sibM' in inCh
-        pheno_filter.append(pf)
+        pheno_filter.append('unaffected only')
+        pheno_filter.append('autism and unaffected')
+    pheno_filter = list(set(pheno_filter))
 
     if not pheno_filter:
         return None
 
     if len(pheno_filter) == 1:
         return pheno_filter[0]
-    return lambda inCh: any([f(inCh) for f in pheno_filter])
+    return pheno_filter
 
 
 def prepare_denovo_study_type(data):
