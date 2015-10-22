@@ -1,7 +1,7 @@
 import itertools
 import re
 import logging
-from query_prepare_bak import \
+from query_prepare import \
     prepare_denovo_studies, prepare_transmitted_studies, \
     prepare_denovo_phenotype, prepare_gender_filter, \
     prepare_denovo_pheno_filter
@@ -78,16 +78,19 @@ def get_sib_gender():
 
 FATHER_RACE = get_focuv_race()
 MOTHER_RACE = get_mocuv_race()
-PROBAND_VIQ  = get_verbal_iq()
+PROBAND_VIQ = get_verbal_iq()
 PROBAND_NVIQ = get_non_verbal_iq()
 
-PARENTS_RACE = dict([(k, ':'.join([m, f])) for (k, m, f) in zip(phDB.families,
-                                                                phDB.get_variable('mocuv.race_parents'),
-                                                                phDB.get_variable('focuv.race_parents'))])
-PARENTS_RACE_QUERY = dict([(k, f if f == m else 'more-than-one-race')
-                           for (k, f, m) in zip(phDB.families,
-                                                phDB.get_variable('mocuv.race_parents'),
-                                                phDB.get_variable('focuv.race_parents'))])
+PARENTS_RACE = \
+    dict([(k, ':'.join([m, f]))
+          for (k, m, f) in zip(phDB.families,
+                               phDB.get_variable('mocuv.race_parents'),
+                               phDB.get_variable('focuv.race_parents'))])
+PARENTS_RACE_QUERY = \
+    dict([(k, f if f == m else 'more-than-one-race')
+          for (k, f, m) in zip(phDB.families,
+                               phDB.get_variable('mocuv.race_parents'),
+                               phDB.get_variable('focuv.race_parents'))])
 
 
 def get_father_race():
@@ -176,8 +179,8 @@ def __bind_family_filter_by_prb_gender(data, family_filters):
 
 def family_filter_by_sib_gender(families, gender):
     return dict([(key, val) for (key, val) in families.items()
-                 if len(val.memberInOrder) > 3
-                 and val.memberInOrder[3].gender == gender])
+                 if len(val.memberInOrder) > 3 and
+                 val.memberInOrder[3].gender == gender])
 
 
 def __bind_family_filter_by_sib_gender(data, family_filters):
@@ -350,14 +353,6 @@ def prepare_effect_types(data):
     if not effect_type_list:
         return None
     return get_effect_types_set(','.join(effect_type_list))
-    # effect_types = effect_type.split(',')
-    # result = [et for et in effect_types if et in get_effect_types(types=True, groups=True)]
-
-    # return set(result)
-    # if effect_type not in get_effect_types(types=True, groups=True):
-    #     return None
-
-    # return effect_type
 
 
 def prepare_variant_types(data):
@@ -372,7 +367,7 @@ def prepare_variant_types(data):
     if variant_types == 'All':
         return None
 
-    variant_types_set= set(get_variant_types())
+    variant_types_set = set(get_variant_types())
     variant_types_list = variant_types.split(',')
     result = [vt for vt in variant_types_list if vt in variant_types_set]
     LOGGER.info("variant types: %s", result)
@@ -409,10 +404,6 @@ def prepare_family_ids(data):
         return None
 
 
-
-# "minParentsCalled=0,maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1"
-
-
 def prepare_min_alt_freq_prcnt(data):
     minAltFreqPrcnt = -1.0
     if 'popFrequencyMin' in data:
@@ -434,18 +425,20 @@ def prepare_max_alt_freq_prcnt(data):
 
 
 def prepare_pop_min_parents_called(data):
-    minParentsCalled = 0 
+    minParentsCalled = 0
     if 'popMinParentsCalled' in data:
         try:
             minParentsCalled = float(str(data['popMinParentsCalled']))
         except:
-            minParentsCalled = 0 
+            minParentsCalled = 0
     return minParentsCalled
+
 
 def prepare_TMM_ALL(data):
     if 'TMM_ALL' in data and data['TMM_ALL']:
         return True
     return False
+
 
 def prepare_ultra_rare(data):
     if 'rarity' in data:
@@ -646,9 +639,9 @@ def do_query_variants(data, atts=[]):
                               '_ch_prof_',
                               '_prb_viq_',
                               '_prb_nviq_',
-                              'valstatus']
-                            +
-                            atts)
+                              'valstatus'] +
+                             atts)
+
 
 def __gene_effect_get_worst_effect(gs):
     if len(gs) == 0:
@@ -664,32 +657,34 @@ def __gene_effect_get_genes(gs):
 
 
 COLUMN_TITLES = {'familyId': 'family id',
-                'location': 'location',
-                'variant': 'variant',
-                'bestSt': 'family genotype',
-                'fromParentS': 'from parent',
-                'inChS': 'in child',
-                'effectType': 'effect type',
-                'worstEffect': 'worst effect',
-                'genes': 'genes',
-                'geneEffect': 'all effects',
-                'requestedGeneEffects': 'requested effects',
-                'popType': 'population type',
-                'effectDetails': 'effect details',
-                'all.altFreq': 'alternative allele frequency',
-                'all.nAltAlls': 'number of alternative alleles',
-                'all.nParCalled': 'number of genotyped parents',
-                '_par_races_': 'parent races',
-                '_ch_prof_': 'children description',
-                '_prb_viq_': 'proband verbal iq',
-                '_prb_nviq_': 'proband non-verbal iq',
-                'studyName': 'study',
-                'counts': 'count',
-                'valstatus': 'validation status',
-             }
+                 'location': 'location',
+                 'variant': 'variant',
+                 'bestSt': 'family genotype',
+                 'fromParentS': 'from parent',
+                 'inChS': 'in child',
+                 'effectType': 'effect type',
+                 'worstEffect': 'worst effect',
+                 'genes': 'genes',
+                 'geneEffect': 'all effects',
+                 'requestedGeneEffects': 'requested effects',
+                 'popType': 'population type',
+                 'effectDetails': 'effect details',
+                 'all.altFreq': 'alternative allele frequency',
+                 'all.nAltAlls': 'number of alternative alleles',
+                 'all.nParCalled': 'number of genotyped parents',
+                 '_par_races_': 'parent races',
+                 '_ch_prof_': 'children description',
+                 '_prb_viq_': 'proband verbal iq',
+                 '_prb_nviq_': 'proband non-verbal iq',
+                 'studyName': 'study',
+                 'counts': 'count',
+                 'valstatus': 'validation status',
+                 }
+
 
 def attr_title(attr_key):
     return COLUMN_TITLES.get(attr_key, attr_key)
+
 
 def generate_response(vs, atts=[], sep='\t'):
     def ge2Str(gs):
@@ -713,7 +708,7 @@ def generate_response(vs, atts=[], sep='\t'):
                    "counts": mat2Str,
                    "geneEffect": ge2Str,
                    "requestedGeneEffects": ge2Str,
-    }
+                   }
 
     specialGeneEffects = {"genes": __gene_effect_get_genes,
                           "worstEffect": __gene_effect_get_worst_effect}
@@ -727,24 +722,25 @@ def generate_response(vs, atts=[], sep='\t'):
                 if att in specialStrF:
                     mavs.append(specialStrF[att](getattr(v, att)))
                 elif att in specialGeneEffects:
-                    mavs.append(specialGeneEffects[att](getattr(v, 'requestedGeneEffects')))
+                    mavs.append(specialGeneEffects[att](
+                        getattr(v, 'requestedGeneEffects')))
                 else:
                     mavs.append(str(getattr(v, att)))
             except:
                 mavs.append("")
         hack = []
         for a in atts:
-            if a in ['SSCfreq', 'EVSfreq', 'E65freq',] and a not in v.atts:
+            if a in ['SSCfreq', 'EVSfreq', 'E65freq', ] and a not in v.atts:
                 a = a[:3]+'-'+a[3:]
             if a in v.atts:
                 val = str(v.atts[a]).replace(sep, ';').replace("'", '"')
-                hack.append(val if val!='False' else "")
+                hack.append(val if val != 'False' else "")
             else:
                 hack.append(getattr(v, a, ''))
         yield (mavs + hack)
-                
+
 #         yield (mavs + [str(v.atts[a]).replace(sep, ';').replace("'", '"')
-#                        if a in v.atts else str(getattr(v, a, '')) for a in atts])
+#                 if a in v.atts else str(getattr(v, a, '')) for a in atts])
 
 
 def join_line(l, sep=','):
