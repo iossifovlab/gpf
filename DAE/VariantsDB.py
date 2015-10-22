@@ -104,6 +104,45 @@ class Study:
         if self.vdb._config.has_option(self._configSection, attName):
             return self.vdb._config.get(self._configSection, attName)
 
+    @staticmethod
+    def _present_in_child_filter(present_in_child=None, gender=None):
+        pheno_filter = []
+        # print(present_in_child)
+        if present_in_child is not None:
+            pic = set(present_in_child)
+            if 'autism only' in pic:
+                pheno_filter.append(lambda inCh: (len(inCh) == 4 and
+                                                  'p' == inCh[0]))
+            if 'unaffected only' in pic:
+                pheno_filter.append(lambda inCh: (len(inCh) == 4 and
+                                                  's' == inCh[0]))
+            if 'autism and unaffected' in pic:
+                pheno_filter.append(lambda inCh: (len(inCh) == 8))
+            if 'neither' in pic:
+                pheno_filter.append(lambda inCh: len(inCh) == 0)
+
+            if len(pheno_filter) == 4:
+                pheno_filter = []
+
+        comp = []
+        if pheno_filter:
+            comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
+
+        if gender is not None:
+            if ['F'] == gender:
+                comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'F' or
+                            (len(inCh) == 6 and inCh[5] == 'F'))
+            elif ['M'] == gender:
+                comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'M' or
+                            (len(inCh) == 6 and inCh[5] == 'M'))
+
+        if len(comp) == 0:
+            return None
+        elif len(comp) == 1:
+            return comp[0]
+        else:
+            return lambda inCh: all([f(inCh) for f in comp])
+
     def get_transmitted_variants(self, callSet='default', **kwargs):
         if callSet not in self.transmission_impl:
             self.transmission_impl[callSet] = TransmissionLegacy(self)
@@ -121,8 +160,11 @@ class Study:
             yield v
 
     def get_denovo_variants(self, inChild=None, presentInChild=None,
+                            gender=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None):
+
+        picFilter = self._present_in_child_filter(presentInChild, gender)
 
         if isinstance(effectTypes, str):
             effectTypes = self.vdb.effectTypesSet(effectTypes)
@@ -138,8 +180,7 @@ class Study:
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
                 continue
-            if presentInChild:
-                if not presentInChild(v.inChS):
+            if picFilter and not picFilter(v.inChS):
                     continue
             elif inChild and inChild not in v.inChS:
                 continue

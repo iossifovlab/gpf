@@ -269,39 +269,22 @@ def prepare_inchild(data):
     return res[0]
 
 
+PRESENT_IN_CHILD_TYPES = [
+    "autism only",
+    "unaffected only",
+    "autism and unaffected",
+    "proband only",
+    "sibling only",
+    "proband and sibling",
+    "neither",
+]
+
+
 def prepare_present_in_child(data):
     if "presentInChild" in data:
         present_in_child = set(data['presentInChild'].split(','))
-
-        gender = None
-        if 'gender' in data:
-            gender = data['gender']
-
-        pheno_filter = []
-        if 'autism only' in present_in_child:
-            pheno_filter.append(lambda inCh: (len(inCh) == 4 and
-                                              'p' == inCh[0]))
-        if 'unaffected only' in present_in_child:
-            pheno_filter.append(lambda inCh: (len(inCh) == 4 and
-                                              's' == inCh[0]))
-        if 'autism and unaffected' in present_in_child:
-            pheno_filter.append(lambda inCh: (len(inCh) == 8))
-        if 'neither' in present_in_child:
-            pheno_filter.append(lambda inCh: len(inCh) == 0)
-
-        comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
-
-        if ['F'] == gender:
-            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'F' or
-                        (len(inCh) == 6 and inCh[5] == 'F'))
-        elif ['M'] == gender:
-            comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'M' or
-                        (len(inCh) == 6 and inCh[5] == 'M'))
-
-        if len(comp) == 1:
-            return comp[0]
-
-        return lambda inCh: all([f(inCh) for f in comp])
+        assert any([pic in PRESENT_IN_CHILD_TYPES for pic in present_in_child])
+        return list(present_in_child)
 
     return None
 
@@ -512,6 +495,7 @@ def prepare_denovo_filters(data):
 
     filters = {'inChild': prepare_inchild(data),
                'presentInChild': prepare_present_in_child(data),
+               'gender': prepare_gender_filter(data),
                'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
                'familyIds': prepare_family_ids(data),

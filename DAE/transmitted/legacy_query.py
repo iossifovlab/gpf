@@ -12,7 +12,7 @@ import copy
 class TransmissionLegacy(object):
 
     @staticmethod
-    def present_in_parent_filter(present_in_parent):
+    def _present_in_parent_filter(present_in_parent):
         if present_in_parent is None:
             return None
         pip = set(present_in_parent)
@@ -180,6 +180,7 @@ class TransmissionLegacy(object):
 
     def get_transmitted_variants(self, inChild=None,
                                  presentInChild=None,
+                                 gender=None,
                                  presentInParent=None,
                                  minParentsCalled=0,
                                  maxAltFreqPrcnt=5.0,
@@ -197,7 +198,8 @@ class TransmissionLegacy(object):
                 self.study._configSection,
                 'transmittedVariants.indexFile') + "-TOOMANY.txt.bgz"
 
-        pipFilter = self.present_in_parent_filter(presentInParent)
+        pipFilter = self._present_in_parent_filter(presentInParent)
+        picFilter = self.study._present_in_child_filter(presentInChild, gender)
 
         if TMM_ALL:
             tbf = gzip.open(transmittedVariantsTOOMANYFile)
@@ -254,8 +256,8 @@ class TransmissionLegacy(object):
                 v.atts['bestState'] = bestStateS
                 v.atts['counts'] = cntsS
 
-                if presentInChild:
-                    if not presentInChild(v.inChS):
+                if picFilter:
+                    if not picFilter(v.inChS):
                         continue
                 elif inChild and inChild not in v.inChS:
                     continue

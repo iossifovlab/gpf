@@ -1,6 +1,7 @@
 import itertools
 import logging
 from DAE import vDB
+from __builtin__ import str
 
 LOGGER = logging.getLogger(__name__)
 
@@ -154,17 +155,23 @@ def prepare_denovo_phenotype(data):
 
 
 def prepare_gender_filter(data):
-    if 'gender' in data:
+    if 'gender' not in data:
+        return None
+    genderFilter = data['gender']
+
+    if isinstance(genderFilter, str):
         genderFilter = data['gender'].split(',')
         res = []
         if 'female' in genderFilter:
             res.append('F')
         if 'male' in genderFilter:
             res.append('M')
-        if res:
-            data['gender'] = res
+        if len(res) == 1:
+            return res
         else:
-            del data['gender']
+            return None
+    else:
+        return genderFilter
 
 
 def prepare_denovo_studies(data):
