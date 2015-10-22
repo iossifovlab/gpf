@@ -521,6 +521,7 @@ def prepare_transmitted_filters(data,
                'minAltFreqPrcnt': prepare_min_alt_freq_prcnt(data),
                'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data),
                'TMM_ALL': prepare_TMM_ALL(data),
+               'presentInParent': prepare_present_in_parent(data),
                }
     return dict(filters, **denovo_filters)
 
@@ -529,7 +530,6 @@ def prepare_denovo_filters(data):
 
     filters = {'inChild': prepare_inchild(data),
                'presentInChild': prepare_present_in_child(data),
-               'presentInParent': prepare_present_in_parent(data),
                'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
                'familyIds': prepare_family_ids(data),

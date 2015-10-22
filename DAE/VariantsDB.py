@@ -120,7 +120,7 @@ class Study:
         for v in vs:
             yield v
 
-    def get_denovo_variants(self, inChild=None, presentInChild=None, presentInParent=None,
+    def get_denovo_variants(self, inChild=None, presentInChild=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None):
 
@@ -143,10 +143,6 @@ class Study:
                     continue
             elif inChild and inChild not in v.inChS:
                 continue
-
-            if presentInParent:
-                if not presentInParent(''):
-                    continue
 
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
