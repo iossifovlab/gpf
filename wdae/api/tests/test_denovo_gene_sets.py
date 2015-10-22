@@ -10,7 +10,7 @@ from denovo_gene_sets import set_genes, get_measure, \
     get_all_denovo_studies,\
     build_prb_set_by_phenotype, build_sib_set, build_denovo_gene_sets
 from DAE import vDB
-from api.deprecated.bg_loader import preload_background, get_background
+
 
 class Test(unittest.TestCase):
 
