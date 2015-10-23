@@ -58,7 +58,7 @@ class MysqlTransmittedQuery(object):
         'sibF',
     ]
 
-    keys = {
+    KEYS = {
         'variantTypes': list,
         'effectTypes': list,
         'geneSyms': list,
@@ -74,7 +74,7 @@ class MysqlTransmittedQuery(object):
         'familyIds': list,
         }
 
-    default_query = {
+    DEFAULT_QUERY = {
         'variantTypes': None,
         'effectTypes': None,
         'geneSyms': None,
@@ -106,7 +106,7 @@ class MysqlTransmittedQuery(object):
         assert self.user
         assert self.passwd
         self.connection = None
-        self.query = copy.deepcopy(self.default_query)
+        self.query = copy.deepcopy(self.DEFAULT_QUERY)
         self.connect()
 
     def connect(self):
@@ -128,7 +128,7 @@ class MysqlTransmittedQuery(object):
         self.connection = None
 
     def __getitem__(self, key):
-        if key not in self.keys:
+        if key not in self.KEYS:
             raise KeyError('unexpected key: {}'.format(key))
         return self.query.get(key, None)
 
@@ -349,10 +349,22 @@ class MysqlTransmittedQuery(object):
         w = ' AND '.join(where)
         return w
 
+    SPECIAL_KEYS = {
+        "minParentsCalled": (-1),
+        "maxAltFreqPrcnt": (-1),
+        "minAltFreqPrcnt": (-1),
+    }
+
     def _copy_kwargs(self, kwargs):
         for field in kwargs:
-            if field in self.keys:
-                self.query[field] = kwargs[field]
+            if field in self.KEYS:
+                if field not in self.SPECIAL_KEYS:
+                    self.query[field] = kwargs[field]
+                else:
+                    if kwargs[field] == self.SPECIAL_KEYS[field]:
+                        self.query[field] = None
+                    else:
+                        self.query[field] = kwargs[field]
 
     def get_transmitted_summary_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
