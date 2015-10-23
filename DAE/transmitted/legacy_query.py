@@ -7,9 +7,10 @@ from Variant import parseGeneEffect, filter_gene_effect, Variant
 import gzip
 import pysam
 import copy
+from transmitted.base_query import TransmissionConfig
 
 
-class TransmissionLegacy(object):
+class TransmissionLegacy(TransmissionConfig):
 
     @staticmethod
     def _present_in_parent_filter(present_in_parent):
@@ -45,7 +46,8 @@ class TransmissionLegacy(object):
         return None
 
     def __init__(self, study, call_set=None):
-        self.study = study
+        super(TransmissionLegacy, self).__init__(study, call_set)
+        assert self._get_params("format") == 'legacy'
 
     def filter_transmitted_variants(self, f, colNms,
                                     minParentsCalled=0,
@@ -117,10 +119,7 @@ class TransmissionLegacy(object):
                                          ultraRareOnly=False, geneSyms=None,
                                          regionS=None):
 
-        transmittedVariantsFile = self.study.vdb._config.get(
-            self.study._configSection,
-            'transmittedVariants.indexFile') + \
-            ".txt.bgz"
+        transmittedVariantsFile = self._get_params('indexFile') + ".txt.bgz"
         print("Loading trasmitted variants from {}".
               format(transmittedVariantsFile))
 
@@ -194,9 +193,7 @@ class TransmissionLegacy(object):
                                  TMM_ALL=False):
 
         transmittedVariantsTOOMANYFile = \
-            self.study.vdb._config.get(
-                self.study._configSection,
-                'transmittedVariants.indexFile') + "-TOOMANY.txt.bgz"
+            self._get_params('indexFile') + "-TOOMANY.txt.bgz"
 
         pipFilter = self._present_in_parent_filter(presentInParent)
         picFilter = self.study._present_in_child_filter(presentInChild, gender)

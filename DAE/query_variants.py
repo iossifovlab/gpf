@@ -449,7 +449,7 @@ def prepare_gene_region(data):
         region = region.replace(',', ' ').split()
     region = [r for r in region if validate_region(r)]
     if region:
-        return ','.join(region)
+        return region
     else:
         return None
 
@@ -710,7 +710,8 @@ def generate_response(vs, atts=[], sep='\t'):
 
 
 def join_line(l, sep=','):
-    return sep.join(l) + '\n'
+    tl = map(lambda v: '' if v is None or v == 'None' else v, l)
+    return sep.join(tl) + '\n'
 
 
 def save_vs(tf, vs, atts=[]):

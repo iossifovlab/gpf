@@ -8,9 +8,10 @@ import copy
 import operator
 import re
 from Variant import Variant
+from transmitted.base_query import TransmissionConfig
 
 
-class MysqlTransmittedQuery(object):
+class MysqlTransmittedQuery(TransmissionConfig):
     EFFECT_TYPES = [
         "3'UTR",
         "3'UTR-intron",
@@ -72,6 +73,7 @@ class MysqlTransmittedQuery(object):
         'gender': list,
         'regionS': list,
         'familyIds': list,
+        'TMM_ALL': bool,
         }
 
     DEFAULT_QUERY = {
@@ -88,30 +90,34 @@ class MysqlTransmittedQuery(object):
         'gender': None,
         'regionS': None,
         'familyIds': None,
+        'TMM_ALL': False,
         }
 
     def _get_config_property(self, name):
         return self.vdb._config.get(self.config_section, name)
 
-    def __init__(self, study):
+    def __init__(self, study, call_set=None):
+        super(MysqlTransmittedQuery, self).__init__(study, call_set)
+        assert self._get_params("format") == 'mysql'
+
         self.study = study
-        self.study_name = self.study.name
-        self.vdb = study.vdb
-        self.config_section = 'study.' + self.study_name
-        self.db = self._get_config_property('transmittedVariants.mysql.db')
-        self.user = self._get_config_property('transmittedVariants.mysql.user')
-        self.passwd = \
-            self._get_config_property('transmittedVariants.mysql.pass')
+        self.db = self._get_params('db')
+        self.user = self._get_params('user')
+        self.passwd = self._get_params('pass')
+        self.host = self._get_params("host")
+
+        assert self.host
         assert self.db
         assert self.user
         assert self.passwd
+
         self.connection = None
         self.query = copy.deepcopy(self.DEFAULT_QUERY)
         self.connect()
 
     def connect(self):
         if not self.connection:
-            self.connection = mdb.connect('127.0.0.1',
+            self.connection = mdb.connect(self.host,
                                           self.user,
                                           self.passwd,
                                           self.db)
@@ -171,7 +177,8 @@ class MysqlTransmittedQuery(object):
 
     def _build_gene_syms_where(self):
         assert self['geneSyms']
-        assert isinstance(self['geneSyms'], list)
+        assert isinstance(self['geneSyms'], list) or \
+            isinstance(self['geneSyms'], set)
         where = map(lambda sym: " '{}' ".format(sym), self['geneSyms'])
         where = ' tge.symbol in ( {} ) '.format(','.join(where))
         return where
@@ -391,7 +398,15 @@ class MysqlTransmittedQuery(object):
 
         for v in self.execute(select):
             v["location"] = v["chr"] + ":" + str(v["position"])
-            yield Variant(v)
+            vr = Variant(v)
+            vr.study = self.study
+            if v['all.nAltAlls'] == 1:
+                vr.popType = "ultraRare"
+            else:
+                # rethink
+                vr.popType = "common"
+
+            yield vr
 
     def get_transmitted_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
@@ -423,4 +438,12 @@ class MysqlTransmittedQuery(object):
 
         for v in self.execute(select):
             v["location"] = v["chr"] + ":" + str(v["position"])
-            yield Variant(v)
+
+            vr = Variant(v)
+            vr.study = self.study
+            if v['all.nAltAlls'] == 1:
+                vr.popType = "ultraRare"
+            else:
+                # rethink
+                vr.popType = "common"
+            yield vr

@@ -26,6 +26,8 @@ import pickle
 from transmitted.legacy_query import TransmissionLegacy
 
 from Variant import Variant, mat2Str, filter_gene_effect, str2Mat
+from transmitted.base_query import TransmissionConfig
+from transmitted.mysql_query import MysqlTransmittedQuery
 
 
 def regions_matcher(regions):
@@ -85,7 +87,7 @@ class Study:
         self.transmission_impl = {}
 
         self.has_denovo = self.vdb._config.has_option(self._configSection,'denovoCalls.files')
-        self.has_transmitted = self.vdb._config.has_option(self._configSection,'transmittedVariants.indexFile')
+        self.has_transmitted = self.vdb._config.has_option(self._configSection, 'transmittedVariants.format')
 
         self.description = ""
         if self.vdb._config.has_option(self._configSection,'description'):
@@ -104,9 +106,8 @@ class Study:
         if self.vdb._config.has_option(self._configSection, attName):
             return self.vdb._config.get(self._configSection, attName)
 
-
     FILTER_MAPPING = {
-        "autism only": 
+        "autism only":
         lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
         "unaffected only":
         lambda inCh: (len(inCh) == 4 and 's' == inCh[0]),
@@ -166,58 +167,28 @@ class Study:
         else:
             return lambda inCh: any([f(inCh) for f in fall])
 
+    def _get_transmitted_impl(self, callSet):
+        if callSet not in self.transmission_impl:
+            conf = TransmissionConfig(self, callSet)
+            impl_format = conf._get_params("format")
+            if impl_format == 'legacy':
+                self.transmission_impl[callSet] = TransmissionLegacy(self)
+            elif impl_format == 'mysql':
+                self.transmission_impl[callSet] = MysqlTransmittedQuery(self)
+            else:
+                raise Exception("unexpected transmission format")
 
-#     @staticmethod
-#     def _present_in_child_filter(present_in_child=None, gender=None):
-#         pheno_filter = []
-#         # print(present_in_child)
-#         if present_in_child is not None:
-#             pic = set(present_in_child)
-#             if 'autism only' in pic:
-#                 pheno_filter.append(lambda inCh: (len(inCh) == 4 and
-#                                                   'p' == inCh[0]))
-#             if 'unaffected only' in pic:
-#                 pheno_filter.append(lambda inCh: (len(inCh) == 4 and
-#                                                   's' == inCh[0]))
-#             if 'autism and unaffected' in pic:
-#                 pheno_filter.append(lambda inCh: (len(inCh) == 8))
-#             if 'neither' in pic:
-#                 pheno_filter.append(lambda inCh: len(inCh) == 0)
-#
-#             if len(pheno_filter) == 4:
-#                 pheno_filter = []
-#
-#         comp = []
-#         if pheno_filter:
-#             comp = [lambda inCh: any([f(inCh) for f in pheno_filter])]
-#
-#         if gender is not None:
-#             if ['F'] == gender:
-#                 comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'F' or
-#                             (len(inCh) == 6 and inCh[5] == 'F'))
-#             elif ['M'] == gender:
-#                 comp.append(lambda inCh: len(inCh) == 0 or inCh[3] == 'M' or
-#                             (len(inCh) == 6 and inCh[5] == 'M'))
-#
-#         if len(comp) == 0:
-#             return None
-#         elif len(comp) == 1:
-#             return comp[0]
-#         else:
-#             return lambda inCh: all([f(inCh) for f in comp])
+        impl = self.transmission_impl[callSet]
+        return impl
 
     def get_transmitted_variants(self, callSet='default', **kwargs):
-        if callSet not in self.transmission_impl:
-            self.transmission_impl[callSet] = TransmissionLegacy(self)
-        impl = self.transmission_impl[callSet]
+        impl = self._get_transmitted_impl(callSet)
         vs = impl.get_transmitted_variants(**kwargs)
         for v in vs:
             yield v
 
     def get_transmitted_summary_variants(self, callSet='default', **kwargs):
-        if callSet not in self.transmission_impl:
-            self.transmission_impl[callSet] = TransmissionLegacy(self)
-        impl = self.transmission_impl[callSet]
+        impl = self._get_transmitted_impl(callSet)
         vs = impl.get_transmitted_summary_variants(**kwargs)
         for v in vs:
             yield v

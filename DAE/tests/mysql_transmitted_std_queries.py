@@ -16,7 +16,7 @@ def get_gene_set_syms(gene_set, gene_term):
 
 def dae_query_q101():
     transmitted_study = vDB.get_study("w1202s766e611")
-    impl = TransmissionLegacy(transmitted_study)
+    impl = TransmissionLegacy(transmitted_study, "old")
 
     tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
@@ -45,7 +45,7 @@ def mysql_query_q101():
 
 def dae_query_q201():
     transmitted_study = vDB.get_study("w1202s766e611")
-    impl = TransmissionLegacy(transmitted_study)
+    impl = TransmissionLegacy(transmitted_study, "old")
 
     tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
@@ -74,7 +74,7 @@ def mysql_query_q201():
 
 def dae_query_q301():
     transmitted_study = vDB.get_study("w1202s766e611")
-    impl = TransmissionLegacy(transmitted_study)
+    impl = TransmissionLegacy(transmitted_study, "old")
 
     tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
@@ -109,7 +109,7 @@ def mysql_query_q301():
 
 def dae_query_q401():
     transmitted_study = vDB.get_study("w1202s766e611")
-    impl = TransmissionLegacy(transmitted_study)
+    impl = TransmissionLegacy(transmitted_study, "old")
 
     tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
@@ -143,7 +143,7 @@ def dae_query_q501():
     assert gene_syms
 
     transmitted_study = vDB.get_study("w1202s766e611")
-    impl = TransmissionLegacy(transmitted_study)
+    impl = TransmissionLegacy(transmitted_study, "old")
 
     tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,
@@ -180,7 +180,7 @@ def mysql_query_q501():
 def dae_query_q601():
 
     transmitted_study = vDB.get_study("w1202s766e611")
-    impl = TransmissionLegacy(transmitted_study)
+    impl = TransmissionLegacy(transmitted_study, "old")
 
     tvs = impl.get_transmitted_variants(
         minParentsCalled=-1,

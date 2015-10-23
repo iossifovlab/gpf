@@ -19,7 +19,7 @@ class Test(VariantsCompareBase):
     def setUpClass(cls):
         super(Test, cls).setUpClass()
         cls.transmitted_study = vDB.get_study("w1202s766e611")
-        cls.legacy = TransmissionLegacy(cls.transmitted_study)
+        cls.legacy = TransmissionLegacy(cls.transmitted_study, "old")
         cls.mysql = MysqlTransmittedQuery(cls.transmitted_study)
 
     def test_compare_default_minus_one_single_gene(self):

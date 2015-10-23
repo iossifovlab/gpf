@@ -13,6 +13,27 @@ class GetVariantsTests(unittest.TestCase):
         args_dict = parse_cli_arguments(args)
         return get_variants(args_dict)
 
+    def compare_variant_lines(self, vl, dl):
+        vs = vl.split('\t')
+        ds = dl.split('\t')
+        self.assertEquals(len(vs), len(ds))
+        pairs = zip(vs, ds)
+        for (v, d) in pairs:
+            v1 = v.strip()
+            d1 = d.strip()
+            if v1 == d1:
+                continue
+            try:
+                v2 = float(v1)
+                d2 = float(d1)
+                if v2 != d2:
+                    print("{}!={}".format(v, d))
+                    return False
+            except ValueError:
+                print("{}!={}".format(v, d))
+                return False
+        return True
+
     def compare_variants_to_data_file(self, generator, filename):
         with open(filename, "r") as data_file:
             count = 0
@@ -20,7 +41,7 @@ class GetVariantsTests(unittest.TestCase):
             for v in generator:
                 vline = join_line(v, '\t')
                 dline = data_file.readline()
-                if vline != dline:
+                if not self.compare_variant_lines(vline, dline):
                     mismatch += 1
                     if mismatch < 10:
                         logger.error('lines %d mismatched\n'
@@ -69,7 +90,7 @@ class GetVariantsTests(unittest.TestCase):
     def test_transmitted_with_region_w1202s766e611(self):
         args = ['--effectTypes=none',
                 '--transmittedStudy=w1202s766e611',
-                '--regionS', '1:1000000-2000000']
+                '--regionS=1:1000000-2000000']
         filename = 'data/transmitted_with_region_w1202s766e611.test'
         self.assert_variants_to_data_file(args, filename)
 
