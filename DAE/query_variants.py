@@ -337,7 +337,7 @@ def prepare_variant_types(data):
     result = [vt for vt in variant_types_list if vt in variant_types_set]
     LOGGER.info("variant types: %s", result)
     if result:
-        result
+        return result
 
     return None
 

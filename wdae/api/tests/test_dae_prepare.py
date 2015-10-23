@@ -56,47 +56,47 @@ class EffectTypesTests(APITestCase):
     def test_effect_types_correct(self):
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'LGDs'}),
-            set(['no-frame-shift-newStop', 'frame-shift',
-                 'nonsense', 'splice-site']))
+            ['no-frame-shift-newStop', 'frame-shift',
+             'nonsense', 'splice-site'])
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'CNVs'}),
-            set(['CNV-', 'CNV+']))
+            ['CNV-', 'CNV+'])
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'nonsynonymous'}),
-            set(['noStart', 'frame-shift', 'noEnd', 'nonsense',
-                 'no-frame-shift-newStop', 'no-frame-shift', 'missense',
-                 'CDS', 'splice-site']))
+            ['noStart', 'frame-shift', 'noEnd', 'nonsense',
+             'no-frame-shift-newStop', 'no-frame-shift', 'missense',
+             'CDS', 'splice-site'])
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'CNV-'}), set(['CNV-']))
+            prepare_effect_types({'effectTypes': 'CNV-'}), ['CNV-'])
         self.assertEqual(
-            prepare_effect_types({'effectTypes': 'CNV+'}), set(['CNV+']))
+            prepare_effect_types({'effectTypes': 'CNV+'}), ['CNV+'])
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'frame-shift'}),
-            set(['frame-shift']))
+            ['frame-shift'])
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'intron'}),
-            set(['intron']))
+            ['intron'])
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'synonymous'}),
-            set(['synonymous']))
+            ['synonymous'])
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'nonsense'}),
-            set(['nonsense']))
+            ['nonsense'])
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'no-frame-shift'}),
-            set(['no-frame-shift']))
+            ['no-frame-shift'])
         self.assertEqual(
             prepare_effect_types({'effectTypes': 'missense'}),
-            set(['missense']))
+            ['missense'])
         self.assertEqual(
             prepare_effect_types({'effectTypes': "3'UTR"}),
-            set(["3'UTR"]))
+            ["3'UTR"])
         self.assertEqual(
             prepare_effect_types({'effectTypes': "5'UTR"}),
-            set(["5'UTR"]))
+            ["5'UTR"])
         self.assertEqual(
             prepare_effect_types({'effectTypes': "splice-site"}),
-            set(["splice-site"]))
+            ["splice-site"])
 
     def test_effect_types_not_correct(self):
         self.assertEqual(
@@ -117,13 +117,13 @@ class VariantTypesTests(APITestCase):
 
     def test_variant_types_correct(self):
         self.assertEqual(
-            prepare_variant_types({'variantTypes': 'CNV'}), 'CNV')
+            prepare_variant_types({'variantTypes': 'CNV'}), ['CNV'])
         self.assertEqual(
-            prepare_variant_types({'variantTypes': 'sub'}), 'sub')
+            prepare_variant_types({'variantTypes': 'sub'}), ['sub'])
         self.assertEqual(
-            prepare_variant_types({'variantTypes': 'ins'}), 'ins')
+            prepare_variant_types({'variantTypes': 'ins'}), ['ins'])
         self.assertEqual(
-            prepare_variant_types({'variantTypes': 'del'}), 'del')
+            prepare_variant_types({'variantTypes': 'del'}), ['del'])
 
     def test_variant_type_not_correct(self):
         self.assertIsNone(

@@ -117,7 +117,33 @@ class VariantTypesFiltersTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         LOGGER.info("result data: %s", response.data)
 
-    def test_variant_filters(self):
+    def test_query_CHD2_LGDs_IossifovWE2014_del(self):
+        url = '/api/query_variants_preview'
+        data = {"geneSyms": "CHD2",
+                "denovoStudies": "IossifovWE2014",
+                "variantTypes": "del",
+                "effectTypes": "LGDs"
+                }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.data
+
+        self.assertEqual('1', result['count'])
+
+    def test_query_CHD2_LGDs_IossifovWE2014_del_ins(self):
+        url = '/api/query_variants_preview'
+        data = {"geneSyms": "CHD2",
+                "denovoStudies": "IossifovWE2014",
+                "variantTypes": "del,ins",
+                "effectTypes": "LGDs"
+                }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        result = response.data
+
+        self.assertEqual('2', result['count'])
+
+    def test_query_CHD2_LGDs_IossifovWE2014_var_all(self):
         url = '/api/query_variants_preview'
 
         data = {"geneSyms": "CHD2",
@@ -131,27 +157,8 @@ class VariantTypesFiltersTests(APITestCase):
 
         self.assertEqual('3', result['count'])
 
-        data = {"geneSyms": "CHD2",
-                "denovoStudies": "IossifovWE2014",
-                "variantTypes": "del",
-                "effectTypes": "LGDs"
-                }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        result = response.data
-
-        self.assertEqual('1', result['count'])
-
-        data = {"geneSyms": "CHD2",
-                "denovoStudies": "IossifovWE2014",
-                "variantTypes": "del,ins",
-                "effectTypes": "LGDs"
-                }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        result = response.data
-
-        self.assertEqual('2', result['count'])
+    def test_query_CHD2_LGDs_IossifovWE2014_del_ins_sub(self):
+        url = '/api/query_variants_preview'
 
         data = {"geneSyms": "CHD2",
                 "denovoStudies": "IossifovWE2014",
