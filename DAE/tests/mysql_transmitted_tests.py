@@ -45,7 +45,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
     def test_default_freq_query(self):
         where = self.impl._build_freq_where()
         self.assertIsNotNone(where)
-        self.assertEquals(' AND  ( tsv.alt_freq <= 5.0 ) ',
+        self.assertEquals(' ( tsv.alt_freq <= 5.0 ) ',
                           where)
 
     def test_default_query_len(self):
