@@ -363,6 +363,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
     }
 
     def _copy_kwargs(self, kwargs):
+        self.query = copy.deepcopy(self.DEFAULT_QUERY)
         for field in kwargs:
             if field in self.KEYS:
                 if field not in self.SPECIAL_KEYS:

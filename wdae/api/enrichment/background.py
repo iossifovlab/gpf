@@ -41,7 +41,7 @@ def _build_synonymous_background(transmitted_study_name):
     vs = transmitted_study.get_transmitted_summary_variants(
                 ultraRareOnly=True,
                 minParentsCalled=600,
-                effectTypes="synonymous")
+                effectTypes=["synonymous"])
     affected_gene_syms = _collect_affected_gene_syms(vs)
 
     base = [gs for gs in affected_gene_syms if len(gs) == 1]

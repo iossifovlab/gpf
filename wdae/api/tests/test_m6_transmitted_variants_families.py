@@ -8,6 +8,7 @@ from api.variants.transmitted_variants import parse_family_data, read_toomany_df
     read_summary_df, load_toomany_family_data
 
 
+@unittest.skip
 class Test(unittest.TestCase):
 
     @classmethod

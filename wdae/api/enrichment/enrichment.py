@@ -45,7 +45,7 @@ def build_transmitted_background(tstd):
     return filter_transmitted(
         tstd.get_transmitted_summary_variants(ultraRareOnly=True,
                                               minParentsCalled=600,
-                                              effectTypes="synonymous"))
+                                              effectTypes=["synonymous"]))
 
 
 # def preload_background(tstd):
