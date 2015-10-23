@@ -21,6 +21,7 @@ def get_gene_set_syms(gene_set, gene_term):
             return gt.t2G[gene_term].keys()
 
 
+@unittest.skip
 class SummaryVariantsLenTest(unittest.TestCase):
 
     def setUp(self):
@@ -251,6 +252,19 @@ class VariantsLenTest(unittest.TestCase):
         res = self.impl.get_transmitted_variants(
             familyIds=['13983'],
             geneSyms=['POGZ'],
+            minParentsCalled=None,
+            maxAltFreqPrcnt=None)
+
+        self.assertEquals(3, count(res))
+
+    def test_family_id_and_pogz_effect_types(self):
+        res = self.impl.get_transmitted_variants(
+            familyIds=['13983'],
+            geneSyms=['POGZ'],
+            effectTypes=["frame-shift", "intergenic", "intron", "missense",
+                         "non-coding", "no-frame-shift", "nonsense",
+                         "splice-site", "synonymous", "noEnd", "noStart",
+                         "3'UTR", "5'UTR", "CNV+", "CNV-"],
             minParentsCalled=None,
             maxAltFreqPrcnt=None)
 

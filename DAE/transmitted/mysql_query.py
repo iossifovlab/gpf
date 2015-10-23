@@ -30,7 +30,9 @@ class MysqlTransmittedQuery(TransmissionConfig):
         'nonsense',
         'splice-site',
         'synonymous',
-        'CDS']
+        'CDS',
+        'CNV+',
+        'CNV-', ]
 
     VARIANT_TYPES = [
         'del', 'ins', 'sub', 'CNV']
@@ -179,7 +181,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
         assert self['geneSyms']
         assert isinstance(self['geneSyms'], list) or \
             isinstance(self['geneSyms'], set)
-        where = map(lambda sym: " '{}' ".format(sym), self['geneSyms'])
+        where = map(lambda sym: ' "{}" '.format(sym), self['geneSyms'])
         where = ' tge.symbol in ( {} ) '.format(','.join(where))
         return where
 
@@ -189,7 +191,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
         assert reduce(operator.and_,
                       map(lambda et: et in self.EFFECT_TYPES,
                           self['effectTypes']))
-        where = map(lambda ef: " '{}' ".format(ef), self['effectTypes'])
+        where = map(lambda ef: ' "{}" '.format(ef), self['effectTypes'])
         where = ' tge.effect_type in ( {} ) '.format(','.join(where))
         return where
 
