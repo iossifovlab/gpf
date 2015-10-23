@@ -317,7 +317,7 @@ def prepare_effect_types(data):
 
     if not effect_type_list:
         return None
-    return get_effect_types_set(','.join(effect_type_list))
+    return list(get_effect_types_set(','.join(effect_type_list)))
 
 
 def prepare_variant_types(data):
@@ -337,7 +337,7 @@ def prepare_variant_types(data):
     result = [vt for vt in variant_types_list if vt in variant_types_set]
     LOGGER.info("variant types: %s", result)
     if result:
-        return ','.join(result)
+        result
 
     return None
 

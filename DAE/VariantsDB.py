@@ -23,15 +23,18 @@ from VariantAnnotation import get_effect_types_set
 from RegionOperations import Region,collapse
 import operator
 import pickle
-from transmitted.legacy_query import TransmissionLegacy
 
 from Variant import Variant, mat2Str, filter_gene_effect, str2Mat
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
+from transmitted.legacy_query import TransmissionLegacy
 
 
 def regions_matcher(regions):
-    regs = regions.split(',')
+    if isinstance(regions, list):
+        regs = regions
+    else:
+        regs = regions.split(',')
     reg_defs = []
 
     for r in regs:
