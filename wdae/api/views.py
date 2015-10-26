@@ -41,7 +41,7 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names, \
 from models import VerificationPath
 from serializers import UserSerializer
 from api.logger import LOGGER, log_filter
-from api.common.effect_types import EFFECT_GROUPS, build_effect_type_filter
+from query_prepare import EFFECT_GROUPS, build_effect_type_filter
 from api.query.wdae_query_variants import wdae_query_wrapper
 
 

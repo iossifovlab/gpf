@@ -175,9 +175,11 @@ class Study:
             conf = TransmissionConfig(self, callSet)
             impl_format = conf._get_params("format")
             if impl_format == 'legacy':
-                self.transmission_impl[callSet] = TransmissionLegacy(self)
+                self.transmission_impl[callSet] = \
+                    TransmissionLegacy(self, callSet)
             elif impl_format == 'mysql':
-                self.transmission_impl[callSet] = MysqlTransmittedQuery(self)
+                self.transmission_impl[callSet] = \
+                    MysqlTransmittedQuery(self, callSet)
             else:
                 raise Exception("unexpected transmission format")
 

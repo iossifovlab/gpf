@@ -5,7 +5,7 @@ Created on Jul 27, 2015
 '''
 from collections import defaultdict, Counter
 
-from api.common.effect_types import EFFECT_GROUPS, build_effect_types
+from query_prepare import EFFECT_GROUPS, build_effect_types
 from DAE import vDB
 from api.precompute.register import Precompute
 import cPickle

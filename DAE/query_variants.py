@@ -4,7 +4,7 @@ import logging
 from query_prepare import \
     prepare_denovo_studies, prepare_transmitted_studies, \
     prepare_denovo_phenotype, prepare_gender_filter, \
-    prepare_denovo_pheno_filter
+    prepare_denovo_pheno_filter, build_effect_type_filter
 
 
 from VariantAnnotation import get_effect_types_set, get_effect_types
@@ -306,6 +306,7 @@ def prepare_present_in_parent(data):
 def prepare_effect_types(data):
     if 'effectTypes' not in data:
         return None
+    build_effect_type_filter(data)
 
     effect_type = data['effectTypes']
     if effect_type == 'none' or effect_type == 'None' or \
@@ -414,7 +415,7 @@ def prepare_ultra_rare(data):
     return False
 
 
-REGION = re.compile(r"""(\d+|[Xx]):(\d+)-(\d+)""")
+REGION = re.compile(r"""^(\d+|[Xx]):(\d+)-(\d+)$""")
 
 
 def validate_region(region):
@@ -426,6 +427,7 @@ def validate_region(region):
         chromo = res.groups()[0]
         if chromo.lower() != 'x' and not (22 >= int(chromo) >= 1):
             return None
+        print(res.groups())
         start = int(res.groups()[1])
         end = int(res.groups()[2])
     except ValueError:
