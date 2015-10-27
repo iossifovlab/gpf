@@ -29,6 +29,16 @@ class VariantsCompareBase(unittest.TestCase):
                                     dv.atts[attr],
                                     mv.atts[attr]))
 
+    def assertVariantProperty(self, dv, mv, prop, msg):
+        dval = getattr(dv, prop)
+        mval = getattr(mv, prop)
+        self.assertEqual(
+            dval,
+            mval,
+            "{}: {}: {}, {}".format(msg, prop,
+                                    dval,
+                                    mval))
+
     def assertSummaryVariantEquals(self, dv, mv, msg):
         self.assertVariantStringAttribute(dv, mv, "location", msg)
         self.assertVariantStringAttribute(dv, mv, "chr", msg)
@@ -40,21 +50,13 @@ class VariantsCompareBase(unittest.TestCase):
         self.assertVariantStringAttribute(dv, mv, 'variant', msg)
         self.assertVariantStringAttribute(dv, mv, 'effectType', msg)
         self.assertVariantStringAttribute(dv, mv, 'effectDetails', msg)
+        self.assertVariantProperty(dv, mv, 'requestedGeneEffects', msg)
 
     def assertVariantEquals(self, dv, mv, msg):
-        self.assertVariantStringAttribute(dv, mv, "location", msg)
-        self.assertVariantStringAttribute(dv, mv, "chr", msg)
-        self.assertVariantIntAttribute(dv, mv, "position", msg)
+        self.assertSummaryVariantEquals(dv, mv, msg)
         self.assertVariantStringAttribute(dv, mv, 'familyId', msg)
-        self.assertVariantIntAttribute(dv, mv, "all.nParCalled", msg)
-        self.assertVariantFloatAttribute(dv, mv, 'all.prcntParCalled', msg)
-        self.assertVariantIntAttribute(dv, mv, "all.nAltAlls", msg)
-        self.assertVariantFloatAttribute(dv, mv, 'all.altFreq', msg)
-        self.assertVariantStringAttribute(dv, mv, 'variant', msg)
         self.assertVariantStringAttribute(dv, mv, 'bestState', msg)
         self.assertVariantStringAttribute(dv, mv, 'counts', msg)
-        self.assertVariantStringAttribute(dv, mv, 'effectType', msg)
-        self.assertVariantStringAttribute(dv, mv, 'effectDetails', msg)
 
     def assertVariantsEquals(self, dvs, mvs, msg):
         self.assertEqual(len(dvs), len(mvs), "{}: len: {}, {}".

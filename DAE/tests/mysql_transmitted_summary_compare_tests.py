@@ -18,20 +18,45 @@ class Test(VariantsCompareBase):
     def tearDown(self):
         self.impl.disconnect()
 
+    @unittest.skip
     def test_synonymous_background(self):
         transmitted_study = vDB.get_study('w1202s766e611')
-        vs = transmitted_study.get_transmitted_summary_variants(
+        ovs = transmitted_study.get_transmitted_summary_variants(
                     ultraRareOnly=True,
                     minParentsCalled=600,
-                    effectTypes=["synonymous"], callSet='old')
-        nvs = transmitted_study.get_transmitted_summary_variants(
+                    effectTypes=["synonymous"],
+                    callSet='old')
+        mvs = transmitted_study.get_transmitted_summary_variants(
                     ultraRareOnly=True,
                     minParentsCalled=600,
-                    effectTypes=["synonymous"], callSet='old')
-        vres = [v for v in vs]
-        nvres = [v for v in nvs]
+                    effectTypes=["synonymous"])
+        ores = [v for v in ovs]
+        mres = [v for v in mvs]
 
-        self.assertSummaryVariantsEquals(vres, nvres, 'synonymous background')
+        self.assertSummaryVariantsEquals(mres, ores, 'synonymous background')
+
+    def test_summary_variants_gene_sym_MAGEA12(self):
+        transmitted_study = vDB.get_study('w1202s766e611')
+        ovs = transmitted_study.get_transmitted_summary_variants(
+                    ultraRareOnly=True,
+                    minParentsCalled=600,
+                    effectTypes=["synonymous"],
+                    geneSyms=["MAGEA12"],
+                    callSet='old')
+        mvs = transmitted_study.get_transmitted_summary_variants(
+                    ultraRareOnly=True,
+                    minParentsCalled=600,
+                    effectTypes=["synonymous"],
+                    geneSyms=["MAGEA12"])
+
+        ores = [v for v in ovs]
+        mres = [v for v in mvs]
+
+        self.assertTrue(len(ores) > 0, "variants not found...")
+
+        self.assertSummaryVariantsEquals(mres, ores, 'MAGEA12')
+
+
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

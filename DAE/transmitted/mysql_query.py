@@ -187,6 +187,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def _build_effect_type_where(self):
         assert self['effectTypes']
+        print(self['effectTypes'])
         assert isinstance(self['effectTypes'], list)
         assert reduce(operator.and_,
                       map(lambda et: et in self.EFFECT_TYPES,
@@ -366,7 +367,15 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def _copy_kwargs(self, kwargs):
         self.query = copy.deepcopy(self.DEFAULT_QUERY)
+
+        if 'effectTypes' in kwargs and isinstance(kwargs['effectTypes'], str):
+            effectTypes = self.study.vdb.effectTypesSet(kwargs['effectTypes'])
+            kwargs['effectTypes'] = list(effectTypes)
+            print(effectTypes)
+            print(kwargs)
+
         for field in kwargs:
+            print("copying {}...".format(field))
             if field in self.KEYS:
                 if field not in self.SPECIAL_KEYS:
                     self.query[field] = kwargs[field]
@@ -400,6 +409,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "where {} ".format(where)
 
         for v in self.execute(select):
+
             v["location"] = v["chr"] + ":" + str(v["position"])
             vr = Variant(v)
             vr.study = self.study
