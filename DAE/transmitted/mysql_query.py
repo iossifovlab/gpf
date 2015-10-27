@@ -187,7 +187,6 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def _build_effect_type_where(self):
         assert self['effectTypes']
-        print(self['effectTypes'])
         assert isinstance(self['effectTypes'], list)
         assert reduce(operator.and_,
                       map(lambda et: et in self.EFFECT_TYPES,
