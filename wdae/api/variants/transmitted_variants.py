@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 from Variant import parseGeneEffect
 import pysam
-#import numba
+# import numba
 
 
 def just_test():
@@ -19,18 +19,18 @@ def just_test():
     print studies
     return [st for st in studies if st.has_transmitted]
 
-def another_test():
-    ts = vDB.get_study('w1202s766e611')
-    fname = ts.vdb._config.get(ts._configSection, 
-                'transmittedVariants.indexFile' ) \
-                + "-TOOMANY.txt.bgz"
-    print fname
-    
-    fname = ts.vdb._config.get(ts._configSection,
-                    'transmittedVariants.indexFile' ) + ".txt.bgz"
-    print fname
-
-    return ts
+# def another_test():
+#     ts = vDB.get_study('w1202s766e611')
+#     fname = ts.vdb._config.get(ts._configSection,
+#                 'transmittedVariants.indexFile' ) \
+#                 + "-TOOMANY.txt.bgz"
+#     print fname
+#
+#     fname = ts.vdb._config.get(ts._configSection,
+#                     'transmittedVariants.indexFile' ) + ".txt.bgz"
+#     print fname
+#
+#     return ts
 
 dt = dict(
     [
