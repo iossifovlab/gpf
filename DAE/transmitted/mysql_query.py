@@ -7,7 +7,7 @@ import MySQLdb as mdb
 import copy
 import operator
 import re
-from Variant import Variant
+from Variant import Variant, parseGeneEffect, filter_gene_effect
 from transmitted.base_query import TransmissionConfig
 
 
@@ -371,11 +371,8 @@ class MysqlTransmittedQuery(TransmissionConfig):
         if 'effectTypes' in kwargs and isinstance(kwargs['effectTypes'], str):
             effectTypes = self.study.vdb.effectTypesSet(kwargs['effectTypes'])
             kwargs['effectTypes'] = list(effectTypes)
-            print(effectTypes)
-            print(kwargs)
 
         for field in kwargs:
-            print("copying {}...".format(field))
             if field in self.KEYS:
                 if field not in self.SPECIAL_KEYS:
                     self.query[field] = kwargs[field]
@@ -384,6 +381,32 @@ class MysqlTransmittedQuery(TransmissionConfig):
                         self.query[field] = None
                     else:
                         self.query[field] = kwargs[field]
+
+    def _build_variant_pop_type(self, atts, v):
+        if atts['all.nAltAlls'] == 1:
+            v.popType = "ultraRare"
+        else:
+            v.popType = "common"  # rethink
+
+    def _build_variant_properties(self, atts):
+            v = Variant(atts)
+            v.study = self.study
+
+            self._build_variant_pop_type(atts, v)
+            self._build_variant_gene_effect(atts, v)
+
+            return v
+
+    def _build_variant_gene_effect(self, atts, v):
+        geneEffect = None
+        if self['effectTypes'] or self['geneSyms']:
+            geneEffect = parseGeneEffect(atts['effectGene'])
+            requestedGeneEffects = filter_gene_effect(geneEffect,
+                                                      self['effectTypes'],
+                                                      self['geneSyms'])
+        if geneEffect:
+            v._geneEffect = geneEffect
+            v._requestedGeneEffect = requestedGeneEffects
 
     def get_transmitted_summary_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
@@ -409,15 +432,8 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "where {} ".format(where)
 
         for v in self.execute(select):
-
             v["location"] = v["chr"] + ":" + str(v["position"])
-            vr = Variant(v)
-            vr.study = self.study
-            if v['all.nAltAlls'] == 1:
-                vr.popType = "ultraRare"
-            else:
-                # rethink
-                vr.popType = "common"
+            vr = self._build_variant_properties(v)
 
             yield vr
 
@@ -451,12 +467,6 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
         for v in self.execute(select):
             v["location"] = v["chr"] + ":" + str(v["position"])
+            vr = self._build_variant_properties(v)
 
-            vr = Variant(v)
-            vr.study = self.study
-            if v['all.nAltAlls'] == 1:
-                vr.popType = "ultraRare"
-            else:
-                # rethink
-                vr.popType = "common"
             yield vr
