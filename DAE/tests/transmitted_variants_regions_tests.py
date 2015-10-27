@@ -34,7 +34,7 @@ class QueryTest(unittest.TestCase):
             "father only,mother and father,mother only,neither",
             "variantTypes": "CNV,del,ins,sub",
             "genes": "All",
-            "rarity": "ultraRare",
+            "rarity": "All",
             'transmittedStudies': 'w1202s766e611'
             }
         params = prepare_denovo_filters(request)
@@ -43,9 +43,9 @@ class QueryTest(unittest.TestCase):
         count = 0
         for v in vs:
             count += 1
-            self.assertTrue(int(v.position) >= 86874300)
-            self.assertTrue(int(v.position) <= 86874400)
-            self.assertEquals("1", v.chr)
+            self.assertTrue(int(v.atts['position']) >= 86874300)
+            self.assertTrue(int(v.atts['position']) <= 86874400)
+            self.assertEquals("1", v.atts['chr'])
         self.assertTrue(count > 0)
 
 if __name__ == "__main__":

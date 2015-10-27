@@ -7,7 +7,6 @@ from query_variants import join_line
 logger = logging.getLogger(__name__)
 
 
-# @unittest.skip
 class GetVariantsTests(unittest.TestCase):
     def perform_query(self, args):
         args_dict = parse_cli_arguments(args)
@@ -146,6 +145,6 @@ class GetVariantsTests(unittest.TestCase):
     def test_transmitted_with_gene_sym_list_w1202s766e611(self):
         args = ['--effectTypes=none',
                 '--transmittedStudy=w1202s766e611',
-                '--geneSym', '"OSBPL8,DIP2C,FAM49A,AGPAT3"']
+                '--geneSym', "OSBPL8,DIP2C,FAM49A,AGPAT3"]
         filename = 'data/transmitted_with_gene_sym_list_w1202s766e611.test'
         self.assert_variants_to_data_file(args, filename)
