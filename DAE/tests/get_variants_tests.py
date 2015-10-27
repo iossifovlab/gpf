@@ -60,6 +60,8 @@ class GetVariantsTests(unittest.TestCase):
 
     def assert_variants_to_data_file(self, args, filename):
         generator = self.perform_query(args)
+        res = [v for v in generator]
+        res.sort()
         # self.store_variants_to_data_file(generator, filename)
         self.compare_variants_to_data_file(generator, filename)
 
@@ -145,6 +147,6 @@ class GetVariantsTests(unittest.TestCase):
     def test_transmitted_with_gene_sym_list_w1202s766e611(self):
         args = ['--effectTypes=none',
                 '--transmittedStudy=w1202s766e611',
-                '--geneSym', "OSBPL8,DIP2C,FAM49A,AGPAT3"]
+                '--geneSym=OSBPL8,DIP2C,FAM49A,AGPAT3']
         filename = 'data/transmitted_with_gene_sym_list_w1202s766e611.test'
         self.assert_variants_to_data_file(args, filename)
