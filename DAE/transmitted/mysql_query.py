@@ -125,9 +125,9 @@ class MysqlTransmittedQuery(TransmissionConfig):
                                           self.db)
 
     def execute(self, select):
-        cursor = self.connection.cursor(mdb.cursors.DictCursor)
-        cursor.execute(select)
-        return cursor.fetchall()
+        self.cursor = self.connection.cursor(mdb.cursors.DictCursor)
+        self.cursor.execute(select)
+        # return cursor.fetchall()
 
     def disconnect(self):
         if not self.connection:
@@ -430,11 +430,20 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "from transmitted_summaryvariant as tsv " \
             "where {} ".format(where)
 
-        for v in self.execute(select):
+        self.execute(select)
+        v = self.cursor.fetchone()
+        while v is not None:
             v["location"] = v["chr"] + ":" + str(v["position"])
             vr = self._build_variant_properties(v)
 
             yield vr
+            v = self.cursor.fetchone()
+
+#         for v in self.execute(select):
+#             v["location"] = v["chr"] + ":" + str(v["position"])
+#             vr = self._build_variant_properties(v)
+#
+#             yield vr
 
     def get_transmitted_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
@@ -464,8 +473,17 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "on tfv.summary_variant_id = tsv.id " \
             "where {} ".format(where)
 
-        for v in self.execute(select):
+        self.execute(select)
+        v = self.cursor.fetchone()
+        while v is not None:
             v["location"] = v["chr"] + ":" + str(v["position"])
             vr = self._build_variant_properties(v)
 
             yield vr
+            v = self.cursor.fetchone()
+
+#         for v in self.execute(select):
+#             v["location"] = v["chr"] + ":" + str(v["position"])
+#             vr = self._build_variant_properties(v)
+#
+#             yield vr
