@@ -21,7 +21,6 @@ def get_gene_set_syms(gene_set, gene_term):
             return gt.t2G[gene_term].keys()
 
 
-@unittest.skip
 class SummaryVariantsLenTest(unittest.TestCase):
 
     def setUp(self):

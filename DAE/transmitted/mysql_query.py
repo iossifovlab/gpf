@@ -126,6 +126,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def execute(self, select):
         self.cursor = self.connection.cursor(mdb.cursors.DictCursor)
+        self.cursor.execute('set group_concat_max_len=4294967295;')
         self.cursor.execute(select)
         # return cursor.fetchall()
 
@@ -194,6 +195,20 @@ class MysqlTransmittedQuery(TransmissionConfig):
         where = map(lambda ef: ' "{}" '.format(ef), self['effectTypes'])
         where = ' tge.effect_type in ( {} ) '.format(','.join(where))
         return where
+
+    def _build_effect_where1(self):
+        assert self['effectTypes'] or self['geneSyms']
+        where = []
+        if self['effectTypes']:
+            # self.query['effectTypes'] = kwargs['effectTypes']
+            where.append(self._build_effect_type_where())
+
+        if self['geneSyms']:
+            # self.query['geneSyms'] = kwargs['geneSyms']
+            where.append(self._build_gene_syms_where())
+
+        w = ' AND '.join(where)
+        return w
 
     def _build_effect_where(self):
         assert self['effectTypes'] or self['geneSyms']
@@ -323,6 +338,41 @@ class MysqlTransmittedQuery(TransmissionConfig):
         where = self.IN_CHILD_MAPPING[self['inChild']]
         return where
 
+    def _build_where1(self):
+        where = []
+        if self['effectTypes'] or self['geneSyms']:
+            where.append(self._build_effect_where1())
+
+        if self['variantTypes']:
+            where.append(self._build_variant_type_where())
+
+        if self['familyIds']:
+            where.append(self._build_family_ids_where())
+
+        if self['regionS']:
+            w = self._build_regions_where()
+            if not w:
+                print("bad regions: {}".format(self['regionS']))
+            else:
+                where.append(w)
+        if self['presentInParent']:
+            w = self._build_present_in_parent_where()
+            where.append(w)
+
+        if self['inChild']:
+            w = self._build_in_child_where()
+            where.append(w)
+        elif self['presentInChild']:
+            w = self._build_present_in_child_where()
+            where.append(w)
+
+        fw = self._build_freq_where()
+        if fw:
+            where.append(self._build_freq_where())
+
+        w = ' AND '.join(where)
+        return w
+
     def _build_where(self):
         where = []
         if self['effectTypes'] or self['geneSyms']:
@@ -409,9 +459,9 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def get_transmitted_summary_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
-        where = self._build_where()
+        where = self._build_where1()
         select = \
-            "select distinct tsv.id, " \
+            "select tsv.id, " \
             "tsv.chrome as chr, " \
             "tsv.position as position, " \
             "tsv.variant as variant, "\
@@ -426,9 +476,13 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "tsv.hw as `HW`, " \
             "tsv.ssc_freq as `SSC-freq`, " \
             "tsv.evs_freq as `EVS-freq`, " \
-            "tsv.e65_freq as `E65-freq` " \
+            "tsv.e65_freq as `E65-freq`, " \
+            "group_concat(concat(tge.symbol, ':', tge.effect_type) " \
+            "separator '|') as _requestedGeneEffectH " \
             "from transmitted_summaryvariant as tsv " \
-            "where {} ".format(where)
+            "left join transmitted_geneeffectvariant as tge " \
+            "on tsv.id = tge.summary_variant_id " \
+            "where {} group by tsv.id ".format(where)
 
         self.execute(select)
         v = self.cursor.fetchone()
@@ -471,7 +525,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "from transmitted_familyvariant as tfv " \
             "left join transmitted_summaryvariant as tsv " \
             "on tfv.summary_variant_id = tsv.id " \
-            "where {} ".format(where)
+            "where {}".format(where)
 
         self.execute(select)
         v = self.cursor.fetchone()
@@ -481,9 +535,3 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
             yield vr
             v = self.cursor.fetchone()
-
-#         for v in self.execute(select):
-#             v["location"] = v["chr"] + ":" + str(v["position"])
-#             vr = self._build_variant_properties(v)
-#
-#             yield vr
