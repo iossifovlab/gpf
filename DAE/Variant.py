@@ -64,6 +64,17 @@ def isVariant(bs, c, location=None, gender=None):
     return False
 
 
+def splitGeneEffect(effStr, geneEffect=[]):
+    for ge in effStr.split("|"):
+        cs = ge.split(":")
+        if len(cs) != 2:
+            raise Exception(
+                ge + " doesn't agree with the <sym>:<effect> format:" + effStr)
+        sym, eff = cs
+        geneEffect.append({'sym': sym, 'eff': eff})
+    return geneEffect
+
+
 def parseGeneEffect(effStr):
     geneEffect = []
     if effStr == "intergenic":
@@ -74,13 +85,7 @@ def parseGeneEffect(effStr):
         geneEffect.append({'sym': "", 'eff': effStr})
         return geneEffect
 
-    for ge in effStr.split("|"):
-        cs = ge.split(":")
-        if len(cs) != 2:
-            raise Exception(
-                ge + " doesn't agree with the <sym>:<effect> format:" + effStr)
-        sym, eff = cs
-        geneEffect.append({'sym': sym, 'eff': eff})
+    splitGeneEffect(effStr, geneEffect)
     return geneEffect
 
 

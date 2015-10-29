@@ -450,9 +450,14 @@ class MysqlTransmittedQuery(TransmissionConfig):
         geneEffect = None
         if self['effectTypes'] or self['geneSyms']:
             geneEffect = parseGeneEffect(atts['effectGene'])
-            requestedGeneEffects = filter_gene_effect(geneEffect,
-                                                      self['effectTypes'],
-                                                      self['geneSyms'])
+            if 'requestedGeneEffects' in atts:
+                requestedGeneEffects = parseGeneEffect(
+                    atts['requestedGeneEffects'])
+            else:
+                requestedGeneEffects = filter_gene_effect(
+                    geneEffect,
+                    self['effectTypes'],
+                    self['geneSyms'])
         if geneEffect:
             v._geneEffect = geneEffect
             v._requestedGeneEffect = requestedGeneEffects
@@ -478,7 +483,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "tsv.evs_freq as `EVS-freq`, " \
             "tsv.e65_freq as `E65-freq`, " \
             "group_concat(concat(tge.symbol, ':', tge.effect_type) " \
-            "separator '|') as _requestedGeneEffectH " \
+            "separator '|') as requestedGeneEffects " \
             "from transmitted_summaryvariant as tsv " \
             "left join transmitted_geneeffectvariant as tge " \
             "on tsv.id = tge.summary_variant_id " \
