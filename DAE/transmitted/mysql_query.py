@@ -196,20 +196,6 @@ class MysqlTransmittedQuery(TransmissionConfig):
         where = ' tge.effect_type in ( {} ) '.format(','.join(where))
         return where
 
-    def _build_effect_where1(self):
-        assert self['effectTypes'] or self['geneSyms']
-        where = []
-        if self['effectTypes']:
-            # self.query['effectTypes'] = kwargs['effectTypes']
-            where.append(self._build_effect_type_where())
-
-        if self['geneSyms']:
-            # self.query['geneSyms'] = kwargs['geneSyms']
-            where.append(self._build_gene_syms_where())
-
-        w = ' AND '.join(where)
-        return w
-
     def _build_effect_where(self):
         assert self['effectTypes'] or self['geneSyms']
         where = []
@@ -222,10 +208,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
             where.append(self._build_gene_syms_where())
 
         w = ' AND '.join(where)
-        where = "tsv.id in ( " \
-            "select distinct tge.summary_variant_id " \
-            "from transmitted_geneeffectvariant as tge where %s )" % w
-        return where
+        return w
 
     REGION_REGEXP = re.compile("([1-9,X][0-9]?):(\d+)-(\d+)")
 
@@ -338,41 +321,6 @@ class MysqlTransmittedQuery(TransmissionConfig):
         where = self.IN_CHILD_MAPPING[self['inChild']]
         return where
 
-    def _build_where1(self):
-        where = []
-        if self['effectTypes'] or self['geneSyms']:
-            where.append(self._build_effect_where1())
-
-        if self['variantTypes']:
-            where.append(self._build_variant_type_where())
-
-        if self['familyIds']:
-            where.append(self._build_family_ids_where())
-
-        if self['regionS']:
-            w = self._build_regions_where()
-            if not w:
-                print("bad regions: {}".format(self['regionS']))
-            else:
-                where.append(w)
-        if self['presentInParent']:
-            w = self._build_present_in_parent_where()
-            where.append(w)
-
-        if self['inChild']:
-            w = self._build_in_child_where()
-            where.append(w)
-        elif self['presentInChild']:
-            w = self._build_present_in_child_where()
-            where.append(w)
-
-        fw = self._build_freq_where()
-        if fw:
-            where.append(self._build_freq_where())
-
-        w = ' AND '.join(where)
-        return w
-
     def _build_where(self):
         where = []
         if self['effectTypes'] or self['geneSyms']:
@@ -464,7 +412,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def get_transmitted_summary_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
-        where = self._build_where1()
+        where = self._build_where()
         select = \
             "select tsv.id, " \
             "tsv.chrome as chr, " \
@@ -506,7 +454,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def get_transmitted_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
-        where = self._build_where1()
+        where = self._build_where()
         select = \
             "select " \
             "tsv.chrome as chr, " \
