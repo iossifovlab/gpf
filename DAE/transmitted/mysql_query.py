@@ -480,7 +480,8 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "on tfv.summary_variant_id = tsv.id " \
             "left join transmitted_geneeffectvariant as tge " \
             "on tsv.id = tge.summary_variant_id " \
-            "where {} group by tfv.family_id, tsv.id ".format(where)
+            "where {} group by tfv.family_id, tsv.id " \
+            "order by tsv.id, tfv.family_id ".format(where)
 
         self.execute(select)
         v = self.cursor.fetchone()
