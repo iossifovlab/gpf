@@ -506,7 +506,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def get_transmitted_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
-        where = self._build_where()
+        where = self._build_where1()
         select = \
             "select " \
             "tsv.chrome as chr, " \
@@ -530,7 +530,9 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "from transmitted_familyvariant as tfv " \
             "left join transmitted_summaryvariant as tsv " \
             "on tfv.summary_variant_id = tsv.id " \
-            "where {}".format(where)
+            "left join transmitted_geneeffectvariant as tge " \
+            "on tsv.id = tge.summary_variant_id " \
+            "where {} group by tfv.family_id, tsv.id ".format(where)
 
         self.execute(select)
         v = self.cursor.fetchone()
