@@ -126,7 +126,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def execute(self, select):
         self.cursor = self.connection.cursor(mdb.cursors.DictCursor)
-        self.cursor.execute('set group_concat_max_len=4294967295;')
+        self.cursor.execute('set group_concat_max_len=65536;')
         self.cursor.execute(select)
         # return cursor.fetchall()
 
