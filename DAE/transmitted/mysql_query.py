@@ -3,12 +3,17 @@ Created on Sep 24, 2015
 
 @author: lubo
 '''
-import MySQLdb as mdb
+# import MySQLdb as mdb
+import pymysql as mdb
 import copy
 import operator
 import re
 from Variant import Variant, parseGeneEffect, filter_gene_effect
 from transmitted.base_query import TransmissionConfig
+import logging
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class MysqlTransmittedQuery(TransmissionConfig):
@@ -119,18 +124,23 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def connect(self):
         if not self.connection:
+            LOGGER.info("creating new mysql connection")
             self.connection = mdb.connect(self.host,
                                           self.user,
                                           self.passwd,
                                           self.db)
 
     def execute(self, select):
+        if not self.connection:
+            self.connect()
+
         self.cursor = self.connection.cursor(mdb.cursors.DictCursor)
-        self.cursor.execute('set group_concat_max_len=65536;')
+        # 4self.cursor.execute('set group_concat_max_len=65536;')
         self.cursor.execute(select)
         # return cursor.fetchall()
 
     def disconnect(self):
+        LOGGER.info("closing mysql connection")
         if not self.connection:
             return
         self.connection.close()
@@ -483,7 +493,13 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "where {} group by tfv.family_id, tsv.id " \
             "order by tsv.id, tfv.family_id ".format(where)
 
-        self.execute(select)
+        try:
+            self.execute(select)
+        except Exception as ex:
+            LOGGER.error("unexpected db error: %s", ex)
+            self.disconnect()
+            raise StopIteration
+
         v = self.cursor.fetchone()
         while v is not None:
             v["location"] = v["chr"] + ":" + str(v["position"])
