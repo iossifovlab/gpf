@@ -73,3 +73,18 @@ class Test(VariantsCompareBase):
 
         self.assertVariantsEquals(vs2l(lvs), vs2l(mvs),
                                   'zero_and_nozeros_again_single_gene')
+
+    def test_compare_intergenic_variants_in_single_family(self):
+        request = {
+            "minParentsCalled": 0,
+            "maxAltFreqPrcnt": (-1),
+            "minAltFreqPrcnt": (-1),
+            "familyIds": ['11001'],
+            "effectTypes": ['intergenic'],
+        }
+        lvs = self.legacy.get_transmitted_variants(**request)
+        mvs = self.mysql.get_transmitted_variants(**request)
+
+        self.assertVariantsEquals(
+            vs2l(lvs), vs2l(mvs),
+            'compare_intergenic_variants_in_single_family')
