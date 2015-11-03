@@ -154,6 +154,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
 
         self.assertEquals(32079, count(res))
 
+    @unittest.skip
     def test_ultra_rare_multiple_regions(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
