@@ -23,11 +23,14 @@ from VariantAnnotation import get_effect_types_set
 from RegionOperations import Region,collapse
 import operator
 import pickle
-
+import logging
 from Variant import Variant, mat2Str, filter_gene_effect, str2Mat
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def regions_matcher(regions):
@@ -187,6 +190,7 @@ class Study:
         return impl
 
     def get_transmitted_variants(self, callSet='default', **kwargs):
+        LOGGER.info("get_transmitted_variants: %s", kwargs)
         impl = self._get_transmitted_impl(callSet)
         vs = impl.get_transmitted_variants(**kwargs)
         for v in vs:

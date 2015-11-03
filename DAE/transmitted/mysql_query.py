@@ -245,10 +245,10 @@ class MysqlTransmittedQuery(TransmissionConfig):
         return where
 
     PRESENT_IN_PARENT_MAPPING = {
-        "mother only": " tfv.in_mom = 1  and tfv.in_dad = 0 ",
-        "father only": " tfv.in_dad = 1  and tfv.in_mom = 0 ",
-        "mother and father": " tfv.in_mom = 1 and tfv.in_dad = 1 ",
-        "neither": " tfv.in_mom = 0 and tfv.in_dad = 0 ",
+        "mother only": " ( tfv.in_mom = 1  and tfv.in_dad = 0 ) ",
+        "father only": " ( tfv.in_dad = 1  and tfv.in_mom = 0 ) ",
+        "mother and father": " ( tfv.in_mom = 1 and tfv.in_dad = 1 ) ",
+        "neither": " ( tfv.in_mom = 0 and tfv.in_dad = 0 ) ",
     }
 
     def _build_present_in_parent_where(self):
@@ -493,6 +493,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "where {} group by tfv.family_id, tsv.id " \
             "order by tsv.id, tfv.family_id ".format(where)
 
+        LOGGER.info("select: %s", select)
         try:
             self.execute(select)
         except Exception as ex:
