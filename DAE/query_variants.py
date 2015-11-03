@@ -376,7 +376,7 @@ def prepare_min_alt_freq_prcnt(data):
         try:
             minAltFreqPrcnt = float(str(data['popFrequencyMin']))
         except:
-            minAltFreqPrcnt = -1.0
+            minAltFreqPrcnt = 0
     return minAltFreqPrcnt
 
 
@@ -386,7 +386,7 @@ def prepare_max_alt_freq_prcnt(data):
         try:
             maxAltFreqPrcnt = float(str(data['popFrequencyMax']))
         except:
-            maxAltFreqPrcnt = 5.0
+            maxAltFreqPrcnt = 100.0
     return maxAltFreqPrcnt
 
 
