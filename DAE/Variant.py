@@ -78,7 +78,7 @@ def splitGeneEffect(effStr, geneEffect=[]):
 def parseGeneEffect(effStr):
     geneEffect = []
     if effStr == "intergenic":
-        return [{'eff': 'intergenic'}]
+        return [{'eff': 'intergenic', 'sym': ''}]
 
     # HACK!!! To rethink
     if effStr in ["CNV+", "CNV-"]:
