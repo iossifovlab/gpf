@@ -701,7 +701,7 @@ def generate_response(vs, atts=[], sep='\t'):
                 a = a[:3]+'-'+a[3:]
             if a in v.atts:
                 val = str(v.atts[a]).replace(sep, ';').replace("'", '"')
-                hack.append(val if val != 'False' else "")
+                hack.append(val if val and val != 'False' and val != 'None' else "")
             else:
                 hack.append(getattr(v, a, ''))
         yield (mavs + hack)
