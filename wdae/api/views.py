@@ -31,7 +31,7 @@ from query_variants import \
     get_child_types, get_variant_types, \
     join_line
 
-from dae_query import prepare_summary, load_gene_set2
+from dae_query import prepare_summary
 
 from report_variants import build_stats
 
@@ -42,7 +42,7 @@ from models import VerificationPath
 from serializers import UserSerializer
 from api.logger import LOGGER, log_filter
 from query_prepare import EFFECT_GROUPS, build_effect_type_filter
-from api.query.wdae_query_variants import wdae_query_wrapper
+from api.query.wdae_query_variants import wdae_query_wrapper, gene_set_loader2
 
 
 @receiver(post_save, sender=get_user_model())
@@ -343,7 +343,7 @@ def gene_set_list2(request):
     gene_name = query_params['gene_name'] \
         if 'gene_name' in query_params else None
 
-    gts = load_gene_set2(gene_set, gene_set_phenotype)
+    gts = gene_set_loader2(gene_set, gene_set_phenotype)
 
     if gts:
         return __gene_set_response(query_params, gts, gene_name)
@@ -375,7 +375,7 @@ def gene_set_download(request):
             if 'gene_set_phenotype' in query_params else None
 
         gene_name = query_params['gene_name']
-        gts = load_gene_set2(gene_set, gene_set_phenotype)
+        gts = gene_set_loader2(gene_set, gene_set_phenotype)
         if gts and gene_name in gts.t2G:
             title = "{}:{}".format(gene_set, gene_name)
             if gene_set_phenotype:

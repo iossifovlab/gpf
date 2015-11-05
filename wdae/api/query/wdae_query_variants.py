@@ -7,12 +7,18 @@ from query_variants import do_query_variants
 from api.dae_query import combine_denovo_gene_sets
 from DAE import get_gene_sets_symNS
 from query_prepare import prepare_gene_syms
+from api.preloaded.register import get_register
 
 
 def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
 
     gene_term = None
     if gene_set_label != 'denovo':
+        register = get_register()
+        if register.has_key(gene_set_label):
+            print('gene set {} found in preloaded'.format(gene_set_label))
+            return register.get(gene_set_label)
+
         gene_term = get_gene_sets_symNS(gene_set_label)
     else:
         gene_term = combine_denovo_gene_sets(gene_set_phenotype)
@@ -38,7 +44,7 @@ def prepare_gene_sets(data):
     gt = gene_set_loader2(gene_set, gene_set_phenotype)
 
     if gt and gene_term in gt.t2G:
-            return set(gt.t2G[gene_term].keys())
+        return set(gt.t2G[gene_term].keys())
 
     return None
 

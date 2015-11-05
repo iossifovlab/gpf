@@ -13,17 +13,17 @@ from api.logger import LOGGER
 
 import numpy as np
 from api.enrichment.config import PHENOTYPES
-from api.dae_query import load_gene_set2
 from api.enrichment.results import EnrichmentTestBuilder
 from api.precompute import register
 from django.conf import settings
 from api.enrichment.denovo_counters import DenovoEventsCounter, \
     DenovoGenesEventCounter
 from api.enrichment.families import ChildrenStats
-from api.query.wdae_query_variants import combine_gene_syms
+from api.query.wdae_query_variants import combine_gene_syms, gene_set_loader2
 
 
 class EnrichmentView(APIView):
+
     def __init__(self):
         self.data = {}
 
@@ -37,9 +37,9 @@ class EnrichmentView(APIView):
                   'geneSet': prepare_string_value(data, 'geneSet'),
                   'geneTerm': prepare_string_value(data, 'geneTerm'),
                   'gene_set_phenotype': prepare_string_value(
-                        data,
-                        'gene_set_phenotype'),
-                  'geneSyms': combine_gene_syms(data)}
+            data,
+            'gene_set_phenotype'),
+            'geneSyms': combine_gene_syms(data)}
 
         if 'geneSet' not in result or result['geneSet'] is None or \
            'geneTerm' not in result or result['geneTerm'] is None:
@@ -87,7 +87,8 @@ class EnrichmentView(APIView):
         if self.gene_set is None:
             gene_terms = None
         else:
-            gene_terms = load_gene_set2(self.gene_set, self.gene_set_phenotype)
+            gene_terms = gene_set_loader2(
+                self.gene_set, self.gene_set_phenotype)
 
         if self.gene_set and self.gene_term and gene_terms:
             res['gs_desc'] = "%s: %s" % (self.gene_term,
@@ -190,8 +191,8 @@ class EnrichmentView(APIView):
     def get(self, request):
         query_data = prepare_query_dict(request.QUERY_PARAMS)
         LOGGER.info(log_filter(
-                request,
-                "enrichment query by phenotype: %s" % str(query_data)))
+            request,
+            "enrichment query by phenotype: %s" % str(query_data)))
 
         self.data = self.enrichment_prepare(query_data)
 
