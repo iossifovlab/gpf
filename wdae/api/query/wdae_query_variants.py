@@ -15,7 +15,7 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
     gene_term = None
     if gene_set_label != 'denovo':
         register = get_register()
-        if register.has_key(gene_set_label):
+        if register.has_key(gene_set_label):  # @IgnorePep8
             print('gene set {} found in preloaded'.format(gene_set_label))
             return register.get(gene_set_label)
 
