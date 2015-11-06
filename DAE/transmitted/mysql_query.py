@@ -81,7 +81,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
         'regionS': list,
         'familyIds': list,
         'TMM_ALL': bool,
-        }
+    }
 
     DEFAULT_QUERY = {
         'variantTypes': None,
@@ -98,7 +98,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
         'regionS': None,
         'familyIds': None,
         'TMM_ALL': False,
-        }
+    }
 
     def _get_config_property(self, name):
         return self.vdb._config.get(self.config_section, name)
@@ -129,15 +129,20 @@ class MysqlTransmittedQuery(TransmissionConfig):
                                           self.user,
                                           self.passwd,
                                           self.db)
+        return self.connection
 
     def execute(self, select):
-        if not self.connection:
-            self.connect()
+        #         if not self.connection:
+        #             self.connect()
+        LOGGER.info("creating new mysql connection")
+        connection = mdb.connect(self.host,
+                                 self.user,
+                                 self.passwd,
+                                 self.db)
 
-        self.cursor = self.connection.cursor(mdb.cursors.DictCursor)
-        # 4self.cursor.execute('set group_concat_max_len=65536;')
-        self.cursor.execute(select)
-        # return cursor.fetchall()
+        cursor = connection.cursor(mdb.cursors.DictCursor)
+        cursor.execute(select)
+        return (connection, cursor)
 
     def disconnect(self):
         LOGGER.info("closing mysql connection")
@@ -396,13 +401,13 @@ class MysqlTransmittedQuery(TransmissionConfig):
             v.popType = "common"  # rethink
 
     def _build_variant_properties(self, atts):
-            v = Variant(atts)
-            v.study = self.study
+        v = Variant(atts)
+        v.study = self.study
 
-            self._build_variant_pop_type(atts, v)
-            self._build_variant_gene_effect(atts, v)
+        self._build_variant_pop_type(atts, v)
+        self._build_variant_gene_effect(atts, v)
 
-            return v
+        return v
 
     def _build_variant_gene_effect(self, atts, v):
         geneEffect = None
@@ -447,20 +452,22 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "on tsv.id = tge.summary_variant_id " \
             "where {} group by tsv.id ".format(where)
 
-        self.execute(select)
-        v = self.cursor.fetchone()
-        while v is not None:
-            v["location"] = v["chr"] + ":" + str(v["position"])
-            vr = self._build_variant_properties(v)
+        try:
+            connection, cursor = self.execute(select)
+            v = cursor.fetchone()
 
-            yield vr
-            v = self.cursor.fetchone()
+            while v is not None:
+                v["location"] = v["chr"] + ":" + str(v["position"])
+                vr = self._build_variant_properties(v)
 
-#         for v in self.execute(select):
-#             v["location"] = v["chr"] + ":" + str(v["position"])
-#             vr = self._build_variant_properties(v)
-#
-#             yield vr
+                yield vr
+                v = cursor.fetchone()
+        except StopIteration:
+            connection.close()
+        except Exception as ex:
+            LOGGER.error("unexpected db error: %s", ex)
+            connection.close()
+            raise StopIteration
 
     def get_transmitted_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
@@ -495,16 +502,18 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
         LOGGER.info("select: %s", select)
         try:
-            self.execute(select)
+            connection, cursor = self.execute(select)
+            v = cursor.fetchone()
+
+            while v is not None:
+                v["location"] = v["chr"] + ":" + str(v["position"])
+                vr = self._build_variant_properties(v)
+
+                yield vr
+                v = cursor.fetchone()
+        except StopIteration:
+            connection.close()
         except Exception as ex:
             LOGGER.error("unexpected db error: %s", ex)
-            self.disconnect()
+            connection.close()
             raise StopIteration
-
-        v = self.cursor.fetchone()
-        while v is not None:
-            v["location"] = v["chr"] + ":" + str(v["position"])
-            vr = self._build_variant_properties(v)
-
-            yield vr
-            v = self.cursor.fetchone()

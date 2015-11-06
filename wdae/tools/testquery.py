@@ -7,9 +7,8 @@ Created on Nov 6, 2015
 import requests
 import StringIO
 import csv
-import urlparse
-import multiprocessing
 import copy
+from multiprocessing.pool import ThreadPool
 
 
 def run_request(url, params):
@@ -67,9 +66,9 @@ class TestRequest(object):
         return self.result
 
     def test_request(self):
-        assert self.result is not None
         result = self._request()
-        assert self.result == result
+        lines = map(lambda (x, y): x == y, zip(self.result, result))
+        return all(lines)
 
 
 class AsyncSSCTest(object):
@@ -102,83 +101,30 @@ class AsyncSSCTest(object):
         for req in self.reqs:
             req.initial_request()
 
-    def async_requests(self, count=10, pool_size=5):
-        repeat = len(self.requests) / count + 1
-        reqs = (self.requests * repeat)[:count]
-        print(len(reqs))
-        pool = multiprocessing.Pool(pool_size)
-        pool.map(lambda req: req.test_request(), reqs)
+    def async_requests(self, count=10, pool_size=2):
+        repeat = count / len(self.reqs) + 1
+        reqs = (self.reqs * repeat)[:count]
 
-if __name__ == "__main__":
+        pool = ThreadPool(processes=pool_size)
+        result = pool.map((lambda req: req.test_request()), reqs)
+        print(result)
+        assert all(result)
+
+
+def main():
     families = [("11110", 32677),
                 ("13398", 32575),
                 ("12854", 35221)]
+
+    # families = [("11110", 32677), ]
 
     ssc_test = AsyncSSCTest("http://localhost:8000",
                             families)
     ssc_test.initial_requests()
 
-    ssc_test.async_requests(10, 5)
+    ssc_test.async_requests(count=50, pool_size=5)
 
-    #     params = {
-    #         "denovoStudies": "ALL SSC",
-    #         "effectTypes": "Frame-shift,Intergenic,Intron,Missense,"
-    #         "Non coding,Non-frame-shift,Nonsense,Splice-site,"
-    #         "Synonymous,noEnd,noStart,3'UTR,5'UTR,CNV+,CNV-,3'-UTR,5'-UTR",
-    #         "families": "familyIds",
-    #         "familyIds": "11110",
-    #         "gender": "female,male",
-    #         "genes": "All",
-    #         "presentInChild": "autism and unaffected,"
-    #         "autism only,neither,unaffected only",
-    #         "presentInParent": "father only,mother and father,mother only,neither",
-    #         "rarity": "all",
-    #         "variantTypes": "CNV,del,ins,sub",
-    #     }
-    #     url = "https://seqpipe.setelis.com/dae/api/ssc_query_variants"
-    #
-    #     req1 = TestRequest(url, params, 32677)
-    #     req1.initial_request()
-    #     req1.test_request()
-    #
-    #     params = {
-    #         "denovoStudies": "ALL SSC",
-    #         "effectTypes": "Frame-shift,Intergenic,Intron,Missense,"
-    #         "Non coding,Non-frame-shift,Nonsense,Splice-site,"
-    #         "Synonymous,noEnd,noStart,3'UTR,5'UTR,CNV+,CNV-,3'-UTR,5'-UTR",
-    #         "families": "familyIds",
-    #         "familyIds": "13398",
-    #         "gender": "female,male",
-    #         "genes": "All",
-    #         "presentInChild": "autism and unaffected,"
-    #         "autism only,neither,unaffected only",
-    #         "presentInParent": "father only,mother and father,mother only,neither",
-    #         "rarity": "all",
-    #         "variantTypes": "CNV,del,ins,sub",
-    #     }
-    #     url = "https://seqpipe.setelis.com/dae/api/ssc_query_variants"
-    #
-    #     req2 = TestRequest(url, params, 32575)
-    #     req2.initial_request()
-    #     req2.test_request()
 
-#     params = {
-#         "denovoStudies": "ALL SSC",
-#         "effectTypes": "Frame-shift,Intergenic,Intron,Missense,"
-#         "Non coding,Non-frame-shift,Nonsense,Splice-site,"
-#         "Synonymous,noEnd,noStart,3'UTR,5'UTR,CNV+,CNV-,3'-UTR,5'-UTR",
-#         "families": "familyIds",
-#         "familyIds": "12854",
-#         "gender": "female,male",
-#         "genes": "All",
-#         "presentInChild": "autism and unaffected,"
-#         "autism only,neither,unaffected only",
-#         "presentInParent": "father only,mother and father,mother only,neither",
-#         "rarity": "all",
-#         "variantTypes": "CNV,del,ins,sub",
-#     }
-#     url = "https://seqpipe.setelis.com/dae/api/ssc_query_variants"
-#
-#     req3 = TestRequest(url, params, 35221)
-#     req3.initial_request()
-#     req3.test_request()
+if __name__ == "__main__":
+
+    main()
