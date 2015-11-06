@@ -2,12 +2,11 @@
 from api.enrichment.enrichment import enrichment, PRB_TESTS, SIB_TESTS, \
     enrichment_by_phenotype
 
-from api.dae_query import load_gene_set2
 import numpy as np
 from query_prepare import prepare_denovo_studies, \
     prepare_string_value
 import logging
-from api.query.wdae_query_variants import combine_gene_syms
+from api.query.wdae_query_variants import combine_gene_syms, gene_set_loader2
 from itertools import chain
 
 
@@ -49,7 +48,7 @@ def colormap_value(p_val, lessmore):
             elif scale < 0:
                 scale = 0
 
-    intensity = int((5.0-scale) * 255.0/5.0)
+    intensity = int((5.0 - scale) * 255.0 / 5.0)
     if lessmore == 'more':
         color = "rgba(%d,%d,%d,180)" % (255, intensity, intensity)
     elif lessmore == 'less':
@@ -70,7 +69,7 @@ def enrichment_results(denovoStudies=None,
     if geneSet is None:
         gene_terms = None
     else:
-        gene_terms = load_gene_set2(geneSet, geneStudy)
+        gene_terms = gene_set_loader2(geneSet, geneStudy)
 
     all_res, totals = enrichment(denovoStudies,
                                  geneSyms)
@@ -190,7 +189,7 @@ def enrichment_results_by_phenotype(
     if geneSet is None:
         gene_terms = None
     else:
-        gene_terms = load_gene_set2(geneSet, gene_set_phenotype)
+        gene_terms = gene_set_loader2(geneSet, gene_set_phenotype)
 
     if geneSet and geneTerm:
         res['gs_desc'] = "%s: %s" % (geneTerm,

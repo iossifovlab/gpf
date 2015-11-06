@@ -5,9 +5,10 @@ Created on Jun 30, 2015
 '''
 
 import unittest
-from api.dae_query import load_gene_set2, combine_denovo_gene_sets,\
+from api.dae_query import combine_denovo_gene_sets,\
     gene_terms_union, collect_denovo_gene_sets
 from api.GeneTerm import ddunion
+from api.query.wdae_query_variants import gene_set_loader2
 
 
 class Test(unittest.TestCase):
@@ -28,7 +29,7 @@ class Test(unittest.TestCase):
         self.assertTrue(gene_term)
 
     def test_single_pheno(self):
-        gene_term = load_gene_set2('denovo', 'autism')
+        gene_term = gene_set_loader2('denovo', 'autism')
         self.assertTrue(gene_term)
 
     def test_ddunion_t2g(self):
@@ -62,7 +63,7 @@ class Test(unittest.TestCase):
                     self.assertIn(rk, rv)
 
     def test_double_pheno(self):
-        gene_term = load_gene_set2('denovo', 'autism,unaffected')
+        gene_term = gene_set_loader2('denovo', 'autism,unaffected')
         self.assertTrue(gene_term)
 
     def test_double_pheno_lgds_gene_syms(self):
@@ -70,7 +71,7 @@ class Test(unittest.TestCase):
         for gt in collect_denovo_gene_sets('autism,unaffected'):
             gs = set(gt.t2G['LGDs.Recurrent'].keys())
             gene_syms = gene_syms.union(gs)
-        gene_term = load_gene_set2('denovo', 'autism,unaffected')
+        gene_term = gene_set_loader2('denovo', 'autism,unaffected')
         gene_syms2 = set(gene_term.t2G['LGDs.Recurrent'].keys())
         self.assertEquals(gene_syms, gene_syms2)
 

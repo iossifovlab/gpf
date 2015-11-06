@@ -6,17 +6,17 @@ from api.deprecated.bg_loader import gene_set_bgloader
 from query_variants import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids
 
-from api.dae_query import load_gene_set2
 
 import logging
 from api.deprecated.bg_loader import preload_background
 from rest_framework.test import APITestCase
-from api.query.wdae_query_variants import prepare_gene_sets
+from api.query.wdae_query_variants import prepare_gene_sets, gene_set_loader2
 
 LOGGER = logging.getLogger(__name__)
 
 
 class InChildTests(APITestCase):
+
     def test_inchild_empty(self):
         self.assertIsNone(prepare_inchild({}))
         self.assertIsNone(prepare_inchild({'inChild': None}))
@@ -229,13 +229,13 @@ class GeneSetsTests(APITestCase):
         super(GeneSetsTests, cls).setUpClass()
 
         builders = [
-                (gene_set_bgloader,
-                 ['GO'],
-                 'GO'),
+            (gene_set_bgloader,
+             ['GO'],
+             'GO'),
 
-                (gene_set_bgloader,
-                 ['MSigDB.curated'],
-                 'MSigDB.curated'),
+            (gene_set_bgloader,
+             ['MSigDB.curated'],
+             'MSigDB.curated'),
 
         ]
         preload_background(builders)
@@ -267,7 +267,7 @@ class GeneSetsTests(APITestCase):
         gs = prepare_gene_sets(self.DENOVO_GENE_SET_1)
         LOGGER.debug("denovo gene sets: %s", str(gs))
         self.assertIsNotNone(gs)
-        gt = load_gene_set2('denovo', 'autism')
+        gt = gene_set_loader2('denovo', 'autism')
         self.assertSetEqual(set(gt.t2G['Missense'].keys()), gs)
 
     DENOVO_GENE_SET_2 = {'geneSet': 'ala-bala',
