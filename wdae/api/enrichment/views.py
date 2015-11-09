@@ -189,7 +189,7 @@ class EnrichmentView(APIView):
                 'denovo_counter': counter_cls}
 
     def get(self, request):
-        query_data = prepare_query_dict(request.QUERY_PARAMS)
+        query_data = prepare_query_dict(request.query_params)
         LOGGER.info(log_filter(
             request,
             "enrichment query by phenotype: %s" % str(query_data)))

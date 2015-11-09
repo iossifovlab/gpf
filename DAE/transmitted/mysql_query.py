@@ -3,8 +3,8 @@ Created on Sep 24, 2015
 
 @author: lubo
 '''
-# import MySQLdb as mdb
-import pymysql as mdb
+import MySQLdb as mdb
+# import pymysql as mdb
 import copy
 import operator
 import re

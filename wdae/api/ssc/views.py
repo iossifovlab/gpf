@@ -21,7 +21,7 @@ from api.query.wdae_query_variants import wdae_query_wrapper
 class SSCPrepare(APIView):
 
     def prepare(self, request):
-        data = prepare_query_dict(request.DATA)
+        data = prepare_query_dict(request.data)
         data = prepare_ssc_filter(data)
         build_effect_type_filter(data)
         return data

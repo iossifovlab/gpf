@@ -18,7 +18,7 @@ from api.query.wdae_query_variants import wdae_query_wrapper
 class SequencingDenovoPrepare(APIView):
 
     def prepare(self, request):
-        data = prepare_query_dict(request.DATA)
+        data = prepare_query_dict(request.data)
         data['denovoStudies'] = "ALL WHOLE EXOME"
         data['transmittedStudies'] = None
 
