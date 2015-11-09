@@ -18,7 +18,6 @@ class Test(VariantsCompareBase):
     def tearDown(self):
         self.impl.disconnect()
 
-    @unittest.skip
     def test_synonymous_background(self):
         transmitted_study = vDB.get_study('w1202s766e611')
         ovs = transmitted_study.get_transmitted_summary_variants(
