@@ -57,6 +57,9 @@ class TransmissionLegacy(TransmissionConfig):
                                     effectTypes=None,
                                     ultraRareOnly=False,
                                     geneSyms=None):
+        geneSymsUpper = None
+        if geneSyms:
+            geneSymsUpper = [sym.upper() for sym in geneSyms]
         for l in f:
             # print "line:", l
             if l[0] == '#':
@@ -89,11 +92,11 @@ class TransmissionLegacy(TransmissionConfig):
                 continue
 
             geneEffect = None
-            if effectTypes or geneSyms:
+            if effectTypes or geneSymsUpper:
                 geneEffect = parseGeneEffect(mainAtts['effectGene'])
                 requestedGeneEffects = filter_gene_effect(geneEffect,
                                                           effectTypes,
-                                                          geneSyms)
+                                                          geneSymsUpper)
                 if not requestedGeneEffects:
                     continue
             v = Variant(mainAtts)
@@ -231,7 +234,7 @@ class TransmissionLegacy(TransmissionConfig):
                 else:
                     flns = []
                     posI = int(pos)
-                    for l in tbf.fetch(chrom, posI-1, posI):
+                    for l in tbf.fetch(chrom, posI - 1, posI):
                         _chrL, posL, varL, fdL = l.strip().split("\t")
 
                         if chrom == chrom and pos == posL and var == varL:

@@ -71,18 +71,18 @@ def splitGeneEffect(effStr, geneEffect=[]):
             raise Exception(
                 ge + " doesn't agree with the <sym>:<effect> format:" + effStr)
         sym, eff = cs
-        geneEffect.append({'sym': sym, 'eff': eff})
+        geneEffect.append({'sym': sym, 'eff': eff, 'symu': sym.upper()})
     return geneEffect
 
 
 def parseGeneEffect(effStr):
     geneEffect = []
     if effStr == "intergenic":
-        return [{'eff': 'intergenic', 'sym': ''}]
+        return [{'eff': 'intergenic', 'sym': '', 'symu': ''}]
 
     # HACK!!! To rethink
     if effStr in ["CNV+", "CNV-"]:
-        geneEffect.append({'sym': "", 'eff': effStr})
+        geneEffect.append({'sym': "", 'symu': '', 'eff': effStr})
         return geneEffect
 
     splitGeneEffect(effStr, geneEffect)
@@ -91,11 +91,11 @@ def parseGeneEffect(effStr):
 
 def filter_gene_effect(geneEffects, effectTypes, geneSyms):
     if not effectTypes:
-        return [x for x in geneEffects if x['sym'] in geneSyms]
+        return [x for x in geneEffects if x['symu'] in geneSyms]
     if not geneSyms:
         return [x for x in geneEffects if x['eff'] in effectTypes]
     return [x for x in geneEffects
-            if x['eff'] in effectTypes and x['sym'] in geneSyms]
+            if x['eff'] in effectTypes and x['symu'] in geneSyms]
 
 
 def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):
@@ -113,6 +113,7 @@ def mat2Str(mat, colSep=" ", rowSep="/"):
 
 
 class Variant:
+
     def __init__(self, atts, familyIdAtt="familyId", locationAtt="location",
                  variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
                  countsAtt="counts", effectGeneAtt="effectGene",
@@ -189,7 +190,7 @@ class Variant:
         try:
             return self._requestedGeneEffect
         except AttributeError:
-                self._requestedGeneEffect = self.geneEffect
+            self._requestedGeneEffect = self.geneEffect
         return self._requestedGeneEffect
 
     @property
@@ -197,9 +198,9 @@ class Variant:
         try:
             return self._altFreqPrcnt
         except AttributeError:
-                self._altFreqPrcnt = 0.0
-                if self.altFreqPrcntAtt in self.atts:
-                    self._altFreqPrcnt = float(self.atts[self.altFreqPrcntAtt])
+            self._altFreqPrcnt = 0.0
+            if self.altFreqPrcntAtt in self.atts:
+                self._altFreqPrcnt = float(self.atts[self.altFreqPrcntAtt])
         return self._altFreqPrcnt
 
     @property

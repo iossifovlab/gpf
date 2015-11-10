@@ -70,6 +70,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
         'variantTypes': list,
         'effectTypes': list,
         'geneSyms': list,
+        'geneSymsUpper': list,
         'ultraRareOnly': bool,
         'minParentsCalled': int,
         'maxAltFreqPrcnt': float,
@@ -87,6 +88,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
         'variantTypes': None,
         'effectTypes': None,
         'geneSyms': None,
+        'geneSymsUpper': None,
         'ultraRareOnly': False,
         'minParentsCalled': 0,
         'maxAltFreqPrcnt': 5.0,
@@ -197,7 +199,8 @@ class MysqlTransmittedQuery(TransmissionConfig):
         assert self['geneSyms']
         assert isinstance(self['geneSyms'], list) or \
             isinstance(self['geneSyms'], set)
-        where = map(lambda sym: ' "{}" '.format(sym), self['geneSyms'])
+        self.query['geneSymsUpper'] = [sym.upper() for sym in self['geneSyms']]
+        where = map(lambda sym: ' "{}" '.format(sym), self['geneSymsUpper'])
         where = ' tge.symbol in ( {} ) '.format(','.join(where))
         return where
 
@@ -411,7 +414,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
     def _build_variant_gene_effect(self, atts, v):
         geneEffect = None
-        if self['effectTypes'] or self['geneSyms']:
+        if self['effectTypes'] or self['geneSymsUpper']:
             geneEffect = parseGeneEffect(atts['effectGene'])
             if 'requestedGeneEffects' in atts:
                 requestedGeneEffects = parseGeneEffect(
@@ -420,7 +423,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
                 requestedGeneEffects = filter_gene_effect(
                     geneEffect,
                     self['effectTypes'],
-                    self['geneSyms'])
+                    self['geneSymsUpper'])
         if geneEffect:
             v._geneEffect = geneEffect
             v._requestedGeneEffect = requestedGeneEffects
