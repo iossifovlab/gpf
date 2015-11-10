@@ -18,7 +18,7 @@ def count(vs):
 def get_gene_set_syms(gene_set, gene_term):
     gt = get_gene_sets_symNS(gene_set)
     if gt and gene_term in gt.t2G:
-            return gt.t2G[gene_term].keys()
+        return gt.t2G[gene_term].keys()
 
 
 class SummaryVariantsLenTest(unittest.TestCase):
@@ -260,6 +260,19 @@ class VariantsLenTest(unittest.TestCase):
         res = self.impl.get_transmitted_variants(
             familyIds=['13983'],
             geneSyms=['POGZ'],
+            effectTypes=["frame-shift", "intergenic", "intron", "missense",
+                         "non-coding", "no-frame-shift", "nonsense",
+                         "splice-site", "synonymous", "noEnd", "noStart",
+                         "3'UTR", "5'UTR", "CNV+", "CNV-"],
+            minParentsCalled=None,
+            maxAltFreqPrcnt=None)
+
+        self.assertEquals(3, count(res))
+
+    def test_family_id_and_pogz_effect_types_case_insensitive(self):
+        res = self.impl.get_transmitted_variants(
+            familyIds=['13983'],
+            geneSyms=['pogz'],
             effectTypes=["frame-shift", "intergenic", "intron", "missense",
                          "non-coding", "no-frame-shift", "nonsense",
                          "splice-site", "synonymous", "noEnd", "noStart",
