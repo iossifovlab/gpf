@@ -30,14 +30,15 @@ class Measures(Preload):
             reader = csv.reader(f)
             reader.next()
             for row in reader:
-                (measure, desc, regr_by_age,
-                 regr_by_nviq,
-                 regr_by_viq) = row
+                (measure, desc, norm_by_age,
+                 norm_by_nviq,
+                 norm_by_viq) = row
+
                 result.append({"measure": measure,
                                "desc": desc,
-                               "regr_by_age": int(regr_by_age),
-                               "regr_by_nviq": int(regr_by_nviq),
-                               "regr_by_viq": int(regr_by_viq)})
+                               "norm_by_age": int(norm_by_age),
+                               "norm_by_nviq": int(norm_by_nviq),
+                               "norm_by_viq": int(norm_by_viq)})
         return result
 
     def __init__(self):
