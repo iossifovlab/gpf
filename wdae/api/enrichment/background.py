@@ -39,9 +39,9 @@ def _count_gene_syms(affected_gene_sets):
 def _build_synonymous_background(transmitted_study_name):
     transmitted_study = vDB.get_study(transmitted_study_name)
     vs = transmitted_study.get_transmitted_summary_variants(
-                ultraRareOnly=True,
-                minParentsCalled=600,
-                effectTypes=["synonymous"])
+        ultraRareOnly=True,
+        minParentsCalled=600,
+        effectTypes=["synonymous"])
     affected_gene_syms = _collect_affected_gene_syms(vs)
 
     base = [gs for gs in affected_gene_syms if len(gs) == 1]
@@ -59,6 +59,7 @@ def _build_synonymous_background(transmitted_study_name):
 
 
 class Background(Precompute):
+
     def __init__(self):
         self.background = None
 
@@ -131,7 +132,7 @@ class CodingLenBackground(Background):
     FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
-        'data/enrichment/background-model-conding-len-in-target.csv')
+        'data/enrichment/background-model-coding-len-in-target.csv')
 
     def _load_and_prepare_build(self):
         back = []
@@ -148,8 +149,8 @@ class CodingLenBackground(Background):
     def precompute(self):
         back = self._load_and_prepare_build()
         self.background = np.array(
-                back,
-                dtype=[('sym', '|S32'), ('raw', '>i4')])
+            back,
+            dtype=[('sym', '|S32'), ('raw', '>i4')])
         return self.background
 
     def serialize(self):
