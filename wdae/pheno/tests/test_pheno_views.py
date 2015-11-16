@@ -16,5 +16,13 @@ class Test(APITestCase):
         self.assertEqual(200, response.status_code)
 
 
+class PhenoMeasuresTest(APITestCase):
+
+    def test_get_pheno_measures(self):
+        url = "/api/v2/pheno_reports/measures"
+        response = self.client.get(url, format='json')
+        self.assertEqual(200, response.status_code)
+        print(response.data)
+
 if __name__ == "__main__":
     unittest.main()

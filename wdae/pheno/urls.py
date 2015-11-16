@@ -10,4 +10,7 @@ urlpatterns = [
     url(r'^$',
         views.PhenoReportView.as_view(),
         name="pheno_report"),
+    url(r'^/measures$',
+        views.PhenoMeasuresView.as_view(),
+        name="pheno_measures")
 ]
