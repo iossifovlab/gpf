@@ -10,6 +10,7 @@ import pandas as pd
 import statsmodels.formula.api as sm
 # import statsmodels.api as sm
 from api.preloaded.register import Preload
+from query_prepare import prepare_denovo_studies
 
 
 class Measures(Preload):
@@ -43,12 +44,20 @@ class Measures(Preload):
                                "norm_by_viq": int(norm_by_viq)})
         return result
 
+    def _load_gender(self):
+        stds = prepare_denovo_studies({'denovoStudies': 'ALL SSC'})
+        return {fmid: pd.gender for st in stds
+                for fmid, fd in st.families.items()
+                for pd in fd.memberInOrder if pd.role == 'prb'}
+
     def __init__(self):
         pass
 
     def load(self):
         self.df = self._load_data()
         self.desc = self._load_desc()
+        self.gender = self._load_gender()
+
         self.measures = {}
         for m in self.desc:
             self.measures[m['measure']] = m
@@ -82,15 +91,22 @@ class NormalizedMeasure(object):
 
         self.df = measures.get_measure_df(measure)
 
-    def normalize(self, by=['age']):
+    def normalize(self, by=[]):
         assert isinstance(by, list)
         assert all(map(lambda b: b in ['age', 'verbal_iq', 'non_verbal_iq'],
                        by))
 
-        self.formula = '{} ~ {}'.format(self.measure, ' + '.join(by))
-        model = sm.ols(formula=self.formula,
-                       data=self.df)
-        fitted = model.fit()
-        dn = pd.Series(index=self.df.index, data=fitted.resid)
-        self.df.normalized = dn
-        return self.df
+        if not by:
+            dn = pd.Series(
+                index=self.df.index, data=self.df[self.measure].values)
+            self.df['normalized'] = dn
+            self.formula = self.measure
+
+        else:
+            self.formula = '{} ~ {}'.format(self.measure, ' + '.join(by))
+            model = sm.ols(formula=self.formula,
+                           data=self.df)
+            fitted = model.fit()
+            dn = pd.Series(index=self.df.index, data=fitted.resid)
+            self.df['normalized'] = dn
+            return self.df

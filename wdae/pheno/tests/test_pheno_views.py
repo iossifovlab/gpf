@@ -11,9 +11,13 @@ class Test(APITestCase):
 
     def test_default_view(self):
         url = "/api/v2/pheno_reports"
-        data = {}
+        data = {
+            'denovoStudies': 'ALL SSC',
+            'phenoMeasure': 'head_circumference',
+        }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
+        print(response.data)
 
 
 class PhenoMeasuresTest(APITestCase):

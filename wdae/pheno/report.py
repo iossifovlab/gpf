@@ -6,8 +6,9 @@ Created on Nov 16, 2015
 import itertools
 from query_variants import dae_query_variants
 from collections import Counter
-from query_prepare import prepare_denovo_studies
 from api.query.wdae_query_variants import wdae_handle_gene_sets
+import numpy as np
+from scipy.stats import ttest_ind
 
 
 EFFECT_TYPE_GROUPS = [
@@ -52,6 +53,8 @@ def _pheno_query_variants(data, effect_type):
 
 
 def family_pheno_query_variants(data):
+    data['denovoStudies'] = 'ALL SSC'
+
     res = {}
     for (effect_type, recurrent) in EFFECT_TYPE_GROUPS:
         vs = _pheno_query_variants(data, effect_type)
@@ -67,10 +70,90 @@ def family_pheno_query_variants(data):
     return families
 
 
-def prepare_families_gender_data(data):
-    stds = prepare_denovo_studies(data)
-    prbs_gender = {fmid: pd.gender for st in stds
-                   for fmid, fd in st.families.items()
-                   for pd in fd.memberInOrder if pd.role == 'prb'}
+def pheno_merge_data(variants, gender, nm):
+    yield tuple(['family_id', 'gender', 'LGDs', 'recLGDs', 'missense',
+                 'synonymous', 'CNV', nm.measure, 'normalized'])
+    for fid, gender in gender.items():
+        vals = nm.df[nm.df.family_id == int(fid)]
+        if len(vals) == 1:
+            m = vals[nm.measure].values[0]
+            n = vals.normalized.values[0]
+        else:
+            m = np.NaN
+            n = np.NaN
 
-    return prbs_gender
+        row = [
+            fid,
+            gender,
+            variants['LGDs'].get(fid, 0),
+            variants['LGDs.Rec'].get(fid, 0),
+            variants['missense'].get(fid, 0),
+            variants['synonymous'].get(fid, 0),
+            variants['CNV+,CNV-'].get(fid, 0),
+            m,
+            n
+        ]
+        yield tuple(row)
+
+
+def pheno_calc(ps):
+    ps.next()  # skip column names
+    rows = [tuple([e if e != 'NA' else np.NaN for e in p]) for p in ps]
+    dtype = np.dtype([('fid', 'S10'),
+                      ('gender', 'S1'),
+                      ('LGDs', '<i4'),
+                      ('recLGDs', '<i4'),
+                      ('missense', '<i4'),
+                      ('synonymous', '<i4'),
+                      ('CNV', '<i4'),
+                      ('measure', 'f'),
+                      ('value', 'f')])
+    data = np.array(rows, dtype=dtype)
+    data = data[~np.isnan(data['value'])]
+    res = []
+
+    for (effect_type, gender) in itertools.product(
+            *[['LGDs', 'recLGDs', 'missense', 'synonymous', 'CNV'],
+              ['M', 'F']]):
+
+        positive = data[np.logical_and(data['gender'] == gender,
+                                       data[effect_type] == 1)]['value']
+        negative = data[np.logical_and(data['gender'] == gender,
+                                       data[effect_type] == 0)]['value']
+        p_count = len(positive)
+        if p_count == 0:
+            p_mean = 0
+            p_std = 0
+        else:
+            p_mean = np.mean(positive, dtype=np.float64)
+            p_std = 1.96 * \
+                np.std(positive, dtype=np.float64) / np.sqrt(len(positive))
+
+        n_count = len(negative)
+        if n_count == 0:
+            n_mean = 0
+            n_std = 0
+        else:
+            n_mean = np.mean(negative, dtype=np.float64)
+            n_std = 1.96 * \
+                np.std(negative, dtype=np.float64) / np.sqrt(len(negative))
+        if n_count == 0 or p_count == 0:
+            pv = 'NA'
+        else:
+            pv = calc_pv(positive, negative)
+
+        res.append((effect_type, gender, n_mean, n_std, p_mean, p_std, pv))
+    return res
+
+
+def calc_pv(positive, negative):
+    pv = ttest_ind(positive, negative)[1]
+    if pv >= 0.1:
+        return "%.1f" % (pv)
+    if pv >= 0.01:
+        return "%.2f" % (pv)
+    if pv >= 0.001:
+        return "%.3f" % (pv)
+    if pv >= 0.0001:
+        return "%.4f" % (pv)
+    return "%.5f" % (pv)
