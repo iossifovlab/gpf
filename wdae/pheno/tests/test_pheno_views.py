@@ -7,6 +7,12 @@ import unittest
 from rest_framework.test import APITestCase
 
 
+def count_iterable(iterable):
+    for num, _it in enumerate(iterable):
+        pass
+    return num + 1
+
+
 class Test(APITestCase):
 
     def test_preview_view(self):
@@ -55,6 +61,9 @@ class Test(APITestCase):
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
+        data = response.streaming_content
+        self.assertIsNotNone(data)
+        self.assertEquals(2820, count_iterable(data))
 
 
 class PhenoMeasuresTest(APITestCase):
