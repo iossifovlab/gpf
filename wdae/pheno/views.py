@@ -15,6 +15,20 @@ from pheno.report import family_pheno_query_variants, pheno_merge_data, \
 
 class PhenoReportView(views.APIView):
 
+    @staticmethod
+    def istrue(val):
+        return val == '1' or val == 'true' or val == 'True'
+
+    def normalize_by(self, data):
+        res = []
+        if 'normByAge' in data and self.istrue(data['normByAge']):
+            res.append('age')
+        if 'normByVIQ' in data and self.istrue(data['normByVIQ']):
+            res.append('verbal_iq')
+        if 'normByNVIQ' in data and self.istrue(data['normByNVIQ']):
+            res.append('non_verbal_iq')
+        return res
+
     def post(self, request):
         data = prepare_query_dict(request.data)
         LOGGER.info(log_filter(request, "preview pheno report: " + str(data)))
@@ -28,8 +42,9 @@ class PhenoReportView(views.APIView):
         if not measures.has_measure(measure_name):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        by = self.normalize_by(data)
         nm = NormalizedMeasure(measure_name)
-        nm.normalize([])
+        nm.normalize(by=by)
 
         variants = family_pheno_query_variants(data)
         gender = measures.gender
@@ -41,7 +56,7 @@ class PhenoReportView(views.APIView):
             "measure": measure_name,
             "formula": nm.formula,
         }
-        return Response(res)
+        return Response(data)
 
 
 class PhenoMeasuresView(views.APIView):

@@ -17,7 +17,35 @@ class Test(APITestCase):
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
-        print(response.data)
+        self.assertIn('measure', response.data)
+        self.assertEqual('head_circumference', response.data['measure'])
+        self.assertEqual('head_circumference', response.data['formula'])
+
+    def test_report_normalized_by_age(self):
+        url = "/api/v2/pheno_reports"
+        data = {
+            'denovoStudies': 'ALL SSC',
+            'phenoMeasure': 'head_circumference',
+            'normByAge': 1,
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        self.assertIn('measure', response.data)
+        self.assertEqual('head_circumference', response.data['measure'])
+        self.assertEqual('head_circumference ~ age', response.data['formula'])
+
+    def test_report_without_normalized_by_age(self):
+        url = "/api/v2/pheno_reports"
+        data = {
+            'denovoStudies': 'ALL SSC',
+            'phenoMeasure': 'head_circumference',
+            'normByAge': 0,
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        self.assertIn('measure', response.data)
+        self.assertEqual('head_circumference', response.data['measure'])
+        self.assertEqual('head_circumference', response.data['formula'])
 
 
 class PhenoMeasuresTest(APITestCase):
