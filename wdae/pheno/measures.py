@@ -7,6 +7,7 @@ import os
 import csv
 from django.conf import settings
 import pandas as pd
+import statsmodels.formula.api as sm
 from api.preloaded.register import Preload
 
 
@@ -54,18 +55,15 @@ class Measures(Preload):
     def get(self):
         return self
 
-    def __getitem__(self, measure):
-        return self.measures[measure]
-
     def has_measure(self, measure):
         return measure in self.measures
 
     def get_measure_df(self, measure):
-        print("getting measure {}".format(measure))
         if measure not in self.measures:
             raise ValueError("unsupported phenotype measure")
         df = pd.DataFrame(index=self.df.index,
                           data=self.df[[measure,
+                                        'family_id',
                                         'age', 'non_verbal_iq', 'verbal_iq']])
         df.dropna(inplace=True)
         return df
@@ -83,5 +81,13 @@ class NormalizedMeasure(object):
 
         self.df = measures.get_measure_df(measure)
 
-    def normalize(self):
-        pass
+    def normalize(self, by=['age']):
+        assert isinstance(by, list)
+
+        x = ' + '.join(by)
+        model = sm.ols(formula='{} ~ {}'.format(self.measure, x),
+                       data=self.df)
+
+        fitted = model.fit()
+        print fitted.summary()
+        return fitted
