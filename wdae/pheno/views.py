@@ -18,5 +18,5 @@ class PhenoMeasuresView(views.APIView):
     def get(self, request):
         from api.preloaded.register import get_register
         register = get_register()
-        desc, _df = register.get('pheno_measures')
-        return Response(desc)
+        measures = register.get('pheno_measures')
+        return Response(measures.desc)

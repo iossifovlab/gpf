@@ -42,16 +42,46 @@ class Measures(Preload):
         return result
 
     def __init__(self):
-        self.df = self._load_data()
-        self.desc = self._load_desc()
+        pass
 
     def load(self):
         self.df = self._load_data()
         self.desc = self._load_desc()
+        self.measures = {}
+        for m in self.desc:
+            self.measures[m['measure']] = m
 
     def get(self):
-        return self.desc, self.df
+        return self
+
+    def __getitem__(self, measure):
+        return self.measures[measure]
+
+    def has_measure(self, measure):
+        return measure in self.measures
+
+    def get_measure_df(self, measure):
+        print("getting measure {}".format(measure))
+        if measure not in self.measures:
+            raise ValueError("unsupported phenotype measure")
+        df = pd.DataFrame(index=self.df.index,
+                          data=self.df[[measure,
+                                        'age', 'non_verbal_iq', 'verbal_iq']])
+        df.dropna(inplace=True)
+        return df
 
 
-class NormalizedMeasures(object):
-    pass
+class NormalizedMeasure(object):
+
+    def __init__(self, measure):
+        from api.preloaded.register import get_register
+        self.measure = measure
+        register = get_register()
+        measures = register.get('pheno_measures')
+        if not measures.has_measure(measure):
+            raise ValueError("unknown phenotype measure")
+
+        self.df = measures.get_measure_df(measure)
+
+    def normalize(self):
+        pass
