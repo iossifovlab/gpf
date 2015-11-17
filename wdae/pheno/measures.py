@@ -8,6 +8,7 @@ import csv
 from django.conf import settings
 import pandas as pd
 import statsmodels.formula.api as sm
+# import statsmodels.api as sm
 from api.preloaded.register import Preload
 
 
@@ -83,11 +84,13 @@ class NormalizedMeasure(object):
 
     def normalize(self, by=['age']):
         assert isinstance(by, list)
+        assert all(map(lambda b: b in ['age', 'verbal_iq', 'non_verbal_iq'],
+                       by))
 
-        x = ' + '.join(by)
-        model = sm.ols(formula='{} ~ {}'.format(self.measure, x),
+        self.formula = '{} ~ {}'.format(self.measure, ' + '.join(by))
+        model = sm.ols(formula=self.formula,
                        data=self.df)
-
         fitted = model.fit()
-        print fitted.summary()
-        return fitted
+        dn = pd.Series(index=self.df.index, data=fitted.resid)
+        self.df.normalized = dn
+        return self.df
