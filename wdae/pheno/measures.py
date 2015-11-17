@@ -51,3 +51,7 @@ class Measures(Preload):
 
     def get(self):
         return self.desc, self.df
+
+
+class NormalizedMeasures(object):
+    pass

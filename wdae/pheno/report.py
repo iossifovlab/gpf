@@ -7,6 +7,7 @@ import itertools
 from query_variants import dae_query_variants
 from collections import Counter
 from query_prepare import prepare_denovo_studies
+from api.query.wdae_query_variants import wdae_handle_gene_sets
 
 
 EFFECT_TYPE_GROUPS = [
@@ -42,7 +43,9 @@ def _filter_var_in_recurent_genes(vs):
 
 
 def _pheno_query_variants(data, effect_type):
+    wdae_handle_gene_sets(data)
     data['effectTypes'] = effect_type
+
     vsl = dae_query_variants(data)
     vs = itertools.chain(*vsl)
     return _filter_one_var_per_gene_per_child(vs)
