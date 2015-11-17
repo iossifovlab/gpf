@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase
 
 class Test(APITestCase):
 
-    def test_default_view(self):
+    def test_preview_view(self):
         url = "/api/v2/pheno_reports"
         data = {
             'denovoStudies': 'ALL SSC',
@@ -46,6 +46,15 @@ class Test(APITestCase):
         self.assertIn('measure', response.data)
         self.assertEqual('head_circumference', response.data['measure'])
         self.assertEqual('head_circumference', response.data['formula'])
+
+    def test_download_view(self):
+        url = "/api/v2/pheno_reports/download"
+        data = {
+            'denovoStudies': 'ALL SSC',
+            'phenoMeasure': 'head_circumference',
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
 
 
 class PhenoMeasuresTest(APITestCase):

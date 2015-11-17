@@ -11,13 +11,20 @@ from api.preloaded.register import get_register
 from pheno.measures import NormalizedMeasure
 from pheno.report import family_pheno_query_variants, pheno_merge_data, \
     pheno_calc
+from django.http.response import StreamingHttpResponse
+import itertools
 
 
-class PhenoReportView(views.APIView):
+class PhenoViewBase(views.APIView):
 
     @staticmethod
     def istrue(val):
         return val == '1' or val == 'true' or val == 'True'
+
+    @staticmethod
+    def join_row(p, sep=','):
+        r = [str(c) for c in p]
+        return sep.join(r) + '\n'
 
     def normalize_by(self, data):
         res = []
@@ -28,6 +35,9 @@ class PhenoReportView(views.APIView):
         if 'normByNVIQ' in data and self.istrue(data['normByNVIQ']):
             res.append('non_verbal_iq')
         return res
+
+
+class PhenoReportView(PhenoViewBase):
 
     def post(self, request):
         data = prepare_query_dict(request.data)
@@ -57,6 +67,42 @@ class PhenoReportView(views.APIView):
             "formula": nm.formula,
         }
         return Response(data)
+
+
+class PhenoReportDownloadView(PhenoViewBase):
+
+    def post(self, request):
+        data = prepare_query_dict(request.data)
+        LOGGER.info(log_filter(request, "preview pheno report: " + str(data)))
+
+        if 'phenoMeasure' not in data:
+            LOGGER.error("phenoMeasure not found")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        measure_name = data['phenoMeasure']
+        measures = get_register().get('pheno_measures')
+        if not measures.has_measure(measure_name):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        by = self.normalize_by(data)
+        nm = NormalizedMeasure(measure_name)
+        nm.normalize(by=by)
+
+        variants = family_pheno_query_variants(data)
+        gender = measures.gender
+        pheno = pheno_merge_data(variants, gender, nm)
+
+        comment = ', '.join([': '.join([k, str(v)])
+                             for (k, v) in data.items()])
+        response = StreamingHttpResponse(
+            itertools.chain(
+                itertools.imap(self.join_row, pheno),
+                ['# %s\n' % comment]),
+            content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=unruly.csv'
+        response['Expires'] = '0'
+
+        return response
 
 
 class PhenoMeasuresView(views.APIView):
