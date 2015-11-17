@@ -62,7 +62,7 @@ def combine_gene_syms(data):
             return list(gene_sets.union(gene_syms))
 
 
-def wdae_query_wrapper(data, atts=[]):
+def wdae_handle_gene_sets(data):
     data['geneSyms'] = combine_gene_syms(data)
     if 'geneSet' in data:
         del data['geneSet']
@@ -70,4 +70,8 @@ def wdae_query_wrapper(data, atts=[]):
         del data['geneTerm']
     if 'gene_set_phenotype' in data:
         del data['gene_set_phenotype']
+
+
+def wdae_query_wrapper(data, atts=[]):
+    wdae_handle_gene_sets(data)
     return do_query_variants(data, atts)

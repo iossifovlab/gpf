@@ -3,13 +3,14 @@ import logging
 
 from DAE import phDB
 from api.studies import get_denovo_studies_names
-from query_variants import dae_query_variants
 
 from query_prepare import prepare_denovo_studies
 
 from collections import Counter
 import numpy as np
 from scipy.stats import ttest_ind
+from api.query.wdae_query_variants import wdae_handle_gene_sets
+from query_variants import dae_query_variants
 
 LOGGER = logging.getLogger(__name__)
 SUPPORTED_PHENO_STUDIES = {'ALL SSC'}
@@ -51,7 +52,9 @@ def filter_var_in_recurent_genes(vs):
 
 
 def _pheno_query_variants(data, effect_type):
+    wdae_handle_gene_sets(data)
     data['effectTypes'] = effect_type
+
     vsl = dae_query_variants(data)
     vs = itertools.chain(*vsl)
     return filter_one_var_per_gene_per_child(vs)
