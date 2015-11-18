@@ -191,6 +191,8 @@ class MysqlTransmittedQuery(TransmissionConfig):
         assert reduce(operator.and_,
                       map(lambda et: et in self.VARIANT_TYPES,
                           self['variantTypes']))
+        if len(set(self['variantTypes'])) == 4:
+            return None
         where = map(lambda ef: " '{}' ".format(ef), self['variantTypes'])
         where = ' tsv.variant_type in ( {} ) '.format(','.join(where))
         return where
@@ -265,6 +267,8 @@ class MysqlTransmittedQuery(TransmissionConfig):
         assert reduce(operator.and_,
                       map(lambda p: p in self.PRESENT_IN_PARENT_TYPES,
                           self['presentInParent']))
+        if len(set(self['presentInParent'])) == 4:
+            return None
         w = [self.PRESENT_IN_PARENT_MAPPING[pip]
              for pip in self['presentInParent']]
         where = " ( {} ) ".format(' OR '.join(w))
@@ -345,7 +349,9 @@ class MysqlTransmittedQuery(TransmissionConfig):
             where.append(self._build_effect_where())
 
         if self['variantTypes']:
-            where.append(self._build_variant_type_where())
+            w = self._build_variant_type_where()
+            if w:
+                where.append(w)
 
         if self['familyIds']:
             where.append(self._build_family_ids_where())
@@ -358,7 +364,8 @@ class MysqlTransmittedQuery(TransmissionConfig):
                 where.append(w)
         if self['presentInParent']:
             w = self._build_present_in_parent_where()
-            where.append(w)
+            if not w:
+                where.append(w)
 
         if self['inChild']:
             w = self._build_in_child_where()

@@ -71,10 +71,13 @@ class Measures(Preload):
     def get_measure_df(self, measure):
         if measure not in self.measures:
             raise ValueError("unsupported phenotype measure")
+        cols = ['family_id',
+                'age', 'non_verbal_iq', 'verbal_iq']
+        if measure not in cols:
+            cols.append(measure)
+
         df = pd.DataFrame(index=self.df.index,
-                          data=self.df[[measure,
-                                        'family_id',
-                                        'age', 'non_verbal_iq', 'verbal_iq']])
+                          data=self.df[cols])
         df.dropna(inplace=True)
         return df
 
@@ -97,6 +100,7 @@ class NormalizedMeasure(object):
                        by))
 
         if not by:
+            # print(self.df[self.measure])
             dn = pd.Series(
                 index=self.df.index, data=self.df[self.measure].values)
             self.df['normalized'] = dn
