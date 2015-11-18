@@ -7,7 +7,7 @@ import unittest
 from pheno.measures import NormalizedMeasure
 
 
-class Test(unittest.TestCase):
+class HeadCircumferenceTest(unittest.TestCase):
 
     def setUp(self):
         self.measure = NormalizedMeasure('head_circumference')
@@ -45,6 +45,33 @@ class Test(unittest.TestCase):
         measure = self.measure
         with self.assertRaises(AssertionError):
             measure.normalize(['age', 'ala_bala_portokala'])
+
+
+class VerbalIqTest(unittest.TestCase):
+
+    def setUp(self):
+        self.measure = NormalizedMeasure('verbal_iq')
+
+    def test_pheno_measure_created(self):
+        measure = self.measure
+        self.assertIsNotNone(measure)
+
+    def test_pheno_measure_check_df(self):
+        measure = self.measure
+        df = measure.df
+        self.assertIn('family_id', df.columns)
+        self.assertIn('age', df.columns)
+        self.assertIn('non_verbal_iq', df.columns)
+        self.assertIn('verbal_iq', df.columns)
+
+    def test_pheno_measure_normalize_by_verbal_iq(self):
+        measure = self.measure
+        measure.normalize(['verbal_iq'])
+        df = measure.df
+        self.assertIn('family_id', df.columns)
+        self.assertIn('age', df.columns)
+        self.assertIn('non_verbal_iq', df.columns)
+        self.assertIn('verbal_iq', df.columns)
 
 if __name__ == "__main__":
     unittest.main()
