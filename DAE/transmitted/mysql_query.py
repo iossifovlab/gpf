@@ -267,10 +267,13 @@ class MysqlTransmittedQuery(TransmissionConfig):
         assert reduce(operator.and_,
                       map(lambda p: p in self.PRESENT_IN_PARENT_TYPES,
                           self['presentInParent']))
-        if len(set(self['presentInParent'])) == 4:
-            return None
         w = [self.PRESENT_IN_PARENT_MAPPING[pip]
              for pip in self['presentInParent']]
+        print("PRESENT_IN_PARENT: {}".format(w))
+        if len(set(w)) == 4:
+            print("PRESENT_IN_PARENT: {}".format(set(w)))
+            return None
+
         where = " ( {} ) ".format(' OR '.join(w))
         return where
 
@@ -350,7 +353,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
         if self['variantTypes']:
             w = self._build_variant_type_where()
-            if w:
+            if w is not None:
                 where.append(w)
 
         if self['familyIds']:
@@ -358,13 +361,13 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
         if self['regionS']:
             w = self._build_regions_where()
-            if not w:
+            if w is None:
                 print("bad regions: {}".format(self['regionS']))
             else:
                 where.append(w)
         if self['presentInParent']:
             w = self._build_present_in_parent_where()
-            if not w:
+            if w is not None:
                 where.append(w)
 
         if self['inChild']:
