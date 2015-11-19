@@ -93,7 +93,7 @@ class PhenoReportDownloadView(PhenoViewBase):
         comment = ', '.join([': '.join([k, str(v)])
                              for (k, v) in request.items()
                              if k != 'effectTypes'])
-        comment.append(formula)
+        # comment.append(formula)
 
         response = StreamingHttpResponse(
             itertools.chain(
