@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import StreamingHttpResponse
-from django.http import QueryDict
 # from rest_framework.response import Response as RestResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
@@ -42,7 +41,8 @@ from models import VerificationPath
 from serializers import UserSerializer
 from api.logger import LOGGER, log_filter
 from query_prepare import EFFECT_GROUPS, build_effect_type_filter
-from api.query.wdae_query_variants import wdae_query_wrapper, gene_set_loader2
+from api.query.wdae_query_variants import wdae_query_wrapper, gene_set_loader2,\
+    prepare_query_dict
 
 
 @receiver(post_save, sender=get_user_model())
@@ -430,25 +430,6 @@ def study_tab_phenotypes(request, study_tab):
                          'schizophrenia',
                          'unaffected'])
     return Response()
-
-
-def prepare_query_dict(data):
-    res = []
-    if isinstance(data, QueryDict):
-        items = data.iterlists()
-    else:
-        items = data.items()
-
-    for (key, val) in items:
-        key = str(key)
-        if isinstance(val, list):
-            value = ','.join([str(s).strip() for s in val])
-        else:
-            value = str(val)
-
-        res.append((key, value))
-
-    return dict(res)
 
 
 @api_view(['POST'])
