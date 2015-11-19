@@ -32,7 +32,7 @@ class Test(APITestCase):
         data = {
             'denovoStudies': 'ALL SSC',
             'phenoMeasure': 'head_circumference',
-            'normByAge': 1,
+            'normalizedBy': 'normByAge',
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
@@ -45,7 +45,7 @@ class Test(APITestCase):
         data = {
             'denovoStudies': 'ALL SSC',
             'phenoMeasure': 'head_circumference',
-            'normByAge': 0,
+            'normalizedBy': "",
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)

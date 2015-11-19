@@ -27,12 +27,16 @@ class PhenoViewBase(views.APIView):
         return sep.join(r) + '\n'
 
     def normalize_by(self, data):
+        norm_by = set()
+        if 'normalizedBy' in data:
+            norm_by = set(data['normalizedBy'].split(','))
+
         res = []
-        if 'normByAge' in data and self.istrue(data['normByAge']):
+        if 'normByAge' in norm_by:
             res.append('age')
-        if 'normByVIQ' in data and self.istrue(data['normByVIQ']):
+        if 'normByVIQ' in norm_by:
             res.append('verbal_iq')
-        if 'normByNVIQ' in data and self.istrue(data['normByNVIQ']):
+        if 'normByNVIQ' in norm_by:
             res.append('non_verbal_iq')
         return res
 
