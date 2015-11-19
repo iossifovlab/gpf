@@ -43,9 +43,7 @@ class PhenoViewBase(views.APIView):
     @staticmethod
     def prepare_query_dict(request):
         data = prepare_query_dict(request.data)
-        print(data)
         if 'effectTypes' in data:
-            print("deleting effect types")
             del data['effectTypes']
         return data
 
@@ -71,30 +69,32 @@ class PhenoViewBase(views.APIView):
         gender = measures.gender
         pheno = pheno_merge_data(variants, gender, nm)
 
-        response = self.build_response(data, pheno)
+        response = self.build_response(data, pheno, nm.formula)
 
         return response
 
 
 class PhenoReportView(PhenoViewBase):
 
-    def build_response(self, request, pheno):
+    def build_response(self, request, pheno, formula):
         pheno.next()
         res = pheno_calc(pheno)
         response = {
             "data": res,
             "measure": "",
-            "formula": "",
+            "formula": formula,
         }
         return Response(response)
 
 
 class PhenoReportDownloadView(PhenoViewBase):
 
-    def build_response(self, request, pheno):
+    def build_response(self, request, pheno, formula):
         comment = ', '.join([': '.join([k, str(v)])
                              for (k, v) in request.items()
                              if k != 'effectTypes'])
+        comment.append(formula)
+
         response = StreamingHttpResponse(
             itertools.chain(
                 itertools.imap(self.join_row, pheno),
