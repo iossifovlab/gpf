@@ -39,9 +39,9 @@ class Measures(Preload):
 
                 result.append({"measure": measure,
                                "desc": desc,
-                               "norm_by_age": int(norm_by_age),
-                               "norm_by_nviq": int(norm_by_nviq),
-                               "norm_by_viq": int(norm_by_viq)})
+                               "normByAge": int(norm_by_age),
+                               "normByNVIQ": int(norm_by_nviq),
+                               "normByVIQ": int(norm_by_viq)})
         return result
 
     def _load_gender(self):
