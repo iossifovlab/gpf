@@ -69,27 +69,26 @@ class PhenoViewBase(views.APIView):
         gender = measures.gender
         pheno = pheno_merge_data(variants, gender, nm)
 
-        response = self.build_response(data, pheno, nm.formula)
-
+        response = self.build_response(data, pheno, nm)
         return response
 
 
 class PhenoReportView(PhenoViewBase):
 
-    def build_response(self, request, pheno, formula):
+    def build_response(self, request, pheno, nm):
         pheno.next()
         res = pheno_calc(pheno)
         response = {
             "data": res,
-            "measure": "",
-            "formula": formula,
+            "measure": nm.measure,
+            "formula": nm.formula,
         }
         return Response(response)
 
 
 class PhenoReportDownloadView(PhenoViewBase):
 
-    def build_response(self, request, pheno, formula):
+    def build_response(self, request, pheno, nm):
         comment = ', '.join([': '.join([k, str(v)])
                              for (k, v) in request.items()
                              if k != 'effectTypes'])
