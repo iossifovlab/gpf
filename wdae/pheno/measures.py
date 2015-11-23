@@ -93,11 +93,13 @@ class NormalizedMeasure(object):
             raise ValueError("unknown phenotype measure")
 
         self.df = measures.get_measure_df(measure)
+        self.by = []
 
     def normalize(self, by=[]):
         assert isinstance(by, list)
         assert all(map(lambda b: b in ['age', 'verbal_iq', 'non_verbal_iq'],
                        by))
+        self.by = by
 
         if not by:
             # print(self.df[self.measure])

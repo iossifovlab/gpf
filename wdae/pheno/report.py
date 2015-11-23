@@ -72,7 +72,7 @@ def family_pheno_query_variants(data):
 
 def pheno_merge_data(variants, gender, nm):
     yield tuple(['family_id', 'gender', 'LGDs', 'recLGDs', 'missense',
-                 'synonymous', 'CNV', nm.measure, 'normalized'])
+                 'synonymous', 'CNV', nm.measure, nm.formula])
     for fid, gender in gender.items():
         vals = nm.df[nm.df.family_id == int(fid)]
         if len(vals) == 1:
