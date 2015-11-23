@@ -72,16 +72,20 @@ def family_pheno_query_variants(data):
 
 def pheno_merge_data(variants, gender, nm):
     yield tuple(['family_id', 'gender', 'LGDs', 'recLGDs', 'missense',
-                 'synonymous', 'CNV', nm.measure, nm.formula])
+                 'synonymous', 'CNV', nm.measure, 'age',
+                 'non_verbal_iq', nm.formula])
     for fid, gender in gender.items():
         vals = nm.df[nm.df.family_id == int(fid)]
         if len(vals) == 1:
             m = vals[nm.measure].values[0]
-            n = vals.normalized.values[0]
+            v = vals.normalized.values[0]
+            a = vals['age'].values[0]
+            nviq = vals['non_verbal_iq'].values[0]
         else:
             m = np.NaN
-            n = np.NaN
-
+            v = np.NaN
+            a = np.NaN
+            nviq = np.NaN
         row = [
             fid,
             gender,
@@ -90,8 +94,10 @@ def pheno_merge_data(variants, gender, nm):
             variants['missense'].get(fid, 0),
             variants['synonymous'].get(fid, 0),
             variants['CNV+,CNV-'].get(fid, 0),
+            a,
+            nviq,
             m,
-            n
+            v
         ]
         yield tuple(row)
 
@@ -106,6 +112,8 @@ def pheno_calc(ps):
                       ('missense', '<i4'),
                       ('synonymous', '<i4'),
                       ('CNV', '<i4'),
+                      ('age', 'f'),
+                      ('non_verbal_iq', 'f'),
                       ('measure', 'f'),
                       ('value', 'f')])
     data = np.array(rows, dtype=dtype)
