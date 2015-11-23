@@ -28,6 +28,7 @@ from Variant import Variant, mat2Str, filter_gene_effect, str2Mat
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
+from ConfigParser import NoOptionError
 
 
 LOGGER = logging.getLogger(__name__)
@@ -105,7 +106,9 @@ class Study:
         self.has_denovo = self.vdb._config.has_option(
             self._configSection, 'denovoCalls.files')
         self.has_transmitted = self.vdb._config.has_option(
-            self._configSection, 'transmittedVariants.format')
+            self._configSection, 'transmittedVariants.format') or \
+            self.vdb._config.has_option(
+                self._configSection, 'transmittedVariants.indexFile')
 
         self.description = ""
         if self.vdb._config.has_option(self._configSection, 'description'):
@@ -189,8 +192,12 @@ class Study:
     def _get_transmitted_impl(self, callSet):
         if callSet not in self.transmission_impl:
             conf = TransmissionConfig(self, callSet)
-            impl_format = conf._get_params("format")
-            if impl_format == 'legacy':
+            try:
+                impl_format = conf._get_params("format")
+            except NoOptionError:
+                impl_format = 'legacy'
+
+            if impl_format is None or impl_format == 'legacy':
                 self.transmission_impl[callSet] = \
                     TransmissionLegacy(self, callSet)
             elif impl_format == 'mysql':

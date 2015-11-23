@@ -3,6 +3,7 @@ Created on Oct 23, 2015
 
 @author: lubo
 '''
+from ConfigParser import NoOptionError
 
 
 class TransmissionConfig(object):
@@ -25,4 +26,8 @@ class TransmissionConfig(object):
 
     def _get_params(self, name):
         path = self._get_config_path(name)
-        return self._config.get(self._config_section, path)
+        try:
+            result = self._config.get(self._config_section, path)
+        except NoOptionError:
+            result = None
+        return result

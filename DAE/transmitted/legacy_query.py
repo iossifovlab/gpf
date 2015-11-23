@@ -47,7 +47,8 @@ class TransmissionLegacy(TransmissionConfig):
 
     def __init__(self, study, call_set=None):
         super(TransmissionLegacy, self).__init__(study, call_set)
-        assert self._get_params("format") == 'legacy'
+        assert self._get_params("format") == 'legacy' or \
+            self._get_params('indexFile') is not None
 
     def filter_transmitted_variants(self, f, colNms,
                                     minParentsCalled=0,
