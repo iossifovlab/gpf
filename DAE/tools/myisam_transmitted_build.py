@@ -17,7 +17,7 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
 from DAE import vDB
-from VariantsDB import Variant, parseGeneEffect
+from Variant import Variant, parseGeneEffect
 import gzip
 import copy
 
@@ -33,6 +33,7 @@ PROFILE = 0
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
+
     def __init__(self, msg):
         super(CLIError).__init__(type(self))
         self.msg = "E: %s" % msg
@@ -45,6 +46,7 @@ class CLIError(Exception):
 
 
 class VariantsBase(object):
+
     def create_summary_variant_dict(self, nrow, vals, evvals):
         res = {
             'id': nrow,
