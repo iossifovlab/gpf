@@ -102,32 +102,48 @@ def pheno_merge_data(variants, gender, nm):
         yield tuple(row)
 
 
-def pheno_calc(ps):
+def build_narray(ps):
     ps.next()  # skip column names
-    rows = [tuple([e if e != 'NA' else np.NaN for e in p]) for p in ps]
-    dtype = np.dtype([('fid', 'S10'),
-                      ('gender', 'S1'),
-                      ('LGDs', '<i4'),
-                      ('recLGDs', '<i4'),
-                      ('missense', '<i4'),
-                      ('synonymous', '<i4'),
-                      ('CNV', '<i4'),
+    rows = []
+    for p in ps:
+        rows.append(tuple([e if e != 'NA' else np.NaN for e in p]))
+
+    dtype = np.dtype([('fid', 'S10'), ('gender', 'S10'),
+                      ('LGDs', 'f'),
+                      ('recLGDs', 'f'),
+                      ('missense', 'f'),
+                      ('synonymous', 'f'),
+                      ('CNV', 'f'),
                       ('age', 'f'),
                       ('non_verbal_iq', 'f'),
                       ('measure', 'f'),
                       ('value', 'f')])
     data = np.array(rows, dtype=dtype)
     data = data[~np.isnan(data['value'])]
+    return data
+
+
+def pheno_calc(ps):
+    data = build_narray(ps)
     res = []
 
     for (effect_type, gender) in itertools.product(
             *[['LGDs', 'recLGDs', 'missense', 'synonymous', 'CNV'],
               ['M', 'F']]):
 
-        positive = data[np.logical_and(data['gender'] == gender,
-                                       data[effect_type] == 1)]['value']
-        negative = data[np.logical_and(data['gender'] == gender,
-                                       data[effect_type] == 0)]['value']
+        gender_index = data['gender'] == gender
+        positive_index = np.logical_and(data[effect_type] != 0,
+                                        ~np.isnan(data[effect_type]))
+        positive_gender_index = np.logical_and(positive_index, gender_index)
+
+        negative_index = data[effect_type] == 0
+        # negative_index = ~np.isnan(data[effect_type])
+        negative_gender_index = np.logical_and(negative_index,
+                                               gender_index)
+
+        positive = data[positive_gender_index]['value']
+        negative = data[negative_gender_index]['value']
+
         p_count = len(positive)
         if p_count == 0:
             p_mean = 0
@@ -155,7 +171,9 @@ def pheno_calc(ps):
 
 
 def calc_pv(positive, negative):
-    pv = ttest_ind(positive, negative)[1]
+    tt = ttest_ind(positive, negative)
+    pv = tt[1]
+
     if pv >= 0.1:
         return "%.1f" % (pv)
     if pv >= 0.01:
@@ -163,5 +181,6 @@ def calc_pv(positive, negative):
     if pv >= 0.001:
         return "%.3f" % (pv)
     if pv >= 0.0001:
-        return "%.4f" % (pv)
+        # return "%.4f" % (pv)
+        return "%.3f" % (pv)
     return "%.5f" % (pv)
