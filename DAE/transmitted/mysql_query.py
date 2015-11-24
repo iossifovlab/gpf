@@ -457,9 +457,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "tsv.hw as `HW`, " \
             "tsv.ssc_freq as `SSC-freq`, " \
             "tsv.evs_freq as `EVS-freq`, " \
-            "tsv.e65_freq as `E65-freq`, " \
-            "group_concat(concat(tge.symbol, ':', tge.effect_type) " \
-            "separator '|') as requestedGeneEffects " \
+            "tsv.e65_freq as `E65-freq` " \
             "from transmitted_summaryvariant as tsv " \
             "left join transmitted_geneeffectvariant as tge " \
             "on tsv.id = tge.summary_variant_id " \
