@@ -181,6 +181,5 @@ def calc_pv(positive, negative):
     if pv >= 0.001:
         return "%.3f" % (pv)
     if pv >= 0.0001:
-        # return "%.4f" % (pv)
-        return "%.3f" % (pv)
+        return "%.4f" % (pv)
     return "%.5f" % (pv)
