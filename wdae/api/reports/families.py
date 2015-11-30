@@ -13,7 +13,7 @@ class FamiliesDataCSV(object):
     def serialize(self):
         seen = set()
         self.data = []
-        self.data.append('familyId,personId,role,gender,orderInFamily\n')
+        self.data.append('study,familyId,personId,role,gender,orderInFamily\n')
         for st in self.studies:
             families = st.families.values()
             families.sort(key=lambda f: f.familyId)
