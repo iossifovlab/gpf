@@ -49,5 +49,6 @@ if __name__ == "__main__":
         {'fun': 'mysql_query_q401'},
         {'fun': 'mysql_query_q501'},
         {'fun': 'mysql_query_q601'},
+        {'fun': 'mysql_query_q701'},
     ]
     measure_all(mysql_to_measure)

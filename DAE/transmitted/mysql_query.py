@@ -269,9 +269,9 @@ class MysqlTransmittedQuery(TransmissionConfig):
                           self['presentInParent']))
         w = [self.PRESENT_IN_PARENT_MAPPING[pip]
              for pip in self['presentInParent']]
-        print("PRESENT_IN_PARENT: {}".format(w))
+        # print("PRESENT_IN_PARENT: {}".format(w))
         if len(set(w)) == 4:
-            print("PRESENT_IN_PARENT: {}".format(set(w)))
+            # print("PRESENT_IN_PARENT: {}".format(set(w)))
             return None
 
         where = " ( {} ) ".format(' OR '.join(w))
