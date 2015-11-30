@@ -66,12 +66,12 @@ class Test(unittest.TestCase):
         nans = self.df[np.isnan(self.df.nvIQ.values)]
         self.assertEqual(0, len(nans))
 
-    @staticmethod
-    def fix_nan(val):
-        if np.isnan(val):
-            return 0
-        else:
-            return val
+#     @staticmethod
+#     def fix_nan(val):
+#         if np.isnan(val):
+#             return 0
+#         else:
+#             return val
 
     @staticmethod
     def get_pvalue(effect, gender, ph):
@@ -81,10 +81,9 @@ class Test(unittest.TestCase):
 
     def test_prepare_pheno_data(self):
         ps = prepare_pheno_data(self.df)
-        for c, r in enumerate(ps):
-            print(r)
-            if c > 5:
-                break
+        for c, _r in enumerate(ps):
+            pass
+        self.assertEqual(2757, c)
 
     def test_pheno_calc(self):
         ps = prepare_pheno_data(self.df)
