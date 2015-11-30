@@ -70,45 +70,14 @@ def family_pheno_query_variants(data):
     return families
 
 
-def pheno_merge_data(variants, gender, nm):
-    yield tuple(['family_id', 'gender', 'LGDs', 'recLGDs', 'missense',
-                 'synonymous', 'CNV', nm.measure, 'age',
-                 'non_verbal_iq', nm.formula])
-    for fid, gender in gender.items():
-        vals = nm.df[nm.df.family_id == int(fid)]
-        if len(vals) == 1:
-            m = vals[nm.measure].values[0]
-            v = vals.normalized.values[0]
-            a = vals['age'].values[0]
-            nviq = vals['non_verbal_iq'].values[0]
-        else:
-            m = np.NaN
-            v = np.NaN
-            a = np.NaN
-            nviq = np.NaN
-        row = [
-            fid,
-            gender,
-            variants['LGDs'].get(fid, 0),
-            variants['LGDs.Rec'].get(fid, 0),
-            variants['missense'].get(fid, 0),
-            variants['synonymous'].get(fid, 0),
-            variants['CNV+,CNV-'].get(fid, 0),
-            a,
-            nviq,
-            m,
-            v
-        ]
-        yield tuple(row)
-
-
 def build_narray(ps):
     ps.next()  # skip column names
     rows = []
     for p in ps:
         rows.append(tuple([e if e != 'NA' else np.NaN for e in p]))
 
-    dtype = np.dtype([('fid', 'S10'), ('gender', 'S10'),
+    dtype = np.dtype([('fid', 'S10'),
+                      ('gender', 'S10'),
                       ('LGDs', 'f'),
                       ('recLGDs', 'f'),
                       ('missense', 'f'),

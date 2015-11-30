@@ -5,6 +5,7 @@ Created on Nov 16, 2015
 '''
 import os
 import csv
+import numpy as np
 from django.conf import settings
 import pandas as pd
 import statsmodels.formula.api as sm
@@ -44,8 +45,21 @@ class Measures(Preload):
                                "normByVIQ": int(norm_by_viq)})
         return result
 
-    def _load_gender(self):
-        stds = prepare_denovo_studies({'denovoStudies': 'ALL SSC'})
+    def _load_gender_all(self):
+        stds = prepare_denovo_studies({'denovoStudies': ['IossifovWE2014',
+                                                         'LevyCNV2011']})
+        return {fmid: pd.gender for st in stds
+                for fmid, fd in st.families.items()
+                for pd in fd.memberInOrder if pd.role == 'prb'}
+
+    def _load_gender_we(self):
+        stds = prepare_denovo_studies({'denovoStudies': ['IossifovWE2014']})
+        return {fmid: pd.gender for st in stds
+                for fmid, fd in st.families.items()
+                for pd in fd.memberInOrder if pd.role == 'prb'}
+
+    def _load_gender_cnv(self):
+        stds = prepare_denovo_studies({'denovoStudies': ['LevyCNV2011']})
         return {fmid: pd.gender for st in stds
                 for fmid, fd in st.families.items()
                 for pd in fd.memberInOrder if pd.role == 'prb'}
@@ -56,7 +70,9 @@ class Measures(Preload):
     def load(self):
         self.df = self._load_data()
         self.desc = self._load_desc()
-        self.gender = self._load_gender()
+        self.gender_all = self._load_gender_all()
+        self.gender_we = self._load_gender_we()
+        self.gender_cnv = self._load_gender_cnv()
 
         self.measures = {}
         for m in self.desc:
@@ -80,6 +96,44 @@ class Measures(Preload):
                           data=self.df[cols])
         df.dropna(inplace=True)
         return df
+
+    def pheno_merge_data(self, variants, nm):
+        yield tuple(['family_id', 'gender', 'LGDs', 'recLGDs', 'missense',
+                     'synonymous', 'CNV', nm.measure, 'age',
+                     'non_verbal_iq', nm.formula])
+        for fid, gender in self.gender_all.items():
+            vals = nm.df[nm.df.family_id == int(fid)]
+            if len(vals) == 1:
+                m = vals[nm.measure].values[0]
+                v = vals.normalized.values[0]
+                a = vals['age'].values[0]
+                nviq = vals['non_verbal_iq'].values[0]
+            else:
+                m = np.NaN
+                v = np.NaN
+                a = np.NaN
+                nviq = np.NaN
+
+            cnv = variants[
+                'CNV+,CNV-'].get(fid, 0) \
+                if fid in self.gender_cnv else np.NaN
+            lgds = variants[
+                'LGDs'].get(fid, 0) \
+                if fid in self.gender_we else np.NaN
+            reclgds = variants[
+                'LGDs.Rec'].get(fid, 0) \
+                if fid in self.gender_we else np.NaN
+            missense = variants[
+                'missense'].get(fid, 0) \
+                if fid in self.gender_we else np.NaN
+            synonymous = variants[
+                'synonymous'].get(fid, 0) \
+                if fid in self.gender_we else np.NaN
+
+            row = [fid, gender, lgds, reclgds, missense, synonymous, cnv,
+                   a, nviq, m, v]
+
+            yield tuple(row)
 
 
 class NormalizedMeasure(object):

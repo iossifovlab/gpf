@@ -8,8 +8,7 @@ from rest_framework.response import Response
 from api.logger import log_filter, LOGGER
 from api.preloaded.register import get_register
 from pheno.measures import NormalizedMeasure
-from pheno.report import family_pheno_query_variants, pheno_merge_data, \
-    pheno_calc
+from pheno.report import family_pheno_query_variants, pheno_calc
 from django.http.response import StreamingHttpResponse
 import itertools
 from api.query.wdae_query_variants import prepare_query_dict
@@ -66,8 +65,7 @@ class PhenoViewBase(views.APIView):
         nm.normalize(by=by)
 
         variants = family_pheno_query_variants(data)
-        gender = measures.gender
-        pheno = pheno_merge_data(variants, gender, nm)
+        pheno = measures.pheno_merge_data(variants, nm)
 
         response = self.build_response(data, pheno, nm)
         return response

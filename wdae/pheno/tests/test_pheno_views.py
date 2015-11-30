@@ -18,7 +18,7 @@ class Test(APITestCase):
     def test_preview_view(self):
         url = "/api/v2/pheno_reports"
         data = {
-            'denovoStudies': 'ALL SSC',
+            'denovoStudies': 'ala bala',
             'phenoMeasure': 'head_circumference',
         }
         response = self.client.post(url, data, format='json')
@@ -30,7 +30,7 @@ class Test(APITestCase):
     def test_report_normalized_by_age(self):
         url = "/api/v2/pheno_reports"
         data = {
-            'denovoStudies': 'ALL SSC',
+            'denovoStudies': 'ala bala',
             'phenoMeasure': 'head_circumference',
             'normalizedBy': 'normByAge',
         }
@@ -43,7 +43,7 @@ class Test(APITestCase):
     def test_report_without_normalized_by_age(self):
         url = "/api/v2/pheno_reports"
         data = {
-            'denovoStudies': 'ALL SSC',
+            'denovoStudies': 'ala bala',
             'phenoMeasure': 'head_circumference',
             'normalizedBy': "",
         }
@@ -56,14 +56,14 @@ class Test(APITestCase):
     def test_download_view(self):
         url = "/api/v2/pheno_reports/download"
         data = {
-            'denovoStudies': 'ALL SSC',
+            'denovoStudies': 'ala bala',
             'phenoMeasure': 'head_circumference',
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
         data = response.streaming_content
         self.assertIsNotNone(data)
-        self.assertEquals(2820, count_iterable(data))
+        self.assertEquals(2597, count_iterable(data))
 
 
 class PhenoMeasuresTest(APITestCase):
