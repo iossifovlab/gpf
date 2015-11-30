@@ -110,6 +110,9 @@ def pheno_calc(ps):
         negative_gender_index = np.logical_and(negative_index,
                                                gender_index)
 
+        assert not np.any(np.logical_and(positive_gender_index,
+                                         negative_gender_index))
+
         positive = data[positive_gender_index]['value']
         negative = data[negative_gender_index]['value']
 
