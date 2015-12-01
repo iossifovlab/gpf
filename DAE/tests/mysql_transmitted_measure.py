@@ -32,15 +32,17 @@ def measure_all(to_measure, count=3):
 
 
 if __name__ == "__main__":
-    #     dae_to_measure = [
-    #         {'fun': 'dae_query_q101'},
-    #         {'fun': 'dae_query_q201'},
-    #         {'fun': 'dae_query_q301'},
-    #         {'fun': 'dae_query_q401'},
-    #         {'fun': 'dae_query_q501'},
-    #         {'fun': 'dae_query_q601'},
-    #     ]
-    #     measure_all(dae_to_measure)
+    dae_to_measure = [
+        {'fun': 'dae_query_q101'},
+        {'fun': 'dae_query_q201'},
+        {'fun': 'dae_query_q301'},
+        {'fun': 'dae_query_q401'},
+        {'fun': 'dae_query_q501'},
+        {'fun': 'dae_query_q601'},
+        {'fun': 'dae_query_q701'},
+        {'fun': 'dae_query_q801'},
+    ]
+    measure_all(dae_to_measure)
 
     mysql_to_measure = [
         {'fun': 'mysql_query_q101'},
@@ -50,5 +52,6 @@ if __name__ == "__main__":
         {'fun': 'mysql_query_q501'},
         {'fun': 'mysql_query_q601'},
         {'fun': 'mysql_query_q701'},
+        {'fun': 'mysql_query_q801'},
     ]
     measure_all(mysql_to_measure)
