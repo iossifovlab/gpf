@@ -17,7 +17,7 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 NOSE_ARGS = [
              # '--with-coverage',
              # '--cover-package=api',
-             '--verbosity=2',
+             '--verbosity=3',
 ]
 
 # import os
