@@ -131,7 +131,7 @@ class Measures(Preload):
                 if fid in self.gender_we else np.NaN
 
             row = [fid, gender, lgds, reclgds, missense, synonymous, cnv,
-                   a, nviq, m, v]
+                   nviq, a, m, v]
 
             yield tuple(row)
 
