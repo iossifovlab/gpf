@@ -83,9 +83,9 @@ def build_narray(ps):
                       ('missense', 'f'),
                       ('synonymous', 'f'),
                       ('CNV', 'f'),
+                      ('measure', 'f'),
                       ('age', 'f'),
                       ('non_verbal_iq', 'f'),
-                      ('measure', 'f'),
                       ('value', 'f')])
     data = np.array(rows, dtype=dtype)
     data = data[~np.isnan(data['value'])]
