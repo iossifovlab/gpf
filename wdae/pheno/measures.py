@@ -98,9 +98,9 @@ class Measures(Preload):
         return df
 
     def pheno_merge_data(self, variants, nm):
-        yield tuple(['family_id', 'gender', 'LGDs', 'recLGDs', 'missense',
-                     'synonymous', 'CNV', nm.measure, 'age',
-                     'non_verbal_iq', nm.formula])
+        yield tuple(['family_id', 'gender',
+                     'LGDs', 'recLGDs', 'missense', 'synonymous', 'CNV',
+                     nm.measure, 'age', 'non_verbal_iq', nm.formula])
         for fid, gender in self.gender_all.items():
             vals = nm.df[nm.df.family_id == int(fid)]
             if len(vals) == 1:
@@ -130,8 +130,9 @@ class Measures(Preload):
                 'synonymous'].get(fid, 0) \
                 if fid in self.gender_we else np.NaN
 
-            row = [fid, gender, lgds, reclgds, missense, synonymous, cnv,
-                   nviq, a, m, v]
+            row = [fid, gender,
+                   lgds, reclgds, missense, synonymous, cnv,
+                   m, a, nviq, v]
 
             yield tuple(row)
 
