@@ -82,6 +82,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
         'regionS': list,
         'familyIds': list,
         'TMM_ALL': bool,
+        'limit': int,
     }
 
     DEFAULT_QUERY = {
@@ -100,6 +101,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
         'regionS': None,
         'familyIds': None,
         'TMM_ALL': False,
+        'limit': None,
     }
 
     def _get_config_property(self, name):
@@ -393,6 +395,11 @@ class MysqlTransmittedQuery(TransmissionConfig):
         w = ' AND '.join(where)
         return w
 
+    def _build_limit(self):
+        assert self['limit']
+        assert isinstance(self['limit'], int)
+        return " LIMIT {}".format(self['limit'])
+
     def _build_where(self):
         summary_where = self._build_summary_where()
         family_where = self._build_family_where()
@@ -403,6 +410,10 @@ class MysqlTransmittedQuery(TransmissionConfig):
             w = family_where
         else:
             w = "{} AND {}".format(family_where, summary_where)
+
+        if self['limit']:
+            w += self._build_limit()
+
         return w
 
     SPECIAL_KEYS = {

@@ -55,6 +55,14 @@ class SummaryVariantsLenTest(unittest.TestCase):
         # 1350367
         self.assertEquals(1350367, count(res))
 
+    def test_default_query_len_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            limit=2000)
+        # 1350367
+        self.assertEquals(2000, count(res))
+
     def test_missense_effect_type_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
@@ -62,6 +70,14 @@ class SummaryVariantsLenTest(unittest.TestCase):
             effectTypes=['missense'])
         self.assertEquals(589907, count(res))
         # print(res[0:30])
+
+    def test_missense_effect_type_len_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            effectTypes=['missense'],
+            limit=2000)
+        self.assertEquals(2000, count(res))
 
     def test_lgds_effect_type_len(self):
         self.impl.connect()
@@ -101,6 +117,19 @@ class SummaryVariantsLenTest(unittest.TestCase):
             geneSyms=gene_syms)
         self.assertEquals(116195, count(res))
 
+    def test_gene_sym_gene_set_limit(self):
+
+        gene_syms = get_gene_set_syms('main', 'FMR1-targets')
+        assert gene_syms
+        assert isinstance(gene_syms, list)
+
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            geneSyms=gene_syms,
+            limit=2000)
+        self.assertEquals(2000, count(res))
+
     def test_gene_sym_gene_set_lgds(self):
         gene_syms = get_gene_set_syms('main', 'FMR1-targets')
         lgds = list(vDB.effectTypesSet('LGDs'))
@@ -122,6 +151,17 @@ class SummaryVariantsLenTest(unittest.TestCase):
             ultraRareOnly=True)
         self.assertEquals(28265, count(res))
 
+    def test_ultra_rare_lgds_len_limit(self):
+        lgds = list(vDB.effectTypesSet('LGDs'))
+
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            effectTypes=lgds,
+            ultraRareOnly=True,
+            limit=2000)
+        self.assertEquals(2000, count(res))
+
     def test_ultra_rare_ins_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
@@ -130,12 +170,29 @@ class SummaryVariantsLenTest(unittest.TestCase):
             ultraRareOnly=True)
         self.assertEquals(13530, count(res))
 
+    def test_ultra_rare_ins_len_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            variantTypes=['ins'],
+            ultraRareOnly=True,
+            limit=100)
+        self.assertEquals(100, count(res))
+
     def test_all_ultra_rare_len(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
             minParentsCalled=600,
             ultraRareOnly=True)
         self.assertEquals(867513, count(res))
+
+    def test_all_ultra_rare_len_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            ultraRareOnly=True,
+            limit=2000)
+        self.assertEquals(2000, count(res))
 
     def test_ultra_rare_all_variant_types_len(self):
         self.impl.connect()
@@ -144,6 +201,15 @@ class SummaryVariantsLenTest(unittest.TestCase):
             variantTypes=['ins', 'del', 'sub'],
             ultraRareOnly=True)
         self.assertEquals(867513, count(res))
+
+    def test_ultra_rare_all_variant_types_len_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            variantTypes=['ins', 'del', 'sub'],
+            ultraRareOnly=True,
+            limit=200)
+        self.assertEquals(200, count(res))
 
     def test_ultra_rare_single_region(self):
         self.impl.connect()
@@ -154,6 +220,16 @@ class SummaryVariantsLenTest(unittest.TestCase):
 
         self.assertEquals(32079, count(res))
 
+    def test_ultra_rare_single_region_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            ultraRareOnly=True,
+            regionS=["1:0-60000000"],
+            limit=1)
+
+        self.assertEquals(1, count(res))
+
     def test_ultra_rare_multiple_regions(self):
         self.impl.connect()
         res = self.impl.get_transmitted_summary_variants(
@@ -162,6 +238,16 @@ class SummaryVariantsLenTest(unittest.TestCase):
             regionS=["1:0-60000000", "X:1000000-30000000"])
 
         self.assertEquals(36299, count(res))
+
+    def test_ultra_rare_multiple_regions_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            ultraRareOnly=True,
+            regionS=["1:0-60000000", "X:1000000-30000000"],
+            limit=2000)
+
+        self.assertEquals(2000, count(res))
 
     def test_region_matcher(self):
         res = self.impl._build_region_where("1:1-2")
@@ -191,6 +277,19 @@ class SummaryVariantsLenTest(unittest.TestCase):
 
         self.assertEquals(1003, count(res))
 
+    def test_ultra_rare_single_region_lgds_limit(self):
+        lgds = list(vDB.effectTypesSet('LGDs'))
+
+        self.impl.connect()
+        res = self.impl.get_transmitted_summary_variants(
+            minParentsCalled=600,
+            effectTypes=lgds,
+            ultraRareOnly=True,
+            regionS=["1:0-60000000"],
+            limit=2)
+
+        self.assertEquals(2, count(res))
+
 
 class VariantsLenTest(unittest.TestCase):
 
@@ -210,6 +309,16 @@ class VariantsLenTest(unittest.TestCase):
 
         self.assertEquals(32079, count(res))
 
+    def test_ultra_rare_single_region_len_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            minParentsCalled=600,
+            ultraRareOnly=True,
+            regionS=["1:0-60000000"],
+            limit=2000)
+
+        self.assertEquals(2000, count(res))
+
     def test_variants_in_single_family_id(self):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(
@@ -218,6 +327,15 @@ class VariantsLenTest(unittest.TestCase):
 
         self.assertEquals(5701, count(res))
 
+    def test_variants_in_single_family_id_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            minParentsCalled=600,
+            familyIds=["11110"],
+            limit=2000)
+
+        self.assertEquals(2000, count(res))
+
     def test_variants_in_two_family_ids(self):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(
@@ -225,6 +343,15 @@ class VariantsLenTest(unittest.TestCase):
             familyIds=["11110", "11111"])
 
         self.assertEquals(9322, count(res))
+
+    def test_variants_in_two_family_ids_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            minParentsCalled=600,
+            familyIds=["11110", "11111"],
+            limit=2000)
+
+        self.assertEquals(2000, count(res))
 
     #  get_variants.py --denovoStudies=none --effectTypes=none
     # --transmittedStudy=w1202s766e611 --popMinParentsCalled=-1
@@ -236,6 +363,15 @@ class VariantsLenTest(unittest.TestCase):
             maxAltFreqPrcnt=None,
             familyIds=["13785"])
         self.assertEquals(29375, count(res))
+
+    def test_all_variants_in_single_family_id_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            minParentsCalled=None,
+            maxAltFreqPrcnt=None,
+            familyIds=["13785"],
+            limit=2000)
+        self.assertEquals(2000, count(res))
 
     def test_family_id_and_pogz(self):
         self.impl.connect()
@@ -256,6 +392,17 @@ class VariantsLenTest(unittest.TestCase):
 
         self.assertEquals(3, count(res))
 
+    def test_family_id_and_pogz_all_limit(self):
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(
+            familyIds=['13983'],
+            geneSyms=['POGZ'],
+            minParentsCalled=None,
+            maxAltFreqPrcnt=None,
+            limit=2)
+
+        self.assertEquals(2, count(res))
+
     def test_family_id_and_pogz_effect_types(self):
         res = self.impl.get_transmitted_variants(
             familyIds=['13983'],
@@ -269,6 +416,20 @@ class VariantsLenTest(unittest.TestCase):
 
         self.assertEquals(3, count(res))
 
+    def test_family_id_and_pogz_effect_types_limit(self):
+        res = self.impl.get_transmitted_variants(
+            familyIds=['13983'],
+            geneSyms=['POGZ'],
+            effectTypes=["frame-shift", "intergenic", "intron", "missense",
+                         "non-coding", "no-frame-shift", "nonsense",
+                         "splice-site", "synonymous", "noEnd", "noStart",
+                         "3'UTR", "5'UTR", "CNV+", "CNV-"],
+            minParentsCalled=None,
+            maxAltFreqPrcnt=None,
+            limit=2)
+
+        self.assertEquals(2, count(res))
+
     def test_family_id_and_pogz_effect_types_case_insensitive(self):
         res = self.impl.get_transmitted_variants(
             familyIds=['13983'],
@@ -281,6 +442,20 @@ class VariantsLenTest(unittest.TestCase):
             maxAltFreqPrcnt=None)
 
         self.assertEquals(3, count(res))
+
+    def test_family_id_and_pogz_effect_types_case_insensitive_limit(self):
+        res = self.impl.get_transmitted_variants(
+            familyIds=['13983'],
+            geneSyms=['pogz'],
+            effectTypes=["frame-shift", "intergenic", "intron", "missense",
+                         "non-coding", "no-frame-shift", "nonsense",
+                         "splice-site", "synonymous", "noEnd", "noStart",
+                         "3'UTR", "5'UTR", "CNV+", "CNV-"],
+            minParentsCalled=None,
+            maxAltFreqPrcnt=None,
+            limit=1)
+
+        self.assertEquals(1, count(res))
 
 
 class VariantsFullTest(unittest.TestCase):
@@ -332,6 +507,21 @@ class VariantsPresentInParentTest(unittest.TestCase):
         res = self.impl.get_transmitted_variants(**request)
         self.assertEquals(14, count(res))
 
+    def test_present_in_parent_all_limit(self):
+        request = {
+            "geneSyms": ["JAKMIP1", "OR4C11", "OSBPL",
+                         "OTUD4", "PAX5", "PHF21A", "WRAP73", "VWA5B1"],
+            "effectTypes": ["nonsense", "frame-shift", "splice-site"],
+            "presentInParent": ["mother only", "father only",
+                                "mother and father", "neither"],
+            "ultraRareOnly": True,
+            "minParentsCalled": 600,
+            "limit": 10,
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(10, count(res))
+
     def test_present_in_parent_father_only(self):
         request = {
             "geneSyms": ["JAKMIP1", "OR4C11", "OSBPL",
@@ -344,6 +534,20 @@ class VariantsPresentInParentTest(unittest.TestCase):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
         self.assertEquals(9, count(res))
+
+    def test_present_in_parent_father_only_limit(self):
+        request = {
+            "geneSyms": ["JAKMIP1", "OR4C11", "OSBPL",
+                         "OTUD4", "PAX5", "PHF21A", "WRAP73", "VWA5B1"],
+            "effectTypes": ["nonsense", "frame-shift", "splice-site"],
+            "presentInParent": ["father only", ],
+            "ultraRareOnly": True,
+            "minParentsCalled": 600,
+            "limit": 5,
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(5, count(res))
 
     def test_present_in_parent_mother_only(self):
         request = {
@@ -358,6 +562,20 @@ class VariantsPresentInParentTest(unittest.TestCase):
         res = self.impl.get_transmitted_variants(**request)
         self.assertEquals(5, count(res))
 
+    def test_present_in_parent_mother_only_limit(self):
+        request = {
+            "geneSyms": ["JAKMIP1", "OR4C11", "OSBPL",
+                         "OTUD4", "PAX5", "PHF21A", "WRAP73", "VWA5B1"],
+            "effectTypes": ["nonsense", "frame-shift", "splice-site"],
+            "presentInParent": ["mother only", ],
+            "ultraRareOnly": True,
+            "minParentsCalled": 600,
+            "limit": 1,
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(1, count(res))
+
     def test_present_in_parent_mother_only_or_father_only(self):
         request = {
             "geneSyms": ["JAKMIP1", "OR4C11", "OSBPL",
@@ -371,6 +589,20 @@ class VariantsPresentInParentTest(unittest.TestCase):
         res = self.impl.get_transmitted_variants(**request)
         self.assertEquals(14, count(res))
 
+    def test_present_in_parent_mother_only_or_father_only_limit(self):
+        request = {
+            "geneSyms": ["JAKMIP1", "OR4C11", "OSBPL",
+                         "OTUD4", "PAX5", "PHF21A", "WRAP73", "VWA5B1"],
+            "effectTypes": ["nonsense", "frame-shift", "splice-site"],
+            "presentInParent": ["mother only", "father only"],
+            "ultraRareOnly": True,
+            "minParentsCalled": 600,
+            "limit": 10,
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(10, count(res))
+
     def test_present_in_parent_mother_and_father(self):
         request = {
             "geneSyms": ["SCNN1D"],
@@ -381,6 +613,30 @@ class VariantsPresentInParentTest(unittest.TestCase):
         self.impl.connect()
         res = self.impl.get_transmitted_variants(**request)
         self.assertEquals(82, count(res))
+
+    def test_present_in_parent_mother_and_father_limit_hi(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "minParentsCalled": 600,
+            "limit": 2000,
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(82, count(res))
+
+    def test_present_in_parent_mother_and_father_limit(self):
+        request = {
+            "geneSyms": ["SCNN1D"],
+            "effectTypes": ['missense'],
+            "presentInParent": ["mother and father"],
+            "minParentsCalled": 600,
+            "limit": 10,
+        }
+        self.impl.connect()
+        res = self.impl.get_transmitted_variants(**request)
+        self.assertEquals(10, count(res))
 
     def test_present_in_parent_neither(self):
         request = {

@@ -121,7 +121,8 @@ class TransmissionLegacy(TransmissionConfig):
                                          minAltFreqPrcnt=-1,
                                          variantTypes=None, effectTypes=None,
                                          ultraRareOnly=False, geneSyms=None,
-                                         regionS=None):
+                                         regionS=None,
+                                         limit=None):
 
         transmittedVariantsFile = self._get_params('indexFile') + ".txt.bgz"
         print("Loading trasmitted variants from {}".
@@ -194,7 +195,8 @@ class TransmissionLegacy(TransmissionConfig):
                                  geneSyms=None,
                                  familyIds=None,
                                  regionS=None,
-                                 TMM_ALL=False):
+                                 TMM_ALL=False,
+                                 limit=None):
 
         transmittedVariantsTOOMANYFile = \
             self._get_params('indexFile') + "-TOOMANY.txt.bgz"
