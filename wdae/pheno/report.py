@@ -46,6 +46,7 @@ def _filter_var_in_recurent_genes(vs):
 def _pheno_query_variants(data, effect_type):
     wdae_handle_gene_sets(data)
     data['effectTypes'] = effect_type
+    data['inChild'] = 'prb'
 
     vsl = dae_query_variants(data)
     vs = itertools.chain(*vsl)
