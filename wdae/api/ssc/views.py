@@ -36,6 +36,7 @@ class SSCPreview(SSCPrepare):
             return Response()
 
         data = self.prepare(request)
+        data['limit'] = 2000
 
         LOGGER.info(log_filter(request,
                                "ssc preview query variants: " + str(data)))

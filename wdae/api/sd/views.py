@@ -35,6 +35,7 @@ class SequencingDenovoPreview(SequencingDenovoPrepare):
             return Response()
 
         data = self.prepare(request)
+        data['limit'] = 2000
 
         LOGGER.info(log_filter(request,
                                "sd preview query variants: " + str(data)))

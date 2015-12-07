@@ -225,7 +225,8 @@ class Study:
     def get_denovo_variants(self, inChild=None, presentInChild=None,
                             gender=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
-                            familyIds=None, regionS=None, callSet=None):
+                            familyIds=None, regionS=None, callSet=None,
+                            limit=None):
 
         picFilter = self._present_in_child_filter(presentInChild, gender)
         geneSymsUpper = None

@@ -41,7 +41,8 @@ from models import VerificationPath
 from serializers import UserSerializer
 from api.logger import LOGGER, log_filter
 from query_prepare import EFFECT_GROUPS, build_effect_type_filter
-from api.query.wdae_query_variants import wdae_query_wrapper, gene_set_loader2,\
+from api.query.wdae_query_variants import wdae_query_wrapper, \
+    gene_set_loader2,\
     prepare_query_dict
 
 
@@ -472,7 +473,7 @@ All fields are same as in query_variants_bak request
     #     data = prepare_query_dict(data)
 
     LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
-
+    data['limit'] = 2000
     generator = wdae_query_wrapper(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
 
