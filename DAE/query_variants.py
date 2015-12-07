@@ -128,7 +128,7 @@ def __bind_family_filter_by_race(data, family_filters):
 
 def family_filter_by_verbal_iq(families, iq_lo=0.0, iq_hi=float('inf')):
     return dict([(key, families[key]) for key, val in get_verbal_iq().items()
-                if key in families and val >= iq_lo and val <= iq_hi])
+                 if key in families and val >= iq_lo and val <= iq_hi])
 
 
 def __bind_family_filter_by_verbal_iq(data, family_filters):
@@ -455,6 +455,18 @@ def prepare_gene_region(data):
         return None
 
 
+def prepare_limit(data):
+    if 'limit' not in data:
+        return None
+    limit = data['limit']
+    res = None
+    try:
+        res = int(limit)
+    except ValueError:
+        res = None
+    return res
+
+
 def __load_text_column(colSpec):
     cn = 0
     sepC = "\t"
@@ -488,6 +500,7 @@ def prepare_transmitted_filters(data,
                'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data),
                'TMM_ALL': prepare_TMM_ALL(data),
                'presentInParent': prepare_present_in_parent(data),
+               'limit': prepare_limit(data),
                }
     return dict(filters, **denovo_filters)
 
@@ -502,7 +515,8 @@ def prepare_denovo_filters(data):
                'familyIds': prepare_family_ids(data),
                'geneSyms': prepare_gene_syms(data),
                # 'geneIds': prepare_gene_ids(data),
-               'regionS': prepare_gene_region(data)}
+               'regionS': prepare_gene_region(data),
+               }
 
     return filters
 
@@ -698,7 +712,7 @@ def generate_response(vs, atts=[], sep='\t'):
         hack = []
         for a in atts:
             if a in ['SSCfreq', 'EVSfreq', 'E65freq', ] and a not in v.atts:
-                a = a[:3]+'-'+a[3:]
+                a = a[:3] + '-' + a[3:]
             if a in v.atts:
                 val = str(v.atts[a]).replace(sep, ';').replace("'", '"')
                 hack.append(val if val and val != 'False' and
