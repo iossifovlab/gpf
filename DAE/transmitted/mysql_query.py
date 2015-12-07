@@ -346,30 +346,41 @@ class MysqlTransmittedQuery(TransmissionConfig):
         where = self.IN_CHILD_MAPPING[self['inChild']]
         return where
 
-    def _build_where(self):
+    def _build_summary_where(self):
         where = []
         if self['effectTypes'] or self['geneSyms']:
             where.append(self._build_effect_where())
-
         if self['variantTypes']:
             w = self._build_variant_type_where()
             if w is not None:
                 where.append(w)
-
-        if self['familyIds']:
-            where.append(self._build_family_ids_where())
-
         if self['regionS']:
             w = self._build_regions_where()
             if w is None:
-                print("bad regions: {}".format(self['regionS']))
+                print "bad regions: {}".format(self['regionS'])
             else:
                 where.append(w)
+        fw = self._build_freq_where()
+        if fw:
+            where.append(self._build_freq_where())
+        if not where:
+            return ""
+        w = ' AND '.join(where)
+        summary_where = \
+            "tsv.id IN (SELECT distinct tsv.id " \
+            "FROM transmitted_summaryvariant AS tsv " \
+            "LEFT JOIN transmitted_geneeffectvariant AS tge " \
+            "ON tsv.id = tge.summary_variant_id  WHERE {})".format(w)
+        return summary_where
+
+    def _build_family_where(self):
+        where = []
+        if self['familyIds']:
+            where.append(self._build_family_ids_where())
         if self['presentInParent']:
             w = self._build_present_in_parent_where()
             if w is not None:
                 where.append(w)
-
         if self['inChild']:
             w = self._build_in_child_where()
             where.append(w)
@@ -377,11 +388,21 @@ class MysqlTransmittedQuery(TransmissionConfig):
             w = self._build_present_in_child_where()
             where.append(w)
 
-        fw = self._build_freq_where()
-        if fw:
-            where.append(self._build_freq_where())
-
+        if not where:
+            return ""
         w = ' AND '.join(where)
+        return w
+
+    def _build_where(self):
+        summary_where = self._build_summary_where()
+        family_where = self._build_family_where()
+
+        if not family_where:
+            w = summary_where
+        elif not summary_where:
+            w = family_where
+        else:
+            w = "{} AND {}".format(family_where, summary_where)
         return w
 
     SPECIAL_KEYS = {
@@ -459,9 +480,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "tsv.evs_freq as `EVS-freq`, " \
             "tsv.e65_freq as `E65-freq` " \
             "from transmitted_summaryvariant as tsv " \
-            "left join transmitted_geneeffectvariant as tge " \
-            "on tsv.id = tge.summary_variant_id " \
-            "where {} group by tsv.id ".format(where)
+            "where {}".format(where)
 
         try:
             connection, cursor = self.execute(select)
@@ -506,10 +525,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "from transmitted_familyvariant as tfv " \
             "left join transmitted_summaryvariant as tsv " \
             "on tfv.summary_variant_id = tsv.id " \
-            "left join transmitted_geneeffectvariant as tge " \
-            "on tsv.id = tge.summary_variant_id " \
-            "where {} group by tfv.family_id, tsv.id " \
-            "order by tsv.id, tfv.family_id ".format(where)
+            "where {}".format(where)
 
         LOGGER.info("select: %s", select)
         try:
