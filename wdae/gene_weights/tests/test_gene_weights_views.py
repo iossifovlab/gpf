@@ -7,7 +7,7 @@ import unittest
 from rest_framework.test import APITestCase
 
 
-class Test(APITestCase):
+class GeneWeightsListViewTest(APITestCase):
 
     def test_gene_weights_list_view(self):
         url = "/api/v2/gene_weights"
