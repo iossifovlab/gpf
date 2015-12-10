@@ -6,6 +6,7 @@ Created on Dec 10, 2015
 import os
 import csv
 import pandas as pd
+import numpy as np
 from api.preloaded.register import Preload
 from django.conf import settings
 
@@ -53,6 +54,20 @@ class Weights(Preload):
 
     def get_weight(self, weight):
         if weight not in self.weights:
-            raise ValueError("unsupported gene weight")
+            raise ValueError("unsupported gene weight {}".format(weight))
 
         return self.df[weight]
+
+    def get_genes_by_weight(self, weight, wmin=None, wmax=None):
+        if weight not in self.weights:
+            raise ValueError("unsupported gene weight {}".format(weight))
+        df = self.df[weight]
+        if wmin is None or wmin < df.min() and wmin >= df.max():
+            wmin = df.min()
+        if wmax is None or wmax <= df.min() and wmax > df.max():
+            wmax = df.max()
+
+        index = np.logical_and(df.values >= wmin, df.values <= wmax)
+        genes = self.df[index].gene
+        # print(self.df[index])
+        return set(genes.values)
