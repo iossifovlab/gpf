@@ -10,5 +10,7 @@ urlpatterns = [
     url(r'^$',
         views.GeneWeightsListView.as_view(),
         name="gene_weights"),
-
+    url(r'^/genes$',
+        views.GeneWeightsGetGenesView.as_view(),
+        name="gene_weights_get_genes"),
 ]
