@@ -25,7 +25,7 @@ class Weights(Preload):
         df = pd.read_csv(self.DATA_FILENAME)
         return df
 
-    def _load_desc(self):
+    def _load_desc(self, df):
         result = []
         with open(self.DESC_FILENAME, 'r') as f:
             reader = csv.reader(f)
@@ -35,13 +35,16 @@ class Weights(Preload):
                 use = int(use)
                 if not use:
                     continue
+                w = df[weight]
                 result.append({"weight": weight,
-                               "desc": desc})
+                               "desc": desc,
+                               "min": w.min(),
+                               "max": w.max(), })
         return result
 
     def load(self):
         self.df = self._load_data()
-        self.desc = self._load_desc()
+        self.desc = self._load_desc(self.df)
         self.weights = {}
         for w in self.desc:
             self.weights[w['weight']] = w
