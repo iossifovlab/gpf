@@ -67,7 +67,7 @@ urlpatterns = patterns(
     url(r'^pheno_report_download$', 'pheno_report_download'),
 
     url(r'^v2/pheno_reports', include('pheno.urls')),
-
+    url(r'^v2/gene_weights', include('gene_weights.urls')),
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)

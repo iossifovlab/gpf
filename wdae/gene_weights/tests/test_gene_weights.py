@@ -25,7 +25,6 @@ class GeneWeightsTest(unittest.TestCase):
     def test_get_lgd_rand(self):
         w = self.weights.get_weight('LGD_rank')
         self.assertIsNotNone(w)
-        print(w.min(), w.max())
         self.assertAlmostEqual(1.0, w.min(), delta=0.01)
         self.assertAlmostEqual(23949.0, w.max(), delta=0.01)
 
