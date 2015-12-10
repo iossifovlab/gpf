@@ -70,7 +70,10 @@ class Weights(Preload):
         if wmax is None or wmax <= df.min() and wmax > df.max():
             wmax = df.max()
 
-        index = np.logical_and(df.values >= wmin, df.values <= wmax)
+        notnan_index = np.logical_not(np.isnan(df.values))
+        minmax_index = np.logical_and(df.values >= wmin, df.values <= wmax)
+        index = np.logical_and(notnan_index, minmax_index)
+
         genes = self.df[index].gene
         # print(self.df[index])
         return set(genes.values)
