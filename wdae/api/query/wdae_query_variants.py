@@ -69,17 +69,52 @@ def prepare_gene_sets(data):
     return None
 
 
+def get_data_key(key, data):
+    if key not in data or not data[key] or \
+            not data[key].strip():
+        return None
+    return data[key].strip()
+
+
+def prepare_gene_weights(data):
+    wname = get_data_key('geneWeight', data)
+    wmax = get_data_key('geneWeightMax', data)
+    wmin = get_data_key('geneWeightMin', data)
+
+    if not wname:
+        return None
+    register = get_register()
+    weights = register.get('gene_weights')
+    if not weights.has_weight(wname):
+        return None
+    genes = weights.get_genes_by_weight(wname, wmin=wmin, wmax=wmax)
+    return genes
+
+
 def combine_gene_syms(data):
     gene_syms = prepare_gene_syms(data)
     gene_sets = prepare_gene_sets(data)
+    gene_weights = prepare_gene_weights(data)
 
-    if gene_syms is None:
-        return list(gene_sets) if gene_sets else None
-    else:
-        if gene_sets is None:
-            return list(gene_syms)
-        else:
-            return list(gene_sets.union(gene_syms))
+    gs = [gene_syms, gene_sets, gene_weights]
+    gs = [g for g in gs if g is not None]
+
+    if not gs:
+        return None
+    if len(gs) == 1:
+        return list(gs[0])
+    if len(gs) == 2:
+        return list(gs[0].union(gs[1]))
+    if len(gs) == 3:
+        return list(gs[0].union(gs[1]).union(gs[2]))
+
+#     if gene_syms is None:
+#         return list(gene_sets) if gene_sets else None
+#     else:
+#         if gene_sets is None:
+#             return list(gene_syms)
+#         else:
+#             return list(gene_sets.union(gene_syms))
 
 
 def wdae_handle_gene_sets(data):
@@ -90,6 +125,12 @@ def wdae_handle_gene_sets(data):
         del data['geneTerm']
     if 'gene_set_phenotype' in data:
         del data['gene_set_phenotype']
+    if 'geneWeight' in data:
+        del data['geneWeight']
+    if 'geneWeightMin' in data:
+        del data['geneWeightMin']
+    if 'geneWeightMax' in data:
+        del data['geneWeightMax']
 
 
 def wdae_query_wrapper(data, atts=[]):

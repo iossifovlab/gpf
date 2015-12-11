@@ -543,6 +543,7 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 def dae_query_variants(data):
     assert "geneSet" not in data
+    assert "geneWeigth" not in data
 
     prepare_denovo_phenotype(data)
     prepare_denovo_study_type(data)
