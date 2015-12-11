@@ -1,7 +1,6 @@
 import logging
 import api.GeneTerm
 from api.precompute import register
-from DAE import get_gene_sets_symNS
 
 
 LOGGER = logging.getLogger(__name__)
