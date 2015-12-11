@@ -39,14 +39,14 @@ class GeneWeightsRVISTest(unittest.TestCase):
             [rv] = df[df.gene == g]['RVIS'].values
             self.assertFalse(np.isnan(rv))
 
-    def test_get_genes_by_weight_check_all_nan(self):
-        df = self.weights.df
-        genes = self.weights.get_genes_by_weight('RVIS',
-                                                 wmin=None,
-                                                 wmax=None)
-        for g in genes:
-            [rv] = df[df.gene == g]['RVIS'].values
-            self.assertFalse(np.isnan(rv))
+#     def test_get_genes_by_weight_check_all_nan(self):
+#         df = self.weights.df
+#         genes = self.weights.get_genes_by_weight('RVIS',
+#                                                  wmin=None,
+#                                                  wmax=None)
+#         for g in genes:
+#             [rv] = df[df.gene == g]['RVIS'].values
+#             self.assertFalse(np.isnan(rv))
 
 
 if __name__ == "__main__":
