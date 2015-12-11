@@ -79,7 +79,11 @@ def get_data_key(key, data):
 def prepare_gene_weights(data):
     wname = get_data_key('geneWeight', data)
     wmax = get_data_key('geneWeightMax', data)
+    if wmax:
+        wmax = float(wmax)
     wmin = get_data_key('geneWeightMin', data)
+    if wmin:
+        wmin = float(wmin)
 
     if not wname:
         return None
@@ -88,6 +92,7 @@ def prepare_gene_weights(data):
     if not weights.has_weight(wname):
         return None
     genes = weights.get_genes_by_weight(wname, wmin=wmin, wmax=wmax)
+    # print("wname: {}, wmin: {}, wmax: {}".format(wname, wmin, wmax))
     return genes
 
 

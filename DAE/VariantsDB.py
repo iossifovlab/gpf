@@ -230,7 +230,7 @@ class Study:
 
         picFilter = self._present_in_child_filter(presentInChild, gender)
         geneSymsUpper = None
-        if geneSyms:
+        if geneSyms is not None:
             geneSymsUpper = [sym.upper() for sym in geneSyms]
 
         if isinstance(effectTypes, str):
@@ -265,7 +265,7 @@ class Study:
                     # print >> sys.stderr, v.atts
                     continue
 
-            if effectTypes or geneSymsUpper:
+            if effectTypes is not None or geneSymsUpper is not None:
                 requestedGeneEffects = filter_gene_effect(
                     v.geneEffect, effectTypes, geneSymsUpper)
                 if not requestedGeneEffects:

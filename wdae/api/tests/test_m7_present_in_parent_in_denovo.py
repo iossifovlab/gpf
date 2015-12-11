@@ -9,6 +9,7 @@ from rest_framework import status
 
 
 class Test(APITestCase):
+
     @classmethod
     def setUpClass(cls):
         super(Test, cls).setUpClass()
@@ -60,7 +61,8 @@ class Test(APITestCase):
             "5'UTR-intron",
             'presentInChild': 'autism only',
             'variantTypes': 'CNV,del,ins,sub',
-            'presentInParent': 'father only,mother and father,mother only,neither',
+            'presentInParent': 'father only,mother and father,mother only,'
+            'neither',
             'transmittedStudies': 'w1202s766e611'
         }
 
@@ -70,5 +72,4 @@ class Test(APITestCase):
         # FIXME
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

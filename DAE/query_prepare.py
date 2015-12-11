@@ -47,9 +47,9 @@ def prepare_gene_syms(data):
     if 'geneSyms' not in data and 'geneSym' not in data:
         return None
 
-    if 'geneSyms' in data and data['geneSyms']:
+    if 'geneSyms' in data and data['geneSyms'] is not None:
         gene_sym = data['geneSyms']
-    elif 'geneSym' in data and data['geneSym']:
+    elif 'geneSym' in data and data['geneSym'] is not None:
         gene_sym = data['geneSym']
     elif 'geneSymFile' in data and data['geneSymFile']:
         gene_sym = __load_text_column(data['geneSymFile'])
@@ -58,10 +58,7 @@ def prepare_gene_syms(data):
 
     if isinstance(gene_sym, list):
         gl = gene_sym
-        if not gl:
-            return None
-        else:
-            return set(gl)
+        return set(gl)
 
     elif isinstance(gene_sym, str):
         gl = [s.strip()

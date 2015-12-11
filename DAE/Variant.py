@@ -90,9 +90,9 @@ def parseGeneEffect(effStr):
 
 
 def filter_gene_effect(geneEffects, effectTypes, geneSyms):
-    if not effectTypes:
+    if effectTypes is None:
         return [x for x in geneEffects if x['symu'] in geneSyms]
-    if not geneSyms:
+    if geneSyms is None:
         return [x for x in geneEffects if x['eff'] in effectTypes]
     return [x for x in geneEffects
             if x['eff'] in effectTypes and x['symu'] in geneSyms]
