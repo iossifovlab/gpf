@@ -10,7 +10,8 @@ from api.enrichment.enrichment import build_transmitted_background
 
 from api.deprecated.bg_loader import preload_background, get_background
 
-from api.enrichment.enrichment import collect_prb_enrichment_variants_by_phenotype, \
+from api.enrichment.enrichment import \
+    collect_prb_enrichment_variants_by_phenotype, \
     collect_sib_enrichment_variants_by_phenotype, \
     filter_prb_enrichment_variants_by_phenotype, \
     filter_sib_enrichment_variants_by_phenotype, \
@@ -18,14 +19,13 @@ from api.enrichment.enrichment import collect_prb_enrichment_variants_by_phenoty
     count_gene_set_enrichment_by_phenotype, \
     count_background
 import time
-    
-# LOGGER = logging.getLogger(__name__)
 
 
 class EnrichmentBasicTest(unittest.TestCase):
+
     def test_collect_prb_variants_by_phenotype_whole_exome(self):
         data = {
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
         }
 
         dsts = prepare_denovo_studies(data)
@@ -35,7 +35,7 @@ class EnrichmentBasicTest(unittest.TestCase):
 
     def test_collect_prb_variants_by_phenotype_autism(self):
         data = {
-            "denovoStudies":"AUTISM",
+            "denovoStudies": "AUTISM",
         }
 
         dsts = prepare_denovo_studies(data)
@@ -45,7 +45,7 @@ class EnrichmentBasicTest(unittest.TestCase):
 
     def test_collect_sib_variants_by_phenotype_whole_exome(self):
         data = {
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
         }
 
         dsts = prepare_denovo_studies(data)
@@ -55,7 +55,7 @@ class EnrichmentBasicTest(unittest.TestCase):
 
     def test_filter_prb_variants_by_phenotype_whole_exome(self):
         data = {
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
         }
 
         dsts = prepare_denovo_studies(data)
@@ -66,10 +66,9 @@ class EnrichmentBasicTest(unittest.TestCase):
         for _phenotype, fevars in res.items():
             self.assertEqual(12, len(fevars))
 
-
     def test_filter_prb_variants_by_phenotype_autism(self):
         data = {
-            "denovoStudies":"AUTISM",
+            "denovoStudies": "AUTISM",
         }
 
         dsts = prepare_denovo_studies(data)
@@ -83,7 +82,7 @@ class EnrichmentBasicTest(unittest.TestCase):
 
     def test_filter_sib_variants_by_phenotype_whole_exome(self):
         data = {
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
         }
 
         dsts = prepare_denovo_studies(data)
@@ -94,53 +93,56 @@ class EnrichmentBasicTest(unittest.TestCase):
 
     def test_build_enrichment_variants_genes_dict(self):
         data = {
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
         }
 
         dsts = prepare_denovo_studies(data)
-        _genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(dsts)
-
+        _genes_dict_by_pheno = \
+            build_enrichment_variants_genes_dict_by_phenotype(dsts)
 
     def test_count_gene_set_enrichment_by_phenotype_whole_exome(self):
         data = enrichment_prepare({
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
             'geneSyms': '',
             'geneStudy': '',
             'transmittedStudies': 'w1202s766e611',
-            'geneTerm': 'ChromatinModifiers',
+            'geneTerm': 'FMRP-Darnell',
             'geneSet': 'main',
         })
 
         dsts = data['denovoStudies']
         gene_syms_set = data['geneSyms']
 
-        genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(
-                dsts)
+        genes_dict_by_pheno = \
+            build_enrichment_variants_genes_dict_by_phenotype(dsts)
 
-        count_res = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
+        count_res = count_gene_set_enrichment_by_phenotype(
+            genes_dict_by_pheno, gene_syms_set)
         self.assertEqual(5 + 1, len(count_res.keys()))
 
-    def test_count_gene_set_enrichment_by_phenotype_whole_exome_FMR1_targets(self):
+    def test_count_gene_set_enrichment_by_phenotype_sd_FMRP_Darnell(self):
         data = enrichment_prepare({
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
             'geneSyms': '',
             'geneStudy': '',
             'transmittedStudies': 'w1202s766e611',
-            'geneTerm': 'FMR1-targets',
+            'geneTerm': 'FMRP-Darnell',
             'geneSet': 'main',
         })
 
         dsts = data['denovoStudies']
         gene_syms_set = data['geneSyms']
 
-        genes_dict_by_pheno = build_enrichment_variants_genes_dict_by_phenotype(
-                dsts)
-        
-        count_res = count_gene_set_enrichment_by_phenotype(genes_dict_by_pheno, gene_syms_set)
+        genes_dict_by_pheno = \
+            build_enrichment_variants_genes_dict_by_phenotype(dsts)
+
+        count_res = count_gene_set_enrichment_by_phenotype(
+            genes_dict_by_pheno, gene_syms_set)
         self.assertEqual(5 + 1, len(count_res.keys()))
 
 
 class EnrichmentWithBackgroundTest(unittest.TestCase):
+
     @classmethod
     def setUpClass(cls):
         cls.tsts = vDB.get_study('w1202s766e611')
@@ -155,10 +157,9 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
     def tearDownClass(cls):
         pass
 
-
     def test_count_gene_set_enrichment_by_phenotype_whole_exome(self):
         data = enrichment_prepare({
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
             'geneSyms': '',
             'geneStudy': '',
             'transmittedStudies': 'w1202s766e611',
@@ -172,49 +173,49 @@ class EnrichmentWithBackgroundTest(unittest.TestCase):
         background_count = count_background(gene_syms_set)
         self.assertEqual(6890, background_count.cnt)
 
-    def test_enrichment_results_by_phenotype_whole_exome_FMR1_targets(self):
+    def test_enrichment_results_by_phenotype_whole_exome_FMRP_Darnell(self):
         data = enrichment_prepare({
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
             'geneSyms': '',
             'geneStudy': '',
             'transmittedStudies': 'w1202s766e611',
-            'geneTerm': 'FMR1-targets',
+            'geneTerm': 'FMRP-Darnell',
             'geneSet': 'main',
         })
 
         self.assertTrue(get_background('enrichment_background') is not None)
         res = enrichment_results_by_phenotype(**data)
 
-        unaffected_rec_lgds=res['unaffected'][0]
-        self.assertTrue(unaffected_rec_lgds.has_key('syms'))
+        unaffected_rec_lgds = res['unaffected'][0]
+        self.assertTrue('syms' in unaffected_rec_lgds)
 
     def test_enrichment_results_by_phenotype_rec_synonymous(self):
         data = enrichment_prepare({
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
             'geneSyms': '',
             'geneStudy': '',
             'transmittedStudies': 'w1202s766e611',
-            'geneTerm': 'FMR1-targets',
+            'geneTerm': 'FMRP-Darnell',
             'geneSet': 'main',
         })
-        
+
         self.assertTrue(get_background('enrichment_background') is not None)
         res = enrichment_results_by_phenotype(**data)
-        rec_synonymous=res['autism'][8]
+        rec_synonymous = res['autism'][8]
         self.assertEquals(rec_synonymous['label'], 'Rec Synonymous')
 
     def test_enrichment_results_by_phenotype_rec_missense(self):
         data = enrichment_prepare({
-            "denovoStudies":"ALL WHOLE EXOME",
+            "denovoStudies": "ALL WHOLE EXOME",
             'geneSyms': '',
             'geneStudy': '',
             'transmittedStudies': 'w1202s766e611',
-            'geneTerm': 'FMR1-targets',
+            'geneTerm': 'FMRP-Darnell',
             'geneSet': 'main',
         })
 
         self.assertTrue(get_background('enrichment_background') is not None)
         res = enrichment_results_by_phenotype(**data)
 
-        rec_synonymous=res['autism'][4]
+        rec_synonymous = res['autism'][4]
         self.assertEquals(rec_synonymous['label'], 'Rec Missense')
