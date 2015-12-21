@@ -215,14 +215,6 @@ class GeneSetsTests(APITestCase):
 
     DISEASE_AIDS = set(['IFNG', 'KIR3DL1', 'CXCL12'])
     GO_GO_2001293 = set(['ACACA', 'ACACB'])
-    MAIN_mPFC_maternal = set(['RAD23B', 'ADD2', 'NCOR2', 'CERS4',
-                              'PPP1R3C', 'KCNK9', 'CLIP2', 'ARF3',
-                              'ADAR', 'DEF8', 'SLC4A8', 'RFTN2',
-                              'COPG2', 'LDHD', 'SPTLC2', 'KCTD20',
-                              'NNT', 'IGF2', 'CLCN2', 'UBE2E2',
-                              'HERC3', 'MEG3', 'TOB1', 'UBR4',
-                              'ZNF157', 'AKAP2', 'DOPEY2', 'SCN1B',
-                              'LIMCH1'])
 
     @classmethod
     def setUpClass(cls):
@@ -242,12 +234,6 @@ class GeneSetsTests(APITestCase):
 
     def test_gene_sets_empty(self):
         self.assertIsNone(prepare_gene_sets({}))
-
-    def test_gete_sets_main(self):
-        gs = prepare_gene_sets({'geneSet': 'main',
-                                'geneTerm': 'mPFC_maternal'})
-        self.assertSetEqual(gs, self.MAIN_mPFC_maternal)
-        self.assertTrue(isinstance(gs, set))
 
     def test_gete_sets_go(self):
         gs = prepare_gene_sets({'geneSet': 'GO', 'geneTerm': 'GO:2001293'})
@@ -290,7 +276,7 @@ class GeneSetsTests(APITestCase):
         self.assertIsNotNone(prepare_gene_sets(
             {'geneSet': 'main',
              'gene_set_phenotype': 'ala-bala',
-             'geneTerm': 'E15-maternal'}))
+             'geneTerm': 'PSD'}))
 
 
 class StudiesTests(APITestCase):
