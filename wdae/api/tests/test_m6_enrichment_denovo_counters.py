@@ -21,7 +21,7 @@ class DenovoCountersTest(unittest.TestCase):
     def setUp(self):
         self.dsts = vDB.get_studies('ALL WHOLE EXOME')
         gt = get_gene_sets_symNS('main')
-        self.gene_syms = gt.t2G['FMR1-targets-1006genes'].keys()
+        self.gene_syms = gt.t2G['FMRP-Tuschl'].keys()
 
     def tearDown(self):
         pass
@@ -34,7 +34,7 @@ class DenovoCountersTest(unittest.TestCase):
         self.assertEquals(606, len(res))
 
         count = count_denovo_variant_events(res, self.gene_syms)
-        self.assertEquals(134, count)
+        self.assertEquals(80, count)
 
     def test_count_denovo_variant_events_zero(self):
         count = count_denovo_variant_events([], self.gene_syms)
