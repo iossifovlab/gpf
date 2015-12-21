@@ -56,7 +56,7 @@ class CombinedTests(unittest.TestCase):
                    "effectTypes": "frame-shift",
                    "variantTypes": "ins",
                    "geneSet": "main",
-                   "geneTerm": "essentialGenes",
+                   "geneTerm": "Essential",
                    "geneSyms": ""}
 
     TEST_DATA_2 = {"denovoStudies": [],
