@@ -29,6 +29,8 @@ class EnrichmentView(APIView):
 
     @staticmethod
     def enrichment_prepare(data):
+        print("enrichment_prepare: data: {}".format(data))
+
         if data['denovoStudies']:
             del data['denovoStudies']
         data['denovoStudies'] = 'ALL WHOLE EXOME'
