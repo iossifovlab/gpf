@@ -18,6 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class RecurrentLGDsGenesTests(APITestCase):
+
     def test_load_gene_set(self):
         geneTerms = vDB.get_denovo_sets("AUTISM")
         LOGGER.info("gene terms: %s", geneTerms.t2G.keys())
@@ -29,7 +30,7 @@ class RecurrentLGDsGenesTests(APITestCase):
         LOGGER.info("rec lgds: %s", geneTerms.t2G["prb.LoF.Recurrent"])
         LOGGER.info("rec lgds: %s",
                     len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
-        self.assertEqual(39, len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
+        self.assertEqual(41, len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
 
 
 def count_iterable(iterable):
@@ -39,6 +40,7 @@ def count_iterable(iterable):
 
 
 class PhenotypeFilterTests(APITestCase):
+
     def test_phenotype_BTN1A1_BTNL2(self):
         data = {
             "geneSyms": "BTN1A1, BTNL2",
@@ -155,6 +157,7 @@ class PhenotypeFilterTests(APITestCase):
 
 
 class PrepareSSCFilterTests(APITestCase):
+
     def test_present_in_parent_neither(self):
         data = {
             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
@@ -207,6 +210,7 @@ class PrepareSSCFilterTests(APITestCase):
 
 
 class SSCPresentInParentTests(APITestCase):
+
     @classmethod
     def setUpClass(cls):
         super(SSCPresentInParentTests, cls).setUpClass()
@@ -345,7 +349,7 @@ class SSCPresentInParentTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # LOGGER.info("result data: %s", response.data)
-        self.assertEqual('77', response.data['count'])
+        self.assertEqual('85', response.data['count'])
 
     def test_present_in_child_all(self):
         self.client.login(email='admin@example.com', password='secret')
@@ -405,7 +409,7 @@ class SSCPresentInParentTests(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # LOGGER.info("result data: %s", response.data)
-        self.assertEqual('147', response.data['count'])
+        self.assertEqual('148', response.data['count'])
 
     def test_present_in_child_autism_only_parent_father(self):
         data = {
@@ -510,7 +514,7 @@ class SSCPresentInChildDownloadTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(79, count_iterable(response.streaming_content))
+        self.assertEqual(87, count_iterable(response.streaming_content))
 
     def test_rec_lgds_download_urlencoded(self):
         data = 'genes=Gene+Sets&geneSet=denovo&' \
@@ -533,4 +537,4 @@ class SSCPresentInChildDownloadTests(APITestCase):
             url, data,
             content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(79, count_iterable(response.streaming_content))
+        self.assertEqual(87, count_iterable(response.streaming_content))
