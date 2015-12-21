@@ -54,6 +54,7 @@ class CommonBase(object):
 
 
 class CounterBase(CommonBase):
+
     @staticmethod
     def build_families_buffer(studies):
         families_buffer = defaultdict(dict)
@@ -83,6 +84,7 @@ class CounterBase(CommonBase):
 
 
 class ChildrenCounter(CounterBase):
+
     def __init__(self, phenotype):
         super(ChildrenCounter, self).__init__(phenotype)
 
@@ -114,6 +116,7 @@ class ChildrenCounter(CounterBase):
 
 
 class FamiliesCounters(CounterBase):
+
     def __init__(self, phenotype):
         super(FamiliesCounters, self).__init__(phenotype)
         if phenotype == 'unaffected':
@@ -140,7 +143,7 @@ class FamiliesCounters(CounterBase):
         return self.data.get(fconf, 0)
 
     def type_counters(self):
-        return self.data.values()
+        return sorted(self.data.values())
 
     @property
     def counters(self):
@@ -150,6 +153,7 @@ class FamiliesCounters(CounterBase):
 
 
 class ReportBase(CommonBase):
+
     def __init__(self, study_name):
         super(ReportBase, self).__init__()
         self.study_name = study_name
@@ -221,6 +225,7 @@ class FamiliesReport(ReportBase, Precompute):
 
 
 class DenovoEventsCounter(CounterBase):
+
     def __init__(self, phenotype, children_counter, effect_type):
         super(DenovoEventsCounter, self).__init__(phenotype)
         self.effect_type = effect_type
@@ -366,6 +371,7 @@ class DenovoEventsReport(ReportBase, Precompute):
 
 
 class StudyVariantReports(ReportBase, Precompute):
+
     def __init__(self, study_name, study_description=None):
         super(StudyVariantReports, self).__init__(study_name)
         self.study_description = study_description
@@ -410,6 +416,7 @@ class StudyVariantReports(ReportBase, Precompute):
 
 
 class VariantReports(Precompute):
+
     def __init__(self):
         self.data = None
 
