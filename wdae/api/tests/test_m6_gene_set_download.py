@@ -43,7 +43,7 @@ class Test(APITestCase):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         count = len(list(response.streaming_content))
-        self.assertEqual(514 + 2, count)
+        self.assertEqual(546 + 2, count)
 
     def test_gene_set_download_denovo_double_pheno(self):
         data = {'gene_set': 'denovo',
@@ -55,7 +55,7 @@ class Test(APITestCase):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         count = len(list(response.streaming_content))
-        self.assertEqual(689 + 2, count)
+        self.assertEqual(751 + 2, count)
 
     def test_gene_set_download_denovo_triple_pheno(self):
         data = {'gene_set': 'denovo',
@@ -67,7 +67,7 @@ class Test(APITestCase):
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         count = len(list(response.streaming_content))
-        self.assertEqual(719 + 2, count)
+        self.assertEqual(781 + 2, count)
 
     def test_gene_set_download_bad_gene_set(self):
         data = {'gene_set': 'ala-bala',
