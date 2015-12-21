@@ -54,7 +54,7 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('18', response.data['count'])
+        self.assertEqual('19', response.data['count'])
 
     def test_rvis_rank_zero_to_one_in_autism(self):
         data = {
@@ -70,7 +70,7 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('26', response.data['count'])
+        self.assertEqual('33', response.data['count'])
 
     def test_ssc_rest_call_by_gene_weight_rvis_25_to_30(self):
         data = {
@@ -127,7 +127,7 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('18', response.data['count'])
+        self.assertEqual('19', response.data['count'])
 
     def test_sd_rest_call_by_gene_syms(self):
 
@@ -143,7 +143,7 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('18', response.data['count'])
+        self.assertEqual('19', response.data['count'])
 
 if __name__ == "__main__":
     unittest.main()
