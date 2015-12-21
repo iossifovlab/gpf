@@ -17,6 +17,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class EffectTypesFiltersTests(APITestCase):
+
     def test_effect_types(self):
         LOGGER.info("All: %s", get_effect_types(types=True, groups=True))
         LOGGER.info("Groups: %s", get_effect_types(types=False, groups=True))
@@ -206,7 +207,7 @@ class PhenotypeFiltersTests(APITestCase):
                 }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('2', response.data['count'])
+        self.assertEqual('3', response.data['count'])
 
     def test_phenotype_filters(self):
         url = '/api/query_variants_preview'
@@ -224,6 +225,7 @@ class PhenotypeFiltersTests(APITestCase):
 
 
 class VariantPedigreeTests(unittest.TestCase):
+
     def test_pedigree_CUL1(self):
         data = {
             "geneSyms": "CUL1",
@@ -256,6 +258,7 @@ class VariantPedigreeTests(unittest.TestCase):
 
 
 class PhenotypeFilterTests(APITestCase):
+
     def test_phenotype_BTN1A1_BTNL2(self):
         data = {
             "geneSyms": "BTN1A1, BTNL2",
@@ -337,6 +340,7 @@ class PhenotypeFilterTests(APITestCase):
 
 
 class GenderFilterTests(APITestCase):
+
     def test_gender_ATRX_SPEG(self):
         data = {
             "geneSyms": "ATRX, SPEG",
@@ -407,6 +411,7 @@ class GenderFilterTests(APITestCase):
 
 
 class SSCPhenotypeFilterTests(APITestCase):
+
     def test_ssc_phenotype_CCDC171(self):
         data = {
             "geneSyms": "CCDC171",
@@ -419,7 +424,7 @@ class SSCPhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('147', response.data['count'])
+        self.assertEqual('148', response.data['count'])
 
     def test_ssc_phenotype_CACNA1S(self):
         data = {
@@ -437,6 +442,7 @@ class SSCPhenotypeFilterTests(APITestCase):
 
 
 class SSCPresentInChildTests(APITestCase):
+
     def test_present_in_child_all(self):
         data = {
             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
@@ -514,6 +520,7 @@ class SSCPresentInChildTests(APITestCase):
 
 
 class SSCPresentInParentTests(APITestCase):
+
     def test_present_in_parent_all(self):
         data = {
             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A,WRAP73,VWA5B1",
@@ -605,6 +612,7 @@ class PhenotypeFilterTestsSRI(APITestCase):
 
 
 class SSCPresentInChildGenderTests(APITestCase):
+
     def test_present_in_child_male_all(self):
         data = {
             "geneSyms": "JAKMIP1,OR4C11,OSBPL,OTUD4,PAX5,PHF21A",
