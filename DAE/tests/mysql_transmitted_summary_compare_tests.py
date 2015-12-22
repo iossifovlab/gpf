@@ -15,20 +15,17 @@ class Test(VariantsCompareBase):
         transmitted_study = vDB.get_study("w1202s766e611")
         self.impl = MysqlTransmittedQuery(transmitted_study)
 
-    def tearDown(self):
-        self.impl.disconnect()
-
     def test_synonymous_background(self):
         transmitted_study = vDB.get_study('w1202s766e611')
         ovs = transmitted_study.get_transmitted_summary_variants(
-                    ultraRareOnly=True,
-                    minParentsCalled=600,
-                    effectTypes=["synonymous"],
-                    callSet='old')
+            ultraRareOnly=True,
+            minParentsCalled=600,
+            effectTypes=["synonymous"],
+            callSet='old')
         mvs = transmitted_study.get_transmitted_summary_variants(
-                    ultraRareOnly=True,
-                    minParentsCalled=600,
-                    effectTypes=["synonymous"])
+            ultraRareOnly=True,
+            minParentsCalled=600,
+            effectTypes=["synonymous"])
         ores = [v for v in ovs]
         mres = [v for v in mvs]
 
@@ -37,16 +34,16 @@ class Test(VariantsCompareBase):
     def test_summary_variants_gene_sym_MAGEA12(self):
         transmitted_study = vDB.get_study('w1202s766e611')
         ovs = transmitted_study.get_transmitted_summary_variants(
-                    ultraRareOnly=True,
-                    minParentsCalled=600,
-                    effectTypes=["synonymous"],
-                    geneSyms=["MAGEA12"],
-                    callSet='old')
+            ultraRareOnly=True,
+            minParentsCalled=600,
+            effectTypes=["synonymous"],
+            geneSyms=["MAGEA12"],
+            callSet='old')
         mvs = transmitted_study.get_transmitted_summary_variants(
-                    ultraRareOnly=True,
-                    minParentsCalled=600,
-                    effectTypes=["synonymous"],
-                    geneSyms=["MAGEA12"])
+            ultraRareOnly=True,
+            minParentsCalled=600,
+            effectTypes=["synonymous"],
+            geneSyms=["MAGEA12"])
 
         ores = [v for v in ovs]
         mres = [v for v in mvs]

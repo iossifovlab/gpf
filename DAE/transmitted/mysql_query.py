@@ -3,8 +3,6 @@ Created on Sep 24, 2015
 
 @author: lubo
 '''
-import MySQLdb as mdb
-# import pymysql as mdb
 import copy
 import operator
 import re
@@ -17,6 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class MysqlTransmittedQuery(TransmissionConfig):
+
     EFFECT_TYPES = [
         "3'UTR",
         "3'UTR-intron",
@@ -124,18 +123,9 @@ class MysqlTransmittedQuery(TransmissionConfig):
 
         self.connection = None
         self.query = copy.deepcopy(self.DEFAULT_QUERY)
-        self.connect()
-
-    def connect(self):
-        if not self.connection:
-            LOGGER.info("creating new mysql connection")
-            self.connection = mdb.connect(self.host,
-                                          self.user,
-                                          self.passwd,
-                                          self.db)
-        return self.connection
 
     def execute(self, select):
+        import MySQLdb as mdb
         #         if not self.connection:
         #             self.connect()
         LOGGER.info("creating new mysql connection")

@@ -31,7 +31,6 @@ def dae_query_q101():
 def mysql_query_q101(limit=None):
     transmitted_study = vDB.get_study("w1202s766e611")
     m = MysqlTransmittedQuery(transmitted_study)
-    m.connect()
 
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,
@@ -62,7 +61,6 @@ def dae_query_q201():
 def mysql_query_q201(limit=None):
     transmitted_study = vDB.get_study("w1202s766e611")
     m = MysqlTransmittedQuery(transmitted_study)
-    m.connect()
 
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,
@@ -97,7 +95,6 @@ def dae_query_q301():
 def mysql_query_q301(limit=None):
     transmitted_study = vDB.get_study("w1202s766e611")
     m = MysqlTransmittedQuery(transmitted_study)
-    m.connect()
 
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,
@@ -133,7 +130,6 @@ def dae_query_q401():
 def mysql_query_q401(limit=None):
     transmitted_study = vDB.get_study("w1202s766e611")
     m = MysqlTransmittedQuery(transmitted_study)
-    m.connect()
 
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,
@@ -174,7 +170,6 @@ def mysql_query_q501(limit=None):
 
     transmitted_study = vDB.get_study("w1202s766e611")
     m = MysqlTransmittedQuery(transmitted_study)
-    m.connect()
 
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,
@@ -213,7 +208,7 @@ def mysql_query_q601(limit=None):
     transmitted_study = vDB.get_study("w1202s766e611")
 
     m = MysqlTransmittedQuery(transmitted_study)
-    m.connect()
+
     tvs = m.get_transmitted_variants(
         minParentsCalled=None,
         maxAltFreqPrcnt=None,
@@ -313,3 +308,4 @@ def dae_query_q801():
 
     res = [v for v in tvs]
     print("dae_query_q701: {}".format(len(res)))
+    return res
