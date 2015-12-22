@@ -107,7 +107,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
 
     def test_gene_sym_gene_set(self):
 
-        gene_syms = get_gene_set_syms('main', 'FMR1-targets')
+        gene_syms = get_gene_set_syms('main', 'FMRP-Tuschl')
         assert gene_syms
         assert isinstance(gene_syms, list)
 
@@ -115,11 +115,11 @@ class SummaryVariantsLenTest(unittest.TestCase):
         res = self.impl.get_transmitted_summary_variants(
             minParentsCalled=600,
             geneSyms=gene_syms)
-        self.assertEquals(116195, count(res))
+        self.assertEquals(135166, count(res))
 
     def test_gene_sym_gene_set_limit(self):
 
-        gene_syms = get_gene_set_syms('main', 'FMR1-targets')
+        gene_syms = get_gene_set_syms('main', 'FMRP-Tuschl')
         assert gene_syms
         assert isinstance(gene_syms, list)
 
@@ -131,7 +131,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
         self.assertEquals(2000, count(res))
 
     def test_gene_sym_gene_set_lgds(self):
-        gene_syms = get_gene_set_syms('main', 'FMR1-targets')
+        gene_syms = get_gene_set_syms('main', 'FMRP-Tuschl')
         lgds = list(vDB.effectTypesSet('LGDs'))
 
         self.impl.connect()
@@ -139,7 +139,7 @@ class SummaryVariantsLenTest(unittest.TestCase):
             minParentsCalled=600,
             geneSyms=gene_syms,
             effectTypes=lgds)
-        self.assertEquals(850, count(res))
+        self.assertEquals(1915, count(res))
 
     def test_ultra_rare_lgds_len(self):
         lgds = list(vDB.effectTypesSet('LGDs'))

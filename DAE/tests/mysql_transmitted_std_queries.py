@@ -145,7 +145,7 @@ def mysql_query_q401():
 
 
 def dae_query_q501():
-    gene_syms = get_gene_set_syms('main', 'FMR1-targets')
+    gene_syms = get_gene_set_syms('main', 'FMRP-Tuschl')
     assert gene_syms
 
     transmitted_study = vDB.get_study("w1202s766e611")
@@ -165,7 +165,7 @@ def dae_query_q501():
 
 
 def mysql_query_q501():
-    gene_syms = get_gene_set_syms('main', 'FMR1-targets')
+    gene_syms = get_gene_set_syms('main', 'FMRP-Tuschl')
     assert gene_syms
 
     transmitted_study = vDB.get_study("w1202s766e611")
