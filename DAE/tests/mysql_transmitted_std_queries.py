@@ -309,3 +309,35 @@ def dae_query_q801():
     res = [v for v in tvs]
     print("dae_query_q701: {}".format(len(res)))
     return res
+
+
+def mysql_query_q101_limit():
+    mysql_query_q101(limit=2000)
+
+
+def mysql_query_q201_limit():
+    mysql_query_q201(limit=2000)
+
+
+def mysql_query_q301_limit():
+    mysql_query_q301(limit=2000)
+
+
+def mysql_query_q401_limit():
+    mysql_query_q401(limit=2000)
+
+
+def mysql_query_q501_limit():
+    mysql_query_q501(limit=2000)
+
+
+def mysql_query_q601_limit():
+    mysql_query_q601(limit=2000)
+
+
+def mysql_query_q701_limit():
+    mysql_query_q701(limit=2000)
+
+
+def mysql_query_q801_limit():
+    mysql_query_q801(limit=2000)
