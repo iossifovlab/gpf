@@ -4,7 +4,8 @@ Created on Oct 15, 2015
 @author: lubo
 '''
 import unittest
-from mysql_transmitted_std_queries import dae_query_q101, mysql_query_q101
+from mysql_transmitted_std_queries import dae_query_q101, mysql_query_q101,\
+    dae_query_q701, mysql_query_q701, dae_query_q801, mysql_query_q801
 from mysql_transmitted_std_queries import dae_query_q201, mysql_query_q201
 from mysql_transmitted_std_queries import dae_query_q301, mysql_query_q301
 from mysql_transmitted_std_queries import dae_query_q401, mysql_query_q401
@@ -50,6 +51,18 @@ class Test(VariantsCompareBase):
         mysql_res = mysql_query_q601()
 
         self.assertVariantsEquals(dae_res, mysql_res, 'q601')
+
+    def test_compare_q701(self):
+        dae_res = dae_query_q701()
+        mysql_res = mysql_query_q701()
+
+        self.assertVariantsEquals(dae_res, mysql_res, 'q701')
+
+    def test_compare_q801(self):
+        dae_res = dae_query_q801()
+        mysql_res = mysql_query_q801()
+
+        self.assertVariantsEquals(dae_res, mysql_res, 'q801')
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
