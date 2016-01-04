@@ -58,14 +58,10 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data)
         self.assertEqual('2', response.data['count'])
         row = response.data['rows'][0]
-        print(row)
         pedigree = json.loads(row[-2])
-        print(pedigree)
         prb = pedigree[1][2]
-        print(prb)
         self.assertEqual(3, prb[-1])
 
     def test_cnv_minus_1(self):
@@ -82,16 +78,29 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data)
         self.assertEqual('3', response.data['count'])
         row = response.data['rows'][0]
-        print(row)
         pedigree = json.loads(row[-2])
-        print(pedigree)
         prb = pedigree[1][2]
-        print(prb)
         self.assertEqual(1, prb[-1])
 
+    def test_lgds(self):
+        data = {
+            "effectTypes": "nonsense,frame-shift,splice-site",
+            "denovoStudies": "ALL SSC",
+            "transmittedStudies": "None",
+            "presentInChild": "autism only",
+            "gender": "male,female",
+        }
+
+        url = '/api/ssc_query_variants_preview'
+
+        response = self.client.post(url, data, format='json')
+        for row in response.data['rows']:
+            print(row)
+            pedigree = json.loads(row[-2])
+            prb = pedigree[1][2]
+            self.assertTrue(prb[-1] < 3)
 
 if __name__ == "__main__":
     unittest.main()
