@@ -49,10 +49,11 @@ def regions_matcher(regions):
         end = int(r[dsP + 1:])
         reg_defs.append((chrom, beg, end))
 
-    return lambda vchr, vpos: any([(chrom == vchr
-                                    and vpos >= beg
-                                    and vpos <= end)
-                                   for(chrom, beg, end) in reg_defs])
+    return lambda vchr, vpos: \
+        any([(chrom == vchr and
+              vpos >= beg and
+              vpos <= end)
+             for(chrom, beg, end) in reg_defs])
 
 
 class Family:
@@ -258,9 +259,18 @@ class Study:
                 smcP = v.location.find(":")
                 vChr = v.location[0:smcP]
                 try:
-                    vPos = int(v.location[smcP + 1:])
-                    if not reg_matcher(vChr, vPos):
-                        continue
+                    vPos = v.location[smcP + 1:]
+                    if '-' in vPos:
+                        p1, p2 = vPos.split('-')
+                        p1 = int(p1)
+                        p2 = int(p2)
+                        if not (reg_matcher(vChr, p1) or
+                                reg_matcher(vChr, p2)):
+                            continue
+                    else:
+                        p = int(vPos)
+                        if not reg_matcher(vChr, p):
+                            continue
                 except ValueError:
                     # print >> sys.stderr, v.atts
                     continue
