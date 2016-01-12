@@ -24,7 +24,9 @@ from RegionOperations import Region, collapse
 import operator
 import pickle
 import logging
-from Variant import Variant, mat2Str, filter_gene_effect, str2Mat
+from Variant import Variant, mat2Str, filter_gene_effect, str2Mat,\
+    present_in_child_filter,\
+    denovo_present_in_parent_filter
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
@@ -129,67 +131,6 @@ class Study:
         if self.vdb._config.has_option(self._configSection, attName):
             return self.vdb._config.get(self._configSection, attName)
 
-    FILTER_MAPPING = {
-        "autism only":
-        lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
-        "unaffected only":
-        lambda inCh: (len(inCh) == 4 and 's' == inCh[0]),
-        "autism and unaffected":
-        lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
-        "neither":
-        lambda inCh: len(inCh) == 0,
-
-        ("autism only", 'F'):
-        lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
-        ("unaffected only", 'F'):
-        lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
-        ("autism and unaffected", 'F'):
-        lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                      ('F' == inCh[3] or 'F' == inCh[7])),
-        ("neither", 'F'):
-        lambda inCh: (len(inCh) == 0),
-
-        ("autism only", 'M'):
-        lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
-        ("unaffected only", 'M'):
-        lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
-        ("autism and unaffected", 'M'):
-        lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                      ('M' == inCh[3] or 'M' == inCh[7])),
-        ("neither", 'M'):
-        lambda inCh: (len(inCh) == 0),
-        'F':
-        lambda inCh: ('F' in inCh),
-        'M':
-        lambda inCh: ('M' in inCh),
-    }
-
-    @classmethod
-    def _present_in_child_filter(cls, present_in_child=None, gender=None):
-        fall = []
-        if present_in_child and gender:
-            assert len(gender) == 1
-            g = gender[0]
-            if len(present_in_child) == 4:
-                fall = [cls.FILTER_MAPPING[g]]
-            else:
-                fall = [cls.FILTER_MAPPING[(pic, g)]
-                        for pic in present_in_child]
-        elif present_in_child:
-            if len(present_in_child) < 4:
-                fall = [cls.FILTER_MAPPING[pic] for pic in present_in_child]
-        elif gender:
-            assert len(gender) == 1
-            g = gender[0]
-            fall = [cls.FILTER_MAPPING[g]]
-
-        if len(fall) == 0:
-            return None
-        elif len(fall) == 1:
-            return fall[0]
-        else:
-            return lambda inCh: any([f(inCh) for f in fall])
-
     def _get_transmitted_impl(self, callSet):
         if callSet not in self.transmission_impl:
             conf = TransmissionConfig(self, callSet)
@@ -224,12 +165,15 @@ class Study:
             yield v
 
     def get_denovo_variants(self, inChild=None, presentInChild=None,
+                            presentInParent=None,
                             gender=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None,
                             limit=None):
 
-        picFilter = self._present_in_child_filter(presentInChild, gender)
+        picFilter = present_in_child_filter(presentInChild, gender)
+        pipFilter = denovo_present_in_parent_filter(presentInParent)
+
         geneSymsUpper = None
         if geneSyms is not None:
             geneSymsUpper = [sym.upper() for sym in geneSyms]
@@ -247,6 +191,8 @@ class Study:
         dnvData = self._load_dnv_data(callSet)
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
+                continue
+            if pipFilter and not pipFilter(v.fromParentS):
                 continue
             if picFilter and not picFilter(v.inChS):
                 continue

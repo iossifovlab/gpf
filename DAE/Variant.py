@@ -282,3 +282,110 @@ class Variant:
     def is_variant_in_person(self, c):
         return isVariant(self.bestSt, c, self.location,
                          self.memberInOrder[c].gender)
+
+
+PRESENT_IN_CHILD_FILTER_MAPPING = {
+    "autism only":
+    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
+    "unaffected only":
+    lambda inCh: (len(inCh) == 4 and 's' == inCh[0]),
+    "autism and unaffected":
+    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
+    "neither":
+    lambda inCh: len(inCh) == 0,
+
+    ("autism only", 'F'):
+    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
+    ("unaffected only", 'F'):
+    lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
+    ("autism and unaffected", 'F'):
+    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
+                  ('F' == inCh[3] or 'F' == inCh[7])),
+    ("neither", 'F'):
+    lambda inCh: (len(inCh) == 0),
+
+    ("autism only", 'M'):
+    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
+    ("unaffected only", 'M'):
+    lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
+    ("autism and unaffected", 'M'):
+    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
+                  ('M' == inCh[3] or 'M' == inCh[7])),
+    ("neither", 'M'):
+    lambda inCh: (len(inCh) == 0),
+    'F':
+    lambda inCh: ('F' in inCh),
+    'M':
+    lambda inCh: ('M' in inCh),
+}
+
+
+def present_in_child_filter(present_in_child=None, gender=None):
+    fall = []
+    if present_in_child and gender:
+        assert len(gender) == 1
+        g = gender[0]
+        if len(present_in_child) == 4:
+            fall = [PRESENT_IN_CHILD_FILTER_MAPPING[g]]
+        else:
+            fall = [PRESENT_IN_CHILD_FILTER_MAPPING[(pic, g)]
+                    for pic in present_in_child]
+    elif present_in_child:
+        if len(present_in_child) < 4:
+            fall = [PRESENT_IN_CHILD_FILTER_MAPPING[pic]
+                    for pic in present_in_child]
+    elif gender:
+        assert len(gender) == 1
+        g = gender[0]
+        fall = [PRESENT_IN_CHILD_FILTER_MAPPING[g]]
+
+    if len(fall) == 0:
+        return None
+    elif len(fall) == 1:
+        return fall[0]
+    else:
+        return lambda inCh: any([f(inCh) for f in fall])
+
+
+def present_in_parent_filter(present_in_parent):
+    if present_in_parent is None:
+        return None
+    pip = set(present_in_parent)
+
+    if set(['father only']) == pip:
+        return lambda fromParent: (len(fromParent) == 3 and
+                                   'd' == fromParent[0])
+    if set(['mother only']) == pip:
+        return lambda fromParent: (len(fromParent) == 3 and
+                                   'm' == fromParent[0])
+    if set(['mother and father']) == pip:
+        return lambda fromParent: len(fromParent) == 6
+    if set(['mother only', 'father only']) == pip:
+        return lambda fromParent: len(fromParent) == 3
+
+    if set(['mother only', 'mother and father']) == pip:
+        return lambda fromParent: ((len(fromParent) == 3 and
+                                    'm' == fromParent[0]) or
+                                   len(fromParent) == 6)
+    if set(['father only', 'mother and father']) == pip:
+        return lambda fromParent: ((len(fromParent) == 3 and
+                                    'd' == fromParent[0]) or
+                                   len(fromParent) == 6)
+    if set(['father only', 'mother only', 'mother and father']) == \
+            pip:
+        return lambda fromParent: (len(fromParent) > 0)
+    if set(['neither']) == pip:
+        return lambda fromParent: (len(fromParent) == 0)
+
+    return None
+
+
+def denovo_present_in_parent_filter(present_in_parent):
+    if present_in_parent is None:
+        return None
+    pip = set(present_in_parent)
+
+    if 'neither' in pip:
+        return None
+
+    return lambda fromParent: False

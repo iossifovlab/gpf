@@ -1,9 +1,9 @@
 import unittest
 
+from DAE import vDB
+from Variant import present_in_child_filter
 from query_prepare import prepare_denovo_phenotype_gender_filter1, \
     prepare_gender_filter
-from DAE import vDB
-from VariantsDB import Study
 
 
 class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
@@ -24,7 +24,7 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
         gender = prepare_gender_filter(data)
 
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
         self.assertTrue(f('prbF'))
         self.assertFalse(f('prbM'))
         self.assertFalse(f('sibF'))
@@ -45,7 +45,7 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
         gender = prepare_gender_filter(data)
 
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -67,7 +67,7 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
         gender = prepare_gender_filter(data)
 
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -89,7 +89,7 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
         gender = prepare_gender_filter(data)
 
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -111,7 +111,7 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
         gender = prepare_gender_filter(data)
 
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -133,7 +133,7 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
             prepare_denovo_phenotype_gender_filter1(data, self.STUDY)
         gender = prepare_gender_filter(data)
 
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -195,7 +195,7 @@ class PrepareDenovoPhenotypeGenderFilterSchizophreniaTests(unittest.TestCase):
         gender = prepare_gender_filter(data)
         self.assertIsNotNone(present_in_child)
 
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -218,7 +218,7 @@ class PrepareDenovoPhenotypeGenderFilterSchizophreniaTests(unittest.TestCase):
         gender = prepare_gender_filter(data)
         self.assertIsNotNone(present_in_child)
 
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -240,7 +240,7 @@ class PrepareDenovoPhenotypeGenderFilterSchizophreniaTests(unittest.TestCase):
         gender = prepare_gender_filter(data)
         self.assertIsNotNone(present_in_child)
 
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))

@@ -71,5 +71,52 @@ class Test(APITestCase):
 
         # FIXME
 
+    def test_no_denovo(self):
+        url = "/api/ssc_query_variants_preview"
+        request = {
+            'families': 'All',
+            'denovoStudies': 'ALL SSC',
+            'gender': 'female,male',
+            'genes': 'Gene Sets',
+            'rarity': 'ultraRare',
+            'effectTypes': 'frame-shift,nonsense,splice-site',
+            'presentInChild': 'autism and unaffected,autism only',
+            'variantTypes': 'CNV,del,ins,sub',
+            'presentInParent': 'father only,mother and father,mother only',
+            'transmittedStudies': 'w1202s766e611',
+            'limit': 2000,
+            'geneTerm': 'LGDs',
+            'geneSet': 'denovo',
+            'gene_set_phenotype': 'intelectual disability',
+        }
+
+        response = self.client.post(url, request, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEquals('12', response.data['count'])
+
+    def test_has_denovo(self):
+        url = "/api/ssc_query_variants_preview"
+        request = {
+            'families': 'All',
+            'denovoStudies': 'ALL SSC',
+            'gender': 'female,male',
+            'genes': 'Gene Sets',
+            'rarity': 'ultraRare',
+            'effectTypes': 'frame-shift,nonsense,splice-site',
+            'presentInChild': 'autism and unaffected,autism only',
+            'variantTypes': 'CNV,del,ins,sub',
+            'presentInParent':
+            'father only,mother and father,mother only,neither',
+            'transmittedStudies': 'w1202s766e611',
+            'limit': 2000,
+            'geneTerm': 'LGDs',
+            'geneSet': 'denovo',
+            'gene_set_phenotype': 'intelectual disability',
+        }
+
+        response = self.client.post(url, request, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEquals('24', response.data['count'])
+
 if __name__ == "__main__":
     unittest.main()

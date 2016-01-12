@@ -97,7 +97,6 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         for row in response.data['rows']:
-            print(row)
             pedigree = json.loads(row[-2])
             prb = pedigree[1][2]
             self.assertTrue(prb[-1] < 3)

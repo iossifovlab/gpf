@@ -3,7 +3,8 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
-from Variant import parseGeneEffect, filter_gene_effect, Variant
+from Variant import parseGeneEffect, filter_gene_effect, Variant,\
+    present_in_parent_filter
 import gzip
 import pysam
 import copy
@@ -11,39 +12,6 @@ from transmitted.base_query import TransmissionConfig
 
 
 class TransmissionLegacy(TransmissionConfig):
-
-    @staticmethod
-    def _present_in_parent_filter(present_in_parent):
-        if present_in_parent is None:
-            return None
-        pip = set(present_in_parent)
-
-        if set(['father only']) == pip:
-            return lambda fromParent: (len(fromParent) == 3 and
-                                       'd' == fromParent[0])
-        if set(['mother only']) == pip:
-            return lambda fromParent: (len(fromParent) == 3 and
-                                       'm' == fromParent[0])
-        if set(['mother and father']) == pip:
-            return lambda fromParent: len(fromParent) == 6
-        if set(['mother only', 'father only']) == pip:
-            return lambda fromParent: len(fromParent) == 3
-
-        if set(['mother only', 'mother and father']) == pip:
-            return lambda fromParent: ((len(fromParent) == 3 and
-                                        'm' == fromParent[0]) or
-                                       len(fromParent) == 6)
-        if set(['father only', 'mother and father']) == pip:
-            return lambda fromParent: ((len(fromParent) == 3 and
-                                        'd' == fromParent[0]) or
-                                       len(fromParent) == 6)
-        if set(['father only', 'mother only', 'mother and father']) == \
-                pip:
-            return lambda fromParent: (len(fromParent) > 0)
-        if set(['neither']) == pip:
-            return lambda fromParent: (len(fromParent) == 0)
-
-        return None
 
     def __init__(self, study, call_set=None):
         super(TransmissionLegacy, self).__init__(study, call_set)
@@ -201,7 +169,7 @@ class TransmissionLegacy(TransmissionConfig):
         transmittedVariantsTOOMANYFile = \
             self._get_params('indexFile') + "-TOOMANY.txt.bgz"
 
-        pipFilter = self._present_in_parent_filter(presentInParent)
+        pipFilter = present_in_parent_filter(presentInParent)
         picFilter = self.study._present_in_child_filter(presentInChild, gender)
 
         if TMM_ALL:

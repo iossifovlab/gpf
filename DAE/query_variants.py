@@ -499,7 +499,6 @@ def prepare_transmitted_filters(data,
                'minAltFreqPrcnt': prepare_min_alt_freq_prcnt(data),
                'maxAltFreqPrcnt': prepare_max_alt_freq_prcnt(data),
                'TMM_ALL': prepare_TMM_ALL(data),
-               'presentInParent': prepare_present_in_parent(data),
                'limit': prepare_limit(data),
                }
     return dict(filters, **denovo_filters)
@@ -509,6 +508,7 @@ def prepare_denovo_filters(data):
 
     filters = {'inChild': prepare_inchild(data),
                'presentInChild': prepare_present_in_child(data),
+               'presentInParent': prepare_present_in_parent(data),
                'gender': prepare_gender_filter(data),
                'variantTypes': prepare_variant_types(data),
                'effectTypes': prepare_effect_types(data),
@@ -542,6 +542,7 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 
 def dae_query_variants(data):
+    print("data: {}".format(data))
     assert "geneSet" not in data
     assert "geneWeigth" not in data
 
