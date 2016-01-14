@@ -41,8 +41,11 @@ def variantCount(bs, c, location=None, gender=None, denovoParent=None):
     normalRefCN = 2
     if location:
         normalRefCN = normalRefCopyNumber(location, gender)
-
+        # print("variantCount: {}, {}, {}".format(
+        # location, gender, normalRefCN))
         count = bs[0, c]
+        # print("count: {}".format(count))
+
         if bs[0, c] == normalRefCN and bs.shape[0] > 1:
             # print("bs=%s; bs.shape[0]=%s" % (bs, bs.shape[0]))
             count = max([bs[o, c] for o in xrange(1, bs.shape[0])])
