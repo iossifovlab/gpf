@@ -38,19 +38,27 @@ def normalRefCopyNumber(location, gender):
 
 
 def variantCount(bs, c, location=None, gender=None, denovoParent=None):
-    normalRefCN = 2
+    normal = 2
     if location:
-        normalRefCN = normalRefCopyNumber(location, gender)
+        normal = normalRefCopyNumber(location, gender)
         # print("variantCount: {}, {}, {}".format(
         # location, gender, normalRefCN))
-        count = bs[0, c]
+        ref = bs[0, c]
         # print("count: {}".format(count))
+        count = 0
+        if bs.shape[0] == 2:
+            alles = bs[1, c]
+            if alles != 0:
+                if ref == normal:
+                    print("location: {}, gender: {}, c: {}, normal: {}, bs: {}"
+                          .format(location, gender, c, normal, bs))
+                count = alles
+        elif bs.shape[0] == 1:
+            if normal != ref:
+                count = ref
 
-        if bs[0, c] == normalRefCN and bs.shape[0] > 1:
-            # print("bs=%s; bs.shape[0]=%s" % (bs, bs.shape[0]))
-            count = max([bs[o, c] for o in xrange(1, bs.shape[0])])
         if c != denovoParent:
-            return [count if count != 2 else 0]
+            return [count]
         else:
             return [1, 1]
 

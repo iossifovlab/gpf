@@ -71,10 +71,10 @@ class Test(APITestCase):
         print(pedigree)
         m = pedigree[1]
         print(m)
-        self.assertEqual(0, m[0][-1])
-        self.assertEqual(0, m[1][-1])
-        self.assertEqual(0, m[2][-1])
-        self.assertEqual(0, m[3][-1])
+        self.assertEqual(2, m[0][-1])
+        self.assertEqual(1, m[1][-1])
+        self.assertEqual(2, m[2][-1])
+        self.assertEqual(1, m[3][-1])
 
 
 if __name__ == "__main__":
