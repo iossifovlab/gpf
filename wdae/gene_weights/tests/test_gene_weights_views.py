@@ -20,6 +20,8 @@ class GeneWeightsListViewTest(APITestCase):
             self.assertIn('max', w)
             self.assertIn('desc', w)
             self.assertIn('weight', w)
+            self.assertIn('bars', w)
+            self.assertIn('bins', w)
 
 
 class GeneWeightsGetGenesViewTest(APITestCase):

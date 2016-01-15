@@ -19,7 +19,7 @@ class Weights(Preload):
     DATA_FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
-        'data/gene_weights/gene_weights.csv')
+        'data/gene_weights/gene_weights_clean.csv')
 
     def _load_data(self):
         df = pd.read_csv(self.DATA_FILENAME)
@@ -36,10 +36,14 @@ class Weights(Preload):
                 if not use:
                     continue
                 w = df[weight]
+                bars, bins = np.histogram(
+                    w[np.logical_not(np.isnan(w.values))].values, 100)
                 result.append({"weight": weight,
                                "desc": desc,
                                "min": w.min(),
-                               "max": w.max(), })
+                               "max": w.max(),
+                               "bars": bars,
+                               "bins": bins, })
         return result
 
     def load(self):

@@ -46,7 +46,7 @@ class Test(unittest.TestCase):
         genes = self.weights.get_genes_by_weight(
             'LGD_and_RVIS_average_rank',
             wmin=None, wmax=None)
-        self.assertEqual(23951, len(genes))
+        self.assertEqual(16642, len(genes))
 
         res = self.impl.get_transmitted_variants(
             ultraRareOnly=True,
