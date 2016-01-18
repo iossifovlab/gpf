@@ -19,6 +19,10 @@ class Measures(Preload):
         settings.BASE_DIR,
         '..',
         'data/pheno/ssc_pheno_descriptions.csv')
+    HELP_FILENAME = os.path.join(
+        settings.BASE_DIR,
+        '..',
+        'data/pheno/pheno_measures_help.csv')
     DATA_FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
@@ -28,7 +32,7 @@ class Measures(Preload):
         df = pd.read_csv(self.DATA_FILENAME)
         return df
 
-    def _load_desc(self):
+    def _load_desc_only(self):
         result = []
         with open(self.DESC_FILENAME, 'r') as f:
             reader = csv.reader(f)
@@ -43,6 +47,46 @@ class Measures(Preload):
                                "normByAge": int(norm_by_age),
                                "normByNVIQ": int(norm_by_nviq),
                                "normByVIQ": int(norm_by_viq)})
+        return result
+
+    def _load_help(self):
+        result = []
+        with open(self.HELP_FILENAME, 'r') as f:
+            reader = csv.reader(f)
+            reader.next()
+            for row in reader:
+                (measure, hist, hist_small, measure_min, measure_max,
+                 corr_by_age, corr_by_age_small,
+                 age_coeff, age_p_val,
+                 corr_by_nviq, corr_by_nviq_small,
+                 nviq_coeff, nviq_p_val) = row
+
+                result.append({"measure": measure,
+                               "hist": hist,
+                               "hist_small": hist_small,
+                               "min": float(measure_min),
+                               "max": float(measure_max),
+                               "corr_age": corr_by_age,
+                               "corr_age_small": corr_by_age_small,
+                               "age_coeff": age_coeff,
+                               "age_p_val": age_p_val,
+                               "corr_nviq": corr_by_nviq,
+                               "corr_by_nviq_small": corr_by_nviq_small,
+                               "nviq_coeff": nviq_coeff,
+                               "nviq_p_val": nviq_p_val})
+        return result
+
+    def _load_desc(self):
+        desc = self._load_desc_only()
+        pheno_help = self._load_help()
+
+        result = []
+        for d, h in zip(desc, pheno_help):
+            assert d['measure'] == h['measure'], "{}: {}".format(
+                d['measure'], h['measure'])
+            r = dict(d)
+            r.update(h)
+            result.append(r)
         return result
 
     def _load_gender_all(self):
