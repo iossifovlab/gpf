@@ -60,11 +60,6 @@ class Measures(Preload):
                  age_coeff, age_p_val,
                  corr_by_nviq, corr_by_nviq_small,
                  nviq_coeff, nviq_p_val) = row
-                print(measure, hist, hist_small, measure_min, measure_max,
-                      corr_by_age, corr_by_age_small,
-                      age_coeff, age_p_val,
-                      corr_by_nviq, corr_by_nviq_small,
-                      nviq_coeff, nviq_p_val)
                 result.append({"measure": measure,
                                "hist": hist,
                                "hist_small": hist_small,
