@@ -26,7 +26,7 @@ class Test(APITestCase):
         u.save()
 
         cls.user = u
-        _token = Token.objects.get_or_create(user=u)
+        Token.objects.get_or_create(user=u)
         cls.user.save()
 
     @classmethod
