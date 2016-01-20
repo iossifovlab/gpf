@@ -107,6 +107,7 @@ class Test(APITestCase):
         for v in vs:
             location = v.location
             bs = v.bestSt
+
             for (c, m) in enumerate(v.memberInOrder):
                 gender = m.gender
                 normal = normalRefCopyNumber(location, gender)
