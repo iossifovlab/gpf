@@ -4,6 +4,8 @@ Created on Oct 22, 2015
 @author: lubo
 '''
 import unittest
+
+from Variant import present_in_child_filter
 from VariantsDB import Study
 from query_prepare import prepare_gender_filter
 from query_variants import prepare_present_in_child
@@ -12,7 +14,7 @@ from query_variants import prepare_present_in_child
 class PresentInChildFilterTest(unittest.TestCase):
 
     def test_autism_only(self):
-        f = Study._present_in_child_filter(
+        f = present_in_child_filter(
             ['autism only'])
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -25,7 +27,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertFalse(f(''))
 
     def test_unaffected_only(self):
-        f = Study._present_in_child_filter(
+        f = present_in_child_filter(
             ['unaffected only'])
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -38,7 +40,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertFalse(f(''))
 
     def test_autism_and_unaffected(self):
-        f = Study._present_in_child_filter(
+        f = present_in_child_filter(
             ['autism and unaffected'])
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -51,7 +53,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertFalse(f(''))
 
     def test_neither(self):
-        f = Study._present_in_child_filter(
+        f = present_in_child_filter(
             ['neither'])
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -64,7 +66,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertTrue(f(''))
 
     def test_autism_only_and_unaffected_only(self):
-        f = Study._present_in_child_filter(
+        f = present_in_child_filter(
             ['autism only', 'unaffected only'])
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -77,7 +79,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertFalse(f(''))
 
     def test_autism_only_and_unaffected_only_and_autism_and_unaffected(self):
-        f = Study._present_in_child_filter(
+        f = present_in_child_filter(
             ['autism only', 'unaffected only', 'autism and unaffected'])
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -90,7 +92,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         self.assertFalse(f(''))
 
     def test_all_pheno(self):
-        f = Study._present_in_child_filter(
+        f = present_in_child_filter(
             ['autism only', 'unaffected only', 'autism and unaffected',
              'neither'])
         self.assertIsNone(f)
@@ -102,7 +104,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -121,7 +123,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -140,7 +142,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -159,7 +161,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -178,7 +180,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -197,7 +199,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -216,7 +218,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -235,7 +237,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -254,7 +256,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -273,7 +275,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -292,7 +294,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -311,7 +313,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -330,7 +332,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -349,7 +351,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -368,7 +370,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -388,7 +390,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -408,7 +410,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -429,7 +431,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -449,7 +451,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertFalse(f('prbF'))
         self.assertTrue(f('prbM'))
@@ -470,7 +472,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertTrue(f('prbF'))
         self.assertFalse(f('prbM'))
@@ -489,7 +491,7 @@ class PresentInChildFilterTest(unittest.TestCase):
         }
         gender = prepare_gender_filter(data)
         present_in_child = prepare_present_in_child(data)
-        f = Study._present_in_child_filter(present_in_child, gender)
+        f = present_in_child_filter(present_in_child, gender)
 
         self.assertIsNone(f)
 

@@ -4,7 +4,7 @@ Created on Oct 21, 2015
 @author: lubo
 '''
 from Variant import parseGeneEffect, filter_gene_effect, Variant,\
-    present_in_parent_filter
+    present_in_parent_filter, present_in_child_filter
 import gzip
 import pysam
 import copy
@@ -170,7 +170,7 @@ class TransmissionLegacy(TransmissionConfig):
             self._get_params('indexFile') + "-TOOMANY.txt.bgz"
 
         pipFilter = present_in_parent_filter(presentInParent)
-        picFilter = self.study._present_in_child_filter(presentInChild, gender)
+        picFilter = present_in_child_filter(presentInChild, gender)
 
         if TMM_ALL:
             tbf = gzip.open(transmittedVariantsTOOMANYFile)
