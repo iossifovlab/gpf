@@ -57,6 +57,17 @@ class EnrichmentView(APIView):
         if 'geneSet' in result and result['geneSet'] != 'denovo':
             del result['gene_set_phenotype']
 
+        if 'geneWeight' not in result or result['geneWeight'] is None or \
+                'geneWeightMin' not in result or \
+                result['geneWeightMin'] is None or \
+                'geneWeightMax' not in result or \
+                result['geneWeightMax'] is None:
+
+            del result['geneWeight']
+            del result['geneWeightMin']
+            del result['geneWeightMax']
+
+        print("enrichment request: {}".format(result))
         if not all(result.values()):
             return None
 
