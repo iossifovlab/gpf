@@ -37,7 +37,7 @@ class Weights(Preload):
                     continue
                 w = df[weight]
                 bars, bins = np.histogram(
-                    w[np.logical_not(np.isnan(w.values))].values, 50)
+                    w[np.logical_not(np.isnan(w.values))].values, 150)
                 result.append({"weight": weight,
                                "desc": desc,
                                "min": w.min(),
