@@ -15,5 +15,5 @@ urlpatterns = [
         name="pheno_report_download"),
     url(r'^/measures$',
         views.PhenoMeasuresView.as_view(),
-        name="pheno_measures")
+        name="pheno_measures"),
 ]

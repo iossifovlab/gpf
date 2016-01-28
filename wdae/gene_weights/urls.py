@@ -13,4 +13,8 @@ urlpatterns = [
     url(r'^/genes$',
         views.GeneWeightsGetGenesView.as_view(),
         name="gene_weights_get_genes"),
+    url(r'^/partitions$',
+        views.GeneWeightsPartitionsView.as_view(),
+        name="gene_weights_partitions")
+               
 ]
