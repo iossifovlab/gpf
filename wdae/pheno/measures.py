@@ -40,7 +40,7 @@ class Measures(Preload):
             for row in reader:
                 (measure, desc, norm_by_age,
                  norm_by_nviq,
-                 norm_by_viq) = row
+                 norm_by_viq) = row[0:5]
 
                 result.append({"measure": measure,
                                "desc": desc,
