@@ -38,13 +38,18 @@ class EnrichmentView(APIView):
         result = {'denovoStudies': prepare_denovo_studies(data),
                   'geneSet': prepare_string_value(data, 'geneSet'),
                   'geneTerm': prepare_string_value(data, 'geneTerm'),
-                  'gene_set_phenotype': prepare_string_value(
-            data,
-            'gene_set_phenotype'),
-            'geneSyms': combine_gene_syms(data)}
+                  'gene_set_phenotype':
+                  prepare_string_value(data, 'gene_set_phenotype'),
+                  'geneSyms': combine_gene_syms(data),
+                  'geneWeight': prepare_string_value(data, 'geneWeight'),
+                  'geneWeightMin': prepare_string_value(data, 'geneWeightMin'),
+                  'geneWeightMax': prepare_string_value(data, 'geneWeightMax'),
+                  }
 
         if 'geneSet' not in result or result['geneSet'] is None or \
            'geneTerm' not in result or result['geneTerm'] is None:
+            print(result['geneSet'])
+
             del result['geneSet']
             del result['geneTerm']
             del result['gene_set_phenotype']
@@ -93,8 +98,17 @@ class EnrichmentView(APIView):
                 self.gene_set, self.gene_set_phenotype)
 
         if self.gene_set and self.gene_term and gene_terms:
-            res['gs_desc'] = "%s: %s" % (self.gene_term,
-                                         gene_terms.tDesc[self.gene_term])
+            res['gs_desc'] = "Gene Set: %s: %s" % \
+                (self.gene_term,
+                 gene_terms.tDesc[self.gene_term])
+        elif self.gene_weight is not None and \
+                self.gene_weight_min is not None and \
+                self.gene_weight_max is not None:
+
+            res['gs_desc'] = "Gene Weights: %s: from %s to %s" % \
+                (self.gene_weight,
+                 self.gene_weight_min,
+                 self.gene_weight_max)
         else:
             syms = list(self.gene_syms)
             desc = ','.join(sorted(syms))
@@ -164,6 +178,18 @@ class EnrichmentView(APIView):
     @property
     def gene_syms(self):
         return self.data.get('geneSyms', None)
+
+    @property
+    def gene_weight(self):
+        return self.data.get('geneWeight', None)
+
+    @property
+    def gene_weight_min(self):
+        return self.data.get('geneWeightMin', None)
+
+    @property
+    def gene_weight_max(self):
+        return self.data.get('geneWeightMax', None)
 
     @property
     def denovo_studies(self):
