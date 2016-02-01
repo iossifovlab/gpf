@@ -49,6 +49,13 @@ class Measures(Preload):
                                "normByVIQ": int(norm_by_viq)})
         return result
 
+    @staticmethod
+    def _float_conv(val):
+        if val == "NaN":
+            return val
+        else:
+            return float(val)
+
     def _load_help(self):
         result = []
         with open(self.HELP_FILENAME, 'r') as f:
@@ -63,16 +70,16 @@ class Measures(Preload):
                 result.append({"measure": measure,
                                "hist": hist,
                                "hist_small": hist_small,
-                               "min": float(measure_min),
-                               "max": float(measure_max),
+                               "min": self._float_conv(measure_min),
+                               "max": self._float_conv(measure_max),
                                "corr_age": corr_by_age,
                                "corr_age_small": corr_by_age_small,
-                               "age_coeff": age_coeff,
-                               "age_p_val": age_p_val,
+                               "age_coeff": self._float_conv(age_coeff),
+                               "age_p_val": self._float_conv(age_p_val),
                                "corr_nviq": corr_by_nviq,
                                "corr_by_nviq_small": corr_by_nviq_small,
-                               "nviq_coeff": nviq_coeff,
-                               "nviq_p_val": nviq_p_val})
+                               "nviq_coeff": self._float_conv(nviq_coeff),
+                               "nviq_p_val": self._float_conv(nviq_p_val)})
         return result
 
     def _load_desc(self):
