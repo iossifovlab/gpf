@@ -56,7 +56,8 @@ class Test(APITestCase):
         res = view.serialize_response_common_data()
 
         self.assertEquals('main', res['gs_id'])
-        self.assertEquals('ChromatinModifiers: from Ivan', res['gs_desc'])
+        self.assertEquals('Gene Set: ChromatinModifiers: from Ivan',
+                          res['gs_desc'])
         self.assertEquals(428, res['gene_number'])
 
     def test_gene_syms_serialize(self):
