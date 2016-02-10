@@ -31,7 +31,7 @@ class Weights(Preload):
             reader = csv.reader(f)
             reader.next()
             for row in reader:
-                (weight, desc, use) = row
+                (weight, desc, use, step) = row
                 use = int(use)
                 if not use:
                     continue
@@ -43,7 +43,8 @@ class Weights(Preload):
                                "min": w.min(),
                                "max": w.max(),
                                "bars": bars,
-                               "bins": bins, })
+                               "bins": bins,
+                               "step": step, })
         return result
 
     def load(self):
