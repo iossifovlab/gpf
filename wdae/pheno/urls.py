@@ -19,5 +19,8 @@ urlpatterns = [
     url(r'^/measure_partitions$',
         views.PhenoMeasurePartitionsView.as_view(),
         name="measure_partitions"),
+    url(r'^/measure_histogram$',
+        views.PhenoMeasureHistogramView.as_view(),
+        name="measure_histogram"),
 
 ]

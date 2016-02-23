@@ -113,6 +113,40 @@ class PhenoMeasuresView(views.APIView):
         return Response(measures.desc)
 
 
+class PhenoMeasureHistogramView(views.APIView):
+    def __init__(self):
+        self.measures = get_register().get('pheno_measures')
+
+    def post(self, request):
+        data = request.data
+
+        print("pheno measures partitions request: " +
+              str(data))
+        assert "pheno_measure" in data
+        assert self.measures is not None
+
+        pheno_measure = data['pheno_measure']
+        if not self.measures.has_measure(pheno_measure):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        df = self.measures.get_measure_df(pheno_measure)
+        m = df[pheno_measure]
+        print(m)
+        bars, bins = np.histogram(
+            df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25)
+
+        result = {
+            "pheno_measure": pheno_measure,
+            "desc": "",
+            "min": m.min(),
+            "max": m.max(),
+            "bars": bars,
+            "bins": bins,
+            "step": (m.max()-m.min())/1000.0,
+        }
+        return Response(result, status=status.HTTP_200_OK)
+
+
 class PhenoMeasurePartitionsView(views.APIView):
     def __init__(self):
         self.measures = get_register().get('pheno_measures')
