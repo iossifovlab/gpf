@@ -4,6 +4,7 @@ Created on Nov 16, 2015
 @author: lubo
 '''
 import itertools
+import numpy as np
 
 from django.http.response import StreamingHttpResponse
 from rest_framework import views, status
@@ -110,3 +111,41 @@ class PhenoMeasuresView(views.APIView):
         register = get_register()
         measures = register.get('pheno_measures')
         return Response(measures.desc)
+
+
+class PhenoMeasurePartitionsView(views.APIView):
+    def __init__(self):
+        self.measures = get_register().get('pheno_measures')
+
+    def post(self, request):
+        data = request.data
+
+        print("pheno measures partitions request: " +
+              str(data))
+        assert "pheno_measure" in data
+        assert self.measures is not None
+
+        pheno_measure = data['pheno_measure']
+
+        if not self.measures.has_measure(pheno_measure):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        df = self.measures.get_measure_df(pheno_measure)
+        print(df)
+        mmin = float(data["min"])
+        mmax = float(data["max"])
+
+        total = 1.0 * len(df)
+
+        ldf = df[df[pheno_measure] < mmin]
+        rdf = df[df[pheno_measure] > mmax]
+        mdf = df[np.logical_and(df[pheno_measure] >= mmin,
+                                df[pheno_measure] <= mmax)]
+
+        res = {"measure": pheno_measure,
+               "wmin": mmin,
+               "wmax": mmax,
+               "left": {"count": len(ldf), "percent": len(ldf) / total},
+               "mid": {"count": len(mdf), "percent": len(mdf) / total},
+               "right": {"count": len(rdf), "percent": len(rdf) / total}}
+        return Response(res)

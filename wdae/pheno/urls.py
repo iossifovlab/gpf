@@ -16,4 +16,8 @@ urlpatterns = [
     url(r'^/measures$',
         views.PhenoMeasuresView.as_view(),
         name="pheno_measures"),
+    url(r'^/measure_partitions$',
+        views.PhenoMeasurePartitionsView.as_view(),
+        name="measure_partitions"),
+
 ]
