@@ -141,7 +141,9 @@ def pheno_calc(ps):
             pv = calc_pv(positive, negative)
             print("pv={}".format(pv))
 
-        res.append((effect_type, gender, n_mean, n_std, p_mean, p_std, pv))
+        res.append((effect_type, gender,
+                    n_mean, n_std, p_mean, p_std, pv,
+                    p_count))
     return res
 
 
