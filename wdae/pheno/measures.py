@@ -123,6 +123,7 @@ class Measures(Preload):
         pass
 
     def load(self):
+        print("Loading Pheno Measures...")
         self.df = self._load_data()
         self.desc = self._load_desc()
         self.gender_all = self._load_gender_all()
@@ -151,6 +152,21 @@ class Measures(Preload):
                           data=self.df[cols])
         df.dropna(inplace=True)
         return df
+
+    def get_measure_families(self, measure, mmin=None, mmax=None):
+        df = self.get_measure_df(measure)
+        m = df[measure]
+
+        selected = None
+        if mmin is not None and mmax is not None:
+            selected = df[np.logical_and(m >= mmin, m <= mmax)]
+        elif mmin is not None:
+            selected = df[m >= mmin]
+        elif mmax is not None:
+            selected = df[m <= mmax]
+        else:
+            selected = df
+        return selected['family_id'].values
 
     def pheno_merge_data(self, variants, nm):
         yield tuple(['family_id', 'gender',

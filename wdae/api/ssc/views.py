@@ -16,12 +16,54 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from query_prepare import prepare_ssc_filter
 from api.query.wdae_query_variants import wdae_query_wrapper
+import api.preloaded
 
 
 class SSCPrepare(APIView):
 
+    @staticmethod
+    def prepare_pheno_measure_query(data):
+        if 'phenoMeasure' not in data:
+            return None
+        pheno_measure_query = data['phenoMeasure']
+        del data['phenoMeasure']
+
+        print(pheno_measure_query)
+        print(type(pheno_measure_query))
+        assert isinstance(pheno_measure_query, dict)
+        assert 'measure' in pheno_measure_query
+        assert 'min' in pheno_measure_query
+        assert 'max' in pheno_measure_query
+
+        register = api.preloaded.register.get_register()
+        assert register.has_key('pheno_measures')  # @IgnorePep8
+
+        measures = register.get('pheno_measures')
+        pheno_measure = pheno_measure_query['measure']
+        assert measures.has_measure(pheno_measure)
+
+        family_ids = measures.get_measure_families(
+            pheno_measure,
+            float(pheno_measure_query['min']),
+            float(pheno_measure_query['max']))
+
+        family_ids = [str(fid) for fid in family_ids]
+
+        if 'familyIds' not in data:
+            data['familyIds'] = ",".join(family_ids)
+            print(data['familyIds'])
+        else:
+            family_ids = set(family_ids)
+            print(family_ids)
+            request_family_ids = set(data['familyIds'].split(','))
+            result_family_ids = family_ids & request_family_ids
+            data['familyIds'] = ",".join(result_family_ids)
+        print(data['familyIds'])
+        return data
+
     def prepare(self, request):
         data = prepare_query_dict(request.data)
+        data = self.prepare_pheno_measure_query(data)
         data = prepare_ssc_filter(data)
         build_effect_type_filter(data)
         return data

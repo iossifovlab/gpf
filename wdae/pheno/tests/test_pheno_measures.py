@@ -4,7 +4,7 @@ Created on Nov 17, 2015
 @author: lubo
 '''
 import unittest
-from pheno.measures import NormalizedMeasure
+from pheno.measures import NormalizedMeasure, Measures
 
 
 class HeadCircumferenceTest(unittest.TestCase):
@@ -72,6 +72,44 @@ class VerbalIqTest(unittest.TestCase):
         self.assertIn('age', df.columns)
         self.assertIn('non_verbal_iq', df.columns)
         self.assertIn('verbal_iq', df.columns)
+
+
+class FamilyIdsByPhenoMeasure(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(FamilyIdsByPhenoMeasure, cls).setUpClass()
+        cls.measures = Measures()
+        cls.measures.load()
+
+    def test_verbal_iq_interval(self):
+        family_ids = self.measures.get_measure_families('verbal_iq', 10, 20)
+        print(len(family_ids))
+        print(type(family_ids[0]))
+        self.assertEquals(120, len(family_ids))
+        df = self.measures.get_measure_df('verbal_iq')
+        for family_id in family_ids:
+            self.assertTrue(
+                all(df[df['family_id'] ==
+                       family_id]['verbal_iq'].values <= 20))
+            self.assertTrue(
+                all(df[df['family_id'] ==
+                       family_id]['verbal_iq'].values >= 10))
+
+    def test_head_circumference_interval(self):
+        family_ids = self.measures.get_measure_families(
+            'head_circumference', 49, 50)
+        print(len(family_ids))
+        self.assertEquals(102, len(family_ids))
+        df = self.measures.get_measure_df('head_circumference')
+        for family_id in family_ids:
+            self.assertTrue(
+                all(df[df['family_id'] ==
+                       family_id]['head_circumference'].values <= 50))
+            self.assertTrue(
+                all(df[df['family_id'] ==
+                       family_id]['head_circumference'].values >= 49))
+
 
 if __name__ == "__main__":
     unittest.main()

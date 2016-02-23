@@ -12,22 +12,23 @@ from django.http import QueryDict
 
 
 def prepare_query_dict(data):
-    res = []
-    if isinstance(data, QueryDict):
-        items = data.iterlists()
-    else:
-        items = data.items()
-
-    for (key, val) in items:
-        key = str(key)
-        if isinstance(val, list):
-            value = ','.join([str(s).strip() for s in val])
-        else:
-            value = str(val)
-
-        res.append((key, value))
-
-    return dict(res)
+    return data
+#     res = []
+#     if isinstance(data, QueryDict):
+#         items = data.iterlists()
+#     else:
+#         items = data.items()
+# 
+#     for (key, val) in items:
+#         key = str(key)
+#         if isinstance(val, list):
+#             value = ','.join([str(s).strip() for s in val])
+#         else:
+#             value = str(val)
+# 
+#         res.append((key, value))
+# 
+#     return dict(res)
 
 
 def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
