@@ -12,6 +12,7 @@ import statsmodels.formula.api as sm
 # import statsmodels.api as sm
 from api.preloaded.register import Preload
 from query_prepare import prepare_denovo_studies
+from helpers.pvalue import colormap_value
 
 
 class Measures(Preload):
@@ -67,19 +68,23 @@ class Measures(Preload):
                  age_coeff, age_p_val,
                  corr_by_nviq, corr_by_nviq_small,
                  nviq_coeff, nviq_p_val) = row
-                result.append({"measure": measure,
-                               "hist": hist,
-                               "hist_small": hist_small,
-                               "min": self._float_conv(measure_min),
-                               "max": self._float_conv(measure_max),
-                               "corr_age": corr_by_age,
-                               "corr_age_small": corr_by_age_small,
-                               "age_coeff": self._float_conv(age_coeff),
-                               "age_p_val": self._float_conv(age_p_val),
-                               "corr_nviq": corr_by_nviq,
-                               "corr_by_nviq_small": corr_by_nviq_small,
-                               "nviq_coeff": self._float_conv(nviq_coeff),
-                               "nviq_p_val": self._float_conv(nviq_p_val)})
+                result.append(
+                    {"measure": measure,
+                     "hist": hist,
+                     "hist_small": hist_small,
+                     "min": self._float_conv(measure_min),
+                     "max": self._float_conv(measure_max),
+                     "corr_age": corr_by_age,
+                     "corr_age_small": corr_by_age_small,
+                     "age_coeff": self._float_conv(age_coeff),
+                     "age_p_val": self._float_conv(age_p_val),
+                     "age_p_val_bg":
+                     colormap_value(self._float_conv(age_p_val)),
+                     "corr_nviq": corr_by_nviq,
+                     "corr_by_nviq_small": corr_by_nviq_small,
+                     "nviq_coeff": self._float_conv(nviq_coeff),
+                     "nviq_p_val":
+                     colormap_value(self._float_conv(nviq_p_val))})
         return result
 
     def _load_desc(self):

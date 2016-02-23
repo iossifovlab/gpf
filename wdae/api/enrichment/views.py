@@ -20,6 +20,7 @@ from api.enrichment.denovo_counters import DenovoEventsCounter, \
     DenovoGenesEventCounter
 from api.enrichment.families import ChildrenStats
 from api.query.wdae_query_variants import combine_gene_syms, gene_set_loader2
+from helpers.pvalue import colormap_value
 # from api.profiler import profile
 
 
@@ -78,27 +79,6 @@ class EnrichmentView(APIView):
 
         return result
 
-    def colormap_value(self, p_val, lessmore):
-        scale = 0
-        if p_val > 0:
-            if p_val > 0.05:
-                scale = 0
-            else:
-                scale = -np.log10(p_val)
-                if scale > 5:
-                    scale = 5
-                elif scale < 0:
-                    scale = 0
-
-        intensity = int((5.0 - scale) * 255.0 / 5.0)
-        if lessmore == 'more':
-            color = "rgba(%d,%d,%d,180)" % (255, intensity, intensity)
-        elif lessmore == 'less':
-            color = "rgba(%d,%d,%d,180)" % (intensity, intensity, 255)
-        else:
-            color = "rgb(255,255,255)"
-        return color
-
     def serialize_response_common_data(self):
         res = {}
         res['gs_id'] = self.gene_set
@@ -150,13 +130,13 @@ class EnrichmentView(APIView):
 
         if t.count > t.expected:
             lessmore = 'more'
-        elif t.count > t.expected:
+        elif t.count < t.expected:
             lessmore = 'less'
         else:
             lessmore = 'equal'
 
         tres['lessmore'] = lessmore
-        tres['bg'] = self.colormap_value(t.p_val, lessmore)
+        tres['bg'] = colormap_value(t.p_val, lessmore)
         return tres
 
     def serialize_response_results(self):
