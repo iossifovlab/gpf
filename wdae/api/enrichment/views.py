@@ -20,6 +20,7 @@ from api.enrichment.denovo_counters import DenovoEventsCounter, \
     DenovoGenesEventCounter
 from api.enrichment.families import ChildrenStats
 from api.query.wdae_query_variants import combine_gene_syms, gene_set_loader2
+# from api.profiler import profile
 
 
 class EnrichmentView(APIView):
@@ -227,6 +228,7 @@ class EnrichmentView(APIView):
         return {'background': background,
                 'denovo_counter': counter_cls}
 
+    # @profile("enrichment_get.prof")
     def get(self, request):
         query_data = prepare_query_dict(request.query_params)
         LOGGER.info(log_filter(

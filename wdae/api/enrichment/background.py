@@ -3,17 +3,20 @@ Created on Jun 8, 2015
 
 @author: lubo
 '''
-import numpy as np
-import cStringIO
-import zlib
-
-from DAE import vDB
-from collections import Counter
 import cPickle
-from api.precompute.register import Precompute
+import cStringIO
+from collections import Counter
 import csv
 import os
+import zlib
+
 from django.conf import settings
+from django.core.cache import caches
+
+from DAE import vDB
+from api.precompute.register import Precompute
+import numpy as np
+from sets import ImmutableSet
 
 
 def _collect_affected_gene_syms(vs):
@@ -62,6 +65,7 @@ class Background(Precompute):
 
     def __init__(self):
         self.background = None
+        self.background_cache = caches['enrichment']
 
     @property
     def is_ready(self):
@@ -69,6 +73,15 @@ class Background(Precompute):
 
     def prob(self, gene_syms):
         return 1.0 * self.count(gene_syms) / self.total
+
+    def cache_get(self, gen_syms):
+        key = hash(ImmutableSet(gen_syms))
+        value = self.background_cache.get(key)
+        return value
+
+    def cache_store(self, gen_syms, base):
+        key = hash(ImmutableSet(gen_syms))
+        self.background_cache.set(key, base, 30)
 
     def count(self, gen_syms):
         vpred = np.vectorize(lambda sym: sym in gen_syms)
@@ -100,11 +113,15 @@ class SynonymousBackground(Background):
         return count
 
     def count(self, gene_syms):
-        vpred = np.vectorize(lambda sym: sym in gene_syms)
-        index = vpred(self.background['sym'])
-        base = np.sum(self.background['raw'][index])
-        foreground = self.count_foreground_events(gene_syms)
-        return base + foreground
+        res = self.cache_get(gene_syms)
+        if not res:
+            vpred = np.vectorize(lambda sym: sym in gene_syms)
+            index = vpred(self.background['sym'])
+            base = np.sum(self.background['raw'][index])
+            foreground = self.count_foreground_events(gene_syms)
+            res = base + foreground
+            self.cache_store(gene_syms, res)
+        return res
 
     @property
     def total(self):
@@ -166,10 +183,13 @@ class CodingLenBackground(Background):
         self.background = np.load(fin)
 
     def count(self, gene_syms):
-        vpred = np.vectorize(lambda sym: sym in gene_syms)
-        index = vpred(self.background['sym'])
-        base = np.sum(self.background['raw'][index])
-        return base
+        res = self.cache_get(gene_syms)
+        if not res:
+            vpred = np.vectorize(lambda sym: sym in gene_syms)
+            index = vpred(self.background['sym'])
+            res = np.sum(self.background['raw'][index])
+            self.cache_store(gene_syms, res)
+        return res
 
     @property
     def total(self):

@@ -3,7 +3,8 @@ import pickle
 import hashlib
 
 
-MAX_CHUNK_SIZE = 1024*1024
+MAX_CHUNK_SIZE = 1024 * 1024
+
 
 def hash_key(key):
     return hashlib.sha1(key).hexdigest()
@@ -15,7 +16,7 @@ def store(key, value, chunksize=950000):
     serialized = pickle.dumps(value, 2)
     values = {}
     for i in xrange(0, len(serialized), chunksize):
-        values['%s.%s' % (hkey, i//chunksize)] = serialized[i: i+chunksize]
+        values['%s.%s' % (hkey, i // chunksize)] = serialized[i: i + chunksize]
     memcache.set_many(values)
 
 
@@ -28,5 +29,3 @@ def retrieve(key):
         return None
     serialized = ''.join(l)
     return pickle.loads(serialized)
-
-
