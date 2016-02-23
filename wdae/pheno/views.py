@@ -131,7 +131,6 @@ class PhenoMeasurePartitionsView(views.APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         df = self.measures.get_measure_df(pheno_measure)
-        print(df)
         mmin = float(data["min"])
         mmax = float(data["max"])
 
