@@ -40,7 +40,8 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names, \
 from models import VerificationPath
 from serializers import UserSerializer
 from api.logger import LOGGER, log_filter
-from query_prepare import EFFECT_GROUPS, build_effect_type_filter
+from query_prepare import EFFECT_GROUPS, build_effect_type_filter,\
+    prepare_string_value
 from api.query.wdae_query_variants import wdae_query_wrapper, \
     gene_set_loader2,\
     prepare_query_dict
@@ -276,8 +277,9 @@ def families_list(request, study_name=None):
 
 def __get_page_count(query_params, page_count=30):
     if 'page_count' in query_params:
+        page_count = prepare_string_value(query_params, 'page_count')
         try:
-            page_count = int(query_params['page_count'])
+            page_count = int(page_count)
         except:
             page_count = 30
     if not (page_count > 0 and page_count <= 200):
@@ -289,15 +291,20 @@ def __gene_set_filter_response_dict(query_params, gts):
     page_count = __get_page_count(query_params, page_count=100)
 
     if 'filter' in query_params:
-        filter_string = query_params['filter'].lower().strip()
+        filter_string = prepare_string_value(query_params, 'filter')
+        filter_string = filter_string.lower().strip()
 
-        filter_by_key = 0
-        filter_by_desc = 0
+        filter_by_key = prepare_string_value(query_params, 'key')
+        filter_by_desc = prepare_string_value(query_params, 'desc')
 
-        if query_params['key'] == 'true':
-            filter_by_key = 1
-        if query_params['desc'] == 'true':
-            filter_by_desc = 1
+        if filter_by_key == 'true':
+            filter_by_key = True
+        else:
+            filter_by_key = False
+        if filter_by_desc == 'true':
+            filter_by_desc = True
+        else:
+            filter_by_desc = False
 
         l = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
              for (key, value) in gts.tDesc.items() if key in gts.t2G and
@@ -337,11 +344,12 @@ def gene_set_list2(request):
     query_params = prepare_query_dict(request.query_params)
     if 'gene_set' not in query_params:
         return Response({})
-    gene_set = query_params['gene_set']
-    gene_set_phenotype = str(query_params['gene_set_phenotype']) \
+    gene_set = prepare_string_value(query_params, 'gene_set')
+    gene_set_phenotype = prepare_string_value(
+        query_params, 'gene_set_phenotype') \
         if 'gene_set_phenotype' in query_params else None
 
-    gene_name = query_params['gene_name'] \
+    gene_name = prepare_string_value(query_params, 'gene_name') \
         if 'gene_name' in query_params else None
 
     gts = gene_set_loader2(gene_set, gene_set_phenotype)

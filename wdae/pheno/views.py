@@ -120,7 +120,7 @@ class PhenoMeasureHistogramView(views.APIView):
     def post(self, request):
         data = request.data
 
-        print("pheno measures partitions request: " +
+        print("pheno measures histogram request: " +
               str(data))
         assert "pheno_measure" in data
         assert self.measures is not None
@@ -131,7 +131,6 @@ class PhenoMeasureHistogramView(views.APIView):
 
         df = self.measures.get_measure_df(pheno_measure)
         m = df[pheno_measure]
-        print(m)
         bars, bins = np.histogram(
             df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25)
 

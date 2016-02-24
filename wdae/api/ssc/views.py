@@ -28,7 +28,6 @@ class SSCPrepare(APIView):
         pheno_measure_query = data['phenoMeasure']
         del data['phenoMeasure']
 
-        print(pheno_measure_query)
         assert isinstance(pheno_measure_query, dict)
         assert 'measure' in pheno_measure_query
         assert 'min' in pheno_measure_query
@@ -50,14 +49,11 @@ class SSCPrepare(APIView):
 
         if 'familyIds' not in data:
             data['familyIds'] = ",".join(family_ids)
-            print(data['familyIds'])
         else:
             family_ids = set(family_ids)
-            print(family_ids)
             request_family_ids = set(data['familyIds'].split(','))
             result_family_ids = family_ids & request_family_ids
             data['familyIds'] = ",".join(result_family_ids)
-        print(data['familyIds'])
         return data
 
     def prepare(self, request):

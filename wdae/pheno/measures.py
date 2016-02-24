@@ -123,7 +123,6 @@ class Measures(Preload):
         pass
 
     def load(self):
-        print("Loading Pheno Measures...")
         self.df = self._load_data()
         self.desc = self._load_desc()
         self.gender_all = self._load_gender_all()

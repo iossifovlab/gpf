@@ -36,12 +36,11 @@ def __load_text_column(colSpec):
 def prepare_string_value(data, key):
     if key not in data or not data[key]:
         return None
+    result = data[key]
+    if isinstance(result, list):
+        result = ",".join(result)
 
-    if isinstance(data[key], list):
-        print("list data: {}".format(data[key]))
-        return str(data[key][0])
-
-    res = str(data[key]).strip()
+    res = str(result).strip()
     if res == 'null' or res == 'Null' or res == 'None' or res == 'none':
         return None
     return res

@@ -8,37 +8,19 @@ from api.dae_query import combine_denovo_gene_sets
 from DAE import get_gene_sets_symNS
 from query_prepare import prepare_gene_syms
 from api.preloaded.register import get_register
-from django.http import QueryDict
 
 
 def prepare_query_dict(data):
+    data = dict(data)
     return data
-#     res = []
-#     if isinstance(data, QueryDict):
-#         items = data.iterlists()
-#     else:
-#         items = data.items()
-# 
-#     for (key, val) in items:
-#         key = str(key)
-#         if isinstance(val, list):
-#             value = ','.join([str(s).strip() for s in val])
-#         else:
-#             value = str(val)
-# 
-#         res.append((key, value))
-# 
-#     return dict(res)
 
 
 def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
-    print("gene_set_label: ({})".format(gene_set_label))
 
     gene_term = None
     if gene_set_label != 'denovo':
         register = get_register()
         if register.has_key(gene_set_label):  # @IgnorePep8
-            print('gene set {} found in preloaded'.format(gene_set_label))
             return register.get(gene_set_label)
 
         gene_term = get_gene_sets_symNS(gene_set_label)
@@ -66,8 +48,6 @@ def prepare_gene_sets(data):
         gene_term = str(','.join(gene_term))
     if isinstance(gene_set_phenotype, list):
         gene_set_phenotype = ','.join(gene_set_phenotype)
-    print("gene_set: {}".format(gene_set))
-    print("gene_set_phenotype: {}".format(gene_set_phenotype))
     gt = gene_set_loader2(gene_set, gene_set_phenotype)
 
     if gt and gene_term in gt.t2G:
