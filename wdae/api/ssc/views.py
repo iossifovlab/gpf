@@ -24,12 +24,11 @@ class SSCPrepare(APIView):
     @staticmethod
     def prepare_pheno_measure_query(data):
         if 'phenoMeasure' not in data:
-            return None
+            return data
         pheno_measure_query = data['phenoMeasure']
         del data['phenoMeasure']
 
         print(pheno_measure_query)
-        print(type(pheno_measure_query))
         assert isinstance(pheno_measure_query, dict)
         assert 'measure' in pheno_measure_query
         assert 'min' in pheno_measure_query
@@ -62,7 +61,8 @@ class SSCPrepare(APIView):
         return data
 
     def prepare(self, request):
-        data = prepare_query_dict(request.data)
+        data = dict(request.data)
+        data = prepare_query_dict(data)
         data = self.prepare_pheno_measure_query(data)
         data = prepare_ssc_filter(data)
         build_effect_type_filter(data)

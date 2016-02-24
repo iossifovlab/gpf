@@ -116,7 +116,7 @@ class PhenotypeFilterTests(APITestCase):
             "geneSyms": "ATRX, SPEG",
             "denovoStudies": "ALL WHOLE EXOME",
             "phenoType": "autism,schizophrenia,unaffected",
-            "effectType": "Nonsense,Frame-shift,Splice-site,"
+            "effectTypes": "Nonsense,Frame-shift,Splice-site,"
             "Missense,Non-frame-shift,noStart,noEnd,"
             "Synonymous,Non coding,Intron,Intergenic,3'-UTR,5'-UTR"
         }

@@ -32,6 +32,7 @@ def prepare_query_dict(data):
 
 
 def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
+    print("gene_set_label: ({})".format(gene_set_label))
 
     gene_term = None
     if gene_set_label != 'denovo':
@@ -48,12 +49,10 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
 
 
 def prepare_gene_sets(data):
-    if 'geneSet' not in data or not data['geneSet'] or \
-            not data['geneSet'].strip():
+    if 'geneSet' not in data or not data['geneSet']:
         return None
 
-    if 'geneTerm' not in data or not data['geneTerm'] or \
-            not data['geneTerm'].strip():
+    if 'geneTerm' not in data or not data['geneTerm']:
         return None
 
     gene_set = data['geneSet']
@@ -61,7 +60,14 @@ def prepare_gene_sets(data):
 
     gene_set_phenotype = data['gene_set_phenotype'] \
         if 'gene_set_phenotype' in data else None
-
+    if isinstance(gene_set, list):
+        gene_set = str(','.join(gene_set))
+    if isinstance(gene_term, list):
+        gene_term = str(','.join(gene_term))
+    if isinstance(gene_set_phenotype, list):
+        gene_set_phenotype = ','.join(gene_set_phenotype)
+    print("gene_set: {}".format(gene_set))
+    print("gene_set_phenotype: {}".format(gene_set_phenotype))
     gt = gene_set_loader2(gene_set, gene_set_phenotype)
 
     if gt and gene_term in gt.t2G:
@@ -71,10 +77,9 @@ def prepare_gene_sets(data):
 
 
 def get_data_key(key, data):
-    if key not in data or not data[key] or \
-            not data[key].strip():
+    if key not in data or not data[key]:
         return None
-    return data[key].strip()
+    return data[key]
 
 
 def prepare_gene_weights(data):

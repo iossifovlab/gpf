@@ -228,6 +228,8 @@ class DenovoEventsCounter(CounterBase):
 
     def __init__(self, phenotype, children_counter, effect_type):
         super(DenovoEventsCounter, self).__init__(phenotype)
+        assert isinstance(effect_type, str)
+
         self.effect_type = effect_type
         if self.phenotype != children_counter.phenotype:
             raise ValueError("wrong phenotype in children counter")
@@ -247,7 +249,7 @@ class DenovoEventsCounter(CounterBase):
 
     @property
     def effect_types_filter(self):
-        return build_effect_types(self.effect_type)
+        return build_effect_types([self.effect_type])
 
     def filter_vs(self, vs):
         ret = []

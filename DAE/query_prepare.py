@@ -34,10 +34,14 @@ def __load_text_column(colSpec):
 
 
 def prepare_string_value(data, key):
-    if key not in data or not data[key] \
-       or not data[key].strip():
+    if key not in data or not data[key]:
         return None
-    res = data[key].strip()
+
+    if isinstance(data[key], list):
+        print("list data: {}".format(data[key]))
+        return str(data[key][0])
+
+    res = str(data[key]).strip()
     if res == 'null' or res == 'Null' or res == 'None' or res == 'none':
         return None
     return res
@@ -49,6 +53,8 @@ def prepare_gene_syms(data):
 
     if 'geneSyms' in data and data['geneSyms'] is not None:
         gene_sym = data['geneSyms']
+        if isinstance(gene_sym, list):
+            gene_sym = ",".join(gene_sym)
     elif 'geneSym' in data and data['geneSym'] is not None:
         gene_sym = data['geneSym']
     elif 'geneSymFile' in data and data['geneSymFile']:
@@ -60,9 +66,9 @@ def prepare_gene_syms(data):
         gl = gene_sym
         return set(gl)
 
-    elif isinstance(gene_sym, str):
+    elif isinstance(gene_sym, str) or isinstance(gene_sym, unicode):
         gl = [s.strip()
-              for s in gene_sym.replace(',', ' ').split()
+              for s in str(gene_sym).replace(',', ' ').split()
               if len(s.strip()) > 0]
         if not gl:
             return None
@@ -134,11 +140,16 @@ def prepare_denovo_phenotype(data):
 
     phenoType = data['phenoType']
 
-    if phenoType is None or phenoType.lower() == 'none':
+    if phenoType is None or not phenoType:
         del data['phenoType']
         return
 
-    phenoType = set(data['phenoType'].split(','))
+    if isinstance(phenoType, list):
+        phenoType = ','.join(phenoType)
+    if isinstance(phenoType, str) or isinstance(phenoType, unicode):
+        phenoType = set(str(phenoType).split(','))
+    elif isinstance(phenoType, list):
+        phenoType = set([str(pt) for pt in phenoType])
     data['phenoType'] = phenoType
 
 
@@ -147,8 +158,8 @@ def prepare_gender_filter(data):
         return None
     genderFilter = data['gender']
 
-    if isinstance(genderFilter, str):
-        genderFilter = data['gender'].split(',')
+    if isinstance(genderFilter, str) or isinstance(genderFilter, unicode):
+        genderFilter = str(data['gender']).split(',')
         res = []
         if 'female' in genderFilter:
             res.append('F')
@@ -306,11 +317,10 @@ EFFECT_GROUPS = {
 }
 
 
-def build_effect_types(effects_string):
-    effects = effects_string.split(',')
+def build_effect_types(effects):
     result_effects = reduce(
         operator.add,
-        [EFFECT_TYPES[et] if et in EFFECT_TYPES else [et] for
+        [EFFECT_TYPES[str(et)] if et in EFFECT_TYPES else [str(et)] for
          et in effects])
     return ','.join(result_effects)
 
@@ -321,5 +331,11 @@ def build_effect_type_filter(data):
     effects_string = data['effectTypes']
     if effects_string is None:
         return
-    result_effects = build_effect_types(effects_string)
+    if isinstance(effects_string, list):
+        effects_string = ','.join(effects_string)
+    if isinstance(effects_string, str) or isinstance(effects_string, unicode):
+        effects = effects_string.split(',')
+        result_effects = build_effect_types(effects)
+    elif isinstance(effects_string, list):
+        result_effects = build_effect_types([str(ef) for ef in effects_string])
     data["effectTypes"] = result_effects

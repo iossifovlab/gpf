@@ -118,11 +118,14 @@ def family_filter_by_race(families, race):
 
 
 def __bind_family_filter_by_race(data, family_filters):
-    if 'familyRace' in data and data['familyRace'] \
-       and data['familyRace'].lower() != 'all':
-
+    if 'familyRace' in data and data['familyRace']:
+        family_race = data['familyRace']
+        if isinstance(family_race, list):
+            family_race = ",".join(family_race)
+        if not family_race or family_race.lower() == 'all':
+            return
         family_filters.append(
-            lambda fs: family_filter_by_race(fs, data['familyRace'])
+            lambda fs: family_filter_by_race(fs, family_race)
         )
 
 
@@ -167,11 +170,14 @@ def family_filter_by_prb_gender(families, gender):
 
 def __bind_family_filter_by_prb_gender(data, family_filters):
     if 'familyPrbGender' in data and data['familyPrbGender']:
-        if data['familyPrbGender'].lower() == 'male':
+        family_prb_gender = data['familyPrbGender']
+        if isinstance(family_prb_gender, list):
+            family_prb_gender = ','.join(family_prb_gender)
+        if family_prb_gender.lower() == 'male':
             family_filters.append(
                 lambda fs: family_filter_by_prb_gender(fs, 'M')
             )
-        elif data['familyPrbGender'].lower() == 'female':
+        elif family_prb_gender.lower() == 'female':
             family_filters.append(
                 lambda fs: family_filter_by_prb_gender(fs, 'F')
             )
@@ -185,11 +191,14 @@ def family_filter_by_sib_gender(families, gender):
 
 def __bind_family_filter_by_sib_gender(data, family_filters):
     if 'familySibGender' in data and data['familySibGender']:
-        if data['familySibGender'].lower() == 'male':
+        family_sib_gender = data['familySibGender']
+        if isinstance(family_sib_gender, list):
+            family_sib_gender = ','.join(family_sib_gender)
+        if family_sib_gender.lower() == 'male':
             family_filters.append(
                 lambda fs: family_filter_by_sib_gender(fs, 'M')
             )
-        elif data['familySibGender'].lower() == 'female':
+        elif family_sib_gender.lower() == 'female':
             family_filters.append(
                 lambda fs: family_filter_by_sib_gender(fs, 'F')
             )
@@ -207,12 +216,16 @@ def family_filter_by_trio_quad(families, trio_quad):
 
 def __bind_family_filter_by_trio_quad(data, family_filters):
     if 'familyQuadTrio' in data and data['familyQuadTrio']:
-        if data['familyQuadTrio'].lower() == 'trio':
+        family_type = data['familyQuadTrio']
+        if isinstance(family_type, list):
+            family_type = ','.join(family_type)
+
+        if family_type.lower() == 'trio':
             LOGGER.debug("filtering trio families...")
             family_filters.append(
                 lambda fs: family_filter_by_trio_quad(fs, 3)
             )
-        elif data['familyQuadTrio'].lower() == 'quad':
+        elif family_type.lower() == 'quad':
             LOGGER.debug("filtering quad families...")
             family_filters.append(
                 lambda fs: family_filter_by_trio_quad(fs, 4)
@@ -257,10 +270,10 @@ def prepare_inchild(data):
 
     if inChild == 'All' or inChild == 'none' or inChild == 'None':
         return None
-    if isinstance(inChild, str):
-        inChild = inChild.split(',')
+    if isinstance(inChild, str) or isinstance(inChild, unicode):
+        inChild = str(inChild).split(',')
 
-    res = [ic for ic in inChild if ic in get_child_types()]
+    res = [str(ic) for ic in inChild if str(ic) in get_child_types()]
     if not res:
         return None
     if len(res) != 1:
@@ -282,7 +295,10 @@ PRESENT_IN_CHILD_TYPES = [
 
 def prepare_present_in_child(data):
     if "presentInChild" in data:
-        present_in_child = set(data['presentInChild'].split(','))
+        present_in_child = data['presentInChild']
+        if isinstance(present_in_child, list):
+            present_in_child = ','.join(present_in_child)
+        present_in_child = set(str(present_in_child).split(','))
         assert any([pic in PRESENT_IN_CHILD_TYPES for pic in present_in_child])
         return list(present_in_child)
 
@@ -296,7 +312,10 @@ PRESENT_IN_PARENT_TYPES = [
 
 def prepare_present_in_parent(data):
     if "presentInParent" in data:
-        present_in_parent = set(data['presentInParent'].split(','))
+        present_in_parent = data['presentInParent']
+        if isinstance(present_in_parent, list):
+            present_in_parent = ','.join(present_in_parent)
+        present_in_parent = set(str(present_in_parent).split(','))
         assert all([pip in PRESENT_IN_PARENT_TYPES
                     for pip in present_in_parent])
         return list(present_in_parent)
@@ -313,7 +332,7 @@ def prepare_effect_types(data):
        effect_type is None or effect_type == 'All':
         return None
 
-    effect_type_list = [et for et in effect_type.split(',')
+    effect_type_list = [str(et) for et in str(effect_type).split(',')
                         if et in get_effect_types(types=True, groups=True)]
 
     if not effect_type_list:
@@ -326,6 +345,9 @@ def prepare_variant_types(data):
         return None
 
     variant_types = data['variantTypes']
+    if isinstance(variant_types, list):
+        variant_types = ','.join(variant_types)
+
     if variant_types == 'none' or variant_types == 'None' or \
        variant_types is None:
         return None
@@ -334,8 +356,9 @@ def prepare_variant_types(data):
         return None
 
     variant_types_set = set(get_variant_types())
-    variant_types_list = variant_types.split(',')
-    result = [vt for vt in variant_types_list if vt in variant_types_set]
+    variant_types_list = str(variant_types).split(',')
+    result = [str(vt)
+              for vt in variant_types_list if str(vt) in variant_types_set]
     LOGGER.info("variant types: %s", result)
     if result:
         return result
@@ -350,6 +373,8 @@ def prepare_family_ids(data):
 
     if 'familyIds' in data and data['familyIds']:
         families = data['familyIds']
+        if isinstance(families, list):
+            families = ",".join(families)
     elif 'familiesList' in data and data['familiesList']:
         families = data['familiesList']
     elif 'familiesFile' in data and data['familiesFile']:
@@ -357,8 +382,10 @@ def prepare_family_ids(data):
     else:
         return None
 
-    if isinstance(families, str):
-        if families.lower() == 'none' or families.lower() == 'all':
+    if isinstance(families, str) or isinstance(families, unicode):
+        families = str(families)
+        if families.lower() == 'none' or families.lower() == 'all' or \
+                families.strip() == '':
             return None
         else:
             return [s.strip()
@@ -446,8 +473,8 @@ def prepare_gene_region(data):
     else:
         return None
 
-    if isinstance(region, str):
-        region = region.replace(',', ' ').split()
+    if isinstance(region, str) or isinstance(region, unicode):
+        region = str(region).replace(',', ' ').split()
     region = [r for r in region if validate_region(r)]
     if region:
         return region

@@ -542,7 +542,7 @@ Advanced family filter expects following fields:
     if request.method == 'OPTIONS':
         return Response()
 
-    data = prepare_query_dict(request.data)
+    data = dict(request.data)
     build_effect_type_filter(data)
 
     LOGGER.info(log_filter(request, "query variants request: " + str(data)))
