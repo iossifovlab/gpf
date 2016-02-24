@@ -83,8 +83,10 @@ class Measures(Preload):
                      "corr_nviq": corr_by_nviq,
                      "corr_by_nviq_small": corr_by_nviq_small,
                      "nviq_coeff": self._float_conv(nviq_coeff),
-                     "nviq_p_val":
-                     colormap_value(self._float_conv(nviq_p_val))})
+                     "nviq_p_val": self._float_conv(nviq_p_val),
+                     "nviq_p_val_bg":
+                     colormap_value(self._float_conv(nviq_p_val)),
+                     })
         return result
 
     def _load_desc(self):
