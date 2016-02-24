@@ -11,7 +11,7 @@ class Test(APITestCase):
     def test_gene_weights_partitions(self):
         url = "/api/v2/pheno_reports/measure_partitions"
         data = {
-            "pheno_measure": "non_verbal_iq",
+            "measure": "non_verbal_iq",
             "min": 9,
             "max": 40,
         }

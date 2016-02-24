@@ -122,10 +122,10 @@ class PhenoMeasureHistogramView(views.APIView):
 
         print("pheno measures histogram request: " +
               str(data))
-        assert "pheno_measure" in data
+        assert "measure" in data
         assert self.measures is not None
 
-        pheno_measure = data['pheno_measure']
+        pheno_measure = data['measure']
         if not self.measures.has_measure(pheno_measure):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -135,7 +135,7 @@ class PhenoMeasureHistogramView(views.APIView):
             df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25)
 
         result = {
-            "pheno_measure": pheno_measure,
+            "measure": pheno_measure,
             "desc": "",
             "min": m.min(),
             "max": m.max(),
@@ -155,10 +155,10 @@ class PhenoMeasurePartitionsView(views.APIView):
 
         print("pheno measures partitions request: " +
               str(data))
-        assert "pheno_measure" in data
+        assert "measure" in data
         assert self.measures is not None
 
-        pheno_measure = data['pheno_measure']
+        pheno_measure = data['measure']
 
         if not self.measures.has_measure(pheno_measure):
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -175,8 +175,8 @@ class PhenoMeasurePartitionsView(views.APIView):
                                 df[pheno_measure] <= mmax)]
 
         res = {"measure": pheno_measure,
-               "wmin": mmin,
-               "wmax": mmax,
+               "min": mmin,
+               "max": mmax,
                "left": {"count": len(ldf), "percent": len(ldf) / total},
                "mid": {"count": len(mdf), "percent": len(mdf) / total},
                "right": {"count": len(rdf), "percent": len(rdf) / total}}
