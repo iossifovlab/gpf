@@ -6,7 +6,7 @@ Created on Oct 21, 2015
 from query_variants import do_query_variants
 from api.dae_query import combine_denovo_gene_sets
 from DAE import get_gene_sets_symNS
-from query_prepare import prepare_gene_syms
+from query_prepare import prepare_gene_syms, prepare_string_value
 from api.preloaded.register import get_register
 
 
@@ -59,7 +59,7 @@ def prepare_gene_sets(data):
 def get_data_key(key, data):
     if key not in data or not data[key]:
         return None
-    return data[key]
+    return prepare_string_value(data, key)
 
 
 def prepare_gene_weights(data):
