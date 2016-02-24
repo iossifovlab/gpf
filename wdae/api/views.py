@@ -379,11 +379,12 @@ def gene_set_download(request):
 
     query_params = prepare_query_dict(request.query_params)
     if 'gene_set' in query_params and 'gene_name' in query_params:
-        gene_set = query_params['gene_set']
-        gene_set_phenotype = str(query_params['gene_set_phenotype']) \
+        gene_set = prepare_string_value(query_params, 'gene_set')
+        gene_set_phenotype = \
+            prepare_string_value(query_params, 'gene_set_phenotype') \
             if 'gene_set_phenotype' in query_params else None
 
-        gene_name = query_params['gene_name']
+        gene_name = prepare_string_value(query_params, 'gene_name')
         gts = gene_set_loader2(gene_set, gene_set_phenotype)
         if gts and gene_name in gts.t2G:
             title = "{}:{}".format(gene_set, gene_name)

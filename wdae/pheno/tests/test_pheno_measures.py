@@ -84,8 +84,6 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
 
     def test_verbal_iq_interval(self):
         family_ids = self.measures.get_measure_families('verbal_iq', 10, 20)
-        print(len(family_ids))
-        print(type(family_ids[0]))
         self.assertEquals(120, len(family_ids))
         df = self.measures.get_measure_df('verbal_iq')
         for family_id in family_ids:
@@ -99,7 +97,6 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
     def test_head_circumference_interval(self):
         family_ids = self.measures.get_measure_families(
             'head_circumference', 49, 50)
-        print(len(family_ids))
         self.assertEquals(102, len(family_ids))
         df = self.measures.get_measure_df('head_circumference')
         for family_id in family_ids:
