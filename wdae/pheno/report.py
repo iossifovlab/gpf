@@ -143,7 +143,7 @@ def pheno_calc(ps):
 
         res.append((effect_type, gender,
                     n_mean, n_std, p_mean, p_std, pv,
-                    p_count))
+                    p_count, n_count))
     return res
 
 
