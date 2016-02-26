@@ -20,30 +20,35 @@ import api.preloaded
 
 
 class SSCPrepare(APIView):
+    """
+    "phenoMeasure": "non_verbal_iq"
+     "phenoMeasureMax": 161
+     "phenoMeasureMin": 9
 
+    """
     @staticmethod
     def prepare_pheno_measure_query(data):
         if 'phenoMeasure' not in data:
             return data
-        pheno_measure_query = data['phenoMeasure']
-        del data['phenoMeasure']
 
-        assert isinstance(pheno_measure_query, dict)
-        assert 'measure' in pheno_measure_query
-        assert 'min' in pheno_measure_query
-        assert 'max' in pheno_measure_query
+        assert 'phenoMeasure' in data
+        assert 'phenoMeasureMax' in data
+        assert 'phenoMeasureMin' in data
 
         register = api.preloaded.register.get_register()
         assert register.has_key('pheno_measures')  # @IgnorePep8
 
+        pheno_measure = data['phenoMeasure']
+        pheno_measure_min = data['phenoMeasureMin']
+        pheno_measure_max = data['phenoMeasureMax']
+
         measures = register.get('pheno_measures')
-        pheno_measure = pheno_measure_query['measure']
         assert measures.has_measure(pheno_measure)
 
         family_ids = measures.get_measure_families(
             pheno_measure,
-            float(pheno_measure_query['min']),
-            float(pheno_measure_query['max']))
+            float(pheno_measure_min),
+            float(pheno_measure_max))
 
         family_ids = [str(fid) for fid in family_ids]
 
