@@ -10,11 +10,21 @@ from families.trios_quad_query import prepare_family_trio_quad_query
 from families.race_query import prepare_family_race_query
 
 
-def prepare_family_query(data):
+def parse_family_ids(data):
     if 'familyIds' in data:
-        family_ids = set(data['familyIds'].split(','))
-    else:
-        family_ids = None
+        family_ids = data['familyIds']
+        if isinstance(family_ids, list):
+            family_ids = ','.join(family_ids)
+        family_ids = family_ids.strip()
+        if family_ids != '':
+            family_ids = set(data['familyIds'].split(','))
+            if len(family_ids) > 0:
+                return family_ids
+    return None
+
+
+def prepare_family_query(data):
+    family_ids = parse_family_ids(data)
 
     family_ids = prepare_pheno_measure_query(data, family_ids)
     assert family_ids is None or isinstance(family_ids, set)
@@ -31,5 +41,6 @@ def prepare_family_query(data):
     family_ids = prepare_family_race_query(data, family_ids)
     assert family_ids is None or isinstance(family_ids, set)
 
-    data['familyIds'] = ",".join(family_ids)
+    if family_ids is not None:
+        data['familyIds'] = ",".join(family_ids)
     return data
