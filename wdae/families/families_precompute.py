@@ -73,7 +73,7 @@ class FamiliesPrecompute(precompute.register.Precompute):
         assert gender == 'M' or gender == 'F'
         return self._siblings[gender]
 
-    def probadns(self, gender):
+    def probands(self, gender):
         assert self._probands is not None
         assert gender == 'M' or gender == 'F'
         return self._probands[gender]

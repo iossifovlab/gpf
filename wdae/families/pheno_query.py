@@ -22,6 +22,10 @@ def prepare_pheno_measure_query(data):
     pheno_measure_min = data['phenoMeasureMin']
     pheno_measure_max = data['phenoMeasureMax']
 
+    del data['phenoMeasure']
+    del data['phenoMeasureMin']
+    del data['phenoMeasureMax']
+
     measures = register.get('pheno_measures')
     assert measures.has_measure(pheno_measure)
 
