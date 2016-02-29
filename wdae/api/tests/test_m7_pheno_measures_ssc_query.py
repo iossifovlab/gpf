@@ -58,11 +58,9 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'phenoMeasure': {
-                "measure": "verbal_iq",
-                "min": 0,
-                "max": 50,
-            }
+            'phenoMeasure': "verbal_iq",
+            'phenoMeasureMin': 0,
+            'phenoMeasureMax': 50,
         }
 
         response = self.client.post(url, request, format='json')
@@ -85,11 +83,9 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'phenoMeasure': {
-                "measure": "verbal_iq",
-                "min": 49,
-                "max": 50,
-            }
+            'phenoMeasure': "verbal_iq",
+            'phenoMeasureMin': 49,
+            'phenoMeasureMax': 50,
         }
 
         response = self.client.post(url, request, format='json')
@@ -112,11 +108,9 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'phenoMeasure': {
-                "measure": "verbal_iq",
-                "min": 0,
-                "max": 50,
-            }
+            'phenoMeasure': 'verbal_iq',
+            'phenoMeasureMin': 0,
+            'phenoMeasureMax': 50,
         }
 
         response = self.client.post(url, request, format='json')
@@ -140,11 +134,9 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'phenoMeasure': {
-                "measure": "verbal_iq",
-                "min": 49,
-                "max": 50,
-            }
+            'phenoMeasure': 'verbal_iq',
+            'phenoMeasureMin': 49,
+            'phenoMeasureMax': 50,
         }
 
         response = self.client.post(url, request, format='json')
