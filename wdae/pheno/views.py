@@ -55,7 +55,7 @@ class PhenoViewBase(views.APIView):
     def post(self, request):
         data = self.prepare_query_dict(request)
 
-        LOGGER.info(log_filter(request, "download pheno report: " + str(data)))
+        LOGGER.info(log_filter(request, "pheno report: " + str(data)))
 
         if 'phenoMeasure' not in data:
             LOGGER.error("phenoMeasure not found")
@@ -124,8 +124,6 @@ class PhenoMeasureHistogramView(views.APIView):
     def post(self, request):
         data = request.data
 
-        print("pheno measures histogram request: " +
-              str(data))
         assert "measure" in data
         assert self.measures is not None
 
@@ -158,8 +156,6 @@ class PhenoMeasurePartitionsView(views.APIView):
     def post(self, request):
         data = request.data
 
-        print("pheno measures partitions request: " +
-              str(data))
         assert "measure" in data
         assert self.measures is not None
 

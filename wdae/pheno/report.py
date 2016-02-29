@@ -134,12 +134,10 @@ def pheno_calc(ps):
             n_mean = np.mean(negative, dtype=np.float64)
             n_std = 1.96 * \
                 np.std(negative, dtype=np.float64) / np.sqrt(len(negative))
-            print("n_mean, n_std= ({}, {})".format(n_mean, n_std))
         if n_count == 0 or p_count == 0:
             pv = 'NA'
         else:
             pv = calc_pv(positive, negative)
-            print("pv={}".format(pv))
 
         res.append((effect_type, gender,
                     n_mean, n_std, p_mean, p_std, pv,
@@ -148,7 +146,6 @@ def pheno_calc(ps):
 
 
 def calc_pv(positive, negative):
-    print("pos, neg = ({}, {})".format(len(positive), len(negative)))
     if len(positive) < 2 or len(negative) < 2:
         return 'NA'
     tt = ttest_ind(positive, negative)
