@@ -46,3 +46,20 @@ class Test(unittest.TestCase):
 
         self.assertEqual(fgender._trios, fg._trios)
         self.assertEqual(fgender._quads, fg._quads)
+
+    def test_families_races_precompute(self):
+        fgender = FamiliesPrecompute()
+        fgender.precompute()
+
+        self.assertIsNotNone(fgender._races)
+
+    def test_families_races_serialize_deserialize(self):
+        fgender = FamiliesPrecompute()
+        fgender.precompute()
+
+        data = fgender.serialize()
+
+        fg = FamiliesPrecompute()
+        fg.deserialize(data)
+
+        self.assertEqual(fgender._races, fg._races)

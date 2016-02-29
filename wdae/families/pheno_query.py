@@ -30,7 +30,7 @@ def prepare_pheno_measure_query(data):
         float(pheno_measure_min),
         float(pheno_measure_max))
 
-    family_ids = [str(fid) for fid in family_ids]
+    family_ids = set([str(fid) for fid in family_ids])
 
     data = family_query_merge(data, family_ids)
     return data
