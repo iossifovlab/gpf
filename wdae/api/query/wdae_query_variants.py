@@ -7,7 +7,7 @@ from query_variants import do_query_variants
 from api.dae_query import combine_denovo_gene_sets
 from DAE import get_gene_sets_symNS
 from query_prepare import prepare_gene_syms, prepare_string_value
-from api.preloaded.register import get_register
+from preloaded.register import get_register
 
 
 def prepare_query_dict(data):

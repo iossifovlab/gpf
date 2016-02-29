@@ -5,7 +5,7 @@ Created on Dec 10, 2015
 '''
 import unittest
 import numpy as np
-from api.preloaded.register import get_register
+from preloaded.register import get_register
 
 
 class GeneWeightsRVISTest(unittest.TestCase):

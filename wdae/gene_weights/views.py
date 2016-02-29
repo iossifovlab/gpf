@@ -5,7 +5,7 @@ Created on Dec 10, 2015
 '''
 from rest_framework import views, status
 from rest_framework.response import Response
-from api.preloaded.register import get_register
+from preloaded.register import get_register
 import numpy as np
 
 

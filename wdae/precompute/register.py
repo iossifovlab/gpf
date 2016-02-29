@@ -3,7 +3,7 @@ Created on Jun 15, 2015
 
 @author: lubo
 '''
-from api.precompute.cache import PrecomputeStore
+from cache import PrecomputeStore
 
 
 class Precompute(object):

@@ -4,7 +4,7 @@ Created on Aug 3, 2015
 @author: lubo
 '''
 from rest_framework.views import APIView
-from api.precompute import register
+from precompute import register
 from rest_framework.response import Response
 from rest_framework import status
 from api.reports.serializers import StudyVariantReportsSerializer

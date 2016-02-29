@@ -3,13 +3,13 @@ Created on Jun 15, 2015
 
 @author: lubo
 '''
-from api.precompute.register import Precompute
+import precompute
 from denovo_gene_sets import build_denovo_gene_sets
 import cPickle
 import zlib
 
 
-class PrecomputeDenovoGeneSets(Precompute):
+class PrecomputeDenovoGeneSets(precompute.register.Precompute):
     def __init__(self):
         self.denovo_gene_sets = {}
 

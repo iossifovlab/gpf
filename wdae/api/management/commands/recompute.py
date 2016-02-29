@@ -4,7 +4,7 @@ Created on Jun 3, 2015
 @author: lubo
 '''
 from django.core.management.base import BaseCommand, CommandError
-from api.precompute import register
+from precompute import register
 
 
 class Command(BaseCommand):

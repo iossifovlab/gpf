@@ -14,7 +14,7 @@ from django.conf import settings
 from django.core.cache import caches
 
 from DAE import vDB
-from api.precompute.register import Precompute
+from precompute.register import Precompute
 import numpy as np
 from sets import ImmutableSet
 

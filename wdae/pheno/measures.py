@@ -10,7 +10,7 @@ from django.conf import settings
 import pandas as pd
 import statsmodels.formula.api as sm
 # import statsmodels.api as sm
-from api.preloaded.register import Preload
+from preloaded.register import Preload
 from query_prepare import prepare_denovo_studies
 from helpers.pvalue import colormap_value
 
@@ -212,7 +212,7 @@ class Measures(Preload):
 class NormalizedMeasure(object):
 
     def __init__(self, measure):
-        from api.preloaded.register import get_register
+        from preloaded.register import get_register
         self.measure = measure
         register = get_register()
         measures = register.get('pheno_measures')

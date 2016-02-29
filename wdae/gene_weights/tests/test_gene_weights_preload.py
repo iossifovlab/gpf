@@ -4,7 +4,7 @@ Created on Dec 10, 2015
 @author: lubo
 '''
 import unittest
-from api.preloaded.register import get_register
+from preloaded.register import get_register
 
 
 class Test(unittest.TestCase):

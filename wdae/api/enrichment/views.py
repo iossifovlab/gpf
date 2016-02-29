@@ -14,7 +14,7 @@ from api.logger import LOGGER
 import numpy as np
 from api.enrichment.config import PHENOTYPES
 from api.enrichment.results import EnrichmentTestBuilder
-from api.precompute import register
+from precompute import register
 from django.conf import settings
 from api.enrichment.denovo_counters import DenovoEventsCounter, \
     DenovoGenesEventCounter

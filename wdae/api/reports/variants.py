@@ -7,7 +7,7 @@ from collections import defaultdict, Counter
 
 from query_prepare import EFFECT_GROUPS, build_effect_types
 from DAE import vDB
-from api.precompute.register import Precompute
+import precompute
 import cPickle
 import zlib
 from api.studies import get_denovo_studies_names, get_transmitted_studies_names
@@ -170,7 +170,7 @@ class ReportBase(CommonBase):
         self.phenotypes = phenotypes
 
 
-class FamiliesReport(ReportBase, Precompute):
+class FamiliesReport(ReportBase, precompute.register.Precompute):
 
     def __init__(self, study_name):
         super(FamiliesReport, self).__init__(study_name)
@@ -288,7 +288,7 @@ class DenovoEventsCounter(CounterBase):
                       self.children_counter.children_total, 3)
 
 
-class DenovoEventsReport(ReportBase, Precompute):
+class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
     def __init__(self, study_name, families_report):
         super(DenovoEventsReport, self).__init__(study_name)
@@ -372,7 +372,7 @@ class DenovoEventsReport(ReportBase, Precompute):
         self.clear_empty_columns()
 
 
-class StudyVariantReports(ReportBase, Precompute):
+class StudyVariantReports(ReportBase, precompute.register.Precompute):
 
     def __init__(self, study_name, study_description=None):
         super(StudyVariantReports, self).__init__(study_name)
@@ -417,7 +417,7 @@ class StudyVariantReports(ReportBase, Precompute):
             self.denovo_report = None
 
 
-class VariantReports(Precompute):
+class VariantReports(precompute.register.Precompute):
 
     def __init__(self):
         self.data = None

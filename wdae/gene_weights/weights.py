@@ -7,7 +7,7 @@ import os
 import csv
 import pandas as pd
 import numpy as np
-from api.preloaded.register import Preload
+from preloaded.register import Preload
 from django.conf import settings
 
 

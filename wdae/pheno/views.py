@@ -11,7 +11,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 
 from api.logger import log_filter, LOGGER
-from api.preloaded.register import get_register
+from preloaded.register import get_register
 from api.query.wdae_query_variants import prepare_query_dict
 from pheno.measures import NormalizedMeasure
 from pheno.report import family_pheno_query_variants, pheno_calc

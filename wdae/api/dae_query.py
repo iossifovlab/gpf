@@ -1,6 +1,6 @@
 import logging
 import api.GeneTerm
-from api.precompute import register
+from precompute import register
 
 
 LOGGER = logging.getLogger(__name__)

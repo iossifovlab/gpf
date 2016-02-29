@@ -21,7 +21,7 @@ class WdaeApiConfig(AppConfig):
         return m, c
 
     def _load_precomputed(self):
-        from api.precompute.register import get_register
+        from precompute.register import get_register
         register = get_register()
         for key, cls_name in settings.PRECOMPUTE_CONFIG.items():
             m, c = self._split_class_name(cls_name)
@@ -30,7 +30,7 @@ class WdaeApiConfig(AppConfig):
             register.register(key, cls())
 
     def _load_preloaded(self):
-        from api.preloaded.register import get_register
+        from preloaded.register import get_register
         register = get_register()
         for key, cls_name in settings.PRELOAD_CONFIG.items():
             m, c = self._split_class_name(cls_name)

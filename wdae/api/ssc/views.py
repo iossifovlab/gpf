@@ -16,7 +16,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from query_prepare import prepare_ssc_filter
 from api.query.wdae_query_variants import wdae_query_wrapper
-import api.preloaded
+import preloaded
 
 
 class SSCPrepare(APIView):
@@ -35,7 +35,7 @@ class SSCPrepare(APIView):
         assert 'phenoMeasureMax' in data
         assert 'phenoMeasureMin' in data
 
-        register = api.preloaded.register.get_register()
+        register = preloaded.register.get_register()
         assert register.has_key('pheno_measures')  # @IgnorePep8
 
         pheno_measure = data['phenoMeasure']
