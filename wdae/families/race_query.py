@@ -5,7 +5,7 @@ Created on Feb 29, 2016
 '''
 from families.families_precompute import FamiliesPrecompute
 import precompute
-from families.merge_query import family_query_merge
+from families.merge_query import merge_family_ids
 
 
 def prepare_race(race):
@@ -17,18 +17,16 @@ def prepare_race(race):
     return race
 
 
-def prepare_family_race_query(data):
+def prepare_family_race_query(data, family_ids=None):
     if 'familyRace' not in data:
-        return data
+        return family_ids
 
     family_race = prepare_race(data['familyRace'])
     del data['familyRace']
 
     if family_race is None:
-        return data
+        return family_ids
 
     families_precompute = precompute.register.get('families_precompute')
-    family_ids = families_precompute.race(family_race)
-
-    data = family_query_merge(data, family_ids)
-    return data
+    result = families_precompute.race(family_race)
+    return merge_family_ids(result, family_ids)

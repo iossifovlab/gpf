@@ -4,12 +4,12 @@ Created on Feb 29, 2016
 @author: lubo
 '''
 import preloaded
-from families.merge_query import family_query_merge
+from families.merge_query import merge_family_ids
 
 
-def prepare_pheno_measure_query(data):
+def prepare_pheno_measure_query(data, family_ids=None):
     if 'phenoMeasure' not in data:
-        return data
+        return family_ids
 
     assert 'phenoMeasure' in data
     assert 'phenoMeasureMax' in data
@@ -29,12 +29,12 @@ def prepare_pheno_measure_query(data):
     measures = register.get('pheno_measures')
     assert measures.has_measure(pheno_measure)
 
-    family_ids = measures.get_measure_families(
+    result = measures.get_measure_families(
         pheno_measure,
         float(pheno_measure_min),
         float(pheno_measure_max))
 
-    family_ids = set([str(fid) for fid in family_ids])
+    result = set([str(fid) for fid in result])
+    assert isinstance(result, set)
 
-    data = family_query_merge(data, family_ids)
-    return data
+    return merge_family_ids(result, family_ids)
