@@ -27,8 +27,8 @@ def prepare_family_sib_gender_query(data):
     if family_sib_gender is None:
         return data
 
-    families_gender = precompute.register.get('families_gender')
-    family_ids = families_gender.siblings(family_sib_gender)
+    families_precompute = precompute.register.get('families_precompute')
+    family_ids = families_precompute.siblings(family_sib_gender)
 
     data = family_query_merge(data, family_ids)
     return data
@@ -44,8 +44,8 @@ def prepare_family_prb_gender_query(data):
     if family_prb_gender is None:
         return data
 
-    families_gender = precompute.register.get('families_gender')
-    family_ids = families_gender.probands(family_prb_gender)
+    families_precompute = precompute.register.get('families_precompute')
+    family_ids = families_precompute.probands(family_prb_gender)
 
     data = family_query_merge(data, family_ids)
     return data

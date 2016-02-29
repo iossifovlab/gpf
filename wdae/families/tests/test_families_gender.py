@@ -27,3 +27,22 @@ class Test(unittest.TestCase):
 
         self.assertEqual(fgender._probands, fg._probands)
         self.assertEqual(fgender._siblings, fg._siblings)
+
+    def test_families_trios_quads_precompute(self):
+        fgender = FamiliesPrecompute()
+        fgender.precompute()
+
+        self.assertIsNotNone(fgender._trios)
+        self.assertIsNotNone(fgender._quads)
+
+    def test_families_trios_quads_serialize_deserialize(self):
+        fgender = FamiliesPrecompute()
+        fgender.precompute()
+
+        data = fgender.serialize()
+
+        fg = FamiliesPrecompute()
+        fg.deserialize(data)
+
+        self.assertEqual(fgender._trios, fg._trios)
+        self.assertEqual(fgender._quads, fg._quads)
