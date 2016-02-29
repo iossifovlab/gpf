@@ -58,9 +58,9 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'phenoMeasure': "verbal_iq",
-            'phenoMeasureMin': 0,
-            'phenoMeasureMax': 50,
+            'familyPhenoMeasure': "verbal_iq",
+            'familyPhenoMeasureMin': 0,
+            'familyPhenoMeasureMax': 50,
         }
 
         response = self.client.post(url, request, format='json')
@@ -83,9 +83,9 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'phenoMeasure': "verbal_iq",
-            'phenoMeasureMin': 49,
-            'phenoMeasureMax': 50,
+            'familyPhenoMeasure': "verbal_iq",
+            'familyPhenoMeasureMin': 49,
+            'familyPhenoMeasureMax': 50,
         }
 
         response = self.client.post(url, request, format='json')
@@ -108,9 +108,9 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'phenoMeasure': 'verbal_iq',
-            'phenoMeasureMin': 0,
-            'phenoMeasureMax': 50,
+            'familyPhenoMeasure': 'verbal_iq',
+            'familyPhenoMeasureMin': 0,
+            'familyPhenoMeasureMax': 50,
         }
 
         response = self.client.post(url, request, format='json')
@@ -134,9 +134,9 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'phenoMeasure': 'verbal_iq',
-            'phenoMeasureMin': 49,
-            'phenoMeasureMax': 50,
+            'familyPhenoMeasure': 'verbal_iq',
+            'familyPhenoMeasureMin': 49,
+            'familyPhenoMeasureMax': 50,
         }
 
         response = self.client.post(url, request, format='json')

@@ -15,6 +15,7 @@ from api.query.wdae_query_variants import prepare_query_dict
 from pheno.measures import NormalizedMeasure
 from pheno.report import family_pheno_query_variants, pheno_calc
 from helpers.logger import log_filter, LOGGER
+from families.families_query import prepare_family_query
 
 
 class PhenoViewBase(views.APIView):
@@ -47,6 +48,8 @@ class PhenoViewBase(views.APIView):
         data = prepare_query_dict(request.data)
         if 'effectTypes' in data:
             del data['effectTypes']
+        data = prepare_family_query(data)
+
         return data
 
     def post(self, request):
@@ -114,6 +117,7 @@ class PhenoMeasuresView(views.APIView):
 
 
 class PhenoMeasureHistogramView(views.APIView):
+
     def __init__(self):
         self.measures = get_register().get('pheno_measures')
 
@@ -141,12 +145,13 @@ class PhenoMeasureHistogramView(views.APIView):
             "max": m.max(),
             "bars": bars,
             "bins": bins,
-            "step": (m.max()-m.min())/1000.0,
+            "step": (m.max() - m.min()) / 1000.0,
         }
         return Response(result, status=status.HTTP_200_OK)
 
 
 class PhenoMeasurePartitionsView(views.APIView):
+
     def __init__(self):
         self.measures = get_register().get('pheno_measures')
 

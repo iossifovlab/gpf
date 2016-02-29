@@ -8,23 +8,23 @@ from families.merge_query import merge_family_ids
 
 
 def prepare_pheno_measure_query(data, family_ids=None):
-    if 'phenoMeasure' not in data:
+    if 'familyPhenoMeasure' not in data:
         return family_ids
 
-    assert 'phenoMeasure' in data
-    assert 'phenoMeasureMax' in data
-    assert 'phenoMeasureMin' in data
+    assert 'familyPhenoMeasure' in data
+    assert 'familyPhenoMeasureMax' in data
+    assert 'familyPhenoMeasureMin' in data
 
     register = preloaded.register.get_register()
     assert register.has_key('pheno_measures')  # @IgnorePep8
 
-    pheno_measure = data['phenoMeasure']
-    pheno_measure_min = data['phenoMeasureMin']
-    pheno_measure_max = data['phenoMeasureMax']
+    pheno_measure = data['familyPhenoMeasure']
+    pheno_measure_min = data['familyPhenoMeasureMin']
+    pheno_measure_max = data['familyPhenoMeasureMax']
 
-    del data['phenoMeasure']
-    del data['phenoMeasureMin']
-    del data['phenoMeasureMax']
+    del data['familyPhenoMeasure']
+    del data['familyPhenoMeasureMin']
+    del data['familyPhenoMeasureMax']
 
     measures = register.get('pheno_measures')
     assert measures.has_measure(pheno_measure)

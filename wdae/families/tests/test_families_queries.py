@@ -11,27 +11,27 @@ class Test(unittest.TestCase):
 
     def test_combined_family_pheno_measure(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
-            'phenoMeasureMin': 0,
-            'phenoMeasureMax': 24,
+            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasureMin': 0,
+            'familyPhenoMeasureMax': 24,
         }
 
         data = prepare_family_query(data)
 
         print(data)
         self.assertIn('familyIds', data)
-        self.assertNotIn('phenoMeasure', data)
-        self.assertNotIn('phenoMeasureMin', data)
-        self.assertNotIn('phenoMeasureMax', data)
+        self.assertNotIn('familyPhenoMeasure', data)
+        self.assertNotIn('familyPhenoMeasureMin', data)
+        self.assertNotIn('familyPhenoMeasureMax', data)
 
         families = data['familyIds'].split(',')
         self.assertEqual(34, len(families))
 
     def test_combined_family_pheno_measure_and_quad(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
-            'phenoMeasureMin': 0,
-            'phenoMeasureMax': 24,
+            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasureMin': 0,
+            'familyPhenoMeasureMax': 24,
             'familyQuadTrio': 'quad',
         }
 
@@ -39,9 +39,9 @@ class Test(unittest.TestCase):
 
         print(data)
         self.assertIn('familyIds', data)
-        self.assertNotIn('phenoMeasure', data)
-        self.assertNotIn('phenoMeasureMin', data)
-        self.assertNotIn('phenoMeasureMax', data)
+        self.assertNotIn('familyPhenoMeasure', data)
+        self.assertNotIn('familyPhenoMeasureMin', data)
+        self.assertNotIn('familyPhenoMeasureMax', data)
         self.assertNotIn('familyQuadTrio', data)
 
         families = data['familyIds'].split(',')
@@ -49,9 +49,9 @@ class Test(unittest.TestCase):
 
     def test_combined_family_pheno_measure_and_quad_prb_gender_female(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
-            'phenoMeasureMin': 0,
-            'phenoMeasureMax': 24,
+            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasureMin': 0,
+            'familyPhenoMeasureMax': 24,
             'familyQuadTrio': 'quad',
             'familyPrbGender': 'female',
         }
@@ -60,9 +60,9 @@ class Test(unittest.TestCase):
 
         print(data)
         self.assertIn('familyIds', data)
-        self.assertNotIn('phenoMeasure', data)
-        self.assertNotIn('phenoMeasureMin', data)
-        self.assertNotIn('phenoMeasureMax', data)
+        self.assertNotIn('familyPhenoMeasure', data)
+        self.assertNotIn('familyPhenoMeasureMin', data)
+        self.assertNotIn('familyPhenoMeasureMax', data)
         self.assertNotIn('familyQuadTrio', data)
         self.assertNotIn('familyPrbGender', data)
 
@@ -71,9 +71,9 @@ class Test(unittest.TestCase):
 
     def test_combined_family_pheno_measure_and_quad_prb_gender_male(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
-            'phenoMeasureMin': 0,
-            'phenoMeasureMax': 24,
+            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasureMin': 0,
+            'familyPhenoMeasureMax': 24,
             'familyQuadTrio': 'quad',
             'familyPrbGender': 'male',
         }
@@ -82,9 +82,9 @@ class Test(unittest.TestCase):
 
         print(data)
         self.assertIn('familyIds', data)
-        self.assertNotIn('phenoMeasure', data)
-        self.assertNotIn('phenoMeasureMin', data)
-        self.assertNotIn('phenoMeasureMax', data)
+        self.assertNotIn('familyPhenoMeasure', data)
+        self.assertNotIn('familyPhenoMeasureMin', data)
+        self.assertNotIn('familyPhenoMeasureMax', data)
         self.assertNotIn('familyQuadTrio', data)
         self.assertNotIn('familyPrbGender', data)
 
@@ -93,9 +93,9 @@ class Test(unittest.TestCase):
 
     def test_combined_family_pheno_measure_and_and_race(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
-            'phenoMeasureMin': 0,
-            'phenoMeasureMax': 24,
+            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasureMin': 0,
+            'familyPhenoMeasureMax': 24,
             'familyRace': 'asian',
         }
 
@@ -103,9 +103,9 @@ class Test(unittest.TestCase):
 
         print(data)
         self.assertIn('familyIds', data)
-        self.assertNotIn('phenoMeasure', data)
-        self.assertNotIn('phenoMeasureMin', data)
-        self.assertNotIn('phenoMeasureMax', data)
+        self.assertNotIn('familyPhenoMeasure', data)
+        self.assertNotIn('familyPhenoMeasureMin', data)
+        self.assertNotIn('familyPhenoMeasureMax', data)
         self.assertNotIn('familyRace', data)
 
         families = data['familyIds'].split(',')
