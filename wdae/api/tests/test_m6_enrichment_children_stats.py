@@ -6,7 +6,7 @@ Created on Jun 22, 2015
 import unittest
 from DAE import vDB
 from api.enrichment.families import ChildrenStats
-from api.logger import LOGGER
+from helpers.logger import LOGGER
 
 
 class Test(unittest.TestCase):

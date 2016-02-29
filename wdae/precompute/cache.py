@@ -8,7 +8,7 @@ import hashlib
 from django.core.cache import caches
 from datetime import datetime
 
-from api.logger import LOGGER
+from helpers.logger import LOGGER
 
 
 class PrecomputeStore(object):

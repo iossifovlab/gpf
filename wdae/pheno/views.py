@@ -10,11 +10,11 @@ from django.http.response import StreamingHttpResponse
 from rest_framework import views, status
 from rest_framework.response import Response
 
-from api.logger import log_filter, LOGGER
 from preloaded.register import get_register
 from api.query.wdae_query_variants import prepare_query_dict
 from pheno.measures import NormalizedMeasure
 from pheno.report import family_pheno_query_variants, pheno_calc
+from helpers.logger import log_filter, LOGGER
 
 
 class PhenoViewBase(views.APIView):

@@ -9,7 +9,7 @@ from query_prepare import prepare_denovo_studies, \
 
 from api.views import prepare_query_dict, log_filter
 from rest_framework.response import Response
-from api.logger import LOGGER
+from helpers.logger import LOGGER
 
 import numpy as np
 from api.enrichment.config import PHENOTYPES

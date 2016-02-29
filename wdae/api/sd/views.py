@@ -6,7 +6,7 @@ Created on Jun 18, 2015
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from api.views import prepare_query_dict, build_effect_type_filter
-from api.logger import log_filter, LOGGER
+from helpers.logger import log_filter, LOGGER
 from query_variants import join_line
 from api.dae_query import prepare_summary
 from django.http.response import StreamingHttpResponse
