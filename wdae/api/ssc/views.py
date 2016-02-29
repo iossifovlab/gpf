@@ -16,11 +16,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from query_prepare import prepare_ssc_filter
 from api.query.wdae_query_variants import wdae_query_wrapper
-from families.pheno_query import prepare_pheno_measure_query
-from families.gender_query import prepare_family_prb_gender_query,\
-    prepare_family_sib_gender_query
-from families.trios_quad_query import prepare_family_trio_quad_query
-from families.race_query import prepare_family_race_query
+from families.families_query import prepare_family_query
 
 
 class SSCPrepare(APIView):
@@ -29,11 +25,7 @@ class SSCPrepare(APIView):
         data = dict(request.data)
         data = prepare_query_dict(data)
 
-        data = prepare_pheno_measure_query(data)
-        data = prepare_family_prb_gender_query(data)
-        data = prepare_family_sib_gender_query(data)
-        data = prepare_family_trio_quad_query(data)
-        data = prepare_family_race_query(data)
+        data = prepare_family_query(data)
 
         data = prepare_ssc_filter(data)
         build_effect_type_filter(data)
