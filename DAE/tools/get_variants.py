@@ -1,10 +1,22 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 import argparse
 import sys
 
 from query_variants import do_query_variants, join_line
-from query_prepare import prepare_gene_sets
+from query_prepare import prepare_gene_syms
+from DAE import get_gene_sets_symNS
+
+
+def get_variants(args_dict):
+    gene_syms = combine_gene_syms(args_dict)
+    args_dict['geneSyms'] = list(gene_syms) if gene_syms else None
+    if 'geneSet' in args_dict:
+        del args_dict['geneSet']
+    if 'geneTerm' in args_dict:
+        del args_dict['geneTerm']
+    generator = do_query_variants(args_dict)
+    return generator
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):
@@ -114,12 +126,44 @@ LGDs by default. none for all variants''')
     return args_dict
 
 
+def prepare_gene_sets(data):
+    if 'geneSet' not in data or not data['geneSet'] \
+            or not data['geneSet'].strip():
+        return None
+
+    if 'geneTerm' not in data or not data['geneTerm'] \
+            or not data['geneTerm'].strip():
+        return None
+
+    gene_set = data['geneSet']
+    gene_term = data['geneTerm']
+
+    gt = get_gene_sets_symNS(gene_set)
+    if gt and gene_term in gt.t2G:
+            return set(gt.t2G[gene_term].keys())
+
+    return None
+
+
+def combine_gene_syms(data):
+    gene_syms = prepare_gene_syms(data)
+    gene_sets = prepare_gene_sets(data)
+
+    if gene_syms is None:
+        return gene_sets
+    else:
+        if gene_sets is None:
+            return gene_syms
+        else:
+            return gene_sets.union(gene_syms)
+
 if __name__ == "__main__":
 
     print >>sys.stderr, sys.argv
     try:
         args_dict = parse_cli_arguments(sys.argv[1:])
-        generator = do_query_variants(args_dict)
+        generator = get_variants(args_dict)
+
         for l in generator:
             sys.stdout.write(join_line(l, '\t'))
     except ValueError, ex:

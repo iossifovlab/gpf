@@ -6,18 +6,19 @@ Created on Jun 18, 2015
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from api.views import prepare_query_dict, build_effect_type_filter
-from api.logger import log_filter, LOGGER
-from api.query.query_variants import do_query_variants, join_line
+from helpers.logger import log_filter, LOGGER
+from query_variants import join_line
 from api.dae_query import prepare_summary
 from django.http.response import StreamingHttpResponse
 import itertools
 from rest_framework.parsers import JSONParser, FormParser
+from api.query.wdae_query_variants import wdae_query_wrapper
 
 
 class SequencingDenovoPrepare(APIView):
 
     def prepare(self, request):
-        data = prepare_query_dict(request.DATA)
+        data = prepare_query_dict(request.data)
         data['denovoStudies'] = "ALL WHOLE EXOME"
         data['transmittedStudies'] = None
 
@@ -34,12 +35,13 @@ class SequencingDenovoPreview(SequencingDenovoPrepare):
             return Response()
 
         data = self.prepare(request)
+        data['limit'] = 2000
 
         LOGGER.info(log_filter(request,
                                "sd preview query variants: " + str(data)))
 
-        generator = do_query_variants(data,
-                                      atts=["_pedigree_", "phenoInChS"])
+        generator = wdae_query_wrapper(data,
+                                       atts=["_pedigree_", "phenoInChS"])
         summary = prepare_summary(generator)
 
         return Response(summary)
@@ -62,7 +64,7 @@ class SequencingDenovoDownload(SequencingDenovoPrepare):
         comment = ', '.join([': '.join([k, str(v)])
                              for (k, v) in data.items()])
 
-        generator = do_query_variants(data)
+        generator = wdae_query_wrapper(data)
         response = StreamingHttpResponse(
             itertools.chain(
                 itertools.imap(join_line, generator),

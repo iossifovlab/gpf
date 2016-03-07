@@ -39,6 +39,8 @@ if __name__ == "__main__":
     #         {'fun': 'dae_query_q401'},
     #         {'fun': 'dae_query_q501'},
     #         {'fun': 'dae_query_q601'},
+    #         {'fun': 'dae_query_q701'},
+    #         {'fun': 'dae_query_q801'},
     #     ]
     #     measure_all(dae_to_measure)
 
@@ -49,5 +51,19 @@ if __name__ == "__main__":
         {'fun': 'mysql_query_q401'},
         {'fun': 'mysql_query_q501'},
         {'fun': 'mysql_query_q601'},
+        {'fun': 'mysql_query_q701'},
+        {'fun': 'mysql_query_q801'},
     ]
     measure_all(mysql_to_measure)
+
+    mysql_limit_to_measure = [
+        {'fun': 'mysql_query_q101_limit'},
+        {'fun': 'mysql_query_q201_limit'},
+        {'fun': 'mysql_query_q301_limit'},
+        {'fun': 'mysql_query_q401_limit'},
+        {'fun': 'mysql_query_q501_limit'},
+        {'fun': 'mysql_query_q601_limit'},
+        {'fun': 'mysql_query_q701_limit'},
+        {'fun': 'mysql_query_q801_limit'},
+    ]
+    measure_all(mysql_limit_to_measure)

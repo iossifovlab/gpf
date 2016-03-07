@@ -1,12 +1,14 @@
 import unittest
 
-from api.query.query_variants import prepare_inchild, \
-    dae_query_variants, \
-    do_query_variants
+from query_variants import prepare_inchild, \
+    dae_query_variants
 
-from api.query.query_prepare import prepare_gene_sets
+from api.dae_query import prepare_summary
+
+
 import logging
 import itertools
+from api.query.wdae_query_variants import prepare_gene_sets, wdae_query_wrapper
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,10 +43,11 @@ class VariantsTests(unittest.TestCase):
         for v in itertools.chain(*vs):
             self.assertTrue('sibF' in v.inChS)
             if 'frame-shift' not in v.atts['effectGene']:
-                fail=True
+                fail = True
 
         # self.assertEqual(v.atts['effectType'], 'frame-shift')
         self.assertFalse(fail)
+
 
 class CombinedTests(unittest.TestCase):
     TEST_DATA_1 = {"denovoStudies": ["ALL WHOLE EXOME"],
@@ -53,7 +56,7 @@ class CombinedTests(unittest.TestCase):
                    "effectTypes": "frame-shift",
                    "variantTypes": "ins",
                    "geneSet": "main",
-                   "geneTerm": "essentialGenes",
+                   "geneTerm": "Essential",
                    "geneSyms": ""}
 
     TEST_DATA_2 = {"denovoStudies": [],
@@ -75,7 +78,7 @@ class CombinedTests(unittest.TestCase):
         # self.assertEqual(len(gs), 1747)
 
     def test_variants_gene_sets_1(self):
-        vs = do_query_variants(self.TEST_DATA_1)
+        vs = wdae_query_wrapper(self.TEST_DATA_1)
         vs.next()
         count = 0
         for v in vs:
@@ -99,7 +102,7 @@ class CombinedTests(unittest.TestCase):
                    "ultraRareOnly": True}
 
     def test_variants_gene_sets_3(self):
-        vs = do_query_variants(self.TEST_DATA_3)
+        vs = wdae_query_wrapper(self.TEST_DATA_3)
         vs.next()
 
         for v in vs:
@@ -123,7 +126,7 @@ class GeneRegionCombinedTests(unittest.TestCase):
                  "ultraRareOnly": True}
 
     def test_gene_region_filter(self):
-        vs = do_query_variants(self.TEST_DATA)
+        vs = wdae_query_wrapper(self.TEST_DATA)
         vs.next()
 
         for v in vs:
@@ -156,21 +159,12 @@ class IvanchoSubmittedQueryTests(unittest.TestCase):
                  'denovoStudies': "ALL WHOLE EXOME"}
 
     def test_gene_region_filter(self):
-        vs = do_query_variants(self.TEST_DATA)
+        vs = wdae_query_wrapper(self.TEST_DATA)
         # vs.next()
         count = 0
         for _v in vs:
             count += 1
-        self.assertTrue(count>0)
-
-
-
-class QueryDictTests(unittest.TestCase):
-    TEST_DATA_1 = "geneSymbols=&geneSet=main&geneSetInput=&denovoStudies=allWEAndTG&transmittedStudies=none&rarity=ultraRare&inChild=prb&variants=All&effectType=All&families="
-
-
-
-from api.dae_query import prepare_summary
+        self.assertTrue(count > 0)
 
 
 class PreviewQueryTests(unittest.TestCase):
@@ -194,7 +188,7 @@ class PreviewQueryTests(unittest.TestCase):
                       "familySibGender": "All"}
 
     def test_preview_1(self):
-        vs = do_query_variants(self.PREVIEW_TEST_1)
+        vs = wdae_query_wrapper(self.PREVIEW_TEST_1)
         vs.next()
         count = 0
         for _v in vs:
@@ -202,6 +196,6 @@ class PreviewQueryTests(unittest.TestCase):
         self.assertTrue(count > 0)
 
     def test_preview_1_summary(self):
-        vs = do_query_variants(self.PREVIEW_TEST_1)
+        vs = wdae_query_wrapper(self.PREVIEW_TEST_1)
         summary = prepare_summary(vs)
         self.assertTrue(int(summary["count"]) > 0)

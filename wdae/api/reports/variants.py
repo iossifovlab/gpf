@@ -5,9 +5,9 @@ Created on Jul 27, 2015
 '''
 from collections import defaultdict, Counter
 
-from api.common.effect_types import EFFECT_GROUPS, build_effect_types
+from query_prepare import EFFECT_GROUPS, build_effect_types
 from DAE import vDB
-from api.precompute.register import Precompute
+import precompute
 import cPickle
 import zlib
 from api.studies import get_denovo_studies_names, get_transmitted_studies_names
@@ -54,6 +54,7 @@ class CommonBase(object):
 
 
 class CounterBase(CommonBase):
+
     @staticmethod
     def build_families_buffer(studies):
         families_buffer = defaultdict(dict)
@@ -83,6 +84,7 @@ class CounterBase(CommonBase):
 
 
 class ChildrenCounter(CounterBase):
+
     def __init__(self, phenotype):
         super(ChildrenCounter, self).__init__(phenotype)
 
@@ -114,6 +116,7 @@ class ChildrenCounter(CounterBase):
 
 
 class FamiliesCounters(CounterBase):
+
     def __init__(self, phenotype):
         super(FamiliesCounters, self).__init__(phenotype)
         if phenotype == 'unaffected':
@@ -140,7 +143,7 @@ class FamiliesCounters(CounterBase):
         return self.data.get(fconf, 0)
 
     def type_counters(self):
-        return self.data.values()
+        return sorted(self.data.values())
 
     @property
     def counters(self):
@@ -150,6 +153,7 @@ class FamiliesCounters(CounterBase):
 
 
 class ReportBase(CommonBase):
+
     def __init__(self, study_name):
         super(ReportBase, self).__init__()
         self.study_name = study_name
@@ -166,7 +170,7 @@ class ReportBase(CommonBase):
         self.phenotypes = phenotypes
 
 
-class FamiliesReport(ReportBase, Precompute):
+class FamiliesReport(ReportBase, precompute.register.Precompute):
 
     def __init__(self, study_name):
         super(FamiliesReport, self).__init__(study_name)
@@ -221,8 +225,11 @@ class FamiliesReport(ReportBase, Precompute):
 
 
 class DenovoEventsCounter(CounterBase):
+
     def __init__(self, phenotype, children_counter, effect_type):
         super(DenovoEventsCounter, self).__init__(phenotype)
+        assert isinstance(effect_type, str)
+
         self.effect_type = effect_type
         if self.phenotype != children_counter.phenotype:
             raise ValueError("wrong phenotype in children counter")
@@ -242,7 +249,7 @@ class DenovoEventsCounter(CounterBase):
 
     @property
     def effect_types_filter(self):
-        return build_effect_types(self.effect_type)
+        return build_effect_types([self.effect_type])
 
     def filter_vs(self, vs):
         ret = []
@@ -281,7 +288,7 @@ class DenovoEventsCounter(CounterBase):
                       self.children_counter.children_total, 3)
 
 
-class DenovoEventsReport(ReportBase, Precompute):
+class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
     def __init__(self, study_name, families_report):
         super(DenovoEventsReport, self).__init__(study_name)
@@ -365,7 +372,8 @@ class DenovoEventsReport(ReportBase, Precompute):
         self.clear_empty_columns()
 
 
-class StudyVariantReports(ReportBase, Precompute):
+class StudyVariantReports(ReportBase, precompute.register.Precompute):
+
     def __init__(self, study_name, study_description=None):
         super(StudyVariantReports, self).__init__(study_name)
         self.study_description = study_description
@@ -409,7 +417,8 @@ class StudyVariantReports(ReportBase, Precompute):
             self.denovo_report = None
 
 
-class VariantReports(Precompute):
+class VariantReports(precompute.register.Precompute):
+
     def __init__(self):
         self.data = None
 

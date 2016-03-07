@@ -28,7 +28,7 @@ class Test(unittest.TestCase):
 
     def test_family_report_we_studies(self):
         fr = FamiliesReport('ALL WHOLE EXOME')
-        self.assertEqual(10, len(fr.studies))
+        self.assertEqual(13, len(fr.studies))
 
     def test_family_report_we_phenotypes(self):
         fr = FamiliesReport('ALL WHOLE EXOME')
@@ -43,7 +43,7 @@ class Test(unittest.TestCase):
 
     def test_family_report_ssc_studies(self):
         fr = FamiliesReport('ALL SSC')
-        self.assertEqual(3, len(fr.studies))
+        self.assertEqual(7, len(fr.studies))
 
     def test_family_report_ssc_phenotypes(self):
         fr = FamiliesReport('ALL SSC')
@@ -150,6 +150,9 @@ class Test(unittest.TestCase):
         fc = fr.get_families_counters('autism')
         fc1 = fr1.get_families_counters('autism')
 
+        # print(sorted(fc.type_counters()))
+        # print(sorted(fc1.type_counters()))
+
         self.assertEquals(fc.type_counters(),
                           fc1.type_counters())
 
@@ -202,15 +205,15 @@ class Test(unittest.TestCase):
         fr = FamiliesReport('ALL WHOLE EXOME')
         fr.build()
         cc = fr.get_children_counters('unaffected')
-        self.assertEquals(971, cc.children_male)
-        self.assertEquals(1058, cc.children_female)
+        self.assertEquals(1464, cc.children_male)
+        self.assertEquals(1566, cc.children_female)
 
     def test_children_counters_lifton_studies(self):
         fr = FamiliesReport('Lifton2013CHD')
         fr.build()
         cc = fr.get_children_counters('unaffected')
-        self.assertEquals(0, cc.children_male)
-        self.assertEquals(0, cc.children_female)
+        self.assertEquals(133, cc.children_male)
+        self.assertEquals(131, cc.children_female)
 
 
 if __name__ == "__main__":

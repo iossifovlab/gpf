@@ -1,10 +1,9 @@
 import logging
 import api.GeneTerm
-from api.precompute import register
+from precompute import register
+
 
 LOGGER = logging.getLogger(__name__)
-
-from DAE import get_gene_sets_symNS
 
 # def load_gene_set(gene_set_label, study_name=None):
 #     gene_term = gene_set_loader(gene_set_label, study_name)
@@ -40,17 +39,17 @@ def combine_denovo_gene_sets(gene_set_phenotype):
     return gene_terms_union(gene_terms)
 
 
-def load_gene_set2(gene_set_label, gene_set_phenotype=None):
-    gene_term = None
-    if gene_set_label != 'denovo':
-        gene_term = get_gene_sets_symNS(gene_set_label)
-    else:
-        gene_term = combine_denovo_gene_sets(gene_set_phenotype)
-
-    if gene_term:
-        gs = api.GeneTerm.GeneTerm(gene_term)
-        return gs
-    return None
+# def load_gene_set2(gene_set_label, gene_set_phenotype=None):
+#     gene_term = None
+#     if gene_set_label != 'denovo':
+#         gene_term = get_gene_sets_symNS(gene_set_label)
+#     else:
+#         gene_term = combine_denovo_gene_sets(gene_set_phenotype)
+#
+#     if gene_term:
+#         gs = api.GeneTerm.GeneTerm(gene_term)
+#         return gs
+#     return None
 
 
 # def prepare_pheno_pedigree(cols, rows):

@@ -20,7 +20,7 @@ def enrichmentTest(testVarGenesDict, geneTerms):
 
     for tName, gSyms in testVarGenesDict:
         for s in geneTerms.t2G:
-            allRes[s][tName] = EnrichmentTestRes();
+            allRes[s][tName] = EnrichmentTestRes()
             allRes[s][tName].cnt = 0
         for gsg in gSyms:
             touchedSets = set()
@@ -56,7 +56,7 @@ def enrichmentTest(testVarGenesDict, geneTerms):
 
 def computeQVals(pVals):
     ss = sorted([(i, p) for i, p in enumerate(pVals)], key=lambda x: x[1])
-    qVals = [ip[1]*len(ss)/(j+1) for j,ip in enumerate(ss)]
+    qVals = [ip[1] * len(ss) / (j + 1) for j, ip in enumerate(ss)]
     qVals = [q if q <= 1.0 else 1.0 for q in qVals]
     prevQVal = qVals[-1]
     for i in xrange(len(ss)-2, -1, -1):
@@ -209,7 +209,7 @@ def main(dnvSts, transmStdy, geneTerms):
              transmStdy.get_transmitted_summary_variants(
                  ultraRareOnly=True,
                  minParentsCalled=600,
-                 effectTypes="synonymous"))]
+                 effectTypes=["synonymous"]))]
     ]
 
     print >> sys.stderr, "Running the test..."

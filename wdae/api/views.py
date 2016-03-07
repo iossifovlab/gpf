@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import StreamingHttpResponse
-from django.http import QueryDict
 # from rest_framework.response import Response as RestResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
@@ -26,11 +25,12 @@ import itertools
 import string
 # import uuid
 
-from api.query.query_variants import do_query_variants, \
+
+from query_variants import \
     get_child_types, get_variant_types, \
     join_line
 
-from dae_query import prepare_summary, load_gene_set2
+from dae_query import prepare_summary
 
 from report_variants import build_stats
 
@@ -39,8 +39,12 @@ from studies import get_transmitted_studies_names, get_denovo_studies_names, \
 
 from models import VerificationPath
 from serializers import UserSerializer
-from api.logger import LOGGER, log_filter
-from api.common.effect_types import EFFECT_GROUPS, build_effect_type_filter
+from helpers.logger import LOGGER, log_filter
+from query_prepare import EFFECT_GROUPS, build_effect_type_filter,\
+    prepare_string_value
+from api.query.wdae_query_variants import wdae_query_wrapper, \
+    gene_set_loader2,\
+    prepare_query_dict
 
 
 @receiver(post_save, sender=get_user_model())
@@ -48,7 +52,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
 
-# from query_prepare import prepare_transmitted_studies
+# from query_prepare_bak import prepare_transmitted_studies
 
 
 # class Response(RestResponse):
@@ -120,7 +124,7 @@ Example:
     GET /api/effect_types_filters?effectFilter=UTRs
 
     """
-    query_params = request.QUERY_PARAMS
+    query_params = request.query_params
     if 'effectFilter' not in query_params:
         effect_filter = 'all'
     else:
@@ -182,7 +186,7 @@ Example:
     """
     all_var_types = ['sub', 'ins', 'del', 'CNV']
 
-    query_params = request.QUERY_PARAMS
+    query_params = request.query_params
     if 'variantFilter' not in query_params:
         return Response({'variant_filters': all_var_types})
 
@@ -217,7 +221,7 @@ def variant_types_list(request):
 
 @api_view(['GET'])
 def pheno_types_filters(request):
-    query_params = request.QUERY_PARAMS
+    query_params = request.query_params
     all_result = ['autism',
                   'congenital heart disease',
                   'epilepsy',
@@ -262,7 +266,7 @@ def families_list(request, study_name=None):
     st = vDB.get_study(study_name)
     families = st.families.keys()
 
-    query_params = request.QUERY_PARAMS
+    query_params = request.query_params
     if 'filter' in query_params:
         start_string = query_params['filter']
         families = [f for f in families if f.startswith(start_string)]
@@ -273,8 +277,9 @@ def families_list(request, study_name=None):
 
 def __get_page_count(query_params, page_count=30):
     if 'page_count' in query_params:
+        page_count = prepare_string_value(query_params, 'page_count')
         try:
-            page_count = int(query_params['page_count'])
+            page_count = int(page_count)
         except:
             page_count = 30
     if not (page_count > 0 and page_count <= 200):
@@ -286,15 +291,20 @@ def __gene_set_filter_response_dict(query_params, gts):
     page_count = __get_page_count(query_params, page_count=100)
 
     if 'filter' in query_params:
-        filter_string = query_params['filter'].lower().strip()
+        filter_string = prepare_string_value(query_params, 'filter')
+        filter_string = filter_string.lower().strip()
 
-        filter_by_key = 0
-        filter_by_desc = 0
+        filter_by_key = prepare_string_value(query_params, 'key')
+        filter_by_desc = prepare_string_value(query_params, 'desc')
 
-        if query_params['key'] == 'true':
-            filter_by_key = 1
-        if query_params['desc'] == 'true':
-            filter_by_desc = 1
+        if filter_by_key == 'true':
+            filter_by_key = True
+        else:
+            filter_by_key = False
+        if filter_by_desc == 'true':
+            filter_by_desc = True
+        else:
+            filter_by_desc = False
 
         l = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
              for (key, value) in gts.tDesc.items() if key in gts.t2G and
@@ -331,17 +341,18 @@ def gene_set_list2(request):
     * `gene_set_phenotype` - if the gene set is `denovo`, we have to
         pass the gene set phenotype.
     """
-    query_params = prepare_query_dict(request.QUERY_PARAMS)
+    query_params = prepare_query_dict(request.query_params)
     if 'gene_set' not in query_params:
         return Response({})
-    gene_set = query_params['gene_set']
-    gene_set_phenotype = str(query_params['gene_set_phenotype']) \
+    gene_set = prepare_string_value(query_params, 'gene_set')
+    gene_set_phenotype = prepare_string_value(
+        query_params, 'gene_set_phenotype') \
         if 'gene_set_phenotype' in query_params else None
 
-    gene_name = query_params['gene_name'] \
+    gene_name = prepare_string_value(query_params, 'gene_name') \
         if 'gene_name' in query_params else None
 
-    gts = load_gene_set2(gene_set, gene_set_phenotype)
+    gts = gene_set_loader2(gene_set, gene_set_phenotype)
 
     if gts:
         return __gene_set_response(query_params, gts, gene_name)
@@ -366,19 +377,21 @@ def gene_set_download(request):
     """
     gene_syms = []
 
-    query_params = prepare_query_dict(request.QUERY_PARAMS)
+    query_params = prepare_query_dict(request.query_params)
     if 'gene_set' in query_params and 'gene_name' in query_params:
-        gene_set = query_params['gene_set']
-        gene_set_phenotype = str(query_params['gene_set_phenotype']) \
+        gene_set = prepare_string_value(query_params, 'gene_set')
+        gene_set_phenotype = \
+            prepare_string_value(query_params, 'gene_set_phenotype') \
             if 'gene_set_phenotype' in query_params else None
 
-        gene_name = query_params['gene_name']
-        gts = load_gene_set2(gene_set, gene_set_phenotype)
+        gene_name = prepare_string_value(query_params, 'gene_name')
+        gts = gene_set_loader2(gene_set, gene_set_phenotype)
         if gts and gene_name in gts.t2G:
             title = "{}:{}".format(gene_set, gene_name)
             if gene_set_phenotype:
                 title += " ({})".format(gene_set_phenotype)
-            gene_syms.append('"{}"\r\n'.format(title))
+            gene_syms.append('"{}"'.format(title))
+            gene_syms.append('"{}"'.format(gts.tDesc[gene_name]))
             gene_syms.extend(gts.t2G[gene_name].keys())
     res = map(lambda s: "{}\r\n".format(s), gene_syms)
     print(res)
@@ -429,25 +442,6 @@ def study_tab_phenotypes(request, study_tab):
     return Response()
 
 
-def prepare_query_dict(data):
-    res = []
-    if isinstance(data, QueryDict):
-        items = data.iterlists()
-    else:
-        items = data.items()
-
-    for (key, val) in items:
-        key = str(key)
-        if isinstance(val, list):
-            value = ','.join([str(s).strip() for s in val])
-        else:
-            value = str(val)
-
-        res.append((key, value))
-
-    return dict(res)
-
-
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
@@ -472,14 +466,14 @@ Example JSON object describing the query is following:
          "ultraRareOnly":"True"
     }
 
-All fields are same as in query_variants request
+All fields are same as in query_variants_bak request
 
     """
 
     if request.method == 'OPTIONS':
         return Response()
 
-    data = prepare_query_dict(request.DATA)
+    data = prepare_query_dict(request.data)
     build_effect_type_filter(data)
 
     # if isinstance(data, QueryDict):
@@ -488,8 +482,8 @@ All fields are same as in query_variants request
     #     data = prepare_query_dict(data)
 
     LOGGER.info(log_filter(request, "preview query variants: " + str(data)))
-
-    generator = do_query_variants(data, atts=["_pedigree_", "phenoInChS"])
+    data['limit'] = 2000
+    generator = wdae_query_wrapper(data, atts=["_pedigree_", "phenoInChS"])
     summary = prepare_summary(generator)
 
     return Response(summary)
@@ -557,14 +551,14 @@ Advanced family filter expects following fields:
     if request.method == 'OPTIONS':
         return Response()
 
-    data = prepare_query_dict(request.DATA)
+    data = dict(request.data)
     build_effect_type_filter(data)
 
     LOGGER.info(log_filter(request, "query variants request: " + str(data)))
 
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
 
-    generator = do_query_variants(data)
+    generator = wdae_query_wrapper(data)
     response = StreamingHttpResponse(
         itertools.chain(
             itertools.imap(join_line, generator),
@@ -591,10 +585,10 @@ Examples:
      GET /api/report_variants?studies=DalyWE2012
 
     """
-    if 'studies' not in request.QUERY_PARAMS:
+    if 'studies' not in request.query_params:
         return Response({})
 
-    studies_names = request.QUERY_PARAMS['studies']
+    studies_names = request.query_params['studies']
     studies = vDB.get_studies(studies_names)
 
     stats = build_stats(studies)
@@ -619,7 +613,7 @@ def pheno_report_preview(request):
     if request.method == 'OPTIONS':
         return Response()
 
-    data = prepare_query_dict(request.DATA)
+    data = prepare_query_dict(request.data)
     LOGGER.info(log_filter(request, "preview pheno report: " + str(data)))
     ps = pheno_query(data)
     res = pheno_calc(ps)
@@ -639,7 +633,7 @@ def pheno_report_download(request):
     if request.method == 'OPTIONS':
         return Response()
 
-    data = prepare_query_dict(request.DATA)
+    data = prepare_query_dict(request.data)
     LOGGER.info(log_filter(request, "preview pheno download: " + str(data)))
     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
 
@@ -657,7 +651,7 @@ def pheno_report_download(request):
 
 @api_view(['POST'])
 def register(request):
-    serialized = UserSerializer(data=request.DATA)
+    serialized = UserSerializer(data=request.data)
     if serialized.is_valid():
         user = get_user_model()
         researcher_id = serialized.validated_data['researcher_id']
@@ -675,7 +669,7 @@ def register(request):
 
 @api_view(['POST'])
 def check_verif_path(request):
-    verif_path = request.DATA['verif_path']
+    verif_path = request.data['verif_path']
     try:
         VerificationPath.objects.get(path=verif_path)
         return Response({}, status=status.HTTP_200_OK)
@@ -687,8 +681,8 @@ def check_verif_path(request):
 
 @api_view(['POST'])
 def change_password(request):
-    password = request.DATA['password']
-    verif_path = request.DATA['verif_path']
+    password = request.data['password']
+    verif_path = request.data['verif_path']
 
     user = get_user_model().change_password(verif_path, password)
 
@@ -698,7 +692,7 @@ def change_password(request):
 
 @api_view(['POST'])
 def get_user_info(request):
-    token = request.DATA['token']
+    token = request.data['token']
     try:
         user = Token.objects.get(key=token).user
         if (user.is_staff):
@@ -714,7 +708,7 @@ def get_user_info(request):
 
 @api_view(['POST'])
 def reset_password(request):
-    email = request.DATA['email']
+    email = request.data['email']
     user_model = get_user_model()
     try:
         user = user_model.objects.get(email=email)

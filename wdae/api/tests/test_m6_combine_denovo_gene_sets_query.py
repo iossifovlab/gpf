@@ -25,7 +25,9 @@ class Test(APITestCase):
                 "geneTerm": "LGDs.Recurrent",
                 "gene_set_phenotype": "congenital heart disease",
                 "genes": "Gene Sets",
-                "phenoType": "autism,congenital heart disease,epilepsy,intelectual disability,schizophrenia,unaffected",
+                "phenoType":
+                "autism,congenital heart disease,epilepsy,"
+                "intelectual disability,schizophrenia,unaffected",
                 "studyType": "TG,WE",
                 "variantTypes": "del,ins,sub",
         }
@@ -45,7 +47,9 @@ class Test(APITestCase):
                 "geneTerm": "LGDs.Recurrent",
                 "gene_set_phenotype": "congenital heart disease,epilepsy",
                 "genes": "Gene Sets",
-                "phenoType": "autism,congenital heart disease,epilepsy,intelectual disability,schizophrenia,unaffected",
+                "phenoType":
+                "autism,congenital heart disease,epilepsy,"
+                "intelectual disability,schizophrenia,unaffected",
                 "studyType": "TG,WE",
                 "variantTypes": "del,ins,sub",
         }

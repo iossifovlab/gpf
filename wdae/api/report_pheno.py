@@ -3,24 +3,29 @@ import logging
 
 from DAE import phDB
 from api.studies import get_denovo_studies_names
-from api.query.query_variants import dae_query_variants
 
-from api.query.query_prepare import prepare_denovo_studies
+from query_prepare import prepare_denovo_studies
 
 from collections import Counter
 import numpy as np
 from scipy.stats import ttest_ind
+from api.query.wdae_query_variants import wdae_handle_gene_sets
+from query_variants import dae_query_variants
 
 LOGGER = logging.getLogger(__name__)
 SUPPORTED_PHENO_STUDIES = {'ALL SSC'}
+
 
 def get_supported_measures():
     return [('vIQ', 'verbal IQ'),
             ('NvIQ', 'non-verbal IQ')]
 
+
 def get_supported_studies():
     stds = get_denovo_studies_names()
-    return [(key, desc) for (key, desc) in stds if key in SUPPORTED_PHENO_STUDIES]
+    return [(key, desc) for (key, desc) in stds
+            if key in SUPPORTED_PHENO_STUDIES]
+
 
 def filter_one_var_per_gene_per_child(vs):
     ret = []
@@ -33,21 +38,28 @@ def filter_one_var_per_gene_per_child(vs):
         seen |= vKs
     return ret
 
+
 def filter_var_in_recurent_genes(vs):
-    gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects]) 
-    sym2Vars = {sym: [ t[1] for t in tpi] for sym, tpi
+    gnSorted = sorted([[ge['sym'], v]
+                       for v in vs for ge in v.requestedGeneEffects])
+    sym2Vars = {sym: [t[1] for t in tpi] for sym, tpi
                 in itertools.groupby(gnSorted, key=lambda x: x[0])}
-    sym2FN = {sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items()} 
-    recGenes = {sym for sym, FN in sym2FN.items() if FN>1}
-    return [v for v in vs if { ge['sym'] for ge in v.requestedGeneEffects } & recGenes]
+    sym2FN = {sym: len(set([v.familyId for v in vs]))
+              for sym, vs in sym2Vars.items()}
+    recGenes = {sym for sym, FN in sym2FN.items() if FN > 1}
+    return [v for v in vs
+            if {ge['sym'] for ge in v.requestedGeneEffects} & recGenes]
 
 
 def _pheno_query_variants(data, effect_type):
+    wdae_handle_gene_sets(data)
     data['effectTypes'] = effect_type
+
     vsl = dae_query_variants(data)
     vs = itertools.chain(*vsl)
     return filter_one_var_per_gene_per_child(vs)
-    
+
+
 def pheno_query_variants(data):
     lgds = _pheno_query_variants(data, 'LGDs')
     rec_lgds = filter_var_in_recurent_genes(lgds)
@@ -70,21 +82,23 @@ def pheno_query_variants(data):
 
 def pheno_prepare_families_data(data):
     stds = prepare_denovo_studies(data)
-    all_families = {fid:prb_gender(family) for st in stds
+    all_families = {fid: prb_gender(family) for st in stds
                     for fid, family in st.families.items()}
-    seq_prbs = {fmid:pd.gender for st in stds
+    seq_prbs = {fmid: pd.gender for st in stds
                 for fmid, fd in st.families.items()
-                for pd in fd.memberInOrder if pd.role=='prb'}
-    
+                for pd in fd.memberInOrder if pd.role == 'prb'}
+
     return seq_prbs, all_families
-    
-    
+
+
 def prb_gender(fms):
-    prb_inds = [ind for ind, prsn in enumerate(fms.memberInOrder) if prsn.role=='prb']
-    if len(prb_inds)!=1:
+    prb_inds = [ind for ind, prsn in enumerate(
+        fms.memberInOrder) if prsn.role == 'prb']
+    if len(prb_inds) != 1:
         return '?'
     else:
         return fms.memberInOrder[prb_inds[0]].gender
+
 
 def pheno_query(data):
     (families_with_lgds,
@@ -92,7 +106,7 @@ def pheno_query(data):
      families_with_missense,
      families_with_synonymous,
      families_with_cnvs) = pheno_query_variants(data)
-    seq_prbs, all_families = pheno_prepare_families_data(data)
+    seq_prbs, _all_families = pheno_prepare_families_data(data)
 
     (measure_name, measure) = prepare_pheno_measure(data)
 
@@ -110,31 +124,36 @@ def pheno_query(data):
             measure[fid] if fid in measure else 'NA']
         yield row
 
+
 def prepare_pheno_measure(data):
     if 'phenoMeasure' not in data:
         LOGGER.error("no measure name in request. returning NvIQ")
         return ('NvIQ', get_non_verbal_iq())
     measure = data['phenoMeasure']
-    if measure =='NvIQ':
+    if measure == 'NvIQ':
         return ('NvIQ', get_non_verbal_iq())
     elif measure == 'vIQ':
         return ('vIQ', get_verbal_iq())
     else:
-        LOGGER.error("strange measure name (%s) in request. returning NvIQ" % measure)
+        LOGGER.error(
+            "strange measure name (%s) in request. returning NvIQ" % measure)
         return ('NvIQ', get_non_verbal_iq())
 
+
 def get_pheno_measure(measure_name, conv_func=str):
-    str_dict = dict(zip(phDB.families,phDB.get_variable(measure_name)))
+    str_dict = dict(zip(phDB.families, phDB.get_variable(measure_name)))
     res_dict = {}
-    for f,m in str_dict.items():
+    for f, m in str_dict.items():
         try:
             res_dict[f] = conv_func(m)
         except:
-            pass 
+            pass
     return res_dict
+
 
 def get_verbal_iq():
     return get_pheno_measure("pcdv.ssc_diagnosis_verbal_iq", float)
+
 
 def get_non_verbal_iq():
     return get_pheno_measure("pcdv.ssc_diagnosis_nonverbal_iq", float)
@@ -143,17 +162,18 @@ def get_non_verbal_iq():
 def calc_pv(positive, negative):
     pv = ttest_ind(positive, negative)[1]
     if pv >= 0.1:
-        return "%.1f" % (pv) 
+        return "%.1f" % (pv)
     if pv >= 0.01:
-        return "%.2f" % (pv) 
+        return "%.2f" % (pv)
     if pv >= 0.001:
-        return "%.3f" % (pv) 
+        return "%.3f" % (pv)
     if pv >= 0.0001:
-        return "%.4f" % (pv) 
-    return "%.5f" % (pv) 
+        return "%.4f" % (pv)
+    return "%.5f" % (pv)
+
 
 def pheno_calc(ps):
-    ps.next() # skip column names
+    ps.next()  # skip column names
     rows = [tuple([e if e != 'NA' else np.NaN for e in p]) for p in ps]
     dtype = np.dtype([('fid', 'S10'),
                       ('gender', 'S1'),
@@ -166,10 +186,11 @@ def pheno_calc(ps):
     data = np.array(rows, dtype=dtype)
     data = data[~np.isnan(data['m'])]
     res = []
-    
-    for (effect_type, gender) in itertools.product(*[['LGDs', 'recLGDs', 'missense', 'synonymous', 'CNV'],
-                                                     ['M', 'F']]):
-        
+
+    for (effect_type, gender) in itertools.product(
+            *[['LGDs', 'recLGDs', 'missense', 'synonymous', 'CNV'],
+              ['M', 'F']]):
+
         positive = data[np.logical_and(data['gender'] == gender,
                                        data[effect_type] == 1)]['m']
         negative = data[np.logical_and(data['gender'] == gender,
@@ -180,7 +201,8 @@ def pheno_calc(ps):
             p_std = 0
         else:
             p_mean = np.mean(positive, dtype=np.float64)
-            p_std = 1.96 * np.std(positive, dtype=np.float64)/np.sqrt(len(positive))
+            p_std = 1.96 * \
+                np.std(positive, dtype=np.float64) / np.sqrt(len(positive))
 
         n_count = len(negative)
         if n_count == 0:
@@ -188,12 +210,12 @@ def pheno_calc(ps):
             n_std = 0
         else:
             n_mean = np.mean(negative, dtype=np.float64)
-            n_std = 1.96 * np.std(negative, dtype=np.float64)/np.sqrt(len(negative))
+            n_std = 1.96 * \
+                np.std(negative, dtype=np.float64) / np.sqrt(len(negative))
         if n_count == 0 or p_count == 0:
-            pv='NA'
+            pv = 'NA'
         else:
             pv = calc_pv(positive, negative)
 
         res.append((effect_type, gender, n_mean, n_std, p_mean, p_std, pv))
     return res
-        

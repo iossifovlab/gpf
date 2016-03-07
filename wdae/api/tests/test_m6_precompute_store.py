@@ -17,7 +17,7 @@ class Test(TestCase):
 
 
     def test_store_retrieve_simple(self):
-        from api.precompute import cache
+        from precompute import cache
         store = cache.PrecomputeStore()
         
         data = {"a": "1", "b": "ala-bala"}

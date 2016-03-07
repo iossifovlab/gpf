@@ -3,14 +3,19 @@ Created on Sep 24, 2015
 
 @author: lubo
 '''
-import MySQLdb as mdb
 import copy
 import operator
 import re
-from VariantsDB import Variant
+from Variant import Variant, parseGeneEffect, filter_gene_effect
+from transmitted.base_query import TransmissionConfig
+import logging
 
 
-class MysqlTransmittedQuery(object):
+LOGGER = logging.getLogger(__name__)
+
+
+class MysqlTransmittedQuery(TransmissionConfig):
+
     EFFECT_TYPES = [
         "3'UTR",
         "3'UTR-intron",
@@ -29,7 +34,9 @@ class MysqlTransmittedQuery(object):
         'nonsense',
         'splice-site',
         'synonymous',
-        'CDS']
+        'CDS',
+        'CNV+',
+        'CNV-', ]
 
     VARIANT_TYPES = [
         'del', 'ins', 'sub', 'CNV']
@@ -58,10 +65,11 @@ class MysqlTransmittedQuery(object):
         'sibF',
     ]
 
-    keys = {
+    KEYS = {
         'variantTypes': list,
         'effectTypes': list,
         'geneSyms': list,
+        'geneSymsUpper': list,
         'ultraRareOnly': bool,
         'minParentsCalled': int,
         'maxAltFreqPrcnt': float,
@@ -72,14 +80,17 @@ class MysqlTransmittedQuery(object):
         'gender': list,
         'regionS': list,
         'familyIds': list,
-        }
+        'TMM_ALL': bool,
+        'limit': int,
+    }
 
-    default_query = {
+    DEFAULT_QUERY = {
         'variantTypes': None,
         'effectTypes': None,
         'geneSyms': None,
+        'geneSymsUpper': None,
         'ultraRareOnly': False,
-        'minParentsCalled': 600,
+        'minParentsCalled': 0,
         'maxAltFreqPrcnt': 5.0,
         'minAltFreqPrcnt': None,
         'presentInParent': None,
@@ -88,46 +99,54 @@ class MysqlTransmittedQuery(object):
         'gender': None,
         'regionS': None,
         'familyIds': None,
-        }
+        'TMM_ALL': False,
+        'limit': None,
+    }
 
     def _get_config_property(self, name):
         return self.vdb._config.get(self.config_section, name)
 
-    def __init__(self, vdb, study_name):
-        self.study_name = study_name
-        self.vdb = vdb
-        self.config_section = 'study.' + study_name
-        self.db = self._get_config_property('transmittedVariants.mysql.db')
-        self.user = self._get_config_property('transmittedVariants.mysql.user')
-        self.passwd = \
-            self._get_config_property('transmittedVariants.mysql.pass')
+    def __init__(self, study, call_set=None):
+        super(MysqlTransmittedQuery, self).__init__(study, call_set)
+        assert self._get_params("format") == 'mysql'
+
+        self.study = study
+        self.db = self._get_params('db')
+        self.user = self._get_params('user')
+        self.passwd = self._get_params('pass')
+        self.host = self._get_params("host")
+
+        assert self.host
         assert self.db
         assert self.user
         assert self.passwd
+
         self.connection = None
-        self.query = copy.deepcopy(self.default_query)
-
-    def connect(self):
-        assert not self.connection
-
-        self.connection = mdb.connect('127.0.0.1',
-                                      self.user,
-                                      self.passwd,
-                                      self.db)
+        self.query = copy.deepcopy(self.DEFAULT_QUERY)
 
     def execute(self, select):
-        cursor = self.connection.cursor(mdb.cursors.DictCursor)
+        import MySQLdb as mdb
+        #         if not self.connection:
+        #             self.connect()
+        LOGGER.info("creating new mysql connection")
+        connection = mdb.connect(self.host,
+                                 self.user,
+                                 self.passwd,
+                                 self.db)
+
+        cursor = connection.cursor(mdb.cursors.DictCursor)
         cursor.execute(select)
-        return cursor.fetchall()
+        return (connection, cursor)
 
     def disconnect(self):
+        LOGGER.info("closing mysql connection")
         if not self.connection:
             return
         self.connection.close()
         self.connection = None
 
     def __getitem__(self, key):
-        if key not in self.keys:
+        if key not in self.KEYS:
             raise KeyError('unexpected key: {}'.format(key))
         return self.query.get(key, None)
 
@@ -164,14 +183,18 @@ class MysqlTransmittedQuery(object):
         assert reduce(operator.and_,
                       map(lambda et: et in self.VARIANT_TYPES,
                           self['variantTypes']))
+        if len(set(self['variantTypes'])) == 4:
+            return None
         where = map(lambda ef: " '{}' ".format(ef), self['variantTypes'])
         where = ' tsv.variant_type in ( {} ) '.format(','.join(where))
         return where
 
     def _build_gene_syms_where(self):
         assert self['geneSyms']
-        assert isinstance(self['geneSyms'], list)
-        where = map(lambda sym: " '{}' ".format(sym), self['geneSyms'])
+        assert isinstance(self['geneSyms'], list) or \
+            isinstance(self['geneSyms'], set)
+        self.query['geneSymsUpper'] = [sym.upper() for sym in self['geneSyms']]
+        where = map(lambda sym: ' "{}" '.format(sym), self['geneSymsUpper'])
         where = ' tge.symbol in ( {} ) '.format(','.join(where))
         return where
 
@@ -181,7 +204,7 @@ class MysqlTransmittedQuery(object):
         assert reduce(operator.and_,
                       map(lambda et: et in self.EFFECT_TYPES,
                           self['effectTypes']))
-        where = map(lambda ef: " '{}' ".format(ef), self['effectTypes'])
+        where = map(lambda ef: ' "{}" '.format(ef), self['effectTypes'])
         where = ' tge.effect_type in ( {} ) '.format(','.join(where))
         return where
 
@@ -197,10 +220,7 @@ class MysqlTransmittedQuery(object):
             where.append(self._build_gene_syms_where())
 
         w = ' AND '.join(where)
-        where = "tsv.id in ( " \
-            "select distinct tge.summary_variant_id " \
-            "from transmitted_geneeffectvariant as tge where %s )" % w
-        return where
+        return w
 
     REGION_REGEXP = re.compile("([1-9,X][0-9]?):(\d+)-(\d+)")
 
@@ -227,10 +247,10 @@ class MysqlTransmittedQuery(object):
         return where
 
     PRESENT_IN_PARENT_MAPPING = {
-        "mother only": " tfv.in_mom = 1  and tfv.in_dad = 0 ",
-        "father only": " tfv.in_dad = 1  and tfv.in_mom = 0 ",
-        "mother and father": " tfv.in_mom = 1 and tfv.in_dad = 1 ",
-        "neither": " tfv.in_mom = 0 and tfv.in_dad = 0 ",
+        "mother only": " ( tfv.in_mom = 1  and tfv.in_dad = 0 ) ",
+        "father only": " ( tfv.in_dad = 1  and tfv.in_mom = 0 ) ",
+        "mother and father": " ( tfv.in_mom = 1 and tfv.in_dad = 1 ) ",
+        "neither": " ( tfv.in_mom = 0 and tfv.in_dad = 0 ) ",
     }
 
     def _build_present_in_parent_where(self):
@@ -241,6 +261,11 @@ class MysqlTransmittedQuery(object):
                           self['presentInParent']))
         w = [self.PRESENT_IN_PARENT_MAPPING[pip]
              for pip in self['presentInParent']]
+        # print("PRESENT_IN_PARENT: {}".format(w))
+        if len(set(w)) == 4:
+            # print("PRESENT_IN_PARENT: {}".format(set(w)))
+            return None
+
         where = " ( {} ) ".format(' OR '.join(w))
         return where
 
@@ -313,27 +338,41 @@ class MysqlTransmittedQuery(object):
         where = self.IN_CHILD_MAPPING[self['inChild']]
         return where
 
-    def _build_where(self):
+    def _build_summary_where(self):
         where = []
         if self['effectTypes'] or self['geneSyms']:
             where.append(self._build_effect_where())
-
         if self['variantTypes']:
-            where.append(self._build_variant_type_where())
-
-        if self['familyIds']:
-            where.append(self._build_family_ids_where())
-
+            w = self._build_variant_type_where()
+            if w is not None:
+                where.append(w)
         if self['regionS']:
             w = self._build_regions_where()
-            if not w:
-                print("bad regions: {}".format(self['regionS']))
+            if w is None:
+                print "bad regions: {}".format(self['regionS'])
             else:
                 where.append(w)
+        fw = self._build_freq_where()
+        if fw:
+            where.append(self._build_freq_where())
+        if not where:
+            return ""
+        w = ' AND '.join(where)
+        summary_where = \
+            "tsv.id IN (SELECT distinct tsv.id " \
+            "FROM transmitted_summaryvariant AS tsv " \
+            "LEFT JOIN transmitted_geneeffectvariant AS tge " \
+            "ON tsv.id = tge.summary_variant_id  WHERE {})".format(w)
+        return summary_where
+
+    def _build_family_where(self):
+        where = []
+        if self['familyIds']:
+            where.append(self._build_family_ids_where())
         if self['presentInParent']:
             w = self._build_present_in_parent_where()
-            where.append(w)
-
+            if w is not None:
+                where.append(w)
         if self['inChild']:
             w = self._build_in_child_where()
             where.append(w)
@@ -341,23 +380,91 @@ class MysqlTransmittedQuery(object):
             w = self._build_present_in_child_where()
             where.append(w)
 
-        fw = self._build_freq_where()
-        if fw:
-            where.append(self._build_freq_where())
-
+        if not where:
+            return ""
         w = ' AND '.join(where)
         return w
 
+    def _build_limit(self):
+        assert self['limit']
+        assert isinstance(self['limit'], int)
+        return " LIMIT {}".format(self['limit'])
+
+    def _build_where(self):
+        summary_where = self._build_summary_where()
+        family_where = self._build_family_where()
+
+        if not family_where:
+            w = summary_where
+        elif not summary_where:
+            w = family_where
+        else:
+            w = "{} AND {}".format(family_where, summary_where)
+
+        if self['limit']:
+            w += self._build_limit()
+
+        return w
+
+    SPECIAL_KEYS = {
+        "minParentsCalled": (-1),
+        "maxAltFreqPrcnt": (-1),
+        "minAltFreqPrcnt": (-1),
+    }
+
     def _copy_kwargs(self, kwargs):
+        self.query = copy.deepcopy(self.DEFAULT_QUERY)
+
+        if 'effectTypes' in kwargs and isinstance(kwargs['effectTypes'], str):
+            effectTypes = self.study.vdb.effectTypesSet(kwargs['effectTypes'])
+            kwargs['effectTypes'] = list(effectTypes)
+
         for field in kwargs:
-            if field in self.keys:
-                self.query[field] = kwargs[field]
+            if field in self.KEYS:
+                if field not in self.SPECIAL_KEYS:
+                    self.query[field] = kwargs[field]
+                else:
+                    if kwargs[field] == self.SPECIAL_KEYS[field]:
+                        self.query[field] = None
+                    else:
+                        self.query[field] = kwargs[field]
+
+    def _build_variant_pop_type(self, atts, v):
+        if atts['all.nAltAlls'] == 1:
+            v.popType = "ultraRare"
+        else:
+            v.popType = "common"  # rethink
+
+    def _build_variant_properties(self, atts):
+        v = Variant(atts)
+        v.study = self.study
+
+        self._build_variant_pop_type(atts, v)
+        self._build_variant_gene_effect(atts, v)
+
+        return v
+
+    def _build_variant_gene_effect(self, atts, v):
+        geneEffect = None
+        if self['effectTypes'] or self['geneSymsUpper']:
+            geneEffect = parseGeneEffect(atts['effectGene'])
+            if 'requestedGeneEffects' in atts:
+                requestedGeneEffects = parseGeneEffect(
+                    atts['requestedGeneEffects'])
+            else:
+                requestedGeneEffects = filter_gene_effect(
+                    geneEffect,
+                    self['effectTypes'],
+                    self['geneSymsUpper'])
+        if geneEffect:
+            v._geneEffect = geneEffect
+            v._requestedGeneEffect = requestedGeneEffects
 
     def get_transmitted_summary_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
         where = self._build_where()
         select = \
-            "select distinct tsv.id, " \
+            "select tsv.id, " \
             "tsv.chrome as chr, " \
             "tsv.position as position, " \
             "tsv.variant as variant, "\
@@ -374,11 +481,24 @@ class MysqlTransmittedQuery(object):
             "tsv.evs_freq as `EVS-freq`, " \
             "tsv.e65_freq as `E65-freq` " \
             "from transmitted_summaryvariant as tsv " \
-            "where {} ".format(where)
+            "where {}".format(where)
 
-        for v in self.execute(select):
-            v["location"] = v["chr"] + ":" + str(v["position"])
-            yield Variant(v)
+        try:
+            connection, cursor = self.execute(select)
+            v = cursor.fetchone()
+
+            while v is not None:
+                v["location"] = v["chr"] + ":" + str(v["position"])
+                vr = self._build_variant_properties(v)
+
+                yield vr
+                v = cursor.fetchone()
+        except StopIteration:
+            connection.close()
+        except Exception as ex:
+            LOGGER.error("unexpected db error: %s", ex)
+            connection.close()
+            raise StopIteration
 
     def get_transmitted_variants(self, **kwargs):
         self._copy_kwargs(kwargs)
@@ -406,8 +526,22 @@ class MysqlTransmittedQuery(object):
             "from transmitted_familyvariant as tfv " \
             "left join transmitted_summaryvariant as tsv " \
             "on tfv.summary_variant_id = tsv.id " \
-            "where {} ".format(where)
+            "where {}".format(where)
 
-        for v in self.execute(select):
-            v["location"] = v["chr"] + ":" + str(v["position"])
-            yield Variant(v)
+        LOGGER.info("select: %s", select)
+        try:
+            connection, cursor = self.execute(select)
+            v = cursor.fetchone()
+
+            while v is not None:
+                v["location"] = v["chr"] + ":" + str(v["position"])
+                vr = self._build_variant_properties(v)
+
+                yield vr
+                v = cursor.fetchone()
+        except StopIteration:
+            connection.close()
+        except Exception as ex:
+            LOGGER.error("unexpected db error: %s", ex)
+            connection.close()
+            raise StopIteration

@@ -3,17 +3,20 @@ Created on Jun 8, 2015
 
 @author: lubo
 '''
-import numpy as np
-import cStringIO
-import zlib
-
-from DAE import vDB
-from collections import Counter
 import cPickle
-from api.precompute.register import Precompute
+import cStringIO
+from collections import Counter
 import csv
 import os
+import zlib
+
 from django.conf import settings
+from django.core.cache import caches
+
+from DAE import vDB
+from precompute.register import Precompute
+import numpy as np
+from sets import ImmutableSet
 
 
 def _collect_affected_gene_syms(vs):
@@ -39,9 +42,9 @@ def _count_gene_syms(affected_gene_sets):
 def _build_synonymous_background(transmitted_study_name):
     transmitted_study = vDB.get_study(transmitted_study_name)
     vs = transmitted_study.get_transmitted_summary_variants(
-                ultraRareOnly=True,
-                minParentsCalled=600,
-                effectTypes="synonymous")
+        ultraRareOnly=True,
+        minParentsCalled=600,
+        effectTypes=["synonymous"])
     affected_gene_syms = _collect_affected_gene_syms(vs)
 
     base = [gs for gs in affected_gene_syms if len(gs) == 1]
@@ -59,8 +62,10 @@ def _build_synonymous_background(transmitted_study_name):
 
 
 class Background(Precompute):
+
     def __init__(self):
         self.background = None
+        self.background_cache = caches['enrichment']
 
     @property
     def is_ready(self):
@@ -68,6 +73,15 @@ class Background(Precompute):
 
     def prob(self, gene_syms):
         return 1.0 * self.count(gene_syms) / self.total
+
+    def cache_get(self, gen_syms):
+        key = hash(ImmutableSet(gen_syms))
+        value = self.background_cache.get(key)
+        return value
+
+    def cache_store(self, gen_syms, base):
+        key = hash(ImmutableSet(gen_syms))
+        self.background_cache.set(key, base, 30)
 
     def count(self, gen_syms):
         vpred = np.vectorize(lambda sym: sym in gen_syms)
@@ -99,11 +113,15 @@ class SynonymousBackground(Background):
         return count
 
     def count(self, gene_syms):
-        vpred = np.vectorize(lambda sym: sym in gene_syms)
-        index = vpred(self.background['sym'])
-        base = np.sum(self.background['raw'][index])
-        foreground = self.count_foreground_events(gene_syms)
-        return base + foreground
+        res = self.cache_get(gene_syms)
+        if not res:
+            vpred = np.vectorize(lambda sym: sym in gene_syms)
+            index = vpred(self.background['sym'])
+            base = np.sum(self.background['raw'][index])
+            foreground = self.count_foreground_events(gene_syms)
+            res = base + foreground
+            self.cache_store(gene_syms, res)
+        return res
 
     @property
     def total(self):
@@ -131,7 +149,7 @@ class CodingLenBackground(Background):
     FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
-        'data/enrichment/background-model-conding-len-in-target.csv')
+        'data/enrichment/background-model-coding-len-in-target.csv')
 
     def _load_and_prepare_build(self):
         back = []
@@ -148,8 +166,8 @@ class CodingLenBackground(Background):
     def precompute(self):
         back = self._load_and_prepare_build()
         self.background = np.array(
-                back,
-                dtype=[('sym', '|S32'), ('raw', '>i4')])
+            back,
+            dtype=[('sym', '|S32'), ('raw', '>i4')])
         return self.background
 
     def serialize(self):
@@ -165,10 +183,13 @@ class CodingLenBackground(Background):
         self.background = np.load(fin)
 
     def count(self, gene_syms):
-        vpred = np.vectorize(lambda sym: sym in gene_syms)
-        index = vpred(self.background['sym'])
-        base = np.sum(self.background['raw'][index])
-        return base
+        res = self.cache_get(gene_syms)
+        if not res:
+            vpred = np.vectorize(lambda sym: sym in gene_syms)
+            index = vpred(self.background['sym'])
+            res = np.sum(self.background['raw'][index])
+            self.cache_store(gene_syms, res)
+        return res
 
     @property
     def total(self):

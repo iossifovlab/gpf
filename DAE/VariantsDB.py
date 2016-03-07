@@ -20,459 +20,163 @@ from GeneTerms import GeneTerms
 from itertools import groupby
 from VariantAnnotation import get_effect_types_set
 # import itertools
-from RegionOperations import Region,collapse
+from RegionOperations import Region, collapse
 import operator
 import pickle
+import logging
+from Variant import Variant, mat2Str, filter_gene_effect, str2Mat,\
+    present_in_child_filter,\
+    denovo_present_in_parent_filter
+from transmitted.base_query import TransmissionConfig
+from transmitted.mysql_query import MysqlTransmittedQuery
+from transmitted.legacy_query import TransmissionLegacy
+from ConfigParser import NoOptionError
+
+
+LOGGER = logging.getLogger(__name__)
+
 
 def regions_matcher(regions):
-    regs = regions.split(',')
+    if isinstance(regions, list):
+        regs = regions
+    else:
+        regs = regions.split(',')
     reg_defs = []
 
     for r in regs:
         smcP = r.find(":")
         dsP = r.find("-")
         chrom = r[0:smcP]
-        beg = int(r[smcP+1:dsP])
-        end = int(r[dsP+1:])
+        beg = int(r[smcP + 1:dsP])
+        end = int(r[dsP + 1:])
         reg_defs.append((chrom, beg, end))
 
-    return lambda vchr, vpos: any([(chrom == vchr
-                                    and vpos >= beg
-                                    and vpos <= end)
-                                   for(chrom, beg, end) in reg_defs])
-class Variant:
-    def __init__(self,atts,familyIdAtt="familyId", locationAtt="location",
-                variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
-                countsAtt="counts", effectGeneAtt="effectGene", altFreqPrcntAtt="all.altFreq"):
-        self.atts = atts
+    return lambda vchr, vpos: \
+        any([(chrom == vchr and
+              vpos >= beg and
+              vpos <= end)
+             for(chrom, beg, end) in reg_defs])
 
-        self.familyIdAtt = familyIdAtt
-        self.locationAtt = locationAtt
-        self.variantAtt = variantAtt
-        self.bestStAtt = bestStAtt
-        self.bestStColSep = bestStColSep
-        self.countsAtt = countsAtt
-        self.effectGeneAtt = effectGeneAtt
-        self.altFreqPrcntAtt = altFreqPrcntAtt
-
-    @property
-    def familyId(self):
-        try:
-            return self._familyId
-        except AttributeError:
-            pass
-        self._familyId = str(self.atts[self.familyIdAtt])
-        return self._familyId
-
-    @property
-    def studyName(self):
-        return self.study.name
-
-    @property
-    def location(self):
-        return self.atts[self.locationAtt]
-
-    @property
-    def variant(self):
-        return self.atts[self.variantAtt]
-
-    @property
-    def bestStStr(self):
-        return self.atts[self.bestStAtt]
-
-    @property
-    def bestSt(self):
-        try:
-            return self._bestSt
-        except AttributeError:
-            pass
-        self._bestSt = str2Mat(self.atts[self.bestStAtt], colSep=self.bestStColSep)
-        return self._bestSt
-
-    @property
-    def countsStr(self):
-        return self.atts[self.countsAtt]
-
-    @property
-    def counts(self):
-        try:
-            return self._counts
-        except AttributeError:
-            pass
-        self._counts = str2Mat(self.atts[self.countsAtt], colSep=" ")
-        return self._counts
-
-    @property
-    def geneEffect(self):
-        try:
-            return self._geneEffect
-        except AttributeError:
-                self._geneEffect = parseGeneEffect(self.atts[self.effectGeneAtt])
-        return self._geneEffect
-
-    @property
-    def requestedGeneEffects(self):
-        try:
-            return self._requestedGeneEffect
-        except AttributeError:
-                self._requestedGeneEffect = self.geneEffect
-        return self._requestedGeneEffect
-
-    @property
-    def altFreqPrcnt(self):
-        try:
-            return self._altFreqPrcnt
-        except AttributeError:
-                self._altFreqPrcnt = 0.0
-                if self.altFreqPrcntAtt in self.atts:
-                    self._altFreqPrcnt = float(self.atts[self.altFreqPrcntAtt])
-        return self._altFreqPrcnt
-
-    @property
-    def memberInOrder(self):
-        try:
-            return self._memberInOrder
-        except AttributeError:
-            self._memberInOrder = self.study.families[self.familyId].memberInOrder
-        return self._memberInOrder
-
-    @property
-    def inChS(self):
-        mbrs = self.memberInOrder
-        # mbrs = elf.study.families[self.familyId].memberInOrder
-        bs = self.bestSt
-        childStr = ''
-        for c in xrange(2,len(mbrs)):
-            if isVariant(bs,c,self.location,mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
-        return childStr
-
-    @property
-    def phenoInChS(self):
-        mbrs = self.memberInOrder
-        # mbrs = elf.study.families[self.familyId].memberInOrder
-        bs = self.bestSt
-        childStr = ''
-        for c in xrange(2,len(mbrs)):
-            if isVariant(bs,c,self.location,mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
-        phenotype = self.study.get_attr('study.phenotype')
-        return childStr.replace('prb',phenotype)
-
-    @property
-    def fromParentS(self):
-        if self.popType == "denovo":
-            if 'fromParent' in self.atts:
-                return self.atts['fromParent']
-            else:
-                return ''
-        parentStr = ''
-        mbrs = self.memberInOrder
-        bs = self.bestSt
-        for c in xrange(2):
-            if isVariant(bs,c,self.location,mbrs[c].gender):
-                parentStr += mbrs[c].role
-        return parentStr
-
-    @property
-    def pedigree(self):
-        mbrs = self.memberInOrder
-        bs = self.bestSt
-        denovo_parent = self.denovo_parent()
-        res = [reduce(operator.add, [[m.role,
-                                      m.gender],
-                                     variantCount(bs, c, self.location, m.gender, denovo_parent)])
-               for (c, m) in enumerate(mbrs)]
-        return res
-
-    def denovo_parent(self):
-        denovo_parent = None
-        if self.popType == 'denovo':
-            if 'fromParent' in self.atts:
-                if self.atts['fromParent'] == 'mom':
-                    denovo_parent = 0
-                elif self.atts['fromParent'] == 'dad':
-                    denovo_parent = 1
-                else:
-                    # print("strange fromParent value: %s" % self.atts['fromParent'])
-                    denovo_parent = None
-        return denovo_parent
-
-# FIXME:
-#     def get_normal_refCN(self,c):
-#         return normalRefCopyNumber(self.location,v.study.families[v.familyId].memberInOrder[c].gender)
-
-    def is_variant_in_person(self,c):
-        return isVariant(self.bestSt,c,self.location,self.memberInOrder[c].gender)
 
 class Family:
-    def __init__(self,atts=None):
+
+    def __init__(self, atts=None):
         if atts:
             self.atts = atts
         else:
             self.atts = {}
     pass
 
+
 class Person:
-    def __init__(self,atts=None):
+
+    def __init__(self, atts=None):
         if atts:
             self.atts = atts
         else:
             self.atts = {}
 
+
 class StudyGroup:
+
     def __init__(self, vdb, name):
         self.vdb = vdb
         self.name = name
         self._configSection = 'studyGroup.' + name
 
         self.description = ""
-        if self.vdb._config.has_option(self._configSection,'description'):
-            self.description = self.vdb._config.get(self._configSection, 'description' )
+        if self.vdb._config.has_option(self._configSection, 'description'):
+            self.description = self.vdb._config.get(
+                self._configSection, 'description')
 
-        self.studyNames = self.vdb._config.get(self._configSection, 'studies' ).split(",")
+        self.studyNames = self.vdb._config.get(
+            self._configSection, 'studies').split(",")
 
-    def get_attr(self,attName):
-        if self.vdb._config.has_option(self._configSection,attName):
-            return self.vdb._config.get(self._configSection,attName)
+    def get_attr(self, attName):
+        if self.vdb._config.has_option(self._configSection, attName):
+            return self.vdb._config.get(self._configSection, attName)
+
 
 class Study:
+
     def __init__(self, vdb, name):
         self.vdb = vdb
         self.name = name
         self._configSection = 'study.' + name
         self._dnvData = {}
+        self.transmission_impl = {}
 
-        self.has_denovo = self.vdb._config.has_option(self._configSection,'denovoCalls.files')
-        self.has_transmitted = self.vdb._config.has_option(self._configSection,'transmittedVariants.indexFile')
+        self.has_denovo = self.vdb._config.has_option(
+            self._configSection, 'denovoCalls.files')
+        self.has_transmitted = self.vdb._config.has_option(
+            self._configSection, 'transmittedVariants.format') or \
+            self.vdb._config.has_option(
+                self._configSection, 'transmittedVariants.indexFile')
 
         self.description = ""
-        if self.vdb._config.has_option(self._configSection,'description'):
-            self.description = self.vdb._config.get(self._configSection, 'description' )
+        if self.vdb._config.has_option(self._configSection, 'description'):
+            self.description = self.vdb._config.get(
+                self._configSection, 'description')
 
     def get_targeted_genes(self):
-        if not self.vdb._config.has_option(self._configSection,"targetedGenes"):
+        if not self.vdb._config.has_option(self._configSection, "targetedGenes"):
             return
-        tGsFN = self.vdb._config.get(self._configSection,"targetedGenes")
+        tGsFN = self.vdb._config.get(self._configSection, "targetedGenes")
         tGsF = open(tGsFN)
         tgsS = {l.strip() for l in tGsF}
         tGsF.close()
         return tgsS
 
-    def get_attr(self,attName):
-        if self.vdb._config.has_option(self._configSection,attName):
-            return self.vdb._config.get(self._configSection,attName)
+    def get_attr(self, attName):
+        if self.vdb._config.has_option(self._configSection, attName):
+            return self.vdb._config.get(self._configSection, attName)
 
-    def filter_transmitted_variants(self, f, colNms,
-                                    minParentsCalled=0,
-                                    maxAltFreqPrcnt=5.0,
-                                    minAltFreqPrcnt=-1,
-                                    variantTypes=None,
-                                    effectTypes=None,
-                                    ultraRareOnly=False,
-                                    geneSyms=None):
-        for l in f:
-            # print "line:", l
-            if l[0] == '#':
-                continue
-            vls = l.strip("\r\n").split("\t")
-            # FIXME: empty strings for additional frequences: 'EVS-freq', 'E65-freq'
-            if len(colNms) != len(vls):
-                print("colNms len: %d; variant col: %d" % (len(colNms), len(vls)))
-                raise Exception("Incorrect transmitted variants file: ")
-            mainAtts = dict(zip(colNms, vls))
+    def _get_transmitted_impl(self, callSet):
+        if callSet not in self.transmission_impl:
+            conf = TransmissionConfig(self, callSet)
+            try:
+                impl_format = conf._get_params("format")
+            except NoOptionError:
+                impl_format = 'legacy'
 
-            mainAtts["location"] = mainAtts["chr"] + ":" + mainAtts["position"]
-
-            if minParentsCalled != -1:
-                parsCalled = int(mainAtts['all.nParCalled'])
-                if parsCalled <= minParentsCalled:
-                    continue
-
-            if maxAltFreqPrcnt != -1 or minAltFreqPrcnt != -1:
-                altPrcnt = float(mainAtts['all.altFreq'])
-                if maxAltFreqPrcnt != -1 and altPrcnt > maxAltFreqPrcnt:
-                    continue
-                if minAltFreqPrcnt != -1 and altPrcnt < minAltFreqPrcnt:
-                    continue
-
-            ultraRare = int(mainAtts['all.nAltAlls']) == 1
-            if ultraRareOnly and not ultraRare:
-                continue
-
-            geneEffect = None
-            if effectTypes or geneSyms:
-                geneEffect = parseGeneEffect(mainAtts['effectGene'])
-                requestedGeneEffects = filter_gene_effect(geneEffect,
-                                                          effectTypes,
-                                                          geneSyms)
-                if not requestedGeneEffects:
-                    continue
-            v = Variant(mainAtts)
-            v.study = self
-
-            if geneEffect:
-                v._geneEffect = geneEffect
-                v._requestedGeneEffect = requestedGeneEffects
-            if ultraRare:
-                v.popType = "ultraRare"
+            if impl_format is None or impl_format == 'legacy':
+                self.transmission_impl[callSet] = \
+                    TransmissionLegacy(self, callSet)
+            elif impl_format == 'mysql':
+                self.transmission_impl[callSet] = \
+                    MysqlTransmittedQuery(self, callSet)
             else:
-                # rethink
-                v.popType = "common"
+                raise Exception("unexpected transmission format")
 
-            if variantTypes and v.variant[0:3] not in variantTypes:
-                continue
+        impl = self.transmission_impl[callSet]
+        return impl
+
+    def get_transmitted_variants(self, callSet='default', **kwargs):
+        LOGGER.info("get_transmitted_variants: %s", kwargs)
+        impl = self._get_transmitted_impl(callSet)
+        vs = impl.get_transmitted_variants(**kwargs)
+        for v in vs:
             yield v
 
+    def get_transmitted_summary_variants(self, callSet='default', **kwargs):
+        impl = self._get_transmitted_impl(callSet)
+        vs = impl.get_transmitted_summary_variants(**kwargs)
+        for v in vs:
+            yield v
 
-    def get_transmitted_summary_variants(self,minParentsCalled=0,
-                                         maxAltFreqPrcnt=5.0,minAltFreqPrcnt=-1,
-                                         variantTypes=None, effectTypes=None,
-                                         ultraRareOnly=False, geneSyms=None, 
-                                         regionS=None):
-
-        transmittedVariantsFile = self.vdb._config.get(self._configSection,
-                            'transmittedVariants.indexFile' ) + ".txt.bgz"
-        print >> sys.stderr, "Loading trasmitted variants from ", transmittedVariantsFile
-
-        if isinstance(effectTypes, str):
-            effectTypes = self.vdb.effectTypesSet(effectTypes)
-
-        if isinstance(variantTypes, str):
-            variantTypes = set(variantTypes.split(","))
-
-        if not regionS and geneSyms and len(geneSyms) <= 10:
-            regionS = self.vdb.get_gene_regions(geneSyms)
-
-        if regionS:
-            f = gzip.open(transmittedVariantsFile)
-            colNms = f.readline().strip().split("\t")
-            f.close()
-            tbf = pysam.Tabixfile(transmittedVariantsFile)
-
-            if isinstance(regionS, str):
-                regionS = [regionS]
-
-            for reg in regionS:
-                try:
-                    f = tbf.fetch(reg)
-                    for v in self.filter_transmitted_variants(
-                            f, colNms,
-                            minParentsCalled,
-                            maxAltFreqPrcnt,
-                            minAltFreqPrcnt,
-                            variantTypes,
-                            effectTypes,
-                            ultraRareOnly,
-                            geneSyms):
-
-                        yield v
-                except ValueError as ex:
-                    print >> sys.stderr, "Bad region:", ex
-                    continue
-        else:
-            f = gzip.open(transmittedVariantsFile)
-            colNms = f.readline().strip().split("\t")
-            # print(colNms)
-            for v in self.filter_transmitted_variants(f, colNms,
-                                                      minParentsCalled,
-                                                      maxAltFreqPrcnt,
-                                                      minAltFreqPrcnt,
-                                                      variantTypes,
-                                                      effectTypes,
-                                                      ultraRareOnly,
-                                                      geneSyms):
-                yield v
-
-        if regionS:
-            tbf.close()
-        else:
-            f.close()
-
-
-    def get_transmitted_variants(self, inChild=None, 
-                                 presentInChild=None, presentInParent=None,
-                                 minParentsCalled=0,maxAltFreqPrcnt=5.0,
-                                 minAltFreqPrcnt=-1,
-                                 variantTypes=None, effectTypes=None, 
-                                 ultraRareOnly=False,
-                                 geneSyms=None, familyIds=None, 
-                                 regionS=None, TMM_ALL=False):
-
-        transmittedVariantsTOOMANYFile = \
-            self.vdb._config.get(self._configSection,
-                                 'transmittedVariants.indexFile' ) + "-TOOMANY.txt.bgz"
-
-        if TMM_ALL:
-            tbf = gzip.open(transmittedVariantsTOOMANYFile)
-        else:
-            tbf = pysam.Tabixfile(transmittedVariantsTOOMANYFile)
-
-        for vs in self.get_transmitted_summary_variants(minParentsCalled,
-                                                        maxAltFreqPrcnt,
-                                                        minAltFreqPrcnt,
-                                                        variantTypes,
-                                                        effectTypes,
-                                                        ultraRareOnly, 
-                                                        geneSyms, regionS):
-            if not vs:
-                continue
-
-            fmsData = vs.atts['familyData']
-            if not fmsData:
-                continue
-            if fmsData == "TOOMANY":
-                chrom = vs.atts['chr']
-                pos = vs.atts['position']
-                var = vs.atts['variant']
-                if TMM_ALL:
-                    for l in tbf:
-                        _chrL,posL,varL,fdL = l.strip().split("\t")
-                        if chrom==chrom and pos==posL and var==varL:
-                            fmsData = fdL
-                            break
-                    if fmsData == "TOOMANY":
-                        raise Exception('TOOMANY mismatch TMM_ALL')
-                else:
-                    flns = []
-                    posI = int(pos)
-                    for l in tbf.fetch(chrom, posI-1, posI):
-                        _chrL,posL,varL,fdL = l.strip().split("\t")
-
-                        if chrom==chrom and pos==posL and var==varL:
-                            flns.append(fdL)
-                    if len(flns)!=1:
-                        raise Exception('TOOMANY mismatch')
-                    fmsData = flns[0]
-
-            for fmData in fmsData.split(";"):
-                cs = fmData.split(":")
-                if len(cs) != 3:
-                    raise Exception("Wrong family data format: " + fmData)
-                familyId, bestStateS, cntsS = cs
-                if familyIds and familyId not in familyIds:
-                    continue
-                v = copy.copy(vs)
-                v.atts = { kk: vv for kk,vv in vs.atts.items() }
-                v.atts['familyId'] = familyId
-                v.atts['bestState'] = bestStateS
-                v.atts['counts'] = cntsS
-
-                if presentInChild:
-                    if not presentInChild(v.inChS):
-                        continue
-                elif inChild and inChild not in v.inChS:
-                    continue
-                if presentInParent:
-                    if not presentInParent(v.fromParentS):
-                        continue
-
-                yield v
-        tbf.close()
-
-    def get_denovo_variants(self, inChild=None, presentInChild=None, presentInParent=None,
+    def get_denovo_variants(self, inChild=None, presentInChild=None,
+                            presentInParent=None,
+                            gender=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
-                            familyIds=None, regionS=None, callSet=None):
+                            familyIds=None, regionS=None, callSet=None,
+                            limit=None):
+
+        picFilter = present_in_child_filter(presentInChild, gender)
+        pipFilter = denovo_present_in_parent_filter(presentInParent)
+
+        geneSymsUpper = None
+        if geneSyms is not None:
+            geneSymsUpper = [sym.upper() for sym in geneSyms]
 
         if isinstance(effectTypes, str):
             effectTypes = self.vdb.effectTypesSet(effectTypes)
@@ -488,15 +192,12 @@ class Study:
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
                 continue
-            if presentInChild:
-                if not presentInChild(v.inChS):
-                    continue
+            if pipFilter and not pipFilter(v.fromParentS):
+                continue
+            if picFilter and not picFilter(v.inChS):
+                continue
             elif inChild and inChild not in v.inChS:
                 continue
-
-            if presentInParent:
-                if not presentInParent(''):
-                    continue
 
             if variantTypes and v.variant[0:3] not in variantTypes:
                 continue
@@ -504,15 +205,25 @@ class Study:
                 smcP = v.location.find(":")
                 vChr = v.location[0:smcP]
                 try:
-                    vPos = int(v.location[smcP+1:])
-                    if not reg_matcher(vChr, vPos):
-                        continue
+                    vPos = v.location[smcP + 1:]
+                    if '-' in vPos:
+                        p1, p2 = vPos.split('-')
+                        p1 = int(p1)
+                        p2 = int(p2)
+                        if not (reg_matcher(vChr, p1) or
+                                reg_matcher(vChr, p2)):
+                            continue
+                    else:
+                        p = int(vPos)
+                        if not reg_matcher(vChr, p):
+                            continue
                 except ValueError:
                     # print >> sys.stderr, v.atts
-                    continue 
+                    continue
 
-            if effectTypes or geneSyms:
-                requestedGeneEffects = filter_gene_effect(v.geneEffect, effectTypes, geneSyms)
+            if effectTypes is not None or geneSymsUpper is not None:
+                requestedGeneEffects = filter_gene_effect(
+                    v.geneEffect, effectTypes, geneSymsUpper)
                 if not requestedGeneEffects:
                     continue
                 vc = copy.copy(v)
@@ -522,7 +233,7 @@ class Study:
                 yield v
 
     def _load_dnv_data(self, callSetP):
-        callSet =  "default"
+        callSet = "default"
         propName = "denovoCalls.files"
 
         if callSetP:
@@ -536,17 +247,17 @@ class Study:
         varList = []
         for fl in flsS.split('\n'):
             print >> sys.stderr, "Loading file", fl, "for collection ", self.name
-            dt = genfromtxt(fl,delimiter='\t',dtype=None,names=True,
+            dt = genfromtxt(fl, delimiter='\t', dtype=None, names=True,
                             case_sensitive=True)
-            if len(dt.shape)==0:
+            if len(dt.shape) == 0:
                 dt = dt.reshape(1)
-            hasCenter = 'center' in dt.dtype.names;
+            hasCenter = 'center' in dt.dtype.names
             for vr in dt:
-                atts = { x: vr[x] for x in dt.dtype.names }
+                atts = {x: vr[x] for x in dt.dtype.names}
                 if not hasCenter:
                     atts['center'] = "CSHL"
 
-                v = Variant(atts,bestStColSep=" ")
+                v = Variant(atts, bestStColSep=" ")
                 v.popType = "denovo"
                 v.study = self
                 varList.append(v)
@@ -565,8 +276,9 @@ class Study:
         return self.badFamilies
 
     def _load_family_data(self):
-        fdFile = self.vdb._config.get(self._configSection, "familyInfo.file" )
-        fdFormat = self.vdb._config.get(self._configSection, "familyInfo.fileFormat" )
+        fdFile = self.vdb._config.get(self._configSection, "familyInfo.file")
+        fdFormat = self.vdb._config.get(
+            self._configSection, "familyInfo.fileFormat")
 
         fmMethod = {
             "quadReportSSC": self._load_family_data_from_quad_report,
@@ -580,7 +292,6 @@ class Study:
             "IossifovWE2014": self._load_family_data_from_IossifovWE2014_families
         }
 
-
         if fdFormat not in fmMethod:
             raise Exception("Unknown Family File Format: " + fdFormat)
 
@@ -588,12 +299,13 @@ class Study:
 
     def _load_family_data_SSCFams(self, reportF):
         rf = open(reportF)
-        families = {l.strip():Family() for l in rf}
+        families = {l.strip(): Family() for l in rf}
         for f in families.values():
             f.memberInOrder = []
 
-        rlsMp = { "mother":"mom", "father":"dad", "proband":"prb", "designated-sibling":"sib", "other-sibling":"sib" }
-        genderMap = {"female":"F", "male":"M"}
+        rlsMp = {"mother": "mom", "father": "dad", "proband": "prb",
+                 "designated-sibling": "sib", "other-sibling": "sib"}
+        genderMap = {"female": "F", "male": "M"}
 
         for indS in self.vdb.sfariDB.individual.values():
             if indS.familyId not in families:
@@ -603,48 +315,47 @@ class Study:
             p.gender = genderMap[indS.sex]
             p.role = rlsMp[indS.role]
             families[indS.familyId].memberInOrder.append(p)
-        return families,{}
-
+        return families, {}
 
     def _load_family_data_SSCTrios(self, reportF):
         buff = defaultdict(dict)
-        for _indId,indS in self.vdb.sfariDB.individual.items():
+        for _indId, indS in self.vdb.sfariDB.individual.items():
             if indS.collection != "ssc":
                 continue
             buff[indS.familyId][indS.role] = indS
 
-        rlsMp = zip("mother,father,proband".split(','),"mom,dad,prb".split(','))
-        genderMap = {"female":"F", "male":"M"}
-
+        rlsMp = zip(
+            "mother,father,proband".split(','), "mom,dad,prb".split(','))
+        genderMap = {"female": "F", "male": "M"}
 
         families = {}
-        for fid,rls in buff.items():
+        for fid, rls in buff.items():
             if "mother" not in rls or "father" not in rls or "proband" not in rls:
                 continue
             f = Family()
             f.familyId = fid
             f.memberInOrder = []
 
-            for srl,irl in rlsMp:
+            for srl, irl in rlsMp:
                 p = Person()
                 p.personId = rls[srl].personId
                 p.gender = genderMap[rls[srl].sex]
                 p.role = irl
                 f.memberInOrder.append(p)
             families[f.familyId] = f
-        return families,{}
+        return families, {}
 
-    def _load_family_data_from_pickle(self,fn):
-        return pickle.load(open(fn,"rb")) 
-        
+    def _load_family_data_from_pickle(self, fn):
+        return pickle.load(open(fn, "rb"))
 
-    def _load_family_data_from_simple(self,reportF):
-        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments="asdgasdgasdga")
+    def _load_family_data_from_simple(self, reportF):
+        dt = genfromtxt(reportF, delimiter='\t', dtype=None,
+                        names=True, case_sensitive=True, comments="asdgasdgasdga")
         families = defaultdict(Family)
         for dtR in dt:
             fmId = str(dtR['familyId'])
             families[fmId].familyId = fmId
-            atts = { x: dtR[x] for x in dt.dtype.names }
+            atts = {x: dtR[x] for x in dt.dtype.names}
             p = Person(atts)
             p.personId = atts['personId']
             p.gender = atts['gender']
@@ -653,19 +364,18 @@ class Study:
                 families[fmId].memberInOrder.append(p)
             except AttributeError:
                 families[fmId].memberInOrder = [p]
-        return families,{}
+        return families, {}
 
-
-
-    def _load_family_data_from_DalyWE2012_SD_Trios(self,reportF):
+    def _load_family_data_from_DalyWE2012_SD_Trios(self, reportF):
         families = {}
 
-        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments="asdgasdgasdga")
+        dt = genfromtxt(reportF, delimiter='\t', dtype=None,
+                        names=True, case_sensitive=True, comments="asdgasdgasdga")
 
-        genderDecoding = { "female":"F", "male":"M"}
+        genderDecoding = {"female": "F", "male": "M"}
 
         for dtR in dt:
-            atts = { x: dtR[x] for x in dt.dtype.names }
+            atts = {x: dtR[x] for x in dt.dtype.names}
             prb = Person(atts)
             prb.gender = genderDecoding[dtR["Gender"]]
             prb.role = "prb"
@@ -688,17 +398,19 @@ class Study:
             f.memberInOrder = [mom, dad, prb]
 
             families[fid] = f
-        return families,{}
+        return families, {}
 
-    def _load_family_data_from_EichlerWE2012_SupTab1(self,reportF):
+    def _load_family_data_from_EichlerWE2012_SupTab1(self, reportF):
         famBuff = defaultdict(dict)
-        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True,comments="asdgasdgasdga")
+        dt = genfromtxt(reportF, delimiter='\t', dtype=None,
+                        names=True, case_sensitive=True, comments="asdgasdgasdga")
 
-        genderDecoding = { "female":"F", "male":"M"}
-        roleDecoding = { "SSC189":"prb", "SSC189_Sib":"sib", "Pilot_Pro":"prb", "Pilot_Sib":"sib" }
+        genderDecoding = {"female": "F", "male": "M"}
+        roleDecoding = {"SSC189": "prb", "SSC189_Sib": "sib",
+                        "Pilot_Pro": "prb", "Pilot_Sib": "sib"}
 
         for dtR in dt:
-            atts = { x: dtR[x] for x in dt.dtype.names }
+            atts = {x: dtR[x] for x in dt.dtype.names}
             p = Person(atts)
             p.gender = genderDecoding[dtR["sex"]]
             p.role = roleDecoding[dtR["type"]]
@@ -710,7 +422,7 @@ class Study:
             famBuff[fid][p.role] = p
 
         families = {}
-        for fid,pDct in famBuff.items():
+        for fid, pDct in famBuff.items():
             f = Family()
             f.familyId = fid
 
@@ -730,23 +442,25 @@ class Study:
             elif len(pDct) == 2:
                 f.memberInOrder = [mom, dad, pDct['prb'], pDct['sib']]
             else:
-                raise Exception("Weird family: " + fid + " with " + str(len(pDct)) + " memmbers")
+                raise Exception(
+                    "Weird family: " + fid + " with " + str(len(pDct)) + " memmbers")
 
             families[fid] = f
 
-        return families,{}
+        return families, {}
 
-
-    def _load_family_data_from_StateWE2012_data1(self,reportF):
+    def _load_family_data_from_StateWE2012_data1(self, reportF):
         famBuff = defaultdict(dict)
         badFamBuff = defaultdict(dict)
-        dt = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True, comments="asdgasdgasdga")
+        dt = genfromtxt(reportF, delimiter='\t', dtype=None,
+                        names=True, case_sensitive=True, comments="asdgasdgasdga")
 
-        genderDecoding = { "Male":"M", "Female":"F" }
-        roleDecoding = { "Mother":"mom", "Father":"dad", "Affected_proband":"prb", "Unaffected_Sibling":"sib" }
+        genderDecoding = {"Male": "M", "Female": "F"}
+        roleDecoding = {"Mother": "mom", "Father": "dad",
+                        "Affected_proband": "prb", "Unaffected_Sibling": "sib"}
 
         for dtR in dt:
-            atts = { x: dtR[x] for x in dt.dtype.names }
+            atts = {x: dtR[x] for x in dt.dtype.names}
             p = Person(atts)
             p.gender = genderDecoding[dtR["Gender"]]
             p.role = roleDecoding[dtR["Role"]]
@@ -757,9 +471,8 @@ class Study:
             else:
                 famBuff[str(dtR["Family"])][p.role] = p
 
-
         families = {}
-        for fid,pDct in famBuff.items():
+        for fid, pDct in famBuff.items():
             f = Family()
             f.familyId = fid
 
@@ -767,14 +480,16 @@ class Study:
             if len(pDct) == 3:
                 f.memberInOrder = [pDct['mom'], pDct['dad'], pDct['prb']]
             elif len(pDct) == 4:
-                f.memberInOrder = [pDct['mom'], pDct['dad'], pDct['prb'],pDct['sib']]
+                f.memberInOrder = [
+                    pDct['mom'], pDct['dad'], pDct['prb'], pDct['sib']]
             else:
-                raise Exception("Weird family: " + fid + " with " + str(len(pDct)) + " memmbers")
+                raise Exception(
+                    "Weird family: " + fid + " with " + str(len(pDct)) + " memmbers")
 
             families[fid] = f
 
         badFamilies = {}
-        for fid,pDct in badFamBuff.items():
+        for fid, pDct in badFamBuff.items():
             f = Family()
             f.familyId = fid
 
@@ -782,18 +497,18 @@ class Study:
 
             badFamilies[fid] = f
 
-        return families,badFamilies
+        return families, badFamilies
 
-    def _load_family_data_from_IossifovWE2014_families(self,reportF):
+    def _load_family_data_from_IossifovWE2014_families(self, reportF):
         families = {}
         badFamilies = {}
-        qrp = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True)
+        qrp = genfromtxt(
+            reportF, delimiter='\t', dtype=None, names=True, case_sensitive=True)
         for qrpR in qrp:
             f = Family()
             f.familyId = str(qrpR['familyId'])
 
-            f.atts = { x:qrpR[x] for x in qrp.dtype.names }
-
+            f.atts = {x: qrpR[x] for x in qrp.dtype.names}
 
             fCntrs = set()
             chldSfx = defaultdict(set)
@@ -825,12 +540,11 @@ class Study:
             dad.atts['race'] = qrpR['fatherRace']
             dad.atts['centers'] = fmCntrS
 
-
             f.memberInOrder = [mom, dad]
 
-            sfxC2Role = {'p':'prb', 's':'sib'}
-            sfxC2GenderAt = {'p':'probandGender', 's':'siblingGender'}
-            for sfx,chCntrs in sorted(chldSfx.items()):
+            sfxC2Role = {'p': 'prb', 's': 'sib'}
+            sfxC2GenderAt = {'p': 'probandGender', 's': 'siblingGender'}
+            for sfx, chCntrs in sorted(chldSfx.items()):
                 chl = Person()
                 chl.personId = f.familyId + "." + sfx
                 chl.role = sfxC2Role[sfx[0]]
@@ -862,21 +576,22 @@ class Study:
             else:
                 badFamilies[f.familyId] = f
             '''
-        return families,badFamilies
+        return families, badFamilies
 
-    def _load_family_data_from_quad_report(self,reportF):
+    def _load_family_data_from_quad_report(self, reportF):
         familyIdRE = re.compile('^auSSC(\d\d\d\d\d)')
-        rlsMap = {"self":"prb", "sibling":"sib"}
+        rlsMap = {"self": "prb", "sibling": "sib"}
         families = {}
         badFamilies = {}
-        qrp = genfromtxt(reportF,delimiter='\t',dtype=None,names=True, case_sensitive=True)
+        qrp = genfromtxt(
+            reportF, delimiter='\t', dtype=None, names=True, case_sensitive=True)
         for qrpR in qrp:
             f = Family()
             f.familyId = qrpR['quadquad_id']
             if familyIdRE.match(f.familyId):
                 f.familyId = f.familyId[5:10]
 
-            f.atts = { x:qrpR[x] for x in qrp.dtype.names }
+            f.atts = {x: qrpR[x] for x in qrp.dtype.names}
 
             def piF(pi):
                 sfariDB = self.vdb.sfariDB
@@ -886,35 +601,39 @@ class Study:
                     return pi
                 return sfariDB.sampleNumber2PersonId[pi]
 
-            def transferPersonAtts(pd,attPref):
+            def transferPersonAtts(pd, attPref):
                 pd.atts['sample_id'] = qrpR[attPref + 'sample_id']
                 pd.atts['mean_depth'] = qrpR[attPref + 'mean_depth']
-                pd.atts['target_covered_at_1_prcnt'] = qrpR[attPref + '_target_covered_at_1_prcnt']
-                pd.atts['target_covered_at_10_prcnt'] = qrpR[attPref + '_target_covered_at_10_prcnt']
-                pd.atts['target_covered_at_20_prcnt'] = qrpR[attPref + '_target_covered_at_20_prcnt']
-                pd.atts['target_covered_at_40_prcnt'] = qrpR[attPref + '_target_covered_at_40_prcnt']
+                pd.atts['target_covered_at_1_prcnt'] = qrpR[
+                    attPref + '_target_covered_at_1_prcnt']
+                pd.atts['target_covered_at_10_prcnt'] = qrpR[
+                    attPref + '_target_covered_at_10_prcnt']
+                pd.atts['target_covered_at_20_prcnt'] = qrpR[
+                    attPref + '_target_covered_at_20_prcnt']
+                pd.atts['target_covered_at_40_prcnt'] = qrpR[
+                    attPref + '_target_covered_at_40_prcnt']
                 pd.atts['relXcopy'] = qrpR[attPref + 'relXcopy']
                 pd.atts['relYcopy'] = qrpR[attPref + 'relYcopy']
-                pd.atts['genderMismatchStr'] = qrpR[attPref + 'genderMismatchStr']
+                pd.atts['genderMismatchStr'] = qrpR[
+                    attPref + 'genderMismatchStr']
 
             mom = Person()
             mom.personId = piF(qrpR['mothersample_id'])
             mom.role = 'mom'
             mom.gender = 'F'
-            transferPersonAtts(mom,"mother")
+            transferPersonAtts(mom, "mother")
 
             dad = Person()
             dad.personId = piF(qrpR['fathersample_id'])
             dad.role = 'dad'
             dad.gender = 'M'
-            transferPersonAtts(dad,"father")
+            transferPersonAtts(dad, "father")
 
             ch1 = Person()
             ch1.personId = piF(qrpR['child1sample_id'])
             ch1.role = rlsMap[qrpR['child1role']]
             ch1.gender = qrpR['child1gender']
-            transferPersonAtts(ch1,"child1")
-
+            transferPersonAtts(ch1, "child1")
 
             f.memberInOrder = [mom, dad, ch1]
 
@@ -923,17 +642,18 @@ class Study:
                 ch2.personId = piF(qrpR['child2sample_id'])
                 ch2.role = rlsMap[qrpR['child2role']]
                 ch2.gender = qrpR['child2gender']
-                transferPersonAtts(ch2,"child2")
+                transferPersonAtts(ch2, "child2")
                 f.memberInOrder.append(ch2)
             if qrpR['status'] == 'OK':
                 families[f.familyId] = f
             else:
                 badFamilies[f.familyId] = f
 
-        return families,badFamilies
+        return families, badFamilies
 
 
 class VariantsDB:
+
     def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None, phDB=None, genomesDB=None):
         self.sfariDB = sfariDB
         self.giDB = giDB
@@ -944,7 +664,7 @@ class VariantsDB:
         if not confFile:
             confFile = daeDir + "/variantDB.conf"
 
-        self._config = ConfigParser.SafeConfigParser({'wd':daeDir})
+        self._config = ConfigParser.SafeConfigParser({'wd': daeDir})
         self._config.optionxform = lambda x: x
 
         self._config.read(confFile)
@@ -953,17 +673,18 @@ class VariantsDB:
         for secName in self._config.sections():
             if secName.startswith('study.'):
                 studyName = secName[6:]
-                self._studies[studyName] = Study(self,studyName)
+                self._studies[studyName] = Study(self, studyName)
 
         self._studyGroups = {}
         for secName in self._config.sections():
             if secName.startswith('studyGroup.'):
                 gName = secName[11:]
-                self._studyGroups[gName] = StudyGroup(self,gName)
+                self._studyGroups[gName] = StudyGroup(self, gName)
 
                 for stN in self._studyGroups[gName].studyNames:
                     if stN not in self._studies:
-                        raise Exception("The study " + stN + " in the study group " + gName + " is unknown")
+                        raise Exception(
+                            "The study " + stN + " in the study group " + gName + " is unknown")
 
     def get_gene_regions(self, gene_list):
         DATA = {"OSBPL8": "12:76770000-76890000",
@@ -983,10 +704,10 @@ class VariantsDB:
         rgns = []
         for gs in gene_list:
             for gm in gms.gene_models_by_gene_name(gs):
-                rgns.append(Region(gm.chr,gm.tx[0]-200,gm.tx[1]+200))
+                rgns.append(Region(gm.chr, gm.tx[0] - 200, gm.tx[1] + 200))
         if rgns:
             rgns = collapse(rgns)
-        return ["%s:%d-%d" % (r.chr,r.start,r.stop) for r in rgns]
+        return ["%s:%d-%d" % (r.chr, r.start, r.stop) for r in rgns]
 
     def get_study_names(self):
         return sorted(self._studies.keys())
@@ -994,16 +715,17 @@ class VariantsDB:
     def get_study_group_names(self):
         return sorted(self._studyGroups.keys())
 
-    def get_study(self,name):
+    def get_study(self, name):
         if name in self._studies:
             return self._studies[name]
         if name in self._studyGroups:
-            if len(self._studyGroups[name].studyNames)!=1:
-                raise Exception('get_study can only use study groups with only one study')
+            if len(self._studyGroups[name].studyNames) != 1:
+                raise Exception(
+                    'get_study can only use study groups with only one study')
             return self._studies[self._studyGroups[name].studyNames[0]]
         raise Exception('unknown study ' + name)
 
-    def get_studies(self,definition):
+    def get_studies(self, definition):
         sts = []
 
         for name in definition.split(","):
@@ -1021,7 +743,7 @@ class VariantsDB:
 
     def get_denovo_variants(self, studies, **filters):
         seenVs = set()
-        if isinstance(studies,str):
+        if isinstance(studies, str):
             studies = self.get_studies(studies)
         for study in studies:
             for v in study.get_denovo_variants(**filters):
@@ -1031,20 +753,23 @@ class VariantsDB:
                 yield v
                 seenVs.add(vKey)
 
-    def _parse_validation_report(self,fn,knownFams,batchId=None):
-        print >>sys.stderr, "Parsing validation reprt file:|", fn,"|"
+    def _parse_validation_report(self, fn, knownFams, batchId=None):
+        print >>sys.stderr, "Parsing validation reprt file:|", fn, "|"
         vars = []
-        dt = genfromtxt(fn,delimiter='\t',dtype=None,names=True, case_sensitive=True)
+        dt = genfromtxt(
+            fn, delimiter='\t', dtype=None, names=True, case_sensitive=True)
         # if there is only row of data in the file then the genfromtxt function returns a 0d array.
-        # this causes an error when trying to iterate over it, so it must be converted to a 1d array
-        if dt.ndim==0:
-            dt=dt.reshape(1)
+        # this causes an error when trying to iterate over it, so it must be
+        # converted to a 1d array
+        if dt.ndim == 0:
+            dt = dt.reshape(1)
 
         if not batchId:
             batchId = dirname(fn).split("/")[-2]
 
         for dtR in dt:
             class ValidationVariant:
+
                 @property
                 def bestSt(self):
                     try:
@@ -1052,6 +777,7 @@ class VariantsDB:
                     except AttributeError:
                         self._bestSt = str2Mat(self.bestStS, colSep=" ")
                         return self._bestSt
+
                 @property
                 def valBestSt(self):
                     try:
@@ -1059,19 +785,21 @@ class VariantsDB:
                     except AttributeError:
                         self._valBestSt = str2Mat(self.valBestStS, colSep=" ")
                         return self._valBestSt
+
                 @property
                 def valCounts(self):
                     try:
                         return self._valCounts
                     except AttributeError:
-                        self._valCounts= str2Mat(self.valCountsS, colSep=" ")
+                        self._valCounts = str2Mat(self.valCountsS, colSep=" ")
                         return self._valCounts
+
                 @property
                 def inChS(self):
                     mbrs = self.memberInOrder
                     bs = self.bestSt
                     childStr = ''
-                    for c in xrange(2,len(mbrs)):
+                    for c in xrange(2, len(mbrs)):
                         if bs[1][c]:
                             childStr += (mbrs[c].role + mbrs[c].gender)
                     return childStr
@@ -1079,7 +807,7 @@ class VariantsDB:
             v = ValidationVariant()
 
             v.batchId = batchId
-            v.atts = { x: dtR[x] for x in dt.dtype.names }
+            v.atts = {x: dtR[x] for x in dt.dtype.names}
 
             v.familyId = str(dtR['familyId'])
             v.location = dtR['location']
@@ -1101,13 +829,12 @@ class VariantsDB:
             v.valBestStS = dtR['valbestState']
             v.valStatus = dtR['valstatus']
 
-
             v.valParent = ""
             # if the valparent column exists but is empty, then the values
             # are turned into a boolean value not and string, if this is
             # the case then do not set the value because it will cause an
             # error
-            if 'valparent' in dtR.dtype.names and dtR['valparent'].dtype!=bool:
+            if 'valparent' in dtR.dtype.names and dtR['valparent'].dtype != bool:
                 v.valParent = dtR['valparent']
 
             if v.familyId in knownFams:
@@ -1116,15 +843,14 @@ class VariantsDB:
                 v.memberInOrder = []
                 print >>sys.stderr, "Breh, the family", v.familyId, "is unknown"
 
-
             # nvf.write("\t".join((v.familyId,v.location,v.variant,v.bestStS,v.who,v.why,v.batchId,v.valCountsS,v.valBestStS,v.valStatus,v.resultNote,v.valParent)) + "\n")
             vars.append(v)
         # nvf.close()
         return vars
 
     def get_validation_variants(self):
-        validationDir = self._config.get('validation', 'dir' )
-        studyNames = self._config.get('validation', 'studies' )
+        validationDir = self._config.get('validation', 'dir')
+        studyNames = self._config.get('validation', 'studies')
         stdies = [self.get_study(x) for x in studyNames.split(',')]
 
         print >>sys.stderr, "validationDir: |", validationDir, "|"
@@ -1134,7 +860,8 @@ class VariantsDB:
         for stdy in stdies:
             for f in stdy.families:
                 if f in knownFams:
-                    print >> sys.stderr, "Ha, family", f, "is more that one study: ", stdy.name, "and", knownFams[f]
+                    print >> sys.stderr, "Ha, family", f, "is more that one study: ", stdy.name, "and", knownFams[
+                        f]
                 knownFams[f] = stdy.families[f]
 
         # print knownFams
@@ -1162,21 +889,21 @@ class VariantsDB:
         nCompleteIns = 0
         vars = []
         for fn in glob.glob(validationDir + '/*/reports/report*.txt'):
-            vars += self._parse_validation_report(fn,knownFams)
+            vars += self._parse_validation_report(fn, knownFams)
         print >>sys.stderr, "nIncompleteIns:", nIncompleteIns
         print >>sys.stderr, "nCompleteIns:", nCompleteIns
         return vars
 
-    def get_denovo_sets(self,dnvStds):
+    def get_denovo_sets(self, dnvStds):
         r = GeneTerms()
         r.geneNS = "sym"
 
         def getMeasure(mName):
             from DAE import phDB
-            strD = dict(zip(phDB.families,phDB.get_variable(mName)))
+            strD = dict(zip(phDB.families, phDB.get_variable(mName)))
             # fltD = {f:float(m) for f,m in strD.items() if m!=''}
             fltD = {}
-            for f,m in strD.items():
+            for f, m in strD.items():
                 try:
                     mf = float(m)
                     # if mf>70:
@@ -1187,7 +914,7 @@ class VariantsDB:
 
         nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq')
 
-        def addSet(setname, genes,desc=None):
+        def addSet(setname, genes, desc=None):
             if not genes:
                 return
             if desc:
@@ -1195,54 +922,62 @@ class VariantsDB:
             else:
                 r.tDesc[setname] = setname
             for gSym in genes:
-                r.t2G[setname][gSym]+=1
-                r.g2T[gSym][setname]+=1
-        def genes(inChild,effectTypes,inGenesSet=None,minIQ=None,maxIQ=None):
+                r.t2G[setname][gSym] += 1
+                r.g2T[gSym][setname] += 1
+
+        def genes(inChild, effectTypes, inGenesSet=None, minIQ=None, maxIQ=None):
             if inGenesSet:
-                vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild,geneSyms=inGenesSet)
+                vs = self.get_denovo_variants(
+                    dnvStds, effectTypes=effectTypes, inChild=inChild, geneSyms=inGenesSet)
             else:
-                vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
+                vs = self.get_denovo_variants(
+                    dnvStds, effectTypes=effectTypes, inChild=inChild)
             if not (minIQ or maxIQ):
                 return {ge['sym'] for v in vs for ge in v.requestedGeneEffects}
             if minIQ:
-                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId]>=minIQ }
+                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] >= minIQ}
             if maxIQ:
-                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] < maxIQ }
+                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] < maxIQ}
 
         def set_genes(geneSetDef):
-            gtId,tmId = geneSetDef.split(":")
+            gtId, tmId = geneSetDef.split(":")
             return set(self.giDB.getGeneTerms(gtId).t2G[tmId].keys())
 
-        def recSingleGenes(inChild,effectTypes):
-            vs = self.get_denovo_variants(dnvStds,effectTypes=effectTypes,inChild=inChild)
+        def recSingleGenes(inChild, effectTypes):
+            vs = self.get_denovo_variants(
+                dnvStds, effectTypes=effectTypes, inChild=inChild)
 
-            gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects ])
-            sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
-            sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() }
-            return {g for g,nf in sym2FN.items() if nf>1 }, {g for g,nf in sym2FN.items() if nf==1 }
+            gnSorted = sorted([[ge['sym'], v]
+                               for v in vs for ge in v.requestedGeneEffects])
+            sym2Vars = {sym: [t[1] for t in tpi]
+                        for sym, tpi in groupby(gnSorted, key=lambda x: x[0])}
+            sym2FN = {sym: len(set([v.familyId for v in vs]))
+                      for sym, vs in sym2Vars.items()}
+            return {g for g, nf in sym2FN.items() if nf > 1}, {g for g, nf in sym2FN.items() if nf == 1}
 
-        addSet("prb.LoF",             genes('prb' ,'LGDs'))
-        recPrbLGDs, sinPrbLGDs = recSingleGenes('prb' ,'LGDs')
+        addSet("prb.LoF",             genes('prb', 'LGDs'))
+        recPrbLGDs, sinPrbLGDs = recSingleGenes('prb', 'LGDs')
         addSet("prb.LoF.Recurrent",   recPrbLGDs)
         addSet("prb.LoF.Single",      sinPrbLGDs)
 
-        addSet("prb.LoF.Male",        genes('prbM','LGDs'))
-        addSet("prb.LoF.Female",      genes('prbF','LGDs'))
+        addSet("prb.LoF.Male",        genes('prbM', 'LGDs'))
+        addSet("prb.LoF.Female",      genes('prbF', 'LGDs'))
 
-        addSet("prb.LoF.LowIQ",       genes('prb','LGDs',maxIQ=90))
-        addSet("prb.LoF.HighIQ",      genes('prb','LGDs',minIQ=90))
+        addSet("prb.LoF.LowIQ",       genes('prb', 'LGDs', maxIQ=90))
+        addSet("prb.LoF.HighIQ",      genes('prb', 'LGDs', minIQ=90))
 
-        addSet("prb.LoF.FMRP",        genes('prb','LGDs',set_genes("main:FMR1-targets")))
+        addSet("prb.LoF.FMRP",        genes(
+            'prb', 'LGDs', set_genes("main:FMR1-targets")))
         # addSet("prbLGDsInCHDs",     genes('prb','LGDs',set("CHD1,CHD2,CHD3,CHD4,CHD5,CHD6,CHD7,CHD8,CHD9".split(','))))
 
-        addSet("prb.Missense",        genes('prb' ,'missense'))
-        addSet("prb.Missense.Male",   genes('prbM' ,'missense'))
-        addSet("prb.Missense.Female", genes('prbF' ,'missense'))
-        addSet("prb.Synonymous",      genes('prb' ,'synonymous'))
+        addSet("prb.Missense",        genes('prb', 'missense'))
+        addSet("prb.Missense.Male",   genes('prbM', 'missense'))
+        addSet("prb.Missense.Female", genes('prbF', 'missense'))
+        addSet("prb.Synonymous",      genes('prb', 'synonymous'))
 
-        addSet("sib.LoF",             genes('sib' ,'LGDs'))
-        addSet("sib.Missense",        genes('sib' ,'missense'))
-        addSet("sib.Synonymous",      genes('sib' ,'synonymous'))
+        addSet("sib.LoF",             genes('sib', 'LGDs'))
+        addSet("sib.Missense",        genes('sib', 'missense'))
+        addSet("sib.Synonymous",      genes('sib', 'synonymous'))
 
         '''
         addSet("A",      recPrbLGDs, "recPrbLGDs")
@@ -1257,24 +992,23 @@ class VariantsDB:
         addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
         '''
 
-        recPrbCNVs, sinPrbCNVs = recSingleGenes('prb' ,'CNVs')
+        recPrbCNVs, sinPrbCNVs = recSingleGenes('prb', 'CNVs')
         addSet("prb.CNV.Recurrent",     recPrbCNVs)
 
-        addSet("prb.CNV",   genes('prb' ,'CNVs'))
-        addSet("prb.Dup",   genes('prb' ,'CNV+'))
-        addSet("prb.Del",   genes('prb' ,'CNV-'))
+        addSet("prb.CNV",   genes('prb', 'CNVs'))
+        addSet("prb.Dup",   genes('prb', 'CNV+'))
+        addSet("prb.Del",   genes('prb', 'CNV-'))
 
-        addSet("sib.CNV",   genes('sib' ,'CNVs'))
-        addSet("sib.Dup",   genes('sib' ,'CNV+'))
-        addSet("sib.Del",   genes('sib' ,'CNV-'))
+        addSet("sib.CNV",   genes('sib', 'CNVs'))
+        addSet("sib.Dup",   genes('sib', 'CNV+'))
+        addSet("sib.Del",   genes('sib', 'CNV-'))
 
         return r
 
-
-    ### THE ONES BELOW SHOULD BE MOVED
+    # THE ONES BELOW SHOULD BE MOVED
     # return a list of valid variant types, add None to this list for the UI
 
-    def effectTypesSet(self,effectTypesS):
+    def effectTypesSet(self, effectTypesS):
         return get_effect_types_set(effectTypesS)
         '''
         if effectTypesS == "CNVs":
@@ -1288,131 +1022,50 @@ class VariantsDB:
         '''
 
 
-def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):
-    # print matS, colSep, rowSep, str2NumF
-    if colSep == -1:
-        return np.array([ [ str2NumF(c) for c in r ] for r in matS.split(rowSep) ])
-    return np.array([ [ str2NumF(v) for v in r.split(colSep) ] for r in matS.split(rowSep) ])
-
-def mat2Str(mat, colSep=" ", rowSep="/"):
-    return rowSep.join([ colSep.join([str(n) for n in mat[i,:]]) for i in xrange(mat.shape[0])  ])
-
 # added sep param in order to produce CSV outout for Web Site
-def _safeVs(tf,vs,atts=[],sep="\t"):
+def _safeVs(tf, vs, atts=[], sep="\t"):
     def ge2Str(gs):
-        return "|".join( x['sym'] + ":" + x['eff'] for x in gs)
+        return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
 
     mainAtts = "familyId studyName location variant bestSt fromParentS inChS counts geneEffect requestedGeneEffects popType".split()
-    specialStrF = {"bestSt":mat2Str, "counts":mat2Str, "geneEffect":ge2Str, "requestedGeneEffects":ge2Str}
+    specialStrF = {"bestSt": mat2Str, "counts": mat2Str,
+                   "geneEffect": ge2Str, "requestedGeneEffects": ge2Str}
 
-    tf.write(sep.join(mainAtts+atts)+"\n")
+    tf.write(sep.join(mainAtts + atts) + "\n")
     for v in vs:
         mavs = []
         for att in mainAtts:
             try:
                 if att in specialStrF:
-                    mavs.append(specialStrF[att](getattr(v,att)))
+                    mavs.append(specialStrF[att](getattr(v, att)))
                 else:
-                    mavs.append(str(getattr(v,att)))
+                    mavs.append(str(getattr(v, att)))
             except:
                 mavs.append("")
 
-        tmp = sep.join(mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts])
-        tf.write(tmp +"\n")
+        tmp = sep.join(
+            mavs + [str(v.atts[a]).replace(sep, ';') if a in v.atts else "" for a in atts])
+        tf.write(tmp + "\n")
 
-def viewVs(vs,atts=[]):
+
+def viewVs(vs, atts=[]):
     tf = tempfile.NamedTemporaryFile("w", delete=False)
     print >>sys.stderr, "temp file name: " + tf.name
-    _safeVs(tf,vs,atts)
+    _safeVs(tf, vs, atts)
     tf.close()
     os.system("oocalc " + tf.name)
     os.remove(tf.name)
 
-def safeVs(vs,fn,atts=[]):
-    if fn=="-":
+
+def safeVs(vs, fn, atts=[]):
+    if fn == "-":
         f = sys.stdout
     else:
-        f = open(fn,"w")
-    _safeVs(f,vs,atts)
-    if fn!="-":
+        f = open(fn, "w")
+    _safeVs(f, vs, atts)
+    if fn != "-":
         f.close()
 
-def normalRefCopyNumber(location,gender):
-    clnInd = location.find(":")
-    chr = location[0:clnInd]
-
-    if chr in ['chrX', 'X', '23', 'chr23']:
-        if '-' in location:
-            dshInd = location.find('-')
-            pos = int(location[clnInd+1:dshInd])
-        else:
-            pos = int(location[clnInd+1:])
-
-        # hg19 pseudo autosomes region: chrX:60001-2699520 and chrX:154931044-155260560
-        if pos < 60001 or (pos>2699520 and pos < 154931044) or pos > 155260560:
-            if gender=='M':
-                return 1
-            elif gender!='F':
-                raise Exception('weird gender ' + gender)
-    elif chr in ['chrY', 'Y', '24', 'chr24']:
-        if gender=='M':
-            return 1
-        elif gender=='F':
-            return 0
-        else:
-            raise Exception('gender needed')
-    return 2
-
-def variantCount(bs,c,location=None,gender=None, denovoParent=None):
-    normalRefCN=2
-    if location:
-        normalRefCN = normalRefCopyNumber(location,gender)
-
-        count = abs(bs[0,c] - normalRefCN)
-        if count == 0 and bs.shape[0]>1:
-            # print("bs=%s; bs.shape[0]=%s" % (bs, bs.shape[0]))
-            count = max([bs[o,c] for o in xrange(1,bs.shape[0])])
-        if c!=denovoParent:
-            return [count]
-        else:
-            return [1, 1]
-
-
-def isVariant(bs,c,location=None,gender=None):
-    normalRefCN=2
-
-    if location:
-        normalRefCN = normalRefCopyNumber(location,gender)
-
-    if bs[0,c] != normalRefCN or any([bs[o,c]!=0 for o in xrange(1,bs.shape[0])]):
-        return True
-    return False
-
-
-def parseGeneEffect(effStr):
-    geneEffect = []
-    if effStr == "intergenic":
-        return geneEffect
-
-    # HACK!!! To rethink
-    if effStr in ["CNV+", "CNV-"]:
-        geneEffect.append({'sym':"", 'eff':effStr})
-        return geneEffect
-
-    for ge in effStr.split("|"):
-        cs = ge.split(":");
-        if len(cs) != 2:
-            raise Exception(ge + " doesn't agree with the <sym>:<effect> format:" + effStr);
-        sym,eff = cs
-        geneEffect.append({'sym':sym, 'eff':eff})
-    return geneEffect
-
-def filter_gene_effect(geneEffects, effectTypes, geneSyms):
-    if not effectTypes:
-        return [x for x in geneEffects if x['sym'] in geneSyms]
-    if not geneSyms:
-        return [x for x in geneEffects if x['eff'] in effectTypes]
-    return [x for x in geneEffects if x['eff'] in effectTypes and  x['sym'] in geneSyms]
 
 if __name__ == "__main__":
     wd = os.environ['DAE_DB_DIR']
@@ -1430,9 +1083,9 @@ if __name__ == "__main__":
 
     st = vDB.get_study("IossifovWE2014")
     fd = st.families['13394']
-    print fd.familyId,len(fd.memberInOrder),fd.atts
+    print fd.familyId, len(fd.memberInOrder), fd.atts
     for pd in fd.memberInOrder:
-        print "\t",pd.personId,pd.role,pd.gender,pd.atts
+        print "\t", pd.personId, pd.role, pd.gender, pd.atts
 
     '''
     for v in vDB.get_validation_variants():
@@ -1502,18 +1155,18 @@ if __name__ == "__main__":
     fo.close()
 '''
 
-    # vDB.getDenovoVariants('wigler582')
-    # vDB.getDenovoVariants('3papers')
-    #
-    # res = vDB.getDenovoVariantsGeneSyms('wig582-3pap',inChildRole='prb', effectTypes="LGDs")
-    # right = set()
-    # for l in open(wd + '/rightPrbLGDs.txt'):
-    #     right.add(l.strip())
+# vDB.getDenovoVariants('wigler582')
+# vDB.getDenovoVariants('3papers')
+#
+# res = vDB.getDenovoVariantsGeneSyms('wig582-3pap',inChildRole='prb', effectTypes="LGDs")
+# right = set()
+# for l in open(wd + '/rightPrbLGDs.txt'):
+#     right.add(l.strip())
 
-    # print len(res), len(right)
-    # print 'res but not right:', " ".join([g for g in res if not g in right])
-    # print 'right but not res:', " ".join([g for g in right if not g in res])
+# print len(res), len(right)
+# print 'res but not right:', " ".join([g for g in res if not g in right])
+# print 'right but not res:', " ".join([g for g in right if not g in res])
 
-    # print "\n".join(["\t".join((v.center, v.geneEffect[0]['sym'], v.majorEffect))
-    #                 for v in vDB.getDenovoVariants('wig582-3pap',effectTypes="LGDs")
-    #                 ])
+# print "\n".join(["\t".join((v.center, v.geneEffect[0]['sym'], v.majorEffect))
+#                 for v in vDB.getDenovoVariants('wig582-3pap',effectTypes="LGDs")
+#                 ])
