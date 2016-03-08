@@ -80,5 +80,4 @@ class Weights(Preload):
         index = np.logical_and(notnan_index, minmax_index)
 
         genes = self.df[index].gene
-        # print(self.df[index])
         return set(genes.values)

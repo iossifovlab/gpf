@@ -150,9 +150,6 @@ class Test(unittest.TestCase):
         fc = fr.get_families_counters('autism')
         fc1 = fr1.get_families_counters('autism')
 
-        # print(sorted(fc.type_counters()))
-        # print(sorted(fc1.type_counters()))
-
         self.assertEquals(fc.type_counters(),
                           fc1.type_counters())
 

@@ -394,7 +394,6 @@ def gene_set_download(request):
             gene_syms.append('"{}"'.format(gts.tDesc[gene_name]))
             gene_syms.extend(gts.t2G[gene_name].keys())
     res = map(lambda s: "{}\r\n".format(s), gene_syms)
-    print(res)
     response = StreamingHttpResponse(
         res,
         content_type='text/csv')

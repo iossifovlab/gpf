@@ -17,7 +17,6 @@ class Test(APITestCase):
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
-        print(response.data)
         self.assertIn('measure',  response.data)
         self.assertEqual('non_verbal_iq', response.data['measure'])
 

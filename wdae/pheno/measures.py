@@ -231,7 +231,6 @@ class NormalizedMeasure(object):
         self.by = by
 
         if not by:
-            # print(self.df[self.measure])
             dn = pd.Series(
                 index=self.df.index, data=self.df[self.measure].values)
             self.df['normalized'] = dn

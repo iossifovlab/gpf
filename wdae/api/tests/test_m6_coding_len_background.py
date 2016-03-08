@@ -29,7 +29,6 @@ class Test(unittest.TestCase):
         bg = background._load_and_prepare_build()
 
         max_sym_len = max([len(s) for (s, _l) in bg])
-        print("max gene sym len: {}".format(max_sym_len))
         self.assertTrue(max_sym_len < 32)
 
     def test_precompute(self):

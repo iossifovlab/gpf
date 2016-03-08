@@ -2,13 +2,11 @@
 from query_prepare import prepare_gene_syms, \
     prepare_denovo_studies, \
     prepare_transmitted_studies
-from api.deprecated.bg_loader import gene_set_bgloader
 from query_variants import prepare_inchild, prepare_effect_types, \
     prepare_variant_types, prepare_family_ids
 
 
 import logging
-from api.deprecated.bg_loader import preload_background
 from rest_framework.test import APITestCase
 from api.query.wdae_query_variants import prepare_gene_sets, gene_set_loader2
 
@@ -215,22 +213,6 @@ class GeneSetsTests(APITestCase):
 
     DISEASE_AIDS = set(['IFNG', 'KIR3DL1', 'CXCL12'])
     GO_GO_2001293 = set(['ACACA', 'ACACB'])
-
-    @classmethod
-    def setUpClass(cls):
-        super(GeneSetsTests, cls).setUpClass()
-
-        builders = [
-            (gene_set_bgloader,
-             ['GO'],
-             'GO'),
-
-            (gene_set_bgloader,
-             ['MSigDB.curated'],
-             'MSigDB.curated'),
-
-        ]
-        preload_background(builders)
 
     def test_gene_sets_empty(self):
         self.assertIsNone(prepare_gene_sets({}))

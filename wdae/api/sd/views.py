@@ -29,7 +29,6 @@ class SequencingDenovoPrepare(APIView):
 class SequencingDenovoPreview(SequencingDenovoPrepare):
 
     def post(self, request):
-        print(request)
 
         if request.method == 'OPTIONS':
             return Response()
@@ -52,7 +51,6 @@ class SequencingDenovoDownload(SequencingDenovoPrepare):
     parser_classes = (JSONParser, FormParser,)
 
     def post(self, request):
-        print(request)
         if request.method == 'OPTIONS':
             return Response()
 

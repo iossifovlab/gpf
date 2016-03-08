@@ -31,7 +31,6 @@ class EnrichmentView(APIView):
 
     @staticmethod
     def enrichment_prepare(data):
-        print("enrichment_prepare: data: {}".format(data))
         data = dict(data)
 
         if data['denovoStudies']:
@@ -51,7 +50,6 @@ class EnrichmentView(APIView):
 
         if 'geneSet' not in result or result['geneSet'] is None or \
            'geneTerm' not in result or result['geneTerm'] is None:
-            print(result['geneSet'])
 
             del result['geneSet']
             del result['geneTerm']
@@ -70,7 +68,6 @@ class EnrichmentView(APIView):
             del result['geneWeightMin']
             del result['geneWeightMax']
 
-        print("enrichment request: {}".format(result))
         if not all(result.values()):
             return None
 

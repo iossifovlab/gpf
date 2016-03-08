@@ -71,9 +71,7 @@ class Test(APITestCase):
         self.assertEqual('1', response.data['count'])
         row = response.data['rows'][0]
         pedigree = json.loads(row[-2])
-        print(pedigree)
         m = pedigree[1]
-        print(m)
         self.assertEqual(2, m[0][-1])
         self.assertEqual(1, m[1][-1])
         self.assertEqual(2, m[2][-1])
@@ -101,7 +99,6 @@ class Test(APITestCase):
             st = vDB.get_study(sn)
             if st.has_denovo:
                 studies.append((st, None))
-                print("adding study: {}".format(sn))
 
         vs = get_denovo_variants(studies, family_filters=None, **filters)
         for v in vs:
@@ -111,7 +108,6 @@ class Test(APITestCase):
             for (c, m) in enumerate(v.memberInOrder):
                 gender = m.gender
                 normal = normalRefCopyNumber(location, gender)
-                # print("variantCount: {}, {}, {}".format(
                 # location, gender, normalRefCN))
                 ref = bs[0, c]
                 # print("count: {}".format(count))

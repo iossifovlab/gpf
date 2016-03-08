@@ -13,7 +13,6 @@ class GeneWeightsListViewTest(APITestCase):
         url = "/api/v2/gene_weights"
         response = self.client.get(url)
         self.assertEqual(200, response.status_code)
-        print(response.data)
         self.assertEqual(4, len(response.data))
         for w in response.data:
             self.assertIn('min', w)
@@ -35,7 +34,6 @@ class GeneWeightsGetGenesViewTest(APITestCase):
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
-        print(response.data)
         self.assertEqual(4, len(response.data))
 
 if __name__ == "__main__":

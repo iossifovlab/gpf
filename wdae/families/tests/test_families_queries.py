@@ -18,7 +18,6 @@ class Test(unittest.TestCase):
 
         data = prepare_family_query(data)
 
-        print(data)
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)
         self.assertNotIn('familyPhenoMeasureMin', data)
@@ -37,7 +36,6 @@ class Test(unittest.TestCase):
 
         data = prepare_family_query(data)
 
-        print(data)
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)
         self.assertNotIn('familyPhenoMeasureMin', data)
@@ -58,7 +56,6 @@ class Test(unittest.TestCase):
 
         data = prepare_family_query(data)
 
-        print(data)
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)
         self.assertNotIn('familyPhenoMeasureMin', data)
@@ -80,7 +77,6 @@ class Test(unittest.TestCase):
 
         data = prepare_family_query(data)
 
-        print(data)
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)
         self.assertNotIn('familyPhenoMeasureMin', data)
@@ -101,7 +97,6 @@ class Test(unittest.TestCase):
 
         data = prepare_family_query(data)
 
-        print(data)
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)
         self.assertNotIn('familyPhenoMeasureMin', data)

@@ -13,7 +13,6 @@ class GeneWeightsRVISTest(unittest.TestCase):
     def setUp(self):
         register = get_register()
         self.weights = register.get('gene_weights')
-        print(self.weights.desc)
 
     def test_nan(self):
         w = self.weights.get_weight('RVIS')
@@ -23,7 +22,6 @@ class GeneWeightsRVISTest(unittest.TestCase):
         genes = self.weights.get_genes_by_weight('RVIS',
                                                  wmin=-0.0001,
                                                  wmax=0.0001)
-        print(genes)
         self.assertEqual(94, len(genes))
 
         genes = self.weights.get_genes_by_weight('RVIS',

@@ -35,7 +35,6 @@ class GeneWeightsGetGenesView(views.APIView):
             wmax = None
         else:
             wmax = float(data['max'])
-        # print("wname={}, wmin={}, wmax={}".format(wname, wmin, wmax))
         return weights.get_genes_by_weight(wname, wmin=wmin, wmax=wmax)
 
     def post(self, request):
@@ -52,8 +51,6 @@ class GeneWeightsPartitionsView(views.APIView):
     def post(self, request):
         data = request.data
 
-        print("weights partitions request: " +
-              str(data))
         assert "weight" in data
         assert self.weights is not None
 

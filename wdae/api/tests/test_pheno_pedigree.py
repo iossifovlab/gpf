@@ -31,11 +31,8 @@ class PedigreeTests(unittest.TestCase):
                    'geneSet': 'main'}
 
     def test_pedigree_data_1(self):
-        _vs = wdae_query_wrapper(self.TEST_DATA_1, atts=["_pedigree_"])
-        # vs.next()
-
-#         for v in vs:
-#             print v
+        vs = wdae_query_wrapper(self.TEST_DATA_1, atts=["_pedigree_"])
+        self.assertIsNotNone(vs)
 
     TEST_DATA_2 = {'geneRegionType': 'on',
                    'denovoStudies': 'LevyCNV2011',

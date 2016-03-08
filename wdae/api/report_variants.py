@@ -94,18 +94,6 @@ def family_buffer(studies):
 
 def __format_header_summary(fam_total, child_cnt_hist,
                             child_type_cnt, fam_type_cnt):
-    """
-print "FAMILIES:", len(famBuff)
-print "\tBy number of children: " + ", ".join([str(nc) + ": " +
-    str(chldNHist[nc]) for nc in sorted(chldNHist.keys())])
-print "\t" + str(chldTpCnt['prbM']), "male and",
-    str(chldTpCnt['prbF']), "female probands."
-print "\t" + str(chldTpCnt['sibM']), "male and",
-    str(chldTpCnt['sibF']), "female siblings."
-print "\t" +  ", ".join([x[0] + ": " + str(x[1])
-    for x in sorted(fmTpCnt.items(),key=lambda x: -x[1])])
-print "+++++++++++++++++++++++++++++++++++++++++++"
-    """
 
     number_of_children = [str(nc)+": " + str(child_cnt_hist[nc])
                           for nc in sorted(child_cnt_hist.keys())]
@@ -116,8 +104,10 @@ print "+++++++++++++++++++++++++++++++++++++++++++"
 
     return {"fam_total": str(fam_total),
             "fam_by_number_of_children": number_of_children,
-            "probants": [str(child_type_cnt['prbM']), str(child_type_cnt['prbF'])],
-            "siblings": [str(child_type_cnt['sibM']), str(child_type_cnt['sibF'])],
+            "probants": [str(child_type_cnt['prbM']),
+                         str(child_type_cnt['prbF'])],
+            "siblings": [str(child_type_cnt['sibM']),
+                         str(child_type_cnt['sibF'])],
             'family_type': family_types}
 
 

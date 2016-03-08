@@ -63,4 +63,4 @@ class AlexPopovSubmittedBadRegionQueryTests(unittest.TestCase):
         vs.next()
 
         for v in vs:
-            print v
+            self.assertIsNotNone(v)

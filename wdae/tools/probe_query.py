@@ -107,7 +107,6 @@ class AsyncSSCTest(object):
 
         pool = ThreadPool(processes=pool_size)
         result = pool.map((lambda req: req.test_request()), reqs)
-        print(result)
         assert all(result)
 
 

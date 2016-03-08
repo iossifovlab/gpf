@@ -57,7 +57,6 @@ class Test(unittest.TestCase):
 
     def test_df_gender_and_fix(self):
         gender = np.unique(self.df.probandGender.values)
-        # print(gender)
         self.assertEqual(2, len(gender))
         self.assertEqual('F', gender[0])
         self.assertEqual('M', gender[1])
@@ -89,7 +88,6 @@ class Test(unittest.TestCase):
         ps = prepare_pheno_data(self.df)
         result = pheno_calc(ps)
         self.assertIsNotNone(result)
-        print(result)
         self.assertEqual('0.00001', self.get_pvalue('recLGDs', 'M', result))
         self.assertEqual('0.04', self.get_pvalue('recLGDs', 'F', result))
 

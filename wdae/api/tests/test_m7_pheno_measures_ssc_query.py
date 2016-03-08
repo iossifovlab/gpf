@@ -65,7 +65,6 @@ class Test(APITestCase):
 
         response = self.client.post(url, request, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data['count'])
         self.assertEqual('43', response.data['count'])
 
     def test_verbal_iq_from49_to50(self):
@@ -90,7 +89,6 @@ class Test(APITestCase):
 
         response = self.client.post(url, request, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data['count'])
         self.assertEquals('3', response.data['count'])
 
     def test_verbal_iq_from0_to50_with_family_ids(self):
@@ -116,7 +114,6 @@ class Test(APITestCase):
         response = self.client.post(url, request, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data['count'])
         self.assertEquals('2', response.data['count'])
 
     def test_verbal_iq_from49_to50_with_family_ids(self):
@@ -141,5 +138,4 @@ class Test(APITestCase):
 
         response = self.client.post(url, request, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data['count'])
         self.assertEquals('1', response.data['count'])
