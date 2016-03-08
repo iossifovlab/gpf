@@ -27,18 +27,6 @@ class ApiTest(APITestCase):
             self.assertIn('frame-shift', row)
             self.assertIn('sibF', row)
 
-    def test_report_variants(self):
-        # Test with no studies provided
-        url_no_study = '/api/report_variants'
-        response = self.client.get(url_no_study)
-        self.assertEqual(response.data, {})
-
-        # Test with study provided
-        url_report = '/api/report_variants?studies=IossifovWE2012'
-        response = self.client.get(url_report)
-        data = response.data
-        self.assertEqual(22, len(data['rows']))
-
     def test_gene_set_response(self):
         # Test simple with gene_set only provided
         url_gs = '/api/gene_set_list2?gene_set=main'
