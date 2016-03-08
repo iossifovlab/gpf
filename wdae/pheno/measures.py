@@ -151,8 +151,8 @@ class Measures(Preload):
 
         df = pd.DataFrame(index=self.df.index,
                           data=self.df[cols])
-        df.dropna(inplace=True)
-        return df
+        res_df = df.dropna()
+        return res_df
 
     def get_measure_families(self, measure, mmin=None, mmax=None):
         df = self.get_measure_df(measure)

@@ -108,5 +108,22 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
                        family_id]['head_circumference'].values >= 49))
 
 
-if __name__ == "__main__":
-    unittest.main()
+class PhenoMeasureRowCount(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(PhenoMeasureRowCount, cls).setUpClass()
+        cls.measures = Measures()
+        cls.measures.load()
+
+    def test_verbal_iq_count(self):
+        df = self.measures.get_measure_df('verbal_iq')
+        self.assertEquals(2756, len(df))
+
+    def test_head_circumference(self):
+        df = self.measures.get_measure_df('head_circumference')
+        self.assertEquals(2727, len(df))
+
+    def test_cbcl_2_5_total_problems(self):
+        df = self.measures.get_measure_df('cbcl_2_5_total_problems')
+        self.assertEquals(655, len(df))
