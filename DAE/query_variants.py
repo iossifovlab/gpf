@@ -569,7 +569,6 @@ def get_denovo_variants(studies, family_filters, **filters):
 
 
 def dae_query_variants(data):
-    print("data: {}".format(data))
     assert "geneSet" not in data
     assert "geneWeigth" not in data
 

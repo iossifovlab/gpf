@@ -78,7 +78,6 @@ def prepare_gene_weights(data):
     if not weights.has_weight(wname):
         return None
     genes = weights.get_genes_by_weight(wname, wmin=wmin, wmax=wmax)
-    # print("wname: {}, wmin: {}, wmax: {}".format(wname, wmin, wmax))
     return genes
 
 

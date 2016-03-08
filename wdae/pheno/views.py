@@ -65,13 +65,17 @@ class PhenoViewBase(views.APIView):
         measures = get_register().get('pheno_measures')
         if not measures.has_measure(measure_name):
             return Response(status=status.HTTP_404_NOT_FOUND)
+        if 'familyIds' in data:
+            families_query = set(data['familyIds'].split(','))
+        else:
+            families_query = None
 
         by = self.normalize_by(data)
         nm = NormalizedMeasure(measure_name)
         nm.normalize(by=by)
 
         variants = family_pheno_query_variants(data)
-        pheno = measures.pheno_merge_data(variants, nm)
+        pheno = measures.pheno_merge_data(variants, nm, families_query)
 
         response = self.build_response(data, pheno, nm)
         return response

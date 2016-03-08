@@ -169,11 +169,13 @@ class Measures(Preload):
             selected = df
         return selected['family_id'].values
 
-    def pheno_merge_data(self, variants, nm):
+    def pheno_merge_data(self, variants, nm, families_query=None):
         yield tuple(['family_id', 'gender',
                      'LGDs', 'recLGDs', 'missense', 'synonymous', 'CNV',
                      nm.measure, 'age', 'non_verbal_iq', nm.formula])
         for fid, gender in self.gender_all.items():
+            if families_query is not None and fid not in families_query:
+                continue
             vals = nm.df[nm.df.family_id == int(fid)]
             if len(vals) == 1:
                 m = vals[nm.measure].values[0]

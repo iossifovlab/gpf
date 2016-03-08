@@ -14,8 +14,8 @@ from rest_framework.decorators import api_view, parser_classes, \
 from rest_framework.parsers import JSONParser, FormParser
 # from rest_framework import serializers
 from rest_framework import status
-from api.report_pheno import get_supported_studies, get_supported_measures, \
-    pheno_calc, pheno_query
+# from api.report_pheno import get_supported_studies, get_supported_measures, \
+#     pheno_calc, pheno_query
 
 from DAE import vDB
 from DAE import giDB
@@ -597,28 +597,28 @@ Examples:
     return Response(stats)
 
 
-@api_view(['GET'])
-def pheno_supported_studies(request):
-    return Response({"pheno_supported_studies": get_supported_studies()})
+# @api_view(['GET'])
+# def pheno_supported_studies(request):
+#     return Response({"pheno_supported_studies": get_supported_studies()})
 
 
-@api_view(['GET'])
-def pheno_supported_measures(request):
-    return Response({"pheno_supported_measures": get_supported_measures()})
+# @api_view(['GET'])
+# def pheno_supported_measures(request):
+#     return Response({"pheno_supported_measures": get_supported_measures()})
 
 
-@api_view(['POST'])
-def pheno_report_preview(request):
-
-    if request.method == 'OPTIONS':
-        return Response()
-
-    data = prepare_query_dict(request.data)
-    LOGGER.info(log_filter(request, "preview pheno report: " + str(data)))
-    ps = pheno_query(data)
-    res = pheno_calc(ps)
-
-    return Response(res)
+# @api_view(['POST'])
+# def pheno_report_preview(request):
+#
+#     if request.method == 'OPTIONS':
+#         return Response()
+#
+#     data = prepare_query_dict(request.data)
+#     LOGGER.info(log_filter(request, "preview pheno report: " + str(data)))
+#     ps = pheno_query(data)
+#     res = pheno_calc(ps)
+#
+#     return Response(res)
 
 
 def join_row(p, sep=','):
@@ -626,27 +626,27 @@ def join_row(p, sep=','):
     return sep.join(r) + '\n'
 
 
-@api_view(['POST'])
-@parser_classes([JSONParser, FormParser])
-def pheno_report_download(request):
-
-    if request.method == 'OPTIONS':
-        return Response()
-
-    data = prepare_query_dict(request.data)
-    LOGGER.info(log_filter(request, "preview pheno download: " + str(data)))
-    comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
-
-    ps = pheno_query(data)
-    response = StreamingHttpResponse(
-        itertools.chain(
-            itertools.imap(join_row, ps),
-            ['# %s\n' % comment]),
-        content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename=unruly.csv'
-    response['Expires'] = '0'
-
-    return response
+# @api_view(['POST'])
+# @parser_classes([JSONParser, FormParser])
+# def pheno_report_download(request):
+#
+#     if request.method == 'OPTIONS':
+#         return Response()
+#
+#     data = prepare_query_dict(request.data)
+#     LOGGER.info(log_filter(request, "preview pheno download: " + str(data)))
+#     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
+#
+#     ps = pheno_query(data)
+#     response = StreamingHttpResponse(
+#         itertools.chain(
+#             itertools.imap(join_row, ps),
+#             ['# %s\n' % comment]),
+#         content_type='text/csv')
+#     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
+#     response['Expires'] = '0'
+#
+#     return response
 
 
 @api_view(['POST'])
