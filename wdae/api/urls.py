@@ -61,11 +61,6 @@ urlpatterns = patterns(
     url(r'^users/reset_password', 'reset_password'),
     url(r'^users/api-token-auth$', rest_views.obtain_auth_token),
 
-    url(r'^pheno_supported_studies$', 'pheno_supported_studies'),
-    url(r'^pheno_supported_measures$', 'pheno_supported_measures'),
-    url(r'^pheno_report_preview$', 'pheno_report_preview'),
-    url(r'^pheno_report_download$', 'pheno_report_download'),
-
     url(r'^v2/pheno_reports', include('pheno.urls')),
     url(r'^v2/gene_weights', include('gene_weights.urls')),
 )
