@@ -66,7 +66,8 @@ class FamiliesPrecompute(precompute.register.Precompute):
                 if fid in parent_races:
                     self._races[parent_races[fid]].add(fid)
                 else:
-                    LOGGER.warn("family {} parent race not found".format(fid))
+                    # LOGGER.warn("family {} parent race not found".format(fid))
+                    pass
 
     def siblings(self, gender):
         assert self._siblings is not None
