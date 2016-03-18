@@ -36,7 +36,7 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(4 + 1, count_iterable(response.streaming_content))
+        self.assertEqual(21 + 1, count_iterable(response.streaming_content))
 
     def test_double_phenotype(self):
         data = {
@@ -58,7 +58,7 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(8 + 1, count_iterable(response.streaming_content))
+        self.assertEqual(25 + 1, count_iterable(response.streaming_content))
 
 
 if __name__ == "__main__":

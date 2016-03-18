@@ -28,7 +28,7 @@ class Test(unittest.TestCase):
 
     def test_family_report_we_studies(self):
         fr = FamiliesReport('ALL WHOLE EXOME')
-        self.assertEqual(13, len(fr.studies))
+        self.assertEqual(14, len(fr.studies))
 
     def test_family_report_we_phenotypes(self):
         fr = FamiliesReport('ALL WHOLE EXOME')

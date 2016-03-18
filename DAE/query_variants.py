@@ -572,6 +572,8 @@ def dae_query_variants(data):
     assert "geneSet" not in data
     assert "geneWeigth" not in data
 
+    LOGGER.info("dae_query_variants: %s", data)
+
     prepare_denovo_phenotype(data)
     prepare_denovo_study_type(data)
     prepare_gender_filter(data)
@@ -632,6 +634,7 @@ def augment_vars(v):
 
 
 def do_query_variants(data, atts=[]):
+
     vsl = dae_query_variants(data)
 
     res_variants = itertools.chain(*vsl)

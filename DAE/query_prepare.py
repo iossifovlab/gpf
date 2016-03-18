@@ -124,6 +124,7 @@ def prepare_denovo_study_type(data):
     study_type = data['studyType']
     if study_type is None or study_type.lower() == 'none':
         del data['studyType']
+        return
 
     study_type = [st for st in data['studyType'].split(',')
                   if st in set(['WE', 'TG', 'CNV'])]

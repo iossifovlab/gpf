@@ -81,7 +81,7 @@ class PhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(10, count_iterable(response.streaming_content))
+        self.assertEqual(11, count_iterable(response.streaming_content))
 
     def test_phenotype_ATRX_SPEG_unaffected(self):
         data = {

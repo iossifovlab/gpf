@@ -207,7 +207,7 @@ class PhenotypeFiltersTests(APITestCase):
                 }
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('3', response.data['count'])
+        self.assertEqual('5', response.data['count'])
 
     def test_phenotype_filters(self):
         url = '/api/query_variants_preview'
@@ -295,7 +295,7 @@ class PhenotypeFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('8', response.data['count'])
+        self.assertEqual('9', response.data['count'])
 
     def test_phenotype_ATRX_SPEG_unaffected(self):
         data = {
@@ -351,7 +351,7 @@ class GenderFilterTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('8', response.data['count'])
+        self.assertEqual('9', response.data['count'])
 
     def test_gender_ATRX_SPEG_female(self):
         data = {
