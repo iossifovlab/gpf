@@ -19,7 +19,7 @@ def parse_family_ids(data):
             family_ids = ','.join(family_ids)
         family_ids = family_ids.strip()
         if family_ids != '':
-            family_ids = set(data['familyIds'].split(','))
+            family_ids = set(family_ids.split(','))
             if len(family_ids) > 0:
                 return family_ids
     return None
