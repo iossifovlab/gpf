@@ -63,3 +63,9 @@ class Test(unittest.TestCase):
         fg.deserialize(data)
 
         self.assertEqual(fgender._races, fg._races)
+
+    def test_families_buffer_precompute(self):
+        fgender = FamiliesPrecompute()
+        fgender.precompute()
+
+        self.assertIsNotNone(fgender._families_buffer)

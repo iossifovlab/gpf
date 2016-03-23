@@ -8,7 +8,8 @@ import zlib
 import precompute
 from DAE import vDB, phDB
 import itertools
-from helpers.logger import LOGGER
+from reports.variants import CounterBase
+# from helpers.logger import LOGGER
 
 
 class FamiliesPrecompute(precompute.register.Precompute):
@@ -18,6 +19,7 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._probands = None
         self._trios = None
         self._quads = None
+        self._families_buffer = None
 
     def serialize(self):
         result = {}
@@ -26,6 +28,8 @@ class FamiliesPrecompute(precompute.register.Precompute):
         result['trios'] = zlib.compress(cPickle.dumps(self._trios))
         result['quads'] = zlib.compress(cPickle.dumps(self._quads))
         result['races'] = zlib.compress(cPickle.dumps(self._races))
+        result['families_buffer'] = \
+            zlib.compress(cPickle.dumps(self._families_buffer))
         return result
 
     def deserialize(self, data):
@@ -34,6 +38,8 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._trios = cPickle.loads(zlib.decompress(data['trios']))
         self._quads = cPickle.loads(zlib.decompress(data['quads']))
         self._races = cPickle.loads(zlib.decompress(data['races']))
+        self._families_buffer = \
+            cPickle.loads(zlib.decompress(data['families_buffer']))
 
     def precompute(self):
         self._siblings = {'M': set(),
@@ -45,6 +51,9 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._races = dict([(r, set()) for r in self.get_races()])
 
         studies = vDB.get_studies('ALL SSC')
+
+        self._families_buffer = CounterBase.build_families_buffer(studies)
+
         parent_races = self._parents_race()
         seen = set()
         for st in itertools.chain(studies):
@@ -66,8 +75,11 @@ class FamiliesPrecompute(precompute.register.Precompute):
                 if fid in parent_races:
                     self._races[parent_races[fid]].add(fid)
                 else:
-                    # LOGGER.warn("family {} parent race not found".format(fid))
+                    # LOGGER.warn("family %s parent race not found", fid)
                     pass
+
+    def families_buffer(self):
+        return self._families_buffer
 
     def siblings(self, gender):
         assert self._siblings is not None
