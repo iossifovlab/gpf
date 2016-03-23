@@ -4,7 +4,7 @@ Created on Jul 31, 2015
 @author: lubo
 '''
 import unittest
-from api.reports.variants import StudyVariantReports
+from reports.variants import StudyVariantReports
 
 
 class Test(unittest.TestCase):

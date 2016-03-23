@@ -4,7 +4,7 @@ Created on Jul 28, 2015
 @author: lubo
 '''
 import unittest
-from api.reports.variants import CommonBase, ChildrenCounter, \
+from reports.variants import CommonBase, ChildrenCounter, \
     FamiliesReport, FamiliesCounters, DenovoEventsCounter, \
     DenovoEventsReport, StudyVariantReports
 

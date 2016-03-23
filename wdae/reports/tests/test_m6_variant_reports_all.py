@@ -4,7 +4,7 @@ Created on Jul 31, 2015
 @author: lubo
 '''
 import unittest
-from api.reports.variants import VariantReports
+from reports.variants import VariantReports
 from api.management.commands import recompute
 
 

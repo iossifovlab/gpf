@@ -7,7 +7,7 @@ import unittest
 from rest_framework import status
 from rest_framework.test import APITestCase
 from precompute import register
-from api.reports.serializers import StudyVariantReportsSerializer
+from reports.serializers import StudyVariantReportsSerializer
 
 
 class Test(APITestCase):

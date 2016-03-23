@@ -3,13 +3,14 @@ Created on Aug 3, 2015
 
 @author: lubo
 '''
-from rest_framework.views import APIView
-from precompute import register
-from rest_framework.response import Response
-from rest_framework import status
-from api.reports.serializers import StudyVariantReportsSerializer
 from django.http.response import StreamingHttpResponse
-from api.reports.families import FamiliesDataCSV
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from precompute import register
+from reports.families import FamiliesDataCSV
+from reports.serializers import StudyVariantReportsSerializer
 
 
 class VariantReportsView(APIView):
