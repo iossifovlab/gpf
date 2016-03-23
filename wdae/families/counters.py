@@ -13,14 +13,16 @@ class FamilyFilterCounters(object):
     def count(self, family_ids):
         prb_counter = {"M": 0, "F": 0}
         sib_counter = {"M": 0, "F": 0}
-        families_counter = {'prb': set(), 'sib': set()}
+        # families_counter = {'prb': set(), 'sib': set()}
+        families_counter = {'prb': 0, 'sib': 0}
 
         family_ids = set(family_ids)
         for fid, family in self.families_buffer.items():
             if fid not in family_ids:
                 continue
             for person in family.values():
-                families_counter[person.role].add(fid)
+                # families_counter[person.role].add(fid)
+                families_counter[person.role] += 1
                 if person.role == 'sib':
                     sib_counter[person.gender] += 1
                 elif person.role == 'prb':
@@ -28,10 +30,10 @@ class FamilyFilterCounters(object):
 
         result = {'autism': {'male': prb_counter['M'],
                              'female': prb_counter['F'],
-                             'families': len(families_counter['prb'])},
+                             'families': families_counter['prb']},
                   'unaffected': {'male': sib_counter['M'],
                                  'female': sib_counter['F'],
-                                 'families': len(families_counter['sib'])}, }
+                                 'families': families_counter['sib']}, }
         return result
 
     @staticmethod
