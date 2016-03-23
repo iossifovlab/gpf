@@ -63,6 +63,7 @@ urlpatterns = patterns(
 
     url(r'^v2/pheno_reports', include('pheno.urls')),
     url(r'^v2/gene_weights', include('gene_weights.urls')),
+    url(r'^v2/families', include('families.urls')),
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)
