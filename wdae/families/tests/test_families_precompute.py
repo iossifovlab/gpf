@@ -69,3 +69,10 @@ class Test(unittest.TestCase):
         fgender.precompute()
 
         self.assertIsNotNone(fgender._families_buffer)
+
+    def test_families_counters_precompute(self):
+        fpre = FamiliesPrecompute()
+        fpre.precompute()
+
+        self.assertIsNotNone(fpre._families_counters)
+        print(fpre.families_counters())

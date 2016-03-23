@@ -33,3 +33,8 @@ class FamilyFilterCounters(object):
                                  'female': sib_counter['F'],
                                  'families': len(families_counter['sib'])}, }
         return result
+
+    @staticmethod
+    def count_all(familes_buffer):
+        counter = FamilyFilterCounters(familes_buffer)
+        return counter.count(familes_buffer.keys())

@@ -9,6 +9,7 @@ import precompute
 from DAE import vDB, phDB
 import itertools
 from reports.variants import CounterBase
+from families.counters import FamilyFilterCounters
 # from helpers.logger import LOGGER
 
 
@@ -20,6 +21,7 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._trios = None
         self._quads = None
         self._families_buffer = None
+        self._families_counters = None
 
     def serialize(self):
         result = {}
@@ -30,6 +32,9 @@ class FamiliesPrecompute(precompute.register.Precompute):
         result['races'] = zlib.compress(cPickle.dumps(self._races))
         result['families_buffer'] = \
             zlib.compress(cPickle.dumps(self._families_buffer))
+        result['families_counters'] = \
+            zlib.compress(cPickle.dumps(self._families_counters))
+
         return result
 
     def deserialize(self, data):
@@ -40,6 +45,8 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._races = cPickle.loads(zlib.decompress(data['races']))
         self._families_buffer = \
             cPickle.loads(zlib.decompress(data['families_buffer']))
+        self._families_counters = \
+            cPickle.loads(zlib.decompress(data['families_counters']))
 
     def precompute(self):
         self._siblings = {'M': set(),
@@ -53,6 +60,8 @@ class FamiliesPrecompute(precompute.register.Precompute):
         studies = vDB.get_studies('ALL SSC')
 
         self._families_buffer = CounterBase.build_families_buffer(studies)
+        self._families_counters = \
+            FamilyFilterCounters.count_all(self._families_buffer)
 
         parent_races = self._parents_race()
         seen = set()
@@ -80,6 +89,9 @@ class FamiliesPrecompute(precompute.register.Precompute):
 
     def families_buffer(self):
         return self._families_buffer
+
+    def families_counters(self):
+        return self._families_counters
 
     def siblings(self, gender):
         assert self._siblings is not None

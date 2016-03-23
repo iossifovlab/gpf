@@ -15,11 +15,15 @@ class FamilyFilterCountersView(APIView):
     def __init__(self):
         families_precompute = precompute.register.get('families_precompute')
         self.families_buffer = families_precompute.families_buffer()
+        self.families_counters = families_precompute.families_counters()
         self.counter = FamilyFilterCounters(self.families_buffer)
 
     def post(self, request):
         data = request.data
         data = prepare_family_query(data)
+        if 'familyIds' not in data:
+            return Response(self.families_counters)
+
         assert 'familyIds' in data
 
         family_ids = data['familyIds'].split(',')

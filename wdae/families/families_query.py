@@ -13,6 +13,8 @@ from families.race_query import prepare_family_race_query
 def parse_family_ids(data):
     if 'familyIds' in data:
         family_ids = data['familyIds']
+        del data['familyIds']
+
         if isinstance(family_ids, list):
             family_ids = ','.join(family_ids)
         family_ids = family_ids.strip()
