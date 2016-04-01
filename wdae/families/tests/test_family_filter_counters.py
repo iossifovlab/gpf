@@ -77,3 +77,17 @@ class Test(unittest.TestCase):
         self.assertEquals(1, sib['male'])
         self.assertEquals(1, sib['female'])
         self.assertEquals(2, sib['families'])
+
+    def test_single_family_11000(self):
+        counter = FamilyFilterCounters(self.families_buffer)
+        result = counter.count(['11000'])
+
+        prb = result['autism']
+        self.assertEquals(1, prb['male'])
+        self.assertEquals(0, prb['female'])
+        self.assertEquals(1, prb['families'])
+
+        sib = result['unaffected']
+        self.assertEquals(0, sib['male'])
+        self.assertEquals(3, sib['female'])
+        self.assertEquals(3, sib['families'])
