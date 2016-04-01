@@ -202,8 +202,8 @@ class Test(unittest.TestCase):
         fr = FamiliesReport('ALL WHOLE EXOME')
         fr.build()
         cc = fr.get_children_counters('unaffected')
-        self.assertEquals(1464, cc.children_male)
-        self.assertEquals(1566, cc.children_female)
+        self.assertEquals(1032, cc.children_male)
+        self.assertEquals(1122, cc.children_female)
 
     def test_children_counters_lifton_studies(self):
         fr = FamiliesReport('Lifton2013CHD')
