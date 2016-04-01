@@ -17,13 +17,14 @@ from rest_framework.permissions import IsAuthenticated
 from query_prepare import prepare_ssc_filter
 from api.query.wdae_query_variants import wdae_query_wrapper
 from families.families_query import prepare_family_query
+from pprint import pprint
 
 
 class SSCPrepare(APIView):
 
     def prepare(self, request):
-        data = dict(request.data)
-        data = prepare_query_dict(data)
+        data = prepare_query_dict(request.data)
+        pprint(data)
 
         data = prepare_family_query(data)
 

@@ -24,7 +24,9 @@ def prepare_query_dict(data):
             value = ','.join([str(s).strip() for s in val])
         else:
             value = str(val)
-
+            value = value.strip()
+        if value == '' or value.lower() == 'none':
+            continue
         res.append((key, value))
 
     return dict(res)
