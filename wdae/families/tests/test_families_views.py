@@ -23,9 +23,9 @@ class Test(APITestCase):
         self.assertEquals(32, data['autism']['male'])
         self.assertEquals(2, data['autism']['female'])
 
-        self.assertEquals(36, data['unaffected']['families'])
-        self.assertEquals(19, data['unaffected']['male'])
-        self.assertEquals(17, data['unaffected']['female'])
+        self.assertEquals(23, data['unaffected']['families'])
+        self.assertEquals(11, data['unaffected']['male'])
+        self.assertEquals(12, data['unaffected']['female'])
 
     def test_families_counter_view_combined_filter(self):
         url = "/api/v2/families/counter"
@@ -44,9 +44,9 @@ class Test(APITestCase):
         self.assertEquals(22, data['autism']['male'])
         self.assertEquals(1, data['autism']['female'])
 
-        self.assertEquals(30, data['unaffected']['families'])
-        self.assertEquals(16, data['unaffected']['male'])
-        self.assertEquals(14, data['unaffected']['female'])
+        self.assertEquals(23, data['unaffected']['families'])
+        self.assertEquals(11, data['unaffected']['male'])
+        self.assertEquals(12, data['unaffected']['female'])
 
     def test_families_empty_filters(self):
         url = "/api/v2/families/counter"
@@ -57,10 +57,10 @@ class Test(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.data
 
-        self.assertEquals(2867, data['autism']['families'])      # 2867
-        self.assertEquals(2477, data['autism']['male'])          # 2477
-        self.assertEquals(390, data['autism']['female'])         # 390
+        self.assertEquals(2850, data['autism']['families'])      # 2867
+        self.assertEquals(2463, data['autism']['male'])          # 2477
+        self.assertEquals(387, data['autism']['female'])         # 390
 
-        self.assertEquals(2703, data['unaffected']['families'])  # 2703
-        self.assertEquals(1285, data['unaffected']['male'])      # 1285
-        self.assertEquals(1418, data['unaffected']['female'])    # 1418
+        self.assertEquals(1975, data['unaffected']['families'])  # 2703
+        self.assertEquals(932, data['unaffected']['male'])      # 1285
+        self.assertEquals(1043, data['unaffected']['female'])    # 1418

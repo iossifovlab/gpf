@@ -17,9 +17,13 @@ class FamilyFilterCounters(object):
         families_counter = {'prb': 0, 'sib': 0}
 
         family_ids = set(family_ids)
+        seen = set()
         for fid, family in self.families_buffer.items():
             if fid not in family_ids:
                 continue
+            if fid in seen:
+                continue
+            seen.add(fid)
             for person in family.values():
                 # families_counter[person.role].add(fid)
                 families_counter[person.role] += 1
