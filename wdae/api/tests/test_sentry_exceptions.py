@@ -43,7 +43,7 @@ class Tests(APITestCase):
         token = Token.objects.get(user__email='admin@example.com')
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
 
-    def test_sentry_exception_request(self):
+    def test_sentry_ssc_download_exception_request(self):
         data = {
             'denovoStudies': 'ALL SSC',
             'effectTypes': 'Missense',
@@ -82,4 +82,9 @@ class Tests(APITestCase):
 
         response = self.client.post(
             url, data)
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+    def test_gene_list_exception(self):
+        url = '/api/gene_set_list2?desc=true&filter=&gene_set=main&key=true&page_count=200'  # @IgnorePep8
+        response = self.client.get(url)
         self.assertEquals(status.HTTP_200_OK, response.status_code)

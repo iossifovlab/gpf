@@ -290,8 +290,11 @@ def __get_page_count(query_params, page_count=30):
 def __gene_set_filter_response_dict(query_params, gts):
     page_count = __get_page_count(query_params, page_count=100)
 
+    filter_string = None
     if 'filter' in query_params:
         filter_string = prepare_string_value(query_params, 'filter')
+
+    if filter_string is not None:
         filter_string = filter_string.lower().strip()
 
         filter_by_key = prepare_string_value(query_params, 'key')
