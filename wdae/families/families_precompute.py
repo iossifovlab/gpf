@@ -54,9 +54,14 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._quads = set()
         for fid, d in self.families_buffer().items():
             if len(d) == 1:
-                self._trios.add(fid)
+                [ch] = d.values()
+                if ch.role == 'prb':
+                    self._trios.add(fid)
+
             if len(d) == 2:
-                self._quads.add(fid)
+                [ch1, ch2] = d.values()
+                if ch1.role != ch2.role:
+                    self._quads.add(fid)
 
     def precompute(self):
         self._siblings = {'M': set(),
@@ -72,8 +77,8 @@ class FamiliesPrecompute(precompute.register.Precompute):
             FamilyFilterCounters.count_all(self._families_buffer)
 
         parent_races = self._parents_race()
-
         self._build_trios_and_quads()
+
         for fid, children in self._families_buffer.items():
             if fid in parent_races:
                 self._races[parent_races[fid]].add(fid)
@@ -86,6 +91,9 @@ class FamiliesPrecompute(precompute.register.Precompute):
                     self._siblings[ch.gender].add(fid)
             if prb_count == 2:
                 print("family_id with 2 prb: {}".format(fid))
+                pprint(children)
+            if prb_count == 0:
+                print("family_id with 0 prb: {}".format(fid))
                 pprint(children)
 
     def families_buffer(self):
