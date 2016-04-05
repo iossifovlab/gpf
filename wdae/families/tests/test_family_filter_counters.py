@@ -89,5 +89,5 @@ class Test(unittest.TestCase):
 
         sib = result['unaffected']
         self.assertEquals(0, sib['male'])
-        self.assertEquals(1, sib['female'])
-        self.assertEquals(1, sib['families'])
+        self.assertEquals(3, sib['female'])
+        self.assertEquals(3, sib['families'])
