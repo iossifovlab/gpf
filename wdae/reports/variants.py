@@ -58,13 +58,8 @@ class CounterBase(CommonBase):
     @staticmethod
     def build_families_buffer(studies):
         families_buffer = defaultdict(dict)
-        seen = set()
         for st in studies:
-            for fid, f in st.families.items():
-                if fid in seen:
-                    continue
-                seen.add(fid)
-
+            for f in st.families.values():
                 children = [f.memberInOrder[c]
                             for c in range(2, len(f.memberInOrder))]
                 for p in children:
