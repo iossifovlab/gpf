@@ -27,6 +27,7 @@ class FamilyFilterCountersView(APIView):
         assert 'familyIds' in data
 
         family_ids = data['familyIds'].split(',')
+        print("family_ids: {}".format(family_ids))
         result = self.counter.count(family_ids)
 
         return Response(result)

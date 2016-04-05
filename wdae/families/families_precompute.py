@@ -5,14 +5,15 @@ Created on Feb 29, 2016
 '''
 import cPickle
 import zlib
-import precompute
+
 from DAE import vDB, phDB
-import itertools
-from reports.variants import CounterBase
 from families.counters import FamilyFilterCounters
+import precompute
+from reports.variants import CounterBase
+from pprint import pprint
+
+
 # from helpers.logger import LOGGER
-
-
 class FamiliesPrecompute(precompute.register.Precompute):
 
     def __init__(self):
@@ -48,13 +49,20 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._families_counters = \
             cPickle.loads(zlib.decompress(data['families_counters']))
 
+    def _build_trios_and_quads(self):
+        self._trios = set()
+        self._quads = set()
+        for fid, d in self.families_buffer().items():
+            if len(d) == 1:
+                self._trios.add(fid)
+            if len(d) == 2:
+                self._quads.add(fid)
+
     def precompute(self):
         self._siblings = {'M': set(),
                           'F': set()}
         self._probands = {'M': set(),
                           'F': set()}
-        self._trios = set()
-        self._quads = set()
         self._races = dict([(r, set()) for r in self.get_races()])
 
         studies = vDB.get_studies('ALL SSC')
@@ -64,28 +72,21 @@ class FamiliesPrecompute(precompute.register.Precompute):
             FamilyFilterCounters.count_all(self._families_buffer)
 
         parent_races = self._parents_race()
-        seen = set()
-        for st in itertools.chain(studies):
-            for fid, family in st.families.items():
-                if fid in seen:
-                    continue
-                seen.add(fid)
-                prb = family.memberInOrder[2]
-                self._probands[prb.gender].add(fid)
 
-                for sib in family.memberInOrder[3:]:
-                    self._siblings[sib.gender].add(fid)
-
-                if len(family.memberInOrder) == 3:
-                    self._trios.add(fid)
-                if len(family.memberInOrder) == 4:
-                    self._quads.add(fid)
-
-                if fid in parent_races:
-                    self._races[parent_races[fid]].add(fid)
-                else:
-                    # LOGGER.warn("family %s parent race not found", fid)
-                    pass
+        self._build_trios_and_quads()
+        for fid, children in self._families_buffer.items():
+            if fid in parent_races:
+                self._races[parent_races[fid]].add(fid)
+            prb_count = 0
+            for ch in children.values():
+                if ch.role == 'prb':
+                    self._probands[ch.gender].add(fid)
+                    prb_count += 1
+                elif ch.role == 'sib':
+                    self._siblings[ch.gender].add(fid)
+            if prb_count == 2:
+                print("family_id with 2 prb: {}".format(fid))
+                pprint(children)
 
     def families_buffer(self):
         return self._families_buffer
