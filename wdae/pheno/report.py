@@ -9,10 +9,11 @@ from collections import Counter
 from api.query.wdae_query_variants import wdae_handle_gene_sets
 import numpy as np
 from scipy.stats import ttest_ind
+from pprint import pprint
 
 
 EFFECT_TYPE_GROUPS = [
-    ('LGDs', 'rec'),
+    ('LGDs', None),
     ('missense', None),
     ('synonymous', None),
     ('CNV+,CNV-', None),
@@ -55,6 +56,14 @@ def _pheno_query_variants(data, effect_type):
 
 def family_pheno_query_variants(data):
     data['denovoStudies'] = 'ALL SSC'
+    data['transmittedStudies'] = 'w1202s766e611'
+    if 'presentInParent' not in data or \
+            data['presentInParent'] is None or \
+            data['presentInParent'] == 'neither':
+
+        del data['transmittedStudies']
+
+    pprint(data)
 
     res = {}
     for (effect_type, recurrent) in EFFECT_TYPE_GROUPS:
@@ -79,7 +88,6 @@ def build_narray(ps):
     dtype = np.dtype([('fid', 'S10'),
                       ('gender', 'S10'),
                       ('LGDs', 'f'),
-                      ('recLGDs', 'f'),
                       ('missense', 'f'),
                       ('synonymous', 'f'),
                       ('CNV', 'f'),
@@ -97,7 +105,7 @@ def pheno_calc(ps):
     res = []
 
     for (effect_type, gender) in itertools.product(
-            *[['LGDs', 'recLGDs', 'missense', 'synonymous', 'CNV'],
+            *[['LGDs', 'missense', 'synonymous', 'CNV'],
               ['M', 'F']]):
 
         gender_index = data['gender'] == gender

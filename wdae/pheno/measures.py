@@ -194,9 +194,6 @@ class Measures(Preload):
             lgds = variants[
                 'LGDs'].get(fid, 0) \
                 if fid in self.gender_we else np.NaN
-            reclgds = variants[
-                'LGDs.Rec'].get(fid, 0) \
-                if fid in self.gender_we else np.NaN
             missense = variants[
                 'missense'].get(fid, 0) \
                 if fid in self.gender_we else np.NaN
@@ -205,7 +202,7 @@ class Measures(Preload):
                 if fid in self.gender_we else np.NaN
 
             row = [fid, gender,
-                   lgds, reclgds, missense, synonymous, cnv,
+                   lgds, missense, synonymous, cnv,
                    m, a, nviq, v]
 
             yield tuple(row)
