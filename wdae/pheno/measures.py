@@ -171,7 +171,7 @@ class Measures(Preload):
 
     def pheno_merge_data(self, variants, nm, families_query=None):
         yield tuple(['family_id', 'gender',
-                     'LGDs', 'recLGDs', 'missense', 'synonymous', 'CNV',
+                     'LGDs', 'missense', 'synonymous', 'CNV',
                      nm.measure, 'age', 'non_verbal_iq', nm.formula])
         for fid, gender in self.gender_all.items():
             if families_query is not None and fid not in families_query:
