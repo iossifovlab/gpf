@@ -19,6 +19,7 @@ class FamiliesPrecompute(precompute.register.Precompute):
     def __init__(self):
         self._siblings = None
         self._probands = None
+        self._study_types = None
         self._trios = None
         self._quads = None
         self._families_buffer = None
@@ -35,6 +36,7 @@ class FamiliesPrecompute(precompute.register.Precompute):
             zlib.compress(cPickle.dumps(self._families_buffer))
         result['families_counters'] = \
             zlib.compress(cPickle.dumps(self._families_counters))
+        result['study_types'] = zlib.compress(cPickle.dumps(self._study_types))
 
         return result
 
@@ -48,20 +50,49 @@ class FamiliesPrecompute(precompute.register.Precompute):
             cPickle.loads(zlib.decompress(data['families_buffer']))
         self._families_counters = \
             cPickle.loads(zlib.decompress(data['families_counters']))
+        self._study_types = cPickle.loads(zlib.decompress(data['study_types']))
 
     def _build_trios_and_quads(self):
-        self._trios = set()
-        self._quads = set()
-        for fid, d in self.families_buffer().items():
-            if len(d) == 1:
-                [ch] = d.values()
-                if ch.role == 'prb':
-                    self._trios.add(fid)
+        self._trios = {}
+        self._quads = {}
+        stypes = self._study_types
+        stypes.append("ALL")
+        for stype in stypes:
+            self._trios[stype] = set()
+            self._quads[stype] = set()
+            for fid, d in self.families_buffer(stype).items():
+                if len(d) == 1:
+                    [ch] = d.values()
+                    if ch.role == 'prb':
+                        self._trios[stype].add(fid)
 
-            if len(d) == 2:
-                [ch1, ch2] = d.values()
-                if ch1.role != ch2.role:
-                    self._quads.add(fid)
+                if len(d) == 2:
+                    [ch1, ch2] = d.values()
+                    if ch1.role != ch2.role:
+                        self._quads[stype].add(fid)
+
+    def _build_family_buffer(self, studies):
+        self._families_buffer = {}
+        self._families_counters = {}
+        self._families_buffer[
+            'ALL'] = CounterBase.build_families_buffer(studies)
+        self._families_counters['ALL'] = FamilyFilterCounters.count_all(
+            self._families_buffer['ALL'])
+
+        for stype in self._study_types:
+            self._families_buffer[stype] = \
+                CounterBase.build_families_buffer(
+                [st for st in studies if st.get_attr("study_type") == stype])
+            self._families_counters[stype] = FamilyFilterCounters.count_all(
+                self._families_buffer[stype])
+
+    def _build_study_types(self, studies):
+        stypes = set()
+        for st in studies:
+            stypes.add(st.get_attr('study.type'))
+        self._study_types = list(stypes)
+        self._study_types.sort()
+        print(self._study_types)
 
     def precompute(self):
         self._siblings = {'M': set(),
@@ -71,15 +102,13 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._races = dict([(r, set()) for r in self.get_races()])
 
         studies = vDB.get_studies('ALL SSC')
+        self._build_study_types(studies)
+        self._build_family_buffer(studies)
 
-        self._families_buffer = CounterBase.build_families_buffer(studies)
-        self._families_counters = \
-            FamilyFilterCounters.count_all(self._families_buffer)
-
-        parent_races = self._parents_race()
         self._build_trios_and_quads()
 
-        for fid, children in self._families_buffer.items():
+        parent_races = self._parents_race()
+        for fid, children in self.families_buffer().items():
             if fid in parent_races:
                 self._races[parent_races[fid]].add(fid)
             prb_count = 0
@@ -96,11 +125,11 @@ class FamiliesPrecompute(precompute.register.Precompute):
                 print("family_id with 0 prb: {}".format(fid))
                 pprint(children)
 
-    def families_buffer(self):
-        return self._families_buffer
+    def families_buffer(self, study_type="ALL"):
+        return self._families_buffer[study_type]
 
-    def families_counters(self):
-        return self._families_counters
+    def families_counters(self, study_type="ALL"):
+        return self._families_counters[study_type]
 
     def siblings(self, gender):
         assert self._siblings is not None
@@ -112,13 +141,13 @@ class FamiliesPrecompute(precompute.register.Precompute):
         assert gender == 'M' or gender == 'F'
         return self._probands[gender]
 
-    def trios(self):
+    def trios(self, study_type="ALL"):
         assert self._trios is not None
-        return self._trios
+        return self._trios[study_type]
 
-    def quads(self):
+    def quads(self, study_type="ALL"):
         assert self._quads is not None
-        return self._quads
+        return self._quads[study_type]
 
     @staticmethod
     def get_races():

@@ -4,6 +4,7 @@ Created on Mar 23, 2016
 @author: lubo
 '''
 from rest_framework.test import APITestCase
+from pprint import pprint
 
 
 class Test(APITestCase):
@@ -56,6 +57,8 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
         data = response.data
+
+        pprint(data)
 
         self.assertEquals(2867, data['autism']['families'])      # 2867
         self.assertEquals(2477, data['autism']['male'])          # 2477
