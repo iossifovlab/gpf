@@ -131,6 +131,9 @@ class FamiliesPrecompute(precompute.register.Precompute):
     def families_counters(self, study_type="ALL"):
         return self._families_counters[study_type]
 
+    def study_types(self):
+        return self._study_types
+
     def siblings(self, gender):
         assert self._siblings is not None
         assert gender == 'M' or gender == 'F'

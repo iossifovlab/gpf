@@ -17,7 +17,7 @@ def prepare_trio_quad(trio_quad):
     return None
 
 
-def prepare_family_trio_quad_query(data, family_ids=None):
+def prepare_family_trio_quad_query(data, study_type, family_ids=None):
     assert family_ids is None or isinstance(family_ids, set)
 
     if 'familyQuadTrio' not in data:
@@ -32,9 +32,9 @@ def prepare_family_trio_quad_query(data, family_ids=None):
     families_precompute = precompute.register.get('families_precompute')
 
     if family_trio_quad == 'trio':
-        result = families_precompute.trios()
+        result = families_precompute.trios(study_type)
     elif family_trio_quad == 'quad':
-        result = families_precompute.quads()
+        result = families_precompute.quads(study_type)
     else:
         raise ValueError()
 

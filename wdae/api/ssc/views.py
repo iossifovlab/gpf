@@ -26,7 +26,7 @@ class SSCPrepare(APIView):
         data = prepare_query_dict(request.data)
         pprint(data)
 
-        data = prepare_family_query(data)
+        _fst, data = prepare_family_query(data)
 
         data = prepare_ssc_filter(data)
         build_effect_type_filter(data)

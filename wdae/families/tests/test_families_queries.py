@@ -16,7 +16,8 @@ class Test(unittest.TestCase):
             'familyPhenoMeasureMax': 24,
         }
 
-        data = prepare_family_query(data)
+        fst, data = prepare_family_query(data)
+        self.assertEquals("ALL", fst)
 
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)
@@ -34,7 +35,8 @@ class Test(unittest.TestCase):
             'familyQuadTrio': 'quad',
         }
 
-        data = prepare_family_query(data)
+        fst, data = prepare_family_query(data)
+        self.assertEquals("ALL", fst)
 
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)
@@ -54,7 +56,8 @@ class Test(unittest.TestCase):
             'familyPrbGender': 'female',
         }
 
-        data = prepare_family_query(data)
+        fst, data = prepare_family_query(data)
+        self.assertEquals("ALL", fst)
 
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)
@@ -75,7 +78,8 @@ class Test(unittest.TestCase):
             'familyPrbGender': 'male',
         }
 
-        data = prepare_family_query(data)
+        fst, data = prepare_family_query(data)
+        self.assertEquals("ALL", fst)
 
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)
@@ -95,7 +99,8 @@ class Test(unittest.TestCase):
             'familyRace': 'asian',
         }
 
-        data = prepare_family_query(data)
+        fst, data = prepare_family_query(data)
+        self.assertEquals("ALL", fst)
 
         self.assertIn('familyIds', data)
         self.assertNotIn('familyPhenoMeasure', data)

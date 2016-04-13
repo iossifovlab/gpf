@@ -48,7 +48,7 @@ class PhenoViewBase(views.APIView):
         data = prepare_query_dict(request.data)
         if 'effectTypes' in data:
             del data['effectTypes']
-        data = prepare_family_query(data)
+        _fst, data = prepare_family_query(data)
 
         return data
 
