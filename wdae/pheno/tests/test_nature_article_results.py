@@ -11,7 +11,7 @@ from pheno.report import pheno_calc
 
 
 def prepare_pheno_data(df):
-    yield tuple(['family_id', 'gender', 'LGDs', 'recLGDs', 'missense',
+    yield tuple(['family_id', 'gender', 'LGDs', 'missense',
                  'synonymous', 'CNV', 'non_verbal_iq', 'age',
                  'non_verbal_iq', 'non_verbal_iq'])
 
@@ -19,7 +19,6 @@ def prepare_pheno_data(df):
         yield tuple([row['familyId'],
                      row['probandGender'],
                      row['LGDs'],
-                     row['recLGDs'],
                      row['missense'],
                      row['synonymous'],
                      0,
@@ -88,8 +87,8 @@ class Test(unittest.TestCase):
         ps = prepare_pheno_data(self.df)
         result = pheno_calc(ps)
         self.assertIsNotNone(result)
-        self.assertEqual('0.00001', self.get_pvalue('recLGDs', 'M', result))
-        self.assertEqual('0.04', self.get_pvalue('recLGDs', 'F', result))
+        # self.assertEqual('0.00001', self.get_pvalue('recLGDs', 'M', result))
+        # self.assertEqual('0.04', self.get_pvalue('recLGDs', 'F', result))
 
         # self.assertEqual('0.00002', self.get_pvalue('recLGDs', 'M', result))
         # self.assertEqual('0.05', self.get_pvalue('recLGDs', 'F', result))

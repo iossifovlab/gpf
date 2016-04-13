@@ -169,7 +169,8 @@ class Measures(Preload):
             selected = df
         return selected['family_id'].values
 
-    def pheno_merge_data(self, variants, nm, families_query=None):
+    def pheno_merge_data(self, families_with_variants,
+                         nm, families_query=None):
         yield tuple(['family_id', 'gender',
                      'LGDs', 'missense', 'synonymous', 'CNV',
                      nm.measure, 'age', 'non_verbal_iq', nm.formula])
@@ -188,16 +189,16 @@ class Measures(Preload):
                 a = np.NaN
                 nviq = np.NaN
 
-            cnv = variants[
+            cnv = families_with_variants[
                 'CNV+,CNV-'].get(fid, 0) \
                 if fid in self.gender_cnv else np.NaN
-            lgds = variants[
+            lgds = families_with_variants[
                 'LGDs'].get(fid, 0) \
                 if fid in self.gender_we else np.NaN
-            missense = variants[
+            missense = families_with_variants[
                 'missense'].get(fid, 0) \
                 if fid in self.gender_we else np.NaN
-            synonymous = variants[
+            synonymous = families_with_variants[
                 'synonymous'].get(fid, 0) \
                 if fid in self.gender_we else np.NaN
 

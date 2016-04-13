@@ -15,11 +15,10 @@ class Test(unittest.TestCase):
         }
         res = family_pheno_query_variants(data)
         self.assertIn('LGDs', res)
-        self.assertIn('LGDs.Rec', res)
         self.assertIn('missense', res)
         self.assertIn('synonymous', res)
         self.assertIn('CNV+,CNV-', res)
-        self.assertEqual(5, len(res.keys()))
+        self.assertEqual(4, len(res.keys()))
 
 #     def test_prepare_families_gender_data(self):
 #         data = {

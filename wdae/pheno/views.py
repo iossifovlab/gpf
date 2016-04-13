@@ -74,8 +74,9 @@ class PhenoViewBase(views.APIView):
         nm = NormalizedMeasure(measure_name)
         nm.normalize(by=by)
 
-        variants = family_pheno_query_variants(data)
-        pheno = measures.pheno_merge_data(variants, nm, families_query)
+        families_with_variants = family_pheno_query_variants(data)
+        pheno = measures.pheno_merge_data(families_with_variants, nm,
+                                          families_query)
 
         response = self.build_response(data, pheno, nm)
         return response
