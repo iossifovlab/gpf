@@ -22,9 +22,11 @@ def prepare_query_dict(data):
         key = str(key)
         if isinstance(val, list):
             value = ','.join([str(s).strip() for s in val])
+        elif isinstance(val, str) or isinstance(val, unicode):
+            value = str(val.replace(u'\xa0', u' ').encode('utf-8'))
+            value = value.strip()
         else:
             value = str(val)
-            value = value.strip()
         if value == '' or value.lower() == 'none':
             continue
         res.append((key, value))
