@@ -61,6 +61,8 @@ def family_pheno_query_variants(data):
     families = {}
     for (k, vs) in res.items():
         families[k] = Counter([v.familyId for v in vs])
+    pprint(families)
+
     return families
 
 
