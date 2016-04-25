@@ -11,6 +11,7 @@ from families.counters import FamilyFilterCounters
 import precompute
 from reports.variants import CounterBase
 from pprint import pprint
+# from pprint import pprint
 
 
 # from helpers.logger import LOGGER
@@ -80,11 +81,13 @@ class FamiliesPrecompute(precompute.register.Precompute):
             self._families_buffer['ALL'])
 
         for stype in self._study_types:
+            tsts = [st for st in studies
+                    if st.get_attr("study.type").upper() == stype]
             self._families_buffer[stype] = \
-                CounterBase.build_families_buffer(
-                [st for st in studies if st.get_attr("study_type") == stype])
+                CounterBase.build_families_buffer(tsts)
             self._families_counters[stype] = FamilyFilterCounters.count_all(
                 self._families_buffer[stype])
+        pprint(self._families_buffer['ALL'])
 
     def _build_study_types(self, studies):
         stypes = set()
@@ -92,7 +95,6 @@ class FamiliesPrecompute(precompute.register.Precompute):
             stypes.add(st.get_attr('study.type'))
         self._study_types = list(stypes)
         self._study_types.sort()
-        print(self._study_types)
 
     def precompute(self):
         self._siblings = {'M': set(),
@@ -118,12 +120,12 @@ class FamiliesPrecompute(precompute.register.Precompute):
                     prb_count += 1
                 elif ch.role == 'sib':
                     self._siblings[ch.gender].add(fid)
-            if prb_count == 2:
-                print("family_id with 2 prb: {}".format(fid))
-                pprint(children)
-            if prb_count == 0:
-                print("family_id with 0 prb: {}".format(fid))
-                pprint(children)
+#             if prb_count == 2:
+#                 print("family_id with 2 prb: {}".format(fid))
+#                 pprint(children)
+#             if prb_count == 0:
+#                 print("family_id with 0 prb: {}".format(fid))
+#                 pprint(children)
 
     def families_buffer(self, study_type="ALL"):
         return self._families_buffer[study_type]
