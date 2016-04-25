@@ -158,6 +158,14 @@ class Study:
         for v in vs:
             yield v
 
+    def get_families_with_transmitted_variants(self,
+                                               callSet='default', **kwargs):
+        LOGGER.info("get_transmitted_variants: %s", kwargs)
+        impl = self._get_transmitted_impl(callSet)
+        fs = impl.get_families_with_transmitted_variants(**kwargs)
+        for f in fs:
+            yield f
+
     def get_transmitted_summary_variants(self, callSet='default', **kwargs):
         impl = self._get_transmitted_impl(callSet)
         vs = impl.get_transmitted_summary_variants(**kwargs)

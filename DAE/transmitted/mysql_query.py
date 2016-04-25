@@ -545,3 +545,30 @@ class MysqlTransmittedQuery(TransmissionConfig):
             LOGGER.error("unexpected db error: %s", ex)
             connection.close()
             raise StopIteration
+
+    def get_families_with_transmitted_variants(self, **kwargs):
+        self._copy_kwargs(kwargs)
+        where = self._build_where()
+        select = \
+            "select " \
+            "distinct(tfv.family_id) " \
+            "from transmitted_familyvariant as tfv " \
+            "left join transmitted_summaryvariant as tsv " \
+            "on tfv.summary_variant_id = tsv.id " \
+            "where {}".format(where)
+
+        LOGGER.info("select: %s", select)
+        try:
+            connection, cursor = self.execute(select)
+            v = cursor.fetchone()
+
+            while v is not None:
+                vr = v
+                yield vr['family_id']
+                v = cursor.fetchone()
+        except StopIteration:
+            connection.close()
+        except Exception as ex:
+            LOGGER.error("unexpected db error: %s", ex)
+            connection.close()
+            raise StopIteration
