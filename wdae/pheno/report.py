@@ -4,12 +4,11 @@ Created on Nov 16, 2015
 @author: lubo
 '''
 import itertools
-from query_variants import dae_query_variants
+from query_variants import dae_query_families_with_variants
 from collections import Counter
 from api.query.wdae_query_variants import wdae_handle_gene_sets
 import numpy as np
 from scipy.stats import ttest_ind
-from pprint import pprint
 
 
 EFFECT_TYPE_GROUPS = [
@@ -37,9 +36,8 @@ def _pheno_query_variants(data, effect_type):
     data['effectTypes'] = effect_type
     data['inChild'] = 'prb'
 
-    vsl = dae_query_variants(data)
-    vs = itertools.chain(*vsl)
-    return _filter_one_var_per_gene_per_child(vs)
+    families = dae_query_families_with_variants(data)
+    return families
 
 
 def family_pheno_query_variants(data):
@@ -51,17 +49,10 @@ def family_pheno_query_variants(data):
 
         del data['transmittedStudies']
 
-    pprint(data)
-
-    res = {}
-    for effect_type in EFFECT_TYPE_GROUPS:
-        vs = _pheno_query_variants(data, effect_type)
-        res[effect_type] = vs
-
     families = {}
-    for (k, vs) in res.items():
-        families[k] = Counter([v.familyId for v in vs])
-    pprint(families)
+    for effect_type in EFFECT_TYPE_GROUPS:
+        fams = _pheno_query_variants(data, effect_type)
+        families[effect_type] = Counter([fid for fid in fams])
 
     return families
 
