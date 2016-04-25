@@ -568,11 +568,42 @@ def get_denovo_variants(studies, family_filters, **filters):
             seenVs.add(vKey)
 
 
+def _dae_query_families_with_transmitted_variants(
+        data, tstudies, denovo_filters, family_filters):
+
+    result = set()
+    if tstudies is not None:
+        transmitted_filters = prepare_transmitted_filters(data, denovo_filters)
+        for study in tstudies:
+            if family_filters is not None:
+                families = family_filters(study).keys()
+                transmitted_filters['familyIds'] = families if len(
+                    families) > 0 else [None]
+            fams = study.get_families_with_transmitted_variants(
+                **transmitted_filters)
+            result.update([f for f in fams])
+    print(result)
+    return result
+
+
+def _dae_query_families_with_denovo_variants(
+        data, dstudies, tstudies, denovo_filters, family_filters):
+
+    variants = []
+    if dstudies is not None:
+        denovo_filtered_studies = prepare_denovo_pheno_filter(data, dstudies)
+        dvs = get_denovo_variants(denovo_filtered_studies, family_filters, **
+                                  denovo_filters)
+        variants.append(dvs)
+    result = set([v.familyId for v in itertools.chain(*variants)])
+    return result
+
+
 def dae_query_families_with_variants(data):
     assert "geneSet" not in data
     assert "geneWeigth" not in data
 
-    LOGGER.info("dae_query_variants: %s", data)
+    LOGGER.info("dae_query_families_with_variants: %s", data)
 
     prepare_denovo_phenotype(data)
     prepare_denovo_study_type(data)
@@ -586,25 +617,14 @@ def dae_query_families_with_variants(data):
     denovo_filters = prepare_denovo_filters(data)
     family_filters = advanced_family_filter(data, denovo_filters)
 
+    dresult = _dae_query_families_with_denovo_variants(
+        data, dstudies, tstudies, denovo_filters, family_filters)
+    tresult = _dae_query_families_with_transmitted_variants(
+        data, tstudies, denovo_filters, family_filters)
+
     result = set()
-    #     variants = []
-    #     if dstudies is not None:
-    #         denovo_filtered_studies = prepare_denovo_pheno_filter(data, dstudies)
-    #         dvs = get_denovo_variants(denovo_filtered_studies, family_filters,
-    #                                   **denovo_filters)
-    #         variants.append(dvs)
-
-    if tstudies is not None:
-        transmitted_filters = prepare_transmitted_filters(data, denovo_filters)
-        for study in tstudies:
-            if family_filters is not None:
-                families = family_filters(study).keys()
-                transmitted_filters['familyIds'] = families \
-                    if len(families) > 0 else [None]
-
-            fams = study.get_families_with_transmitted_variants(
-                **transmitted_filters)
-            result.update(fams)
+    result.update(dresult)
+    result.update(tresult)
 
     return result
 

@@ -160,7 +160,7 @@ class Study:
 
     def get_families_with_transmitted_variants(self,
                                                callSet='default', **kwargs):
-        LOGGER.info("get_transmitted_variants: %s", kwargs)
+        LOGGER.info("get_families_with_transmitted_variants: %s", kwargs)
         impl = self._get_transmitted_impl(callSet)
         fs = impl.get_families_with_transmitted_variants(**kwargs)
         for f in fs:

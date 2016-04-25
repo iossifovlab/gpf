@@ -52,7 +52,7 @@ def family_pheno_query_variants(data):
     families = {}
     for effect_type in EFFECT_TYPE_GROUPS:
         fams = _pheno_query_variants(data, effect_type)
-        families[effect_type] = Counter([fid for fid in fams])
+        families[effect_type] = Counter(fams)
 
     return families
 
