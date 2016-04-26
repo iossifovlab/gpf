@@ -12,7 +12,7 @@ from scipy.stats import ttest_ind
 from api.default_ssc_study import get_ssc_all
 
 
-EFFECT_TYPE_GROUPS = [
+DEFAULT_EFFECT_TYPE_GROUPS = [
     'LGDs',
     'missense',
     'synonymous',

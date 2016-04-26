@@ -7,7 +7,7 @@ import os
 import unittest
 import pandas as pd
 import numpy as np
-from pheno.report import pheno_calc, EFFECT_TYPE_GROUPS
+from pheno.report import pheno_calc, DEFAULT_EFFECT_TYPE_GROUPS
 
 
 def prepare_pheno_data(df):
@@ -85,7 +85,7 @@ class Test(unittest.TestCase):
 
     def test_pheno_calc(self):
         ps = prepare_pheno_data(self.df)
-        result = pheno_calc(ps, EFFECT_TYPE_GROUPS)
+        result = pheno_calc(ps, DEFAULT_EFFECT_TYPE_GROUPS)
         self.assertIsNotNone(result)
         # self.assertEqual('0.00001', self.get_pvalue('recLGDs', 'M', result))
         # self.assertEqual('0.04', self.get_pvalue('recLGDs', 'F', result))

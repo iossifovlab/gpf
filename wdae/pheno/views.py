@@ -14,7 +14,7 @@ from preloaded.register import get_register
 from api.query.wdae_query_variants import prepare_query_dict
 from pheno.measures import NormalizedMeasure
 from pheno.report import family_pheno_query_variants, pheno_calc,\
-    EFFECT_TYPE_GROUPS
+    DEFAULT_EFFECT_TYPE_GROUPS
 from helpers.logger import log_filter, LOGGER
 from families.families_query import prepare_family_query
 
@@ -59,7 +59,7 @@ class PhenoViewBase(views.APIView):
         if 'effectTypeGroups' in data:
             effect_type_groups = data['effectTypeGroups'].split(',')
         else:
-            effect_type_groups = EFFECT_TYPE_GROUPS
+            effect_type_groups = DEFAULT_EFFECT_TYPE_GROUPS
 
         LOGGER.info(log_filter(request, "pheno report: " + str(data)))
 
