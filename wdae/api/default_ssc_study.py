@@ -13,10 +13,8 @@ def get_ssc_all_group():
 def get_ssc_all():
     study_group = vDB.get_study_group(get_ssc_all_group())
 
-    denovo_studies = vDB.get_studies(
-        study_group.get_attr('studies'))
-    transmitted_studies = vDB.get_studies(
-        study_group.get_attr('transmittedStudies'))
+    denovo_studies = study_group.get_attr('studies')
+    transmitted_studies = study_group.get_attr('transmittedStudies')
 
     return {"denovoStudies": denovo_studies,
             "transmittedStudies": transmitted_studies}
@@ -29,4 +27,26 @@ def get_ssc_denovo():
 
 def get_ssc_transmitted():
     res = get_ssc_all()
+    return res['transmittedStudies']
+
+
+def get_ssc_all_studies():
+    study_group = vDB.get_study_group(get_ssc_all_group())
+
+    denovo_studies = vDB.get_studies(
+        study_group.get_attr('studies'))
+    transmitted_studies = vDB.get_studies(
+        study_group.get_attr('transmittedStudies'))
+
+    return {"denovoStudies": denovo_studies,
+            "transmittedStudies": transmitted_studies}
+
+
+def get_ssc_denovo_studies():
+    res = get_ssc_all_studies()
+    return res['denovoStudies']
+
+
+def get_ssc_transmitted_studies():
+    res = get_ssc_all_studies()
     return res['transmittedStudies']

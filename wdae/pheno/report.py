@@ -44,6 +44,8 @@ def _pheno_query_variants(data, effect_type):
 def family_pheno_query_variants(data):
 
     data.update(get_ssc_all())
+    print(data)
+
     if 'presentInParent' not in data or \
             data['presentInParent'] is None or \
             data['presentInParent'] == 'neither':
