@@ -4,7 +4,7 @@ Created on Nov 16, 2015
 @author: lubo
 '''
 import unittest
-from pheno.report import family_pheno_query_variants
+from pheno.report import family_pheno_query_variants, EFFECT_TYPE_GROUPS
 
 
 class Test(unittest.TestCase):
@@ -13,7 +13,7 @@ class Test(unittest.TestCase):
         data = {
             'denovoStudies': 'ALL SSC',
         }
-        res = family_pheno_query_variants(data)
+        res = family_pheno_query_variants(data, EFFECT_TYPE_GROUPS)
         self.assertIn('LGDs', res)
         self.assertIn('missense', res)
         self.assertIn('synonymous', res)

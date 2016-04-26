@@ -20,28 +20,28 @@ EFFECT_TYPE_GROUPS = [
 ]
 
 
-def _filter_one_var_per_gene_per_child(vs):
-    ret = []
-    seen = set()
-    for v in vs:
-        vKs = {v.familyId + "." + ge['sym'] for ge in v.requestedGeneEffects}
-        if seen & vKs:
-            continue
-        ret.append(v)
-        seen |= vKs
-    return ret
+# def _filter_one_var_per_gene_per_child(vs):
+#     ret = []
+#     seen = set()
+#     for v in vs:
+#         vKs = {v.familyId + "." + ge['sym'] for ge in v.requestedGeneEffects}
+#         if seen & vKs:
+#             continue
+#         ret.append(v)
+#         seen |= vKs
+#     return ret
 
 
-def _pheno_query_variants(data, effect_type):
-    wdae_handle_gene_sets(data)
-    data['effectTypes'] = effect_type
-    data['inChild'] = 'prb'
+# def _pheno_query_variants(data, effect_type):
+#     wdae_handle_gene_sets(data)
+#     data['effectTypes'] = effect_type
+#     data['inChild'] = 'prb'
+#
+#     families = dae_query_families_with_variants(data)
+#     return families
 
-    families = dae_query_families_with_variants(data)
-    return families
 
-
-def family_pheno_query_variants(data):
+def family_pheno_query_variants(data, effect_type_groups):
 
     data.update(get_ssc_all())
     print(data)
@@ -53,40 +53,46 @@ def family_pheno_query_variants(data):
         del data['transmittedStudies']
 
     families = {}
-    for effect_type in EFFECT_TYPE_GROUPS:
-        fams = _pheno_query_variants(data, effect_type)
+    for effect_type in effect_type_groups:
+        wdae_handle_gene_sets(data)
+        data['effectTypes'] = effect_type
+        data['inChild'] = 'prb'
+
+        fams = dae_query_families_with_variants(data)
         families[effect_type] = Counter(fams)
 
     return families
 
 
-def build_narray(ps):
+def build_narray(ps, effect_type_groups):
     ps.next()  # skip column names
     rows = []
     for p in ps:
         rows.append(tuple([e if e != 'NA' else np.NaN for e in p]))
 
-    dtype = np.dtype([('fid', 'S10'),
-                      ('gender', 'S10'),
-                      ('LGDs', 'f'),
-                      ('missense', 'f'),
-                      ('synonymous', 'f'),
-                      ('CNV', 'f'),
-                      ('measure', 'f'),
-                      ('age', 'f'),
-                      ('non_verbal_iq', 'f'),
-                      ('value', 'f')])
+    columns = [('fid', 'S10'),
+               ('gender', 'S10'), ]
+    for effect in effect_type_groups:
+        columns.append((effect, 'f'))
+
+    columns.extend(
+        [('measure', 'f'),
+         ('age', 'f'),
+         ('non_verbal_iq', 'f'),
+         ('value', 'f')])
+
+    dtype = np.dtype(columns)
     data = np.array(rows, dtype=dtype)
     data = data[~np.isnan(data['value'])]
     return data
 
 
-def pheno_calc(ps):
-    data = build_narray(ps)
+def pheno_calc(ps, effect_type_groups):
+    data = build_narray(ps, effect_type_groups)
     res = []
 
     for (effect_type, gender) in itertools.product(
-            *[['LGDs', 'missense', 'synonymous', 'CNV'],
+            *[effect_type_groups,
               ['M', 'F']]):
 
         gender_index = data['gender'] == gender

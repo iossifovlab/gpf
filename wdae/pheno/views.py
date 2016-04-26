@@ -13,7 +13,8 @@ from rest_framework.response import Response
 from preloaded.register import get_register
 from api.query.wdae_query_variants import prepare_query_dict
 from pheno.measures import NormalizedMeasure
-from pheno.report import family_pheno_query_variants, pheno_calc
+from pheno.report import family_pheno_query_variants, pheno_calc,\
+    EFFECT_TYPE_GROUPS
 from helpers.logger import log_filter, LOGGER
 from families.families_query import prepare_family_query
 
@@ -55,6 +56,11 @@ class PhenoViewBase(views.APIView):
     def post(self, request):
         data = self.prepare_query_dict(request)
 
+        if 'effectTypeGroups' in data:
+            effect_type_groups = data['effectTypeGroups'].split(',')
+        else:
+            effect_type_groups = EFFECT_TYPE_GROUPS
+
         LOGGER.info(log_filter(request, "pheno report: " + str(data)))
 
         if 'phenoMeasure' not in data:
@@ -74,19 +80,20 @@ class PhenoViewBase(views.APIView):
         nm = NormalizedMeasure(measure_name)
         nm.normalize(by=by)
 
-        families_with_variants = family_pheno_query_variants(data)
+        families_with_variants = family_pheno_query_variants(
+            data, effect_type_groups)
         pheno = measures.pheno_merge_data(families_with_variants, nm,
                                           families_query)
 
-        response = self.build_response(data, pheno, nm)
+        response = self.build_response(data, pheno, nm, effect_type_groups)
         return response
 
 
 class PhenoReportView(PhenoViewBase):
 
-    def build_response(self, request, pheno, nm):
+    def build_response(self, request, pheno, nm, effect_type_groups):
         pheno.next()
-        res = pheno_calc(pheno)
+        res = pheno_calc(pheno, effect_type_groups)
         response = {
             "data": res,
             "measure": nm.measure,
@@ -97,7 +104,7 @@ class PhenoReportView(PhenoViewBase):
 
 class PhenoReportDownloadView(PhenoViewBase):
 
-    def build_response(self, request, pheno, nm):
+    def build_response(self, request, pheno, nm, effect_type_groups):
         comment = ', '.join([': '.join([k, str(v)])
                              for (k, v) in request.items()
                              if k != 'effectTypes'])
