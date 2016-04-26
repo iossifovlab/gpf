@@ -6,11 +6,12 @@ Created on Feb 29, 2016
 import cPickle
 import zlib
 
-from DAE import vDB, phDB
+from DAE import phDB
 from families.counters import FamilyFilterCounters
 import precompute
 from reports.variants import CounterBase
 from pprint import pprint
+from api.default_ssc_study import get_ssc_denovo
 # from pprint import pprint
 
 
@@ -103,7 +104,7 @@ class FamiliesPrecompute(precompute.register.Precompute):
                           'F': set()}
         self._races = dict([(r, set()) for r in self.get_races()])
 
-        studies = vDB.get_studies('ALL SSC')
+        studies = get_ssc_denovo()
         self._build_study_types(studies)
         self._build_family_buffer(studies)
 

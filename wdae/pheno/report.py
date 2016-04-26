@@ -9,6 +9,7 @@ from collections import Counter
 from api.query.wdae_query_variants import wdae_handle_gene_sets
 import numpy as np
 from scipy.stats import ttest_ind
+from api.default_ssc_study import get_ssc_all
 
 
 EFFECT_TYPE_GROUPS = [
@@ -41,8 +42,8 @@ def _pheno_query_variants(data, effect_type):
 
 
 def family_pheno_query_variants(data):
-    data['denovoStudies'] = 'ALL SSC'
-    data['transmittedStudies'] = 'w1202s766e611'
+
+    data.update(get_ssc_all())
     if 'presentInParent' not in data or \
             data['presentInParent'] is None or \
             data['presentInParent'] == 'neither':
