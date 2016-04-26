@@ -5,7 +5,7 @@ Created on Apr 26, 2016
 '''
 import unittest
 from api.default_ssc_study import get_ssc_all, get_ssc_denovo,\
-    get_ssc_transmitted
+    get_ssc_transmitted, get_ssc_denovo_studies, get_ssc_transmitted_studies
 
 
 class Test(unittest.TestCase):
@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
         self.assertIsNotNone(res)
 
     def test_default_ssc_denovo_has_denovo(self):
-        res = get_ssc_denovo()
+        res = get_ssc_denovo_studies()
         for st in res:
             self.assertFalse(st.has_transmitted)
             self.assertTrue(st.has_denovo)
@@ -30,7 +30,7 @@ class Test(unittest.TestCase):
         self.assertIsNotNone(res)
 
     def test_default_ssc_transmitted_has_transmitted(self):
-        res = get_ssc_transmitted()
+        res = get_ssc_transmitted_studies()
         for st in res:
             self.assertTrue(st.has_transmitted)
             self.assertFalse(st.has_denovo)

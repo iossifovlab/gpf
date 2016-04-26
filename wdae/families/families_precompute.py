@@ -10,8 +10,7 @@ from DAE import phDB
 from families.counters import FamilyFilterCounters
 import precompute
 from reports.variants import CounterBase
-from pprint import pprint
-from api.default_ssc_study import get_ssc_denovo
+from api.default_ssc_study import get_ssc_denovo_studies
 # from pprint import pprint
 
 
@@ -88,7 +87,6 @@ class FamiliesPrecompute(precompute.register.Precompute):
                 CounterBase.build_families_buffer(tsts)
             self._families_counters[stype] = FamilyFilterCounters.count_all(
                 self._families_buffer[stype])
-        pprint(self._families_buffer['ALL'])
 
     def _build_study_types(self, studies):
         stypes = set()
@@ -104,7 +102,7 @@ class FamiliesPrecompute(precompute.register.Precompute):
                           'F': set()}
         self._races = dict([(r, set()) for r in self.get_races()])
 
-        studies = get_ssc_denovo()
+        studies = get_ssc_denovo_studies()
         self._build_study_types(studies)
         self._build_family_buffer(studies)
 
