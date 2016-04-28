@@ -6,6 +6,7 @@ Created on Apr 28, 2016
 import unittest
 from DAE import vDB
 from transmitted.legacy_query import TransmissionLegacy
+from transmitted.mysql_query import MysqlTransmittedQuery
 
 
 class Test(unittest.TestCase):
@@ -30,9 +31,17 @@ class Test(unittest.TestCase):
 
         transmitted_study = vDB.get_study("w1202s766e611")
         impl = TransmissionLegacy(transmitted_study, "old")
-        fit = impl.get_families_with_transmitted_variants(**query)
-        families = [f for f in fit]
-        self.assertEquals(42, len(families))
+        tfams = impl.get_families_with_transmitted_variants(**query)
+        tfamilies = [f for f in tfams]
+        self.assertEquals(42, len(tfamilies))
+
+        m = MysqlTransmittedQuery(transmitted_study)
+
+        tfams = m.get_families_with_transmitted_variants(**query)
+        mfamilies = [f for f in tfams]
+        self.assertEquals(42, len(mfamilies))
+
+        self.assertEquals(set(tfamilies), set(mfamilies))
 
 if __name__ == "__main__":
     unittest.main()
