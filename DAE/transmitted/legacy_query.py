@@ -9,6 +9,7 @@ import gzip
 import pysam
 import copy
 from transmitted.base_query import TransmissionConfig
+from collections import Counter
 
 
 class TransmissionLegacy(TransmissionConfig):
@@ -238,3 +239,18 @@ class TransmissionLegacy(TransmissionConfig):
 
                 yield v
         tbf.close()
+
+        def get_families_with_transmitted_variants(self, **kwargs):
+            vs = self.get_transmitted_variants(**kwargs)
+            variants = []
+            seen = set()
+            for v in vs:
+                vKs = {v.familyId + "." + ge['sym']
+                       for ge in v.requestedGeneEffects}
+                if seen & vKs:
+                    continue
+                variants.append(v)
+                seen |= vKs
+
+            families = Counter([v.familyId for v in variants])
+            return families
