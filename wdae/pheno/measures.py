@@ -170,10 +170,14 @@ class Measures(Preload):
         return selected['family_id'].values
 
     def pheno_merge_data(self, families_with_variants,
-                         nm, families_query=None):
-        yield tuple(['family_id', 'gender',
-                     'LGDs', 'missense', 'synonymous', 'CNV',
-                     nm.measure, 'age', 'non_verbal_iq', nm.formula])
+                         nm,
+                         effect_type_groups,
+                         families_query=None):
+        columns = ['family_id', 'gender', ]
+        columns.extend(effect_type_groups)
+        columns.extend([nm.measure, 'age', 'non_verbal_iq', nm.formula])
+        yield tuple(columns)
+
         for fid, gender in self.gender_all.items():
             if families_query is not None and fid not in families_query:
                 continue
@@ -189,23 +193,14 @@ class Measures(Preload):
                 a = np.NaN
                 nviq = np.NaN
 
-            cnv = families_with_variants[
-                'CNV+,CNV-'].get(fid, 0) \
-                if fid in self.gender_cnv else np.NaN
-            lgds = families_with_variants[
-                'LGDs'].get(fid, 0) \
-                if fid in self.gender_we else np.NaN
-            missense = families_with_variants[
-                'missense'].get(fid, 0) \
-                if fid in self.gender_we else np.NaN
-            synonymous = families_with_variants[
-                'synonymous'].get(fid, 0) \
-                if fid in self.gender_we else np.NaN
+            row = [fid, gender, ]
+            for etg in effect_type_groups:
+                col = families_with_variants[
+                    etg].get(fid, 0) \
+                    if fid in self.gender_cnv else np.NaN
+                row.append(col)
 
-            row = [fid, gender,
-                   lgds, missense, synonymous, cnv,
-                   m, a, nviq, v]
-
+            row.extend([m, a, nviq, v])
             yield tuple(row)
 
 

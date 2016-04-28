@@ -83,6 +83,7 @@ class PhenoViewBase(views.APIView):
         families_with_variants = family_pheno_query_variants(
             data, effect_type_groups)
         pheno = measures.pheno_merge_data(families_with_variants, nm,
+                                          effect_type_groups,
                                           families_query)
 
         response = self.build_response(data, pheno, nm, effect_type_groups)
