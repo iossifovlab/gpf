@@ -197,7 +197,7 @@ class Measures(Preload):
             for etg in effect_type_groups:
                 col = families_with_variants[
                     etg].get(fid, 0) \
-                    if fid in self.gender_cnv else np.NaN
+                    if fid in self.gender_all else np.NaN
                 row.append(col)
 
             row.extend([m, a, nviq, v])

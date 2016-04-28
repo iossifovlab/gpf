@@ -35,8 +35,8 @@ class Test(APITestCase):
         self.assertEqual('head_circumference', response.data['formula'])
 
         data = response.data['data']
-        self.assertEqual(306, self.pos_count('LGDs', data))
-        self.assertEqual(1783, self.neg_count('LGDs', data))
+        self.assertEqual(307, self.pos_count('LGDs', data))
+        self.assertEqual(1833, self.neg_count('LGDs', data))
 
     def test_family_pheno_filter_families_count(self):
         measures = preloaded.register.get_register().get('pheno_measures')
@@ -60,4 +60,4 @@ class Test(APITestCase):
 
         data = response.data['data']
         self.assertEqual(25, self.pos_count('LGDs', data))
-        self.assertEqual(126, self.neg_count('LGDs', data))
+        self.assertEqual(130, self.neg_count('LGDs', data))
