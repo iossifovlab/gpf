@@ -30,7 +30,7 @@ class RecurrentLGDsGenesTests(APITestCase):
         LOGGER.info("rec lgds: %s", geneTerms.t2G["prb.LoF.Recurrent"])
         LOGGER.info("rec lgds: %s",
                     len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
-        self.assertEqual(41, len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
+        self.assertEqual(45, len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
 
 
 def count_iterable(iterable):

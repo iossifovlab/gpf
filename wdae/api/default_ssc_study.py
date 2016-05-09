@@ -35,8 +35,11 @@ def get_ssc_all_studies():
 
     denovo_studies = vDB.get_studies(
         study_group.get_attr('studies'))
-    transmitted_studies = vDB.get_studies(
-        study_group.get_attr('transmittedStudies'))
+    transmitted_name = study_group.get_attr('transmittedStudies')
+    if transmitted_name is None:
+        transmitted_studies = None
+    else:
+        transmitted_studies = vDB.get_studies(transmitted_name)
 
     return {"denovoStudies": denovo_studies,
             "transmittedStudies": transmitted_studies}
