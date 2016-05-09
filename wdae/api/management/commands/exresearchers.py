@@ -5,6 +5,7 @@ Created on Jun 3, 2015
 '''
 from django.core.management.base import BaseCommand, CommandError
 
+
 class Command(BaseCommand):
     args = ''
     help = 'Creates example researchers.'
@@ -21,8 +22,7 @@ class Command(BaseCommand):
         u.researcher_id = '10020'
         u.set_password('paslubo')
         u.save()
-        
-        
+
         u, _ = User.objects.get_or_create(email='ivan.iossifov@gmail.com')
         u.is_staff = False
         u.is_active = True

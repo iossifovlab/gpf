@@ -14,13 +14,17 @@ class Researcher(models.Model):
     first_name = models.CharField(max_length='100')
     last_name = models.CharField(max_length='100')
     email = models.EmailField(unique=True)
-    unique_number = models.CharField(max_length='100', unique=True)
 
     def __str__(self):
         return self.first_name + ' ' + self.last_name + ' ' + self.email
 
     class Meta:
         db_table = 'researchers'
+
+
+class ResearcherId(models.Model):
+    owner = models.ForeignKey(Researcher)
+    researcher_id = models.CharField(max_length='100', unique=True)
 
 
 class VerificationPath(models.Model):
@@ -74,6 +78,7 @@ Creates and saves a User with the given email and password.
 
 
 class WdaeUser(AbstractBaseUser):
+    app_label = 'api'
     first_name = models.CharField(max_length='100')
     last_name = models.CharField(max_length='100')
     email = models.EmailField(unique=True)

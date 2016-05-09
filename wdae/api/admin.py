@@ -4,11 +4,13 @@ from models import WdaeUser, Researcher, VerificationPath
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
+
 class WdaeUserCreationForm(forms.ModelForm):
     """A form for creating new users. Includes all the required
     fields, plus a repeated password."""
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput)
+    password2 = forms.CharField(
+        label='Password confirmation', widget=forms.PasswordInput)
 
     class Meta:
         model = WdaeUser
@@ -30,6 +32,7 @@ class WdaeUserCreationForm(forms.ModelForm):
             user.save()
         return user
 
+
 class WdaeUserChangeForm(forms.ModelForm):
     """A form for updating users. Includes all the fields on
     the user, but replaces the password field with admin's
@@ -39,7 +42,8 @@ class WdaeUserChangeForm(forms.ModelForm):
 
     class Meta:
         model = WdaeUser
-        fields = ('email', 'password', 'is_active', 'is_staff', 'researcher_id')
+        fields = (
+            'email', 'password', 'is_active', 'is_staff', 'researcher_id')
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
@@ -68,7 +72,7 @@ class WdaeUserAdmin(UserAdmin):
         (None, {
             'classes': ('wide',),
             'fields': ('email', 'password1', 'password2', 'researcher_id')}
-        ),
+         ),
     )
     search_fields = ('email',)
     ordering = ('email',)

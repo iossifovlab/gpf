@@ -3,11 +3,12 @@ Created on May 25, 2015
 
 @author: lubo
 '''
-from api.models import WdaeUser, VerificationPath, Researcher
+from api.models import WdaeUser, VerificationPath, Researcher, ResearcherId
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework.test import APITestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+from pprint import pprint
 
 
 class Test(APITestCase):
@@ -54,10 +55,10 @@ class Test(APITestCase):
 
     def test_create_superuser(self):
         u = WdaeUser.objects.create(
-                email="iossifov@cshl.edu",
-                first_name="Ivan",
-                last_name="Iossifov",
-                researcher_id="1")
+            email="iossifov@cshl.edu",
+            first_name="Ivan",
+            last_name="Iossifov",
+            researcher_id="1")
         u.set_password("pasivan")
         u.is_staff = True
 
@@ -156,22 +157,26 @@ class SuperUserTestCase(APITestCase):
         self.assertEqual(user.id, u.id)
 
 
-class UserRegistrationTest(APITestCase):
+class ResearcherRegistrationTest(APITestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(UserRegistrationTest, cls).setUpClass()
+        super(ResearcherRegistrationTest, cls).setUpClass()
 
         cls.res = Researcher()
         cls.res.first_name = 'fname'
         cls.res.last_name = 'lname'
-        cls.res.unique_number = '11aa--bb'
         cls.res.email = 'fake@fake.com'
         cls.res.save()
 
+        cls.research_id = ResearcherId()
+        cls.research_id.researcher_id = '11aa--bb'
+        cls.research_id.owner = cls.res
+        cls.research_id.save()
+
     @classmethod
     def tearDownClass(cls):
-        super(UserRegistrationTest, cls).tearDownClass()
+        super(ResearcherRegistrationTest, cls).tearDownClass()
         cls.res.delete()
 
     def test_fail_register(self):
@@ -185,25 +190,91 @@ class UserRegistrationTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_successful_register(self):
-
+        [id1] = self.res.researcherid_set.all()
         data = {
             'first_name': self.res.first_name,
             'last_name': self.res.last_name,
-            'researcher_id': self.res.unique_number,
+            'researcher_id': id1.researcher_id,
             'email': self.res.email
+        }
+        pprint(data)
+
+        response = self.client.post('/api/users/register', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.data['researcher_id'], id1.researcher_id)
+        self.assertEqual(response.data['email'], self.res.email)
+
+
+class ResearcherWithTwoIdsRegistrationTest(APITestCase):
+
+    def setUp(self):
+        super(ResearcherWithTwoIdsRegistrationTest, self).setUp()
+
+        self.res = Researcher()
+        self.res.first_name = 'fname'
+        self.res.last_name = 'lname'
+        self.res.email = 'fake@fake.com'
+        self.res.save()
+
+        self.research_id1 = ResearcherId()
+        self.research_id1.researcher_id = '101.1'
+        self.research_id1.owner = self.res
+        self.research_id1.save()
+
+        self.research_id2 = ResearcherId()
+        self.research_id2.researcher_id = '101.2'
+        self.research_id2.owner = self.res
+        self.research_id2.save()
+
+    def tearDown(self):
+        super(ResearcherWithTwoIdsRegistrationTest, self).tearDown()
+        self.res.delete()
+        users = WdaeUser.objects.filter(email='fake@fake.com')
+        for u in users:
+            u.delete()
+
+    def test_successful_register1(self):
+        data = {
+            'first_name': 'fname',
+            'last_name': 'lname',
+            'researcher_id': '101.1',
+            'email': 'fake@fake.com',
         }
 
         response = self.client.post('/api/users/register', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
-            response.data['researcher_id'], self.res.unique_number)
-        self.assertEqual(response.data['email'], self.res.email)
+            response.data['researcher_id'], '101.1')
+        self.assertEqual(response.data['email'], 'fake@fake.com')
 
-    def test_query_variants_full_security(self):
-        pass
+        [user] = WdaeUser.objects.filter(email='fake@fake.com')
 
-    def test_query_variants_preview_full_security(self):
-        pass
+        self.assertEquals('fname', user.first_name)
+        self.assertEquals('lname', user.last_name)
+        self.assertEquals('fake@fake.com', user.email)
+        self.assertEquals('101.1', user.researcher_id)
+
+    def test_successful_register2(self):
+        data = {
+            'first_name': 'fname',
+            'last_name': 'lname',
+            'researcher_id': '101.2',
+            'email': 'fake@fake.com',
+        }
+
+        response = self.client.post('/api/users/register', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.data['researcher_id'], '101.2')
+        self.assertEqual(response.data['email'], 'fake@fake.com')
+
+        [user] = WdaeUser.objects.filter(email='fake@fake.com')
+
+        self.assertEquals('fname', user.first_name)
+        self.assertEquals('lname', user.last_name)
+        self.assertEquals('fake@fake.com', user.email)
+        self.assertEquals('101.2', user.researcher_id)
 
 
 class UserAuthenticationTest(APITestCase):

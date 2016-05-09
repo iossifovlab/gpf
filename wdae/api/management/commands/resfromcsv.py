@@ -5,6 +5,7 @@ from django.db.utils import IntegrityError
 
 from api.models import Researcher
 
+
 class Command(BaseCommand):
     args = '<file> <file> ...'
     help = 'Creates researchers from csv. Column names for the csv file - first name, last name, email and researcher_id.'
@@ -26,10 +27,11 @@ class Command(BaseCommand):
                         try:
                             res_instance.save()
                         except IntegrityError, i:
-                            self.stdout.write('Researcher {0} {1} {2} {3} already exists, skipped.' \
-                                             .format(res_instance.first_name, res_instance.last_name, \
-                                                     res_instance.email, res_instance.unique_number))
+                            self.stdout.write('Researcher {0} {1} {2} {3} already exists, skipped.'
+                                              .format(res_instance.first_name, res_instance.last_name,
+                                                      res_instance.email, res_instance.unique_number))
             except csv.Error:
-                raise CommandError('There was a problem while reading "%s"' % csv_file)
+                raise CommandError(
+                    'There was a problem while reading "%s"' % csv_file)
             except IOError:
                 raise CommandError('File "%s" not found' % csv_file)
