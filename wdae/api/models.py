@@ -7,8 +7,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
 from django.conf import settings
 
-EMAIL_VERIFICATION_PATH = '/static/variants/index.html#/users/validate/'
-
 
 class Researcher(models.Model):
     first_name = models.CharField(max_length='100')
@@ -150,14 +148,14 @@ class WdaeUser(AbstractBaseUser):
 def send_verif_email(user):
     email = _create_verif_email(
         settings.EMAIL_VERIFICATION_HOST,
-        EMAIL_VERIFICATION_PATH, str(user.verification_path.path))
+        settings.EMAIL_VERIFICATION_PATH, str(user.verification_path.path))
     user.email_user(email['subject'], email['message'])
 
 
 def send_reset_email(user):
     email = _create_reset_mail(
         settings.EMAIL_VERIFICATION_HOST,
-        EMAIL_VERIFICATION_PATH, str(user.verification_path))
+        settings.EMAIL_VERIFICATION_PATH, str(user.verification_path))
 
     user.email_user(email['subject'], email['message'])
 
