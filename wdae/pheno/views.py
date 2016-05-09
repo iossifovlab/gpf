@@ -195,3 +195,12 @@ class PhenoMeasurePartitionsView(views.APIView):
                "mid": {"count": len(mdf), "percent": len(mdf) / total},
                "right": {"count": len(rdf), "percent": len(rdf) / total}}
         return Response(res)
+
+
+class PhenoEffectTypeGroups(views.APIView):
+    effect_type_groups = ['LGDs', 'Nonsense', 'Frame-shift', 'Splice-site',
+                          'Missense',
+                          'CNV', 'CNV+', 'CNV-', 'Nonsynonymous']
+
+    def get(self, request):
+        return Response(self.effect_type_groups)

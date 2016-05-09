@@ -22,5 +22,8 @@ urlpatterns = [
     url(r'^/measure_histogram$',
         views.PhenoMeasureHistogramView.as_view(),
         name="measure_histogram"),
+    url(r'^/effect_type_groups$',
+        views.PhenoEffectTypeGroups.as_view(),
+        name="effect_type_groups"),
 
 ]
