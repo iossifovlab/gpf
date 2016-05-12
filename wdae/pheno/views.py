@@ -199,8 +199,22 @@ class PhenoMeasurePartitionsView(views.APIView):
 
 class PhenoEffectTypeGroups(views.APIView):
     effect_type_groups = ['LGDs', 'Nonsense', 'Frame-shift', 'Splice-site',
-                          'Missense',
-                          'CNV', 'CNV+', 'CNV-', 'Nonsynonymous']
+                          'Missense', 'Nonsynonymous', 'Synonymous',
+                          'CNV', 'CNV+', 'CNV-', ]
+
+    def get(self, request):
+        return Response(self.effect_type_groups)
+
+
+class PhenoEffectTypeGroupsGrouped(views.APIView):
+    effect_type_groups = {
+        'groups': [
+            ['LGDs', 'Nonsense', 'Frame-shift', 'Splice-site'],
+            ['Missense', 'Nonsynonymous', 'Synonymous'],
+            ['CNV', 'CNV+', 'CNV-', ]
+        ],
+        'defaults': ['LGDs', 'Missense', 'Synonymous', 'CNV'],
+    }
 
     def get(self, request):
         return Response(self.effect_type_groups)

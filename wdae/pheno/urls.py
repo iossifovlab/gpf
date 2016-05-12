@@ -25,5 +25,8 @@ urlpatterns = [
     url(r'^/effect_type_groups$',
         views.PhenoEffectTypeGroups.as_view(),
         name="effect_type_groups"),
+    url(r'^/effect_type_groups_grouped$',
+        views.PhenoEffectTypeGroupsGrouped.as_view(),
+        name="effect_type_groups_grouped"),
 
 ]
