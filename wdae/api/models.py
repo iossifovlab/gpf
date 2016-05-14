@@ -164,9 +164,10 @@ def send_reset_email(user):
 
 def _create_verif_email(host, path, verification_path):
     settings = {
-        'subject': 'Registration validation',
-        'initial_message': 'Hello. Follow this link to validate your account'
-        ' and to set your new password: ',
+        'subject': 'GPF: Registration validation',
+        'initial_message': 'Hello. Follow this link to validate '
+        'your account in GPF: Genotype and Phenotype in Families '
+        'and to set your new password: ',
         'host': host,
         'path': path,
         'verification_path': verification_path
@@ -177,8 +178,9 @@ def _create_verif_email(host, path, verification_path):
 
 def _create_reset_mail(host, path, verification_path):
     settings = {
-        'subject': 'Password reset',
-        'initial_message': 'Hello. To change your password '
+        'subject': 'GPF: Password reset',
+        'initial_message': 'Hello. To change your password in '
+        'GPF: Genotype and Phenotype in Families '
         'please follow this link: ',
         'host': host,
         'path': path,
