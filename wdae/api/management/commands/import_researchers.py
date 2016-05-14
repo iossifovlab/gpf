@@ -3,7 +3,6 @@ import csv
 from django.core.management.base import BaseCommand, CommandError
 
 from api.models import Researcher, ResearcherId
-from pprint import pprint
 
 
 class Command(BaseCommand):
@@ -20,7 +19,7 @@ class Command(BaseCommand):
                     resreader = csv.DictReader(csvfile)
 
                     for res in resreader:
-                        pprint(res)
+                        print("creating researcher:{}".format(res))
 
                         rid = res['Id']
                         email = res['Email']
@@ -28,6 +27,14 @@ class Command(BaseCommand):
                         res_instances = Researcher.objects.filter(email=email)
                         if len(res_instances) == 1:
                             res_instance = res_instances[0]
+                            researcher_ids = \
+                                res_instance.researcherid_set.all()
+                            researcher_id_set = set(
+                                [r.researcher_id for r in researcher_ids])
+                            if rid in researcher_id_set:
+                                print("researcher already exists: {}".format(
+                                    email))
+                                continue
                             res_id = ResearcherId()
                             res_id.researcher_id = rid
                             res_id.owner = res_instance
