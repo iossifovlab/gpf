@@ -13,6 +13,7 @@ import statsmodels.formula.api as sm
 from preloaded.register import Preload
 from query_prepare import prepare_denovo_studies
 from helpers.pvalue import colormap_value
+import precompute
 
 
 class Measures(Preload):
@@ -102,18 +103,12 @@ class Measures(Preload):
             result.append(r)
         return result
 
-    def _load_gender_all(self):
-        stds = prepare_denovo_studies({'denovoStudies': 'ALL SSC'})
-        return {fmid: pd.gender for st in stds
-                for fmid, fd in st.families.items()
-                for pd in fd.memberInOrder if pd.role == 'prb'}
- 
 #     def _load_gender_we(self):
 #         stds = prepare_denovo_studies({'denovoStudies': ['IossifovWE2014']})
 #         return {fmid: pd.gender for st in stds
 #                 for fmid, fd in st.families.items()
 #                 for pd in fd.memberInOrder if pd.role == 'prb'}
-# 
+#
 #     def _load_gender_cnv(self):
 #         stds = prepare_denovo_studies({'denovoStudies': ['LevyCNV2011']})
 #         return {fmid: pd.gender for st in stds
@@ -126,7 +121,9 @@ class Measures(Preload):
     def load(self):
         self.df = self._load_data()
         self.desc = self._load_desc()
-        self.gender_all = self._load_gender_all()
+        families_precompute = precompute.register.get('families_precompute')
+        self.probands_gender = families_precompute.probands_gender()
+        # self.probands_gender = self._load_gender_all()
 #         self.gender_we = self._load_gender_we()
 #         self.gender_cnv = self._load_gender_cnv()
 
@@ -177,7 +174,7 @@ class Measures(Preload):
         columns.extend([nm.measure, 'age', 'non_verbal_iq', nm.formula])
         yield tuple(columns)
 
-        for fid, gender in self.gender_all.items():
+        for fid, gender in self.probands_gender.items():
             if families_query is not None and fid not in families_query:
                 continue
             vals = nm.df[nm.df.family_id == int(fid)]
@@ -196,7 +193,7 @@ class Measures(Preload):
             for etg in effect_type_groups:
                 col = families_with_variants[
                     etg].get(fid, 0) \
-                    if fid in self.gender_all else np.NaN
+                    if fid in self.probands_gender else np.NaN
                 row.append(col)
 
             row.extend([m, a, nviq, v])

@@ -10,7 +10,8 @@ from DAE import phDB
 from families.counters import FamilyFilterCounters
 import precompute
 from reports.variants import CounterBase
-from api.default_ssc_study import get_ssc_denovo_studies
+from api.default_ssc_study import get_ssc_denovo_studies, get_ssc_all_studies
+from query_prepare import prepare_denovo_studies
 # from pprint import pprint
 
 
@@ -39,7 +40,8 @@ class FamiliesPrecompute(precompute.register.Precompute):
         result['families_counters'] = \
             zlib.compress(cPickle.dumps(self._families_counters))
         result['study_types'] = zlib.compress(cPickle.dumps(self._study_types))
-
+        result['probands_gender'] = zlib.compress(
+            cPickle.dumps(self._probands_gender))
         return result
 
     def deserialize(self, data):
@@ -53,6 +55,8 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._families_counters = \
             cPickle.loads(zlib.decompress(data['families_counters']))
         self._study_types = cPickle.loads(zlib.decompress(data['study_types']))
+        self._probands_gender = cPickle.loads(
+            zlib.decompress(data['probands_gender']))
 
     def _build_trios_and_quads(self):
         self._trios = {}
@@ -96,6 +100,13 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._study_types = list(stypes)
         self._study_types.sort()
 
+    def _build_proband_gender(self):
+        stds = get_ssc_denovo_studies()
+        self._probands_gender = {
+            fmid: pd.gender for st in stds
+            for fmid, fd in st.families.items()
+            for pd in fd.memberInOrder if pd.role == 'prb'}
+
     def precompute(self):
         self._siblings = {'M': set(),
                           'F': set()}
@@ -108,6 +119,7 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._build_family_buffer(studies)
 
         self._build_trios_and_quads()
+        self._build_proband_gender()
 
         parent_races = self._parents_race()
         for fid, children in self.families_buffer().items():
@@ -153,6 +165,10 @@ class FamiliesPrecompute(precompute.register.Precompute):
     def quads(self, study_type="ALL"):
         assert self._quads is not None
         return self._quads[study_type]
+
+    def probands_gender(self):
+        assert self._probands_gender is not None
+        return self._probands_gender
 
     @staticmethod
     def get_races():
