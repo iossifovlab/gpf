@@ -169,8 +169,10 @@ class PhenoMeasurePartitionsView(views.APIView):
     def post(self, request):
         data = request.data
 
-        assert "measure" in data
         assert self.measures is not None
+
+        if 'measure' not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         pheno_measure = data['measure']
 
