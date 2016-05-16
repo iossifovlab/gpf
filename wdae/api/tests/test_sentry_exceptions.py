@@ -85,6 +85,45 @@ class Tests(APITestCase):
         self.assertEquals(status.HTTP_200_OK, response.status_code)
 
     def test_gene_list_exception(self):
-        url = '/api/gene_set_list2?desc=true&filter=&gene_set=main&key=true&page_count=200'  # @IgnorePep8
+        # @IgnorePep8
+        url = '/api/gene_set_list2?' \
+            'desc=true&filter=&gene_set=main&key=true&page_count=200'
         response = self.client.get(url)
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+    def test_sentry_agre_with_rarity(self):
+        data = {
+            'denovoStudies': None,
+            'effectTypes': 'LGDs',
+            'families': 'All',
+            'familyIds': '',
+            'familyPrbGender': '',
+            'familyQuadTrio': '',
+            'familyRace': '',
+            'familySibGender': '',
+            'familyVerbalIqHi': '',
+            'familyVerbalIqLo': '',
+            'gene_set_phenotype': 'autism',
+            'genes': 'All',
+            'geneSet': '',
+            'geneSyms': '',
+            'geneTerm': '',
+            'geneTermFilter': '',
+            'geneWeight': '',
+            'geneWeightMax': '',
+            'geneWeightMin': '',
+            'inChild': 'All',
+            'max': '1.0',
+            'min': '1.0',
+            'popFrequencyMax': '',
+            'popFrequencyMin': '',
+            'rarity': 'ultraRare',
+            'transmittedStudies': 'AGRE433',
+            'variantTypes': 'All',
+        }
+        url = '/api/query_variants'
+#         response = self.client.post(url, data, format='json')
+#         self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+        response = self.client.post(url, data)
         self.assertEquals(status.HTTP_200_OK, response.status_code)

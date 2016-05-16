@@ -435,6 +435,7 @@ def prepare_TMM_ALL(data):
 
 def prepare_ultra_rare(data):
     if 'rarity' in data:
+        print(data['rarity'])
         if data['rarity'].strip() == 'ultraRare':
             return True
     elif 'popFrequencyMax' in data and data['popFrequencyMax'] == 'ultraRare':

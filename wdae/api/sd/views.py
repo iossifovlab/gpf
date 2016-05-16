@@ -5,14 +5,15 @@ Created on Jun 18, 2015
 '''
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from api.views import prepare_query_dict, build_effect_type_filter
+from api.views import build_effect_type_filter
 from helpers.logger import log_filter, LOGGER
 from query_variants import join_line
 from api.dae_query import prepare_summary
 from django.http.response import StreamingHttpResponse
 import itertools
 from rest_framework.parsers import JSONParser, FormParser
-from api.query.wdae_query_variants import wdae_query_wrapper
+from api.query.wdae_query_variants import wdae_query_wrapper, \
+    prepare_query_dict
 
 
 class SequencingDenovoPrepare(APIView):

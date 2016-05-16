@@ -29,6 +29,7 @@ def prepare_query_dict(data):
             value = str(val)
         if value == '' or value.lower() == 'none':
             continue
+        print("appending {}: {}".format(key, value))
         res.append((key, value))
 
     return dict(res)
