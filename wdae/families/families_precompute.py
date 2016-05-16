@@ -25,6 +25,7 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._quads = None
         self._families_buffer = None
         self._families_counters = None
+        self._probands_gender = None
 
     def serialize(self):
         result = {}

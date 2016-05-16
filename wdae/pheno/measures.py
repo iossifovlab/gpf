@@ -103,23 +103,22 @@ class Measures(Preload):
         return result
 
     def _load_gender_all(self):
-        stds = prepare_denovo_studies({'denovoStudies': ['IossifovWE2014',
-                                                         'LevyCNV2011']})
+        stds = prepare_denovo_studies({'denovoStudies': 'ALL SSC'})
         return {fmid: pd.gender for st in stds
                 for fmid, fd in st.families.items()
                 for pd in fd.memberInOrder if pd.role == 'prb'}
-
-    def _load_gender_we(self):
-        stds = prepare_denovo_studies({'denovoStudies': ['IossifovWE2014']})
-        return {fmid: pd.gender for st in stds
-                for fmid, fd in st.families.items()
-                for pd in fd.memberInOrder if pd.role == 'prb'}
-
-    def _load_gender_cnv(self):
-        stds = prepare_denovo_studies({'denovoStudies': ['LevyCNV2011']})
-        return {fmid: pd.gender for st in stds
-                for fmid, fd in st.families.items()
-                for pd in fd.memberInOrder if pd.role == 'prb'}
+ 
+#     def _load_gender_we(self):
+#         stds = prepare_denovo_studies({'denovoStudies': ['IossifovWE2014']})
+#         return {fmid: pd.gender for st in stds
+#                 for fmid, fd in st.families.items()
+#                 for pd in fd.memberInOrder if pd.role == 'prb'}
+# 
+#     def _load_gender_cnv(self):
+#         stds = prepare_denovo_studies({'denovoStudies': ['LevyCNV2011']})
+#         return {fmid: pd.gender for st in stds
+#                 for fmid, fd in st.families.items()
+#                 for pd in fd.memberInOrder if pd.role == 'prb'}
 
     def __init__(self):
         pass
@@ -128,8 +127,8 @@ class Measures(Preload):
         self.df = self._load_data()
         self.desc = self._load_desc()
         self.gender_all = self._load_gender_all()
-        self.gender_we = self._load_gender_we()
-        self.gender_cnv = self._load_gender_cnv()
+#         self.gender_we = self._load_gender_we()
+#         self.gender_cnv = self._load_gender_cnv()
 
         self.measures = {}
         for m in self.desc:
