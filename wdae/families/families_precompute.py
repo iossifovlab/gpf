@@ -10,9 +10,7 @@ from DAE import phDB
 from families.counters import FamilyFilterCounters
 import precompute
 from reports.variants import CounterBase
-from api.default_ssc_study import get_ssc_denovo_studies, get_ssc_all_studies
-from query_prepare import prepare_denovo_studies
-# from pprint import pprint
+from api.default_ssc_study import get_ssc_denovo_studies
 
 
 # from helpers.logger import LOGGER

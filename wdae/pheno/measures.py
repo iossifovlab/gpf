@@ -9,9 +9,7 @@ import numpy as np
 from django.conf import settings
 import pandas as pd
 import statsmodels.formula.api as sm
-# import statsmodels.api as sm
 from preloaded.register import Preload
-from query_prepare import prepare_denovo_studies
 from helpers.pvalue import colormap_value
 import precompute
 
@@ -103,18 +101,6 @@ class Measures(Preload):
             result.append(r)
         return result
 
-#     def _load_gender_we(self):
-#         stds = prepare_denovo_studies({'denovoStudies': ['IossifovWE2014']})
-#         return {fmid: pd.gender for st in stds
-#                 for fmid, fd in st.families.items()
-#                 for pd in fd.memberInOrder if pd.role == 'prb'}
-#
-#     def _load_gender_cnv(self):
-#         stds = prepare_denovo_studies({'denovoStudies': ['LevyCNV2011']})
-#         return {fmid: pd.gender for st in stds
-#                 for fmid, fd in st.families.items()
-#                 for pd in fd.memberInOrder if pd.role == 'prb'}
-
     def __init__(self):
         pass
 
@@ -123,9 +109,6 @@ class Measures(Preload):
         self.desc = self._load_desc()
         families_precompute = precompute.register.get('families_precompute')
         self.probands_gender = families_precompute.probands_gender()
-        # self.probands_gender = self._load_gender_all()
-#         self.gender_we = self._load_gender_we()
-#         self.gender_cnv = self._load_gender_cnv()
 
         self.measures = {}
         for m in self.desc:
