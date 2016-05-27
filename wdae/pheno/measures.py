@@ -13,7 +13,6 @@ from preloaded.register import Preload
 from helpers.pvalue import colormap_value
 import precompute
 import itertools
-from pprint import pprint
 
 
 class Measures(Preload):
@@ -118,12 +117,6 @@ class Measures(Preload):
         self.probands_gender.extend(
             zip(itertools.cycle(['F']),
                 self.families_precompute.probands('F')))
-
-        print("probands M: {}".format(
-            len(self.families_precompute.probands('M'))))
-        print("probands F: {}".format(
-            len(self.families_precompute.probands('F'))))
-
         self.measures = {}
         for m in self.desc:
             self.measures[m['measure']] = m
@@ -191,7 +184,6 @@ class Measures(Preload):
                 if fid in self.families_precompute.probands(gender):
                     col = families_with_variants[etg].get(fid, 0)
                 else:
-                    print("NaN fid: {}".format(fid))
                     col = np.NaN
                 row.append(col)
 

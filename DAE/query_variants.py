@@ -435,7 +435,6 @@ def prepare_TMM_ALL(data):
 
 def prepare_ultra_rare(data):
     if 'rarity' in data:
-        print(data['rarity'])
         if data['rarity'].strip() == 'ultraRare':
             return True
     elif 'popFrequencyMax' in data and data['popFrequencyMax'] == 'ultraRare':
@@ -583,7 +582,6 @@ def _dae_query_families_with_transmitted_variants(
             fams = study.get_families_with_transmitted_variants(
                 **transmitted_filters)
             result.update([f for f in fams])
-    print(result)
     return result
 
 
