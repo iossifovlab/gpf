@@ -36,7 +36,7 @@ class Test(APITestCase):
 
         data = response.data['data']
         self.assertEqual(310, self.pos_count('LGDs', data))
-        self.assertEqual(2044, self.neg_count('LGDs', data))
+        self.assertEqual(2045, self.neg_count('LGDs', data))
 
     def test_family_pheno_filter_families_count(self):
         measures = preloaded.register.get_register().get('pheno_measures')

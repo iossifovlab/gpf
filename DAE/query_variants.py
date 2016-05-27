@@ -604,8 +604,6 @@ def dae_query_families_with_variants(data):
     assert "geneSet" not in data
     assert "geneWeigth" not in data
 
-    LOGGER.info("dae_query_families_with_variants: %s", data)
-
     prepare_denovo_phenotype(data)
     prepare_denovo_study_type(data)
     prepare_gender_filter(data)

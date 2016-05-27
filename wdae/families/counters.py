@@ -24,6 +24,7 @@ class FamilyFilterCounters(object):
             if fid in seen:
                 continue
             seen.add(fid)
+            fam_prbs = 0
             for person in family.values():
                 # families_counter[person.role].add(fid)
                 families_counter[person.role] += 1
@@ -31,6 +32,10 @@ class FamilyFilterCounters(object):
                     sib_counter[person.gender] += 1
                 elif person.role == 'prb':
                     prb_counter[person.gender] += 1
+                    fam_prbs += 1
+            if fam_prbs > 1:
+                print("more than one proband in family {}: {}".format(
+                    fid, fam_prbs))
 
         result = {'autism': {'male': prb_counter['M'],
                              'female': prb_counter['F'],

@@ -54,14 +54,15 @@ class PhenoViewBase(views.APIView):
         return data
 
     def post(self, request):
+        LOGGER.info(log_filter(request, "pheno report request: " +
+                               str(request.data)))
+
         data = self.prepare_query_dict(request)
 
         if 'effectTypeGroups' in data:
             effect_type_groups = data['effectTypeGroups'].split(',')
         else:
             effect_type_groups = DEFAULT_EFFECT_TYPE_GROUPS
-
-        LOGGER.info(log_filter(request, "pheno report: " + str(data)))
 
         if 'phenoMeasure' not in data:
             LOGGER.error("phenoMeasure not found")
@@ -82,7 +83,8 @@ class PhenoViewBase(views.APIView):
 
         families_with_variants = family_pheno_query_variants(
             data, effect_type_groups)
-        pheno = measures.pheno_merge_data(families_with_variants, nm,
+        pheno = measures.pheno_merge_data(families_with_variants,
+                                          nm,
                                           effect_type_groups,
                                           families_query)
 

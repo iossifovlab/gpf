@@ -8,6 +8,7 @@ import precompute
 from families.counters import FamilyFilterCounters
 from families.families_query import prepare_family_query
 from rest_framework.response import Response
+from helpers.logger import log_filter, LOGGER
 
 
 class FamilyFilterCountersView(APIView):
@@ -18,6 +19,9 @@ class FamilyFilterCountersView(APIView):
 
     def post(self, request):
         data = request.data
+        LOGGER.info(log_filter(request, "family counters request: " +
+                               str(data)))
+
         study_type, data = prepare_family_query(data)
         if 'familyIds' not in data:
             families_counters = self.families_precompute.families_counters(

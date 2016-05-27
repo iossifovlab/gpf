@@ -68,6 +68,8 @@ def build_narray(ps, effect_type_groups):
     for p in ps:
         rows.append(tuple([e if e != 'NA' else np.NaN for e in p]))
 
+    print("number of rows: {}".format(len(rows)))
+
     columns = [('fid', 'S10'),
                ('gender', 'S10'), ]
     for effect in effect_type_groups:
@@ -81,6 +83,7 @@ def build_narray(ps, effect_type_groups):
 
     dtype = np.dtype(columns)
     data = np.array(rows, dtype=dtype)
+
     data = data[~np.isnan(data['value'])]
     return data
 
