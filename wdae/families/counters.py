@@ -31,8 +31,14 @@ class FamilyFilterCounters(object):
                 if person.role == 'sib':
                     sib_counter[person.gender] += 1
                 elif person.role == 'prb':
-                    prb_counter[person.gender] += 1
+                    if fam_prbs == 0:
+                        prb_counter[person.gender] += 1
+                    #     prev_person = person
+                    # else:
+                    #     print((prev_person.personId, prev_person.gender,
+                    #            person.personId, person.gender))
                     fam_prbs += 1
+
             if fam_prbs > 1:
                 print("more than one proband in family {}: {}".format(
                     fid, fam_prbs))

@@ -63,7 +63,7 @@ class Test(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.streaming_content
         self.assertIsNotNone(data)
-        self.assertEquals(2862, count_iterable(data))
+        self.assertEquals(2729, count_iterable(data))
 
 
 class PhenoMeasuresTest(APITestCase):

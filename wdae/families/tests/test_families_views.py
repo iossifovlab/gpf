@@ -59,8 +59,8 @@ class Test(APITestCase):
         data = response.data
 
         self.assertEquals(2867, data['autism']['families'])      # 2867
-        self.assertEquals(2477, data['autism']['male'])          # 2477
-        self.assertEquals(390, data['autism']['female'])         # 390
+        self.assertEquals(2471, data['autism']['male'])          # 2477
+        self.assertEquals(389, data['autism']['female'])         # 390
 
         self.assertEquals(2703, data['unaffected']['families'])  # 2703
         self.assertEquals(1285, data['unaffected']['male'])      # 1285
@@ -79,8 +79,8 @@ class Test(APITestCase):
         pprint(data)
 
         self.assertEquals(2763, data['autism']['families'])
-        self.assertEquals(2388, data['autism']['male'])
-        self.assertEquals(375, data['autism']['female'])
+        self.assertEquals(2382, data['autism']['male'])
+        self.assertEquals(374, data['autism']['female'])
 
         self.assertEquals(2607, data['unaffected']['families'])
         self.assertEquals(1232, data['unaffected']['male'])
@@ -99,8 +99,8 @@ class Test(APITestCase):
         pprint(data)
 
         self.assertEquals(2734, data['autism']['families'])
-        self.assertEquals(2362, data['autism']['male'])
-        self.assertEquals(372, data['autism']['female'])
+        self.assertEquals(2356, data['autism']['male'])
+        self.assertEquals(371, data['autism']['female'])
 
         self.assertEquals(2580, data['unaffected']['families'])
         self.assertEquals(1220, data['unaffected']['male'])

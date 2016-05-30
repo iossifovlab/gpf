@@ -123,19 +123,11 @@ class FamiliesPrecompute(precompute.register.Precompute):
         for fid, children in self.families_buffer().items():
             if fid in parent_races:
                 self._races[parent_races[fid]].add(fid)
-            prb_count = 0
             for ch in children.values():
                 if ch.role == 'prb':
                     self._probands[ch.gender].add(fid)
-                    prb_count += 1
                 elif ch.role == 'sib':
                     self._siblings[ch.gender].add(fid)
-#             if prb_count == 2:
-#                 print("family_id with 2 prb: {}".format(fid))
-#                 pprint(children)
-#             if prb_count == 0:
-#                 print("family_id with 0 prb: {}".format(fid))
-#                 pprint(children)
 
     def families_buffer(self, study_type="ALL"):
         return self._families_buffer[study_type]
