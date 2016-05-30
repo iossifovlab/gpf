@@ -95,7 +95,6 @@ class PhenoViewBase(views.APIView):
 class PhenoReportView(PhenoViewBase):
 
     def build_response(self, request, pheno, nm, effect_type_groups):
-        pheno.next()
         res = pheno_calc(pheno, effect_type_groups)
         response = {
             "data": res,
