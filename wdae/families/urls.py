@@ -10,5 +10,8 @@ urlpatterns = [
     url(r'^/counter$',
         views.FamilyFilterCountersView.as_view(),
         name="counter"),
+    url(r'^/studies$',
+        views.FamilyFilterStudies.as_view(),
+        name="family_studies"),
 
 ]

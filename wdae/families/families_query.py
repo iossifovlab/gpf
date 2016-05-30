@@ -43,6 +43,7 @@ def prepare_family_query(data):
     assert family_ids is None or isinstance(family_ids, set)
 
     study_type = prepare_family_study_type(data)
+
     family_ids = prepare_family_trio_quad_query(data, study_type, family_ids)
     assert family_ids is None or isinstance(family_ids, set)
 

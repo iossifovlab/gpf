@@ -9,6 +9,7 @@ from families.counters import FamilyFilterCounters
 from families.families_query import prepare_family_query
 from rest_framework.response import Response
 from helpers.logger import log_filter, LOGGER
+from api.default_ssc_study import get_ssc_denovo
 
 
 class FamilyFilterCountersView(APIView):
@@ -37,3 +38,8 @@ class FamilyFilterCountersView(APIView):
         result = self.counter.count(family_ids)
 
         return Response(result)
+
+
+class FamilyFilterStudies(APIView):
+    def get(self, request):
+        return Response(get_ssc_denovo().split(','))
