@@ -41,4 +41,4 @@ class Test(APITestCase):
         pprint(res)
 
         self.assertIsNotNone(res)
-        self.assertEquals(2381, res['autism']['male'])
+        self.assertEquals(2382, res['autism']['male'])
