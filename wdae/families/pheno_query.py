@@ -38,3 +38,24 @@ def prepare_pheno_measure_query(data, family_ids=None):
     assert isinstance(result, set)
 
     return merge_family_ids(result, family_ids)
+
+
+def prepare_base_pheno_measure_query(data, family_ids=None):
+    if 'phenoMeasure' not in data:
+        return family_ids
+
+    register = preloaded.register.get_register()
+    assert register.has_key('pheno_measures')  # @IgnorePep8
+
+    pheno_measure = data['phenoMeasure']
+
+    measures = register.get('pheno_measures')
+    assert measures.has_measure(pheno_measure)
+
+    result = measures.get_measure_families(
+        pheno_measure)
+
+    result = set([str(fid) for fid in result])
+    assert isinstance(result, set)
+
+    return merge_family_ids(result, family_ids)
