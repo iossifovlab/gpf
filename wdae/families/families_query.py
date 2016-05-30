@@ -43,9 +43,8 @@ def prepare_family_query(data):
     family_ids = prepare_family_sib_gender_query(data, family_ids)
     assert family_ids is None or isinstance(family_ids, set)
 
-    family_ids = prepare_study_family_filter(data, family_ids)
-
     study_type = prepare_family_study_type(data)
+    family_ids = prepare_study_family_filter(data, study_type, family_ids)
 
     family_ids = prepare_family_trio_quad_query(data, study_type, family_ids)
     assert family_ids is None or isinstance(family_ids, set)

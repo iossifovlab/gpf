@@ -7,7 +7,7 @@ from api.default_ssc_study import get_ssc_denovo_studies
 from families.merge_query import merge_family_ids
 
 
-def prepare_study_family_filter(data, family_ids=None):
+def prepare_study_family_filter(data, study_type, family_ids=None):
     if 'familyStudy' not in data:
         return family_ids
 
@@ -19,6 +19,8 @@ def prepare_study_family_filter(data, family_ids=None):
             break
 
     assert study is not None
-
-    return merge_family_ids(set(study.families.keys()),
-                            family_ids)
+    if study_type == 'ALL' or study_type == study.get_attr('study.type'):
+        return merge_family_ids(set(study.families.keys()),
+                                family_ids)
+    else:
+        return set()

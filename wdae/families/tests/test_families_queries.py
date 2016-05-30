@@ -4,7 +4,7 @@ Created on Feb 29, 2016
 @author: lubo
 '''
 import unittest
-from families.families_query import prepare_family_query
+from families.families_query import prepare_family_query, parse_family_ids
 from DAE import vDB
 
 
@@ -122,7 +122,7 @@ class Test(unittest.TestCase):
         self.assertEquals("WE", fst)
 
         self.assertIn('familyIds', data)
-        family_ids1 = set(data['familyIds'].split(','))
+        family_ids1 = parse_family_ids(data)
 
         study = vDB.get_study('IossifovWE2014')
         family_ids2 = set(study.families.keys())
@@ -135,9 +135,9 @@ class Test(unittest.TestCase):
         }
 
         fst, data = prepare_family_query(data)
-        self.assertEquals("WE", fst)
+        self.assertEquals("CNV", fst)
 
         self.assertIn('familyIds', data)
-        family_ids1 = set(data['familyIds'].split(','))
+        family_ids = parse_family_ids(data)
 
-        self.assertEquals(0, len(family_ids1))
+        self.assertIsNone(family_ids)
