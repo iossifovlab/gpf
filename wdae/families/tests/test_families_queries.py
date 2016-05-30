@@ -5,6 +5,7 @@ Created on Feb 29, 2016
 '''
 import unittest
 from families.families_query import prepare_family_query
+from DAE import vDB
 
 
 class Test(unittest.TestCase):
@@ -110,3 +111,33 @@ class Test(unittest.TestCase):
 
         families = data['familyIds'].split(',')
         self.assertEqual(6, len(families))
+
+    def test_combined_family_study_type_and_study(self):
+        data = {
+            'familyStudyType': 'WE',
+            'familyStudy': 'IossifovWE2014',
+        }
+
+        fst, data = prepare_family_query(data)
+        self.assertEquals("WE", fst)
+
+        self.assertIn('familyIds', data)
+        family_ids1 = set(data['familyIds'].split(','))
+
+        study = vDB.get_study('IossifovWE2014')
+        family_ids2 = set(study.families.keys())
+        self.assertEquals(0, len(family_ids1.difference(family_ids2)))
+
+    def test_combined_family_study_type_and_study_cnv(self):
+        data = {
+            'familyStudyType': 'CNV',
+            'familyStudy': 'IossifovWE2014',
+        }
+
+        fst, data = prepare_family_query(data)
+        self.assertEquals("WE", fst)
+
+        self.assertIn('familyIds', data)
+        family_ids1 = set(data['familyIds'].split(','))
+
+        self.assertEquals(0, len(family_ids1))

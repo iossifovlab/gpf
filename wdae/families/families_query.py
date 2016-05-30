@@ -10,6 +10,7 @@ from families.gender_query import prepare_family_prb_gender_query,\
 from families.trios_quad_query import prepare_family_trio_quad_query
 from families.race_query import prepare_family_race_query
 from families.study_type_query import prepare_family_study_type
+from families.study_query import prepare_study_family_filter
 
 
 def parse_family_ids(data):
@@ -41,6 +42,8 @@ def prepare_family_query(data):
 
     family_ids = prepare_family_sib_gender_query(data, family_ids)
     assert family_ids is None or isinstance(family_ids, set)
+
+    family_ids = prepare_study_family_filter(data, family_ids)
 
     study_type = prepare_family_study_type(data)
 
