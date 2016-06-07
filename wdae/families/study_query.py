@@ -18,6 +18,9 @@ def prepare_study_family_filter(data, study_type, family_ids=None):
             study = st
             break
 
+    if study is None:
+        return family_ids
+
     assert study is not None
     if study_type == 'ALL' or study_type == study.get_attr('study.type'):
         return merge_family_ids(set(study.families.keys()),
