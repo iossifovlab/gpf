@@ -115,7 +115,7 @@ class Test(unittest.TestCase):
     def test_combined_family_study_type_and_study(self):
         data = {
             'familyStudyType': 'WE',
-            'familyStudy': 'IossifovWE2014',
+            'familyStudies': 'IossifovWE2014',
         }
 
         fst, data = prepare_family_query(data)
@@ -131,7 +131,7 @@ class Test(unittest.TestCase):
     def test_combined_family_study_type_and_study_cnv(self):
         data = {
             'familyStudyType': 'CNV',
-            'familyStudy': 'IossifovWE2014',
+            'familyStudies': 'IossifovWE2014',
         }
 
         fst, data = prepare_family_query(data)

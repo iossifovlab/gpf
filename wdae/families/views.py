@@ -35,6 +35,7 @@ class FamilyFilterCountersView(APIView):
         self.counter = FamilyFilterCounters(families_buffer)
 
         family_ids = data['familyIds'].split(',')
+        print(family_ids)
         result = self.counter.count(family_ids)
 
         return Response(result)

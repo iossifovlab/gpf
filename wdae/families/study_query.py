@@ -8,10 +8,10 @@ from families.merge_query import merge_family_ids
 
 
 def prepare_study_family_filter(data, study_type, family_ids=None):
-    if 'familyStudy' not in data:
+    if 'familyStudies' not in data:
         return family_ids
 
-    study_name = data['familyStudy']
+    study_name = data['familyStudies']
     study = None
     for st in get_ssc_denovo_studies():
         if st.name == study_name:
