@@ -41,5 +41,8 @@ class FamilyFilterCountersView(APIView):
 
 
 class FamilyFilterStudies(APIView):
+
     def get(self, request):
-        return Response(get_ssc_denovo().split(','))
+        result = ["All"]
+        result.extend(get_ssc_denovo().split(','))
+        return Response(result)
