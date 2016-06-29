@@ -130,7 +130,7 @@ class Measures(Preload):
     def get_measure_df(self, measure):
         if measure not in self.measures:
             raise ValueError("unsupported phenotype measure")
-        cols = ['family_id',
+        cols = ['family_id', 'individual',
                 'age', 'non_verbal_iq', 'verbal_iq']
         if measure not in cols:
             cols.append(measure)
@@ -140,10 +140,9 @@ class Measures(Preload):
         res_df = df.dropna()
         return res_df
 
-    def get_measure_families(self, measure, mmin=None, mmax=None):
+    def _select_measure_df(self, measure, mmin, mmax):
         df = self.get_measure_df(measure)
         m = df[measure]
-
         selected = None
         if mmin is not None and mmax is not None:
             selected = df[np.logical_and(m >= mmin, m <= mmax)]
@@ -153,7 +152,15 @@ class Measures(Preload):
             selected = df[m <= mmax]
         else:
             selected = df
+        return selected
+
+    def get_measure_families(self, measure, mmin=None, mmax=None):
+        selected = self._select_measure_df(measure, mmin, mmax)
         return selected['family_id'].values
+
+    def get_measure_probands(self, measure, mmin=None, mmax=None):
+        selected = self._select_measure_df(measure, mmin, mmax)
+        return selected['individual'].values
 
     def pheno_merge_data(self, families_with_variants,
                          nm,
