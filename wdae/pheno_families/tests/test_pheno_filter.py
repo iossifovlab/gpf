@@ -42,9 +42,8 @@ class PhenoStudyFilterTest(unittest.TestCase):
         self.assertEquals(858, len(probands))
 
     def test_get_matching_probands_by_bad_study_name(self):
-        self.assertRaises(
-            AssertionError,
-            self.study_filters.get_matching_probands_by_study, "ala bala")
+        with self.assertRaises(AssertionError):
+            self.study_filters.get_matching_probands_by_study("ala bala")
 
     def test_get_matching_probands_by_study_name(self):
         probands = self.study_filters.get_matching_probands_by_study(
