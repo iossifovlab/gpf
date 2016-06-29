@@ -53,5 +53,6 @@ class PhenoRaceFilter(object):
     from the selected ethnicity (parents should be found through the family
     data from the phenotypic database.
     '''
+
     def __init__(self):
         pass
