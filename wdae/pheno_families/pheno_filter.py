@@ -6,6 +6,7 @@ Created on Jun 29, 2016
 import preloaded
 from api.default_ssc_study import get_ssc_denovo_studies, get_ssc_denovo
 from DAE import vDB
+import precompute
 
 
 class PhenoMeasureFilters(object):
@@ -88,4 +89,29 @@ class PhenoRaceFilter(object):
     '''
 
     def __init__(self):
-        pass
+        self.families_precompute = precompute.register.get(
+            'families_precompute')
+
+    @staticmethod
+    def get_races():
+        return set(['african-amer',
+                    'asian',
+                    'more-than-one-race',
+                    'native-american',
+                    'native-hawaiian',
+                    'white',
+                    'other',
+                    'not-specified'])
+
+    @staticmethod
+    def strip_proband_id(proband_id):
+        return proband_id.split('.')[0]
+
+    def get_matching_families_by_race(self, race):
+        family_ids = set(self.families_precompute.race(race))
+        return family_ids
+
+    def filter_matching_by_race(self, race, probands):
+        family_ids = self.get_matching_families_by_race(race)
+        res = [p for p in probands if self.strip_proband_id(p) in family_ids]
+        return res
