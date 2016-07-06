@@ -48,7 +48,7 @@ class PhenoStudyFilter(object):
     that are not included in any of the studies.
     '''
 
-    STUDY_TYPES = set(['all', 'we', 'tg', 'cnv'])
+    STUDY_TYPES = set(['we', 'tg', 'cnv'])
     STUDIES = get_ssc_denovo_studies()
     STUDY_NAMES = set(get_ssc_denovo().split(','))
 

@@ -11,7 +11,7 @@ from api.query.wdae_query_variants import prepare_query_dict
 from api.default_ssc_study import get_ssc_denovo
 
 
-class PhenoFamilyView(APIView):
+class PhenoFamilyBase(object):
 
     def __init__(self):
         self.pheno_measure_filter = PhenoMeasureFilters()
@@ -58,7 +58,7 @@ class PhenoFamilyView(APIView):
             raise ValueError("bad race param: {}".format(race))
         return race
 
-    def get_family_studies_param(self, data):
+    def get_study_name_param(self, data):
         if 'familyStudies' not in data:
             return None
 
@@ -66,6 +66,18 @@ class PhenoFamilyView(APIView):
         if study_name not in get_ssc_denovo():
             return None
         return study_name
+
+    def get_study_type_params(self, data):
+        if 'familyStudyType' not in data:
+            return None
+
+        study_type = data['familyStudyType']
+        del data['familyStudyType']
+
+        study_type = study_type.lower()
+        if study_type in PhenoStudyFilter.STUDY_TYPES:
+            return study_type
+        return None
 
     def get_family_ids(self, data):
         if 'familyIds' in data:
@@ -96,6 +108,17 @@ class PhenoFamilyView(APIView):
             probands = self.pheno_measure_filter.filter_matching_probands(
                 probands, *family_pheno_measure)
 
+        study_type = self.get_study_type_params(data)
+        if study_type is not None:
+            probands = self.study_filter.\
+                filter_matching_probands_by_study_type(
+                    probands, study_type)
+
+        study_name = self.get_study_name_param(data)
+        if study_name is not None:
+            probands = self.study_filter.filter_matching_probands_by_study(
+                probands, study_name)
+
         family_race = self.get_family_race_params(data)
         if family_race is not None:
             probands = self.race_filter.filter_matching_by_race(
@@ -103,5 +126,8 @@ class PhenoFamilyView(APIView):
 
         return FamilyFilter.probands_to_families(probands)
 
-    def post(self, request):
-        pass
+
+class PhenoFamilyCountersView(APIView, PhenoFamilyBase):
+
+    def __init__(self):
+        PhenoFamilyBase.__init__(self)
