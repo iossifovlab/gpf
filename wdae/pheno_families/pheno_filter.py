@@ -94,7 +94,26 @@ class PhenoStudyFilter(object):
         return [p for p in probands if p in filter_probands]
 
 
-class PhenoRaceFilter(object):
+class FamilyFilter(object):
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def strip_proband_id(proband_id):
+        return proband_id.split('.')[0]
+
+    @staticmethod
+    def filter_by_family_ids(family_ids, probands):
+        return [p for p in probands
+                if FamilyFilter.strip_proband_id(p) in family_ids]
+
+    @staticmethod
+    def probands_to_families(probands):
+        return [FamilyFilter.strip_proband_id(p) for p in probands]
+
+
+class PhenoRaceFilter(FamilyFilter):
     '''
     If ethnicity is selected filter our children whose parents are not
     from the selected ethnicity (parents should be found through the family
@@ -116,16 +135,10 @@ class PhenoRaceFilter(object):
                     'other',
                     'not-specified'])
 
-    @staticmethod
-    def strip_proband_id(proband_id):
-        return proband_id.split('.')[0]
-
     def get_matching_families_by_race(self, race):
         family_ids = set(self.families_precompute.race(race))
         return family_ids
 
     def filter_matching_by_race(self, race, probands):
         filter_familys = self.get_matching_families_by_race(race)
-        res = [p for p in probands
-               if self.strip_proband_id(p) in filter_familys]
-        return res
+        return self.filter_by_family_ids(filter_familys, probands)
