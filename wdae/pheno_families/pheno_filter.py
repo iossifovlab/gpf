@@ -84,6 +84,10 @@ class PhenoStudyFilter(object):
         study_probands = self.get_matching_probands_by_study(study_name)
         return [p for p in probands if p in study_probands]
 
+    def filter_matching_probands_by_study_type(self, study_type, probands):
+        stype_probands = self.get_matching_probands_by_study_type(study_type)
+        return [p for p in probands if p in stype_probands]
+
 
 class PhenoRaceFilter(object):
     '''

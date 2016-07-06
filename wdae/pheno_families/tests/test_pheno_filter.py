@@ -65,6 +65,13 @@ class PhenoStudyFilterTest(unittest.TestCase):
             "LevyCNV2011", prbs2)
         self.assertEquals(771, len(prbs))
 
+    def test_filter_matching_probands_by_study_type(self):
+        prbs1 = self.study_filters.get_matching_probands_by_study(
+            "LevyCNV2011")
+        prbs = self.study_filters.filter_matching_probands_by_study_type(
+            "TG", prbs1)
+        self.assertEquals(768, len(prbs))
+
 
 class PhenoRaceFilterTest(unittest.TestCase):
 
