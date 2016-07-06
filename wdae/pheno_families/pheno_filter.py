@@ -86,12 +86,12 @@ class PhenoStudyFilter(object):
         return self._study_types
 
     def filter_matching_probands_by_study(self, probands, study_name):
-        study_probands = self.get_matching_probands_by_study(study_name)
-        return [p for p in probands if p in study_probands]
+        filter_probands = self.get_matching_probands_by_study(study_name)
+        return [p for p in probands if p in filter_probands]
 
     def filter_matching_probands_by_study_type(self, probands, study_type):
-        stype_probands = self.get_matching_probands_by_study_type(study_type)
-        return [p for p in probands if p in stype_probands]
+        filter_probands = self.get_matching_probands_by_study_type(study_type)
+        return [p for p in probands if p in filter_probands]
 
 
 class PhenoRaceFilter(object):
@@ -125,6 +125,6 @@ class PhenoRaceFilter(object):
         return family_ids
 
     def filter_matching_by_race(self, race, probands):
-        family_ids = self.get_matching_families_by_race(race)
-        res = [p for p in probands if self.strip_proband_id(p) in family_ids]
+        filter_familys = self.get_matching_families_by_race(race)
+        res = [p for p in probands if self.strip_proband_id(p) in filter_familys]
         return res
