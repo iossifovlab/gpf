@@ -38,7 +38,8 @@ class PhenoMeasureFilters(object):
 
     def filter_matching_probands(self, probands, pheno_measure,
                                  mmin=None, mmax=None):
-        pass
+        filter_probands = self.get_matching_probands(pheno_measure, mmin, mmax)
+        return [p for p in probands if p in filter_probands]
 
 
 class PhenoStudyFilter(object):
