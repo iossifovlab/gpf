@@ -126,5 +126,6 @@ class PhenoRaceFilter(object):
 
     def filter_matching_by_race(self, race, probands):
         filter_familys = self.get_matching_families_by_race(race)
-        res = [p for p in probands if self.strip_proband_id(p) in filter_familys]
+        res = [p for p in probands
+               if self.strip_proband_id(p) in filter_familys]
         return res
