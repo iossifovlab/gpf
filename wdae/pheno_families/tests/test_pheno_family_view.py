@@ -26,8 +26,9 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'phenoMeasure': 'non_verbal_iq',
             'familyPhenoMeasure': 'non_verbal_iq',
             'familyPhenoMeasureMin': 9,
-            'familyPhenoMeasureMax': 10,
+            'familyPhenoMeasureMax': 15,
         }
 
         family_ids = self.pheno_family_view.prepare(data)
-        self.assertEquals(1, len(family_ids))
+        self.assertEquals(4, len(family_ids))
+        # ['14525', '13830', '13952', '13529']
