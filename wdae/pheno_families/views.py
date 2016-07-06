@@ -5,10 +5,13 @@ Created on Jul 6, 2016
 '''
 from rest_framework.views import APIView
 from pheno_families.pheno_filter import PhenoMeasureFilters, PhenoStudyFilter,\
-    PhenoRaceFilter, FamilyFilter
+    PhenoRaceFilter
 import preloaded
 from api.query.wdae_query_variants import prepare_query_dict
 from api.default_ssc_study import get_ssc_denovo
+from helpers.logger import log_filter, LOGGER
+from rest_framework.response import Response
+import precompute
 
 
 class PhenoFamilyBase(object):
@@ -94,8 +97,6 @@ class PhenoFamilyBase(object):
         return None
 
     def prepare(self, data):
-        data = prepare_query_dict(data)
-
         base_measure = self.get_base_pheno_measure_params(data)
         if base_measure is None:
             raise ValueError("base pheno measure not found in request")
@@ -124,10 +125,41 @@ class PhenoFamilyBase(object):
             probands = self.race_filter.filter_matching_by_race(
                 family_race, probands)
 
-        return FamilyFilter.probands_to_families(probands)
+        return probands
 
 
 class PhenoFamilyCountersView(APIView, PhenoFamilyBase):
 
     def __init__(self):
         PhenoFamilyBase.__init__(self)
+        self.pheno_families_precompute = precompute.register.get(
+            'pheno_families_precompute')
+
+    def probands_counters(self, probands):
+        prbs = set(probands)
+        male = prbs & self.pheno_families_precompute.probands('M')
+        female = prbs & self.pheno_families_precompute.probands('F')
+        return {
+            'autism': {
+                'families': len(probands),
+                'male': len(male),
+                'female': len(female),
+            },
+            'unaffected': {
+                'families': 0,
+                'male': 0,
+                'female': 0,
+            }
+        }
+
+    def post(self, request):
+        data = prepare_query_dict(request.data)
+        LOGGER.info(log_filter(
+            request, "family counters request: " +
+            str(data)))
+
+        probands = self.prepare(data)
+        result = self.probands_counters(probands)
+        print(result)
+
+        return Response(result)

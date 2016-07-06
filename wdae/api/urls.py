@@ -64,7 +64,7 @@ urlpatterns = patterns(
     url(r'^v2/pheno_reports', include('pheno.urls')),
     url(r'^v2/gene_weights', include('gene_weights.urls')),
     url(r'^v2/families', include('families.urls')),
-    url(r'^v2/ssc_pheno_families', include('families.urls')),
+    url(r'^v2/ssc_pheno_families', include('pheno_families.urls')),
     url(r'^v2/ssc_dataset_families', include('families.urls')),
 )
 
