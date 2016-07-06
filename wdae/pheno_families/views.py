@@ -55,7 +55,7 @@ class PhenoFamilyView(APIView):
 
         race = race.lower()
         if race not in PhenoRaceFilter.get_races():
-            return None
+            raise ValueError("bad race param: {}".format(race))
         return race
 
     def get_family_studies_param(self, data):
@@ -95,6 +95,11 @@ class PhenoFamilyView(APIView):
         if family_pheno_measure is not None:
             probands = self.pheno_measure_filter.filter_matching_probands(
                 probands, *family_pheno_measure)
+
+        family_race = self.get_family_race_params(data)
+        if family_race is not None:
+            probands = self.race_filter.filter_matching_by_race(
+                family_race, probands)
 
         return FamilyFilter.probands_to_families(probands)
 

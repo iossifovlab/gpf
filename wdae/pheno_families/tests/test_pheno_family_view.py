@@ -32,3 +32,12 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
         family_ids = self.pheno_family_view.prepare(data)
         self.assertEquals(4, len(family_ids))
         # ['14525', '13830', '13952', '13529']
+
+    def test_prepare_family_race(self):
+        data = {
+            'phenoMeasure': 'non_verbal_iq',
+            'familyRace': 'other',
+        }
+
+        family_ids = self.pheno_family_view.prepare(data)
+        self.assertEquals(71, len(family_ids))
