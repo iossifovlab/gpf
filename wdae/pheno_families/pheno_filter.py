@@ -36,6 +36,10 @@ class PhenoMeasureFilters(object):
         '''
         return set([])
 
+    def filter_matching_probands(self, probands, pheno_measure,
+                                 mmin=None, mmax=None):
+        pass
+
 
 class PhenoStudyFilter(object):
     '''
@@ -80,11 +84,11 @@ class PhenoStudyFilter(object):
         self._study_types.sort()
         return self._study_types
 
-    def filter_matching_probands_by_study(self, study_name, probands):
+    def filter_matching_probands_by_study(self, probands, study_name):
         study_probands = self.get_matching_probands_by_study(study_name)
         return [p for p in probands if p in study_probands]
 
-    def filter_matching_probands_by_study_type(self, study_type, probands):
+    def filter_matching_probands_by_study_type(self, probands, study_type):
         stype_probands = self.get_matching_probands_by_study_type(study_type)
         return [p for p in probands if p in stype_probands]
 
