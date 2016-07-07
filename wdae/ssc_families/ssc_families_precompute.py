@@ -99,7 +99,7 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
                 self._build_quads(studies_by_type)
 
     def quads(self, study='all'):
-        return self._quads[study].keys()
+        return set(self._quads[study].keys())
 
     def mismatched_quads(self, study='all'):
-        return self._mismatched[study].keys()
+        return set(self._mismatched[study].keys())
