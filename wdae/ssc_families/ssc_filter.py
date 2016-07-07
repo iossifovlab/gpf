@@ -94,4 +94,15 @@ class QuadFamiliesFilter(object):
 
 
 class SSCFamiliesGenderFilter(object):
-    pass
+
+    def __init__(self):
+        self.ssc_families_precompute = precompute.register.get(
+            'ssc_families_precompute')
+
+    def filter_matching_probands(self, families, gender):
+        filter_families = self.ssc_families_precompute.probands(gender)
+        return [f for f in families if f in filter_families]
+
+    def filter_matching_siblings(self, families, gender):
+        filter_families = self.ssc_families_precompute.siblings(gender)
+        return [f for f in families if f in filter_families]

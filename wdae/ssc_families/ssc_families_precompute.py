@@ -125,3 +125,9 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
 
     def mismatched_quads(self, study='all'):
         return set(self._mismatched[study].keys())
+
+    def probands(self, gender):
+        return self._probands[gender]
+
+    def siblings(self, gender):
+        return self._siblings[gender]
