@@ -96,7 +96,7 @@ class PhenoFamilyBase(object):
                     return family_ids
         return None
 
-    def prepare(self, data):
+    def prepare_probands(self, data):
         base_measure = self.get_base_pheno_measure_params(data)
         if base_measure is None:
             raise ValueError("base pheno measure not found in request")
@@ -158,8 +158,6 @@ class PhenoFamilyCountersView(APIView, PhenoFamilyBase):
             request, "family counters request: " +
             str(data)))
 
-        probands = self.prepare(data)
+        probands = self.prepare_probands(data)
         result = self.probands_counters(probands)
-        print(result)
-
         return Response(result)

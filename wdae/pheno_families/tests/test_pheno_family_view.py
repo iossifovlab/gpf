@@ -18,7 +18,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'phenoMeasure': 'non_verbal_iq',
         }
 
-        family_ids = self.pheno_family_view.prepare(data)
+        family_ids = self.pheno_family_view.prepare_probands(data)
         self.assertEquals(2756, len(family_ids))
 
     def test_prepare_family_pheno_measure(self):
@@ -29,7 +29,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyPhenoMeasureMax': 15,
         }
 
-        family_ids = self.pheno_family_view.prepare(data)
+        family_ids = self.pheno_family_view.prepare_probands(data)
         self.assertEquals(4, len(family_ids))
         # ['14525', '13830', '13952', '13529']
 
@@ -39,7 +39,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyRace': 'other',
         }
 
-        family_ids = self.pheno_family_view.prepare(data)
+        family_ids = self.pheno_family_view.prepare_probands(data)
         self.assertEquals(71, len(family_ids))
 
     def test_prepare_study_type_all(self):
@@ -48,7 +48,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyStudyType': 'ALL',
         }
 
-        family_ids = self.pheno_family_view.prepare(data)
+        family_ids = self.pheno_family_view.prepare_probands(data)
         self.assertEquals(2756, len(family_ids))
 
     def test_prepare_study_type_cnv(self):
@@ -57,7 +57,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyStudyType': 'CNV',
         }
 
-        family_ids = self.pheno_family_view.prepare(data)
+        family_ids = self.pheno_family_view.prepare_probands(data)
         self.assertEquals(771, len(family_ids))
 
 
@@ -74,5 +74,5 @@ class PhenoFamilyCountersViewTestCase(unittest.TestCase):
             'familyStudyType': 'CNV',
         }
 
-        family_ids = self.pheno_family_counters_view.prepare(data)
+        family_ids = self.pheno_family_counters_view.prepare_probands(data)
         self.assertEquals(771, len(family_ids))
