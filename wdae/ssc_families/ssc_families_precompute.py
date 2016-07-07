@@ -52,27 +52,31 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
         return ch1.role == 'prb' and ch2.role == 'sib'
 
     def _build_quads(self):
-        self._quads = {}
-        self._mismatched_quads = {}
+        quads = {}
+        mismatched_quads = {}
 
         studies = get_ssc_denovo_studies()
         for st in studies:
             for fid, fam in st.families.items():
-                if fid in self._mismatched_quads:
-                    self._mismatched_quads[fid].append(fam)
-                elif fid in self._quads:
-                    prev = self._quads[fid]
+                if fid in mismatched_quads:
+                    mismatched_quads[fid].append(fam)
+                elif fid in quads:
+                    prev = quads[fid]
                     if not self._match_quad_families(fam, prev):
-                        self._mismatched_quads[fid] = [prev, fam]
-                        del self._quads[fid]
+                        mismatched_quads[fid] = [prev, fam]
+                        del quads[fid]
                 elif self._is_quad_family(fam):
-                    self._quads[fid] = fam
+                    quads[fid] = fam
+        return quads, mismatched_quads
 
     def precompute(self):
-        self._build_quads()
+        self._quads = {}
+        self._mismatched_quads = {}
 
-    def quads(self):
-        return self._quads.keys()
+        self._quads['all'], self._mismatched_quads['all'] = self._build_quads()
 
-    def mismatched_quads(self):
-        return self._mismatched_quads.keys()
+    def quads(self, study='all'):
+        return self._quads[study].keys()
+
+    def mismatched_quads(self, study='all'):
+        return self._mismatched_quads[study].keys()
