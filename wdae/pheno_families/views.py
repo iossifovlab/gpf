@@ -85,7 +85,7 @@ class PhenoFamilyBase(object):
             return study_type
         return None
 
-    def get_family_ids(self, data):
+    def get_family_ids_params(self, data):
         if 'familyIds' in data:
             family_ids = data['familyIds']
             del data['familyIds']
@@ -127,6 +127,11 @@ class PhenoFamilyBase(object):
         if family_race is not None:
             probands = self.race_filter.filter_matching_by_race(
                 family_race, probands)
+
+        family_ids = self.get_family_ids_params(data)
+        if family_ids:
+            probands = self.race_filter.filter_by_family_ids(
+                family_ids, probands)
 
         return probands
 
