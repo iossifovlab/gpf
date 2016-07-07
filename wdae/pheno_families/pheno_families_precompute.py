@@ -40,9 +40,9 @@ class FamiliesPrecompute(precompute.register.Precompute):
                     if p.role == 'sib':
                         self._siblings[p.gender].add(p.personId)
 
-        print("probands with both geners: {}".format(
+        print("probands with both genders: {}".format(
             self._probands['M'] & self._probands['F']))
-        print("siblings with both geners: {}".format(
+        print("siblings with both genders: {}".format(
             self._siblings['M'] & self._siblings['F']))
 
     def probands(self, gender):

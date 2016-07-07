@@ -13,15 +13,21 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
 
     def __init__(self):
         self._quads = None
+        self._siblings = None
+        self._probands = None
 
     def serialize(self):
         result = {}
         result['quads'] = zlib.compress(cPickle.dumps(self._quads))
+        result['prb'] = zlib.compress(cPickle.dumps(self._probands))
+        result['sib'] = zlib.compress(cPickle.dumps(self._siblings))
 
         return result
 
     def deserialize(self, data):
         self._quads = cPickle.loads(zlib.decompress(data['quads']))
+        self._probands = cPickle.loads(zlib.decompress(data['prb']))
+        self._siblings = cPickle.loads(zlib.decompress(data['sib']))
 
     @staticmethod
     def _match_quad_families(fam1, fam2):
@@ -80,23 +86,39 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
                     quads[fid] = fam
         return quads, mismatched
 
-    def precompute(self):
+    def _build_all_quads(self):
         self._quads = {}
         self._mismatched = {}
-
         studies = get_ssc_denovo_studies()
         self._build_study_types(studies)
-
-        self._quads['all'], self._mismatched['all'] = \
-            self._build_quads(studies)
+        self._quads['all'], self._mismatched[
+            'all'] = self._build_quads(studies)
         for st in studies:
-            self._quads[st.name], self._mismatched[st.name] = \
-                self._build_quads([st])
+            self._quads[st.name], self._mismatched[
+                st.name] = self._build_quads([st])
 
         for study_type in self._study_types:
             studies_by_type = self._filter_studies(studies, study_type)
-            self._quads[study_type], self._mismatched[study_type] = \
-                self._build_quads(studies_by_type)
+            self._quads[study_type], self._mismatched[
+                study_type] = self._build_quads(studies_by_type)
+
+    def _build_children_gender(self):
+        self._siblings = {'M': set(),
+                          'F': set()}
+        self._probands = {'M': set(),
+                          'F': set()}
+        studies = get_ssc_denovo_studies()
+        for st in studies:
+            for fid, fam in st.families.items():
+                for ch in fam.memberInOrder[2:]:
+                    if ch.role == 'prb':
+                        self._probands[ch.gender].add(fid)
+                    elif ch.role == 'sib':
+                        self._siblings[ch.gender].add(fid)
+
+    def precompute(self):
+        self._build_all_quads()
+        self._build_children_gender()
 
     def quads(self, study='all'):
         return set(self._quads[study].keys())
