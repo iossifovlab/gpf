@@ -25,6 +25,21 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
 
     @staticmethod
     def _match_quad_families(fam1, fam2):
+        if len(fam1.memberInOrder) != len(fam2.memberInOrder):
+            return False
+        if len(fam1.memberInOrder) != 4:
+            return False
+
+        ch1 = fam1.memberInOrder[2]
+        ch2 = fam2.memberInOrder[2]
+        if ch1.role != ch2.role and ch1.personId != ch2.personId:
+            return False
+
+        ch1 = fam1.memberInOrder[3]
+        ch2 = fam2.memberInOrder[3]
+        if ch1.role != ch2.role and ch1.personId != ch2.personId:
+            return False
+
         return True
 
     @staticmethod

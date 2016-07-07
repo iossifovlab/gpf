@@ -16,5 +16,5 @@ class Test(unittest.TestCase):
     def test_quads_precompute(self):
         self.precompute.precompute()
         self.assertIsNotNone(self.precompute.quads())
-        self.assertEquals(2371, len(self.precompute.quads()))
-        self.assertEquals(0, len(self.precompute.mismatched_quads()))
+        self.assertEquals(417, len(self.precompute.quads()))
+        self.assertEquals(1954, len(self.precompute.mismatched_quads()))
