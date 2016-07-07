@@ -57,6 +57,9 @@ class PhenoFamilyBase(object):
         del data['familyRace']
 
         race = race.lower()
+        if race == 'all':
+            return None
+
         if race not in PhenoRaceFilter.get_races():
             raise ValueError("bad race param: {}".format(race))
         return race

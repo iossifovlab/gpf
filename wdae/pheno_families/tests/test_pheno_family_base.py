@@ -11,14 +11,14 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.pheno_family_view = PhenoFamilyBase()
+        self.pheno_family_base = PhenoFamilyBase()
 
     def test_prepare_base_pheno_measure(self):
         data = {
             'phenoMeasure': 'non_verbal_iq',
         }
 
-        family_ids = self.pheno_family_view.prepare_probands(data)
+        family_ids = self.pheno_family_base.prepare_probands(data)
         self.assertEquals(2756, len(family_ids))
 
     def test_prepare_family_pheno_measure(self):
@@ -29,7 +29,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyPhenoMeasureMax': 15,
         }
 
-        family_ids = self.pheno_family_view.prepare_probands(data)
+        family_ids = self.pheno_family_base.prepare_probands(data)
         self.assertEquals(4, len(family_ids))
         # ['14525', '13830', '13952', '13529']
 
@@ -39,8 +39,17 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyRace': 'other',
         }
 
-        family_ids = self.pheno_family_view.prepare_probands(data)
+        family_ids = self.pheno_family_base.prepare_probands(data)
         self.assertEquals(71, len(family_ids))
+
+    def test_prepare_family_race_all(self):
+        data = {
+            'phenoMeasure': 'non_verbal_iq',
+            'familyRace': 'all',
+        }
+
+        family_ids = self.pheno_family_base.prepare_probands(data)
+        self.assertEquals(2756, len(family_ids))
 
     def test_prepare_study_type_all(self):
         data = {
@@ -48,7 +57,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyStudyType': 'ALL',
         }
 
-        family_ids = self.pheno_family_view.prepare_probands(data)
+        family_ids = self.pheno_family_base.prepare_probands(data)
         self.assertEquals(2756, len(family_ids))
 
     def test_prepare_study_type_cnv(self):
@@ -57,7 +66,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyStudyType': 'CNV',
         }
 
-        family_ids = self.pheno_family_view.prepare_probands(data)
+        family_ids = self.pheno_family_base.prepare_probands(data)
         self.assertEquals(771, len(family_ids))
 
 
