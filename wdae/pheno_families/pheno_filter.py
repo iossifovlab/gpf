@@ -77,14 +77,6 @@ class PhenoStudyFilter(object):
                         probands.add(p.personId)
         return probands
 
-    def _build_study_types(self):
-        stypes = set()
-        for st in self.STUDIES:
-            stypes.add(st.get_attr('study.type'))
-        self._study_types = list(stypes)
-        self._study_types.sort()
-        return self._study_types
-
     def filter_matching_probands_by_study(self, probands, study_name):
         filter_probands = self.get_matching_probands_by_study(study_name)
         return [p for p in probands if p in filter_probands]

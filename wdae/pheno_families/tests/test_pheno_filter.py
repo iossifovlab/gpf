@@ -41,11 +41,6 @@ class PhenoStudyFilterTest(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.study_filters = PhenoStudyFilter()
 
-    def test_study_types(self):
-        types = self.study_filters._build_study_types()
-        self.assertEquals(set(["WE", "TG", "CNV"]),
-                          set(types))
-
     def test_get_matching_probands_by_study_type(self):
         probands = self.study_filters.get_matching_probands_by_study_type(
             "CNV")
