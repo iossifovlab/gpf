@@ -67,3 +67,9 @@ class SSCStudyFilter(object):
     def filter_matching_families_by_study_type(self, families, study_type):
         filter_families = self.get_matching_families_by_study_type(study_type)
         return [f for f in families if f in filter_families]
+
+
+class QuadFamiliesFilter(object):
+
+    def __init__(self):
+        pass

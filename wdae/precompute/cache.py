@@ -13,7 +13,7 @@ from helpers.logger import LOGGER
 
 class PrecomputeStore(object):
 
-    MAX_CHUNK_SIZE = 1024 * 1024
+    MAX_CHUNK_SIZE = 4 * 1024 * 1024
 
     def __init__(self):
         self.cache = caches['pre']
