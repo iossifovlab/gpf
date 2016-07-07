@@ -5,7 +5,7 @@ Created on Jun 29, 2016
 '''
 import unittest
 from pheno_families.pheno_filter import PhenoMeasureFilters, PhenoStudyFilter,\
-    PhenoRaceFilter
+    RaceFilter
 
 
 class PhenoMeasureFiltersTest(unittest.TestCase):
@@ -82,7 +82,7 @@ class PhenoRaceFilterTest(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.study_filters = PhenoStudyFilter()
-        self.race_filter = PhenoRaceFilter()
+        self.race_filter = RaceFilter()
 
     def test_white_race(self):
         res = self.race_filter.get_matching_families_by_race('other')
@@ -90,5 +90,5 @@ class PhenoRaceFilterTest(unittest.TestCase):
 
         probands = self.study_filters.get_matching_probands_by_study(
             "LevyCNV2011")
-        res = self.race_filter.filter_matching_by_race('other', probands)
+        res = self.race_filter.filter_matching_probands_by_race('other', probands)
         self.assertEquals(14, len(res))

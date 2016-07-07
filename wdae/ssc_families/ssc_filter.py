@@ -33,7 +33,7 @@ class PhenoMeasureFilters(object):
         return [f for f in families if f in filter_families]
 
 
-class PhenoStudyFilter(object):
+class SSCStudyFilter(object):
     '''
     If a study or study type is selected filter out the probands and siblings
     that are not included in any of the studies.

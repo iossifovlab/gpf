@@ -5,7 +5,7 @@ Created on Jul 6, 2016
 '''
 from rest_framework.views import APIView
 from pheno_families.pheno_filter import PhenoMeasureFilters, PhenoStudyFilter,\
-    PhenoRaceFilter, FamilyFilter
+    RaceFilter, FamilyFilter
 import preloaded
 from api.query.wdae_query_variants import prepare_query_dict
 from api.default_ssc_study import get_ssc_denovo
@@ -19,7 +19,7 @@ class PhenoFamilyBase(object):
     def __init__(self):
         self.pheno_measure_filter = PhenoMeasureFilters()
         self.study_filter = PhenoStudyFilter()
-        self.race_filter = PhenoRaceFilter()
+        self.race_filter = RaceFilter()
         register = preloaded.register.get_register()
         self.pheno_measures_register = register.get('pheno_measures')
 
@@ -60,7 +60,7 @@ class PhenoFamilyBase(object):
         if race == 'all':
             return None
 
-        if race not in PhenoRaceFilter.get_races():
+        if race not in RaceFilter.get_races():
             raise ValueError("bad race param: {}".format(race))
         return race
 
@@ -125,12 +125,12 @@ class PhenoFamilyBase(object):
 
         family_race = self.get_family_race_params(data)
         if family_race is not None:
-            probands = self.race_filter.filter_matching_by_race(
+            probands = self.race_filter.filter_matching_probands_by_race(
                 family_race, probands)
 
         family_ids = self.get_family_ids_params(data)
         if family_ids:
-            probands = self.race_filter.filter_by_family_ids(
+            probands = self.race_filter.filter_probands_by_family_ids(
                 family_ids, probands)
 
         return probands
