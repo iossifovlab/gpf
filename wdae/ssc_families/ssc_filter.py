@@ -4,6 +4,8 @@ Created on Jul 7, 2016
 @author: lubo
 '''
 import preloaded
+from api.default_ssc_study import get_ssc_denovo_studies, get_ssc_denovo
+from DAE import vDB
 
 
 class PhenoMeasureFilters(object):
@@ -28,4 +30,40 @@ class PhenoMeasureFilters(object):
     def filter_matching_families(self, families, pheno_measure,
                                  mmin=None, mmax=None):
         filter_families = self.get_matching_families(pheno_measure, mmin, mmax)
+        return [f for f in families if f in filter_families]
+
+
+class PhenoStudyFilter(object):
+    '''
+    If a study or study type is selected filter out the probands and siblings
+    that are not included in any of the studies.
+    '''
+
+    STUDY_TYPES = set(['we', 'tg', 'cnv'])
+    STUDIES = get_ssc_denovo_studies()
+    STUDY_NAMES = set(get_ssc_denovo().split(','))
+
+    def __init__(self):
+        pass
+
+    def get_matching_families_by_study(self, study_name):
+        assert study_name in self.STUDY_NAMES
+        study = vDB.get_study(study_name)
+        return set(study.families.keys())
+
+    def get_matching_families_by_study_type(self, study_type):
+        assert study_type.lower() in self.STUDY_TYPES
+        families = set([])
+        for st in self.STUDIES:
+            if st.get_attr('study.type').lower() != study_type.lower():
+                continue
+            families = families | set(st.families.keys())
+        return families
+
+    def filter_matching_families_by_study(self, families, study_name):
+        filter_families = self.get_matching_families_by_study(study_name)
+        return [f for f in families if f in filter_families]
+
+    def filter_matching_families_by_study_type(self, families, study_type):
+        filter_families = self.get_matching_families_by_study_type(study_type)
         return [f for f in families if f in filter_families]
