@@ -51,6 +51,18 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
 
         return ch1.role == 'prb' and ch2.role == 'sib'
 
+    def _build_study_types(self, studies):
+        stypes = set()
+        for st in studies:
+            stypes.add(st.get_attr('study.type').lower())
+        self._study_types = list(stypes)
+        self._study_types.sort()
+
+    @staticmethod
+    def _filter_studies(studies, study_type):
+        return [st for st in studies
+                if st.get_attr('study.type').lower() == study_type]
+
     def _build_quads(self, studies):
         quads = {}
         mismatched = {}
@@ -73,12 +85,18 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
         self._mismatched = {}
 
         studies = get_ssc_denovo_studies()
+        self._build_study_types(studies)
 
         self._quads['all'], self._mismatched['all'] = \
             self._build_quads(studies)
         for st in studies:
             self._quads[st.name], self._mismatched[st.name] = \
                 self._build_quads([st])
+
+        for study_type in self._study_types:
+            studies_by_type = self._filter_studies(studies, study_type)
+            self._quads[study_type], self._mismatched[study_type] = \
+                self._build_quads(studies_by_type)
 
     def quads(self, study='all'):
         return self._quads[study].keys()
