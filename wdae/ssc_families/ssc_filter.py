@@ -34,7 +34,7 @@ class PhenoMeasureFilters(object):
         return [f for f in families if f in filter_families]
 
 
-class SSCStudyFilter(object):
+class StudyFilter(object):
     '''
     If a study or study type is selected filter out the probands and siblings
     that are not included in any of the studies.
@@ -93,16 +93,22 @@ class QuadFamiliesFilter(object):
         return [f for f in families if f in filter_families]
 
 
-class SSCFamiliesGenderFilter(object):
+class FamiliesGenderFilter(object):
 
     def __init__(self):
         self.ssc_families_precompute = precompute.register.get(
             'ssc_families_precompute')
 
+    def get_matching_probands(self, gender):
+        return self.ssc_families_precompute.probands(gender)
+
+    def get_matching_siblings(self, gender):
+        return self.ssc_families_precompute.siblings(gender)
+
     def filter_matching_probands(self, families, gender):
-        filter_families = self.ssc_families_precompute.probands(gender)
+        filter_families = self.get_matching_probands(gender)
         return [f for f in families if f in filter_families]
 
     def filter_matching_siblings(self, families, gender):
-        filter_families = self.ssc_families_precompute.siblings(gender)
+        filter_families = self.get_matching_siblings(gender)
         return [f for f in families if f in filter_families]
