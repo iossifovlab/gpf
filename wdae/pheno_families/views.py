@@ -5,7 +5,7 @@ Created on Jul 6, 2016
 '''
 from rest_framework.views import APIView
 from pheno_families.pheno_filter import PhenoMeasureFilters, PhenoStudyFilter,\
-    PhenoRaceFilter
+    PhenoRaceFilter, FamilyFilter
 import preloaded
 from api.query.wdae_query_variants import prepare_query_dict
 from api.default_ssc_study import get_ssc_denovo
@@ -126,6 +126,10 @@ class PhenoFamilyBase(object):
                 family_race, probands)
 
         return probands
+
+    def prepare_families(self, data):
+        probands = self.prepare_probands(data)
+        return [FamilyFilter.strip_proband_id(p) for p in probands]
 
 
 class PhenoFamilyCountersView(APIView, PhenoFamilyBase):

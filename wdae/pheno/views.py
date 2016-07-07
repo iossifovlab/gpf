@@ -16,10 +16,13 @@ from pheno.measures import NormalizedMeasure
 from pheno.report import family_pheno_query_variants, pheno_calc,\
     DEFAULT_EFFECT_TYPE_GROUPS
 from helpers.logger import log_filter, LOGGER
-from families.families_query import prepare_family_query
+from pheno_families.views import PhenoFamilyBase
 
 
-class PhenoViewBase(views.APIView):
+class PhenoViewBase(views.APIView, PhenoFamilyBase):
+
+    def __init__(self):
+        PhenoFamilyBase.__init__(self)
 
     @staticmethod
     def istrue(val):
@@ -44,13 +47,13 @@ class PhenoViewBase(views.APIView):
             res.append('non_verbal_iq')
         return res
 
-    @staticmethod
-    def prepare_query_dict(request):
+    def prepare_query_dict(self, request):
         data = prepare_query_dict(request.data)
         if 'effectTypes' in data:
             del data['effectTypes']
-        _fst, data = prepare_family_query(data)
-
+        families = self.prepare_families(data)
+        if families:
+            data['familyIds'] = ",".join(families)
         return data
 
     def post(self, request):
