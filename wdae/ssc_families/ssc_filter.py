@@ -18,12 +18,14 @@ class QuadFamiliesFilter(object):
             return self.ssc_families_precompute.quads(study_type)
         elif study_name is not None and study_type is None:
             return self.ssc_families_precompute.quads(study_name)
-        else:
+        elif study_name is not None and study_type is not None:
             return self.ssc_families_precompute.quads(study_name) & \
                 self.ssc_families_precompute.quads(study_type)
+        else:
+            return self.ssc_families_precompute.quads('all')
 
     def filter_matching_familes(
-            self, families, study_type='all', study_name=None):
+            self, families, study_type=None, study_name=None):
 
         filter_families = self.get_matching_families(study_type, study_name)
         if families:

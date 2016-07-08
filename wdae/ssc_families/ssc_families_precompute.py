@@ -130,6 +130,7 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
     def precompute(self):
         self._build_all_quads()
         self._build_children_gender()
+        self._build_families()
 
     def quads(self, study='all'):
         return set(self._quads[study].keys())

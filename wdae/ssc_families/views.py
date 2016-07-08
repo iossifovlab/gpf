@@ -50,9 +50,7 @@ class SSCFamilyBase(FamilyBase):
         gender = self._parse_gender(data['familySibParameters'])
         return gender
 
-    def prepare_families(self, data):
-        families = None
-
+    def prepare_families(self, data, families=None):
         family_pheno_measure = self.get_pheno_measure_params(data)
         if family_pheno_measure is not None:
             families = self.pheno_measure_filter.filter_matching_families(
@@ -95,31 +93,39 @@ class SSCFamilyBase(FamilyBase):
                 families = [f for f in families if f in family_ids]
             else:
                 families = family_ids
-
-        return families
+        if families:
+            return set(families)
+        else:
+            return None
 
 
 class SSCFamilyCountersView(APIView, SSCFamilyBase):
 
     def __init__(self):
         SSCFamilyBase.__init__(self)
+        APIView.__init__(self)
+
         self.ssc_families_precompute = precompute.register.get(
             'ssc_families_precompute')
 
-    def probands_counters(self, probands):
-        prbs = set(probands)
-        male = prbs & self.pheno_families_precompute.probands('M')
-        female = prbs & self.pheno_families_precompute.probands('F')
+    def families_counters(self, families):
+        families = set(families)
+        prb_male = families & self.ssc_families_precompute.probands('M')
+        prb_female = families & self.ssc_families_precompute.probands('F')
+
+        sib_male = families & self.ssc_families_precompute.siblings('M')
+        sib_female = families & self.ssc_families_precompute.siblings('F')
+
         return {
             'autism': {
-                'families': len(probands),
-                'male': len(male),
-                'female': len(female),
+                'families': len(prb_male | prb_female),
+                'male': len(prb_male),
+                'female': len(prb_female),
             },
             'unaffected': {
-                'families': 0,
-                'male': 0,
-                'female': 0,
+                'families': len(sib_male | sib_female),
+                'male': len(sib_male),
+                'female': len(sib_female),
             }
         }
 
@@ -129,4 +135,9 @@ class SSCFamilyCountersView(APIView, SSCFamilyBase):
             request, "ssc family counters request: " +
             str(data)))
 
-        return Response()
+        families = self.ssc_families_precompute.families()
+        families = self.prepare_families(data, families)
+
+        result = self.families_counters(families)
+
+        return Response(result)
