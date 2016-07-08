@@ -64,3 +64,11 @@ class Test(APITestCase):
         self.assertEquals(2380, data['unaffected']['families'])  # 2703
         self.assertEquals(1191, data['unaffected']['male'])      # 1285
         self.assertEquals(1332, data['unaffected']['female'])    # 1418
+
+    def test_families_counter_with_wrong_family_id(self):
+        url = "/api/v2/ssc_dataset_families/counter"
+        data = {
+            'familyIds': '1100',
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)

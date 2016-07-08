@@ -96,7 +96,7 @@ class SSCFamilyBase(FamilyBase):
         if families:
             return set(families)
         else:
-            return None
+            return set()
 
 
 class SSCFamilyCountersView(APIView, SSCFamilyBase):
@@ -109,7 +109,6 @@ class SSCFamilyCountersView(APIView, SSCFamilyBase):
             'ssc_families_precompute')
 
     def families_counters(self, families):
-        families = set(families)
         prb_male = families & self.ssc_families_precompute.probands('M')
         prb_female = families & self.ssc_families_precompute.probands('F')
 
@@ -136,7 +135,10 @@ class SSCFamilyCountersView(APIView, SSCFamilyBase):
             str(data)))
 
         families = self.ssc_families_precompute.families()
+        assert families is not None
+
         families = self.prepare_families(data, families)
+        assert families is not None
 
         result = self.families_counters(families)
 
