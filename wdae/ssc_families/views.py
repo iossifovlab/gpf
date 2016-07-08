@@ -74,6 +74,11 @@ class SSCFamilyBase(FamilyBase):
             families = self.race_filter.filter_matching_families_by_race(
                 family_race, families)
 
+        quad = self.get_quad_params(data)
+        if quad is not None:
+            families = self.quad_filter.filter_matching_familes(
+                families, study_type, study_name)
+
         family_ids = self.get_family_ids_params(data)
         if family_ids:
             families = [f for f in families if f in family_ids]

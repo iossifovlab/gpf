@@ -81,3 +81,13 @@ class SSCFiltersTest(unittest.TestCase):
 
         family_ids = self.ssc_family_base.prepare_families(data)
         self.assertEquals(794, len(family_ids))
+
+    def test_prepare_quad_and_study_type(self):
+        data = {
+            'phenoMeasure': 'non_verbal_iq',
+            'familyStudyType': 'CNV',
+            'familyQuadTrio': 'Quad',
+        }
+
+        family_ids = self.ssc_family_base.prepare_families(data)
+        self.assertEquals(560, len(family_ids))
