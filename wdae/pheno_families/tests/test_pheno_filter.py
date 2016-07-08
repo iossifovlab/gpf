@@ -4,7 +4,7 @@ Created on Jun 29, 2016
 @author: lubo
 '''
 import unittest
-from pheno_families.pheno_filter import PhenoMeasureFilters, PhenoStudyFilter,\
+from pheno_families.pheno_filter import PhenoMeasureFilters, StudyFilter,\
     RaceFilter
 
 
@@ -39,7 +39,7 @@ class PhenoStudyFilterTest(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.study_filters = PhenoStudyFilter()
+        self.study_filters = StudyFilter()
 
     def test_get_matching_probands_by_study_type(self):
         probands = self.study_filters.get_matching_probands_by_study_type(
@@ -81,7 +81,7 @@ class PhenoRaceFilterTest(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.study_filters = PhenoStudyFilter()
+        self.study_filters = StudyFilter()
         self.race_filter = RaceFilter()
 
     def test_white_race(self):
@@ -90,5 +90,6 @@ class PhenoRaceFilterTest(unittest.TestCase):
 
         probands = self.study_filters.get_matching_probands_by_study(
             "LevyCNV2011")
-        res = self.race_filter.filter_matching_probands_by_race('other', probands)
+        res = self.race_filter.filter_matching_probands_by_race(
+            'other', probands)
         self.assertEquals(14, len(res))

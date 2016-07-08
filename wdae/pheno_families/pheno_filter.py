@@ -41,8 +41,24 @@ class PhenoMeasureFilters(object):
         filter_probands = self.get_matching_probands(pheno_measure, mmin, mmax)
         return [p for p in probands if p in filter_probands]
 
+    def get_matching_families(self, pheno_measure, mmin=None, mmax=None):
+        '''
+        List the families that have the specified property
 
-class PhenoStudyFilter(object):
+        If a phenotypic property is selected, filter our the families
+        that don't have that property and the ones that have that property
+        but it's value is outside of the selected interval.
+        '''
+        return set(self.measures.get_measure_families(
+            pheno_measure, mmin, mmax))
+
+    def filter_matching_families(self, families, pheno_measure,
+                                 mmin=None, mmax=None):
+        filter_families = self.get_matching_families(pheno_measure, mmin, mmax)
+        return [f for f in families if f in filter_families]
+
+
+class StudyFilter(object):
     '''
     If a study or study type is selected filter out the probands and siblings
     that are not included in any of the studies.
@@ -84,6 +100,28 @@ class PhenoStudyFilter(object):
     def filter_matching_probands_by_study_type(self, probands, study_type):
         filter_probands = self.get_matching_probands_by_study_type(study_type)
         return [p for p in probands if p in filter_probands]
+
+    def get_matching_families_by_study(self, study_name):
+        assert study_name in self.STUDY_NAMES
+        study = vDB.get_study(study_name)
+        return set(study.families.keys())
+
+    def get_matching_families_by_study_type(self, study_type):
+        assert study_type.lower() in self.STUDY_TYPES
+        families = set([])
+        for st in self.STUDIES:
+            if st.get_attr('study.type').lower() != study_type.lower():
+                continue
+            families = families | set(st.families.keys())
+        return families
+
+    def filter_matching_families_by_study(self, families, study_name):
+        filter_families = self.get_matching_families_by_study(study_name)
+        return [f for f in families if f in filter_families]
+
+    def filter_matching_families_by_study_type(self, families, study_type):
+        filter_families = self.get_matching_families_by_study_type(study_type)
+        return [f for f in families if f in filter_families]
 
 
 class FamilyFilter(object):

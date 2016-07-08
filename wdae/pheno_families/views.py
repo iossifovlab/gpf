@@ -4,7 +4,7 @@ Created on Jul 6, 2016
 @author: lubo
 '''
 from rest_framework.views import APIView
-from pheno_families.pheno_filter import PhenoMeasureFilters, PhenoStudyFilter,\
+from pheno_families.pheno_filter import PhenoMeasureFilters, StudyFilter,\
     RaceFilter, FamilyFilter
 import preloaded
 from api.query.wdae_query_variants import prepare_query_dict
@@ -18,7 +18,7 @@ class PhenoFamilyBase(object):
 
     def __init__(self):
         self.pheno_measure_filter = PhenoMeasureFilters()
-        self.study_filter = PhenoStudyFilter()
+        self.study_filter = StudyFilter()
         self.race_filter = RaceFilter()
         register = preloaded.register.get_register()
         self.pheno_measures_register = register.get('pheno_measures')
@@ -81,7 +81,7 @@ class PhenoFamilyBase(object):
         del data['familyStudyType']
 
         study_type = study_type.lower()
-        if study_type in PhenoStudyFilter.STUDY_TYPES:
+        if study_type in StudyFilter.STUDY_TYPES:
             return study_type
         return None
 
