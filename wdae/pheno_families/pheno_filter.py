@@ -49,8 +49,8 @@ class PhenoMeasureFilters(object):
         that don't have that property and the ones that have that property
         but it's value is outside of the selected interval.
         '''
-        return set(self.measures.get_measure_families(
-            pheno_measure, mmin, mmax))
+        return set([str(f) for f in self.measures.get_measure_families(
+            pheno_measure, mmin, mmax)])
 
     def filter_matching_families(self, families, pheno_measure,
                                  mmin=None, mmax=None):

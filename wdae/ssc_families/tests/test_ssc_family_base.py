@@ -1,25 +1,25 @@
 '''
-Created on Jul 6, 2016
+Created on Jul 8, 2016
 
 @author: lubo
 '''
 import unittest
-from pheno_families.views import PhenoFamilyBase, PhenoFamilyCountersView
+from ssc_families.views import SSCFamilyBase
 
 
-class PhenoMeasureFiltersTest(unittest.TestCase):
+class SSCFiltersTest(unittest.TestCase):
 
     def setUp(self):
         unittest.TestCase.setUp(self)
-        self.pheno_family_base = PhenoFamilyBase()
+        self.ssc_family_base = SSCFamilyBase()
 
     def test_prepare_base_pheno_measure(self):
         data = {
             'phenoMeasure': 'non_verbal_iq',
         }
 
-        probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(2756, len(probands))
+        family_ids = self.ssc_family_base.prepare_families(data)
+        self.assertEquals(2756, len(family_ids))
 
     def test_prepare_family_pheno_measure(self):
         data = {
@@ -29,8 +29,8 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyPhenoMeasureMax': 15,
         }
 
-        probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(4, len(probands))
+        family_ids = self.ssc_family_base.prepare_families(data)
+        self.assertEquals(4, len(family_ids))
         # ['14525', '13830', '13952', '13529']
 
     def test_prepare_family_pheno_measure_with_family_ids(self):
@@ -42,8 +42,8 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyIds': '14525,13830',
         }
 
-        probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(2, len(probands))
+        family_ids = self.ssc_family_base.prepare_families(data)
+        self.assertEquals(2, len(family_ids))
         # ['14525', '13830', '13952', '13529']
 
     def test_prepare_family_race(self):
@@ -52,8 +52,8 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyRace': 'other',
         }
 
-        probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(71, len(probands))
+        family_ids = self.ssc_family_base.prepare_families(data)
+        self.assertEquals(71, len(family_ids))
 
     def test_prepare_family_race_all(self):
         data = {
@@ -61,8 +61,8 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyRace': 'all',
         }
 
-        probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(2756, len(probands))
+        family_ids = self.ssc_family_base.prepare_families(data)
+        self.assertEquals(2756, len(family_ids))
 
     def test_prepare_study_type_all(self):
         data = {
@@ -70,8 +70,8 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyStudyType': 'ALL',
         }
 
-        probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(2756, len(probands))
+        family_ids = self.ssc_family_base.prepare_families(data)
+        self.assertEquals(2756, len(family_ids))
 
     def test_prepare_study_type_cnv(self):
         data = {
@@ -79,22 +79,5 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
             'familyStudyType': 'CNV',
         }
 
-        probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(771, len(probands))
-
-
-class PhenoFamilyCountersViewTestCase(unittest.TestCase):
-
-    def setUp(self):
-        unittest.TestCase.setUp(self)
-        self.pheno_family_counters_view = PhenoFamilyCountersView()
-
-    def test_prepare_check(self):
-
-        data = {
-            'phenoMeasure': 'non_verbal_iq',
-            'familyStudyType': 'CNV',
-        }
-
-        family_ids = self.pheno_family_counters_view.prepare_probands(data)
-        self.assertEquals(771, len(family_ids))
+        family_ids = self.ssc_family_base.prepare_families(data)
+        self.assertEquals(794, len(family_ids))

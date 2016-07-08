@@ -14,7 +14,7 @@ from rest_framework.response import Response
 import precompute
 
 
-class PhenoFamilyBase(object):
+class FamilyBase(object):
 
     def __init__(self):
         self.pheno_measure_filter = PhenoMeasureFilters()
@@ -98,6 +98,12 @@ class PhenoFamilyBase(object):
                 if len(family_ids) > 0:
                     return family_ids
         return None
+
+
+class PhenoFamilyBase(FamilyBase):
+
+    def __init__(self):
+        FamilyBase.__init__(self)
 
     def prepare_probands(self, data):
         base_measure = self.get_base_pheno_measure_params(data)
