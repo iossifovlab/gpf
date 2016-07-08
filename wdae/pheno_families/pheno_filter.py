@@ -55,7 +55,10 @@ class PhenoMeasureFilters(object):
     def filter_matching_families(self, families, pheno_measure,
                                  mmin=None, mmax=None):
         filter_families = self.get_matching_families(pheno_measure, mmin, mmax)
-        return [f for f in families if f in filter_families]
+        if families:
+            return [f for f in families if f in filter_families]
+        else:
+            return filter_families
 
 
 class StudyFilter(object):
@@ -117,11 +120,17 @@ class StudyFilter(object):
 
     def filter_matching_families_by_study(self, families, study_name):
         filter_families = self.get_matching_families_by_study(study_name)
-        return [f for f in families if f in filter_families]
+        if families:
+            return [f for f in families if f in filter_families]
+        else:
+            return filter_families
 
     def filter_matching_families_by_study_type(self, families, study_type):
         filter_families = self.get_matching_families_by_study_type(study_type)
-        return [f for f in families if f in filter_families]
+        if families:
+            return [f for f in families if f in filter_families]
+        else:
+            return filter_families
 
 
 class FamilyFilter(object):
@@ -175,4 +184,7 @@ class RaceFilter(FamilyFilter):
 
     def filter_matching_families_by_race(self, race, families):
         filter_families = self.get_matching_families_by_race(race)
-        return [f for f in families if f in filter_families]
+        if families:
+            return [f for f in families if f in filter_families]
+        else:
+            return filter_families

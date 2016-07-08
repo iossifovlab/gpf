@@ -46,12 +46,7 @@ class SSCFamilyBase(FamilyBase):
         return gender
 
     def prepare_families(self, data):
-        base_measure = self.get_base_pheno_measure_params(data)
-        if base_measure is None:
-            raise ValueError("base pheno measure not found in request")
-
-        families = self.pheno_measure_filter.get_matching_families(
-            base_measure)
+        families = None
 
         family_pheno_measure = self.get_pheno_measure_params(data)
         if family_pheno_measure is not None:
@@ -78,6 +73,16 @@ class SSCFamilyBase(FamilyBase):
         if quad is not None:
             families = self.quad_filter.filter_matching_familes(
                 families, study_type, study_name)
+
+        prb_gender = self.get_probands_gender_params(data)
+        if prb_gender is not None:
+            families = self.families_gender_filter.filter_matching_probands(
+                families, prb_gender)
+
+        sib_gender = self.get_siblings_gender_params(data)
+        if sib_gender is not None:
+            families = self.families_gender_filter.filter_matching_siblings(
+                families, sib_gender)
 
         family_ids = self.get_family_ids_params(data)
         if family_ids:

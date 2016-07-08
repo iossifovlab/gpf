@@ -26,7 +26,10 @@ class QuadFamiliesFilter(object):
             self, families, study_type='all', study_name=None):
 
         filter_families = self.get_matching_families(study_type, study_name)
-        return [f for f in families if f in filter_families]
+        if families:
+            return [f for f in families if f in filter_families]
+        else:
+            return filter_families
 
 
 class FamiliesGenderFilter(object):
@@ -43,8 +46,14 @@ class FamiliesGenderFilter(object):
 
     def filter_matching_probands(self, families, gender):
         filter_families = self.get_matching_probands(gender)
-        return [f for f in families if f in filter_families]
+        if families:
+            return [f for f in families if f in filter_families]
+        else:
+            return filter_families
 
     def filter_matching_siblings(self, families, gender):
         filter_families = self.get_matching_siblings(gender)
-        return [f for f in families if f in filter_families]
+        if families:
+            return [f for f in families if f in filter_families]
+        else:
+            return filter_families

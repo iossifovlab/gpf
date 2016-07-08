@@ -13,17 +13,8 @@ class SSCFiltersTest(unittest.TestCase):
         unittest.TestCase.setUp(self)
         self.ssc_family_base = SSCFamilyBase()
 
-    def test_prepare_base_pheno_measure(self):
-        data = {
-            'phenoMeasure': 'non_verbal_iq',
-        }
-
-        family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2756, len(family_ids))
-
     def test_prepare_family_pheno_measure(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
             'familyPhenoMeasure': 'non_verbal_iq',
             'familyPhenoMeasureMin': 9,
             'familyPhenoMeasureMax': 15,
@@ -35,7 +26,6 @@ class SSCFiltersTest(unittest.TestCase):
 
     def test_prepare_family_pheno_measure_with_family_ids(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
             'familyPhenoMeasure': 'non_verbal_iq',
             'familyPhenoMeasureMin': 9,
             'familyPhenoMeasureMax': 15,
@@ -48,7 +38,6 @@ class SSCFiltersTest(unittest.TestCase):
 
     def test_prepare_family_race(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
             'familyRace': 'other',
         }
 
@@ -57,7 +46,9 @@ class SSCFiltersTest(unittest.TestCase):
 
     def test_prepare_family_race_all(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasureMin': 5,
+            'familyPhenoMeasureMax': 200,
             'familyRace': 'all',
         }
 
@@ -66,7 +57,9 @@ class SSCFiltersTest(unittest.TestCase):
 
     def test_prepare_study_type_all(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasureMin': 5,
+            'familyPhenoMeasureMax': 200,
             'familyStudyType': 'ALL',
         }
 
@@ -75,19 +68,25 @@ class SSCFiltersTest(unittest.TestCase):
 
     def test_prepare_study_type_cnv(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
             'familyStudyType': 'CNV',
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(794, len(family_ids))
+        self.assertEquals(887, len(family_ids))
 
     def test_prepare_quad_and_study_type(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
             'familyStudyType': 'CNV',
             'familyQuadTrio': 'Quad',
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(560, len(family_ids))
+        self.assertEquals(628, len(family_ids))
+
+    def test_prepare_probands_gender(self):
+        data = {
+            'familyPrbGender': 'male',
+        }
+
+        family_ids = self.ssc_family_base.prepare_families(data)
+        self.assertEquals(2473, len(family_ids))
