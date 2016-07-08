@@ -15,12 +15,14 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
         self._quads = None
         self._siblings = None
         self._probands = None
+        self._families = None
 
     def serialize(self):
         result = {}
         result['quads'] = zlib.compress(cPickle.dumps(self._quads))
         result['prb'] = zlib.compress(cPickle.dumps(self._probands))
         result['sib'] = zlib.compress(cPickle.dumps(self._siblings))
+        result['families'] = zlib.compress(cPickle.dumps(self._families))
 
         return result
 
@@ -28,6 +30,7 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
         self._quads = cPickle.loads(zlib.decompress(data['quads']))
         self._probands = cPickle.loads(zlib.decompress(data['prb']))
         self._siblings = cPickle.loads(zlib.decompress(data['sib']))
+        self._families = cPickle.loads(zlib.decompress(data['families']))
 
     @staticmethod
     def _match_quad_families(fam1, fam2):
@@ -116,6 +119,14 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
                     elif ch.role == 'sib':
                         self._siblings[ch.gender].add(fid)
 
+    def _build_families(self):
+        studies = get_ssc_denovo_studies()
+        families = set()
+        for st in studies:
+            for fid in st.families:
+                families.add(fid)
+        self._families = families
+
     def precompute(self):
         self._build_all_quads()
         self._build_children_gender()
@@ -131,3 +142,6 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
 
     def siblings(self, gender):
         return self._siblings[gender]
+
+    def families(self):
+        return self._families

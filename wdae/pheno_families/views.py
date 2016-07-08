@@ -173,7 +173,7 @@ class PhenoFamilyCountersView(APIView, PhenoFamilyBase):
     def post(self, request):
         data = prepare_query_dict(request.data)
         LOGGER.info(log_filter(
-            request, "family counters request: " +
+            request, "pheno family counters request: " +
             str(data)))
 
         probands = self.prepare_probands(data)

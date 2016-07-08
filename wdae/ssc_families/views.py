@@ -5,6 +5,11 @@ Created on Jul 8, 2016
 '''
 from pheno_families.views import FamilyBase
 from ssc_families.ssc_filter import QuadFamiliesFilter, FamiliesGenderFilter
+from rest_framework.views import APIView
+import precompute
+from api.query.wdae_query_variants import prepare_query_dict
+from helpers.logger import log_filter, LOGGER
+from rest_framework.response import Response
 
 
 class SSCFamilyBase(FamilyBase):
@@ -86,6 +91,42 @@ class SSCFamilyBase(FamilyBase):
 
         family_ids = self.get_family_ids_params(data)
         if family_ids:
-            families = [f for f in families if f in family_ids]
+            if families:
+                families = [f for f in families if f in family_ids]
+            else:
+                families = family_ids
 
         return families
+
+
+class SSCFamilyCountersView(APIView, SSCFamilyBase):
+
+    def __init__(self):
+        SSCFamilyBase.__init__(self)
+        self.ssc_families_precompute = precompute.register.get(
+            'ssc_families_precompute')
+
+    def probands_counters(self, probands):
+        prbs = set(probands)
+        male = prbs & self.pheno_families_precompute.probands('M')
+        female = prbs & self.pheno_families_precompute.probands('F')
+        return {
+            'autism': {
+                'families': len(probands),
+                'male': len(male),
+                'female': len(female),
+            },
+            'unaffected': {
+                'families': 0,
+                'male': 0,
+                'female': 0,
+            }
+        }
+
+    def post(self, request):
+        data = prepare_query_dict(request.data)
+        LOGGER.info(log_filter(
+            request, "ssc family counters request: " +
+            str(data)))
+
+        return Response()
