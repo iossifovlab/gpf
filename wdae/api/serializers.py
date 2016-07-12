@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from models import Researcher
+from django.contrib.auth.models import BaseUserManager
 
 
 class UserSerializer(serializers.Serializer):
@@ -15,9 +16,9 @@ class UserSerializer(serializers.Serializer):
     def validate(self, data):
         user_model = get_user_model()
         res_id = data['researcher_id']
-        email = data['email']
-        first_name = data['first_name']
-        last_name = data['last_name']
+        email = BaseUserManager.normalize_email(data['email'])
+        # first_name = data['first_name']
+        # last_name = data['last_name']
 
         try:
             res = Researcher.objects.get(email=email)
