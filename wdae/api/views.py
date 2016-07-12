@@ -45,6 +45,7 @@ from query_prepare import EFFECT_GROUPS, build_effect_type_filter,\
 from api.query.wdae_query_variants import wdae_query_wrapper, \
     gene_set_loader2,\
     prepare_query_dict
+from django.contrib.auth.models import BaseUserManager
 
 
 @receiver(post_save, sender=get_user_model())
@@ -657,7 +658,8 @@ def register(request):
     if serialized.is_valid():
         user = get_user_model()
         researcher_id = serialized.validated_data['researcher_id']
-        email = serialized.validated_data['email']
+        email = BaseUserManager.normalize_email(
+            serialized.validated_data['email'])
 
         created_user = user.objects.create_user(email, researcher_id)
         created_user.first_name = serialized.validated_data['first_name']

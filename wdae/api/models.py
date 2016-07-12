@@ -21,7 +21,7 @@ class Researcher(models.Model):
 
 
 class ResearcherId(models.Model):
-    owner = models.ForeignKey(Researcher)
+    researcher = models.ManyToManyField(Researcher)
     researcher_id = models.CharField(max_length='100', unique=True)
 
 
@@ -82,7 +82,6 @@ class WdaeUser(AbstractBaseUser):
     email = models.EmailField(unique=True)
     researcher_id = models.CharField(
         max_length='100',
-        unique=True,
         blank=True,
         null=True)
     verification_path = models.OneToOneField(
