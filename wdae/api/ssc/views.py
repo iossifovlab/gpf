@@ -3,28 +3,39 @@ Created on Jun 18, 2015
 
 @author: lubo
 '''
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from api.views import prepare_query_dict, build_effect_type_filter
-from helpers.logger import log_filter, LOGGER
-from query_variants import join_line
-from api.dae_query import prepare_summary
-from django.http.response import StreamingHttpResponse
 import itertools
-from rest_framework.parsers import JSONParser, FormParser
+
+from django.http.response import StreamingHttpResponse
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.parsers import JSONParser, FormParser
 from rest_framework.permissions import IsAuthenticated
-from query_prepare import prepare_ssc_filter
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from api.dae_query import prepare_summary
 from api.query.wdae_query_variants import wdae_query_wrapper
+from api.views import prepare_query_dict, build_effect_type_filter
 from families.families_query import prepare_family_query
+from helpers.logger import log_filter, LOGGER
+from query_prepare import prepare_ssc_filter
+from query_variants import join_line
+from ssc_families.views import SSCFamilyBase
 
 
-class SSCPrepare(APIView):
+class SSCPrepare(APIView, SSCFamilyBase):
+
+    def __init__(self):
+        SSCFamilyBase.__init__(self)
+        APIView.__init__(self)
 
     def prepare(self, request):
         data = prepare_query_dict(request.data)
 
-        _fst, data = prepare_family_query(data)
+        # _fst, data = prepare_family_query(data)
+
+        families = self.prepare_families(data)
+        if families:
+            data['familiesId'] = families
 
         data = prepare_ssc_filter(data)
         build_effect_type_filter(data)

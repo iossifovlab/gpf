@@ -47,7 +47,7 @@ class SSCFamilyBase(FamilyBase):
     def get_siblings_gender_params(self, data):
         if 'familySibGender' not in data:
             return None
-        gender = self._parse_gender(data['familySibParameters'])
+        gender = self._parse_gender(data['familySibGender'])
         return gender
 
     def prepare_families(self, data, families=None):
