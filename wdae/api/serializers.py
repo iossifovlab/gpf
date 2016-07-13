@@ -20,6 +20,7 @@ class UserSerializer(serializers.Serializer):
         # first_name = data['first_name']
         # last_name = data['last_name']
 
+        print("res_id: {}".format(res_id))
         try:
             res = Researcher.objects.get(email=email)
             researcher_ids = res.researcherid_set.all()
