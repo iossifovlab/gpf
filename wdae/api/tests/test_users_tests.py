@@ -171,7 +171,9 @@ class ResearcherRegistrationTest(APITestCase):
 
         cls.research_id = ResearcherId()
         cls.research_id.researcher_id = '11aa--bb'
-        cls.research_id.owner = cls.res
+        cls.research_id.save()
+
+        cls.research_id.researcher.add(cls.res)
         cls.research_id.save()
 
     @classmethod
@@ -219,12 +221,16 @@ class ResearcherWithTwoIdsRegistrationTest(APITestCase):
 
         self.research_id1 = ResearcherId()
         self.research_id1.researcher_id = '101.1'
-        self.research_id1.owner = self.res
+        self.research_id1.save()
+
+        self.research_id1.researcher.add(self.res)
         self.research_id1.save()
 
         self.research_id2 = ResearcherId()
         self.research_id2.researcher_id = '101.2'
-        self.research_id2.owner = self.res
+        self.research_id2.save()
+
+        self.research_id2.researcher.add(self.res)
         self.research_id2.save()
 
     def tearDown(self):
