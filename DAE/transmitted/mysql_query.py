@@ -497,7 +497,8 @@ class MysqlTransmittedQuery(TransmissionConfig):
             connection.close()
         except Exception as ex:
             LOGGER.error("unexpected db error: %s", ex)
-            connection.close()
+            print("unexpected db error: {}".format(ex))
+            # connection.close()
             raise StopIteration
 
     def get_transmitted_variants(self, **kwargs):
