@@ -2,7 +2,7 @@ from django.conf.urls import patterns, url, include
 
 from rest_framework.urlpatterns import format_suffix_patterns
 from rest_framework.authtoken import views as rest_views
-from api.enrichment.views import EnrichmentView
+from enrichment.views import EnrichmentView
 from api.sd.views import SequencingDenovoPreview, SequencingDenovoDownload
 from api.ssc.views import SSCPreview, SSCDownload
 from reports.views import VariantReportsView, FamiliesDataDownloadView

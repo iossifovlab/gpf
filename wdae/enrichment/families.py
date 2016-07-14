@@ -5,8 +5,9 @@ Created on Jun 22, 2015
 '''
 
 from collections import defaultdict, Counter
-from api.enrichment.config import PHENOTYPES
-from api.enrichment.denovo_counters import filter_denovo_studies_by_phenotype
+
+from enrichment.config import PHENOTYPES
+from enrichment.denovo_counters import filter_denovo_studies_by_phenotype
 
 
 class ChildrenStats(object):

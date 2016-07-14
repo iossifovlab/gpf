@@ -3,10 +3,11 @@ Created on Jun 10, 2015
 
 @author: lubo
 '''
-from api.enrichment.denovo_counters import \
-    DenovoRecurrentGenesCounter, filter_denovo_studies_by_phenotype
 from scipy import stats
-from api.enrichment.config import PHENOTYPES, PRB_TESTS_SPECS, SIB_TESTS_SPECS
+
+from enrichment.config import PHENOTYPES, PRB_TESTS_SPECS, SIB_TESTS_SPECS
+from enrichment.denovo_counters import \
+    DenovoRecurrentGenesCounter, filter_denovo_studies_by_phenotype
 
 
 class EnrichmentTest(object):
