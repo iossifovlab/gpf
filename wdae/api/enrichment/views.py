@@ -3,27 +3,25 @@ Created on Jun 12, 2015
 
 @author: lubo
 '''
-from rest_framework.views import APIView
-from query_prepare import prepare_denovo_studies, \
-    prepare_string_value
-
-from api.views import prepare_query_dict, log_filter
-from rest_framework.response import Response
-from helpers.logger import LOGGER
-
-import numpy as np
-from api.enrichment.config import PHENOTYPES
-from api.enrichment.results import EnrichmentTestBuilder
-from precompute import register
 from django.conf import settings
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from api.enrichment.config import PHENOTYPES
 from api.enrichment.denovo_counters import DenovoEventsCounter, \
     DenovoGenesEventCounter
 from api.enrichment.families import ChildrenStats
+from api.enrichment.results import EnrichmentTestBuilder
 from api.query.wdae_query_variants import combine_gene_syms, gene_set_loader2
+from api.views import prepare_query_dict, log_filter
+from helpers.logger import LOGGER
 from helpers.pvalue import colormap_value
+from precompute import register
+from query_prepare import prepare_denovo_studies, \
+    prepare_string_value
+
+
 # from api.profiler import profile
-
-
 class EnrichmentView(APIView):
 
     def __init__(self):
@@ -31,8 +29,6 @@ class EnrichmentView(APIView):
 
     @staticmethod
     def enrichment_prepare(data):
-        data = dict(data)
-
         if data['denovoStudies']:
             del data['denovoStudies']
         data['denovoStudies'] = 'ALL WHOLE EXOME'
@@ -185,8 +181,7 @@ class EnrichmentView(APIView):
     def denovo_studies(self):
         return self.data.get('denovoStudies', None)
 
-    @property
-    def enrichment_config(self):
+    def enrichment_default_config(self):
         config = settings.ENRICHMENT_CONFIG
         background_name = config['background']
         counter_name = config['denovo_counter']
@@ -218,7 +213,7 @@ class EnrichmentView(APIView):
         if self.data is None:
             return Response(None)
 
-        config = self.enrichment_config
+        config = self.enrichment_default_config()
 
         self.enrichment = EnrichmentTestBuilder()
         self.enrichment.build(**config)
