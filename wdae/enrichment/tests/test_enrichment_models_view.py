@@ -1,0 +1,21 @@
+'''
+Created on Jul 14, 2016
+
+@author: lubo
+'''
+
+from rest_framework.test import APITestCase
+from rest_framework import status
+
+
+class Test(APITestCase):
+
+    def test_enrichment_background_models(self):
+        url = '/api/v2/enrichment/models/background'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_enrichment_counting_models(self):
+        url = '/api/v2/enrichment/models/counting'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

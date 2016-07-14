@@ -19,9 +19,37 @@ from helpers.pvalue import colormap_value
 from precompute import register
 from query_prepare import prepare_denovo_studies, \
     prepare_string_value
-
+from rest_framework import status
 
 # from api.profiler import profile
+
+
+class EnrichmentModelsView(APIView):
+
+    BACKGROUND_MODELS = [
+        {'name': 'synonymousBackgroundModel',
+         'desc':
+         'Background model based on synonymous variants in transmitted'},
+        {'name': 'codingLenBackgroundModel',
+         'desc': 'Genes coding lenght background model'}
+    ]
+
+    COUNTING_MODELS = [
+        {'name': 'enrichmentEventsCounting',
+         'desc': 'Counting events'},
+        {'name': 'enrichmentGeneCounting',
+         'desc': 'Counting affected genes'},
+    ]
+
+    def get(self, request, enrichment_model_type):
+        if enrichment_model_type == 'background':
+            return Response(self.BACKGROUND_MODELS)
+        if enrichment_model_type == 'counting':
+            return Response(self.COUNTING_MODELS)
+
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
 class EnrichmentView(APIView):
 
     def __init__(self):
