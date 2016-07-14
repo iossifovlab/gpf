@@ -33,16 +33,17 @@ class EnrichmentView(APIView):
             del data['denovoStudies']
         data['denovoStudies'] = 'ALL WHOLE EXOME'
 
-        result = {'denovoStudies': prepare_denovo_studies(data),
-                  'geneSet': prepare_string_value(data, 'geneSet'),
-                  'geneTerm': prepare_string_value(data, 'geneTerm'),
-                  'gene_set_phenotype':
-                  prepare_string_value(data, 'gene_set_phenotype'),
-                  'geneSyms': combine_gene_syms(data),
-                  'geneWeight': prepare_string_value(data, 'geneWeight'),
-                  'geneWeightMin': prepare_string_value(data, 'geneWeightMin'),
-                  'geneWeightMax': prepare_string_value(data, 'geneWeightMax'),
-                  }
+        result = {
+            'denovoStudies': prepare_denovo_studies(data),
+            'geneSet': prepare_string_value(data, 'geneSet'),
+            'geneTerm': prepare_string_value(data, 'geneTerm'),
+            'gene_set_phenotype':
+            prepare_string_value(data, 'gene_set_phenotype'),
+            'geneSyms': combine_gene_syms(data),
+            'geneWeight': prepare_string_value(data, 'geneWeight'),
+            'geneWeightMin': prepare_string_value(data, 'geneWeightMin'),
+            'geneWeightMax': prepare_string_value(data, 'geneWeightMax'),
+        }
 
         if 'geneSet' not in result or result['geneSet'] is None or \
            'geneTerm' not in result or result['geneTerm'] is None:
@@ -181,6 +182,35 @@ class EnrichmentView(APIView):
     def denovo_studies(self):
         return self.data.get('denovoStudies', None)
 
+    def background_config(self, data):
+        background_model = prepare_string_value(
+            data, 'enrichmentBackgroundModel')
+        if background_model is None:
+            config = settings.ENRICHMENT_CONFIG
+            background_model = config['background']
+
+        if register.has_key(background_model):  # @IgnorePep8
+            background = register.get(background_model)
+        else:
+            background = register.get('synonymous_background')
+        return background
+
+    def counting_config(self, data):
+        counting_model = prepare_string_value(
+            data, 'enrichmentCountingModel')
+        if counting_model is None:
+            config = settings.ENRICHMENT_CONFIG
+            counting_model = config['denovo_counter']
+
+        if counting_model == 'events_counter':
+            counter_cls = DenovoEventsCounter
+        elif counting_model == 'genes_counter':
+            counter_cls = DenovoGenesEventCounter
+        else:
+            raise KeyError('wrong denovo counter: {}'.format(counting_model))
+
+        return counter_cls
+
     def enrichment_default_config(self):
         config = settings.ENRICHMENT_CONFIG
         background_name = config['background']
@@ -201,6 +231,12 @@ class EnrichmentView(APIView):
         return {'background': background,
                 'denovo_counter': counter_cls}
 
+    def enrichment_config(self, data):
+        return {
+            'background': self.background_config(data),
+            'denovo_counter': self.counting_config(data),
+        }
+
     # @profile("enrichment_get.prof")
     def get(self, request):
         query_data = prepare_query_dict(request.query_params)
@@ -213,7 +249,7 @@ class EnrichmentView(APIView):
         if self.data is None:
             return Response(None)
 
-        config = self.enrichment_default_config()
+        config = self.enrichment_config(query_data)
 
         self.enrichment = EnrichmentTestBuilder()
         self.enrichment.build(**config)
