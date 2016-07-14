@@ -220,7 +220,7 @@ class EnrichmentView(APIView):
         if register.has_key(background_model):  # @IgnorePep8
             background = register.get(background_model)
         else:
-            background = register.get('synonymous_background')
+            background = register.get('synonymousBackgroundModel')
         return background
 
     def counting_config(self, data):
@@ -230,9 +230,9 @@ class EnrichmentView(APIView):
             config = settings.ENRICHMENT_CONFIG
             counting_model = config['enrichmentCountingModel']
 
-        if counting_model == 'events_counter':
+        if counting_model == 'enrichmentEventsCounting':
             counter_cls = DenovoEventsCounter
-        elif counting_model == 'genes_counter':
+        elif counting_model == 'enrichmentGeneCounting':
             counter_cls = DenovoGenesEventCounter
         else:
             raise KeyError('wrong denovo counter: {}'.format(counting_model))
