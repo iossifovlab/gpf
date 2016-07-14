@@ -66,6 +66,7 @@ class Background(Precompute):
     def __init__(self):
         self.background = None
         self.background_cache = caches['enrichment']
+        self.name = None
 
     @property
     def is_ready(self):
@@ -94,6 +95,7 @@ class SynonymousBackground(Background):
 
     def __init__(self):
         super(SynonymousBackground, self).__init__()
+        self.name = 'synonymousBackgroundModel'
 
     def precompute(self):
         self.background, self.foreground = \
@@ -162,6 +164,7 @@ class CodingLenBackground(Background):
 
     def __init__(self):
         super(CodingLenBackground, self).__init__()
+        self.name = 'codingLenBackgroundModel'
 
     def precompute(self):
         back = self._load_and_prepare_build()
