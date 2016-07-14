@@ -5,7 +5,7 @@ Created on Jun 22, 2015
 '''
 import unittest
 from DAE import vDB
-from api.enrichment.families import ChildrenStats
+from enrichment.families import ChildrenStats
 from helpers.logger import LOGGER
 
 

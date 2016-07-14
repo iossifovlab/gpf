@@ -5,7 +5,7 @@ Created on Jun 9, 2015
 '''
 import unittest
 import numpy as np
-from api.enrichment.background import SynonymousBackground, \
+from enrichment.background import SynonymousBackground, \
     _collect_affected_gene_syms
 from DAE import vDB
 
