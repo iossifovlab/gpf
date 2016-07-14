@@ -7,11 +7,11 @@ from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.enrichment.config import PHENOTYPES
-from api.enrichment.denovo_counters import DenovoEventsCounter, \
+from enrichment.config import PHENOTYPES
+from enrichment.denovo_counters import DenovoEventsCounter, \
     DenovoGenesEventCounter
-from api.enrichment.families import ChildrenStats
-from api.enrichment.results import EnrichmentTestBuilder
+from enrichment.families import ChildrenStats
+from enrichment.results import EnrichmentTestBuilder
 from api.query.wdae_query_variants import combine_gene_syms, gene_set_loader2
 from api.views import prepare_query_dict, log_filter
 from helpers.logger import LOGGER
