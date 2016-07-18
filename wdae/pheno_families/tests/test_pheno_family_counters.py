@@ -4,6 +4,7 @@ Created on Jul 6, 2016
 @author: lubo
 '''
 from rest_framework.test import APITestCase
+from pprint import pprint
 
 
 class Test(APITestCase):
@@ -27,3 +28,24 @@ class Test(APITestCase):
         self.assertEquals(0, data['unaffected']['families'])
         self.assertEquals(0, data['unaffected']['male'])
         self.assertEquals(0, data['unaffected']['female'])
+
+    def test_family_counters_ivans_test_case(self):
+        url = "/api/v2/ssc_pheno_families/counter"
+        data = {
+            'phenoMeasure': 'non_verbal_iq',
+            "familyRace": "All",
+            "familyPhenoMeasure": "vabs_ii_motor_skills",
+            "familyPhenoMeasureMin": 0,
+            "familyPhenoMeasureMax": 134,
+            "familyStudyType": "All",
+            "familyStudies": "All"
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        data = response.data
+
+        pprint(data)
+
+        self.assertEquals(131, data['autism']['female'])
+        self.assertEquals(857, data['autism']['male'])
+        self.assertEquals(988, data['autism']['families'])

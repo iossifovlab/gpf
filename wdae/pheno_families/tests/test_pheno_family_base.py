@@ -80,7 +80,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
         }
 
         probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(771, len(probands))
+        self.assertEquals(2756, len(probands))
 
 
 class PhenoFamilyCountersViewTestCase(unittest.TestCase):
@@ -97,4 +97,4 @@ class PhenoFamilyCountersViewTestCase(unittest.TestCase):
         }
 
         family_ids = self.pheno_family_counters_view.prepare_probands(data)
-        self.assertEquals(771, len(family_ids))
+        self.assertEquals(2756, len(family_ids))
