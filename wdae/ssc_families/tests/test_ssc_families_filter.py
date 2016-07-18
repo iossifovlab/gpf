@@ -50,3 +50,40 @@ class GenderFamiliesFilterTest(unittest.TestCase):
 
         self.assertEquals(1655, len(male_probands))
         self.assertEquals(235, len(female_probands))
+
+
+class QuadGenderFamiliesFilterTest(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.quad_filter = QuadFamiliesFilter()
+        self.gender_filter = FamiliesGenderFilter()
+
+    def test_quad_filter_male(self):
+        families = self.quad_filter.get_matching_families(
+            study_type=None, study_name='IossifovWE2014')
+        self.assertEquals(1902, len(families))
+
+        male_probands = self.gender_filter.filter_matching_probands(
+            families, 'M')
+
+        female_probands = set(male_probands) & \
+            set(self.gender_filter.get_matching_probands('F'))
+
+        self.assertEquals(0, len(female_probands))
+
+    def test_quad_filter_female(self):
+        families = self.quad_filter.get_matching_families(
+            study_type=None, study_name='IossifovWE2014')
+        self.assertEquals(1902, len(families))
+
+        female_probands = self.gender_filter.filter_matching_probands(
+            families, 'F')
+
+        self.assertEquals(235, len(female_probands))
+
+        all_male_probands = self.gender_filter.get_matching_probands('M')
+        self.assertEquals(2471, len(all_male_probands))
+
+        self.assertEquals(
+            0, len(set(female_probands) & set(all_male_probands)))

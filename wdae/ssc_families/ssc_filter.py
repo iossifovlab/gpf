@@ -48,7 +48,7 @@ class FamiliesGenderFilter(object):
 
     def filter_matching_probands(self, families, gender):
         filter_families = self.get_matching_probands(gender)
-        if families:
+        if families is not None:
             return [f for f in families if f in filter_families]
         else:
             return filter_families

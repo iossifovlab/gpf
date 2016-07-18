@@ -119,6 +119,11 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
                     elif ch.role == 'sib':
                         self._siblings[ch.gender].add(fid)
 
+        print("mixed probands gender: {}".format(
+            self._probands['M'] & self._probands['F']))
+        print("mixed siblings gender: {}".format(
+            self._siblings['M'] & self._siblings['F']))
+
     def _build_families(self):
         studies = get_ssc_denovo_studies()
         families = set()
