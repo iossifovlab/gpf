@@ -23,12 +23,12 @@ class QuadFamiliesFilterTest(unittest.TestCase):
     def test_quad_filter_by_study_type(self):
         families = self.quad_filter.get_matching_families(
             study_type='cnv', study_name=None)
-        self.assertEquals(628, len(families))
+        self.assertEquals(2351, len(families))
 
     def test_quad_filter_by_study_and_study_type(self):
         families = self.quad_filter.get_matching_families(
             study_type='cnv', study_name='IossifovWE2014')
-        self.assertEquals(474, len(families))
+        self.assertEquals(1890, len(families))
 
 
 class GenderFamiliesFilterTest(unittest.TestCase):
@@ -41,12 +41,12 @@ class GenderFamiliesFilterTest(unittest.TestCase):
     def test_filter_probands_gender(self):
         families = self.quad_filter.get_matching_families(
             'cnv', 'IossifovWE2014')
-        self.assertEquals(474, len(families))
+        self.assertEquals(1890, len(families))
 
         male_probands = self.gender_filter.filter_matching_probands(
             families, 'M')
         female_probands = self.gender_filter.filter_matching_probands(
             families, 'F')
 
-        self.assertEquals(414, len(male_probands))
+        self.assertEquals(1655, len(male_probands))
         self.assertEquals(60, len(female_probands))

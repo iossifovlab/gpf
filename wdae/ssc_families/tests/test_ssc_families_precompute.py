@@ -35,12 +35,12 @@ class Test(unittest.TestCase):
 
     def test_we_quads(self):
         self.assertEquals(
-            2326, len(self.precompute.quads('we')))
+            1905, len(self.precompute.quads('we')))
         self.assertEquals(
-            14, len(self.precompute.mismatched_quads('we')))
+            5, len(self.precompute.mismatched_quads('we')))
 
     def test_cnv_quads(self):
         self.assertEquals(
-            628, len(self.precompute.quads('cnv')))
+            2351, len(self.precompute.quads('cnv')))
         self.assertEquals(
-            0, len(self.precompute.mismatched_quads('cnv')))
+            8, len(self.precompute.mismatched_quads('cnv')))
