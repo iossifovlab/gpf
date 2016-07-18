@@ -49,4 +49,4 @@ class GenderFamiliesFilterTest(unittest.TestCase):
             families, 'F')
 
         self.assertEquals(1655, len(male_probands))
-        self.assertEquals(60, len(female_probands))
+        self.assertEquals(235, len(female_probands))
