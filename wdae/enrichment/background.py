@@ -75,13 +75,18 @@ class Background(Precompute):
     def prob(self, gene_syms):
         return 1.0 * self.count(gene_syms) / self.total
 
-    def cache_get(self, gen_syms):
-        key = hash(ImmutableSet(gen_syms))
+    def cache_key(self, gene_syms):
+        gskey = hash(ImmutableSet(gene_syms))
+        key = hash(self.name + str(gskey))
+        return key
+
+    def cache_get(self, gene_syms):
+        key = self.cache_key(gene_syms)
         value = self.background_cache.get(key)
         return value
 
-    def cache_store(self, gen_syms, base):
-        key = hash(ImmutableSet(gen_syms))
+    def cache_store(self, gene_syms, base):
+        key = self.cache_key(gene_syms)
         self.background_cache.set(key, base, 30)
 
     def count(self, gen_syms):
