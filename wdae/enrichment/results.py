@@ -3,7 +3,6 @@ Created on Jun 10, 2015
 
 @author: lubo
 '''
-from scipy import stats
 
 from enrichment.config import PHENOTYPES, PRB_TESTS_SPECS, SIB_TESTS_SPECS
 from enrichment.denovo_counters import \
@@ -32,11 +31,11 @@ class EnrichmentTest(object):
         return res
 
     def calc(self, dsts, gene_syms):
+        effect_type = self.spec['effect']
         res = self.counter.count(dsts, gene_syms)
-        bg_prob = self.background.prob(gene_syms)
 
-        res.expected = round(bg_prob * res.total, 4)
-        res.p_val = stats.binom_test(res.count, res.total, p=bg_prob)
+        res.expected, res.p_val = self.background.test(
+            res.count, res.total, effect_type, gene_syms)
 
         return res
 

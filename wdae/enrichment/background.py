@@ -8,15 +8,16 @@ import cStringIO
 from collections import Counter
 import csv
 import os
+from scipy import stats
+from sets import ImmutableSet
 import zlib
 
 from django.conf import settings
 from django.core.cache import caches
 
 from DAE import vDB
-from precompute.register import Precompute
 import numpy as np
-from sets import ImmutableSet
+from precompute.register import Precompute
 
 
 def _collect_affected_gene_syms(vs):
@@ -93,6 +94,13 @@ class Background(Precompute):
         vpred = np.vectorize(lambda sym: sym in gen_syms)
         index = vpred(self.background['sym'])
         return np.sum(self.background['raw'][index])
+
+    def test(self, O, N, effect_type, gene_syms):
+        # N = total
+        bg_prob = self.prob(gene_syms)
+        expected = round(bg_prob * N, 4)
+        p_val = stats.binom_test(O, N, p=bg_prob)
+        return expected, p_val
 
 
 class SynonymousBackground(Background):
