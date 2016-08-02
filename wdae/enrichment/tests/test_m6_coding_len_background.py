@@ -41,17 +41,17 @@ class Test(unittest.TestCase):
     def test_total(self):
         background = CodingLenBackground()
         background.precompute()
-        self.assertEquals(33100101, background.total)
+        self.assertEquals(33100101, background._total)
 
     def test_count(self):
         background = CodingLenBackground()
         background.precompute()
-        self.assertEquals(3395921, background.count(self.gene_syms))
+        self.assertEquals(3395921, background._count(self.gene_syms))
 
     def test_prob(self):
         background = CodingLenBackground()
         background.precompute()
-        self.assertAlmostEqual(0.10259, background.prob(self.gene_syms), 4)
+        self.assertAlmostEqual(0.10259, background._prob(self.gene_syms), 4)
 
     def test_serialize_deserialize(self):
         background = CodingLenBackground()

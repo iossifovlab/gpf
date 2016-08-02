@@ -17,6 +17,8 @@ from django.core.cache import caches
 
 from DAE import vDB
 import numpy as np
+import pandas as pd
+
 from precompute.register import Precompute
 
 
@@ -62,7 +64,7 @@ def _build_synonymous_background(transmitted_study_name):
     return (b, foreground)
 
 
-class Background(Precompute):
+class Background(object):
 
     def __init__(self):
         self.background = None
@@ -73,8 +75,8 @@ class Background(Precompute):
     def is_ready(self):
         return self.background is not None
 
-    def prob(self, gene_syms):
-        return 1.0 * self.count(gene_syms) / self.total
+    def _prob(self, gene_syms):
+        return 1.0 * self._count(gene_syms) / self._total
 
     def cache_key(self, gene_syms):
         gskey = hash(ImmutableSet(gene_syms))
@@ -90,20 +92,20 @@ class Background(Precompute):
         key = self.cache_key(gene_syms)
         self.background_cache.set(key, base, 30)
 
-    def count(self, gen_syms):
+    def _count(self, gen_syms):
         vpred = np.vectorize(lambda sym: sym in gen_syms)
         index = vpred(self.background['sym'])
         return np.sum(self.background['raw'][index])
 
     def test(self, O, N, effect_type, gene_syms):
         # N = total
-        bg_prob = self.prob(gene_syms)
+        bg_prob = self._prob(gene_syms)
         expected = round(bg_prob * N, 4)
         p_val = stats.binom_test(O, N, p=bg_prob)
         return expected, p_val
 
 
-class SynonymousBackground(Background):
+class SynonymousBackground(Background, Precompute):
     TRANSMITTED_STUDY_NAME = 'w1202s766e611'
 
     def __init__(self):
@@ -115,7 +117,7 @@ class SynonymousBackground(Background):
             _build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
         return self.background
 
-    def count_foreground_events(self, gene_syms):
+    def _count_foreground_events(self, gene_syms):
         count = 0
         for gs in self.foreground:
             touch = False
@@ -127,19 +129,19 @@ class SynonymousBackground(Background):
                 count += 1
         return count
 
-    def count(self, gene_syms):
+    def _count(self, gene_syms):
         res = self.cache_get(gene_syms)
         if not res:
             vpred = np.vectorize(lambda sym: sym in gene_syms)
             index = vpred(self.background['sym'])
             base = np.sum(self.background['raw'][index])
-            foreground = self.count_foreground_events(gene_syms)
+            foreground = self._count_foreground_events(gene_syms)
             res = base + foreground
             self.cache_store(gene_syms, res)
         return res
 
     @property
-    def total(self):
+    def _total(self):
         return np.sum(self.background['raw']) + len(self.foreground)
 
     def serialize(self):
@@ -160,7 +162,7 @@ class SynonymousBackground(Background):
         self.foreground = cPickle.loads(zlib.decompress(f))
 
 
-class CodingLenBackground(Background):
+class CodingLenBackground(Background, Precompute):
     FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
@@ -198,7 +200,7 @@ class CodingLenBackground(Background):
         fin = cStringIO.StringIO(zlib.decompress(b))
         self.background = np.load(fin)
 
-    def count(self, gene_syms):
+    def _count(self, gene_syms):
         res = self.cache_get(gene_syms)
         if not res:
             vpred = np.vectorize(lambda sym: sym in gene_syms)
@@ -208,5 +210,33 @@ class CodingLenBackground(Background):
         return res
 
     @property
-    def total(self):
+    def _total(self):
         return np.sum(self.background['raw'])
+
+
+class SamochaBackground(Background):
+    FILENAME = os.path.join(
+        settings.BASE_DIR,
+        '..',
+        'data/enrichment/background-samocha-et-al.csv')
+
+    def _load_and_prepare_build(self):
+        df = pd.read_csv(self.FILENAME)
+        return df
+
+    def __init__(self):
+        super(SamochaBackground, self).__init__()
+        self.name = 'samochaBackgroundModel'
+        self.background = self._load_and_prepare_build()
+
+    def test(self, O, N, effect_type, gene_syms):
+        eff = 'P_{}'.format(effect_type.upper())
+        assert eff in self.background.columns
+
+        # N = total
+        # bg_prob = self._prob(gene_syms)
+        # expected = round(bg_prob * N, 4)
+        # p_val = stats.binom_test(O, N, p=bg_prob)
+        expected = 1
+        p_val = 1
+        return expected, p_val
