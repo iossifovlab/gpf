@@ -97,7 +97,7 @@ class Background(object):
         index = vpred(self.background['sym'])
         return np.sum(self.background['raw'][index])
 
-    def test(self, O, N, effect_type, gene_syms):
+    def test(self, O, N, effect_type, gene_syms, boys=0, girls=0):
         # N = total
         bg_prob = self._prob(gene_syms)
         expected = round(bg_prob * N, 4)
@@ -214,6 +214,10 @@ class CodingLenBackground(Background, Precompute):
         return np.sum(self.background['raw'])
 
 
+def poisson_test(observed, expected):
+    return 1.0
+
+
 class SamochaBackground(Background):
     FILENAME = os.path.join(
         settings.BASE_DIR,
@@ -229,14 +233,21 @@ class SamochaBackground(Background):
         self.name = 'samochaBackgroundModel'
         self.background = self._load_and_prepare_build()
 
-    def test(self, O, N, effect_type, gene_syms):
+    def test(self, O, N, effect_type, gene_syms, boys, girls):
         eff = 'P_{}'.format(effect_type.upper())
         assert eff in self.background.columns
 
+        gs = [g.upper() for g in gene_syms]
+        df = self.background[self.background['gene'].isin(gs)]
+        male = df['M'] * df[eff] * boys
+        female = df['F'] * df[eff] * girls
         # N = total
         # bg_prob = self._prob(gene_syms)
         # expected = round(bg_prob * N, 4)
         # p_val = stats.binom_test(O, N, p=bg_prob)
-        expected = 1
-        p_val = 1
+        expected = male.sum() + female.sum()
+        print("expected: {}".format(expected))
+        # expected = df[]
+
+        p_val = poisson_test(O, expected)
         return expected, p_val
