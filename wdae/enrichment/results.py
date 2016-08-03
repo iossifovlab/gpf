@@ -30,12 +30,14 @@ class EnrichmentTest(object):
         res.counter = DenovoRecurrentGenesCounter(spec)
         return res
 
-    def calc(self, dsts, gene_syms):
+    def calc(self, dsts, gene_syms, children_stats):
+        # pprint(children_stats)
         effect_type = self.spec['effect']
         res = self.counter.count(dsts, gene_syms)
 
         res.expected, res.p_val = self.background.test(
-            res.count, res.total, effect_type, gene_syms)
+            res.count, res.total, effect_type, gene_syms,
+            children_stats['M'], children_stats['F'])
 
         return res
 
@@ -70,17 +72,17 @@ class EnrichmentTestBuilder(object):
 
         return self.sib_sets
 
-    def _prb_calc(self, dsts, gene_syms):
+    def _prb_calc(self, dsts, gene_syms, children_stats):
         res = []
         for test in self.prb_tests:
-            r = test.calc(dsts, gene_syms)
+            r = test.calc(dsts, gene_syms, children_stats)
             res.append(r)
         return res
 
-    def _sib_calc(self, dsts, gene_syms):
+    def _sib_calc(self, dsts, gene_syms, children_stats):
         res = []
         for test in self.sib_sets:
-            r = test.calc(dsts, gene_syms)
+            r = test.calc(dsts, gene_syms, children_stats)
             res.append(r)
         return res
 
@@ -88,25 +90,26 @@ class EnrichmentTestBuilder(object):
         self._prb_build(background, denovo_counter)
         self._sib_build(background, denovo_counter)
 
-    def _calc_by_phenotype(self, dsts, phenotype, gene_syms):
+    def _calc_by_phenotype(self, dsts, phenotype, gene_syms, children_stats):
         if phenotype == 'unaffected':
-            res = self._sib_calc(dsts, gene_syms)
+            res = self._sib_calc(dsts, gene_syms, children_stats[phenotype])
             return ('unaffected', res)
 
         pdsts = filter_denovo_studies_by_phenotype(dsts, phenotype)
         if not pdsts:
             return None
 
-        res = self._prb_calc(pdsts, gene_syms)
+        res = self._prb_calc(pdsts, gene_syms, children_stats[phenotype])
         return (phenotype, res)
 
-    def calc(self, dsts, gene_syms):
+    def calc(self, dsts, gene_syms, children_stats):
         res = {}
         for phenotype in PHENOTYPES:
             (ph, er) = self._calc_by_phenotype(
                 dsts,
                 phenotype,
-                gene_syms)
+                gene_syms,
+                children_stats)
 
             assert ph == phenotype
 

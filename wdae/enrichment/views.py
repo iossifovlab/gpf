@@ -31,7 +31,10 @@ class EnrichmentModelsView(APIView):
          'desc':
          'Background model based on synonymous variants in transmitted'},
         {'name': 'codingLenBackgroundModel',
-         'desc': 'Genes coding lenght background model'}
+         'desc': 'Genes coding lenght background model'},
+        {'name': 'samochaBackgroundModel',
+         'desc': 'Background model described in Samocha et al',
+         }
     ]
 
     COUNTING_MODELS = [
@@ -259,13 +262,16 @@ class EnrichmentView(APIView):
 
         config = self.enrichment_config(query_data)
 
+        children_stats = ChildrenStats.build(self.denovo_studies)
+
         self.enrichment = EnrichmentTestBuilder()
         self.enrichment.build(**config)
 
         self.result = self.enrichment.calc(self.denovo_studies,
-                                           self.gene_syms)
+                                           self.gene_syms,
+                                           children_stats)
 
         response = self.serialize()
-        response['children_stats'] = ChildrenStats.build(self.denovo_studies)
+        response['children_stats'] = children_stats
 
         return Response(response)

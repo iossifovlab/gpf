@@ -218,7 +218,7 @@ def poisson_test(observed, expected):
     return 1.0
 
 
-class SamochaBackground(Background):
+class SamochaBackground(Background, Precompute):
     FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
@@ -231,6 +231,16 @@ class SamochaBackground(Background):
     def __init__(self):
         super(SamochaBackground, self).__init__()
         self.name = 'samochaBackgroundModel'
+        self.background = self._load_and_prepare_build()
+
+    def precompute(self):
+        self.background = self._load_and_prepare_build()
+        return self.background
+
+    def serialize(self):
+        return {'background': ''}
+
+    def deserialize(self, data):
         self.background = self._load_and_prepare_build()
 
     def test(self, O, N, effect_type, gene_syms, boys, girls):
