@@ -41,9 +41,16 @@ class Test(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.bg.test(10, 10, 'splice-site', self.gene_syms, 3367, 596)
 
-    def test_example_calculation(self):
+    def test_example_calculation_lgds(self):
         expected, p_val = self.bg.test(
-            546, 46, 'LGDs', self.gene_syms, 3367, 596)
+            46, 546, 'LGDs', self.gene_syms, 3367, 596)
         print("expected: {}; p_val: {}".format(expected, p_val))
         self.assertAlmostEquals(12.57, expected, 1)
-        self.assertAlmostEquals(8.3E-05, p_val, 4)
+        self.assertAlmostEquals(8E-49, p_val, 10)
+
+    def test_example_calculation_missense(self):
+        expected, p_val = self.bg.test(
+            95, 2583, 'missense', self.gene_syms, 3367, 596)
+        print("expected: {}; p_val: {}".format(expected, p_val))
+        self.assertAlmostEquals(85.85, expected, 1)
+        self.assertAlmostEquals(2E-6, p_val, 5)

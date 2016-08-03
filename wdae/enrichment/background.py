@@ -239,15 +239,17 @@ class SamochaBackground(Background):
 
         gs = [g.upper() for g in gene_syms]
         df = self.background[self.background['gene'].isin(gs)]
-        male = df['M'] * df[eff] * boys
-        female = df['F'] * df[eff] * girls
-        # N = total
-        # bg_prob = self._prob(gene_syms)
-        # expected = round(bg_prob * N, 4)
-        # p_val = stats.binom_test(O, N, p=bg_prob)
-        expected = male.sum() + female.sum()
-        print("expected: {}".format(expected))
-        # expected = df[]
+        p_boys = (df['M'] * df[eff]).sum()
+        boys_expected = p_boys * boys
 
-        p_val = poisson_test(O, expected)
+        p_girls = (df['F'] * df[eff]).sum()
+        girls_expected = p_girls * girls
+
+        expected = boys_expected + girls_expected
+        bg_prob = (p_boys + p_girls) / 2.0
+        print("observed: {}; trails: {}; expected: {}; bg_prob: {}"
+              .format(O, N, expected, bg_prob))
+        # p_val = poisson_test(O, expected)
+        p_val = stats.binom_test(O, N, p=bg_prob)
+
         return expected, p_val
