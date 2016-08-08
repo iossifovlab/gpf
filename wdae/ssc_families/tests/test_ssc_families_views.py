@@ -40,13 +40,13 @@ class Test(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.data
 
-        self.assertEquals(5, data['autism']['families'])
-        self.assertEquals(5, data['autism']['male'])
+        self.assertEquals(0, data['autism']['families'])
+        self.assertEquals(0, data['autism']['male'])
         self.assertEquals(0, data['autism']['female'])
 
-        self.assertEquals(5, data['unaffected']['families'])
-        self.assertEquals(3, data['unaffected']['male'])
-        self.assertEquals(2, data['unaffected']['female'])
+        self.assertEquals(0, data['unaffected']['families'])
+        self.assertEquals(0, data['unaffected']['male'])
+        self.assertEquals(0, data['unaffected']['female'])
 
     def test_families_empty_filters(self):
         url = "/api/v2/ssc_dataset_families/counter"

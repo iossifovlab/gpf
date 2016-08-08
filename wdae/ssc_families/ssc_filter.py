@@ -40,21 +40,29 @@ class FamiliesGenderFilter(object):
         self.ssc_families_precompute = precompute.register.get(
             'ssc_families_precompute')
 
-    def get_matching_probands(self, gender):
-        return self.ssc_families_precompute.probands(gender)
+    def get_matching_probands(
+            self, gender, study_type=None, study_name=None):
+        return self.ssc_families_precompute.probands(
+            gender, study_type, study_name)
 
-    def get_matching_siblings(self, gender):
-        return self.ssc_families_precompute.siblings(gender)
+    def get_matching_siblings(
+            self, gender, study_type=None, study_name=None):
+        return self.ssc_families_precompute.siblings(
+            gender, study_type, study_name)
 
-    def filter_matching_probands(self, families, gender):
-        filter_families = self.get_matching_probands(gender)
+    def filter_matching_probands(
+            self, families, gender, study_type=None, study_name=None):
+        filter_families = self.get_matching_probands(
+            gender, study_type, study_name)
         if families is not None:
             return [f for f in families if f in filter_families]
         else:
             return filter_families
 
-    def filter_matching_siblings(self, families, gender):
-        filter_families = self.get_matching_siblings(gender)
+    def filter_matching_siblings(
+            self, families, gender, study_type=None, study_name=None):
+        filter_families = self.get_matching_siblings(
+            gender, study_type, study_name)
         if families:
             return [f for f in families if f in filter_families]
         else:

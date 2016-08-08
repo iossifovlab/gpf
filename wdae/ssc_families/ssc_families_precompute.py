@@ -32,21 +32,23 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
         self._siblings = cPickle.loads(zlib.decompress(data['sib']))
         self._families = cPickle.loads(zlib.decompress(data['families']))
 
-    @staticmethod
-    def _match_quad_families(fam1, fam2):
-        if len(fam1.memberInOrder) != len(fam2.memberInOrder):
-            return False
+    @classmethod
+    def _match_quad_families(cls, fam1, fam2):
+        assert fam1.familyId == fam2.familyId
         if len(fam1.memberInOrder) != 4:
             return False
+        assert len(fam2.memberInOrder) == 4
 
-        ch1 = fam1.memberInOrder[2]
-        ch2 = fam2.memberInOrder[2]
-        if ch1.role != ch2.role and ch1.personId != ch2.personId:
+        prb1 = fam1.memberInOrder[2]
+        prb2 = fam2.memberInOrder[2]
+        if prb1.role != prb2.role and prb1.personId != prb2.personId and \
+                prb1.gender != prb2.gender:
             return False
 
-        ch1 = fam1.memberInOrder[3]
-        ch2 = fam2.memberInOrder[3]
-        if ch1.role != ch2.role and ch1.personId != ch2.personId:
+        sib1 = fam1.memberInOrder[3]
+        sib2 = fam2.memberInOrder[3]
+        if sib1.role != sib2.role and sib1.personId != sib2.personId and \
+                sib1.gender != sib2.gender:
             return False
 
         return True
@@ -74,55 +76,79 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
 
     def _build_quads(self, studies):
         quads = {}
-        mismatched = {}
+        nonquads = {}
 
         for st in studies:
             for fid, fam in st.families.items():
-                if fid in mismatched:
-                    mismatched[fid].append(fam)
+                if fid in nonquads:
+                    nonquads[fid].append(fam)
                 elif fid in quads:
                     prev = quads[fid]
                     if not self._match_quad_families(fam, prev):
-                        mismatched[fid] = [prev, fam]
+                        nonquads[fid] = [prev, fam]
                         del quads[fid]
+
                 elif self._is_quad_family(fam):
                     quads[fid] = fam
-        return quads, mismatched
+                else:
+                    nonquads[fid] = [fam]
+        return quads, nonquads
 
     def _build_all_quads(self):
         self._quads = {}
-        self._mismatched = {}
+        self._nonquads = {}
         studies = get_ssc_denovo_studies()
         self._build_study_types(studies)
-        self._quads['all'], self._mismatched[
+        self._quads['all'], self._nonquads[
             'all'] = self._build_quads(studies)
+
         for st in studies:
-            self._quads[st.name], self._mismatched[
+            self._quads[st.name], self._nonquads[
                 st.name] = self._build_quads([st])
 
         for study_type in self._study_types:
             studies_by_type = self._filter_studies(studies, study_type)
-            self._quads[study_type], self._mismatched[
-                study_type] = self._build_quads(studies_by_type)
+            self._quads[study_type], \
+                self._nonquads[study_type] = self._build_quads(
+                    studies_by_type)
 
-    def _build_children_gender(self):
-        self._siblings = {'M': set(),
-                          'F': set()}
-        self._probands = {'M': set(),
-                          'F': set()}
+    def _build_all_children_gender(self):
+        self._probands = {}
+        self._siblings = {}
         studies = get_ssc_denovo_studies()
+        self._build_study_types(studies)
+        print("children gender: all")
+        self._probands['all'], self._siblings['all'] = \
+            self._build_children_gender(studies)
+        for st in studies:
+            print("children gender from study: {}".format(st.name))
+            self._probands[st.name], self._siblings[st.name] = \
+                self._build_children_gender([st])
+
+        for study_type in self._study_types:
+            print("children gender from study type: {}".format(study_type))
+            studies_by_type = self._filter_studies(studies, study_type)
+            self._probands[study_type], self._siblings[study_type] = \
+                self._build_children_gender(studies_by_type)
+
+    def _build_children_gender(self, studies):
+        siblings = {'M': set(),
+                    'F': set()}
+        probands = {'M': set(),
+                    'F': set()}
         for st in studies:
             for fid, fam in st.families.items():
                 for ch in fam.memberInOrder[2:]:
                     if ch.role == 'prb':
-                        self._probands[ch.gender].add(fid)
+                        probands[ch.gender].add(fid)
                     elif ch.role == 'sib':
-                        self._siblings[ch.gender].add(fid)
+                        siblings[ch.gender].add(fid)
 
         print("mixed probands gender: {}".format(
-            self._probands['M'] & self._probands['F']))
+            probands['M'] & probands['F']))
         print("mixed siblings gender: {}".format(
-            self._siblings['M'] & self._siblings['F']))
+            siblings['M'] & siblings['F']))
+        return probands, siblings
 
     def _build_families(self):
         studies = get_ssc_denovo_studies()
@@ -134,20 +160,34 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
 
     def precompute(self):
         self._build_all_quads()
-        self._build_children_gender()
+        self._build_all_children_gender()
         self._build_families()
 
     def quads(self, study='all'):
         return set(self._quads[study].keys())
 
-    def mismatched_quads(self, study='all'):
-        return set(self._mismatched[study].keys())
+    def nonquads(self, study='all'):
+        return set(self._nonquads[study].keys())
 
-    def probands(self, gender):
-        return self._probands[gender]
+    @staticmethod
+    def _filter_gender(children, gender, study_type, study_name):
+        if study_type is not None and study_name is None:
+            return children[study_type][gender]
+        elif study_name is not None and study_type is None:
+            return children[study_name][gender]
+        elif study_name is not None and study_type is not None:
+            return children[study_name][gender] & \
+                children[study_type][gender]
+        else:
+            return children['all'][gender]
 
-    def siblings(self, gender):
-        return self._siblings[gender]
+    def probands(self, gender, study_type=None, study_name=None):
+        return self._filter_gender(
+            self._probands, gender, study_type, study_name)
+
+    def siblings(self, gender, study_type=None, study_name=None):
+        return self._filter_gender(
+            self._siblings, gender, study_type, study_name)
 
     def families(self):
         return self._families

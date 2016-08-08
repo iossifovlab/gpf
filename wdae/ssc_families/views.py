@@ -80,12 +80,12 @@ class SSCFamilyBase(FamilyBase):
         prb_gender = self.get_probands_gender_params(data)
         if prb_gender is not None:
             families = self.families_gender_filter.filter_matching_probands(
-                families, prb_gender)
+                families, prb_gender, study_type, study_name)
 
         sib_gender = self.get_siblings_gender_params(data)
         if sib_gender is not None:
             families = self.families_gender_filter.filter_matching_siblings(
-                families, sib_gender)
+                families, sib_gender, study_type, study_name)
 
         family_ids = self.get_family_ids_params(data)
         if family_ids:
