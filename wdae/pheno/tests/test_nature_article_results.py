@@ -11,12 +11,13 @@ from pheno.report import pheno_calc, DEFAULT_EFFECT_TYPE_GROUPS
 
 
 def prepare_pheno_data(df):
-    yield tuple(['family_id', 'gender', 'LGDs', 'missense',
+    yield tuple(['family_id', 'person_id', 'gender', 'LGDs', 'missense',
                  'synonymous', 'CNV', 'non_verbal_iq', 'age',
                  'non_verbal_iq', 'non_verbal_iq'])
 
     for _index, row in df.iterrows():
         yield tuple([row['familyId'],
+                     row['familyId'],
                      row['probandGender'],
                      row['LGDs'],
                      row['missense'],

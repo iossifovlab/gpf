@@ -117,16 +117,13 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
         self._siblings = {}
         studies = get_ssc_denovo_studies()
         self._build_study_types(studies)
-        print("children gender: all")
         self._probands['all'], self._siblings['all'] = \
             self._build_children_gender(studies)
         for st in studies:
-            print("children gender from study: {}".format(st.name))
             self._probands[st.name], self._siblings[st.name] = \
                 self._build_children_gender([st])
 
         for study_type in self._study_types:
-            print("children gender from study type: {}".format(study_type))
             studies_by_type = self._filter_studies(studies, study_type)
             self._probands[study_type], self._siblings[study_type] = \
                 self._build_children_gender(studies_by_type)

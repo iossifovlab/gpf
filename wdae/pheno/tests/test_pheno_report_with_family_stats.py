@@ -31,7 +31,7 @@ class Test(APITestCase):
         result = response.data['data']
         pprint(result)
 
-        url = "/api/v2/families/counter"
+        url = "/api/v2/ssc_pheno_families/counter"
         data = {
             'phenoMeasure': 'non_verbal_iq',
         }
@@ -40,6 +40,7 @@ class Test(APITestCase):
 
         family_stats = response.data
         pprint(family_stats)
+        pprint(result)
 
         with_hit_male = self.with_hit(result[0])
         without_hit_male = self.without_hit(result[0])
@@ -65,7 +66,7 @@ class Test(APITestCase):
         result = response.data['data']
         pprint(result)
 
-        url = "/api/v2/families/counter"
+        url = "/api/v2/ssc_pheno_families/counter"
         data = {
             'phenoMeasure': 'head_circumference',
         }
@@ -74,6 +75,7 @@ class Test(APITestCase):
 
         family_stats = response.data
         pprint(family_stats)
+        pprint(result)
 
         with_hit_male = self.with_hit(result[0])
         without_hit_male = self.without_hit(result[0])

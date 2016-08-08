@@ -109,7 +109,7 @@ class Measures(Preload):
         self.df = self._load_data()
         self.desc = self._load_desc()
         self.families_precompute = precompute.register.get(
-            'families_precompute')
+            'pheno_families_precompute')
         # self.probands_gender = families_precompute.probands_gender()
         self.probands_gender = \
             zip(itertools.cycle(['M']),
@@ -166,12 +166,18 @@ class Measures(Preload):
                          nm,
                          effect_type_groups,
                          families_query=None):
-        columns = ['family_id', 'gender', ]
+        columns = ['family_id', 'person_id', 'gender', ]
         columns.extend(effect_type_groups)
         columns.extend([nm.measure, 'age', 'non_verbal_iq', nm.formula])
         yield tuple(columns)
 
-        for gender, fid in self.probands_gender:
+        def pid_to_fid(pid):
+            p = pid.split('.')
+            assert len(p) >= 1
+            return p[0].strip()
+
+        for gender, pid in self.probands_gender:
+            fid = pid_to_fid(pid)
             if families_query is not None and fid not in families_query:
                 continue
             vals = nm.df[nm.df.family_id == int(fid)]
@@ -186,9 +192,9 @@ class Measures(Preload):
                 a = np.NaN
                 nviq = np.NaN
 
-            row = [fid, gender, ]
+            row = [fid, pid, gender, ]
             for etg in effect_type_groups:
-                if fid in self.families_precompute.probands(gender):
+                if pid in self.families_precompute.probands(gender):
                     col = families_with_variants[etg].get(fid, 0)
                 else:
                     col = np.NaN

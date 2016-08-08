@@ -69,6 +69,7 @@ def build_narray(ps, effect_type_groups):
         rows.append(tuple([e if e != 'NA' else np.NaN for e in p]))
 
     columns = [('fid', 'S10'),
+               ('pid', 'S13'),
                ('gender', 'S10'), ]
     for effect in effect_type_groups:
         columns.append((effect, 'f'))

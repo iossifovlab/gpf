@@ -62,6 +62,8 @@ class PhenoViewBase(views.APIView, PhenoFamilyBase):
 
         data = self.prepare_query_dict(request)
 
+        print(data)
+
         if 'effectTypeGroups' in data:
             effect_type_groups = data['effectTypeGroups'].split(',')
         else:

@@ -179,3 +179,11 @@ class PhenoFamilyCountersView(APIView, PhenoFamilyBase):
         probands = self.prepare_probands(data)
         result = self.probands_counters(probands)
         return Response(result)
+
+
+class FamilyFilterStudies(APIView):
+
+    def get(self, request):
+        result = ["All"]
+        result.extend(get_ssc_denovo().split(','))
+        return Response(result)

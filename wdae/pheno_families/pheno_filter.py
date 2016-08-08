@@ -161,7 +161,7 @@ class RaceFilter(FamilyFilter):
 
     def __init__(self):
         self.families_precompute = precompute.register.get(
-            'families_precompute')
+            'pheno_families_precompute')
 
     @staticmethod
     def get_races():
