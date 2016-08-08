@@ -41,13 +41,13 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
 
         prb1 = fam1.memberInOrder[2]
         prb2 = fam2.memberInOrder[2]
-        if prb1.role != prb2.role and prb1.personId != prb2.personId and \
+        if prb1.role != prb2.role or prb1.personId != prb2.personId or \
                 prb1.gender != prb2.gender:
             return False
 
         sib1 = fam1.memberInOrder[3]
         sib2 = fam2.memberInOrder[3]
-        if sib1.role != sib2.role and sib1.personId != sib2.personId and \
+        if sib1.role != sib2.role or sib1.personId != sib2.personId or \
                 sib1.gender != sib2.gender:
             return False
 

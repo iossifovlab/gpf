@@ -17,15 +17,15 @@ class Test(unittest.TestCase):
 
     def test_quads_precompute(self):
         self.assertIsNotNone(self.precompute.quads())
-        self.assertEquals(146, len(self.precompute.quads()))
-        self.assertEquals(2719, len(self.precompute.nonquads()))
+        self.assertEquals(141, len(self.precompute.quads()))
+        self.assertEquals(2724, len(self.precompute.nonquads()))
 
     def test_build_quads(self):
         studies = get_ssc_denovo_studies()
 
-        quads, mismatched = self.precompute._build_quads(studies)
-        self.assertEquals(146, len(quads))
-        self.assertEquals(2719, len(mismatched))
+        quads, nonquads = self.precompute._build_quads(studies)
+        self.assertEquals(141, len(quads))
+        self.assertEquals(2724, len(nonquads))
 
     def test_iossifov2014we_quads(self):
         self.assertEquals(
@@ -35,9 +35,9 @@ class Test(unittest.TestCase):
 
     def test_we_quads(self):
         self.assertEquals(
-            1902, len(self.precompute.quads('we')))
+            1899, len(self.precompute.quads('we')))
         self.assertEquals(
-            624, len(self.precompute.nonquads('we')))
+            627, len(self.precompute.nonquads('we')))
 
     def test_cnv_quads(self):
         self.assertEquals(

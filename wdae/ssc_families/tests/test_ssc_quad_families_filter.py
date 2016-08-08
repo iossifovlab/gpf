@@ -153,3 +153,31 @@ class Test(unittest.TestCase):
         print(set(quads) & self.MIXED_SIBLINGS_GENDER)
 
         self.assertEquals(0, len(set(quads) & self.MIXED_SIBLINGS_GENDER))
+
+    def test_build_we_quads_sib_gender(self):
+        precompute = SSCFamiliesPrecompute()
+        study_type = 'we'
+        studies = [st for st in get_ssc_denovo_studies()
+                   if st.get_attr('study.type').lower() == study_type]
+
+        quads, _nonquads = precompute._build_quads(studies)
+
+        for fid in quads.keys():
+            fams = []
+            for st in studies:
+                if fid in st.families:
+                    fams.append(st.families[fid])
+            self.assertTrue(len(fams) >= 1)
+
+            sib_gender = [f.memberInOrder[3].gender for f in fams]
+
+            def same_gender(genders):
+                g0 = genders[0]
+                return all([g == g0 for g in genders])
+
+            if not same_gender(sib_gender):
+                print("family: {}; genders: {}".format(fid, sib_gender))
+                print([(f.memberInOrder[3].personId, f.memberInOrder[3].gender)
+                       for f in fams])
+
+            self.assertTrue(same_gender(sib_gender))
