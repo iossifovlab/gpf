@@ -4,6 +4,7 @@ Created on Mar 23, 2016
 @author: lubo
 '''
 from rest_framework.test import APITestCase
+from pprint import pprint
 
 
 class Test(APITestCase):
@@ -57,13 +58,13 @@ class Test(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.data
 
-        self.assertEquals(2860, data['autism']['families'])      # 2867
-        self.assertEquals(2471, data['autism']['male'])          # 2477
-        self.assertEquals(389, data['autism']['female'])         # 390
+        self.assertEquals(2860, data['autism']['families'])
+        self.assertEquals(2471, data['autism']['male'])
+        self.assertEquals(389, data['autism']['female'])
 
-        self.assertEquals(2380, data['unaffected']['families'])  # 2703
-        self.assertEquals(1190, data['unaffected']['male'])      # 1285
-        self.assertEquals(1330, data['unaffected']['female'])    # 1418
+        self.assertEquals(2380, data['unaffected']['families'])
+        self.assertEquals(1190, data['unaffected']['male'])
+        self.assertEquals(1330, data['unaffected']['female'])
 
     def test_families_counter_with_wrong_family_id(self):
         url = "/api/v2/ssc_dataset_families/counter"
@@ -72,3 +73,27 @@ class Test(APITestCase):
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
+
+    def test_families_cnv_quads(self):
+        url = "/api/v2/ssc_dataset_families/counter"
+        data = {
+            'familyQuadTrio': 'quad',
+            'familyStudyType': 'cnv',
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        data = response.data
+
+        pprint(data)
+        self.assertEquals(2225, data['autism']['families'])
+        self.assertEquals(
+            data['autism']['families'],
+            data['autism']['male'] + data['autism']['female']
+        )
+
+        self.assertEquals(2225, data['unaffected']['families'])  # 2703
+        self.assertEquals(
+            data['unaffected']['families'],
+            data['unaffected']['male'] + data['unaffected']['female']
+        )

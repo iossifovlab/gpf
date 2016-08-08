@@ -35,7 +35,7 @@ class SSCPrepare(APIView, SSCFamilyBase):
 
         families = self.prepare_families(data)
         if families:
-            data['familyIds'] = ','.join(families)
+            data['familyIds'] = ','.join(families['all'])
 
         data = prepare_ssc_filter(data)
         build_effect_type_filter(data)

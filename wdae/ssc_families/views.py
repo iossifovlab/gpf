@@ -17,7 +17,7 @@ class SSCFamilyBase(FamilyBase):
     def __init__(self):
         FamilyBase.__init__(self)
         self.quad_filter = QuadFamiliesFilter()
-        self.families_gender_filter = FamiliesGenderFilter()
+        self.gender_filter = FamiliesGenderFilter()
 
     def get_quad_params(self, data):
         if 'familyQuadTrio' in data:
@@ -50,7 +50,25 @@ class SSCFamilyBase(FamilyBase):
         gender = self._parse_gender(data['familySibGender'])
         return gender
 
+    def _fill_gender_data(self, study_type, study_name):
+        return {
+            'prb': {
+                'M': self.gender_filter.get_matching_probands(
+                    'M', study_type, study_name),
+                'F': self.gender_filter.get_matching_probands(
+                    'F', study_type, study_name),
+            },
+            'sib': {
+                'M': self.gender_filter.get_matching_siblings(
+                    'M', study_type, study_name),
+                'F': self.gender_filter.get_matching_siblings(
+                    'F', study_type, study_name),
+            }
+
+        }
+
     def prepare_families(self, data, families=None):
+        result = {}
         family_pheno_measure = self.get_pheno_measure_params(data)
         if family_pheno_measure is not None:
             families = self.pheno_measure_filter.filter_matching_families(
@@ -79,12 +97,12 @@ class SSCFamilyBase(FamilyBase):
 
         prb_gender = self.get_probands_gender_params(data)
         if prb_gender is not None:
-            families = self.families_gender_filter.filter_matching_probands(
+            families = self.gender_filter.filter_matching_probands(
                 families, prb_gender, study_type, study_name)
 
         sib_gender = self.get_siblings_gender_params(data)
         if sib_gender is not None:
-            families = self.families_gender_filter.filter_matching_siblings(
+            families = self.gender_filter.filter_matching_siblings(
                 families, sib_gender, study_type, study_name)
 
         family_ids = self.get_family_ids_params(data)
@@ -94,9 +112,12 @@ class SSCFamilyBase(FamilyBase):
             else:
                 families = family_ids
         if families:
-            return set(families)
+            result['all'] = set(families)
         else:
-            return set()
+            result['all'] = set()
+
+        result.update(self._fill_gender_data(study_type, study_name))
+        return result
 
 
 class SSCFamilyCountersView(APIView, SSCFamilyBase):
@@ -109,11 +130,11 @@ class SSCFamilyCountersView(APIView, SSCFamilyBase):
             'ssc_families_precompute')
 
     def families_counters(self, families):
-        prb_male = families & self.ssc_families_precompute.probands('M')
-        prb_female = families & self.ssc_families_precompute.probands('F')
+        prb_male = families['all'] & families['prb']['M']
+        prb_female = families['all'] & families['prb']['F']
 
-        sib_male = families & self.ssc_families_precompute.siblings('M')
-        sib_female = families & self.ssc_families_precompute.siblings('F')
+        sib_male = families['all'] & families['sib']['M']
+        sib_female = families['all'] & families['sib']['F']
 
         return {
             'autism': {
@@ -134,11 +155,12 @@ class SSCFamilyCountersView(APIView, SSCFamilyBase):
             request, "ssc family counters request: " +
             str(data)))
 
-        families = self.ssc_families_precompute.families()
+        families = self.prepare_families(
+            data, self.ssc_families_precompute.families())
         assert families is not None
 
-        families = self.prepare_families(data, families)
-        assert families is not None
+        if families['all'] is None:
+            families['all'] = self.ssc_families_precompute.families()
 
         result = self.families_counters(families)
 

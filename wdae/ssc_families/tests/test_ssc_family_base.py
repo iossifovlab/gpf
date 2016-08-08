@@ -21,7 +21,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(4, len(family_ids))
+        self.assertEquals(4, len(family_ids['all']))
         # ['14525', '13830', '13952', '13529']
 
     def test_prepare_family_pheno_measure_with_family_ids(self):
@@ -33,7 +33,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2, len(family_ids))
+        self.assertEquals(2, len(family_ids['all']))
         # ['14525', '13830', '13952', '13529']
 
     def test_prepare_family_race(self):
@@ -42,7 +42,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(71, len(family_ids))
+        self.assertEquals(71, len(family_ids['all']))
 
     def test_prepare_family_race_all(self):
         data = {
@@ -53,7 +53,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2756, len(family_ids))
+        self.assertEquals(2756, len(family_ids['all']))
 
     def test_prepare_study_type_all(self):
         data = {
@@ -64,7 +64,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2756, len(family_ids))
+        self.assertEquals(2756, len(family_ids['all']))
 
     def test_prepare_study_type_cnv(self):
         data = {
@@ -72,7 +72,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2856, len(family_ids))
+        self.assertEquals(2856, len(family_ids['all']))
 
     def test_prepare_quad_and_study_type(self):
         data = {
@@ -81,7 +81,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2225, len(family_ids))
+        self.assertEquals(2225, len(family_ids['all']))
 
     def test_prepare_probands_gender_male(self):
         data = {
@@ -89,7 +89,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2471, len(family_ids))
+        self.assertEquals(2471, len(family_ids['all']))
 
     def test_prepare_probands_gender_female(self):
         data = {
@@ -97,4 +97,4 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(389, len(family_ids))
+        self.assertEquals(389, len(family_ids['all']))
