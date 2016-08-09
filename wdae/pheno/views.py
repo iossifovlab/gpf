@@ -11,11 +11,9 @@ from rest_framework import views, status
 from rest_framework.response import Response
 
 from preloaded.register import get_register
-from pheno.report import family_pheno_query_variants, pheno_calc
 from helpers.logger import log_filter, LOGGER
 from pheno_families.views import PhenoFamilyBase
-from pheno import pheno_request
-import preloaded
+from pheno import pheno_request, pheno_tool
 
 
 class PhenoViewBase(views.APIView, PhenoFamilyBase):
@@ -36,19 +34,11 @@ class PhenoViewBase(views.APIView, PhenoFamilyBase):
         LOGGER.info(log_filter(request, "pheno report request: " +
                                str(request.data)))
 
-        measures = preloaded.register.get_register().get('pheno_measures')
-
         try:
             req = pheno_request.Request(request.data)
-            families_with_variants = family_pheno_query_variants(
-                req.data, req.effect_type_groups)
-            pheno = measures.pheno_merge_data(families_with_variants,
-                                              req.nm,
-                                              req.effect_type_groups,
-                                              req.families)
+            tool = pheno_tool.PhenoTool(req)
 
-            response = self.build_response(req.data, pheno,
-                                           req.nm, req.effect_type_groups)
+            response = self.build_response(tool)
             return response
 
         except ValueError:
@@ -57,28 +47,42 @@ class PhenoViewBase(views.APIView, PhenoFamilyBase):
 
 class PhenoReportView(PhenoViewBase):
 
-    def build_response(self, request, pheno, nm, effect_type_groups):
-        res = pheno_calc(pheno, effect_type_groups)
+    @staticmethod
+    def migrate_response(response):
+        result = []
+        for r in response:
+            result.append(
+                (
+                    r['effectType'],
+                    r['gender'],
+                    r['negativeMean'],
+                    r['negativeDeviation'],
+                    r['positiveMean'],
+                    r['positiveDeviation'],
+                    r['pValue'],
+                    r['positiveCount'],
+                    r['negativeCount'],
+                )
+            )
+        return result
+
+    def build_response(self, tool):
+        res = tool.calc()
         response = {
-            "data": res,
-            "measure": nm.measure,
-            "formula": nm.formula,
+            "data": self.migrate_response(res),
+            "measure": tool.nm.measure,
+            "formula": tool.nm.formula,
         }
         return Response(response)
 
 
 class PhenoReportDownloadView(PhenoViewBase):
 
-    def build_response(self, request, pheno, nm, effect_type_groups):
-        comment = ', '.join([': '.join([k, str(v)])
-                             for (k, v) in request.items()
-                             if k != 'effectTypes'])
-        # comment.append(formula)
-
+    def build_response(self, tool):
+        table = tool.build_data_table()
         response = StreamingHttpResponse(
             itertools.chain(
-                itertools.imap(self.join_row, pheno),
-                ['# "%s"\n' % comment]),
+                itertools.imap(self.join_row, table),),
             content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=pheno.csv'
         response['Expires'] = '0'
