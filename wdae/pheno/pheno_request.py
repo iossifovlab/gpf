@@ -4,7 +4,7 @@ Created on Aug 9, 2016
 @author: lubo
 '''
 from api.query.wdae_query_variants import prepare_query_dict
-from helpers.logger import log_filter, LOGGER
+from helpers.logger import LOGGER
 from pheno_families.pheno_filter import FamilyFilter
 from pheno_families.views import PhenoFamilyBase
 
@@ -12,7 +12,7 @@ import preloaded
 from pheno.measures import NormalizedMeasure
 
 
-class PhenoRequest(PhenoFamilyBase):
+class Request(PhenoFamilyBase):
 
     DEFAULT_EFFECT_TYPE_GROUPS = [
         'LGDs',

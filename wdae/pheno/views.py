@@ -11,9 +11,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 
 from preloaded.register import get_register
-from api.query.wdae_query_variants import prepare_query_dict
-from pheno.report import family_pheno_query_variants, pheno_calc,\
-    DEFAULT_EFFECT_TYPE_GROUPS
+from pheno.report import family_pheno_query_variants, pheno_calc
 from helpers.logger import log_filter, LOGGER
 from pheno_families.views import PhenoFamilyBase
 from pheno import pheno_request
@@ -34,55 +32,27 @@ class PhenoViewBase(views.APIView, PhenoFamilyBase):
         r = [str(c) for c in p]
         return sep.join(r) + '\n'
 
-    def prepare_query_dict(self, data):
-        data = prepare_query_dict(data)
-        if 'effectTypes' in data:
-            del data['effectTypes']
-        families = self.prepare_families(data)
-        if families:
-            data['familyIds'] = ",".join(families)
-        return data
-
     def post(self, request):
         LOGGER.info(log_filter(request, "pheno report request: " +
                                str(request.data)))
 
-#         data = self.prepare_query_dict(request.data)
-#
-#         if 'effectTypeGroups' in data:
-#             effect_type_groups = data['effectTypeGroups'].split(',')
-#         else:
-#             effect_type_groups = DEFAULT_EFFECT_TYPE_GROUPS
-#
-#         if 'phenoMeasure' not in data:
-#             LOGGER.error("phenoMeasure not found")
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
-#
-#         measure_name = data['phenoMeasure']
         measures = preloaded.register.get_register().get('pheno_measures')
-#         if not measures.has_measure(measure_name):
-#             return Response(status=status.HTTP_404_NOT_FOUND)
-#         if 'familyIds' in data:
-#             families_query = set(data['familyIds'].split(','))
-#         else:
-#             families_query = None
-#
-#         by = self.normalize_by(data)
-#         nm = NormalizedMeasure(measure_name)
-#         nm.normalize(by=by)
 
-        req = pheno_request.PhenoRequest(request.data)
+        try:
+            req = pheno_request.Request(request.data)
+            families_with_variants = family_pheno_query_variants(
+                req.data, req.effect_type_groups)
+            pheno = measures.pheno_merge_data(families_with_variants,
+                                              req.nm,
+                                              req.effect_type_groups,
+                                              req.families)
 
-        families_with_variants = family_pheno_query_variants(
-            req.data, req.effect_type_groups)
-        pheno = measures.pheno_merge_data(families_with_variants,
-                                          req.nm,
-                                          req.effect_type_groups,
-                                          req.families)
+            response = self.build_response(req.data, pheno,
+                                           req.nm, req.effect_type_groups)
+            return response
 
-        response = self.build_response(req.data, pheno,
-                                       req.nm, req.effect_type_groups)
-        return response
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class PhenoReportView(PhenoViewBase):
