@@ -4,8 +4,8 @@ Created on Apr 28, 2016
 @author: lubo
 '''
 import unittest
-from pheno.report import family_pheno_query_variants
 from rest_framework.test import APITestCase
+from pheno import pheno_request, pheno_tool
 
 
 class Test(unittest.TestCase):
@@ -13,42 +13,23 @@ class Test(unittest.TestCase):
     def test_single_gene_sym_lgds_only(self):
         data = {
             'denovoStudies': 'ALL SSC',
+            'phenoMeasure': 'head_circumference',
             'transmittedStudies': 'w1202s766e611',
             'presentInParent': "father only",
             'geneSyms': "POGZ",
+            'effectTypeGroups': 'LGDs',
 
         }
-        res = family_pheno_query_variants(data, ['LGDs'])
+        req = pheno_request.Request(data)
+        tool = pheno_tool.PhenoTool(req)
 
-        self.assertIn('LGDs', res)
-        self.assertNotIn('missense', res)
-        self.assertNotIn('synonymous', res)
-        self.assertNotIn('CNV+,CNV-', res)
-        self.assertEqual(1, len(res.keys()))
-        self.assertEqual(0, len(res['LGDs']))
-#         self.assertEqual(42, len(res['missense']))
-#         self.assertEqual(119, len(res['synonymous']))
-#         self.assertEqual(0, len(res['CNV+,CNV-']))
+        res = tool.calc()
+        print(res)
 
-    def test_single_gene_sym_lgds_and_missense(self):
-        data = {
-            'denovoStudies': 'ALL SSC',
-            'transmittedStudies': 'w1202s766e611',
-            'presentInParent': "father only",
-            'geneSyms': "POGZ",
-
-        }
-        res = family_pheno_query_variants(data, ['LGDs', 'missense'])
-
-        self.assertIn('LGDs', res)
-        self.assertIn('missense', res)
-        self.assertNotIn('synonymous', res)
-        self.assertNotIn('CNV+,CNV-', res)
-        self.assertEqual(2, len(res.keys()))
-        self.assertEqual(0, len(res['LGDs']))
-        self.assertEqual(42, len(res['missense']))
-#         self.assertEqual(119, len(res['synonymous']))
-#         self.assertEqual(0, len(res['CNV+,CNV-']))
+        self.assertEquals(2, len(res))
+        [male, female] = res
+        self.assertEquals(male['effectType'], 'LGDs')
+        self.assertEquals(female['effectType'], 'LGDs')
 
 
 class TestViews(APITestCase):

@@ -13,7 +13,6 @@ from preloaded.register import Preload
 from helpers.pvalue import colormap_value
 import precompute
 import itertools
-from pheno_families import pheno_filter
 
 
 class Measures(Preload):
@@ -163,41 +162,42 @@ class Measures(Preload):
         selected = self._select_measure_df(measure, mmin, mmax)
         return selected['individual'].values
 
-    def pheno_merge_data(self, families_with_variants,
-                         nm,
-                         effect_type_groups,
-                         families_query=None):
-        columns = ['family_id', 'person_id', 'gender', ]
-        columns.extend(effect_type_groups)
-        columns.extend([nm.measure, 'age', 'non_verbal_iq', nm.formula])
-        yield tuple(columns)
 
-        for gender, pid in self.probands_gender:
-            fid = pheno_filter.FamilyFilter.strip_proband_id(pid)
-            if families_query is not None and fid not in families_query:
-                continue
-            vals = nm.df[nm.df.family_id == int(fid)]
-            if len(vals) == 1:
-                m = vals[nm.measure].values[0]
-                v = vals.normalized.values[0]
-                a = vals['age'].values[0]
-                nviq = vals['non_verbal_iq'].values[0]
-            else:
-                m = np.NaN
-                v = np.NaN
-                a = np.NaN
-                nviq = np.NaN
-
-            row = [fid, pid, gender, ]
-            for etg in effect_type_groups:
-                if pid in self.families_precompute.probands(gender):
-                    col = families_with_variants[etg].get(fid, 0)
-                else:
-                    col = np.NaN
-                row.append(col)
-
-            row.extend([m, a, nviq, v])
-            yield tuple(row)
+#     def pheno_merge_data(self, families_with_variants,
+#                          nm,
+#                          effect_type_groups,
+#                          families_query=None):
+#         columns = ['family_id', 'person_id', 'gender', ]
+#         columns.extend(effect_type_groups)
+#         columns.extend([nm.measure, 'age', 'non_verbal_iq', nm.formula])
+#         yield tuple(columns)
+#
+#         for gender, pid in self.probands_gender:
+#             fid = pheno_filter.FamilyFilter.strip_proband_id(pid)
+#             if families_query is not None and fid not in families_query:
+#                 continue
+#             vals = nm.df[nm.df.family_id == int(fid)]
+#             if len(vals) == 1:
+#                 m = vals[nm.measure].values[0]
+#                 v = vals.normalized.values[0]
+#                 a = vals['age'].values[0]
+#                 nviq = vals['non_verbal_iq'].values[0]
+#             else:
+#                 m = np.NaN
+#                 v = np.NaN
+#                 a = np.NaN
+#                 nviq = np.NaN
+#
+#             row = [fid, pid, gender, ]
+#             for etg in effect_type_groups:
+#                 if pid in self.families_precompute.probands(gender):
+#                     col = families_with_variants[etg].get(fid, 0)
+#                 else:
+#                     col = np.NaN
+#                 row.append(col)
+#
+#             row.extend([m, a, nviq, v])
+#             yield tuple(row)
 
 
 class NormalizedMeasure(object):
