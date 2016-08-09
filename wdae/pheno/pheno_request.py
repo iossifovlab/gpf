@@ -3,13 +3,15 @@ Created on Aug 9, 2016
 
 @author: lubo
 '''
-from api.query.wdae_query_variants import prepare_query_dict
+from api.query.wdae_query_variants import prepare_query_dict,\
+    wdae_handle_gene_sets
 from helpers.logger import LOGGER
 from pheno_families.pheno_filter import FamilyFilter
 from pheno_families.views import PhenoFamilyBase
 
 import preloaded
 from pheno.measures import NormalizedMeasure
+from api.default_ssc_study import get_ssc_all
 
 
 class Request(PhenoFamilyBase):
@@ -20,6 +22,14 @@ class Request(PhenoFamilyBase):
         'synonymous',
         'CNV+,CNV-',
     ]
+
+    def _prepare_studies(self):
+        self.data.update(get_ssc_all())
+        if 'presentInParent' not in self.data or \
+                self.data['presentInParent'] is None or \
+                self.data['presentInParent'] == 'neither':
+
+            del self.data['transmittedStudies']
 
     def _prepare_families_data(self):
         self.probands = self.prepare_probands(self.data)
@@ -68,7 +78,9 @@ class Request(PhenoFamilyBase):
         PhenoFamilyBase.__init__(self)
 
         self.data = prepare_query_dict(data)
+        wdae_handle_gene_sets(self.data)
 
+        self._prepare_studies()
         self._prepare_families_data()
         self._prepare_effect_groups()
 
