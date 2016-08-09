@@ -66,7 +66,7 @@ class PhenoTool(object):
         row.extend([m, a, nviq, v])
         return row
 
-    def _build_data_table(self):
+    def build_data_table(self):
         self._build_families_variants()
 
         header = self._build_table_header()
@@ -95,7 +95,7 @@ class PhenoTool(object):
         return np.dtype(columns)
 
     def _build_data_array(self):
-        gen = self._build_data_table()
+        gen = self.build_data_table()
         gen.next()  # skip table header
         rows = []
         for row in gen:

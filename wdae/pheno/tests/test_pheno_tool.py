@@ -33,7 +33,7 @@ class Test(unittest.TestCase):
             self.assertIn(fid, self.req.families)
 
     def test_table_header(self):
-        gen = self.tool._build_data_table()
+        gen = self.tool.build_data_table()
         header = gen.next()
 
         self.assertEquals(8, len(header))
@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
         self.assertIn('head_circumference ~ age', header)
 
     def test_table_first_row(self):
-        gen = self.tool._build_data_table()
+        gen = self.tool.build_data_table()
         gen.next()
 
         row = gen.next()
