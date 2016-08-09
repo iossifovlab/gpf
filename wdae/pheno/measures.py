@@ -13,6 +13,7 @@ from preloaded.register import Preload
 from helpers.pvalue import colormap_value
 import precompute
 import itertools
+from pheno_families import pheno_filter
 
 
 class Measures(Preload):
@@ -171,13 +172,8 @@ class Measures(Preload):
         columns.extend([nm.measure, 'age', 'non_verbal_iq', nm.formula])
         yield tuple(columns)
 
-        def pid_to_fid(pid):
-            p = pid.split('.')
-            assert len(p) >= 1
-            return p[0].strip()
-
         for gender, pid in self.probands_gender:
-            fid = pid_to_fid(pid)
+            fid = pheno_filter.FamilyFilter.strip_proband_id(pid)
             if families_query is not None and fid not in families_query:
                 continue
             vals = nm.df[nm.df.family_id == int(fid)]

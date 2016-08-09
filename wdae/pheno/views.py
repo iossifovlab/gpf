@@ -12,11 +12,12 @@ from rest_framework.response import Response
 
 from preloaded.register import get_register
 from api.query.wdae_query_variants import prepare_query_dict
-from pheno.measures import NormalizedMeasure
 from pheno.report import family_pheno_query_variants, pheno_calc,\
     DEFAULT_EFFECT_TYPE_GROUPS
 from helpers.logger import log_filter, LOGGER
 from pheno_families.views import PhenoFamilyBase
+from pheno import pheno_request
+import preloaded
 
 
 class PhenoViewBase(views.APIView, PhenoFamilyBase):
@@ -33,22 +34,8 @@ class PhenoViewBase(views.APIView, PhenoFamilyBase):
         r = [str(c) for c in p]
         return sep.join(r) + '\n'
 
-    def normalize_by(self, data):
-        norm_by = set()
-        if 'normalizedBy' in data:
-            norm_by = set(data['normalizedBy'].split(','))
-
-        res = []
-        if 'normByAge' in norm_by:
-            res.append('age')
-        if 'normByVIQ' in norm_by:
-            res.append('verbal_iq')
-        if 'normByNVIQ' in norm_by:
-            res.append('non_verbal_iq')
-        return res
-
-    def prepare_query_dict(self, request):
-        data = prepare_query_dict(request.data)
+    def prepare_query_dict(self, data):
+        data = prepare_query_dict(data)
         if 'effectTypes' in data:
             del data['effectTypes']
         families = self.prepare_families(data)
@@ -60,40 +47,41 @@ class PhenoViewBase(views.APIView, PhenoFamilyBase):
         LOGGER.info(log_filter(request, "pheno report request: " +
                                str(request.data)))
 
-        data = self.prepare_query_dict(request)
+#         data = self.prepare_query_dict(request.data)
+#
+#         if 'effectTypeGroups' in data:
+#             effect_type_groups = data['effectTypeGroups'].split(',')
+#         else:
+#             effect_type_groups = DEFAULT_EFFECT_TYPE_GROUPS
+#
+#         if 'phenoMeasure' not in data:
+#             LOGGER.error("phenoMeasure not found")
+#             return Response(status=status.HTTP_400_BAD_REQUEST)
+#
+#         measure_name = data['phenoMeasure']
+        measures = preloaded.register.get_register().get('pheno_measures')
+#         if not measures.has_measure(measure_name):
+#             return Response(status=status.HTTP_404_NOT_FOUND)
+#         if 'familyIds' in data:
+#             families_query = set(data['familyIds'].split(','))
+#         else:
+#             families_query = None
+#
+#         by = self.normalize_by(data)
+#         nm = NormalizedMeasure(measure_name)
+#         nm.normalize(by=by)
 
-        print(data)
-
-        if 'effectTypeGroups' in data:
-            effect_type_groups = data['effectTypeGroups'].split(',')
-        else:
-            effect_type_groups = DEFAULT_EFFECT_TYPE_GROUPS
-
-        if 'phenoMeasure' not in data:
-            LOGGER.error("phenoMeasure not found")
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        measure_name = data['phenoMeasure']
-        measures = get_register().get('pheno_measures')
-        if not measures.has_measure(measure_name):
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if 'familyIds' in data:
-            families_query = set(data['familyIds'].split(','))
-        else:
-            families_query = None
-
-        by = self.normalize_by(data)
-        nm = NormalizedMeasure(measure_name)
-        nm.normalize(by=by)
+        req = pheno_request.PhenoRequest(request.data)
 
         families_with_variants = family_pheno_query_variants(
-            data, effect_type_groups)
+            req.data, req.effect_type_groups)
         pheno = measures.pheno_merge_data(families_with_variants,
-                                          nm,
-                                          effect_type_groups,
-                                          families_query)
+                                          req.nm,
+                                          req.effect_type_groups,
+                                          req.families)
 
-        response = self.build_response(data, pheno, nm, effect_type_groups)
+        response = self.build_response(req.data, pheno,
+                                       req.nm, req.effect_type_groups)
         return response
 
 
