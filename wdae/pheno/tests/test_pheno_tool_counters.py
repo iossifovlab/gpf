@@ -48,7 +48,23 @@ class CountersTest(unittest.TestCase):
             u'denovoStudies': u'ALL SSC',
             u'effectTypeGroups': u'LGDs',
             u'presentInParent': u'neither',
-        }
+        },
+        {
+            'denovoStudies': 'ALL SSC',
+            'transmittedStudies': 'w1202s766e611',
+            'presentInParent': "father only",
+            'geneSyms': "POGZ",
+            'phenoMeasure': 'head_circumference',
+            'effectTypeGroups': 'LGDs',
+        },
+        {
+            'denovoStudies': 'ALL SSC',
+            'transmittedStudies': 'w1202s766e611',
+            'presentInParent': "father only",
+            'geneSyms': "POGZ",
+            'phenoMeasure': 'head_circumference',
+            'effectTypeGroups': 'missense'
+        },
     ]
 
     def test(self):
