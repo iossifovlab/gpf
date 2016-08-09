@@ -32,7 +32,7 @@ from query_variants import \
 
 from dae_query import prepare_summary
 
-from report_variants import build_stats
+# from report_variants import build_stats
 
 from studies import get_transmitted_studies_names, get_denovo_studies_names, \
     get_studies_summaries
@@ -573,83 +573,9 @@ Advanced family filter expects following fields:
     return response
 
 
-@api_view(['GET'])
-def report_variants(request):
-    """
-Performs query to DAE to generate report similar to 'reportVariantNumbers.py'.
-
-Expects list of studies names as comma separated list in the query parameters
-with name 'studies'.
-
-Examples:
-
-     GET /api/report_variants?studies=IossifovWE2012,DalyWE2012
-     GET /api/report_variants?studies=IossifovWE2012
-     GET /api/report_variants?studies=DalyWE2012
-
-    """
-    if 'studies' not in request.query_params:
-        return Response({})
-
-    studies_names = request.query_params['studies']
-    studies = vDB.get_studies(studies_names)
-
-    stats = build_stats(studies)
-    stats['studies_names'] = studies_names
-
-    return Response(stats)
-
-
-# @api_view(['GET'])
-# def pheno_supported_studies(request):
-#     return Response({"pheno_supported_studies": get_supported_studies()})
-
-
-# @api_view(['GET'])
-# def pheno_supported_measures(request):
-#     return Response({"pheno_supported_measures": get_supported_measures()})
-
-
-# @api_view(['POST'])
-# def pheno_report_preview(request):
-#
-#     if request.method == 'OPTIONS':
-#         return Response()
-#
-#     data = prepare_query_dict(request.data)
-#     LOGGER.info(log_filter(request, "preview pheno report: " + str(data)))
-#     ps = pheno_query(data)
-#     res = pheno_calc(ps)
-#
-#     return Response(res)
-
-
 def join_row(p, sep=','):
     r = [str(c) for c in p]
     return sep.join(r) + '\n'
-
-
-# @api_view(['POST'])
-# @parser_classes([JSONParser, FormParser])
-# def pheno_report_download(request):
-#
-#     if request.method == 'OPTIONS':
-#         return Response()
-#
-#     data = prepare_query_dict(request.data)
-#     LOGGER.info(log_filter(request, "preview pheno download: " + str(data)))
-#     comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
-#
-#     ps = pheno_query(data)
-#     response = StreamingHttpResponse(
-#         itertools.chain(
-#             itertools.imap(join_row, ps),
-#             ['# %s\n' % comment]),
-#         content_type='text/csv')
-#     response['Content-Disposition'] = 'attachment; filename=unruly.csv'
-#     response['Expires'] = '0'
-#
-#     return response
 
 
 @api_view(['POST'])
