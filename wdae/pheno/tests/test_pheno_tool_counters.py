@@ -65,6 +65,26 @@ class CountersTest(unittest.TestCase):
             'phenoMeasure': 'head_circumference',
             'effectTypeGroups': 'missense'
         },
+        {
+            'denovoStudies': 'ALL SSC',
+            'presentInParent': "neither",
+            'effectTypeGroups': 'missense',
+
+            'phenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'verbal_iq',
+            'familyPhenoMeasureMin': 0,
+            'familyPhenoMeasureMax': 50,
+
+        },
+        {
+            'denovoStudies': 'ALL SSC',
+            'presentInParent': "neither",
+            'effectTypeGroups': 'missense',
+
+            'phenoMeasure': 'non_verbal_iq',
+            'familyRace': 'other',
+            'familyStudyType': 'CNV',
+        },
     ]
 
     def test(self):
