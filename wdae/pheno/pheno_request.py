@@ -32,6 +32,7 @@ class Request(PhenoFamilyBase):
             del self.data['transmittedStudies']
 
     def _prepare_families_data(self):
+        self.siblings = self.prepare_siblins(self.data)
         self.probands = self.prepare_probands(self.data)
         self.families = [
             FamilyFilter.strip_proband_id(p) for p in self.probands]

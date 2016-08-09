@@ -104,6 +104,11 @@ class PhenoFamilyBase(FamilyBase):
 
     def __init__(self):
         FamilyBase.__init__(self)
+        self.pheno_families_precompute = precompute.register.get(
+            'pheno_families_precompute')
+
+    def prepare_siblins(self, data):
+        return set([])
 
     def prepare_probands(self, data):
         base_measure = self.get_base_pheno_measure_params(data)
@@ -145,15 +150,7 @@ class PhenoFamilyBase(FamilyBase):
         probands = self.prepare_probands(data)
         return [FamilyFilter.strip_proband_id(p) for p in probands]
 
-
-class PhenoFamilyCountersView(APIView, PhenoFamilyBase):
-
-    def __init__(self):
-        PhenoFamilyBase.__init__(self)
-        self.pheno_families_precompute = precompute.register.get(
-            'pheno_families_precompute')
-
-    def probands_counters(self, probands):
+    def pheno_counters(self, probands):
         prbs = set(probands)
         male = prbs & self.pheno_families_precompute.probands('M')
         female = prbs & self.pheno_families_precompute.probands('F')
@@ -170,6 +167,12 @@ class PhenoFamilyCountersView(APIView, PhenoFamilyBase):
             }
         }
 
+
+class PhenoFamilyCountersView(APIView, PhenoFamilyBase):
+
+    def __init__(self):
+        PhenoFamilyBase.__init__(self)
+
     def post(self, request):
         data = prepare_query_dict(request.data)
         LOGGER.info(log_filter(
@@ -177,7 +180,7 @@ class PhenoFamilyCountersView(APIView, PhenoFamilyBase):
             str(data)))
 
         probands = self.prepare_probands(data)
-        result = self.probands_counters(probands)
+        result = self.pheno_counters(probands)
         return Response(result)
 
 
