@@ -1,10 +1,11 @@
-from django.conf.urls import patterns, url, include
-
+from django.conf.urls import patterns, url
 from rest_framework.urlpatterns import format_suffix_patterns
-from enrichment.views import EnrichmentView
+
 from api.sd.views import SequencingDenovoPreview, SequencingDenovoDownload
 from api.ssc.views import SSCPreview, SSCDownload
+from enrichment.views import EnrichmentView
 from reports.views import VariantReportsView, FamiliesDataDownloadView
+
 
 urlpatterns = patterns(
     'api.views',
@@ -49,11 +50,6 @@ urlpatterns = patterns(
     url(r'^child_types$', 'child_type_list'),
     url(r'^studies_summaries$', 'studies_summaries'),
 
-    url(r'^v2/pheno_reports', include('pheno.urls')),
-    url(r'^v2/gene_weights', include('gene_weights.urls')),
-    url(r'^v2/ssc_pheno_families', include('pheno_families.urls')),
-    url(r'^v2/ssc_dataset_families', include('ssc_families.urls')),
-    url(r'^v2/enrichment', include('enrichment.urls')),
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)
