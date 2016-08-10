@@ -8,7 +8,7 @@ from query_variants import prepare_inchild, prepare_effect_types, \
 
 import logging
 from rest_framework.test import APITestCase
-from api.query.wdae_query_variants import prepare_gene_sets, gene_set_loader2
+from helpers.wdae_query_variants import prepare_gene_sets, gene_set_loader2
 
 LOGGER = logging.getLogger(__name__)
 

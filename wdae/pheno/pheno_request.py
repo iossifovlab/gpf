@@ -3,7 +3,7 @@ Created on Aug 9, 2016
 
 @author: lubo
 '''
-from api.query.wdae_query_variants import prepare_query_dict,\
+from helpers.wdae_query_variants import prepare_query_dict,\
     wdae_handle_gene_sets
 from helpers.logger import LOGGER
 from pheno_families.pheno_filter import FamilyFilter

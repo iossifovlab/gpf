@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.studies import get_denovo_studies_names, get_transmitted_studies_names
+from studies.studies import get_denovo_studies_names, get_transmitted_studies_names
 from VariantAnnotation import get_effect_types
 from query_variants import get_variant_types, get_child_types
 

@@ -8,7 +8,7 @@ from helpers.dae_query import prepare_summary
 
 import logging
 import itertools
-from api.query.wdae_query_variants import prepare_gene_sets, wdae_query_wrapper
+from helpers.wdae_query_variants import prepare_gene_sets, wdae_query_wrapper
 
 LOGGER = logging.getLogger(__name__)
 

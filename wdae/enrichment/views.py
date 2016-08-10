@@ -7,7 +7,7 @@ from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.query.wdae_query_variants import combine_gene_syms, gene_set_loader2
+from helpers.wdae_query_variants import combine_gene_syms, gene_set_loader2
 from api.views import prepare_query_dict, log_filter
 from enrichment.config import PHENOTYPES
 from enrichment.denovo_counters import DenovoEventsCounter, \
@@ -21,7 +21,7 @@ from query_prepare import prepare_denovo_studies, \
     prepare_string_value
 from rest_framework import status
 
-# from api.profiler import profile
+# from helpers.profiler import profile
 
 
 class EnrichmentModelsView(APIView):

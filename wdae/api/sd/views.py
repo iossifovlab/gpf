@@ -12,7 +12,7 @@ from helpers.dae_query import prepare_summary
 from django.http.response import StreamingHttpResponse
 import itertools
 from rest_framework.parsers import JSONParser, FormParser
-from api.query.wdae_query_variants import wdae_query_wrapper, \
+from helpers.wdae_query_variants import wdae_query_wrapper, \
     prepare_query_dict
 
 

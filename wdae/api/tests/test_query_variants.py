@@ -1,5 +1,5 @@
 import unittest
-from api.query.wdae_query_variants import wdae_query_wrapper
+from helpers.wdae_query_variants import wdae_query_wrapper
 
 # LOGGER = logging.getLogger(__name__)
 

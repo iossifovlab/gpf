@@ -8,7 +8,7 @@ import unittest
 from helpers.dae_query import combine_denovo_gene_sets,\
     gene_terms_union, collect_denovo_gene_sets
 from helpers.GeneTerm import ddunion
-from api.query.wdae_query_variants import gene_set_loader2
+from helpers.wdae_query_variants import gene_set_loader2
 
 
 class Test(unittest.TestCase):

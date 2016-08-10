@@ -4,7 +4,7 @@ Created on Apr 25, 2016
 @author: lubo
 '''
 import unittest
-from api.query.wdae_query_variants import prepare_query_dict
+from helpers.wdae_query_variants import prepare_query_dict
 
 
 class Test(unittest.TestCase):

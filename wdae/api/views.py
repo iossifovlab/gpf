@@ -34,7 +34,7 @@ from helpers.dae_query import prepare_summary
 
 # from report_variants import build_stats
 
-from studies import get_transmitted_studies_names, get_denovo_studies_names, \
+from studies.studies import get_transmitted_studies_names, get_denovo_studies_names, \
     get_studies_summaries
 
 from models import VerificationPath
@@ -42,7 +42,7 @@ from serializers import UserSerializer
 from helpers.logger import LOGGER, log_filter
 from query_prepare import EFFECT_GROUPS, build_effect_type_filter,\
     prepare_string_value
-from api.query.wdae_query_variants import wdae_query_wrapper, \
+from helpers.wdae_query_variants import wdae_query_wrapper, \
     gene_set_loader2,\
     prepare_query_dict
 from django.contrib.auth.models import BaseUserManager

@@ -2,7 +2,7 @@ import unittest
 
 # from query_prepare_bak import prepare_gene_sets
 import logging
-from api.query.wdae_query_variants import wdae_query_wrapper
+from helpers.wdae_query_variants import wdae_query_wrapper
 # import itertools
 
 LOGGER = logging.getLogger(__name__)
