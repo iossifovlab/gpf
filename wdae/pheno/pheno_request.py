@@ -3,8 +3,7 @@ Created on Aug 9, 2016
 
 @author: lubo
 '''
-from helpers.wdae_query_variants import prepare_query_dict,\
-    wdae_handle_gene_sets
+from helpers.wdae_query_variants import wdae_handle_gene_sets
 from helpers.logger import LOGGER
 from pheno_families.pheno_filter import FamilyFilter
 from pheno_families.views import PhenoFamilyBase
@@ -12,6 +11,7 @@ from pheno_families.views import PhenoFamilyBase
 import preloaded
 from pheno.measures import NormalizedMeasure
 from helpers.default_ssc_study import get_ssc_all
+from helpers.dae_query import prepare_query_dict
 
 
 class Request(PhenoFamilyBase):

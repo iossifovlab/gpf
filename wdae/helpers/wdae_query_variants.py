@@ -3,35 +3,12 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
-from query_variants import do_query_variants
-from helpers.dae_query import combine_denovo_gene_sets
+
 from DAE import get_gene_sets_symNS
-from query_prepare import prepare_gene_syms, prepare_string_value
+from helpers.dae_query import combine_denovo_gene_sets
 from preloaded.register import get_register
-from django.http.request import QueryDict
-
-
-def prepare_query_dict(data):
-    res = []
-    if isinstance(data, QueryDict):
-        items = data.iterlists()
-    else:
-        items = data.items()
-
-    for (key, val) in items:
-        key = str(key)
-        if isinstance(val, list):
-            value = ','.join([str(s).strip() for s in val])
-        elif isinstance(val, str) or isinstance(val, unicode):
-            value = str(val.replace(u'\xa0', u' ').encode('utf-8'))
-            value = value.strip()
-        else:
-            value = str(val)
-        if value == '' or value.lower() == 'none':
-            continue
-        res.append((key, value))
-
-    return dict(res)
+from query_prepare import prepare_gene_syms, prepare_string_value
+from query_variants import do_query_variants
 
 
 def gene_set_loader2(gene_set_label, gene_set_phenotype=None):

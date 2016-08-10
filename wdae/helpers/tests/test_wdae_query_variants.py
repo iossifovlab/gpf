@@ -4,14 +4,15 @@ Created on Apr 25, 2016
 @author: lubo
 '''
 import unittest
-from helpers.wdae_query_variants import prepare_query_dict
+from helpers.dae_query import prepare_query_dict
 
 
 class Test(unittest.TestCase):
 
     def test_unicode_unbreakable_space(self):
         data = {
-            u'effectTypes': u'Nonsense,Frame-shift,Splice-site,Missense,Non-frame-shift,noStart,noEnd',  # @IgnorePep8
+            # @IgnorePep8
+            u'effectTypes': u'Nonsense,Frame-shift,Splice-site,Missense,Non-frame-shift,noStart,noEnd',
             u'gender': u'male,female',
             u'gene_set_phenotype': u'',
             u'geneRegion': u'',

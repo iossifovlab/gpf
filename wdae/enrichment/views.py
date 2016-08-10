@@ -8,18 +8,18 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from helpers.wdae_query_variants import combine_gene_syms, gene_set_loader2
-from api.views import prepare_query_dict, log_filter
 from enrichment.config import PHENOTYPES
 from enrichment.denovo_counters import DenovoEventsCounter, \
     DenovoGenesEventCounter
 from enrichment.families import ChildrenStats
 from enrichment.results import EnrichmentTestBuilder
-from helpers.logger import LOGGER
+from helpers.logger import LOGGER, log_filter
 from helpers.pvalue import colormap_value
 from precompute import register
 from query_prepare import prepare_denovo_studies, \
     prepare_string_value
 from rest_framework import status
+from helpers.dae_query import prepare_query_dict
 
 # from helpers.profiler import profile
 

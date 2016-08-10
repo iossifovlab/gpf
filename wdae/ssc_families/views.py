@@ -7,9 +7,9 @@ from pheno_families.views import FamilyBase
 from ssc_families.ssc_filter import QuadFamiliesFilter, FamiliesGenderFilter
 from rest_framework.views import APIView
 import precompute
-from helpers.wdae_query_variants import prepare_query_dict
 from helpers.logger import log_filter, LOGGER
 from rest_framework.response import Response
+from helpers.dae_query import prepare_query_dict
 
 
 class SSCFamilyBase(FamilyBase):

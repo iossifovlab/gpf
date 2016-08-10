@@ -1,6 +1,7 @@
 import logging
 import helpers.GeneTerm
 from precompute import register
+from django.http.request import QueryDict
 
 
 LOGGER = logging.getLogger(__name__)
@@ -9,6 +10,29 @@ LOGGER = logging.getLogger(__name__)
 #     gene_term = gene_set_loader(gene_set_label, study_name)
 #     gs = helpers.GeneTerm.GeneTerm(gene_term)
 #     return gs
+
+
+def prepare_query_dict(data):
+    res = []
+    if isinstance(data, QueryDict):
+        items = data.iterlists()
+    else:
+        items = data.items()
+
+    for (key, val) in items:
+        key = str(key)
+        if isinstance(val, list):
+            value = ','.join([str(s).strip() for s in val])
+        elif isinstance(val, str) or isinstance(val, unicode):
+            value = str(val.replace(u'\xa0', u' ').encode('utf-8'))
+            value = value.strip()
+        else:
+            value = str(val)
+        if value == '' or value.lower() == 'none':
+            continue
+        res.append((key, value))
+
+    return dict(res)
 
 
 def gene_terms_union(gene_terms):

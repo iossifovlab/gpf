@@ -5,10 +5,10 @@ Created on Jul 31, 2015
 '''
 import unittest
 from reports.variants import VariantReports
-# from api.management.commands import recompute
 
 
 class Test(unittest.TestCase):
+
     @classmethod
     def setUpClass(cls):
         super(Test, cls).setUpClass()
