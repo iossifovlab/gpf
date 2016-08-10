@@ -2,7 +2,7 @@ import csv
 
 from django.core.management.base import BaseCommand, CommandError
 
-from api.models import Researcher, ResearcherId
+from users.models import Researcher, ResearcherId
 from django.contrib.auth.models import BaseUserManager
 
 
