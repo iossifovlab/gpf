@@ -10,4 +10,4 @@ INSTALLED_APPS += [
     'django_jenkins',
 ]
 
-PROJECT_APPS = ['api', 'pheno', 'gene_weights', 'helpers', 'families']
+PROJECT_APPS = ['api', 'pheno_report', 'gene_weights', 'helpers', 'families']
