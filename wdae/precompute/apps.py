@@ -10,8 +10,8 @@ from django.conf import settings
 from importlib import import_module
 
 
-class WdaeApiConfig(AppConfig):
-    name = "api"
+class WdaePrecomputeConfig(AppConfig):
+    name = "precompute"
 
     def _split_class_name(self, cls_name):
         spl = cls_name.split('.')
