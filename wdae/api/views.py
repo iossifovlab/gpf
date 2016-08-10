@@ -1,61 +1,40 @@
 # Create your views here.
-from django.contrib.auth import get_user_model
-# from django.contrib.auth.models import AnonymousUser
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+import itertools
+import string
+
 from django.http import StreamingHttpResponse
-# from rest_framework.response import Response as RestResponse
+from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, parser_classes, \
     authentication_classes, permission_classes
 from rest_framework.parsers import JSONParser, FormParser
-# from rest_framework import serializers
-from rest_framework import status
-# from api.report_pheno import get_supported_studies, get_supported_measures, \
-#     pheno_calc, pheno_query
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
 
-from DAE import vDB
 from DAE import giDB
+from DAE import vDB
 from VariantAnnotation import get_effect_types
-
-import itertools
-import string
-# import uuid
-
-
+from helpers.dae_query import prepare_summary, prepare_query_dict
+from helpers.logger import LOGGER, log_filter
+from helpers.wdae_query_variants import wdae_query_wrapper, \
+    gene_set_loader2
+from query_prepare import EFFECT_GROUPS, build_effect_type_filter,\
+    prepare_string_value
 from query_variants import \
     get_child_types, get_variant_types, \
     join_line
-
-from helpers.dae_query import prepare_summary, prepare_query_dict
-
-# from report_variants import build_stats
-
 from studies.studies import get_transmitted_studies_names, \
     get_denovo_studies_names, \
     get_studies_summaries
 
-from models import VerificationPath
-from serializers import UserSerializer
-from helpers.logger import LOGGER, log_filter
-from query_prepare import EFFECT_GROUPS, build_effect_type_filter,\
-    prepare_string_value
-from helpers.wdae_query_variants import wdae_query_wrapper, \
-    gene_set_loader2
-from django.contrib.auth.models import BaseUserManager
 
-
-@receiver(post_save, sender=get_user_model())
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
-
+# from rest_framework.response import Response as RestResponse
+# from rest_framework import serializers
+# from api.report_pheno import get_supported_studies, get_supported_measures, \
+#     pheno_calc, pheno_query
+# import uuid
+# from report_variants import build_stats
 # from query_prepare_bak import prepare_transmitted_studies
-
-
 # class Response(RestResponse):
 #     def __init__(self,data=None, status=200,
 #                  template_name=None, headers=None,
@@ -65,8 +44,6 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 #         else:
 #             headers['Access-Control-Allow-Origin']='*'
 #         RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
-
-
 @api_view(['GET'])
 def report_studies(request):
     return Response({"report_studies": get_denovo_studies_names() +
@@ -576,75 +553,3 @@ Advanced family filter expects following fields:
 def join_row(p, sep=','):
     r = [str(c) for c in p]
     return sep.join(r) + '\n'
-
-
-@api_view(['POST'])
-def register(request):
-    serialized = UserSerializer(data=request.data)
-    if serialized.is_valid():
-        user = get_user_model()
-        researcher_id = serialized.validated_data['researcher_id']
-        email = BaseUserManager.normalize_email(
-            serialized.validated_data['email'])
-
-        created_user = user.objects.create_user(email, researcher_id)
-        created_user.first_name = serialized.validated_data['first_name']
-        created_user.last_name = serialized.validated_data['last_name']
-
-        created_user.save()
-        return Response(serialized.data, status=status.HTTP_201_CREATED)
-    else:
-        return Response(serialized._errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['POST'])
-def check_verif_path(request):
-    verif_path = request.data['verif_path']
-    try:
-        VerificationPath.objects.get(path=verif_path)
-        return Response({}, status=status.HTTP_200_OK)
-    except VerificationPath.DoesNotExist:
-        return Response({
-            'errors': 'Verification path does not exist.'},
-            status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['POST'])
-def change_password(request):
-    password = request.data['password']
-    verif_path = request.data['verif_path']
-
-    user = get_user_model().change_password(verif_path, password)
-
-    return Response({'username': user.email, 'password': password},
-                    status.HTTP_201_CREATED)
-
-
-@api_view(['POST'])
-def get_user_info(request):
-    token = request.data['token']
-    try:
-        user = Token.objects.get(key=token).user
-        if (user.is_staff):
-            userType = 'admin'
-        else:
-            userType = 'registered'
-
-        return Response({'userType': userType,
-                         'email': user.email}, status.HTTP_200_OK)
-    except Token.DoesNotExist:
-        return Response({}, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['POST'])
-def reset_password(request):
-    email = request.data['email']
-    user_model = get_user_model()
-    try:
-        user = user_model.objects.get(email=email)
-        user.reset_password()
-
-        return Response({}, status.HTTP_200_OK)
-    except user_model.DoesNotExist:
-        return Response({'errors': 'User with this email not found'},
-                        status=status.HTTP_400_BAD_REQUEST)

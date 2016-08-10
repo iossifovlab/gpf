@@ -20,5 +20,6 @@ urlpatterns = patterns(
     '',
     url(r'^$', 'variants_angular.views.index'),
     url(r'^api/', include('api.urls')),
+    url(r'^api/users/', include('users.urls')),
     url(r'^angular/', 'variants_angular.views.index'),
 )
