@@ -4,7 +4,7 @@ Created on Apr 26, 2016
 @author: lubo
 '''
 import unittest
-from api.default_ssc_study import get_ssc_all, get_ssc_denovo,\
+from helpers.default_ssc_study import get_ssc_all, get_ssc_denovo,\
     get_ssc_transmitted, get_ssc_denovo_studies, get_ssc_transmitted_studies
 
 

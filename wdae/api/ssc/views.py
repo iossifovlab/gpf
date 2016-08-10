@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.dae_query import prepare_summary
+from helpers.dae_query import prepare_summary
 from api.query.wdae_query_variants import wdae_query_wrapper
 from api.views import prepare_query_dict, build_effect_type_filter
 from helpers.logger import log_filter, LOGGER

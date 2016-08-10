@@ -5,7 +5,7 @@ Created on Jul 7, 2016
 '''
 import unittest
 from ssc_families.ssc_families_precompute import SSCFamiliesPrecompute
-from api.default_ssc_study import get_ssc_denovo_studies
+from helpers.default_ssc_study import get_ssc_denovo_studies
 
 
 class Test(unittest.TestCase):

@@ -4,7 +4,7 @@ Created on Jun 29, 2016
 @author: lubo
 '''
 import preloaded
-from api.default_ssc_study import get_ssc_denovo_studies, get_ssc_denovo
+from helpers.default_ssc_study import get_ssc_denovo_studies, get_ssc_denovo
 from DAE import vDB
 import precompute
 

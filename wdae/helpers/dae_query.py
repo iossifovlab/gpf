@@ -1,5 +1,5 @@
 import logging
-import api.GeneTerm
+import helpers.GeneTerm
 from precompute import register
 
 
@@ -7,15 +7,15 @@ LOGGER = logging.getLogger(__name__)
 
 # def load_gene_set(gene_set_label, study_name=None):
 #     gene_term = gene_set_loader(gene_set_label, study_name)
-#     gs = api.GeneTerm.GeneTerm(gene_term)
+#     gs = helpers.GeneTerm.GeneTerm(gene_term)
 #     return gs
 
 
 def gene_terms_union(gene_terms):
     if len(gene_terms) == 1:
-        return api.GeneTerm.GeneTerm(gene_terms[0])
+        return helpers.GeneTerm.GeneTerm(gene_terms[0])
 
-    result = api.GeneTerm.GeneTerm(gene_terms[0])
+    result = helpers.GeneTerm.GeneTerm(gene_terms[0])
 
     for gt in gene_terms[1:]:
         result.union(gt)
@@ -47,7 +47,7 @@ def combine_denovo_gene_sets(gene_set_phenotype):
 #         gene_term = combine_denovo_gene_sets(gene_set_phenotype)
 #
 #     if gene_term:
-#         gs = api.GeneTerm.GeneTerm(gene_term)
+#         gs = helpers.GeneTerm.GeneTerm(gene_term)
 #         return gs
 #     return None
 

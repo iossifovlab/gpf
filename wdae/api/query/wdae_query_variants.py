@@ -4,7 +4,7 @@ Created on Oct 21, 2015
 @author: lubo
 '''
 from query_variants import do_query_variants
-from api.dae_query import combine_denovo_gene_sets
+from helpers.dae_query import combine_denovo_gene_sets
 from DAE import get_gene_sets_symNS
 from query_prepare import prepare_gene_syms, prepare_string_value
 from preloaded.register import get_register

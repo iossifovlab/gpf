@@ -30,7 +30,7 @@ from query_variants import \
     get_child_types, get_variant_types, \
     join_line
 
-from dae_query import prepare_summary
+from helpers.dae_query import prepare_summary
 
 # from report_variants import build_stats
 

@@ -3,7 +3,7 @@ import unittest
 from query_variants import prepare_inchild, \
     dae_query_variants
 
-from api.dae_query import prepare_summary
+from helpers.dae_query import prepare_summary
 
 
 import logging

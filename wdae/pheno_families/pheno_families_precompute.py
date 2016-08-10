@@ -6,7 +6,7 @@ Created on Jul 6, 2016
 import cPickle
 import zlib
 import precompute
-from api.default_ssc_study import get_ssc_denovo_studies
+from helpers.default_ssc_study import get_ssc_denovo_studies
 from DAE import phDB
 import itertools
 

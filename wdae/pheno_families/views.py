@@ -8,7 +8,7 @@ from pheno_families.pheno_filter import PhenoMeasureFilters, StudyFilter,\
     RaceFilter, FamilyFilter
 import preloaded
 from api.query.wdae_query_variants import prepare_query_dict
-from api.default_ssc_study import get_ssc_denovo
+from helpers.default_ssc_study import get_ssc_denovo
 from helpers.logger import log_filter, LOGGER
 from rest_framework.response import Response
 import precompute

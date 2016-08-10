@@ -11,7 +11,7 @@ from pheno_families.views import PhenoFamilyBase
 
 import preloaded
 from pheno.measures import NormalizedMeasure
-from api.default_ssc_study import get_ssc_all
+from helpers.default_ssc_study import get_ssc_all
 
 
 class Request(PhenoFamilyBase):

@@ -6,7 +6,7 @@ Created on Jul 7, 2016
 import precompute
 import cPickle
 import zlib
-from api.default_ssc_study import get_ssc_denovo_studies
+from helpers.default_ssc_study import get_ssc_denovo_studies
 
 
 class SSCFamiliesPrecompute(precompute.register.Precompute):
