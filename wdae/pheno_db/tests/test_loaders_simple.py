@@ -43,5 +43,23 @@ class V14LoaderTest(unittest.TestCase):
         df = self.loader.load_everything()
         self.assertIsNotNone(df)
 
+    def test_compare_columns_in_cdv_and_ocuv(self):
+        cdv = self.loader.load_cdv()
+        ocuv = self.loader.load_ocuv()
+
+        print(cdv.columns)
+        print(ocuv.columns)
+
+        self.assertTrue((cdv.columns == ocuv.columns).all())
+
+    def test_check_ocuv_categories(self):
+        df = self.loader.load_ocuv()
+        df1 = self.loader._load_df(self.loader.OCUV_OLD)
+
+        self.assertIsNotNone(df1)
+        self.assertEquals(len(df1), len(df))
+        self.assertTrue((df.variableCategory == df1.variableCategory).all())
+
+
 if __name__ == "__main__":
     unittest.main()

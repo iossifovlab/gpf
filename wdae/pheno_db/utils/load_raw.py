@@ -14,8 +14,10 @@ class V14Loader(object):
     CDV = "SSC_DataDictionary_20120321_Core_Descriptive_Variables.csv"
     OCUV = "SSC_DataDictionary_20120321_Other_Commonly_Used_Variables.csv"
     CDV_OLD = "SSC_DataDictionary_20120321_cdv.csv"
+    OCUV_OLD = "SSC_DataDictionary_20120321_ocuv.csv"
 
     EVERYTHING = "EVERYTHING.csv"
+    COMMON_CORE = "COMMON_CORE.csv"
 
     def __init__(self):
         self.config = Config()
