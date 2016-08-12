@@ -5,13 +5,20 @@ Created on Aug 12, 2016
 '''
 
 
-def set_variable_descriptor_from_main_row(vd, row):
+def variable_id(row):
+    return "{}.{}".format(row['tableName'], row['name'])
+
+
+def set_variable_descriptor_from_main_row(vd, row, source):
+    vd.source = source
     vd.table_name = row['tableName']
-    vd.unique_variable_name = row['name']
-    vd.variable_id = row['variableId']
+    vd.variable_name = row['name']
+    vd.variable_id = variable_id(row)
+
     vd.domain = row['domain']
     vd.domain_choice_label = row['domainChoiceLabel']
     vd.measurement_scale = row['measurementScale']
+
     vd.regards_mother = row['regardsMother']
     vd.regards_father = row['regardsFather']
     vd.regards_proband = row['regardsProband']
@@ -25,14 +32,17 @@ def set_variable_descriptor_from_main_row(vd, row):
         str(row['questionInstruction'])
 
 
-def set_variable_descriptor_from_ssc_row(vd, row):
+def set_variable_descriptor_from_ssc_row(vd, row, source):
+    vd.source = source
     vd.table_name = row['tableName']
-    vd.variable_category = row['variableCategory']
-    vd.unique_variable_name = row['name']
-    vd.variable_id = row['variableId']
+    vd.variable_name = row['name']
+    vd.variable_id = variable_id(row)
+
     vd.domain = row['domain']
     vd.domain_choice_label = row['domainChoiceLabel']
     vd.measurement_scale = row['measurementScale']
+
+    vd.variable_category = row['variableCategory']
 
     vd.is_calculated = row['isCalculated']
     vd.calculation_documentation = row['calculationDocumentation']

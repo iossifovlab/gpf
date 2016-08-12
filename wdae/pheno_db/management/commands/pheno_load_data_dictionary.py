@@ -13,14 +13,14 @@ from pheno_db.utils.variables import set_variable_descriptor_from_main_row,\
 class Command(BaseCommand):
     help = '''Loads Main Data Dictionary into the database'''
 
-    def _create_or_update_variable_descriptor(self, df, set_func):
+    def _create_or_update_variable_descriptor(self, df, source, set_func):
         for _index, row in df.iterrows():
             try:
                 vd = VariableDescriptor.objects.get(
                     variable_id=row['variableId'])
             except VariableDescriptor.DoesNotExist:
                 vd = VariableDescriptor()
-            set_func(vd, row)
+            set_func(vd, row, source)
             vd.save()
 
     def handle(self, *args, **options):
@@ -32,17 +32,20 @@ class Command(BaseCommand):
         df = loader.load_ocuv()
         self._create_or_update_variable_descriptor(
             df,
+            'ocuv',
             set_variable_descriptor_from_ssc_row
         )
 
         df = loader.load_cdv()
         self._create_or_update_variable_descriptor(
             df,
+            'cdv',
             set_variable_descriptor_from_ssc_row
         )
 
         df = loader.load_main()
         self._create_or_update_variable_descriptor(
             df,
+            'main',
             set_variable_descriptor_from_main_row
         )

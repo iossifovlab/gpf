@@ -12,8 +12,12 @@ class VariableDescriptor(models.Model):
     variable_name = models.CharField(max_length='127')
     variable_category = models.CharField(max_length='127', null=True)
 
-    variable_id = models.CharField(max_length='255', unique=True)
-    domain = models.CharField(max_length='127')
+    variable_id = models.CharField(
+        max_length='255', unique=True, db_index=True)
+
+    domain = models.CharField(
+        max_length='127', db_index=True)
+
     domain_choice_label = models.CharField(max_length='255', null=True)
     measurement_scale = models.CharField(max_length='32')
     regards_mother = models.NullBooleanField()
@@ -26,3 +30,20 @@ class VariableDescriptor(models.Model):
 
     is_calculated = models.BooleanField()
     calculation_documentation = models.TextField(null=True)
+
+
+class ValueBase(models.Model):
+    family_id = models.CharField(max_length='64', db_index=True)
+    person_id = models.CharField(max_length='64', db_index=True)
+    person_role = models.CharField(max_length='16', db_index=True)
+
+    descriptor = models.ForeignKey(VariableDescriptor, db_index=True)
+    variable_id = models.CharField(max_length='255', db_index=True)
+
+    class Meta:
+        abstract = True
+        unique_together = (('descriptor', 'person_id'),)
+
+
+class ValueFloat(ValueBase):
+    value = models.FloatField()

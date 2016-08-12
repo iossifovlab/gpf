@@ -42,3 +42,16 @@ class V14Loader(object):
 
     def load_everything(self):
         return self._load_df(self.EVERYTHING)
+
+
+class V15Loader(object):
+    DATA_DIRS = [
+        "Proband Data",
+        # "Designated Unaffected Sibling Data",
+        # "Other Sibling Data",
+    ]
+
+    def __init__(self):
+        self.config = Config()
+        self.v14 = self.config._daeConfig.get('sfariDB', 'v14')
+        self.v15 = self.config._daeConfig.get('sfariDB', 'v15')
