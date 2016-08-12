@@ -45,13 +45,31 @@ class V14Loader(object):
 
 
 class V15Loader(object):
-    DATA_DIRS = [
-        "Proband Data",
+    DATA_DIRS = {
+        'prb': 'Proband Data',
         # "Designated Unaffected Sibling Data",
         # "Other Sibling Data",
-    ]
+    }
 
     def __init__(self):
         self.config = Config()
         self.v14 = self.config._daeConfig.get('sfariDB', 'v14')
         self.v15 = self.config._daeConfig.get('sfariDB', 'v15')
+
+    def load(self, table_name):
+        result = []
+        for data_dir in self.DATA_DIRS.values():
+            dirname = os.path.join(self.v15, data_dir)
+            assert os.path.isdir(dirname)
+
+            filename = os.path.join(dirname, "{}.csv".format(table_name))
+            if not os.path.isfile(filename):
+                print("skipping {}...".format(filename))
+                continue
+
+            print("processing table: {}".format(filename))
+
+            df = pd.read_csv(filename, low_memory=False)
+            result.append(df)
+
+        return result
