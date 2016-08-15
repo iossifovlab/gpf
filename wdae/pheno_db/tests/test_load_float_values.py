@@ -23,9 +23,15 @@ class Test(TestCase):
     def test_check_variable_descriptor(self):
         self.assertIsNotNone(self.vd)
 
-    def test_value_float_qs(self):
+    def test_load_value_float_qs(self):
         loader = ValuesLoader(self.vd)
         qs = loader.load_qs()
         rows = list(qs)
-        print(rows)
         self.assertEquals(6, len(rows))
+
+    def test_load_value_float_df(self):
+        loader = ValuesLoader(self.vd)
+        df = loader.load_df()
+        print(df.head())
+        self.assertIsNotNone(df)
+        self.assertIsNotNone(df.variable_descriptor)
