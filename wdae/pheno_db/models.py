@@ -31,6 +31,11 @@ class VariableDescriptor(models.Model):
     is_calculated = models.BooleanField()
     calculation_documentation = models.TextField(null=True)
 
+    has_values = models.NullBooleanField()
+
+    domain_rank = models.IntegerField(null=True)
+    individuals = models.IntegerField(null=True)
+
 
 class ValueBase(models.Model):
     family_id = models.CharField(max_length='64', db_index=True)

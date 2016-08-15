@@ -3,15 +3,17 @@ Created on Aug 12, 2016
 
 @author: lubo
 '''
+import sys
+
 from django.core.management.base import BaseCommand, CommandError
+
+import numpy as np
 from pheno_db.models import VariableDescriptor, ValueFloat
 from pheno_db.utils.load_raw import V15Loader
-import numpy as np
-import sys
 
 
 class Command(BaseCommand):
-    help = '''Loads Main Data Dictionary into the database'''
+    help = '''Loads Pheno DB v15 data into the database'''
 
     BULK_SIZE = 200
 
@@ -20,7 +22,6 @@ class Command(BaseCommand):
             raise CommandError('Unexpected argument passed!')
 
         tables = VariableDescriptor.objects.values('table_name').distinct()
-        print(tables)
 
         loader = V15Loader()
 
