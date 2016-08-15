@@ -46,19 +46,37 @@ class V14Loader(object):
 
 class V15Loader(object):
     DATA_DIRS = {
-        'prb': 'Proband Data',
-        # "Designated Unaffected Sibling Data",
-        # "Other Sibling Data",
+        'prb': [
+            'Proband Data',
+        ],
+        'sib': [
+            'Designated Unaffected Sibling Data',
+            # 'Other Sibling Data',
+        ],
+        'father': [
+            'Father Data',
+        ],
+        'mother': [
+            'Mother Data',
+        ],
     }
+
+    INDIVIDUALS = "Individuals_by_Distribution_v15.csv"
 
     def __init__(self):
         self.config = Config()
         self.v14 = self.config._daeConfig.get('sfariDB', 'v14')
         self.v15 = self.config._daeConfig.get('sfariDB', 'v15')
 
-    def load(self, table_name):
+    def _data_dirs(self, roles):
         result = []
-        for data_dir in self.DATA_DIRS.values():
+        for role in roles:
+            result.extend(self.DATA_DIRS[role])
+        return result
+
+    def load(self, table_name, roles=['prb']):
+        result = []
+        for data_dir in self._data_dirs(roles):
             dirname = os.path.join(self.v15, data_dir)
             assert os.path.isdir(dirname)
 
@@ -73,3 +91,14 @@ class V15Loader(object):
             result.append(df)
 
         return result
+
+    def _load_df(self, name):
+        filename = os.path.join(self.v15, name)
+        assert os.path.isfile(filename)
+        df = pd.read_csv(filename, low_memory=False, sep='\t')
+
+        return df
+
+    def load_individuals(self):
+        df = self._load_df(self.INDIVIDUALS)
+        return df

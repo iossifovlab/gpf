@@ -7,6 +7,7 @@ read -r -d '' drop_pheno_db << EOF
 BEGIN;
 DELETE FROM "pheno_db_variabledescriptor";
 DELETE FROM "pheno_db_valuefloat";
+DELETE FROM "pheno_db_individual";
 COMMIT;
 EOF
 

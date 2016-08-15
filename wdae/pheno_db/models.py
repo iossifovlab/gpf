@@ -52,3 +52,12 @@ class ValueBase(models.Model):
 
 class ValueFloat(ValueBase):
     value = models.FloatField()
+
+
+class Individual(models.Model):
+    person_id = models.CharField(max_length='32', db_index=True)
+    role = models.CharField(max_length='16', db_index=True)
+    gender = models.CharField(max_length='1', db_index=True)
+    race = models.CharField(max_length='32', db_index=True)
+    family_id = models.CharField(max_length=16, db_index=True)
+    collection = models.CharField(max_length='64')
