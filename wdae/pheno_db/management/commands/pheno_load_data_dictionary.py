@@ -12,16 +12,22 @@ from pheno_db.utils.variables import set_variable_descriptor_from_main_row,\
 
 class Command(BaseCommand):
     help = '''Loads Main Data Dictionary into the database'''
+    BULK_SIZE = 200
 
     def _create_or_update_variable_descriptor(self, df, source, set_func):
+        bulk = []
         for _index, row in df.iterrows():
-            try:
-                vd = VariableDescriptor.objects.get(
-                    variable_id=row['variableId'])
-            except VariableDescriptor.DoesNotExist:
-                vd = VariableDescriptor()
+            vd = VariableDescriptor()
             set_func(vd, row, source)
-            vd.save()
+            bulk.append(vd)
+
+            if len(bulk) >= self.BULK_SIZE:
+                VariableDescriptor.objects.bulk_create(bulk)
+                bulk = []
+
+        if len(bulk) > 0:
+            VariableDescriptor.objects.bulk_create(bulk)
+            bulk = []
 
     def handle(self, *args, **options):
         if(len(args) != 0):
