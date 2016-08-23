@@ -169,13 +169,13 @@ class Individuals(PhenoConfig):
     def load(self):
         cache_dir = self.cache_dir
         filename = os.path.join(cache_dir, 'individuals.csv')
-        df = pd.read_csv(filename, dtype={
+        self.df = pd.read_csv(filename, dtype={
             'personId': 'S16', 'familyId': 'S16',
             'roleId': 'S8', 'role': 'S8', 'roleOrder': 'S8',
-            'collection': 'S64'})
+            'collection': 'S64', 'gender': 'S8'})
 
         self.families = defaultdict(Family)
-        for _index, row in df.iterrows():
+        for _index, row in self.df.iterrows():
 
             family_id = row['familyId']
             self.families[family_id].familyId = family_id
