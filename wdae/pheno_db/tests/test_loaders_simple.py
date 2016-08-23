@@ -4,7 +4,7 @@ Created on Aug 10, 2016
 @author: lubo
 '''
 import unittest
-from pheno_db.utils.load_raw import V14Loader
+from pheno.utils.load_raw import V14Loader
 # import collections
 # import pprint
 

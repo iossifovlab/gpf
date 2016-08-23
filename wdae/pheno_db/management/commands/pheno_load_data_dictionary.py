@@ -4,7 +4,7 @@ Created on Aug 12, 2016
 @author: lubo
 '''
 from django.core.management.base import BaseCommand, CommandError
-from pheno_db.utils.load_raw import V14Loader
+from pheno.utils.load_raw import V14Loader
 from pheno_db.models import VariableDescriptor
 
 

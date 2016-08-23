@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 import numpy as np
 from pheno_db.models import VariableDescriptor, ValueFloat
-from pheno_db.utils.load_raw import V15Loader
+from pheno.utils.load_raw import V15Loader
 
 
 class Command(BaseCommand):

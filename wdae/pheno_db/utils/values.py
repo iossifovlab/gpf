@@ -4,7 +4,7 @@ Created on Aug 15, 2016
 @author: lubo
 '''
 import pandas as pd
-from pheno_db.models import ValueFloat
+from pheno.models import ValueFloat
 
 
 class ValuesLoader(object):

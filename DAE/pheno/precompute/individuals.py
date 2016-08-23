@@ -8,8 +8,8 @@ import csv
 import numpy as np
 import pandas as pd
 
-from pheno_db.utils.load_raw import V15Loader
-from pheno_db.utils.configuration import PhenoConfig
+from pheno.utils.load_raw import V15Loader
+from pheno.utils.configuration import PhenoConfig
 from VariantsDB import Family, Person
 from collections import defaultdict
 

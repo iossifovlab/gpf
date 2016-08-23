@@ -1,0 +1,24 @@
+
+phDB = openPheno(...)
+
+
+phDB.families -- the same interface as in vDB.families
+	{ fmId: (fd.familyId, fd.memberInOrder (pd.personId,pd.role,pd.gender,pd.atts), fd.atts) }
+
+pd.instruments
+	intrsuments with description?? and list of fields.
+	for each field, fieldKey, description of the type
+		
+
+pd.get_string_data(personId, fieldKey)
+
+pd.get_data(personId, fieldKey)
+
+pd.get_data(list of personId, fieldKey)
+
+pd.get_intruments(personId)
+
+pd.get_fields(personId)???
+
+pd.get_intrument_values(personId,instrumentId) -> dictionary {fieldKey -> value}
+

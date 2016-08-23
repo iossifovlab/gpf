@@ -6,7 +6,7 @@ Created on Aug 10, 2016
 import os
 
 import pandas as pd
-from pheno_db.utils.configuration import PhenoConfig
+from pheno.utils.configuration import PhenoConfig
 
 
 class V14Loader(PhenoConfig):
