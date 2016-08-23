@@ -54,7 +54,7 @@ class ValueFloat(ValueBase):
     value = models.FloatField()
 
 
-class Individual(models.Model):
+class Person(models.Model):
     person_id = models.CharField(max_length='32', db_index=True)
     role = models.CharField(max_length='16', db_index=True)
     role_order = models.IntegerField()
