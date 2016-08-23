@@ -5,11 +5,11 @@ Created on Aug 10, 2016
 '''
 import os
 
-from Config import Config
 import pandas as pd
+from pheno_db.utils.configuration import PhenoConfig
 
 
-class V14Loader(object):
+class V14Loader(PhenoConfig):
     MAIN = "SSC_DataDictionary_20120321_Main.csv"
     CDV = "SSC_DataDictionary_20120321_Core_Descriptive_Variables.csv"
     OCUV = "SSC_DataDictionary_20120321_Other_Commonly_Used_Variables.csv"
@@ -20,9 +20,7 @@ class V14Loader(object):
     COMMON_CORE = "COMMON_CORE.csv"
 
     def __init__(self):
-        self.config = Config()
-        self.v14 = self.config._daeConfig.get('sfariDB', 'v14')
-        self.v15 = self.config._daeConfig.get('sfariDB', 'v15')
+        super(V14Loader, self).__init__()
 
     def _load_df(self, name):
         filename = os.path.join(self.v14, name)
@@ -44,7 +42,7 @@ class V14Loader(object):
         return self._load_df(self.EVERYTHING)
 
 
-class V15Loader(object):
+class V15Loader(PhenoConfig):
     DATA_DIRS = {
         'prb': [
             'Proband Data',
@@ -64,9 +62,7 @@ class V15Loader(object):
     INDIVIDUALS = "Individuals_by_Distribution_v15.csv"
 
     def __init__(self):
-        self.config = Config()
-        self.v14 = self.config._daeConfig.get('sfariDB', 'v14')
-        self.v15 = self.config._daeConfig.get('sfariDB', 'v15')
+        super(V15Loader, self).__init__()
 
     def _data_dirs(self, roles):
         result = []
