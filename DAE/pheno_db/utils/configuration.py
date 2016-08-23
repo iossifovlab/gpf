@@ -14,8 +14,8 @@ class PhenoConfig(object):
         self.config = Config()
         self.v14 = self.config._daeConfig.get('sfariDB', 'v14')
         self.v15 = self.config._daeConfig.get('sfariDB', 'v15')
-        self.cache = self.config._daeConfig.get('sfariDB', 'cache')
+        self.cache_dir = self.config._daeConfig.get('sfariDB', 'cache')
 
-        assert os.path.isdir(self.cache)
+        assert os.path.isdir(self.cache_dir)
         assert os.path.isdir(self.v14)
         assert os.path.isdir(self.v15)
