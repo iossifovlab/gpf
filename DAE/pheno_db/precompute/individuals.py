@@ -65,10 +65,11 @@ class PrepareIndividuals(V15Loader):
         'v6', 'v7', 'v8', 'v9',
         'v10', 'v11', 'v12', 'v13', 'v14', 'v15']
 
-    def _build_individuals_header(self):
+    def _build_individuals_dtype(self):
         dtype = [('personId', 'S16'), ('familyId', 'S16'),
                  ('roleId', 'S8'), ('role', 'S8'),
-                 ('roleOrder', int), ('collection', 'S64')]
+                 ('roleOrder', int), ('collection', 'S64'),
+                 ('gender', 'S8')]
         for ver in self.VERSIONS:
             dtype.append((ver, int))
 
@@ -88,7 +89,8 @@ class PrepareIndividuals(V15Loader):
         role_order = PrepareIndividuals._role_order(role_id)
         role_type = PrepareIndividuals._role_type(role_id)
         t = [person_id, family_id, role_id,
-             role_type, role_order, collection]
+             role_type, role_order, collection,
+             'X']
         for ver in self.VERSIONS:
             v = row[self.VERSION2LABEL[ver]]
             t.append(1 if v else 0)
@@ -100,7 +102,7 @@ class PrepareIndividuals(V15Loader):
         index = self._build_individuals_versions_index(individuals)
 
         df = individuals[index]
-        dtype = self._build_individuals_header()
+        dtype = self._build_individuals_dtype()
 
         values = []
         for _index, row in df.iterrows():
@@ -121,6 +123,41 @@ class PrepareIndividuals(V15Loader):
 
     def prepare(self):
         df = self._build_df_from_individuals()
+        df = self._build_gender(df)
+
+        return df
+
+    def _build_proband_gender(self, df):
+        [cd] = self.load_table('ssc_core_descriptive', roles=['prb'])
+        for _index, row in cd.iterrows():
+            pid = row['individual']
+            gender = row['sex'].upper()[0]
+            df.loc[df.personId == pid, 'gender'] = gender
+        return df
+
+    def _build_siblings_gender(self, df):
+        cds = self.load_table('ssc_core_descriptive', roles=['sib'])
+        for cd in cds:
+            for _index, row in cd.iterrows():
+                pid = row['individual']
+                if isinstance(row['sex'], float):
+                    gender = 'X'
+                else:
+                    gender = row['sex'].upper()[0]
+                df.loc[df.personId == pid, 'gender'] = gender
+        return df
+
+    def _build_gender(self, df):
+        gender = pd.Series('X', df.index)
+
+        gender[df.role == 'mom'] = 'F'
+        gender[df.role == 'dad'] = 'M'
+
+        df['gender'] = gender
+
+        df = self._build_proband_gender(df)
+        df = self._build_siblings_gender(df)
+
         return df
 
 
