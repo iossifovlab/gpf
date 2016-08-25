@@ -218,7 +218,6 @@ class PrepareIndividualsGenderFromSSC(V15Loader):
                 gender[pid] = ps[0].gender
             else:
                 check = [p.gender == ps[0].gender for p in ps]
-                print(check)
                 if all(check):
                     gender[pid] = ps[0].gender
                 else:
@@ -234,7 +233,7 @@ class PrepareIndividualsGenderFromSSC(V15Loader):
     def prepare(self):
         pm = PersonManager()
         pm.connect()
-        df = pm.load_df(where='ssc_present=1')
+        df = pm.load_df(where='gender is null and ssc_present=1')
         self._build_gender_from_ssc(df)
 
         for _index, row in df.iterrows():
