@@ -241,3 +241,55 @@ class PrepareIndividualsGenderFromSSC(V15Loader):
             pm.save(p)
 
         pm.close()
+
+
+class CheckIndividualsGenderToSSC(V15Loader):
+
+    def __init__(self):
+        super(CheckIndividualsGenderToSSC, self).__init__()
+
+    def _check_gender_to_ssc(self, df):
+        persons = {}
+        for _index, val in df.person_id.iteritems():
+            persons[val] = []
+
+        for st in self.get_all_ssc_studies():
+            print("processing study: {}".format(st.name))
+            for _fid, fam in st.families.items():
+                for p in fam.memberInOrder:
+                    if p.personId in persons:
+                        p.study = st.name
+                        persons[p.personId].append(p)
+
+        gender = {}
+        for pid, ps in persons.items():
+            assert len(ps) > 0
+            if len(ps) == 1:
+                gender[pid] = ps[0].gender
+            else:
+                check = [p.gender == ps[0].gender for p in ps]
+                if all(check):
+                    gender[pid] = ps[0].gender
+                else:
+                    print("\ngender mismatch for person: {}:".format(pid))
+                    for p in ps:
+                        print("\tstudy: {}; pid: {}; gender {}".format(
+                            p.study, p.personId, p.gender))
+
+            check = df[df.person_id == pid].gender == gender[pid]
+            if not np.all(check):
+                print("\ngender mismatch for person: {}".format(pid))
+                print("\tpheno db gender: {}".format(
+                    df[df.person_id == pid].gender.values))
+                for p in ps:
+                    print("\tstudy: {}; pid: {}; gender {}".format(
+                        p.study, p.personId, p.gender))
+
+    def check(self):
+        pm = PersonManager()
+        pm.connect()
+        df = pm.load_df(where='ssc_present=1')
+
+        self._check_gender_to_ssc(df)
+
+        pm.close()

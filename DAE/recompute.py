@@ -3,12 +3,21 @@ Created on Aug 25, 2016
 
 @author: lubo
 '''
+import sys
+import argparse
+
 from pheno.precompute.families import PrepareIndividuals,\
     PrepareIndividualsGender, PrepareIndividualsSSCPresent,\
-    PrepareIndividualsGenderFromSSC
+    PrepareIndividualsGenderFromSSC, CheckIndividualsGenderToSSC
+
+LINE = "--------------------------------------------------------------------"
 
 
 def recompute_pheno_families_cache():
+    print(LINE)
+    print("recomputing pheno db caches")
+    print(LINE)
+
     p10 = PrepareIndividuals()
     p10.prepare()
 
@@ -21,7 +30,48 @@ def recompute_pheno_families_cache():
     p40 = PrepareIndividualsGenderFromSSC()
     p40.prepare()
 
+    print(LINE)
+
+
+def check_pheno_families_cache():
+    print(LINE)
+    print("checking pheno db caches")
+    print(LINE)
+
+    ch10 = CheckIndividualsGenderToSSC()
+    ch10.check()
+
+    print(LINE)
+
+
+def parse_arguments(argv=sys.argv[1:]):
+    pass
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description="Tool to precompute caches for DAE.")
 
-    recompute_pheno_families_cache()
+    parser.add_argument(
+        "--recompute",
+        dest="recompute",
+        action="store_true",
+        help="recomputes caches")
+
+    parser.add_argument(
+        "--check",
+        dest="check",
+        action="store_true",
+        help="checks caches")
+
+    parser.add_argument(
+        "cache",
+        help="caches to recompute",
+        nargs='?')
+
+    # Process arguments
+    args = parser.parse_args()
+    if args.cache == 'pheno_db' or args.cache == 'all':
+        if args.recompute:
+            recompute_pheno_families_cache()
+        if args.check:
+            check_pheno_families_cache()
