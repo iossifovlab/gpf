@@ -116,7 +116,7 @@ class PrepareIndividualsGender(V15Loader):
             for _index, row in cd.iterrows():
                 pid = row['individual']
                 if isinstance(row['sex'], float):
-                    gender = 'X'
+                    gender = None
                 else:
                     gender = row['sex'].upper()[0]
                 df.loc[df.person_id == pid, 'gender'] = gender
@@ -140,11 +140,105 @@ class PrepareIndividualsGender(V15Loader):
 
         self._build_gender(df)
 
-        manager = PersonManager()
-        manager.connect()
+        for _index, row in df.iterrows():
+            p = PersonModel.create_from_df(row)
+            pm.save(p)
+
+        pm.close()
+
+
+class PrepareIndividualsSSCPresent(V15Loader):
+
+    def __init__(self):
+        super(PrepareIndividualsSSCPresent, self).__init__()
+
+    def _build_ssc_present(self, df):
+        persons = {}
+        for _index, val in df.person_id.iteritems():
+            persons[val] = []
+
+        for st in self.get_all_ssc_studies():
+            print("processing study: {}".format(st.name))
+            for _fid, fam in st.families.items():
+                for p in fam.memberInOrder:
+                    if p.personId not in persons:
+                        print("person: {} from study: {} not found in PhenoDB"
+                              .format(p.personId, st.name))
+                        continue
+                    persons[p.personId].append((st.name, p))
+
+        missing = []
+        for pid, studies in persons.items():
+            if len(studies) == 0:
+                missing.append(pid)
+
+        df.ssc_present = True
+
+        missing.sort()
+        for pid in missing:
+            df.loc[df.person_id == pid, 'ssc_present'] = False
+        return df
+
+    def prepare(self):
+        pm = PersonManager()
+        pm.connect()
+        df = pm.load_df()
+
+        self._build_ssc_present(df)
 
         for _index, row in df.iterrows():
             p = PersonModel.create_from_df(row)
-            manager.save(p)
+            pm.save(p)
 
-        manager.close()
+        pm.close()
+
+
+class PrepareIndividualsGenderFromSSC(V15Loader):
+
+    def __init__(self):
+        super(PrepareIndividualsGenderFromSSC, self).__init__()
+
+    def _build_gender_from_ssc(self, df):
+        persons = {}
+        for _index, val in df.person_id.iteritems():
+            persons[val] = []
+
+        for st in self.get_all_ssc_studies():
+            print("processing study: {}".format(st.name))
+            for _fid, fam in st.families.items():
+                for p in fam.memberInOrder:
+                    if p.personId in persons:
+                        p.study = st.name
+                        persons[p.personId].append(p)
+
+        gender = {}
+        for pid, ps in persons.items():
+            assert len(ps) > 0
+            if len(ps) == 1:
+                gender[pid] = ps[0].gender
+            else:
+                check = [p.gender == ps[0].gender for p in ps]
+                print(check)
+                if all(check):
+                    gender[pid] = ps[0].gender
+                else:
+                    print("\ngender mismatch for person: {}:".format(pid))
+                    for p in ps:
+                        print("\tstudy: {}; pid: {}; gender {}".format(
+                            p.study, p.personId, p.gender))
+
+        for pid, gender in gender.items():
+            df.loc[df.person_id == pid, 'gender'] = gender
+        return df
+
+    def prepare(self):
+        pm = PersonManager()
+        pm.connect()
+        df = pm.load_df(where='ssc_present=1')
+        self._build_gender_from_ssc(df)
+
+        for _index, row in df.iterrows():
+            p = PersonModel.create_from_df(row)
+            pm.save(p)
+
+        pm.close()

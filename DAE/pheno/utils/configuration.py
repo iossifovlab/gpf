@@ -6,9 +6,20 @@ Created on Aug 23, 2016
 import os
 
 from Config import Config
+from DAE import vDB
 
 
 class PhenoConfig(object):
+
+    @staticmethod
+    def get_all_ssc_studies():
+        study_group = vDB.get_study_group('ALL SSC')
+        denovo_studies = study_group.get_attr('studies')
+        transmitted_studies = study_group.get_attr('transmittedStudies')
+        studies = []
+        studies.extend(vDB.get_studies(denovo_studies))
+        studies.extend(vDB.get_studies(transmitted_studies))
+        return studies
 
     def __init__(self):
         self.config = Config()
