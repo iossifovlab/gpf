@@ -196,6 +196,12 @@ class PersonManager(ManagerBase):
             query += " WHERE {};".format(where)
         return query
 
+    def save_df(self, df):
+        for _index, row in df.iterrows():
+            p = PersonModel.create_from_df(row)
+            self.save(p)
+        self.db.commit()
+
     def load_df(self, where=None):
         query = self._build_select(where)
 
