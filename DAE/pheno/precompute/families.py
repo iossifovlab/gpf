@@ -73,7 +73,6 @@ class PrepareIndividuals(V15Loader):
         df = self._build_df_from_individuals()
 
         manager = PersonManager()
-        manager.delete()
         manager.create_tables()
 
         manager.connect()

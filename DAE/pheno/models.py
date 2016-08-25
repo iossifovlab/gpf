@@ -101,14 +101,9 @@ class ManagerBase(PhenoConfig):
         self.db.close()
         self.db = None
 
-    def create_db(self):
-        if os.path.exists(self.pheno_db):
-            raise ValueError("pheno db {} already exists".format(
-                self.pheno_db))
-        assert not self.is_connected()
+    def create_tables(self):
         self.connect()
-        self.db.executescript(_SCHEMA_)
-        self.db.commit()
+        self.db.executescript(self.SCHEMA_CREATE)
         self.close()
 
 
@@ -155,11 +150,6 @@ class PersonManager(ManagerBase):
     COMMIT;
     """
 
-    def create_tables(self):
-        self.connect()
-        self.db.executescript(self.SCHEMA_CREATE)
-        self.close()
-
     def __init__(self, test=False):
         super(PersonManager, self).__init__(test)
 
@@ -172,6 +162,12 @@ class PersonManager(ManagerBase):
              p.gender, p.race,
              p.collection, p.ssc_present)
         self.db.execute(query, t)
+
+    def save_df(self, df):
+        for _index, row in df.iterrows():
+            p = PersonModel.create_from_df(row)
+            self.save(p)
+        self.db.commit()
 
     COLUMNS = [
         'person_id',
@@ -196,12 +192,6 @@ class PersonManager(ManagerBase):
             query += " WHERE {};".format(where)
         return query
 
-    def save_df(self, df):
-        for _index, row in df.iterrows():
-            p = PersonModel.create_from_df(row)
-            self.save(p)
-        self.db.commit()
-
     def load_df(self, where=None):
         query = self._build_select(where)
 
@@ -215,3 +205,81 @@ class PersonManager(ManagerBase):
 
         df = pd.DataFrame.from_records(recs, columns=self.COLUMNS)
         return df
+
+
+class VariableModel(object):
+    TABLE = 'pheno_db_variable'
+
+    COLUMNS = [
+        'variable_id',
+        'table_name',
+        'variable_name',
+        'domain',
+        'domain_choice_label',
+        'measurement_scale',
+        'description',
+        'has_values',
+        'domain_rank',
+        'individuals',
+    ]
+
+    def __init__(self):
+        self.variable_id = None
+        self.table_name = None
+        self.variable_name = None
+        self.domain = None
+        self.domain_choice_label = None
+        self.measurement_scale = None
+        self.description = None
+        self.has_values = None
+        self.domain_rank = None
+        self.individuals = None
+
+    @staticmethod
+    def to_tuple(v):
+        choice_label = None
+        if isinstance(v.domain_choice_label, str):
+            choice_label = v.domain_choice_label.decode('utf-8')
+        return (
+            v.variable_id, v.table_name, v.variable_name,
+            v.domain,
+            choice_label,
+            v.measurement_scale,
+            v.description,
+            v.has_values, v.domain_rank, v.individuals,
+        )
+
+
+class VariableManager(ManagerBase):
+
+    SCHEMA_CREATE = """
+    BEGIN;
+    CREATE TABLE IF NOT EXISTS "pheno_db_variable" (
+        "variable_id" varchar(255) NOT NULL PRIMARY KEY,
+        "table_name" varchar(64) NOT NULL,
+        "variable_name" varchar(127) NOT NULL,
+        "domain" varchar(127) NOT NULL,
+        "domain_choice_label" varchar(255) NULL,
+        "measurement_scale" varchar(32) NOT NULL,
+        "description" text NULL,
+        "has_values" bool NULL,
+        "domain_rank" integer NULL,
+        "individuals" integer NULL
+    );
+    COMMIT;
+    """
+
+    MODEL = VariableModel
+    INSERT = "INSERT OR REPLACE INTO {} ({}) VALUES ({})".format(
+        VariableModel.TABLE,
+        ', '.join(VariableModel.COLUMNS),
+        ', '.join(['?' for _i in VariableModel.COLUMNS])
+    )
+
+    def __init__(self, test=False):
+        super(VariableManager, self).__init__(test)
+
+    def save(self, obj):
+        t = self.MODEL.to_tuple(obj)
+        print((self.INSERT, t))
+        self.db.execute(self.INSERT, t)
