@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 Created on Aug 25, 2016
 
@@ -51,8 +52,11 @@ def recompute_pheno_float_values_cache():
     print("recomputing pheno db float/integer values caches")
     print(LINE)
 
-    p10 = PrepareFloatValues()
+    p10 = PrepareVariables()
     p10.prepare()
+
+    p20 = PrepareFloatValues()
+    p20.prepare()
 
     print(LINE)
 

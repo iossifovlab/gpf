@@ -3,8 +3,8 @@ Created on Aug 25, 2016
 
 @author: lubo
 '''
-from pheno.utils.load_raw import V15Loader, V14Loader
 from pheno.models import VariableModel, VariableManager
+from pheno.utils.load_raw import V15Loader, V14Loader
 
 
 class PrepareVariables(V15Loader):
@@ -18,11 +18,37 @@ class PrepareVariables(V15Loader):
 
     @staticmethod
     def _variable_description_from_main(row):
-        return None
+        descr = [
+            row['tableDisplayTitle'],
+            row['variableDisplayTitle'],
+            row['variableDisplayHint'],
+            row['variableNotes'],
+        ]
+        descr = [d for d in descr if isinstance(d, str)]
+
+        if descr:
+            return '\n\n'.join(descr)
+        else:
+            return None
 
     @staticmethod
     def _variable_description_from_ssc(row):
-        return None
+        descr = []
+        variable_notes = row['variableNotes']
+        calculation_documentation = row['calculationDocumentation']
+        category = row['variableCategory']
+
+        if isinstance(variable_notes, str):
+            descr.append(variable_notes)
+        if isinstance(category, str):
+            descr.append(category)
+        if isinstance(calculation_documentation, str):
+            descr.append(calculation_documentation)
+
+        if descr:
+            return '\n\n'.join(descr)
+        else:
+            return None
 
     @staticmethod
     def _set_variable_from_row(var, row, build_description):

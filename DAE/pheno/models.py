@@ -227,7 +227,7 @@ class VariableModel(object):
             v.domain,
             choice_label,
             v.measurement_scale,
-            v.description,
+            v.description.decode('utf-8'),
             v.has_values, v.domain_rank, v.individuals,
         )
 
