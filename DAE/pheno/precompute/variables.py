@@ -56,17 +56,19 @@ class PrepareVariables(V15Loader):
     def prepare(self):
         loader = V14Loader()
 
-        with VariableManager() as vm:
+        with VariableManager(config=self.config) as vm:
             vm.create_tables()
-
+            print("loading main dictionary")
             df = loader.load_main()
             self._build_variable_dictionary(
                 vm, df, PrepareVariables._variable_description_from_main)
 
+            print("loading cdv dictionary")
             df = loader.load_cdv()
             self._build_variable_dictionary(
                 vm, df, PrepareVariables._variable_description_from_ssc)
 
+            print("loading ocuv dictionary")
             df = loader.load_ocuv()
             self._build_variable_dictionary(
                 vm, df, PrepareVariables._variable_description_from_ssc)

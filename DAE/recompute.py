@@ -10,6 +10,7 @@ from pheno.precompute.families import PrepareIndividuals,\
     PrepareIndividualsGender, PrepareIndividualsSSCPresent,\
     PrepareIndividualsGenderFromSSC, CheckIndividualsGenderToSSC
 from pheno.precompute.variables import PrepareVariables
+from pheno.precompute.values import PrepareFloatValues
 
 LINE = "--------------------------------------------------------------------"
 
@@ -34,12 +35,23 @@ def recompute_pheno_families_cache():
     print(LINE)
 
 
-def recompute_variables_cache():
+def recompute_pheno_variables_cache():
     print(LINE)
     print("recomputing pheno db variable dictionary caches")
     print(LINE)
 
     p10 = PrepareVariables()
+    p10.prepare()
+
+    print(LINE)
+
+
+def recompute_pheno_float_values_cache():
+    print(LINE)
+    print("recomputing pheno db float/integer values caches")
+    print(LINE)
+
+    p10 = PrepareFloatValues()
     p10.prepare()
 
     print(LINE)
@@ -82,9 +94,16 @@ if __name__ == '__main__':
 
     # Process arguments
     args = parser.parse_args()
-    if args.cache == 'pheno_db' or args.cache == 'all':
+    if args.cache == 'pheno_families' or args.cache == 'all':
         if args.recompute:
             recompute_pheno_families_cache()
-            recompute_variables_cache()
         if args.check:
             check_pheno_families_cache()
+
+    if args.cache == 'pheno_variables' or args.cache == 'all':
+        if args.recompute:
+            recompute_pheno_variables_cache()
+
+    if args.cache == 'pheno_values' or args.cache == 'all':
+        if args.recompute:
+            recompute_pheno_float_values_cache()

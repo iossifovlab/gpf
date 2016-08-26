@@ -67,19 +67,20 @@ class ManagerBase(PhenoConfig):
         self.db.commit()
 
     def __enter__(self):
-        print("ManagerBase enter called...")
         self.connect()
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        print("ManagerBase exit called...")
+        res = True
         if exc_type is not None:
             print("Exception in ManagerBase: {}: {}\n{}".format(
                 exc_type, exc_value, tb))
             traceback.print_tb(tb)
+            res = exc_value
+
         self.db.commit()
         self.db.close()
-        return True
+        return res
 
     def save(self, obj):
         t = self.MODEL.to_tuple(obj)
