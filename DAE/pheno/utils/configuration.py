@@ -21,8 +21,14 @@ class PhenoConfig(object):
         studies.extend(vDB.get_studies(transmitted_studies))
         return studies
 
-    def __init__(self):
-        self.config = Config()
+    def __init__(self, config=None, *args, **kwargs):
+        super(PhenoConfig, self).__init__(*args, **kwargs)
+
+        if config is None:
+            self.config = Config()
+        else:
+            self.config = config
+
         self.v14 = self.config._daeConfig.get('sfariDB', 'v14')
         self.v15 = self.config._daeConfig.get('sfariDB', 'v15')
         self.cache_dir = self.config._daeConfig.get('sfariDB', 'cache')

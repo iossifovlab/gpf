@@ -8,6 +8,7 @@ import sqlite3
 
 import pandas as pd
 from pheno.utils.configuration import PhenoConfig
+import sys
 
 
 _SCHEMA_ = """
@@ -85,6 +86,8 @@ class ManagerBase(PhenoConfig):
         self.db = None
 
     def connect(self):
+        if self.db is not None:
+            return self.db
         self.db = sqlite3.connect(self.pheno_db)
         return self.db
 
@@ -97,14 +100,27 @@ class ManagerBase(PhenoConfig):
             os.remove(self.pheno_db)
 
     def close(self):
+        if self.db is None:
+            return
         self.db.commit()
         self.db.close()
         self.db = None
 
     def create_tables(self):
-        self.connect()
         self.db.executescript(self.SCHEMA_CREATE)
+
+    def __enter__(self):
+        print("ManagerBase enter called...")
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        print("ManagerBase exit called...")
+        if exc_type is not None:
+            print("Exception in ManagerBase: {}: {}\n{}".format(
+                exc_type, exc_value, traceback))
         self.close()
+        return True
 
 
 class PersonModel(object):
@@ -281,5 +297,5 @@ class VariableManager(ManagerBase):
 
     def save(self, obj):
         t = self.MODEL.to_tuple(obj)
-        print((self.INSERT, t))
+        sys.stderr.write('.')
         self.db.execute(self.INSERT, t)

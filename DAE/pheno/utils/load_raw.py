@@ -19,8 +19,8 @@ class V14Loader(PhenoConfig):
     EVERYTHING = "EVERYTHING.csv"
     COMMON_CORE = "COMMON_CORE.csv"
 
-    def __init__(self):
-        super(V14Loader, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(V14Loader, self).__init__(*args, **kwargs)
 
     def _load_df(self, name):
         filename = os.path.join(self.v14, name)
@@ -61,8 +61,8 @@ class V15Loader(PhenoConfig):
 
     INDIVIDUALS = "Individuals_by_Distribution_v15.csv"
 
-    def __init__(self):
-        super(V15Loader, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(V15Loader, self).__init__(*args, **kwargs)
 
     def _data_dirs(self, roles):
         result = []

@@ -11,8 +11,8 @@ from pheno.utils.load_raw import V15Loader
 
 class PrepareIndividuals(V15Loader):
 
-    def __init__(self):
-        super(PrepareIndividuals, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(PrepareIndividuals, self).__init__(*args, **kwargs)
 
     @staticmethod
     def _role_order(role):
@@ -98,8 +98,8 @@ class PrepareIndividuals(V15Loader):
 
 class PrepareIndividualsGender(V15Loader):
 
-    def __init__(self):
-        super(PrepareIndividualsGender, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(PrepareIndividualsGender, self).__init__(*args, **kwargs)
 
     def _build_proband_gender(self, df):
         [cd] = self.load_table('ssc_core_descriptive', roles=['prb'])
@@ -145,8 +145,8 @@ class PrepareIndividualsGender(V15Loader):
 
 class PrepareIndividualsSSCPresent(V15Loader):
 
-    def __init__(self):
-        super(PrepareIndividualsSSCPresent, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(PrepareIndividualsSSCPresent, self).__init__(*args, **kwargs)
 
     def _build_ssc_present(self, df):
         persons = {}
@@ -188,8 +188,8 @@ class PrepareIndividualsSSCPresent(V15Loader):
 
 class PrepareIndividualsGenderFromSSC(V15Loader):
 
-    def __init__(self):
-        super(PrepareIndividualsGenderFromSSC, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(PrepareIndividualsGenderFromSSC, self).__init__(*args, **kwargs)
 
     def _build_gender_from_ssc(self, df):
         persons = {}
@@ -236,8 +236,8 @@ class PrepareIndividualsGenderFromSSC(V15Loader):
 
 class PrepareIndividualsRace(V15Loader):
 
-    def __init__(self):
-        super(PrepareIndividualsRace, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(PrepareIndividualsRace, self).__init__(*args, **kwargs)
 
     def prepare(self):
         pm = PersonManager()
@@ -252,8 +252,8 @@ class PrepareIndividualsRace(V15Loader):
 
 class CheckIndividualsGenderToSSC(V15Loader):
 
-    def __init__(self):
-        super(CheckIndividualsGenderToSSC, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(CheckIndividualsGenderToSSC, self).__init__(*args, **kwargs)
 
     def _check_gender_to_ssc(self, df):
         persons = {}

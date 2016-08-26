@@ -9,8 +9,8 @@ from pheno.models import VariableModel, VariableManager
 
 class PrepareVariables(V15Loader):
 
-    def __init__(self):
-        super(PrepareVariables, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(PrepareVariables, self).__init__(*args, **kwargs)
 
     @staticmethod
     def _variable_id(row):
@@ -56,20 +56,17 @@ class PrepareVariables(V15Loader):
     def prepare(self):
         loader = V14Loader()
 
-        vm = VariableManager()
-        vm.create_tables()
-        vm.connect()
+        with VariableManager() as vm:
+            vm.create_tables()
 
-        df = loader.load_main()
-        self._build_variable_dictionary(
-            vm, df, PrepareVariables._variable_description_from_main)
+            df = loader.load_main()
+            self._build_variable_dictionary(
+                vm, df, PrepareVariables._variable_description_from_main)
 
-        df = loader.load_cdv()
-        self._build_variable_dictionary(
-            vm, df, PrepareVariables._variable_description_from_ssc)
+            df = loader.load_cdv()
+            self._build_variable_dictionary(
+                vm, df, PrepareVariables._variable_description_from_ssc)
 
-        df = loader.load_ocuv()
-        self._build_variable_dictionary(
-            vm, df, PrepareVariables._variable_description_from_ssc)
-
-        vm.close()
+            df = loader.load_ocuv()
+            self._build_variable_dictionary(
+                vm, df, PrepareVariables._variable_description_from_ssc)
