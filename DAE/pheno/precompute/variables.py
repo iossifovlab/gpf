@@ -18,9 +18,18 @@ class PrepareVariables(V15Loader):
 
     @staticmethod
     def _variable_description_from_main(row):
-        descr = [
+        display = [
             row['tableDisplayTitle'],
             row['variableDisplayTitle'],
+        ]
+        display = [d for d in display if isinstance(d, str)]
+        if display:
+            display = ': '.join(display)
+        else:
+            display = None
+
+        descr = [
+            display,
             row['variableDisplayHint'],
             row['variableNotes'],
         ]
