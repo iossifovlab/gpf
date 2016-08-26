@@ -127,14 +127,10 @@ class PrepareIndividualsGender(V15Loader):
         return df
 
     def prepare(self):
-        pm = PersonManager()
-        pm.connect()
-        df = pm.load_df()
-
-        self._build_gender(df)
-
-        pm.save_df(df)
-        pm.close()
+        with PersonManager(config=self.config) as pm:
+            df = pm.load_df()
+            self._build_gender(df)
+            pm.save_df(df)
 
 
 class PrepareIndividualsSSCPresent(V15Loader):
@@ -170,14 +166,10 @@ class PrepareIndividualsSSCPresent(V15Loader):
         return df
 
     def prepare(self):
-        pm = PersonManager()
-        pm.connect()
-        df = pm.load_df()
-
-        self._build_ssc_present(df)
-
-        pm.save_df(df)
-        pm.close()
+        with PersonManager(config=self.config) as pm:
+            df = pm.load_df()
+            self._build_ssc_present(df)
+            pm.save_df(df)
 
 
 class PrepareIndividualsGenderFromSSC(V15Loader):
@@ -218,14 +210,11 @@ class PrepareIndividualsGenderFromSSC(V15Loader):
         return df
 
     def prepare(self):
-        pm = PersonManager()
-        pm.connect()
-        df = pm.load_df(where='gender is null and ssc_present=1')
-        self._build_gender_from_ssc(df)
+        with PersonManager(config=self.config) as pm:
+            df = pm.load_df(where='gender is null and ssc_present=1')
+            self._build_gender_from_ssc(df)
 
-        pm.save_df(df)
-
-        pm.close()
+            pm.save_df(df)
 
 
 class PrepareIndividualsRace(V15Loader):
@@ -287,10 +276,6 @@ class CheckIndividualsGenderToSSC(V15Loader):
                         p.study, p.personId, p.gender))
 
     def check(self):
-        pm = PersonManager()
-        pm.connect()
-        df = pm.load_df(where='ssc_present=1')
-
-        self._check_gender_to_ssc(df)
-
-        pm.close()
+        with PersonManager(config=self.config) as pm:
+            df = pm.load_df(where='ssc_present=1')
+            self._check_gender_to_ssc(df)

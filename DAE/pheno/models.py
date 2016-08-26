@@ -123,8 +123,25 @@ class ManagerBase(PhenoConfig):
         self.close()
         return True
 
+    def save(self, obj):
+        t = self.MODEL.to_tuple(obj)
+        sys.stderr.write('.')
+        self.db.execute(self.INSERT, t)
+
 
 class PersonModel(object):
+    COLUMNS = [
+        'person_id',
+        'family_id',
+        'role',
+        'role_id',
+        'gender',
+        'race',
+        'collection',
+        'ssc_present',
+    ]
+
+    TABLE = 'pheno_db_person'
 
     def __init__(self):
         self.person_id = None
@@ -150,6 +167,19 @@ class PersonModel(object):
 
         return p
 
+    @staticmethod
+    def to_tuple(p):
+        return (
+            p.person_id,
+            p.family_id,
+            p.role,
+            p.role_id,
+            p.gender,
+            p.race,
+            p.collection,
+            p.ssc_present
+        )
+
 
 class PersonManager(ManagerBase):
     SCHEMA_CREATE = """
@@ -167,35 +197,32 @@ class PersonManager(ManagerBase):
     COMMIT;
     """
 
+    MODEL = PersonModel
+
+    INSERT = "INSERT OR REPLACE INTO {} ({}) VALUES ({})".format(
+        PersonModel.TABLE,
+        ', '.join(PersonModel.COLUMNS),
+        ', '.join(['?' for _i in PersonModel.COLUMNS])
+    )
+
     def __init__(self, *args, **kwargs):
         super(PersonManager, self).__init__(*args, **kwargs)
 
-    def save(self, p):
-        query = "INSERT OR REPLACE INTO pheno_db_person " \
-            "(person_id, family_id, role, role_id, " \
-            " gender, race, " \
-            " collection, ssc_present) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        t = (p.person_id, p.family_id, p.role, p.role_id,
-             p.gender, p.race,
-             p.collection, p.ssc_present)
-        self.db.execute(query, t)
+    #     def save(self, p):
+    #         query = "INSERT OR REPLACE INTO pheno_db_person " \
+    #             "(person_id, family_id, role, role_id, " \
+    #             " gender, race, " \
+    #             " collection, ssc_present) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    #         t = (p.person_id, p.family_id, p.role, p.role_id,
+    #              p.gender, p.race,
+    #              p.collection, p.ssc_present)
+    #         self.db.execute(query, t)
 
     def save_df(self, df):
         for _index, row in df.iterrows():
             p = PersonModel.create_from_df(row)
             self.save(p)
         self.db.commit()
-
-    COLUMNS = [
-        'person_id',
-        'family_id',
-        'role',
-        'role_id',
-        'gender',
-        'race',
-        'collection',
-        'ssc_present',
-    ]
 
     def _build_select(self, where):
         query = "SELECT "\
@@ -220,7 +247,7 @@ class PersonManager(ManagerBase):
             recs.extend(rows)
             rows = cursor.fetchmany(size=200)
 
-        df = pd.DataFrame.from_records(recs, columns=self.COLUMNS)
+        df = pd.DataFrame.from_records(recs, columns=self.MODEL.COLUMNS)
         return df
 
 
@@ -295,8 +322,3 @@ class VariableManager(ManagerBase):
 
     def __init__(self, test=False):
         super(VariableManager, self).__init__(test)
-
-    def save(self, obj):
-        t = self.MODEL.to_tuple(obj)
-        sys.stderr.write('.')
-        self.db.execute(self.INSERT, t)

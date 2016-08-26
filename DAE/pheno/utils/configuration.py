@@ -22,15 +22,14 @@ class PhenoConfig(object):
 
     def __init__(self, config=None, *args, **kwargs):
         super(PhenoConfig, self).__init__(*args, **kwargs)
+        self.dae_config = Config()
 
-        if config is None:
-            self.dae_config = Config()
+        if config is not None:
+            self.config = config
         else:
-            self.dae_config = config
-
-        wd = self.dae_config.daeDir
-        self.config = ConfigParser.SafeConfigParser({'wd': wd})
-        self.config.read(self.dae_config.phenoDBconfFile)
+            wd = self.dae_config.daeDir
+            self.config = ConfigParser.SafeConfigParser({'wd': wd})
+            self.config.read(self.dae_config.phenoDBconfFile)
 
     def __getitem__(self, args):
         return self.config.get(*args)

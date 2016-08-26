@@ -74,7 +74,7 @@ class V15Loader(PhenoConfig):
     def load_table(self, table_name, roles=['prb']):
         result = []
         for data_dir in self._data_dirs(roles):
-            dirname = os.path.join(self.v15, data_dir)
+            dirname = os.path.join(self['v15', 'dir'], data_dir)
             assert os.path.isdir(dirname)
 
             filename = os.path.join(dirname, "{}.csv".format(table_name))
