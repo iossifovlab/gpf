@@ -325,14 +325,14 @@ class FloatValueManager(ManagerBase):
         value real NOT NULL,
         PRIMARY KEY (person_id, variable_id)
     );
-    CREATE INDEX IF NOT EXISTS "value_float_person_id" 
-        ON "value_float" ("person_id");
-    CREATE INDEX IF NOT EXISTS "value_float_family_id" 
-        ON "value_float" ("family_id");
-    CREATE INDEX IF NOT EXISTS "value_float_person_role" 
-        ON "value_float" ("person_role");
-    CREATE INDEX IF NOT EXISTS "value_float_variable_id" 
-        ON "value_float" ("variable_id");
+    CREATE INDEX IF NOT EXISTS value_float_person_id
+        ON value_float (person_id);
+    CREATE INDEX IF NOT EXISTS value_float_family_id
+        ON value_float (family_id);
+    CREATE INDEX IF NOT EXISTS value_float_person_role
+        ON value_float (person_role);
+    CREATE INDEX IF NOT EXISTS value_float_variable_id
+        ON value_float (variable_id);
 
     COMMIT;
     """
@@ -340,12 +340,12 @@ class FloatValueManager(ManagerBase):
     SCHEMA_DROP = """
     BEGIN;
 
-    DROP INDEX IF EXISTS "value_float_person_id";
-    DROP INDEX IF EXISTS "value_float_family_id";
-    DROP INDEX IF EXISTS "value_float_person_role";
-    DROP INDEX IF EXISTS "value_float_variable_id";
+    DROP INDEX IF EXISTS value_float_person_id;
+    DROP INDEX IF EXISTS value_float_family_id;
+    DROP INDEX IF EXISTS value_float_person_role;
+    DROP INDEX IF EXISTS value_float_variable_id;
 
-    DROP TABLE IF EXISTS "value_float";
+    DROP TABLE IF EXISTS value_float;
 
     COMMIT;
     """
