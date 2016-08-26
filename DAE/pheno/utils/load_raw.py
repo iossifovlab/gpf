@@ -23,7 +23,7 @@ class V14Loader(PhenoConfig):
         super(V14Loader, self).__init__(*args, **kwargs)
 
     def _load_df(self, name):
-        filename = os.path.join(self.v14, name)
+        filename = os.path.join(self['v14', 'dir'], name)
         assert os.path.isfile(filename)
         df = pd.read_csv(filename, low_memory=False)
 

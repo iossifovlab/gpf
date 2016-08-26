@@ -24,7 +24,8 @@ class PhenoConfig(object):
         super(PhenoConfig, self).__init__(*args, **kwargs)
         self.dae_config = Config()
 
-        if config is not None:
+        if config:
+            assert isinstance(config, ConfigParser.SafeConfigParser)
             self.config = config
         else:
             wd = self.dae_config.daeDir

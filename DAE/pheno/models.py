@@ -77,19 +77,17 @@ COMMIT;
 
 class ManagerBase(PhenoConfig):
 
-    def __init__(self, config=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(ManagerBase, self).__init__(*args, **kwargs)
-        if config is not None:
-            self.config = config
-
-        self.pheno_db = os.path.join(
-            self['cache', 'dir'], 'pheno_db.sql')
         self.db = None
 
     def connect(self):
         if self.db is not None:
             return self.db
-        self.db = sqlite3.connect(self.pheno_db)
+        filename = os.path.join(
+            self['cache', 'dir'], 'pheno_db.sql')
+
+        self.db = sqlite3.connect(filename)
         return self.db
 
     def is_connected(self):
@@ -125,8 +123,34 @@ class ManagerBase(PhenoConfig):
 
     def save(self, obj):
         t = self.MODEL.to_tuple(obj)
-        sys.stderr.write('.')
         self.db.execute(self.INSERT, t)
+
+    def save_df(self, df):
+        for _index, row in df.iterrows():
+            v = self.MODEL.create_from_df(row)
+            self.save(v)
+        self.db.commit()
+
+    def _build_select(self, where):
+        if where is None:
+            query = self.SELECT + ";"
+        else:
+            query = self.SELECT + " WHERE {};".format(where)
+        return query
+
+    def load_df(self, where=None):
+        query = self._build_select(where)
+
+        recs = []
+        cursor = self.db.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchmany(size=200)
+        while rows:
+            recs.extend(rows)
+            rows = cursor.fetchmany(size=200)
+
+        df = pd.DataFrame.from_records(recs, columns=self.MODEL.COLUMNS)
+        return df
 
 
 class PersonModel(object):
@@ -205,50 +229,13 @@ class PersonManager(ManagerBase):
         ', '.join(['?' for _i in PersonModel.COLUMNS])
     )
 
+    SELECT = "SELECT {} FROM {} ".format(
+        ', '.join(PersonModel.COLUMNS),
+        PersonModel.TABLE
+    )
+
     def __init__(self, *args, **kwargs):
         super(PersonManager, self).__init__(*args, **kwargs)
-
-    #     def save(self, p):
-    #         query = "INSERT OR REPLACE INTO pheno_db_person " \
-    #             "(person_id, family_id, role, role_id, " \
-    #             " gender, race, " \
-    #             " collection, ssc_present) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-    #         t = (p.person_id, p.family_id, p.role, p.role_id,
-    #              p.gender, p.race,
-    #              p.collection, p.ssc_present)
-    #         self.db.execute(query, t)
-
-    def save_df(self, df):
-        for _index, row in df.iterrows():
-            p = PersonModel.create_from_df(row)
-            self.save(p)
-        self.db.commit()
-
-    def _build_select(self, where):
-        query = "SELECT "\
-            "person_id, family_id, role, role_id, "\
-            "gender, race, "\
-            "collection, ssc_present "\
-            "FROM pheno_db_person "
-        if where is None:
-            query += ";"
-        else:
-            query += " WHERE {};".format(where)
-        return query
-
-    def load_df(self, where=None):
-        query = self._build_select(where)
-
-        recs = []
-        cursor = self.db.cursor()
-        cursor.execute(query)
-        rows = cursor.fetchmany(size=200)
-        while rows:
-            recs.extend(rows)
-            rows = cursor.fetchmany(size=200)
-
-        df = pd.DataFrame.from_records(recs, columns=self.MODEL.COLUMNS)
-        return df
 
 
 class VariableModel(object):
@@ -293,6 +280,22 @@ class VariableModel(object):
             v.has_values, v.domain_rank, v.individuals,
         )
 
+    @staticmethod
+    def create_from_df(row):
+        v = VariableModel()
+
+        v.variable_id = row['variable_id']
+        v.table_name = row['table_name']
+        v.domain = row['domain']
+        v.domain_choice_label = row['domain_choice_label']
+        v.measurement_scale = row['measurement_scale']
+        v.description = row['description']
+        v.has_values = row['has_values']
+        v.domain_rank = row['domain_rank']
+        v.individuals = row['individuals']
+
+        return v
+
 
 class VariableManager(ManagerBase):
 
@@ -318,6 +321,11 @@ class VariableManager(ManagerBase):
         VariableModel.TABLE,
         ', '.join(VariableModel.COLUMNS),
         ', '.join(['?' for _i in VariableModel.COLUMNS])
+    )
+
+    SELECT = "SELECT {} FROM {} ".format(
+        ', '.join(VariableModel.COLUMNS),
+        VariableModel.TABLE
     )
 
     def __init__(self, test=False):
