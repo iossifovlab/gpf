@@ -9,13 +9,14 @@ import argparse
 from pheno.precompute.families import PrepareIndividuals,\
     PrepareIndividualsGender, PrepareIndividualsSSCPresent,\
     PrepareIndividualsGenderFromSSC, CheckIndividualsGenderToSSC
+from pheno.precompute.variables import PrepareVariables
 
 LINE = "--------------------------------------------------------------------"
 
 
 def recompute_pheno_families_cache():
     print(LINE)
-    print("recomputing pheno db caches")
+    print("recomputing pheno db family caches")
     print(LINE)
 
     p10 = PrepareIndividuals()
@@ -29,6 +30,17 @@ def recompute_pheno_families_cache():
 
     p40 = PrepareIndividualsGenderFromSSC()
     p40.prepare()
+
+    print(LINE)
+
+
+def recompute_variables_cache():
+    print(LINE)
+    print("recomputing pheno db variable dictionary caches")
+    print(LINE)
+
+    p10 = PrepareVariables()
+    p10.prepare()
 
     print(LINE)
 
@@ -73,5 +85,6 @@ if __name__ == '__main__':
     if args.cache == 'pheno_db' or args.cache == 'all':
         if args.recompute:
             recompute_pheno_families_cache()
+            recompute_variables_cache()
         if args.check:
             check_pheno_families_cache()
