@@ -90,7 +90,7 @@ class V15Loader(PhenoConfig):
         return result
 
     def _load_df(self, name):
-        filename = os.path.join(self.v15, name)
+        filename = os.path.join(self['v15', 'dir'], name)
         assert os.path.isfile(filename)
         df = pd.read_csv(filename, low_memory=False, sep='\t')
 

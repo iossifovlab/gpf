@@ -71,29 +71,23 @@ class PrepareIndividuals(V15Loader):
 
     def prepare(self):
         df = self._build_df_from_individuals()
+        with PersonManager(config=self.config) as pm:
+            pm.create_tables()
 
-        manager = PersonManager()
-        manager.create_tables()
+            for _index, row in df.iterrows():
+                p = PersonModel()
+                p.person_id = row['personId']
+                p.family_id = row['familyId']
+                p.role = row['role']
+                p.role_id = row['roleId']
+                p.gender = None
+                p.race = None
+                p.collection = None if (isinstance(row['collection'], float) or
+                                        row['collection'] == 'nan') \
+                    else row['collection']
+                p.ssc_present = None
 
-        manager.connect()
-        assert manager.db is not None
-
-        for _index, row in df.iterrows():
-            p = PersonModel()
-            p.person_id = row['personId']
-            p.family_id = row['familyId']
-            p.role = row['role']
-            p.role_id = row['roleId']
-            p.gender = None
-            p.race = None
-            p.collection = None if (isinstance(row['collection'], float) or
-                                    row['collection'] == 'nan') \
-                else row['collection']
-            p.ssc_present = None
-
-            manager.save(p)
-
-        manager.close()
+                pm.save(p)
 
 
 class PrepareIndividualsGender(V15Loader):

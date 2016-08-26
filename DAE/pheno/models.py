@@ -77,12 +77,13 @@ COMMIT;
 
 class ManagerBase(PhenoConfig):
 
-    def __init__(self, test=False):
-        super(ManagerBase, self).__init__()
-        if test:
-            self.pheno_db = os.path.join(self.cache_dir, 'pheno_db_test.sql')
-        else:
-            self.pheno_db = os.path.join(self.cache_dir, 'pheno_db.sql')
+    def __init__(self, config=None, *args, **kwargs):
+        super(ManagerBase, self).__init__(*args, **kwargs)
+        if config is not None:
+            self.config = config
+
+        self.pheno_db = os.path.join(
+            self['cache', 'dir'], 'pheno_db.sql')
         self.db = None
 
     def connect(self):
@@ -166,8 +167,8 @@ class PersonManager(ManagerBase):
     COMMIT;
     """
 
-    def __init__(self, test=False):
-        super(PersonManager, self).__init__(test)
+    def __init__(self, *args, **kwargs):
+        super(PersonManager, self).__init__(*args, **kwargs)
 
     def save(self, p):
         query = "INSERT OR REPLACE INTO pheno_db_person " \

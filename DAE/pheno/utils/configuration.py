@@ -3,10 +3,9 @@ Created on Aug 23, 2016
 
 @author: lubo
 '''
-import os
-
 from Config import Config
 from DAE import vDB
+import ConfigParser
 
 
 class PhenoConfig(object):
@@ -25,14 +24,13 @@ class PhenoConfig(object):
         super(PhenoConfig, self).__init__(*args, **kwargs)
 
         if config is None:
-            self.config = Config()
+            self.dae_config = Config()
         else:
-            self.config = config
+            self.dae_config = config
 
-        self.v14 = self.config._daeConfig.get('sfariDB', 'v14')
-        self.v15 = self.config._daeConfig.get('sfariDB', 'v15')
-        self.cache_dir = self.config._daeConfig.get('sfariDB', 'cache')
+        wd = self.dae_config.daeDir
+        self.config = ConfigParser.SafeConfigParser({'wd': wd})
+        self.config.read(self.dae_config.phenoDBconfFile)
 
-        assert os.path.isdir(self.cache_dir)
-        assert os.path.isdir(self.v14)
-        assert os.path.isdir(self.v15)
+    def __getitem__(self, args):
+        return self.config.get(*args)
