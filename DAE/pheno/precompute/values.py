@@ -7,6 +7,8 @@ from pheno.models import VariableManager, FloatValueManager,\
     TextValueManager
 from pheno.precompute.families import PrepareIndividuals
 from pheno.utils.load_raw import V15Loader
+from pheno.utils.configuration import PhenoConfig
+from numpy import rank
 
 
 class PrepareValueBase(V15Loader):
@@ -30,27 +32,26 @@ class PrepareValueBase(V15Loader):
             df = vm.load_df(where=where)
             return df
 
-    def _build_variable_values(self, dfs, variable):
+    def _build_variable_values(self, vm, dfs, variable):
         variable_name = variable['variable_name']
         variable_id = variable['variable_id']
         print("processing variable: {}".format(variable_name))
-        with self.value_manager(config=self.config) as fvm:
-            for df in dfs:
-                if variable_name not in df.columns:
+        for df in dfs:
+            if variable_name not in df.columns:
+                continue
+            for _vindex, vrow in df.iterrows():
+                value_model = self.value_manager.MODEL
+                val = value_model()
+                val.value = vrow[variable_name]
+                if value_model.isnull(val.value):
                     continue
-                for _vindex, vrow in df.iterrows():
-                    value_model = self.value_manager.MODEL
-                    val = value_model()
-                    val.value = vrow[variable_name]
-                    if value_model.isnull(val.value):
-                        continue
-                    val.id = None
-                    val.variable_id = variable_id
-                    val.person_id = vrow['individual']
-                    [val.family_id, role] = val.person_id.split('.')
-                    val.person_role = PrepareIndividuals._role_type(
-                        role)
-                    fvm.save(val)
+                val.id = None
+                val.variable_id = variable_id
+                val.person_id = vrow['individual']
+                [val.family_id, role] = val.person_id.split('.')
+                val.person_role = PrepareIndividuals._role_type(
+                    role)
+                vm.save(val)
 
     def _build_table_values(self, table):
         variables = self._load_variables(table)
@@ -59,8 +60,9 @@ class PrepareValueBase(V15Loader):
 
         dfs = self.load_table(
             table, ['prb', 'sib', 'father', 'mother'])
-        for _index, variable in variables.iterrows():
-            self._build_variable_values(dfs, variable)
+        with self.value_manager(config=self.config) as vm:
+            for _index, variable in variables.iterrows():
+                self._build_variable_values(vm, dfs, variable)
 
     def prepare(self):
         tables = self._load_tables()
@@ -87,3 +89,40 @@ class PrepareTextValues(PrepareValueBase):
     def __init__(self, *args, **kwargs):
         super(PrepareTextValues, self).__init__(
             value_manager=TextValueManager, *args, **kwargs)
+
+
+class PrepareVariableDomainRanks(PhenoConfig):
+
+    def __init__(self, *args, **kwargs):
+        super(PrepareVariableDomainRanks, self).__init__(*args, **kwargs)
+
+    def _rank(self, var, value_manager):
+        where = "variable_id='{}'".format(var.variable_id)
+        with value_manager(config=self.config) as fvm:
+            df = fvm.load_df(where=where)
+
+            individuals = len(df)
+            rank = len(df.value.unique())
+
+            return rank, individuals
+
+    def _float_rank(self, var):
+        return self._rank(var, FloatValueManager)
+
+    def _text_rank(self, var):
+        return self._rank(var, TextValueManager)
+
+    def prepare(self):
+        with VariableManager(config=self.config) as vm:
+            variables = vm.load_df()
+
+            for var in variables:
+                if var.measurement_scale == 'float':
+                    rank, individuals = self._float_rank(var)
+                else:
+                    rank, individuals = self._text_rank(var)
+
+                var.domain_rank = rank
+                var.individuals = individuals
+
+                vm.save(var)

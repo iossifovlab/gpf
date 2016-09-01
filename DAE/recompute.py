@@ -11,7 +11,8 @@ from pheno.precompute.families import PrepareIndividuals,\
     PrepareIndividualsGender, PrepareIndividualsSSCPresent,\
     PrepareIndividualsGenderFromSSC, CheckIndividualsGenderToSSC
 from pheno.precompute.variables import PrepareVariables
-from pheno.precompute.values import PrepareFloatValues, PrepareTextValues
+from pheno.precompute.values import PrepareFloatValues, PrepareTextValues,\
+    PrepareVariableDomainRanks
 
 LINE = "--------------------------------------------------------------------"
 
@@ -69,6 +70,17 @@ def recompute_pheno_text_values_cache():
     print(LINE)
 
 
+def recompute_pheno_variables_ranks_cache():
+    print(LINE)
+    print("recomputing pheno db variables ranks caches")
+    print(LINE)
+
+    p20 = PrepareVariableDomainRanks()
+    p20.prepare()
+
+    print(LINE)
+
+
 def check_pheno_families_cache():
     print(LINE)
     print("checking pheno db caches")
@@ -89,6 +101,7 @@ CACHES = [
     'pheno_variables',
     'pheno_float_values',
     'pheno_text_values',
+    'pheno_variables_ranks',
 ]
 
 if __name__ == '__main__':
@@ -137,3 +150,7 @@ if __name__ == '__main__':
     if 'pheno_text_values' in args.cache or 'all' in args.cache:
         if args.recompute:
             recompute_pheno_text_values_cache()
+
+    if 'pheno_variables_ranks' in args.cache or 'all' in args.cache:
+        if args.recompute:
+            recompute_pheno_variables_ranks_cache()
