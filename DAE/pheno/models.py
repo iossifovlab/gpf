@@ -42,7 +42,7 @@ class ManagerBase(PhenoConfig):
         filename = os.path.join(
             self['cache', 'dir'], 'pheno_db.sql')
 
-        self.db = sqlite3.connect(filename)
+        self.db = sqlite3.connect(filename, isolation_level="DEFERRED")
         return self.db
 
     def is_connected(self):
@@ -114,6 +114,8 @@ class ManagerBase(PhenoConfig):
 
         recs = []
         cursor = self.db.cursor()
+        if cursor is None:
+            raise ValueError("can't create cursor...")
         cursor.execute(query)
         rows = cursor.fetchmany(size=200)
         while rows:
@@ -279,10 +281,13 @@ class VariableModel(object):
 
         v.variable_id = row['variable_id']
         v.table_name = row['table_name']
+        v.variable_name = row['variable_name']
         v.domain = row['domain']
-        v.domain_choice_label = row['domain_choice_label']
+        if isinstance(v.domain_choice_label, str):
+            v.domain_choice_label = (
+                row['domain_choice_label']).encode('utf-8')
         v.measurement_scale = row['measurement_scale']
-        v.description = row['description']
+        v.description = (row['description']).encode('utf-8')
         v.source = row['source']
         v.domain_rank = row['domain_rank']
         v.individuals = row['individuals']

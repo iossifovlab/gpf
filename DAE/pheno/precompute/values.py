@@ -4,7 +4,7 @@ Created on Aug 26, 2016
 @author: lubo
 '''
 from pheno.models import VariableManager, FloatValueManager,\
-    TextValueManager
+    TextValueManager, FloatValueModel, TextValueModel, VariableModel
 from pheno.precompute.families import PrepareIndividuals
 from pheno.utils.load_raw import V15Loader
 from pheno.utils.configuration import PhenoConfig
@@ -98,9 +98,10 @@ class PrepareVariableDomainRanks(PhenoConfig):
 
     def _rank(self, var, value_manager):
         where = "variable_id='{}'".format(var.variable_id)
-        with value_manager(config=self.config) as fvm:
-            df = fvm.load_df(where=where)
-
+        with value_manager(config=self.config) as vm:
+            df = vm.load_df(where=where)
+            if(df is None):
+                return 0, 0
             individuals = len(df)
             rank = len(df.value.unique())
 
@@ -116,13 +117,15 @@ class PrepareVariableDomainRanks(PhenoConfig):
         with VariableManager(config=self.config) as vm:
             variables = vm.load_df()
 
-            for var in variables:
-                if var.measurement_scale == 'float':
-                    rank, individuals = self._float_rank(var)
-                else:
-                    rank, individuals = self._text_rank(var)
+        for _index, row in variables.iterrows():
+            var = VariableModel.create_from_df(row)
+            print("calculating rank of {}".format(var.variable_id))
+            if row.measurement_scale == 'float':
+                rank, individuals = self._float_rank(var)
+            else:
+                rank, individuals = self._text_rank(var)
 
-                var.domain_rank = rank
-                var.individuals = individuals
-
+            var.domain_rank = rank
+            var.individuals = individuals
+            with VariableManager(config=self.config) as vm:
                 vm.save(var)
