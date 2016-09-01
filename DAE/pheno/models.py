@@ -58,12 +58,20 @@ class ManagerBase(PhenoConfig):
         self.db.close()
         self.db = None
 
+    @classmethod
+    def schema_create(cls):
+        return cls.MODEL.SCHEMA_CREATE.format(table=cls.MODEL.TABLE)
+
+    @classmethod
+    def schema_drop(cls):
+        return cls.MODEL.SCHEMA_DROP.format(table=cls.MODEL.TABLE)
+
     def create_tables(self):
-        self.db.executescript(self.SCHEMA_CREATE)
+        self.db.executescript(self.schema_create())
         self.db.commit()
 
     def drop_tables(self):
-        self.db.executescript(self.SCHEMA_DROP)
+        self.db.executescript(self.schema_drop())
         self.db.commit()
 
     def __enter__(self):
@@ -116,6 +124,21 @@ class ManagerBase(PhenoConfig):
 
 
 class PersonModel(object):
+    SCHEMA_CREATE = """
+    BEGIN;
+    CREATE TABLE IF NOT EXISTS person (
+        person_id varchar(32) NOT NULL PRIMARY KEY,
+        family_id varchar(16) NOT NULL,
+        role varchar(16) NOT NULL,
+        role_id varchar(8) NOT NULL,
+        gender varchar(1) NULL,
+        race varchar(32) NULL,
+        collection varchar(64) NULL,
+        ssc_present bool NULL
+    );
+    COMMIT;
+    """
+
     COLUMNS = [
         'person_id',
         'family_id',
@@ -168,20 +191,6 @@ class PersonModel(object):
 
 
 class PersonManager(ManagerBase):
-    SCHEMA_CREATE = """
-    BEGIN;
-    CREATE TABLE IF NOT EXISTS person (
-        person_id varchar(32) NOT NULL PRIMARY KEY,
-        family_id varchar(16) NOT NULL,
-        role varchar(16) NOT NULL,
-        role_id varchar(8) NOT NULL,
-        gender varchar(1) NULL,
-        race varchar(32) NULL,
-        collection varchar(64) NULL,
-        ssc_present bool NULL
-    );
-    COMMIT;
-    """
 
     MODEL = PersonModel
 
@@ -190,6 +199,32 @@ class PersonManager(ManagerBase):
 
 
 class VariableModel(object):
+    SCHEMA_CREATE = """
+    BEGIN;
+    CREATE TABLE IF NOT EXISTS variable (
+        variable_id varchar(255) NOT NULL PRIMARY KEY,
+        table_name varchar(64) NOT NULL,
+        variable_name varchar(127) NOT NULL,
+        domain varchar(127) NOT NULL,
+        domain_choice_label varchar(255) NULL,
+        measurement_scale varchar(32) NOT NULL,
+        description text NULL,
+        source varchar(64) NULL,
+        has_values bool NULL,
+        domain_rank integer NULL,
+        individuals integer NULL
+    );
+    COMMIT;
+    """
+
+    SCHEMA_DROP = """
+    BEGIN;
+
+    DROP TABLE IF EXISTS variable;
+
+    COMMIT;
+    """
+
     TABLE = 'variable'
 
     COLUMNS = [
@@ -254,40 +289,48 @@ class VariableModel(object):
 
 class VariableManager(ManagerBase):
 
-    SCHEMA_CREATE = """
-    BEGIN;
-    CREATE TABLE IF NOT EXISTS variable (
-        variable_id varchar(255) NOT NULL PRIMARY KEY,
-        table_name varchar(64) NOT NULL,
-        variable_name varchar(127) NOT NULL,
-        domain varchar(127) NOT NULL,
-        domain_choice_label varchar(255) NULL,
-        measurement_scale varchar(32) NOT NULL,
-        description text NULL,
-        source varchar(64) NULL,
-        has_values bool NULL,
-        domain_rank integer NULL,
-        individuals integer NULL
-    );
-    COMMIT;
-    """
-
-    SCHEMA_DROP = """
-    BEGIN;
-
-    DROP TABLE IF EXISTS variable;
-
-    COMMIT;
-    """
-
     MODEL = VariableModel
 
     def __init__(self, *args, **kwargs):
         super(VariableManager, self).__init__(*args, **kwargs)
 
 
-class FloatValueModel(object):
-    TABLE = 'value_float'
+class ValueModel(object):
+    SCHEMA_CREATE = """
+    BEGIN;
+
+    CREATE TABLE IF NOT EXISTS {table} (
+        person_id varchar(64) NOT NULL,
+        variable_id varchar(255) NOT NULL,
+        family_id varchar(64) NOT NULL,
+        person_role varchar(16) NOT NULL,
+        value {sql_type} NOT NULL,
+        PRIMARY KEY (person_id, variable_id)
+    );
+    CREATE INDEX IF NOT EXISTS {table}_person_id
+        ON {table} (person_id);
+    CREATE INDEX IF NOT EXISTS {table}_family_id
+        ON {table} (family_id);
+    CREATE INDEX IF NOT EXISTS {table}_person_role
+        ON {table} (person_role);
+    CREATE INDEX IF NOT EXISTS {table}_variable_id
+        ON {table} (variable_id);
+
+    COMMIT;
+    """
+
+    SCHEMA_DROP = """
+    BEGIN;
+
+    DROP INDEX IF EXISTS {table}_person_id;
+    DROP INDEX IF EXISTS {table}_family_id;
+    DROP INDEX IF EXISTS {table}_person_role;
+    DROP INDEX IF EXISTS {table}_variable_id;
+
+    DROP TABLE IF EXISTS {table};
+
+    COMMIT;
+    """
 
     COLUMNS = [
         'family_id',
@@ -304,19 +347,19 @@ class FloatValueModel(object):
         self.variable_id = None
         self.value = None
 
-    @staticmethod
-    def to_tuple(v):
+    @classmethod
+    def to_tuple(cls, v):
         return (
             v.family_id,
             v.person_id,
             v.person_role,
             v.variable_id,
-            v.value
+            cls.value_convert(v.value)
         )
 
-    @staticmethod
-    def create_from_df(row):
-        v = FloatValueModel()
+    @classmethod
+    def create_from_df(cls, row):
+        v = cls()
 
         v.family_id = row['family_id']
         v.person_id = row['person_id']
@@ -327,42 +370,30 @@ class FloatValueModel(object):
         return v
 
 
-class FloatValueManager(ManagerBase):
-    SCHEMA_CREATE = """
-    BEGIN;
+class ValueManager(ManagerBase):
 
-    CREATE TABLE IF NOT EXISTS value_float (
-        person_id varchar(64) NOT NULL,
-        variable_id varchar(255) NOT NULL,
-        family_id varchar(64) NOT NULL,
-        person_role varchar(16) NOT NULL,
-        value real NOT NULL,
-        PRIMARY KEY (person_id, variable_id)
-    );
-    CREATE INDEX IF NOT EXISTS value_float_person_id
-        ON value_float (person_id);
-    CREATE INDEX IF NOT EXISTS value_float_family_id
-        ON value_float (family_id);
-    CREATE INDEX IF NOT EXISTS value_float_person_role
-        ON value_float (person_role);
-    CREATE INDEX IF NOT EXISTS value_float_variable_id
-        ON value_float (variable_id);
+    def __init__(self, *args, **kwargs):
+        super(ValueManager, self).__init__(*args, **kwargs)
 
-    COMMIT;
-    """
+    @classmethod
+    def schema_create(cls):
+        return cls.MODEL.SCHEMA_CREATE.format(
+            table=cls.MODEL.TABLE,
+            sql_type=cls.MODEL.TYPE_SQL)
 
-    SCHEMA_DROP = """
-    BEGIN;
 
-    DROP INDEX IF EXISTS value_float_person_id;
-    DROP INDEX IF EXISTS value_float_family_id;
-    DROP INDEX IF EXISTS value_float_person_role;
-    DROP INDEX IF EXISTS value_float_variable_id;
+class FloatValueModel(ValueModel):
+    TABLE = 'value_float'
+    TYPE = float
+    TYPE_NAME = 'float'
+    TYPE_SQL = 'real'
 
-    DROP TABLE IF EXISTS value_float;
+    @classmethod
+    def value_convert(cls, val):
+        return float(val)
 
-    COMMIT;
-    """
+
+class FloatValueManager(ValueManager):
 
     MODEL = FloatValueModel
 
@@ -370,84 +401,18 @@ class FloatValueManager(ManagerBase):
         super(FloatValueManager, self).__init__(*args, **kwargs)
 
 
-class NominalValueModel(object):
-    TABLE = 'value_nominal'
+class NominalValueModel(ValueModel):
+    TABLE = 'value_text'
+    TYPE = str
+    TYPE_NAME = 'text'
+    TYPE_SQL = 'varchar(255)'
 
-    COLUMNS = [
-        'family_id',
-        'person_id',
-        'person_role',
-        'variable_id',
-        'value',
-    ]
-
-    def __init__(self):
-        self.family_id = None
-        self.person_id = None
-        self.person_role = None
-        self.variable_id = None
-        self.value = None
-
-    @staticmethod
-    def to_tuple(v):
-        return (
-            v.family_id,
-            v.person_id,
-            v.person_role,
-            v.variable_id,
-            v.value.decode('utf-8')
-        )
-
-    @staticmethod
-    def create_from_df(row):
-        v = FloatValueModel()
-
-        v.family_id = row['family_id']
-        v.person_id = row['person_id']
-        v.person_role = row['person_role']
-        v.variable_id = row['variable_id']
-        v.value = row['value']
-
-        return v
+    @classmethod
+    def value_convert(cls, val):
+        return str(val).decode('utf-8')
 
 
-class NominalValueManager(ManagerBase):
-    SCHEMA_CREATE = """
-    BEGIN;
-
-    CREATE TABLE IF NOT EXISTS value_nominal (
-        person_id varchar(64) NOT NULL,
-        variable_id varchar(255) NOT NULL,
-        family_id varchar(64) NOT NULL,
-        person_role varchar(16) NOT NULL,
-        value varchar(255) NOT NULL,
-        PRIMARY KEY (person_id, variable_id)
-    );
-    CREATE INDEX IF NOT EXISTS value_nominal_person_id
-        ON value_nominal (person_id);
-    CREATE INDEX IF NOT EXISTS value_nominal_family_id
-        ON value_nominal (family_id);
-    CREATE INDEX IF NOT EXISTS value_nominal_person_role
-        ON value_nominal (person_role);
-    CREATE INDEX IF NOT EXISTS value_nominal_variable_id
-        ON value_nominal (variable_id);
-
-    COMMIT;
-    """
-
-    SCHEMA_DROP = """
-    BEGIN;
-
-    DROP INDEX IF EXISTS value_nominal_person_id;
-    DROP INDEX IF EXISTS value_nominal_family_id;
-    DROP INDEX IF EXISTS value_nominal_person_role;
-    DROP INDEX IF EXISTS value_nominal_variable_id;
-
-    DROP TABLE IF EXISTS value_nominal;
-
-    COMMIT;
-    """
-
+class NominalValueManager(ValueManager):
     MODEL = NominalValueModel
 
     def __init__(self, *args, **kwargs):
