@@ -11,7 +11,7 @@ from pheno.precompute.families import PrepareIndividuals,\
     PrepareIndividualsGender, PrepareIndividualsSSCPresent,\
     PrepareIndividualsGenderFromSSC, CheckIndividualsGenderToSSC
 from pheno.precompute.variables import PrepareVariables
-from pheno.precompute.values import PrepareFloatValues, PrepareNominalValues
+from pheno.precompute.values import PrepareFloatValues, PrepareTextValues
 
 LINE = "--------------------------------------------------------------------"
 
@@ -49,7 +49,7 @@ def recompute_pheno_variables_cache():
 
 def recompute_pheno_float_values_cache():
     print(LINE)
-    print("recomputing pheno db float/integer values caches")
+    print("recomputing pheno db float values caches")
     print(LINE)
 
     p20 = PrepareFloatValues()
@@ -58,12 +58,12 @@ def recompute_pheno_float_values_cache():
     print(LINE)
 
 
-def recompute_pheno_nominal_values_cache():
+def recompute_pheno_text_values_cache():
     print(LINE)
-    print("recomputing pheno db nominal values caches")
+    print("recomputing pheno db text values caches")
     print(LINE)
 
-    p20 = PrepareNominalValues()
+    p20 = PrepareTextValues()
     p20.prepare()
 
     print(LINE)
@@ -87,8 +87,8 @@ CACHES = [
     'all',
     'pheno_families',
     'pheno_variables',
-    'pheno_values',
-    'pheno_nominal_values',
+    'pheno_float_values',
+    'pheno_text_values',
 ]
 
 if __name__ == '__main__':
@@ -130,10 +130,10 @@ if __name__ == '__main__':
         if args.recompute:
             recompute_pheno_variables_cache()
 
-    if 'pheno_values' in args.cache or 'all' in args.cache:
+    if 'pheno_float_values' in args.cache or 'all' in args.cache:
         if args.recompute:
             recompute_pheno_float_values_cache()
 
-    if 'pheno_nominal_values' in args.cache or 'all' in args.cache:
+    if 'pheno_text_values' in args.cache or 'all' in args.cache:
         if args.recompute:
-            recompute_pheno_nominal_values_cache()
+            recompute_pheno_text_values_cache()

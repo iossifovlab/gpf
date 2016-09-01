@@ -7,6 +7,8 @@ import os
 import sqlite3
 
 import pandas as pd
+import numpy as np
+
 from pheno.utils.configuration import PhenoConfig
 import traceback
 
@@ -369,6 +371,15 @@ class ValueModel(object):
 
         return v
 
+    @classmethod
+    def isnull(cls, value):
+        if isinstance(value, float) and np.isnan(value):
+            return True
+        if isinstance(value, str) and value is None:
+            return True
+
+        return False
+
 
 class ValueManager(ManagerBase):
 
@@ -401,7 +412,7 @@ class FloatValueManager(ValueManager):
         super(FloatValueManager, self).__init__(*args, **kwargs)
 
 
-class NominalValueModel(ValueModel):
+class TextValueModel(ValueModel):
     TABLE = 'value_text'
     TYPE = str
     TYPE_NAME = 'text'
@@ -412,8 +423,8 @@ class NominalValueModel(ValueModel):
         return str(val).decode('utf-8')
 
 
-class NominalValueManager(ValueManager):
-    MODEL = NominalValueModel
+class TextValueManager(ValueManager):
+    MODEL = TextValueModel
 
     def __init__(self, *args, **kwargs):
-        super(NominalValueManager, self).__init__(*args, **kwargs)
+        super(TextValueManager, self).__init__(*args, **kwargs)
