@@ -212,9 +212,9 @@ class VariableModel(object):
         measurement_scale varchar(32) NOT NULL,
         description text NULL,
         source varchar(64) NULL,
-        has_values bool NULL,
         domain_rank integer NULL,
-        individuals integer NULL
+        individuals integer NULL,
+        stats varchar(32) NULL
     );
     COMMIT;
     """
@@ -238,9 +238,9 @@ class VariableModel(object):
         'measurement_scale',
         'description',
         'source',
-        'has_values',
         'domain_rank',
         'individuals',
+        'stats',
     ]
 
     def __init__(self):
@@ -252,9 +252,9 @@ class VariableModel(object):
         self.measurement_scale = None
         self.description = None
         self.source = None
-        self.has_values = None
         self.domain_rank = None
         self.individuals = None
+        self.stats = None
 
     @staticmethod
     def to_tuple(v):
@@ -268,7 +268,9 @@ class VariableModel(object):
             v.measurement_scale,
             v.description.decode('utf-8'),
             v.source,
-            v.has_values, v.domain_rank, v.individuals,
+            v.domain_rank,
+            v.individuals,
+            v.stats
         )
 
     @staticmethod
@@ -282,9 +284,9 @@ class VariableModel(object):
         v.measurement_scale = row['measurement_scale']
         v.description = row['description']
         v.source = row['source']
-        v.has_values = row['has_values']
         v.domain_rank = row['domain_rank']
         v.individuals = row['individuals']
+        v.stats = row['stats']
 
         return v
 

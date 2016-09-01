@@ -17,8 +17,7 @@ class PrepareValueBase(V15Loader):
 
     def _load_tables(self):
         with VariableManager(config=self.config) as vm:
-            df = vm.load_df(
-                where=self.WHERE_DOMAIN)
+            df = vm.load_df(where=self.WHERE_DOMAIN)
 
             tables = df.table_name.unique()
             return tables
@@ -83,7 +82,7 @@ class PrepareFloatValues(PrepareValueBase):
 
 
 class PrepareTextValues(PrepareValueBase):
-    WHERE_DOMAIN = "not (measurement_scale='float')"
+    WHERE_DOMAIN = "measurement_scale != 'float'"
 
     def __init__(self, *args, **kwargs):
         super(PrepareTextValues, self).__init__(
