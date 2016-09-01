@@ -75,39 +75,52 @@ def check_pheno_families_cache():
 def parse_arguments(argv=sys.argv[1:]):
     pass
 
+CACHES = [
+    'all',
+    'pheno_families',
+    'pheno_variables',
+    'pheno_values',
+]
+
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
-        description="Tool to precompute caches for DAE.")
+        description='Tool to precompute caches for DAE.')
 
     parser.add_argument(
-        "--recompute",
-        dest="recompute",
-        action="store_true",
-        help="recomputes caches")
+        '--recompute', '-r',
+        dest='recompute',
+        action='store_true',
+        help='recomputes caches')
 
     parser.add_argument(
-        "--check",
-        dest="check",
-        action="store_true",
-        help="checks caches")
+        '--check', '-c',
+        dest='check',
+        action='store_true',
+        help='checks caches')
 
     parser.add_argument(
-        "cache",
-        help="caches to recompute",
-        nargs='?')
+        'cache',
+        help='caches to recompute; choose from {}'.format(
+            ', '.join(["'{}'".format(c) for c in CACHES])
+        ),
+        choices=CACHES,
+        default='all',
+        nargs='+')
 
     # Process arguments
     args = parser.parse_args()
-    if args.cache == 'pheno_families' or args.cache == 'all':
+
+    if 'pheno_families' in args.cache or 'all' in args.cache:
         if args.recompute:
             recompute_pheno_families_cache()
         if args.check:
             check_pheno_families_cache()
 
-    if args.cache == 'pheno_variables' or args.cache == 'all':
+    if 'pheno_variables' in args.cache or 'all' in args.cache:
         if args.recompute:
             recompute_pheno_variables_cache()
 
-    if args.cache == 'pheno_values' or args.cache == 'all':
+    if 'pheno_values' in args.cache or 'all' in args.cache:
         if args.recompute:
             recompute_pheno_float_values_cache()

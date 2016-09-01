@@ -200,6 +200,7 @@ class VariableModel(object):
         'domain_choice_label',
         'measurement_scale',
         'description',
+        'source',
         'has_values',
         'domain_rank',
         'individuals',
@@ -213,6 +214,7 @@ class VariableModel(object):
         self.domain_choice_label = None
         self.measurement_scale = None
         self.description = None
+        self.source = None
         self.has_values = None
         self.domain_rank = None
         self.individuals = None
@@ -228,6 +230,7 @@ class VariableModel(object):
             choice_label,
             v.measurement_scale,
             v.description.decode('utf-8'),
+            v.source,
             v.has_values, v.domain_rank, v.individuals,
         )
 
@@ -241,6 +244,7 @@ class VariableModel(object):
         v.domain_choice_label = row['domain_choice_label']
         v.measurement_scale = row['measurement_scale']
         v.description = row['description']
+        v.source = row['source']
         v.has_values = row['has_values']
         v.domain_rank = row['domain_rank']
         v.individuals = row['individuals']
@@ -260,10 +264,19 @@ class VariableManager(ManagerBase):
         domain_choice_label varchar(255) NULL,
         measurement_scale varchar(32) NOT NULL,
         description text NULL,
+        source varchar(64) NULL,
         has_values bool NULL,
         domain_rank integer NULL,
         individuals integer NULL
     );
+    COMMIT;
+    """
+
+    SCHEMA_DROP = """
+    BEGIN;
+
+    DROP TABLE IF EXISTS variable;
+
     COMMIT;
     """
 
