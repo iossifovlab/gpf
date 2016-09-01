@@ -4,7 +4,7 @@ Created on Aug 26, 2016
 @author: lubo
 '''
 from pheno.models import VariableManager, FloatValueManager,\
-    TextValueManager, FloatValueModel, TextValueModel, VariableModel
+    TextValueManager, VariableModel
 from pheno.precompute.families import PrepareIndividuals
 from pheno.utils.load_raw import V15Loader
 from pheno.utils.configuration import PhenoConfig
@@ -129,3 +129,9 @@ class PrepareVariableDomainRanks(PhenoConfig):
             var.individuals = individuals
             with VariableManager(config=self.config) as vm:
                 vm.save(var)
+
+
+class PrepareValueClassification(PhenoConfig):
+
+    def __init__(self, *args, **kwargs):
+        super(PrepareValueClassification, self).__init__(*args, **kwargs)
