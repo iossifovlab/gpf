@@ -132,6 +132,8 @@ class PrepareVariableDomainRanks(PhenoConfig):
 
 
 class PrepareValueClassification(PhenoConfig):
+    INDIVIDUALS_CUTOFF = 77
+    RANK_CUTOFF = 1
 
     def __init__(self, *args, **kwargs):
         super(PrepareValueClassification, self).__init__(*args, **kwargs)
