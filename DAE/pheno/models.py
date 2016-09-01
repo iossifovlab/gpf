@@ -368,3 +368,87 @@ class FloatValueManager(ManagerBase):
 
     def __init__(self, *args, **kwargs):
         super(FloatValueManager, self).__init__(*args, **kwargs)
+
+
+class NominalValueModel(object):
+    TABLE = 'value_nominal'
+
+    COLUMNS = [
+        'family_id',
+        'person_id',
+        'person_role',
+        'variable_id',
+        'value',
+    ]
+
+    def __init__(self):
+        self.family_id = None
+        self.person_id = None
+        self.person_role = None
+        self.variable_id = None
+        self.value = None
+
+    @staticmethod
+    def to_tuple(v):
+        return (
+            v.family_id,
+            v.person_id,
+            v.person_role,
+            v.variable_id,
+            v.value.decode('utf-8')
+        )
+
+    @staticmethod
+    def create_from_df(row):
+        v = FloatValueModel()
+
+        v.family_id = row['family_id']
+        v.person_id = row['person_id']
+        v.person_role = row['person_role']
+        v.variable_id = row['variable_id']
+        v.value = row['value']
+
+        return v
+
+
+class NominalValueManager(ManagerBase):
+    SCHEMA_CREATE = """
+    BEGIN;
+
+    CREATE TABLE IF NOT EXISTS value_nominal (
+        person_id varchar(64) NOT NULL,
+        variable_id varchar(255) NOT NULL,
+        family_id varchar(64) NOT NULL,
+        person_role varchar(16) NOT NULL,
+        value varchar(255) NOT NULL,
+        PRIMARY KEY (person_id, variable_id)
+    );
+    CREATE INDEX IF NOT EXISTS value_nominal_person_id
+        ON value_nominal (person_id);
+    CREATE INDEX IF NOT EXISTS value_nominal_family_id
+        ON value_nominal (family_id);
+    CREATE INDEX IF NOT EXISTS value_nominal_person_role
+        ON value_nominal (person_role);
+    CREATE INDEX IF NOT EXISTS value_nominal_variable_id
+        ON value_nominal (variable_id);
+
+    COMMIT;
+    """
+
+    SCHEMA_DROP = """
+    BEGIN;
+
+    DROP INDEX IF EXISTS value_nominal_person_id;
+    DROP INDEX IF EXISTS value_nominal_family_id;
+    DROP INDEX IF EXISTS value_nominal_person_role;
+    DROP INDEX IF EXISTS value_nominal_variable_id;
+
+    DROP TABLE IF EXISTS value_nominal;
+
+    COMMIT;
+    """
+
+    MODEL = NominalValueModel
+
+    def __init__(self, *args, **kwargs):
+        super(NominalValueManager, self).__init__(*args, **kwargs)
