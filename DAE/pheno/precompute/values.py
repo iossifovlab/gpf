@@ -9,6 +9,7 @@ from pheno.precompute.families import PrepareIndividuals
 from pheno.utils.load_raw import V15Loader
 from pheno.utils.configuration import PhenoConfig
 from numpy import rank
+import math
 
 
 class PrepareValueBase(V15Loader):
@@ -136,14 +137,29 @@ class PrepareValueClassification(PhenoConfig):
     def __init__(self, *args, **kwargs):
         super(PrepareValueClassification, self).__init__(*args, **kwargs)
 
+    def check_type(self, values):
+        try:
+            fvals = [float(v) for v in values]
+        except ValueError:
+            fvals = None
+        if fvals is None:
+            return str
+
+        hvals = [math.floor(v) for v in fvals]
+        lvals = [math.ceil(v) for v in fvals]
+
+        check_float = [v1 == v2 for (v1, v2) in zip(hvals, lvals)]
+        if all(check_float):
+            return int
+        else:
+            return float
+
     def classify_variable(self, var):
         with RawValueManager(config=self.config) as vm:
-            df = vm.load_values()
-            unique = df.values.unique()
-            print(unique)
-            if self.check_float(unique):
-                pass
-            elif self.check_int(unique):
-                pass
-            else:
-                pass
+            df = vm.load_values(var)
+            unique = df.value.unique()
+            value_type = self.check_type(unique)
+
+            return value_type
+
+        return None

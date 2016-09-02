@@ -245,6 +245,14 @@ class VariableModel(object):
         'stats',
     ]
 
+    def __repr__(self):
+        return "Variable({}, {}, {}, {}, {})".format(
+            self.variable_id,
+            self.domain,
+            self.domain_choice_label,
+            self.measurement_scale,
+            self.domain_rank)
+
     def __init__(self):
         self.variable_id = None
         self.table_name = None
@@ -400,7 +408,7 @@ class ValueManager(ManagerBase):
             sql_type=cls.MODEL.TYPE_SQL)
 
     def load_values(self, variable, where=None):
-        query = "variable_id = '{}".format(variable.variable_id)
+        query = "variable_id = '{}'".format(variable.variable_id)
         if where is not None:
             query = "({}) and ({})".format(query, where)
         df = self.load_df(query)
