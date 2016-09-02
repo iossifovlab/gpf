@@ -154,6 +154,58 @@ class PrepareValueClassification(PhenoConfig):
         else:
             return float
 
+    def check_domain_choice(self, domain_choice_label):
+        def strip_brackets(s):
+            if s[0] == '[':
+                s = s[1:]
+            if s[-1] == ']':
+                s = s[:-1]
+            return s
+
+        def is_int_list(s):
+            s = strip_brackets(s)
+            l = s.split(',')
+            assert isinstance(l, list)
+            l = [v.strip() for v in l]
+            l = [v for v in l if v != 'null']
+
+            if self.check_type(l) == int:
+                return l
+            return None
+
+        def is_str_list(s):
+            s = strip_brackets(s)
+            l = s.split(',')
+            assert isinstance(l, list)
+            l = [v.strip() for v in l]
+            l = [v for v in l if v != 'null']
+            if self.check_type(l) == str:
+                return l
+            return None
+
+        dtype = 'nominal'
+
+        if domain_choice_label is None or \
+                len(domain_choice_label) == 0 or \
+                domain_choice_label == '[]':
+            dtype = 'continuous', float
+
+        elif is_int_list(domain_choice_label):
+            dtype = 'ordinal', is_int_list(domain_choice_label)
+
+        elif is_str_list(domain_choice_label):
+            dtype = 'nominal', is_str_list(domain_choice_label)
+
+        return dtype
+
+    def check_domain_type(self, variable, values):
+        if variable.domain_choice_label is None:
+            dtype = 'continuous'
+        elif variable.domain_choice_label == '[]':
+            dtype = 'continuous'
+
+        return dtype
+
     def classify_variable(self, var):
         with RawValueManager(config=self.config) as vm:
             df = vm.load_values(var)

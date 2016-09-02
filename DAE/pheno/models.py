@@ -291,9 +291,15 @@ class VariableModel(object):
         v.table_name = row['table_name']
         v.variable_name = row['variable_name']
         v.domain = row['domain']
-        if isinstance(v.domain_choice_label, str):
+        print((row['domain_choice_label'], type(row['domain_choice_label'])))
+        if isinstance(row['domain_choice_label'], str):
             v.domain_choice_label = (
                 row['domain_choice_label']).encode('utf-8')
+        elif isinstance(row['domain_choice_label'], unicode):
+            v.domain_choice_label = (
+                row['domain_choice_label']).encode('utf-8')
+        print(v.domain_choice_label)
+
         v.measurement_scale = row['measurement_scale']
         v.description = (row['description']).encode('utf-8')
         v.source = row['source']

@@ -14,7 +14,7 @@ class PrepareVariables(V15Loader):
 
     @staticmethod
     def _variable_id(row):
-        return "{}.{}".format(row['tableName'], row['name'])
+        return "{}.{}".format(row['tableName'].strip(), row['name'].strip())
 
     @staticmethod
     def _variable_description_from_main(row):
@@ -68,7 +68,7 @@ class PrepareVariables(V15Loader):
         var.domain = row['domain']
         var.domain_choice_label = row['domainChoiceLabel']
         var.measurement_scale = row['measurementScale']
-
+        print((var.domain, var.domain_choice_label, var.measurement_scale))
         var.description = build_description(row)
 
         var.source = source
