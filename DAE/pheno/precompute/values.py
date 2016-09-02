@@ -131,8 +131,6 @@ class PrepareVariableDomainRanks(PhenoConfig):
 
 
 class PrepareValueClassification(PhenoConfig):
-    INDIVIDUALS_CUTOFF = 77
-    RANK_CUTOFF = 1
 
     def __init__(self, *args, **kwargs):
         super(PrepareValueClassification, self).__init__(*args, **kwargs)
@@ -170,7 +168,7 @@ class PrepareValueClassification(PhenoConfig):
             l = [v for v in l if v != 'null']
 
             if self.check_type(l) == int:
-                return l
+                return [int(v) for v in l]
             return None
 
         def is_str_list(s):
@@ -183,7 +181,16 @@ class PrepareValueClassification(PhenoConfig):
                 return l
             return None
 
-        dtype = 'nominal'
+        def is_int_range(s):
+            l = s.split('-')
+            if len(s) != 2:
+                return None
+            l = [v.strip() for v in l]
+            if self.check_type(l) == int:
+                return [int(v) for v in l]
+            return None
+
+        dtype = 'unknown', None
 
         if domain_choice_label is None or \
                 len(domain_choice_label) == 0 or \
@@ -191,27 +198,50 @@ class PrepareValueClassification(PhenoConfig):
             dtype = 'continuous', float
 
         elif is_int_list(domain_choice_label):
-            dtype = 'ordinal', is_int_list(domain_choice_label)
+            dtype = 'ordinal', sorted(is_int_list(domain_choice_label))
 
         elif is_str_list(domain_choice_label):
-            dtype = 'nominal', is_str_list(domain_choice_label)
+            dtype = 'nominal', sorted(is_str_list(domain_choice_label))
+        elif is_int_range(domain_choice_label):
+            return 'range', sorted(is_int_range(domain_choice_label))
 
         return dtype
 
+    def check_value_domain(self, values):
+        stype = self.check_type(values)
+        if stype == int:
+            sdomain = [int(float(v)) for v in values]
+        elif stype == float:
+            sdomain = [float(v) for v in values]
+        else:
+            sdomain = values
+        return stype, sorted(sdomain)
+
     def check_domain_type(self, variable, values):
-        if variable.domain_choice_label is None:
-            dtype = 'continuous'
-        elif variable.domain_choice_label == '[]':
-            dtype = 'continuous'
+        dtype, ddomain = self.check_domain_choice(variable.domain_choice_label)
+        stype, sdomain = self.check_value_domain(values.unique())
+
+        if dtype == 'continuous' and stype == float:
+            print(
+                'continuous(float): rank: |{}|; individuals: |{}|; var: {}'
+                .format(
+                    len(values.unique()), len(values), variable.variable_id))
+        if dtype == 'continuous' and stype == int:
+            print(
+                'continuous(int  ): rank: |{}|; individuals: |{}|; var: {}'
+                .format(
+                    len(values.unique()), len(values), variable.variable_id))
+
+        if dtype == 'ordinal' and (stype == float or stype == int):
+            print('ordinal: |{} =?= {}|'.format(ddomain, sdomain))
 
         return dtype
 
     def classify_variable(self, var):
         with RawValueManager(config=self.config) as vm:
             df = vm.load_values(var)
-            unique = df.value.unique()
-            value_type = self.check_type(unique)
-
-            return value_type
+            if len(df) == 0:
+                return None
+            return self.check_domain_type(var, df.value)
 
         return None
