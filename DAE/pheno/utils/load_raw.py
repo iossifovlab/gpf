@@ -71,7 +71,7 @@ class V15Loader(PhenoConfig):
         print(result)
         return result
 
-    def load_table(self, table_name, roles=['prb']):
+    def load_table(self, table_name, roles=['prb'], dtype=None):
         result = []
         for data_dir in self._data_dirs(roles):
             dirname = os.path.join(self['v15', 'dir'], data_dir)
@@ -84,7 +84,7 @@ class V15Loader(PhenoConfig):
 
             print("processing table: {}".format(filename))
 
-            df = pd.read_csv(filename, low_memory=False)
+            df = pd.read_csv(filename, low_memory=False, dtype=dtype)
             result.append(df)
 
         return result

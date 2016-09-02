@@ -3,8 +3,8 @@ Created on Aug 26, 2016
 
 @author: lubo
 '''
-from pheno.models import VariableManager, FloatValueManager,\
-    TextValueManager, VariableModel
+from pheno.models import VariableManager, \
+    VariableModel, RawValueManager
 from pheno.precompute.families import PrepareIndividuals
 from pheno.utils.load_raw import V15Loader
 from pheno.utils.configuration import PhenoConfig
@@ -25,10 +25,16 @@ class PrepareValueBase(V15Loader):
             return tables
 
     def _load_variables(self, table_name):
+        def build_where(where):
+            if where is None:
+                return "table_name='{}'".format(table_name)
+            else:
+                return "table_name='{}' and  ({})".format(
+                    table_name,
+                    self.WHERE_DOMAIN)
+
         with VariableManager(config=self.config) as vm:
-            where = "table_name='{}' and  ({})".format(
-                table_name,
-                self.WHERE_DOMAIN)
+            where = build_where(self.WHERE_DOMAIN)
             df = vm.load_df(where=where)
             return df
 
@@ -59,7 +65,8 @@ class PrepareValueBase(V15Loader):
             return
 
         dfs = self.load_table(
-            table, ['prb', 'sib', 'father', 'mother'])
+            table, ['prb', 'sib', 'father', 'mother'],
+            dtype=str)
         with self.value_manager(config=self.config) as vm:
             for _index, variable in variables.iterrows():
                 self._build_variable_values(vm, dfs, variable)
@@ -74,21 +81,21 @@ class PrepareValueBase(V15Loader):
             self._build_table_values(table)
 
 
-class PrepareFloatValues(PrepareValueBase):
-    WHERE_DOMAIN = "measurement_scale='float'"
+# class PrepareFloatValues(PrepareValueBase):
+#     WHERE_DOMAIN = "measurement_scale='float'"
+#
+#     def __init__(self, *args, **kwargs):
+#
+#         super(PrepareFloatValues, self).__init__(
+#             value_manager=FloatValueManager, *args, **kwargs)
+
+
+class PrepareRawValues(PrepareValueBase):
+    WHERE_DOMAIN = None
 
     def __init__(self, *args, **kwargs):
-
-        super(PrepareFloatValues, self).__init__(
-            value_manager=FloatValueManager, *args, **kwargs)
-
-
-class PrepareTextValues(PrepareValueBase):
-    WHERE_DOMAIN = "measurement_scale != 'float'"
-
-    def __init__(self, *args, **kwargs):
-        super(PrepareTextValues, self).__init__(
-            value_manager=TextValueManager, *args, **kwargs)
+        super(PrepareRawValues, self).__init__(
+            value_manager=RawValueManager, *args, **kwargs)
 
 
 class PrepareVariableDomainRanks(PhenoConfig):
@@ -96,9 +103,9 @@ class PrepareVariableDomainRanks(PhenoConfig):
     def __init__(self, *args, **kwargs):
         super(PrepareVariableDomainRanks, self).__init__(*args, **kwargs)
 
-    def _rank(self, var, value_manager):
+    def _rank(self, var):
         where = "variable_id='{}'".format(var.variable_id)
-        with value_manager(config=self.config) as vm:
+        with RawValueManager(config=self.config) as vm:
             df = vm.load_df(where=where)
             if(df is None):
                 return 0, 0
@@ -107,12 +114,6 @@ class PrepareVariableDomainRanks(PhenoConfig):
 
             return rank, individuals
 
-    def _float_rank(self, var):
-        return self._rank(var, FloatValueManager)
-
-    def _text_rank(self, var):
-        return self._rank(var, TextValueManager)
-
     def prepare(self):
         with VariableManager(config=self.config) as vm:
             variables = vm.load_df()
@@ -120,10 +121,7 @@ class PrepareVariableDomainRanks(PhenoConfig):
         for _index, row in variables.iterrows():
             var = VariableModel.create_from_df(row)
             print("calculating rank of {}".format(var.variable_id))
-            if row.measurement_scale == 'float':
-                rank, individuals = self._float_rank(var)
-            else:
-                rank, individuals = self._text_rank(var)
+            rank, individuals = self._rank(var)
 
             var.domain_rank = rank
             var.individuals = individuals

@@ -435,3 +435,21 @@ class TextValueManager(ValueManager):
 
     def __init__(self, *args, **kwargs):
         super(TextValueManager, self).__init__(*args, **kwargs)
+
+
+class RawValueModel(ValueModel):
+    TABLE = 'value_raw'
+    TYPE = str
+    TYPE_NAME = 'text'
+    TYPE_SQL = 'varchar(255)'
+
+    @classmethod
+    def value_convert(cls, val):
+        return str(val).decode('utf-8')
+
+
+class RawValueManager(ValueManager):
+    MODEL = RawValueModel
+
+    def __init__(self, *args, **kwargs):
+        super(RawValueManager, self).__init__(*args, **kwargs)
