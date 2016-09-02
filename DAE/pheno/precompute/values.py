@@ -154,14 +154,15 @@ class PrepareValueClassification(PhenoConfig):
 
     def check_domain_choice(self, domain_choice_label):
         def strip_brackets(s):
+            if s is None or len(s) == 0:
+                return s
             if s[0] == '[':
                 s = s[1:]
             if s[-1] == ']':
                 s = s[:-1]
-            return s
+            return s.strip()
 
         def is_int_list(s):
-            s = strip_brackets(s)
             l = s.split(',')
             assert isinstance(l, list)
             l = [v.strip() for v in l]
@@ -172,9 +173,10 @@ class PrepareValueClassification(PhenoConfig):
             return None
 
         def is_str_list(s):
-            s = strip_brackets(s)
             l = s.split(',')
             assert isinstance(l, list)
+            if len(l) <= 1:
+                return None
             l = [v.strip() for v in l]
             l = [v for v in l if v != 'null']
             if self.check_type(l) == str:
@@ -182,28 +184,35 @@ class PrepareValueClassification(PhenoConfig):
             return None
 
         def is_int_range(s):
-            l = s.split('-')
-            if len(s) != 2:
+            if '-' in s:
+                l = s.split('-')
+            elif 'to' in s:
+                l = s.split('to')
+            else:
+                return None
+
+            if len(l) != 2:
                 return None
             l = [v.strip() for v in l]
+
             if self.check_type(l) == int:
-                return [int(v) for v in l]
+                return [int(float(v)) for v in l]
             return None
 
         dtype = 'unknown', None
 
-        if domain_choice_label is None or \
-                len(domain_choice_label) == 0 or \
-                domain_choice_label == '[]':
+        label = strip_brackets(domain_choice_label)
+        if label is None or \
+                len(label) == 0:
             dtype = 'continuous', float
 
-        elif is_int_list(domain_choice_label):
-            dtype = 'ordinal', sorted(is_int_list(domain_choice_label))
+        elif is_int_list(label):
+            dtype = 'ordinal', sorted(is_int_list(label))
 
-        elif is_str_list(domain_choice_label):
-            dtype = 'nominal', sorted(is_str_list(domain_choice_label))
-        elif is_int_range(domain_choice_label):
-            return 'range', sorted(is_int_range(domain_choice_label))
+        elif is_str_list(label):
+            dtype = 'nominal', sorted(is_str_list(label))
+        elif is_int_range(label):
+            return 'range', is_int_range(label)
 
         return dtype
 
@@ -226,15 +235,27 @@ class PrepareValueClassification(PhenoConfig):
                 'continuous(float): rank: |{}|; individuals: |{}|; var: {}'
                 .format(
                     len(values.unique()), len(values), variable.variable_id))
-        if dtype == 'continuous' and stype == int:
+        elif dtype == 'continuous' and stype == int:
             print(
                 'continuous(int  ): rank: |{}|; individuals: |{}|; var: {}'
                 .format(
                     len(values.unique()), len(values), variable.variable_id))
 
-        if dtype == 'ordinal' and (stype == float or stype == int):
-            print('ordinal: |{} =?= {}|'.format(ddomain, sdomain))
+        elif dtype == 'ordinal' and (stype == float or stype == int):
+            print('ordinal: |{} =?= {}|; var: {}'.format(
+                ddomain, sdomain, variable.variable_id))
 
+        elif dtype == 'range':
+            print('range: |{}|, rank:|{}|; var: {}'.format(
+                ddomain, len(sdomain), variable.variable_id))
+
+        else:
+            print(
+                "not handled: dtype: {}, stype: {},  ddomain: {}, "
+                "rank: {}, var: {}, dcl: {}".format(
+                    dtype, stype, ddomain, len(sdomain), variable.variable_id,
+                    variable.domain_choice_label))
+            print(sdomain)
         return dtype
 
     def classify_variable(self, var):
