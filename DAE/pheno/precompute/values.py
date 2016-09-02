@@ -135,3 +135,15 @@ class PrepareValueClassification(PhenoConfig):
 
     def __init__(self, *args, **kwargs):
         super(PrepareValueClassification, self).__init__(*args, **kwargs)
+
+    def classify_variable(self, var):
+        with RawValueManager(config=self.config) as vm:
+            df = vm.load_values()
+            unique = df.values.unique()
+            print(unique)
+            if self.check_float(unique):
+                pass
+            elif self.check_int(unique):
+                pass
+            else:
+                pass

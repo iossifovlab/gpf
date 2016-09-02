@@ -399,6 +399,13 @@ class ValueManager(ManagerBase):
             table=cls.MODEL.TABLE,
             sql_type=cls.MODEL.TYPE_SQL)
 
+    def load_values(self, variable, where=None):
+        query = "variable_id = '{}".format(variable.variable_id)
+        if where is not None:
+            query = "({}) and ({})".format(query, where)
+        df = self.load_df(query)
+        return df
+
 
 class FloatValueModel(ValueModel):
     TABLE = 'value_float'
