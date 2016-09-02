@@ -86,7 +86,7 @@ class ManagerBase(PhenoConfig):
             print("Exception in ManagerBase: {}: {}\n{}".format(
                 exc_type, exc_value, tb))
             traceback.print_tb(tb)
-            res = exc_value
+            res = None
 
         self.db.commit()
         self.db.close()
