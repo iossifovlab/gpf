@@ -5,7 +5,7 @@ Created on Aug 25, 2016
 '''
 import numpy as np
 import pandas as pd
-from pheno.models import PersonManager, PersonModel
+from pheno.models import PersonManager, PersonModel, RawValueManager
 from pheno.utils.load_raw import V15Loader, V14Loader
 
 
@@ -238,15 +238,33 @@ class PrepareIndividualsRace(V15Loader):
     def __init__(self, *args, **kwargs):
         super(PrepareIndividualsRace, self).__init__(*args, **kwargs)
 
-    def prepare(self):
-        pm = PersonManager()
-        pm.connect()
-        df = pm.load_df(where='ssc_present=1')
-        self._build_race(df)
-        pm.save_df(df)
+    def _prepare_probands_race(self):
+        with RawValueManager(config=self.config) as vm:
+            df = vm.load_df(
+                where="variable_id='{}'"
+                .format('ssc_core_descriptive.race'))
+        with PersonManager(config=self.config) as pm:
+            # print('setting race for {}'.format(row['person_id']))
+            for _index, row in df.iterrows():
+                person = pm.get("person_id='{}'".format(row['person_id']))
+                person.race = row['value']
+                pm.save(person)
 
-    def _build_race(self, df):
-        pass
+    def _prepare_parents_race(self):
+        with RawValueManager(config=self.config) as vm:
+            df = vm.load_df(
+                where="variable_id='{}'"
+                .format('ssc_commonly_used.race_parents'))
+        with PersonManager(config=self.config) as pm:
+            # print('setting race for {}'.format(row['person_id']))
+            for _index, row in df.iterrows():
+                person = pm.get("person_id='{}'".format(row['person_id']))
+                person.race = row['value']
+                pm.save(person)
+
+    def prepare(self):
+        self._prepare_probands_race()
+        self._prepare_parents_race()
 
 
 class CheckIndividualsGenderToSSC(V15Loader):
