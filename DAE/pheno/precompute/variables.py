@@ -68,11 +68,15 @@ class PrepareVariables(V15Loader):
         var.variable_name = row['name'].strip().decode('utf-8')
 
         var.domain = row['domain'].strip().decode('utf-8')
+
         var.domain_choice_label = row['domainChoiceLabel'].strip() \
             .decode('utf-8') \
             if isinstance(row['domainChoiceLabel'], str) else None
+
         var.measurement_scale = row['measurementScale'].strip().decode('utf-8')
         var.description = build_description(row)
+        if var.description is None:
+            var.description = ''
 
         var.source = source
         var.has_values = None

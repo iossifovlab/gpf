@@ -271,6 +271,8 @@ class VariableModel(object):
         choice_label = None
         if isinstance(v.domain_choice_label, str):
             choice_label = v.domain_choice_label
+        elif isinstance(v.domain_choice_label, unicode):
+            choice_label = v.domain_choice_label
         return (
             v.variable_id, v.table_name, v.variable_name,
             v.domain,
@@ -518,7 +520,7 @@ class OrdinalValueModel(ValueModel):
 
     @classmethod
     def value_convert(cls, val):
-        return int(val)
+        return int(float(val))
 
 
 class OrdinalValueManager(ValueManager):

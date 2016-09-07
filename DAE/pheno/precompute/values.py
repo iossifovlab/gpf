@@ -223,14 +223,14 @@ class PrepareValueClassification(PhenoConfig):
         return dtype
 
     def check_value_domain(self, values):
-        stype = self.check_type(values)
-        if stype == int:
+        vtype = self.check_type(values)
+        if vtype == int:
             sdomain = [int(float(v)) for v in values]
-        elif stype == float:
+        elif vtype == float:
             sdomain = [float(v) for v in values]
         else:
             sdomain = values
-        return stype, sorted(sdomain)
+        return vtype, sorted(sdomain)
 
     def check_continuous(self, variable, values):
         dtype, ddomain = self.check_domain_choice_label(
@@ -257,47 +257,29 @@ class PrepareValueClassification(PhenoConfig):
 
         return True
 
-    def check_domain_type(self, variable, values):
-        dtype, ddomain = self.check_domain_choice_label(
+    def check_ordinal(self, variable, values):
+        dtype, _ddomain = self.check_domain_choice_label(
             variable.domain_choice_label)
-        stype, sdomain = self.check_value_domain(values.unique())
+        vtype, _vdomain = self.check_value_domain(values)
 
-        if dtype == 'continuous' and stype == float:
-            print(
-                'continuous(float): rank: |{}|; type: |{}|; domain: |{}|; '
-                'individuals: |{}|; var: {}'
-                .format(
-                    len(values.unique()),
-                    variable.measurement_scale, variable.domain,
-                    len(values), variable.variable_id))
-        elif dtype == 'continuous' and stype == int:
-            print(
-                'continuous(int  ): rank: |{}|; type: |{}|; domain: |{}|; '
-                'individuals: |{}|; var: {}'
-                .format(
-                    len(values.unique()),
-                    variable.measurement_scale, variable.domain,
-                    len(values), variable.variable_id))
+        rank = len(values.unique())
+        individuals = len(values)
 
-        elif dtype == 'ordinal' and (stype == float or stype == int):
-            print('ordinal: |{} =?= {}|; var: {}'.format(
-                ddomain, sdomain, variable.variable_id))
+        if variable.domain in ['meta.text_t', 'meta.memo_t', 'meta.file_t']:
+            return False
 
-        elif dtype == 'range':
-            print('range: |{}|, rank: |{}|; type: |{}|; domain: |{}|; '
-                  'individuals: |{}|; var: {}'.format(
-                      ddomain,
-                      len(values.unique()),
-                      variable.measurement_scale, variable.domain,
-                      len(values), variable.variable_id))
-        else:
-            print(
-                "not handled: dtype: {}, stype: {},  ddomain: {}, "
-                "rank: {}, var: {}, dcl: {}".format(
-                    dtype, stype, ddomain, len(sdomain), variable.variable_id,
-                    variable.domain_choice_label))
-            print(sdomain)
-        return dtype
+        if not ((dtype == self.ORDINAL and vtype == int) or
+                (dtype == self.CONTINUOUS and vtype == int)):
+            return False
+
+        if rank < int(self[self.ORDINAL, 'min_rank']) or \
+                rank > int(self[self.ORDINAL, 'max_rank']):
+            return False
+
+        if individuals < int(self[self.ORDINAL, 'min_individuals']):
+            return False
+
+        return True
 
     def classify_variable(self, variable_id):
         with VariableManager(config=self.config) as vm:
@@ -313,6 +295,8 @@ class PrepareValueClassification(PhenoConfig):
                 return self.UNKNOWN
             if self.check_continuous(variable, df.value):
                 return self.CONTINUOUS
+            elif self.check_ordinal(variable, df.value):
+                return self.ORDINAL
 
         return self.UNKNOWN
 
@@ -327,11 +311,35 @@ class PrepareValueClassification(PhenoConfig):
             vm.drop_tables()
             vm.create_tables()
 
+    def _prepare_continuous_variable(self, variable, df):
+        print "processing continuous variable: {}".format(variable.variable_id)
+        variable.stats = self.CONTINUOUS
+        variable.rank = len(df.value.unique())
+        variable.individuals = len(df.value)
+        with VariableManager(config=self.config) as vm:
+            vm.save(variable)
+        with ContinuousValueManager(config=self.config) as valm:
+            for _vindex, value in df.iterrows():
+                value = ContinuousValueModel.create_from_df(value)
+                valm.save(value)
+
+    def _prepare_ordinal_variable(self, variable, df):
+        print "processing ordinal variable: {}".format(variable.variable_id)
+        variable.stats = self.ORDINAL
+        variable.rank = len(df.value.unique())
+        variable.individuals = len(df.value)
+        with VariableManager(config=self.config) as vm:
+            vm.save(variable)
+        with OrdinalValueManager(config=self.config) as valm:
+            for _vindex, value in df.iterrows():
+                value = ContinuousValueModel.create_from_df(value)
+                valm.save(value)
+
     def prepare(self):
         self._create_value_tables()
 
-        with VariableManager(config=self.config) as vm:
-            variables = vm.load_df()
+        with VariableManager(config=self.config) as variable_manager:
+            variables = variable_manager.load_df()
 
         for _index, variable in variables.iterrows():
             with RawValueManager(config=self.config) as vm:
@@ -339,16 +347,6 @@ class PrepareValueClassification(PhenoConfig):
                     where="variable_id = '{}'"
                     .format(variable.variable_id))
             if self.check_continuous(variable, df.value):
-                print("processing continuous variable: {}"
-                      .format(variable.variable_id))
-                variable.stats = self.CONTINUOUS
-                variable.rank = len(df.value.unique())
-                variable.individuals = len(df.value)
-
-                with VariableManager(config=self.config) as vm:
-                    vm.save(variable)
-
-                with ContinuousValueManager(config=self.config) as valm:
-                    for _vindex, value in df.iterrows():
-                        value = ContinuousValueModel.create_from_df(value)
-                        valm.save(value)
+                self._prepare_continuous_variable(variable, df)
+            elif self.check_ordinal(variable, df.value):
+                self._prepare_ordinal_variable(variable, df)
