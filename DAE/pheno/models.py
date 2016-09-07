@@ -270,13 +270,13 @@ class VariableModel(object):
     def to_tuple(v):
         choice_label = None
         if isinstance(v.domain_choice_label, str):
-            choice_label = v.domain_choice_label.decode('utf-8')
+            choice_label = v.domain_choice_label
         return (
             v.variable_id, v.table_name, v.variable_name,
             v.domain,
             choice_label,
             v.measurement_scale,
-            v.description.decode('utf-8'),
+            v.description,
             v.source,
             v.domain_rank,
             v.individuals,

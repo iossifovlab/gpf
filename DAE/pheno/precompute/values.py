@@ -5,7 +5,7 @@ Created on Aug 26, 2016
 '''
 from pheno.models import VariableManager, \
     VariableModel, RawValueManager, ContinuousValueManager,\
-    CategoricalValueManager, OrdinalValueManager
+    CategoricalValueManager, OrdinalValueManager, ContinuousValueModel
 from pheno.precompute.families import PrepareIndividuals
 from pheno.utils.load_raw import V15Loader
 from pheno.utils.configuration import PhenoConfig
@@ -132,6 +132,11 @@ class PrepareVariableDomainRanks(PhenoConfig):
 
 
 class PrepareValueClassification(PhenoConfig):
+    CONTINUOUS = 'continuous'
+    RANGE = 'range'
+    ORDINAL = 'ordinal'
+    CATEGORICAL = 'categorical'
+    UNKNOWN = 'unknown'
 
     def __init__(self, *args, **kwargs):
         super(PrepareValueClassification, self).__init__(*args, **kwargs)
@@ -205,15 +210,15 @@ class PrepareValueClassification(PhenoConfig):
         label = strip_brackets(domain_choice_label)
         if label is None or \
                 len(label) == 0:
-            dtype = 'continuous', float
+            dtype = self.CONTINUOUS, float
 
         elif is_int_list(label):
-            dtype = 'ordinal', sorted(is_int_list(label))
+            dtype = self.ORDINAL, sorted(is_int_list(label))
 
         elif is_str_list(label):
-            dtype = 'categorical', sorted(is_str_list(label))
+            dtype = self.CATEGORICAL, sorted(is_str_list(label))
         elif is_int_range(label):
-            return 'range', is_int_range(label)
+            return self.RANGE, is_int_range(label)
 
         return dtype
 
@@ -226,6 +231,31 @@ class PrepareValueClassification(PhenoConfig):
         else:
             sdomain = values
         return stype, sorted(sdomain)
+
+    def check_continuous(self, variable, values):
+        dtype, ddomain = self.check_domain_choice_label(
+            variable.domain_choice_label)
+        rank = len(values.unique())
+        individuals = len(values)
+
+        if not (dtype == self.CONTINUOUS or dtype == self.RANGE):
+            return False
+
+        if not (ddomain == float or ddomain == int or
+                isinstance(ddomain, list)):
+            return False
+
+        if not (variable.domain == 'meta.integer_t' or
+                variable.domain == 'meta.float_t'):
+            return False
+
+        if rank < int(self[self.CONTINUOUS, 'min_rank']):
+            return False
+
+        if individuals < int(self[self.CONTINUOUS, 'min_individuals']):
+            return False
+
+        return True
 
     def check_domain_type(self, variable, values):
         dtype, ddomain = self.check_domain_choice_label(
@@ -269,14 +299,22 @@ class PrepareValueClassification(PhenoConfig):
             print(sdomain)
         return dtype
 
-    def classify_variable(self, var):
-        with RawValueManager(config=self.config) as vm:
-            df = vm.load_values(var)
+    def classify_variable(self, variable_id):
+        with VariableManager(config=self.config) as vm:
+            df = vm.load_df(where="variable_id = '{}'".format(variable_id))
+            assert len(df) <= 1
             if len(df) == 0:
-                return None
-            return self.check_domain_type(var, df.value)
+                return self.UNKNOWN
+            variable = VariableModel.create_from_df(df.loc[0])
 
-        return None
+        with RawValueManager(config=self.config) as vm:
+            df = vm.load_values(variable)
+            if len(df) == 0:
+                return self.UNKNOWN
+            if self.check_continuous(variable, df.value):
+                return self.CONTINUOUS
+
+        return self.UNKNOWN
 
     def _create_value_tables(self):
         with ContinuousValueManager(config=self.config) as vm:
@@ -291,3 +329,26 @@ class PrepareValueClassification(PhenoConfig):
 
     def prepare(self):
         self._create_value_tables()
+
+        with VariableManager(config=self.config) as vm:
+            variables = vm.load_df()
+
+        for _index, variable in variables.iterrows():
+            with RawValueManager(config=self.config) as vm:
+                df = vm.load_df(
+                    where="variable_id = '{}'"
+                    .format(variable.variable_id))
+            if self.check_continuous(variable, df.value):
+                print("processing continuous variable: {}"
+                      .format(variable.variable_id))
+                variable.stats = self.CONTINUOUS
+                variable.rank = len(df.value.unique())
+                variable.individuals = len(df.value)
+
+                with VariableManager(config=self.config) as vm:
+                    vm.save(variable)
+
+                with ContinuousValueManager(config=self.config) as valm:
+                    for _vindex, value in df.iterrows():
+                        value = ContinuousValueModel.create_from_df(value)
+                        valm.save(value)

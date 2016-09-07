@@ -22,7 +22,8 @@ class PrepareVariables(V15Loader):
             row['tableDisplayTitle'],
             row['variableDisplayTitle'],
         ]
-        display = [d.strip() for d in display if isinstance(d, str)]
+        display = [d.strip().decode('utf-8')
+                   for d in display if isinstance(d, str)]
         if display:
             display = ': '.join(display)
         else:
@@ -33,7 +34,8 @@ class PrepareVariables(V15Loader):
             row['variableDisplayHint'],
             row['variableNotes'],
         ]
-        descr = [d.strip() for d in descr if isinstance(d, str)]
+        descr = [d.strip().decode('utf-8')
+                 for d in descr if isinstance(d, str)]
 
         if descr:
             return '\n\n'.join(descr)
@@ -48,11 +50,11 @@ class PrepareVariables(V15Loader):
         category = row['variableCategory']
 
         if isinstance(variable_notes, str):
-            descr.append(variable_notes.strip())
+            descr.append(variable_notes.strip().decode('utf-8'))
         if isinstance(category, str):
-            descr.append(category.strip())
+            descr.append(category.strip().decode('utf-8'))
         if isinstance(calculation_documentation, str):
-            descr.append(calculation_documentation.strip())
+            descr.append(calculation_documentation.strip().decode('utf-8'))
 
         if descr:
             return '\n\n'.join(descr)
@@ -62,13 +64,14 @@ class PrepareVariables(V15Loader):
     @staticmethod
     def _set_variable_from_row(var, row, build_description, source):
         var.variable_id = PrepareVariables._variable_id(row)
-        var.table_name = row['tableName'].strip()
-        var.variable_name = row['name'].strip()
+        var.table_name = row['tableName'].strip().decode('utf-8')
+        var.variable_name = row['name'].strip().decode('utf-8')
 
-        var.domain = row['domain'].strip()
+        var.domain = row['domain'].strip().decode('utf-8')
         var.domain_choice_label = row['domainChoiceLabel'].strip() \
+            .decode('utf-8') \
             if isinstance(row['domainChoiceLabel'], str) else None
-        var.measurement_scale = row['measurementScale'].strip()
+        var.measurement_scale = row['measurementScale'].strip().decode('utf-8')
         var.description = build_description(row)
 
         var.source = source
