@@ -72,6 +72,7 @@ class PrepareIndividuals(V15Loader):
     def prepare(self):
         df = self._build_df_from_individuals()
         with PersonManager(config=self.config) as pm:
+            pm.drop_tables()
             pm.create_tables()
 
             for _index, row in df.iterrows():

@@ -137,9 +137,17 @@ class PersonModel(object):
         role_id varchar(8) NOT NULL,
         gender varchar(1) NULL,
         race varchar(32) NULL,
+        age integer NULL,
         collection varchar(64) NULL,
+        site varchar(64) NULL,
         ssc_present bool NULL
     );
+    COMMIT;
+    """
+
+    SCHEMA_DROP = """
+    BEGIN;
+    DROP TABLE IF EXISTS person;
     COMMIT;
     """
 
@@ -150,7 +158,9 @@ class PersonModel(object):
         'role_id',
         'gender',
         'race',
+        'age',
         'collection',
+        'site',
         'ssc_present',
     ]
 
@@ -163,7 +173,9 @@ class PersonModel(object):
         self.role_id = None
         self.gender = None
         self.race = None
+        self.age = None
         self.collection = None
+        self.site = None
         self.ssc_present = None
 
     @staticmethod
@@ -175,7 +187,9 @@ class PersonModel(object):
         p.role_id = row['role_id']
         p.gender = row['gender']
         p.race = row['race']
+        p.age = row['age']
         p.collection = row['collection']
+        p.site = row['site']
         p.ssc_present = row['ssc_present']
 
         return p
@@ -189,8 +203,10 @@ class PersonModel(object):
             p.role_id,
             p.gender,
             p.race,
+            p.age,
             p.collection,
-            p.ssc_present
+            p.site,
+            p.ssc_present,
         )
 
 
