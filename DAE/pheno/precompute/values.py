@@ -210,7 +210,7 @@ class PrepareValueClassification(PhenoConfig):
             dtype = 'ordinal', sorted(is_int_list(label))
 
         elif is_str_list(label):
-            dtype = 'nominal', sorted(is_str_list(label))
+            dtype = 'categorical', sorted(is_str_list(label))
         elif is_int_range(label):
             return 'range', is_int_range(label)
 
@@ -232,23 +232,32 @@ class PrepareValueClassification(PhenoConfig):
 
         if dtype == 'continuous' and stype == float:
             print(
-                'continuous(float): rank: |{}|; individuals: |{}|; var: {}'
+                'continuous(float): rank: |{}|; type: |{}|; domain: |{}|; '
+                'individuals: |{}|; var: {}'
                 .format(
-                    len(values.unique()), len(values), variable.variable_id))
+                    len(values.unique()),
+                    variable.measurement_scale, variable.domain,
+                    len(values), variable.variable_id))
         elif dtype == 'continuous' and stype == int:
             print(
-                'continuous(int  ): rank: |{}|; individuals: |{}|; var: {}'
+                'continuous(int  ): rank: |{}|; type: |{}|; domain: |{}|; '
+                'individuals: |{}|; var: {}'
                 .format(
-                    len(values.unique()), len(values), variable.variable_id))
+                    len(values.unique()),
+                    variable.measurement_scale, variable.domain,
+                    len(values), variable.variable_id))
 
         elif dtype == 'ordinal' and (stype == float or stype == int):
             print('ordinal: |{} =?= {}|; var: {}'.format(
                 ddomain, sdomain, variable.variable_id))
 
         elif dtype == 'range':
-            print('range: |{}|, rank:|{}|; var: {}'.format(
-                ddomain, len(sdomain), variable.variable_id))
-
+            print('range: |{}|, rank: |{}|; type: |{}|; domain: |{}|; '
+                  'individuals: |{}|; var: {}'.format(
+                      ddomain,
+                      len(values.unique()),
+                      variable.measurement_scale, variable.domain,
+                      len(values), variable.variable_id))
         else:
             print(
                 "not handled: dtype: {}, stype: {},  ddomain: {}, "

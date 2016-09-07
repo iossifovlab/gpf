@@ -22,24 +22,24 @@ class V14Loader(PhenoConfig):
     def __init__(self, *args, **kwargs):
         super(V14Loader, self).__init__(*args, **kwargs)
 
-    def _load_df(self, name):
+    def _load_df(self, name, dtype=None):
         filename = os.path.join(self['v14', 'dir'], name)
         assert os.path.isfile(filename)
-        df = pd.read_csv(filename, low_memory=False)
+        df = pd.read_csv(filename, low_memory=False, dtype=dtype)
 
         return df
 
     def load_main(self):
-        return self._load_df(self.MAIN)
+        return self._load_df(self.MAIN, dtype=str)
 
     def load_cdv(self):
-        return self._load_df(self.CDV)
+        return self._load_df(self.CDV, dtype=str)
 
     def load_ocuv(self):
-        return self._load_df(self.OCUV)
+        return self._load_df(self.OCUV, dtype=str)
 
     def load_everything(self):
-        return self._load_df(self.EVERYTHING)
+        return self._load_df(self.EVERYTHING, dtype=str)
 
 
 class V15Loader(PhenoConfig):
@@ -89,10 +89,10 @@ class V15Loader(PhenoConfig):
 
         return result
 
-    def _load_df(self, name):
+    def _load_df(self, name, dtype=None):
         filename = os.path.join(self['v15', 'dir'], name)
         assert os.path.isfile(filename)
-        df = pd.read_csv(filename, low_memory=False, sep='\t')
+        df = pd.read_csv(filename, low_memory=False, sep='\t', dtype=dtype)
 
         return df
 

@@ -22,7 +22,7 @@ class PrepareVariables(V15Loader):
             row['tableDisplayTitle'],
             row['variableDisplayTitle'],
         ]
-        display = [d for d in display if isinstance(d, str)]
+        display = [d.strip() for d in display if isinstance(d, str)]
         if display:
             display = ': '.join(display)
         else:
@@ -33,7 +33,7 @@ class PrepareVariables(V15Loader):
             row['variableDisplayHint'],
             row['variableNotes'],
         ]
-        descr = [d for d in descr if isinstance(d, str)]
+        descr = [d.strip() for d in descr if isinstance(d, str)]
 
         if descr:
             return '\n\n'.join(descr)
@@ -48,11 +48,11 @@ class PrepareVariables(V15Loader):
         category = row['variableCategory']
 
         if isinstance(variable_notes, str):
-            descr.append(variable_notes)
+            descr.append(variable_notes.strip())
         if isinstance(category, str):
-            descr.append(category)
+            descr.append(category.strip())
         if isinstance(calculation_documentation, str):
-            descr.append(calculation_documentation)
+            descr.append(calculation_documentation.strip())
 
         if descr:
             return '\n\n'.join(descr)
@@ -62,13 +62,13 @@ class PrepareVariables(V15Loader):
     @staticmethod
     def _set_variable_from_row(var, row, build_description, source):
         var.variable_id = PrepareVariables._variable_id(row)
-        var.table_name = row['tableName']
-        var.variable_name = row['name']
+        var.table_name = row['tableName'].strip()
+        var.variable_name = row['name'].strip()
 
-        var.domain = row['domain']
-        var.domain_choice_label = row['domainChoiceLabel']
-        var.measurement_scale = row['measurementScale']
-        print((var.domain, var.domain_choice_label, var.measurement_scale))
+        var.domain = row['domain'].strip()
+        var.domain_choice_label = row['domainChoiceLabel'].strip() \
+            if isinstance(row['domainChoiceLabel'], str) else None
+        var.measurement_scale = row['measurementScale'].strip()
         var.description = build_description(row)
 
         var.source = source
