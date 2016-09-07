@@ -472,3 +472,57 @@ class RawValueManager(ValueManager):
 
     def __init__(self, *args, **kwargs):
         super(RawValueManager, self).__init__(*args, **kwargs)
+
+
+class ContinuousValueModel(ValueModel):
+    TABLE = 'value_continuous'
+    TYPE = float
+    TYPE_NAME = 'float'
+    TYPE_SQL = 'real'
+
+    @classmethod
+    def value_convert(cls, val):
+        return float(val)
+
+
+class ContinuousValueManager(ValueManager):
+    MODEL = ContinuousValueModel
+
+    def __init__(self, *args, **kwargs):
+        super(ContinuousValueManager, self).__init__(*args, **kwargs)
+
+
+class CategoricalValueModel(ValueModel):
+    TABLE = 'value_categorical'
+    TYPE = str
+    TYPE_NAME = 'text'
+    TYPE_SQL = 'varchar(255)'
+
+    @classmethod
+    def value_convert(cls, val):
+        return str(val).decode('utf-8')
+
+
+class CategoricalValueManager(ValueManager):
+    MODEL = CategoricalValueModel
+
+    def __init__(self, *args, **kwargs):
+        super(CategoricalValueManager, self).__init__(*args, **kwargs)
+
+
+class OrdinalValueModel(ValueModel):
+    TABLE = 'value_ordinal'
+    TYPE = int
+    TYPE_NAME = 'int'
+    TYPE_SQL = 'integer'
+
+    @classmethod
+    def value_convert(cls, val):
+        return int(val)
+
+
+class OrdinalValueManager(ValueManager):
+    MODEL = OrdinalValueModel
+
+    def __init__(self, *args, **kwargs):
+        super(OrdinalValueManager, self).__init__(*args, **kwargs)

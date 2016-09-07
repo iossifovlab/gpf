@@ -4,7 +4,8 @@ Created on Aug 26, 2016
 @author: lubo
 '''
 from pheno.models import VariableManager, \
-    VariableModel, RawValueManager
+    VariableModel, RawValueManager, ContinuousValueManager,\
+    CategoricalValueManager, OrdinalValueManager
 from pheno.precompute.families import PrepareIndividuals
 from pheno.utils.load_raw import V15Loader
 from pheno.utils.configuration import PhenoConfig
@@ -152,7 +153,7 @@ class PrepareValueClassification(PhenoConfig):
         else:
             return float
 
-    def check_domain_choice(self, domain_choice_label):
+    def check_domain_choice_label(self, domain_choice_label):
         def strip_brackets(s):
             if s is None or len(s) == 0:
                 return s
@@ -227,7 +228,8 @@ class PrepareValueClassification(PhenoConfig):
         return stype, sorted(sdomain)
 
     def check_domain_type(self, variable, values):
-        dtype, ddomain = self.check_domain_choice(variable.domain_choice_label)
+        dtype, ddomain = self.check_domain_choice_label(
+            variable.domain_choice_label)
         stype, sdomain = self.check_value_domain(values.unique())
 
         if dtype == 'continuous' and stype == float:
@@ -275,3 +277,17 @@ class PrepareValueClassification(PhenoConfig):
             return self.check_domain_type(var, df.value)
 
         return None
+
+    def _create_value_tables(self):
+        with ContinuousValueManager(config=self.config) as vm:
+            vm.drop_tables()
+            vm.create_tables()
+        with CategoricalValueManager(config=self.config) as vm:
+            vm.drop_tables()
+            vm.create_tables()
+        with OrdinalValueManager(config=self.config) as vm:
+            vm.drop_tables()
+            vm.create_tables()
+
+    def prepare(self):
+        self._create_value_tables()
