@@ -30,16 +30,13 @@ class V14Loader(PhenoConfig):
         return df
 
     def load_main(self):
-        return self._load_df(self.MAIN, dtype=str)
+        return self._load_df(self['dictionary', 'main'], dtype=str)
 
     def load_cdv(self):
-        return self._load_df(self.CDV, dtype=str)
+        return self._load_df(self['dictionary', 'cdv'], dtype=str)
 
     def load_ocuv(self):
-        return self._load_df(self.OCUV, dtype=str)
-
-    def load_everything(self):
-        return self._load_df(self.EVERYTHING, dtype=str)
+        return self._load_df(self['dictionary', 'ocuv'], dtype=str)
 
 
 class V15Loader(PhenoConfig):
