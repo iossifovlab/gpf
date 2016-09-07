@@ -377,7 +377,7 @@ class ValueModel(object):
             v.person_id,
             v.person_role,
             v.variable_id,
-            cls.value_convert(v.value)
+            cls.value_encode(v.value)
         )
 
     @classmethod
@@ -388,7 +388,7 @@ class ValueModel(object):
         v.person_id = row['person_id']
         v.person_role = row['person_role']
         v.variable_id = row['variable_id']
-        v.value = row['value']
+        v.value = cls.value_decode(row['value'])
 
         return v
 
@@ -400,6 +400,19 @@ class ValueModel(object):
             return True
 
         return False
+
+    @classmethod
+    def value_encode(cls, val):
+        return str(val).encode('utf-8')
+
+    @classmethod
+    def value_decode(cls, val):
+        try:
+            return str(val).decode('utf-8')
+        except Exception as ex:
+            print("ex: {}".format(ex))
+            print("val: {}".format(val))
+        return val
 
 
 class ValueManager(ManagerBase):
@@ -428,7 +441,11 @@ class FloatValueModel(ValueModel):
     TYPE_SQL = 'real'
 
     @classmethod
-    def value_convert(cls, val):
+    def value_encode(cls, val):
+        return float(val)
+
+    @classmethod
+    def value_decode(cls, val):
         return float(val)
 
 
@@ -446,10 +463,6 @@ class TextValueModel(ValueModel):
     TYPE_NAME = 'text'
     TYPE_SQL = 'varchar(255)'
 
-    @classmethod
-    def value_convert(cls, val):
-        return str(val).decode('utf-8')
-
 
 class TextValueManager(ValueManager):
     MODEL = TextValueModel
@@ -463,10 +476,6 @@ class RawValueModel(ValueModel):
     TYPE = str
     TYPE_NAME = 'text'
     TYPE_SQL = 'varchar(255)'
-
-    @classmethod
-    def value_convert(cls, val):
-        return str(val).decode('utf-8')
 
 
 class RawValueManager(ValueManager):
@@ -486,6 +495,14 @@ class ContinuousValueModel(ValueModel):
     def value_convert(cls, val):
         return float(val)
 
+    @classmethod
+    def value_encode(cls, val):
+        return float(val)
+
+    @classmethod
+    def value_decode(cls, val):
+        return float(val)
+
 
 class ContinuousValueManager(ValueManager):
     MODEL = ContinuousValueModel
@@ -499,10 +516,6 @@ class CategoricalValueModel(ValueModel):
     TYPE = str
     TYPE_NAME = 'text'
     TYPE_SQL = 'varchar(255)'
-
-    @classmethod
-    def value_convert(cls, val):
-        return str(val).decode('utf-8')
 
 
 class CategoricalValueManager(ValueManager):
@@ -519,7 +532,11 @@ class OrdinalValueModel(ValueModel):
     TYPE_SQL = 'integer'
 
     @classmethod
-    def value_convert(cls, val):
+    def value_encode(cls, val):
+        return int(float(val))
+
+    @classmethod
+    def value_decode(cls, val):
         return int(float(val))
 
 

@@ -5,7 +5,8 @@ Created on Aug 26, 2016
 '''
 from pheno.models import VariableManager, \
     VariableModel, RawValueManager, ContinuousValueManager,\
-    CategoricalValueManager, OrdinalValueManager, ContinuousValueModel
+    CategoricalValueManager, OrdinalValueManager, ContinuousValueModel,\
+    OrdinalValueModel, CategoricalValueModel
 from pheno.precompute.families import PrepareIndividuals
 from pheno.utils.load_raw import V15Loader
 from pheno.utils.configuration import PhenoConfig
@@ -268,9 +269,24 @@ class PrepareValueClassification(PhenoConfig):
         if variable.domain in ['meta.text_t', 'meta.memo_t', 'meta.file_t']:
             return False
 
-        if not ((dtype == self.ORDINAL and vtype == int) or
-                (dtype == self.CONTINUOUS and vtype == int)):
+        if vtype != int:
             return False
+
+        if not (dtype == self.ORDINAL or dtype == self.CONTINUOUS):
+            return False
+
+        if rank < int(self[self.ORDINAL, 'min_rank']) or \
+                rank > int(self[self.ORDINAL, 'max_rank']):
+            return False
+
+        if individuals < int(self[self.ORDINAL, 'min_individuals']):
+            return False
+
+        return True
+
+    def check_categorical(self, variable, values):
+        rank = len(values.unique())
+        individuals = len(values)
 
         if rank < int(self[self.ORDINAL, 'min_rank']) or \
                 rank > int(self[self.ORDINAL, 'max_rank']):
@@ -312,7 +328,8 @@ class PrepareValueClassification(PhenoConfig):
             vm.create_tables()
 
     def _prepare_continuous_variable(self, variable, df):
-        print "processing continuous variable: {}".format(variable.variable_id)
+        print(
+            "processing continuous variable: {}".format(variable.variable_id))
         variable.stats = self.CONTINUOUS
         variable.rank = len(df.value.unique())
         variable.individuals = len(df.value)
@@ -324,7 +341,8 @@ class PrepareValueClassification(PhenoConfig):
                 valm.save(value)
 
     def _prepare_ordinal_variable(self, variable, df):
-        print "processing ordinal variable: {}".format(variable.variable_id)
+        print(
+            "processing ordinal variable: {}".format(variable.variable_id))
         variable.stats = self.ORDINAL
         variable.rank = len(df.value.unique())
         variable.individuals = len(df.value)
@@ -332,7 +350,20 @@ class PrepareValueClassification(PhenoConfig):
             vm.save(variable)
         with OrdinalValueManager(config=self.config) as valm:
             for _vindex, value in df.iterrows():
-                value = ContinuousValueModel.create_from_df(value)
+                value = OrdinalValueModel.create_from_df(value)
+                valm.save(value)
+
+    def _prepare_categorical_variable(self, variable, df):
+        print(
+            "processing categorical variable: {}".format(variable.variable_id))
+        variable.stats = self.CATEGORICAL
+        variable.rank = len(df.value.unique())
+        variable.individuals = len(df.value)
+        with VariableManager(config=self.config) as vm:
+            vm.save(variable)
+        with CategoricalValueManager(config=self.config) as valm:
+            for _vindex, value in df.iterrows():
+                value = CategoricalValueModel.create_from_df(value)
                 valm.save(value)
 
     def prepare(self):
@@ -346,7 +377,16 @@ class PrepareValueClassification(PhenoConfig):
                 df = vm.load_df(
                     where="variable_id = '{}'"
                     .format(variable.variable_id))
-            if self.check_continuous(variable, df.value):
+            if len(df) == 0:
+                with VariableManager(config=self.config) as variable_manager:
+                    variable.rank = 0
+                    variable.individuals = 0
+                    variable.stats = 'empty'
+                    variable_manager.save(variable)
+
+            elif self.check_continuous(variable, df.value):
                 self._prepare_continuous_variable(variable, df)
             elif self.check_ordinal(variable, df.value):
                 self._prepare_ordinal_variable(variable, df)
+            elif self.check_categorical(variable, df.value):
+                self._prepare_categorical_variable(variable, df)
