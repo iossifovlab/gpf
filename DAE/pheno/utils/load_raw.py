@@ -22,7 +22,7 @@ class V14Loader(PhenoConfig):
     def __init__(self, *args, **kwargs):
         super(V14Loader, self).__init__(*args, **kwargs)
 
-    def _load_df(self, name, dtype=None):
+    def load_df(self, name, dtype=None):
         filename = os.path.join(self['v14', 'dir'], name)
         assert os.path.isfile(filename)
         df = pd.read_csv(filename, low_memory=False, dtype=dtype)
@@ -30,13 +30,13 @@ class V14Loader(PhenoConfig):
         return df
 
     def load_main(self):
-        return self._load_df(self['dictionary', 'main'], dtype=str)
+        return self.load_df(self['dictionary', 'main'], dtype=str)
 
     def load_cdv(self):
-        return self._load_df(self['dictionary', 'cdv'], dtype=str)
+        return self.load_df(self['dictionary', 'cdv'], dtype=str)
 
     def load_ocuv(self):
-        return self._load_df(self['dictionary', 'ocuv'], dtype=str)
+        return self.load_df(self['dictionary', 'ocuv'], dtype=str)
 
 
 class V15Loader(PhenoConfig):

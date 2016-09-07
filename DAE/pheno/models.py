@@ -126,6 +126,23 @@ class ManagerBase(PhenoConfig):
         df = pd.DataFrame.from_records(recs, columns=self.MODEL.COLUMNS)
         return df
 
+    def load(self, where=None):
+        df = self.load_df(where)
+
+        res = []
+        for _index, row in df.iterrows():
+            r = self.MODEL.create_from_df(row)
+            res.append(r)
+        return res
+
+    def get(self, where):
+        res = self.load(where)
+        assert len(res) <= 1
+        if res:
+            return res[0]
+        else:
+            return None
+
 
 class PersonModel(object):
     SCHEMA_CREATE = """

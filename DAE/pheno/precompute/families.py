@@ -6,7 +6,7 @@ Created on Aug 25, 2016
 import numpy as np
 import pandas as pd
 from pheno.models import PersonManager, PersonModel
-from pheno.utils.load_raw import V15Loader
+from pheno.utils.load_raw import V15Loader, V14Loader
 
 
 class PrepareIndividuals(V15Loader):
@@ -216,6 +216,21 @@ class PrepareIndividualsGenderFromSSC(V15Loader):
             self._build_gender_from_ssc(df)
 
             pm.save_df(df)
+
+
+class PrepareIndividualsAge(V14Loader):
+
+    def __init__(self, *args, **kwargs):
+        super(PrepareIndividualsAge, self).__init__(*args, **kwargs)
+
+    def prepare(self):
+        df = self.load_df('ssc_age_at_assessment.csv')
+        with PersonManager(config=self.config) as pm:
+            for _index, row in df.iterrows():
+                pid = row['portalId']
+                person = pm.get("person_id = '{}'".format(pid))
+                person.age = int(row['age_at_assessment'])
+                pm.save(person)
 
 
 class PrepareIndividualsRace(V15Loader):
