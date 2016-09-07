@@ -403,16 +403,21 @@ class ValueModel(object):
 
     @classmethod
     def value_encode(cls, val):
-        return str(val).encode('utf-8')
+        if isinstance(val, unicode):
+            return val
+        elif isinstance(val, str):
+            return str(val).encode('utf-8')
+        else:
+            return str(val)
 
     @classmethod
     def value_decode(cls, val):
-        try:
+        if isinstance(val, unicode):
+            return val
+        elif isinstance(val, str):
             return str(val).decode('utf-8')
-        except Exception as ex:
-            print("ex: {}".format(ex))
-            print("val: {}".format(val))
-        return val
+        else:
+            return str(val)
 
 
 class ValueManager(ManagerBase):

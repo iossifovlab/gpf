@@ -313,6 +313,8 @@ class PrepareValueClassification(PhenoConfig):
                 return self.CONTINUOUS
             elif self.check_ordinal(variable, df.value):
                 return self.ORDINAL
+            elif self.check_categorical(variable, df.value):
+                return self.CATEGORICAL
 
         return self.UNKNOWN
 
