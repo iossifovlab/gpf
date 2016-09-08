@@ -43,7 +43,7 @@ class Test(unittest.TestCase):
 
     def test_family_report_ssc_studies(self):
         fr = FamiliesReport('ALL SSC')
-        self.assertEqual(6, len(fr.studies))
+        self.assertEqual(7, len(fr.studies))
 
     def test_family_report_ssc_phenotypes(self):
         fr = FamiliesReport('ALL SSC')

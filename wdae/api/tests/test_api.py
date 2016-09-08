@@ -1,7 +1,8 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from studies.studies import get_denovo_studies_names, get_transmitted_studies_names
+from studies.studies import get_denovo_studies_names, \
+    get_transmitted_studies_names
 from VariantAnnotation import get_effect_types
 from query_variants import get_variant_types, get_child_types
 
@@ -80,11 +81,11 @@ class ApiTest(APITestCase):
         # Test page count with wrong attr
         url_page_count = '/api/gene_set_list2?gene_set=main&page_count=foo'
         response = self.client.get(url_page_count)
-        self.assertEqual(len(response.data), 7)
+        self.assertEqual(len(response.data), 8)
 
         url_page_count = '/api/gene_set_list2?gene_set=main&page_count=-10'
         response = self.client.get(url_page_count)
-        self.assertEqual(len(response.data), 7)
+        self.assertEqual(len(response.data), 8)
 
     def test_child_type_list(self):
         response = self.client.get('/api/child_types')
