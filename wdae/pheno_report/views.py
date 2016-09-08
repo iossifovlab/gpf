@@ -70,7 +70,7 @@ class PhenoReportView(PhenoViewBase):
         res = tool.calc()
         response = {
             "data": self.migrate_response(res),
-            "measure": tool.nm.measure,
+            "measure": tool.nm.measure_name,
             "formula": tool.nm.formula,
         }
         return Response(response)

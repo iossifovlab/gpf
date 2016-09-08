@@ -170,8 +170,8 @@ class Measures(Preload):
         with ContinuousValueManager() as vm:
             value_df = vm.load_df(where="variable_id='{}'".format(measure))
 
-        df = persons_df.set_index('person_id').join(
-            value_df.set_index('person_id'), rsuffix='_val')
+        df = persons_df.join(
+            value_df.set_index('person_id'), on='person_id', rsuffix='_val')
         res_df = df.dropna()
 
         _instrument, measure_name = self.split_measure_name(measure)

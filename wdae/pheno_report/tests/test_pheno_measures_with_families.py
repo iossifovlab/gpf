@@ -54,7 +54,8 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
         family_ids = self.measures.get_measure_families(
             'ssc_commonly_used.head_circumference', 49, 50)
         self.assertEquals(102, len(family_ids))
-        df = self.measures.get_measure_df('head_circumference')
+        df = self.measures.get_measure_df(
+            'ssc_commonly_used.head_circumference')
         for family_id in family_ids:
             self.assertTrue(
                 all(df[df['family_id'] ==
@@ -70,10 +71,10 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
         df = self.measures.get_measure_df('verbal_iq')
         for proband_id in proband_ids:
             self.assertTrue(
-                all(df[df['individual'] ==
+                all(df[df['person_id'] ==
                        proband_id]['verbal_iq'].values <= 20))
             self.assertTrue(
-                all(df[df['individual'] ==
+                all(df[df['person_id'] ==
                        proband_id]['verbal_iq'].values >= 10))
 
         pids = self.pheno_measure.get_matching_probands('verbal_iq', 10, 20)

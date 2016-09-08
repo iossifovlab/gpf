@@ -63,7 +63,7 @@ class Test(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.streaming_content
         self.assertIsNotNone(data)
-        self.assertEquals(2728, count_iterable(data))
+        self.assertEquals(2729, count_iterable(data))
 
 
 class PhenoMeasuresTest(APITestCase):
@@ -72,7 +72,7 @@ class PhenoMeasuresTest(APITestCase):
         url = "/api/v2/pheno_reports/measures"
         response = self.client.get(url, format='json')
         self.assertEqual(200, response.status_code)
-        self.assertEqual(75, len(response.data))
+        self.assertEqual(523, len(response.data))
 
 if __name__ == "__main__":
     unittest.main()

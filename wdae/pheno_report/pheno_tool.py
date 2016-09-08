@@ -47,9 +47,9 @@ class PhenoTool(object):
 
     def _build_table_row(self, person_id, gender):
         family_id = pheno_filter.FamilyFilter.strip_proband_id(person_id)
-        vals = self.nm.df[self.nm.df.individual == person_id]
+        vals = self.nm.df[self.nm.df.person_id == person_id]
         if len(vals) == 1:
-            m = vals[self.nm.measure].values[0]
+            m = vals[self.nm.measure_name].values[0]
             v = vals.normalized.values[0]
             a = vals['age'].values[0]
             nviq = vals['non_verbal_iq'].values[0]
