@@ -231,6 +231,7 @@ class PrepareIndividualsAge(V14Loader):
                 pid = row['portalId']
                 person = pm.get("person_id = '{}'".format(pid))
                 person.age = int(row['age_at_assessment'])
+                person.site = row['site']
                 pm.save(person)
 
 
@@ -247,7 +248,8 @@ class PrepareIndividualsRace(V15Loader):
         with PersonManager(config=self.config) as pm:
             # print('setting race for {}'.format(row['person_id']))
             for _index, row in df.iterrows():
-                person = pm.get("person_id='{}'".format(row['person_id']))
+                person = pm.get(
+                    where="person_id='{}'".format(row['person_id']))
                 person.race = row['value']
                 pm.save(person)
 

@@ -13,6 +13,7 @@ from preloaded.register import Preload
 from helpers.pvalue import colormap_value
 import precompute
 import itertools
+from pheno.models import VariableManager, PersonManager, ContinuousValueManager
 
 
 class Measures(Preload):
@@ -106,7 +107,7 @@ class Measures(Preload):
         pass
 
     def load(self):
-        self.df = self._load_data()
+        # self.df = self._load_data()
         self.desc = self._load_desc()
         self.families_precompute = precompute.register.get(
             'pheno_families_precompute')
@@ -117,31 +118,49 @@ class Measures(Preload):
         self.probands_gender.extend(
             zip(itertools.cycle(['F']),
                 self.families_precompute.probands('F')))
-        self.measures = {}
-        for m in self.desc:
-            self.measures[m['measure']] = m
+        # self.measures = {}
+        # for m in self.desc:
+        #     self.measures[m['measure']] = m
 
     def get(self):
         return self
 
-    def has_measure(self, measure):
-        return measure in self.measures
+    def has_measure(self, instrument, measure):
+        if measure in set(['non_verbal_iq', 'verbal_iq']):
+            return True
+        measure_id = '{}.{}'.format(instrument, measure)
+        with VariableManager() as vm:
+            variable = vm.get(
+                where="variable_id='{}' and stats='continuous'"
+                .format(measure_id))
+        return variable is not None
 
-    def get_measure_df(self, measure):
-        if measure not in self.measures:
+    def get_measure_df(self, instrument, measure):
+        if not self.has_measure(instrument, measure):
             raise ValueError("unsupported phenotype measure")
-        cols = ['family_id', 'individual',
-                'age', 'non_verbal_iq', 'verbal_iq']
-        if measure not in cols:
-            cols.append(measure)
 
-        df = pd.DataFrame(index=self.df.index,
-                          data=self.df[cols])
+        with PersonManager() as pm:
+            persons_df = pm.load_df(where="role='prb' and ssc_present=1")
+
+        if measure in set(['non_verbal_iq', 'verbal_iq']):
+            return persons_df.dropna()
+
+        measure_id = '{}.{}'.format(instrument, measure)
+        with ContinuousValueManager() as vm:
+            value_df = vm.load_df(where="variable_id='{}'".format(measure_id))
+
+        df = persons_df.set_index('person_id').join(
+            value_df.set_index('person_id'), rsuffix='_val')
         res_df = df.dropna()
+
+        names = res_df.columns.tolist()
+        names[names.index('value')] = measure
+        res_df.columns = names
+
         return res_df
 
-    def _select_measure_df(self, measure, mmin, mmax):
-        df = self.get_measure_df(measure)
+    def _select_measure_df(self, instrument, measure, mmin, mmax):
+        df = self.get_measure_df(instrument, measure)
         m = df[measure]
         selected = None
         if mmin is not None and mmax is not None:
@@ -154,12 +173,12 @@ class Measures(Preload):
             selected = df
         return selected
 
-    def get_measure_families(self, measure, mmin=None, mmax=None):
-        selected = self._select_measure_df(measure, mmin, mmax)
+    def get_measure_families(self, instrument, measure, mmin=None, mmax=None):
+        selected = self._select_measure_df(instrument, measure, mmin, mmax)
         return selected['family_id'].values
 
-    def get_measure_probands(self, measure, mmin=None, mmax=None):
-        selected = self._select_measure_df(measure, mmin, mmax)
+    def get_measure_probands(self, instrument, measure, mmin=None, mmax=None):
+        selected = self._select_measure_df(instrument, measure, mmin, mmax)
         return selected['individual'].values
 
 
@@ -202,15 +221,16 @@ class Measures(Preload):
 
 class NormalizedMeasure(object):
 
-    def __init__(self, measure):
+    def __init__(self, instrument, measure):
         from preloaded.register import get_register
         self.measure = measure
+        self.instrument = instrument
         register = get_register()
         measures = register.get('pheno_measures')
-        if not measures.has_measure(measure):
+        if not measures.has_measure(instrument, measure):
             raise ValueError("unknown phenotype measure")
 
-        self.df = measures.get_measure_df(measure)
+        self.df = measures.get_measure_df(instrument, measure)
         self.by = []
 
     def normalize(self, by=[]):
