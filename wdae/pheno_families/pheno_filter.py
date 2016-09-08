@@ -31,7 +31,7 @@ class PhenoMeasureFilters(object):
         return set(self.measures.get_measure_probands(
             pheno_measure, mmin, mmax))
 
-    def get_matching_siblings(self, pheno_instrument, pheno_measure,
+    def get_matching_siblings(self, pheno_measure,
                               mmin=None, mmax=None):
         '''
         (At the moment the sibling list should always be empty.)

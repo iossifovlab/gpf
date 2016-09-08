@@ -34,7 +34,7 @@ class Test(APITestCase):
         data = {
             'phenoMeasure': 'non_verbal_iq',
             "familyRace": "All",
-            "familyPhenoMeasure": "vabs_ii_motor_skills",
+            "familyPhenoMeasure": "ssc_commonly_used.vabs_ii_motor_skills",
             "familyPhenoMeasureMin": 0,
             "familyPhenoMeasureMax": 134,
             "familyStudyType": "All",
@@ -47,5 +47,5 @@ class Test(APITestCase):
         pprint(data)
 
         self.assertEquals(131, data['autism']['female'])
-        self.assertEquals(857, data['autism']['male'])
-        self.assertEquals(988, data['autism']['families'])
+        self.assertEquals(858, data['autism']['male'])
+        self.assertEquals(989, data['autism']['families'])

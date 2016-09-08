@@ -28,7 +28,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
     def test_filter_matching_probands(self):
         prbs1 = self.pheno_filters.get_matching_probands(
             "non_verbal_iq")
-        self.assertEquals(2756, len(prbs1))
+        self.assertEquals(2757, len(prbs1))
 
         prbs = self.pheno_filters.filter_matching_probands(
             prbs1, "non_verbal_iq", 9, 10)

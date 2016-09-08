@@ -53,7 +53,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2756, len(family_ids['all']))
+        self.assertEquals(2757, len(family_ids['all']))
 
     def test_prepare_study_type_all(self):
         data = {
@@ -64,7 +64,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2756, len(family_ids['all']))
+        self.assertEquals(2757, len(family_ids['all']))
 
     def test_prepare_study_type_cnv(self):
         data = {

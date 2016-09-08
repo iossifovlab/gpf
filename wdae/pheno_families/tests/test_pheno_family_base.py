@@ -19,7 +19,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
         }
 
         probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(2756, len(probands))
+        self.assertEquals(2757, len(probands))
 
     def test_prepare_family_pheno_measure(self):
         data = {
@@ -62,7 +62,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
         }
 
         probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(2756, len(probands))
+        self.assertEquals(2757, len(probands))
 
     def test_prepare_study_type_all(self):
         data = {
@@ -71,7 +71,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
         }
 
         probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(2756, len(probands))
+        self.assertEquals(2757, len(probands))
 
     def test_prepare_study_type_cnv(self):
         data = {
@@ -80,7 +80,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
         }
 
         probands = self.pheno_family_base.prepare_probands(data)
-        self.assertEquals(2756, len(probands))
+        self.assertEquals(2757, len(probands))
 
 
 class PhenoFamilyCountersViewTestCase(unittest.TestCase):
@@ -97,4 +97,4 @@ class PhenoFamilyCountersViewTestCase(unittest.TestCase):
         }
 
         family_ids = self.pheno_family_counters_view.prepare_probands(data)
-        self.assertEquals(2756, len(family_ids))
+        self.assertEquals(2757, len(family_ids))
