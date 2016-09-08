@@ -262,9 +262,33 @@ class PrepareIndividualsRace(V15Loader):
                 person.race = row['value']
                 pm.save(person)
 
+    def _prepare_siblings_race(self):
+        with PersonManager(config=self.config) as pm:
+            siblings = pm.load_df(where="role='sib'")
+            for _index, row in siblings.iterrows():
+                sib = PersonModel.create_from_df(row)
+                mom = pm.get(where="person_id='{}.mo'".format(sib.family_id))
+                dad = pm.get(where="person_id='{}.fa'".format(sib.family_id))
+                sib.race = PersonModel.calc_race(mom.race, dad.race)
+                pm.save(sib)
+
+    def _check_probands_race(self):
+        with PersonManager(config=self.config) as pm:
+            probands = pm.load_df(where="role='prb'")
+            for _index, row in probands.iterrows():
+                prb = PersonModel.create_from_df(row)
+                mom = pm.get(where="person_id='{}.mo'".format(prb.family_id))
+                dad = pm.get(where="person_id='{}.fa'".format(prb.family_id))
+                race = PersonModel.calc_race(mom.race, dad.race)
+                if prb.race != race:
+                    print("family: {}; prb: |{}|; mom: |{}|; dad: |{}|".format(
+                        prb.family_id, prb.race, mom.race, dad.race))
+
     def prepare(self):
         self._prepare_probands_race()
         self._prepare_parents_race()
+        self._prepare_siblings_race()
+        self._check_probands_race()
 
 
 class CheckIndividualsGenderToSSC(V15Loader):

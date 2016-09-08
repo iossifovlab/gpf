@@ -226,6 +226,17 @@ class PersonModel(object):
             p.ssc_present,
         )
 
+    @staticmethod
+    def calc_race(race1, race2):
+        if race1 == race2:
+            return race1
+        if race1 is None or race2 is None:
+            return 'not-specified'
+        if race1 == 'not-specified' or race2 == 'not-specified':
+            return 'not-specified'
+
+        return 'more-than-one-race'
+
 
 class PersonManager(ManagerBase):
 
