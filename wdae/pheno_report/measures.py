@@ -3,14 +3,14 @@ Created on Nov 16, 2015
 
 @author: lubo
 '''
-import os
-import csv
+# import os
+# import csv
 import numpy as np
-from django.conf import settings
+# from django.conf import settings
 import pandas as pd
 import statsmodels.formula.api as sm
 from preloaded.register import Preload
-from helpers.pvalue import colormap_value
+# from helpers.pvalue import colormap_value
 import precompute
 import itertools
 from pheno.models import VariableManager, PersonManager, ContinuousValueManager
@@ -103,26 +103,27 @@ class Measures(Preload):
 #             result.append(r)
 #         return result
 
-    def _load_desc(self):
+    def load_desc(self):
         with VariableManager() as vm:
             variables = vm.load(where="stats='continuous'")
-        self.desc = {}
+        d = {}
         for v in variables:
-            self.desc[v.variable_id] = {
+            print("loading measure: {}".format(v.variable_id))
+            d[v.variable_id] = {
                 'id': v.variable_id,
                 'instrument': v.table_name,
                 'measure': v.variable_name,
-                'desc': v.description,
+                'desc': v.description.decode('utf-8'),
                 'min': v.min_value,
                 'max': v.max_value,
             }
+        return d
 
     def __init__(self):
         pass
 
     def load(self):
         # self.df = self._load_data()
-        self.desc = self._load_desc()
         self.families_precompute = precompute.register.get(
             'pheno_families_precompute')
         # self.probands_gender = families_precompute.probands_gender()
