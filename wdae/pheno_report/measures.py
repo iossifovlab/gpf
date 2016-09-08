@@ -110,9 +110,9 @@ class Measures(Preload):
         for v in variables:
             print("loading measure: {}".format(v.variable_id))
             d[v.variable_id] = {
-                'id': v.variable_id,
+                'measure': v.variable_id,
                 'instrument': v.table_name,
-                'measure': v.variable_name,
+                'measure_name': v.variable_name,
                 'desc': v.description.decode('utf-8'),
                 'min': v.min_value,
                 'max': v.max_value,
@@ -140,18 +140,25 @@ class Measures(Preload):
     def get(self):
         return self
 
-    def has_measure(self, instrument, measure):
+    def has_measure(self, measure):
         if measure in set(['non_verbal_iq', 'verbal_iq']):
             return True
-        measure_id = '{}.{}'.format(instrument, measure)
         with VariableManager() as vm:
             variable = vm.get(
                 where="variable_id='{}' and stats='continuous'"
-                .format(measure_id))
+                .format(measure))
         return variable is not None
 
-    def get_measure_df(self, instrument, measure):
-        if not self.has_measure(instrument, measure):
+    @staticmethod
+    def split_measure_name(measure):
+        if '.' not in measure:
+            return (None, measure)
+        else:
+            [instrument, measure_name] = measure.split('.')
+            return (instrument, measure_name)
+
+    def get_measure_df(self, measure):
+        if not self.has_measure(measure):
             raise ValueError("unsupported phenotype measure")
 
         with PersonManager() as pm:
@@ -160,23 +167,25 @@ class Measures(Preload):
         if measure in set(['non_verbal_iq', 'verbal_iq']):
             return persons_df.dropna()
 
-        measure_id = '{}.{}'.format(instrument, measure)
         with ContinuousValueManager() as vm:
-            value_df = vm.load_df(where="variable_id='{}'".format(measure_id))
+            value_df = vm.load_df(where="variable_id='{}'".format(measure))
 
         df = persons_df.set_index('person_id').join(
             value_df.set_index('person_id'), rsuffix='_val')
         res_df = df.dropna()
 
+        _instrument, measure_name = self.split_measure_name(measure)
+
         names = res_df.columns.tolist()
-        names[names.index('value')] = measure
+        names[names.index('value')] = measure_name
         res_df.columns = names
 
         return res_df
 
-    def _select_measure_df(self, instrument, measure, mmin, mmax):
-        df = self.get_measure_df(instrument, measure)
-        m = df[measure]
+    def _select_measure_df(self, measure, mmin, mmax):
+        df = self.get_measure_df(measure)
+        _instrument, measure_name = self.split_measure_name(measure)
+        m = df[measure_name]
         selected = None
         if mmin is not None and mmax is not None:
             selected = df[np.logical_and(m >= mmin, m <= mmax)]
@@ -188,13 +197,13 @@ class Measures(Preload):
             selected = df
         return selected
 
-    def get_measure_families(self, instrument, measure, mmin=None, mmax=None):
-        selected = self._select_measure_df(instrument, measure, mmin, mmax)
+    def get_measure_families(self, measure, mmin=None, mmax=None):
+        selected = self._select_measure_df(measure, mmin, mmax)
         return selected['family_id'].values
 
-    def get_measure_probands(self, instrument, measure, mmin=None, mmax=None):
-        selected = self._select_measure_df(instrument, measure, mmin, mmax)
-        return selected['individual'].values
+    def get_measure_probands(self, measure, mmin=None, mmax=None):
+        selected = self._select_measure_df(measure, mmin, mmax)
+        return selected['person_id'].values
 
 
 #     def pheno_merge_data(self, families_with_variants,
@@ -236,16 +245,16 @@ class Measures(Preload):
 
 class NormalizedMeasure(object):
 
-    def __init__(self, instrument, measure):
+    def __init__(self, measure):
         from preloaded.register import get_register
-        self.measure = measure
-        self.instrument = instrument
+        self.instrument, self.measure_name = \
+            Measures.split_measure_name(measure)
         register = get_register()
         measures = register.get('pheno_measures')
-        if not measures.has_measure(instrument, measure):
+        if not measures.has_measure(measure):
             raise ValueError("unknown phenotype measure")
 
-        self.df = measures.get_measure_df(instrument, measure)
+        self.df = measures.get_measure_df(measure)
         self.by = []
 
     def normalize(self, by=[]):
@@ -256,12 +265,12 @@ class NormalizedMeasure(object):
 
         if not by:
             dn = pd.Series(
-                index=self.df.index, data=self.df[self.measure].values)
+                index=self.df.index, data=self.df[self.measure_name].values)
             self.df['normalized'] = dn
-            self.formula = self.measure
+            self.formula = self.measure_name
 
         else:
-            self.formula = '{} ~ {}'.format(self.measure, ' + '.join(by))
+            self.formula = '{} ~ {}'.format(self.measure_name, ' + '.join(by))
             model = sm.ols(formula=self.formula,
                            data=self.df)
             fitted = model.fit()

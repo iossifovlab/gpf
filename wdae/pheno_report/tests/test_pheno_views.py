@@ -19,7 +19,7 @@ class Test(APITestCase):
         url = "/api/v2/pheno_reports"
         data = {
             'denovoStudies': 'ala bala',
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
@@ -31,7 +31,7 @@ class Test(APITestCase):
         url = "/api/v2/pheno_reports"
         data = {
             'denovoStudies': 'ala bala',
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
             'normalizedBy': 'normByAge',
         }
         response = self.client.post(url, data, format='json')
@@ -44,7 +44,7 @@ class Test(APITestCase):
         url = "/api/v2/pheno_reports"
         data = {
             'denovoStudies': 'ala bala',
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
             'normalizedBy': "",
         }
         response = self.client.post(url, data, format='json')
@@ -57,7 +57,7 @@ class Test(APITestCase):
         url = "/api/v2/pheno_reports/download"
         data = {
             'denovoStudies': 'ala bala',
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)

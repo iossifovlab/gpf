@@ -13,7 +13,7 @@ class Test(unittest.TestCase):
     def setUpClass(cls):
         super(Test, cls).setUpClass()
         cls.data = {
-            u'phenoMeasure': u'head_circumference',
+            u'phenoMeasure': u'ssc_commonly_used.head_circumference',
             u'normalizedBy': u'normByAge',
             u'denovoStudies': u'ALL SSC',
             u'effectTypeGroups': u'LGDs',

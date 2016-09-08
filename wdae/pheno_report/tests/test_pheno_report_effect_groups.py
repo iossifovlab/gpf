@@ -13,7 +13,7 @@ class Test(unittest.TestCase):
     def test_single_gene_sym_lgds_only(self):
         data = {
             'denovoStudies': 'ALL SSC',
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
             'transmittedStudies': 'w1202s766e611',
             'presentInParent': "father only",
             'geneSyms': "POGZ",
@@ -41,7 +41,7 @@ class TestViews(APITestCase):
             'transmittedStudies': 'w1202s766e611',
             'presentInParent': "father only",
             'geneSyms': "POGZ",
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
             'effectTypeGroups': 'LGDs'
 
         }
@@ -59,7 +59,7 @@ class TestViews(APITestCase):
             'transmittedStudies': 'w1202s766e611',
             'presentInParent': "father only",
             'geneSyms': "POGZ",
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
             'effectTypeGroups': 'LGDs,missense'
 
         }

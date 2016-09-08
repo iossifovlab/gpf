@@ -28,4 +28,4 @@ class Test(APITestCase):
         self.assertIn('mid', response.data)
         mid = response.data['mid']
         self.assertIn('count', mid)
-        self.assertEqual(223, mid['count'])
+        self.assertEqual(224, mid['count'])

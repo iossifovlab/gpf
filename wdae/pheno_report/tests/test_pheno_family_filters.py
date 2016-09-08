@@ -26,7 +26,7 @@ class Test(APITestCase):
     def test_pheno_without_family_filters(self):
         url = "/api/v2/pheno_reports"
         data = {
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
@@ -41,12 +41,12 @@ class Test(APITestCase):
     def test_family_pheno_filter_families_count(self):
         measures = preloaded.register.get_register().get('pheno_measures')
         families = measures.get_measure_families('non_verbal_iq', 0, 40)
-        self.assertEquals(223, len(families))
+        self.assertEquals(224, len(families))
 
     def test_pheno_with_family_pheno_filter(self):
         url = "/api/v2/pheno_reports"
         data = {
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
             'familyPhenoMeasure': 'non_verbal_iq',
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 40,

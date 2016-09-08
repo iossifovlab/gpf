@@ -34,7 +34,7 @@ class Test(APITestCase):
                 'transmittedStudies': 'w1202s766e611',
                 'presentInParent': "father only",
                 'geneSyms': "POGZ",
-                'phenoMeasure': 'head_circumference',
+                'phenoMeasure': 'ssc_commonly_used.head_circumference',
                 'effectTypeGroups': et,
             }
             response = self.client.post(url, data, format='json')

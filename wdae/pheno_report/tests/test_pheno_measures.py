@@ -11,7 +11,7 @@ class HeadCircumferenceTest(unittest.TestCase):
 
     def setUp(self):
         self.measure = NormalizedMeasure(
-            'ssc_commonly_used', 'head_circumference')
+            'ssc_commonly_used.head_circumference')
 
     def test_pheno_measure_created(self):
         measure = self.measure
@@ -51,7 +51,7 @@ class HeadCircumferenceTest(unittest.TestCase):
 class VerbalIqTest(unittest.TestCase):
 
     def setUp(self):
-        self.measure = NormalizedMeasure('core', 'verbal_iq')
+        self.measure = NormalizedMeasure('verbal_iq')
 
     def test_pheno_measure_created(self):
         measure = self.measure
@@ -85,10 +85,10 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
 
     def test_verbal_iq_interval(self):
         family_ids = self.measures.get_measure_families(
-            'core', 'verbal_iq', 10, 20)
+            'verbal_iq', 10, 20)
         self.assertEquals(120, len(family_ids))
         df = self.measures.get_measure_df(
-            'core', 'verbal_iq')
+            'verbal_iq')
         for family_id in family_ids:
             self.assertTrue(
                 all(df[df['family_id'] ==
@@ -99,10 +99,10 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
 
     def test_head_circumference_interval(self):
         family_ids = self.measures.get_measure_families(
-            'ssc_commonly_used', 'head_circumference', 49, 50)
+            'ssc_commonly_used.head_circumference', 49, 50)
         self.assertEquals(102, len(family_ids))
         df = self.measures.get_measure_df(
-            'ssc_commonly_used', 'head_circumference')
+            'ssc_commonly_used.head_circumference')
         for family_id in family_ids:
             self.assertTrue(
                 all(df[df['family_id'] == family_id][
@@ -121,12 +121,12 @@ class PhenoMeasureRowCount(unittest.TestCase):
         cls.measures.load()
 
     def test_verbal_iq_count(self):
-        df = self.measures.get_measure_df('core', 'verbal_iq')
+        df = self.measures.get_measure_df('verbal_iq')
         self.assertEquals(2757, len(df))
 
     def test_head_circumference(self):
         df = self.measures.get_measure_df(
-            'ssc_commonly_used', 'head_circumference')
+            'ssc_commonly_used.head_circumference')
         self.assertEquals(2728, len(df))
 
 #     def test_cbcl_2_5_total_problems(self):

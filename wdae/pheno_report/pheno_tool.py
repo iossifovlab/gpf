@@ -42,7 +42,7 @@ class PhenoTool(object):
         columns = ['family_id', 'person_id', 'gender', ]
         columns.extend(self.effect_type_groups)
         columns.extend(
-            [self.nm.measure, 'age', 'non_verbal_iq', self.nm.formula])
+            [self.nm.measure_name, 'age', 'non_verbal_iq', self.nm.formula])
         return tuple(columns)
 
     def _build_table_row(self, person_id, gender):

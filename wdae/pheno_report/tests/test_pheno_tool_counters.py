@@ -11,7 +11,7 @@ class Test(unittest.TestCase):
 
     def test_pheno_with_family_pheno_filter(self):
         data = {
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
             'familyPhenoMeasure': 'non_verbal_iq',
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 40,
@@ -44,7 +44,7 @@ class CountersTest(unittest.TestCase):
             u'presentInParent': u'neither',
         },
         {
-            u'phenoMeasure': u'head_circumference',
+            u'phenoMeasure': u'ssc_commonly_used.head_circumference',
             u'denovoStudies': u'ALL SSC',
             u'effectTypeGroups': u'LGDs',
             u'presentInParent': u'neither',
@@ -54,7 +54,7 @@ class CountersTest(unittest.TestCase):
             'transmittedStudies': 'w1202s766e611',
             'presentInParent': "father only",
             'geneSyms': "POGZ",
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
             'effectTypeGroups': 'LGDs',
         },
         {
@@ -62,7 +62,7 @@ class CountersTest(unittest.TestCase):
             'transmittedStudies': 'w1202s766e611',
             'presentInParent': "father only",
             'geneSyms': "POGZ",
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
             'effectTypeGroups': 'missense'
         },
         {

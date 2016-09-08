@@ -56,7 +56,7 @@ class Test(APITestCase):
         url = "/api/v2/pheno_reports"
 
         data = {
-            u'phenoMeasure': u'head_circumference',
+            u'phenoMeasure': u'ssc_commonly_used.head_circumference',
             u'denovoStudies': u'ALL SSC',
             u'effectTypeGroups': u'LGDs',
             u'presentInParent': u'neither',
@@ -68,7 +68,7 @@ class Test(APITestCase):
 
         url = "/api/v2/ssc_pheno_families/counter"
         data = {
-            'phenoMeasure': 'head_circumference',
+            'phenoMeasure': 'ssc_commonly_used.head_circumference',
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)

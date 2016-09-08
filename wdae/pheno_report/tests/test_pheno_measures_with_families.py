@@ -11,7 +11,8 @@ from pheno_families.pheno_filter import PhenoMeasureFilters
 class HeadCircumferenceTest(unittest.TestCase):
 
     def setUp(self):
-        self.measure = NormalizedMeasure('head_circumference')
+        self.measure = NormalizedMeasure(
+            'ssc_commonly_used.head_circumference')
 
     def test_pheno_measure_created(self):
         measure = self.measure
@@ -21,7 +22,7 @@ class HeadCircumferenceTest(unittest.TestCase):
         measure = self.measure
         df = measure.df
         self.assertIn('family_id', df.columns)
-        self.assertIn('individual', df.columns)
+        self.assertIn('person_id', df.columns)
         self.assertIn('age', df.columns)
         self.assertIn('non_verbal_iq', df.columns)
         self.assertIn('verbal_iq', df.columns)
@@ -51,7 +52,7 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
 
     def test_head_circumference_interval(self):
         family_ids = self.measures.get_measure_families(
-            'head_circumference', 49, 50)
+            'ssc_commonly_used.head_circumference', 49, 50)
         self.assertEquals(102, len(family_ids))
         df = self.measures.get_measure_df('head_circumference')
         for family_id in family_ids:
