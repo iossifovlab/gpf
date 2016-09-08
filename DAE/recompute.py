@@ -10,7 +10,7 @@ import argparse
 from pheno.precompute.families import PrepareIndividuals,\
     PrepareIndividualsGender, PrepareIndividualsSSCPresent,\
     PrepareIndividualsGenderFromSSC, CheckIndividualsGenderToSSC,\
-    PrepareIndividualsAge, PrepareIndividualsRace
+    PrepareIndividualsAge, PrepareIndividualsRace, PrepareNonverbalIQ
 from pheno.precompute.variables import PrepareVariables
 from pheno.precompute.values import PrepareRawValues,\
     PrepareVariableDomainRanks, PrepareValueClassification
@@ -40,6 +40,9 @@ def recompute_pheno_families_cache():
 
     p60 = PrepareIndividualsRace()
     p60.prepare()
+
+    p70 = PrepareNonverbalIQ()
+    p70.prepare()
 
     print(LINE)
 

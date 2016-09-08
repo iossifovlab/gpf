@@ -155,6 +155,8 @@ class PersonModel(object):
         gender varchar(1) NULL,
         race varchar(32) NULL,
         age integer NULL,
+        non_verbal_iq real NULL,
+        verbal_iq real NULL,
         collection varchar(64) NULL,
         site varchar(64) NULL,
         ssc_present bool NULL
@@ -176,6 +178,8 @@ class PersonModel(object):
         'gender',
         'race',
         'age',
+        'non_verbal_iq',
+        'verbal_iq',
         'collection',
         'site',
         'ssc_present',
@@ -191,6 +195,8 @@ class PersonModel(object):
         self.gender = None
         self.race = None
         self.age = None
+        self.non_verbal_iq = None
+        self.verbal_iq = None
         self.collection = None
         self.site = None
         self.ssc_present = None
@@ -205,6 +211,8 @@ class PersonModel(object):
         p.gender = row['gender']
         p.race = row['race']
         p.age = row['age']
+        p.non_verbal_iq = row['non_verbal_iq']
+        p.verbal_iq = row['verbal_iq']
         p.collection = row['collection']
         p.site = row['site']
         p.ssc_present = row['ssc_present']
@@ -221,6 +229,8 @@ class PersonModel(object):
             p.gender,
             p.race,
             p.age,
+            p.non_verbal_iq,
+            p.verbal_iq,
             p.collection,
             p.site,
             p.ssc_present,
