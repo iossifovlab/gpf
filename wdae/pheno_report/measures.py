@@ -17,39 +17,39 @@ from pheno.models import VariableManager, PersonManager, ContinuousValueManager
 
 
 class Measures(Preload):
-    DESC_FILENAME = os.path.join(
-        settings.BASE_DIR,
-        '..',
-        'data/pheno/ssc_pheno_descriptions.csv')
-    HELP_FILENAME = os.path.join(
-        settings.BASE_DIR,
-        '..',
-        'data/pheno/pheno_measures_help.csv')
-    DATA_FILENAME = os.path.join(
-        settings.BASE_DIR,
-        '..',
-        'data/pheno/ssc_pheno_measures.csv')
+    #     DESC_FILENAME = os.path.join(
+    #         settings.BASE_DIR,
+    #         '..',
+    #         'data/pheno/ssc_pheno_descriptions.csv')
+    #     HELP_FILENAME = os.path.join(
+    #         settings.BASE_DIR,
+    #         '..',
+    #         'data/pheno/pheno_measures_help.csv')
+    #     DATA_FILENAME = os.path.join(
+    #         settings.BASE_DIR,
+    #         '..',
+    #         'data/pheno/ssc_pheno_measures.csv')
+    #
+    #     def _load_data(self):
+    #         df = pd.read_csv(self.DATA_FILENAME)
+    #         return df
 
-    def _load_data(self):
-        df = pd.read_csv(self.DATA_FILENAME)
-        return df
-
-    def _load_desc_only(self):
-        result = []
-        with open(self.DESC_FILENAME, 'r') as f:
-            reader = csv.reader(f)
-            reader.next()
-            for row in reader:
-                (measure, desc, norm_by_age,
-                 norm_by_nviq,
-                 norm_by_viq) = row[0:5]
-
-                result.append({"measure": measure,
-                               "desc": desc,
-                               "normByAge": int(norm_by_age),
-                               "normByNVIQ": int(norm_by_nviq),
-                               "normByVIQ": int(norm_by_viq)})
-        return result
+    #     def _load_desc_only(self):
+    #         result = []
+    #         with open(self.DESC_FILENAME, 'r') as f:
+    #             reader = csv.reader(f)
+    #             reader.next()
+    #             for row in reader:
+    #                 (measure, desc, norm_by_age,
+    #                  norm_by_nviq,
+    #                  norm_by_viq) = row[0:5]
+    #
+    #                 result.append({"measure": measure,
+    #                                "desc": desc,
+    #                                "normByAge": int(norm_by_age),
+    #                                "normByNVIQ": int(norm_by_nviq),
+    #                                "normByVIQ": int(norm_by_viq)})
+    #         return result
 
     @staticmethod
     def _float_conv(val):
@@ -58,50 +58,64 @@ class Measures(Preload):
         else:
             return float(val)
 
-    def _load_help(self):
-        result = []
-        with open(self.HELP_FILENAME, 'r') as f:
-            reader = csv.reader(f)
-            reader.next()
-            for row in reader:
-                (measure, hist, hist_small, measure_min, measure_max,
-                 corr_by_age, corr_by_age_small,
-                 age_coeff, age_p_val,
-                 corr_by_nviq, corr_by_nviq_small,
-                 nviq_coeff, nviq_p_val) = row
-                result.append(
-                    {"measure": measure,
-                     "hist": hist,
-                     "hist_small": hist_small,
-                     "min": self._float_conv(measure_min),
-                     "max": self._float_conv(measure_max),
-                     "corr_age": corr_by_age,
-                     "corr_age_small": corr_by_age_small,
-                     "age_coeff": self._float_conv(age_coeff),
-                     "age_p_val": self._float_conv(age_p_val),
-                     "age_p_val_bg":
-                     colormap_value(self._float_conv(age_p_val)),
-                     "corr_nviq": corr_by_nviq,
-                     "corr_by_nviq_small": corr_by_nviq_small,
-                     "nviq_coeff": self._float_conv(nviq_coeff),
-                     "nviq_p_val": self._float_conv(nviq_p_val),
-                     "nviq_p_val_bg":
-                     colormap_value(self._float_conv(nviq_p_val)),
-                     })
-        return result
+#     def _load_help(self):
+#         result = []
+#         with open(self.HELP_FILENAME, 'r') as f:
+#             reader = csv.reader(f)
+#             reader.next()
+#             for row in reader:
+#                 (measure, hist, hist_small, measure_min, measure_max,
+#                  corr_by_age, corr_by_age_small,
+#                  age_coeff, age_p_val,
+#                  corr_by_nviq, corr_by_nviq_small,
+#                  nviq_coeff, nviq_p_val) = row
+#                 result.append(
+#                     {"measure": measure,
+#                      "hist": hist,
+#                      "hist_small": hist_small,
+#                      "min": self._float_conv(measure_min),
+#                      "max": self._float_conv(measure_max),
+#                      "corr_age": corr_by_age,
+#                      "corr_age_small": corr_by_age_small,
+#                      "age_coeff": self._float_conv(age_coeff),
+#                      "age_p_val": self._float_conv(age_p_val),
+#                      "age_p_val_bg":
+#                      colormap_value(self._float_conv(age_p_val)),
+#                      "corr_nviq": corr_by_nviq,
+#                      "corr_by_nviq_small": corr_by_nviq_small,
+#                      "nviq_coeff": self._float_conv(nviq_coeff),
+#                      "nviq_p_val": self._float_conv(nviq_p_val),
+#                      "nviq_p_val_bg":
+#                      colormap_value(self._float_conv(nviq_p_val)),
+#                      })
+#         return result
+
+#     def _load_desc(self):
+#         desc = self._load_desc_only()
+#         pheno_help = self._load_help()
+#
+#         result = []
+#         for d, h in zip(desc, pheno_help):
+#             assert d['measure'] == h['measure'], "{}: {}".format(
+#                 d['measure'], h['measure'])
+#             r = dict(d)
+#             r.update(h)
+#             result.append(r)
+#         return result
 
     def _load_desc(self):
-        desc = self._load_desc_only()
-        pheno_help = self._load_help()
-
-        result = []
-        for d, h in zip(desc, pheno_help):
-            assert d['measure'] == h['measure'], "{}: {}".format(
-                d['measure'], h['measure'])
-            r = dict(d)
-            r.update(h)
-            result.append(r)
-        return result
+        with VariableManager() as vm:
+            variables = vm.load(where="stats='continuous'")
+        self.desc = {}
+        for v in variables:
+            self.desc[v.variable_id] = {
+                'id': v.variable_id,
+                'instrument': v.table_name,
+                'measure': v.variable_name,
+                'desc': v.description,
+                'min': v.min_value,
+                'max': v.max_value,
+            }
 
     def __init__(self):
         pass

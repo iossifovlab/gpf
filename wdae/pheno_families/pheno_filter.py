@@ -17,7 +17,8 @@ class PhenoMeasureFilters(object):
 
         self.measures = register.get('pheno_measures')
 
-    def get_matching_probands(self, pheno_measure, mmin=None, mmax=None):
+    def get_matching_probands(self, pheno_instrument, pheno_measure,
+                              mmin=None, mmax=None):
         '''
         List the probands that have the specified property and separately the
         siblings that have the selected property.
@@ -28,20 +29,24 @@ class PhenoMeasureFilters(object):
         but it's value is outside of the selected interval.
         '''
         return set(self.measures.get_measure_probands(
-            pheno_measure, mmin, mmax))
+            pheno_instrument, pheno_measure, mmin, mmax))
 
-    def get_matching_siblings(self, pheno_measure, mmin=None, mmax=None):
+    def get_matching_siblings(self, pheno_instrument, pheno_measure,
+                              mmin=None, mmax=None):
         '''
         (At the moment the sibling list should always be empty.)
         '''
         return set([])
 
-    def filter_matching_probands(self, probands, pheno_measure,
+    def filter_matching_probands(self, probands,
+                                 pheno_instrument, pheno_measure,
                                  mmin=None, mmax=None):
-        filter_probands = self.get_matching_probands(pheno_measure, mmin, mmax)
+        filter_probands = self.get_matching_probands(
+            pheno_instrument, pheno_measure, mmin, mmax)
         return [p for p in probands if p in filter_probands]
 
-    def get_matching_families(self, pheno_measure, mmin=None, mmax=None):
+    def get_matching_families(self, pheno_instrument, pheno_measure,
+                              mmin=None, mmax=None):
         '''
         List the families that have the specified property
 
@@ -50,11 +55,13 @@ class PhenoMeasureFilters(object):
         but it's value is outside of the selected interval.
         '''
         return set([str(f) for f in self.measures.get_measure_families(
-            pheno_measure, mmin, mmax)])
+            pheno_instrument, pheno_measure, mmin, mmax)])
 
-    def filter_matching_families(self, families, pheno_measure,
+    def filter_matching_families(self, families,
+                                 pheno_instrument, pheno_measure,
                                  mmin=None, mmax=None):
-        filter_families = self.get_matching_families(pheno_measure, mmin, mmax)
+        filter_families = self.get_matching_families(
+            pheno_instrument, pheno_measure, mmin, mmax)
         if families:
             return [f for f in families if f in filter_families]
         else:

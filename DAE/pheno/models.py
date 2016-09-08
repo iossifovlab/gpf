@@ -270,7 +270,9 @@ class VariableModel(object):
         source varchar(64) NULL,
         domain_rank integer NULL,
         individuals integer NULL,
-        stats varchar(32) NULL
+        stats varchar(32) NULL,
+        min_value real NULL,
+        max_value real NULL
     );
     COMMIT;
     """
@@ -297,6 +299,8 @@ class VariableModel(object):
         'domain_rank',
         'individuals',
         'stats',
+        'min_value',
+        'max_value',
     ]
 
     def __repr__(self):
@@ -319,6 +323,8 @@ class VariableModel(object):
         self.domain_rank = None
         self.individuals = None
         self.stats = None
+        self.min_value = None
+        self.max_value = None
 
     @staticmethod
     def to_tuple(v):
@@ -336,7 +342,9 @@ class VariableModel(object):
             v.source,
             v.domain_rank,
             v.individuals,
-            v.stats
+            v.stats,
+            v.min_value,
+            v.max_value,
         )
 
     @staticmethod
@@ -360,6 +368,8 @@ class VariableModel(object):
         v.domain_rank = row['domain_rank']
         v.individuals = row['individuals']
         v.stats = row['stats']
+        v.min_value = row['min_value']
+        v.max_value = row['max_value']
 
         return v
 

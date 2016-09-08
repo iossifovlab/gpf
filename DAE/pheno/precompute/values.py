@@ -10,8 +10,9 @@ from pheno.models import VariableManager, \
 from pheno.precompute.families import PrepareIndividuals
 from pheno.utils.load_raw import V15Loader
 from pheno.utils.configuration import PhenoConfig
-from numpy import rank
+
 import math
+import pandas as pd
 
 
 class PrepareValueBase(V15Loader):
@@ -332,15 +333,25 @@ class PrepareValueClassification(PhenoConfig):
     def _prepare_continuous_variable(self, variable, df):
         print(
             "processing continuous variable: {}".format(variable.variable_id))
+
         variable.stats = self.CONTINUOUS
         variable.rank = len(df.value.unique())
         variable.individuals = len(df.value)
+
+        vals = pd.Series(df.index)
+
+        with ContinuousValueManager(config=self.config) as valm:
+            for vindex, row in df.iterrows():
+                value = ContinuousValueModel.create_from_df(row)
+                valm.save(value)
+                vals[vindex] = value.value
+
+        variable.min_value = vals.min()
+        variable.max_value = vals.max()
+
+        assert variable.min_value <= variable.max_value
         with VariableManager(config=self.config) as vm:
             vm.save(variable)
-        with ContinuousValueManager(config=self.config) as valm:
-            for _vindex, value in df.iterrows():
-                value = ContinuousValueModel.create_from_df(value)
-                valm.save(value)
 
     def _prepare_ordinal_variable(self, variable, df):
         print(
@@ -348,12 +359,21 @@ class PrepareValueClassification(PhenoConfig):
         variable.stats = self.ORDINAL
         variable.rank = len(df.value.unique())
         variable.individuals = len(df.value)
+
+        vals = pd.Series(df.index)
+
+        with OrdinalValueManager(config=self.config) as valm:
+            for vindex, row in df.iterrows():
+                value = OrdinalValueModel.create_from_df(row)
+                valm.save(value)
+                vals[vindex] = value.value
+
+        variable.min_value = vals.min()
+        variable.max_value = vals.max()
+
+        assert variable.min_value <= variable.max_value
         with VariableManager(config=self.config) as vm:
             vm.save(variable)
-        with OrdinalValueManager(config=self.config) as valm:
-            for _vindex, value in df.iterrows():
-                value = OrdinalValueModel.create_from_df(value)
-                valm.save(value)
 
     def _prepare_categorical_variable(self, variable, df):
         print(
