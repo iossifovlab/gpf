@@ -348,6 +348,8 @@ class PrepareValueClassification(PhenoConfig):
 
         variable.min_value = vals.min()
         variable.max_value = vals.max()
+        variable.value_domain = "[{}, {}]".format(
+            variable.min_value, variable.max_value)
 
         assert variable.min_value <= variable.max_value
         with VariableManager(config=self.config) as vm:
@@ -370,6 +372,8 @@ class PrepareValueClassification(PhenoConfig):
 
         variable.min_value = vals.min()
         variable.max_value = vals.max()
+        variable.value_domain = "[{}, {}]".format(
+            variable.min_value, variable.max_value)
 
         assert variable.min_value <= variable.max_value
         with VariableManager(config=self.config) as vm:
@@ -381,6 +385,8 @@ class PrepareValueClassification(PhenoConfig):
         variable.stats = self.CATEGORICAL
         variable.rank = len(df.value.unique())
         variable.individuals = len(df.value)
+        variable.value_domain = ",".join(df.value.unique())
+
         with VariableManager(config=self.config) as vm:
             vm.save(variable)
         with CategoricalValueManager(config=self.config) as valm:
@@ -403,7 +409,7 @@ class PrepareValueClassification(PhenoConfig):
                 with VariableManager(config=self.config) as variable_manager:
                     variable.rank = 0
                     variable.individuals = 0
-                    variable.stats = 'empty'
+                    variable.stats = None
                     variable_manager.save(variable)
 
             elif self.check_continuous(variable, df.value):
