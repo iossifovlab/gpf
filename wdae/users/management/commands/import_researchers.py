@@ -53,7 +53,7 @@ class Command(BaseCommand):
                         else:
 
                             res_instance = Researcher()
-                            res_instance.email = res['Email']
+                            res_instance.email = email
                             res_instance.last_name = res['LastName']
                             res_instance.save()
 
