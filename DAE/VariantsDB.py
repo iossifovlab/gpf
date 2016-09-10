@@ -67,6 +67,9 @@ class Family:
             self.atts = {}
         self.memberInOrder = []
 
+    def __repr__(self):
+        return "Family({}: {})".format(self.familyId, self.memberInOrder)
+
 
 class Person:
 
@@ -77,8 +80,8 @@ class Person:
             self.atts = {}
 
     def __repr__(self):
-        return "Person({}; role: {})".format(
-            self.personId, self.role, self.atts)
+        return "Person({}; {})".format(
+            self.personId, self.role)
 
 
 class StudyGroup:

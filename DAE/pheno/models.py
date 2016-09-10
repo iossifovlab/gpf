@@ -152,6 +152,7 @@ class PersonModel(object):
         family_id varchar(16) NOT NULL,
         role varchar(16) NOT NULL,
         role_id varchar(8) NOT NULL,
+        role_order int NOT NULL,
         gender varchar(1) NULL,
         race varchar(32) NULL,
         age integer NULL,
@@ -175,6 +176,7 @@ class PersonModel(object):
         'family_id',
         'role',
         'role_id',
+        'role_order',
         'gender',
         'race',
         'age',
@@ -192,6 +194,7 @@ class PersonModel(object):
         self.family_id = None
         self.role = None
         self.role_id = None
+        self.role_order = None
         self.gender = None
         self.race = None
         self.age = None
@@ -208,6 +211,7 @@ class PersonModel(object):
         p.family_id = row['family_id']
         p.role = row['role']
         p.role_id = row['role_id']
+        p.role_order = row['role_order']
         p.gender = row['gender']
         p.race = row['race']
         p.age = row['age']
@@ -226,6 +230,7 @@ class PersonModel(object):
             p.family_id,
             p.role,
             p.role_id,
+            p.role_order,
             p.gender,
             p.race,
             p.age,

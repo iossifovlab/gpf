@@ -82,6 +82,7 @@ class PrepareIndividuals(V15Loader):
                 p.family_id = row['familyId']
                 p.role = row['role']
                 p.role_id = row['roleId']
+                p.role_order = row['roleOrder']
                 p.gender = None
                 p.race = None
                 p.collection = None if (isinstance(row['collection'], float) or
