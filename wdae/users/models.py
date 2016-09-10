@@ -12,6 +12,8 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
 from django.conf import settings
 
+from helpers.logger import LOGGER
+
 
 class Researcher(models.Model):
     first_name = models.CharField(max_length='100')
@@ -106,7 +108,17 @@ class WdaeUser(AbstractBaseUser):
     REQUIRED_FIELDS = ['researcher_id', 'first_name', 'last_name']
 
     def email_user(self, subject, message, from_email=None):
-        mail = send_mail(subject, message, from_email, [self.email])
+        override = None
+        try:
+            override = settings.EMAIL_OVERRIDE
+        except Exception:
+            LOGGER.info("exception on email override")
+            override = None
+        if override:
+            mail = send_mail(subject, message, from_email, override)
+        else:
+            mail = send_mail(subject, message, from_email, [self.email])
+
         return mail
 
     def get_full_name(self):
