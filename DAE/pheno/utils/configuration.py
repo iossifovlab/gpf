@@ -20,9 +20,12 @@ class PhenoConfig(object):
         studies.extend(vDB.get_studies(transmitted_studies))
         return studies
 
-    def __init__(self, config=None, *args, **kwargs):
+    def __init__(self, dae_config=None, config=None, *args, **kwargs):
         super(PhenoConfig, self).__init__(*args, **kwargs)
-        self.dae_config = Config()
+        if dae_config is None:
+            self.dae_config = Config()
+        else:
+            self.dae_config = dae_config
 
         if config:
             assert isinstance(config, ConfigParser.SafeConfigParser)
