@@ -166,6 +166,12 @@ class PhenoDB(PhenoConfig):
         else:
             raise ValueError("unsupported value type: {}".format(value_type))
 
+    @staticmethod
+    def _rename_value_column(measure_id, df):
+        names = df.columns.tolist()
+        names[names.index('value')] = measure_id
+        df.columns = names
+
     def get_values_df(self, measure_id, person_ids=None, role=None):
         assert measure_id is not None
         value_type = self.get_measure_type(measure_id)
@@ -182,5 +188,7 @@ class PhenoDB(PhenoConfig):
         df = self._get_values(value_manager, where)
         if person_ids:
             df = df[df.person_id.isin(person_ids)]
+
+        # self._rename_value_column(measure_id, df)
 
         return df
