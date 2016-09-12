@@ -7,7 +7,7 @@ import numpy as np
 from collections import defaultdict, OrderedDict
 
 from pheno.utils.configuration import PhenoConfig
-from pheno.models import PersonManager, VariableManager
+from pheno.models import PersonManager, VariableManager, ContinuousValueManager
 from VariantsDB import Person, Family
 
 
@@ -113,7 +113,7 @@ class PhenoDB(PhenoConfig):
                     'gender': row['gender'],
                     'age': self.check_nan(row['age']),
                     'non_verbal_iq': self.check_nan(row['non_verbal_iq']),
-                    'verbal_iq': self.check_nan(row['verbal_iq']),
+                    # 'verbal_iq': self.check_nan(row['verbal_iq']),
                     'race': row['race'],
                 }
                 p = Person(atts)
@@ -136,3 +136,25 @@ class PhenoDB(PhenoConfig):
     def load(self):
         self._load_families()
         self._load_instruments()
+
+    def get_measure_type(self, measure_id):
+        with VariableManager() as vm:
+            variable = vm.get(where="variable_id='{}'".format(measure_id))
+        if not variable:
+            return None
+        else:
+            return variable.stats
+
+    def get_values(self, measure_id, person_ids=None, role=None):
+
+        if not person_ids:
+            print("person_ids is empty")
+            if not role:
+                where = "variable_id = '{}'".format(measure_id)
+            else:
+                where = "variable_id = '{}' and person_role = '{}'".format(
+                    measure_id, role)
+            with ContinuousValueManager() as vm:
+                pass
+        else:
+            print("person_ids: {}".format(person_ids))
