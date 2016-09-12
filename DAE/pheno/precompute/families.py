@@ -119,10 +119,8 @@ class PrepareIndividualsGender(V15Loader):
         return df
 
     def _build_gender(self, df):
-        gender = df['gender']
-
-        gender[df.role == 'mom'] = 'F'
-        gender[df.role == 'dad'] = 'M'
+        df.loc[df.role == 'mom', 'gender'] = 'F'
+        df.loc[df.role == 'dad', 'gender'] = 'M'
 
         df = self._build_proband_gender(df)
         df = self._build_siblings_gender(df)
