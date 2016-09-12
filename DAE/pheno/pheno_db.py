@@ -139,7 +139,9 @@ class PhenoDB(PhenoConfig):
 
     def get_measure_type(self, measure_id):
         with VariableManager() as vm:
-            variable = vm.get(where="variable_id='{}'".format(measure_id))
+            variable = vm.get(
+                where="variable_id='{}' and not stats isnull"
+                .format(measure_id))
         if not variable:
             return None
         else:

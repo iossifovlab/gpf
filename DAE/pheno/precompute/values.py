@@ -289,11 +289,11 @@ class PrepareValueClassification(PhenoConfig):
         rank = len(values.unique())
         individuals = len(values)
 
-        if rank < int(self[self.ORDINAL, 'min_rank']) or \
-                rank > int(self[self.ORDINAL, 'max_rank']):
+        if rank < int(self[self.CATEGORICAL, 'min_rank']) or \
+                rank > int(self[self.CATEGORICAL, 'max_rank']):
             return False
 
-        if individuals < int(self[self.ORDINAL, 'min_individuals']):
+        if individuals < int(self[self.CATEGORICAL, 'min_individuals']):
             return False
 
         return True
