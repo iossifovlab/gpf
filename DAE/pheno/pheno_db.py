@@ -191,4 +191,7 @@ class PhenoDB(PhenoConfig):
 
         # self._rename_value_column(measure_id, df)
 
-        return df
+        return df[['person_id', 'value']]
+
+    def get_instrument_values(self, person_id, instrument_id):
+        pass
