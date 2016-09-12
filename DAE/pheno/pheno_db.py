@@ -7,7 +7,9 @@ import numpy as np
 from collections import defaultdict, OrderedDict
 
 from pheno.utils.configuration import PhenoConfig
-from pheno.models import PersonManager, VariableManager, ContinuousValueManager
+from pheno.models import PersonManager, VariableManager, \
+    ContinuousValueManager,\
+    OrdinalValueManager, CategoricalValueManager
 from VariantsDB import Person, Family
 
 
@@ -147,16 +149,38 @@ class PhenoDB(PhenoConfig):
         else:
             return variable.stats
 
-    def get_values(self, measure_id, person_ids=None, role=None):
+    def _get_values(self, value_manager, where):
+        with value_manager() as vm:
+            df = vm.load_df(where=where)
+            return df
 
-        if not person_ids:
-            print("person_ids is empty")
-            if not role:
-                where = "variable_id = '{}'".format(measure_id)
-            else:
-                where = "variable_id = '{}' and person_role = '{}'".format(
-                    measure_id, role)
-            with ContinuousValueManager() as vm:
-                pass
+        return None
+
+    def _get_value_manager(self, value_type):
+        if value_type == 'continuous':
+            return ContinuousValueManager
+        elif value_type == 'ordinal':
+            return OrdinalValueManager
+        elif value_type == 'categorical':
+            return CategoricalValueManager
         else:
-            print("person_ids: {}".format(person_ids))
+            raise ValueError("unsupported value type: {}".format(value_type))
+
+    def get_values_df(self, measure_id, person_ids=None, role=None):
+        assert measure_id is not None
+        value_type = self.get_measure_type(measure_id)
+        if value_type is None:
+            raise ValueError("bad measure: {}; unknown value type"
+                             .format(measure_id))
+        value_manager = self._get_value_manager(value_type)
+
+        clauses = ["variable_id = '{}'".format(measure_id)]
+        if role:
+            clauses.append("person_role = '{}'".format(role))
+        where = ' and '.join(clauses)
+
+        df = self._get_values(value_manager, where)
+        if person_ids:
+            df = df[df.person_id.isin(person_ids)]
+
+        return df
