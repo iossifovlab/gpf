@@ -143,6 +143,19 @@ class ManagerBase(PhenoConfig):
         else:
             return None
 
+    def _execute(self, query):
+        recs = []
+        cursor = self.db.cursor()
+        if cursor is None:
+            raise ValueError("can't create cursor...")
+        cursor.execute(query)
+        rows = cursor.fetchmany(size=200)
+        while rows:
+            recs.extend(rows)
+            rows = cursor.fetchmany(size=200)
+        self.db.commit()
+        return recs
+
 
 class PersonModel(object):
     SCHEMA_CREATE = """

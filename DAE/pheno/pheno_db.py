@@ -9,7 +9,7 @@ from collections import defaultdict, OrderedDict
 from pheno.utils.configuration import PhenoConfig
 from pheno.models import PersonManager, VariableManager, \
     ContinuousValueManager,\
-    OrdinalValueManager, CategoricalValueManager
+    OrdinalValueManager, CategoricalValueManager, RawValueManager
 from VariantsDB import Person, Family
 
 
@@ -222,3 +222,13 @@ class PhenoDB(PhenoConfig):
         for _index, row in df.iterrows():
             res[row['person_id']] = row['value']
         return res
+
+    def get_instruments(self, person_id):
+        query = "SELECT DISTINCT table_name FROM variable WHERE " \
+            "variable_id IN " \
+            "(SELECT variable_id FROM value_raw WHERE person_id='{}')" \
+            .format(person_id)
+        with RawValueManager() as vm:
+            instruments = vm._execute(query)
+        return dict([(i[0], self.instruments[i[0]]) for i in instruments
+                     if i[0] in self.instruments])

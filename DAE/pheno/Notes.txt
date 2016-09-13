@@ -16,7 +16,7 @@ pd.get_string_data(personId, fieldKey)
 
 + pd.get_data(list of personId, fieldKey)
 
-pd.get_intruments(personId)
++ pd.get_intruments(personId)
 
 pd.get_fields(personId)???
 
