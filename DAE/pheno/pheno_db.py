@@ -194,4 +194,24 @@ class PhenoDB(PhenoConfig):
         return df[['person_id', 'value']]
 
     def get_instrument_values(self, person_id, instrument_id):
-        pass
+        where = "person_id = '{}' and variable_id in " \
+            "(select variable_id from variable where table_name='{}')" \
+            .format(person_id, instrument_id)
+
+        vms = [
+            ContinuousValueManager,
+            OrdinalValueManager,
+            CategoricalValueManager,
+        ]
+        dfs = [self._get_values(vm, where) for vm in vms]
+
+        def todict(df):
+            res = {}
+            for _index, row in df.iterrows():
+                res[row['variable_id']] = row['value']
+            return res
+
+        res = {}
+        [res.update(todict(df)) for df in dfs]
+
+        return res
