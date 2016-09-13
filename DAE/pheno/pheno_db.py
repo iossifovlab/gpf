@@ -149,7 +149,7 @@ class PhenoDB(PhenoConfig):
         else:
             return variable.stats
 
-    def _get_values(self, value_manager, where):
+    def _get_values_df(self, value_manager, where):
         with value_manager() as vm:
             df = vm.load_df(where=where)
             return df
@@ -185,7 +185,7 @@ class PhenoDB(PhenoConfig):
             clauses.append("person_role = '{}'".format(role))
         where = ' and '.join(clauses)
 
-        df = self._get_values(value_manager, where)
+        df = self._get_values_df(value_manager, where)
         if person_ids:
             df = df[df.person_id.isin(person_ids)]
 
@@ -203,7 +203,7 @@ class PhenoDB(PhenoConfig):
             OrdinalValueManager,
             CategoricalValueManager,
         ]
-        dfs = [self._get_values(vm, where) for vm in vms]
+        dfs = [self._get_values_df(vm, where) for vm in vms]
 
         def todict(df):
             res = {}
@@ -250,27 +250,34 @@ class PhenoDB(PhenoConfig):
                 .format(measure_id))
         return variable is not None
 
-    def get_measure_df(self, measure):
-        if not self.has_measure(measure):
+    def _get_person_df(self, role):
+        where = ["ssc_present=1"]
+        if role:
+            where.append("role='{}'".format(role))
+        with PersonManager() as pm:
+            persons_df = pm.load_df(where=' and '.join(where))
+        return persons_df
+
+    def get_measure_df(self, measure_id, role='prb'):
+        if not self.has_measure(measure_id):
             raise ValueError("unsupported phenotype measure")
 
-        with PersonManager() as pm:
-            persons_df = pm.load_df(where="role='prb' and ssc_present=1")
+        persons_df = self._get_person_df(role)
+        if measure_id in set(['non_verbal_iq', 'verbal_iq']):
+            return persons_df
 
-        if measure in set(['non_verbal_iq', 'verbal_iq']):
-            return persons_df.dropna()
-
-        with ContinuousValueManager() as vm:
-            value_df = vm.load_df(where="variable_id='{}'".format(measure))
+        value_df = self.get_values_df(measure_id, role=role)
+        print(len(value_df))
 
         df = persons_df.join(
             value_df.set_index('person_id'), on='person_id', rsuffix='_val')
-        res_df = df.dropna()
 
-        _instrument, measure_name = self.split_measure_name(measure)
+        _instrument, measure_name = self.split_measure_id(measure_id)
 
-        names = res_df.columns.tolist()
+        names = df.columns.tolist()
         names[names.index('value')] = measure_name
-        res_df.columns = names
+        df.columns = names
 
-        return res_df
+        return df[['person_id', 'family_id', 'role',
+                   'gender', 'race', 'age', 'non_verbal_iq',
+                   measure_name]]
