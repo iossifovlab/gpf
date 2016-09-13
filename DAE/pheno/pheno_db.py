@@ -193,7 +193,7 @@ class PhenoDB(PhenoConfig):
 
         return df[['person_id', 'value']]
 
-    def get_instrument_values(self, person_id, instrument_id):
+    def get_instrument_values(self, instrument_id, person_id):
         where = "person_id = '{}' and variable_id in " \
             "(select variable_id from variable where table_name='{}')" \
             .format(person_id, instrument_id)
@@ -214,4 +214,11 @@ class PhenoDB(PhenoConfig):
         res = {}
         [res.update(todict(df)) for df in dfs]
 
+        return res
+
+    def get_values(self, measure_id, person_ids=None, role=None):
+        df = self.get_values_df(measure_id, person_ids, role)
+        res = {}
+        for _index, row in df.iterrows():
+            res[row['person_id']] = row['value']
         return res
