@@ -22,3 +22,9 @@ pd.get_fields(personId)???
 
 + pd.get_intrument_values(personId,instrumentId) -> dictionary {fieldKey -> value}
 
+pd.is_applied(measure_id, person_ids)
+	- applied, non_applied, not_applicable
+
+get_values_df() да приема аргумент какви колони да връща и да обединя със 
+	get_measures_df()
+
