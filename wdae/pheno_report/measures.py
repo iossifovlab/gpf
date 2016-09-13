@@ -113,7 +113,7 @@ class Measures(Preload):
                 'measure': v.variable_id,
                 'instrument': v.table_name,
                 'measure_name': v.variable_name,
-                'desc': v.description.decode('utf-8'),
+                'desc': None,  # v.description.decode('utf-8'),
                 'min': v.min_value,
                 'max': v.max_value,
             }

@@ -232,3 +232,45 @@ class PhenoDB(PhenoConfig):
             instruments = vm._execute(query)
         return dict([(i[0], self.instruments[i[0]]) for i in instruments
                      if i[0] in self.instruments])
+
+    @staticmethod
+    def split_measure_id(measure_id):
+        if '.' not in measure_id:
+            return (None, measure_id)
+        else:
+            [instrument_name, measure_name] = measure_id.split('.')
+            return (instrument_name, measure_name)
+
+    def has_measure(self, measure_id):
+        if measure_id in set(['non_verbal_iq', 'verbal_iq']):
+            return True
+        with VariableManager() as vm:
+            variable = vm.get(
+                where="variable_id='{}' and not stats isnull"
+                .format(measure_id))
+        return variable is not None
+
+    def get_measure_df(self, measure):
+        if not self.has_measure(measure):
+            raise ValueError("unsupported phenotype measure")
+
+        with PersonManager() as pm:
+            persons_df = pm.load_df(where="role='prb' and ssc_present=1")
+
+        if measure in set(['non_verbal_iq', 'verbal_iq']):
+            return persons_df.dropna()
+
+        with ContinuousValueManager() as vm:
+            value_df = vm.load_df(where="variable_id='{}'".format(measure))
+
+        df = persons_df.join(
+            value_df.set_index('person_id'), on='person_id', rsuffix='_val')
+        res_df = df.dropna()
+
+        _instrument, measure_name = self.split_measure_name(measure)
+
+        names = res_df.columns.tolist()
+        names[names.index('value')] = measure_name
+        res_df.columns = names
+
+        return res_df
