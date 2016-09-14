@@ -8,7 +8,7 @@ import pandas as pd
 from pheno.utils.load_raw import V14Loader, V15Loader
 from pheno.models import VariableModel, RawValueManager, PersonManager,\
     PersonModel, VariableManager
-from pheno.precompute.values import PrepareRawValues
+from pheno.prepare.values import PrepareRawValues
 from pheno.utils.commons import calc_race
 
 

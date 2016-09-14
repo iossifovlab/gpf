@@ -110,35 +110,35 @@ class PrepareRawValues(PrepareValueBase):
             value_manager=RawValueManager, *args, **kwargs)
 
 
-class PrepareVariableDomainRanks(PhenoConfig):
-
-    def __init__(self, *args, **kwargs):
-        super(PrepareVariableDomainRanks, self).__init__(*args, **kwargs)
-
-    def _rank(self, var):
-        where = "variable_id='{}'".format(var.variable_id)
-        with RawValueManager(config=self.config) as vm:
-            df = vm.load_df(where=where)
-            if(df is None):
-                return 0, 0
-            individuals = len(df)
-            rank = len(df.value.unique())
-
-            return rank, individuals
-
-    def prepare(self):
-        with VariableManager(config=self.config) as vm:
-            variables = vm.load_df()
-
-        for _index, row in variables.iterrows():
-            var = VariableModel.create_from_df(row)
-            print("calculating rank of {}".format(var.variable_id))
-            rank, individuals = self._rank(var)
-
-            var.domain_rank = rank
-            var.individuals = individuals
-            with VariableManager(config=self.config) as vm:
-                vm.save(var)
+# class PrepareVariableDomainRanks(PhenoConfig):
+#
+#     def __init__(self, *args, **kwargs):
+#         super(PrepareVariableDomainRanks, self).__init__(*args, **kwargs)
+#
+#     def _rank(self, var):
+#         where = "variable_id='{}'".format(var.variable_id)
+#         with RawValueManager(config=self.config) as vm:
+#             df = vm.load_df(where=where)
+#             if(df is None):
+#                 return 0, 0
+#             individuals = len(df)
+#             rank = len(df.value.unique())
+#
+#             return rank, individuals
+#
+#     def prepare(self):
+#         with VariableManager(config=self.config) as vm:
+#             variables = vm.load_df()
+#
+#         for _index, row in variables.iterrows():
+#             var = VariableModel.create_from_df(row)
+#             print("calculating rank of {}".format(var.variable_id))
+#             rank, individuals = self._rank(var)
+#
+#             var.domain_rank = rank
+#             var.individuals = individuals
+#             with VariableManager(config=self.config) as vm:
+#                 vm.save(var)
 
 
 class PrepareValueClassification(PhenoConfig):
