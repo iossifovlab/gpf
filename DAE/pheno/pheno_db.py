@@ -112,10 +112,6 @@ class PhenoDB(PhenoConfig):
                     'person_id': person_id,
                     'role': row['role'],
                     'gender': row['gender'],
-                    'age': self.check_nan(row['age']),
-                    'non_verbal_iq': self.check_nan(row['non_verbal_iq']),
-                    # 'verbal_iq': self.check_nan(row['verbal_iq']),
-                    'race': row['race'],
                 }
                 p = Person(atts)
                 p.personId = person_id
