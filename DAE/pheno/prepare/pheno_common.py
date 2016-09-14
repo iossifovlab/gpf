@@ -22,7 +22,7 @@ class PreparePhenoCommonAge(V14Loader):
         var.variable_id = 'pheno_common.age'
         var.table_name = 'pheno_common'
         var.variable_name = 'age'
-        var.domain = 'meta_t.integer'
+        var.domain = 'meta.integer_t'
         var.domain_choice_label = None
         var.measurement_scale = 'integer'
         var.description = 'Age at assessment'
@@ -171,7 +171,7 @@ class PreparePhenoIQ(V15Loader):
         var.variable_id = 'pheno_common.non_verbal_iq'
         var.table_name = 'pheno_common'
         var.variable_name = 'non_verbal_iq'
-        var.domain = 'meta_t.integer'
+        var.domain = 'meta_t.float_t'
         var.domain_choice_label = None
         var.measurement_scale = 'integer'
         var.description = 'Non verbal iq'
@@ -184,10 +184,10 @@ class PreparePhenoIQ(V15Loader):
 
     def prepare_pheno_verbal_iq_variables(self):
         var = VariableModel()
-        var.variable_id = 'pheno_common.non_verbal_iq'
+        var.variable_id = 'pheno_common.verbal_iq'
         var.table_name = 'pheno_common'
         var.variable_name = 'verbal_iq'
-        var.domain = 'meta_t.integer'
+        var.domain = 'meta.integer_t'
         var.domain_choice_label = None
         var.measurement_scale = 'integer'
         var.description = 'Verbal iq'

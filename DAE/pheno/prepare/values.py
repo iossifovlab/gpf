@@ -313,9 +313,10 @@ class PrepareValueClassification(PhenoConfig):
             if len(df) == 0:
                 return self.UNKNOWN
             variable = VariableModel.create_from_df(df.loc[0])
-
+        print(variable)
         with RawValueManager(config=self.config) as vm:
             df = vm.load_values(variable)
+            print(len(df))
             if len(df) == 0:
                 return self.UNKNOWN
             if self.check_continuous(variable, df.value):
