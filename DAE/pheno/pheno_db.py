@@ -211,39 +211,39 @@ class PhenoDB(PhenoConfig):
 
         return res_df
 
-    def get_values(self, measure_ids, person_ids=None, role=None):
-        df = self.get_values_df(measure_ids, person_ids, role)
+    def _values_df_to_dict(self, measure_ids, df):
         res = {}
         for _index, row in df.iterrows():
             person_id = row.person_id
             vals = {}
             for mid in measure_ids:
                 vals[mid] = row[mid]
+
             res[person_id] = vals
-        return res
-
-    def get_instrument_values(self, instrument_id, person_id):
-        where = "person_id = '{}' and variable_id in " \
-            "(select variable_id from variable where table_name='{}')" \
-            .format(person_id, instrument_id)
-
-        vms = [
-            ContinuousValueManager,
-            OrdinalValueManager,
-            CategoricalValueManager,
-        ]
-        dfs = [self._get_values_df(vm, where) for vm in vms]
-
-        def todict(df):
-            res = {}
-            for _index, row in df.iterrows():
-                res[row['variable_id']] = row['value']
-            return res
-
-        res = {}
-        [res.update(todict(df)) for df in dfs]
 
         return res
+
+    def get_values(self, measure_ids, person_ids=None, role=None):
+        df = self.get_values_df(measure_ids, person_ids, role)
+        return self._values_df_to_dict(measure_ids, df)
+
+    def get_instrument_measures(self, instrument_id):
+        assert instrument_id in self.instruments
+        measure_ids = [m.measure_id for
+                       m in self.instruments[instrument_id].measures.values()]
+        return measure_ids
+
+    def get_instrument_values_df(
+            self, instrument_id, person_ids=None, role=None):
+        measure_ids = self.get_instrument_measures(instrument_id)
+        res = self.get_values_df(measure_ids, person_ids, role)
+        return res
+
+    def get_instrument_values(
+            self, instrument_id, person_ids=None, role=None):
+        measure_ids = self.get_instrument_measures(instrument_id)
+        df = self.get_values_df(measure_ids, person_ids, role)
+        return self._values_df_to_dict(measure_ids, df)
 
     def get_instruments(self, person_id):
         query = "SELECT DISTINCT table_name FROM variable WHERE " \
