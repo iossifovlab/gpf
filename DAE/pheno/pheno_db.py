@@ -198,9 +198,9 @@ class PhenoDB(PhenoConfig):
 
         res_df = dfs[0]
         for i, df in enumerate(dfs[1:]):
-            df.set_index('person_id')
             res_df = res_df.join(
-                df, on='person_id', rsuffix='_val_{}'.format(i))
+                df.set_index('person_id'), on='person_id',
+                rsuffix='_val_{}'.format(i))
 
         return res_df
 
