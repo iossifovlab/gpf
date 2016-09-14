@@ -5,10 +5,8 @@ Created on Aug 25, 2016
 '''
 import numpy as np
 import pandas as pd
-from pheno.models import PersonManager, PersonModel, RawValueManager,\
-    ContinuousValueManager, ContinuousValueModel, VariableModel
-from pheno.utils.load_raw import V15Loader, V14Loader
-from pheno.precompute.values import PrepareRawValues
+from pheno.models import PersonManager, PersonModel
+from pheno.utils.load_raw import V15Loader
 
 
 class PrepareIndividuals(V15Loader):
@@ -265,34 +263,3 @@ class CheckIndividualsGenderToSSC(V15Loader):
         with PersonManager(config=self.config) as pm:
             df = pm.load_df(where='ssc_present=1')
             self._check_gender_to_ssc(df)
-
-
-class PrepareNonverbalIQ(V15Loader):
-    NONVERBAL_IQ = 'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq'
-    VERBAL_IQ = 'ssc_core_descriptive.ssc_diagnosis_verbal_iq'
-
-    def _prepare_nonverbal_iq(self):
-        with ContinuousValueManager(config=self.config) as vm:
-            df = vm.load_df(where="variable_id='{}'".format(self.NONVERBAL_IQ))
-
-        with PersonManager(config=self.config) as pm:
-            for _index, row in df.iterrows():
-                val = ContinuousValueModel.create_from_df(row)
-                person = pm.get(where="person_id='{}'".format(val.person_id))
-                person.non_verbal_iq = val.value
-                pm.save(person)
-
-    def _prepare_verbal_iq(self):
-        with ContinuousValueManager(config=self.config) as vm:
-            df = vm.load_df(where="variable_id='{}'".format(self.VERBAL_IQ))
-
-        with PersonManager(config=self.config) as pm:
-            for _index, row in df.iterrows():
-                val = ContinuousValueModel.create_from_df(row)
-                person = pm.get(where="person_id='{}'".format(val.person_id))
-                person.verbal_iq = val.value
-                pm.save(person)
-
-    def prepare(self):
-        self._prepare_nonverbal_iq()
-        self._prepare_verbal_iq()

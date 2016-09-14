@@ -3,8 +3,7 @@ Created on Aug 25, 2016
 
 @author: lubo
 '''
-from pheno.models import VariableModel, VariableManager, PersonManager,\
-    RawValueManager, PersonModel, ContinuousValueManager, ContinuousValueModel
+from pheno.models import VariableModel, VariableManager
 from pheno.utils.load_raw import V15Loader, V14Loader
 
 

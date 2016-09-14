@@ -14,7 +14,7 @@ from pheno.precompute.variables import PrepareVariables
 from pheno.precompute.values import PrepareRawValues,\
     PrepareVariableDomainRanks, PrepareValueClassification
 from pheno.precompute.pheno_common import PreparePhenoCommonRace, \
-    PreparePhenoCommonAge
+    PreparePhenoCommonAge, PreparePhenoIQ
 
 LINE = "--------------------------------------------------------------------"
 
@@ -102,6 +102,10 @@ def prepare_pheno_common():
 
     p30 = PreparePhenoCommonRace()
     p30.prepare()
+
+    p40 = PreparePhenoIQ()
+    p40.prepare()
+
     print(LINE)
 
 

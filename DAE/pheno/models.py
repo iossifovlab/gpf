@@ -446,9 +446,9 @@ class ValueModel(object):
     def isnull(cls, value):
         if isinstance(value, float) and np.isnan(value):
             return True
-        if isinstance(value, str) and value is None:
+        if isinstance(value, str) and (value is None or value == 'nan'):
             return True
-        if isinstance(value, unicode) and value is None:
+        if isinstance(value, unicode) and (value is None or value == 'nan'):
             return True
 
         return False

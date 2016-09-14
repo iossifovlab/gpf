@@ -7,12 +7,13 @@ from pheno.models import VariableManager, \
     VariableModel, RawValueManager, ContinuousValueManager,\
     CategoricalValueManager, OrdinalValueManager, ContinuousValueModel,\
     OrdinalValueModel, CategoricalValueModel
-from pheno.precompute.families import PrepareIndividuals
+
 from pheno.utils.load_raw import V15Loader
 from pheno.utils.configuration import PhenoConfig
 
 import math
 import pandas as pd
+from pheno.utils.commons import role_type
 
 
 class PrepareValueBase(V15Loader):
@@ -43,11 +44,13 @@ class PrepareValueBase(V15Loader):
             return df
 
     def _build_variable_values(self, vm, variable, dfs):
-        variable_name = variable['variable_name']
-        variable_id = variable['variable_id']
+        variable_name = variable.variable_name
+        variable_id = variable.variable_id
         print("processing variable: {}".format(variable_name))
         for df in dfs:
             if variable_name not in df.columns:
+                print(">>> cant find values for '{}'".format(
+                    variable_name))
                 continue
             for _vindex, vrow in df.iterrows():
                 value_model = self.value_manager.MODEL
@@ -59,8 +62,7 @@ class PrepareValueBase(V15Loader):
                 val.variable_id = variable_id
                 val.person_id = vrow['individual']
                 [val.family_id, role] = val.person_id.split('.')
-                val.person_role = PrepareIndividuals._role_type(
-                    role)
+                val.person_role = role_type(role)
                 vm.save(val)
 
     def _build_table_values(self, table):
@@ -76,6 +78,8 @@ class PrepareValueBase(V15Loader):
                 self._build_variable_values(vm, variable, dfs)
 
     def prepare_variable(self, variable, dfs):
+        assert isinstance(variable, VariableModel)
+
         with self.value_manager(config=self.config) as vm:
             self._build_variable_values(vm, variable, dfs)
 
