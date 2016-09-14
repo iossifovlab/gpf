@@ -198,6 +198,8 @@ class PhenoDB(PhenoConfig):
     def get_values_df(self, measure_ids, person_ids=None, role=None):
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
+        print(measure_ids)
+        print([self.has_measure(m) for m in measure_ids])
         assert all([self.has_measure(m) for m in measure_ids])
 
         dfs = [self.get_measure_values_df(m, person_ids, role)
@@ -264,8 +266,6 @@ class PhenoDB(PhenoConfig):
             return (instrument_name, measure_name)
 
     def has_measure(self, measure_id):
-        if measure_id in set(['non_verbal_iq', 'verbal_iq']):
-            return True
         with VariableManager() as vm:
             variable = vm.get(
                 where="variable_id='{}' and not stats isnull"
@@ -279,27 +279,3 @@ class PhenoDB(PhenoConfig):
         with PersonManager() as pm:
             persons_df = pm.load_df(where=' and '.join(where))
         return persons_df
-
-    def get_measure_df(self, measure_id, role='prb'):
-        if not self.has_measure(measure_id):
-            raise ValueError("unsupported phenotype measure")
-
-        persons_df = self._get_person_df(role)
-        if measure_id in set(['non_verbal_iq', 'verbal_iq']):
-            return persons_df
-
-        value_df = self.get_values_df(measure_id, role=role)
-        print(len(value_df))
-
-        df = persons_df.join(
-            value_df.set_index('person_id'), on='person_id', rsuffix='_val')
-
-        _instrument, measure_name = self.split_measure_id(measure_id)
-
-        names = df.columns.tolist()
-        names[names.index('value')] = measure_name
-        df.columns = names
-
-        return df[['person_id', 'family_id', 'role',
-                   'gender', 'race', 'age', 'non_verbal_iq',
-                   measure_name]]

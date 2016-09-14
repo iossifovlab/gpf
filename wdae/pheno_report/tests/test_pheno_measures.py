@@ -21,11 +21,10 @@ class HeadCircumferenceTest(unittest.TestCase):
         measure = self.measure
         df = measure.df
         self.assertIn('family_id', df.columns)
-        self.assertIn('age', df.columns)
-        self.assertIn('non_verbal_iq', df.columns)
-        self.assertIn('verbal_iq', df.columns)
+        self.assertIn('pheno_common.age', df.columns)
+        self.assertIn('pheno_common.non_verbal_iq', df.columns)
 
-        self.assertIn('head_circumference', df.columns)
+        self.assertIn('ssc_commonly_used.head_circumference', df.columns)
 
     def test_pheno_measure_normalize_by_age(self):
         measure = self.measure
@@ -85,17 +84,17 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
 
     def test_verbal_iq_interval(self):
         family_ids = self.measures.get_measure_families(
-            'verbal_iq', 10, 20)
+            'pheno_common.verbal_iq', 10, 20)
         self.assertEquals(120, len(family_ids))
         df = self.measures.get_measure_df(
-            'verbal_iq')
+            'pheno_common.verbal_iq')
         for family_id in family_ids:
             self.assertTrue(
                 all(df[df['family_id'] ==
-                       family_id]['verbal_iq'].values <= 20))
+                       family_id]['pheno_common.verbal_iq'].values <= 20))
             self.assertTrue(
                 all(df[df['family_id'] ==
-                       family_id]['verbal_iq'].values >= 10))
+                       family_id]['pheno_common.verbal_iq'].values >= 10))
 
     def test_head_circumference_interval(self):
         family_ids = self.measures.get_measure_families(

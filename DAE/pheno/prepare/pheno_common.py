@@ -186,11 +186,11 @@ class PreparePhenoIQ(V15Loader):
         var = VariableModel()
         var.variable_id = 'pheno_common.non_verbal_iq'
         var.table_name = 'pheno_common'
-        var.variable_name = 'non_verbal_iq'
+        var.variable_name = 'verbal_iq'
         var.domain = 'meta_t.integer'
         var.domain_choice_label = None
         var.measurement_scale = 'integer'
-        var.description = 'Non verbal iq'
+        var.description = 'Verbal iq'
         var.has_values = True
 
         with VariableManager(config=self.config) as vm:

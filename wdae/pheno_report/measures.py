@@ -14,6 +14,7 @@ from preloaded.register import Preload
 import precompute
 import itertools
 from pheno.models import VariableManager, PersonManager, ContinuousValueManager
+from pheno.pheno_db import PhenoDB
 
 
 class Measures(Preload):
@@ -123,6 +124,9 @@ class Measures(Preload):
         pass
 
     def load(self):
+        self.phdb = PhenoDB()
+        self.phdb.load()
+
         # self.df = self._load_data()
         self.families_precompute = precompute.register.get(
             'pheno_families_precompute')
@@ -140,45 +144,36 @@ class Measures(Preload):
     def get(self):
         return self
 
-    def has_measure(self, measure):
-        if measure in set(['non_verbal_iq', 'verbal_iq']):
-            return True
-        with VariableManager() as vm:
-            variable = vm.get(
-                where="variable_id='{}' and stats='continuous'"
-                .format(measure))
-        return variable is not None
+    def has_measure(self, measure_id):
+        return self.phdb.has_measure(measure_id)
+#         if measure in set(['non_verbal_iq', 'verbal_iq']):
+#             return True
+#         with VariableManager() as vm:
+#             variable = vm.get(
+#                 where="variable_id='{}' and stats='continuous'"
+#                 .format(measure))
+#         return variable is not None
 
     @staticmethod
-    def split_measure_name(measure):
-        if '.' not in measure:
-            return (None, measure)
-        else:
-            [instrument, measure_name] = measure.split('.')
-            return (instrument, measure_name)
+    def split_measure_id(measure_id):
+        assert '.' in measure_id
+        [instrument_name, measure_name] = measure_id.split('.')
+        return (instrument_name, measure_name)
 
-    def get_measure_df(self, measure):
-        if not self.has_measure(measure):
+    def get_measure_df(self, measure_id):
+        if not self.has_measure(measure_id):
             raise ValueError("unsupported phenotype measure")
 
         with PersonManager() as pm:
             persons_df = pm.load_df(where="role='prb' and ssc_present=1")
 
-        if measure in set(['non_verbal_iq', 'verbal_iq']):
-            return persons_df.dropna()
-
-        with ContinuousValueManager() as vm:
-            value_df = vm.load_df(where="variable_id='{}'".format(measure))
+        value_df = self.phdb.get_values_df(
+            ['pheno_common.age', 'pheno_common.non_verbal_iq', measure_id],
+            role='prb')
 
         df = persons_df.join(
             value_df.set_index('person_id'), on='person_id', rsuffix='_val')
         res_df = df.dropna()
-
-        _instrument, measure_name = self.split_measure_name(measure)
-
-        names = res_df.columns.tolist()
-        names[names.index('value')] = measure_name
-        res_df.columns = names
 
         return res_df
 
@@ -248,7 +243,7 @@ class NormalizedMeasure(object):
     def __init__(self, measure):
         from preloaded.register import get_register
         self.instrument, self.measure_name = \
-            Measures.split_measure_name(measure)
+            Measures.split_measure_id(measure)
         register = get_register()
         measures = register.get('pheno_measures')
         if not measures.has_measure(measure):
