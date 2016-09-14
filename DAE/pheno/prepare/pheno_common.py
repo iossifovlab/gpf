@@ -216,7 +216,7 @@ class PreparePhenoIQ(V15Loader):
 
         names = df.columns.tolist()
         names[names.index('person_id')] = 'individual'
-        names[names.index('value')] = 'non_verbal_iq'
+        names[names.index('value')] = 'verbal_iq'
         df.columns = names
 
         prep = PrepareRawValues()
