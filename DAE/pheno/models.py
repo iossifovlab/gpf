@@ -167,12 +167,7 @@ class PersonModel(object):
         role_id varchar(8) NOT NULL,
         role_order int NOT NULL,
         gender varchar(1) NULL,
-        race varchar(32) NULL,
-        age integer NULL,
-        non_verbal_iq real NULL,
-        verbal_iq real NULL,
         collection varchar(64) NULL,
-        site varchar(64) NULL,
         ssc_present bool NULL
     );
     COMMIT;
@@ -191,12 +186,7 @@ class PersonModel(object):
         'role_id',
         'role_order',
         'gender',
-        'race',
-        'age',
-        'non_verbal_iq',
-        'verbal_iq',
         'collection',
-        'site',
         'ssc_present',
     ]
 
@@ -209,12 +199,7 @@ class PersonModel(object):
         self.role_id = None
         self.role_order = None
         self.gender = None
-        self.race = None
-        self.age = None
-        self.non_verbal_iq = None
-        self.verbal_iq = None
         self.collection = None
-        self.site = None
         self.ssc_present = None
 
     @staticmethod
@@ -226,12 +211,7 @@ class PersonModel(object):
         p.role_id = row['role_id']
         p.role_order = row['role_order']
         p.gender = row['gender']
-        p.race = row['race']
-        p.age = row['age']
-        p.non_verbal_iq = row['non_verbal_iq']
-        p.verbal_iq = row['verbal_iq']
         p.collection = row['collection']
-        p.site = row['site']
         p.ssc_present = row['ssc_present']
 
         return p
@@ -245,12 +225,7 @@ class PersonModel(object):
             p.role_id,
             p.role_order,
             p.gender,
-            p.race,
-            p.age,
-            p.non_verbal_iq,
-            p.verbal_iq,
             p.collection,
-            p.site,
             p.ssc_present,
         )
 
@@ -484,6 +459,8 @@ class ValueModel(object):
             return True
         if isinstance(value, str) and value is None:
             return True
+        if isinstance(value, unicode) and value is None:
+            return True
 
         return False
 
@@ -492,7 +469,11 @@ class ValueModel(object):
         if isinstance(val, unicode):
             return val
         elif isinstance(val, str):
-            return str(val).encode('utf-8')
+            try:
+                return str(val).encode('utf-8')
+            except Exception as ex:
+                print("cant encode value: |{}|".format(val))
+                raise ex
         else:
             return str(val)
 

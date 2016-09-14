@@ -28,7 +28,6 @@ class Measure(object):
 
     def __init__(self, name):
         self.name = name
-        self.instrument = None
 
     def __repr__(self):
         return "Measure({}, {}, {})".format(

@@ -42,7 +42,7 @@ class PrepareValueBase(V15Loader):
             df = vm.load_df(where=where)
             return df
 
-    def _build_variable_values(self, vm, dfs, variable):
+    def _build_variable_values(self, vm, variable, dfs):
         variable_name = variable['variable_name']
         variable_id = variable['variable_id']
         print("processing variable: {}".format(variable_name))
@@ -52,7 +52,7 @@ class PrepareValueBase(V15Loader):
             for _vindex, vrow in df.iterrows():
                 value_model = self.value_manager.MODEL
                 val = value_model()
-                val.value = vrow[variable_name]
+                val.value = value_model.value_decode(vrow[variable_name])
                 if value_model.isnull(val.value):
                     continue
                 val.id = None
@@ -73,7 +73,11 @@ class PrepareValueBase(V15Loader):
             dtype=str)
         with self.value_manager(config=self.config) as vm:
             for _index, variable in variables.iterrows():
-                self._build_variable_values(vm, dfs, variable)
+                self._build_variable_values(vm, variable, dfs)
+
+    def prepare_variable(self, variable, dfs):
+        with self.value_manager(config=self.config) as vm:
+            self._build_variable_values(vm, variable, dfs)
 
     def prepare(self):
         tables = self._load_tables()

@@ -6,7 +6,7 @@ Created on Aug 25, 2016
 import numpy as np
 import pandas as pd
 from pheno.models import PersonManager, PersonModel, RawValueManager,\
-    ContinuousValueManager, ContinuousValueModel
+    ContinuousValueManager, ContinuousValueModel, VariableModel
 from pheno.utils.load_raw import V15Loader, V14Loader
 
 
@@ -218,10 +218,74 @@ class PrepareIndividualsGenderFromSSC(V15Loader):
             pm.save_df(df)
 
 
-class PrepareIndividualsAge(V14Loader):
+class CheckIndividualsGenderToSSC(V15Loader):
 
     def __init__(self, *args, **kwargs):
-        super(PrepareIndividualsAge, self).__init__(*args, **kwargs)
+        super(CheckIndividualsGenderToSSC, self).__init__(*args, **kwargs)
+
+    def _check_gender_to_ssc(self, df):
+        persons = {}
+        for _index, val in df.person_id.iteritems():
+            persons[val] = []
+
+        for st in self.get_all_ssc_studies():
+            print("processing study: {}".format(st.name))
+            for _fid, fam in st.families.items():
+                for p in fam.memberInOrder:
+                    if p.personId in persons:
+                        p.study = st.name
+                        persons[p.personId].append(p)
+
+        gender = {}
+        for pid, ps in persons.items():
+            assert len(ps) > 0
+            if len(ps) == 1:
+                gender[pid] = ps[0].gender
+            else:
+                check = [p.gender == ps[0].gender for p in ps]
+                if all(check):
+                    gender[pid] = ps[0].gender
+                else:
+                    print("\ngender mismatch for person: {}:".format(pid))
+                    for p in ps:
+                        print("\tstudy: {}; pid: {}; gender {}".format(
+                            p.study, p.personId, p.gender))
+
+            check = df[df.person_id == pid].gender == gender[pid]
+            if not np.all(check):
+                print("\ngender mismatch for person: {}".format(pid))
+                print("\tpheno db gender: {}".format(
+                    df[df.person_id == pid].gender.values))
+                for p in ps:
+                    print("\tstudy: {}; pid: {}; gender {}".format(
+                        p.study, p.personId, p.gender))
+
+    def check(self):
+        with PersonManager(config=self.config) as pm:
+            df = pm.load_df(where='ssc_present=1')
+            self._check_gender_to_ssc(df)
+
+
+class PreparePersonsAge(V14Loader):
+
+    def __init__(self, *args, **kwargs):
+        super(PreparePersonsAge, self).__init__(*args, **kwargs)
+
+    def prepare_person_age_variable(self):
+        var = VariableModel()
+        var.variable_id = 'pheno_common.age'
+        var.table_name = 'pheno_common'
+        var.variable_name = 'age'
+        var.domain = 'meta_t.integer'
+        var.domain_choice_label = None
+        var.measurement_scale = 'integer'
+        var.description = 'Age at assessment'
+        var.has_values = True
+
+        with VariableModel() as vm:
+            vm.save(var)
+
+        return var
 
     def prepare(self):
         df = self.load_df('ssc_age_at_assessment.csv')
@@ -230,7 +294,6 @@ class PrepareIndividualsAge(V14Loader):
                 pid = row['portalId']
                 person = pm.get("person_id = '{}'".format(pid))
                 person.age = int(row['age_at_assessment'])
-                person.site = row['site']
                 pm.save(person)
 
 
@@ -322,51 +385,3 @@ class PrepareNonverbalIQ(V15Loader):
     def prepare(self):
         self._prepare_nonverbal_iq()
         self._prepare_verbal_iq()
-
-
-class CheckIndividualsGenderToSSC(V15Loader):
-
-    def __init__(self, *args, **kwargs):
-        super(CheckIndividualsGenderToSSC, self).__init__(*args, **kwargs)
-
-    def _check_gender_to_ssc(self, df):
-        persons = {}
-        for _index, val in df.person_id.iteritems():
-            persons[val] = []
-
-        for st in self.get_all_ssc_studies():
-            print("processing study: {}".format(st.name))
-            for _fid, fam in st.families.items():
-                for p in fam.memberInOrder:
-                    if p.personId in persons:
-                        p.study = st.name
-                        persons[p.personId].append(p)
-
-        gender = {}
-        for pid, ps in persons.items():
-            assert len(ps) > 0
-            if len(ps) == 1:
-                gender[pid] = ps[0].gender
-            else:
-                check = [p.gender == ps[0].gender for p in ps]
-                if all(check):
-                    gender[pid] = ps[0].gender
-                else:
-                    print("\ngender mismatch for person: {}:".format(pid))
-                    for p in ps:
-                        print("\tstudy: {}; pid: {}; gender {}".format(
-                            p.study, p.personId, p.gender))
-
-            check = df[df.person_id == pid].gender == gender[pid]
-            if not np.all(check):
-                print("\ngender mismatch for person: {}".format(pid))
-                print("\tpheno db gender: {}".format(
-                    df[df.person_id == pid].gender.values))
-                for p in ps:
-                    print("\tstudy: {}; pid: {}; gender {}".format(
-                        p.study, p.personId, p.gender))
-
-    def check(self):
-        with PersonManager(config=self.config) as pm:
-            df = pm.load_df(where='ssc_present=1')
-            self._check_gender_to_ssc(df)
