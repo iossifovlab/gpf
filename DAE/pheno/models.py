@@ -161,13 +161,13 @@ class PersonModel(object):
     SCHEMA_CREATE = """
     BEGIN;
     CREATE TABLE IF NOT EXISTS person (
-        person_id varchar(32) NOT NULL PRIMARY KEY,
+        person_id varchar(16) NOT NULL PRIMARY KEY,
         family_id varchar(16) NOT NULL,
         role varchar(16) NOT NULL,
         role_id varchar(8) NOT NULL,
         role_order int NOT NULL,
         gender varchar(1) NULL,
-        collection varchar(64) NULL,
+        collection varchar(32) NULL,
         ssc_present bool NULL
     );
     COMMIT;
@@ -242,20 +242,20 @@ class VariableModel(object):
     SCHEMA_CREATE = """
     BEGIN;
     CREATE TABLE IF NOT EXISTS variable (
-        variable_id varchar(255) NOT NULL PRIMARY KEY,
+        variable_id varchar(128) NOT NULL PRIMARY KEY,
         table_name varchar(64) NOT NULL,
-        variable_name varchar(127) NOT NULL,
-        domain varchar(127) NOT NULL,
-        domain_choice_label varchar(255) NULL,
-        measurement_scale varchar(32) NOT NULL,
+        variable_name varchar(64) NOT NULL,
+        domain varchar(64) NOT NULL,
+        domain_choice_label text NULL,
+        measurement_scale varchar(16) NOT NULL,
         description text NULL,
         source varchar(64) NULL,
         domain_rank integer NULL,
         individuals integer NULL,
-        stats varchar(32) NULL,
+        stats varchar(16) NULL,
         min_value real NULL,
         max_value real NULL,
-        value_domain varchar(127) NULL
+        value_domain text NULL
     );
     COMMIT;
     """
@@ -373,10 +373,10 @@ class ValueModel(object):
     BEGIN;
 
     CREATE TABLE IF NOT EXISTS {table} (
-        person_id varchar(64) NOT NULL,
-        variable_id varchar(255) NOT NULL,
-        family_id varchar(64) NOT NULL,
-        person_role varchar(16) NOT NULL,
+        person_id varchar(16) NOT NULL,
+        variable_id varchar(128) NOT NULL,
+        family_id varchar(16) NOT NULL,
+        person_role varchar(8) NOT NULL,
         value {sql_type} NOT NULL,
         PRIMARY KEY (person_id, variable_id)
     );
@@ -522,7 +522,7 @@ class TextValueModel(ValueModel):
     TABLE = 'value_text'
     TYPE = str
     TYPE_NAME = 'text'
-    TYPE_SQL = 'varchar(255)'
+    TYPE_SQL = 'varchar(127)'
 
 
 class TextValueManager(ValueManager):
@@ -536,7 +536,7 @@ class RawValueModel(ValueModel):
     TABLE = 'value_raw'
     TYPE = str
     TYPE_NAME = 'text'
-    TYPE_SQL = 'varchar(255)'
+    TYPE_SQL = 'varchar(127)'
 
 
 class RawValueManager(ValueManager):
@@ -576,7 +576,7 @@ class CategoricalValueModel(ValueModel):
     TABLE = 'value_categorical'
     TYPE = str
     TYPE_NAME = 'text'
-    TYPE_SQL = 'varchar(255)'
+    TYPE_SQL = 'varchar(127)'
 
 
 class CategoricalValueManager(ValueManager):
