@@ -184,9 +184,9 @@ class PhenoDB(PhenoConfig):
         if person_ids:
             df = df[df.person_id.isin(person_ids)]
 
-        # self._rename_value_column(measure_id, df)
+        self._rename_value_column(measure_id, df)
 
-        return df[['person_id', 'value']]
+        return df[['person_id', measure_id]]
 
     def get_instrument_values(self, instrument_id, person_id):
         where = "person_id = '{}' and variable_id in " \
@@ -215,7 +215,7 @@ class PhenoDB(PhenoConfig):
         df = self.get_values_df(measure_id, person_ids, role)
         res = {}
         for _index, row in df.iterrows():
-            res[row['person_id']] = row['value']
+            res[row['person_id']] = row[measure_id]
         return res
 
     def get_instruments(self, person_id):
