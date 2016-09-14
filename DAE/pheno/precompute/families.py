@@ -8,6 +8,7 @@ import pandas as pd
 from pheno.models import PersonManager, PersonModel, RawValueManager,\
     ContinuousValueManager, ContinuousValueModel, VariableModel
 from pheno.utils.load_raw import V15Loader, V14Loader
+from pheno.precompute.values import PrepareRawValues
 
 
 class PrepareIndividuals(V15Loader):
@@ -264,96 +265,6 @@ class CheckIndividualsGenderToSSC(V15Loader):
         with PersonManager(config=self.config) as pm:
             df = pm.load_df(where='ssc_present=1')
             self._check_gender_to_ssc(df)
-
-
-class PreparePersonsAge(V14Loader):
-
-    def __init__(self, *args, **kwargs):
-        super(PreparePersonsAge, self).__init__(*args, **kwargs)
-
-    def prepare_person_age_variable(self):
-        var = VariableModel()
-        var.variable_id = 'pheno_common.age'
-        var.table_name = 'pheno_common'
-        var.variable_name = 'age'
-        var.domain = 'meta_t.integer'
-        var.domain_choice_label = None
-        var.measurement_scale = 'integer'
-        var.description = 'Age at assessment'
-        var.has_values = True
-
-        with VariableModel() as vm:
-            vm.save(var)
-
-        return var
-
-    def prepare(self):
-        df = self.load_df('ssc_age_at_assessment.csv')
-        with PersonManager(config=self.config) as pm:
-            for _index, row in df.iterrows():
-                pid = row['portalId']
-                person = pm.get("person_id = '{}'".format(pid))
-                person.age = int(row['age_at_assessment'])
-                pm.save(person)
-
-
-class PrepareIndividualsRace(V15Loader):
-
-    def __init__(self, *args, **kwargs):
-        super(PrepareIndividualsRace, self).__init__(*args, **kwargs)
-
-    def _prepare_probands_race(self):
-        with RawValueManager(config=self.config) as vm:
-            df = vm.load_df(
-                where="variable_id='{}'"
-                .format('ssc_core_descriptive.race'))
-        with PersonManager(config=self.config) as pm:
-            # print('setting race for {}'.format(row['person_id']))
-            for _index, row in df.iterrows():
-                person = pm.get(
-                    where="person_id='{}'".format(row['person_id']))
-                person.race = row['value']
-                pm.save(person)
-
-    def _prepare_parents_race(self):
-        with RawValueManager(config=self.config) as vm:
-            df = vm.load_df(
-                where="variable_id='{}'"
-                .format('ssc_commonly_used.race_parents'))
-        with PersonManager(config=self.config) as pm:
-            # print('setting race for {}'.format(row['person_id']))
-            for _index, row in df.iterrows():
-                person = pm.get("person_id='{}'".format(row['person_id']))
-                person.race = row['value']
-                pm.save(person)
-
-    def _prepare_siblings_race(self):
-        with PersonManager(config=self.config) as pm:
-            siblings = pm.load_df(where="role='sib'")
-            for _index, row in siblings.iterrows():
-                sib = PersonModel.create_from_df(row)
-                mom = pm.get(where="person_id='{}.mo'".format(sib.family_id))
-                dad = pm.get(where="person_id='{}.fa'".format(sib.family_id))
-                sib.race = PersonModel.calc_race(mom.race, dad.race)
-                pm.save(sib)
-
-    def _check_probands_race(self):
-        with PersonManager(config=self.config) as pm:
-            probands = pm.load_df(where="role='prb'")
-            for _index, row in probands.iterrows():
-                prb = PersonModel.create_from_df(row)
-                mom = pm.get(where="person_id='{}.mo'".format(prb.family_id))
-                dad = pm.get(where="person_id='{}.fa'".format(prb.family_id))
-                race = PersonModel.calc_race(mom.race, dad.race)
-                if prb.race != race:
-                    print("family: {}; prb: |{}|; mom: |{}|; dad: |{}|".format(
-                        prb.family_id, prb.race, mom.race, dad.race))
-
-    def prepare(self):
-        self._prepare_probands_race()
-        self._prepare_parents_race()
-        self._prepare_siblings_race()
-        self._check_probands_race()
 
 
 class PrepareNonverbalIQ(V15Loader):

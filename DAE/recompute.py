@@ -13,6 +13,8 @@ from pheno.precompute.families import PrepareIndividuals,\
 from pheno.precompute.variables import PrepareVariables
 from pheno.precompute.values import PrepareRawValues,\
     PrepareVariableDomainRanks, PrepareValueClassification
+from pheno.precompute.pheno_common import PreparePhenoCommonRace, \
+    PreparePhenoCommonAge
 
 LINE = "--------------------------------------------------------------------"
 
@@ -90,6 +92,19 @@ def classify_pheno_variables():
     print(LINE)
 
 
+def prepare_pheno_common():
+    print(LINE)
+    print("recomputing pheno common variables")
+    print(LINE)
+
+    p20 = PreparePhenoCommonAge()
+    p20.prepare()
+
+    p30 = PreparePhenoCommonRace()
+    p30.prepare()
+    print(LINE)
+
+
 def check_pheno_families_cache():
     print(LINE)
     print("checking pheno db caches")
@@ -111,6 +126,7 @@ CACHES = [
     'pheno_raw_values',
     'pheno_variables_ranks',
     'pheno_values',
+    'pheno_common',
 ]
 
 if __name__ == '__main__':
@@ -155,6 +171,10 @@ if __name__ == '__main__':
     if 'pheno_raw_values' in args.cache or 'all' in args.cache:
         if args.recompute:
             recompute_pheno_raw_values_cache()
+
+    if 'pheno_common' in args.cache or 'all' in args.cache:
+        if args.recompute:
+            prepare_pheno_common()
 
     if 'pheno_variables_ranks' in args.cache or 'all' in args.cache:
         if args.recompute:
