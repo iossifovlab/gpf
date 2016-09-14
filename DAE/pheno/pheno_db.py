@@ -167,7 +167,7 @@ class PhenoDB(PhenoConfig):
         names[names.index('value')] = measure_id
         df.columns = names
 
-    def get_values_df(self, measure_id, person_ids=None, role=None):
+    def get_measure_values_df(self, measure_id, person_ids=None, role=None):
         assert measure_id is not None
         value_type = self.get_measure_type(measure_id)
         if value_type is None:
@@ -187,6 +187,22 @@ class PhenoDB(PhenoConfig):
         self._rename_value_column(measure_id, df)
 
         return df[['person_id', measure_id]]
+
+    def get_values_df(self, measure_ids, person_ids=None, role=None):
+        assert isinstance(measure_ids, list)
+        assert len(measure_ids) >= 1
+        assert all([self.has_measure(m) for m in measure_ids])
+
+        dfs = [self.get_measure_values_df(m, person_ids, role)
+               for m in measure_ids]
+
+        res_df = dfs[0]
+        for i, df in enumerate(dfs[1:]):
+            df.set_index('person_id')
+            res_df = res_df.join(
+                df, on='person_id', rsuffix='_val_{}'.format(i))
+
+        return res_df
 
     def get_instrument_values(self, instrument_id, person_id):
         where = "person_id = '{}' and variable_id in " \
@@ -211,8 +227,8 @@ class PhenoDB(PhenoConfig):
 
         return res
 
-    def get_values(self, measure_id, person_ids=None, role=None):
-        df = self.get_values_df(measure_id, person_ids, role)
+    def get_measure_values(self, measure_id, person_ids=None, role=None):
+        df = self.get_measure_values_df(measure_id, person_ids, role)
         res = {}
         for _index, row in df.iterrows():
             res[row['person_id']] = row[measure_id]
