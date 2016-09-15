@@ -56,7 +56,7 @@ class PreparePhenoCommonRace(V15Loader):
         var.variable_id = 'pheno_common.race'
         var.table_name = 'pheno_common'
         var.variable_name = 'race'
-        var.domain = 'meta_t.text'
+        var.domain = 'meta.text_t'
         var.domain_choice_label = None
         var.measurement_scale = 'text'
         var.description = 'Race'
@@ -171,10 +171,10 @@ class PreparePhenoIQ(V15Loader):
         var.variable_id = 'pheno_common.non_verbal_iq'
         var.table_name = 'pheno_common'
         var.variable_name = 'non_verbal_iq'
-        var.domain = 'meta_t.float_t'
+        var.domain = 'meta.float_t'
         var.domain_choice_label = None
-        var.measurement_scale = 'integer'
-        var.description = 'Non verbal iq'
+        var.measurement_scale = 'float'
+        var.description = 'Non verbal IQ'
         var.has_values = True
 
         with VariableManager(config=self.config) as vm:
@@ -187,10 +187,10 @@ class PreparePhenoIQ(V15Loader):
         var.variable_id = 'pheno_common.verbal_iq'
         var.table_name = 'pheno_common'
         var.variable_name = 'verbal_iq'
-        var.domain = 'meta.integer_t'
+        var.domain = 'meta.float_t'
         var.domain_choice_label = None
-        var.measurement_scale = 'integer'
-        var.description = 'Verbal iq'
+        var.measurement_scale = 'float'
+        var.description = 'Verbal IQ'
         var.has_values = True
 
         with VariableManager(config=self.config) as vm:

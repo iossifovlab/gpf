@@ -247,7 +247,7 @@ class PrepareValueClassification(PhenoConfig):
             variable.domain_choice_label)
         rank = len(values.unique())
         individuals = len(values)
-
+        print((dtype, ddomain, rank, individuals, variable.domain))
         if not (dtype == self.CONTINUOUS or dtype == self.RANGE):
             return False
 
@@ -264,7 +264,7 @@ class PrepareValueClassification(PhenoConfig):
 
         if individuals < int(self[self.CONTINUOUS, 'min_individuals']):
             return False
-
+        print("returning CONTINUOUS")
         return True
 
     def check_ordinal(self, variable, values):
@@ -313,13 +313,12 @@ class PrepareValueClassification(PhenoConfig):
             if len(df) == 0:
                 return self.UNKNOWN
             variable = VariableModel.create_from_df(df.loc[0])
-        print(variable)
         with RawValueManager(config=self.config) as vm:
             df = vm.load_values(variable)
-            print(len(df))
             if len(df) == 0:
                 return self.UNKNOWN
             if self.check_continuous(variable, df.value):
+                print("returning continuous")
                 return self.CONTINUOUS
             elif self.check_ordinal(variable, df.value):
                 return self.ORDINAL
