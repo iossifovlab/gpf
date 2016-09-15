@@ -198,8 +198,6 @@ class PhenoDB(PhenoConfig):
     def get_values_df(self, measure_ids, person_ids=None, role=None):
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
-        print(measure_ids)
-        print([self.has_measure(m) for m in measure_ids])
         assert all([self.has_measure(m) for m in measure_ids])
 
         dfs = [self.get_measure_values_df(m, person_ids, role)
