@@ -12,7 +12,7 @@ class Test(APITestCase):
     def test_families_counter_view_with_pheno_measure(self):
         url = "/api/v2/ssc_dataset_families/counter"
         data = {
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 24,
         }
@@ -31,7 +31,7 @@ class Test(APITestCase):
     def test_families_counter_view_combined_filter(self):
         url = "/api/v2/ssc_dataset_families/counter"
         data = {
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 24,
             'familyQuadTrio': 'quad',

@@ -12,8 +12,8 @@ class Test(APITestCase):
     def test_families_counter_view_with_pheno_measure(self):
         url = "/api/v2/ssc_pheno_families/counter"
         data = {
-            'phenoMeasure': 'non_verbal_iq',
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 24,
         }
@@ -32,7 +32,7 @@ class Test(APITestCase):
     def test_family_counters_ivans_test_case(self):
         url = "/api/v2/ssc_pheno_families/counter"
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
             "familyRace": "All",
             "familyPhenoMeasure": "ssc_commonly_used.vabs_ii_motor_skills",
             "familyPhenoMeasureMin": 0,

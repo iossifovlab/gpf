@@ -15,7 +15,7 @@ class SSCFiltersTest(unittest.TestCase):
 
     def test_prepare_family_pheno_measure(self):
         data = {
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 9,
             'familyPhenoMeasureMax': 15,
         }
@@ -26,7 +26,7 @@ class SSCFiltersTest(unittest.TestCase):
 
     def test_prepare_family_pheno_measure_with_family_ids(self):
         data = {
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 9,
             'familyPhenoMeasureMax': 15,
             'familyIds': '14525,13830',
@@ -46,7 +46,7 @@ class SSCFiltersTest(unittest.TestCase):
 
     def test_prepare_family_race_all(self):
         data = {
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 5,
             'familyPhenoMeasureMax': 200,
             'familyRace': 'all',
@@ -57,7 +57,7 @@ class SSCFiltersTest(unittest.TestCase):
 
     def test_prepare_study_type_all(self):
         data = {
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 5,
             'familyPhenoMeasureMax': 200,
             'familyStudyType': 'ALL',

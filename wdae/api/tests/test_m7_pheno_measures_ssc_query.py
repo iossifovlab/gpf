@@ -58,7 +58,7 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'familyPhenoMeasure': "verbal_iq",
+            'familyPhenoMeasure': "pheno_common.verbal_iq",
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 50,
         }
@@ -82,7 +82,7 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'familyPhenoMeasure': "verbal_iq",
+            'familyPhenoMeasure': "pheno_common.verbal_iq",
             'familyPhenoMeasureMin': 49,
             'familyPhenoMeasureMax': 50,
         }
@@ -106,7 +106,7 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'familyPhenoMeasure': 'verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.verbal_iq',
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 50,
         }
@@ -131,7 +131,7 @@ class Test(APITestCase):
             'variantTypes': 'CNV,del,ins,sub',
             'presentInParent': 'neither',
             'transmittedStudies': 'w1202s766e611',
-            'familyPhenoMeasure': 'verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.verbal_iq',
             'familyPhenoMeasureMin': 49,
             'familyPhenoMeasureMax': 50,
         }

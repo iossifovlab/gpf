@@ -15,7 +15,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
 
     def test_prepare_base_pheno_measure(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
         }
 
         probands = self.pheno_family_base.prepare_probands(data)
@@ -23,8 +23,8 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
 
     def test_prepare_family_pheno_measure(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 9,
             'familyPhenoMeasureMax': 15,
         }
@@ -35,8 +35,8 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
 
     def test_prepare_family_pheno_measure_with_family_ids(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 9,
             'familyPhenoMeasureMax': 15,
             'familyIds': '14525,13830',
@@ -48,7 +48,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
 
     def test_prepare_family_race(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
             'familyRace': 'other',
         }
 
@@ -57,7 +57,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
 
     def test_prepare_family_race_all(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
             'familyRace': 'all',
         }
 
@@ -66,7 +66,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
 
     def test_prepare_study_type_all(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
             'familyStudyType': 'ALL',
         }
 
@@ -75,7 +75,7 @@ class PhenoMeasureFiltersTest(unittest.TestCase):
 
     def test_prepare_study_type_cnv(self):
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
             'familyStudyType': 'CNV',
         }
 
@@ -92,7 +92,7 @@ class PhenoFamilyCountersViewTestCase(unittest.TestCase):
     def test_prepare_check(self):
 
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
             'familyStudyType': 'CNV',
         }
 
