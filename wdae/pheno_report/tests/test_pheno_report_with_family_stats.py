@@ -21,7 +21,7 @@ class Test(APITestCase):
         url = "/api/v2/pheno_reports"
 
         data = {
-            u'phenoMeasure': u'non_verbal_iq',
+            u'phenoMeasure': u'pheno_common.non_verbal_iq',
             u'denovoStudies': u'ALL SSC',
             u'effectTypeGroups': u'LGDs',
             u'presentInParent': u'neither',
@@ -33,7 +33,7 @@ class Test(APITestCase):
 
         url = "/api/v2/ssc_pheno_families/counter"
         data = {
-            'phenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)

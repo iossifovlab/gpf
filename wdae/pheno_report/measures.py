@@ -13,7 +13,7 @@ from preloaded.register import Preload
 # from helpers.pvalue import colormap_value
 import precompute
 import itertools
-from pheno.models import VariableManager, PersonManager, ContinuousValueManager
+from pheno.models import VariableManager, PersonManager
 from pheno.pheno_db import PhenoDB
 
 

@@ -11,14 +11,15 @@ class Test(APITestCase):
     def test_gene_weights_partitions(self):
         url = "/api/v2/pheno_reports/measure_partitions"
         data = {
-            "measure": "non_verbal_iq",
+            "measure": "pheno_common.non_verbal_iq",
             "min": 9,
             "max": 40,
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
         self.assertIn('measure',  response.data)
-        self.assertEqual('non_verbal_iq', response.data['measure'])
+        self.assertEqual(
+            'pheno_common.non_verbal_iq', response.data['measure'])
 
         self.assertIn('left', response.data)
         left = response.data['left']

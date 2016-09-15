@@ -31,8 +31,10 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
         self.assertIn('measure', response.data)
-        self.assertEqual('head_circumference', response.data['measure'])
-        self.assertEqual('head_circumference', response.data['formula'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference', response.data['measure'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference', response.data['formula'])
 
         data = response.data['data']
         self.assertEqual(310, self.pos_count('LGDs', data))
@@ -40,14 +42,15 @@ class Test(APITestCase):
 
     def test_family_pheno_filter_families_count(self):
         measures = preloaded.register.get_register().get('pheno_measures')
-        families = measures.get_measure_families('non_verbal_iq', 0, 40)
+        families = measures.get_measure_families(
+            'pheno_common.non_verbal_iq', 0, 40)
         self.assertEquals(224, len(families))
 
     def test_pheno_with_family_pheno_filter(self):
         url = "/api/v2/pheno_reports"
         data = {
             'phenoMeasure': 'ssc_commonly_used.head_circumference',
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 40,
 
@@ -55,8 +58,10 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
         self.assertIn('measure', response.data)
-        self.assertEqual('head_circumference', response.data['measure'])
-        self.assertEqual('head_circumference', response.data['formula'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference', response.data['measure'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference', response.data['formula'])
 
         data = response.data['data']
         self.assertEqual(28, self.pos_count('LGDs', data))

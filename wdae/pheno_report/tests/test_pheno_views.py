@@ -24,8 +24,10 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
         self.assertIn('measure', response.data)
-        self.assertEqual('head_circumference', response.data['measure'])
-        self.assertEqual('head_circumference', response.data['formula'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference', response.data['measure'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference', response.data['formula'])
 
     def test_report_normalized_by_age(self):
         url = "/api/v2/pheno_reports"
@@ -37,8 +39,11 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
         self.assertIn('measure', response.data)
-        self.assertEqual('head_circumference', response.data['measure'])
-        self.assertEqual('head_circumference ~ age', response.data['formula'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference', response.data['measure'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference ~ pheno_common.age',
+            response.data['formula'])
 
     def test_report_without_normalized_by_age(self):
         url = "/api/v2/pheno_reports"
@@ -50,8 +55,10 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
         self.assertIn('measure', response.data)
-        self.assertEqual('head_circumference', response.data['measure'])
-        self.assertEqual('head_circumference', response.data['formula'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference', response.data['measure'])
+        self.assertEqual(
+            'ssc_commonly_used.head_circumference', response.data['formula'])
 
     def test_download_view(self):
         url = "/api/v2/pheno_reports/download"
@@ -72,7 +79,7 @@ class PhenoMeasuresTest(APITestCase):
         url = "/api/v2/pheno_reports/measures"
         response = self.client.get(url, format='json')
         self.assertEqual(200, response.status_code)
-        self.assertEqual(523, len(response.data))
+        self.assertEqual(526, len(response.data))
 
 if __name__ == "__main__":
     unittest.main()

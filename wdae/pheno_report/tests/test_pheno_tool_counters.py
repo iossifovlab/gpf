@@ -12,7 +12,7 @@ class Test(unittest.TestCase):
     def test_pheno_with_family_pheno_filter(self):
         data = {
             'phenoMeasure': 'ssc_commonly_used.head_circumference',
-            'familyPhenoMeasure': 'non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.non_verbal_iq',
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 40,
             'effectTypeGroups': 'LGDs',
@@ -38,7 +38,7 @@ class Test(unittest.TestCase):
 class CountersTest(unittest.TestCase):
     DATA = [
         {
-            u'phenoMeasure': u'non_verbal_iq',
+            u'phenoMeasure': u'pheno_common.non_verbal_iq',
             u'denovoStudies': u'ALL SSC',
             u'effectTypeGroups': u'LGDs',
             u'presentInParent': u'neither',
@@ -70,8 +70,8 @@ class CountersTest(unittest.TestCase):
             'presentInParent': "neither",
             'effectTypeGroups': 'missense',
 
-            'phenoMeasure': 'non_verbal_iq',
-            'familyPhenoMeasure': 'verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
+            'familyPhenoMeasure': 'pheno_common.verbal_iq',
             'familyPhenoMeasureMin': 0,
             'familyPhenoMeasureMax': 50,
 
@@ -81,7 +81,7 @@ class CountersTest(unittest.TestCase):
             'presentInParent': "neither",
             'effectTypeGroups': 'missense',
 
-            'phenoMeasure': 'non_verbal_iq',
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
             'familyRace': 'other',
             'familyStudyType': 'CNV',
         },

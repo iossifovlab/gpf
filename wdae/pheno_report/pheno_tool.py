@@ -41,18 +41,22 @@ class PhenoTool(object):
     def _build_table_header(self):
         columns = ['family_id', 'person_id', 'gender', ]
         columns.extend(self.effect_type_groups)
-        columns.extend(
-            [self.nm.measure_name, 'age', 'non_verbal_iq', self.nm.formula])
+        columns.extend([
+            self.nm.measure_id,
+            'pheno_common.age',
+            'pheno_common.non_verbal_iq',
+            self.nm.formula
+        ])
         return tuple(columns)
 
     def _build_table_row(self, person_id, gender):
         family_id = pheno_filter.FamilyFilter.strip_proband_id(person_id)
         vals = self.nm.df[self.nm.df.person_id == person_id]
         if len(vals) == 1:
-            m = vals[self.nm.measure_name].values[0]
+            m = vals[self.nm.measure_id].values[0]
             v = vals.normalized.values[0]
-            a = vals['age'].values[0]
-            nviq = vals['non_verbal_iq'].values[0]
+            a = vals['pheno_common.age'].values[0]
+            nviq = vals['pheno_common.non_verbal_iq'].values[0]
         else:
             m = np.NaN
             v = np.NaN

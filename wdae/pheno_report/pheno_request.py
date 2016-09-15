@@ -53,11 +53,11 @@ class Request(PhenoFamilyBase):
 
         res = []
         if 'normByAge' in norm_by:
-            res.append('age')
+            res.append('pheno_common.age')
         if 'normByVIQ' in norm_by:
-            res.append('verbal_iq')
+            res.append('pheno_common.verbal_iq')
         if 'normByNVIQ' in norm_by:
-            res.append('non_verbal_iq')
+            res.append('pheno_common.non_verbal_iq')
         return res
 
     def _prepare_pheno_measure(self):
