@@ -41,10 +41,14 @@ class Test(unittest.TestCase):
         self.assertIn('person_id', header)
         self.assertIn('gender', header)
         self.assertIn('LGDs', header)
-        self.assertIn('head_circumference', header)
-        self.assertIn('non_verbal_iq', header)
-        self.assertIn('age', header)
-        self.assertIn('head_circumference ~ age', header)
+        self.assertIn(
+            'ssc_commonly_used.head_circumference', header)
+        self.assertIn(
+            'pheno_common.non_verbal_iq', header)
+        self.assertIn(
+            'pheno_common.age', header)
+        self.assertIn(
+            'ssc_commonly_used.head_circumference ~ pheno_common.age', header)
 
     def test_table_first_row(self):
         gen = self.tool.build_data_table()
