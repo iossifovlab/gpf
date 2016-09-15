@@ -106,10 +106,10 @@ class FamilyIdsByPhenoMeasure(unittest.TestCase):
         for family_id in family_ids:
             self.assertTrue(
                 all(df[df['family_id'] == family_id][
-                    'head_circumference'].values <= 50))
+                    'ssc_commonly_used.head_circumference'].values <= 50))
             self.assertTrue(
                 all(df[df['family_id'] == family_id][
-                    'head_circumference'].values >= 49))
+                    'ssc_commonly_used.head_circumference'].values >= 49))
 
 
 class PhenoMeasureRowCount(unittest.TestCase):

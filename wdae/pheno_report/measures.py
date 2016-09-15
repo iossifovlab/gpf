@@ -177,10 +177,9 @@ class Measures(Preload):
 
         return res_df
 
-    def _select_measure_df(self, measure, mmin, mmax):
-        df = self.get_measure_df(measure)
-        _instrument, measure_name = self.split_measure_name(measure)
-        m = df[measure_name]
+    def _select_measure_df(self, measure_id, mmin, mmax):
+        df = self.get_measure_df(measure_id)
+        m = df[measure_id]
         selected = None
         if mmin is not None and mmax is not None:
             selected = df[np.logical_and(m >= mmin, m <= mmax)]
