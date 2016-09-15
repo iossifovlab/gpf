@@ -60,6 +60,21 @@ class Test(APITestCase):
         self.assertEqual(
             'ssc_commonly_used.head_circumference', response.data['formula'])
 
+    def test_report_nviq_normalized_by_nviq(self):
+        url = "/api/v2/pheno_reports"
+        data = {
+            u'phenoMeasure': u'pheno_common.non_verbal_iq',
+            u'denovoStudies': u'ALL SSC',
+            u'families': u'All',
+            u'gene_set_phenotype': u'autism',
+            u'normalizedBy': u'normByNVIQ',
+            u'genes': u'All',
+            u'effectTypeGroups': u'LGDs,Missense,Synonymous,CNV',
+            u'presentInParent': u'neither'
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+
     def test_download_view(self):
         url = "/api/v2/pheno_reports/download"
         data = {

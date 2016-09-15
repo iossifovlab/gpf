@@ -36,12 +36,17 @@ class PhenoViewBase(views.APIView, PhenoFamilyBase):
 
         try:
             req = pheno_request.Request(request.data)
+            print("request created")
             tool = pheno_tool.PhenoTool(req)
-
+            print("tool created")
             response = self.build_response(tool)
+            print("response created")
             return response
 
-        except ValueError:
+        except ValueError as ex:
+            LOGGER.error("problem processing pheno report: {}".format(ex))
+            import traceback
+            traceback.print_exc()
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 

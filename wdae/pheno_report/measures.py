@@ -256,13 +256,15 @@ class NormalizedMeasure(object):
     def _rename_forward(self, df, mapping):
         names = df.columns.tolist()
         for n, f in mapping:
-            names[names.index(n)] = f
+            if n in names:
+                names[names.index(n)] = f
         df.columns = names
 
     def _rename_backward(self, df, mapping):
         names = df.columns.tolist()
         for n, f in mapping:
-            names[names.index(f)] = n
+            if f in names:
+                names[names.index(f)] = n
         df.columns = names
 
     def normalize(self, by=[]):
@@ -280,11 +282,14 @@ class NormalizedMeasure(object):
         else:
             self.formula = '{} ~ {}'.format(self.measure_id, ' + '.join(by))
 
-            variables = [(b, 'X_{}'.format(i)) for (i, b) in enumerate(by)]
+            variables = [
+                (b, 'X_{}'.format(i)) if b != self.measure_id else (b, 'R')
+                for (i, b) in enumerate(by)]
             mapping = [(self.measure_id, 'R')]
             mapping.extend(variables)
+            formula = "R ~ {}".format(
+                ' + '.join([f for (_n, f) in variables]))
 
-            formula = "R ~ {}".format(' + '.join([f for (_n, f) in variables]))
             print(mapping)
             self._rename_forward(self.df, mapping)
             model = sm.ols(formula=formula,
