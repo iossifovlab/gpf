@@ -240,35 +240,59 @@ class Measures(Preload):
 
 class NormalizedMeasure(object):
 
-    def __init__(self, measure):
+    def __init__(self, measure_id):
+
         from preloaded.register import get_register
-        self.instrument, self.measure_name = \
-            Measures.split_measure_id(measure)
+        self.measure_id = measure_id
         register = get_register()
         measures = register.get('pheno_measures')
-        if not measures.has_measure(measure):
-            raise ValueError("unknown phenotype measure")
 
-        self.df = measures.get_measure_df(measure)
+        if not measures.has_measure(measure_id):
+            raise ValueError(
+                "unknown phenotype measure: {}".format(measure_id))
+
+        self.df = measures.get_measure_df(measure_id)
         self.by = []
+
+    def _rename_forward(self, df, mapping):
+        names = df.columns.tolist()
+        for n, f in mapping:
+            names[names.index(n)] = f
+        df.columns = names
+
+    def _rename_backward(self, df, mapping):
+        names = df.columns.tolist()
+        for n, f in mapping:
+            names[names.index(f)] = n
+        df.columns = names
 
     def normalize(self, by=[]):
         assert isinstance(by, list)
-        assert all(map(lambda b: b in ['age', 'verbal_iq', 'non_verbal_iq'],
-                       by))
+        assert all(map(lambda b: b in [
+            'pheno_common.age', 'pheno_common.non_verbal_iq'], by))
         self.by = by
 
         if not by:
             dn = pd.Series(
-                index=self.df.index, data=self.df[self.measure_name].values)
+                index=self.df.index, data=self.df[self.measure_id].values)
             self.df['normalized'] = dn
-            self.formula = self.measure_name
+            self.formula = self.measure_id
 
         else:
-            self.formula = '{} ~ {}'.format(self.measure_name, ' + '.join(by))
-            model = sm.ols(formula=self.formula,
+            self.formula = '{} ~ {}'.format(self.measure_id, ' + '.join(by))
+
+            variables = [(b, 'X_{}'.format(i)) for (i, b) in enumerate(by)]
+            mapping = [(self.measure_id, 'R')]
+            mapping.extend(variables)
+
+            formula = "R ~ {}".format(' + '.join([f for (_n, f) in variables]))
+            print(mapping)
+            self._rename_forward(self.df, mapping)
+            model = sm.ols(formula=formula,
                            data=self.df)
             fitted = model.fit()
+            self._rename_backward(self.df, mapping)
+
             dn = pd.Series(index=self.df.index, data=fitted.resid)
             self.df['normalized'] = dn
             return self.df

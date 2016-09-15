@@ -134,6 +134,9 @@ class PhenoDB(PhenoConfig):
         self._load_families()
         self._load_instruments()
 
+    def get_persons_df(self, person_ids=None, role=None):
+        pass
+
     def get_measure_type(self, measure_id):
         with VariableManager() as vm:
             variable = vm.get(

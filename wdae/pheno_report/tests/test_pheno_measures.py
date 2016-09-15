@@ -28,12 +28,13 @@ class HeadCircumferenceTest(unittest.TestCase):
 
     def test_pheno_measure_normalize_by_age(self):
         measure = self.measure
-        fitted = measure.normalize(['age'])
+        fitted = measure.normalize(['pheno_common.age'])
         self.assertIsNotNone(fitted)
 
     def test_pheno_measure_normalize_by_couple(self):
         measure = self.measure
-        fitted = measure.normalize(['age', 'verbal_iq'])
+        fitted = measure.normalize(
+            ['pheno_common.age', 'pheno_common.non_verbal_iq'])
         self.assertIsNotNone(fitted)
 
     def test_pheno_measure_normalize_by_single_wrong_value(self):
@@ -50,7 +51,7 @@ class HeadCircumferenceTest(unittest.TestCase):
 class VerbalIqTest(unittest.TestCase):
 
     def setUp(self):
-        self.measure = NormalizedMeasure('verbal_iq')
+        self.measure = NormalizedMeasure('pheno_common.verbal_iq')
 
     def test_pheno_measure_created(self):
         measure = self.measure
@@ -60,18 +61,18 @@ class VerbalIqTest(unittest.TestCase):
         measure = self.measure
         df = measure.df
         self.assertIn('family_id', df.columns)
-        self.assertIn('age', df.columns)
-        self.assertIn('non_verbal_iq', df.columns)
-        self.assertIn('verbal_iq', df.columns)
+        self.assertIn('pheno_common.age', df.columns)
+        self.assertIn('pheno_common.non_verbal_iq', df.columns)
+        self.assertIn('pheno_common.verbal_iq', df.columns)
 
     def test_pheno_measure_normalize_by_verbal_iq(self):
         measure = self.measure
-        measure.normalize(['verbal_iq'])
+        measure.normalize(['pheno_common.non_verbal_iq'])
         df = measure.df
         self.assertIn('family_id', df.columns)
-        self.assertIn('age', df.columns)
-        self.assertIn('non_verbal_iq', df.columns)
-        self.assertIn('verbal_iq', df.columns)
+        self.assertIn('pheno_common.age', df.columns)
+        self.assertIn('pheno_common.non_verbal_iq', df.columns)
+        self.assertIn('pheno_common.verbal_iq', df.columns)
 
 
 class FamilyIdsByPhenoMeasure(unittest.TestCase):
@@ -120,7 +121,7 @@ class PhenoMeasureRowCount(unittest.TestCase):
         cls.measures.load()
 
     def test_verbal_iq_count(self):
-        df = self.measures.get_measure_df('verbal_iq')
+        df = self.measures.get_measure_df('pheno_common.verbal_iq')
         self.assertEquals(2757, len(df))
 
     def test_head_circumference(self):
