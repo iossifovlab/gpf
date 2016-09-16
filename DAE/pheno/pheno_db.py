@@ -74,6 +74,14 @@ class PhenoDB(PhenoConfig):
         else:
             return val
 
+    @staticmethod
+    def _rename_forward(df, mapping):
+        names = df.columns.tolist()
+        for n, f in mapping:
+            if n in names:
+                names[names.index(n)] = f
+        df.columns = names
+
     def get_measures_df(self, instrument=None, stats=None):
         assert instrument is None or instrument in self.instruments
         assert stats is None or \
@@ -130,33 +138,11 @@ class PhenoDB(PhenoConfig):
         self.instruments = instruments
 
     def _load_families(self):
-        persons = {}
         families = defaultdict(list)
+        persons = self.get_persons()
 
-        with PersonManager(config=self.config) as pm:
-            df = pm.load_df(where="ssc_present=1")
-            try:
-                df.sort_values(['family_id', 'role_order'], inplace=True)
-            except AttributeError:
-                df = df.sort(['family_id', 'role_order'])
-
-            for _index, row in df.iterrows():
-                person_id = row['person_id']
-                family_id = row['family_id']
-
-                atts = {
-                    'family_id': family_id,
-                    'person_id': person_id,
-                    'role': row['role'],
-                    'gender': row['gender'],
-                }
-                p = Person(atts)
-                p.personId = person_id
-                p.role = atts['role']
-                p.gender = atts['gender']
-
-                persons[person_id] = p
-                families[family_id].append(p)
+        for p in persons.values():
+            families[p.atts['family_id']].append(p)
 
         self.persons = persons
         self.families = {}
@@ -171,19 +157,40 @@ class PhenoDB(PhenoConfig):
         self._load_families()
         self._load_instruments()
 
-    @staticmethod
-    def _rename_forward(df, mapping):
-        names = df.columns.tolist()
-        for n, f in mapping:
-            if n in names:
-                names[names.index(n)] = f
-        df.columns = names
+    def get_persons_df(self, role=None):
+        where = ["ssc_present=1"]
+        if role:
+            where.append("role='{}'".format(role))
+        with PersonManager() as pm:
+            df = pm.load_df(where=' and '.join(where))
+            try:
+                df.sort_values(['family_id', 'role_order'], inplace=True)
+            except AttributeError:
+                df = df.sort(['family_id', 'role_order'])
 
-    def get_persons_df(self, person_ids=None, role=None):
-        pass
+        return df[['person_id', 'family_id', 'role', 'gender']]
 
-    def get_persons(self, person_ids=None, role=None):
-        pass
+    def get_persons(self, role=None):
+        persons = OrderedDict()
+        df = self.get_persons_df(role)
+
+        for _index, row in df.iterrows():
+            person_id = row['person_id']
+            family_id = row['family_id']
+
+            atts = {
+                'family_id': family_id,
+                'person_id': person_id,
+                'role': row['role'],
+                'gender': row['gender'],
+            }
+            p = Person(atts)
+            p.personId = person_id
+            p.role = atts['role']
+            p.gender = atts['gender']
+
+            persons[person_id] = p
+        return persons
 
     def get_measure_type(self, measure_id):
         with VariableManager() as vm:
@@ -320,11 +327,3 @@ class PhenoDB(PhenoConfig):
                 where="variable_id='{}' and not stats isnull"
                 .format(measure_id))
         return variable is not None
-
-    def _get_person_df(self, role):
-        where = ["ssc_present=1"]
-        if role:
-            where.append("role='{}'".format(role))
-        with PersonManager() as pm:
-            persons_df = pm.load_df(where=' and '.join(where))
-        return persons_df

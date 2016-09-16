@@ -107,7 +107,7 @@ class Measures(Preload):
     def load_desc(self):
         d = {}
         measures = self.phdb.get_measures(stats='continuous')
-        for m in measures:
+        for m in measures.values():
             print("loading measure: {}".format(m.measure_id))
             d[m.measure_id] = {
                 'measure': m.measure_id,
@@ -163,8 +163,7 @@ class Measures(Preload):
         if not self.has_measure(measure_id):
             raise ValueError("unsupported phenotype measure")
 
-        with PersonManager() as pm:
-            persons_df = pm.load_df(where="role='prb' and ssc_present=1")
+        persons_df = self.phdb.get_persons_df(role='prb')
 
         value_df = self.phdb.get_values_df(
             ['pheno_common.age', 'pheno_common.non_verbal_iq', measure_id],
