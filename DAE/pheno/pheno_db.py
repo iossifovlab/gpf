@@ -28,6 +28,7 @@ class Measure(object):
 
     def __init__(self, name):
         self.name = name
+        self.measure_name = name
 
     def __repr__(self):
         return "Measure({}, {}, {})".format(
@@ -37,15 +38,15 @@ class Measure(object):
     def from_df(row):
         assert row['stats'] is not None
 
-        m = Measure(row['variable_name'])
-        m.measure_id = row['variable_id']
-        m.instrument_name = row['table_name']
+        m = Measure(row['measure_name'])
+        m.measure_id = row['measure_id']
+        m.instrument_name = row['instrument_name']
         m.type = row['stats']
         m.stats = row['stats']
         m.description = row['description']
         m.min_value = None
         m.max_value = None
-        if m.type == 'continuous' or m.type == 'ordinal':
+        if m.stats == 'continuous' or m.stats == 'ordinal':
             m.min_value = row['min_value']
             m.max_value = row['max_value']
             assert m.max_value >= m.min_value
@@ -73,22 +74,58 @@ class PhenoDB(PhenoConfig):
         else:
             return val
 
+    def get_measures_df(self, instrument=None, stats=None):
+        assert instrument is None or instrument in self.instruments
+        assert stats is None or \
+            stats in set(['continuous', 'ordinal', 'categorical'])
+
+        clauses = ["not stats isnull"]
+        if instrument is not None:
+            clauses.append("table_name = '{}'".format(instrument))
+        if stats is not None:
+            clauses.append("stats='{}'".format(stats))
+
+        with VariableManager() as vm:
+            df = vm.load_df(
+                where=' and '.join(['( {} )'.format(c) for c in clauses]))
+
+        res_df = df[[
+            'variable_id', 'variable_name', 'table_name',
+            'description', 'individuals', 'stats',
+            'min_value', 'max_value', 'value_domain'
+        ]]
+        mapping = [
+            ('variable_id', 'measure_id'),
+            ('variable_name', 'measure_name'),
+            ('table_name', 'instrument_name'),
+        ]
+        self._rename_forward(res_df, mapping)
+        return res_df
+
+    def get_measures(self, instrument=None, stats=None):
+        df = self.get_measures_df(instrument, stats)
+        res = OrderedDict()
+        for _index, row in df.iterrows():
+            m = Measure.from_df(row)
+            res[m.measure_id] = m
+        return res
+
     def _load_instruments(self):
         instruments = OrderedDict()
-        with VariableManager(config=self.config) as vm:
-            df = vm.load_df(where="not (stats isnull)")
-            table_names = df.table_name.unique()
 
-            for table_name in table_names:
-                instrument = Instrument(table_name)
-                measures = OrderedDict()
-                measures_df = df[df.table_name == table_name]
-                for _index, row in measures_df.iterrows():
-                    m = Measure.from_df(row)
-                    m.instrument = instrument
-                    measures[m.name] = m
-                instrument.measures = measures
-                instruments[instrument.name] = instrument
+        df = self.get_measures_df()
+        instrument_names = df.instrument_name.unique()
+
+        for instrument_name in instrument_names:
+            instrument = Instrument(instrument_name)
+            measures = OrderedDict()
+            measures_df = df[df.instrument_name == instrument_name]
+            for _index, row in measures_df.iterrows():
+                m = Measure.from_df(row)
+                m.instrument = instrument
+                measures[m.name] = m
+            instrument.measures = measures
+            instruments[instrument.name] = instrument
 
         self.instruments = instruments
 
@@ -134,7 +171,18 @@ class PhenoDB(PhenoConfig):
         self._load_families()
         self._load_instruments()
 
+    @staticmethod
+    def _rename_forward(df, mapping):
+        names = df.columns.tolist()
+        for n, f in mapping:
+            if n in names:
+                names[names.index(n)] = f
+        df.columns = names
+
     def get_persons_df(self, person_ids=None, role=None):
+        pass
+
+    def get_persons(self, person_ids=None, role=None):
         pass
 
     def get_measure_type(self, measure_id):
