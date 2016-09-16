@@ -13,7 +13,7 @@ from preloaded.register import Preload
 # from helpers.pvalue import colormap_value
 import precompute
 import itertools
-from pheno.models import VariableManager, PersonManager
+from pheno.models import PersonManager
 from pheno.pheno_db import PhenoDB
 
 
@@ -105,18 +105,17 @@ class Measures(Preload):
 #         return result
 
     def load_desc(self):
-        with VariableManager() as vm:
-            variables = vm.load(where="stats='continuous'")
         d = {}
-        for v in variables:
-            print("loading measure: {}".format(v.variable_id))
-            d[v.variable_id] = {
-                'measure': v.variable_id,
-                'instrument': v.table_name,
-                'measure_name': v.variable_name,
+        measures = self.phdb.get_measures(stats='continuous')
+        for m in measures:
+            print("loading measure: {}".format(m.measure_id))
+            d[m.measure_id] = {
+                'measure': m.measure_id,
+                'instrument': m.instrument_name,
+                'measure_name': m.measure_name,
                 'desc': None,  # v.description.decode('utf-8'),
-                'min': v.min_value,
-                'max': v.max_value,
+                'min': m.min_value,
+                'max': m.max_value,
             }
         return d
 
