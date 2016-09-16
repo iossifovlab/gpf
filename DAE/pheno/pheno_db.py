@@ -269,6 +269,19 @@ class PhenoDB(PhenoConfig):
 
         return res_df
 
+    def get_persons_values_df(self, measure_ids, person_ids=None, role=None):
+        persons_df = self.get_persons_df(role='prb')
+
+        value_df = self.get_values_df(
+            measure_ids,
+            role='prb')
+
+        df = persons_df.join(
+            value_df.set_index('person_id'), on='person_id', rsuffix='_val')
+        res_df = df.dropna()
+
+        return res_df
+
     def _values_df_to_dict(self, measure_ids, df):
         res = {}
         for _index, row in df.iterrows():
