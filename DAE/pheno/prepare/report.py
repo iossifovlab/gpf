@@ -5,7 +5,6 @@ Created on Sep 17, 2016
 '''
 
 import numpy as np
-import pylab as pl
 import pandas as pd
 import matplotlib.pyplot as plt
 from pheno.pheno_db import PhenoDB
@@ -33,8 +32,11 @@ class PhenoReport(object):
 
     def __init__(self, args):
         self.args = args
-        self.outfile = "pheno_report.rst"
+        self.outfile = "source/index.rst"
         self.outpath = os.path.join(self.args.output, self.outfile)
+
+        self.phdb = PhenoDB()
+        self.phdb.load()
 
     def measure_gender_boxplots(self, m, df):
         data = [
@@ -49,14 +51,17 @@ class PhenoReport(object):
         ]
         plt.boxplot(data, labels=labels, showmeans=True)
 
-    def savefig(self, measure, suffix, dpi=120):
+    def save_fig(self, measure, suffix, dpi=120):
         filename = "{}.{}.png".format(
             measure.measure_id, suffix)
-        filepath = os.path.join(self.args.output, 'figs', filename)
+        linkpath = os.path.join('figs', filename)
+        filepath = os.path.join(self.args.output, 'source', linkpath)
         plt.savefig(filepath, dpi=dpi)
+        plt.close()
+
+        return linkpath
 
     def individuals_counts_df(self, m, df):
-
         d = OrderedDict([
             ('prb', [
                 len(df[np.logical_and(df.role == 'prb', df.gender == 'M')][
@@ -90,33 +95,145 @@ class PhenoReport(object):
 
         ])
         res = pd.DataFrame(d, index=['M', 'F', 'ALL'])
-        print(res.head())
         return res
 
-    def df_table(self, df):
+    H1 = '='
+    H2 = '-'
+    H3 = '`'
+    H4 = "'"
+    H5 = '.'
+
+    def _out_df_table(self, out, df):
         from tabulate import tabulate
+        out.write(tabulate(df, headers="keys", tablefmt="grid"))
+        out.write('\n')
+
+    def _out_header(self, out, title, line):
+        out.write('\n')
+        out.write(line)
+        out.write('\n')
+        out.write(title)
+        out.write('\n')
+        out.write(line)
+        out.write('\n\n')
+
+    def out_measure_name(self, m):
         with open(self.outpath, 'a') as out:
-            out.write(tabulate(df, headers="keys", tablefmt="grid"))
+            section_title = "Measure: {}".format(m.measure_id)
+            section_line = len(section_title) * self.H3
+            self._out_header(out, section_title, section_line)
+
+    def out_measure_description(self, m):
+        with open(self.outpath, 'a') as out:
+            subsection_title = 'Description'
+            subsection_line = len(subsection_title) * self.H4
+            self._out_header(out, subsection_title, subsection_line)
+
+            out.write(m.description)
+            out.write('\n\n\n')
+
+    def out_measure_individuals_summary(self, m):
+        with open(self.outpath, 'a') as out:
+            title = 'Measured Individuals'
+            line = len(title) * self.H4
+            self._out_header(out, title, line)
+
+            df = self.phdb.get_persons_values_df([m.measure_id])
+            counts_df = self.individuals_counts_df(m, df)
+            self._out_df_table(out, counts_df)
+            return counts_df
+
+    def _figure_caption(self, caption):
+        params = {
+            'axes.titlesize': 'x-large',
+        }
+        plt.rcParams.update(params)
+        plt.title(caption)
+
+    def _out_figure(self, linkpath, caption):
+        with open(self.outpath, 'a') as out:
+            out.write('\n')
+            # out.write('.. compound::\n')
+            # out.write('  Figure: {}\n\n'.format(caption))
+            out.write('.. image:: {}\n'.format(linkpath))
+            out.write('   :align: center\n')
+            out.write('   :scale: 75%\n\n\n')
             out.write('\n')
 
-    def run(self):
-        phdb = PhenoDB()
-        phdb.load()
+    def out_measure_probands(self, m):
+        caption = 'Measured Probands Boxplots\n{}'.format(m.measure_id)
+        df = self.phdb.get_persons_values_df([m.measure_id])
+        self.measure_gender_boxplots(m, df[df.role == 'prb'])
+        self._figure_caption(caption)
 
-        instrument = phdb.instruments['abc']
-        m = instrument.measures.values()[1]
+        linkpath = self.save_fig(m, "prbs_boxplot")
 
-        df = phdb.get_persons_values_df([m.measure_id])
-        tdf = self.individuals_counts_df(m, df)
-        self.df_table(tdf)
+        self._out_figure(linkpath, caption)
 
-        self.measure_gender_boxplots(m, df)
-        self.savefig(m, "boxplot_all")
+    def out_measure_siblings(self, m):
+        caption = 'Measured Siblings Boxplots\n{}'.format(m.measure_id)
+        df = self.phdb.get_persons_values_df([m.measure_id])
+        self.measure_gender_boxplots(m, df[df.role == 'sib'])
+        self._figure_caption(caption)
 
+        linkpath = self.save_fig(m, "sibs_boxplot")
+
+        self._out_figure(linkpath, caption)
+
+    def out_measure_parents(self, m):
+        caption = 'Measured Parents Boxplots\n{}'.format(m.measure_id)
+        df = self.phdb.get_persons_values_df([m.measure_id])
+        self.measure_gender_boxplots(
+            m, df[np.logical_or(df.role == 'mom', df.role == 'dad')])
+        self._figure_caption(caption)
+
+        linkpath = self.save_fig(m, "parents_boxplot")
+
+        self._out_figure(linkpath, caption)
+
+    def out_measure_type(self, m):
+        title = "Measure Type: {}".format(m.stats)
+        line = len(title) * self.H4
+        with open(self.outpath, 'a') as out:
+            self._out_header(out, title, line)
+
+    def out_measure(self, m):
+        self.out_measure_name(m)
+        self.out_measure_type(m)
+        self.out_measure_description(m)
+
+        counts_df = self.out_measure_individuals_summary(m)
+        if counts_df.prb['ALL'] > 0:
+            self.out_measure_probands(m)
+        if counts_df.sib['ALL'] > 0:
+            self.out_measure_siblings(m)
+        if counts_df.parents['ALL'] > 0:
+            self.out_measure_parents(m)
+
+    def out_instrument(self, instrument):
+        with open(self.outpath, 'a') as out:
+            title = 'Instrument: {}'.format(instrument.name)
+            line = len(title) * self.H2
+            self._out_header(out, title, line)
+
+    def out_title(self):
+        with open(self.outpath, 'w') as out:
+            title = 'PhenoDB Instruments Description'
+            line = len(title) * self.H1
+            self._out_header(out, title, line)
+
+    def test_run(self):
+        self.out_title()
+
+        instrument = self.phdb.instruments['ssc_commonly_used']
+        self.out_instrument(instrument)
+        for m in instrument.measures.values():
+            if m.stats == 'continuous' or m.stats == 'ordinal':
+                self.out_measure(m)
 
 if __name__ == "__main__":
 
     args = parse_args(sys.argv[1:])
 
     report = PhenoReport(args)
-    report.run()
+    report.test_run()
