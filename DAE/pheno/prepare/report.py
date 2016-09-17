@@ -149,6 +149,7 @@ class PhenoReport(object):
         }
         plt.rcParams.update(params)
         plt.title(caption)
+        plt.tight_layout()
 
     def _out_figure(self, linkpath, caption):
         with open(self.outpath, 'a') as out:
