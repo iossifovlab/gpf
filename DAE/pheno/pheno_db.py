@@ -270,11 +270,11 @@ class PhenoDB(PhenoConfig):
         return res_df
 
     def get_persons_values_df(self, measure_ids, person_ids=None, role=None):
-        persons_df = self.get_persons_df(role='prb')
+        persons_df = self.get_persons_df(role=role)
 
         value_df = self.get_values_df(
             measure_ids,
-            role='prb')
+            role=role)
 
         df = persons_df.join(
             value_df.set_index('person_id'), on='person_id', rsuffix='_val')
