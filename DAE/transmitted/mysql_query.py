@@ -475,7 +475,6 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "tsv.effect_type as effectType, " \
             "tsv.effect_gene_all as `effectGene`, " \
             "tsv.effect_details as `effectDetails`, " \
-            "tsv.seg_dups as `segDups`, " \
             "tsv.hw as `HW`, " \
             "tsv.ssc_freq as `SSC-freq`, " \
             "tsv.evs_freq as `EVS-freq`, " \
@@ -516,7 +515,6 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "tsv.effect_type as effectType, " \
             "tsv.effect_gene_all as `effectGene`, " \
             "tsv.effect_details as `effectDetails`, " \
-            "tsv.seg_dups as `segDups`, " \
             "tsv.hw as `HW`, " \
             "tsv.ssc_freq as `SSC-freq`, " \
             "tsv.evs_freq as `EVS-freq`, " \

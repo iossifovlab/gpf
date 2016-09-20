@@ -64,16 +64,17 @@ class VariantsBase(object):
             'n_alt_alls': int(vals['all.nAltAlls']),
             'alt_freq': float(vals['all.altFreq']),
             'prcnt_par_called': float(vals['all.prcntParCalled']),
-            'seg_dups': int(vals['segDups']),
             'hw': float(vals['HW']),
-            'ssc_freq': self.safe_float(vals['SSC-freq']),
-            'evs_freq': self.safe_float(vals['EVS-freq']),
-            'e65_freq': self.safe_float(vals['E65-freq']),
+            'ssc_freq': self.safe_float(vals.get('SSC-freq', None)),
+            'evs_freq': self.safe_float(vals.get('EVS-freq', None)),
+            'e65_freq': self.safe_float(vals.get('E65-freq', None)),
         }
         return res
 
     @staticmethod
     def safe_float(s):
+        if s is None:
+            return 'NULL'
         if s.strip() == '':
             return 'NULL'
         else:
@@ -150,7 +151,6 @@ CREATE TABLE `transmitted_summaryvariant` (
   `n_alt_alls` int(11) NOT NULL,
   `alt_freq` double NOT NULL,
   `prcnt_par_called` double NOT NULL,
-  `seg_dups` int(11) NOT NULL,
   `hw` double NOT NULL,
   `ssc_freq` double DEFAULT NULL,
   `evs_freq` double DEFAULT NULL,
@@ -187,7 +187,7 @@ UNLOCK TABLES;
         ''' "%(effect_type)s", %(effect_gene)s, "%(effect_gene_all)s", ''' \
         ''' %(effect_count)d, "%(effect_details)s", ''' \
         ''' %(n_par_called)d, %(n_alt_alls)d, %(alt_freq)f, ''' \
-        ''' %(prcnt_par_called)f, %(seg_dups)d, %(hw)f, ''' \
+        ''' %(prcnt_par_called)f, %(hw)f, ''' \
         ''' %(ssc_freq)s, %(evs_freq)s, %(e65_freq)s )'''
 
     def handle(self, study_name, summary_filename, outdir):
@@ -212,20 +212,33 @@ UNLOCK TABLES;
             erow = 0
             ins_line = []
             for line in fh:
-                data = line.strip("\r\n").split("\t")
-                vals = dict(zip(column_names, data))
-                erow, evvals = \
-                    self.create_effect_variant_dict(vals, nrow, erow)
-                svvals = self.create_summary_variant_dict(nrow, vals, evvals)
-                ins_values = self.VALUES % svvals
-                ins_line.append(ins_values)
-                nrow += 1
-                if nrow % 100 == 0:
-                    outfile.write(self.INSERT_BEGIN %
-                                  ', '.join(ins_line))
-                    outfile.write('\n')
-                    ins_line = []
-                    print("line: {}".format(nrow))
+                try:
+                    if line[0] == '#':
+                        print('skipping comment: {}'.format(line.strip()))
+                        continue
+                    data = line.strip("\r\n").split("\t")
+                    vals = dict(zip(column_names, data))
+                    erow, evvals = \
+                        self.create_effect_variant_dict(vals, nrow, erow)
+                    svvals = self.create_summary_variant_dict(
+                        nrow, vals, evvals)
+                    ins_values = self.VALUES % svvals
+                    ins_line.append(ins_values)
+                    nrow += 1
+                    if nrow % 100 == 0:
+                        outfile.write(self.INSERT_BEGIN %
+                                      ', '.join(ins_line))
+                        outfile.write('\n')
+                        ins_line = []
+                        print("line: {}".format(nrow))
+                except Exception as ex:
+                    import traceback
+                    print(
+                        "exception thrown during processing row {};"
+                        " line: |{}|; data: {}; vals: {}"
+                        .format(nrow, line, data, vals))
+                    traceback.print_exc()
+                    raise ex
             if ins_line:
                 outfile.write(self.INSERT_BEGIN %
                               ', '.join(ins_line))
@@ -310,20 +323,32 @@ UNLOCK TABLES;
             erow = 1
             ins_line = []
             for line in fh:
-                data = line.strip("\r\n").split("\t")
-                vals = dict(zip(column_names, data))
-                erow, evvals = \
-                    self.create_effect_variant_dict(vals, vrow, erow)
-                ins_values = [self.VALUES % ev
-                              for ev in evvals]
-                ins_line.extend(ins_values)
-                vrow += 1
-                if vrow % 100 == 0:
-                    outfile.write(self.INSERT_BEGIN %
-                                  ', '.join(ins_line))
-                    outfile.write('\n')
-                    ins_line = []
-                    print("summary variants: {}".format(vrow))
+                try:
+                    if line[0] == '#':
+                        print('skipping comment: {}'.format(line.strip()))
+                        continue
+                    data = line.strip("\r\n").split("\t")
+                    vals = dict(zip(column_names, data))
+                    erow, evvals = \
+                        self.create_effect_variant_dict(vals, vrow, erow)
+                    ins_values = [self.VALUES % ev
+                                  for ev in evvals]
+                    ins_line.extend(ins_values)
+                    vrow += 1
+                    if vrow % 100 == 0:
+                        outfile.write(self.INSERT_BEGIN %
+                                      ', '.join(ins_line))
+                        outfile.write('\n')
+                        ins_line = []
+                        print("summary variants gene effects: {}".format(vrow))
+
+                except Exception as ex:
+                    import traceback
+                    print("exception thrown during processing line: |{}|"
+                          .format(line))
+                    traceback.print_exc()
+                    raise ex
+
             if ins_line:
                 outfile.write(self.INSERT_BEGIN %
                               ', '.join(ins_line))
@@ -512,25 +537,35 @@ UNLOCK TABLES;
 
             vrow = 1
             for line in fh:
-                data = line.strip("\r\n").split("\t")
-                vals = dict(zip(column_names, data))
+                try:
+                    if line[0] == '#':
+                        print('skipping comment: {}'.format(line.strip()))
+                        continue
+                    data = line.strip("\r\n").split("\t")
+                    vals = dict(zip(column_names, data))
 
-                variant = self.create_summary_variant(vals)
+                    variant = self.create_summary_variant(vals)
 
-                fv_values = self.create_family_variants_values(tmfh,
-                                                               vals,
-                                                               vrow,
-                                                               variant)
+                    fv_values = self.create_family_variants_values(tmfh,
+                                                                   vals,
+                                                                   vrow,
+                                                                   variant)
 
-                fv_insert = '%s %s;' % (self.INSERT_BEGIN,
-                                        ','.join(fv_values))
+                    fv_insert = '%s %s;' % (self.INSERT_BEGIN,
+                                            ','.join(fv_values))
 
-                outfile.write(fv_insert)
-                outfile.write('\n')
+                    outfile.write(fv_insert)
+                    outfile.write('\n')
 
-                if vrow % 1000 == 0:
-                    print("line: {}".format(vrow))
-                vrow += 1
+                    if vrow % 1000 == 0:
+                        print("line: {}".format(vrow))
+                    vrow += 1
+                except Exception as ex:
+                    import traceback
+                    print("exception thrown during processing line: |{}|"
+                          .format(line))
+                    traceback.print_exc()
+                    raise ex
 
             outfile.write(self.END_DUMPING_DATA)
             outfile.write('\n')
@@ -629,6 +664,9 @@ USAGE
         # handle keyboard interrupt
         return 0
     except Exception, e:
+        import traceback
+        traceback.print_exc()
+
         if DEBUG or TESTRUN:
             raise(e)
         indent = len(program_name) * " "
