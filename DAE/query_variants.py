@@ -442,7 +442,9 @@ def prepare_ultra_rare(data):
     return False
 
 
-REGION = re.compile(r"""^(\d+|[Xx]):(\d+)-(\d+)$""")
+# REGION = re.compile(r"""^(\d+|[Xx]):(\d+)-(\d+)$""")
+REGION = re.compile(
+    r"""^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)-([\d]{1,3}(,?[\d]{3})*)$""")
 
 
 def validate_region(region):
@@ -451,16 +453,36 @@ def validate_region(region):
         return None
 
     try:
-        chromo = res.groups()[0]
+        print(res.groups())
+        chromo = res.groups()[1]
         if chromo.lower() != 'x' and not (22 >= int(chromo) >= 1):
             return None
-        start = int(res.groups()[1])
-        end = int(res.groups()[2])
+        start = int(res.groups()[2].replace(',', ''))
+        end = int(res.groups()[4].replace(',', ''))
     except ValueError:
         return None
     if start >= end:
         return None
     return True
+
+
+def fix_region(region):
+    res = REGION.match(region)
+    if not res:
+        return None
+
+    try:
+        print(res.groups())
+        chromo = res.groups()[1]
+        if chromo.lower() != 'x' and not (22 >= int(chromo) >= 1):
+            return None
+        start = int(res.groups()[2].replace(',', ''))
+        end = int(res.groups()[4].replace(',', ''))
+    except ValueError:
+        return None
+    if start >= end:
+        return None
+    return '{}:{}-{}'.format(chromo, start, end)
 
 
 def prepare_gene_region(data):
@@ -474,8 +496,10 @@ def prepare_gene_region(data):
         return None
 
     if isinstance(region, str) or isinstance(region, unicode):
-        region = str(region).replace(',', ' ').split()
+        region = str(region).replace(';', ' ').split()
     region = [r for r in region if validate_region(r)]
+    region = [fix_region(r) for r in region]
+
     if region:
         return region
     else:
