@@ -84,7 +84,7 @@ class ApiTest(APITestCase):
 
         url_page_count = '/api/gene_set_list2?gene_set=main&page_count=-10'
         response = self.client.get(url_page_count)
-        self.assertEqual(len(response.data), 7)
+        self.assertEqual(len(response.data), 8)
 
     def test_child_type_list(self):
         response = self.client.get('/api/child_types')
