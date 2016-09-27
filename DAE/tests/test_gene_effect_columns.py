@@ -5,7 +5,7 @@ Created on Sep 27, 2016
 '''
 import itertools
 
-from query_variants import dae_query_variants
+from query_variants import dae_query_variants, generate_response
 
 
 def test_dae_query():
@@ -74,3 +74,32 @@ def test_effect_type_vs_worst_effect_counterexample():
 
     assert count == 1
     print(count)
+
+
+def variant_response_dict(v):
+    g = generate_response([v])
+    names = g.next()
+    vr = g.next()
+    d = dict(zip(names, vr))
+    return d
+
+
+def test_effect_type_genes_list():
+    query = {
+        'denovoStudies': 'ALL SSC',
+        'geneRegion': 'chr5:140,117,933-140,900,259',
+    }
+    vs = dae_query_variants(query)
+    count = 0
+    for v in itertools.chain(*vs):
+        count += 1
+        d = variant_response_dict(v)
+
+        print(d['all effects'])
+        print(d['worst effect'])
+        print(d['genes'])
+        print(" ")
+
+        assert d['worst effect'] == v.requestedGeneEffects[0]['eff']
+
+    assert 19 == count
