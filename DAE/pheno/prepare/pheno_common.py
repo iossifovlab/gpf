@@ -67,19 +67,19 @@ class PreparePhenoCommonRace(V15Loader):
 
         return var
 
-    def _prepare_probands_race(self, variable):
-        with RawValueManager(config=self.config) as vm:
-            df = vm.load_df(
-                where="variable_id='{}'"
-                .format('ssc_core_descriptive.race'))
-
-        names = df.columns.tolist()
-        names[names.index('person_id')] = 'individual'
-        names[names.index('value')] = 'race'
-        df.columns = names
-
-        prep = PrepareRawValues()
-        prep.prepare_variable(variable, [df])
+#     def _prepare_probands_race(self, variable):
+#         with RawValueManager(config=self.config) as vm:
+#             df = vm.load_df(
+#                 where="variable_id='{}'"
+#                 .format('ssc_core_descriptive.race'))
+#
+#         names = df.columns.tolist()
+#         names[names.index('person_id')] = 'individual'
+#         names[names.index('value')] = 'race'
+#         df.columns = names
+#
+#         prep = PrepareRawValues()
+#         prep.prepare_variable(variable, [df])
 
     def _prepare_parents_race(self, variable):
         with RawValueManager(config=self.config) as vm:
@@ -128,6 +128,27 @@ class PreparePhenoCommonRace(V15Loader):
         prep = PrepareRawValues()
         prep.prepare_variable(variable, [siblings])
 
+    def _prepare_probands_race(self, variable):
+        moms, dads = self._parent_races()
+
+        with PersonManager(config=self.config) as pm:
+            probands = pm.load_df(where="role='prb'")
+            probands.loc[:, 'value'] = pd.Series('', index=probands.index)
+
+            for _index, row in probands.iterrows():
+                prb = PersonModel.create_from_df(row)
+                mom_race = moms.get('{}.mo'.format(prb.family_id), None)
+                dad_race = dads.get('{}.fa'.format(prb.family_id), None)
+                row['value'] = calc_race(mom_race, dad_race)
+
+        names = probands.columns.tolist()
+        names[names.index('person_id')] = 'individual'
+        names[names.index('value')] = 'race'
+        probands.columns = names
+
+        prep = PrepareRawValues()
+        prep.prepare_variable(variable, [probands])
+
     def _proband_races(self):
         with RawValueManager(config=self.config) as vm:
             prbs_races = vm.load(
@@ -135,31 +156,32 @@ class PreparePhenoCommonRace(V15Loader):
         prbs_races = dict([(p.person_id, p.value) for p in prbs_races])
         return prbs_races
 
-    def _check_probands_race(self):
-        moms_races, dads_races = self._parent_races()
-
-        prbs_races = self._proband_races()
-
-        with PersonManager(config=self.config) as pm:
-            probands = pm.load_df(where="role='prb'")
-            for _index, row in probands.iterrows():
-                prb = PersonModel.create_from_df(row)
-                prb_race = prbs_races.get(row['person_id'], None)
-                mom_race = moms_races.get(
-                    '{}.mo'.format(row['family_id']), None)
-                dad_race = dads_races.get(
-                    '{}.fa'.format(row['family_id']), None)
-                race = calc_race(mom_race, dad_race)
-                if prb_race != race:
-                    print("family: {}; prb: |{}|; mom: |{}|; dad: |{}|".format(
-                        prb.family_id, prb_race, mom_race, dad_race))
+#     def _check_probands_race(self):
+#         moms_races, dads_races = self._parent_races()
+#
+#         prbs_races = self._proband_races()
+#
+#         with PersonManager(config=self.config) as pm:
+#             probands = pm.load_df(where="role='prb'")
+#             for _index, row in probands.iterrows():
+#                 prb = PersonModel.create_from_df(row)
+#                 prb_race = prbs_races.get(row['person_id'], None)
+#                 mom_race = moms_races.get(
+#                     '{}.mo'.format(row['family_id']), None)
+#                 dad_race = dads_races.get(
+#                     '{}.fa'.format(row['family_id']), None)
+#                 race = calc_race(mom_race, dad_race)
+#                 if prb_race != race:
+#                     print(
+#                        "family: {}; prb: |{}|; mom: |{}|; dad: |{}|".format(
+#                         prb.family_id, prb_race, mom_race, dad_race))
 
     def prepare(self):
         variable = self.prepare_person_race_variable()
-        self._prepare_probands_race(variable)
         self._prepare_parents_race(variable)
+        self._prepare_probands_race(variable)
         self._prepare_siblings_race(variable)
-        self._check_probands_race()
+        # self._check_probands_race()
 
 
 class PreparePhenoIQ(V15Loader):
