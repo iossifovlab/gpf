@@ -3,6 +3,8 @@ Created on Jul 6, 2016
 
 @author: lubo
 '''
+import re
+
 from rest_framework.views import APIView
 from pheno_families.pheno_filter import PhenoMeasureFilters, StudyFilter,\
     RaceFilter, FamilyFilter
@@ -94,7 +96,11 @@ class FamilyBase(object):
                 family_ids = ','.join(family_ids)
             family_ids = family_ids.strip()
             if family_ids != '':
-                family_ids = set(family_ids.split(','))
+                family_ids = re.sub(r'[\s,]+', ',', family_ids)
+                family_ids = [f.strip() for f in family_ids.split(',')
+                              if f.strip()]
+                family_ids = set(family_ids)
+
                 if len(family_ids) > 0:
                     return family_ids
         return None

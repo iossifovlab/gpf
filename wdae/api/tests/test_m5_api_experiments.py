@@ -604,7 +604,7 @@ class PhenotypeFilterTestsSRI(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('1', response.data['count'])
 
-        pedigree_data = response.data['rows'][0][26]
+        pedigree_data = response.data['rows'][0][27]
         self.assertEqual(
             '["schizophrenia", [["mom", "F", 0], '
             '["dad", "M", 0], ["sib", "M", 1]]]',

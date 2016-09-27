@@ -25,7 +25,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         fail = False
         for v in vs:
             count += 1
-            if v[21] != 'african-amer:african-amer':
+            if v[22] != 'african-amer:african-amer':
                 fail = True
         self.assertFalse(fail)
         self.assertTrue(count > 0)
@@ -48,7 +48,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         fail = False
         for v in vs:
             count += 1
-            if v[21] != 'white:white':
+            if v[22] != 'white:white':
                 fail = True
         self.assertFalse(fail)
         self.assertTrue(count > 0)
@@ -71,7 +71,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         fail = False
         for v in vs:
             count += 1
-            self.assertEqual(4, len(v[4].split('/')[0].split(' ')), str(v[4]))
+            self.assertEqual(4, len(v[5].split('/')[0].split(' ')), str(v[5]))
         self.assertFalse(fail)
         self.assertTrue(count > 0)
 
@@ -92,7 +92,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         count = 0
         for v in vs:
             count += 1
-            self.assertEqual(3, len(v[4].split('/')[0].split(' ')), str(v[4]))
+            self.assertEqual(3, len(v[5].split('/')[0].split(' ')), str(v[5]))
         self.assertTrue(count > 0)
 
     TEST_DATA_4 = {"denovoStudies": ["ALL SSC"],
@@ -269,7 +269,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         count = 0
         for v in vs:
             count += 1
-            self.assertIn('prb', v[6], str(v[6]))
+            self.assertIn('prb', v[7], str(v[7]))
 
         self.assertTrue(count > 0)
 
@@ -288,5 +288,5 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
         count = 0
         for v in vs:
             count += 1
-            self.assertIn('del', v[3], str(v[3]))
+            self.assertIn('del', v[4], str(v[4]))
         self.assertTrue(count > 0)

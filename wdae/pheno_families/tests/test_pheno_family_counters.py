@@ -49,3 +49,51 @@ class Test(APITestCase):
         self.assertEquals(131, data['autism']['female'])
         self.assertEquals(858, data['autism']['male'])
         self.assertEquals(989, data['autism']['families'])
+
+    def test_family_ids_counter(self):
+        url = "/api/v2/ssc_pheno_families/counter"
+        data = {
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
+            u'families': u'familyIds',
+            u'familyIds': u'3084 \n11241 \n11241 \n11558 \n11810 \n11944'
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        data = response.data
+
+        pprint(data)
+
+        self.assertEquals(4, data['autism']['families'])
+
+    def test_family_ids_counter_with_commas(self):
+        url = "/api/v2/ssc_pheno_families/counter"
+        data = {
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
+            u'families': u'familyIds',
+            u'familyIds': u'3084, \n11241, \n11241, \n11558, \n11810, \n11944,'
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        data = response.data
+
+        pprint(data)
+
+        self.assertEquals(4, data['autism']['families'])
+
+    def test_family_ids_counter_with_spaces(self):
+        url = "/api/v2/ssc_pheno_families/counter"
+        data = {
+            'phenoMeasure': 'pheno_common.non_verbal_iq',
+            u'families': u'familyIds',
+            u'familyIds': u'\n11241, \t\n11558 \t, \n11810\t\t, \n11944,'
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        data = response.data
+
+        pprint(data)
+
+        self.assertEquals(4, data['autism']['families'])
