@@ -444,7 +444,7 @@ def prepare_ultra_rare(data):
 
 # REGION = re.compile(r"""^(\d+|[Xx]):(\d+)-(\d+)$""")
 REGION = re.compile(
-    r"""^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$""")
+    r"^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$")
 
 
 def fix_region(region):
@@ -703,6 +703,9 @@ def augment_vars(v):
     v.atts["_prb_viq_"] = viq
     v.atts["_prb_nviq_"] = nviq
     v.atts["_pedigree_"] = pedigree_data(v)
+    v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
+    v._phenotype_ = v.study.get_attr('study.phenotype')
+
     # v.atts["phenoInChS"] = v.phenoInChS()
 
     return v
@@ -743,30 +746,32 @@ def __gene_effect_get_genes(gs):
     return ';'.join(genes)
 
 
-COLUMN_TITLES = {'familyId': 'family id',
-                 'location': 'location',
-                 'variant': 'variant',
-                 'bestSt': 'family genotype',
-                 'fromParentS': 'from parent',
-                 'inChS': 'in child',
-                 'effectType': 'effect type',
-                 'worstEffect': 'worst effect',
-                 'genes': 'genes',
-                 'geneEffect': 'all effects',
-                 'requestedGeneEffects': 'requested effects',
-                 'popType': 'population type',
-                 'effectDetails': 'effect details',
-                 'all.altFreq': 'alternative allele frequency',
-                 'all.nAltAlls': 'number of alternative alleles',
-                 'all.nParCalled': 'number of genotyped parents',
-                 '_par_races_': 'parent races',
-                 '_ch_prof_': 'children description',
-                 '_prb_viq_': 'proband verbal iq',
-                 '_prb_nviq_': 'proband non-verbal iq',
-                 'studyName': 'study',
-                 'counts': 'count',
-                 'valstatus': 'validation status',
-                 }
+COLUMN_TITLES = {
+    'familyId': 'family id',
+    'location': 'location',
+    'variant': 'variant',
+    'bestSt': 'family genotype',
+    'fromParentS': 'from parent',
+    'inChS': 'in child',
+    'effectType': 'effect type',
+    'worstEffect': 'worst effect',
+    'genes': 'genes',
+    'geneEffect': 'all effects',
+    'requestedGeneEffects': 'requested effects',
+    'popType': 'population type',
+    'effectDetails': 'effect details',
+    'all.altFreq': 'alternative allele frequency',
+    'all.nAltAlls': 'number of alternative alleles',
+    'all.nParCalled': 'number of genotyped parents',
+    '_par_races_': 'parent races',
+    '_ch_prof_': 'children description',
+    '_prb_viq_': 'proband verbal iq',
+    '_prb_nviq_': 'proband non-verbal iq',
+    'studyName': 'study',
+    '_phenotype_': 'study phenotype',
+    'counts': 'count',
+    'valstatus': 'validation status',
+}
 
 
 def attr_title(attr_key):
@@ -777,28 +782,34 @@ def generate_response(vs, atts=[], sep='\t'):
     def ge2Str(gs):
         return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
 
-    mainAtts = ['familyId',
-                'studyName',
-                'location',
-                'variant',
-                'bestSt',
-                'fromParentS',
-                'inChS',
-                'worstEffect',
-                'genes',
-                'counts',
-                'geneEffect',
-                'requestedGeneEffects',
-                'popType']
+    mainAtts = [
+        'familyId',
+        'studyName',
+        '_phenotype_',
+        'location',
+        'variant',
+        'bestSt',
+        'fromParentS',
+        'inChS',
+        'worstEffect',
+        'genes',
+        'counts',
+        'geneEffect',
+        'requestedGeneEffects',
+        'popType'
+    ]
 
-    specialStrF = {"bestSt": mat2Str,
-                   "counts": mat2Str,
-                   "geneEffect": ge2Str,
-                   "requestedGeneEffects": ge2Str,
-                   }
+    specialStrF = {
+        "bestSt": mat2Str,
+        "counts": mat2Str,
+        "geneEffect": ge2Str,
+        "requestedGeneEffects": ge2Str,
+    }
 
-    specialGeneEffects = {"genes": __gene_effect_get_genes,
-                          "worstEffect": __gene_effect_get_worst_effect}
+    specialGeneEffects = {
+        "genes": __gene_effect_get_genes,
+        "worstEffect": __gene_effect_get_worst_effect
+    }
 
     yield [attr_title(attr) for attr in mainAtts + atts]
 
