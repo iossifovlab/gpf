@@ -105,3 +105,48 @@ class Test(APITestCase):
         self.assertEquals(2580, data['unaffected']['families'])
         self.assertEquals(1220, data['unaffected']['male'])
         self.assertEquals(1360, data['unaffected']['female'])
+
+    def test_family_ids_counter(self):
+        url = "/api/v2/families/counter"
+        data = {
+            u'families': u'familyIds',
+            u'familyIds': u'3084 \n11241 \n11241 \n11558 \n11810 \n11944'
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        data = response.data
+
+        pprint(data)
+
+        self.assertEquals(4, data['autism']['families'])
+
+    def test_family_ids_counter_with_commas(self):
+        url = "/api/v2/families/counter"
+        data = {
+            u'families': u'familyIds',
+            u'familyIds': u'3084, \n11241, \n11241, \n11558, \n11810, \n11944,'
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        data = response.data
+
+        pprint(data)
+
+        self.assertEquals(4, data['autism']['families'])
+
+    def test_family_ids_counter_with_spaces(self):
+        url = "/api/v2/families/counter"
+        data = {
+            u'families': u'familyIds',
+            u'familyIds': u'\n11241, \t\n11558 \t, \n11810\t\t, \n11944,'
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
+        data = response.data
+
+        pprint(data)
+
+        self.assertEquals(4, data['autism']['families'])

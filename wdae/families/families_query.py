@@ -3,6 +3,8 @@ Created on Feb 29, 2016
 
 @author: lubo
 '''
+import re
+
 from families.pheno_query import prepare_pheno_measure_query,\
     prepare_base_pheno_measure_query
 from families.gender_query import prepare_family_prb_gender_query,\
@@ -22,7 +24,13 @@ def parse_family_ids(data):
             family_ids = ','.join(family_ids)
         family_ids = family_ids.strip()
         if family_ids != '':
-            family_ids = set(family_ids.split(','))
+            print(family_ids)
+            family_ids = re.sub(r'[\s,]+', ',', family_ids)
+            family_ids = [f.strip() for f in family_ids.split(',')
+                          if f.strip()]
+            family_ids = set(family_ids)
+            print(family_ids)
+
             if len(family_ids) > 0:
                 return family_ids
     return None
