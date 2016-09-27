@@ -83,12 +83,12 @@ class CombinedTests(unittest.TestCase):
         count = 0
         for v in vs:
             count += 1
-            self.assertTrue('ins' in v[3], "%s: %s" % (str(v[3]), str(v)))
-            self.assertTrue('prbM' in v[6])
-            self.assertTrue('frame-shift' in v[10])
+            self.assertTrue('ins' in v[4], "%s: %s" % (str(v[3]), str(v)))
+            self.assertTrue('prbM' in v[7])
             self.assertTrue('frame-shift' in v[11])
-            self.assertTrue('frame-shift' in v[13])
-            self.assertTrue('prbM' in v[22])
+            self.assertTrue('frame-shift' in v[12])
+            self.assertTrue('frame-shift' in v[14])
+            self.assertTrue('prbM' in v[23])
 
         self.assertTrue(count > 0)
 
@@ -106,12 +106,12 @@ class CombinedTests(unittest.TestCase):
         vs.next()
 
         for v in vs:
-            self.assertTrue('del' in v[3], "%s: %s" % (str(v[3]), str(v)))
-            self.assertTrue('prbF' in v[6])
-            self.assertTrue('frame-shift' in v[10])
+            self.assertTrue('del' in v[4], "%s: %s" % (str(v[3]), str(v)))
+            self.assertTrue('prbF' in v[7])
             self.assertTrue('frame-shift' in v[11])
-            self.assertTrue('frame-shift' in v[13])
-            self.assertTrue('prbF' in v[22])
+            self.assertTrue('frame-shift' in v[12])
+            self.assertTrue('frame-shift' in v[14])
+            self.assertTrue('prbF' in v[23])
 
 
 class GeneRegionCombinedTests(unittest.TestCase):
@@ -130,9 +130,9 @@ class GeneRegionCombinedTests(unittest.TestCase):
         vs.next()
 
         for v in vs:
-            loc = int(v[2].split(':')[1])
-            self.assertTrue(loc >= 1018000, "%s: %s" % (str(loc), str(v[2])))
-            self.assertTrue(loc <= 1020000, "%s: %s" % (str(loc), str(v[2])))
+            loc = int(v[3].split(':')[1])
+            self.assertTrue(loc >= 1018000, "%s: %s" % (str(loc), str(v[3])))
+            self.assertTrue(loc <= 1020000, "%s: %s" % (str(loc), str(v[3])))
 
 
 class IvanchoSubmittedQueryTests(unittest.TestCase):
