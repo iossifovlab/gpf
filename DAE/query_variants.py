@@ -740,7 +740,9 @@ def __gene_effect_get_worst_effect(gs):
 
 
 def __gene_effect_get_genes(gs):
-    genes_set = set([g['sym'] for g in gs])
+    if len(gs) == 0:
+        return ''
+    genes_set = set([g['sym'] for g in gs if g['eff'] == gs[0]['eff']])
     genes = list(genes_set)
 
     return ';'.join(genes)
