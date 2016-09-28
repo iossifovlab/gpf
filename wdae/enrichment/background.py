@@ -219,7 +219,7 @@ def poisson_test(observed, expected):
     # pp 260-261
     rv = stats.poisson(expected)
     if observed >= expected:
-        p = rv.cdf(observed-1)
+        p = rv.cdf(observed - 1)
         p_value = 2 * (1 - p)
     else:
         p = rv.cdf(observed)
@@ -265,8 +265,12 @@ class SamochaBackground(Background, Precompute):
         p_girls = (df['F'] * df[eff]).sum()
         girls_expected = p_girls * girls
 
-        expected = boys_expected + girls_expected
+        # expected = (
+        #    boys * boys_expected + girls * girls_expected) / (boys + girls)
+        expected = (boys_expected + girls_expected) / 2.0
         bg_prob = (p_boys + p_girls) / 2.0
+        print("boys: {}, e: {}; girls: {}, e: {}; expected: {}".format(
+            boys, boys_expected, girls, girls_expected, expected))
         print("observed: {}; trails: {}; expected: {}; bg_prob: {}"
               .format(O, N, expected, bg_prob))
         p_val = poisson_test(O, expected)

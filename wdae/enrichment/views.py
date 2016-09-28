@@ -100,8 +100,9 @@ class EnrichmentView(APIView):
             return None
 
         dsts = result['denovoStudies']
-        result['denovoStudies'] = [st for st in dsts
-                                   if st.get_attr('study.type') == 'WE']
+        result['denovoStudies'] = [
+            st for st in dsts
+            if st.get_attr('study.type') == 'WE']
 
         return result
 
