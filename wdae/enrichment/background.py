@@ -256,6 +256,8 @@ class SamochaBackground(Background, Precompute):
     def test(self, O, N, effect_type, gene_syms, boys, girls):
         eff = 'P_{}'.format(effect_type.upper())
         assert eff in self.background.columns
+        print("boys: {}; girls: {}, sum: {}, N: {}".format(
+            boys, girls, boys + girls, N))
 
         gs = [g.upper() for g in gene_syms]
         df = self.background[self.background['gene'].isin(gs)]
@@ -267,8 +269,11 @@ class SamochaBackground(Background, Precompute):
 
         # expected = (
         #    boys * boys_expected + girls * girls_expected) / (boys + girls)
-        expected = (boys_expected + girls_expected) / 2.0
         bg_prob = (p_boys + p_girls) / 2.0
+        expected = (boys_expected + girls_expected)  # / 2.0
+        expected = round(bg_prob * N, 4)
+        # expected = bg_prob * N
+
         print("boys: {}, e: {}; girls: {}, e: {}; expected: {}".format(
             boys, boys_expected, girls, girls_expected, expected))
         print("observed: {}; trails: {}; expected: {}; bg_prob: {}"
