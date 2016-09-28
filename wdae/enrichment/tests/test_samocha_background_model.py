@@ -53,4 +53,4 @@ class Test(unittest.TestCase):
             95, 2583, 'missense', self.gene_syms, 3367, 596)
         print("expected: {}; p_val: {}".format(expected, p_val))
         self.assertAlmostEquals(85.85, expected, 1)
-        self.assertAlmostEquals(2E-6, p_val, 5)
+        self.assertAlmostEquals(0.34940690, p_val, 5)

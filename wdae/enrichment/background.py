@@ -215,7 +215,17 @@ class CodingLenBackground(Background, Precompute):
 
 
 def poisson_test(observed, expected):
-    return 1.0
+    # Bernard Rosner, Fundamentals of Biostatistics, 8th edition,
+    # pp 260-261
+    rv = stats.poisson(expected)
+    if observed >= expected:
+        p = rv.cdf(observed-1)
+        p_value = 2 * (1 - p)
+    else:
+        p = rv.cdf(observed)
+        p_value = 2 * p
+
+    return min(p_value, 1)
 
 
 class SamochaBackground(Background, Precompute):
@@ -259,7 +269,7 @@ class SamochaBackground(Background, Precompute):
         bg_prob = (p_boys + p_girls) / 2.0
         print("observed: {}; trails: {}; expected: {}; bg_prob: {}"
               .format(O, N, expected, bg_prob))
-        # p_val = poisson_test(O, expected)
-        p_val = stats.binom_test(O, N, p=bg_prob)
+        p_val = poisson_test(O, expected)
+        # p_val = stats.binom_test(O, N, p=bg_prob)
 
         return expected, p_val
