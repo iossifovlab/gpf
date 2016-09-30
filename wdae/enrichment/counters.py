@@ -51,8 +51,12 @@ class CounterBase(EnrichmentConfig):
             variants.append(vs)
         return list(itertools.chain(*variants))
 
-    def filter_events(self, denovo_studies):
+    def all_events(self, denovo_studies):
         pass
+
+    @staticmethod
+    def filter_enrichment_events(events, gene_set):
+        return [ev for ev in events if any([gs in gene_set for gs in ev])]
 
 
 class EventsResult(object):
@@ -70,21 +74,21 @@ class EventsCounter(CounterBase):
         super(EventsCounter, self).__init__(phenotype, effect_types)
 
     def enrichment_events(self, denovo_studies, gene_set):
-        events = self.filter_events(denovo_studies)
+        events = self.all_events(denovo_studies)
 
-        total_events = count_denovo_variant_events(
+        total_events = self.filter_enrichment_events(
             events.total_events, gene_set)
-        rec_events = count_denovo_variant_events(
+        rec_events = self.filter_enrichment_events(
             events.rec_events, gene_set)
-        male_events = count_denovo_variant_events(
+        male_events = self.filter_enrichment_events(
             events.male_events, gene_set)
-        female_events = count_denovo_variant_events(
+        female_events = self.filter_enrichment_events(
             events.female_events, gene_set)
 
         return EventsResult(
             total_events, rec_events, male_events, female_events)
 
-    def filter_events(self, denovo_studies):
+    def all_events(self, denovo_studies):
         variants = self.get_variants(denovo_studies)
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']

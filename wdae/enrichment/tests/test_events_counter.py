@@ -21,7 +21,7 @@ class EventsCounterTest(unittest.TestCase):
     def test_events_autism_with_effect_type_lgd(self):
         counter = EventsCounter('autism', 'LGDs')
 
-        events = counter.filter_events(self.denovo_studies)
+        events = counter.all_events(self.denovo_studies)
 
         self.assertIsNotNone(events)
 
@@ -33,7 +33,7 @@ class EventsCounterTest(unittest.TestCase):
     def test_events_unaffected_with_effect_type_lgd(self):
         counter = EventsCounter('unaffected', 'LGDs')
 
-        events = counter.filter_events(self.denovo_studies)
+        events = counter.all_events(self.denovo_studies)
 
         self.assertIsNotNone(events)
 
@@ -45,7 +45,7 @@ class EventsCounterTest(unittest.TestCase):
     def test_events_schizophrenia_with_effect_type_lgd(self):
         counter = EventsCounter('schizophrenia', 'LGDs')
 
-        events = counter.filter_events(self.denovo_studies)
+        events = counter.all_events(self.denovo_studies)
 
         self.assertIsNotNone(events)
         self.assertEquals(95, len(events.total_events))
@@ -65,10 +65,10 @@ class EventsCounterTest(unittest.TestCase):
 
         self.assertIsNotNone(events)
 
-        self.assertEquals(56, events.total_events)
-        self.assertEquals(9, events.rec_events)
-        self.assertEquals(40, events.male_events)
-        self.assertEquals(16, events.female_events)
+        self.assertEquals(56, len(events.total_events))
+        self.assertEquals(9, len(events.rec_events))
+        self.assertEquals(40, len(events.male_events))
+        self.assertEquals(16, len(events.female_events))
 
     def test_enrichment_events_unaffected_with_effect_type_synonymous(self):
         counter = EventsCounter('unaffected', 'synonymous')
@@ -78,7 +78,20 @@ class EventsCounterTest(unittest.TestCase):
 
         self.assertIsNotNone(events)
 
-        self.assertEquals(18, events.total_events)
-        self.assertEquals(1, events.rec_events)
-        self.assertEquals(14, events.male_events)
-        self.assertEquals(4, events.female_events)
+        self.assertEquals(18, len(events.total_events))
+        self.assertEquals(1, len(events.rec_events))
+        self.assertEquals(14, len(events.male_events))
+        self.assertEquals(4, len(events.female_events))
+
+    def test_enrichment_events_schizophrenia_with_effect_type_missense(self):
+        counter = EventsCounter('schizophrenia', 'missense')
+
+        events = counter.enrichment_events(
+            self.denovo_studies, self.gene_set)
+
+        self.assertIsNotNone(events)
+
+        self.assertEquals(23, len(events.total_events))
+        self.assertEquals(2, len(events.rec_events))
+        self.assertEquals(10, len(events.male_events))
+        self.assertEquals(13, len(events.female_events))
