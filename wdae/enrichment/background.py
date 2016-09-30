@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from precompute.register import Precompute
+from enrichment.config import EnrichmentConfig
 
 
 def _collect_affected_gene_syms(vs):
@@ -64,6 +65,16 @@ def _build_synonymous_background(transmitted_study_name):
     return (b, foreground)
 
 
+class StatsResults(EnrichmentConfig):
+
+    def __init__(self, config):
+        super(StatsResults, self).__init__(
+            config.phenotype, config.effect_types)
+
+    def __call__(self):
+        return self
+
+
 class Background(object):
 
     def __init__(self):
@@ -105,7 +116,30 @@ class Background(object):
         return expected, p_val
 
     def stats(self, all_events, enriched_events, gene_set):
-        pass
+        bg_prob = self._prob(gene_set)
+        result = StatsResults(all_events)
+
+        result.total_expected = bg_prob * len(all_events.total_events)
+        result.total_pvalue = stats.binom_test(
+            len(enriched_events.total_events), len(all_events.total_events),
+            p=bg_prob)
+
+        result.rec_expected = bg_prob * len(all_events.rec_events)
+        result.rec_pvalue = stats.binom_test(
+            len(enriched_events.rec_events),
+            len(all_events.rec_events), p=bg_prob)
+
+        result.male_expected = bg_prob * len(all_events.male_events)
+        result.male_pvalue = stats.binom_test(
+            len(enriched_events.male_events),
+            len(all_events.male_events), p=bg_prob)
+
+        result.female_expected = bg_prob * len(all_events.female_events)
+        result.female_pvalue = stats.binom_test(
+            len(enriched_events.female_events),
+            len(all_events.female_events), p=bg_prob)
+
+        return result
 
 
 class SynonymousBackground(Background, Precompute):
@@ -285,3 +319,36 @@ class SamochaBackground(Background, Precompute):
         # p_val = stats.binom_test(O, N, p=bg_prob)
 
         return expected, p_val
+
+    def stats(self, all_events, enriched_events, gene_set):
+        result = StatsResults(all_events)
+
+        eff = 'P_{}'.format(all_events.effect_types.upper())
+        assert eff in self.background.columns
+
+        gs = [g.upper() for g in gene_set]
+        df = self.background[self.background['gene'].isin(gs)]
+        p_boys = (df['M'] * df[eff]).sum()
+        result.male_expected = p_boys * all_events.male_count
+
+        p_girls = (df['F'] * df[eff]).sum()
+        result.female_expected = p_girls * all_events.female_count
+
+        result.total_expected = result.male_expected + result.female_expected
+
+        result.total_pvalue = poisson_test(
+            enriched_events.total_count,
+            result.total_expected)
+        result.male_pvalue = poisson_test(
+            enriched_events.male_count,
+            result.male_expected)
+        result.female_pvalue = poisson_test(
+            enriched_events.female_count,
+            result.female_expected)
+
+        result.rec_expected = all_events.rec_count * (p_boys + p_girls) / 2.0
+        result.rec_pvalue = poisson_test(
+            enriched_events.rec_count,
+            result.rec_expected)
+
+        return result

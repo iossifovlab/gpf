@@ -24,7 +24,6 @@ class EnrichmentConfig(object):
         self.phenotype = phenotype
 
         self.effect_types = build_effect_types_list([effect_types])
-        print(self.effect_types)
 
         assert all([et in self.EFFECT_TYPES for et in self.effect_types])
         self.effect_types = ','.join(self.effect_types)

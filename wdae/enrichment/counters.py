@@ -92,6 +92,12 @@ class EventsResult(EnrichmentConfig):
         self.rec_events = rec_events
         self.male_events = boys_events
         self.female_events = girls_events
+
+        self.total_count = len(self.total_events)
+        self.rec_count = len(self.rec_events)
+        self.male_count = len(self.male_events)
+        self.female_count = len(self.female_events)
+
         return self
 
 
