@@ -28,10 +28,10 @@ class DenovoStudies(object):
             return studies
 
 
-class Counter(EnrichmentResult):
+class CounterBase(EnrichmentResult):
 
-    def __init__(self, phenotype, effect_type):
-        super(Counter, self).__init__(phenotype, effect_type)
+    def __init__(self, phenotype, effect_types):
+        super(CounterBase, self).__init__(phenotype, effect_types)
         if phenotype == 'unaffected':
             self.in_child = 'sib'
         else:
@@ -45,7 +45,6 @@ class Counter(EnrichmentResult):
         variants = []
         for st in studies:
             vs = st.get_denovo_variants(
-                inChild=self.in_child, effectTypes=self.effect_type)
+                inChild=self.in_child, effectTypes=self.effect_types)
             variants.append(vs)
-
-        return itertools.chain(variants)
+        return itertools.chain(*variants)

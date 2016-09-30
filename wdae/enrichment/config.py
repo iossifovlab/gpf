@@ -27,6 +27,7 @@ class EnrichmentConfig(object):
         print(self.effect_types)
 
         assert all([et in self.EFFECT_TYPES for et in self.effect_types])
+        self.effect_types = ','.join(self.effect_types)
 
 
 class EnrichmentResult(EnrichmentConfig):
