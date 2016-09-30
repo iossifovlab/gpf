@@ -68,3 +68,9 @@ class CounterBaseTest(unittest.TestCase):
             count += 1
         print(count)
         self.assertTrue(count > 0)
+
+    def test_count_not_implemented(self):
+        counter = CounterBase('autism', 'LGDs')
+        denovo_studies = DenovoStudies()
+        with self.assertRaises(NotImplementedError):
+            counter.count(denovo_studies)

@@ -38,7 +38,7 @@ class CounterBase(EnrichmentResult):
             self.in_child = 'prb'
 
     def count(self, studies):
-        pass
+        raise NotImplementedError()
 
     def get_variants(self, denovo_studies):
         studies = denovo_studies.get_studies(self.phenotype)
