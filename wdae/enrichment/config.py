@@ -25,14 +25,14 @@ EFFECT_TYPES = [
 class EnrichmentConfig(object):
     EFFECT_TYPES = get_effect_types(True, True)
 
-    def __init__(self, phenotype, effect_types):
+    def __init__(self, phenotype, effect_type):
         assert phenotype in PHENOTYPES
         self.phenotype = phenotype
 
-        self.effect_types = build_effect_types_list([effect_types])
+        self.effect_type = build_effect_types_list([effect_type])
 
-        assert all([et in self.EFFECT_TYPES for et in self.effect_types])
-        self.effect_types = ','.join(self.effect_types)
+        assert all([et in self.EFFECT_TYPES for et in self.effect_type])
+        self.effect_type = ','.join(self.effect_type)
 
         if phenotype == 'unaffected':
             self.in_child = 'sib'

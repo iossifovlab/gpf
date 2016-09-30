@@ -31,8 +31,8 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
 
         self.assertIsNotNone(stats)
 
-        self.assertAlmostEqual(17.70, stats.total_expected, 2)
-        self.assertAlmostEqual(8.3E-05, stats.total_pvalue, 4)
+        self.assertAlmostEqual(17.70, stats.all_expected, 2)
+        self.assertAlmostEqual(8.3E-05, stats.all_pvalue, 4)
 
         self.assertAlmostEqual(1.26, stats.rec_expected, 2)
         self.assertAlmostEqual(3.5E-06, stats.rec_pvalue, 4)
@@ -54,8 +54,8 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
 
         self.assertIsNotNone(stats)
 
-        self.assertAlmostEqual(3.02, stats.total_expected, 2)
-        self.assertAlmostEqual(0.1288, stats.total_pvalue, 4)
+        self.assertAlmostEqual(3.02, stats.all_expected, 2)
+        self.assertAlmostEqual(0.1288, stats.all_pvalue, 4)
 
         self.assertAlmostEqual(0.06, stats.rec_expected, 2)
         self.assertAlmostEqual(1, stats.rec_pvalue, 4)
@@ -77,8 +77,8 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
 
         self.assertIsNotNone(stats)
 
-        self.assertAlmostEqual(43.90, stats.total_expected, 2)
-        self.assertAlmostEqual(0.8181, stats.total_pvalue, 4)
+        self.assertAlmostEqual(43.90, stats.all_expected, 2)
+        self.assertAlmostEqual(0.8181, stats.all_pvalue, 4)
 
         self.assertAlmostEqual(3.66, stats.rec_expected, 2)
         self.assertAlmostEqual(0.7875, stats.rec_pvalue, 4)
@@ -112,8 +112,8 @@ class SamochaBackgroundStatsTest(unittest.TestCase):
 
         self.assertIsNotNone(stats)
 
-        self.assertAlmostEqual(1.79, stats.total_expected, 2)
-        self.assertAlmostEqual(0.0, stats.total_pvalue, 4)
+        self.assertAlmostEqual(1.79, stats.all_expected, 2)
+        self.assertAlmostEqual(0.0, stats.all_pvalue, 4)
 
         self.assertAlmostEqual(0.125, stats.rec_expected, 2)
         self.assertAlmostEqual(3.5E-06, stats.rec_pvalue, 4)

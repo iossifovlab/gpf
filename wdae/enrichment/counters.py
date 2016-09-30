@@ -34,15 +34,15 @@ class DenovoStudies(object):
 
 class CounterBase(EnrichmentConfig):
 
-    def __init__(self, phenotype, effect_types):
-        super(CounterBase, self).__init__(phenotype, effect_types)
+    def __init__(self, phenotype, effect_type):
+        super(CounterBase, self).__init__(phenotype, effect_type)
 
     def get_variants(self, denovo_studies):
         studies = denovo_studies.get_studies(self.phenotype)
         variants = []
         for st in studies:
             vs = st.get_denovo_variants(
-                inChild=self.in_child, effectTypes=self.effect_types)
+                inChild=self.in_child, effectTypes=self.effect_type)
             variants.append(vs)
         return list(itertools.chain(*variants))
 
@@ -50,24 +50,23 @@ class CounterBase(EnrichmentConfig):
         raise NotImplementedError()
 
     @staticmethod
-    def filter_overlapped_events(events, gene_set):
+    def filter_overlapping_events(events, gene_set):
         return [ev for ev in events if any([gs in gene_set for gs in ev])]
 
     def overlap_events(self, events, gene_set):
-        all_events = self.filter_overlapped_events(
+        all_events = self.filter_overlapping_events(
             events.all_events, gene_set)
-        rec_events = self.filter_overlapped_events(
+        rec_events = self.filter_overlapping_events(
             events.rec_events, gene_set)
-        male_events = self.filter_overlapped_events(
+        male_events = self.filter_overlapping_events(
             events.male_events, gene_set)
-        female_events = self.filter_overlapped_events(
+        female_events = self.filter_overlapping_events(
             events.female_events, gene_set)
         return EventsResult(self)(
             all_events, rec_events, male_events, female_events)
 
     def overlapped_events(self, denovo_studies, gene_set):
         events = self.events(denovo_studies)
-
         return self.overlap_events(events, gene_set)
 
     def full_events(self, denovo_studies, gene_set):
@@ -81,7 +80,7 @@ class EventsResult(EnrichmentConfig):
 
     def __init__(self, config):
         super(EventsResult, self).__init__(
-            config.phenotype, config.effect_types)
+            config.phenotype, config.effect_type)
 
     def __call__(self, events, rec_events, boys_events, girls_events):
         self.all_events = events
@@ -99,8 +98,8 @@ class EventsResult(EnrichmentConfig):
 
 class EventsCounter(CounterBase):
 
-    def __init__(self, phenotype, effect_types):
-        super(EventsCounter, self).__init__(phenotype, effect_types)
+    def __init__(self, phenotype, effect_type):
+        super(EventsCounter, self).__init__(phenotype, effect_type)
 
     def events(self, denovo_studies):
         variants = self.get_variants(denovo_studies)
@@ -118,8 +117,8 @@ class EventsCounter(CounterBase):
 
 class GeneEventsCounter(CounterBase):
 
-    def __init__(self, phenotype, effect_types):
-        super(GeneEventsCounter, self).__init__(phenotype, effect_types)
+    def __init__(self, phenotype, effect_type):
+        super(GeneEventsCounter, self).__init__(phenotype, effect_type)
 
     def events(self, denovo_studies):
         variants = self.get_variants(denovo_studies)

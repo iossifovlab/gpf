@@ -69,7 +69,7 @@ class StatsResults(EnrichmentConfig):
 
     def __init__(self, config):
         super(StatsResults, self).__init__(
-            config.phenotype, config.effect_types)
+            config.phenotype, config.effect_type)
 
     def __call__(self):
         return self
@@ -119,8 +119,8 @@ class Background(object):
         bg_prob = self._prob(gene_set)
         result = StatsResults(events)
 
-        result.total_expected = bg_prob * events.all_count
-        result.total_pvalue = stats.binom_test(
+        result.all_expected = bg_prob * events.all_count
+        result.all_pvalue = stats.binom_test(
             overlapped_events.all_count,
             events.all_count,
             p=bg_prob)
@@ -294,7 +294,7 @@ class SamochaBackground(Background, Precompute):
     def calc_stats(self, events, overlapped_events, gene_set):
         result = StatsResults(events)
 
-        eff = 'P_{}'.format(events.effect_types.upper())
+        eff = 'P_{}'.format(events.effect_type.upper())
         assert eff in self.background.columns
 
         gs = [g.upper() for g in gene_set]
@@ -305,11 +305,11 @@ class SamochaBackground(Background, Precompute):
         p_girls = (df['F'] * df[eff]).sum()
         result.female_expected = p_girls * events.female_count
 
-        result.total_expected = result.male_expected + result.female_expected
+        result.all_expected = result.male_expected + result.female_expected
 
-        result.total_pvalue = poisson_test(
+        result.all_pvalue = poisson_test(
             overlapped_events.all_count,
-            result.total_expected)
+            result.all_expected)
         result.male_pvalue = poisson_test(
             overlapped_events.male_count,
             result.male_expected)
