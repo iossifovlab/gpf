@@ -7,7 +7,8 @@ from enrichment.config import PHENOTYPES, EnrichmentConfig
 from DAE import vDB
 import itertools
 from enrichment.denovo_counters import filter_denovo_one_event_per_family,\
-    filter_denovo_one_gene_per_recurrent_events, count_denovo_variant_events
+    filter_denovo_one_gene_per_recurrent_events,\
+    filter_denovo_one_gene_per_events
 
 
 class DenovoStudies(object):
@@ -94,6 +95,25 @@ class EventsCounter(CounterBase):
         rec_events = filter_denovo_one_gene_per_recurrent_events(variants)
         male_events = filter_denovo_one_event_per_family(male_variants)
         female_events = filter_denovo_one_event_per_family(female_variants)
+
+        return EventsResult(
+            total_events, rec_events, male_events, female_events)
+
+
+class GeneEventsCounter(CounterBase):
+
+    def __init__(self, phenotype, effect_types):
+        super(GeneEventsCounter, self).__init__(phenotype, effect_types)
+
+    def all_events(self, denovo_studies):
+        variants = self.get_variants(denovo_studies)
+        male_variants = [v for v in variants if v.inChS[3] == 'M']
+        female_variants = [v for v in variants if v.inChS[3] == 'F']
+
+        total_events = filter_denovo_one_gene_per_events(variants)
+        rec_events = filter_denovo_one_gene_per_recurrent_events(variants)
+        male_events = filter_denovo_one_gene_per_events(male_variants)
+        female_events = filter_denovo_one_gene_per_events(female_variants)
 
         return EventsResult(
             total_events, rec_events, male_events, female_events)
