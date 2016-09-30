@@ -3,6 +3,8 @@ Created on Jun 11, 2015
 
 @author: lubo
 '''
+from VariantAnnotation import get_effect_types
+from query_prepare import build_effect_types_list
 
 PHENOTYPES = [
     'autism',
@@ -12,6 +14,33 @@ PHENOTYPES = [
     'schizophrenia',
     'unaffected',
 ]
+
+
+class EnrichmentConfig(object):
+    EFFECT_TYPES = get_effect_types(True, True)
+
+    def __init__(self, phenotype, effect_types):
+        assert phenotype in PHENOTYPES
+        self.phenotype = phenotype
+
+        self.effect_types = build_effect_types_list([effect_types])
+        print(self.effect_types)
+
+        assert all([et in self.EFFECT_TYPES for et in self.effect_types])
+
+
+class EnrichmentResult(EnrichmentConfig):
+
+    def __init__(self, phenotype, effect_types):
+        super(EnrichmentResult, self).__init__(phenotype, effect_types)
+        self.total_events = -1
+        self.total_events_male = -1
+        self.total_events_female = -1
+
+        self.events_in_affected_genes = -1
+        self.events_in_affected_genes_male = -1
+        self.events_in_affected_genes_female = -1
+
 
 PRB_TESTS_SPECS = [
     # 0

@@ -317,11 +317,16 @@ EFFECT_GROUPS = {
 }
 
 
-def build_effect_types(effects):
+def build_effect_types_list(effects):
     result_effects = reduce(
         operator.add,
         [EFFECT_TYPES[str(et)] if et in EFFECT_TYPES else [str(et)] for
          et in effects])
+    return result_effects
+
+
+def build_effect_types(effects):
+    result_effects = build_effect_types_list(effects)
     return ','.join(result_effects)
 
 
