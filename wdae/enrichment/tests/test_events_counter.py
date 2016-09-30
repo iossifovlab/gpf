@@ -21,11 +21,11 @@ class EventsCounterTest(unittest.TestCase):
     def test_events_autism_with_effect_type_lgd(self):
         counter = EventsCounter('autism', 'LGDs')
 
-        events = counter.all_events(self.denovo_studies)
+        events = counter.events(self.denovo_studies)
 
         self.assertIsNotNone(events)
 
-        self.assertEquals(606, len(events.total_events))
+        self.assertEquals(606, len(events.all_events))
         self.assertEquals(39, len(events.rec_events))
         self.assertEquals(492, len(events.male_events))
         self.assertEquals(114, len(events.female_events))
@@ -33,11 +33,11 @@ class EventsCounterTest(unittest.TestCase):
     def test_events_unaffected_with_effect_type_lgd(self):
         counter = EventsCounter('unaffected', 'LGDs')
 
-        events = counter.all_events(self.denovo_studies)
+        events = counter.events(self.denovo_studies)
 
         self.assertIsNotNone(events)
 
-        self.assertEquals(224, len(events.total_events))
+        self.assertEquals(224, len(events.all_events))
         self.assertEquals(5, len(events.rec_events))
         self.assertEquals(113, len(events.male_events))
         self.assertEquals(111, len(events.female_events))
@@ -45,10 +45,10 @@ class EventsCounterTest(unittest.TestCase):
     def test_events_schizophrenia_with_effect_type_lgd(self):
         counter = EventsCounter('schizophrenia', 'LGDs')
 
-        events = counter.all_events(self.denovo_studies)
+        events = counter.events(self.denovo_studies)
 
         self.assertIsNotNone(events)
-        self.assertEquals(95, len(events.total_events))
+        self.assertEquals(95, len(events.all_events))
         self.assertEquals(2, len(events.rec_events))
 
         self.assertEquals(49, len(events.male_events))
@@ -65,7 +65,7 @@ class EventsCounterTest(unittest.TestCase):
 
         self.assertIsNotNone(events)
 
-        self.assertEquals(56, len(events.total_events))
+        self.assertEquals(56, len(events.all_events))
         self.assertEquals(9, len(events.rec_events))
         self.assertEquals(40, len(events.male_events))
         self.assertEquals(16, len(events.female_events))
@@ -78,7 +78,7 @@ class EventsCounterTest(unittest.TestCase):
 
         self.assertIsNotNone(events)
 
-        self.assertEquals(18, len(events.total_events))
+        self.assertEquals(18, len(events.all_events))
         self.assertEquals(1, len(events.rec_events))
         self.assertEquals(14, len(events.male_events))
         self.assertEquals(4, len(events.female_events))
@@ -91,7 +91,7 @@ class EventsCounterTest(unittest.TestCase):
 
         self.assertIsNotNone(events)
 
-        self.assertEquals(23, len(events.total_events))
+        self.assertEquals(23, len(events.all_events))
         self.assertEquals(2, len(events.rec_events))
         self.assertEquals(10, len(events.male_events))
         self.assertEquals(13, len(events.female_events))

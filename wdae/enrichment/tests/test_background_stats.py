@@ -23,7 +23,7 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
     def test_stats_autism_with_effect_type_lgd(self):
         counter = GeneEventsCounter('autism', 'LGDs')
 
-        all_events, enriched_events = counter.events(
+        all_events, enriched_events = counter.full_events(
             self.denovo_studies, self.gene_set)
 
         stats = self.background.calc_stats(
@@ -46,7 +46,7 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
     def test_stats_schizophrenia_with_effect_type_lgd(self):
         counter = GeneEventsCounter('schizophrenia', 'LGDs')
 
-        all_events, enriched_events = counter.events(
+        all_events, enriched_events = counter.full_events(
             self.denovo_studies, self.gene_set)
 
         stats = self.background.calc_stats(
@@ -69,7 +69,7 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
     def test_stats_unaffected_with_effect_type_missense(self):
         counter = GeneEventsCounter('unaffected', 'missense')
 
-        all_events, enriched_events = counter.events(
+        all_events, enriched_events = counter.full_events(
             self.denovo_studies, self.gene_set)
 
         stats = self.background.calc_stats(
@@ -104,7 +104,7 @@ class SamochaBackgroundStatsTest(unittest.TestCase):
     def test_stats_autism_with_effect_type_lgd(self):
         counter = GeneEventsCounter('autism', 'LGDs')
 
-        all_events, enriched_events = counter.events(
+        all_events, enriched_events = counter.full_events(
             self.denovo_studies, self.gene_set)
 
         stats = self.background.calc_stats(

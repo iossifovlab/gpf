@@ -115,29 +115,30 @@ class Background(object):
         p_val = stats.binom_test(O, N, p=bg_prob)
         return expected, p_val
 
-    def calc_stats(self, all_events, enriched_events, gene_set):
+    def calc_stats(self, events, overlapped_events, gene_set):
         bg_prob = self._prob(gene_set)
-        result = StatsResults(all_events)
+        result = StatsResults(events)
 
-        result.total_expected = bg_prob * len(all_events.total_events)
+        result.total_expected = bg_prob * events.all_count
         result.total_pvalue = stats.binom_test(
-            len(enriched_events.total_events), len(all_events.total_events),
+            overlapped_events.all_count,
+            events.all_count,
             p=bg_prob)
 
-        result.rec_expected = bg_prob * len(all_events.rec_events)
+        result.rec_expected = bg_prob * events.rec_count
         result.rec_pvalue = stats.binom_test(
-            len(enriched_events.rec_events),
-            len(all_events.rec_events), p=bg_prob)
+            overlapped_events.rec_count,
+            events.rec_count, p=bg_prob)
 
-        result.male_expected = bg_prob * len(all_events.male_events)
+        result.male_expected = bg_prob * events.male_count
         result.male_pvalue = stats.binom_test(
-            len(enriched_events.male_events),
-            len(all_events.male_events), p=bg_prob)
+            overlapped_events.male_count,
+            events.male_count, p=bg_prob)
 
-        result.female_expected = bg_prob * len(all_events.female_events)
+        result.female_expected = bg_prob * events.female_count
         result.female_pvalue = stats.binom_test(
-            len(enriched_events.female_events),
-            len(all_events.female_events), p=bg_prob)
+            overlapped_events.female_count,
+            events.female_count, p=bg_prob)
 
         return result
 
@@ -290,65 +291,35 @@ class SamochaBackground(Background, Precompute):
     def deserialize(self, data):
         self.background = self._load_and_prepare_build()
 
-    def test(self, O, N, effect_type, gene_syms, boys, girls):
-        eff = 'P_{}'.format(effect_type.upper())
-        assert eff in self.background.columns
-        print("boys: {}; girls: {}, sum: {}, N: {}".format(
-            boys, girls, boys + girls, N))
+    def calc_stats(self, events, overlapped_events, gene_set):
+        result = StatsResults(events)
 
-        gs = [g.upper() for g in gene_syms]
-        df = self.background[self.background['gene'].isin(gs)]
-        p_boys = (df['M'] * df[eff]).sum()
-        boys_expected = p_boys * boys
-
-        p_girls = (df['F'] * df[eff]).sum()
-        girls_expected = p_girls * girls
-
-        # expected = (
-        #    boys * boys_expected + girls * girls_expected) / (boys + girls)
-        bg_prob = (p_boys + p_girls) / 2.0
-        # expected = (boys_expected + girls_expected)  # / 2.0
-        expected = round(bg_prob * N, 4)
-        # expected = bg_prob * N
-
-        print("boys: {}, e: {}; girls: {}, e: {}; expected: {}".format(
-            boys, boys_expected, girls, girls_expected, expected))
-        print("observed: {}; trails: {}; expected: {}; bg_prob: {}"
-              .format(O, N, expected, bg_prob))
-        p_val = poisson_test(O, expected)
-        # p_val = stats.binom_test(O, N, p=bg_prob)
-
-        return expected, p_val
-
-    def calc_stats(self, all_events, enriched_events, gene_set):
-        result = StatsResults(all_events)
-
-        eff = 'P_{}'.format(all_events.effect_types.upper())
+        eff = 'P_{}'.format(events.effect_types.upper())
         assert eff in self.background.columns
 
         gs = [g.upper() for g in gene_set]
         df = self.background[self.background['gene'].isin(gs)]
         p_boys = (df['M'] * df[eff]).sum()
-        result.male_expected = p_boys * all_events.male_count
+        result.male_expected = p_boys * events.male_count
 
         p_girls = (df['F'] * df[eff]).sum()
-        result.female_expected = p_girls * all_events.female_count
+        result.female_expected = p_girls * events.female_count
 
         result.total_expected = result.male_expected + result.female_expected
 
         result.total_pvalue = poisson_test(
-            enriched_events.total_count,
+            overlapped_events.all_count,
             result.total_expected)
         result.male_pvalue = poisson_test(
-            enriched_events.male_count,
+            overlapped_events.male_count,
             result.male_expected)
         result.female_pvalue = poisson_test(
-            enriched_events.female_count,
+            overlapped_events.female_count,
             result.female_expected)
 
-        result.rec_expected = all_events.rec_count * (p_boys + p_girls) / 2.0
+        result.rec_expected = events.rec_count * (p_boys + p_girls) / 2.0
         result.rec_pvalue = poisson_test(
-            enriched_events.rec_count,
+            overlapped_events.rec_count,
             result.rec_expected)
 
         return result

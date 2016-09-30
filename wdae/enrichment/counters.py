@@ -46,7 +46,7 @@ class CounterBase(EnrichmentConfig):
             variants.append(vs)
         return list(itertools.chain(*variants))
 
-    def all_events(self, denovo_studies):
+    def events(self, denovo_studies):
         raise NotImplementedError()
 
     @staticmethod
@@ -54,8 +54,8 @@ class CounterBase(EnrichmentConfig):
         return [ev for ev in events if any([gs in gene_set for gs in ev])]
 
     def overlap_events(self, events, gene_set):
-        total_events = self.filter_overlapped_events(
-            events.total_events, gene_set)
+        all_events = self.filter_overlapped_events(
+            events.all_events, gene_set)
         rec_events = self.filter_overlapped_events(
             events.rec_events, gene_set)
         male_events = self.filter_overlapped_events(
@@ -63,18 +63,18 @@ class CounterBase(EnrichmentConfig):
         female_events = self.filter_overlapped_events(
             events.female_events, gene_set)
         return EventsResult(self)(
-            total_events, rec_events, male_events, female_events)
+            all_events, rec_events, male_events, female_events)
 
     def overlapped_events(self, denovo_studies, gene_set):
-        events = self.all_events(denovo_studies)
+        events = self.events(denovo_studies)
 
         return self.overlap_events(events, gene_set)
 
-    def events(self, denovo_studies, gene_set):
-        all_events = self.all_events(denovo_studies)
-        overlapped_events = self.overlap_events(all_events, gene_set)
+    def full_events(self, denovo_studies, gene_set):
+        events = self.events(denovo_studies)
+        overlapped_events = self.overlap_events(events, gene_set)
 
-        return all_events, overlapped_events
+        return events, overlapped_events
 
 
 class EventsResult(EnrichmentConfig):
@@ -84,12 +84,12 @@ class EventsResult(EnrichmentConfig):
             config.phenotype, config.effect_types)
 
     def __call__(self, events, rec_events, boys_events, girls_events):
-        self.total_events = events
+        self.all_events = events
         self.rec_events = rec_events
         self.male_events = boys_events
         self.female_events = girls_events
 
-        self.total_count = len(self.total_events)
+        self.all_count = len(self.all_events)
         self.rec_count = len(self.rec_events)
         self.male_count = len(self.male_events)
         self.female_count = len(self.female_events)
@@ -102,18 +102,18 @@ class EventsCounter(CounterBase):
     def __init__(self, phenotype, effect_types):
         super(EventsCounter, self).__init__(phenotype, effect_types)
 
-    def all_events(self, denovo_studies):
+    def events(self, denovo_studies):
         variants = self.get_variants(denovo_studies)
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']
 
-        total_events = filter_denovo_one_event_per_family(variants)
+        all_events = filter_denovo_one_event_per_family(variants)
         rec_events = filter_denovo_one_gene_per_recurrent_events(variants)
         male_events = filter_denovo_one_event_per_family(male_variants)
         female_events = filter_denovo_one_event_per_family(female_variants)
 
         return EventsResult(self)(
-            total_events, rec_events, male_events, female_events)
+            all_events, rec_events, male_events, female_events)
 
 
 class GeneEventsCounter(CounterBase):
@@ -121,15 +121,15 @@ class GeneEventsCounter(CounterBase):
     def __init__(self, phenotype, effect_types):
         super(GeneEventsCounter, self).__init__(phenotype, effect_types)
 
-    def all_events(self, denovo_studies):
+    def events(self, denovo_studies):
         variants = self.get_variants(denovo_studies)
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']
 
-        total_events = filter_denovo_one_gene_per_events(variants)
+        all_events = filter_denovo_one_gene_per_events(variants)
         rec_events = filter_denovo_one_gene_per_recurrent_events(variants)
         male_events = filter_denovo_one_gene_per_events(male_variants)
         female_events = filter_denovo_one_gene_per_events(female_variants)
 
         return EventsResult(self)(
-            total_events, rec_events, male_events, female_events)
+            all_events, rec_events, male_events, female_events)
