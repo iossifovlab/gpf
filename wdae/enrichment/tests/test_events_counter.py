@@ -57,10 +57,10 @@ class EventsCounterTest(unittest.TestCase):
         print(events.rec_events)
         print(events.female_events)
 
-    def test_enrichment_events_autism_with_effect_type_lgd(self):
+    def test_overlapped_events_autism_with_effect_type_lgd(self):
         counter = EventsCounter('autism', 'LGDs')
 
-        events = counter.enrichment_events(
+        events = counter.overlapped_events(
             self.denovo_studies, self.gene_set)
 
         self.assertIsNotNone(events)
@@ -70,10 +70,10 @@ class EventsCounterTest(unittest.TestCase):
         self.assertEquals(40, len(events.male_events))
         self.assertEquals(16, len(events.female_events))
 
-    def test_enrichment_events_unaffected_with_effect_type_synonymous(self):
+    def test_overlapped_events_unaffected_with_effect_type_synonymous(self):
         counter = EventsCounter('unaffected', 'synonymous')
 
-        events = counter.enrichment_events(
+        events = counter.overlapped_events(
             self.denovo_studies, self.gene_set)
 
         self.assertIsNotNone(events)
@@ -83,10 +83,10 @@ class EventsCounterTest(unittest.TestCase):
         self.assertEquals(14, len(events.male_events))
         self.assertEquals(4, len(events.female_events))
 
-    def test_enrichment_events_schizophrenia_with_effect_type_missense(self):
+    def test_overlapped_events_schizophrenia_with_effect_type_missense(self):
         counter = EventsCounter('schizophrenia', 'missense')
 
-        events = counter.enrichment_events(
+        events = counter.overlapped_events(
             self.denovo_studies, self.gene_set)
 
         self.assertIsNotNone(events)
