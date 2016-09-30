@@ -3,9 +3,10 @@ Created on Sep 29, 2016
 
 @author: lubo
 '''
-from enrichment.config import PHENOTYPES, EnrichmentConfig
-from DAE import vDB
 import itertools
+
+from DAE import vDB
+from enrichment.config import PHENOTYPES, EnrichmentConfig
 from enrichment.denovo_counters import filter_denovo_one_event_per_family,\
     filter_denovo_one_gene_per_recurrent_events,\
     filter_denovo_one_gene_per_events
@@ -65,7 +66,7 @@ class CounterBase(EnrichmentConfig):
             events.male_events, gene_set)
         female_events = self.filter_enrichment_events(
             events.female_events, gene_set)
-        return EventsResult(
+        return EventsResult(self)(
             total_events, rec_events, male_events, female_events)
 
     def enrichment_events(self, denovo_studies, gene_set):
@@ -80,13 +81,18 @@ class CounterBase(EnrichmentConfig):
         return all_events, enriched_events
 
 
-class EventsResult(object):
+class EventsResult(EnrichmentConfig):
 
-    def __init__(self, events, rec_events, boys_events, girls_events):
+    def __init__(self, config):
+        super(EventsResult, self).__init__(
+            config.phenotype, config.effect_types)
+
+    def __call__(self, events, rec_events, boys_events, girls_events):
         self.total_events = events
         self.rec_events = rec_events
         self.male_events = boys_events
         self.female_events = girls_events
+        return self
 
 
 class EventsCounter(CounterBase):
@@ -104,7 +110,7 @@ class EventsCounter(CounterBase):
         male_events = filter_denovo_one_event_per_family(male_variants)
         female_events = filter_denovo_one_event_per_family(female_variants)
 
-        return EventsResult(
+        return EventsResult(self)(
             total_events, rec_events, male_events, female_events)
 
 
@@ -123,5 +129,5 @@ class GeneEventsCounter(CounterBase):
         male_events = filter_denovo_one_gene_per_events(male_variants)
         female_events = filter_denovo_one_gene_per_events(female_variants)
 
-        return EventsResult(
+        return EventsResult(self)(
             total_events, rec_events, male_events, female_events)

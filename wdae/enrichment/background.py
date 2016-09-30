@@ -104,6 +104,9 @@ class Background(object):
         p_val = stats.binom_test(O, N, p=bg_prob)
         return expected, p_val
 
+    def stats(self, all_events, enriched_events, gene_set):
+        pass
+
 
 class SynonymousBackground(Background, Precompute):
     TRANSMITTED_STUDY_NAME = 'w1202s766e611'
@@ -270,7 +273,7 @@ class SamochaBackground(Background, Precompute):
         # expected = (
         #    boys * boys_expected + girls * girls_expected) / (boys + girls)
         bg_prob = (p_boys + p_girls) / 2.0
-        expected = (boys_expected + girls_expected)  # / 2.0
+        # expected = (boys_expected + girls_expected)  # / 2.0
         expected = round(bg_prob * N, 4)
         # expected = bg_prob * N
 
