@@ -39,9 +39,6 @@ class CounterBase(EnrichmentConfig):
         else:
             self.in_child = 'prb'
 
-    def count(self, denovo_studies, gene_set):
-        raise NotImplementedError()
-
     def get_variants(self, denovo_studies):
         studies = denovo_studies.get_studies(self.phenotype)
         variants = []
@@ -52,26 +49,11 @@ class CounterBase(EnrichmentConfig):
         return list(itertools.chain(*variants))
 
     def all_events(self, denovo_studies):
-        pass
+        raise NotImplementedError()
 
     @staticmethod
     def filter_enrichment_events(events, gene_set):
         return [ev for ev in events if any([gs in gene_set for gs in ev])]
-
-
-class EventsResult(object):
-
-    def __init__(self, events, rec_events, boys_events, girls_events):
-        self.total_events = events
-        self.rec_events = rec_events
-        self.male_events = boys_events
-        self.female_events = girls_events
-
-
-class EventsCounter(CounterBase):
-
-    def __init__(self, phenotype, effect_types):
-        super(EventsCounter, self).__init__(phenotype, effect_types)
 
     def enrichment_events(self, denovo_studies, gene_set):
         events = self.all_events(denovo_studies)
@@ -87,6 +69,21 @@ class EventsCounter(CounterBase):
 
         return EventsResult(
             total_events, rec_events, male_events, female_events)
+
+
+class EventsResult(object):
+
+    def __init__(self, events, rec_events, boys_events, girls_events):
+        self.total_events = events
+        self.rec_events = rec_events
+        self.male_events = boys_events
+        self.female_events = girls_events
+
+
+class EventsCounter(CounterBase):
+
+    def __init__(self, phenotype, effect_types):
+        super(EventsCounter, self).__init__(phenotype, effect_types)
 
     def all_events(self, denovo_studies):
         variants = self.get_variants(denovo_studies)
