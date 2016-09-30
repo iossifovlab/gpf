@@ -15,6 +15,12 @@ PHENOTYPES = [
     'unaffected',
 ]
 
+EFFECT_TYPES = [
+    'LGDs',
+    'Missense',
+    'Synonymous'
+]
+
 
 class EnrichmentConfig(object):
     EFFECT_TYPES = get_effect_types(True, True)
@@ -28,6 +34,57 @@ class EnrichmentConfig(object):
         assert all([et in self.EFFECT_TYPES for et in self.effect_types])
         self.effect_types = ','.join(self.effect_types)
 
+        if phenotype == 'unaffected':
+            self.in_child = 'sib'
+        else:
+            self.in_child = 'prb'
+
+#     def build_label(self, gender=None, rec=None):
+#         spec = self.build_spec(gender, rec)
+#         return spec['label']
+#
+#     def build_spec(self, gender=None, rec=None):
+#         def expand_effect(et):
+#             if 'lgds' == et.lower():
+#                 return 'Nonsense,Frame-shift,Splice-site'
+#             if 'missense' == et.lower():
+#                 return 'Missense'
+#             if 'sysnonymous' == et.lower():
+#                 return 'Synonymous'
+#             raise ValueError("bad effect type: {}".format(et))
+#
+#         result = {}
+#         result['effect'] = self.effect_types
+#         print(self.effect_types)
+#
+#         if rec:
+#             result['type'] = 'rec'
+#             name = 'Rec {}'.format(self.effect_types)
+#         else:
+#             result['type'] = 'event'
+#             name = self.effect_types
+#
+#         if gender:
+#             result['gender'] = 'male,female'
+#             result['inchild'] = self.in_child
+#         elif gender == 'M':
+#             result['gender'] = 'male'
+#             result['inchild'] = self.in_child + 'M'
+#         elif gender == 'F':
+#             result['gender'] = 'female'
+#             result['inchild'] = self.in_child + 'F'
+#         else:
+#             raise ValueError("bad gender: {}".format(gender))
+#
+#         label = "{}|{}|{}|{}|{}".format(
+#             self.in_child,
+#             name,
+#             self.in_child,
+#             result['gender'],
+#             expand_effect(self.effect_types)
+#         )
+#         result['label'] = label
+#         return result
 
 # class EnrichmentResult(EnrichmentConfig):
 #

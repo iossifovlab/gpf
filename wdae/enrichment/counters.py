@@ -36,10 +36,6 @@ class CounterBase(EnrichmentConfig):
 
     def __init__(self, phenotype, effect_types):
         super(CounterBase, self).__init__(phenotype, effect_types)
-        if phenotype == 'unaffected':
-            self.in_child = 'sib'
-        else:
-            self.in_child = 'prb'
 
     def get_variants(self, denovo_studies):
         studies = denovo_studies.get_studies(self.phenotype)

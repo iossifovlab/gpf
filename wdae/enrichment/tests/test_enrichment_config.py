@@ -26,7 +26,30 @@ class EnrichmentConfigTest(unittest.TestCase):
 
         self.assertEquals('missense', config.effect_types)
 
-    def test_synonimous_effect(self):
+    def test_synonymous_effect(self):
         config = EnrichmentConfig('unaffected', 'Synonymous')
 
         self.assertEquals('synonymous', config.effect_types)
+
+    def test_build_spec(self):
+        config = EnrichmentConfig('unaffected', 'LGDs')
+        spec = config.build_spec('M', rec=True)
+
+        self.assertIsNotNone(spec)
+        self.assertEquals("sib", spec['inchild'])
+        self.assertEquals('LGDs', spec['effect'])
+        self.assertEquals('rec', spec['type'])
+        self.assertEquals(
+            'sib|Rec LGDs|sib|male,female|Nonsense,Frame-shift,Splice-site',
+            spec['label'])
+
+        config = EnrichmentConfig('autism', 'LGDs')
+        spec = config.build_spec('M', rec=True)
+
+        self.assertIsNotNone(spec)
+        self.assertEquals("prb", spec['inchild'])
+        self.assertEquals('LGDs', spec['effect'])
+        self.assertEquals('rec', spec['type'])
+        self.assertEquals(
+            'prb|Rec LGDs|prb|male,female|Nonsense,Frame-shift,Splice-site',
+            spec['label'])
