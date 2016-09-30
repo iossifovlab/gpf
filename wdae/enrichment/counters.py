@@ -56,9 +56,7 @@ class CounterBase(EnrichmentConfig):
     def filter_enrichment_events(events, gene_set):
         return [ev for ev in events if any([gs in gene_set for gs in ev])]
 
-    def enrichment_events(self, denovo_studies, gene_set):
-        events = self.all_events(denovo_studies)
-
+    def enrich_events(self, events, gene_set):
         total_events = self.filter_enrichment_events(
             events.total_events, gene_set)
         rec_events = self.filter_enrichment_events(
@@ -67,9 +65,19 @@ class CounterBase(EnrichmentConfig):
             events.male_events, gene_set)
         female_events = self.filter_enrichment_events(
             events.female_events, gene_set)
-
         return EventsResult(
             total_events, rec_events, male_events, female_events)
+
+    def enrichment_events(self, denovo_studies, gene_set):
+        events = self.all_events(denovo_studies)
+
+        return self.enrich_events(events, gene_set)
+
+    def events(self, denovo_studies, gene_set):
+        all_events = self.all_events(denovo_studies)
+        enriched_events = self.enrich_events(all_events, gene_set)
+
+        return all_events, enriched_events
 
 
 class EventsResult(object):
