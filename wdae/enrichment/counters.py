@@ -47,4 +47,4 @@ class CounterBase(EnrichmentResult):
             vs = st.get_denovo_variants(
                 inChild=self.in_child, effectTypes=self.effect_types)
             variants.append(vs)
-        return itertools.chain(*variants)
+        return list(itertools.chain(*variants))

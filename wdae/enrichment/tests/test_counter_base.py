@@ -23,7 +23,7 @@ class CounterBaseTest(unittest.TestCase):
             self.assertIn('sib', v.inChS)
             count += 1
         print(count)
-        self.assertTrue(count > 0)
+        self.assertEquals(243, count)
 
     def test_variants_unaffected_with_effect_type_missense(self):
         counter = CounterBase('unaffected', 'Missense')
@@ -38,7 +38,7 @@ class CounterBaseTest(unittest.TestCase):
             self.assertEquals('missense', v.requestedGeneEffects[0]['eff'])
             count += 1
         print(count)
-        self.assertTrue(count > 0)
+        self.assertEquals(1616, count)
 
     def test_variants_unaffected_with_effect_type_synonimous(self):
         counter = CounterBase('unaffected', 'synonymous')
@@ -53,7 +53,7 @@ class CounterBaseTest(unittest.TestCase):
             self.assertEquals('synonymous', v.requestedGeneEffects[0]['eff'])
             count += 1
         print(count)
-        self.assertTrue(count > 0)
+        self.assertEquals(686, count)
 
     def test_variants_autism_with_effect_type_lgd(self):
         counter = CounterBase('autism', 'LGDs')
@@ -67,7 +67,7 @@ class CounterBaseTest(unittest.TestCase):
             self.assertIn('prb', v.inChS)
             count += 1
         print(count)
-        self.assertTrue(count > 0)
+        self.assertEquals(607, count)
 
     def test_count_not_implemented(self):
         counter = CounterBase('autism', 'LGDs')
