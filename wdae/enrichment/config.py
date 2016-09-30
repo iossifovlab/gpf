@@ -30,17 +30,17 @@ class EnrichmentConfig(object):
         self.effect_types = ','.join(self.effect_types)
 
 
-class EnrichmentResult(EnrichmentConfig):
-
-    def __init__(self, phenotype, effect_types):
-        super(EnrichmentResult, self).__init__(phenotype, effect_types)
-        self.total_events = -1
-        self.total_events_male = -1
-        self.total_events_female = -1
-
-        self.events_in_affected_genes = -1
-        self.events_in_affected_genes_male = -1
-        self.events_in_affected_genes_female = -1
+# class EnrichmentResult(EnrichmentConfig):
+# 
+#     def __init__(self, phenotype, effect_types):
+#         super(EnrichmentResult, self).__init__(phenotype, effect_types)
+#         self.total_events = -1
+#         self.total_events_male = -1
+#         self.total_events_female = -1
+# 
+#         self.events_in_affected_genes = -1
+#         self.events_in_affected_genes_male = -1
+#         self.events_in_affected_genes_female = -1
 
 
 PRB_TESTS_SPECS = [
