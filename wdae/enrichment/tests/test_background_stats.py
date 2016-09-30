@@ -26,7 +26,7 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
         all_events, enriched_events = counter.events(
             self.denovo_studies, self.gene_set)
 
-        stats = self.background.stats(
+        stats = self.background.calc_stats(
             all_events, enriched_events, self.gene_set)
 
         self.assertIsNotNone(stats)
@@ -49,7 +49,7 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
         all_events, enriched_events = counter.events(
             self.denovo_studies, self.gene_set)
 
-        stats = self.background.stats(
+        stats = self.background.calc_stats(
             all_events, enriched_events, self.gene_set)
 
         self.assertIsNotNone(stats)
@@ -72,7 +72,7 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
         all_events, enriched_events = counter.events(
             self.denovo_studies, self.gene_set)
 
-        stats = self.background.stats(
+        stats = self.background.calc_stats(
             all_events, enriched_events, self.gene_set)
 
         self.assertIsNotNone(stats)
@@ -107,7 +107,7 @@ class SamochaBackgroundStatsTest(unittest.TestCase):
         all_events, enriched_events = counter.events(
             self.denovo_studies, self.gene_set)
 
-        stats = self.background.stats(
+        stats = self.background.calc_stats(
             all_events, enriched_events, self.gene_set)
 
         self.assertIsNotNone(stats)

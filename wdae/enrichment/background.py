@@ -115,7 +115,7 @@ class Background(object):
         p_val = stats.binom_test(O, N, p=bg_prob)
         return expected, p_val
 
-    def stats(self, all_events, enriched_events, gene_set):
+    def calc_stats(self, all_events, enriched_events, gene_set):
         bg_prob = self._prob(gene_set)
         result = StatsResults(all_events)
 
@@ -320,7 +320,7 @@ class SamochaBackground(Background, Precompute):
 
         return expected, p_val
 
-    def stats(self, all_events, enriched_events, gene_set):
+    def calc_stats(self, all_events, enriched_events, gene_set):
         result = StatsResults(all_events)
 
         eff = 'P_{}'.format(all_events.effect_types.upper())
