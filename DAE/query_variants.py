@@ -742,7 +742,8 @@ def __gene_effect_get_worst_effect(gs):
 def __gene_effect_get_genes(gs):
     if len(gs) == 0:
         return ''
-    genes_set = set([g['sym'] for g in gs if g['eff'] == gs[0]['eff']])
+    # genes_set = set([g['sym'] for g in gs if g['eff'] == gs[0]['eff']])
+    genes_set = set([g['sym'] for g in gs])
     genes = list(genes_set)
 
     return ';'.join(genes)
@@ -755,8 +756,8 @@ COLUMN_TITLES = {
     'bestSt': 'family genotype',
     'fromParentS': 'from parent',
     'inChS': 'in child',
-    'effectType': 'effect type',
-    'worstEffect': 'worst effect',
+    'effectType': 'worst effect type',
+    'worstEffect': 'worst requested effect',
     'genes': 'genes',
     'geneEffect': 'all effects',
     'requestedGeneEffects': 'requested effects',
