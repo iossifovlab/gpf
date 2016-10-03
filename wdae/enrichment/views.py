@@ -170,6 +170,16 @@ class EnrichmentView(APIView):
 #         return tres
 
     def serialize_response_test(self, t):
+        def less_more(count, expected):
+            lessmore = 'more'
+            if count > expected:
+                lessmore = 'more'
+            elif count < expected:
+                lessmore = 'less'
+            else:
+                lessmore = 'equal'
+            return lessmore
+        
         tres = {}
         tres['overlap'] = t.count
         tres['count'] = t.overlapped_count
@@ -186,12 +196,7 @@ class EnrichmentView(APIView):
 
         tres['expected'] = round(t.expected, 4)
 
-        if t.overlapped_count > t.expected:
-            lessmore = 'more'
-        elif t.overlapped_count < t.expected:
-            lessmore = 'less'
-        else:
-            lessmore = 'equal'
+        lessmore = less_more(t.overlapped_count, t.expected)
 
         tres['lessmore'] = lessmore
         tres['bg'] = colormap_value(t.pvalue, lessmore)
