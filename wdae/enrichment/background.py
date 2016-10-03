@@ -285,6 +285,8 @@ class SamochaBackground(Background, Precompute):
         self.background = self._load_and_prepare_build()
 
     def calc_stats(self, events, overlapped_events, gene_set, children_stats):
+        print(children_stats)
+
         result = StatsResults(events)
 
         eff = 'P_{}'.format(events.effect_type.upper())
@@ -293,10 +295,12 @@ class SamochaBackground(Background, Precompute):
         gs = [g.upper() for g in gene_set]
         df = self.background[self.background['gene'].isin(gs)]
         p_boys = (df['M'] * df[eff]).sum()
-        result.male_expected = p_boys * events.male_count
+        # result.male_expected = p_boys * events.male_count
+        result.male_expected = p_boys * children_stats['M']
 
         p_girls = (df['F'] * df[eff]).sum()
-        result.female_expected = p_girls * events.female_count
+        # result.female_expected = p_girls * events.female_count
+        result.female_expected = p_boys * children_stats['F']
 
         result.all_expected = result.male_expected + result.female_expected
 
@@ -310,7 +314,10 @@ class SamochaBackground(Background, Precompute):
             overlapped_events.female_count,
             result.female_expected)
 
-        result.rec_expected = events.rec_count * (p_boys + p_girls) / 2.0
+        p = (p_boys + p_girls) / 2.0
+        result.rec_expected = \
+            (children_stats['M'] + children_stats['F']) * p * p
+
         result.rec_pvalue = poisson_test(
             overlapped_events.rec_count,
             result.rec_expected)

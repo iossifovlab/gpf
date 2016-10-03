@@ -186,9 +186,9 @@ class EnrichmentView(APIView):
 
         tres['expected'] = round(t.expected, 4)
 
-        if t.count > t.expected:
+        if t.overlapped_count > t.expected:
             lessmore = 'more'
-        elif t.count < t.expected:
+        elif t.overlapped_count < t.expected:
             lessmore = 'less'
         else:
             lessmore = 'equal'
