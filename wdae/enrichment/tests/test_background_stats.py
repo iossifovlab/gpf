@@ -7,6 +7,7 @@ import unittest
 from enrichment.counters import DenovoStudies, GeneEventsCounter
 from DAE import get_gene_sets_symNS
 import precompute
+from enrichment.families import ChildrenStats
 
 
 class SynonymousBackgroundStatsTest(unittest.TestCase):
@@ -19,6 +20,7 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
         cls.gene_set = gt.t2G['ChromatinModifiers'].keys()
 
         cls.background = precompute.register.get('synonymousBackgroundModel')
+        cls.children_stats = ChildrenStats.build(cls.denovo_studies)
 
     def test_stats_autism_with_effect_type_lgd(self):
         counter = GeneEventsCounter('autism', 'LGDs')
@@ -27,7 +29,8 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
             self.denovo_studies, self.gene_set)
 
         stats = self.background.calc_stats(
-            all_events, enriched_events, self.gene_set)
+            all_events, enriched_events, self.gene_set,
+            self.children_stats['autism'])
 
         self.assertIsNotNone(stats)
 
@@ -50,7 +53,8 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
             self.denovo_studies, self.gene_set)
 
         stats = self.background.calc_stats(
-            all_events, enriched_events, self.gene_set)
+            all_events, enriched_events, self.gene_set,
+            self.children_stats['schizophrenia'])
 
         self.assertIsNotNone(stats)
 
@@ -73,7 +77,8 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
             self.denovo_studies, self.gene_set)
 
         stats = self.background.calc_stats(
-            all_events, enriched_events, self.gene_set)
+            all_events, enriched_events, self.gene_set,
+            self.children_stats['unaffected'])
 
         self.assertIsNotNone(stats)
 
@@ -100,6 +105,7 @@ class SamochaBackgroundStatsTest(unittest.TestCase):
         cls.gene_set = gt.t2G['ChromatinModifiers'].keys()
 
         cls.background = precompute.register.get('samochaBackgroundModel')
+        cls.children_stats = ChildrenStats.build(cls.denovo_studies)
 
     def test_stats_autism_with_effect_type_lgd(self):
         counter = GeneEventsCounter('autism', 'LGDs')
@@ -108,7 +114,8 @@ class SamochaBackgroundStatsTest(unittest.TestCase):
             self.denovo_studies, self.gene_set)
 
         stats = self.background.calc_stats(
-            all_events, enriched_events, self.gene_set)
+            all_events, enriched_events, self.gene_set,
+            self.children_stats['autism'])
 
         self.assertIsNotNone(stats)
 

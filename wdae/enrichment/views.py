@@ -303,15 +303,14 @@ class EnrichmentView(APIView):
             return Response(None)
 
         config = self.enrichment_config(query_data)
-        print(config)
-
-        children_stats = ChildrenStats.build(self.denovo_studies)
-
         denovo_studies = DenovoStudies()
+        children_stats = ChildrenStats.build(denovo_studies)
+        print(children_stats)
 
         self.enrichment = EnrichmentBuilder(
             config['background'], config['denovo_counter'],
-            denovo_studies, self.gene_syms)
+            denovo_studies, self.gene_syms,
+            children_stats)
         self.result = self.enrichment.build()
 
         response = self.serialize()

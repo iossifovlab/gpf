@@ -7,7 +7,6 @@ Created on Jun 22, 2015
 from collections import defaultdict, Counter
 
 from enrichment.config import PHENOTYPES
-from enrichment.denovo_counters import filter_denovo_studies_by_phenotype
 
 
 class ChildrenStats(object):
@@ -59,17 +58,13 @@ class ChildrenStats(object):
         return dict(child_type_cnt.items())
 
     @staticmethod
-    def build(dsts):
+    def build(denovo_studies):
         res = {}
         for phenotype in PHENOTYPES:
-            if phenotype != 'unaffected':
-                studies = filter_denovo_studies_by_phenotype(dsts, phenotype)
-                stats = ChildrenStats.probands(studies)
-                res[phenotype] = stats
-            else:
-                studies = [st for st in dsts
-                           if st.get_attr('study.type') == 'WE']
+            studies = denovo_studies.get_studies(phenotype)
+            if phenotype == 'uanffected':
                 stats = ChildrenStats.siblings(studies)
-                res[phenotype] = stats
-
+            else:
+                stats = ChildrenStats.probands(studies)
+            res[phenotype] = stats
         return res

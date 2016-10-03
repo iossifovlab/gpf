@@ -70,10 +70,10 @@ def collect_denovo_variants(dsts, inchild, effect, **kwargs):
     return itertools.chain.from_iterable(vsres)
 
 
-def filter_denovo_studies_by_phenotype(dsts, phenotype):
-    return [st for st in dsts
-            if st and st.get_attr('study.phenotype') == phenotype and
-            st.get_attr('study.type') == 'WE']
+# def filter_denovo_studies_by_phenotype(dsts, phenotype):
+#     return [st for st in dsts
+#             if st and st.get_attr('study.phenotype') == phenotype and
+#             st.get_attr('study.type') == 'WE']
 
 
 def count_denovo_variant_events(affected_gene_syms, gene_syms):

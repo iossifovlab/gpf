@@ -10,6 +10,7 @@ from DAE import get_gene_sets_symNS
 from enrichment.enrichment_builder import EnrichmentBuilder
 import precompute
 from enrichment.config import PHENOTYPES, EFFECT_TYPES
+from enrichment.families import ChildrenStats
 
 
 class EnrichmentBuilderTest(unittest.TestCase):
@@ -21,6 +22,7 @@ class EnrichmentBuilderTest(unittest.TestCase):
         gt = get_gene_sets_symNS('main')
         cls.gene_set = gt.t2G['ChromatinModifiers'].keys()
         cls.background = precompute.register.get('synonymousBackgroundModel')
+        cls.children_stats = ChildrenStats.build(cls.denovo_studies)
 
     def test_enrichment_builder_autism_phenotype(self):
 
@@ -28,7 +30,8 @@ class EnrichmentBuilderTest(unittest.TestCase):
             self.background,
             GeneEventsCounter,
             self.denovo_studies,
-            self.gene_set)
+            self.gene_set,
+            self.children_stats)
 
         res = builder.build_phenotype('autism')
 
@@ -80,7 +83,8 @@ class EnrichmentBuilderTest(unittest.TestCase):
             self.background,
             GeneEventsCounter,
             self.denovo_studies,
-            self.gene_set)
+            self.gene_set,
+            self.children_stats)
 
         res = builder.build_phenotype('unaffected')
 
@@ -131,7 +135,8 @@ class EnrichmentBuilderTest(unittest.TestCase):
             self.background,
             GeneEventsCounter,
             self.denovo_studies,
-            self.gene_set)
+            self.gene_set,
+            self.children_stats)
 
         res = builder.build()
         for phenotype in PHENOTYPES:

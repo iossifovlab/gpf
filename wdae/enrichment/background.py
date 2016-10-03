@@ -108,14 +108,7 @@ class Background(object):
         index = vpred(self.background['sym'])
         return np.sum(self.background['raw'][index])
 
-#     def test(self, O, N, effect_type, gene_syms, boys=0, girls=0):
-#         # N = total
-#         bg_prob = self._prob(gene_syms)
-#         expected = round(bg_prob * N, 4)
-#         p_val = stats.binom_test(O, N, p=bg_prob)
-#         return expected, p_val
-
-    def calc_stats(self, events, overlapped_events, gene_set):
+    def calc_stats(self, events, overlapped_events, gene_set, children_stats):
         bg_prob = self._prob(gene_set)
         result = StatsResults(events)
 
@@ -291,7 +284,7 @@ class SamochaBackground(Background, Precompute):
     def deserialize(self, data):
         self.background = self._load_and_prepare_build()
 
-    def calc_stats(self, events, overlapped_events, gene_set):
+    def calc_stats(self, events, overlapped_events, gene_set, children_stats):
         result = StatsResults(events)
 
         eff = 'P_{}'.format(events.effect_type.upper())
