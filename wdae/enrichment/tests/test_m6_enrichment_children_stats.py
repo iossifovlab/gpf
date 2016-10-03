@@ -26,3 +26,6 @@ class Test(unittest.TestCase):
 
         self.assertEquals(1502, stats['unaffected']['F'])
         self.assertEquals(5069, stats['unaffected']['M'])
+
+        self.assertEquals(1111, stats['unaffected']['M'])
+        self.assertEquals(1192, stats['unaffected']['F'])
