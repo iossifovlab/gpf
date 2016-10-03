@@ -170,7 +170,6 @@ class EnrichmentView(APIView):
 #         return tres
 
     def serialize_response_test(self, t):
-        print(t)
         tres = {}
         tres['overlap'] = t.count
         tres['count'] = t.overlapped_count
