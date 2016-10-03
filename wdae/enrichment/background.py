@@ -108,12 +108,12 @@ class Background(object):
         index = vpred(self.background['sym'])
         return np.sum(self.background['raw'][index])
 
-    def test(self, O, N, effect_type, gene_syms, boys=0, girls=0):
-        # N = total
-        bg_prob = self._prob(gene_syms)
-        expected = round(bg_prob * N, 4)
-        p_val = stats.binom_test(O, N, p=bg_prob)
-        return expected, p_val
+#     def test(self, O, N, effect_type, gene_syms, boys=0, girls=0):
+#         # N = total
+#         bg_prob = self._prob(gene_syms)
+#         expected = round(bg_prob * N, 4)
+#         p_val = stats.binom_test(O, N, p=bg_prob)
+#         return expected, p_val
 
     def calc_stats(self, events, overlapped_events, gene_set):
         bg_prob = self._prob(gene_set)

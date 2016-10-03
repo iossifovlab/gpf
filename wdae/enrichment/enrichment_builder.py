@@ -3,10 +3,29 @@ Created on Sep 30, 2016
 
 @author: lubo
 '''
-from enrichment.config import EnrichmentConfig, EFFECT_TYPES
+from enrichment.config import EnrichmentConfig, EFFECT_TYPES, PHENOTYPES
+import itertools
 
 
 class CellResult(EnrichmentConfig):
+
+    @staticmethod
+    def filter_effect_type(effect_type):
+        if 'lgds' == effect_type.lower():
+            return 'Nonsense,Frame-shift,Splice-site'
+        elif 'missense' == effect_type.lower():
+            return 'Missense'
+        elif 'synonymous' == effect_type.lower():
+            return 'Synonymous'
+
+    @staticmethod
+    def name_effect_type(effect_type):
+        if 'lgds' == effect_type.lower():
+            return 'LGDs'
+        elif 'missense' == effect_type.lower():
+            return 'Missense'
+        elif 'synonymous' == effect_type.lower():
+            return 'Synonymous'
 
     @staticmethod
     def _interpolate_gender(gender):
@@ -31,43 +50,63 @@ class CellResult(EnrichmentConfig):
         self.overlapped_count = len(self.overlapped_events)
 
         self.expected = expected
-        self.pvale = pvalue
+        self.pvalue = pvalue
         return self
 
     @property
     def filter(self):
-        return '{}|{}|{}'.format(self.in_child, self.gender, self.name)
+        return [
+            self.in_child,
+            self.gender,
+            self.filter_effect_type(self.effect_type)
+        ]
 
     @property
     def name(self):
         if self.rec:
-            return "Rec {}".format(self.effect_type)
+            return "Rec {}".format(self.name_effect_type(self.effect_type))
         else:
-            return self.effect_type
+            et = self.name_effect_type(self.effect_type)
+            if self.gender == 'male':
+                return 'Male {}'.format(et)
+            if self.gender == 'female':
+                return 'Female {}'.format(et)
+            return et
+
+    @property
+    def overlapped_gene_syms(self):
+        return set(itertools.chain.from_iterable(self.overlapped_events))
+
+    @property
+    def gene_syms(self):
+        return set(itertools.chain.from_iterable(self.events))
 
 
 class RowResult(EnrichmentConfig):
+    TESTS = ['all', 'rec', 'male', 'female']
 
     def __init__(self, config):
         super(RowResult, self).__init__(config.phenotype, config.effect_type)
 
     def __call__(self, events, overlapped_events, enrichment_stats):
-        self.all_result = CellResult(events)(
+        self.results = {}
+
+        self.results['all'] = CellResult(events)(
             events.all_events,
             overlapped_events.all_events,
             enrichment_stats.all_expected,
             enrichment_stats.all_pvalue)
-        self.rec_result = CellResult(events, rec=True)(
+        self.results['rec'] = CellResult(events, rec=True)(
             events.rec_events,
             overlapped_events.rec_events,
             enrichment_stats.rec_expected,
             enrichment_stats.rec_pvalue)
-        self.male_result = CellResult(events, gender='M')(
+        self.results['male'] = CellResult(events, gender='M')(
             events.male_events,
             overlapped_events.male_events,
             enrichment_stats.male_expected,
             enrichment_stats.male_pvalue)
-        self.female_result = CellResult(events, gender='F')(
+        self.results['female'] = CellResult(events, gender='F')(
             events.female_events,
             overlapped_events.female_events,
             enrichment_stats.female_expected,
@@ -75,21 +114,16 @@ class RowResult(EnrichmentConfig):
 
         return self
 
-    @property
-    def all(self):
-        return self.all_result
+    def __getitem__(self, test):
+        return self.results[test]
 
-    @property
-    def rec(self):
-        return self.rec_result
+    def __contains__(self, test):
+        return test in self.results
 
-    @property
-    def male(self):
-        return self.male_result
-
-    @property
-    def female(self):
-        return self.female_result
+    def __getattr__(self, test):
+        if test not in self.results:
+            raise AttributeError("unexpected test: {}".format(test))
+        return self.results[test]
 
 
 class PhenotypeResult(object):
@@ -109,6 +143,27 @@ class PhenotypeResult(object):
             raise AttributeError("bad effect type: {}".format(effect_type))
         return self._result[et]
 
+    def __getitem__(self, effect_type):
+        et = effect_type.lower()
+        if et not in self._result:
+            raise KeyError("bad effect type: {}".format(effect_type))
+        return self._result[et]
+
+    def __contains__(self, effect_type):
+        return effect_type.lower() in self._result
+
+
+class EnrichmentResult(object):
+
+    def __init__(self, results):
+        self.results = results
+
+    def __getitem__(self, phenotype):
+        return self.results[phenotype]
+
+    def __contains__(self, phenotype):
+        return phenotype in self.results
+
 
 class EnrichmentBuilder(object):
 
@@ -118,7 +173,8 @@ class EnrichmentBuilder(object):
         self.denovo_studies = denovo_studies
         self.gene_set = gene_set
 
-    def events_by_phenotype_and_effect_type(self, phenotype, effect_type):
+    def events_by_phenotype_and_effect_type(
+            self, phenotype, effect_type):
         counter = self.denovo_counter(
             phenotype, effect_type)
         events, overlapped_events = counter.full_events(
@@ -139,3 +195,11 @@ class EnrichmentBuilder(object):
 
         res = PhenotypeResult(phenotype)(results)
         return res
+
+    def build(self):
+        results = {}
+        for phenotype in PHENOTYPES:
+            res = self.build_phenotype(phenotype)
+            results[phenotype] = res
+        self.result = EnrichmentResult(results)
+        return self.result

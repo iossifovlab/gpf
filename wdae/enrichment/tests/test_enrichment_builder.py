@@ -9,6 +9,7 @@ from enrichment.counters import DenovoStudies, GeneEventsCounter
 from DAE import get_gene_sets_symNS
 from enrichment.enrichment_builder import EnrichmentBuilder
 import precompute
+from enrichment.config import PHENOTYPES, EFFECT_TYPES
 
 
 class EnrichmentBuilderTest(unittest.TestCase):
@@ -124,3 +125,27 @@ class EnrichmentBuilderTest(unittest.TestCase):
 
         self.assertEquals(306, res.Synonymous.female.count)
         self.assertEquals(4, res.Synonymous.female.overlapped_count)
+
+    def test_enrichment_test(self):
+        builder = EnrichmentBuilder(
+            self.background,
+            GeneEventsCounter,
+            self.denovo_studies,
+            self.gene_set)
+
+        res = builder.build()
+        for phenotype in PHENOTYPES:
+            self.assertIn(phenotype, res)
+            pres = res[phenotype]
+            for et in EFFECT_TYPES:
+                self.assertIn(et, pres)
+                epres = pres[et]
+                self.assertIsNotNone(epres)
+
+                self.assertEquals(phenotype, epres.phenotype)
+                self.assertEquals(et, epres.effect_type)
+
+                self.assertIn('all', epres)
+                self.assertIn('rec', epres)
+                self.assertIn('male', epres)
+                self.assertIn('female', epres)

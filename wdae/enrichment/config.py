@@ -15,10 +15,16 @@ PHENOTYPES = [
     'unaffected',
 ]
 
+# EFFECT_TYPES = [
+#     'LGDs',
+#     'Missense',
+#     'Synonymous'
+# ]
+
 EFFECT_TYPES = [
     'LGDs',
-    'Missense',
-    'Synonymous'
+    'missense',
+    'synonymous'
 ]
 
 
@@ -29,10 +35,11 @@ class EnrichmentConfig(object):
         assert phenotype in PHENOTYPES
         self.phenotype = phenotype
 
-        self.effect_type = build_effect_types_list([effect_type])
+        et = build_effect_types_list([effect_type])
+        assert 1 == len(et)
+        assert all([e in self.EFFECT_TYPES for e in et])
 
-        assert all([et in self.EFFECT_TYPES for et in self.effect_type])
-        self.effect_type = ','.join(self.effect_type)
+        self.effect_type = ','.join(et)
 
         if phenotype == 'unaffected':
             self.in_child = 'sib'

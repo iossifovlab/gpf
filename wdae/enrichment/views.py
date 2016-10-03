@@ -8,11 +8,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from helpers.wdae_query_variants import combine_gene_syms, gene_set_loader2
-from enrichment.config import PHENOTYPES
-from enrichment.denovo_counters import DenovoEventsCounter, \
-    DenovoGenesEventCounter
+from enrichment.config import PHENOTYPES, EFFECT_TYPES
+from enrichment.counters import EventsCounter, \
+    GeneEventsCounter
 from enrichment.families import ChildrenStats
-from enrichment.results import EnrichmentTestBuilder
+# from enrichment.results import EnrichmentTestBuilder
 from helpers.logger import LOGGER, log_filter
 from helpers.pvalue import colormap_value
 from precompute import register
@@ -20,6 +20,8 @@ from query_prepare import prepare_denovo_studies, \
     prepare_string_value
 from rest_framework import status
 from helpers.dae_query import prepare_query_dict
+from enrichment.counters import DenovoStudies
+from enrichment.enrichment_builder import EnrichmentBuilder, RowResult
 
 # from helpers.profiler import profile
 
@@ -138,20 +140,50 @@ class EnrichmentView(APIView):
         res['phenotypes'] = PHENOTYPES
         return res
 
+#     def serialize_response_test(self, t):
+#         print(t)
+#         tres = {}
+#         tres['overlap'] = t.total
+#         tres['count'] = t.count
+#
+#         tres['label'] = t.name
+#         if t.type == 'rec':
+#             tres['syms'] = t.gene_syms.intersection(self.gene_syms)
+#         tres['filter'] = t.filter
+#
+#         if t.p_val >= 0.0001:
+#             tres['p_val'] = round(t.p_val, 4)
+#         else:
+#             tres['p_val'] = str('%.1E' % t.p_val)
+#
+#         tres['expected'] = round(t.expected, 4)
+#
+#         if t.count > t.expected:
+#             lessmore = 'more'
+#         elif t.count < t.expected:
+#             lessmore = 'less'
+#         else:
+#             lessmore = 'equal'
+#
+#         tres['lessmore'] = lessmore
+#         tres['bg'] = colormap_value(t.p_val, lessmore)
+#         return tres
+
     def serialize_response_test(self, t):
+        print(t)
         tres = {}
-        tres['overlap'] = t.total
-        tres['count'] = t.count
+        tres['overlap'] = t.count
+        tres['count'] = t.overlapped_count
 
         tres['label'] = t.name
-        if t.type == 'rec':
-            tres['syms'] = t.gene_syms.intersection(self.gene_syms)
+        if t.rec:
+            tres['syms'] = t.overlapped_gene_syms
         tres['filter'] = t.filter
 
-        if t.p_val >= 0.0001:
-            tres['p_val'] = round(t.p_val, 4)
+        if t.pvalue >= 0.0001:
+            tres['p_val'] = round(t.pvalue, 4)
         else:
-            tres['p_val'] = str('%.1E' % t.p_val)
+            tres['p_val'] = str('%.1E' % t.pvalue)
 
         tres['expected'] = round(t.expected, 4)
 
@@ -163,18 +195,28 @@ class EnrichmentView(APIView):
             lessmore = 'equal'
 
         tres['lessmore'] = lessmore
-        tres['bg'] = colormap_value(t.p_val, lessmore)
+        tres['bg'] = colormap_value(t.pvalue, lessmore)
         return tres
 
     def serialize_response_results(self):
         result = {}
-        for phenotype, tests in self.result.items():
+        for phenotype in PHENOTYPES:
             res = []
-            for t in tests:
-                tres = self.serialize_response_test(t)
-                res.append(tres)
+            for effect_type in EFFECT_TYPES:
+                for test_type in RowResult.TESTS:
+                    t = self.result[phenotype][effect_type][test_type]
+                    tres = self.serialize_response_test(t)
+                    res.append(tres)
             result[phenotype] = res
         return result
+
+#         for phenotype, tests in self.result.items():
+#             res = []
+#             for t in tests:
+#                 tres = self.serialize_response_test(t)
+#                 res.append(tres)
+#             result[phenotype] = res
+#         return result
 
     def serialize(self):
         res1 = self.serialize_response_common_data()
@@ -235,9 +277,9 @@ class EnrichmentView(APIView):
             counting_model = config['enrichmentCountingModel']
 
         if counting_model == 'enrichmentEventsCounting':
-            counter_cls = DenovoEventsCounter
+            counter_cls = EventsCounter
         elif counting_model == 'enrichmentGeneCounting':
-            counter_cls = DenovoGenesEventCounter
+            counter_cls = GeneEventsCounter
         else:
             raise KeyError('wrong denovo counter: {}'.format(counting_model))
 
@@ -262,15 +304,16 @@ class EnrichmentView(APIView):
             return Response(None)
 
         config = self.enrichment_config(query_data)
+        print(config)
 
         children_stats = ChildrenStats.build(self.denovo_studies)
 
-        self.enrichment = EnrichmentTestBuilder()
-        self.enrichment.build(**config)
+        denovo_studies = DenovoStudies()
 
-        self.result = self.enrichment.calc(self.denovo_studies,
-                                           self.gene_syms,
-                                           children_stats)
+        self.enrichment = EnrichmentBuilder(
+            config['background'], config['denovo_counter'],
+            denovo_studies, self.gene_syms)
+        self.result = self.enrichment.build()
 
         response = self.serialize()
         response['children_stats'] = children_stats
