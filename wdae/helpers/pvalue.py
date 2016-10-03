@@ -11,11 +11,14 @@ def colormap_value(p_val, lessmore='more'):
         return "rgb(255,255,255)"
 
     scale = 0
-    if p_val > 0:
+    if p_val >= 0:
         if p_val > 0.05:
             scale = 0
         else:
-            scale = -np.log10(p_val)
+            if p_val < 1E-10:
+                scale = 10
+            else:
+                scale = -np.log10(p_val)
             if scale > 5:
                 scale = 5
             elif scale < 0:
