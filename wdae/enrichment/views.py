@@ -179,7 +179,7 @@ class EnrichmentView(APIView):
             else:
                 lessmore = 'equal'
             return lessmore
-        
+
         tres = {}
         tres['overlap'] = t.count
         tres['count'] = t.overlapped_count
