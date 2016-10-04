@@ -119,13 +119,13 @@ class SamochaBackgroundStatsTest(unittest.TestCase):
 
         self.assertIsNotNone(stats)
 
-        self.assertAlmostEqual(12.52, stats.all_expected, 2)
+        self.assertAlmostEqual(12.5358, stats.all_expected, 2)
         self.assertAlmostEqual(0.0, stats.all_pvalue, 4)
 
-        self.assertAlmostEqual(0.04069, stats.rec_expected, 2)
+        self.assertAlmostEqual(0.89924, stats.rec_expected, 2)
         self.assertAlmostEqual(0.0, stats.rec_pvalue, 4)
 
-        self.assertAlmostEqual(10.64, stats.male_expected, 2)
+        self.assertAlmostEqual(10.65059, stats.male_expected, 2)
         self.assertAlmostEqual(0.0, stats.male_pvalue, 4)
 
         self.assertAlmostEqual(1.8831, stats.female_expected, 2)
