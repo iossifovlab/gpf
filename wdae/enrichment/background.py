@@ -24,7 +24,7 @@ from enrichment.config import EnrichmentConfig
 
 
 def _collect_affected_gene_syms(vs):
-    return [set([ge['sym'] for ge in v.requestedGeneEffects])
+    return [set([ge['sym'].upper() for ge in v.requestedGeneEffects])
             for v in vs]
 
 
@@ -207,7 +207,7 @@ class CodingLenBackground(Background, Precompute):
             reader = csv.reader(f)
             reader.next()
             for row in reader:
-                back.append((str(row[0]), int(row[1])))
+                back.append((str(row[1]), int(row[2])))
         return back
 
     def __init__(self):
