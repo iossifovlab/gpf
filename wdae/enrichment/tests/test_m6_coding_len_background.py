@@ -15,6 +15,7 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.gene_term = get_gene_sets_symNS('main')
         self.gene_syms = self.gene_term.t2G['FMRP-Tuschl'].keys()
+        self.gene_syms = [gs.upper() for gs in self.gene_syms]
 
     def tearDown(self):
         pass
