@@ -51,7 +51,8 @@ class CounterBase(EnrichmentConfig):
 
     @staticmethod
     def filter_overlapping_events(events, gene_set):
-        return [ev for ev in events if any([gs in gene_set for gs in ev])]
+        gene_syms = [gs.upper() for gs in gene_set]
+        return [ev for ev in events if any([gs in gene_syms for gs in ev])]
 
     def overlap_events(self, events, gene_set):
         all_events = self.filter_overlapping_events(

@@ -75,11 +75,11 @@ class CellResult(EnrichmentConfig):
 
     @property
     def overlapped_gene_syms(self):
-        return set(itertools.chain.from_iterable(self.overlapped_events))
+        return list(set(itertools.chain.from_iterable(self.overlapped_events)))
 
     @property
     def gene_syms(self):
-        return set(itertools.chain.from_iterable(self.events))
+        return list(set(itertools.chain.from_iterable(self.events)))
 
 
 class RowResult(EnrichmentConfig):

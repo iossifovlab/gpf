@@ -109,6 +109,8 @@ class Background(object):
         return np.sum(self.background['raw'][index])
 
     def calc_stats(self, events, overlapped_events, gene_set, children_stats):
+        gene_set = [gs.upper() for gs in gene_set]
+
         bg_prob = self._prob(gene_set)
         result = StatsResults(events)
 
@@ -285,7 +287,7 @@ class SamochaBackground(Background, Precompute):
         self.background = self._load_and_prepare_build()
 
     def calc_stats(self, events, overlapped_events, gene_set, children_stats):
-        print(children_stats)
+        gene_set = [gs.upper() for gs in gene_set]
 
         result = StatsResults(events)
 

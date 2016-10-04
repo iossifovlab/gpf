@@ -3,9 +3,10 @@ Created on Jun 15, 2015
 
 @author: lubo
 '''
-from enrichment.views import EnrichmentView
-from rest_framework.test import APITestCase
 from rest_framework import status
+from rest_framework.test import APITestCase
+
+from enrichment.views import EnrichmentView
 
 
 class Test(APITestCase):
