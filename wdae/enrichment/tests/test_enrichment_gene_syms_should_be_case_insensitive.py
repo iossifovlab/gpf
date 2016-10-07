@@ -5,7 +5,7 @@ Created on Oct 4, 2016
 '''
 from rest_framework import status
 from rest_framework.test import APITestCase
-from enrichment.background import SamochaBackground
+
 import precompute
 
 
@@ -66,7 +66,7 @@ class Test(APITestCase):
         self.assertEqual(data1, data2)
 
     def test_samocha_background_case_insensitive(self):
-        background = SamochaBackground()
+        background = precompute.register.get('samochaBackgroundModel')
         self.assertIsNotNone(background.background)
 
         for gs in background.background['gene']:

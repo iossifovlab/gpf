@@ -16,13 +16,29 @@ import pandas as pd
 
 class Test(unittest.TestCase):
 
-    def setUp(self):
-        self.gene_term = get_gene_sets_symNS('main')
-        self.gene_syms = self.gene_term.t2G['ChromatinModifiers'].keys()
+    @classmethod
+    def setUpClass(cls):
+        super(Test, cls).setUpClass()
+        gene_term = get_gene_sets_symNS('main')
+        cls.gene_syms = gene_term.t2G['ChromatinModifiers'].keys()
+        cls.background = SamochaBackground()
+        cls.background.precompute()
+
+    def compareSamochaBackgrounds(self, df1, df2):
+        self.assertTrue(np.all(df1['gene'] == df2['gene']))
+        self.assertTrue(np.all(df1['M'] == df2['M']))
+        self.assertTrue(np.all(df1['F'] == df2['F']))
+        index = np.abs(df1['P_LGDS'] - df2['P_LGDS']) > 1E-8
+        self.assertFalse(np.any(index))
+        index = np.abs(df1['P_LGDS'] - df2['P_LGDS']) < 1E-8
+        self.assertTrue(np.all(index))
+        index = np.abs(df1['P_MISSENSE'] - df2['P_MISSENSE']) < 1E-8
+        self.assertTrue(np.all(index))
+        index = np.abs(df1['P_SYNONYMOUS'] - df2['P_SYNONYMOUS']) < 1E-8
+        self.assertTrue(np.all(index))
 
     def test_compare_two_background_tables(self):
-        background = SamochaBackground()
-        df1 = background.background
+        df1 = self.background.background
         self.assertIsNotNone(df1)
 
         filename = os.path.join(
@@ -33,20 +49,18 @@ class Test(unittest.TestCase):
         df2 = pd.read_csv(filename)
         self.assertIsNotNone(df2)
 
-        self.assertTrue(np.all(df1['gene'] == df2['gene_upper']))
-        self.assertTrue(np.all(df1['M'] == df2['M']))
-        self.assertTrue(np.all(df1['F'] == df2['F']))
+        self.compareSamochaBackgrounds(df1, df2)
 
-        index = np.abs(df1['P_LGDS'] - df2['P_LGDS']) > 1E-8
-        self.assertFalse(np.any(index))
-        index = np.abs(df1['P_LGDS'] - df2['P_LGDS']) < 1E-8
-        self.assertTrue(np.all(index))
+    def test_model_serialize(self):
+        data = self.background.serialize()
+        self.assertIsNotNone(data)
 
-        index = np.abs(df1['P_MISSENSE'] - df2['P_MISSENSE']) < 1E-8
-        self.assertTrue(np.all(index))
+        background = SamochaBackground()
+        background.deserialize(data)
+        self.compareSamochaBackgrounds(
+            self.background.background,
+            background.background)
 
-        index = np.abs(df1['P_SYNONYMOUS'] - df2['P_SYNONYMOUS']) < 1E-8
-        self.assertTrue(np.all(index))
 
 #     def test_enrichment_test(self):
 #         expected, p_val = self.bg.test(

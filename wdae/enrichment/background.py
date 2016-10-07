@@ -320,17 +320,32 @@ class SamochaBackground(Background, Precompute):
     def __init__(self):
         super(SamochaBackground, self).__init__()
         self.name = 'samochaBackgroundModel'
-        self.background = self._load_and_prepare_build()
+        # self.background = self._load_and_prepare_build()
 
     def precompute(self):
         self.background = self._load_and_prepare_build()
         return self.background
 
     def serialize(self):
-        return {'background': ''}
+        ndarray = self.background.as_matrix(
+            ['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
+        fout = cStringIO.StringIO()
+        np.save(fout, ndarray)
+
+        data = zlib.compress(fout.getvalue())
+        return {'background': data}
+
+#     def deserialize(self, data):
+#         self._load_and_prepare_build()
 
     def deserialize(self, data):
-        self.background = self._load_and_prepare_build()
+        b = data['background']
+        fin = cStringIO.StringIO(zlib.decompress(b))
+        ndarray = np.load(fin)
+
+        self.background = pd.DataFrame(
+            ndarray,
+            columns=['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
 
     def calc_stats(self, events, gene_set, children_stats):
         result = StatsResults(events)
