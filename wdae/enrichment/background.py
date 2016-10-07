@@ -110,10 +110,10 @@ class Background(object):
         return np.sum(self.background['raw'][index])
 
     def calc_stats(self, events, gene_set, children_stats):
-        gene_set = [gs.upper() for gs in gene_set]
-        overlapped_events = events.overlap(gene_set)
+        gene_syms = [gs.upper() for gs in gene_set]
+        overlapped_events = events.overlap(gene_syms)
 
-        bg_prob = self._prob(gene_set)
+        bg_prob = self._prob(gene_syms)
         result = StatsResults(events)
 
         result.all_expected = bg_prob * events.all_count
@@ -277,7 +277,7 @@ class SamochaBackground(Background, Precompute):
         df['F'] = pd.Series(2, index=df.index)
         df['M'] = pd.Series(2, index=df.index)
 
-        for _c, gene_name in enumerate(df['gene']):
+        for gene_name in df['gene']:
             gene_loc = df['gene'] == gene_name
             gms = GM.gene_models_by_gene_name(gene_name)
             chromes = []

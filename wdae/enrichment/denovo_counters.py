@@ -20,7 +20,7 @@ def filter_denovo_one_event_per_family(vs):
     seen = set()
     res = []
     for v in vs:
-        syms = set([ge['sym'] for ge in v.requestedGeneEffects])
+        syms = set([ge['sym'].upper() for ge in v.requestedGeneEffects])
         not_seen = [gs for gs in syms if (v.familyId + gs) not in seen]
         if not not_seen:
             continue
@@ -32,7 +32,7 @@ def filter_denovo_one_event_per_family(vs):
 
 
 def filter_denovo_one_gene_per_recurrent_events(vs):
-    gn_sorted = sorted([[ge['sym'], v] for v in vs
+    gn_sorted = sorted([[ge['sym'].upper(), v] for v in vs
                         for ge in v.requestedGeneEffects])
     sym_2_vars = {sym: [t[1] for t in tpi]
                   for sym, tpi in itertools.groupby(gn_sorted,
@@ -43,7 +43,7 @@ def filter_denovo_one_gene_per_recurrent_events(vs):
 
 
 def filter_denovo_one_gene_per_events(vs):
-    gn_sorted = sorted([[ge['sym'], v] for v in vs
+    gn_sorted = sorted([[ge['sym'].upper(), v] for v in vs
                         for ge in v.requestedGeneEffects])
     sym_2_vars = {sym: [t[1] for t in tpi]
                   for sym, tpi in itertools.groupby(gn_sorted,
@@ -53,21 +53,21 @@ def filter_denovo_one_gene_per_events(vs):
     return [[gs] for gs, _fn in sym_2_fn.items()]
 
 
-def collect_denovo_variants(dsts, inchild, effect, **kwargs):
-    """
-    Selects denovo variants according given test spec.
-
-    dsts - list of denovo studies;
-    test_spec - enrichment test specification.
-
-    Returns a generator of variants.
-    """
-    vsres = []
-
-    for dst in dsts:
-        vsres.append(dst.get_denovo_variants(inChild=inchild,
-                                             effectTypes=effect))
-    return itertools.chain.from_iterable(vsres)
+# def collect_denovo_variants(dsts, inchild, effect, **kwargs):
+#     """
+#     Selects denovo variants according given test spec.
+#
+#     dsts - list of denovo studies;
+#     test_spec - enrichment test specification.
+#
+#     Returns a generator of variants.
+#     """
+#     vsres = []
+#
+#     for dst in dsts:
+#         vsres.append(dst.get_denovo_variants(inChild=inchild,
+#                                              effectTypes=effect))
+#     return itertools.chain.from_iterable(vsres)
 
 
 # def filter_denovo_studies_by_phenotype(dsts, phenotype):
@@ -76,17 +76,17 @@ def collect_denovo_variants(dsts, inchild, effect, **kwargs):
 #             st.get_attr('study.type') == 'WE']
 
 
-def count_denovo_variant_events(affected_gene_syms, gene_syms):
-    count = 0
-    for variant_gene_syms in affected_gene_syms:
-        touched_gene_set = False
-        for sym in variant_gene_syms:
-            if sym in gene_syms:
-                touched_gene_set = True
-        if touched_gene_set:
-            count += 1
-
-    return count
+# def count_denovo_variant_events(affected_gene_syms, gene_syms):
+#     count = 0
+#     for variant_gene_syms in affected_gene_syms:
+#         touched_gene_set = False
+#         for sym in variant_gene_syms:
+#             if sym in gene_syms:
+#                 touched_gene_set = True
+#         if touched_gene_set:
+#             count += 1
+#
+#     return count
 
 
 # class EnrichmentResult(object):
