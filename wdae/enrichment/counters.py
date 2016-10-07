@@ -49,32 +49,15 @@ class CounterBase(EnrichmentConfig):
     def events(self, denovo_studies):
         raise NotImplementedError()
 
-    @staticmethod
-    def filter_overlapping_events(events, gene_set):
-        gene_syms = [gs.upper() for gs in gene_set]
-        return [ev for ev in events if any([gs in gene_syms for gs in ev])]
-
-    def overlap_events(self, events, gene_set):
-        all_events = self.filter_overlapping_events(
-            events.all_events, gene_set)
-        rec_events = self.filter_overlapping_events(
-            events.rec_events, gene_set)
-        male_events = self.filter_overlapping_events(
-            events.male_events, gene_set)
-        female_events = self.filter_overlapping_events(
-            events.female_events, gene_set)
-        return EventsResult(self)(
-            all_events, rec_events, male_events, female_events)
-
-    def overlapped_events(self, denovo_studies, gene_set):
-        events = self.events(denovo_studies)
-        return self.overlap_events(events, gene_set)
-
-    def full_events(self, denovo_studies, gene_set):
-        events = self.events(denovo_studies)
-        overlapped_events = self.overlap_events(events, gene_set)
-
-        return events, overlapped_events
+#     def overlapped_events(self, denovo_studies, gene_set):
+#         events = self.events(denovo_studies)
+#         return self.overlap_events(events, gene_set)
+#
+#     def full_events(self, denovo_studies, gene_set):
+#         events = self.events(denovo_studies)
+#         overlapped_events = self.overlap_events(events, gene_set)
+#
+#         return events, overlapped_events
 
 
 class EventsResult(EnrichmentConfig):
@@ -95,6 +78,23 @@ class EventsResult(EnrichmentConfig):
         self.female_count = len(self.female_events)
 
         return self
+
+    @staticmethod
+    def filter_overlapping_events(events, gene_set):
+        gene_syms = [gs.upper() for gs in gene_set]
+        return [ev for ev in events if any([gs in gene_syms for gs in ev])]
+
+    def overlap(self, gene_set):
+        all_events = self.filter_overlapping_events(
+            self.all_events, gene_set)
+        rec_events = self.filter_overlapping_events(
+            self.rec_events, gene_set)
+        male_events = self.filter_overlapping_events(
+            self.male_events, gene_set)
+        female_events = self.filter_overlapping_events(
+            self.female_events, gene_set)
+        return EventsResult(self)(
+            all_events, rec_events, male_events, female_events)
 
 
 class EventsCounter(CounterBase):

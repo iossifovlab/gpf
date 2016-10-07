@@ -60,38 +60,38 @@ class EventsCounterTest(unittest.TestCase):
     def test_overlapped_events_autism_with_effect_type_lgd(self):
         counter = GeneEventsCounter('autism', 'LGDs')
 
-        events = counter.overlapped_events(
-            self.denovo_studies, self.gene_set)
+        events = counter.events(self.denovo_studies)
+        overlapped_events = events.overlap(self.gene_set)
 
-        self.assertIsNotNone(events)
+        self.assertIsNotNone(overlapped_events)
 
-        self.assertEquals(36, len(events.all_events))
-        self.assertEquals(9, len(events.rec_events))
-        self.assertEquals(28, len(events.male_events))
-        self.assertEquals(13, len(events.female_events))
+        self.assertEquals(36, len(overlapped_events.all_events))
+        self.assertEquals(9, len(overlapped_events.rec_events))
+        self.assertEquals(28, len(overlapped_events.male_events))
+        self.assertEquals(13, len(overlapped_events.female_events))
 
     def test_overlapped_events_unaffected_with_effect_type_synonymous(self):
         counter = GeneEventsCounter('unaffected', 'synonymous')
 
-        events = counter.overlapped_events(
-            self.denovo_studies, self.gene_set)
+        events = counter.events(self.denovo_studies)
+        overlapped_events = events.overlap(self.gene_set)
 
-        self.assertIsNotNone(events)
+        self.assertIsNotNone(overlapped_events)
 
-        self.assertEquals(17, len(events.all_events))
-        self.assertEquals(1, len(events.rec_events))
-        self.assertEquals(13, len(events.male_events))
-        self.assertEquals(4, len(events.female_events))
+        self.assertEquals(17, len(overlapped_events.all_events))
+        self.assertEquals(1, len(overlapped_events.rec_events))
+        self.assertEquals(13, len(overlapped_events.male_events))
+        self.assertEquals(4, len(overlapped_events.female_events))
 
     def test_overlapped_events_schizophrenia_with_effect_type_missense(self):
         counter = GeneEventsCounter('schizophrenia', 'missense')
 
-        events = counter.overlapped_events(
-            self.denovo_studies, self.gene_set)
+        events = counter.events(self.denovo_studies)
+        overlapped_events = events.overlap(self.gene_set)
 
-        self.assertIsNotNone(events)
+        self.assertIsNotNone(overlapped_events)
 
-        self.assertEquals(21, len(events.all_events))
-        self.assertEquals(2, len(events.rec_events))
-        self.assertEquals(9, len(events.male_events))
-        self.assertEquals(12, len(events.female_events))
+        self.assertEquals(21, len(overlapped_events.all_events))
+        self.assertEquals(2, len(overlapped_events.rec_events))
+        self.assertEquals(9, len(overlapped_events.male_events))
+        self.assertEquals(12, len(overlapped_events.female_events))

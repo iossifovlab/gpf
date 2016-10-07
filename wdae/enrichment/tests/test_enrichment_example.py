@@ -26,11 +26,10 @@ class EnrichmentExampleTest(unittest.TestCase):
         background = precompute.register.get('samochaBackgroundModel')
 
         counter = GeneEventsCounter('autism', 'LGDs')
-        events, overlapped_events = counter.full_events(
-            self.denovo_studies, self.gene_set)
+        events = counter.events(self.denovo_studies)
 
         stats = background.calc_stats(
-            events, overlapped_events, self.gene_set,
+            events, self.gene_set,
             self.children_stats['autism'])
 
         self.assertIsNotNone(stats)

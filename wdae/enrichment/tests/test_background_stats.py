@@ -25,11 +25,10 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
     def test_stats_autism_with_effect_type_lgd(self):
         counter = GeneEventsCounter('autism', 'LGDs')
 
-        events, overlapped_events = counter.full_events(
-            self.denovo_studies, self.gene_set)
+        events = counter.events(self.denovo_studies)
 
         stats = self.background.calc_stats(
-            events, overlapped_events, self.gene_set,
+            events, self.gene_set,
             self.children_stats['autism'])
 
         self.assertIsNotNone(stats)
@@ -49,11 +48,10 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
     def test_stats_schizophrenia_with_effect_type_lgd(self):
         counter = GeneEventsCounter('schizophrenia', 'LGDs')
 
-        events, overlapped_events = counter.full_events(
-            self.denovo_studies, self.gene_set)
+        events = counter.events(self.denovo_studies)
 
         stats = self.background.calc_stats(
-            events, overlapped_events, self.gene_set,
+            events, self.gene_set,
             self.children_stats['schizophrenia'])
 
         self.assertIsNotNone(stats)
@@ -73,11 +71,10 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
     def test_stats_unaffected_with_effect_type_missense(self):
         counter = GeneEventsCounter('unaffected', 'missense')
 
-        events, overlapped_events = counter.full_events(
-            self.denovo_studies, self.gene_set)
+        events = counter.events(self.denovo_studies)
 
         stats = self.background.calc_stats(
-            events, overlapped_events, self.gene_set,
+            events, self.gene_set,
             self.children_stats['unaffected'])
 
         self.assertIsNotNone(stats)
@@ -110,11 +107,10 @@ class SamochaBackgroundStatsTest(unittest.TestCase):
     def test_stats_autism_with_effect_type_lgd(self):
         counter = GeneEventsCounter('autism', 'LGDs')
 
-        events, overlapped_events = counter.full_events(
-            self.denovo_studies, self.gene_set)
+        events = counter.events(self.denovo_studies)
 
         stats = self.background.calc_stats(
-            events, overlapped_events, self.gene_set,
+            events, self.gene_set,
             self.children_stats['autism'])
 
         self.assertIsNotNone(stats)

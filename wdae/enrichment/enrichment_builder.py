@@ -180,20 +180,21 @@ class EnrichmentBuilder(object):
             self, phenotype, effect_type):
         counter = self.denovo_counter(
             phenotype, effect_type)
-        events, overlapped_events = counter.full_events(
-            self.denovo_studies, self.gene_set)
+        events = counter.events(self.denovo_studies)
 
         stats = self.background.calc_stats(
-            events, overlapped_events, self.gene_set,
+            events, self.gene_set,
             self.children_stats[phenotype])
-        return events, overlapped_events, stats
+        return events, stats
 
     def build_phenotype(self, phenotype):
         results = []
         for effect_type in EFFECT_TYPES:
-            events, overlapped_events, enrichment_stats = \
+            events, enrichment_stats = \
                 self.events_by_phenotype_and_effect_type(
                     phenotype, effect_type)
+            overlapped_events = events.overlap(self.gene_set)
+
             row = RowResult(events)(
                 events, overlapped_events, enrichment_stats)
             results.append(row)
