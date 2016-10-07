@@ -8,6 +8,7 @@ from enrichment.counters import DenovoStudies, GeneEventsCounter
 from DAE import get_gene_sets_symNS
 import precompute
 from enrichment.families import ChildrenStats
+from enrichment.background import SamochaBackground
 
 
 class SynonymousBackgroundStatsTest(unittest.TestCase):
@@ -101,7 +102,7 @@ class SamochaBackgroundStatsTest(unittest.TestCase):
         gt = get_gene_sets_symNS('main')
         cls.gene_set = gt.t2G['ChromatinModifiers'].keys()
 
-        cls.background = precompute.register.get('samochaBackgroundModel')
+        cls.background = SamochaBackground()
         cls.children_stats = ChildrenStats.build(cls.denovo_studies)
 
     def test_stats_autism_with_effect_type_lgd(self):

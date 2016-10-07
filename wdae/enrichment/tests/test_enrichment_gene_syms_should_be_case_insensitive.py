@@ -69,7 +69,7 @@ class Test(APITestCase):
         background = SamochaBackground()
         self.assertIsNotNone(background.background)
 
-        for gs in background.background['gene_upper']:
+        for gs in background.background['gene']:
             if gs != gs.upper():
                 print(gs)
             self.assertEquals(gs, gs.upper())

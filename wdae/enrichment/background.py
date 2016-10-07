@@ -15,12 +15,13 @@ import zlib
 from django.conf import settings
 from django.core.cache import caches
 
+from DAE import *
+# from DAE import genomesDB
 from DAE import vDB
+from enrichment.config import EnrichmentConfig
 import numpy as np
 import pandas as pd
-
 from precompute.register import Precompute
-from enrichment.config import EnrichmentConfig
 
 
 def _collect_affected_gene_syms(vs):
@@ -266,10 +267,54 @@ class SamochaBackground(Background, Precompute):
     FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
-        'data/enrichment/background-samocha-et-al.csv')
+        'data/enrichment/NIHMS612569-supplement-3.csv',
+        # 'data/enrichment/background-samocha-et-al.csv'
+    )
+
+    def _load_and_prepare_gender_count(self, df):
+        GM = genomesDB.get_gene_models()
+
+        df['F'] = pd.Series(2, index=df.index)
+        df['M'] = pd.Series(2, index=df.index)
+
+        for _c, gene_name in enumerate(df['gene']):
+            gene_loc = df['gene'] == gene_name
+            gms = GM.gene_models_by_gene_name(gene_name)
+            chromes = []
+            for tm in gms:
+                chromes.append(tm.chr)
+            if 'X' in chromes:
+                df.loc[gene_loc, 'F'] = 2
+                df.loc[gene_loc, 'M'] = 1
+            elif 'Y' in chromes:
+                df.loc[gene_loc, 'F'] = 0
+                df.loc[gene_loc, 'M'] = 1
+        return df
+
+    def _load_and_prepare_probabilities(self, df):
+        df.fillna(-99, inplace=True)
+        df['P_LGDS'] = pd.Series(1E-99, index=df.index)
+        df['P_MISSENSE'] = pd.Series(1E-99, index=df.index)
+        df['P_SYNONYMOUS'] = pd.Series(1E-99, index=df.index)
+
+        df['P_LGDS'] = np.power(10, df['nonsense'].values) + \
+            np.power(10.0, df['splice-site'].values) + \
+            np.power(10.0, df['frame-shift'].values)
+        df['P_MISSENSE'] = np.power(10, df['missense'].values)
+        df['P_SYNONYMOUS'] = np.power(10, df['synonymous'].values)
+
+        return df
+
+    def _load_and_prepare_gene_upper(self, df):
+        df['gene'] = df['gene'].str.upper()
+        return df
 
     def _load_and_prepare_build(self):
         df = pd.read_csv(self.FILENAME)
+        df = self._load_and_prepare_gender_count(df)
+        df = self._load_and_prepare_probabilities(df)
+        df = self._load_and_prepare_gene_upper(df)
+
         return df
 
     def __init__(self):
@@ -296,7 +341,7 @@ class SamochaBackground(Background, Precompute):
         assert eff in self.background.columns
 
         gs = [g.upper() for g in gene_set]
-        df = self.background[self.background['gene_upper'].isin(gs)]
+        df = self.background[self.background['gene'].isin(gs)]
         p_boys = (df['M'] * df[eff]).sum()
         # result.male_expected = p_boys * events.male_count
         result.male_expected = p_boys * children_stats['M']
