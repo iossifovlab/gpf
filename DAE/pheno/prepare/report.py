@@ -45,6 +45,7 @@ class MeasureData(object):
 
 
 class PhenoReport(object):
+    FIGSIZE = (10, 5)
 
     def __init__(self, args):
         self.args = args
@@ -114,19 +115,19 @@ class PhenoReport(object):
 
     def measure_violinplot(self, m, df):
         data, labels = self._measure_df_split(m, df)
-        plt.figure(figsize=(11, 5))
+        plt.figure(figsize=self.FIGSIZE)
         sns.violinplot(data=data)
         plt.xticks(range(len(labels)), labels, rotation='vertical')
 
     def measure_boxplot(self, m, df):
         data, labels = self._measure_df_split(m, df)
-        plt.figure(figsize=(11, 5))
+        plt.figure(figsize=self.FIGSIZE)
         sns.boxplot(data=data)
         plt.xticks(range(len(labels)), labels, rotation='vertical')
 
     def measure_stripplot(self, m, df):
         data, labels = self._measure_df_split(m, df)
-        plt.figure(figsize=(11, 5))
+        plt.figure(figsize=self.FIGSIZE)
         sns.stripplot(data=data, jitter=True)
         plt.xticks(range(len(labels)), labels, rotation='vertical')
 
@@ -290,7 +291,7 @@ class PhenoReport(object):
 
         instrument = self.phdb.instruments['ssc_commonly_used']
         self.out_instrument(instrument)
-        for m in instrument.measures.values()[:15]:
+        for m in instrument.measures.values():
             if m.stats == 'continuous' or m.stats == 'ordinal':
                 print("handling measure: {}".format(m.measure_id))
                 self.out_measure(m)
