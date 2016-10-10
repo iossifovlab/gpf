@@ -30,6 +30,84 @@ def parse_args(argv):
     return parser.parse_args(argv)
 
 
+def build_measure_df(df, measure_id):
+    values = df[measure_id].values
+    roles = [['ALL'] * len(values)]
+    data = [values]
+
+    values = df[df.gender == 'M'][measure_id].values
+    roles.append(['M'] * len(values))
+    data.append(values)
+
+    values = df[df.gender == 'F'][measure_id].values
+    roles.append(['F'] * len(values))
+    data.append(values)
+
+    values = df[df.role == 'prb'][measure_id].values
+    roles.append(['prb'] * len(values))
+    data.append(values)
+
+    values = df[np.logical_and(
+        df.role == 'prb', df.gender == 'M')][measure_id].values
+    roles.append(['prbM'] * len(values))
+    data.append(values)
+
+    values = df[np.logical_and(df.role == 'prb', df.gender == 'F')][
+        measure_id].values
+    roles.append(['prbF'] * len(values))
+    data.append(values)
+
+    values = df[df.role == 'sib'][measure_id].values
+    roles.append(['sib'] * len(values))
+    data.append(values)
+
+    values = df[np.logical_and(df.role == 'sib', df.gender == 'M')][
+        measure_id].values
+    roles.append(['sibM'] * len(values))
+    data.append(values)
+
+    values = df[np.logical_and(df.role == 'sib', df.gender == 'F')][
+        measure_id].values
+    roles.append(['sibF'] * len(values))
+    data.append(values)
+
+    values = df[np.logical_or(df.role == 'dad', df.role == 'mom')][
+        measure_id].values
+    roles.append(['parents'] * len(values))
+    data.append(values)
+
+    values = df[df.role == 'dad'][measure_id].values
+    roles.append(['dad'] * len(values))
+    data.append(values)
+
+    values = df[df.role == 'mom'][measure_id].values
+    roles.append(['mom'] * len(values))
+    data.append(values)
+
+    return pd.DataFrame(
+        data={
+            'role': np.hstack(roles),
+            'value': np.hstack(data)
+        })
+
+
+def build_measure_df_labels(dd):
+    labels = [
+        'All ({})'.format(np.sum(dd.role == 'ALL')),
+        'M ({})'.format(np.sum(dd.role == 'M')),
+        'F ({})'.format(np.sum(dd.role == 'F')),
+        'prb All ({})'.format(np.sum(dd.role == 'prb')),
+        'prb M ({})'.format(np.sum(dd.role == 'prbM')),
+        'prb F ({})'.format(np.sum(dd.role == 'prbF')),
+        'sib All ({})'.format(np.sum(dd.role == 'sib')),
+        'sib M ({})'.format(np.sum(dd.role == 'sibM')),
+        'sib F ({})'.format(np.sum(dd.role == 'sibF')),
+        'Parents All ({})'.format(np.sum(dd.role == 'parents')),
+        'dad ({})'.format(np.sum(dd.role == 'dad')),
+        'mom ({})'.format(np.sum(dd.role == 'mom'))]
+    return labels
+
+
 class MeasureData(object):
 
     def __init__(self, data, labels):
