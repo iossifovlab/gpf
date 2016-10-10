@@ -30,6 +30,20 @@ def parse_args(argv):
     return parser.parse_args(argv)
 
 
+class MeasureData(object):
+
+    def __init__(self, data, labels):
+        self.data = data
+        self.labels = labels
+
+    def get(self, label, default):
+        print("label: {}; default: {}".format(label, default))
+        if label not in self.labels:
+            return self.data[0]
+        index = self.labels.index(label)
+        return self.data[index]
+
+
 class PhenoReport(object):
 
     def __init__(self, args):
@@ -69,9 +83,11 @@ class PhenoReport(object):
         plt.xticks(range(len(labels)), labels, rotation='vertical')
 
     def _measure_df_gender_split(self, m, df):
-        data = [df[m.measure_id],
-                df[df.gender == 'M'][m.measure_id],
-                df[df.gender == 'F'][m.measure_id]]
+        data = [
+            df[m.measure_id],
+            df[df.gender == 'M'][m.measure_id],
+            df[df.gender == 'F'][m.measure_id]
+        ]
         return data
 
     def _measure_df_split(self, m, df):
@@ -80,6 +96,7 @@ class PhenoReport(object):
         data.extend(self._measure_df_gender_split(m, df[df.role == 'sib']))
         data.extend(self._measure_df_gender_split(
             m, df[np.logical_or(df.role == 'mom', df.role == 'dad')]))
+
         labels = [
             'All ({})'.format(len(data[0])),
             'M ({})'.format(len(data[1])),
@@ -87,28 +104,29 @@ class PhenoReport(object):
             'prb All ({})'.format(len(data[3])),
             'prb M ({})'.format(len(data[4])),
             'prb F ({})'.format(len(data[5])),
-            'sib All ({})'.format(len(data[3])),
-            'sib M ({})'.format(len(data[4])),
-            'sib F ({})'.format(len(data[5])),
-            'Parents All ({})'.format(len(data[3])),
-            'dad ({})'.format(len(data[4])),
-            'mom ({})'.format(len(data[5]))]
+            'sib All ({})'.format(len(data[6])),
+            'sib M ({})'.format(len(data[7])),
+            'sib F ({})'.format(len(data[8])),
+            'Parents All ({})'.format(len(data[9])),
+            'dad ({})'.format(len(data[10])),
+            'mom ({})'.format(len(data[11]))]
         return data, labels
 
     def measure_violinplot(self, m, df):
         data, labels = self._measure_df_split(m, df)
-        sns.violinplot(data=data, jitter=True)
-        # sns.swarmplot(data=data, color="w", alpha=.5)
-        # sns.stripplot(data=data, jitter=True)
+        plt.figure(figsize=(11, 5))
+        sns.violinplot(data=data)
         plt.xticks(range(len(labels)), labels, rotation='vertical')
 
     def measure_boxplot(self, m, df):
         data, labels = self._measure_df_split(m, df)
+        plt.figure(figsize=(11, 5))
         sns.boxplot(data=data)
         plt.xticks(range(len(labels)), labels, rotation='vertical')
 
     def measure_stripplot(self, m, df):
         data, labels = self._measure_df_split(m, df)
+        plt.figure(figsize=(11, 5))
         sns.stripplot(data=data, jitter=True)
         plt.xticks(range(len(labels)), labels, rotation='vertical')
 
@@ -206,7 +224,7 @@ class PhenoReport(object):
 
     def _figure_caption(self, caption):
         params = {
-            'axes.titlesize': 'x-large',
+            'axes.titlesize': 'large',
         }
         plt.rcParams.update(params)
         plt.title(caption)
@@ -222,38 +240,23 @@ class PhenoReport(object):
             out.write('   :scale: 75%\n\n\n')
             out.write('\n')
 
-    def out_measure_probands(self, m):
-        caption = 'Measured Probands Boxplots\n{}'.format(m.measure_id)
+    def out_measure_values_figure(self, m):
+        caption = 'Measure\n{}'.format(m.measure_id)
         df = self.phdb.get_persons_values_df([m.measure_id])
+
         self.measure_violinplot(m, df)
         self._figure_caption(caption)
-
-        linkpath = self.save_fig(m, "prbs_boxplot")
-
+        linkpath = self.save_fig(m, "violinplot")
         self._out_figure(linkpath, caption)
 
-    def out_measure_siblings(self, m):
-        caption = 'Measured Siblings Boxplots\n{}'.format(m.measure_id)
-        df = self.phdb.get_persons_values_df([m.measure_id])
-        # self.measure_gender_boxplots(m, df[df.role == 'sib'])
         self.measure_boxplot(m, df)
-
         self._figure_caption(caption)
-
-        linkpath = self.save_fig(m, "sibs_boxplot")
-
+        linkpath = self.save_fig(m, "boxplot")
         self._out_figure(linkpath, caption)
 
-    def out_measure_parents(self, m):
-        caption = 'Measured Parents Boxplots\n{}'.format(m.measure_id)
-        df = self.phdb.get_persons_values_df([m.measure_id])
-#         self.measure_gender_boxplots(
-#             m, df[np.logical_or(df.role == 'mom', df.role == 'dad')])
         self.measure_stripplot(m, df)
         self._figure_caption(caption)
-
-        linkpath = self.save_fig(m, "parents_boxplot")
-
+        linkpath = self.save_fig(m, "stripplot")
         self._out_figure(linkpath, caption)
 
     def out_measure_type(self, m):
@@ -267,13 +270,8 @@ class PhenoReport(object):
         self.out_measure_type(m)
         self.out_measure_description(m)
 
-        counts_df = self.out_measure_individuals_summary(m)
-        if counts_df.prb['ALL'] > 0:
-            self.out_measure_probands(m)
-        if counts_df.sib['ALL'] > 0:
-            self.out_measure_siblings(m)
-        if counts_df.parents['ALL'] > 0:
-            self.out_measure_parents(m)
+        _counts_df = self.out_measure_individuals_summary(m)
+        self.out_measure_values_figure(m)
 
     def out_instrument(self, instrument):
         with open(self.outpath, 'a') as out:
@@ -292,7 +290,7 @@ class PhenoReport(object):
 
         instrument = self.phdb.instruments['ssc_commonly_used']
         self.out_instrument(instrument)
-        for m in instrument.measures.values():
+        for m in instrument.measures.values()[:15]:
             if m.stats == 'continuous' or m.stats == 'ordinal':
                 print("handling measure: {}".format(m.measure_id))
                 self.out_measure(m)
