@@ -135,6 +135,7 @@ def draw_joint_linregres(df, col1, col2):
 
 class PhenoReport(object):
     FIGSIZE = (10, 5)
+    RFIGSIZE = (10, 8)
 
     def __init__(self, args):
         self.args = args
@@ -475,13 +476,13 @@ class PhenoReport(object):
 
         title = 'PhenoDB Instruments Description'
         self.out_title(title, self.H1)
-
-        instrument = self.phdb.instruments['ssc_commonly_used']
-        self.out_instrument(instrument)
-        for m in instrument.measures.values():
-            if m.stats == 'continuous' or m.stats == 'ordinal':
-                print("handling measure: {}".format(m.measure_id))
-                self.out_measure(m)
+        for instrument in self.phdb.instruments.values():
+            # instrument = self.phdb.instruments['ssc_commonly_used']
+            self.out_instrument(instrument)
+            for m in instrument.measures.values():
+                if m.stats == 'continuous' or m.stats == 'ordinal':
+                    print("handling measure: {}".format(m.measure_id))
+                    self.out_measure(m)
 
 if __name__ == "__main__":
 
