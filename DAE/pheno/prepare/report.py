@@ -8,12 +8,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import statsmodels.api as sm
 
 from pheno.pheno_db import PhenoDB
 import sys
 import argparse
 import os
 from collections import OrderedDict
+from collections import defaultdict
 
 
 def parse_args(argv):
@@ -30,96 +32,105 @@ def parse_args(argv):
     return parser.parse_args(argv)
 
 
-def build_measure_df(df, measure_id):
-    values = df[measure_id].values
-    roles = [['ALL'] * len(values)]
-    data = [values]
-
-    values = df[df.gender == 'M'][measure_id].values
-    roles.append(['M'] * len(values))
-    data.append(values)
-
-    values = df[df.gender == 'F'][measure_id].values
-    roles.append(['F'] * len(values))
-    data.append(values)
-
-    values = df[df.role == 'prb'][measure_id].values
-    roles.append(['prb'] * len(values))
-    data.append(values)
-
-    values = df[np.logical_and(
-        df.role == 'prb', df.gender == 'M')][measure_id].values
-    roles.append(['prbM'] * len(values))
-    data.append(values)
-
-    values = df[np.logical_and(df.role == 'prb', df.gender == 'F')][
-        measure_id].values
-    roles.append(['prbF'] * len(values))
-    data.append(values)
-
-    values = df[df.role == 'sib'][measure_id].values
-    roles.append(['sib'] * len(values))
-    data.append(values)
-
-    values = df[np.logical_and(df.role == 'sib', df.gender == 'M')][
-        measure_id].values
-    roles.append(['sibM'] * len(values))
-    data.append(values)
-
-    values = df[np.logical_and(df.role == 'sib', df.gender == 'F')][
-        measure_id].values
-    roles.append(['sibF'] * len(values))
-    data.append(values)
-
-    values = df[np.logical_or(df.role == 'dad', df.role == 'mom')][
-        measure_id].values
-    roles.append(['parents'] * len(values))
-    data.append(values)
-
-    values = df[df.role == 'dad'][measure_id].values
-    roles.append(['dad'] * len(values))
-    data.append(values)
-
-    values = df[df.role == 'mom'][measure_id].values
-    roles.append(['mom'] * len(values))
-    data.append(values)
-
-    return pd.DataFrame(
-        data={
-            'role': np.hstack(roles),
-            'value': np.hstack(data)
-        })
+def roles():
+    return [
+        'all',
+        'M',
+        'F',
+        'prb',
+        'prbM',
+        'prbF',
+        'sib',
+        'sibM',
+        'sibF',
+        'parents',
+        'dad',
+        'mom',
+    ]
 
 
-def build_measure_df_labels(dd):
-    labels = [
-        'All ({})'.format(np.sum(dd.role == 'ALL')),
-        'M ({})'.format(np.sum(dd.role == 'M')),
-        'F ({})'.format(np.sum(dd.role == 'F')),
-        'prb All ({})'.format(np.sum(dd.role == 'prb')),
-        'prb M ({})'.format(np.sum(dd.role == 'prbM')),
-        'prb F ({})'.format(np.sum(dd.role == 'prbF')),
-        'sib All ({})'.format(np.sum(dd.role == 'sib')),
-        'sib M ({})'.format(np.sum(dd.role == 'sibM')),
-        'sib F ({})'.format(np.sum(dd.role == 'sibF')),
-        'Parents All ({})'.format(np.sum(dd.role == 'parents')),
-        'dad ({})'.format(np.sum(dd.role == 'dad')),
-        'mom ({})'.format(np.sum(dd.role == 'mom'))]
-    return labels
+def roles_indices(df):
+    return [
+        ('all', None),
+        ('M', df.gender == 'M'),
+        ('F', df.gender == 'F'),
+
+        ('prb', df.role == 'prb'),
+        ('prbM', np.logical_and(df.role == 'prb', df.gender == 'M')),
+        ('prbF', np.logical_and(df.role == 'prb', df.gender == 'F')),
+
+        ('sib', df.role == 'sib'),
+        ('sibM', np.logical_and(df.role == 'sib', df.gender == 'M')),
+        ('sibF', np.logical_and(df.role == 'sib', df.gender == 'F')),
+
+        ('parents', np.logical_or(df.role == 'dad', df.role == 'mom')),
+        ('dad', df.role == 'dad'),
+        ('mom', df.role == 'mom'),
+    ]
 
 
-class MeasureData(object):
+def roles_split(df, measure_ids):
+    data = defaultdict(list)
+    for (role, index) in roles_indices(df):
+        if index is None:
+            size = len(df)
+            gender = df['gender'].values
+        else:
+            size = np.sum(index)
+            gender = df[index]['gender'].values
 
-    def __init__(self, data, labels):
-        self.data = data
-        self.labels = labels
+        data['role'].append([role] * size)
+        data['gender'].append(gender)
 
-    def get(self, label, default):
-        print("label: {}; default: {}".format(label, default))
-        if label not in self.labels:
-            return self.data[0]
-        index = self.labels.index(label)
-        return self.data[index]
+        for mid in measure_ids:
+            if index is None:
+                data[mid].append(df[mid].values)
+            else:
+                data[mid].append(df[index][mid].values)
+
+    data = {
+        key: np.hstack(value) for (key, value) in data.items()
+    }
+    return pd.DataFrame(data=data)
+
+
+def draw_linregres(df, col1, col2):
+    def names(col1, col2):
+        assert '.' in col1
+        assert '.' in col2
+        name1 = col1.split('.')[1]
+        name2 = col2.split('.')[1]
+        return (name1, name2)
+
+    dd = pd.DataFrame(index=df.index, data=df[[col1, col2]])
+    dd = dd.dropna()
+
+    plt.plot(dd[col1], dd[col2], '.', ms=4)
+    name1, name2 = names(col1, col2)
+    plt.xlabel(name1)
+    plt.ylabel(name2)
+
+    x = dd[col1]
+    X = sm.add_constant(x)
+    y = dd[col2]
+    res = sm.OLS(y, X).fit()
+
+    plt.plot(dd[col1], res.predict(), linewidth=3.0)
+    return res
+
+
+def draw_joint_linregres(df, col1, col2):
+    def names(col1, col2):
+        assert '.' in col1
+        assert '.' in col2
+        name1 = col1.split('.')[1]
+        name2 = col2.split('.')[1]
+        return (name1, name2)
+
+    dd = pd.DataFrame(index=df.index, data=df[[col1, col2]])
+    dd = dd.dropna()
+
+    sns.jointplot(x=col1, y=col2, data=dd, kind="reg")
 
 
 class PhenoReport(object):
@@ -268,7 +279,8 @@ class PhenoReport(object):
 
     def _out_header(self, out, title, line):
         out.write('\n')
-        out.write(line)
+        out.write('\n')
+        out.write('\n')
         out.write('\n')
         out.write(title)
         out.write('\n')
@@ -344,6 +356,94 @@ class PhenoReport(object):
         with open(self.outpath, 'a') as out:
             self._out_header(out, title, line)
 
+    def out_measure_regressions_by_age(self, m):
+
+        title = 'Fitting OLS by Age'
+        self.out_title(title, self.H4)
+
+        df = self.phdb.get_persons_values_df(
+            ['pheno_common.age', m.measure_id])
+
+        df = roles_split(df, ['pheno_common.age', m.measure_id])
+
+        dd = df[df.role == 'prb']
+        if len(dd) > 5:
+            self.out_title("Probands", self.H5)
+            plt.figure(figsize=self.FIGSIZE)
+            res = draw_linregres(
+                dd, 'pheno_common.age', m.measure_id)
+            caption = 'Probands: {} ~ {}'.format(m.name, 'age')
+            self._figure_caption(caption)
+            linkpath = self.save_fig(m, "prb_regression_by_age")
+
+            self._out_figure(linkpath, caption)
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Probands model: slope: {0:.2G}; intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n'.format(
+                        res.params[1], res.params[0], res.pvalues[1]))
+
+        dd = df[df.role == 'sib']
+        if len(dd) > 5:
+            self.out_title("Siblings", self.H5)
+            plt.figure(figsize=self.FIGSIZE)
+            res = draw_linregres(
+                dd, 'pheno_common.age', m.measure_id)
+            caption = 'Siblings: {} ~ {}'.format(m.name, 'age')
+            self._figure_caption(caption)
+            linkpath = self.save_fig(m, "sib_regression_by_age")
+
+            self._out_figure(linkpath, caption)
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Siblings model: slope: {0:.2G}; intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n'.format(
+                        res.params[1], res.params[0], res.pvalues[1]))
+
+    def out_measure_regressions_by_nviq(self, m):
+
+        title = 'Fitting OLS by Non Verbal IQ'
+        self.out_title(title, self.H4)
+
+        df = self.phdb.get_persons_values_df(
+            ['pheno_common.non_verbal_iq', m.measure_id])
+
+        df = roles_split(df, ['pheno_common.non_verbal_iq', m.measure_id])
+
+        dd = df[df.role == 'prb']
+        if len(dd) > 5:
+            self.out_title("Probands", self.H5)
+            plt.figure(figsize=self.FIGSIZE)
+            res = draw_linregres(
+                dd, 'pheno_common.non_verbal_iq', m.measure_id)
+            caption = 'Probands: {} ~ {}'.format(m.name, 'non_verbal_iq')
+            self._figure_caption(caption)
+            linkpath = self.save_fig(m, "prb_regression_by_non_verbal_iq")
+
+            self._out_figure(linkpath, caption)
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Probands model: slope: {0:.2G}; intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n'.format(
+                        res.params[1], res.params[0], res.pvalues[1]))
+
+        dd = df[df.role == 'sib']
+        if len(dd) > 5:
+            self.out_title("Siblings", self.H5)
+            plt.figure(figsize=self.FIGSIZE)
+            res = draw_linregres(
+                dd, 'pheno_common.non_verbal_iq', m.measure_id)
+            caption = 'Siblings: {} ~ {}'.format(m.name, 'non_verbal_iq')
+            self._figure_caption(caption)
+            linkpath = self.save_fig(m, "sib_regression_by_non_verbal_iq")
+
+            self._out_figure(linkpath, caption)
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Siblings model: slope: {0:.2G}; intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n'.format(
+                        res.params[1], res.params[0], res.pvalues[1]))
+
     def out_measure(self, m):
         self.out_measure_name(m)
         self.out_measure_type(m)
@@ -352,20 +452,29 @@ class PhenoReport(object):
         _counts_df = self.out_measure_individuals_summary(m)
         self.out_measure_values_figure(m)
 
+        self.out_measure_regressions_by_age(m)
+        self.out_measure_regressions_by_nviq(m)
+
     def out_instrument(self, instrument):
         with open(self.outpath, 'a') as out:
             title = 'Instrument: {}'.format(instrument.name)
             line = len(title) * self.H2
             self._out_header(out, title, line)
 
-    def out_title(self):
-        with open(self.outpath, 'w') as out:
-            title = 'PhenoDB Instruments Description'
-            line = len(title) * self.H1
+    def out_title(self, title, header):
+        with open(self.outpath, 'a') as out:
+            line = len(title) * header
             self._out_header(out, title, line)
 
+    def reset(self):
+        with open(self.outpath, 'w') as out:
+            out.write('\n')
+
     def test_run(self):
-        self.out_title()
+        self.reset()
+
+        title = 'PhenoDB Instruments Description'
+        self.out_title(title, self.H1)
 
         instrument = self.phdb.instruments['ssc_commonly_used']
         self.out_instrument(instrument)
