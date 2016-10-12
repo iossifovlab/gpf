@@ -102,6 +102,27 @@ def names(col1, col2):
     return (name1, name2)
 
 
+def male_female_colors():
+    colors = iter(plt.rcParams['axes.prop_cycle'])
+    color_male = colors.next()['color']
+    color_female = colors.next()['color']
+    return color_male, color_female
+
+
+def extra_color():
+    colors = iter(plt.rcParams['axes.prop_cycle'])
+    colors.next()
+    colors.next()
+    return colors.next()['color']
+
+
+def male_female_legend(color_male, color_female):
+    import matplotlib.patches as mpatches
+    male_patch = mpatches.Patch(color=color_male, label='Male')
+    female_patch = mpatches.Patch(color=color_female, label='Female')
+    plt.legend(handles=[male_patch, female_patch])
+
+
 def draw_linregres(df, col1, col2, jitter=None):
     dd = df.dropna()
 
@@ -123,9 +144,7 @@ def draw_linregres(df, col1, col2, jitter=None):
         y = dfemale[col2]
         res_female = sm.OLS(y, X).fit()
 
-        colors = iter(plt.rcParams['axes.prop_cycle'])
-        color_male = colors.next()['color']
-        color_female = colors.next()['color']
+        color_male, color_female = male_female_colors()
 
         if jitter is None:
             jmale1 = jmale2 = np.zeros(len(dmale[col1]))
@@ -151,12 +170,27 @@ def draw_linregres(df, col1, col2, jitter=None):
             label='female')
         plt.plot(dfemale[col1], res_female.predict(), color=color_female)
 
-        import matplotlib.patches as mpatches
-        male_patch = mpatches.Patch(color=color_male, label='Male')
-        female_patch = mpatches.Patch(color=color_female, label='Female')
-        plt.legend(handles=[male_patch, female_patch])
+        male_female_legend(color_male, color_female)
 
     return res_male, res_female
+
+
+def draw_distribution(df, col):
+    color_male, color_female = male_female_colors()
+    plt.hist(
+        [
+            df[df.gender == 'F'][col],
+            df[df.gender == 'M'][col]
+        ],
+        color=[color_female, color_male],
+        stacked=True,
+        bins=20,
+        normed=True)
+    sns.kdeplot(df[col], ax=plt.gca(), color=extra_color())
+
+    male_female_legend(color_male, color_female)
+
+    # plt.hist(df[df.gender == 'F'][col], hold=True)
 
 
 # def draw_linregres(df, col1, col2):
