@@ -300,7 +300,7 @@ class PhenoReport(object):
             subsection_line = len(subsection_title) * self.H4
             self._out_header(out, subsection_title, subsection_line)
 
-            out.write(m.description)
+            out.write(m.description.encode('utf-8'))
             out.write('\n\n\n')
 
     def out_measure_individuals_summary(self, m):
@@ -511,10 +511,10 @@ class PhenoReport(object):
         title = 'PhenoDB Instruments Description'
         self.out_title(title, self.H1)
         # for instrument in self.phdb.instruments.values():
-        instrument = self.phdb.instruments['ssc_commonly_used']
+        instrument = self.phdb.instruments['quant_dysmorph_data']
         self.out_instrument(instrument)
         for m in instrument.measures.values():
-            if m.stats == 'continuous' or m.stats == 'ordinal':
+            if m.stats == 'continuous':
                 print("handling measure: {}".format(m.measure_id))
                 self.out_measure(m)
 
