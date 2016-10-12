@@ -253,10 +253,7 @@ def draw_measure_violinplot(df, col):
 #     return res_male, res_female
 
 
-class PhenoReport(object):
-    FIGSIZE = (10, 5)
-    RFIGSIZE = (10, 8)
-
+class PhenoReportBase(object):
     def __init__(self, args):
         self.args = args
         self.outfile = "source/index.rst"
@@ -264,6 +261,14 @@ class PhenoReport(object):
 
         self.phdb = PhenoDB()
         self.phdb.load()
+
+
+class PhenoReport(PhenoReportBase):
+    FIGSIZE = (10, 5)
+    RFIGSIZE = (10, 8)
+
+    def __init__(self, args):
+        super(PhenoReport, self).__init__(args)
 
     def measure_gender_boxplots(self, m, df):
         data = [
