@@ -237,13 +237,18 @@ def draw_measure_violinplot(df, col, ax=None):
 
     data, labels = _measure_df_split(df, col)
 
-    pos = range(1, len(labels) + 1)
-    plt.xticks(pos, labels, rotation='vertical')
+    sns.violinplot(
+        data=data,
+        scale='count',
+        linewidth=0.1)
+    plt.xticks(range(len(labels)), labels, rotation='vertical')
 
-    for index, df in enumerate(data):
-        pos = index + 1
-        if len(df) > 0:
-            ax.violinplot(df.values, [pos], points=20)
+#     pos = range(1, len(labels) + 1)
+#     plt.xticks(pos, labels, rotation='vertical')
+#     for index, df in enumerate(data):
+#         pos = index + 1
+#         if len(df) > 0:
+#             ax.violinplot(df.values, [pos], points=20, widths=1.0)
 
 
 class PhenoReportBase(object):
