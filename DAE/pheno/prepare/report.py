@@ -108,24 +108,32 @@ def draw_linregres(df, col1, col2):
     dmale = dd[dd.gender == 'M']
     dfemale = dd[dd.gender == 'F']
 
-    plt.plot(dmale[col1], dmale[col2], '.', ms=4, color='b')
-    plt.plot(dfemale[col1], dfemale[col2], '.', ms=4, color='r')
-    name1, name2 = names(col1, col2)
-    plt.xlabel(name1)
-    plt.ylabel(name2)
+    with plt.style.context('bmh'):
+        name1, name2 = names(col1, col2)
+        plt.xlabel(name1)
+        plt.ylabel(name2)
 
-    x = dmale[col1]
-    X = sm.add_constant(x)
-    y = dmale[col2]
-    res_male = sm.OLS(y, X).fit()
+        x = dmale[col1]
+        X = sm.add_constant(x)
+        y = dmale[col2]
+        res_male = sm.OLS(y, X).fit()
 
-    x = dfemale[col1]
-    X = sm.add_constant(x)
-    y = dfemale[col2]
-    res_female = sm.OLS(y, X).fit()
+        x = dfemale[col1]
+        X = sm.add_constant(x)
+        y = dfemale[col2]
+        res_female = sm.OLS(y, X).fit()
 
-    plt.plot(dmale[col1], res_male.predict(), linewidth=3.0, color='b')
-    plt.plot(dfemale[col1], res_female.predict(), linewidth=3.0, color='r')
+        colors = iter(plt.rcParams['axes.prop_cycle'])
+        color_male = colors.next()['color']
+        color_female = colors.next()['color']
+
+        print(color_male)
+
+        plt.plot(dmale[col1], dmale[col2], '.', color=color_male)
+        plt.plot(dmale[col1], res_male.predict(), color=color_male)
+
+        plt.plot(dfemale[col1], dfemale[col2], '.', color=color_female)
+        plt.plot(dfemale[col1], res_female.predict(), color=color_female)
     return res_male, res_female
 
 
@@ -560,13 +568,13 @@ class PhenoReport(object):
 
         title = 'PhenoDB Instruments Description'
         self.out_title(title, self.H1)
-        for instrument in self.phdb.instruments.values():
-            # instrument = self.phdb.instruments['ssc_commonly_used']
-            self.out_instrument(instrument)
-            for m in instrument.measures.values():
-                if m.stats == 'continuous':
-                    print("handling measure: {}".format(m.measure_id))
-                    self.out_measure(m)
+        # for instrument in self.phdb.instruments.values():
+        instrument = self.phdb.instruments['ssc_commonly_used']
+        self.out_instrument(instrument)
+        for m in instrument.measures.values()[:20]:
+            if m.stats == 'continuous':
+                print("handling measure: {}".format(m.measure_id))
+                self.out_measure(m)
 
 if __name__ == "__main__":
 
