@@ -357,6 +357,38 @@ class PhenoReport(object):
         with open(self.outpath, 'a') as out:
             self._out_header(out, title, line)
 
+    def out_measure_distribution(self, m):
+
+        title = 'Value Distribution'
+        self.out_title(title, self.H4)
+
+        df = self.phdb.get_persons_values_df(
+            [m.measure_id])
+
+        df = roles_split(df, [m.measure_id])
+
+        dd = df[df.role == 'prb']
+        if len(dd) > 5:
+            self.out_title("Probands", self.H5)
+            plt.figure(figsize=self.FIGSIZE)
+            sns.distplot(dd[m.measure_id])
+            caption = 'Probands: {} distribution'.format(m.name, 'age')
+            self._figure_caption(caption)
+            linkpath = self.save_fig(m, "prb_distribution")
+
+            self._out_figure(linkpath, caption)
+
+        dd = df[df.role == 'sib']
+        if len(dd) > 5:
+            self.out_title("Siblings", self.H5)
+            plt.figure(figsize=self.FIGSIZE)
+            sns.distplot(dd[m.measure_id])
+            caption = 'Siblings: {} ~ {}'.format(m.name, 'age')
+            self._figure_caption(caption)
+            linkpath = self.save_fig(m, "sib_distribution")
+
+            self._out_figure(linkpath, caption)
+
     def out_measure_regressions_by_age(self, m):
 
         title = 'Fitting OLS by Age'
@@ -453,6 +485,8 @@ class PhenoReport(object):
         _counts_df = self.out_measure_individuals_summary(m)
         self.out_measure_values_figure(m)
 
+        self.out_measure_distribution(m)
+
         self.out_measure_regressions_by_age(m)
         self.out_measure_regressions_by_nviq(m)
 
@@ -476,13 +510,13 @@ class PhenoReport(object):
 
         title = 'PhenoDB Instruments Description'
         self.out_title(title, self.H1)
-        for instrument in self.phdb.instruments.values():
-            # instrument = self.phdb.instruments['ssc_commonly_used']
-            self.out_instrument(instrument)
-            for m in instrument.measures.values():
-                if m.stats == 'continuous' or m.stats == 'ordinal':
-                    print("handling measure: {}".format(m.measure_id))
-                    self.out_measure(m)
+        # for instrument in self.phdb.instruments.values():
+        instrument = self.phdb.instruments['ssc_commonly_used']
+        self.out_instrument(instrument)
+        for m in instrument.measures.values():
+            if m.stats == 'continuous' or m.stats == 'ordinal':
+                print("handling measure: {}".format(m.measure_id))
+                self.out_measure(m)
 
 if __name__ == "__main__":
 
