@@ -94,7 +94,7 @@ def roles_split(df, measure_ids):
     return pd.DataFrame(data=data)
 
 
-def draw_linregres(df, col1, col2):
+def draw_linregres(df, col1, col2, jitter=None):
     def names(col1, col2):
         assert '.' in col1
         assert '.' in col2
@@ -127,12 +127,24 @@ def draw_linregres(df, col1, col2):
         color_male = colors.next()['color']
         color_female = colors.next()['color']
 
-        print(color_male)
+        if jitter is None:
+            jmale1 = jmale2 = np.zeros(len(dmale[col1]))
+            jfemale1 = jfemale2 = np.zeros(len(dfemale[col1]))
+        else:
+            jmale1 = np.random.uniform(-jitter, jitter, len(dmale[col1]))
+            jmale2 = np.random.uniform(-jitter, jitter, len(dmale[col2]))
 
-        plt.plot(dmale[col1], dmale[col2], '.', color=color_male)
+            jfemale1 = np.random.uniform(-jitter, jitter, len(dfemale[col1]))
+            jfemale2 = np.random.uniform(-jitter, jitter, len(dfemale[col2]))
+
+        plt.plot(
+            dmale[col1] + jmale1,
+            dmale[col2] + jmale2, '.', color=color_male, ms=5)
         plt.plot(dmale[col1], res_male.predict(), color=color_male)
 
-        plt.plot(dfemale[col1], dfemale[col2], '.', color=color_female)
+        plt.plot(
+            dfemale[col1] + jfemale1,
+            dfemale[col2] + jfemale2, '.', color=color_female, ms=5)
         plt.plot(dfemale[col1], res_female.predict(), color=color_female)
     return res_male, res_female
 
