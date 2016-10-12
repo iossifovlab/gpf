@@ -94,15 +94,15 @@ def roles_split(df, measure_ids):
     return pd.DataFrame(data=data)
 
 
-def draw_linregres(df, col1, col2, jitter=None):
-    def names(col1, col2):
-        assert '.' in col1
-        assert '.' in col2
-        name1 = col1.split('.')[1]
-        name2 = col2.split('.')[1]
-        return (name1, name2)
+def names(col1, col2):
+    assert '.' in col1
+    assert '.' in col2
+    name1 = col1.split('.')[1]
+    name2 = col2.split('.')[1]
+    return (name1, name2)
 
-    # dd = pd.DataFrame(index=df.index, data=df[[col1, col2]])
+
+def draw_linregres(df, col1, col2, jitter=None):
     dd = df.dropna()
 
     dmale = dd[dd.gender == 'M']
@@ -139,13 +139,23 @@ def draw_linregres(df, col1, col2, jitter=None):
 
         plt.plot(
             dmale[col1] + jmale1,
-            dmale[col2] + jmale2, '.', color=color_male, ms=5)
+            dmale[col2] + jmale2,
+            '.', color=color_male, ms=5,
+            label='male')
         plt.plot(dmale[col1], res_male.predict(), color=color_male)
 
         plt.plot(
             dfemale[col1] + jfemale1,
-            dfemale[col2] + jfemale2, '.', color=color_female, ms=5)
+            dfemale[col2] + jfemale2,
+            '.', color=color_female, ms=5,
+            label='female')
         plt.plot(dfemale[col1], res_female.predict(), color=color_female)
+
+        import matplotlib.patches as mpatches
+        male_patch = mpatches.Patch(color=color_male, label='Male')
+        female_patch = mpatches.Patch(color=color_female, label='Female')
+        plt.legend(handles=[male_patch, female_patch])
+
     return res_male, res_female
 
 
