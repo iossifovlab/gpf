@@ -118,68 +118,75 @@ def extra_color():
     return colors.next()['color']
 
 
-def male_female_legend(color_male, color_female):
+def male_female_legend(color_male, color_female, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
     import matplotlib.patches as mpatches
     male_patch = mpatches.Patch(color=color_male, label='Male')
     female_patch = mpatches.Patch(color=color_female, label='Female')
-    plt.legend(handles=[male_patch, female_patch])
+    ax.legend(handles=[male_patch, female_patch])
 
 
-def draw_linregres(df, col1, col2, jitter=None):
+def draw_linregres(df, col1, col2, jitter=None, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
     dd = df.dropna()
 
     dmale = dd[dd.gender == 'M']
     dfemale = dd[dd.gender == 'F']
 
-    with plt.style.context('bmh'):
-        name1, name2 = names(col1, col2)
-        plt.xlabel(name1)
-        plt.ylabel(name2)
+    name1, name2 = names(col1, col2)
+    ax.set_xlabel(name1)
+    ax.set_ylabel(name2)
 
-        x = dmale[col1]
-        X = sm.add_constant(x)
-        y = dmale[col2]
-        res_male = sm.OLS(y, X).fit()
+    x = dmale[col1]
+    X = sm.add_constant(x)
+    y = dmale[col2]
+    res_male = sm.OLS(y, X).fit()
 
-        x = dfemale[col1]
-        X = sm.add_constant(x)
-        y = dfemale[col2]
-        res_female = sm.OLS(y, X).fit()
+    x = dfemale[col1]
+    X = sm.add_constant(x)
+    y = dfemale[col2]
+    res_female = sm.OLS(y, X).fit()
 
-        color_male, color_female = male_female_colors()
+    color_male, color_female = male_female_colors()
 
-        if jitter is None:
-            jmale1 = jmale2 = np.zeros(len(dmale[col1]))
-            jfemale1 = jfemale2 = np.zeros(len(dfemale[col1]))
-        else:
-            jmale1 = np.random.uniform(-jitter, jitter, len(dmale[col1]))
-            jmale2 = np.random.uniform(-jitter, jitter, len(dmale[col2]))
+    if jitter is None:
+        jmale1 = jmale2 = np.zeros(len(dmale[col1]))
+        jfemale1 = jfemale2 = np.zeros(len(dfemale[col1]))
+    else:
+        jmale1 = np.random.uniform(-jitter, jitter, len(dmale[col1]))
+        jmale2 = np.random.uniform(-jitter, jitter, len(dmale[col2]))
 
-            jfemale1 = np.random.uniform(-jitter, jitter, len(dfemale[col1]))
-            jfemale2 = np.random.uniform(-jitter, jitter, len(dfemale[col2]))
+        jfemale1 = np.random.uniform(-jitter, jitter, len(dfemale[col1]))
+        jfemale2 = np.random.uniform(-jitter, jitter, len(dfemale[col2]))
 
-        plt.plot(
-            dmale[col1] + jmale1,
-            dmale[col2] + jmale2,
-            '.', color=color_male, ms=5,
-            label='male')
-        plt.plot(dmale[col1], res_male.predict(), color=color_male)
+    ax.plot(
+        dmale[col1] + jmale1,
+        dmale[col2] + jmale2,
+        '.', color=color_male, ms=5,
+        label='male')
+    ax.plot(dmale[col1], res_male.predict(), color=color_male)
 
-        plt.plot(
-            dfemale[col1] + jfemale1,
-            dfemale[col2] + jfemale2,
-            '.', color=color_female, ms=5,
-            label='female')
-        plt.plot(dfemale[col1], res_female.predict(), color=color_female)
+    ax.plot(
+        dfemale[col1] + jfemale1,
+        dfemale[col2] + jfemale2,
+        '.', color=color_female, ms=5,
+        label='female')
+    ax.plot(dfemale[col1], res_female.predict(), color=color_female)
 
-        male_female_legend(color_male, color_female)
-
+    male_female_legend(color_male, color_female, ax)
     return res_male, res_female
 
 
-def draw_distribution(df, col):
+def draw_distribution(df, col, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
     color_male, color_female = male_female_colors()
-    plt.hist(
+    ax.hist(
         [
             df[df.gender == 'F'][col],
             df[df.gender == 'M'][col]
@@ -188,11 +195,8 @@ def draw_distribution(df, col):
         stacked=True,
         bins=20,
         normed=True)
-    sns.kdeplot(df[col], ax=plt.gca(), color=extra_color())
-
-    male_female_legend(color_male, color_female)
-
-    # plt.hist(df[df.gender == 'F'][col], hold=True)
+    sns.kdeplot(df[col], ax=ax, color=extra_color())
+    male_female_legend(color_male, color_female, ax)
 
 
 def _measure_df_gender_split(df, col):
@@ -227,33 +231,23 @@ def _measure_df_split(df, col):
     return data, labels
 
 
-def draw_measure_violinplot(df, col):
+def draw_measure_violinplot(df, col, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
     data, labels = _measure_df_split(df, col)
 
-    with plt.style.context('bmh'):
-        plt.figure(figsize=FIGSIZE)
-        sns.violinplot(data=data)
-        plt.xticks(range(len(labels)), labels, rotation='vertical')
+    pos = range(1, len(labels) + 1)
+    plt.xticks(pos, labels, rotation='vertical')
 
-# def draw_linregres(df, col1, col2):
-#     dd = df.dropna()
-#     ax = plt.gca()
-#     sns.lmplot(x=col1, y=col2, data=dd, hue='gender', ax=ax)
-#
-#     x = dd[dd.gender == 'M'][col1]
-#     X = sm.add_constant(x)
-#     y = dd[dd.gender == 'M'][col2]
-#     res_male = sm.OLS(y, X).fit()
-#
-#     x = dd[dd.gender == 'F'][col1]
-#     X = sm.add_constant(x)
-#     y = dd[dd.gender == 'F'][col2]
-#     res_female = sm.OLS(y, X).fit()
-#
-#     return res_male, res_female
+    for index, df in enumerate(data):
+        pos = index + 1
+        if len(df) > 0:
+            ax.violinplot(df.values, [pos], points=20)
 
 
 class PhenoReportBase(object):
+
     def __init__(self, args):
         self.args = args
         self.outfile = "source/index.rst"
@@ -261,90 +255,6 @@ class PhenoReportBase(object):
 
         self.phdb = PhenoDB()
         self.phdb.load()
-
-
-class PhenoReport(PhenoReportBase):
-    FIGSIZE = (10, 5)
-    RFIGSIZE = (10, 8)
-
-    def __init__(self, args):
-        super(PhenoReport, self).__init__(args)
-
-    def measure_gender_boxplots(self, m, df):
-        data = [
-            df[m.measure_id],
-            df[df.gender == 'M'][m.measure_id],
-            df[df.gender == 'F'][m.measure_id],
-        ]
-        labels = [
-            'All ({})'.format(len(data[0])),
-            'M ({})'.format(len(data[1])),
-            'F ({})'.format(len(data[2])),
-        ]
-        plt.boxplot(data, showmeans=True)
-        plt.xticks(range(1, len(labels) + 1), labels, rotation='vertical')
-
-    def measure_gender_violinplot(self, m, df):
-        data = [
-            df[m.measure_id],
-            df[df.gender == 'M'][m.measure_id],
-            df[df.gender == 'F'][m.measure_id],
-        ]
-        labels = [
-            'All ({})'.format(len(data[0])),
-            'M ({})'.format(len(data[1])),
-            'F ({})'.format(len(data[2])),
-        ]
-        sns.violinplot(data=data)
-        plt.xticks(range(len(labels)), labels, rotation='vertical')
-
-    def _measure_df_gender_split(self, m, df):
-        data = [
-            df[m.measure_id],
-            df[df.gender == 'M'][m.measure_id],
-            df[df.gender == 'F'][m.measure_id]
-        ]
-        return data
-
-    def _measure_df_split(self, m, df):
-        data = self._measure_df_gender_split(m, df)
-        data.extend(self._measure_df_gender_split(m, df[df.role == 'prb']))
-        data.extend(self._measure_df_gender_split(m, df[df.role == 'sib']))
-        data.extend(self._measure_df_gender_split(
-            m, df[np.logical_or(df.role == 'mom', df.role == 'dad')]))
-
-        labels = [
-            'All ({})'.format(len(data[0])),
-            'M ({})'.format(len(data[1])),
-            'F ({})'.format(len(data[2])),
-            'prb All ({})'.format(len(data[3])),
-            'prb M ({})'.format(len(data[4])),
-            'prb F ({})'.format(len(data[5])),
-            'sib All ({})'.format(len(data[6])),
-            'sib M ({})'.format(len(data[7])),
-            'sib F ({})'.format(len(data[8])),
-            'Parents All ({})'.format(len(data[9])),
-            'dad ({})'.format(len(data[10])),
-            'mom ({})'.format(len(data[11]))]
-        return data, labels
-
-    def measure_violinplot(self, m, df):
-        data, labels = self._measure_df_split(m, df)
-        plt.figure(figsize=self.FIGSIZE)
-        sns.violinplot(data=data)
-        plt.xticks(range(len(labels)), labels, rotation='vertical')
-
-    def measure_boxplot(self, m, df):
-        data, labels = self._measure_df_split(m, df)
-        plt.figure(figsize=self.FIGSIZE)
-        sns.boxplot(data=data)
-        plt.xticks(range(len(labels)), labels, rotation='vertical')
-
-    def measure_stripplot(self, m, df):
-        data, labels = self._measure_df_split(m, df)
-        plt.figure(figsize=self.FIGSIZE)
-        sns.stripplot(data=data, jitter=True)
-        plt.xticks(range(len(labels)), labels, rotation='vertical')
 
     def save_fig(self, measure, suffix, dpi=120):
         filename = "{}.{}.png".format(
@@ -457,23 +367,15 @@ class PhenoReport(PhenoReportBase):
             out.write('   :scale: 75%\n\n\n')
             out.write('\n')
 
-    def out_measure_values_figure(self, m):
-        caption = 'Measure\n{}'.format(m.measure_id)
-        df = self.phdb.get_persons_values_df([m.measure_id])
+    def _out_measure_distribution(self, df, title, m, role):
+        self.out_title(title, self.H5)
+        plt.figure(figsize=self.FIGSIZE)
+        draw_distribution(df, m.measure_id)
 
-        self.measure_violinplot(m, df)
+        caption = '{}: {} distribution'.format(title, m.name)
         self._figure_caption(caption)
-        linkpath = self.save_fig(m, "violinplot")
-        self._out_figure(linkpath, caption)
-
-        # self.measure_boxplot(m, df)
-        # self._figure_caption(caption)
-        # linkpath = self.save_fig(m, "boxplot")
-        # self._out_figure(linkpath, caption)
-
-        self.measure_stripplot(m, df)
-        self._figure_caption(caption)
-        linkpath = self.save_fig(m, "stripplot")
+        linkpath = self.save_fig(
+            m, "{}_distribution".format(role))
         self._out_figure(linkpath, caption)
 
     def out_measure_type(self, m):
@@ -482,42 +384,71 @@ class PhenoReport(PhenoReportBase):
         with open(self.outpath, 'a') as out:
             self._out_header(out, title, line)
 
-    def out_measure_distribution(self, m):
+    def out_instrument(self, instrument):
+        with open(self.outpath, 'a') as out:
+            title = 'Instrument: {}'.format(instrument.name)
+            line = len(title) * self.H2
+            self._out_header(out, title, line)
 
-        title = 'Value Distribution'
+    def out_title(self, title, header):
+        with open(self.outpath, 'a') as out:
+            line = len(title) * header
+            self._out_header(out, title, line)
+
+    def reset(self):
+        with open(self.outpath, 'w') as out:
+            out.write('\n')
+
+
+class PhenoReport(PhenoReportBase):
+    FIGSIZE = (10, 5)
+    RFIGSIZE = (10, 8)
+
+    def __init__(self, args):
+        super(PhenoReport, self).__init__(args)
+
+    def measure_violinplot(self, df, col):
+        data, labels = _measure_df_split(df, col)
+        plt.figure(figsize=self.FIGSIZE)
+        sns.violinplot(data=data)
+        plt.xticks(range(len(labels)), labels, rotation='vertical')
+
+    def measure_stripplot(self, df, col):
+        data, labels = _measure_df_split(df, col)
+        plt.figure(figsize=self.FIGSIZE)
+        sns.stripplot(data=data, jitter=True)
+        plt.xticks(range(len(labels)), labels, rotation='vertical')
+
+    def out_measure_values_figure(self, m):
+        caption = 'Measure\n{}'.format(m.measure_id)
+        df = self.phdb.get_persons_values_df([m.measure_id])
+
+        self.measure_violinplot(df, m.measure_id)
+        self._figure_caption(caption)
+        linkpath = self.save_fig(m, "violinplot")
+        self._out_figure(linkpath, caption)
+
+        self.measure_stripplot(df, m.measure_id)
+        self._figure_caption(caption)
+        linkpath = self.save_fig(m, "stripplot")
+        self._out_figure(linkpath, caption)
+
+    def out_measure_distribution(self, m):
+        title = 'Values Distribution'
         self.out_title(title, self.H4)
 
         df = self.phdb.get_persons_values_df(
             [m.measure_id])
-
         df = roles_split(df, [m.measure_id])
 
         dd = df[df.role == 'prb']
         if len(dd) > 5:
-            self.out_title("Probands", self.H5)
-            plt.figure(figsize=self.FIGSIZE)
-            sns.distplot(
-                dd[m.measure_id],
-            )
-            caption = 'Probands: {} distribution'.format(m.name, 'age')
-            self._figure_caption(caption)
-            linkpath = self.save_fig(m, "prb_distribution")
-
-            self._out_figure(linkpath, caption)
-
+            self._out_measure_distribution(dd, 'Probands', m, 'prb')
         dd = df[df.role == 'sib']
         if len(dd) > 5:
-            self.out_title("Siblings", self.H5)
-            plt.figure(figsize=self.FIGSIZE)
-            sns.distplot(dd[m.measure_id])
-            caption = 'Siblings: {} ~ {}'.format(m.name, 'age')
-            self._figure_caption(caption)
-            linkpath = self.save_fig(m, "sib_distribution")
-
-            self._out_figure(linkpath, caption)
+            self._out_measure_distribution(dd, 'Siblings', m, 'sib')
 
     def out_measure_regressions_by_age(self, m):
-
         title = 'Fitting OLS by Age'
         self.out_title(title, self.H4)
 
@@ -531,7 +462,7 @@ class PhenoReport(PhenoReportBase):
             self.out_title("Probands", self.H5)
             plt.figure(figsize=self.FIGSIZE)
             res_male, res_female = draw_linregres(
-                dd, 'pheno_common.age', m.measure_id)
+                dd, 'pheno_common.age', m.measure_id, jitter=0.3)
             caption = 'Probands: {} ~ {}'.format(m.name, 'age')
             self._figure_caption(caption)
             linkpath = self.save_fig(m, "prb_regression_by_age")
@@ -650,21 +581,6 @@ class PhenoReport(PhenoReportBase):
 
         self.out_measure_regressions_by_age(m)
         self.out_measure_regressions_by_nviq(m)
-
-    def out_instrument(self, instrument):
-        with open(self.outpath, 'a') as out:
-            title = 'Instrument: {}'.format(instrument.name)
-            line = len(title) * self.H2
-            self._out_header(out, title, line)
-
-    def out_title(self, title, header):
-        with open(self.outpath, 'a') as out:
-            line = len(title) * header
-            self._out_header(out, title, line)
-
-    def reset(self):
-        with open(self.outpath, 'w') as out:
-            out.write('\n')
 
     def test_run(self):
         self.reset()
