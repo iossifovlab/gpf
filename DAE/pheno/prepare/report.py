@@ -17,6 +17,8 @@ import os
 from collections import OrderedDict
 from collections import defaultdict
 
+FIGSIZE = (10, 6)
+
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(
@@ -192,6 +194,46 @@ def draw_distribution(df, col):
 
     # plt.hist(df[df.gender == 'F'][col], hold=True)
 
+
+def _measure_df_gender_split(df, col):
+    data = [
+        df[col],
+        df[df.gender == 'M'][col],
+        df[df.gender == 'F'][col]
+    ]
+    return data
+
+
+def _measure_df_split(df, col):
+    data = _measure_df_gender_split(df, col)
+    data.extend(_measure_df_gender_split(df[df.role == 'prb'], col))
+    data.extend(_measure_df_gender_split(df[df.role == 'sib'], col))
+    data.extend(_measure_df_gender_split(
+        df[np.logical_or(df.role == 'mom', df.role == 'dad')], col))
+
+    labels = [
+        'All ({})'.format(len(data[0])),
+        'M ({})'.format(len(data[1])),
+        'F ({})'.format(len(data[2])),
+        'prb All ({})'.format(len(data[3])),
+        'prb M ({})'.format(len(data[4])),
+        'prb F ({})'.format(len(data[5])),
+        'sib All ({})'.format(len(data[6])),
+        'sib M ({})'.format(len(data[7])),
+        'sib F ({})'.format(len(data[8])),
+        'Parents All ({})'.format(len(data[9])),
+        'dad ({})'.format(len(data[10])),
+        'mom ({})'.format(len(data[11]))]
+    return data, labels
+
+
+def draw_measure_violinplot(df, col):
+    data, labels = _measure_df_split(df, col)
+
+    with plt.style.context('bmh'):
+        plt.figure(figsize=FIGSIZE)
+        sns.violinplot(data=data)
+        plt.xticks(range(len(labels)), labels, rotation='vertical')
 
 # def draw_linregres(df, col1, col2):
 #     dd = df.dropna()
