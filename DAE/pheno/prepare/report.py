@@ -102,35 +102,49 @@ def draw_linregres(df, col1, col2):
         name2 = col2.split('.')[1]
         return (name1, name2)
 
-    dd = pd.DataFrame(index=df.index, data=df[[col1, col2]])
-    dd = dd.dropna()
+    # dd = pd.DataFrame(index=df.index, data=df[[col1, col2]])
+    dd = df.dropna()
 
-    plt.plot(dd[col1], dd[col2], '.', ms=4)
+    dmale = dd[dd.gender == 'M']
+    dfemale = dd[dd.gender == 'F']
+
+    plt.plot(dmale[col1], dmale[col2], '.', ms=4, color='b')
+    plt.plot(dfemale[col1], dfemale[col2], '.', ms=4, color='r')
     name1, name2 = names(col1, col2)
     plt.xlabel(name1)
     plt.ylabel(name2)
 
-    x = dd[col1]
+    x = dmale[col1]
     X = sm.add_constant(x)
-    y = dd[col2]
-    res = sm.OLS(y, X).fit()
+    y = dmale[col2]
+    res_male = sm.OLS(y, X).fit()
 
-    plt.plot(dd[col1], res.predict(), linewidth=3.0)
-    return res
+    x = dfemale[col1]
+    X = sm.add_constant(x)
+    y = dfemale[col2]
+    res_female = sm.OLS(y, X).fit()
+
+    plt.plot(dmale[col1], res_male.predict(), linewidth=3.0, color='b')
+    plt.plot(dfemale[col1], res_female.predict(), linewidth=3.0, color='r')
+    return res_male, res_female
 
 
-def draw_joint_linregres(df, col1, col2):
-    def names(col1, col2):
-        assert '.' in col1
-        assert '.' in col2
-        name1 = col1.split('.')[1]
-        name2 = col2.split('.')[1]
-        return (name1, name2)
-
-    dd = pd.DataFrame(index=df.index, data=df[[col1, col2]])
-    dd = dd.dropna()
-
-    sns.jointplot(x=col1, y=col2, data=dd, kind="reg")
+# def draw_linregres(df, col1, col2):
+#     dd = df.dropna()
+#     ax = plt.gca()
+#     sns.lmplot(x=col1, y=col2, data=dd, hue='gender', ax=ax)
+#
+#     x = dd[dd.gender == 'M'][col1]
+#     X = sm.add_constant(x)
+#     y = dd[dd.gender == 'M'][col2]
+#     res_male = sm.OLS(y, X).fit()
+#
+#     x = dd[dd.gender == 'F'][col1]
+#     X = sm.add_constant(x)
+#     y = dd[dd.gender == 'F'][col2]
+#     res_female = sm.OLS(y, X).fit()
+#
+#     return res_male, res_female
 
 
 class PhenoReport(object):
@@ -341,10 +355,10 @@ class PhenoReport(object):
         linkpath = self.save_fig(m, "violinplot")
         self._out_figure(linkpath, caption)
 
-        self.measure_boxplot(m, df)
-        self._figure_caption(caption)
-        linkpath = self.save_fig(m, "boxplot")
-        self._out_figure(linkpath, caption)
+        # self.measure_boxplot(m, df)
+        # self._figure_caption(caption)
+        # linkpath = self.save_fig(m, "boxplot")
+        # self._out_figure(linkpath, caption)
 
         self.measure_stripplot(m, df)
         self._figure_caption(caption)
@@ -371,7 +385,9 @@ class PhenoReport(object):
         if len(dd) > 5:
             self.out_title("Probands", self.H5)
             plt.figure(figsize=self.FIGSIZE)
-            sns.distplot(dd[m.measure_id])
+            sns.distplot(
+                dd[m.measure_id],
+            )
             caption = 'Probands: {} distribution'.format(m.name, 'age')
             self._figure_caption(caption)
             linkpath = self.save_fig(m, "prb_distribution")
@@ -403,35 +419,53 @@ class PhenoReport(object):
         if len(dd) > 5:
             self.out_title("Probands", self.H5)
             plt.figure(figsize=self.FIGSIZE)
-            res = draw_linregres(
+            res_male, res_female = draw_linregres(
                 dd, 'pheno_common.age', m.measure_id)
             caption = 'Probands: {} ~ {}'.format(m.name, 'age')
             self._figure_caption(caption)
             linkpath = self.save_fig(m, "prb_regression_by_age")
 
             self._out_figure(linkpath, caption)
+
             with open(self.outpath, 'a') as out:
                 out.write(
-                    'Probands model: slope: {0:.2G}; intercept: {1:.2G}; '
-                    'pvalue: {2:.2G}\n'.format(
-                        res.params[1], res.params[0], res.pvalues[1]))
+                    'Probands male model: slope: {0:.2G}; intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_male.params[1], res_male.params[0],
+                        res_male.pvalues[1]))
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Probands female model: slope: {0:.2G}; '
+                    'intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_female.params[1], res_female.params[0],
+                        res_female.pvalues[1]))
 
         dd = df[df.role == 'sib']
         if len(dd) > 5:
             self.out_title("Siblings", self.H5)
             plt.figure(figsize=self.FIGSIZE)
-            res = draw_linregres(
+            res_male, res_female = draw_linregres(
                 dd, 'pheno_common.age', m.measure_id)
             caption = 'Siblings: {} ~ {}'.format(m.name, 'age')
             self._figure_caption(caption)
             linkpath = self.save_fig(m, "sib_regression_by_age")
 
             self._out_figure(linkpath, caption)
+
             with open(self.outpath, 'a') as out:
                 out.write(
-                    'Siblings model: slope: {0:.2G}; intercept: {1:.2G}; '
-                    'pvalue: {2:.2G}\n'.format(
-                        res.params[1], res.params[0], res.pvalues[1]))
+                    'Siblings male model: slope: {0:.2G}; intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_male.params[1], res_male.params[0],
+                        res_male.pvalues[1]))
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Siblings female model: slope: {0:.2G}; '
+                    'intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_female.params[1], res_female.params[0],
+                        res_female.pvalues[1]))
 
     def out_measure_regressions_by_nviq(self, m):
 
@@ -447,7 +481,7 @@ class PhenoReport(object):
         if len(dd) > 5:
             self.out_title("Probands", self.H5)
             plt.figure(figsize=self.FIGSIZE)
-            res = draw_linregres(
+            res_male, res_female = draw_linregres(
                 dd, 'pheno_common.non_verbal_iq', m.measure_id)
             caption = 'Probands: {} ~ {}'.format(m.name, 'non_verbal_iq')
             self._figure_caption(caption)
@@ -456,15 +490,23 @@ class PhenoReport(object):
             self._out_figure(linkpath, caption)
             with open(self.outpath, 'a') as out:
                 out.write(
-                    'Probands model: slope: {0:.2G}; intercept: {1:.2G}; '
-                    'pvalue: {2:.2G}\n'.format(
-                        res.params[1], res.params[0], res.pvalues[1]))
+                    'Probands male model: slope: {0:.2G}; intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_male.params[1], res_male.params[0],
+                        res_male.pvalues[1]))
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Probands female model: slope: {0:.2G}; '
+                    'intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_female.params[1], res_female.params[0],
+                        res_female.pvalues[1]))
 
         dd = df[df.role == 'sib']
         if len(dd) > 5:
             self.out_title("Siblings", self.H5)
             plt.figure(figsize=self.FIGSIZE)
-            res = draw_linregres(
+            res_male, res_female = draw_linregres(
                 dd, 'pheno_common.non_verbal_iq', m.measure_id)
             caption = 'Siblings: {} ~ {}'.format(m.name, 'non_verbal_iq')
             self._figure_caption(caption)
@@ -473,9 +515,17 @@ class PhenoReport(object):
             self._out_figure(linkpath, caption)
             with open(self.outpath, 'a') as out:
                 out.write(
-                    'Siblings model: slope: {0:.2G}; intercept: {1:.2G}; '
-                    'pvalue: {2:.2G}\n'.format(
-                        res.params[1], res.params[0], res.pvalues[1]))
+                    'Siblings male model: slope: {0:.2G}; intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_male.params[1], res_male.params[0],
+                        res_male.pvalues[1]))
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Siblings female model: slope: {0:.2G}; '
+                    'intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_female.params[1], res_female.params[0],
+                        res_female.pvalues[1]))
 
     def out_measure(self, m):
         self.out_measure_name(m)
@@ -510,13 +560,13 @@ class PhenoReport(object):
 
         title = 'PhenoDB Instruments Description'
         self.out_title(title, self.H1)
-        # for instrument in self.phdb.instruments.values():
-        instrument = self.phdb.instruments['quant_dysmorph_data']
-        self.out_instrument(instrument)
-        for m in instrument.measures.values():
-            if m.stats == 'continuous':
-                print("handling measure: {}".format(m.measure_id))
-                self.out_measure(m)
+        for instrument in self.phdb.instruments.values():
+            # instrument = self.phdb.instruments['ssc_commonly_used']
+            self.out_instrument(instrument)
+            for m in instrument.measures.values():
+                if m.stats == 'continuous':
+                    print("handling measure: {}".format(m.measure_id))
+                    self.out_measure(m)
 
 if __name__ == "__main__":
 
