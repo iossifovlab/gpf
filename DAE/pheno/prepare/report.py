@@ -199,53 +199,89 @@ def draw_distribution(df, col, ax=None):
     male_female_legend(color_male, color_female, ax)
 
 
-def _measure_df_gender_split(df, col):
-    data = [
-        df[col],
-        df[df.gender == 'M'][col],
-        df[df.gender == 'F'][col]
+# def _measure_df_gender_split(df, col):
+#     data = [
+#         df[col],
+#         df[df.gender == 'M'][col],
+#         df[df.gender == 'F'][col]
+#     ]
+#     return data
+#
+#
+# def _measure_df_split(df, col):
+#     data = _measure_df_gender_split(df, col)
+#     data.extend(_measure_df_gender_split(df[df.role == 'prb'], col))
+#     data.extend(_measure_df_gender_split(df[df.role == 'sib'], col))
+#     data.extend(_measure_df_gender_split(
+#         df[np.logical_or(df.role == 'mom', df.role == 'dad')], col))
+#
+#     labels = [
+#         'All ({})'.format(len(data[0])),
+#         'M ({})'.format(len(data[1])),
+#         'F ({})'.format(len(data[2])),
+#         'prb All ({})'.format(len(data[3])),
+#         'prb M ({})'.format(len(data[4])),
+#         'prb F ({})'.format(len(data[5])),
+#         'sib All ({})'.format(len(data[6])),
+#         'sib M ({})'.format(len(data[7])),
+#         'sib F ({})'.format(len(data[8])),
+#         'Parents All ({})'.format(len(data[9])),
+#         'dad ({})'.format(len(data[10])),
+#         'mom ({})'.format(len(data[11]))]
+#     return data, labels
+
+
+def role_counts(df):
+    counts = {
+        'prb': len(df[df.role == 'prb']),
+        'prbM': len(df[np.logical_and(df.role == 'prb', df.gender == 'M')]),
+        'prbF': len(df[np.logical_and(df.role == 'prb', df.gender == 'F')]),
+
+        'sib': len(df[df.role == 'sib']),
+        'sibM': len(df[np.logical_and(df.role == 'sib', df.gender == 'M')]),
+        'sibF': len(df[np.logical_and(df.role == 'sib', df.gender == 'F')]),
+
+        'parent': len(df[df.role == 'parent']),
+        'parentM': len(df[np.logical_and(
+            df.role == 'parent', df.gender == 'M')]),
+        'parentF': len(df[np.logical_and(
+            df.role == 'parent', df.gender == 'F')]),
+    }
+    return counts
+
+
+def role_labels(df):
+    counts = role_counts(df)
+    return [
+        "prb: {prb:>4d}\n  M: {prbM:>4d}\n  F: {prbF:>4d}".format(**counts),
+        "sib: {sib:>4d}\n  M: {sibM:>4d}\n  F: {sibF:>4d}".format(**counts),
+        "parent: {parent:>4d}\n   dad: {parentM:>4d}\n   mom: {parentF:>4d}"
+        .format(**counts),
     ]
-    return data
 
 
-def _measure_df_split(df, col):
-    data = _measure_df_gender_split(df, col)
-    data.extend(_measure_df_gender_split(df[df.role == 'prb'], col))
-    data.extend(_measure_df_gender_split(df[df.role == 'sib'], col))
-    data.extend(_measure_df_gender_split(
-        df[np.logical_or(df.role == 'mom', df.role == 'dad')], col))
-
-    labels = [
-        'All ({})'.format(len(data[0])),
-        'M ({})'.format(len(data[1])),
-        'F ({})'.format(len(data[2])),
-        'prb All ({})'.format(len(data[3])),
-        'prb M ({})'.format(len(data[4])),
-        'prb F ({})'.format(len(data[5])),
-        'sib All ({})'.format(len(data[6])),
-        'sib M ({})'.format(len(data[7])),
-        'sib F ({})'.format(len(data[8])),
-        'Parents All ({})'.format(len(data[9])),
-        'dad ({})'.format(len(data[10])),
-        'mom ({})'.format(len(data[11]))]
-    return data, labels
-
-
-def draw_measure_violinplot(df, m, ax=None):
+def draw_measure_violinplot(df, measure_id, ax=None):
     if ax is None:
         ax = plt.gca()
 
+    palette = sns.diverging_palette(240, 10, s=80, l=50, n=2, )
     sns.violinplot(
-        data=df, x='role', y=m.measure_id, hue='gender',
+        data=df, x='role', y=measure_id, hue='gender',
         order=['prb', 'sib', 'parent'], hue_order=['M', 'F'],
-        linewidth=1, split=True)
+        linewidth=1, split=True,
+        scale='count',
+        palette=palette)
 
     palette = sns.diverging_palette(240, 10, s=80, l=77, n=2, )
     sns.stripplot(
-        data=df, x='role', y=m.measure_id, hue='gender',
+        data=df, x='role', y=measure_id, hue='gender',
         order=['prb', 'sib', 'parent'], hue_order=['M', 'F'],
-        jitter=0.05, size=2, palette=palette,
-        linewidth=0.25)
+        jitter=0.025, size=2,
+        palette=palette,
+        linewidth=0.1)
+
+    labels = role_labels(df)
+    plt.xticks([0, 1, 2], labels)
 
 # def draw_measure_violinplot(df, col, ax=None):
 #     if ax is None:
@@ -311,13 +347,12 @@ class PhenoReportBase(object):
                     m.measure_id]),
                 len(df[df.role == 'sib'][m.measure_id]),
             ]),
-            ('parents', [
-                len(df[df.role == 'dad'][
+            ('parent', [
+                len(df[np.logical_and(df.role == 'parent', df.gender == 'M')][
                     m.measure_id]),
-                len(df[df.role == 'mom'][
+                len(df[np.logical_and(df.role == 'parent', df.gender == 'F')][
                     m.measure_id]),
-                len(df[np.logical_or(df.role == 'mom', df.role == 'dad')][
-                    m.measure_id]),
+                len(df[df.role == 'parent'][m.measure_id]),
             ]),
             ('ALL', [
                 len(df[df.gender == 'M'][
@@ -436,30 +471,25 @@ class PhenoReport(PhenoReportBase):
     def __init__(self, args):
         super(PhenoReport, self).__init__(args)
 
-    def measure_violinplot(self, df, col):
-        data, labels = _measure_df_split(df, col)
-        plt.figure(figsize=self.FIGSIZE)
-        sns.violinplot(data=data)
-        plt.xticks(range(len(labels)), labels, rotation='vertical')
-
-    def measure_stripplot(self, df, col):
-        data, labels = _measure_df_split(df, col)
-        plt.figure(figsize=self.FIGSIZE)
-        sns.stripplot(data=data, jitter=True)
-        plt.xticks(range(len(labels)), labels, rotation='vertical')
+#     def measure_violinplot(self, df, col):
+#         data, labels = _measure_df_split(df, col)
+#         plt.figure(figsize=self.FIGSIZE)
+#         sns.violinplot(data=data)
+#         plt.xticks(range(len(labels)), labels, rotation='vertical')
+#
+#     def measure_stripplot(self, df, col):
+#         data, labels = _measure_df_split(df, col)
+#         plt.figure(figsize=self.FIGSIZE)
+#         sns.stripplot(data=data, jitter=True)
+#         plt.xticks(range(len(labels)), labels, rotation='vertical')
 
     def out_measure_values_figure(self, m):
         caption = 'Measure\n{}'.format(m.measure_id)
-        df = self.phdb.get_persons_values_df([m.measure_id])
+        df = self.load_measure(m)
 
-        self.measure_violinplot(df, m.measure_id)
+        draw_measure_violinplot(df, m.measure_id)
         self._figure_caption(caption)
         linkpath = self.save_fig(m, "violinplot")
-        self._out_figure(linkpath, caption)
-
-        self.measure_stripplot(df, m.measure_id)
-        self._figure_caption(caption)
-        linkpath = self.save_fig(m, "stripplot")
         self._out_figure(linkpath, caption)
 
     def out_measure_distribution(self, m):
