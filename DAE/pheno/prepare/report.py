@@ -181,21 +181,21 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     return res_male, res_female
 
 
-def draw_distribution(df, col, ax=None):
+def draw_distribution(df, measure_id, ax=None):
     if ax is None:
         ax = plt.gca()
 
     color_male, color_female = male_female_colors()
     ax.hist(
         [
-            df[df.gender == 'F'][col],
-            df[df.gender == 'M'][col]
+            df[df.gender == 'F'][measure_id],
+            df[df.gender == 'M'][measure_id]
         ],
         color=[color_female, color_male],
         stacked=True,
         bins=20,
-        normed=True)
-    sns.kdeplot(df[col], ax=ax, color=extra_color())
+        normed=False)
+    # sns.kdeplot(df[col], ax=ax, color=extra_color())
     male_female_legend(color_male, color_female, ax)
 
 
@@ -270,6 +270,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
         order=['prb', 'sib', 'parent'], hue_order=['M', 'F'],
         linewidth=1, split=True,
         scale='count',
+        scale_hue=False,
         palette=palette)
 
     palette = sns.diverging_palette(240, 10, s=80, l=77, n=2, )
