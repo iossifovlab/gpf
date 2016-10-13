@@ -163,12 +163,12 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     ax.plot(
         dmale[col1] + jmale1,
         dmale[col2] + jmale2,
-        '.', color=color_male, ms=5,
+        '.', color=color_male, ms=4,
         label='male')
     ax.plot(
         dfemale[col1] + jfemale1,
         dfemale[col2] + jfemale2,
-        '.', color=color_female, ms=5,
+        '.', color=color_female, ms=4,
         label='female')
 
     [color_male, color_female] = gender_palette()
@@ -195,6 +195,9 @@ def draw_distribution(df, measure_id, ax=None):
         normed=False)
     # sns.kdeplot(df[col], ax=ax, color=extra_color())
     male_female_legend(color_male, color_female, ax)
+
+    ax.set_xlabel(measure_id)
+    ax.set_ylabel('count')
 
 
 # def _measure_df_gender_split(df, col):
@@ -315,6 +318,9 @@ def draw_measure_violinplot(df, measure_id, ax=None):
 
 class PhenoReportBase(object):
 
+    LARGE_DPI = 300
+    SMALL_DPI = 16
+
     def __init__(self, args):
         self.args = args
         self.outfile = "source/index.rst"
@@ -325,17 +331,25 @@ class PhenoReportBase(object):
 
     def load_measure(self, m):
         df = self.phdb.get_persons_values_df(
-            ['pheno_common.age', m.measure_id])
+            ['pheno_common.age', 'pheno_common.non_verbal_iq', m.measure_id])
         df.loc[df.role == 'mom', 'role'] = 'parent'
         df.loc[df.role == 'dad', 'role'] = 'parent'
         return df
 
-    def save_fig(self, measure, suffix, dpi=300):
-        filename = "{}.{}.png".format(
-            measure.measure_id, suffix)
+    def figure_filepath(self, measure, suffix):
+        filename = "{}.{}.png".format(measure.measure_id, suffix)
         linkpath = os.path.join('figs', filename)
         filepath = os.path.join(self.args.output, 'source', linkpath)
-        plt.savefig(filepath, dpi=dpi)
+        return filepath, linkpath
+
+    def save_fig(self, measure, suffix):
+        filepath, _ = self.figure_filepath(
+            measure, "{}_small".format(suffix))
+        plt.savefig(filepath, dpi=self.SMALL_DPI)
+
+        filepath, linkpath = self.figure_filepath(measure, suffix)
+        plt.savefig(filepath, dpi=self.LARGE_DPI)
+
         plt.close()
 
         return linkpath
@@ -426,8 +440,9 @@ class PhenoReportBase(object):
         caption = 'Measure\n{}'.format(m.measure_id)
         df = self.load_measure(m)
 
+        plt.figure(figsize=self.FIGSIZE)
         draw_measure_violinplot(df, m.measure_id)
-        self._figure_caption(caption)
+        # self._figure_caption(caption)
         linkpath = self.save_fig(m, "violinplot")
         self._out_figure(linkpath, caption)
 
@@ -451,11 +466,10 @@ class PhenoReportBase(object):
 
     def _out_measure_distribution(self, df, title, m, role):
         self.out_title(title, self.H5)
-        plt.figure(figsize=self.FIGSIZE)
         draw_distribution(df, m.measure_id)
 
         caption = '{}: {} distribution'.format(title, m.name)
-        self._figure_caption(caption)
+        # self._figure_caption(caption)
         linkpath = self.save_fig(
             m, "{}_distribution".format(role))
         self._out_figure(linkpath, caption)

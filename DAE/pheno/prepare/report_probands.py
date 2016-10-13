@@ -10,7 +10,7 @@ from pheno.prepare.report import PhenoReportBase, parse_args, draw_linregres
 
 
 class ProbandsPhenoReport(PhenoReportBase):
-    FIGSIZE = (10, 5)
+    FIGSIZE = (10, 6)
     RFIGSIZE = (10, 8)
 
     def __init__(self, args):
@@ -24,6 +24,7 @@ class ProbandsPhenoReport(PhenoReportBase):
 
         dd = df[df.role == 'prb']
         if len(dd) > 5:
+            plt.figure(figsize=self.FIGSIZE)
             self._out_measure_distribution(dd, 'Probands', m, 'prb')
 
     def out_measure_regressions_by_age(self, m):
@@ -39,8 +40,40 @@ class ProbandsPhenoReport(PhenoReportBase):
             res_male, res_female = draw_linregres(
                 dd, 'pheno_common.age', m.measure_id, jitter=0.3)
             caption = 'Probands: {} ~ {}'.format(m.name, 'age')
-            self._figure_caption(caption)
+            # self._figure_caption(caption)
             linkpath = self.save_fig(m, "prb_regression_by_age")
+
+            self._out_figure(linkpath, caption)
+
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Probands male model: slope: {0:.2G}; intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_male.params[1], res_male.params[0],
+                        res_male.pvalues[1]))
+            with open(self.outpath, 'a') as out:
+                out.write(
+                    'Probands female model: slope: {0:.2G}; '
+                    'intercept: {1:.2G}; '
+                    'pvalue: {2:.2G}\n\n'.format(
+                        res_female.params[1], res_female.params[0],
+                        res_female.pvalues[1]))
+
+    def out_measure_regressions_by_nviq(self, m):
+        title = 'Fitting OLS by Non Verbal IQ'
+        self.out_title(title, self.H4)
+
+        df = self.load_measure(m)
+
+        dd = df[df.role == 'prb']
+        if len(dd) > 5:
+            self.out_title("Probands", self.H5)
+            plt.figure(figsize=self.FIGSIZE)
+            res_male, res_female = draw_linregres(
+                dd, 'pheno_common.non_verbal_iq', m.measure_id, jitter=0.3)
+            caption = 'Probands: {} ~ {}'.format(m.name, 'non_verbal_iq')
+            # self._figure_caption(caption)
+            linkpath = self.save_fig(m, "prb_regression_by_nviq")
 
             self._out_figure(linkpath, caption)
 
@@ -69,20 +102,20 @@ class ProbandsPhenoReport(PhenoReportBase):
         self.out_measure_distribution(m)
 
         self.out_measure_regressions_by_age(m)
-#         self.out_measure_regressions_by_nviq(m)
+        self.out_measure_regressions_by_nviq(m)
 
     def test_run(self):
         self.reset()
 
         title = 'Probands PhenoDB Instruments Description'
         self.out_title(title, self.H1)
-        # for instrument in self.phdb.instruments.values():
-        instrument = self.phdb.instruments['ssc_commonly_used']
-        self.out_instrument(instrument)
-        for m in instrument.measures.values():
-            if m.stats == 'continuous':
-                print("handling measure: {}".format(m.measure_id))
-                self.out_measure(m)
+        for instrument in self.phdb.instruments.values():
+            # instrument = self.phdb.instruments['ssc_commonly_used']
+            self.out_instrument(instrument)
+            for m in instrument.measures.values()[:20]:
+                if m.stats == 'continuous':
+                    print("handling measure: {}".format(m.measure_id))
+                    self.out_measure(m)
 
 
 if __name__ == "__main__":
