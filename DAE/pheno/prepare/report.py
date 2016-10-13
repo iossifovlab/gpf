@@ -322,7 +322,7 @@ class PhenoReportBase(object):
         df.loc[df.role == 'dad', 'role'] = 'parent'
         return df
 
-    def save_fig(self, measure, suffix, dpi=120):
+    def save_fig(self, measure, suffix, dpi=300):
         filename = "{}.{}.png".format(
             measure.measure_id, suffix)
         linkpath = os.path.join('figs', filename)
