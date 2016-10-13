@@ -105,9 +105,7 @@ def names(col1, col2):
 
 
 def male_female_colors():
-    colors = iter(plt.rcParams['axes.prop_cycle'])
-    color_male = colors.next()['color']
-    color_female = colors.next()['color']
+    [color_male, color_female] = gender_palette()
     return color_male, color_female
 
 
@@ -123,8 +121,8 @@ def male_female_legend(color_male, color_female, ax=None):
         ax = plt.gca()
 
     import matplotlib.patches as mpatches
-    male_patch = mpatches.Patch(color=color_male, label='Male')
-    female_patch = mpatches.Patch(color=color_female, label='Female')
+    male_patch = mpatches.Patch(color=color_male, label='M')
+    female_patch = mpatches.Patch(color=color_female, label='F')
     ax.legend(handles=[male_patch, female_patch])
 
 
@@ -151,8 +149,6 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     y = dfemale[col2]
     res_female = sm.OLS(y, X).fit()
 
-    color_male, color_female = male_female_colors()
-
     if jitter is None:
         jmale1 = jmale2 = np.zeros(len(dmale[col1]))
         jfemale1 = jfemale2 = np.zeros(len(dfemale[col1]))
@@ -163,18 +159,20 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
         jfemale1 = np.random.uniform(-jitter, jitter, len(dfemale[col1]))
         jfemale2 = np.random.uniform(-jitter, jitter, len(dfemale[col2]))
 
+    [color_male, color_female] = gender_palette_light()
     ax.plot(
         dmale[col1] + jmale1,
         dmale[col2] + jmale2,
         '.', color=color_male, ms=5,
         label='male')
-    ax.plot(dmale[col1], res_male.predict(), color=color_male)
-
     ax.plot(
         dfemale[col1] + jfemale1,
         dfemale[col2] + jfemale2,
         '.', color=color_female, ms=5,
         label='female')
+
+    [color_male, color_female] = gender_palette()
+    ax.plot(dmale[col1], res_male.predict(), color=color_male)
     ax.plot(dfemale[col1], res_female.predict(), color=color_female)
 
     male_female_legend(color_male, color_female, ax)
@@ -260,11 +258,21 @@ def role_labels(df):
     ]
 
 
+def gender_palette_light():
+    palette = sns.diverging_palette(240, 10, s=80, l=77, n=2)
+    return palette
+
+
+def gender_palette():
+    palette = sns.diverging_palette(240, 10, s=80, l=50, n=2)
+    return palette
+
+
 def draw_measure_violinplot(df, measure_id, ax=None):
     if ax is None:
         ax = plt.gca()
 
-    palette = sns.diverging_palette(240, 10, s=80, l=50, n=2, )
+    palette = gender_palette()
     sns.violinplot(
         data=df, x='role', y=measure_id, hue='gender',
         order=['prb', 'sib', 'parent'], hue_order=['M', 'F'],
@@ -273,7 +281,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
         scale_hue=False,
         palette=palette)
 
-    palette = sns.diverging_palette(240, 10, s=80, l=77, n=2, )
+    palette = gender_palette_light()
     sns.stripplot(
         data=df, x='role', y=measure_id, hue='gender',
         order=['prb', 'sib', 'parent'], hue_order=['M', 'F'],
