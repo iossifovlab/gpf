@@ -231,17 +231,34 @@ def _measure_df_split(df, col):
     return data, labels
 
 
-def draw_measure_violinplot(df, col, ax=None):
+def draw_measure_violinplot(df, m, ax=None):
     if ax is None:
         ax = plt.gca()
 
-    data, labels = _measure_df_split(df, col)
-
     sns.violinplot(
-        data=data,
-        scale='count',
-        linewidth=0.1)
-    plt.xticks(range(len(labels)), labels, rotation='vertical')
+        data=df, x='role', y=m.measure_id, hue='gender',
+        order=['prb', 'sib', 'parent'], hue_order=['M', 'F'],
+        linewidth=1, split=True)
+
+    palette = sns.diverging_palette(240, 10, s=80, l=77, n=2, )
+    sns.stripplot(
+        data=df, x='role', y=m.measure_id, hue='gender',
+        order=['prb', 'sib', 'parent'], hue_order=['M', 'F'],
+        jitter=0.05, size=2, palette=palette,
+        linewidth=0.25)
+
+# def draw_measure_violinplot(df, col, ax=None):
+#     if ax is None:
+#         ax = plt.gca()
+#
+#     data, labels = _measure_df_split(df, col)
+#
+#     sns.violinplot(
+#         data=data,
+#         scale='count',
+#         linewidth=0.1)
+#     plt.xticks(range(len(labels)), labels, rotation='vertical')
+
 
 #     pos = range(1, len(labels) + 1)
 #     plt.xticks(pos, labels, rotation='vertical')
@@ -260,6 +277,13 @@ class PhenoReportBase(object):
 
         self.phdb = PhenoDB()
         self.phdb.load()
+
+    def load_measure(self, m):
+        df = self.phdb.get_persons_values_df(
+            ['pheno_common.age', m.measure_id])
+        df.loc[df.role == 'mom', 'role'] = 'parent'
+        df.loc[df.role == 'dad', 'role'] = 'parent'
+        return df
 
     def save_fig(self, measure, suffix, dpi=120):
         filename = "{}.{}.png".format(
