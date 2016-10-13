@@ -324,10 +324,27 @@ class PhenoReportBase(object):
     def __init__(self, args):
         self.args = args
         self.outfile = "source/index.rst"
+        self.datafile = "source/data.csv"
         self.outpath = os.path.join(self.args.output, self.outfile)
+        self.datapath = os.path.join(self.args.output, self.datafile)
+        self.dataline = []
 
         self.phdb = PhenoDB()
         self.phdb.load()
+
+    def out_data_write(self, *vals):
+        for val in vals:
+            if val is None:
+                self.dataline.append('na')
+            else:
+                self.dataline.append(val)
+
+    def out_data_writeln(self,):
+        with open(self.datapath, 'a') as out:
+            line = ','.join([str(val) for val in self.dataline])
+            out.write(line)
+            out.write('\n')
+            self.dataline = []
 
     def load_measure(self, m):
         df = self.phdb.get_persons_values_df(
@@ -493,6 +510,14 @@ class PhenoReportBase(object):
 
     def reset(self):
         with open(self.outpath, 'w') as out:
+            out.write('\n')
+        with open(self.datapath, 'w') as out:
+            line = "instrument,measure_name,measure_id,type," \
+                "male age slope,male age pvalue," \
+                "female age slope,female age pvalue," \
+                "male nviq slope,male nviq pvalue," \
+                "female nviq slope,female nviq pvalue,"
+            out.write(line)
             out.write('\n')
 
 
