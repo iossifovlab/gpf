@@ -413,6 +413,15 @@ class PhenoReportBase(object):
             self._out_df_table(out, counts_df)
             return counts_df
 
+    def out_measure_values_figure(self, m):
+        caption = 'Measure\n{}'.format(m.measure_id)
+        df = self.load_measure(m)
+
+        draw_measure_violinplot(df, m.measure_id)
+        self._figure_caption(caption)
+        linkpath = self.save_fig(m, "violinplot")
+        self._out_figure(linkpath, caption)
+
     def _figure_caption(self, caption):
         params = {
             'axes.titlesize': 'large',
@@ -470,27 +479,6 @@ class PhenoReport(PhenoReportBase):
 
     def __init__(self, args):
         super(PhenoReport, self).__init__(args)
-
-#     def measure_violinplot(self, df, col):
-#         data, labels = _measure_df_split(df, col)
-#         plt.figure(figsize=self.FIGSIZE)
-#         sns.violinplot(data=data)
-#         plt.xticks(range(len(labels)), labels, rotation='vertical')
-#
-#     def measure_stripplot(self, df, col):
-#         data, labels = _measure_df_split(df, col)
-#         plt.figure(figsize=self.FIGSIZE)
-#         sns.stripplot(data=data, jitter=True)
-#         plt.xticks(range(len(labels)), labels, rotation='vertical')
-
-    def out_measure_values_figure(self, m):
-        caption = 'Measure\n{}'.format(m.measure_id)
-        df = self.load_measure(m)
-
-        draw_measure_violinplot(df, m.measure_id)
-        self._figure_caption(caption)
-        linkpath = self.save_fig(m, "violinplot")
-        self._out_figure(linkpath, caption)
 
     def out_measure_distribution(self, m):
         title = 'Values Distribution'
