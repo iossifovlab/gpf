@@ -9,7 +9,8 @@ from collections import defaultdict, OrderedDict
 from pheno.utils.configuration import PhenoConfig
 from pheno.models import PersonManager, VariableManager, \
     ContinuousValueManager,\
-    OrdinalValueManager, CategoricalValueManager, RawValueManager
+    OrdinalValueManager, CategoricalValueManager, RawValueManager,\
+    MetaVariableManager
 from VariantsDB import Person, Family
 
 
@@ -34,8 +35,8 @@ class Measure(object):
         return "Measure({}, {}, {})".format(
             self.measure_id, self.type, self.value_domain.encode('utf-8'))
 
-    @staticmethod
-    def from_df(row):
+    @classmethod
+    def from_df(cls, row):
         assert row['stats'] is not None
 
         m = Measure(row['measure_name'])
@@ -53,6 +54,12 @@ class Measure(object):
         m.value_domain = row['value_domain']
 
         return m
+
+
+class MeasureMeta(Measure):
+
+    def __init__(self, name):
+        super(MeasureMeta, self).__init__(name)
 
 
 class PhenoDB(PhenoConfig):
@@ -82,7 +89,15 @@ class PhenoDB(PhenoConfig):
                 names[names.index(n)] = f
         df.columns = names
 
-    def get_measures_df(self, instrument=None, stats=None):
+    def _load_measures_meta_df(self, df):
+        variable_ids = df.measure_id.unique()
+        with MetaVariableManager() as vm:
+            df = vm.load_df(where='variable_id IN ({})'.format(
+                ','.join(["'{}'".format(v) for v in variable_ids])))
+
+            print(df.head())
+
+    def get_measures_df(self, instrument=None, stats=None, **kwmeta):
         assert instrument is None or instrument in self.instruments
         assert stats is None or \
             stats in set(['continuous', 'ordinal', 'categorical'])
@@ -108,6 +123,12 @@ class PhenoDB(PhenoConfig):
             ('table_name', 'instrument_name'),
         ]
         self._rename_forward(res_df, mapping)
+
+        print(kwmeta)
+        if kwmeta:
+            print("joining meta...")
+            meta_df = self._load_measures_meta_df(res_df)
+
         return res_df
 
     def get_measures(self, instrument=None, stats=None):
