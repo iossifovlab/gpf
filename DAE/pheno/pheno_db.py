@@ -90,14 +90,19 @@ class PhenoDB(PhenoConfig):
         df.columns = names
 
     def _load_measures_meta_df(self, df):
-        variable_ids = df.measure_id.unique()
+        variable_ids = df.variable_id.unique()
         with MetaVariableManager() as vm:
-            df = vm.load_df(where='variable_id IN ({})'.format(
+            meta_df = vm.load_df(where='variable_id IN ({})'.format(
                 ','.join(["'{}'".format(v) for v in variable_ids])))
 
-            print(df.head())
+            print(meta_df.head())
 
-    def get_measures_df(self, instrument=None, stats=None, **kwmeta):
+            df = df.join(
+                meta_df.set_index('variable_id'), on='variable_id',
+                rsuffix='_val_meta')
+        return df
+
+    def get_measures_df(self, instrument=None, stats=None):
         assert instrument is None or instrument in self.instruments
         assert stats is None or \
             stats in set(['continuous', 'ordinal', 'categorical'])
@@ -112,10 +117,14 @@ class PhenoDB(PhenoConfig):
             df = vm.load_df(
                 where=' and '.join(['( {} )'.format(c) for c in clauses]))
 
+        df = self._load_measures_meta_df(df)
+
         res_df = df[[
             'variable_id', 'variable_name', 'table_name',
             'description', 'individuals', 'stats',
-            'min_value', 'max_value', 'value_domain'
+            'min_value', 'max_value', 'value_domain',
+            'has_probands', 'has_siblings', 'has_parents',
+            'default_filter'
         ]]
         mapping = [
             ('variable_id', 'measure_id'),
@@ -123,11 +132,6 @@ class PhenoDB(PhenoConfig):
             ('table_name', 'instrument_name'),
         ]
         self._rename_forward(res_df, mapping)
-
-        print(kwmeta)
-        if kwmeta:
-            print("joining meta...")
-            meta_df = self._load_measures_meta_df(res_df)
 
         return res_df
 
