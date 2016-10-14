@@ -33,7 +33,7 @@ class Measures(Preload):
     def load_desc(self, instrument=None):
         d = []
         measures = self.phdb.get_measures_df(
-            # instrument='ssc_commonly_used',
+            instrument=instrument,
             stats='continuous'
         )
         for _index, row in measures.iterrows():
