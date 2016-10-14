@@ -25,14 +25,19 @@ class Measures(Preload):
         else:
             return float(val)
 
-    def load_desc(self, instrument):
+    def load_instruments(self):
+        instruments = self.phdb.instruments
+        res = [i.name for i in instruments.values()]
+        return res
+
+    def load_desc(self, instrument=None):
         d = []
         measures = self.phdb.get_measures_df(
             # instrument='ssc_commonly_used',
             stats='continuous'
         )
         for _index, row in measures.iterrows():
-            print("loading measure: {}".format(row['measure_id']))
+            # print("loading measure: {}".format(row['measure_id']))
             d.append({
                 'measure': row['measure_id'],
                 'instrument': row['instrument_name'],

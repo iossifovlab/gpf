@@ -108,7 +108,22 @@ class PhenoMeasuresHelpView(views.APIView):
     def get(self, request):
         register = get_register()
         measures = register.get('pheno_measures')
-        return Response(measures.load_desc())
+        print(request.query_params)
+        if 'instrument' not in request.query_params:
+            instrument = None
+        else:
+            instrument = request.query_params['instrument']
+        print(instrument)
+
+        return Response(measures.load_desc(instrument))
+
+
+class PhenoInstrumentsHelpView(views.APIView):
+
+    def get(self, request):
+        register = get_register()
+        measures = register.get('pheno_measures')
+        return Response(measures.load_instruments())
 
 
 class PhenoMeasureHistogramView(views.APIView):
