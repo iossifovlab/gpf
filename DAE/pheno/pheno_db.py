@@ -10,7 +10,7 @@ from pheno.utils.configuration import PhenoConfig
 from pheno.models import PersonManager, VariableManager, \
     ContinuousValueManager,\
     OrdinalValueManager, CategoricalValueManager, RawValueManager,\
-    MetaVariableManager
+    MetaVariableManager, MetaVariableCorrelationManager
 from VariantsDB import Person, Family
 
 
@@ -89,11 +89,14 @@ class PhenoDB(PhenoConfig):
                 names[names.index(n)] = f
         df.columns = names
 
+    def _where_variables(self, variable_ids):
+        return 'variable_id IN ({})'.format(
+            ','.join(["'{}'".format(v) for v in variable_ids]))
+
     def _load_measures_meta_df(self, df):
         variable_ids = df.variable_id.unique()
         with MetaVariableManager() as vm:
-            meta_df = vm.load_df(where='variable_id IN ({})'.format(
-                ','.join(["'{}'".format(v) for v in variable_ids])))
+            meta_df = vm.load_df(where=self._where_variables(variable_ids))
 
             print(meta_df.head())
 
@@ -101,6 +104,45 @@ class PhenoDB(PhenoConfig):
                 meta_df.set_index('variable_id'), on='variable_id',
                 rsuffix='_val_meta')
         return df
+
+    def get_measures_corellations_df(self, measures, correlations_with, role):
+        def names(correlation_with, role, gender):
+            suffix = '{}.{}.{}'.format(
+                role,
+                gender,
+                correlation_with)
+            return (
+                'coeff.{}'.format(suffix),
+                'pvalue.{}'.format(suffix)
+            )
+        assert measures is not None
+
+        dfs = []
+        for correlation_with in correlations_with:
+            for gender in ['M', 'F']:
+                where_variables = self._where_variables(measures)
+                where = "correlation_with = '{}' AND " \
+                    "role = '{}' AND " \
+                    "gender = '{}' AND {}".format(
+                        correlation_with,
+                        role, gender,
+                        where_variables)
+                with MetaVariableCorrelationManager() as vm:
+                    df = vm.load_df(where)
+                    df = df[['variable_id', 'coeff', 'pvalue']]
+                    self._rename_forward(
+                        df, zip(
+                            ['coeff', 'pvalue'],
+                            names(correlation_with, role, gender)))
+                    dfs.append(df)
+
+        res_df = dfs[0]
+        for i, df in enumerate(dfs[1:]):
+            res_df = res_df.join(
+                df.set_index('variable_id'), on='variable_id',
+                rsuffix='_val_{}'.format(i))
+
+        return res_df
 
     def get_measures_df(self, instrument=None, stats=None):
         assert instrument is None or instrument in self.instruments
