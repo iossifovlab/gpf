@@ -98,8 +98,6 @@ class PhenoDB(PhenoConfig):
         with MetaVariableManager() as vm:
             meta_df = vm.load_df(where=self._where_variables(variable_ids))
 
-            print(meta_df.head())
-
             df = df.join(
                 meta_df.set_index('variable_id'), on='variable_id',
                 rsuffix='_val_meta')
