@@ -368,6 +368,158 @@ class VariableManager(ManagerBase):
         super(VariableManager, self).__init__(*args, **kwargs)
 
 
+class MetaVariableCorrelationModel(object):
+    SCHEMA_CREATE = """
+    BEGIN;
+    CREATE TABLE IF NOT EXISTS {table} (
+        variable_id varchar(128) NOT NULL,
+        correlation_with varchar(128) NOT NULL,
+        role varchar(16) NOT NULL,
+        gender varchar(1) NOT NULL,
+        coeff real NULL,
+        pvalue real NULL,
+        PRIMARY KEY (variable_id, correlation_with, role, gender)
+    );
+    COMMIT;
+    """
+
+    SCHEMA_DROP = """
+    BEGIN;
+
+    DROP TABLE IF EXISTS {table};
+
+    COMMIT;
+    """
+
+    TABLE = 'meta_variable_correlation'
+
+    COLUMNS = [
+        'variable_id',
+        'correlation_with',
+        'role',
+        'gender',
+        'coeff',
+        'pvalue',
+    ]
+
+    def __init__(self):
+        self.variable_id = None
+        self.correlation_with = None
+        self.role = None
+        self.gender = None
+        self.coeff = None
+        self.pvalue = None
+
+    @staticmethod
+    def to_tuple(v):
+        return (
+            v.variable_id,
+            v.correlation_with,
+            v.role,
+            v.gender,
+            v.coeff,
+            v.pvalue,
+        )
+
+    @staticmethod
+    def create_from_df(row):
+        v = MetaVariableModel()
+
+        v.variable_id = row['variable_id']
+        v.correlation_with = row['correlation_with']
+        v.role = row['role']
+        v.gender = row['gender']
+        v.coeff = row['coeff']
+        v.pvalue = row['pvalue']
+        return v
+
+
+class MetaVariableCorrelationManager(ManagerBase):
+
+    MODEL = MetaVariableCorrelationModel
+
+    def __init__(self, *args, **kwargs):
+        super(MetaVariableCorrelationManager, self).__init__(*args, **kwargs)
+
+
+class MetaVariableModel(object):
+    SCHEMA_CREATE = """
+    BEGIN;
+    CREATE TABLE IF NOT EXISTS {table} (
+        variable_id varchar(128) NOT NULL PRIMARY KEY,
+        min_value real NULL,
+        max_value real NULL,
+        has_probands bool NULL,
+        has_siblings bool NULL,
+        has_parents bool NULL,
+        default_filter varchar(128) NULL
+    );
+    COMMIT;
+    """
+
+    SCHEMA_DROP = """
+    BEGIN;
+
+    DROP TABLE IF EXISTS {table};
+
+    COMMIT;
+    """
+
+    TABLE = 'meta_variable'
+
+    COLUMNS = [
+        'variable_id',
+        'min_value',
+        'max_value',
+        'has_probands',
+        'has_siblings',
+        'has_parents',
+        'default_filter',
+    ]
+
+    def __init__(self):
+        self.variable_id = None
+        self.min_value = None
+        self.max_value = None
+        self.has_probands = None
+        self.has_siblings = None
+        self.has_parents = None
+        self.default_filter = None
+
+    @staticmethod
+    def to_tuple(v):
+        return (
+            v.variable_id,
+            v.min_value,
+            v.max_value,
+            v.has_probands,
+            v.has_siblings,
+            v.has_parents,
+            v.default_filter
+        )
+
+    @staticmethod
+    def create_from_df(row):
+        v = MetaVariableModel()
+
+        v.variable_id = row['variable_id']
+        v.min_value = row['min_value']
+        v.max_value = row['max_value']
+        v.has_probands = row['has_probands']
+        v.has_siblings = row['has_siblings']
+        v.has_parents = row['has_parents']
+        v.default_filter = row['default_filter']
+        return v
+
+
+class MetaVariableManager(ManagerBase):
+
+    MODEL = MetaVariableModel
+
+    def __init__(self, *args, **kwargs):
+        super(MetaVariableManager, self).__init__(*args, **kwargs)
+
+
 class ValueModel(object):
     SCHEMA_CREATE = """
     BEGIN;
