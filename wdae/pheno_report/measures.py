@@ -14,6 +14,7 @@ from preloaded.register import Preload
 import precompute
 import itertools
 from pheno.pheno_db import PhenoDB
+from helpers.pvalue import format_pvalue, colormap_pvalue
 
 
 class Measures(Preload):
@@ -31,21 +32,98 @@ class Measures(Preload):
         return res
 
     def load_desc(self, instrument=None):
-        d = []
+        def violin_plot(measure_id, small=None):
+            if small is None:
+                return '{}.violinplot.png'.format(measure_id)
+            else:
+                return '{}.violinplot_small.png'.format(measure_id)
+
+        def histogram_plot(measure_id, small=None):
+            if small is None:
+                return '{}.prb_distribution.png'.format(measure_id)
+            else:
+                return '{}.prb_distribution_small.png'.format(measure_id)
+
+        def corr_nviq_plot(measure_id, small=None):
+            if small is None:
+                return '{}.prb_regression_by_nviq.png'.format(measure_id)
+            else:
+                return '{}.prb_regression_by_nviq_small.png'.format(measure_id)
+
+        def corr_age_plot(measure_id, small=None):
+            if small is None:
+                return '{}.prb_regression_by_age.png'.format(measure_id)
+            else:
+                return '{}.prb_regression_by_age_small.png'.format(measure_id)
+
+        d = {}
+        res = []
         measures = self.phdb.get_measures_df(
             instrument=instrument,
             stats='continuous'
         )
         for _index, row in measures.iterrows():
             # print("loading measure: {}".format(row['measure_id']))
-            d.append({
-                'measure': row['measure_id'],
+            if not row['has_probands']:
+                continue
+            measure_id = row['measure_id']
+            desc = {
+                'measure': measure_id,
                 'instrument': row['instrument_name'],
                 'measure_name': row['measure_name'],
                 'desc': None,  # v.description.decode('utf-8'),
                 'min': row['min_value'],
                 'max': row['max_value'],
-            })
+                'violin_plot': violin_plot(measure_id),
+                'violin_plot_small': violin_plot(measure_id, 'small'),
+                'hist': histogram_plot(measure_id),
+                'hist_small': histogram_plot(measure_id, 'small'),
+                'corr_nviq': corr_nviq_plot(measure_id),
+                'corr_nviq_small': corr_nviq_plot(measure_id, 'small'),
+                'corr_age': corr_age_plot(measure_id),
+                'corr_age_small': corr_age_plot(measure_id, 'small'),
+
+            }
+            res.append(desc)
+            d[measure_id] = desc
+
+        corr_df = self.phdb.get_measures_corellations_df(
+            measures.measure_id.unique(),
+            ['pheno_common.non_verbal_iq', 'pheno_common.age'],
+            'prb')
+
+        for _index, row in corr_df.iterrows():
+            # print("loading measure: {}".format(row['measure_id']))
+            measure_id = row['variable_id']
+            desc = d[measure_id]
+            desc['nviq_male_pval'] = \
+                format_pvalue(
+                row['pvalue.prb.M.pheno_common.non_verbal_iq'])
+            desc['nviq_male_pval_bg'] = \
+                colormap_pvalue(
+                row['pvalue.prb.M.pheno_common.non_verbal_iq'])
+
+            desc['nviq_female_pval'] = \
+                format_pvalue(
+                row['pvalue.prb.F.pheno_common.non_verbal_iq'])
+            desc['nviq_female_pval_bg'] = \
+                colormap_pvalue(
+                row['pvalue.prb.F.pheno_common.non_verbal_iq'])
+
+            desc['age_male_pval'] = \
+                format_pvalue(
+                row['pvalue.prb.M.pheno_common.age'])
+            desc['age_male_pval_bg'] = \
+                colormap_pvalue(
+                row['pvalue.prb.M.pheno_common.age'])
+
+            desc['age_female_pval'] = \
+                format_pvalue(
+                row['pvalue.prb.F.pheno_common.age'])
+            desc['age_female_pval_bg'] = \
+                colormap_pvalue(
+                row['pvalue.prb.F.pheno_common.age'])
+
         return d
 
     def load_list(self):

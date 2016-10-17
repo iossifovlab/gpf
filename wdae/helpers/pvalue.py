@@ -6,7 +6,7 @@ Created on Feb 23, 2016
 import numpy as np
 
 
-def colormap_value(p_val, lessmore='more'):
+def colormap_pvalue(p_val, lessmore='more'):
     if p_val == "NaN":
         return "rgb(255,255,255)"
 
@@ -32,3 +32,10 @@ def colormap_value(p_val, lessmore='more'):
     else:
         color = "rgb(255,255,255)"
     return color
+
+
+def format_pvalue(p_val):
+    if p_val >= 0.0001:
+        return str(round(p_val, 4))
+    else:
+        return str('%.1E' % p_val)

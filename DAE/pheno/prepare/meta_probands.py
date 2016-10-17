@@ -77,9 +77,9 @@ class PrepareMetaProbands(object):
                     v.variable_id = m.measure_id
                     v.min_value = df[m.measure_id].min()
                     v.max_value = df[m.measure_id].max()
-                    v.has_probands = (len(df[df.role == 'prb']) > 0)
-                    v.has_siblings = (len(df[df.role == 'sib']) > 0)
-                    v.has_parents = (len(df[df.role == 'parent']) > 0)
+                    v.has_probands = (len(df[df.role == 'prb']) > 7)
+                    v.has_siblings = (len(df[df.role == 'sib']) > 7)
+                    v.has_parents = (len(df[df.role == 'parent']) > 7)
 
                     vm.save(v)
 

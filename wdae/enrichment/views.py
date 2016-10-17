@@ -14,7 +14,7 @@ from enrichment.counters import EventsCounter, \
 from enrichment.families import ChildrenStats
 # from enrichment.results import EnrichmentTestBuilder
 from helpers.logger import LOGGER, log_filter
-from helpers.pvalue import colormap_value
+from helpers.pvalue import colormap_pvalue
 from precompute import register
 from query_prepare import prepare_denovo_studies, \
     prepare_string_value
@@ -199,7 +199,7 @@ class EnrichmentView(APIView):
         lessmore = less_more(t.overlapped_count, t.expected)
 
         tres['lessmore'] = lessmore
-        tres['bg'] = colormap_value(t.pvalue, lessmore)
+        tres['bg'] = colormap_pvalue(t.pvalue, lessmore)
         return tres
 
     def serialize_response_results(self):
