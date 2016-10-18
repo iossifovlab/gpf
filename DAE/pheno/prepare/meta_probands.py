@@ -65,36 +65,36 @@ class PrepareMetaProbands(object):
             vm.save(v)
 
     def run(self):
-        # for instrument in self.phdb.instruments.values():
-        instrument = self.phdb.instruments['ssc_commonly_used']
-        for m in instrument.measures.values():
-            if m.stats == 'continuous':
-                print("handling measure: {}".format(m.measure_id))
-                df = self.load_measure(m)
+        for instrument in self.phdb.instruments.values():
+            # instrument = self.phdb.instruments['ssc_commonly_used']
+            for m in instrument.measures.values():
+                if m.stats == 'continuous':
+                    print("handling measure: {}".format(m.measure_id))
+                    df = self.load_measure(m)
 
-                with MetaVariableManager() as vm:
-                    v = MetaVariableModel()
-                    v.variable_id = m.measure_id
-                    v.min_value = df[m.measure_id].min()
-                    v.max_value = df[m.measure_id].max()
-                    v.has_probands = (len(df[df.role == 'prb']) > 7)
-                    v.has_siblings = (len(df[df.role == 'sib']) > 7)
-                    v.has_parents = (len(df[df.role == 'parent']) > 7)
+                    with MetaVariableManager() as vm:
+                        v = MetaVariableModel()
+                        v.variable_id = m.measure_id
+                        v.min_value = df[m.measure_id].min()
+                        v.max_value = df[m.measure_id].max()
+                        v.has_probands = (len(df[df.role == 'prb']) > 7)
+                        v.has_siblings = (len(df[df.role == 'sib']) > 7)
+                        v.has_parents = (len(df[df.role == 'parent']) > 7)
 
-                    vm.save(v)
+                        vm.save(v)
 
-                if len(df[df.role == 'prb']) == 0:
-                    print("NO PROBANDS: skipping regressions...")
-                    continue
+                    if len(df[df.role == 'prb']) == 0:
+                        print("NO PROBANDS: skipping regressions...")
+                        continue
 
-                self._build_regression(
-                    df, m, 'pheno_common.non_verbal_iq', 'prb', 'M')
-                self._build_regression(
-                    df, m, 'pheno_common.non_verbal_iq', 'prb', 'F')
-                self._build_regression(
-                    df, m, 'pheno_common.age', 'prb', 'M')
-                self._build_regression(
-                    df, m, 'pheno_common.age', 'prb', 'F')
+                    self._build_regression(
+                        df, m, 'pheno_common.non_verbal_iq', 'prb', 'M')
+                    self._build_regression(
+                        df, m, 'pheno_common.non_verbal_iq', 'prb', 'F')
+                    self._build_regression(
+                        df, m, 'pheno_common.age', 'prb', 'M')
+                    self._build_regression(
+                        df, m, 'pheno_common.age', 'prb', 'F')
 
 
 if __name__ == '__main__':
