@@ -94,7 +94,7 @@ class PhenoMeasuresTest(APITestCase):
         url = "/api/v2/pheno_reports/measures"
         response = self.client.get(url, format='json')
         self.assertEqual(200, response.status_code)
-        self.assertEqual(526, len(response.data))
+        self.assertEqual(523, len(response.data['measures']))
 
 if __name__ == "__main__":
     unittest.main()

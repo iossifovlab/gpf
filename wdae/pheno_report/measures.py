@@ -117,6 +117,9 @@ class Measures(Preload):
             res.append(desc)
             d[desc['measure']] = desc
 
+        if not res:
+            return res
+
         corr_df = self.phdb.get_measures_corellations_df(
             measures,
             ['pheno_common.non_verbal_iq', 'pheno_common.age'],
@@ -124,11 +127,11 @@ class Measures(Preload):
 
         for _index, row in corr_df.iterrows():
             # print("loading measure: {}".format(row['measure_id']))
-            measure_id = row['measure_id']
-            desc = d[measure_id]
+            # measure_id = row['measure_id']
+            desc = d['measure']
             self._build_measure_stats_description(desc, row)
 
-        return d
+        return res
 
     def load_list(self):
         d = []
