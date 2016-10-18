@@ -55,7 +55,11 @@ class Measure(object):
             m.max_value = row['max_value']
             assert m.max_value >= m.min_value
         m.value_domain = row['value_domain']
-        m.default_filter = row['default_filter']
+        if isinstance(row['default_filter'], float) and \
+                np.isnan(row['default_filter']):
+            m.default_filter = None
+        else:
+            m.default_filter = row['default_filter']
 
         return m
 
@@ -333,7 +337,6 @@ class PhenoDB(PhenoConfig):
                 clauses.append(filter_clause)
 
         where = ' and '.join(clauses)
-
         df = self._get_values_df(value_manager, where)
         if person_ids:
             df = df[df.person_id.isin(person_ids)]
