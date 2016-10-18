@@ -28,8 +28,13 @@ class Measures(Preload):
 
     def load_instruments(self):
         instruments = self.phdb.instruments
-        res = [
-            i.name for i in instruments.values() if i.name != 'pheno_common']
+        res = []
+        for instrument in instruments.values():
+            if instrument.name == 'pheno_common':
+                continue
+            df = self.phdb.get_measures_df(instrument.name, stats='continuous')
+            if np.any(df.has_probands):
+                res.append(instrument.name)
         return res
 
     def load_desc(self, instrument=None):

@@ -20,6 +20,9 @@ class Instrument(object):
         self.name = name
 
         self.measures = OrderedDict()
+        self.has_probands = None
+        self.has_siblings = None
+        self.has_parents = None
 
     def __repr__(self):
         return "Instrument({}, {})".format(self.name, len(self.measures))
@@ -193,6 +196,10 @@ class PhenoDB(PhenoConfig):
             instrument = Instrument(instrument_name)
             measures = OrderedDict()
             measures_df = df[df.instrument_name == instrument_name]
+            instrument.has_probands = np.any(measures_df.has_probands)
+            instrument.has_siblings = np.any(measures_df.has_siblings)
+            instrument.has_parents = np.any(measures_df.has_parents)
+
             for _index, row in measures_df.iterrows():
                 m = Measure.from_df(row)
                 m.instrument = instrument
