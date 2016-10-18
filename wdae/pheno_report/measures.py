@@ -126,9 +126,8 @@ class Measures(Preload):
             'prb')
 
         for _index, row in corr_df.iterrows():
-            # print("loading measure: {}".format(row['measure_id']))
-            # measure_id = row['measure_id']
-            desc = d['measure']
+            measure_id = row['measure_id']
+            desc = d[measure_id]
             self._build_measure_stats_description(desc, row)
 
         return res
