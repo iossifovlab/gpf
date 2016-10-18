@@ -127,6 +127,8 @@ class Measures(Preload):
 
         for _index, row in corr_df.iterrows():
             measure_id = row['measure_id']
+            if measure_id not in d:
+                continue
             desc = d[measure_id]
             self._build_measure_stats_description(desc, row)
 

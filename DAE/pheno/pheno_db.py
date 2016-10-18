@@ -55,6 +55,7 @@ class Measure(object):
             m.max_value = row['max_value']
             assert m.max_value >= m.min_value
         m.value_domain = row['value_domain']
+        m.default_filter = row['default_filter']
 
         return m
 
@@ -73,6 +74,7 @@ class PhenoDB(PhenoConfig):
         self.families = None
         self.persons = None
         self.instruments = None
+        self.measures = {}
 
     @staticmethod
     def check_nan(val):
@@ -208,6 +210,7 @@ class PhenoDB(PhenoConfig):
                 m = Measure.from_df(row)
                 m.instrument = instrument
                 measures[m.name] = m
+                self.measures[m.measure_id] = m
             instrument.measures = measures
             instruments[instrument.name] = instrument
 
@@ -269,14 +272,8 @@ class PhenoDB(PhenoConfig):
         return persons
 
     def get_measure_type(self, measure_id):
-        with VariableManager() as vm:
-            variable = vm.get(
-                where="variable_id='{}' and not stats isnull"
-                .format(measure_id))
-        if not variable:
-            return None
-        else:
-            return variable.stats
+        assert measure_id in self.measures
+        return self.measures[measure_id].stats
 
     def _get_values_df(self, value_manager, where):
         with value_manager() as vm:
@@ -301,8 +298,24 @@ class PhenoDB(PhenoConfig):
         names[names.index('value')] = measure_id
         df.columns = names
 
-    def get_measure_values_df(self, measure_id, person_ids=None, role=None):
-        assert measure_id is not None
+    def _build_default_filter_clause(self, m, default_filter):
+        if default_filter == 'skip' or m.default_filter is None:
+            return None
+        elif default_filter == 'apply':
+            return "value {}".format(m.default_filter)
+        elif default_filter == 'invert':
+            return "NOT (value {})".format(m.default_filter)
+        else:
+            raise ValueError(
+                "bad default_filter value: {}".format(default_filter))
+
+    def get_measure_values_df(self, measure_id,
+                              person_ids=None, role=None,
+                              default_filter='apply'):
+        assert measure_id in self.measures
+
+        m = self.measures[measure_id]
+
         value_type = self.get_measure_type(measure_id)
         if value_type is None:
             raise ValueError("bad measure: {}; unknown value type"
@@ -312,6 +325,13 @@ class PhenoDB(PhenoConfig):
         clauses = ["variable_id = '{}'".format(measure_id)]
         if role:
             clauses.append("person_role = '{}'".format(role))
+
+        if m.default_filter is not None:
+            filter_clause = self._build_default_filter_clause(
+                m, default_filter)
+            if filter_clause is not None:
+                clauses.append(filter_clause)
+
         where = ' and '.join(clauses)
 
         df = self._get_values_df(value_manager, where)
