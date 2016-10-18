@@ -100,7 +100,7 @@ class PhenoMeasuresView(views.APIView):
     def get(self, request):
         register = get_register()
         measures = register.get('pheno_measures')
-        return Response(measures.load_list())
+        return Response({'measures': measures.load_list()})
 
 
 class PhenoMeasuresHelpView(views.APIView):
@@ -115,7 +115,7 @@ class PhenoMeasuresHelpView(views.APIView):
             instrument = request.query_params['instrument']
         print(instrument)
 
-        return Response(measures.load_desc(instrument))
+        return Response({'measures': measures.load_desc(instrument)})
 
 
 class PhenoInstrumentsHelpView(views.APIView):
@@ -123,7 +123,7 @@ class PhenoInstrumentsHelpView(views.APIView):
     def get(self, request):
         register = get_register()
         measures = register.get('pheno_measures')
-        return Response(measures.load_instruments())
+        return Response({'instruments': measures.load_instruments()})
 
 
 class PhenoMeasureHistogramView(views.APIView):
