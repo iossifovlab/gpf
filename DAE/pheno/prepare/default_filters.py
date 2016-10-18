@@ -26,3 +26,8 @@ class PrepareDefaultFilters(V15Loader):
                         row['measure_id']))
                 mv.default_filter = row['default_filter']
                 vm.save(mv)
+
+
+if __name__ == '__main__':
+    prepare = PrepareDefaultFilters()
+    prepare.prepare()

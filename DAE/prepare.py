@@ -9,6 +9,8 @@ import argparse
 
 from pheno.prepare.pheno_prepare import prepare_pheno_db_cache,\
     check_pheno_db_cache
+from pheno.prepare.meta_probands import PrepareMetaProbands
+from pheno.prepare.default_filters import PrepareDefaultFilters
 
 
 def parse_arguments(argv=sys.argv[1:]):
@@ -17,6 +19,8 @@ def parse_arguments(argv=sys.argv[1:]):
 CACHES = [
     'all',
     'pheno_db',
+    'pheno_db_meta',
+    'pheno_db_filters',
 ]
 
 if __name__ == '__main__':
@@ -53,3 +57,13 @@ if __name__ == '__main__':
             prepare_pheno_db_cache()
         if args.check:
             check_pheno_db_cache()
+
+    if 'pheno_db_meta' in args.cache or 'all' in args.cache:
+        if args.recompute:
+            p = PrepareMetaProbands()
+            p.prepare()
+
+    if 'pheno_db_filters' in args.cache or 'all' in args.cache:
+        if args.recompute:
+            p = PrepareDefaultFilters()
+            p.prepare()

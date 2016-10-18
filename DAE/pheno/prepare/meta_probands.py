@@ -96,9 +96,12 @@ class PrepareMetaProbands(object):
                     self._build_regression(
                         df, m, 'pheno_common.age', 'prb', 'F')
 
+    def prepare(self):
+        self.drop_tables()
+        self.create_tables()
+        self.run()
+
 
 if __name__ == '__main__':
     prepare = PrepareMetaProbands()
-    prepare.drop_tables()
-    prepare.create_tables()
-    prepare.run()
+    prepare.prepare()
