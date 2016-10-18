@@ -29,13 +29,13 @@ class Measures(Preload):
     def load_instruments(self):
         instruments = self.phdb.instruments
         res = []
-        for instrument in instruments.values():
+        for name, instrument in instruments.items():
             if instrument.name == 'pheno_common':
                 continue
             df = self.phdb.get_measures_df(instrument.name, stats='continuous')
             if np.any(df.has_probands):
-                res.append(instrument.name)
-        return res
+                res.append(name)
+        return sorted(res)
 
     def _build_measure_description(self, row):
         def violin_plot(measure_id, small=None):
