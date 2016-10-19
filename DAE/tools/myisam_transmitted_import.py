@@ -31,6 +31,7 @@ PROFILE = 0
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
+
     def __init__(self, msg):
         super(CLIError).__init__(type(self))
         self.msg = "E: %s" % msg
@@ -87,23 +88,31 @@ class Tools(object):
         study = self.study
         user = study.vdb._config.get(
             study._configSection,
-            'transmittedVariants.mysql.user')
+            'transmittedVariants.user')
         db = study.vdb._config.get(
             study._configSection,
-            'transmittedVariants.mysql.db')
+            'transmittedVariants.db')
         password = study.vdb._config.get(
             study._configSection,
-            'transmittedVariants.mysql.pass')
+            'transmittedVariants.pass')
         host = study.vdb._config.get(
             study._configSection,
-            'transmittedVariants.mysql.host')
-        return host, user, password, db
+            'transmittedVariants.host')
+        port = study.vdb._config.get(
+            study._configSection,
+            'transmittedVariants.port')
+        if port is None:
+            port = 3306
+        else:
+            port = int(port)
+
+        return host, port, user, password, db
 
     def connect(self):
-        (host, user, password, db) = self.get_db_conf()
+        (host, port, user, password, db) = self.get_db_conf()
         if not self.connection:
             self.connection = mdb.connect(
-                host, user, password, db)
+                host=host, port=port, user=user, passwd=password, db=db)
         return self.connection
 
     def drop_all_tables(self):
@@ -118,15 +127,17 @@ class Tools(object):
             cursor.close()
 
     def _import_sql_file(self, family_filename):
-        host, user, password, db = self.get_db_conf()
+        host, port, user, password, db = self.get_db_conf()
         params = {
             'filename': family_filename,
             'host': host,
+            'port': port,
             'user': user,
             'password': password,
             'db': db}
         command = "gunzip -c %(filename)s | "\
-            "mysql -h%(host)s -u%(user)s -p%(password)s %(db)s" % params
+            "mysql -h%(host)s -P%(port)s -u%(user)s -p%(password)s %(db)s" % \
+            params
         print "executing command: %s" % command
         os.system(command)
 
