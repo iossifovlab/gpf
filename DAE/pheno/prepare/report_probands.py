@@ -31,7 +31,7 @@ class ProbandsPhenoReport(PhenoReportBase):
         title = 'Fitting OLS by Age'
         self.out_title(title, self.H4)
 
-        df = self.load_measure(m)
+        df = self.load_measure_and_age(m)
 
         dd = df[df.role == 'prb']
         if len(dd) > 5:
@@ -65,7 +65,7 @@ class ProbandsPhenoReport(PhenoReportBase):
         title = 'Fitting OLS by Non Verbal IQ'
         self.out_title(title, self.H4)
 
-        df = self.load_measure(m)
+        df = self.load_measure_and_nviq(m)
 
         dd = df[df.role == 'prb']
         if len(dd) > 5:

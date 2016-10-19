@@ -348,7 +348,21 @@ class PhenoReportBase(object):
 
     def load_measure(self, m):
         df = self.phdb.get_persons_values_df(
-            ['pheno_common.age', 'pheno_common.non_verbal_iq', m.measure_id])
+            [m.measure_id])
+        df.loc[df.role == 'mom', 'role'] = 'parent'
+        df.loc[df.role == 'dad', 'role'] = 'parent'
+        return df
+
+    def load_measure_and_age(self, m):
+        df = self.phdb.get_persons_values_df(
+            ['pheno_common.age', m.measure_id])
+        df.loc[df.role == 'mom', 'role'] = 'parent'
+        df.loc[df.role == 'dad', 'role'] = 'parent'
+        return df
+
+    def load_measure_and_nviq(self, m):
+        df = self.phdb.get_persons_values_df(
+            ['pheno_common.non_verbal_iq', m.measure_id])
         df.loc[df.role == 'mom', 'role'] = 'parent'
         df.loc[df.role == 'dad', 'role'] = 'parent'
         return df
