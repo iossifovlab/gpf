@@ -39,6 +39,15 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(404, response.status_code)
 
+    def test_full_patition(self):
+        url = "/api/v2/gene_weights/partitions"
+        data = {
+            "weight": "RVIS",
+            "min": -1000,
+            "max": 1000,
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(200, response.status_code)
 
 if __name__ == "__main__":
     unittest.main()

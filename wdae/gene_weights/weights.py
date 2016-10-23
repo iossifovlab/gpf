@@ -77,10 +77,8 @@ class Weights(Preload):
             wmax = df.max()
 
         notnan_index = np.logical_not(np.isnan(df.values))
-        print("NOTNAN: ", np.sum(notnan_index))
         minmax_index = np.logical_and(df.values >= wmin, df.values <= wmax)
         index = np.logical_and(notnan_index, minmax_index)
-        print("INDEX: ", np.sum(index))
 
         genes = self.df[index].gene
         return set(genes.values)
