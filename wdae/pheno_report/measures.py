@@ -140,11 +140,14 @@ class Measures(Preload):
             # instrument='ssc_commonly_used',
             stats='continuous'
         )
+        print(measures.head())
         for _index, row in measures.iterrows():
             if 'pheno_common' in row['measure_id']:
                 continue
             d.append({
                 'measure': row['measure_id'],
+                'min': row['min_value'],
+                'max': row['max_value'],
             })
         return d
 
