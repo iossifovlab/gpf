@@ -70,14 +70,16 @@ class Weights(Preload):
         if weight not in self.weights:
             raise ValueError("unsupported gene weight {}".format(weight))
         df = self.df[weight]
-        if wmin is None or wmin < df.min() and wmin >= df.max():
+        if wmin is None or wmin < df.min() or wmin >= df.max():
             wmin = df.min()
-        if wmax is None or wmax <= df.min() and wmax > df.max():
+        if wmax is None or wmax <= df.min() or wmax > df.max():
             wmax = df.max()
 
         notnan_index = np.logical_not(np.isnan(df.values))
+        print("NOTNAN: ", np.sum(notnan_index))
         minmax_index = np.logical_and(df.values >= wmin, df.values <= wmax)
         index = np.logical_and(notnan_index, minmax_index)
+        print("INDEX: ", np.sum(index))
 
         genes = self.df[index].gene
         return set(genes.values)
