@@ -19,7 +19,7 @@ class Weights(Preload):
     DATA_FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
-        'data/gene_weights/gene_weights_clean.csv')
+        'data/gene_weights/gene_weights_2.csv')
 
     def _load_data(self):
         df = pd.read_csv(self.DATA_FILENAME)
@@ -40,8 +40,8 @@ class Weights(Preload):
                     w[np.logical_not(np.isnan(w.values))].values, 150)
                 result.append({"weight": weight,
                                "desc": desc,
-                               "min": w.min(),
-                               "max": w.max(),
+                               "min": float("{:.4G}".format(w.min())),
+                               "max": float("{:.4G}".format(w.max())),
                                "bars": bars,
                                "bins": bins,
                                "step": step, })
