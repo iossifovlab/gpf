@@ -141,20 +141,26 @@ class PhenoMeasureHistogramView(views.APIView):
         if not self.measures.has_measure(pheno_measure):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        df = self.measures.get_measure_df(pheno_measure)
+        df = self.measures.get_values_df(pheno_measure)
+        print(df.head())
         m = df[pheno_measure]
         bars, bins = np.histogram(
             df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25)
 
+        measure = self.measures.phdb.measures[pheno_measure]
+        print(measure)
+
         result = {
             "measure": pheno_measure,
             "desc": "",
-            "min": m.min(),
-            "max": m.max(),
+            "min": measure.min_value,
+            "max": measure.max_value,
             "bars": bars,
             "bins": bins,
-            "step": (m.max() - m.min()) / 1000.0,
+            "step": (measure.max_value - measure.min_value) / 1000.0,
         }
+        print(result)
+
         return Response(result, status=status.HTTP_200_OK)
 
 
