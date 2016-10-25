@@ -19,7 +19,7 @@ class Weights(Preload):
     DATA_FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
-        'data/gene_weights/gene_weights_2.csv')
+        'data/gene_weights/gene_weights_3.csv')
 
     def _load_data(self):
         df = pd.read_csv(self.DATA_FILENAME)
