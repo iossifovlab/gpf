@@ -18,14 +18,14 @@ class Test(APITestCase):
         APITestCase.tearDown(self)
 
     def test_call_gene_set_download_status(self):
-        data = {'gene_set': 'main', 'gene_name': 'ChromatinModifiers'}
+        data = {'gene_set': 'main', 'gene_name': 'chromatin modifiers'}
         url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     def test_call_gene_set_download_content(self):
-        data = {'gene_set': 'main', 'gene_name': 'ChromatinModifiers'}
+        data = {'gene_set': 'main', 'gene_name': 'chromatin modifiers'}
         url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
         response = self.client.get(url)
 
@@ -93,7 +93,7 @@ class Test(APITestCase):
 
     def test_gene_set_download_bad_params(self):
         data = {'ala': 'main',
-                'bala': 'ChromatinModifiers'}
+                'bala': 'chromatin modifiers'}
 
         url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
         response = self.client.get(url)
@@ -103,14 +103,14 @@ class Test(APITestCase):
         self.assertEqual(0, count)
 
     def test_gene_set_download_title(self):
-        data = {'gene_set': 'main', 'gene_name': 'ChromatinModifiers'}
+        data = {'gene_set': 'main', 'gene_name': 'chromatin modifiers'}
         url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = list(response.streaming_content)
         title = res[0]
-        self.assertEqual('"main:ChromatinModifiers"', title.strip())
+        self.assertEqual('"main:chromatin modifiers"', title.strip())
 
     def test_gene_set_download_denovo_title(self):
         data = {'gene_set': 'denovo',

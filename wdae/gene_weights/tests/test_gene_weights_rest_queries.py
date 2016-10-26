@@ -74,7 +74,7 @@ class Test(APITestCase):
 
     def test_ssc_rest_call_by_gene_weight_rvis_25_to_30(self):
         data = {
-            "geneWeight": "RVIS",
+            "geneWeight": "RVIS_rank",
             "geneWeightMin": 25,
             "geneWeightMax": 30,
             "gender": "female,male",
@@ -90,7 +90,7 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('15', response.data['count'])
+        self.assertEqual('9', response.data['count'])
 
     def test_ssc_rest_call_by_gene_syms(self):
         data = {
@@ -115,7 +115,7 @@ class Test(APITestCase):
     def test_sd_rest_call_by_gene_weight_rvis_25_to_30(self):
 
         data = {
-            "geneWeight": "RVIS",
+            "geneWeight": "RVIS_rank",
             "geneWeightMin": 25,
             "geneWeightMax": 30,
             "gender": "female,male",
@@ -127,7 +127,7 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('19', response.data['count'])
+        self.assertEqual('18', response.data['count'])
 
     def test_sd_rest_call_by_gene_syms(self):
 

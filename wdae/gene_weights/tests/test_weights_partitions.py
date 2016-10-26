@@ -22,9 +22,9 @@ class Test(APITestCase):
     def test_gene_weights_partitions_rvis(self):
         url = "/api/v2/gene_weights/partitions"
         data = {
-            "weight": "RVIS",
-            "min": -8,
-            "max": -3,
+            "weight": "RVIS_rank",
+            "min": 1,
+            "max": 100,
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
@@ -42,8 +42,8 @@ class Test(APITestCase):
     def test_full_patition(self):
         url = "/api/v2/gene_weights/partitions"
         data = {
-            "weight": "RVIS",
-            "min": -1000,
+            "weight": "RVIS_rank",
+            "min": 0,
             "max": 1000,
         }
         response = self.client.post(url, data, format='json')

@@ -21,7 +21,7 @@ class Test(unittest.TestCase):
         pass
 
     def test_set_genes(self):
-        gs = set_genes("main:FMRP-Tuschl")
+        gs = set_genes("main:FMRP Tuschl")
         self.assertTrue(gs)
         self.assertEquals(939, len(gs))
 
