@@ -20,7 +20,7 @@ class Test(unittest.TestCase):
     def setUpClass(cls):
         super(Test, cls).setUpClass()
         gene_term = get_gene_sets_symNS('main')
-        cls.gene_syms = gene_term.t2G['ChromatinModifiers'].keys()
+        cls.gene_syms = gene_term.t2G['chromatin modifiers'].keys()
         cls.background = SamochaBackground()
         cls.background.precompute()
 

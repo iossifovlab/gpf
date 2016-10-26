@@ -18,7 +18,7 @@ class SynonymousBackgroundStatsTest(unittest.TestCase):
         super(SynonymousBackgroundStatsTest, cls).setUpClass()
         cls.denovo_studies = DenovoStudies()
         gt = get_gene_sets_symNS('main')
-        cls.gene_set = gt.t2G['ChromatinModifiers'].keys()
+        cls.gene_set = gt.t2G['chromatin modifiers'].keys()
 
         cls.background = precompute.register.get('synonymousBackgroundModel')
         cls.children_stats = ChildrenStats.build(cls.denovo_studies)
@@ -100,7 +100,7 @@ class SamochaBackgroundStatsTest(unittest.TestCase):
         super(SamochaBackgroundStatsTest, cls).setUpClass()
         cls.denovo_studies = DenovoStudies()
         gt = get_gene_sets_symNS('main')
-        cls.gene_set = gt.t2G['ChromatinModifiers'].keys()
+        cls.gene_set = gt.t2G['chromatin modifiers'].keys()
 
         cls.background = precompute.register.get('samochaBackgroundModel')
         cls.children_stats = ChildrenStats.build(cls.denovo_studies)

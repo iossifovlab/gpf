@@ -16,7 +16,7 @@ class EventsCounterTest(unittest.TestCase):
         super(EventsCounterTest, cls).setUpClass()
         cls.denovo_studies = DenovoStudies()
         gt = get_gene_sets_symNS('main')
-        cls.gene_set = gt.t2G['ChromatinModifiers'].keys()
+        cls.gene_set = gt.t2G['chromatin modifiers'].keys()
 
     def test_events_autism_with_effect_type_lgd(self):
         counter = GeneEventsCounter('autism', 'LGDs')

@@ -17,14 +17,14 @@ class Test(APITestCase):
             'geneSyms': '',
             'geneStudy': '',
             'transmittedStudies': 'w1202s766e611',
-            'geneTerm': 'ChromatinModifiers',
+            'geneTerm': 'chromatin modifiers',
             'geneSet': 'main',
         }
         view = EnrichmentView()
         view.data = EnrichmentView.enrichment_prepare(data)
 
         self.assertEquals('main', view.gene_set)
-        self.assertEquals('ChromatinModifiers', view.gene_term)
+        self.assertEquals('chromatin modifiers', view.gene_term)
 
     def test_gene_syms_prepare(self):
         data = {
@@ -48,7 +48,7 @@ class Test(APITestCase):
             'geneSyms': '',
             'geneStudy': '',
             'transmittedStudies': 'w1202s766e611',
-            'geneTerm': 'ChromatinModifiers',
+            'geneTerm': 'chromatin modifiers',
             'geneSet': 'main',
         }
         view = EnrichmentView()
@@ -57,7 +57,9 @@ class Test(APITestCase):
         res = view.serialize_response_common_data()
 
         self.assertEquals('main', res['gs_id'])
-        self.assertEquals('Gene Set: ChromatinModifiers: from Ivan',
+        self.assertEquals('Gene Set: chromatin modifiers: Iossifov I., et al. '
+                          'The contribution of de novo coding mutations to '
+                          'autism spectrum disorder. Nature (2014)',
                           res['gs_desc'])
         self.assertEquals(428, res['gene_number'])
 
@@ -86,7 +88,7 @@ class Test(APITestCase):
             'geneSyms': '',
             'geneStudy': '',
             'transmittedStudies': 'w1202s766e611',
-            'geneTerm': 'ChromatinModifiers',
+            'geneTerm': 'chromatin modifiers',
             'geneSet': 'main',
         }
 

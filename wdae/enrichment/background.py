@@ -267,8 +267,8 @@ class SamochaBackground(Background, Precompute):
     FILENAME = os.path.join(
         settings.BASE_DIR,
         '..',
-        'data/enrichment/NIHMS612569-supplement-3.csv',
-        # 'data/enrichment/background-samocha-et-al.csv'
+        # 'data/enrichment/NIHMS612569-supplement-3.csv',
+        'data/enrichment/background-samocha-et-al.csv'
     )
 
     def _load_and_prepare_gender_count(self, df):
@@ -311,9 +311,9 @@ class SamochaBackground(Background, Precompute):
 
     def _load_and_prepare_build(self):
         df = pd.read_csv(self.FILENAME)
-        df = self._load_and_prepare_gender_count(df)
-        df = self._load_and_prepare_probabilities(df)
-        df = self._load_and_prepare_gene_upper(df)
+        # df = self._load_and_prepare_gender_count(df)
+        # df = self._load_and_prepare_probabilities(df)
+        # df = self._load_and_prepare_gene_upper(df)
 
         return df
 
