@@ -92,6 +92,7 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
                     quads[fid] = fam
                 else:
                     nonquads[fid] = [fam]
+        quads = {fid: fid for fid in quads}
         return quads, nonquads
 
     def _build_all_quads(self):
