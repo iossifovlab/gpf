@@ -4,11 +4,12 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 
-import pandas as pd
-
-from Config import Config
 import ConfigParser
 from collections import OrderedDict
+
+from Config import Config
+import numpy as np
+import pandas as pd
 
 
 class WeightsConfig(object):
@@ -40,7 +41,27 @@ class Weights(WeightsConfig):
         filename = self[self.section_name, 'file']
         assert filename is not None
         self.df = pd.read_csv(filename)
+        assert self.name in self.df.columns
+
         return self.df
+
+    def weights(self):
+        return self.df[self.name]
+
+    def get_genes(self, wmin=None, wmax=None):
+        df = self.df[self.name]
+
+        if wmin is None or wmin < df.min() or wmin > df.max():
+            wmin = df.min()
+        if wmax is None or wmax < df.min() or wmax > df.max():
+            wmax = df.max()
+
+        notnan_index = np.logical_not(np.isnan(df.values))
+        minmax_index = np.logical_and(df.values >= wmin, df.values <= wmax)
+        index = np.logical_and(notnan_index, minmax_index)
+
+        genes = self.df[index].gene
+        return set(genes.values)
 
 
 class WeightsLoader(object):
