@@ -33,6 +33,7 @@ class Weights(WeightsConfig):
         self.name = weights_name
         self.section_name = 'geneWeights.{}'.format(weights_name)
         self.desc = self[self.section_name, 'desc']
+        self.step = self[self.section_name, 'step']
         self.df = None
 
     def load_weights(self):
@@ -50,6 +51,12 @@ class Weights(WeightsConfig):
 
     def weights(self):
         return self.df[self.name]
+
+    def min(self):
+        return self.df[self.name].min()
+
+    def max(self):
+        return self.df[self.name].max()
 
     def get_genes(self, wmin=None, wmax=None):
         df = self.df[self.name]

@@ -59,7 +59,8 @@ class GeneWeightsPartitionsView(views.APIView):
         if not self.weights.has_weight(weight_name):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        df = self.weights.get_weight(weight_name).dropna()
+        w = self.weights.get_weight(weight_name)
+        df = w.df
 
         wmin = float(data["min"])
         wmax = float(data["max"])

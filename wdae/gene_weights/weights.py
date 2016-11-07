@@ -3,82 +3,52 @@ Created on Dec 10, 2015
 
 @author: lubo
 '''
-import os
-import csv
-import pandas as pd
 import numpy as np
 from preloaded.register import Preload
-from django.conf import settings
+from gene.weights import WeightsLoader
 
 
 class Weights(Preload):
-    DESC_FILENAME = os.path.join(
-        settings.BASE_DIR,
-        '..',
-        'data/gene_weights/gene_weights_description.csv')
-    DATA_FILENAME = os.path.join(
-        settings.BASE_DIR,
-        '..',
-        'data/gene_weights/gene_weights_3.csv')
 
-    def _load_data(self):
-        df = pd.read_csv(self.DATA_FILENAME)
-        return df
+    def __init__(self):
+        super(Weights, self).__init__()
+        self.loader = WeightsLoader()
 
-    def _load_desc(self, df):
+    def _load_desc(self):
         result = []
-        with open(self.DESC_FILENAME, 'r') as f:
-            reader = csv.reader(f)
-            reader.next()
-            for row in reader:
-                (weight, desc, use, step) = row
-                use = int(use)
-                if not use:
-                    continue
-                w = df[weight]
-                bars, bins = np.histogram(
-                    w[np.logical_not(np.isnan(w.values))].values, 150)
-                result.append({"weight": weight,
-                               "desc": desc,
-                               "min": float("{:.4G}".format(w.min())),
-                               "max": float("{:.4G}".format(w.max())),
-                               "bars": bars,
-                               "bins": bins,
-                               "step": step, })
+
+        for weight_name in self.loader.weights:
+            w = self.loader[weight_name]
+            assert w.df is not None
+
+            bars, bins = np.histogram(w.weights(), 150)
+            result.append({"weight": w.name,
+                           "desc": w.desc,
+                           "min": float("{:.4G}".format(w.min())),
+                           "max": float("{:.4G}".format(w.max())),
+                           "bars": bars,
+                           "bins": bins,
+                           "step": w.step, })
         return result
 
     def load(self):
-        self.df = self._load_data()
-        self.desc = self._load_desc(self.df)
-        self.weights = {}
-        for w in self.desc:
-            self.weights[w['weight']] = w
+        self.desc = self._load_desc()
 
     def get(self):
         return self
 
     def has_weight(self, weight):
-        return weight in self.weights
+        return weight in self.loader
 
     def get_weight(self, weight):
-        if weight not in self.weights:
+        if weight not in self.loader:
             raise ValueError("unsupported gene weight {}".format(weight))
 
-        return self.df[weight]
+        return self.loader[weight]
 
     def get_genes_by_weight(self, weight, wmin=None, wmax=None):
-        if weight not in self.weights:
+        if weight not in self.loader:
             raise ValueError("unsupported gene weight {}".format(weight))
-        df = self.df[weight]
-
-        if wmin is None or wmin < df.min() or wmin > df.max():
-            wmin = df.min()
-        if wmax is None or wmax < df.min() or wmax > df.max():
-            wmax = df.max()
-
-        notnan_index = np.logical_not(np.isnan(df.values))
-        minmax_index = np.logical_and(df.values >= wmin, df.values <= wmax)
-        index = np.logical_and(notnan_index, minmax_index)
-
-        genes = self.df[index].gene
-        return set(genes.values)
+        w = self.loader[weight]
+        genes = w.get_genes(wmin, wmax)
+        return genes
