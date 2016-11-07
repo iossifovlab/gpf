@@ -4,7 +4,7 @@ Created on Dec 10, 2015
 @author: lubo
 '''
 import unittest
-import numpy as np
+# import numpy as np
 from preloaded.register import get_register
 
 
@@ -23,12 +23,12 @@ class GeneWeightsRVISTest(unittest.TestCase):
 #                                                  wmin=-0.0001,
 #                                                  wmax=0.0001)
 #         self.assertEqual(94, len(genes))
-# 
+#
 #         genes = self.weights.get_genes_by_weight('RVIS',
 #                                                  wmin=0.0,
 #                                                  wmax=0.0)
 #         self.assertEqual(94, len(genes))
-# 
+#
 #     def test_get_genes_by_weight_check_nan(self):
 #         df = self.weights.df
 #         genes = self.weights.get_genes_by_weight('RVIS',

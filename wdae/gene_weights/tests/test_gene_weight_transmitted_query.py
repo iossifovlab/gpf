@@ -32,7 +32,8 @@ class Test(unittest.TestCase):
         self.assertIsNotNone(self.weights)
 
     def test_query_all_rvis_genes(self):
-        genes = self.weights.get_genes_by_weight('RVIS_rank', wmin=None, wmax=None)
+        genes = self.weights.get_genes_by_weight(
+            'RVIS_rank', wmin=None, wmax=None)
         self.assertEqual(16642, len(genes))
 
         res = self.impl.get_transmitted_variants(
@@ -47,12 +48,12 @@ class Test(unittest.TestCase):
 #             'LGD_and_RVIS_average_rank',
 #             wmin=None, wmax=None)
 #         self.assertEqual(16642, len(genes))
-# 
+#
 #         res = self.impl.get_transmitted_variants(
 #             ultraRareOnly=True,
 #             geneSyms=genes,
 #             limit=1000)
-# 
+#
 #         self.assertEqual(1000, count(res))
 
 

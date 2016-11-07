@@ -8,7 +8,7 @@ from enrichment.counters import DenovoStudies, GeneEventsCounter
 from DAE import get_gene_sets_symNS
 import precompute
 from enrichment.families import ChildrenStats
-from enrichment.background import SamochaBackground
+# from enrichment.background import SamochaBackground
 
 
 class SynonymousBackgroundStatsTest(unittest.TestCase):
