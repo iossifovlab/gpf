@@ -3,7 +3,7 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-from gene_weights.weights import WeightsLoader
+from gene.weights import WeightsLoader
 
 
 def test_weights_default():

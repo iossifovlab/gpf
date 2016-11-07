@@ -40,8 +40,11 @@ class Weights(WeightsConfig):
 
         filename = self[self.section_name, 'file']
         assert filename is not None
-        self.df = pd.read_csv(filename)
-        assert self.name in self.df.columns
+        df = pd.read_csv(filename)
+        assert self.name in df.columns
+
+        self.df = df[['gene', self.name]].copy()
+        self.df.dropna(inplace=True)
 
         return self.df
 
@@ -50,16 +53,14 @@ class Weights(WeightsConfig):
 
     def get_genes(self, wmin=None, wmax=None):
         df = self.df[self.name]
+        df.dropna(inplace=True)
 
         if wmin is None or wmin < df.min() or wmin > df.max():
             wmin = df.min()
         if wmax is None or wmax < df.min() or wmax > df.max():
             wmax = df.max()
 
-        notnan_index = np.logical_not(np.isnan(df.values))
-        minmax_index = np.logical_and(df.values >= wmin, df.values <= wmax)
-        index = np.logical_and(notnan_index, minmax_index)
-
+        index = np.logical_and(df.values >= wmin, df.values <= wmax)
         genes = self.df[index].gene
         return set(genes.values)
 
