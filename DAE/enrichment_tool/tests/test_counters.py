@@ -3,8 +3,10 @@ Created on Nov 8, 2016
 
 @author: lubo
 '''
-from enrichment_tool.event_counters import CounterBase, EventsCounter
 import pytest
+
+from enrichment_tool.event_counters import CounterBase, EventsCounter,\
+    GeneEventsCounter
 
 
 def test_variants_unaffected_with_effect_type_lgd(denovo_studies):
@@ -153,3 +155,85 @@ def test_overlapped_events_schizophrenia_with_effect_type_missense(
     assert 2 == len(overlapped_events.rec_events)
     assert 10 == len(overlapped_events.male_events)
     assert 13 == len(overlapped_events.female_events)
+
+
+def test_gene_events_autism_with_effect_type_lgd(denovo_studies):
+    counter = GeneEventsCounter('autism', 'LGDs')
+
+    events = counter.events(denovo_studies)
+
+    assert events is not None
+
+    assert 546 == len(events.all_events)
+    assert 39 == len(events.rec_events)
+    assert 458 == len(events.male_events)
+    assert 107 == len(events.female_events)
+
+
+def test_gene_events_unaffected_with_effect_type_lgd(denovo_studies):
+    counter = GeneEventsCounter('unaffected', 'LGDs')
+
+    events = counter.events(denovo_studies)
+    assert events is not None
+
+    assert 220 == len(events.all_events)
+    assert 5 == len(events.rec_events)
+    assert 113 == len(events.male_events)
+    assert 111 == len(events.female_events)
+
+
+def test_gene_events_schizophrenia_with_effect_type_lgd(denovo_studies):
+    counter = GeneEventsCounter('schizophrenia', 'LGDs')
+
+    events = counter.events(denovo_studies)
+    assert events is not None
+
+    assert 93 == len(events.all_events)
+    assert 2 == len(events.rec_events)
+    assert 48 == len(events.male_events)
+    assert 45 == len(events.female_events)
+
+
+def test_overlapped_gene_events_autism_with_effect_type_lgd(
+        denovo_studies, gene_set):
+    counter = GeneEventsCounter('autism', 'LGDs')
+
+    events = counter.events(denovo_studies)
+    overlapped_events = events.overlap(gene_set)
+
+    assert overlapped_events is not None
+
+    assert 36 == len(overlapped_events.all_events)
+    assert 9 == len(overlapped_events.rec_events)
+    assert 28 == len(overlapped_events.male_events)
+    assert 13 == len(overlapped_events.female_events)
+
+
+def test_overlapped_gene_events_unaffected_with_effect_type_synonymous(
+        denovo_studies, gene_set):
+    counter = GeneEventsCounter('unaffected', 'synonymous')
+
+    events = counter.events(denovo_studies)
+    overlapped_events = events.overlap(gene_set)
+
+    assert overlapped_events is not None
+
+    assert 17 == len(overlapped_events.all_events)
+    assert 1 == len(overlapped_events.rec_events)
+    assert 13 == len(overlapped_events.male_events)
+    assert 4 == len(overlapped_events.female_events)
+
+
+def test_overlapped_gene_events_schizophrenia_with_effect_type_missense(
+        denovo_studies, gene_set):
+    counter = GeneEventsCounter('schizophrenia', 'missense')
+
+    events = counter.events(denovo_studies)
+    overlapped_events = events.overlap(gene_set)
+
+    assert overlapped_events is not None
+
+    assert 21 == len(overlapped_events.all_events)
+    assert 2 == len(overlapped_events.rec_events)
+    assert 9 == len(overlapped_events.male_events)
+    assert 12 == len(overlapped_events.female_events)
