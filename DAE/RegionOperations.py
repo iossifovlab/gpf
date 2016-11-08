@@ -97,6 +97,9 @@ def connected_component(R):
 def collapse(r, is_sorted=False):
     """Ivan knows"""
 
+    if not r:
+        return r
+
     r_copy = copy.deepcopy(r)
 
     if is_sorted == False:
