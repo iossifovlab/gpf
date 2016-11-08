@@ -4,9 +4,8 @@ Created on Jun 22, 2015
 @author: lubo
 '''
 import unittest
-from enrichment.families import ChildrenStats
 from helpers.logger import LOGGER
-from enrichment.counters import DenovoStudies
+from enrichment_tool.config import DenovoStudies, ChildrenStats
 
 
 class Test(unittest.TestCase):

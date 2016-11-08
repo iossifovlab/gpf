@@ -5,9 +5,8 @@ Created on Jun 9, 2015
 '''
 import unittest
 import numpy as np
-from enrichment.background import SynonymousBackground, \
-    _collect_affected_gene_syms
 from DAE import vDB
+from enrichment_tool.background import SynonymousBackground
 
 
 class SynonymousBackgroundTest(unittest.TestCase):
@@ -46,6 +45,6 @@ class SynonymousBackgroundTest(unittest.TestCase):
                 minParentsCalled=600,
                 effectTypes=["synonymous"])
 
-        oaffected = _collect_affected_gene_syms(ovs)
-        maffected = _collect_affected_gene_syms(mvs)
+        oaffected = SynonymousBackground._collect_affected_gene_syms(ovs)
+        maffected = SynonymousBackground._collect_affected_gene_syms(mvs)
         self.assertEquals(oaffected, maffected)

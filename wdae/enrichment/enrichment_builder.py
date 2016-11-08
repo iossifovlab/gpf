@@ -3,8 +3,8 @@ Created on Sep 30, 2016
 
 @author: lubo
 '''
-from enrichment.config import EnrichmentConfig, EFFECT_TYPES, PHENOTYPES
 import itertools
+from enrichment_tool.config import EnrichmentConfig, EFFECT_TYPES, PHENOTYPES
 
 
 class CellResult(EnrichmentConfig):

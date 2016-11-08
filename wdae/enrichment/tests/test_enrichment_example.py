@@ -5,10 +5,10 @@ Created on Oct 4, 2016
 '''
 
 import unittest
-from enrichment.counters import DenovoStudies, GeneEventsCounter
 from DAE import get_gene_sets_symNS
 import precompute
-from enrichment.families import ChildrenStats
+from enrichment_tool.config import DenovoStudies, ChildrenStats
+from enrichment_tool.event_counters import GeneEventsCounter
 
 
 class EnrichmentExampleTest(unittest.TestCase):

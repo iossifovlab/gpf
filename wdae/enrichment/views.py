@@ -8,10 +8,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from helpers.wdae_query_variants import combine_gene_syms, gene_set_loader2
-from enrichment.config import PHENOTYPES, EFFECT_TYPES
-from enrichment.counters import EventsCounter, \
-    GeneEventsCounter
-from enrichment.families import ChildrenStats
 # from enrichment.results import EnrichmentTestBuilder
 from helpers.logger import LOGGER, log_filter
 from helpers.pvalue import colormap_pvalue
@@ -20,8 +16,10 @@ from query_prepare import prepare_denovo_studies, \
     prepare_string_value
 from rest_framework import status
 from helpers.dae_query import prepare_query_dict
-from enrichment.counters import DenovoStudies
 from enrichment.enrichment_builder import EnrichmentBuilder, RowResult
+from enrichment_tool.config import PHENOTYPES, EFFECT_TYPES, DenovoStudies,\
+    ChildrenStats
+from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 
 # from helpers.profiler import profile
 
@@ -140,35 +138,6 @@ class EnrichmentView(APIView):
         res['phenotypes'] = PHENOTYPES
         return res
 
-#     def serialize_response_test(self, t):
-#         print(t)
-#         tres = {}
-#         tres['overlap'] = t.total
-#         tres['count'] = t.count
-#
-#         tres['label'] = t.name
-#         if t.type == 'rec':
-#             tres['syms'] = t.gene_syms.intersection(self.gene_syms)
-#         tres['filter'] = t.filter
-#
-#         if t.p_val >= 0.0001:
-#             tres['p_val'] = round(t.p_val, 4)
-#         else:
-#             tres['p_val'] = str('%.1E' % t.p_val)
-#
-#         tres['expected'] = round(t.expected, 4)
-#
-#         if t.count > t.expected:
-#             lessmore = 'more'
-#         elif t.count < t.expected:
-#             lessmore = 'less'
-#         else:
-#             lessmore = 'equal'
-#
-#         tres['lessmore'] = lessmore
-#         tres['bg'] = colormap_value(t.p_val, lessmore)
-#         return tres
-
     def serialize_response_test(self, t):
         def less_more(count, expected):
             lessmore = 'more'
@@ -213,14 +182,6 @@ class EnrichmentView(APIView):
                     res.append(tres)
             result[phenotype] = res
         return result
-
-#         for phenotype, tests in self.result.items():
-#             res = []
-#             for t in tests:
-#                 tres = self.serialize_response_test(t)
-#                 res.append(tres)
-#             result[phenotype] = res
-#         return result
 
     def serialize(self):
         res1 = self.serialize_response_common_data()

@@ -4,10 +4,11 @@ Created on Jun 19, 2015
 @author: lubo
 '''
 import unittest
-from enrichment.background import CodingLenBackground
+# from enrichment.background import CodingLenBackground
 from DAE import get_gene_sets_symNS
 
 import numpy as np
+from enrichment_tool.background import CodingLenBackground
 
 
 class Test(unittest.TestCase):
