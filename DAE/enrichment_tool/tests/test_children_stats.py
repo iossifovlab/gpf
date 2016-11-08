@@ -4,10 +4,9 @@ Created on Nov 8, 2016
 @author: lubo
 '''
 from collections import Counter
-from enrichment_tool.config import ChildrenStats
 
 
-def test_count_unaffected(denovo_studies):
+def test_count_unaffected(denovo_studies, children_stats):
     seen = set()
     counter = Counter()
     studies = denovo_studies.get_studies('unaffected')
@@ -29,9 +28,13 @@ def test_count_unaffected(denovo_studies):
     assert counter['F'] > 0
     assert 2303 == counter['F'] + counter['M']
 
-    stats = ChildrenStats.count(studies, 'sib')
-    print(stats)
+    assert children_stats['unaffected'] == counter
 
-    res = ChildrenStats.build(denovo_studies)
-    print(res)
-    assert res['unaffected'] == counter
+
+def test_children_stats_simple(children_stats):
+
+    assert 596 == children_stats['autism']['F']
+    assert 3367 == children_stats['autism']['M']
+
+    assert 1111 == children_stats['unaffected']['M']
+    assert 1192 == children_stats['unaffected']['F']

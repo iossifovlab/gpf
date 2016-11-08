@@ -17,6 +17,28 @@ def background(request):
     return bg
 
 
+def test_synonymous_background_default(background):
+    assert background.background is not None
+    assert background.foreground is not None
+
+    background.cache_save()
+
+    b1 = SynonymousBackground()
+    assert b1.cache_load()
+    assert b1.background is not None
+    assert b1.foreground is not None
+
+    assert np.all(background.background == b1.background)
+    assert np.all(background.foreground == b1.foreground)
+
+
+def test_cache_clear(background):
+    background.cache_clear()
+    background.cache_clear()
+
+    assert not background.cache_load()
+
+
 def test_synonymous_background_stats_default(background):
     assert background is not None
 
