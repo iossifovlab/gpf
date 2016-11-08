@@ -30,8 +30,7 @@ class EnrichmentBuilderTest(unittest.TestCase):
             self.background,
             GeneEventsCounter,
             self.denovo_studies,
-            self.gene_set,
-            self.children_stats)
+            self.gene_set)
 
         res = builder.build_phenotype('autism')
 
@@ -83,8 +82,7 @@ class EnrichmentBuilderTest(unittest.TestCase):
             self.background,
             GeneEventsCounter,
             self.denovo_studies,
-            self.gene_set,
-            self.children_stats)
+            self.gene_set)
 
         res = builder.build_phenotype('unaffected')
 
@@ -135,8 +133,7 @@ class EnrichmentBuilderTest(unittest.TestCase):
             self.background,
             GeneEventsCounter,
             self.denovo_studies,
-            self.gene_set,
-            self.children_stats)
+            self.gene_set)
 
         res = builder.build()
         for phenotype in PHENOTYPES:
