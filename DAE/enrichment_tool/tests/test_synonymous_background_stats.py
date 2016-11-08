@@ -7,8 +7,6 @@ import numpy as np
 
 import pytest
 from enrichment_tool.background import SynonymousBackground
-from DAE import get_gene_sets_symNS
-from enrichment_tool.config import DenovoStudies, ChildrenStats
 from enrichment_tool.event_counters import GeneEventsCounter
 
 
@@ -17,24 +15,6 @@ def background(request):
     bg = SynonymousBackground()
     bg.precompute()
     return bg
-
-
-@pytest.fixture(scope='module')
-def gene_set(request):
-    gt = get_gene_sets_symNS('main')
-    gene_set = gt.t2G['chromatin modifiers'].keys()
-    return gene_set
-
-
-@pytest.fixture(scope='module')
-def denovo_studies(request):
-    return DenovoStudies()
-
-
-@pytest.fixture(scope='module')
-def children_stats(request):
-    denovo_studies = DenovoStudies()
-    return ChildrenStats.build(denovo_studies)
 
 
 def test_synonymous_background_stats_default(background):
@@ -104,3 +84,15 @@ def test_stats_unaffected_with_missense(background, denovo_studies,
         children_stats['unaffected'])
 
     assert stats is not None
+
+    assert 43.924 == pytest.approx(stats.all_expected, 2)
+    assert 0.81817466 == pytest.approx(stats.all_pvalue, 4)
+
+    assert 3.665747 == pytest.approx(stats.rec_expected, 2)
+    assert 0.7875 == pytest.approx(stats.rec_pvalue, 4)
+
+    assert 20.69687 == pytest.approx(stats.male_expected, 2)
+    assert 0.8228654 == pytest.approx(stats.male_pvalue, 4)
+
+    assert 25.368269 == pytest.approx(stats.female_expected, 2)
+    assert 0.47852 == pytest.approx(stats.female_pvalue, 4)

@@ -266,13 +266,6 @@ def poisson_test(observed, expected):
 
 
 class SamochaBackground(BackgroundBase):
-    FILENAME = os.path.join(
-        # settings.BASE_DIR,
-        '..',
-        # 'data/enrichment/NIHMS612569-supplement-3.csv',
-        'data/enrichment/background-samocha-et-al.csv'
-    )
-
     def _load_and_prepare_gender_count(self, df):
         GM = genomesDB.get_gene_models()  # @UndefinedVariable
 
@@ -311,8 +304,12 @@ class SamochaBackground(BackgroundBase):
         df['gene'] = df['gene'].str.upper()
         return df
 
+    @property
+    def filename(self):
+        return self[self.name, 'file']
+
     def _load_and_prepare_build(self):
-        filename = self[self.name, 'file']
+        filename = self.filename
         assert filename is not None
 
         df = pd.read_csv(filename)
