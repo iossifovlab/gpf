@@ -5,12 +5,12 @@ Created on Sep 30, 2016
 '''
 import unittest
 
-from enrichment.counters import DenovoStudies, GeneEventsCounter
 from DAE import get_gene_sets_symNS
 from enrichment.enrichment_builder import EnrichmentBuilder
 import precompute
-from enrichment.config import PHENOTYPES, EFFECT_TYPES
-from enrichment.families import ChildrenStats
+from enrichment_tool.config import DenovoStudies, ChildrenStats, PHENOTYPES,\
+    EFFECT_TYPES
+from enrichment_tool.event_counters import GeneEventsCounter
 
 
 class EnrichmentBuilderTest(unittest.TestCase):
@@ -30,8 +30,8 @@ class EnrichmentBuilderTest(unittest.TestCase):
             self.background,
             GeneEventsCounter,
             self.denovo_studies,
-            self.gene_set,
-            self.children_stats)
+            self.children_stats,
+            self.gene_set)
 
         res = builder.build_phenotype('autism')
 
@@ -83,8 +83,8 @@ class EnrichmentBuilderTest(unittest.TestCase):
             self.background,
             GeneEventsCounter,
             self.denovo_studies,
-            self.gene_set,
-            self.children_stats)
+            self.children_stats,
+            self.gene_set)
 
         res = builder.build_phenotype('unaffected')
 
@@ -135,8 +135,8 @@ class EnrichmentBuilderTest(unittest.TestCase):
             self.background,
             GeneEventsCounter,
             self.denovo_studies,
-            self.gene_set,
-            self.children_stats)
+            self.children_stats,
+            self.gene_set)
 
         res = builder.build()
         for phenotype in PHENOTYPES:

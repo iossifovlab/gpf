@@ -1,35 +1,57 @@
 '''
-Created on Sep 29, 2016
+Created on Nov 7, 2016
 
 @author: lubo
 '''
 import itertools
-
-from DAE import vDB
-from enrichment.config import PHENOTYPES, EnrichmentConfig
-from enrichment.denovo_counters import filter_denovo_one_event_per_family,\
-    filter_denovo_one_gene_per_recurrent_events,\
-    filter_denovo_one_gene_per_events
+from enrichment_tool.config import EnrichmentConfig
 
 
-class DenovoStudies(object):
+def filter_denovo_one_event_per_family(vs):
+    """
+    For each variant returns list of affected gene syms.
 
-    def __init__(self):
-        self.studies = vDB.get_studies('ALL WHOLE EXOME')
+    vs - generator for variants.
 
-    def get_studies(self, phenotype):
-        assert phenotype in PHENOTYPES
-        if phenotype == 'unaffected':
-            studies = [st for st in self.studies
-                       if 'WE' == st.get_attr('study.type')]
-            return studies
-        else:
-            studies = []
-            for st in self.studies:
-                if phenotype == st.get_attr('study.phenotype') and \
-                        'WE' == st.get_attr('study.type'):
-                    studies.append(st)
-            return studies
+    This functions receives a generator for variants and transforms each
+    variant into list of gene symbols, that are affected by the variant.
+
+    The result is represented as list of lists.
+    """
+    seen = set()
+    res = []
+    for v in vs:
+        syms = set([ge['sym'].upper() for ge in v.requestedGeneEffects])
+        not_seen = [gs for gs in syms if (v.familyId + gs) not in seen]
+        if not not_seen:
+            continue
+        for gs in not_seen:
+            seen.add(v.familyId + gs)
+        res.append(not_seen)
+
+    return res
+
+
+def filter_denovo_one_gene_per_recurrent_events(vs):
+    gn_sorted = sorted([[ge['sym'].upper(), v] for v in vs
+                        for ge in v.requestedGeneEffects])
+    sym_2_vars = {sym: [t[1] for t in tpi]
+                  for sym, tpi in itertools.groupby(gn_sorted,
+                                                    key=lambda x: x[0])}
+    sym_2_fn = {sym: len(set([v.familyId for v in vs]))
+                for sym, vs in sym_2_vars.items()}
+    return [[gs] for gs, fn in sym_2_fn.items() if fn > 1]
+
+
+def filter_denovo_one_gene_per_events(vs):
+    gn_sorted = sorted([[ge['sym'].upper(), v] for v in vs
+                        for ge in v.requestedGeneEffects])
+    sym_2_vars = {sym: [t[1] for t in tpi]
+                  for sym, tpi in itertools.groupby(gn_sorted,
+                                                    key=lambda x: x[0])}
+    sym_2_fn = {sym: len(set([v.familyId for v in vs]))
+                for sym, vs in sym_2_vars.items()}
+    return [[gs] for gs, _fn in sym_2_fn.items()]
 
 
 class CounterBase(EnrichmentConfig):
@@ -68,6 +90,11 @@ class EventsResult(EnrichmentConfig):
         self.female_count = len(self.female_events)
 
         return self
+
+    def __repr__(self):
+        return "Events({},{}): all: {}, rec: {}, male: {}, female: {}".format(
+            self.phenotype, self.effect_type,
+            self.all_count, self.rec_count, self.male_count, self.female_count)
 
     @staticmethod
     def filter_overlapping_events(events, gene_set):

@@ -34,6 +34,9 @@ class Config:
             'variantsDB', 'confFile')
         self._genomesDBconfFile = self._daeConfig.get('genomesDB', 'confFile')
 
+        self._enrichmentConfFile = self._daeConfig.get(
+            'enrichment', 'confFile')
+
     @property
     def daeDir(self):
         return self._daeDir
@@ -73,3 +76,7 @@ class Config:
     @property
     def genomesDBconfFile(self):
         return self._genomesDBconfFile
+
+    @property
+    def enrichmentConfFile(self):
+        return self._enrichmentConfFile

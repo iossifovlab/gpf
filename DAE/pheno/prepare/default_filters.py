@@ -19,7 +19,7 @@ class PrepareDefaultFilters(V15Loader):
 
     def prepare(self):
         df = self.load_default_filters()
-        with MetaVariableManager() as vm:
+        with MetaVariableManager(config=self.config) as vm:
             for _index, row in df.iterrows():
                 mv = vm.get(
                     where="variable_id = '{}'".format(

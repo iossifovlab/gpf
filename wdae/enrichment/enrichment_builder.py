@@ -3,8 +3,9 @@ Created on Sep 30, 2016
 
 @author: lubo
 '''
-from enrichment.config import EnrichmentConfig, EFFECT_TYPES, PHENOTYPES
 import itertools
+from enrichment_tool.config import EnrichmentConfig, EFFECT_TYPES, PHENOTYPES
+from enrichment_tool.tool import EnrichmentTool
 
 
 class CellResult(EnrichmentConfig):
@@ -169,31 +170,19 @@ class EnrichmentBuilder(object):
 
     def __init__(
             self, background, denovo_counter,
-            denovo_studies, gene_set, children_stats):
-        self.background = background
-        self.denovo_counter = denovo_counter
-        self.denovo_studies = denovo_studies
+            denovo_studies, children_stats,
+            gene_set):
+
+        self.tool = EnrichmentTool(denovo_studies, children_stats,
+                                   background, denovo_counter)
         self.gene_set = gene_set
-        self.children_stats = children_stats
-
-    def events_by_phenotype_and_effect_type(
-            self, phenotype, effect_type):
-        counter = self.denovo_counter(
-            phenotype, effect_type)
-        events = counter.events(self.denovo_studies)
-
-        stats = self.background.calc_stats(
-            events, self.gene_set,
-            self.children_stats[phenotype])
-        return events, stats
 
     def build_phenotype(self, phenotype):
         results = []
         for effect_type in EFFECT_TYPES:
-            events, enrichment_stats = \
-                self.events_by_phenotype_and_effect_type(
-                    phenotype, effect_type)
-            overlapped_events = events.overlap(self.gene_set)
+            events, overlapped_events, enrichment_stats = \
+                self.tool.calc(
+                    phenotype, effect_type, self.gene_set)
 
             row = RowResult(events)(
                 events, overlapped_events, enrichment_stats)

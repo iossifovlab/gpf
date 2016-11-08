@@ -1,5 +1,5 @@
 '''
-Created on Jun 8, 2015
+Created on Nov 7, 2016
 
 @author: lubo
 '''
@@ -9,61 +9,12 @@ from collections import Counter
 import csv
 import os
 from scipy import stats
-from sets import ImmutableSet
 import zlib
 
-from django.conf import settings
-from django.core.cache import caches
-
-from DAE import *
-# from DAE import genomesDB
-from DAE import vDB
-from enrichment.config import EnrichmentConfig
+from DAE import vDB, genomesDB
+from enrichment_tool.config import EnrichmentConfig, BackgroundConfig
 import numpy as np
 import pandas as pd
-from precompute.register import Precompute
-
-
-def _collect_affected_gene_syms(vs):
-    return [set([ge['sym'].upper() for ge in v.requestedGeneEffects])
-            for v in vs]
-
-
-def _collect_unique_gene_syms(affected_gene_sets):
-    gene_set = set()
-    for gs in affected_gene_sets:
-        gene_set |= set(gs)
-    return gene_set
-
-
-def _count_gene_syms(affected_gene_sets):
-    background = Counter()
-    for gene_set in affected_gene_sets:
-        for gene_sym in gene_set:
-            background[gene_sym] += 1
-    return background
-
-
-def _build_synonymous_background(transmitted_study_name):
-    transmitted_study = vDB.get_study(transmitted_study_name)
-    vs = transmitted_study.get_transmitted_summary_variants(
-        ultraRareOnly=True,
-        minParentsCalled=600,
-        effectTypes=["synonymous"])
-    affected_gene_syms = _collect_affected_gene_syms(vs)
-
-    base = [gs for gs in affected_gene_syms if len(gs) == 1]
-    foreground = [gs for gs in affected_gene_syms if len(gs) > 1]
-
-    base_counts = _count_gene_syms(base)
-
-    base_sorted = sorted(zip(base_counts.keys(),
-                             base_counts.values()))
-
-    b = np.array(base_sorted,
-                 dtype=[('sym', '|S32'), ('raw', '>i4')])
-
-    return (b, foreground)
 
 
 class StatsResults(EnrichmentConfig):
@@ -71,43 +22,78 @@ class StatsResults(EnrichmentConfig):
     def __init__(self, config):
         super(StatsResults, self).__init__(
             config.phenotype, config.effect_type)
+        self.all_expected = None
+        self.all_pvalue = None
+        self.rec_expected = None
+        self.rec_pvalue = None
+        self.male_expected = None
+        self.male_pvalue = None
+        self.female_expected = None
+        self.female_pvalue = None
 
     def __call__(self):
         return self
 
+    def __repr__(self):
+        return "Stats({}, {}): all: {:.2f} (pv={:.2g}); " \
+            "rec: {:.2f} (pv={:.2g}); " \
+            "male: {:.2f} (pv={:.2g}); " \
+            "female: {:.2f} (pv={:.2g})".format(
+                self.phenotype, self.effect_type,
+                self.all_expected, self.all_pvalue,
+                self.rec_expected, self.rec_pvalue,
+                self.male_expected, self.male_pvalue,
+                self.female_expected, self.female_pvalue)
 
-class Background(object):
+
+class BackgroundBase(BackgroundConfig):
 
     def __init__(self):
+        super(BackgroundBase, self).__init__()
         self.background = None
-        self.background_cache = caches['enrichment']
         self.name = None
+
+    @property
+    def cache_filename(self):
+        return os.path.join(
+            self.cache_dir,
+            "{}.pckl".format(self.name))
+
+    def cache_clear(self):
+        assert self.name is not None
+        if not os.path.exists(self.cache_filename):
+            return False
+        os.remove(self.cache_filename)
+        return True
+
+    def cache_save(self):
+        assert self.name is not None
+        with open(self.cache_filename, 'w') as output:
+            data = self.serialize()
+            cPickle.dump(data, output)
+
+    def cache_load(self):
+        if not os.path.exists(self.cache_filename):
+            return False
+
+        with open(self.cache_filename, 'r') as infile:
+            data = cPickle.load(infile)
+            self.deserialize(data)
+
+        return True
 
     @property
     def is_ready(self):
         return self.background is not None
 
+
+class BackgroundCommon(BackgroundBase):
+
+    def __init__(self):
+        super(BackgroundCommon, self).__init__()
+
     def _prob(self, gene_syms):
         return 1.0 * self._count(gene_syms) / self._total
-
-    def cache_key(self, gene_syms):
-        gskey = hash(ImmutableSet(gene_syms))
-        key = hash(self.name + str(gskey))
-        return key
-
-    def cache_get(self, gene_syms):
-        key = self.cache_key(gene_syms)
-        value = self.background_cache.get(key)
-        return value
-
-    def cache_store(self, gene_syms, base):
-        key = self.cache_key(gene_syms)
-        self.background_cache.set(key, base, 30)
-
-    def _count(self, gen_syms):
-        vpred = np.vectorize(lambda sym: sym in gen_syms)
-        index = vpred(self.background['sym'])
-        return np.sum(self.background['raw'][index])
 
     def calc_stats(self, events, gene_set, children_stats):
         gene_syms = [gs.upper() for gs in gene_set]
@@ -137,11 +123,54 @@ class Background(object):
             overlapped_events.female_count,
             events.female_count, p=bg_prob)
 
-        return result
+        return overlapped_events, result
 
 
-class SynonymousBackground(Background, Precompute):
+class SynonymousBackground(BackgroundCommon):
     TRANSMITTED_STUDY_NAME = 'w1202s766e611'
+
+    @staticmethod
+    def _collect_affected_gene_syms(vs):
+        return [set([ge['sym'].upper() for ge in v.requestedGeneEffects])
+                for v in vs]
+
+    @staticmethod
+    def _collect_unique_gene_syms(affected_gene_sets):
+        gene_set = set()
+        for gs in affected_gene_sets:
+            gene_set |= set(gs)
+        return gene_set
+
+    @staticmethod
+    def _count_gene_syms(affected_gene_sets):
+        background = Counter()
+        for gene_set in affected_gene_sets:
+            for gene_sym in gene_set:
+                background[gene_sym] += 1
+        return background
+
+    @staticmethod
+    def _build_synonymous_background(transmitted_study_name):
+        transmitted_study = vDB.get_study(transmitted_study_name)
+        vs = transmitted_study.get_transmitted_summary_variants(
+            ultraRareOnly=True,
+            minParentsCalled=600,
+            effectTypes=["synonymous"])
+        affected_gene_syms = \
+            SynonymousBackground._collect_affected_gene_syms(vs)
+
+        base = [gs for gs in affected_gene_syms if len(gs) == 1]
+        foreground = [gs for gs in affected_gene_syms if len(gs) > 1]
+
+        base_counts = SynonymousBackground._count_gene_syms(base)
+
+        base_sorted = sorted(zip(base_counts.keys(),
+                                 base_counts.values()))
+
+        background = np.array(base_sorted,
+                              dtype=[('sym', '|S32'), ('raw', '>i4')])
+
+        return (background, foreground)
 
     def __init__(self):
         super(SynonymousBackground, self).__init__()
@@ -149,35 +178,8 @@ class SynonymousBackground(Background, Precompute):
 
     def precompute(self):
         self.background, self.foreground = \
-            _build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
+            self._build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
         return self.background
-
-    def _count_foreground_events(self, gene_syms):
-        count = 0
-        for gs in self.foreground:
-            touch = False
-            for sym in gs:
-                if sym in gene_syms:
-                    touch = True
-                    break
-            if touch:
-                count += 1
-        return count
-
-    def _count(self, gene_syms):
-        res = self.cache_get(gene_syms)
-        if not res:
-            vpred = np.vectorize(lambda sym: sym in gene_syms)
-            index = vpred(self.background['sym'])
-            base = np.sum(self.background['raw'][index])
-            foreground = self._count_foreground_events(gene_syms)
-            res = base + foreground
-            self.cache_store(gene_syms, res)
-        return res
-
-    @property
-    def _total(self):
-        return np.sum(self.background['raw']) + len(self.foreground)
 
     def serialize(self):
         fout = cStringIO.StringIO()
@@ -196,16 +198,42 @@ class SynonymousBackground(Background, Precompute):
         f = data['foreground']
         self.foreground = cPickle.loads(zlib.decompress(f))
 
+    def _count_foreground_events(self, gene_syms):
+        count = 0
+        for gs in self.foreground:
+            touch = False
+            for sym in gs:
+                if sym in gene_syms:
+                    touch = True
+                    break
+            if touch:
+                count += 1
+        return count
 
-class CodingLenBackground(Background, Precompute):
-    FILENAME = os.path.join(
-        settings.BASE_DIR,
-        '..',
-        'data/enrichment/background-model-coding-len-in-target.csv')
+    def _count(self, gene_syms):
+        vpred = np.vectorize(lambda sym: sym in gene_syms)
+        index = vpred(self.background['sym'])
+        base = np.sum(self.background['raw'][index])
+        foreground = self._count_foreground_events(gene_syms)
+        res = base + foreground
+        return res
+
+    @property
+    def _total(self):
+        return np.sum(self.background['raw']) + len(self.foreground)
+
+
+class CodingLenBackground(BackgroundCommon):
+
+    @property
+    def filename(self):
+        return self[self.name, 'file']
 
     def _load_and_prepare_build(self):
+        filename = self.filename
+        assert filename is not None
         back = []
-        with open(self.FILENAME, 'r') as f:
+        with open(filename, 'r') as f:
             reader = csv.reader(f)
             reader.next()
             for row in reader:
@@ -236,12 +264,9 @@ class CodingLenBackground(Background, Precompute):
         self.background = np.load(fin)
 
     def _count(self, gene_syms):
-        res = self.cache_get(gene_syms)
-        if not res:
-            vpred = np.vectorize(lambda sym: sym in gene_syms)
-            index = vpred(self.background['sym'])
-            res = np.sum(self.background['raw'][index])
-            self.cache_store(gene_syms, res)
+        vpred = np.vectorize(lambda sym: sym in gene_syms)
+        index = vpred(self.background['sym'])
+        res = np.sum(self.background['raw'][index])
         return res
 
     @property
@@ -263,16 +288,10 @@ def poisson_test(observed, expected):
     return min(p_value, 1)
 
 
-class SamochaBackground(Background, Precompute):
-    FILENAME = os.path.join(
-        settings.BASE_DIR,
-        '..',
-        # 'data/enrichment/NIHMS612569-supplement-3.csv',
-        'data/enrichment/background-samocha-et-al.csv'
-    )
+class SamochaBackground(BackgroundBase):
 
     def _load_and_prepare_gender_count(self, df):
-        GM = genomesDB.get_gene_models()
+        GM = genomesDB.get_gene_models()  # @UndefinedVariable
 
         df['F'] = pd.Series(2, index=df.index)
         df['M'] = pd.Series(2, index=df.index)
@@ -309,8 +328,15 @@ class SamochaBackground(Background, Precompute):
         df['gene'] = df['gene'].str.upper()
         return df
 
+    @property
+    def filename(self):
+        return self[self.name, 'file']
+
     def _load_and_prepare_build(self):
-        df = pd.read_csv(self.FILENAME)
+        filename = self.filename
+        assert filename is not None
+
+        df = pd.read_csv(filename)
         # df = self._load_and_prepare_gender_count(df)
         # df = self._load_and_prepare_probabilities(df)
         # df = self._load_and_prepare_gene_upper(df)
@@ -334,9 +360,6 @@ class SamochaBackground(Background, Precompute):
 
         data = zlib.compress(fout.getvalue())
         return {'background': data}
-
-#     def deserialize(self, data):
-#         self._load_and_prepare_build()
 
     def deserialize(self, data):
         b = data['background']
@@ -389,4 +412,4 @@ class SamochaBackground(Background, Precompute):
             overlapped_events.rec_count,
             result.rec_expected)
 
-        return result
+        return overlapped_events, result
