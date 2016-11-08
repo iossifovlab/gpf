@@ -92,7 +92,6 @@ class ChildrenStats(object):
 
     @staticmethod
     def count(studies, role):
-        print([st.name for st in studies])
         seen = set()
         counter = Counter()
         for st in studies:

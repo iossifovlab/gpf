@@ -22,9 +22,28 @@ class StatsResults(EnrichmentConfig):
     def __init__(self, config):
         super(StatsResults, self).__init__(
             config.phenotype, config.effect_type)
+        self.all_expected = None
+        self.all_pvalue = None
+        self.rec_expected = None
+        self.rec_pvalue = None
+        self.male_expected = None
+        self.male_pvalue = None
+        self.female_expected = None
+        self.female_pvalue = None
 
     def __call__(self):
         return self
+
+    def __repr__(self):
+        return "Stats({}, {}): all: {:.2f} (pv={:.2g}); " \
+            "rec: {:.2f} (pv={:.2g}); " \
+            "male: {:.2f} (pv={:.2g}); " \
+            "female: {:.2f} (pv={:.2g})".format(
+                self.phenotype, self.effect_type,
+                self.all_expected, self.all_pvalue,
+                self.rec_expected, self.rec_pvalue,
+                self.male_expected, self.male_pvalue,
+                self.female_expected, self.female_pvalue)
 
 
 class BackgroundBase(BackgroundConfig):

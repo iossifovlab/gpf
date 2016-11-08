@@ -91,6 +91,11 @@ class EventsResult(EnrichmentConfig):
 
         return self
 
+    def __repr__(self):
+        return "Events({},{}): all: {}, rec: {}, male: {}, female: {}".format(
+            self.phenotype, self.effect_type,
+            self.all_count, self.rec_count, self.male_count, self.female_count)
+
     @staticmethod
     def filter_overlapping_events(events, gene_set):
         return [ev for ev in events if any([gs in gene_set for gs in ev])]
