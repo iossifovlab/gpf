@@ -16,15 +16,18 @@ def background(request):
     return bg
 
 
-def test_enrichment_tool_gene_events(denovo_studies, background, gene_set):
-    tool = EnrichmentTool(denovo_studies, background, GeneEventsCounter)
+def test_enrichment_tool_gene_events(denovo_studies, children_stats,
+                                     background, gene_set):
+    tool = EnrichmentTool(denovo_studies, children_stats,
+                          background, GeneEventsCounter)
     assert tool is not None
 
-    events, stats = tool.calc('autism', 'LGDs', gene_set)
+    events, overlapped, stats = tool.calc('autism', 'LGDs', gene_set)
     assert events is not None
     assert stats is not None
 
     print(events)
+    print(overlapped)
     print(stats)
 
     assert 546 == len(events.all_events)
@@ -45,15 +48,18 @@ def test_enrichment_tool_gene_events(denovo_studies, background, gene_set):
     assert 0.0 == pytest.approx(stats.female_pvalue, 6)
 
 
-def test_enrichment_tool_events(denovo_studies, background, gene_set):
-    tool = EnrichmentTool(denovo_studies, background, EventsCounter)
+def test_enrichment_tool_events(denovo_studies, children_stats,
+                                background, gene_set):
+    tool = EnrichmentTool(denovo_studies, children_stats,
+                          background, EventsCounter)
     assert tool is not None
 
-    events, stats = tool.calc('autism', 'LGDs', gene_set)
+    events, overlapped, stats = tool.calc('autism', 'LGDs', gene_set)
     assert events is not None
     assert stats is not None
 
     print(events)
+    print(overlapped)
     print(stats)
 
     assert 606 == len(events.all_events)

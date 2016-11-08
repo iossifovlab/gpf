@@ -274,7 +274,9 @@ class EnrichmentView(APIView):
 
         self.enrichment = EnrichmentBuilder(
             config['background'], config['denovo_counter'],
-            denovo_studies, self.gene_syms)
+            denovo_studies,
+            children_stats,
+            self.gene_syms)
         self.result = self.enrichment.build()
 
         response = self.serialize()

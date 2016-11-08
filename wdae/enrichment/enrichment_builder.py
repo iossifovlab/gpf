@@ -170,18 +170,19 @@ class EnrichmentBuilder(object):
 
     def __init__(
             self, background, denovo_counter,
-            denovo_studies, gene_set):
+            denovo_studies, children_stats,
+            gene_set):
 
-        self.tool = EnrichmentTool(denovo_studies, background, denovo_counter)
+        self.tool = EnrichmentTool(denovo_studies, children_stats,
+                                   background, denovo_counter)
         self.gene_set = gene_set
 
     def build_phenotype(self, phenotype):
         results = []
         for effect_type in EFFECT_TYPES:
-            events, enrichment_stats = \
+            events, overlapped_events, enrichment_stats = \
                 self.tool.calc(
                     phenotype, effect_type, self.gene_set)
-            overlapped_events = events.overlap(self.gene_set)
 
             row = RowResult(events)(
                 events, overlapped_events, enrichment_stats)

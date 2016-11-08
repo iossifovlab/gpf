@@ -20,7 +20,7 @@ def test_stats_autism_lgd(background, denovo_studies,
     counter = GeneEventsCounter('autism', 'LGDs')
     events = counter.events(denovo_studies)
 
-    stats = background.calc_stats(
+    _, stats = background.calc_stats(
         events,
         gene_set,
         children_stats['autism'])

@@ -123,7 +123,7 @@ class BackgroundCommon(BackgroundBase):
             overlapped_events.female_count,
             events.female_count, p=bg_prob)
 
-        return result
+        return overlapped_events, result
 
 
 class SynonymousBackground(BackgroundCommon):
@@ -412,4 +412,4 @@ class SamochaBackground(BackgroundBase):
             overlapped_events.rec_count,
             result.rec_expected)
 
-        return result
+        return overlapped_events, result
