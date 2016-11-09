@@ -7,5 +7,4 @@ python manage.py syncdb
 python manage.py migrate
 
 python manage.py devusers
-python manage.py recompute
 
