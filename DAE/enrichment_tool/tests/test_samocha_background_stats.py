@@ -27,14 +27,14 @@ def test_stats_autism_lgd(background, denovo_studies,
 
     assert stats is not None
 
-    assert 12.5358 == pytest.approx(stats.all_expected, 2)
-    assert 0.0 == pytest.approx(stats.all_pvalue, 4)
+    assert 12.5358 == pytest.approx(stats.all_expected, abs=1E-4)
+    assert 0.0 == pytest.approx(stats.all_pvalue, abs=1E-4)
 
-    assert 0.89924 == pytest.approx(stats.rec_expected, 2)
-    assert 0.0 == pytest.approx(stats.rec_pvalue, 4)
+    assert 0.89924 == pytest.approx(stats.rec_expected, abs=1E-4)
+    assert 0.0 == pytest.approx(stats.rec_pvalue, abs=1E-4)
 
-    assert 10.65059 == pytest.approx(stats.male_expected, 2)
-    assert 0.0 == pytest.approx(stats.male_pvalue, 4)
+    assert 10.65059 == pytest.approx(stats.male_expected, abs=1E-4)
+    assert 0.0 == pytest.approx(stats.male_pvalue, abs=1E-4)
 
-    assert 1.8831 == pytest.approx(stats.female_expected, 2)
-    assert 2E-07 == pytest.approx(stats.female_pvalue, 4)
+    assert 1.8853 == pytest.approx(stats.female_expected, abs=1E-4)
+    assert 0.0 == pytest.approx(stats.female_pvalue, abs=1E-4)

@@ -21,6 +21,7 @@ class PhenoRequest(object):
         self.effect_type_groups = effect_type_groups
         self.in_child = in_child
         self.present_in_parent = present_in_parent
+        self.probands = None
 
     def dae_query_request(self):
         data = {
@@ -28,7 +29,6 @@ class PhenoRequest(object):
             'presentInParent': self.present_in_parent,
             'inChild': self.in_child,
             'effectTypes': self.effect_type_groups,
-
         }
         return data
 
@@ -42,6 +42,7 @@ class PhenoTool(object):
                  study=DEFAULT_STUDY,
                  transmitted=DEFAULT_TRANSMITTED):
         self.measures = measures
+        self.phdb = self.measures.phdb
         self.study = study
         self.transmitted = transmitted
 
@@ -72,11 +73,14 @@ class PhenoTool(object):
     def strip_proband_id(proband_id):
         return proband_id.split('.')[0]
 
-    def _build_table_row(self, person_id, gender):
-        family_id = self.strip_proband_id(person_id)
-        vals = self.nm.df[self.nm.df.person_id == person_id]
+    def build_table_row(self, pheno_request, families_variants,
+                        person, normalized_measure):
+        family_id = self.strip_proband_id(person.personId)
+        df = normalized_measure.df
+
+        vals = df[df.person_id == person.personId]
         if len(vals) == 1:
-            m = vals[self.nm.measure_id].values[0]
+            m = vals[normalized_measure.measure_id].values[0]
             v = vals.normalized.values[0]
             a = vals['pheno_common.age'].values[0]
             nviq = vals['pheno_common.non_verbal_iq'].values[0]
@@ -85,32 +89,37 @@ class PhenoTool(object):
             v = np.NaN
             a = np.NaN
             nviq = np.NaN
-        row = [family_id, person_id, gender]
-        for etg in self.effect_type_groups:
-            col = self._families_variants[etg].get(family_id, 0)
+        row = [family_id, person.personId, person.gender]
+        for etg in pheno_request.effect_type_groups:
+            col = families_variants[etg].get(family_id, 0)
             row.append(col)
 
         row.extend([m, a, nviq, v])
         return row
 
     def build_data_table(self, pheno_request, normalized_measure):
-        self.build_families_variants(pheno_request)
+        families_variants = self.build_families_variants(pheno_request)
 
         header = self.build_table_header(pheno_request, normalized_measure)
         yield header
 
-        for gender, person_id in self.pheno_families.probands_gender():
-            if person_id not in self.probands:
+        probands = self.phdb.get_persons(role='prb')
+
+        for person in probands.values():
+            if pheno_request.probands and \
+                    person.personId not in pheno_request.probands:
                 continue
 
-            row = self._build_table_row(person_id, gender)
+            row = self.build_table_row(
+                pheno_request, families_variants,
+                person, normalized_measure)
             yield tuple(row)
 
-    def _build_narray_dtype(self):
+    def build_narray_dtype(self, pheno_request):
         columns = [('fid', 'S10'),
                    ('pid', 'S13'),
                    ('gender', 'S10'), ]
-        for eff in self.effect_type_groups:
+        for eff in pheno_request.effect_type_groups:
             columns.append((eff, 'f'))
 
         columns.extend(
@@ -127,8 +136,10 @@ class PhenoTool(object):
         rows = []
         for row in gen:
             rows.append(tuple([v if v != 'NA' else np.NaN for v in row]))
-        dtype = self._build_narray_dtype()
+        dtype = self.build_narray_dtype(pheno_request)
         result = np.array(rows, dtype=dtype)
+
+        result = result[np.logical_not(np.isnan(result['value']))]
 
         # print(result[np.isnan(result['value'])])
         assert not np.any(np.isnan(result['value']))
@@ -153,17 +164,18 @@ class PhenoTool(object):
             return 'NA'
         tt = ttest_ind(positive, negative)
         pv = tt[1]
-        if np.isnan(pv):
-            return "NA"
-        if pv >= 0.1:
-            return "%.1f" % (pv)
-        if pv >= 0.01:
-            return "%.2f" % (pv)
-        if pv >= 0.001:
-            return "%.3f" % (pv)
-        if pv >= 0.0001:
-            return "%.4f" % (pv)
-        return "%.5f" % (pv)
+        return pv
+#         if np.isnan(pv):
+#             return "NA"
+#         if pv >= 0.1:
+#             return "%.1f" % (pv)
+#         if pv >= 0.01:
+#             return "%.2f" % (pv)
+#         if pv >= 0.001:
+#             return "%.3f" % (pv)
+#         if pv >= 0.0001:
+#             return "%.4f" % (pv)
+#         return "%.5f" % (pv)
 
     @staticmethod
     def _calc_stats(data, eff, gender):
@@ -199,9 +211,9 @@ class PhenoTool(object):
         }
 
     def calc(self, pheno_request, measure_id, normalized_by=None):
-        effect_type_groups = pheno_request['effect_type_groups']
-        normalized_measure = NormalizedMeasure(self.measures, measure_id)
-        normalized_measure.normalize(normalized_by)
+        effect_type_groups = pheno_request.effect_type_groups
+        normalized_measure = NormalizedMeasure(measure_id, self.measures)
+        normalized_measure.normalize([normalized_by])
 
         result = []
         data = self.build_data_array(pheno_request, normalized_measure)

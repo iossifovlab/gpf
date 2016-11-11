@@ -16,7 +16,7 @@ def test_experiments():
     pvalue = poisson_test(observed, expected)
     print(pvalue)
     print(expected_pvalue)
-    assert expected_pvalue == pytest.approx(pvalue, 3)
+    assert expected_pvalue == pytest.approx(pvalue, abs=1E-3)
 
     observed = 4
     expected = 3.3
@@ -25,7 +25,7 @@ def test_experiments():
     pvalue = poisson_test(observed, expected)
     print(pvalue)
     print(expected_pvalue)
-    assert expected_pvalue == pytest.approx(pvalue, 3)
+    assert expected_pvalue == pytest.approx(pvalue, abs=1E-3)
 
 
 def test_samocha_poisson_vs_binom():

@@ -35,17 +35,17 @@ def test_enrichment_tool_gene_events(denovo_studies, children_stats,
     assert 458 == len(events.male_events)
     assert 107 == len(events.female_events)
 
-    assert 12.54 == pytest.approx(stats.all_expected, 2)
-    assert 0.0 == pytest.approx(stats.all_pvalue, 6)
+    assert 12.54 == pytest.approx(stats.all_expected, abs=1E-2)
+    assert 0.0 == pytest.approx(stats.all_pvalue, abs=1E-2)
 
-    assert 0.90 == pytest.approx(stats.rec_expected, 2)
-    assert 0.0 == pytest.approx(stats.rec_pvalue, 6)
+    assert 0.90 == pytest.approx(stats.rec_expected, abs=1E-2)
+    assert 0.0 == pytest.approx(stats.rec_pvalue, abs=1E-2)
 
-    assert 10.65 == pytest.approx(stats.male_expected, 2)
-    assert 0.0 == pytest.approx(stats.male_pvalue, 6)
+    assert 10.65 == pytest.approx(stats.male_expected, abs=1E-2)
+    assert 0.0 == pytest.approx(stats.male_pvalue, abs=1E-2)
 
-    assert 1.88 == pytest.approx(stats.female_expected, 2)
-    assert 0.0 == pytest.approx(stats.female_pvalue, 6)
+    assert 1.88 == pytest.approx(stats.female_expected, abs=1E-2)
+    assert 0.0 == pytest.approx(stats.female_pvalue, abs=1E-2)
 
 
 def test_enrichment_tool_events(denovo_studies, children_stats,
@@ -67,14 +67,14 @@ def test_enrichment_tool_events(denovo_studies, children_stats,
     assert 492 == len(events.male_events)
     assert 114 == len(events.female_events)
 
-    assert 12.54 == pytest.approx(stats.all_expected, 2)
-    assert 0.0 == pytest.approx(stats.all_pvalue, 6)
+    assert 12.54 == pytest.approx(stats.all_expected, abs=1E-2)
+    assert 0.0 == pytest.approx(stats.all_pvalue, abs=1E-2)
 
-    assert 0.81 == pytest.approx(stats.rec_expected, 2)
-    assert 0.0 == pytest.approx(stats.rec_pvalue, 6)
+    assert 0.81 == pytest.approx(stats.rec_expected, abs=1E-2)
+    assert 0.0 == pytest.approx(stats.rec_pvalue, abs=1E-2)
 
-    assert 10.65 == pytest.approx(stats.male_expected, 2)
-    assert 0.0 == pytest.approx(stats.male_pvalue, 6)
+    assert 10.65 == pytest.approx(stats.male_expected, abs=1E-2)
+    assert 0.0 == pytest.approx(stats.male_pvalue, abs=1E-2)
 
-    assert 1.89 == pytest.approx(stats.female_expected, 2)
-    assert 0.0 == pytest.approx(stats.female_pvalue, 6)
+    assert 1.89 == pytest.approx(stats.female_expected, abs=1E-2)
+    assert 0.0 == pytest.approx(stats.female_pvalue, abs=1E-2)
