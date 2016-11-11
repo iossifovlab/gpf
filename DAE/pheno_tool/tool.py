@@ -177,8 +177,8 @@ class PhenoTool(object):
 #             return "%.4f" % (pv)
 #         return "%.5f" % (pv)
 
-    @staticmethod
-    def _calc_stats(data, eff, gender):
+    @classmethod
+    def _calc_stats(cls, data, eff, gender):
         gender_index = data['gender'] == gender
         positive_index = np.logical_and(
             data[eff] != 0, ~np.isnan(data[eff]))
@@ -196,7 +196,7 @@ class PhenoTool(object):
         negative = data[negative_gender_index]['value']
         p_count, p_mean, p_std = PhenoTool._calc_base_stats(positive)
         n_count, n_mean, n_std = PhenoTool._calc_base_stats(negative)
-        p_val = PhenoTool._calc_pv(positive, negative)
+        p_val = cls._calc_pv(positive, negative)
 
         return {
             'effectType': eff,
