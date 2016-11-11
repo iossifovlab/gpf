@@ -29,6 +29,28 @@ class Instrument(object):
 
 
 class Measure(object):
+    """
+    Measure objects represent phenotype measures.
+
+    Common fields are:
+
+    * `instrument_name`
+
+    * `measure_name`
+
+    * `measure_id` - formed by `instrument_name`.`measure_name`
+
+    * `type` - one of 'continuous', 'ordinal', 'categorical'
+
+    * `description`
+
+    * `min_value` - for 'continuous' and 'ordinal' measures
+
+    * `max_value` - for 'continuous' and 'ordinal' measures
+
+    * `value_domain` - string that represents the values
+
+    """
 
     def __init__(self, name):
         self.name = name
@@ -40,6 +62,9 @@ class Measure(object):
 
     @classmethod
     def from_df(cls, row):
+        """
+        Creates `Measure` object from pandas data frame row.
+        """
         assert row['stats'] is not None
 
         m = Measure(row['measure_name'])
@@ -55,6 +80,10 @@ class Measure(object):
             m.max_value = row['max_value']
             assert m.max_value >= m.min_value
         m.value_domain = row['value_domain']
+        m.has_probands = row['has_probands']
+        m.has_siblings = row['has_siblings']
+        m.has_parents = row['has_parents']
+
         if isinstance(row['default_filter'], float) and \
                 np.isnan(row['default_filter']):
             m.default_filter = None
@@ -65,12 +94,21 @@ class Measure(object):
 
 
 class MeasureMeta(Measure):
+    """
+    Represents additional meta information about given `Measure`.
+    """
 
     def __init__(self, name):
         super(MeasureMeta, self).__init__(name)
 
 
 class PhenoDB(PhenoConfig):
+    """
+    Main class for accessing phenotype database in DAE.
+
+    To access the phenotype database create an instance of this class
+    and call the method *load()*.
+    """
 
     def __init__(self, dae_config=None, *args, **kwargs):
         super(PhenoDB, self).__init__(dae_config, *args, **kwargs)
@@ -82,6 +120,9 @@ class PhenoDB(PhenoConfig):
 
     @staticmethod
     def check_nan(val):
+        if val is None:
+            return None
+
         if not isinstance(val, float):
             raise ValueError("unexpected value: {}".format(val))
 
@@ -156,6 +197,23 @@ class PhenoDB(PhenoConfig):
         return res_df
 
     def get_measures_df(self, instrument=None, stats=None):
+        """
+        Returns data frame containing measures information.
+
+        `instrument` -- an instrument name which measures should be
+        returned. If not specified all type of measures are returned.
+
+        `stats` -- a type ('continuous', 'ordinal' or 'categorical')
+        of measures that should be returned. If not specified all
+        type of measures are returned.
+
+        Each row in the returned data frame represents given measure.
+
+        Columns in the returned data frame are: `measure_id`, `measure_name`,
+        `instrument_name`, `description`, `stats`, `min_value`, `max_value`,
+        `value_domain`, `has_probands`, `has_siblings`, `has_parents`,
+        `default_filter`.
+        """
         assert instrument is None or instrument in self.instruments
         assert stats is None or \
             stats in set(['continuous', 'ordinal', 'categorical'])
@@ -189,6 +247,17 @@ class PhenoDB(PhenoConfig):
         return res_df
 
     def get_measures(self, instrument=None, stats=None):
+        """
+        Returns ordered dictionary of measures objects.
+
+        `instrument` -- an instrument name which measures should be
+        returned. If not specified all type of measures are returned.
+
+        `stats` -- a type ('continuous', 'ordinal' or 'categorical')
+        of measures that should be returned. If not specified all
+        type of measures are returned.
+
+        """
         df = self.get_measures_df(instrument, stats)
         res = OrderedDict()
         for _index, row in df.iterrows():
@@ -237,10 +306,24 @@ class PhenoDB(PhenoConfig):
             self.families[family_id] = f
 
     def load(self):
+        """Loads basic families, instruments and measures data from
+        the phenotype database."""
         self._load_families()
         self._load_instruments()
 
     def get_persons_df(self, role=None):
+        """
+        Returns a individuals information form phenotype database as a data
+        frame.
+
+        `role` -- specifies persons of which role should be returned. If not
+        specified returns all individuals from phenotype database.
+
+        Each row of the returned data frame represnts a person from phenotype
+        database.
+
+        Columns returned are: `person_id`, `family_id`, `role`, `gender`.
+        """
         where = ["ssc_present=1"]
         if role:
             where.append("role='{}'".format(role))
@@ -254,6 +337,14 @@ class PhenoDB(PhenoConfig):
         return df[['person_id', 'family_id', 'role', 'gender']]
 
     def get_persons(self, role=None):
+        """Returns persons data from phenotype database.
+
+        `role` -- specifies persons of which role should be returned. If not
+        specified returns all individuals from phenotype database.
+
+        Returns ordered dictionary of (`personId`, `Person()`) where
+        the `Person` object is the same object used into `VariantDB` families.
+        """
         persons = OrderedDict()
         df = self.get_persons_df(role)
 
@@ -316,6 +407,25 @@ class PhenoDB(PhenoConfig):
     def get_measure_values_df(self, measure_id,
                               person_ids=None, role=None,
                               default_filter='apply'):
+        """
+        Returns a data frame with values for the specified `measure_id`.
+
+        `measure_id` -- a measure ID which values should be returned.
+
+        `person_ids` -- list of individuals to select measurement values for.
+        If not specified values for all individuals are returned.
+
+        `role` -- role of individuals to select measure value for. If not
+        specified value for individuals in all roles are retuned.
+
+        `default_filter` -- one of ('`skip`', '`apply`', '`invert`'). When
+        the measure has a `default_filter` this argument specifies whether
+        the filter should be applied or skipped or inverted.
+
+        The returned data frame contains two columns: `person_id` for
+        individuals IDs and column named as `measure_id` values of the measure.
+        """
+
         assert measure_id in self.measures
 
         m = self.measures[measure_id]
@@ -353,6 +463,21 @@ class PhenoDB(PhenoConfig):
         return res
 
     def get_values_df(self, measure_ids, person_ids=None, role=None):
+        """
+        Returns a data frame with values for given list of measures.
+
+        Values are loaded using consecutive calls to
+        `get_measure_values_df()` method for each measure in `measure_ids`.
+        All data frames are joined in the end and returned.
+
+        `measure_ids` -- list of measure ids which values should be returned.
+
+        `person_ids` -- list of individuals to select measurement values for.
+        If not specified values for all individuals are returned.
+
+        `role` -- role of individuals to select measure value for. If not
+        specified value for individuals in all roles are retuned.
+        """
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
         assert all([self.has_measure(m) for m in measure_ids])
