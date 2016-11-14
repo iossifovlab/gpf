@@ -42,10 +42,18 @@ class StatsResults(object):
 
 class BackgroundBase(BackgroundConfig):
 
-    def __init__(self):
+    def __init__(self, name, use_cache=False):
         super(BackgroundBase, self).__init__()
         self.background = None
-        self.name = None
+        self.name = name
+        assert self.name is not None
+
+        if not use_cache:
+            self.precompute()
+        else:
+            if not self.cache_load():
+                self.precompute()
+                self.cache_save()
 
     @property
     def cache_filename(self):
@@ -83,8 +91,8 @@ class BackgroundBase(BackgroundConfig):
 
 class BackgroundCommon(BackgroundBase):
 
-    def __init__(self):
-        super(BackgroundCommon, self).__init__()
+    def __init__(self, name, use_cache=False):
+        super(BackgroundCommon, self).__init__(name, use_cache)
 
     def _prob(self, gene_syms):
         return 1.0 * self._count(gene_syms) / self._total
@@ -166,9 +174,9 @@ class SynonymousBackground(BackgroundCommon):
 
         return (background, foreground)
 
-    def __init__(self):
-        super(SynonymousBackground, self).__init__()
-        self.name = 'synonymousBackgroundModel'
+    def __init__(self, use_cache=False):
+        super(SynonymousBackground, self).__init__(
+            'synonymousBackgroundModel', use_cache)
 
     def precompute(self):
         self.background, self.foreground = \
@@ -234,9 +242,9 @@ class CodingLenBackground(BackgroundCommon):
                 back.append((str(row[1]), int(row[2])))
         return back
 
-    def __init__(self):
-        super(CodingLenBackground, self).__init__()
-        self.name = 'codingLenBackgroundModel'
+    def __init__(self, use_cache=False):
+        super(CodingLenBackground, self).__init__(
+            'codingLenBackgroundModel', use_cache)
 
     def precompute(self):
         back = self._load_and_prepare_build()
@@ -337,10 +345,9 @@ class SamochaBackground(BackgroundBase):
 
         return df
 
-    def __init__(self):
-        super(SamochaBackground, self).__init__()
-        self.name = 'samochaBackgroundModel'
-        # self.background = self._load_and_prepare_build()
+    def __init__(self, use_cache=False):
+        super(SamochaBackground, self).__init__(
+            'samochaBackgroundModel', use_cache)
 
     def precompute(self):
         self.background = self._load_and_prepare_build()

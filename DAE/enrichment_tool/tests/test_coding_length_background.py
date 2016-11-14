@@ -12,7 +12,6 @@ from DAE import get_gene_sets_symNS
 
 def test_coding_length_background_default():
     background = CodingLenBackground()
-    background.precompute()
 
     assert background.background is not None
 
@@ -28,7 +27,6 @@ def test_coding_length_background_default():
 @pytest.fixture(scope='module')
 def background(request):
     bg = CodingLenBackground()
-    bg.precompute()
     return bg
 
 

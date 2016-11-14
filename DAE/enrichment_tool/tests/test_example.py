@@ -18,12 +18,10 @@ def test_simple_example():
     autism_studes = [
         st for st in denovo_studies
         if 'autism' == st.get_attr('study.phenotype')]
-    
+
     # create background
     background = SamochaBackground()
-    background.precompute()
 
-    
     # create enrichment tool
     tool = EnrichmentTool(background, GeneEventsCounter())
 

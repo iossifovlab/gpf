@@ -12,7 +12,6 @@ from enrichment_tool.config import children_stats_counter
 @pytest.fixture(scope='module')
 def background(request):
     bg = SamochaBackground()
-    bg.precompute()
     return bg
 
 
