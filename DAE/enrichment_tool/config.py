@@ -4,10 +4,8 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 import ConfigParser
-from VariantAnnotation import get_effect_types
-from query_prepare import build_effect_types_list
 from collections import Counter
-from DAE import vDB, Config
+from DAE import Config
 
 
 class BackgroundConfig(object):
@@ -34,8 +32,6 @@ class BackgroundConfig(object):
         return self['enrichment', 'cache_dir']
 
 
-# class ChildrenStats(object):
-
 def children_stats_counter(studies, role):
     seen = set()
     counter = Counter()
@@ -51,15 +47,3 @@ def children_stats_counter(studies, role):
                 counter[p.gender] += 1
                 seen.add(iid)
     return counter
-
-#     @staticmethod
-#     def build(denovo_studies):
-#         res = {}
-#         for phenotype in PHENOTYPES:
-#             studies = denovo_studies.get_studies(phenotype)
-#             if phenotype == 'unaffected':
-#                 stats = ChildrenStats.count(studies, 'sib')
-#             else:
-#                 stats = ChildrenStats.count(studies, 'prb')
-#             res[phenotype] = stats
-#         return res

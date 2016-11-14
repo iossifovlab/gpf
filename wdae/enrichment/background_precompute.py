@@ -12,16 +12,16 @@ from precompute.register import Precompute
 class SynonymousBackgroundPrecompute(SynonymousBackground, Precompute):
 
     def __init__(self):
-        super(SynonymousBackgroundPrecompute, self).__init__()
+        super(SynonymousBackgroundPrecompute, self).__init__(use_cache=True)
 
 
 class CodingLenBackgroundPrecompute(CodingLenBackground, Precompute):
 
     def __init__(self):
-        super(CodingLenBackgroundPrecompute, self).__init__()
+        super(CodingLenBackgroundPrecompute, self).__init__(use_cache=True)
 
 
 class SamochaBackgroundPrecompute(SamochaBackground, Precompute):
 
     def __init__(self):
-        super(SamochaBackgroundPrecompute, self).__init__()
+        super(SamochaBackgroundPrecompute, self).__init__(use_cache=True)
