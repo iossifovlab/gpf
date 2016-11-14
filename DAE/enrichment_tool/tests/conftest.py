@@ -5,10 +5,9 @@ Created on Nov 8, 2016
 '''
 import pytest
 from DAE import get_gene_sets_symNS, vDB
-from enrichment_tool.config import DenovoStudies, ChildrenStats
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def gene_set(request):
     gt = get_gene_sets_symNS('main')
     gene_set = gt.t2G['chromatin modifiers'].keys()
@@ -38,7 +37,7 @@ def unaffected_studies(request, denovo_studies):
     return denovo_studies
 
 
-@pytest.fixture(scope='module')
-def children_stats(request):
-    denovo_studies = DenovoStudies()
-    return ChildrenStats.build(denovo_studies)
+# @pytest.fixture(scope='module')
+# def children_stats(request):
+#     denovo_studies = DenovoStudies()
+#     return ChildrenStats.build(denovo_studies)

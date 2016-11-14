@@ -4,7 +4,7 @@ Created on Nov 8, 2016
 @author: lubo
 '''
 from enrichment_tool.background import SamochaBackground
-from enrichment_tool.config import DenovoStudies, ChildrenStats
+from enrichment_tool.config import DenovoStudies
 from DAE import get_gene_sets_symNS
 from enrichment_tool.tool import EnrichmentTool
 from enrichment_tool.event_counters import GeneEventsCounter
@@ -18,9 +18,6 @@ def test_simple_example():
     # enrichment denovo studies helper
     denovo_studies = DenovoStudies()
 
-    # collect children stats from denovo studies
-    children_stats = ChildrenStats.build(denovo_studies)
-
     # create enrichment tool
     tool = EnrichmentTool(background, GeneEventsCounter())
 
@@ -32,8 +29,7 @@ def test_simple_example():
         denovo_studies.get_studies('autism'),
         'prb',
         'LGDs',
-        gene_set,
-        children_stats['autism'])
+        gene_set)
     print(events)
     print(overlapped)
     print(stats)
@@ -42,8 +38,7 @@ def test_simple_example():
         denovo_studies.get_studies('unaffected'),
         'sib',
         'LGDs',
-        gene_set,
-        children_stats['unaffected'])
+        gene_set)
     print(events)
     print(overlapped)
     print(stats)

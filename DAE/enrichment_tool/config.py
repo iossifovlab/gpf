@@ -88,33 +88,32 @@ class EnrichmentConfig(object):
             self.in_child = 'prb'
 
 
-class ChildrenStats(object):
+# class ChildrenStats(object):
 
-    @staticmethod
-    def count(studies, role):
-        seen = set()
-        counter = Counter()
-        for st in studies:
-            for fid, fam in st.families.items():
-                for p in fam.memberInOrder[2:]:
-                    iid = "{}:{}".format(fid, p.personId)
-                    if iid in seen:
-                        continue
-                    if p.role != role:
-                        continue
+def children_stats_counter(studies, role):
+    seen = set()
+    counter = Counter()
+    for st in studies:
+        for fid, fam in st.families.items():
+            for p in fam.memberInOrder[2:]:
+                iid = "{}:{}".format(fid, p.personId)
+                if iid in seen:
+                    continue
+                if p.role != role:
+                    continue
 
-                    counter[p.gender] += 1
-                    seen.add(iid)
-        return counter
+                counter[p.gender] += 1
+                seen.add(iid)
+    return counter
 
-    @staticmethod
-    def build(denovo_studies):
-        res = {}
-        for phenotype in PHENOTYPES:
-            studies = denovo_studies.get_studies(phenotype)
-            if phenotype == 'unaffected':
-                stats = ChildrenStats.count(studies, 'sib')
-            else:
-                stats = ChildrenStats.count(studies, 'prb')
-            res[phenotype] = stats
-        return res
+#     @staticmethod
+#     def build(denovo_studies):
+#         res = {}
+#         for phenotype in PHENOTYPES:
+#             studies = denovo_studies.get_studies(phenotype)
+#             if phenotype == 'unaffected':
+#                 stats = ChildrenStats.count(studies, 'sib')
+#             else:
+#                 stats = ChildrenStats.count(studies, 'prb')
+#             res[phenotype] = stats
+#         return res

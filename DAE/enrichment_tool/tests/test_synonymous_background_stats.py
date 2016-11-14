@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from enrichment_tool.background import SynonymousBackground
 from enrichment_tool.event_counters import GeneEventsCounter
+from enrichment_tool.config import children_stats_counter
 
 
 @pytest.fixture(scope='module')
@@ -46,16 +47,17 @@ def test_synonymous_background_stats_default(background):
 
 
 def test_stats_autism_lgd(background, autism_studies,
-                          gene_set, children_stats):
+                          gene_set):
     counter = GeneEventsCounter()
     events = counter.events(
         autism_studies, 'prb', 'LGDs')
 
+    children_stats = children_stats_counter(autism_studies, 'prb')
     _, stats = background.calc_stats(
         'LGDs',
         events,
         gene_set,
-        children_stats['autism'])
+        children_stats)
 
     assert stats is not None
 
@@ -73,16 +75,17 @@ def test_stats_autism_lgd(background, autism_studies,
 
 
 def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
-                                      gene_set, children_stats):
+                                      gene_set):
     counter = GeneEventsCounter()
     events = counter.events(schizophrenia_studies,
                             'prb', 'LGDs')
+    children_stats = children_stats_counter(schizophrenia_studies, 'prb')
 
     _, stats = background.calc_stats(
         'LGDs',
         events,
         gene_set,
-        children_stats['schizophrenia'])
+        children_stats)
 
     assert stats is not None
 
@@ -100,16 +103,17 @@ def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
 
 
 def test_stats_unaffected_with_missense(background, unaffected_studies,
-                                        gene_set, children_stats):
+                                        gene_set):
     counter = GeneEventsCounter()
     events = counter.events(
         unaffected_studies, 'sib', 'missense')
+    children_stats = children_stats_counter(unaffected_studies, 'sib')
 
     _, stats = background.calc_stats(
         'missense',
         events,
         gene_set,
-        children_stats['unaffected'])
+        children_stats)
 
     assert stats is not None
 

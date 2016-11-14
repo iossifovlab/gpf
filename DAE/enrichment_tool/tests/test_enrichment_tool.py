@@ -16,19 +16,17 @@ def background(request):
     return bg
 
 
-def test_enrichment_tool_gene_events(autism_studies, children_stats,
+def test_enrichment_tool_gene_events(autism_studies,
                                      background, gene_set):
     tool = EnrichmentTool(background, GeneEventsCounter())
     assert tool is not None
-
-    print(children_stats)
 
     events, overlapped, stats = tool.calc(
         autism_studies,
         'prb',
         'LGDs',
         gene_set,
-        children_stats['autism'])
+        children_stats=None)
     assert events is not None
     assert stats is not None
 
@@ -54,7 +52,7 @@ def test_enrichment_tool_gene_events(autism_studies, children_stats,
     assert 0.0 == pytest.approx(stats.female_pvalue, abs=1E-2)
 
 
-def test_enrichment_tool_events(autism_studies, children_stats,
+def test_enrichment_tool_events(autism_studies,
                                 background, gene_set):
     tool = EnrichmentTool(background, EventsCounter())
     assert tool is not None
@@ -64,7 +62,7 @@ def test_enrichment_tool_events(autism_studies, children_stats,
         'prb',
         'LGDs',
         gene_set,
-        children_stats['autism'])
+        children_stats=None)
     assert events is not None
     assert stats is not None
 
