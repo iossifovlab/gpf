@@ -15,11 +15,11 @@ def background(request):
     return bg
 
 
-def test_stats_autism_lgd(background, denovo_studies,
+def test_stats_autism_lgd(background, autism_studies,
                           gene_set, children_stats):
     counter = GeneEventsCounter()
     events = counter.events(
-        denovo_studies.get_studies('autism'), 'prb', 'LGDs')
+        autism_studies, 'prb', 'LGDs')
 
     _, stats = background.calc_stats(
         'LGDs',

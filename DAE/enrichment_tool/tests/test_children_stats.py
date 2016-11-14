@@ -9,7 +9,7 @@ from collections import Counter
 def test_count_unaffected(denovo_studies, children_stats):
     seen = set()
     counter = Counter()
-    studies = denovo_studies.get_studies('unaffected')
+    studies = denovo_studies
     print([st.name for st in studies])
     for st in studies:
         for fid, fam in st.families.items():

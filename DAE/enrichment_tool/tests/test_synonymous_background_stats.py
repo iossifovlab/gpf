@@ -45,11 +45,11 @@ def test_synonymous_background_stats_default(background):
     assert 211645 == np.sum(background.background['raw'])
 
 
-def test_stats_autism_lgd(background, denovo_studies,
+def test_stats_autism_lgd(background, autism_studies,
                           gene_set, children_stats):
     counter = GeneEventsCounter()
     events = counter.events(
-        denovo_studies.get_studies('autism'), 'prb', 'LGDs')
+        autism_studies, 'prb', 'LGDs')
 
     _, stats = background.calc_stats(
         'LGDs',
@@ -72,10 +72,10 @@ def test_stats_autism_lgd(background, denovo_studies,
     assert 4.6E-05 == pytest.approx(stats.female_pvalue, abs=1E-4)
 
 
-def test_stats_schizophrenia_with_lgd(background, denovo_studies,
+def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
                                       gene_set, children_stats):
     counter = GeneEventsCounter()
-    events = counter.events(denovo_studies.get_studies('schizophrenia'),
+    events = counter.events(schizophrenia_studies,
                             'prb', 'LGDs')
 
     _, stats = background.calc_stats(
@@ -99,11 +99,11 @@ def test_stats_schizophrenia_with_lgd(background, denovo_studies,
     assert 0.6579 == pytest.approx(stats.female_pvalue, abs=1E-4)
 
 
-def test_stats_unaffected_with_missense(background, denovo_studies,
+def test_stats_unaffected_with_missense(background, unaffected_studies,
                                         gene_set, children_stats):
     counter = GeneEventsCounter()
     events = counter.events(
-        denovo_studies.get_studies('unaffected'), 'sib', 'missense')
+        unaffected_studies, 'sib', 'missense')
 
     _, stats = background.calc_stats(
         'missense',
