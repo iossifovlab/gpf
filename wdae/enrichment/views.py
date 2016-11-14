@@ -16,9 +16,8 @@ from query_prepare import prepare_denovo_studies, \
     prepare_string_value
 from rest_framework import status
 from helpers.dae_query import prepare_query_dict
-from enrichment.enrichment_builder import EnrichmentBuilder, RowResult
-from enrichment_tool.config import PHENOTYPES, EFFECT_TYPES, DenovoStudies,\
-    ChildrenStats
+from enrichment.enrichment_builder import EnrichmentBuilder, RowResult,\
+    PHENOTYPES, EFFECT_TYPES, DenovoStudies, ChildrenStats
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 
 # from helpers.profiler import profile
@@ -242,13 +241,13 @@ class EnrichmentView(APIView):
             counting_model = config['enrichmentCountingModel']
 
         if counting_model == 'enrichmentEventsCounting':
-            counter_cls = EventsCounter
+            counter_object = EventsCounter()
         elif counting_model == 'enrichmentGeneCounting':
-            counter_cls = GeneEventsCounter
+            counter_object = GeneEventsCounter()
         else:
             raise KeyError('wrong denovo counter: {}'.format(counting_model))
 
-        return counter_cls
+        return counter_object
 
     def enrichment_config(self, data):
         return {

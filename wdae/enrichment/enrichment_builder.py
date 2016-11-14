@@ -4,8 +4,82 @@ Created on Sep 30, 2016
 @author: lubo
 '''
 import itertools
-from enrichment_tool.config import EnrichmentConfig, EFFECT_TYPES, PHENOTYPES
+
+from DAE import vDB
+from VariantAnnotation import get_effect_types
 from enrichment_tool.tool import EnrichmentTool
+from query_prepare import build_effect_types_list
+from enrichment_tool.config import children_stats_counter
+
+
+PHENOTYPES = [
+    'autism',
+    'congenital heart disease',
+    'epilepsy',
+    'intelectual disability',
+    'schizophrenia',
+    'unaffected',
+]
+
+EFFECT_TYPES = [
+    'LGDs',
+    'missense',
+    'synonymous'
+]
+
+
+class DenovoStudies(object):
+
+    def __init__(self):
+        self.studies = vDB.get_studies('ALL WHOLE EXOME')
+
+    def get_studies(self, phenotype):
+        assert phenotype in PHENOTYPES
+        if phenotype == 'unaffected':
+            studies = [st for st in self.studies
+                       if 'WE' == st.get_attr('study.type')]
+            return studies
+        else:
+            studies = []
+            for st in self.studies:
+                if phenotype == st.get_attr('study.phenotype') and \
+                        'WE' == st.get_attr('study.type'):
+                    studies.append(st)
+            return studies
+
+
+class EnrichmentConfig(object):
+    EFFECT_TYPES = get_effect_types(True, True)
+
+    def __init__(self, phenotype, effect_type):
+        assert phenotype in PHENOTYPES
+        self.phenotype = phenotype
+
+        et = build_effect_types_list([effect_type])
+        assert 1 == len(et)
+        assert all([e in self.EFFECT_TYPES for e in et])
+
+        self.effect_type = ','.join(et)
+
+        if phenotype == 'unaffected':
+            self.in_child = 'sib'
+        else:
+            self.in_child = 'prb'
+
+
+class ChildrenStats(object):
+
+    @staticmethod
+    def build(denovo_studies):
+        res = {}
+        for phenotype in PHENOTYPES:
+            studies = denovo_studies.get_studies(phenotype)
+            if phenotype == 'unaffected':
+                stats = children_stats_counter(studies, 'sib')
+            else:
+                stats = children_stats_counter(studies, 'prb')
+            res[phenotype] = stats
+        return res
 
 
 class CellResult(EnrichmentConfig):
@@ -38,8 +112,8 @@ class CellResult(EnrichmentConfig):
             return 'female'
         raise ValueError("unexpected gender: {}".format(gender))
 
-    def __init__(self, config, gender=None, rec=False):
-        super(CellResult, self).__init__(config.phenotype, config.effect_type)
+    def __init__(self, phenotype, effect_type, gender=None, rec=False):
+        super(CellResult, self).__init__(phenotype, effect_type)
         self.gender = self._interpolate_gender(gender)
         self.rec = rec
 
@@ -86,33 +160,36 @@ class CellResult(EnrichmentConfig):
 class RowResult(EnrichmentConfig):
     TESTS = ['all', 'rec', 'male', 'female']
 
-    def __init__(self, config):
-        super(RowResult, self).__init__(config.phenotype, config.effect_type)
+    def __init__(self, phenotype, effect_type):
+        super(RowResult, self).__init__(phenotype, effect_type)
 
     def __call__(self, events, overlapped_events, enrichment_stats):
         self.results = {}
 
-        self.results['all'] = CellResult(events)(
+        self.results['all'] = CellResult(
+            self.phenotype, self.effect_type)(
             events.all_events,
             overlapped_events.all_events,
             enrichment_stats.all_expected,
             enrichment_stats.all_pvalue)
-        self.results['rec'] = CellResult(events, rec=True)(
+        self.results['rec'] = CellResult(
+            self.phenotype, self.effect_type, rec=True)(
             events.rec_events,
             overlapped_events.rec_events,
             enrichment_stats.rec_expected,
             enrichment_stats.rec_pvalue)
-        self.results['male'] = CellResult(events, gender='M')(
+        self.results['male'] = CellResult(
+            self.phenotype, self.effect_type, gender='M')(
             events.male_events,
             overlapped_events.male_events,
             enrichment_stats.male_expected,
             enrichment_stats.male_pvalue)
-        self.results['female'] = CellResult(events, gender='F')(
+        self.results['female'] = CellResult(
+            self.phenotype, self.effect_type, gender='F')(
             events.female_events,
             overlapped_events.female_events,
             enrichment_stats.female_expected,
             enrichment_stats.female_pvalue)
-
         return self
 
     def __getitem__(self, test):
@@ -173,18 +250,29 @@ class EnrichmentBuilder(object):
             denovo_studies, children_stats,
             gene_set):
 
-        self.tool = EnrichmentTool(denovo_studies, children_stats,
-                                   background, denovo_counter)
+        self.tool = EnrichmentTool(background, denovo_counter)
         self.gene_set = gene_set
+        self.children_stats = children_stats
+        self.denovo_studies = denovo_studies
+
+    def in_child(self, phenotype):
+        if phenotype == 'unaffected':
+            return 'sib'
+        else:
+            return 'prb'
 
     def build_phenotype(self, phenotype):
         results = []
         for effect_type in EFFECT_TYPES:
             events, overlapped_events, enrichment_stats = \
                 self.tool.calc(
-                    phenotype, effect_type, self.gene_set)
+                    self.denovo_studies.get_studies(phenotype),
+                    self.in_child(phenotype),
+                    effect_type,
+                    self.gene_set,
+                    self.children_stats[phenotype])
 
-            row = RowResult(events)(
+            row = RowResult(phenotype, effect_type)(
                 events, overlapped_events, enrichment_stats)
             results.append(row)
 
@@ -193,6 +281,7 @@ class EnrichmentBuilder(object):
 
     def build(self):
         results = {}
+
         for phenotype in PHENOTYPES:
             res = self.build_phenotype(phenotype)
             results[phenotype] = res
