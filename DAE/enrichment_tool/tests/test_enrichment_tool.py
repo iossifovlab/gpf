@@ -18,11 +18,17 @@ def background(request):
 
 def test_enrichment_tool_gene_events(denovo_studies, children_stats,
                                      background, gene_set):
-    tool = EnrichmentTool(denovo_studies, children_stats,
-                          background, GeneEventsCounter)
+    tool = EnrichmentTool(background, GeneEventsCounter())
     assert tool is not None
 
-    events, overlapped, stats = tool.calc('autism', 'LGDs', gene_set)
+    print(children_stats)
+
+    events, overlapped, stats = tool.calc(
+        denovo_studies.get_studies('autism'),
+        'prb',
+        'LGDs',
+        gene_set,
+        children_stats['autism'])
     assert events is not None
     assert stats is not None
 
@@ -50,11 +56,15 @@ def test_enrichment_tool_gene_events(denovo_studies, children_stats,
 
 def test_enrichment_tool_events(denovo_studies, children_stats,
                                 background, gene_set):
-    tool = EnrichmentTool(denovo_studies, children_stats,
-                          background, EventsCounter)
+    tool = EnrichmentTool(background, EventsCounter())
     assert tool is not None
 
-    events, overlapped, stats = tool.calc('autism', 'LGDs', gene_set)
+    events, overlapped, stats = tool.calc(
+        denovo_studies.get_studies('autism'),
+        'prb',
+        'LGDs',
+        gene_set,
+        children_stats['autism'])
     assert events is not None
     assert stats is not None
 

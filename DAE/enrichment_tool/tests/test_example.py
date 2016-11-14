@@ -22,20 +22,28 @@ def test_simple_example():
     children_stats = ChildrenStats.build(denovo_studies)
 
     # create enrichment tool
-    tool = EnrichmentTool(
-        denovo_studies, children_stats, background, GeneEventsCounter)
+    tool = EnrichmentTool(background, GeneEventsCounter())
 
     # load gene set
     gt = get_gene_sets_symNS('main')
     gene_set = gt.t2G['chromatin modifiers'].keys()
 
-    events, overlapped, stats = tool.calc('autism', 'LGDs', gene_set)
+    events, overlapped, stats = tool.calc(
+        denovo_studies.get_studies('autism'),
+        'prb',
+        'LGDs',
+        gene_set,
+        children_stats['autism'])
     print(events)
     print(overlapped)
     print(stats)
 
     events, overlapped, stats = tool.calc(
-        'unaffected', 'LGDs', gene_set)
+        denovo_studies.get_studies('unaffected'),
+        'sib',
+        'LGDs',
+        gene_set,
+        children_stats['unaffected'])
     print(events)
     print(overlapped)
     print(stats)

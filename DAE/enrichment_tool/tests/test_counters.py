@@ -10,9 +10,12 @@ from enrichment_tool.event_counters import CounterBase, EventsCounter,\
 
 
 def test_variants_unaffected_with_effect_type_lgd(denovo_studies):
-    counter = CounterBase('unaffected', 'LGDs')
+    counter = CounterBase()
 
-    variants = counter.get_variants(denovo_studies)
+    variants = counter.get_variants(
+        denovo_studies.get_studies('unaffected'),
+        'sib',
+        'LGDs')
     assert variants is not None
 
     count = 0
@@ -24,9 +27,12 @@ def test_variants_unaffected_with_effect_type_lgd(denovo_studies):
 
 
 def test_variants_unaffected_with_effect_type_missense(denovo_studies):
-    counter = CounterBase('unaffected', 'Missense')
+    counter = CounterBase()
 
-    variants = counter.get_variants(denovo_studies)
+    variants = counter.get_variants(
+        denovo_studies.get_studies('unaffected'),
+        'sib',
+        'missense')
     assert variants is not None
 
     count = 0
@@ -39,9 +45,12 @@ def test_variants_unaffected_with_effect_type_missense(denovo_studies):
 
 
 def test_variants_unaffected_with_effect_type_synonimous(denovo_studies):
-    counter = CounterBase('unaffected', 'synonymous')
+    counter = CounterBase()
 
-    variants = counter.get_variants(denovo_studies)
+    variants = counter.get_variants(
+        denovo_studies.get_studies('unaffected'),
+        'sib',
+        'synonymous')
     assert variants is not None
 
     count = 0
@@ -54,9 +63,12 @@ def test_variants_unaffected_with_effect_type_synonimous(denovo_studies):
 
 
 def test_variants_autism_with_effect_type_lgd(denovo_studies):
-    counter = CounterBase('autism', 'LGDs')
+    counter = CounterBase()
 
-    variants = counter.get_variants(denovo_studies)
+    variants = counter.get_variants(
+        denovo_studies.get_studies('autism'),
+        'prb',
+        'LGDs')
     assert variants is not None
 
     count = 0
@@ -68,16 +80,22 @@ def test_variants_autism_with_effect_type_lgd(denovo_studies):
 
 
 def test_events_not_implemented(denovo_studies):
-    counter = CounterBase('autism', 'LGDs')
+    counter = CounterBase()
 
     with pytest.raises(NotImplementedError):
-        counter.events(denovo_studies)
+        counter.events(
+            denovo_studies.get_studies('autism'),
+            'prb',
+            'LGDs')
 
 
 def test_events_autism_with_effect_type_lgd(denovo_studies):
-    counter = EventsCounter('autism', 'LGDs')
+    counter = EventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('autism'),
+        'prb',
+        'LGDs')
     assert events is not None
 
     assert 606 == len(events.all_events)
@@ -87,9 +105,12 @@ def test_events_autism_with_effect_type_lgd(denovo_studies):
 
 
 def test_events_unaffected_with_effect_type_lgd(denovo_studies):
-    counter = EventsCounter('unaffected', 'LGDs')
+    counter = EventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('unaffected'),
+        'sib',
+        'LGDs')
     assert events is not None
 
     assert 224 == len(events.all_events)
@@ -99,9 +120,12 @@ def test_events_unaffected_with_effect_type_lgd(denovo_studies):
 
 
 def test_events_schizophrenia_with_effect_type_lgd(denovo_studies):
-    counter = EventsCounter('schizophrenia', 'LGDs')
+    counter = EventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('schizophrenia'),
+        'prb',
+        'LGDs')
 
     assert events is not None
 
@@ -114,9 +138,12 @@ def test_events_schizophrenia_with_effect_type_lgd(denovo_studies):
 def test_overlapped_events_autism_with_effect_type_lgd(
         denovo_studies, gene_set):
 
-    counter = EventsCounter('autism', 'LGDs')
+    counter = EventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('autism'),
+        'prb',
+        'LGDs')
     overlapped_events = events.overlap(gene_set)
 
     assert overlapped_events is not None
@@ -129,9 +156,12 @@ def test_overlapped_events_autism_with_effect_type_lgd(
 
 def test_overlapped_events_unaffected_with_effect_type_synonymous(
         denovo_studies, gene_set):
-    counter = EventsCounter('unaffected', 'synonymous')
+    counter = EventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('unaffected'),
+        'sib',
+        'synonymous')
     overlapped_events = events.overlap(gene_set)
 
     assert overlapped_events is not None
@@ -144,9 +174,12 @@ def test_overlapped_events_unaffected_with_effect_type_synonymous(
 
 def test_overlapped_events_schizophrenia_with_effect_type_missense(
         denovo_studies, gene_set):
-    counter = EventsCounter('schizophrenia', 'missense')
+    counter = EventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('schizophrenia'),
+        'prb',
+        'missense')
     overlapped_events = events.overlap(gene_set)
 
     assert overlapped_events is not None
@@ -158,9 +191,12 @@ def test_overlapped_events_schizophrenia_with_effect_type_missense(
 
 
 def test_gene_events_autism_with_effect_type_lgd(denovo_studies):
-    counter = GeneEventsCounter('autism', 'LGDs')
+    counter = GeneEventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('autism'),
+        'prb',
+        'LGDs')
 
     assert events is not None
 
@@ -171,9 +207,12 @@ def test_gene_events_autism_with_effect_type_lgd(denovo_studies):
 
 
 def test_gene_events_unaffected_with_effect_type_lgd(denovo_studies):
-    counter = GeneEventsCounter('unaffected', 'LGDs')
+    counter = GeneEventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('unaffected'),
+        'sib',
+        'LGDs')
     assert events is not None
 
     assert 220 == len(events.all_events)
@@ -183,9 +222,12 @@ def test_gene_events_unaffected_with_effect_type_lgd(denovo_studies):
 
 
 def test_gene_events_schizophrenia_with_effect_type_lgd(denovo_studies):
-    counter = GeneEventsCounter('schizophrenia', 'LGDs')
+    counter = GeneEventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('schizophrenia'),
+        'prb',
+        'LGDs')
     assert events is not None
 
     assert 93 == len(events.all_events)
@@ -196,9 +238,12 @@ def test_gene_events_schizophrenia_with_effect_type_lgd(denovo_studies):
 
 def test_overlapped_gene_events_autism_with_effect_type_lgd(
         denovo_studies, gene_set):
-    counter = GeneEventsCounter('autism', 'LGDs')
+    counter = GeneEventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('autism'),
+        'prb',
+        'LGDs')
     overlapped_events = events.overlap(gene_set)
 
     assert overlapped_events is not None
@@ -211,9 +256,12 @@ def test_overlapped_gene_events_autism_with_effect_type_lgd(
 
 def test_overlapped_gene_events_unaffected_with_effect_type_synonymous(
         denovo_studies, gene_set):
-    counter = GeneEventsCounter('unaffected', 'synonymous')
+    counter = GeneEventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('unaffected'),
+        'sib',
+        'synonymous')
     overlapped_events = events.overlap(gene_set)
 
     assert overlapped_events is not None
@@ -226,9 +274,12 @@ def test_overlapped_gene_events_unaffected_with_effect_type_synonymous(
 
 def test_overlapped_gene_events_schizophrenia_with_effect_type_missense(
         denovo_studies, gene_set):
-    counter = GeneEventsCounter('schizophrenia', 'missense')
+    counter = GeneEventsCounter()
 
-    events = counter.events(denovo_studies)
+    events = counter.events(
+        denovo_studies.get_studies('schizophrenia'),
+        'prb',
+        'missense')
     overlapped_events = events.overlap(gene_set)
 
     assert overlapped_events is not None

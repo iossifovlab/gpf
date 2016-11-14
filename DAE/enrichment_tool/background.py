@@ -12,16 +12,14 @@ from scipy import stats
 import zlib
 
 from DAE import vDB, genomesDB
-from enrichment_tool.config import EnrichmentConfig, BackgroundConfig
+from enrichment_tool.config import BackgroundConfig
 import numpy as np
 import pandas as pd
 
 
-class StatsResults(EnrichmentConfig):
+class StatsResults(object):
 
-    def __init__(self, config):
-        super(StatsResults, self).__init__(
-            config.phenotype, config.effect_type)
+    def __init__(self,):
         self.all_expected = None
         self.all_pvalue = None
         self.rec_expected = None
@@ -31,15 +29,11 @@ class StatsResults(EnrichmentConfig):
         self.female_expected = None
         self.female_pvalue = None
 
-    def __call__(self):
-        return self
-
     def __repr__(self):
-        return "Stats({}, {}): all: {:.2f} (pv={:.2g}); " \
+        return "Stats: all: {:.2f} (pv={:.2g}); " \
             "rec: {:.2f} (pv={:.2g}); " \
             "male: {:.2f} (pv={:.2g}); " \
             "female: {:.2f} (pv={:.2g})".format(
-                self.phenotype, self.effect_type,
                 self.all_expected, self.all_pvalue,
                 self.rec_expected, self.rec_pvalue,
                 self.male_expected, self.male_pvalue,
@@ -95,12 +89,12 @@ class BackgroundCommon(BackgroundBase):
     def _prob(self, gene_syms):
         return 1.0 * self._count(gene_syms) / self._total
 
-    def calc_stats(self, events, gene_set, children_stats):
+    def calc_stats(self, effect_type, events, gene_set, children_stats):
         gene_syms = [gs.upper() for gs in gene_set]
         overlapped_events = events.overlap(gene_syms)
 
         bg_prob = self._prob(gene_syms)
-        result = StatsResults(events)
+        result = StatsResults()
 
         result.all_expected = bg_prob * events.all_count
         result.all_pvalue = stats.binom_test(
@@ -370,12 +364,12 @@ class SamochaBackground(BackgroundBase):
             ndarray,
             columns=['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
 
-    def calc_stats(self, events, gene_set, children_stats):
-        result = StatsResults(events)
+    def calc_stats(self, effect_type, events, gene_set, children_stats):
+        result = StatsResults()
 
         overlapped_events = events.overlap(gene_set)
 
-        eff = 'P_{}'.format(events.effect_type.upper())
+        eff = 'P_{}'.format(effect_type.upper())
         assert eff in self.background.columns
 
         gs = [g.upper() for g in gene_set]

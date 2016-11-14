@@ -4,7 +4,6 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 import itertools
-from enrichment_tool.config import EnrichmentConfig
 
 
 def filter_denovo_one_event_per_family(vs):
@@ -54,31 +53,23 @@ def filter_denovo_one_gene_per_events(vs):
     return [[gs] for gs, _fn in sym_2_fn.items()]
 
 
-class CounterBase(EnrichmentConfig):
+class CounterBase(object):
 
-    def __init__(self, phenotype, effect_type):
-        super(CounterBase, self).__init__(phenotype, effect_type)
-
-    def get_variants(self, denovo_studies):
-        studies = denovo_studies.get_studies(self.phenotype)
+    def get_variants(self, denovo_studies, in_child, effect_types):
         variants = []
-        for st in studies:
+        for st in denovo_studies:
             vs = st.get_denovo_variants(
-                inChild=self.in_child, effectTypes=self.effect_type)
+                inChild=in_child, effectTypes=effect_types)
             variants.append(vs)
         return list(itertools.chain(*variants))
 
-    def events(self, denovo_studies):
+    def events(self, denovo_studies, in_child, effect_types):
         raise NotImplementedError()
 
 
-class EventsResult(EnrichmentConfig):
+class EventsResult(object):
 
-    def __init__(self, config):
-        super(EventsResult, self).__init__(
-            config.phenotype, config.effect_type)
-
-    def __call__(self, events, rec_events, boys_events, girls_events):
+    def __init__(self, events, rec_events, boys_events, girls_events):
         self.all_events = events
         self.rec_events = rec_events
         self.male_events = boys_events
@@ -89,11 +80,8 @@ class EventsResult(EnrichmentConfig):
         self.male_count = len(self.male_events)
         self.female_count = len(self.female_events)
 
-        return self
-
     def __repr__(self):
-        return "Events({},{}): all: {}, rec: {}, male: {}, female: {}".format(
-            self.phenotype, self.effect_type,
+        return "Events: all: {}, rec: {}, male: {}, female: {}".format(
             self.all_count, self.rec_count, self.male_count, self.female_count)
 
     @staticmethod
@@ -111,17 +99,14 @@ class EventsResult(EnrichmentConfig):
             self.male_events, gene_syms)
         female_events = self.filter_overlapping_events(
             self.female_events, gene_syms)
-        return EventsResult(self)(
+        return EventsResult(
             all_events, rec_events, male_events, female_events)
 
 
 class EventsCounter(CounterBase):
 
-    def __init__(self, phenotype, effect_type):
-        super(EventsCounter, self).__init__(phenotype, effect_type)
-
-    def events(self, denovo_studies):
-        variants = self.get_variants(denovo_studies)
+    def events(self, denovo_studies, in_child, effect_types):
+        variants = self.get_variants(denovo_studies, in_child, effect_types)
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']
 
@@ -130,17 +115,14 @@ class EventsCounter(CounterBase):
         male_events = filter_denovo_one_event_per_family(male_variants)
         female_events = filter_denovo_one_event_per_family(female_variants)
 
-        return EventsResult(self)(
+        return EventsResult(
             all_events, rec_events, male_events, female_events)
 
 
 class GeneEventsCounter(CounterBase):
 
-    def __init__(self, phenotype, effect_type):
-        super(GeneEventsCounter, self).__init__(phenotype, effect_type)
-
-    def events(self, denovo_studies):
-        variants = self.get_variants(denovo_studies)
+    def events(self, denovo_studies, in_child, effect_types):
+        variants = self.get_variants(denovo_studies, in_child, effect_types)
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']
 
@@ -149,5 +131,5 @@ class GeneEventsCounter(CounterBase):
         male_events = filter_denovo_one_gene_per_events(male_variants)
         female_events = filter_denovo_one_gene_per_events(female_variants)
 
-        return EventsResult(self)(
+        return EventsResult(
             all_events, rec_events, male_events, female_events)

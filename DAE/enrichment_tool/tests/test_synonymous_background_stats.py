@@ -47,10 +47,12 @@ def test_synonymous_background_stats_default(background):
 
 def test_stats_autism_lgd(background, denovo_studies,
                           gene_set, children_stats):
-    counter = GeneEventsCounter('autism', 'LGDs')
-    events = counter.events(denovo_studies)
+    counter = GeneEventsCounter()
+    events = counter.events(
+        denovo_studies.get_studies('autism'), 'prb', 'LGDs')
 
     _, stats = background.calc_stats(
+        'LGDs',
         events,
         gene_set,
         children_stats['autism'])
@@ -72,10 +74,12 @@ def test_stats_autism_lgd(background, denovo_studies,
 
 def test_stats_schizophrenia_with_lgd(background, denovo_studies,
                                       gene_set, children_stats):
-    counter = GeneEventsCounter('schizophrenia', 'LGDs')
-    events = counter.events(denovo_studies)
+    counter = GeneEventsCounter()
+    events = counter.events(denovo_studies.get_studies('schizophrenia'),
+                            'prb', 'LGDs')
 
     _, stats = background.calc_stats(
+        'LGDs',
         events,
         gene_set,
         children_stats['schizophrenia'])
@@ -97,10 +101,12 @@ def test_stats_schizophrenia_with_lgd(background, denovo_studies,
 
 def test_stats_unaffected_with_missense(background, denovo_studies,
                                         gene_set, children_stats):
-    counter = GeneEventsCounter('unaffected', 'missense')
-    events = counter.events(denovo_studies)
+    counter = GeneEventsCounter()
+    events = counter.events(
+        denovo_studies.get_studies('unaffected'), 'sib', 'missense')
 
     _, stats = background.calc_stats(
+        'missense',
         events,
         gene_set,
         children_stats['unaffected'])
