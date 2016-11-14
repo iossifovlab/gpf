@@ -15,6 +15,24 @@ from VariantsDB import Person, Family
 
 
 class Instrument(object):
+    """
+    Instrument object represents phenotype instruments.
+
+    Common fields are:
+
+    * `instrument_name`
+
+    * `masures` -- dictionary of all measures in the instrument
+
+    * `has_probands` - returns True if any of measures in this instrument
+        is applied to probands
+
+    * `has_siblings` -- returns True if any of measures in this instrument is
+        applied to siblings
+
+    * `has_parents` -- returns True if any of measures in this instrument is
+        applied to parents
+    """
 
     def __init__(self, name):
         self.name = name
@@ -40,7 +58,7 @@ class Measure(object):
 
     * `measure_id` - formed by `instrument_name`.`measure_name`
 
-    * `type` - one of 'continuous', 'ordinal', 'categorical'
+    * `measure_type` - one of 'continuous', 'ordinal', 'categorical'
 
     * `description`
 
@@ -49,6 +67,12 @@ class Measure(object):
     * `max_value` - for 'continuous' and 'ordinal' measures
 
     * `value_domain` - string that represents the values
+
+    * `has_probands` - returns True if this measure is applied to probands
+
+    * `has_siblings` - returns True if this measrue is applied to siblings
+
+    * `has_parents` - returns True if this measure is applied to parents
 
     """
 
@@ -61,21 +85,21 @@ class Measure(object):
             self.measure_id, self.type, self.value_domain.encode('utf-8'))
 
     @classmethod
-    def from_df(cls, row):
+    def _from_df(cls, row):
         """
         Creates `Measure` object from pandas data frame row.
         """
-        assert row['stats'] is not None
+        assert row['measure_type'] is not None
 
         m = Measure(row['measure_name'])
         m.measure_id = row['measure_id']
         m.instrument_name = row['instrument_name']
-        m.type = row['stats']
-        m.stats = row['stats']
+        m.measure_type = row['measure_type']
+
         m.description = row['description']
         m.min_value = None
         m.max_value = None
-        if m.stats == 'continuous' or m.stats == 'ordinal':
+        if m.measure_type == 'continuous' or m.measure_type == 'ordinal':
             m.min_value = row['min_value']
             m.max_value = row['max_value']
             assert m.max_value >= m.min_value
@@ -119,7 +143,7 @@ class PhenoDB(PhenoConfig):
         self.measures = {}
 
     @staticmethod
-    def check_nan(val):
+    def _check_nan(val):
         if val is None:
             return None
 
@@ -196,14 +220,14 @@ class PhenoDB(PhenoConfig):
 
         return res_df
 
-    def get_measures_df(self, instrument=None, stats=None):
+    def _get_measures_df(self, instrument=None, measure_type=None):
         """
         Returns data frame containing measures information.
 
         `instrument` -- an instrument name which measures should be
         returned. If not specified all type of measures are returned.
 
-        `stats` -- a type ('continuous', 'ordinal' or 'categorical')
+        `measure_type` -- a type ('continuous', 'ordinal' or 'categorical')
         of measures that should be returned. If not specified all
         type of measures are returned.
 
@@ -215,14 +239,14 @@ class PhenoDB(PhenoConfig):
         `default_filter`.
         """
         assert instrument is None or instrument in self.instruments
-        assert stats is None or \
-            stats in set(['continuous', 'ordinal', 'categorical'])
+        assert measure_type is None or \
+            measure_type in set(['continuous', 'ordinal', 'categorical'])
 
         clauses = ["not stats isnull"]
         if instrument is not None:
             clauses.append("table_name = '{}'".format(instrument))
-        if stats is not None:
-            clauses.append("stats='{}'".format(stats))
+        if measure_type is not None:
+            clauses.append("stats='{}'".format(measure_type))
 
         with VariableManager() as vm:
             df = vm.load_df(
@@ -240,35 +264,36 @@ class PhenoDB(PhenoConfig):
         mapping = [
             ('variable_id', 'measure_id'),
             ('variable_name', 'measure_name'),
+            ('stats', 'measure_type'),
             ('table_name', 'instrument_name'),
         ]
         self._rename_forward(res_df, mapping)
 
         return res_df
 
-    def get_measures(self, instrument=None, stats=None):
+    def get_measures(self, instrument=None, measure_type=None):
         """
         Returns ordered dictionary of measures objects.
 
         `instrument` -- an instrument name which measures should be
         returned. If not specified all type of measures are returned.
 
-        `stats` -- a type ('continuous', 'ordinal' or 'categorical')
+        `measure_type` -- a type ('continuous', 'ordinal' or 'categorical')
         of measures that should be returned. If not specified all
         type of measures are returned.
 
         """
-        df = self.get_measures_df(instrument, stats)
+        df = self._get_measures_df(instrument, measure_type)
         res = OrderedDict()
         for _index, row in df.iterrows():
-            m = Measure.from_df(row)
+            m = Measure._from_df(row)
             res[m.measure_id] = m
         return res
 
     def _load_instruments(self):
         instruments = OrderedDict()
 
-        df = self.get_measures_df()
+        df = self._get_measures_df()
         instrument_names = df.instrument_name.unique()
 
         for instrument_name in instrument_names:
@@ -280,7 +305,7 @@ class PhenoDB(PhenoConfig):
             instrument.has_parents = np.any(measures_df.has_parents)
 
             for _index, row in measures_df.iterrows():
-                m = Measure.from_df(row)
+                m = Measure._from_df(row)
                 m.instrument = instrument
                 measures[m.name] = m
                 self.measures[m.measure_id] = m
@@ -337,7 +362,7 @@ class PhenoDB(PhenoConfig):
         return df[['person_id', 'family_id', 'role', 'gender']]
 
     def get_persons(self, role=None):
-        """Returns persons data from phenotype database.
+        """Returns individuals data from phenotype database.
 
         `role` -- specifies persons of which role should be returned. If not
         specified returns all individuals from phenotype database.
@@ -366,9 +391,12 @@ class PhenoDB(PhenoConfig):
             persons[person_id] = p
         return persons
 
-    def get_measure_type(self, measure_id):
+    def get_measure(self, measure_id):
+        """
+        Returns a measure by measure_id.
+        """
         assert measure_id in self.measures
-        return self.measures[measure_id].stats
+        return self.measures[measure_id]
 
     def _get_values_df(self, value_manager, where):
         with value_manager() as vm:
@@ -430,7 +458,7 @@ class PhenoDB(PhenoConfig):
 
         m = self.measures[measure_id]
 
-        value_type = self.get_measure_type(measure_id)
+        value_type = m.measure_type
         if value_type is None:
             raise ValueError("bad measure: {}; unknown value type"
                              .format(measure_id))
@@ -455,14 +483,36 @@ class PhenoDB(PhenoConfig):
 
         return df[['person_id', measure_id]]
 
-    def get_measure_values(self, measure_id, person_ids=None, role=None):
-        df = self.get_measure_values_df(measure_id, person_ids, role)
+    def get_measure_values(self, measure_id, person_ids=None, role=None,
+                           default_filter='apply'):
+        """
+        Returns a dictionary with values for the specified `measure_id`.
+
+        `measure_id` -- a measure ID which values should be returned.
+
+        `person_ids` -- list of individuals to select measurement values for.
+        If not specified values for all individuals are returned.
+
+        `role` -- role of individuals to select measure value for. If not
+        specified value for individuals in all roles are retuned.
+
+        `default_filter` -- one of ('`skip`', '`apply`', '`invert`'). When
+        the measure has a `default_filter` this argument specifies whether
+        the filter should be applied or skipped or inverted.
+
+        The returned dictionary contains values of the measure for
+        each individual. The person_id is used as key in the dictionary.
+        """
+
+        df = self.get_measure_values_df(measure_id, person_ids, role,
+                                        default_filter)
         res = {}
         for _index, row in df.iterrows():
             res[row['person_id']] = row[measure_id]
         return res
 
-    def get_values_df(self, measure_ids, person_ids=None, role=None):
+    def get_values_df(self, measure_ids, person_ids=None, role=None,
+                      default_filter='apply'):
         """
         Returns a data frame with values for given list of measures.
 
@@ -482,7 +532,7 @@ class PhenoDB(PhenoConfig):
         assert len(measure_ids) >= 1
         assert all([self.has_measure(m) for m in measure_ids])
 
-        dfs = [self.get_measure_values_df(m, person_ids, role)
+        dfs = [self.get_measure_values_df(m, person_ids, role, default_filter)
                for m in measure_ids]
 
         res_df = dfs[0]
@@ -490,19 +540,6 @@ class PhenoDB(PhenoConfig):
             res_df = res_df.join(
                 df.set_index('person_id'), on='person_id',
                 rsuffix='_val_{}'.format(i))
-
-        return res_df
-
-    def get_persons_values_df(self, measure_ids, person_ids=None, role=None):
-        persons_df = self.get_persons_df(role=role)
-
-        value_df = self.get_values_df(
-            measure_ids,
-            role=role)
-
-        df = persons_df.join(
-            value_df.set_index('person_id'), on='person_id', rsuffix='_val')
-        res_df = df.dropna()
 
         return res_df
 
@@ -519,10 +556,45 @@ class PhenoDB(PhenoConfig):
         return res
 
     def get_values(self, measure_ids, person_ids=None, role=None):
+        """
+        Returns dictionary dictionaries with values for all `measure_ids`.
+
+        The returned dictionary uses `person_id` as key. The value for each key
+        is a dictionary of measurement values for each ID in `measure_ids`
+        keyed measure_id.
+
+        `measure_ids` -- list of measure IDs which values should be returned.
+
+        `person_ids` -- list of individuals to select measurement values for.
+        If not specified values for all individuals are returned.
+
+        `role` -- role of individuals to select measure value for. If not
+        specified value for individuals in all roles are retuned.
+
+        """
         df = self.get_values_df(measure_ids, person_ids, role)
         return self._values_df_to_dict(measure_ids, df)
 
+    def get_persons_values_df(self, measure_ids, person_ids=None, role=None):
+        """
+        Returns a dataframe with value for all measures in `measure_ids`
+        joined with a dataframe returned by `get_persons_df`.
+        """
+        persons_df = self.get_persons_df(role=role)
+
+        value_df = self.get_values_df(
+            measure_ids,
+            role=role)
+
+        df = persons_df.join(
+            value_df.set_index('person_id'), on='person_id', rsuffix='_val')
+
+        return df
+
     def get_instrument_measures(self, instrument_id):
+        """
+        Returns measures for given instrument.
+        """
         assert instrument_id in self.instruments
         measure_ids = [m.measure_id for
                        m in self.instruments[instrument_id].measures.values()]
@@ -530,17 +602,30 @@ class PhenoDB(PhenoConfig):
 
     def get_instrument_values_df(
             self, instrument_id, person_ids=None, role=None):
+        """
+        Returns a dataframe with values for all measures in given
+        instrument (see **get_values_df**).
+        """
         measure_ids = self.get_instrument_measures(instrument_id)
         res = self.get_values_df(measure_ids, person_ids, role)
         return res
 
     def get_instrument_values(
             self, instrument_id, person_ids=None, role=None):
+        """
+        Returns a dictionary with values for all measures in given
+        instrument (see **get_values**).
+        """
         measure_ids = self.get_instrument_measures(instrument_id)
         df = self.get_values_df(measure_ids, person_ids, role)
         return self._values_df_to_dict(measure_ids, df)
 
     def get_instruments(self, person_id):
+        """
+        Returns dictionary with all instruments applied to given
+        individual.
+
+        """
         query = "SELECT DISTINCT table_name FROM variable WHERE " \
             "variable_id IN " \
             "(SELECT variable_id FROM value_raw WHERE person_id='{}')" \
@@ -551,7 +636,7 @@ class PhenoDB(PhenoConfig):
                      if i[0] in self.instruments])
 
     @staticmethod
-    def split_measure_id(measure_id):
+    def _split_measure_id(measure_id):
         if '.' not in measure_id:
             return (None, measure_id)
         else:
@@ -559,8 +644,7 @@ class PhenoDB(PhenoConfig):
             return (instrument_name, measure_name)
 
     def has_measure(self, measure_id):
-        with VariableManager() as vm:
-            variable = vm.get(
-                where="variable_id='{}' and not stats isnull"
-                .format(measure_id))
-        return variable is not None
+        """
+        Checks is `measure_id` is value ID for measure in our phenotype DB.
+        """
+        return measure_id in self.measures
