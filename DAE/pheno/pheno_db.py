@@ -24,14 +24,11 @@ class Instrument(object):
 
     * `masures` -- dictionary of all measures in the instrument
 
-    * `has_probands` - returns True if any of measures in this instrument
-        is applied to probands
+    * `has_probands` -- if any of measures is applied to probands
 
-    * `has_siblings` -- returns True if any of measures in this instrument is
-        applied to siblings
+    * `has_siblings` -- if any of measures is applied to siblings
 
-    * `has_parents` -- returns True if any of measures in this instrument is
-        applied to parents
+    * `has_parents` -- if any of measures is applied to parents
     """
 
     def __init__(self, name):
@@ -132,6 +129,16 @@ class PhenoDB(PhenoConfig):
 
     To access the phenotype database create an instance of this class
     and call the method *load()*.
+
+    Common fields of this class are:
+
+    * `families` -- list of all families in the database
+
+    * `persons` -- list of all individuals in the database
+
+    * `instruments` -- dictionary of all instruments
+
+    * `measures` -- dictionary of all measures
     """
 
     def __init__(self, dae_config=None, *args, **kwargs):
@@ -614,7 +621,7 @@ class PhenoDB(PhenoConfig):
             self, instrument_id, person_ids=None, role=None):
         """
         Returns a dictionary with values for all measures in given
-        instrument (see **get_values**).
+        instrument (see :ref:`get_values`).
         """
         measure_ids = self.get_instrument_measures(instrument_id)
         df = self.get_values_df(measure_ids, person_ids, role)
