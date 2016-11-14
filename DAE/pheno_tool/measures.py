@@ -6,8 +6,6 @@ Created on Nov 16, 2015
 import numpy as np
 import pandas as pd
 
-from pheno.pheno_db import PhenoDB
-
 import statsmodels.formula.api as sm
 
 
@@ -55,24 +53,25 @@ class Measures(object):
         else:
             return float(val)
 
-    def load_instruments(self):
-        instruments = self.phdb.instruments
-        res = []
-        for name, instrument in instruments.items():
-            if instrument.name == 'pheno_common':
-                continue
-            df = self.phdb.get_measures_df(instrument.name, stats='continuous')
-            if np.any(df.has_probands):
-                res.append(name)
-        return sorted(res)
+#     def load_instruments(self):
+#         instruments = self.phdb.instruments
+#         res = []
+#         for name, instrument in instruments.items():
+#             if instrument.name == 'pheno_common':
+#                 continue
+#             df = self.phdb.get_measures_df(
+#                     instrument.name, stats='continuous')
+#             if np.any(df.has_probands):
+#                 res.append(name)
+#         return sorted(res)
 
-    def __init__(self, phdb=None):
+    def __init__(self, phdb):
         self.phdb = phdb
 
-    def load(self):
-        if self.phdb is None:
-            self.phdb = PhenoDB()
-            self.phdb.load()
+#     def load(self):
+#         if self.phdb is None:
+#             self.phdb = PhenoDB()
+#             self.phdb.load()
 
     def has_measure(self, measure_id):
         return self.phdb.has_measure(measure_id)
