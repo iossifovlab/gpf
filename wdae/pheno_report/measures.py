@@ -32,7 +32,8 @@ class Measures(Preload):
         for name, instrument in instruments.items():
             if instrument.name == 'pheno_common':
                 continue
-            df = self.phdb.get_measures_df(instrument.name, stats='continuous')
+            df = self.phdb._get_measures_df(
+                instrument.name, measure_type='continuous')
             if np.any(df.has_probands):
                 res.append(name)
         return sorted(res)
@@ -105,9 +106,9 @@ class Measures(Preload):
         if instrument == 'pheno_common':
             return res
 
-        measures = self.phdb.get_measures_df(
+        measures = self.phdb._get_measures_df(
             instrument=instrument,
-            stats='continuous'
+            measure_type='continuous'
         )
         for _index, row in measures.iterrows():
             # print("loading measure: {}".format(row['measure_id']))
@@ -136,9 +137,9 @@ class Measures(Preload):
 
     def load_list(self):
         d = []
-        measures = self.phdb.get_measures_df(
+        measures = self.phdb._get_measures_df(
             # instrument='ssc_commonly_used',
-            stats='continuous'
+            measure_type='continuous'
         )
         for _index, row in measures.iterrows():
             if 'pheno_common' in row['measure_id']:

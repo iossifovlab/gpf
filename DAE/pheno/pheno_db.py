@@ -79,7 +79,8 @@ class Measure(object):
 
     def __repr__(self):
         return "Measure({}, {}, {})".format(
-            self.measure_id, self.type, self.value_domain.encode('utf-8'))
+            self.measure_id, self.measure_type,
+            self.value_domain.encode('utf-8'))
 
     @classmethod
     def _from_df(cls, row):
