@@ -23,21 +23,27 @@ class PhenoRequest(object):
 
     Constructor arguments are:
 
-    * `effect_type_groups` -- list of effect type groups
+    `effect_type_groups` -- list of effect type groups
 
-    * `in_child` -- one of *prb* or *sib*
+    `in_child` -- one of *prb* or *sib*
 
-    * `study` -- study of group of studies to search (defaults to 'ALL SSC')
+    `study` -- study of group of studies to search
+    (defaults to 'ALL SSC')
 
-    * `transmitted` -- transmitted study to search for variants
+    `transmitted` -- transmitted study to search for variants
 
-    * `present_in_parent` -- father only,mother only,father and mother,neither
+    `present_in_parent` -- a comma separted combination of `father only`,
+    `mother only`, `father and mother`, `neither`. Specifies what kind of
+    transmitted variants to find.
 
-    * `rarity` -- one of `ultraRare`, `rare`, `interval`
+    `rarity` -- one of `ultraRare`, `rare`, `interval`. Together with
+    `ratiry_max` and `rarity_min` specifies the rarity of transmitted variants.
 
-    * `rarity_max` -- used when *rarity* is `rare` or `interval` (percents)
+    `rarity_max` -- used when *rarity* is `rare` or `interval`. Specifies the
+    the upper boundary of the rarity (percents)
 
-    * `rarity_min` -- used when *rarity* is `interval` (percents)
+    `rarity_min` -- used when *rarity* is `interval`. Specifies the lower
+    boundary of rarity (percents)
     """
 
     def __init__(
