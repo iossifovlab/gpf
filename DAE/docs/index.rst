@@ -10,12 +10,5 @@ Welcome to DAE's documentation!
    :maxdepth: 4
 
    pheno
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   enrichment_tool
 

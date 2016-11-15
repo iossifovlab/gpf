@@ -22,12 +22,12 @@ def test_simple_example():
     # create background
     background = SamochaBackground()
 
-    # create enrichment tool
-    tool = EnrichmentTool(background, GeneEventsCounter())
-
-    # load gene set
+    # load a gene set
     gt = get_gene_sets_symNS('main')
     gene_set = gt.t2G['chromatin modifiers'].keys()
+
+    # create enrichment tool
+    tool = EnrichmentTool(background, GeneEventsCounter())
 
     events, overlapped, stats = tool.calc(
         autism_studes,
