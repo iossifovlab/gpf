@@ -590,8 +590,8 @@ class PhenoDB(PhenoConfig):
 
     def get_persons_values_df(self, measure_ids, person_ids=None, role=None):
         """
-        Returns a dataframe with value for all measures in `measure_ids`
-        joined with a dataframe returned by `get_persons_df`.
+        Returns a data frame with values for all measures in `measure_ids`
+        joined with a data frame returned by `get_persons_df`.
         """
         persons_df = self.get_persons_df(role=role)
 
