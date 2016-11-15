@@ -10,5 +10,6 @@ Welcome to DAE's documentation!
    :maxdepth: 4
 
    pheno
+   pheno_tool
    enrichment_tool
 

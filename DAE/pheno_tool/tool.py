@@ -18,16 +18,40 @@ DEFAULT_TRANSMITTED = 'w1202s766e611'
 
 
 class PhenoRequest(object):
+    """
+    Represents query filters for finding family variants.
 
-    def __init__(self, effect_type_groups=['LGDs'],
-                 gene_syms=None,
-                 in_child='prb',
-                 present_in_parent='neither',
-                 rarity='ultraRare',
-                 rarity_max=1.0,
-                 rarity_min=0.0,
-                 study=DEFAULT_STUDY,
-                 transmitted=DEFAULT_TRANSMITTED):
+    Constructor arguments are:
+
+    * `effect_type_groups` -- list of effect type groups
+
+    * `in_child` -- one of *prb* or *sib*
+
+    * `study` -- study of group of studies to search (defaults to 'ALL SSC')
+
+    * `transmitted` -- transmitted study to search for variants
+
+    * `present_in_parent` -- father only,mother only,father and mother,neither
+
+    * `rarity` -- one of `ultraRare`, `rare`, `interval`
+
+    * `rarity_max` -- used when *rarity* is `rare` or `interval` (percents)
+
+    * `rarity_min` -- used when *rarity* is `interval` (percents)
+    """
+
+    def __init__(
+        self,
+        effect_type_groups=['LGDs'],
+        gene_syms=None,
+        in_child='prb',
+        present_in_parent='neither',
+        rarity='ultraRare',
+        rarity_max=1.0,
+        rarity_min=0.0,
+        study=DEFAULT_STUDY,
+        transmitted=DEFAULT_TRANSMITTED
+    ):
 
         self.study = study
         self.transmitted = transmitted
@@ -40,7 +64,7 @@ class PhenoRequest(object):
         self.rarity_max = rarity_max
         self.rarity_min = rarity_min
 
-    def dae_query_request(self):
+    def _dae_query_request(self):
         data = {
             'denovoStudies': self.study,
             'transmittedStudies': self.transmitted,
@@ -59,28 +83,39 @@ class PhenoRequest(object):
 
 
 class PhenoTool(object):
+    """
+    Tool to estimate dependency between variants and phenotype measrues.
+
+    Receives as argument an instance of PhenoDB class.
+    """
 
     def __init__(self, phdb):
         self.phdb = phdb
 
-    def normalize_measure_values_df(self, measure_id, by=[]):
-        assert isinstance(by, list)
-        assert all(map(lambda b: b in [
-            'pheno_common.age', 'pheno_common.non_verbal_iq'], by))
+    def normalize_measure_values_df(self, measure_id, normalize_by=[]):
+        """
+        Returns a data frame containing values for the `measure_id`.
 
-        measures = by[:]
+        Values are normalized if the argument `normalize_by` is a non empty
+        list of measure_ids.
+        """
+        assert isinstance(normalize_by, list)
+        assert all(map(lambda b: b in [
+            'pheno_common.age', 'pheno_common.non_verbal_iq'], normalize_by))
+
+        measures = normalize_by[:]
         measures.append(measure_id)
 
         df = self.phdb.get_persons_values_df(measures, role='prb')
         df.dropna(inplace=True)
 
-        if not by:
+        if not normalize_by:
             dn = pd.Series(
                 index=df.index, data=df[measure_id].values)
             df['normalized'] = dn
             return df
         else:
-            X = sm.add_constant(df[by])
+            X = sm.add_constant(df[normalize_by])
             y = df[measure_id]
             model = sm.OLS(y, X)
             fitted = model.fit()
@@ -145,7 +180,7 @@ class PhenoTool(object):
     def _build_families_variants(self, pheno_request):
         result = {}
         for effect_type in pheno_request.effect_type_groups:
-            data = pheno_request.dae_query_request()
+            data = pheno_request._dae_query_request()
             data['effectTypes'] = effect_type
             data['inChild'] = 'prb'
 

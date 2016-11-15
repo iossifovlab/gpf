@@ -39,7 +39,7 @@ def test_example_1():
     #             'negativeCount': 2259,
     #             'positiveMean': -0.24415336174389424,
     #             'negativeMean': 0.11582221729709602,
-    #             'positiveDeviation': 0.39541204342235059
+    #             'positiveDeviation': 0.39541204342235059,
     #             'negativeDeviation': 0.075602233503285168,
     #             'pValue': 0.058240764767345257,
     #         },
@@ -50,7 +50,7 @@ def test_example_1():
     #             'negativeCount': 338,
     #             'positiveMean': -0.79135045607117627,
     #             'negativeMean': -0.62369657963543668,
-    #             'positiveDeviation': 0.78261262906505169
+    #             'positiveDeviation': 0.78261262906505169,
     #             'negativeDeviation': 0.22346514664220996,
     #             'pValue': 0.66113586273086755,
     #         }
@@ -82,27 +82,27 @@ def test_example_2():
     )
 
     print(res)
-#     [
-#         {
-#             'effectType': 'LGDs',
-#             'gender': 'M',
-#             'positiveCount': 524,
-#             'negativeCount': 1859,
-#             'positiveMean': 83.496183206106863,
-#             'negativeMean': 86.147391070467989,
-#             'positiveDeviation': 2.1420548304730307
-#             'negativeDeviation': 1.1934784184591305,
-#             'pValue': 0.039335912517152301,
-#         },
-#         {
-#             'effectType': 'LGDs',
-#             'gender': 'F',
-#             'positiveCount': 114,
-#             'negativeCount': 260,
-#             'positiveMean': 79.982456140350877,
-#             'negativeMean': 77.115384615384613,
-#             'positiveDeviation': 4.6735815772196778
-#             'negativeDeviation': 3.1995644483398933,
-#             'pValue': 0.32934600678855175,
-#         }
-#     ]
+    #     [
+    #         {
+    #             'effectType': 'LGDs',
+    #             'gender': 'M',
+    #             'positiveCount': 524,
+    #             'negativeCount': 1859,
+    #             'positiveMean': 83.496183206106863,
+    #             'negativeMean': 86.147391070467989,
+    #             'positiveDeviation': 2.1420548304730307,
+    #             'negativeDeviation': 1.1934784184591305,
+    #             'pValue': 0.039335912517152301,
+    #         },
+    #         {
+    #             'effectType': 'LGDs',
+    #             'gender': 'F',
+    #             'positiveCount': 114,
+    #             'negativeCount': 260,
+    #             'positiveMean': 79.982456140350877,
+    #             'negativeMean': 77.115384615384613,
+    #             'positiveDeviation': 4.6735815772196778,
+    #             'negativeDeviation': 3.1995644483398933,
+    #             'pValue': 0.32934600678855175,
+    #         }
+    #     ]
