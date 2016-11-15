@@ -116,6 +116,8 @@ class Measure(object):
 
 class MeasureMeta(Measure):
     """
+    **this class should be moved out of this package.**
+
     Represents additional meta information about given `Measure`.
     """
 
@@ -186,6 +188,9 @@ class PhenoDB(PhenoConfig):
 
     def get_measures_corellations_df(
             self, measures_df, correlations_with, role):
+        """
+        **this method should be moved out of this package**
+        """
 
         def names(correlation_with, role, gender):
             suffix = '{}.{}.{}'.format(
@@ -280,7 +285,7 @@ class PhenoDB(PhenoConfig):
 
     def get_measures(self, instrument=None, measure_type=None):
         """
-        Returns ordered dictionary of measures objects.
+        Returns a dictionary of measures objects.
 
         `instrument` -- an instrument name which measures should be
         returned. If not specified all type of measures are returned.
@@ -374,7 +379,7 @@ class PhenoDB(PhenoConfig):
         `role` -- specifies persons of which role should be returned. If not
         specified returns all individuals from phenotype database.
 
-        Returns ordered dictionary of (`personId`, `Person()`) where
+        Returns a dictionary of (`personId`, `Person()`) where
         the `Person` object is the same object used into `VariantDB` families.
         """
         persons = OrderedDict()

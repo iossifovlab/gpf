@@ -1,6 +1,9 @@
 pheno package
 =============
 
+Example usage of :ref:`PhenoDB`
+-------------------------------
+
 The main class that ensures access to SSC the phenotype database is 
 :ref:`PhenoDB`. To start using the phenotype database you need to create an
 instance of this class::
@@ -13,7 +16,6 @@ instance of this class::
 To access values of given measure use::
 
     In [8]: df = phdb.get_measure_values_df('ssc_commonly_used.head_circumference')
-    
     In [9]: df.head()
     Out[9]: 
       person_id  ssc_commonly_used.head_circumference
@@ -27,7 +29,6 @@ You can get a data frame with value for multiple measures by using::
 
     In [12]: df = phdb.get_values_df(['pheno_common.age', 
         'ssc_commonly_used.head_circumference'])
-    
     In [13]: df.head()
     Out[13]: 
       person_id  pheno_common.age  ssc_commonly_used.head_circumference
@@ -41,7 +42,6 @@ You can get a data frame with value for multiple measures by using::
 To access data for individuals in the database use::
 
     In [10]: psdf = phdb.get_persons_df()
-    
     In [11]: psdf.head()
     Out[11]: 
           person_id family_id role gender
@@ -50,6 +50,27 @@ To access data for individuals in the database use::
     2      11000.p1     11000  prb      M
     3      11000.s1     11000  sib      F
     10764  11000.s2     11000  sib      F
+
+You can access individuals and measures values as a joined data frame by using
+**get_persons_values_df**::
+
+    In [17]: df = phdb.get_persons_values_df(['pheno_common.age', 'ssc_commonly_used.head_circumference'])
+    In [18]: df.head()
+    Out[18]: 
+          person_id family_id role gender  pheno_common.age  \
+    0      11000.mo     11000  mom      F             536.0   
+    1      11000.fa     11000  dad      M             550.0   
+    2      11000.p1     11000  prb      M             110.0   
+    3      11000.s1     11000  sib      F             201.0   
+    10764  11000.s2     11000  sib      F               NaN   
+    
+           ssc_commonly_used.head_circumference  
+    0                                      56.0  
+    1                                      63.5  
+    2                                      57.0  
+    3                                      58.0  
+    10764                                   NaN  
+
 
 
 .. automodule:: pheno
