@@ -28,6 +28,7 @@ class PhenoRequest(object):
                  rarity_min=0.0,
                  study=DEFAULT_STUDY,
                  transmitted=DEFAULT_TRANSMITTED):
+
         self.study = study
         self.transmitted = transmitted
         self.effect_type_groups = effect_type_groups
