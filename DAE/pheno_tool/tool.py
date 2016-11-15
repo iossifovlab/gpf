@@ -20,8 +20,12 @@ DEFAULT_TRANSMITTED = 'w1202s766e611'
 class PhenoRequest(object):
 
     def __init__(self, effect_type_groups=['LGDs'],
+                 gene_syms=None,
                  in_child='prb',
                  present_in_parent='neither',
+                 rarity='ultraRare',
+                 rarity_max=1.0,
+                 rarity_min=0.0,
                  study=DEFAULT_STUDY,
                  transmitted=DEFAULT_TRANSMITTED):
         self.study = study
@@ -30,15 +34,26 @@ class PhenoRequest(object):
         self.in_child = in_child
         self.present_in_parent = present_in_parent
         self.probands = None
+        self.gene_syms = gene_syms
+        self.rarity = rarity
+        self.rarity_max = rarity_max
+        self.rarity_min = rarity_min
 
     def dae_query_request(self):
         data = {
             'denovoStudies': self.study,
             'transmittedStudies': self.transmitted,
-            'presentInParent': self.present_in_parent,
             'inChild': self.in_child,
             'effectTypes': self.effect_type_groups,
+            'presentInParent': self.present_in_parent,
+            'rarity': self.rarity,
+            'popFrequencyMax': self.rarity_max,
+            'popFrequencyMin': self.rarity_min,
         }
+        if self.gene_syms:
+            data['geneSyms'] = self.gene_syms
+        print(data)
+
         return data
 
 
