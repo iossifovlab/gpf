@@ -284,3 +284,123 @@ class NormalizedMeasure(object):
             dn = pd.Series(index=self.df.index, data=fitted.resid)
             self.df['normalized'] = dn
             return self.df
+
+
+class MeasuresDescription(object):
+
+    def __init__(self, measures):
+        self.measures = measures
+        self.phdb = measures.phdb
+
+    def _build_measure_description(self, row):
+        def violin_plot(measure_id, small=None):
+            if small is None:
+                return '{}.violinplot.png'.format(measure_id)
+            else:
+                return '{}.violinplot_small.png'.format(measure_id)
+
+        def histogram_plot(measure_id, small=None):
+            if small is None:
+                return '{}.prb_distribution.png'.format(measure_id)
+            else:
+                return '{}.prb_distribution_small.png'.format(measure_id)
+
+        def corr_nviq_plot(measure_id, small=None):
+            if small is None:
+                return '{}.prb_regression_by_nviq.png'.format(measure_id)
+            else:
+                return '{}.prb_regression_by_nviq_small.png'.format(measure_id)
+
+        def corr_age_plot(measure_id, small=None):
+            if small is None:
+                return '{}.prb_regression_by_age.png'.format(measure_id)
+            else:
+                return '{}.prb_regression_by_age_small.png'.format(measure_id)
+
+        measure_id = row['measure_id']
+        desc = {'measure': measure_id,
+                'instrument': row['instrument_name'],
+                'measure_name': row['measure_name'],
+                'desc': None,  # v.description.decode('utf-8'),
+                'min': row['min_value'],
+                'max': row['max_value'],
+                'violin_plot': violin_plot(measure_id),
+                'violin_plot_small': violin_plot(measure_id, 'small'),
+                'hist': histogram_plot(measure_id),
+                'hist_small': histogram_plot(measure_id, 'small'),
+                'corr_nviq': corr_nviq_plot(measure_id),
+                'corr_nviq_small': corr_nviq_plot(measure_id, 'small'),
+                'corr_age': corr_age_plot(measure_id),
+                'corr_age_small': corr_age_plot(measure_id, 'small')}
+        return desc
+
+    def _build_measure_stats_description(self, desc, row):
+
+        desc['nviq_male_pval'] = format_pvalue(
+            row['pvalue.prb.M.pheno_common.non_verbal_iq'])
+        desc['nviq_male_pval_bg'] = colormap_pvalue(
+            row['pvalue.prb.M.pheno_common.non_verbal_iq'])
+        desc['nviq_female_pval'] = format_pvalue(
+            row['pvalue.prb.F.pheno_common.non_verbal_iq'])
+        desc['nviq_female_pval_bg'] = colormap_pvalue(
+            row['pvalue.prb.F.pheno_common.non_verbal_iq'])
+        desc['age_male_pval'] = format_pvalue(
+            row['pvalue.prb.M.pheno_common.age'])
+        desc['age_male_pval_bg'] = colormap_pvalue(
+            row['pvalue.prb.M.pheno_common.age'])
+        desc['age_female_pval'] = format_pvalue(
+            row['pvalue.prb.F.pheno_common.age'])
+        desc['age_female_pval_bg'] = colormap_pvalue(
+            row['pvalue.prb.F.pheno_common.age'])
+
+    def load_desc(self, instrument=None):
+
+        d = {}
+        res = []
+        if instrument == 'pheno_common':
+            return res
+
+        measures = self.phdb.get_measures_df(
+            instrument=instrument,
+            stats='continuous'
+        )
+        for _index, row in measures.iterrows():
+            # print("loading measure: {}".format(row['measure_id']))
+            if not row['has_probands']:
+                continue
+            desc = self._build_measure_description(row)
+            res.append(desc)
+            d[desc['measure']] = desc
+
+        if not res:
+            return res
+
+        corr_df = self.phdb.get_measures_corellations_df(
+            measures,
+            ['pheno_common.non_verbal_iq', 'pheno_common.age'],
+            'prb')
+
+        for _index, row in corr_df.iterrows():
+            measure_id = row['measure_id']
+            if measure_id not in d:
+                continue
+            desc = d[measure_id]
+            self._build_measure_stats_description(desc, row)
+
+        return res
+
+    def load_list(self):
+        d = []
+        measures = self.phdb.get_measures_df(
+            # instrument='ssc_commonly_used',
+            stats='continuous'
+        )
+        for _index, row in measures.iterrows():
+            if 'pheno_common' in row['measure_id']:
+                continue
+            d.append({
+                'measure': row['measure_id'],
+                'min': row['min_value'],
+                'max': row['max_value'],
+            })
+        return d

@@ -1,0 +1,45 @@
+'''
+Created on Nov 15, 2016
+
+@author: lubo
+'''
+
+
+def test_verbal_iq_interval(phdb, tool):
+    family_ids = tool.get_measure_families(
+        'pheno_common.verbal_iq', 10, 20)
+    assert 120 == len(family_ids)
+
+    df = phdb.get_measure_values_df('pheno_common.verbal_iq', role='prb')
+
+    for family_id in family_ids:
+        index = df['person_id'].str.startswith(family_id)
+        assert all(df[index]['pheno_common.verbal_iq'].values <= 20)
+        assert all(df[index]['pheno_common.verbal_iq'].values >= 10)
+
+
+def test_head_circumference_interval(phdb, tool):
+    family_ids = tool.get_measure_families(
+        'ssc_commonly_used.head_circumference', 49, 50)
+    assert 102 == len(family_ids)
+    df = phdb.get_measure_values_df(
+        'ssc_commonly_used.head_circumference', role='prb')
+    for family_id in family_ids:
+        index = df['person_id'].str.startswith(family_id)
+        assert all(
+            df[index]['ssc_commonly_used.head_circumference'].values <= 50)
+        assert all(
+            df[index]['ssc_commonly_used.head_circumference'].values >= 49)
+
+
+def test_verbal_iq_interval_with_family_counters(phdb, tool):
+    proband_ids = tool.get_measure_probands(
+        'pheno_common.verbal_iq', 10, 20)
+
+    assert 120 == len(proband_ids)
+    df = phdb.get_measure_values_df('pheno_common.verbal_iq', role='prb')
+    for proband_id in proband_ids:
+        assert all(df[df['person_id'] ==
+                      proband_id]['pheno_common.verbal_iq'].values <= 20)
+        assert all(df[df['person_id'] ==
+                      proband_id]['pheno_common.verbal_iq'].values >= 10)

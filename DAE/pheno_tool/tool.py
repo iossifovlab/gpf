@@ -9,8 +9,9 @@ import itertools
 from scipy.stats.stats import ttest_ind
 
 import numpy as np
-from pheno_tool.measures import NormalizedMeasure
+import pandas as pd
 from query_variants import dae_query_families_with_variants
+import statsmodels.api as sm
 
 
 class PhenoRequest(object):
@@ -38,11 +39,10 @@ class PhenoTool(object):
     DEFAULT_STUDY = 'ALL SSC'
     DEFAULT_TRANSMITTED = ''
 
-    def __init__(self, measures,
+    def __init__(self, phdb,
                  study=DEFAULT_STUDY,
                  transmitted=DEFAULT_TRANSMITTED):
-        self.measures = measures
-        self.phdb = self.measures.phdb
+        self.phdb = phdb
         self.study = study
         self.transmitted = transmitted
 
@@ -55,94 +55,6 @@ class PhenoTool(object):
 
             fams = dae_query_families_with_variants(data)
             result[effect_type] = Counter(fams)
-
-        return result
-
-    def build_table_header(self, pheno_request, normalized_measure):
-        columns = ['family_id', 'person_id', 'gender', ]
-        columns.extend(pheno_request.effect_type_groups)
-        columns.extend([
-            normalized_measure.measure_id,
-            'pheno_common.age',
-            'pheno_common.non_verbal_iq',
-            normalized_measure.formula
-        ])
-        return tuple(columns)
-
-    @staticmethod
-    def strip_proband_id(proband_id):
-        return proband_id.split('.')[0]
-
-    def build_table_row(self, pheno_request, families_variants,
-                        person, normalized_measure):
-        family_id = self.strip_proband_id(person.personId)
-        df = normalized_measure.df
-
-        vals = df[df.person_id == person.personId]
-        if len(vals) == 1:
-            m = vals[normalized_measure.measure_id].values[0]
-            v = vals.normalized.values[0]
-            a = vals['pheno_common.age'].values[0]
-            nviq = vals['pheno_common.non_verbal_iq'].values[0]
-        else:
-            m = np.NaN
-            v = np.NaN
-            a = np.NaN
-            nviq = np.NaN
-        row = [family_id, person.personId, person.gender]
-        for etg in pheno_request.effect_type_groups:
-            col = families_variants[etg].get(family_id, 0)
-            row.append(col)
-
-        row.extend([m, a, nviq, v])
-        return row
-
-    def build_data_table(self, pheno_request, normalized_measure):
-        families_variants = self.build_families_variants(pheno_request)
-
-        header = self.build_table_header(pheno_request, normalized_measure)
-        yield header
-
-        probands = self.phdb.get_persons(role='prb')
-
-        for person in probands.values():
-            if pheno_request.probands and \
-                    person.personId not in pheno_request.probands:
-                continue
-
-            row = self.build_table_row(
-                pheno_request, families_variants,
-                person, normalized_measure)
-            yield tuple(row)
-
-    def build_narray_dtype(self, pheno_request):
-        columns = [('fid', 'S10'),
-                   ('pid', 'S13'),
-                   ('gender', 'S10'), ]
-        for eff in pheno_request.effect_type_groups:
-            columns.append((eff, 'f'))
-
-        columns.extend(
-            [('measure', 'f'),
-             ('age', 'f'),
-             ('non_verbal_iq', 'f'),
-             ('value', 'f')])
-
-        return np.dtype(columns)
-
-    def build_data_array(self, pheno_request, normalized_measure):
-        gen = self.build_data_table(pheno_request, normalized_measure)
-        gen.next()  # skip table header
-        rows = []
-        for row in gen:
-            rows.append(tuple([v if v != 'NA' else np.NaN for v in row]))
-        dtype = self.build_narray_dtype(pheno_request)
-        result = np.array(rows, dtype=dtype)
-
-        result = result[np.logical_not(np.isnan(result['value']))]
-
-        # print(result[np.isnan(result['value'])])
-        assert not np.any(np.isnan(result['value']))
 
         return result
 
@@ -165,41 +77,30 @@ class PhenoTool(object):
         tt = ttest_ind(positive, negative)
         pv = tt[1]
         return pv
-#         if np.isnan(pv):
-#             return "NA"
-#         if pv >= 0.1:
-#             return "%.1f" % (pv)
-#         if pv >= 0.01:
-#             return "%.2f" % (pv)
-#         if pv >= 0.001:
-#             return "%.3f" % (pv)
-#         if pv >= 0.0001:
-#             return "%.4f" % (pv)
-#         return "%.5f" % (pv)
 
     @classmethod
-    def _calc_stats(cls, data, eff, gender):
+    def _calc_stats(cls, data, effect_type, gender):
         gender_index = data['gender'] == gender
         positive_index = np.logical_and(
-            data[eff] != 0, ~np.isnan(data[eff]))
+            data[effect_type] != 0, ~np.isnan(data[effect_type]))
         positive_gender_index = np.logical_and(
             positive_index, gender_index)
 
-        negative_index = data[eff] == 0
+        negative_index = data[effect_type] == 0
         negative_gender_index = np.logical_and(negative_index,
                                                gender_index)
 
         assert not np.any(np.logical_and(positive_gender_index,
                                          negative_gender_index))
 
-        positive = data[positive_gender_index]['value']
-        negative = data[negative_gender_index]['value']
+        positive = data[positive_gender_index].normalized.values
+        negative = data[negative_gender_index].normalized.values
         p_count, p_mean, p_std = PhenoTool._calc_base_stats(positive)
         n_count, n_mean, n_std = PhenoTool._calc_base_stats(negative)
         p_val = cls._calc_pv(positive, negative)
 
         return {
-            'effectType': eff,
+            'effectType': effect_type,
             'gender': gender,
             'negativeMean': n_mean,
             'negativeDeviation': n_std,
@@ -210,17 +111,71 @@ class PhenoTool(object):
             'negativeCount': n_count
         }
 
-    def calc(self, pheno_request, measure_id, normalized_by=None):
-        effect_type_groups = pheno_request.effect_type_groups
-        normalized_measure = NormalizedMeasure(measure_id, self.measures)
-        normalized_measure.normalize([normalized_by])
+    def normalize_measure_values_df(self, measure_id, by=[]):
+        assert isinstance(by, list)
+        assert all(map(lambda b: b in [
+            'pheno_common.age', 'pheno_common.non_verbal_iq'], by))
+
+        measures = by[:]
+        measures.append(measure_id)
+
+        df = self.phdb.get_persons_values_df(measures, role='prb')
+        df.dropna(inplace=True)
+
+        if not by:
+            dn = pd.Series(
+                index=df.index, data=df[measure_id].values)
+            df['normalized'] = dn
+            return df
+        else:
+            X = sm.add_constant(df[by])
+            y = df[measure_id]
+            model = sm.OLS(y, X)
+            fitted = model.fit()
+
+            dn = pd.Series(index=df.index, data=fitted.resid)
+            df['normalized'] = dn
+            return df
+
+    def calc(self, pheno_request, measure_id, normalize_by=[]):
+        df = self.normalize_measure_values_df(measure_id, normalize_by)
+        families_variants = self.build_families_variants(pheno_request)
+        for effect_type in pheno_request.effect_type_groups:
+            et = pd.Series(0, index=df.index)
+            df[effect_type] = et
+
+        for index, row in df.iterrows():
+            family_id = row['family_id']
+            for effect_type in pheno_request.effect_type_groups:
+                var_count = families_variants[effect_type].get(family_id, 0)
+                df.loc[index, effect_type] = var_count
 
         result = []
-        data = self.build_data_array(pheno_request, normalized_measure)
-
-        for eff, gender in itertools.product(
-                *[effect_type_groups, ['M', 'F']]):
-            p = self._calc_stats(data, eff, gender)
+        for effect_type, gender in itertools.product(
+                *[pheno_request.effect_type_groups, ['M', 'F']]):
+            p = self._calc_stats(df, effect_type, gender)
             result.append(p)
 
         return result
+
+    def _select_measure_df(self, measure_id, mmin, mmax):
+        df = self.phdb.get_measure_values_df(measure_id, role='prb')
+        m = df[measure_id]
+        selected = None
+        if mmin is not None and mmax is not None:
+            selected = df[np.logical_and(m >= mmin, m <= mmax)]
+        elif mmin is not None:
+            selected = df[m >= mmin]
+        elif mmax is not None:
+            selected = df[m <= mmax]
+        else:
+            selected = df
+        return selected
+
+    def get_measure_families(self, measure_id, mmin=None, mmax=None):
+        selected = self._select_measure_df(measure_id, mmin, mmax)
+        return set([pid.split('.')[0] for pid in selected['person_id'].values])
+
+    def get_measure_probands(self, measure_id, mmin=None, mmax=None):
+        selected = self._select_measure_df(measure_id, mmin, mmax)
+        return selected['person_id'].values

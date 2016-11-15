@@ -4,8 +4,8 @@ Created on Nov 8, 2016
 @author: lubo
 '''
 import pytest
-from pheno_tool.measures import Measures, NormalizedMeasure
 from pheno.pheno_db import PhenoDB
+from pheno_tool.tool import PhenoTool, PhenoRequest
 
 
 @pytest.fixture(scope='session')
@@ -16,21 +16,17 @@ def phdb(request):
 
 
 @pytest.fixture(scope='session')
-def measures(request, phdb):
-    ms = Measures(phdb)
-    ms.load()
-    return ms
+def default_request(request):
+    data = {
+        'effect_type_groups': ['LGDs'],
+        'in_child': 'prb',
+        'present_in_parent': 'neither',
+    }
+    req = PhenoRequest(**data)
+    return req
 
 
 @pytest.fixture(scope='session')
-def head_circumference(request, measures):
-    measure = NormalizedMeasure(
-        'ssc_commonly_used.head_circumference', measures)
-    return measure
-
-
-@pytest.fixture(scope='session')
-def verbal_iq(request, measures):
-    measure = NormalizedMeasure(
-        'pheno_common.verbal_iq', measures)
-    return measure
+def tool(request, phdb):
+    tool = PhenoTool(phdb)
+    return tool
