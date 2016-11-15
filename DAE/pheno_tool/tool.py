@@ -13,12 +13,19 @@ import pandas as pd
 from query_variants import dae_query_families_with_variants
 import statsmodels.api as sm
 
+DEFAULT_STUDY = 'ALL SSC'
+DEFAULT_TRANSMITTED = 'w1202s766e611'
+
 
 class PhenoRequest(object):
 
     def __init__(self, effect_type_groups=['LGDs'],
                  in_child='prb',
-                 present_in_parent='neither'):
+                 present_in_parent='neither',
+                 study=DEFAULT_STUDY,
+                 transmitted=DEFAULT_TRANSMITTED):
+        self.study = study
+        self.transmitted = transmitted
         self.effect_type_groups = effect_type_groups
         self.in_child = in_child
         self.present_in_parent = present_in_parent
@@ -26,7 +33,8 @@ class PhenoRequest(object):
 
     def dae_query_request(self):
         data = {
-            'denovoStudies': 'ALL SSC',
+            'denovoStudies': self.study,
+            'transmittedStudies': self.transmitted,
             'presentInParent': self.present_in_parent,
             'inChild': self.in_child,
             'effectTypes': self.effect_type_groups,
@@ -36,15 +44,8 @@ class PhenoRequest(object):
 
 class PhenoTool(object):
 
-    DEFAULT_STUDY = 'ALL SSC'
-    DEFAULT_TRANSMITTED = ''
-
-    def __init__(self, phdb,
-                 study=DEFAULT_STUDY,
-                 transmitted=DEFAULT_TRANSMITTED):
+    def __init__(self, phdb):
         self.phdb = phdb
-        self.study = study
-        self.transmitted = transmitted
 
     def build_families_variants(self, request):
         result = {}
@@ -157,25 +158,3 @@ class PhenoTool(object):
             result.append(p)
 
         return result
-
-    def _select_measure_df(self, measure_id, mmin, mmax):
-        df = self.phdb.get_measure_values_df(measure_id, role='prb')
-        m = df[measure_id]
-        selected = None
-        if mmin is not None and mmax is not None:
-            selected = df[np.logical_and(m >= mmin, m <= mmax)]
-        elif mmin is not None:
-            selected = df[m >= mmin]
-        elif mmax is not None:
-            selected = df[m <= mmax]
-        else:
-            selected = df
-        return selected
-
-    def get_measure_families(self, measure_id, mmin=None, mmax=None):
-        selected = self._select_measure_df(measure_id, mmin, mmax)
-        return set([pid.split('.')[0] for pid in selected['person_id'].values])
-
-    def get_measure_probands(self, measure_id, mmin=None, mmax=None):
-        selected = self._select_measure_df(measure_id, mmin, mmax)
-        return selected['person_id'].values

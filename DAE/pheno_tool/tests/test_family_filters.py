@@ -5,8 +5,8 @@ Created on Nov 15, 2016
 '''
 
 
-def test_verbal_iq_interval(phdb, tool):
-    family_ids = tool.get_measure_families(
+def test_verbal_iq_interval(phdb, family_filters):
+    family_ids = family_filters.get_measure_families(
         'pheno_common.verbal_iq', 10, 20)
     assert 120 == len(family_ids)
 
@@ -18,8 +18,8 @@ def test_verbal_iq_interval(phdb, tool):
         assert all(df[index]['pheno_common.verbal_iq'].values >= 10)
 
 
-def test_head_circumference_interval(phdb, tool):
-    family_ids = tool.get_measure_families(
+def test_head_circumference_interval(phdb, family_filters):
+    family_ids = family_filters.get_measure_families(
         'ssc_commonly_used.head_circumference', 49, 50)
     assert 102 == len(family_ids)
     df = phdb.get_measure_values_df(
@@ -32,8 +32,8 @@ def test_head_circumference_interval(phdb, tool):
             df[index]['ssc_commonly_used.head_circumference'].values >= 49)
 
 
-def test_verbal_iq_interval_with_family_counters(phdb, tool):
-    proband_ids = tool.get_measure_probands(
+def test_verbal_iq_interval_with_family_counters(phdb, family_filters):
+    proband_ids = family_filters.get_measure_probands(
         'pheno_common.verbal_iq', 10, 20)
 
     assert 120 == len(proband_ids)

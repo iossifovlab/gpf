@@ -6,6 +6,7 @@ Created on Nov 8, 2016
 import pytest
 from pheno.pheno_db import PhenoDB
 from pheno_tool.tool import PhenoTool, PhenoRequest
+from pheno_tool.family_filters import FamilyFilters
 
 
 @pytest.fixture(scope='session')
@@ -15,7 +16,7 @@ def phdb(request):
     return db
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture
 def default_request(request):
     data = {
         'effect_type_groups': ['LGDs'],
@@ -30,3 +31,8 @@ def default_request(request):
 def tool(request, phdb):
     tool = PhenoTool(phdb)
     return tool
+
+
+@pytest.fixture(scope='session')
+def family_filters(request, phdb):
+    return FamilyFilters(phdb)
