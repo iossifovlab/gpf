@@ -17,7 +17,7 @@ def test_pheno_tool_create_default(phdb, default_request):
 
 
 def test_build_families_variants(tool, default_request):
-    result = tool.build_families_variants(default_request)
+    result = tool._build_families_variants(default_request)
 
     assert result is not None
     assert 'LGDs' in result

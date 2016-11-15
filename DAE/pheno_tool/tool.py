@@ -47,17 +47,31 @@ class PhenoTool(object):
     def __init__(self, phdb):
         self.phdb = phdb
 
-    def build_families_variants(self, request):
-        result = {}
-        for effect_type in request.effect_type_groups:
-            data = request.dae_query_request()
-            data['effectTypes'] = effect_type
-            data['inChild'] = 'prb'
+    def normalize_measure_values_df(self, measure_id, by=[]):
+        assert isinstance(by, list)
+        assert all(map(lambda b: b in [
+            'pheno_common.age', 'pheno_common.non_verbal_iq'], by))
 
-            fams = dae_query_families_with_variants(data)
-            result[effect_type] = Counter(fams)
+        measures = by[:]
+        measures.append(measure_id)
 
-        return result
+        df = self.phdb.get_persons_values_df(measures, role='prb')
+        df.dropna(inplace=True)
+
+        if not by:
+            dn = pd.Series(
+                index=df.index, data=df[measure_id].values)
+            df['normalized'] = dn
+            return df
+        else:
+            X = sm.add_constant(df[by])
+            y = df[measure_id]
+            model = sm.OLS(y, X)
+            fitted = model.fit()
+
+            dn = pd.Series(index=df.index, data=fitted.resid)
+            df['normalized'] = dn
+            return df
 
     @staticmethod
     def _calc_base_stats(arr):
@@ -112,35 +126,21 @@ class PhenoTool(object):
             'negativeCount': n_count
         }
 
-    def normalize_measure_values_df(self, measure_id, by=[]):
-        assert isinstance(by, list)
-        assert all(map(lambda b: b in [
-            'pheno_common.age', 'pheno_common.non_verbal_iq'], by))
+    def _build_families_variants(self, pheno_request):
+        result = {}
+        for effect_type in pheno_request.effect_type_groups:
+            data = pheno_request.dae_query_request()
+            data['effectTypes'] = effect_type
+            data['inChild'] = 'prb'
 
-        measures = by[:]
-        measures.append(measure_id)
+            fams = dae_query_families_with_variants(data)
+            result[effect_type] = Counter(fams)
 
-        df = self.phdb.get_persons_values_df(measures, role='prb')
-        df.dropna(inplace=True)
-
-        if not by:
-            dn = pd.Series(
-                index=df.index, data=df[measure_id].values)
-            df['normalized'] = dn
-            return df
-        else:
-            X = sm.add_constant(df[by])
-            y = df[measure_id]
-            model = sm.OLS(y, X)
-            fitted = model.fit()
-
-            dn = pd.Series(index=df.index, data=fitted.resid)
-            df['normalized'] = dn
-            return df
+        return result
 
     def calc(self, pheno_request, measure_id, normalize_by=[]):
         df = self.normalize_measure_values_df(measure_id, normalize_by)
-        families_variants = self.build_families_variants(pheno_request)
+        families_variants = self._build_families_variants(pheno_request)
         for effect_type in pheno_request.effect_type_groups:
             et = pd.Series(0, index=df.index)
             df[effect_type] = et
