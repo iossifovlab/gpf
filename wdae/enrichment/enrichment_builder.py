@@ -117,15 +117,15 @@ class CellResult(EnrichmentConfig):
         self.gender = self._interpolate_gender(gender)
         self.rec = rec
 
-    def __call__(self, events, overlapped_events, expected, pvalue):
-        self.events = events
-        self.overlapped_events = overlapped_events
+    def __call__(self, result):
+        self.events = result.events
+        self.overlapped_events = result.overlapped
 
         self.count = len(self.events)
         self.overlapped_count = len(self.overlapped_events)
 
-        self.expected = expected
-        self.pvalue = pvalue
+        self.expected = result.expected
+        self.pvalue = result.pvalue
         return self
 
     @property
@@ -163,33 +163,21 @@ class RowResult(EnrichmentConfig):
     def __init__(self, phenotype, effect_type):
         super(RowResult, self).__init__(phenotype, effect_type)
 
-    def __call__(self, events, overlapped_events, enrichment_stats):
+    def __call__(self, enrichment_results):
         self.results = {}
 
         self.results['all'] = CellResult(
             self.phenotype, self.effect_type)(
-            events.all_events,
-            overlapped_events.all_events,
-            enrichment_stats.all_expected,
-            enrichment_stats.all_pvalue)
+                enrichment_results['all'])
         self.results['rec'] = CellResult(
             self.phenotype, self.effect_type, rec=True)(
-            events.rec_events,
-            overlapped_events.rec_events,
-            enrichment_stats.rec_expected,
-            enrichment_stats.rec_pvalue)
+                enrichment_results['rec'])
         self.results['male'] = CellResult(
             self.phenotype, self.effect_type, gender='M')(
-            events.male_events,
-            overlapped_events.male_events,
-            enrichment_stats.male_expected,
-            enrichment_stats.male_pvalue)
+                enrichment_results['male'])
         self.results['female'] = CellResult(
             self.phenotype, self.effect_type, gender='F')(
-            events.female_events,
-            overlapped_events.female_events,
-            enrichment_stats.female_expected,
-            enrichment_stats.female_pvalue)
+                enrichment_results['female'])
         return self
 
     def __getitem__(self, test):
@@ -264,16 +252,14 @@ class EnrichmentBuilder(object):
     def build_phenotype(self, phenotype):
         results = []
         for effect_type in EFFECT_TYPES:
-            events, overlapped_events, enrichment_stats = \
-                self.tool.calc(
+            enrichment_results = self.tool.calc(
                     self.denovo_studies.get_studies(phenotype),
                     self.in_child(phenotype),
                     effect_type,
                     self.gene_set,
                     self.children_stats[phenotype])
 
-            row = RowResult(phenotype, effect_type)(
-                events, overlapped_events, enrichment_stats)
+            row = RowResult(phenotype, effect_type)(enrichment_results)
             results.append(row)
 
         res = PhenotypeResult(phenotype)(results)
