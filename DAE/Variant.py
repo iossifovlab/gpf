@@ -75,6 +75,14 @@ def isVariant(bs, c, location=None, gender=None):
     return False
 
 
+def variantInMembers(v):
+    result = []
+    for index, member in enumerate(v.memberInOrder):
+        if isVariant(v.bestSt, index, v.location, member.gender):
+            result.append(member.personId)
+    return result
+
+
 def splitGeneEffect(effStr, geneEffect=[]):
     for ge in effStr.split("|"):
         cs = ge.split(":")

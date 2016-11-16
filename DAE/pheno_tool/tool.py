@@ -53,8 +53,8 @@ class PhenoRequest(object):
         in_child='prb',
         present_in_parent='neither',
         rarity='ultraRare',
-        rarity_max=1.0,
-        rarity_min=0.0,
+        rarity_max=None,
+        rarity_min=None,
         study=DEFAULT_STUDY,
         transmitted=DEFAULT_TRANSMITTED
     ):
@@ -83,7 +83,6 @@ class PhenoRequest(object):
         }
         if self.gene_syms:
             data['geneSyms'] = self.gene_syms
-        print(data)
 
         return data
 
