@@ -545,7 +545,6 @@ def prepare_transmitted_filters(data,
                'TMM_ALL': prepare_TMM_ALL(data),
                'limit': prepare_limit(data),
                }
-    print(filters)
     return dict(filters, **denovo_filters)
 
 
@@ -644,7 +643,6 @@ def dae_query_variants(data):
     assert "geneWeigth" not in data
 
     LOGGER.info("dae_query_variants: %s", data)
-    print(data)
 
     prepare_denovo_phenotype(data)
     prepare_denovo_study_type(data)

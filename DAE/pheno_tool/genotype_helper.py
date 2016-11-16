@@ -5,6 +5,8 @@ Created on Nov 16, 2016
 '''
 from query_variants import dae_query_variants
 import itertools
+from Variant import variantInMembers
+from collections import Counter
 
 
 class GenotypeHelper(object):
@@ -24,3 +26,18 @@ class GenotypeHelper(object):
 
         vs = dae_query_variants(request._dae_query_request())
         return itertools.chain(*vs)
+
+    def get_persons_variants(self, request):
+        vs = self.get_variants(request)
+        seen = set([])
+        result = Counter()
+        for v in vs:
+            persons = variantInMembers(v)
+            for p in persons:
+                vid = "{}:{}:{}".format(p, v.location, v.variant)
+                if vid not in seen:
+                    seen.add(vid)
+                    result[p] += 1
+                else:
+                    print("skipping {}".format(vid))
+        return result
