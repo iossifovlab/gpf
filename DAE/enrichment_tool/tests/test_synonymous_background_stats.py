@@ -52,25 +52,26 @@ def test_stats_autism_lgd(background, autism_studies,
         autism_studies, 'prb', 'LGDs')
 
     children_stats = children_stats_counter(autism_studies, 'prb')
-    _, stats = background.calc_stats(
+    enrichment_results = background.calc_stats(
         'LGDs',
         events,
         gene_set,
         children_stats)
 
-    assert stats is not None
+    assert enrichment_results is not None
+    er = enrichment_results
 
-    assert 17.71 == pytest.approx(stats.all_expected, abs=1E-2)
-    assert 8.3E-05 == pytest.approx(stats.all_pvalue, abs=1E-4)
+    assert 17.71 == pytest.approx(er['all'].expected, abs=1E-2)
+    assert 8.3E-05 == pytest.approx(er['all'].pvalue, abs=1E-4)
 
-    assert 1.27 == pytest.approx(stats.rec_expected, abs=1E-2)
-    assert 3.5E-06 == pytest.approx(stats.rec_pvalue, abs=1E-4)
+    assert 1.27 == pytest.approx(er['rec'].expected, abs=1E-2)
+    assert 3.5E-06 == pytest.approx(er['rec'].pvalue, abs=1E-4)
 
-    assert 14.86 == pytest.approx(stats.male_expected, abs=1E-2)
-    assert 0.0021 == pytest.approx(stats.male_pvalue, abs=1E-4)
+    assert 14.86 == pytest.approx(er['male'].expected, abs=1E-2)
+    assert 0.0021 == pytest.approx(er['male'].pvalue, abs=1E-4)
 
-    assert 3.47 == pytest.approx(stats.female_expected, abs=1E-2)
-    assert 4.6E-05 == pytest.approx(stats.female_pvalue, abs=1E-4)
+    assert 3.47 == pytest.approx(er['female'].expected, abs=1E-2)
+    assert 4.6E-05 == pytest.approx(er['female'].pvalue, abs=1E-4)
 
 
 def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
@@ -80,25 +81,26 @@ def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
                             'prb', 'LGDs')
     children_stats = children_stats_counter(schizophrenia_studies, 'prb')
 
-    _, stats = background.calc_stats(
+    enrichment_results = background.calc_stats(
         'LGDs',
         events,
         gene_set,
         children_stats)
 
-    assert stats is not None
+    assert enrichment_results is not None
+    er = enrichment_results
 
-    assert 3.02 == pytest.approx(stats.all_expected, abs=1E-2)
-    assert 0.128851 == pytest.approx(stats.all_pvalue, abs=1E-4)
+    assert 3.02 == pytest.approx(er['all'].expected, abs=1E-2)
+    assert 0.128851 == pytest.approx(er['all'].pvalue, abs=1E-4)
 
-    assert 0.06 == pytest.approx(stats.rec_expected, abs=1E-2)
-    assert 1 == pytest.approx(stats.rec_pvalue, abs=1E-4)
+    assert 0.06 == pytest.approx(er['rec'].expected, abs=1E-2)
+    assert 1 == pytest.approx(er['rec'].pvalue, abs=1E-4)
 
-    assert 1.56 == pytest.approx(stats.male_expected, abs=1E-2)
-    assert 0.0698 == pytest.approx(stats.male_pvalue, abs=1E-4)
+    assert 1.56 == pytest.approx(er['male'].expected, abs=1E-2)
+    assert 0.0698 == pytest.approx(er['male'].pvalue, abs=1E-4)
 
-    assert 1.46 == pytest.approx(stats.female_expected, abs=1E-2)
-    assert 0.6579 == pytest.approx(stats.female_pvalue, abs=1E-4)
+    assert 1.46 == pytest.approx(er['female'].expected, abs=1E-2)
+    assert 0.6579 == pytest.approx(er['female'].pvalue, abs=1E-4)
 
 
 def test_stats_unaffected_with_missense(background, unaffected_studies,
@@ -108,22 +110,23 @@ def test_stats_unaffected_with_missense(background, unaffected_studies,
         unaffected_studies, 'sib', 'missense')
     children_stats = children_stats_counter(unaffected_studies, 'sib')
 
-    _, stats = background.calc_stats(
+    enrichment_results = background.calc_stats(
         'missense',
         events,
         gene_set,
         children_stats)
 
-    assert stats is not None
+    assert enrichment_results is not None
+    er = enrichment_results
 
-    assert 43.924 == pytest.approx(stats.all_expected, abs=1E-2)
-    assert 0.81817466 == pytest.approx(stats.all_pvalue, abs=1E-4)
+    assert 43.924 == pytest.approx(er['all'].expected, abs=1E-2)
+    assert 0.81817466 == pytest.approx(er['all'].pvalue, abs=1E-4)
 
-    assert 3.665747 == pytest.approx(stats.rec_expected, abs=1E-2)
-    assert 0.7875 == pytest.approx(stats.rec_pvalue, abs=1E-4)
+    assert 3.665747 == pytest.approx(er['rec'].expected, abs=1E-2)
+    assert 0.7875 == pytest.approx(er['rec'].pvalue, abs=1E-4)
 
-    assert 20.69687 == pytest.approx(stats.male_expected, abs=1E-2)
-    assert 0.8228654 == pytest.approx(stats.male_pvalue, abs=1E-4)
+    assert 20.69687 == pytest.approx(er['male'].expected, abs=1E-2)
+    assert 0.8228654 == pytest.approx(er['male'].pvalue, abs=1E-4)
 
-    assert 25.368269 == pytest.approx(stats.female_expected, abs=1E-2)
-    assert 0.47852 == pytest.approx(stats.female_pvalue, abs=1E-4)
+    assert 25.368269 == pytest.approx(er['female'].expected, abs=1E-2)
+    assert 0.47852 == pytest.approx(er['female'].pvalue, abs=1E-4)

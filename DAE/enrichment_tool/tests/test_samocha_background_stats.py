@@ -18,27 +18,27 @@ def background(request):
 def test_stats_autism_lgd(background, autism_studies,
                           gene_set):
     counter = GeneEventsCounter()
-    events = counter.events(
+    results = counter.events(
         autism_studies, 'prb', 'LGDs')
 
     children_stats = children_stats_counter(autism_studies, 'prb')
 
-    _, stats = background.calc_stats(
+    enrichment_results = background.calc_stats(
         'LGDs',
-        events,
+        results,
         gene_set,
         children_stats)
 
-    assert stats is not None
+    assert enrichment_results is not None
 
-    assert 12.5358 == pytest.approx(stats.all_expected, abs=1E-4)
-    assert 0.0 == pytest.approx(stats.all_pvalue, abs=1E-4)
+    assert 12.5358 == pytest.approx(results['all'].expected, abs=1E-4)
+    assert 0.0 == pytest.approx(results['all'].pvalue, abs=1E-4)
 
-    assert 0.89924 == pytest.approx(stats.rec_expected, abs=1E-4)
-    assert 0.0 == pytest.approx(stats.rec_pvalue, abs=1E-4)
+    assert 0.89924 == pytest.approx(results['rec'].expected, abs=1E-4)
+    assert 0.0 == pytest.approx(results['rec'].pvalue, abs=1E-4)
 
-    assert 10.65059 == pytest.approx(stats.male_expected, abs=1E-4)
-    assert 0.0 == pytest.approx(stats.male_pvalue, abs=1E-4)
+    assert 10.65059 == pytest.approx(results['male'].expected, abs=1E-4)
+    assert 0.0 == pytest.approx(results['male'].pvalue, abs=1E-4)
 
-    assert 1.8853 == pytest.approx(stats.female_expected, abs=1E-4)
-    assert 0.0 == pytest.approx(stats.female_pvalue, abs=1E-4)
+    assert 1.8853 == pytest.approx(results['female'].expected, abs=1E-4)
+    assert 0.0 == pytest.approx(results['female'].pvalue, abs=1E-4)

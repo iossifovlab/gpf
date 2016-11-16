@@ -6,7 +6,7 @@ Created on Nov 8, 2016
 import pytest
 
 from enrichment_tool.event_counters import CounterBase, EventsCounter,\
-    GeneEventsCounter
+    GeneEventsCounter, overlap_enrichment_result_dict
 
 
 def test_variants_unaffected_with_effect_type_lgd(unaffected_studies):
@@ -92,47 +92,47 @@ def test_events_not_implemented(autism_studies):
 def test_events_autism_with_effect_type_lgd(autism_studies):
     counter = EventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         autism_studies,
         'prb',
         'LGDs')
-    assert events is not None
+    assert result is not None
 
-    assert 606 == len(events.all_events)
-    assert 39 == len(events.rec_events)
-    assert 492 == len(events.male_events)
-    assert 114 == len(events.female_events)
+    assert 606 == len(result['all'].events)
+    assert 39 == len(result['rec'].events)
+    assert 492 == len(result['male'].events)
+    assert 114 == len(result['female'].events)
 
 
 def test_events_unaffected_with_effect_type_lgd(unaffected_studies):
     counter = EventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         unaffected_studies,
         'sib',
         'LGDs')
-    assert events is not None
+    assert result is not None
 
-    assert 224 == len(events.all_events)
-    assert 5 == len(events.rec_events)
-    assert 113 == len(events.male_events)
-    assert 111 == len(events.female_events)
+    assert 224 == len(result['all'].events)
+    assert 5 == len(result['rec'].events)
+    assert 113 == len(result['male'].events)
+    assert 111 == len(result['female'].events)
 
 
 def test_events_schizophrenia_with_effect_type_lgd(schizophrenia_studies):
     counter = EventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         schizophrenia_studies,
         'prb',
         'LGDs')
 
-    assert events is not None
+    assert result is not None
 
-    assert 95 == len(events.all_events)
-    assert 2 == len(events.rec_events)
-    assert 49 == len(events.male_events)
-    assert 46 == len(events.female_events)
+    assert 95 == len(result['all'].events)
+    assert 2 == len(result['rec'].events)
+    assert 49 == len(result['male'].events)
+    assert 46 == len(result['female'].events)
 
 
 def test_overlapped_events_autism_with_effect_type_lgd(
@@ -140,151 +140,147 @@ def test_overlapped_events_autism_with_effect_type_lgd(
 
     counter = EventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         autism_studies,
         'prb',
         'LGDs')
-    overlapped_events = events.overlap(gene_set)
 
+    overlapped_events = overlap_enrichment_result_dict(result, gene_set)
     assert overlapped_events is not None
 
-    assert 56 == len(overlapped_events.all_events)
-    assert 9 == len(overlapped_events.rec_events)
-    assert 40 == len(overlapped_events.male_events)
-    assert 16 == len(overlapped_events.female_events)
+    assert 56 == len(result['all'].overlapped)
+    assert 9 == len(result['rec'].overlapped)
+    assert 40 == len(result['male'].overlapped)
+    assert 16 == len(result['female'].overlapped)
 
 
 def test_overlapped_events_unaffected_with_effect_type_synonymous(
         unaffected_studies, gene_set):
     counter = EventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         unaffected_studies,
         'sib',
         'synonymous')
-    overlapped_events = events.overlap(gene_set)
 
+    overlapped_events = overlap_enrichment_result_dict(result, gene_set)
     assert overlapped_events is not None
 
-    assert 18 == len(overlapped_events.all_events)
-    assert 1 == len(overlapped_events.rec_events)
-    assert 14 == len(overlapped_events.male_events)
-    assert 4 == len(overlapped_events.female_events)
+    assert 18 == len(result['all'].overlapped)
+    assert 1 == len(result['rec'].overlapped)
+    assert 14 == len(result['male'].overlapped)
+    assert 4 == len(result['female'].overlapped)
 
 
 def test_overlapped_events_schizophrenia_with_effect_type_missense(
         schizophrenia_studies, gene_set):
     counter = EventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         schizophrenia_studies,
         'prb',
         'missense')
-    overlapped_events = events.overlap(gene_set)
 
+    overlapped_events = overlap_enrichment_result_dict(result, gene_set)
     assert overlapped_events is not None
 
-    assert 23 == len(overlapped_events.all_events)
-    assert 2 == len(overlapped_events.rec_events)
-    assert 10 == len(overlapped_events.male_events)
-    assert 13 == len(overlapped_events.female_events)
+    assert 23 == len(result['all'].overlapped)
+    assert 2 == len(result['rec'].overlapped)
+    assert 10 == len(result['male'].overlapped)
+    assert 13 == len(result['female'].overlapped)
 
 
 def test_gene_events_autism_with_effect_type_lgd(autism_studies):
     counter = GeneEventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         autism_studies,
         'prb',
         'LGDs')
 
-    assert events is not None
-
-    assert 546 == len(events.all_events)
-    assert 39 == len(events.rec_events)
-    assert 458 == len(events.male_events)
-    assert 107 == len(events.female_events)
+    assert 546 == len(result['all'].events)
+    assert 39 == len(result['rec'].events)
+    assert 458 == len(result['male'].events)
+    assert 107 == len(result['female'].events)
 
 
 def test_gene_events_unaffected_with_effect_type_lgd(unaffected_studies):
     counter = GeneEventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         unaffected_studies,
         'sib',
         'LGDs')
-    assert events is not None
 
-    assert 220 == len(events.all_events)
-    assert 5 == len(events.rec_events)
-    assert 113 == len(events.male_events)
-    assert 111 == len(events.female_events)
+    assert 220 == len(result['all'].events)
+    assert 5 == len(result['rec'].events)
+    assert 113 == len(result['male'].events)
+    assert 111 == len(result['female'].events)
 
 
 def test_gene_events_schizophrenia_with_effect_type_lgd(schizophrenia_studies):
     counter = GeneEventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         schizophrenia_studies,
         'prb',
         'LGDs')
-    assert events is not None
 
-    assert 93 == len(events.all_events)
-    assert 2 == len(events.rec_events)
-    assert 48 == len(events.male_events)
-    assert 45 == len(events.female_events)
+    assert 93 == len(result['all'].events)
+    assert 2 == len(result['rec'].events)
+    assert 48 == len(result['male'].events)
+    assert 45 == len(result['female'].events)
 
 
 def test_overlapped_gene_events_autism_with_effect_type_lgd(
         autism_studies, gene_set):
     counter = GeneEventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         autism_studies,
         'prb',
         'LGDs')
-    overlapped_events = events.overlap(gene_set)
 
+    overlapped_events = overlap_enrichment_result_dict(result, gene_set)
     assert overlapped_events is not None
 
-    assert 36 == len(overlapped_events.all_events)
-    assert 9 == len(overlapped_events.rec_events)
-    assert 28 == len(overlapped_events.male_events)
-    assert 13 == len(overlapped_events.female_events)
+    assert 36 == len(result['all'].overlapped)
+    assert 9 == len(result['rec'].overlapped)
+    assert 28 == len(result['male'].overlapped)
+    assert 13 == len(result['female'].overlapped)
 
 
 def test_overlapped_gene_events_unaffected_with_effect_type_synonymous(
         unaffected_studies, gene_set):
     counter = GeneEventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         unaffected_studies,
         'sib',
         'synonymous')
-    overlapped_events = events.overlap(gene_set)
 
+    overlapped_events = overlap_enrichment_result_dict(result, gene_set)
     assert overlapped_events is not None
 
-    assert 17 == len(overlapped_events.all_events)
-    assert 1 == len(overlapped_events.rec_events)
-    assert 13 == len(overlapped_events.male_events)
-    assert 4 == len(overlapped_events.female_events)
+    assert 17 == len(result['all'].overlapped)
+    assert 1 == len(result['rec'].overlapped)
+    assert 13 == len(result['male'].overlapped)
+    assert 4 == len(result['female'].overlapped)
 
 
 def test_overlapped_gene_events_schizophrenia_with_effect_type_missense(
         schizophrenia_studies, gene_set):
     counter = GeneEventsCounter()
 
-    events = counter.events(
+    result = counter.events(
         schizophrenia_studies,
         'prb',
         'missense')
-    overlapped_events = events.overlap(gene_set)
 
+    overlapped_events = overlap_enrichment_result_dict(result, gene_set)
     assert overlapped_events is not None
 
-    assert 21 == len(overlapped_events.all_events)
-    assert 2 == len(overlapped_events.rec_events)
-    assert 9 == len(overlapped_events.male_events)
-    assert 12 == len(overlapped_events.female_events)
+    assert 21 == len(result['all'].overlapped)
+    assert 2 == len(result['rec'].overlapped)
+    assert 9 == len(result['male'].overlapped)
+    assert 12 == len(result['female'].overlapped)

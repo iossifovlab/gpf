@@ -17,8 +17,8 @@ class EnrichmentTool(object):
         if children_stats is None:
             children_stats = children_stats_counter(denovo_studies, in_child)
 
-        events = self.event_counter.events(
+        enrichment_results = self.event_counter.events(
             denovo_studies, in_child, effect_types)
-        overlapped_events, stats = self.background.calc_stats(
-            effect_types, events, gene_syms, children_stats)
-        return events, overlapped_events, stats
+        self.background.calc_stats(
+            effect_types, enrichment_results, gene_syms, children_stats)
+        return enrichment_results

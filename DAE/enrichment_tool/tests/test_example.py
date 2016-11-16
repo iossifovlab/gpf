@@ -29,20 +29,22 @@ def test_simple_example():
     # create enrichment tool
     tool = EnrichmentTool(background, GeneEventsCounter())
 
-    events, overlapped, stats = tool.calc(
+    enrichment_results = tool.calc(
         autism_studes,
         'prb',
         'LGDs',
         gene_set)
-    print(events)
-    print(overlapped)
-    print(stats)
+    print(enrichment_results['all'])
+    print(enrichment_results['rec'])
+    print(enrichment_results['male'])
+    print(enrichment_results['female'])
 
-    events, overlapped, stats = tool.calc(
+    enrichment_results = tool.calc(
         denovo_studies,
         'sib',
         'LGDs',
         gene_set)
-    print(events)
-    print(overlapped)
-    print(stats)
+    print(enrichment_results['all'])
+    print(enrichment_results['rec'])
+    print(enrichment_results['male'])
+    print(enrichment_results['female'])
