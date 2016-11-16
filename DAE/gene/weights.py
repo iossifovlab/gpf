@@ -45,7 +45,7 @@ class Weights(WeightsConfig):
         assert self.name in df.columns
 
         self.df = df[['gene', self.name]].copy()
-       	self.df = self.df.dropna()
+        self.df.dropna(inplace=True)
 
         return self.df
 
