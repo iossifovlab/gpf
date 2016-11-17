@@ -29,10 +29,9 @@ def test_build_families_variants(phdb, default_request, all_ssc_studies):
 
 def test_tool_calc(phdb, default_request, all_ssc_studies):
     tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
-    persons_variants = tool.get_persons_variants(default_request)
 
     r = tool.calc(
-        persons_variants,
+        default_request,
         'ssc_commonly_used.head_circumference',
         normalize_by=['pheno_common.age']
     )
@@ -75,10 +74,9 @@ def test_tool_present_in_parent_ultra_rare(phdb, gene_set, all_ssc_studies):
     )
     tool = PhenoTool(
         phdb, all_ssc_studies, roles=['prb', 'mom', 'dad'])
-    persons_variants = tool.get_persons_variants(pheno_request)
 
     r = tool.calc(
-        persons_variants,
+        pheno_request,
         'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
     )
     assert r is not None

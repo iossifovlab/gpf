@@ -27,10 +27,8 @@ def test_example_1():
         gene_syms=gene_syms,
     )
 
-    families_variants = tool.get_persons_variants(pheno_request)
-
     res = tool.calc(
-        families_variants,
+        pheno_request,
         'ssc_commonly_used.head_circumference',
         normalize_by=['pheno_common.age'])
 
@@ -82,10 +80,8 @@ def test_example_2():
         rarity_max=10.0,
     )
 
-    families_variants = tool.get_persons_variants(pheno_request)
-
     res = tool.calc(
-        families_variants,
+        pheno_request,
         'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
     )
 

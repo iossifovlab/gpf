@@ -47,7 +47,6 @@ class PhenoRequest(object):
     ):
 
         self.effect_types = effect_types
-        self.probands = None
         self.gene_syms = gene_syms
         self.rarity = rarity
         self.rarity_max = rarity_max
@@ -227,8 +226,9 @@ class PhenoTool(object):
             'negativeCount': n_count
         }
 
-    def calc(self, persons_variants, measure_id, normalize_by=[]):
+    def calc(self, pheno_request, measure_id, normalize_by=[]):
         df = self.normalize_measure_values_df(measure_id, normalize_by)
+        persons_variants = self.get_persons_variants(pheno_request)
 
         variants = pd.Series(0, index=df.index)
         df['variants'] = variants
