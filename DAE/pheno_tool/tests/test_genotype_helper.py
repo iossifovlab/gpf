@@ -10,13 +10,11 @@ from pprint import pprint
 def test_get_variants_denovo(
         all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies)
+    helper = GenotypeHelper(all_ssc_studies, roles=['prb'])
     assert 1 == len(helper.transmitted_studies)
 
     pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        in_child='prb',
-        present_in_parent='neither',
+        effect_types='LGDs',
         gene_syms=autism_candidates_genes,
     )
 
@@ -27,46 +25,40 @@ def test_get_variants_denovo(
 def test_get_variants_father_ultra_rare(
         all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies)
+    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
 
     pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        in_child='prb',
-        present_in_parent='neither,father only',
+        effect_types=['LGDs'],
         gene_syms=autism_candidates_genes,
     )
 
     variants = [v for v in helper.get_variants(pheno_request)]
-    assert 176 == len(variants)
+    assert 185 == len(variants)
 
 
 def test_get_variants_father_rarity(
         all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies)
+    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
 
     pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        in_child='prb',
-        present_in_parent='neither,father only',
+        effect_types=['LGDs'],
         gene_syms=autism_candidates_genes,
         rarity='rare',
         rarity_max=1.0,
     )
 
     variants = [v for v in helper.get_variants(pheno_request)]
-    assert 196 == len(variants)
+    assert 250 == len(variants)
 
 
 def test_get_variants_father_interval(
         all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies)
+    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
 
     pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        in_child='prb',
-        present_in_parent='neither,father only',
+        effect_types=['LGDs'],
         gene_syms=autism_candidates_genes,
         rarity='interval',
         rarity_max=50.0,
@@ -74,18 +66,13 @@ def test_get_variants_father_interval(
     )
 
     variants = [v for v in helper.get_variants(pheno_request)]
-    assert 366 == len(variants)
+    assert 593 == len(variants)
 
 
 def test_get_single_gene_all(all_ssc_studies):
-    helper = GenotypeHelper(all_ssc_studies)
+    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
     pheno_request = PhenoRequest(
-        in_child=None,
-        present_in_parent=[
-            'neither',
-            'father only',
-            'mother only',
-            'mother and father'],
+        effect_types=['LGDs'],
         gene_syms=['POGZ'],
         rarity='all',
     )
@@ -95,14 +82,9 @@ def test_get_single_gene_all(all_ssc_studies):
 
 
 def test_get_single_gene_persons_variants_all(all_ssc_studies):
-    helper = GenotypeHelper(all_ssc_studies)
+    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'mom', 'dad'])
     pheno_request = PhenoRequest(
-        in_child=None,
-        present_in_parent=[
-            'neither',
-            'father only',
-            'mother only',
-            'mother and father'],
+        effect_types=['LGDs'],
         gene_syms=['POGZ'],
         rarity='all',
     )
@@ -115,13 +97,13 @@ def test_get_single_gene_persons_variants_all(all_ssc_studies):
 def test_get_persons_variants_denovo(
         all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies)
+    helper = GenotypeHelper(all_ssc_studies, roles=['prb'])
     assert 1 == len(helper.transmitted_studies)
 
     pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        in_child='prb',
-        present_in_parent='neither',
+        effect_types=['LGDs'],
+        #         in_child='prb',
+        #         present_in_parent='neither',
         gene_syms=autism_candidates_genes,
     )
 
@@ -132,21 +114,23 @@ def test_get_persons_variants_denovo(
 def test_get_person_variants_father_all(
         all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies)
+    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
 
     pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        in_child='prb',
-        present_in_parent='neither,father only',
+        effect_types='Frame-shift,Nonsense,Splice-site',
         gene_syms=autism_candidates_genes,
-        rarity='all',
+        rarity='rare',
+        rarity_max=10.0,
     )
 
+    variants = [v for v in helper.get_variants(pheno_request)]
+    assert 683 == len(variants)
+
     res = helper.get_persons_variants(pheno_request)
-    assert 704 == len(res)
-    assert 3 == max(res.values())
+    assert 1081 == len(res)
+    assert 4 == max(res.values())
     ps3 = [p for (p, c) in res.items() if c == 3]
-    assert 6 == len(ps3)
+    assert 12 == len(ps3)
 
     assert '13528.p1' in ps3
     assert '13528.fa' in ps3

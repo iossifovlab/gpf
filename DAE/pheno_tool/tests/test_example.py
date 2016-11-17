@@ -24,13 +24,11 @@ def test_example_1():
     tool = PhenoTool(phdb)
 
     pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        in_child='prb',
-        present_in_parent='neither',
+        effect_types=['LGDs'],
         gene_syms=gene_syms,
     )
 
-    genotype_helper = GenotypeHelper(studies)
+    genotype_helper = GenotypeHelper(studies, roles=['prb'])
     families_variants = genotype_helper.get_families_variants(pheno_request)
 
     res = tool.calc(
@@ -80,15 +78,13 @@ def test_example_2():
     tool = PhenoTool(phdb)
 
     pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        in_child='prb',
+        effect_types=['LGDs'],
         gene_syms=gene_syms,
-        present_in_parent='mother only,father only,mother and father,neither',
         rarity='rare',
         rarity_max=10.0,
     )
 
-    genotype_helper = GenotypeHelper(studies)
+    genotype_helper = GenotypeHelper(studies, roles=['prb', 'mom', 'dad'])
     families_variants = genotype_helper.get_families_variants(pheno_request)
 
     res = tool.calc(

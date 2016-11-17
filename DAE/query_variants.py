@@ -618,9 +618,13 @@ def dae_query_families_with_variants(data):
     prepare_denovo_phenotype(data)
     prepare_denovo_study_type(data)
     prepare_gender_filter(data)
+    print(data)
 
     dstudies = prepare_denovo_studies(data)
     tstudies = prepare_transmitted_studies(data)
+    print(dstudies)
+    print(tstudies)
+
     if dstudies is None and tstudies is None:
         return []
 
@@ -650,6 +654,7 @@ def dae_query_variants(data):
 
     dstudies = prepare_denovo_studies(data)
     tstudies = prepare_transmitted_studies(data)
+
     if dstudies is None and tstudies is None:
         return []
 

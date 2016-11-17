@@ -3,7 +3,7 @@ Created on Nov 16, 2016
 
 @author: lubo
 '''
-from query_variants import dae_query_variants, dae_query_families_with_variants
+from query_variants import dae_query_variants
 import itertools
 from Variant import variantInMembers
 from collections import Counter
@@ -62,7 +62,7 @@ class GenotypeHelper(object):
     def __init__(self, studies, roles=['prb']):
         self.studies = studies
 
-        self.denovo_studies = studies[:]
+        self.denovo_studies = [st for st in studies if st.has_denovo]
         self.transmitted_studies = [st for st in studies if st.has_transmitted]
 
         self.roles = roles
@@ -96,17 +96,16 @@ class GenotypeHelper(object):
     def get_variants(self, request):
         query = request._dae_query_request()
         query.update({
-            'denovoStudies': self.studies,
+            'denovoStudies': self.denovo_studies,
             'transmittedStudies': self.transmitted_studies,
             'presentInChild': self.present_in_child,
             'presentInParent': self.present_in_parent,
         })
-
-        vs = dae_query_variants(request._dae_query_request())
+        vs = dae_query_variants(query)
         return itertools.chain(*vs)
 
-    def get_persons_variants(self, request):
-        vs = self.get_variants(request)
+    def get_persons_variants(self, pheno_request):
+        vs = self.get_variants(pheno_request)
         seen = set([])
         result = Counter()
         for v in vs:
@@ -121,10 +120,12 @@ class GenotypeHelper(object):
         return result
 
     def get_families_variants(self, pheno_request):
-        data = pheno_request._dae_query_request()
-        data['inChild'] = 'prb'
-
-        fams = dae_query_families_with_variants(data)
-        result = Counter(fams)
-
+        vs = self.get_variants(pheno_request)
+        seen = set([])
+        result = Counter()
+        for v in vs:
+            vid = "{}:{}:{}".format(v.familyId, v.location, v.variant)
+            if vid not in seen:
+                seen.add(vid)
+                result[v.familyId] += 1
         return result

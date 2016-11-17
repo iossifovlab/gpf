@@ -21,9 +21,7 @@ def phdb(request):
 @pytest.fixture
 def default_request(request):
     data = {
-        'effect_type_groups': ['LGDs'],
-        'in_child': 'prb',
-        'present_in_parent': 'neither',
+        'effect_types': ['LGDs'],
     }
     req = PhenoRequest(**data)
     return req

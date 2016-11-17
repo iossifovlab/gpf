@@ -7,7 +7,7 @@ from pprint import pprint
 
 import pytest
 
-from pheno_tool.genotype_helper import PhenoRequest
+from pheno_tool.genotype_helper import PhenoRequest, GenotypeHelper
 from pheno_tool.tool import PhenoTool
 
 
@@ -27,8 +27,8 @@ def test_build_families_variants(tool, default_request, genotype_helper):
     assert 390 == len(result)
 
 
-def test_tool_calc(tool, default_request, genotype_helper):
-
+def test_tool_calc(tool, default_request, all_ssc_studies):
+    genotype_helper = GenotypeHelper(all_ssc_studies, roles=['prb'])
     families_variants = genotype_helper.get_families_variants(default_request)
 
     r = tool.calc(
@@ -37,6 +37,7 @@ def test_tool_calc(tool, default_request, genotype_helper):
         normalize_by=['pheno_common.age']
     )
     assert r is not None
+    print(r)
 
     male, female = male_female_result(r)
 
@@ -65,15 +66,15 @@ def male_female_result(r):
     return male, female
 
 
-def test_tool_present_in_parent_ultra_rare(tool, gene_set, genotype_helper):
+def test_tool_present_in_parent_ultra_rare(tool, gene_set, all_ssc_studies):
     assert 239 == len(gene_set)
 
     pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        present_in_parent='mother only,father only,mother and father,neither',
+        effect_types=['LGDs'],
         gene_syms=gene_set,
     )
-
+    genotype_helper = GenotypeHelper(
+        all_ssc_studies, roles=['prb', 'mom', 'dad'])
     families_variants = genotype_helper.get_families_variants(pheno_request)
 
     r = tool.calc(
@@ -85,73 +86,11 @@ def test_tool_present_in_parent_ultra_rare(tool, gene_set, genotype_helper):
 
     male, female = male_female_result(r)
 
-    assert 165 == male['positiveCount']
-    assert 2218 == male['negativeCount']
+    assert 177 == male['positiveCount']
+    assert 2206 == male['negativeCount']
 
     assert 47 == female['positiveCount']
     assert 327 == female['negativeCount']
 
-    assert 0.00002 == pytest.approx(male['pValue'], abs=1E-5)
+    assert 0.00000 == pytest.approx(male['pValue'], abs=1E-5)
     assert 0.2 == pytest.approx(female['pValue'], abs=1E-1)
-
-
-def test_tool_present_in_parent_rare(tool, gene_set, genotype_helper):
-
-    pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        gene_syms=gene_set,
-        present_in_parent='mother only,father only,mother and father,neither',
-        rarity='rare',
-        rarity_max=10.0,
-    )
-
-    families_variants = genotype_helper.get_families_variants(pheno_request)
-
-    r = tool.calc(
-        families_variants,
-        'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
-    )
-    assert r is not None
-
-    male, female = male_female_result(r)
-
-    assert 524 == male['positiveCount']
-    assert 1859 == male['negativeCount']
-
-    assert 114 == female['positiveCount']
-    assert 260 == female['negativeCount']
-
-    assert 0.04 == pytest.approx(male['pValue'], abs=1E-2)
-    assert 0.3 == pytest.approx(female['pValue'], abs=1E-1)
-
-
-def test_tool_present_in_parent_rarity_interval(
-        tool, gene_set, genotype_helper):
-
-    pheno_request = PhenoRequest(
-        effect_type_groups=['LGDs'],
-        gene_syms=gene_set,
-        present_in_parent='mother only,father only,mother and father,neither',
-        rarity='interval',
-        rarity_max=10.0,
-        rarity_min=5.0,
-    )
-
-    families_variants = genotype_helper.get_families_variants(pheno_request)
-
-    r = tool.calc(
-        families_variants,
-        'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
-    )
-    assert r is not None
-
-    male, female = male_female_result(r)
-
-    assert 350 == male['positiveCount']
-    assert 2033 == male['negativeCount']
-
-    assert 84 == female['positiveCount']
-    assert 290 == female['negativeCount']
-
-    assert 0.02 == pytest.approx(male['pValue'], abs=1E-2)
-    assert 0.5 == pytest.approx(female['pValue'], abs=1E-1)
