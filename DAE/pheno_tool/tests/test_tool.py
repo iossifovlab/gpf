@@ -29,10 +29,10 @@ def test_build_families_variants(tool, default_request, genotype_helper):
 
 def test_tool_calc(tool, default_request, all_ssc_studies):
     genotype_helper = GenotypeHelper(all_ssc_studies, roles=['prb'])
-    families_variants = genotype_helper.get_families_variants(default_request)
+    persons_variants = genotype_helper.get_persons_variants(default_request)
 
     r = tool.calc(
-        families_variants,
+        persons_variants,
         'ssc_commonly_used.head_circumference',
         normalize_by=['pheno_common.age']
     )
@@ -75,10 +75,10 @@ def test_tool_present_in_parent_ultra_rare(tool, gene_set, all_ssc_studies):
     )
     genotype_helper = GenotypeHelper(
         all_ssc_studies, roles=['prb', 'mom', 'dad'])
-    families_variants = genotype_helper.get_families_variants(pheno_request)
+    persons_variants = genotype_helper.get_persons_variants(pheno_request)
 
     r = tool.calc(
-        families_variants,
+        persons_variants,
         'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
     )
     assert r is not None
@@ -86,11 +86,11 @@ def test_tool_present_in_parent_ultra_rare(tool, gene_set, all_ssc_studies):
 
     male, female = male_female_result(r)
 
-    assert 177 == male['positiveCount']
-    assert 2206 == male['negativeCount']
+    assert 165 == male['positiveCount']
+    assert 2218 == male['negativeCount']
 
     assert 47 == female['positiveCount']
     assert 327 == female['negativeCount']
 
-    assert 0.00000 == pytest.approx(male['pValue'], abs=1E-5)
+    assert 0.00002 == pytest.approx(male['pValue'], abs=1E-5)
     assert 0.2 == pytest.approx(female['pValue'], abs=1E-1)

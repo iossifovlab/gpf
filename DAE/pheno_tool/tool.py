@@ -105,15 +105,15 @@ class PhenoTool(object):
             'negativeCount': n_count
         }
 
-    def calc(self, families_variants, measure_id, normalize_by=[]):
+    def calc(self, persons_variants, measure_id, normalize_by=[]):
         df = self.normalize_measure_values_df(measure_id, normalize_by)
 
         variants = pd.Series(0, index=df.index)
         df['variants'] = variants
 
         for index, row in df.iterrows():
-            family_id = row['family_id']
-            var_count = families_variants.get(family_id, 0)
+            person_id = row['person_id']
+            var_count = persons_variants.get(person_id, 0)
             df.loc[index, 'variants'] = var_count
 
         result = []
