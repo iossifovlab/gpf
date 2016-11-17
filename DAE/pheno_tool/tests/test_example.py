@@ -5,8 +5,8 @@ Created on Nov 15, 2016
 '''
 from DAE import get_gene_sets_symNS, vDB
 from pheno.pheno_db import PhenoDB
-from pheno_tool.tool import PhenoTool, PhenoRequest
-from pheno_tool.genotype_helper import GenotypeHelper
+from pheno_tool.tool import PhenoTool
+from pheno_tool.genotype_helper import GenotypeHelper, PhenoRequest
 
 
 def test_example_1():

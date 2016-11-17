@@ -3,9 +3,12 @@ Created on Nov 9, 2016
 
 @author: lubo
 '''
-import pytest
-from pheno_tool.tool import PhenoTool, PhenoRequest
 from pprint import pprint
+
+import pytest
+
+from pheno_tool.genotype_helper import PhenoRequest
+from pheno_tool.tool import PhenoTool
 
 
 def test_pheno_tool_create_default(phdb, default_request):

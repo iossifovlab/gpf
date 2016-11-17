@@ -3,8 +3,7 @@ Created on Nov 16, 2016
 
 @author: lubo
 '''
-from pheno_tool.tool import PhenoRequest
-from pheno_tool.genotype_helper import GenotypeHelper
+from pheno_tool.genotype_helper import GenotypeHelper, PhenoRequest
 from pprint import pprint
 
 

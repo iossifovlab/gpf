@@ -5,10 +5,10 @@ Created on Nov 8, 2016
 '''
 import pytest
 from pheno.pheno_db import PhenoDB
-from pheno_tool.tool import PhenoTool, PhenoRequest
+from pheno_tool.tool import PhenoTool
 from pheno_tool.family_filters import FamilyFilters
 from DAE import get_gene_sets_symNS, vDB
-from pheno_tool.genotype_helper import GenotypeHelper
+from pheno_tool.genotype_helper import GenotypeHelper, PhenoRequest
 
 
 @pytest.fixture(scope='session')
