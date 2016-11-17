@@ -3,14 +3,11 @@ Created on Nov 9, 2016
 
 @author: lubo
 '''
-from collections import Counter
-import itertools
 
 from scipy.stats.stats import ttest_ind
 
 import numpy as np
 import pandas as pd
-from query_variants import dae_query_families_with_variants
 import statsmodels.api as sm
 
 DEFAULT_STUDY = 'ALL SSC'
@@ -150,14 +147,14 @@ class PhenoTool(object):
         return pv
 
     @classmethod
-    def _calc_stats(cls, data, effect_type, gender):
+    def _calc_stats(cls, data, gender):
         gender_index = data['gender'] == gender
         positive_index = np.logical_and(
-            data[effect_type] != 0, ~np.isnan(data[effect_type]))
+            data['variants'] != 0, ~np.isnan(data['variants']))
         positive_gender_index = np.logical_and(
             positive_index, gender_index)
 
-        negative_index = data[effect_type] == 0
+        negative_index = data['variants'] == 0
         negative_gender_index = np.logical_and(negative_index,
                                                gender_index)
 
@@ -171,7 +168,6 @@ class PhenoTool(object):
         p_val = cls._calc_pv(positive, negative)
 
         return {
-            'effectType': effect_type,
             'gender': gender,
             'negativeMean': n_mean,
             'negativeDeviation': n_std,
@@ -182,35 +178,20 @@ class PhenoTool(object):
             'negativeCount': n_count
         }
 
-    def _build_families_variants(self, pheno_request):
-        result = {}
-        for effect_type in pheno_request.effect_type_groups:
-            data = pheno_request._dae_query_request()
-            data['effectTypes'] = effect_type
-            data['inChild'] = 'prb'
-
-            fams = dae_query_families_with_variants(data)
-            result[effect_type] = Counter(fams)
-
-        return result
-
-    def calc(self, pheno_request, measure_id, normalize_by=[]):
+    def calc(self, families_variants, measure_id, normalize_by=[]):
         df = self.normalize_measure_values_df(measure_id, normalize_by)
-        families_variants = self._build_families_variants(pheno_request)
-        for effect_type in pheno_request.effect_type_groups:
-            et = pd.Series(0, index=df.index)
-            df[effect_type] = et
+
+        variants = pd.Series(0, index=df.index)
+        df['variants'] = variants
 
         for index, row in df.iterrows():
             family_id = row['family_id']
-            for effect_type in pheno_request.effect_type_groups:
-                var_count = families_variants[effect_type].get(family_id, 0)
-                df.loc[index, effect_type] = var_count
+            var_count = families_variants.get(family_id, 0)
+            df.loc[index, 'variants'] = var_count
 
         result = []
-        for effect_type, gender in itertools.product(
-                *[pheno_request.effect_type_groups, ['M', 'F']]):
-            p = self._calc_stats(df, effect_type, gender)
+        for gender in ['M', 'F']:
+            p = self._calc_stats(df, gender)
             result.append(p)
 
         return result

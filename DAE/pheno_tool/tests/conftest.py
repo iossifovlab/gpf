@@ -8,6 +8,7 @@ from pheno.pheno_db import PhenoDB
 from pheno_tool.tool import PhenoTool, PhenoRequest
 from pheno_tool.family_filters import FamilyFilters
 from DAE import get_gene_sets_symNS, vDB
+from pheno_tool.genotype_helper import GenotypeHelper
 
 
 @pytest.fixture(scope='session')
@@ -62,3 +63,9 @@ def autism_candidates_genes(request):
     gt = get_gene_sets_symNS('main')
     gene_syms = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
     return gene_syms
+
+
+@pytest.fixture
+def genotype_helper(request, all_ssc_studies):
+    helper = GenotypeHelper(all_ssc_studies)
+    return helper

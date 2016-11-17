@@ -3,15 +3,20 @@ Created on Nov 15, 2016
 
 @author: lubo
 '''
-from DAE import get_gene_sets_symNS
+from DAE import get_gene_sets_symNS, vDB
 from pheno.pheno_db import PhenoDB
 from pheno_tool.tool import PhenoTool, PhenoRequest
+from pheno_tool.genotype_helper import GenotypeHelper
 
 
 def test_example_1():
     # load gene set
     gt = get_gene_sets_symNS('main')
     gene_syms = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
+
+    studies = vDB.get_studies('ALL SSC')
+    transmitted_study = vDB.get_study('w1202s766e611')
+    studies.append(transmitted_study)
 
     phdb = PhenoDB()
     phdb.load()
@@ -25,8 +30,11 @@ def test_example_1():
         gene_syms=gene_syms,
     )
 
+    genotype_helper = GenotypeHelper(studies)
+    families_variants = genotype_helper.get_families_variants(pheno_request)
+
     res = tool.calc(
-        pheno_request,
+        families_variants,
         'ssc_commonly_used.head_circumference',
         normalize_by=['pheno_common.age'])
 
@@ -62,6 +70,10 @@ def test_example_2():
     gt = get_gene_sets_symNS('main')
     gene_syms = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
 
+    studies = vDB.get_studies('ALL SSC')
+    transmitted_study = vDB.get_study('w1202s766e611')
+    studies.append(transmitted_study)
+
     phdb = PhenoDB()
     phdb.load()
 
@@ -76,8 +88,11 @@ def test_example_2():
         rarity_max=10.0,
     )
 
+    genotype_helper = GenotypeHelper(studies)
+    families_variants = genotype_helper.get_families_variants(pheno_request)
+
     res = tool.calc(
-        pheno_request,
+        families_variants,
         'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
     )
 

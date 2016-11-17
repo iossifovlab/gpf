@@ -5,6 +5,7 @@ Created on Nov 9, 2016
 '''
 import pytest
 from pheno_tool.tool import PhenoTool, PhenoRequest
+from pprint import pprint
 
 
 def test_pheno_tool_create_default(phdb, default_request):
@@ -16,17 +17,19 @@ def test_pheno_tool_create_default(phdb, default_request):
     assert tool.phdb is not None
 
 
-def test_build_families_variants(tool, default_request):
-    result = tool._build_families_variants(default_request)
+def test_build_families_variants(tool, default_request, genotype_helper):
+    result = genotype_helper.get_families_variants(default_request)
 
     assert result is not None
-    assert 'LGDs' in result
-    assert 390 == len(result['LGDs'])
+    assert 390 == len(result)
 
 
-def test_tool_calc(tool, default_request):
+def test_tool_calc(tool, default_request, genotype_helper):
+
+    families_variants = genotype_helper.get_families_variants(default_request)
+
     r = tool.calc(
-        default_request,
+        families_variants,
         'ssc_commonly_used.head_circumference',
         normalize_by=['pheno_common.age']
     )
@@ -59,7 +62,7 @@ def male_female_result(r):
     return male, female
 
 
-def test_tool_present_in_parent_ultra_rare(tool, gene_set):
+def test_tool_present_in_parent_ultra_rare(tool, gene_set, genotype_helper):
     assert 239 == len(gene_set)
 
     pheno_request = PhenoRequest(
@@ -68,11 +71,14 @@ def test_tool_present_in_parent_ultra_rare(tool, gene_set):
         gene_syms=gene_set,
     )
 
+    families_variants = genotype_helper.get_families_variants(pheno_request)
+
     r = tool.calc(
-        pheno_request,
+        families_variants,
         'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
     )
     assert r is not None
+    pprint(r)
 
     male, female = male_female_result(r)
 
@@ -86,8 +92,7 @@ def test_tool_present_in_parent_ultra_rare(tool, gene_set):
     assert 0.2 == pytest.approx(female['pValue'], abs=1E-1)
 
 
-def test_tool_present_in_parent_rare(tool, gene_set):
-    assert 239 == len(gene_set)
+def test_tool_present_in_parent_rare(tool, gene_set, genotype_helper):
 
     pheno_request = PhenoRequest(
         effect_type_groups=['LGDs'],
@@ -97,8 +102,10 @@ def test_tool_present_in_parent_rare(tool, gene_set):
         rarity_max=10.0,
     )
 
+    families_variants = genotype_helper.get_families_variants(pheno_request)
+
     r = tool.calc(
-        pheno_request,
+        families_variants,
         'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
     )
     assert r is not None
@@ -115,8 +122,8 @@ def test_tool_present_in_parent_rare(tool, gene_set):
     assert 0.3 == pytest.approx(female['pValue'], abs=1E-1)
 
 
-def test_tool_present_in_parent_rarity_interval(tool, gene_set):
-    assert 239 == len(gene_set)
+def test_tool_present_in_parent_rarity_interval(
+        tool, gene_set, genotype_helper):
 
     pheno_request = PhenoRequest(
         effect_type_groups=['LGDs'],
@@ -127,8 +134,10 @@ def test_tool_present_in_parent_rarity_interval(tool, gene_set):
         rarity_min=5.0,
     )
 
+    families_variants = genotype_helper.get_families_variants(pheno_request)
+
     r = tool.calc(
-        pheno_request,
+        families_variants,
         'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
     )
     assert r is not None

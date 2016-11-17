@@ -3,7 +3,7 @@ Created on Nov 16, 2016
 
 @author: lubo
 '''
-from query_variants import dae_query_variants
+from query_variants import dae_query_variants, dae_query_families_with_variants
 import itertools
 from Variant import variantInMembers
 from collections import Counter
@@ -40,4 +40,13 @@ class GenotypeHelper(object):
                     result[p] += 1
                 else:
                     print("skipping {}".format(vid))
+        return result
+
+    def get_families_variants(self, pheno_request):
+        data = pheno_request._dae_query_request()
+        data['inChild'] = 'prb'
+
+        fams = dae_query_families_with_variants(data)
+        result = Counter(fams)
+
         return result
