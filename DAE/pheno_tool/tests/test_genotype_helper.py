@@ -3,14 +3,14 @@ Created on Nov 16, 2016
 
 @author: lubo
 '''
-from pheno_tool.genotype_helper import GenotypeHelper, PhenoRequest
 from pprint import pprint
+from pheno_tool.tool import PhenoTool, PhenoRequest
 
 
 def test_get_variants_denovo(
-        all_ssc_studies, autism_candidates_genes):
+        phdb, all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies, roles=['prb'])
+    helper = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
     assert 1 == len(helper.transmitted_studies)
 
     pheno_request = PhenoRequest(
@@ -23,9 +23,9 @@ def test_get_variants_denovo(
 
 
 def test_get_variants_father_ultra_rare(
-        all_ssc_studies, autism_candidates_genes):
+        phdb, all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
+    helper = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'dad'])
 
     pheno_request = PhenoRequest(
         effect_types=['LGDs'],
@@ -37,9 +37,9 @@ def test_get_variants_father_ultra_rare(
 
 
 def test_get_variants_father_rarity(
-        all_ssc_studies, autism_candidates_genes):
+        phdb, all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
+    helper = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'dad'])
 
     pheno_request = PhenoRequest(
         effect_types=['LGDs'],
@@ -53,9 +53,9 @@ def test_get_variants_father_rarity(
 
 
 def test_get_variants_father_interval(
-        all_ssc_studies, autism_candidates_genes):
+        phdb, all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
+    helper = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'dad'])
 
     pheno_request = PhenoRequest(
         effect_types=['LGDs'],
@@ -69,8 +69,8 @@ def test_get_variants_father_interval(
     assert 593 == len(variants)
 
 
-def test_get_single_gene_all(all_ssc_studies):
-    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
+def test_get_single_gene_all(phdb, all_ssc_studies):
+    helper = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'dad'])
     pheno_request = PhenoRequest(
         effect_types=['LGDs'],
         gene_syms=['POGZ'],
@@ -81,8 +81,8 @@ def test_get_single_gene_all(all_ssc_studies):
     assert 6 == len(variants)
 
 
-def test_get_single_gene_persons_variants_all(all_ssc_studies):
-    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'mom', 'dad'])
+def test_get_single_gene_persons_variants_all(phdb, all_ssc_studies):
+    helper = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'mom', 'dad'])
     pheno_request = PhenoRequest(
         effect_types=['LGDs'],
         gene_syms=['POGZ'],
@@ -95,9 +95,9 @@ def test_get_single_gene_persons_variants_all(all_ssc_studies):
 
 
 def test_get_persons_variants_denovo(
-        all_ssc_studies, autism_candidates_genes):
+        phdb, all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies, roles=['prb'])
+    helper = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
     assert 1 == len(helper.transmitted_studies)
 
     pheno_request = PhenoRequest(
@@ -112,9 +112,9 @@ def test_get_persons_variants_denovo(
 
 
 def test_get_person_variants_father_all(
-        all_ssc_studies, autism_candidates_genes):
+        phdb, all_ssc_studies, autism_candidates_genes):
 
-    helper = GenotypeHelper(all_ssc_studies, roles=['prb', 'dad'])
+    helper = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'dad'])
 
     pheno_request = PhenoRequest(
         effect_types='Frame-shift,Nonsense,Splice-site',

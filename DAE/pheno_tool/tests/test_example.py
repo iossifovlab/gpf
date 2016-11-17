@@ -5,8 +5,7 @@ Created on Nov 15, 2016
 '''
 from DAE import get_gene_sets_symNS, vDB
 from pheno.pheno_db import PhenoDB
-from pheno_tool.tool import PhenoTool
-from pheno_tool.genotype_helper import GenotypeHelper, PhenoRequest
+from pheno_tool.tool import PhenoTool, PhenoRequest
 
 
 def test_example_1():
@@ -21,15 +20,14 @@ def test_example_1():
     phdb = PhenoDB()
     phdb.load()
 
-    tool = PhenoTool(phdb)
+    tool = PhenoTool(phdb, studies, roles=['prb'])
 
     pheno_request = PhenoRequest(
         effect_types=['LGDs'],
         gene_syms=gene_syms,
     )
 
-    genotype_helper = GenotypeHelper(studies, roles=['prb'])
-    families_variants = genotype_helper.get_families_variants(pheno_request)
+    families_variants = tool.get_persons_variants(pheno_request)
 
     res = tool.calc(
         families_variants,
@@ -75,7 +73,7 @@ def test_example_2():
     phdb = PhenoDB()
     phdb.load()
 
-    tool = PhenoTool(phdb)
+    tool = PhenoTool(phdb, studies, roles=['prb', 'mom', 'dad'])
 
     pheno_request = PhenoRequest(
         effect_types=['LGDs'],
@@ -84,8 +82,7 @@ def test_example_2():
         rarity_max=10.0,
     )
 
-    genotype_helper = GenotypeHelper(studies, roles=['prb', 'mom', 'dad'])
-    families_variants = genotype_helper.get_families_variants(pheno_request)
+    families_variants = tool.get_persons_variants(pheno_request)
 
     res = tool.calc(
         families_variants,

@@ -7,29 +7,29 @@ from pprint import pprint
 
 import pytest
 
-from pheno_tool.genotype_helper import PhenoRequest, GenotypeHelper
-from pheno_tool.tool import PhenoTool
+from pheno_tool.tool import PhenoTool, PhenoRequest
 
 
-def test_pheno_tool_create_default(phdb, default_request):
+def test_pheno_tool_create_default(phdb, all_ssc_studies, default_request):
     assert default_request is not None
 
-    tool = PhenoTool(phdb)
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
     assert tool is not None
 
     assert tool.phdb is not None
 
 
-def test_build_families_variants(tool, default_request, genotype_helper):
-    result = genotype_helper.get_families_variants(default_request)
+def test_build_families_variants(phdb, default_request, all_ssc_studies):
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
+    result = tool.get_families_variants(default_request)
 
     assert result is not None
     assert 390 == len(result)
 
 
-def test_tool_calc(tool, default_request, all_ssc_studies):
-    genotype_helper = GenotypeHelper(all_ssc_studies, roles=['prb'])
-    persons_variants = genotype_helper.get_persons_variants(default_request)
+def test_tool_calc(phdb, default_request, all_ssc_studies):
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
+    persons_variants = tool.get_persons_variants(default_request)
 
     r = tool.calc(
         persons_variants,
@@ -66,16 +66,16 @@ def male_female_result(r):
     return male, female
 
 
-def test_tool_present_in_parent_ultra_rare(tool, gene_set, all_ssc_studies):
+def test_tool_present_in_parent_ultra_rare(phdb, gene_set, all_ssc_studies):
     assert 239 == len(gene_set)
 
     pheno_request = PhenoRequest(
         effect_types=['LGDs'],
         gene_syms=gene_set,
     )
-    genotype_helper = GenotypeHelper(
-        all_ssc_studies, roles=['prb', 'mom', 'dad'])
-    persons_variants = genotype_helper.get_persons_variants(pheno_request)
+    tool = PhenoTool(
+        phdb, all_ssc_studies, roles=['prb', 'mom', 'dad'])
+    persons_variants = tool.get_persons_variants(pheno_request)
 
     r = tool.calc(
         persons_variants,

@@ -5,10 +5,9 @@ Created on Nov 8, 2016
 '''
 import pytest
 from pheno.pheno_db import PhenoDB
-from pheno_tool.tool import PhenoTool
+from pheno_tool.tool import PhenoRequest
 from pheno_tool.family_filters import FamilyFilters
 from DAE import get_gene_sets_symNS, vDB
-from pheno_tool.genotype_helper import GenotypeHelper, PhenoRequest
 
 
 @pytest.fixture(scope='session')
@@ -25,12 +24,6 @@ def default_request(request):
     }
     req = PhenoRequest(**data)
     return req
-
-
-@pytest.fixture(scope='session')
-def tool(request, phdb):
-    tool = PhenoTool(phdb)
-    return tool
 
 
 @pytest.fixture(scope='session')
@@ -61,9 +54,3 @@ def autism_candidates_genes(request):
     gt = get_gene_sets_symNS('main')
     gene_syms = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
     return gene_syms
-
-
-@pytest.fixture
-def genotype_helper(request, all_ssc_studies):
-    helper = GenotypeHelper(all_ssc_studies)
-    return helper
