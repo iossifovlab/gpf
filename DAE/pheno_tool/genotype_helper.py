@@ -18,18 +18,7 @@ class PhenoRequest(object):
 
     Constructor arguments are:
 
-    `effect_type_groups` -- list of effect type groups
-
-    `in_child` -- one of *prb* or *sib*
-
-    `study` -- study of group of studies to search
-    (defaults to 'ALL SSC')
-
-    `transmitted` -- transmitted study to search for variants
-
-    `present_in_parent` -- a comma separted combination of `father only`,
-    `mother only`, `father and mother`, `neither`. Specifies what kind of
-    transmitted variants to find.
+    `effect_types` -- list of effect types
 
     `rarity` -- one of `ultraRare`, `rare`, `interval`. Together with
     `ratiry_max` and `rarity_min` specifies the rarity of transmitted variants.
@@ -43,22 +32,14 @@ class PhenoRequest(object):
 
     def __init__(
         self,
-        effect_type_groups=['LGDs'],
+        effect_types=None,
         gene_syms=None,
-        in_child='prb',
-        present_in_parent='neither',
         rarity='ultraRare',
         rarity_max=None,
         rarity_min=None,
-        study=DEFAULT_STUDY,
-        transmitted=DEFAULT_TRANSMITTED
     ):
 
-        self.study = study
-        self.transmitted = transmitted
-        self.effect_type_groups = effect_type_groups
-        self.in_child = in_child
-        self.present_in_parent = present_in_parent
+        self.effect_types = effect_types
         self.probands = None
         self.gene_syms = gene_syms
         self.rarity = rarity
@@ -67,18 +48,12 @@ class PhenoRequest(object):
 
     def _dae_query_request(self):
         data = {
-            'denovoStudies': self.study,
-            'transmittedStudies': self.transmitted,
-            'inChild': self.in_child,
-            'effectTypes': self.effect_type_groups,
-            'presentInParent': self.present_in_parent,
+            'geneSyms': self.gene_syms,
+            'effectTypes': self.effect_types,
             'rarity': self.rarity,
             'popFrequencyMax': self.rarity_max,
             'popFrequencyMin': self.rarity_min,
         }
-        if self.gene_syms:
-            data['geneSyms'] = self.gene_syms
-
         return data
 
 
@@ -92,10 +67,40 @@ class GenotypeHelper(object):
 
         self.roles = roles
 
+    @property
+    def present_in_child(self):
+        pic = set([])
+        if 'prb' in self.roles:
+            pic.add('autism only')
+            pic.add('autism and unaffected')
+        if 'sib' in self.roles:
+            pic.add('unaffected only')
+            pic.add('autism and unaffected')
+        if not pic or 'mom' in self.roles or 'dad' in self.roles:
+            pic.add('neither')
+        return ','.join(pic)
+
+    @property
+    def present_in_parent(self):
+        pic = set([])
+        if 'mom' in self.roles:
+            pic.add('mother only')
+            pic.add('mother and father')
+        if 'dad' in self.roles:
+            pic.add('father only')
+            pic.add('mother and father')
+        if not pic or 'prb' in self.roles or 'sib' in self.roles:
+            pic.add('neither')
+        return ','.join(pic)
+
     def get_variants(self, request):
         query = request._dae_query_request()
-        query['denovoStudies'] = self.studies
-        query['transmittedStudies'] = self.transmitted_studies
+        query.update({
+            'denovoStudies': self.studies,
+            'transmittedStudies': self.transmitted_studies,
+            'presentInChild': self.present_in_child,
+            'presentInParent': self.present_in_parent,
+        })
 
         vs = dae_query_variants(request._dae_query_request())
         return itertools.chain(*vs)
