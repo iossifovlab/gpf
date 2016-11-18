@@ -13,6 +13,9 @@ import pandas as pd
 
 
 class WeightsConfig(object):
+    """
+    Helper class for accessing DAE and geneInfo configuration.
+    """
 
     def __init__(self, *args, **kwargs):
         super(WeightsConfig, self).__init__(*args, **kwargs)
@@ -22,11 +25,14 @@ class WeightsConfig(object):
         self.config = ConfigParser.SafeConfigParser({'wd': wd})
         self.config.read(self.dae_config.geneInfoDBconfFile)
 
-#     def __getitem__(self, args):
-#         return self.config.get(*args)
-
 
 class Weights(WeightsConfig):
+    """
+    Represents gene weights.
+
+    Loads a CSV file with gene weights by gene weight name as described
+    in `geneInfo.conf`.
+    """
 
     def __init__(self, weights_name, *args, **kwargs):
         super(Weights, self).__init__(*args, **kwargs)
@@ -35,8 +41,9 @@ class Weights(WeightsConfig):
         self.desc = self.config.get(self.section_name, 'desc')
         self.step = self.config.get(self.section_name, 'step')
         self.df = None
+        self._load_weights()
 
-    def load_weights(self):
+    def _load_weights(self):
         assert self.config.get(self.section_name, 'file') is not None
 
         filename = self.config.get(self.section_name, 'file')
@@ -49,16 +56,31 @@ class Weights(WeightsConfig):
 
         return self.df
 
-    def weights(self):
-        return self.df[self.name]
+#     def weights(self):
+#         return self.df[self.name]
 
     def min(self):
+        """
+        Returns minimal weight value.
+        """
         return self.df[self.name].min()
 
     def max(self):
+        """
+        Returns maximal weight value.
+        """
         return self.df[self.name].max()
 
     def get_genes(self, wmin=None, wmax=None):
+        """
+        Returns a set of genes which weights are between `wmin` and `wmax`.
+
+        `wmin` -- the lower bound of weights. If not specified or `None`
+        works without lower bound.
+
+        `wmax` -- the upper bound of weights. If not specified or `None`
+        works without upper bound.
+        """
         df = self.df[self.name]
         df.dropna(inplace=True)
 
@@ -72,13 +94,28 @@ class Weights(WeightsConfig):
         return set(genes.values)
 
     def to_dict(self):
+        """
+        Returns dictionary of all defined weights keyed by gene symbol.
+        """
         result = {}
         for _index, row in self.df.iterrows():
             result[row['gene']] = row[self.name]
         return result
 
+    def to_df(self):
+        """
+        Returns a data frame with all gene weights with columns `gene` and
+        `weight`.
+        """
+        return self.df
+
 
 class WeightsLoader(object):
+    """
+    Helper class used to load all defined gene weights.
+
+    Used by Web interface.
+    """
 
     def __init__(self, *args, **kwargs):
         super(WeightsLoader, self).__init__(*args, **kwargs)

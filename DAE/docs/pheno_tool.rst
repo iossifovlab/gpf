@@ -105,8 +105,6 @@ with the new `pheno_request` instance::
     ]
 
 
-Submodules
-----------
 
 ..
     pheno_tool.family_filters module

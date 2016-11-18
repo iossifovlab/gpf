@@ -12,4 +12,5 @@ Welcome to DAE's documentation!
    pheno
    pheno_tool
    enrichment_tool
+   gene
 

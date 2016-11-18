@@ -5,4 +5,6 @@ enrichment_tool
    :maxdepth: 4
 
    pheno
+   pheno_tool
    enrichment_tool
+   gene
