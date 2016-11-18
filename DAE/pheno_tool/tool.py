@@ -63,6 +63,63 @@ class PhenoRequest(object):
         return data
 
 
+class PhenoResult(object):
+
+    def __init__(self, df, index=None):
+        self.gender = None
+        self.df = df
+        self.genotypes_df = self._select_genotype(df, index)
+        self.phenotypes_df = self._select_phenotype(df, index)
+        self.pvalue = None
+        self.positive_count = None
+        self.positive_mean = None
+        self.positive_deviation = None
+        self.negative_count = None
+        self.negative_mean = None
+        self.negative_deviation = None
+
+    @staticmethod
+    def _select_genotype(df, index):
+        gdf = df[['person_id', 'gender', 'role', 'variants']]
+        if index is not None:
+            gdf = gdf[index]
+        return gdf
+
+    @staticmethod
+    def _select_phenotype(df, index):
+        columns = list(df.columns)
+        del columns[columns.index('variants')]
+        del columns[columns.index('family_id')]
+
+        pdf = df[columns]
+        if index is not None:
+            pdf = pdf[index]
+        return pdf
+
+    @property
+    def genotypes(self):
+        result = Counter()
+        for _index, row in self.genotypes_df.iterrows():
+            result[row['person_id']] = row['variants']
+        return result
+
+    @property
+    def phenotypes(self):
+        result = {}
+        for _index, row in self.phenotypes_df.iterrows():
+            result[row['person_id']] = row.to_dict()
+        return result
+
+    def __repr__(self):
+        if self.gender is not None:
+            return "PhenoResult({}): pvalue={:.3g}; pos={} (neg={})".format(
+                self.gender,
+                self.pvalue, self.positive_count, self.negative_count)
+        else:
+            return "PhenoResult: pvalue={:.3g}; pos={} (neg={})".format(
+                self.pvalue, self.positive_count, self.negative_count)
+
+
 class PhenoTool(object):
     """
     Tool to estimate dependency between variants and phenotype measrues.
@@ -215,16 +272,20 @@ class PhenoTool(object):
         n_count, n_mean, n_std = PhenoTool._calc_base_stats(negative)
         p_val = cls._calc_pv(positive, negative)
 
-        return {
-            'gender': gender,
-            'negativeMean': n_mean,
-            'negativeDeviation': n_std,
-            'positiveMean': p_mean,
-            'positiveDeviation': p_std,
-            'pValue': p_val,
-            'positiveCount': p_count,
-            'negativeCount': n_count
-        }
+        result = PhenoResult(data, gender_index)
+        if gender is not None:
+            result.gender = gender
+        result.positive_count = p_count
+        result.positive_mean = p_mean
+        result.positive_deviation = p_std
+
+        result.negative_count = n_count
+        result.negative_mean = n_mean
+        result.negative_deviation = n_std
+
+        result.pvalue = p_val
+
+        return result
 
     def calc(self, pheno_request, measure_id, normalize_by=[]):
         df = self.normalize_measure_values_df(measure_id, normalize_by)
