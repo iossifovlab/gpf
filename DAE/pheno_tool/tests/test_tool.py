@@ -33,15 +33,13 @@ def test_tool_calc(phdb, default_request, all_ssc_studies):
     r = tool.calc(
         default_request,
         'ssc_commonly_used.head_circumference',
-        normalize_by=['pheno_common.age']
+        normalize_by=['pheno_common.age'],
+        gender_split=True
     )
     assert r is not None
     print(r)
 
     male, female = male_female_result(r)
-
-    assert 'M' == male.gender
-    assert 'F' == female.gender
 
     assert 310 == male.positive_count
     assert 2047 == male.negative_count
@@ -56,13 +54,7 @@ def test_tool_calc(phdb, default_request, all_ssc_studies):
 
 
 def male_female_result(r):
-    if r[0].gender == 'M':
-        male = r[0]
-        female = r[1]
-    else:
-        male = r[1]
-        female = r[0]
-    return male, female
+    return r['M'], r['F']
 
 
 def test_tool_present_in_parent_ultra_rare(phdb, gene_set, all_ssc_studies):
@@ -78,6 +70,7 @@ def test_tool_present_in_parent_ultra_rare(phdb, gene_set, all_ssc_studies):
     r = tool.calc(
         pheno_request,
         'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
+        gender_split=True,
     )
     assert r is not None
     pprint(r)
@@ -100,14 +93,15 @@ def test_genotypes(phdb, default_request, all_ssc_studies):
     r = tool.calc(
         default_request,
         'ssc_commonly_used.head_circumference',
-        normalize_by=['pheno_common.age']
+        normalize_by=['pheno_common.age'],
+        gender_split=True,
     )
 
-    genotypes = r[0].genotypes
+    genotypes = r['M'].genotypes
     assert 2357 == len(genotypes)
     assert 3 == max(genotypes.values())
 
-    genotypes = r[1].genotypes
+    genotypes = r['F'].genotypes
     assert 372 == len(genotypes)
     assert 3 == max(genotypes.values())
 
@@ -118,15 +112,30 @@ def test_phenotypes(phdb, default_request, all_ssc_studies):
     r = tool.calc(
         default_request,
         'ssc_commonly_used.head_circumference',
-        normalize_by=['pheno_common.age']
+        normalize_by=['pheno_common.age'],
+        gender_split=True
     )
 
-    phenotypes = r[0].phenotypes
+    phenotypes = r['M'].phenotypes
     assert 2357 == len(phenotypes)
     # assert 3 == max(genotypes.values())
 
-    phenotypes = r[1].phenotypes
+    phenotypes = r['F'].phenotypes
     assert 372 == len(phenotypes)
     # assert 3 == max(genotypes.values())
 
     pprint(phenotypes)
+
+
+def test_gender_split_false(phdb, default_request, all_ssc_studies):
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
+
+    r = tool.calc(
+        default_request,
+        'ssc_commonly_used.head_circumference',
+        normalize_by=['pheno_common.age'],
+        gender_split=False
+    )
+
+    assert 374 == r.positive_count
+    assert 2355 == r.negative_count

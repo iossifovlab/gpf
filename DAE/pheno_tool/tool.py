@@ -66,7 +66,6 @@ class PhenoRequest(object):
 class PhenoResult(object):
 
     def __init__(self, df, index=None):
-        self.gender = None
         self.df = df
         self.genotypes_df = self._select_genotype(df, index)
         self.phenotypes_df = self._select_phenotype(df, index)
@@ -96,6 +95,16 @@ class PhenoResult(object):
             pdf = pdf[index]
         return pdf
 
+    def _set_positive_stats(self, p_count, p_mean, p_std):
+        self.positive_count = p_count
+        self.positive_mean = p_mean
+        self.positive_deviation = p_std
+
+    def _set_negative_stats(self, n_count, n_mean, n_std):
+        self.negative_count = n_count
+        self.negative_mean = n_mean
+        self.negative_deviation = n_std
+
     @property
     def genotypes(self):
         result = Counter()
@@ -111,13 +120,8 @@ class PhenoResult(object):
         return result
 
     def __repr__(self):
-        if self.gender is not None:
-            return "PhenoResult({}): pvalue={:.3g}; pos={} (neg={})".format(
-                self.gender,
-                self.pvalue, self.positive_count, self.negative_count)
-        else:
-            return "PhenoResult: pvalue={:.3g}; pos={} (neg={})".format(
-                self.pvalue, self.positive_count, self.negative_count)
+        return "PhenoResult: pvalue={:.3g}; pos={} (neg={})".format(
+            self.pvalue, self.positive_count, self.negative_count)
 
 
 class PhenoTool(object):
@@ -253,41 +257,39 @@ class PhenoTool(object):
 
     @classmethod
     def _calc_stats(cls, data, gender):
-        gender_index = data['gender'] == gender
         positive_index = np.logical_and(
             data['variants'] != 0, ~np.isnan(data['variants']))
-        positive_gender_index = np.logical_and(
-            positive_index, gender_index)
 
         negative_index = data['variants'] == 0
-        negative_gender_index = np.logical_and(negative_index,
-                                               gender_index)
 
-        assert not np.any(np.logical_and(positive_gender_index,
-                                         negative_gender_index))
+        if gender is None:
+            gender_index = None
+            positive_gender_index = positive_index
+            negative_gender_index = negative_index
+        else:
+            gender_index = data['gender'] == gender
+            positive_gender_index = np.logical_and(
+                positive_index, gender_index)
+            negative_gender_index = np.logical_and(negative_index,
+                                                   gender_index)
+
+            assert not np.any(np.logical_and(positive_gender_index,
+                                             negative_gender_index))
 
         positive = data[positive_gender_index].normalized.values
         negative = data[negative_gender_index].normalized.values
-        p_count, p_mean, p_std = PhenoTool._calc_base_stats(positive)
-        n_count, n_mean, n_std = PhenoTool._calc_base_stats(negative)
         p_val = cls._calc_pv(positive, negative)
 
         result = PhenoResult(data, gender_index)
-        if gender is not None:
-            result.gender = gender
-        result.positive_count = p_count
-        result.positive_mean = p_mean
-        result.positive_deviation = p_std
-
-        result.negative_count = n_count
-        result.negative_mean = n_mean
-        result.negative_deviation = n_std
+        result._set_positive_stats(*PhenoTool._calc_base_stats(positive))
+        result._set_negative_stats(*PhenoTool._calc_base_stats(negative))
 
         result.pvalue = p_val
 
         return result
 
-    def calc(self, pheno_request, measure_id, normalize_by=[]):
+    def calc(self, pheno_request, measure_id, normalize_by=[],
+             gender_split=False):
         df = self.normalize_measure_values_df(measure_id, normalize_by)
         persons_variants = self.get_persons_variants(pheno_request)
 
@@ -299,9 +301,11 @@ class PhenoTool(object):
             var_count = persons_variants.get(person_id, 0)
             df.loc[index, 'variants'] = var_count
 
-        result = []
-        for gender in ['M', 'F']:
-            p = self._calc_stats(df, gender)
-            result.append(p)
-
-        return result
+        if not gender_split:
+            return self._calc_stats(df, None)
+        else:
+            result = {}
+            for gender in ['M', 'F']:
+                p = self._calc_stats(df, gender)
+                result[gender] = p
+            return result
