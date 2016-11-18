@@ -54,6 +54,19 @@ def filter_denovo_one_gene_per_events(vs):
 
 
 class EnrichmentResult(object):
+    """
+    Represents result of enrichment tool calculations. Supported fields are:
+
+    `name`
+
+    `events` -- list of events found
+
+    `overlapped` -- list of overlapped events
+
+    `expected` -- number of expected events
+
+    `pvalue`
+    """
 
     def __init__(self, name):
         self.name = name

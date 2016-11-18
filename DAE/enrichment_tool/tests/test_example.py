@@ -15,7 +15,7 @@ def test_simple_example():
     denovo_studies = [
         st for st in studies if 'WE' == st.get_attr('study.type')]
 
-    autism_studes = [
+    autism_studies = [
         st for st in denovo_studies
         if 'autism' == st.get_attr('study.phenotype')]
 
@@ -30,7 +30,7 @@ def test_simple_example():
     tool = EnrichmentTool(background, GeneEventsCounter())
 
     enrichment_results = tool.calc(
-        autism_studes,
+        autism_studies,
         'prb',
         'LGDs',
         gene_set)
