@@ -71,6 +71,12 @@ class Weights(WeightsConfig):
         genes = self.df[index].gene
         return set(genes.values)
 
+    def to_dict(self):
+        result = {}
+        for _index, row in self.df.iterrows():
+            result[row['gene']] = row[self.name]
+        return result
+
 
 class WeightsLoader(object):
 
