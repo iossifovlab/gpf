@@ -78,7 +78,7 @@ def test_tool_present_in_parent_ultra_rare(phdb, gene_set, all_ssc_studies):
     male, female = male_female_result(r)
 
     assert 165 == male.positive_count
-    assert 2218 == male.negative_count
+    assert 2222 == male.negative_count
 
     assert 47 == female.positive_count
     assert 327 == female.negative_count

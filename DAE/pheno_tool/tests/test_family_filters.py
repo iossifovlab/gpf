@@ -10,7 +10,7 @@ def test_verbal_iq_interval(phdb, family_filters):
         'pheno_common.verbal_iq', 10, 20)
     assert 120 == len(family_ids)
 
-    df = phdb.get_measure_values_df('pheno_common.verbal_iq', role='prb')
+    df = phdb.get_measure_values_df('pheno_common.verbal_iq', roles=['prb'])
 
     for family_id in family_ids:
         index = df['person_id'].str.startswith(family_id)
@@ -23,7 +23,7 @@ def test_head_circumference_interval(phdb, family_filters):
         'ssc_commonly_used.head_circumference', 49, 50)
     assert 102 == len(family_ids)
     df = phdb.get_measure_values_df(
-        'ssc_commonly_used.head_circumference', role='prb')
+        'ssc_commonly_used.head_circumference', roles=['prb'])
     for family_id in family_ids:
         index = df['person_id'].str.startswith(family_id)
         assert all(
@@ -37,7 +37,7 @@ def test_verbal_iq_interval_with_family_counters(phdb, family_filters):
         'pheno_common.verbal_iq', 10, 20)
 
     assert 120 == len(proband_ids)
-    df = phdb.get_measure_values_df('pheno_common.verbal_iq', role='prb')
+    df = phdb.get_measure_values_df('pheno_common.verbal_iq', roles=['prb'])
     for proband_id in proband_ids:
         assert all(df[df['person_id'] ==
                       proband_id]['pheno_common.verbal_iq'].values <= 20)

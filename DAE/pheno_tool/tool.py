@@ -219,7 +219,7 @@ class PhenoTool(object):
         measures = normalize_by[:]
         measures.append(measure_id)
 
-        df = self.phdb.get_persons_values_df(measures, role='prb')
+        df = self.phdb.get_persons_values_df(measures, roles=self.roles)
         df.dropna(inplace=True)
 
         if not normalize_by:

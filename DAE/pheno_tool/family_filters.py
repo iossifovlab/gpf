@@ -12,7 +12,7 @@ class FamilyFilters(object):
         self.phdb = phdb
 
     def _select_measure_df(self, measure_id, mmin, mmax):
-        df = self.phdb.get_measure_values_df(measure_id, role='prb')
+        df = self.phdb.get_measure_values_df(measure_id, roles=['prb'])
         m = df[measure_id]
         selected = None
         if mmin is not None and mmax is not None:
