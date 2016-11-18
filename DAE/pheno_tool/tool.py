@@ -211,8 +211,10 @@ class PhenoTool(object):
         list of measure_ids.
         """
         assert isinstance(normalize_by, list)
-        assert all(map(lambda b: b in [
-            'pheno_common.age', 'pheno_common.non_verbal_iq'], normalize_by))
+        assert all(map(
+            lambda m: self.phdb.get_measure(m).measure_type == 'continuous',
+            normalize_by))
+        assert self.phdb.get_measure(measure_id).measure_type == 'continuous'
 
         measures = normalize_by[:]
         measures.append(measure_id)

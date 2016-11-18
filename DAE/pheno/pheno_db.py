@@ -349,7 +349,7 @@ class PhenoDB(PhenoConfig):
         self._load_families()
         self._load_instruments()
 
-    def get_persons_df(self, role=None):
+    def get_persons_df(self, roles=None, person_ids=None):
         """
         Returns a individuals information form phenotype database as a data
         frame.
@@ -363,8 +363,8 @@ class PhenoDB(PhenoConfig):
         Columns returned are: `person_id`, `family_id`, `role`, `gender`.
         """
         where = ["ssc_present=1"]
-        if role:
-            where.append("role='{}'".format(role))
+        if roles:
+            where.append(self._roles_clause(roles, 'role'))
         with PersonManager() as pm:
             df = pm.load_df(where=' and '.join(where))
             try:
@@ -372,9 +372,12 @@ class PhenoDB(PhenoConfig):
             except AttributeError:
                 df = df.sort(['family_id', 'role_order'])
 
+        if person_ids:
+            df = df[df.person_id.isin(person_ids)]
+
         return df[['person_id', 'family_id', 'role', 'gender']]
 
-    def get_persons(self, role=None):
+    def get_persons(self, roles=None, person_ids=None):
         """Returns individuals data from phenotype database.
 
         `role` -- specifies persons of which role should be returned. If not
@@ -384,7 +387,7 @@ class PhenoDB(PhenoConfig):
         the `Person` object is the same object used into `VariantDB` families.
         """
         persons = OrderedDict()
-        df = self.get_persons_df(role)
+        df = self.get_persons_df(roles=roles, person_ids=person_ids)
 
         for _index, row in df.iterrows():
             person_id = row['person_id']
@@ -445,8 +448,13 @@ class PhenoDB(PhenoConfig):
             raise ValueError(
                 "bad default_filter value: {}".format(default_filter))
 
+    @staticmethod
+    def _roles_clause(roles, column_name):
+        clauses = ["{} = '{}'".format(column_name, role) for role in roles]
+        return " ( {} ) ".format(' or '.join(clauses))
+
     def get_measure_values_df(self, measure_id,
-                              person_ids=None, role=None,
+                              person_ids=None, roles=None,
                               default_filter='apply'):
         """
         Returns a data frame with values for the specified `measure_id`.
@@ -456,8 +464,8 @@ class PhenoDB(PhenoConfig):
         `person_ids` -- list of individuals to select measurement values for.
         If not specified values for all individuals are returned.
 
-        `role` -- role of individuals to select measure value for. If not
-        specified value for individuals in all roles are retuned.
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are retuned.
 
         `default_filter` -- one of ('`skip`', '`apply`', '`invert`'). When
         the measure has a `default_filter` this argument specifies whether
@@ -478,8 +486,9 @@ class PhenoDB(PhenoConfig):
         value_manager = self._get_value_manager(value_type)
 
         clauses = ["variable_id = '{}'".format(measure_id)]
-        if role:
-            clauses.append("person_role = '{}'".format(role))
+        if roles:
+            roles_clause = self._roles_clause(roles, 'person_role')
+            clauses.append(roles_clause)
 
         if m.default_filter is not None:
             filter_clause = self._build_default_filter_clause(
@@ -496,7 +505,7 @@ class PhenoDB(PhenoConfig):
 
         return df[['person_id', measure_id]]
 
-    def get_measure_values(self, measure_id, person_ids=None, role=None,
+    def get_measure_values(self, measure_id, person_ids=None, roles=None,
                            default_filter='apply'):
         """
         Returns a dictionary with values for the specified `measure_id`.
@@ -506,8 +515,8 @@ class PhenoDB(PhenoConfig):
         `person_ids` -- list of individuals to select measurement values for.
         If not specified values for all individuals are returned.
 
-        `role` -- role of individuals to select measure value for. If not
-        specified value for individuals in all roles are retuned.
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are returned.
 
         `default_filter` -- one of ('`skip`', '`apply`', '`invert`'). When
         the measure has a `default_filter` this argument specifies whether
@@ -517,14 +526,14 @@ class PhenoDB(PhenoConfig):
         each individual. The person_id is used as key in the dictionary.
         """
 
-        df = self.get_measure_values_df(measure_id, person_ids, role,
+        df = self.get_measure_values_df(measure_id, person_ids, roles,
                                         default_filter)
         res = {}
         for _index, row in df.iterrows():
             res[row['person_id']] = row[measure_id]
         return res
 
-    def get_values_df(self, measure_ids, person_ids=None, role=None,
+    def get_values_df(self, measure_ids, person_ids=None, roles=None,
                       default_filter='apply'):
         """
         Returns a data frame with values for given list of measures.
@@ -538,14 +547,14 @@ class PhenoDB(PhenoConfig):
         `person_ids` -- list of individuals to select measurement values for.
         If not specified values for all individuals are returned.
 
-        `role` -- role of individuals to select measure value for. If not
-        specified value for individuals in all roles are retuned.
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are returned.
         """
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
         assert all([self.has_measure(m) for m in measure_ids])
 
-        dfs = [self.get_measure_values_df(m, person_ids, role, default_filter)
+        dfs = [self.get_measure_values_df(m, person_ids, roles, default_filter)
                for m in measure_ids]
 
         res_df = dfs[0]
@@ -568,7 +577,7 @@ class PhenoDB(PhenoConfig):
 
         return res
 
-    def get_values(self, measure_ids, person_ids=None, role=None):
+    def get_values(self, measure_ids, person_ids=None, roles=None):
         """
         Returns dictionary dictionaries with values for all `measure_ids`.
 
@@ -581,23 +590,24 @@ class PhenoDB(PhenoConfig):
         `person_ids` -- list of individuals to select measurement values for.
         If not specified values for all individuals are returned.
 
-        `role` -- role of individuals to select measure value for. If not
-        specified value for individuals in all roles are retuned.
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are returned.
 
         """
-        df = self.get_values_df(measure_ids, person_ids, role)
+        df = self.get_values_df(measure_ids, person_ids, roles)
         return self._values_df_to_dict(measure_ids, df)
 
-    def get_persons_values_df(self, measure_ids, person_ids=None, role=None):
+    def get_persons_values_df(self, measure_ids, person_ids=None, roles=None):
         """
         Returns a data frame with values for all measures in `measure_ids`
         joined with a data frame returned by `get_persons_df`.
         """
-        persons_df = self.get_persons_df(role=role)
+        persons_df = self.get_persons_df(roles=roles, person_ids=person_ids)
 
         value_df = self.get_values_df(
             measure_ids,
-            role=role)
+            person_ids=person_ids,
+            roles=roles)
 
         df = persons_df.join(
             value_df.set_index('person_id'), on='person_id', rsuffix='_val')
