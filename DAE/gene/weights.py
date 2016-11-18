@@ -22,8 +22,8 @@ class WeightsConfig(object):
         self.config = ConfigParser.SafeConfigParser({'wd': wd})
         self.config.read(self.dae_config.geneInfoDBconfFile)
 
-    def __getitem__(self, args):
-        return self.config.get(*args)
+#     def __getitem__(self, args):
+#         return self.config.get(*args)
 
 
 class Weights(WeightsConfig):
@@ -32,14 +32,14 @@ class Weights(WeightsConfig):
         super(Weights, self).__init__(*args, **kwargs)
         self.name = weights_name
         self.section_name = 'geneWeights.{}'.format(weights_name)
-        self.desc = self[self.section_name, 'desc']
-        self.step = self[self.section_name, 'step']
+        self.desc = self.config.get(self.section_name, 'desc')
+        self.step = self.config.get(self.section_name, 'step')
         self.df = None
 
     def load_weights(self):
-        assert self[self.section_name, 'file'] is not None
+        assert self.config.get(self.section_name, 'file') is not None
 
-        filename = self[self.section_name, 'file']
+        filename = self.config.get(self.section_name, 'file')
         assert filename is not None
         df = pd.read_csv(filename)
         assert self.name in df.columns
@@ -81,7 +81,7 @@ class WeightsLoader(object):
         self._load()
 
     def _load(self):
-        weights = self.config['geneWeights', 'weights']
+        weights = self.config.config.get('geneWeights', 'weights')
         names = [n.strip() for n in weights.split(',')]
         for name in names:
             w = Weights(name)
