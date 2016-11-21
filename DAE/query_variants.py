@@ -294,7 +294,7 @@ PRESENT_IN_CHILD_TYPES = [
 
 
 def prepare_present_in_child(data):
-    if "presentInChild" in data:
+    if "presentInChild" in data and data['presentInChild'] is not None:
         present_in_child = data['presentInChild']
         if isinstance(present_in_child, list):
             present_in_child = ','.join(present_in_child)
@@ -311,7 +311,7 @@ PRESENT_IN_PARENT_TYPES = [
 
 
 def prepare_present_in_parent(data):
-    if "presentInParent" in data:
+    if "presentInParent" in data and data['presentInParent'] is not None:
         present_in_parent = data['presentInParent']
         if isinstance(present_in_parent, list):
             present_in_parent = ','.join(present_in_parent)

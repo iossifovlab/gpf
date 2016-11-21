@@ -7,7 +7,7 @@ from pprint import pprint
 
 import pytest
 
-from pheno_tool.tool import PhenoTool, PhenoRequest
+from pheno_tool.tool import PhenoTool, VariantTypes
 
 
 def test_pheno_tool_create_default(phdb, all_ssc_studies, default_request):
@@ -60,7 +60,7 @@ def male_female_result(r):
 def test_tool_present_in_parent_ultra_rare(phdb, gene_set, all_ssc_studies):
     assert 239 == len(gene_set)
 
-    pheno_request = PhenoRequest(
+    pheno_request = VariantTypes(
         effect_types=['LGDs'],
         gene_syms=gene_set,
     )

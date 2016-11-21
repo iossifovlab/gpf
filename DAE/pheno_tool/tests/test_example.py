@@ -5,7 +5,7 @@ Created on Nov 15, 2016
 '''
 from DAE import get_gene_sets_symNS, vDB
 from pheno.pheno_db import PhenoDB
-from pheno_tool.tool import PhenoTool, PhenoRequest
+from pheno_tool.tool import PhenoTool, VariantTypes
 
 
 def test_example_1():
@@ -22,7 +22,7 @@ def test_example_1():
 
     tool = PhenoTool(phdb, studies, roles=['prb'])
 
-    pheno_request = PhenoRequest(
+    pheno_request = VariantTypes(
         effect_types=['LGDs'],
         gene_syms=gene_syms,
     )
@@ -73,7 +73,7 @@ def test_example_2():
 
     tool = PhenoTool(phdb, studies, roles=['prb', 'mom', 'dad'])
 
-    pheno_request = PhenoRequest(
+    pheno_request = VariantTypes(
         effect_types=['LGDs'],
         gene_syms=gene_syms,
         rarity='rare',

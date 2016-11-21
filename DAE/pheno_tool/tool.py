@@ -19,7 +19,7 @@ DEFAULT_STUDY = 'ALL SSC'
 DEFAULT_TRANSMITTED = 'w1202s766e611'
 
 
-class PhenoRequest(object):
+class VariantTypes(object):
     """
     Represents query filters for finding family variants.
 
