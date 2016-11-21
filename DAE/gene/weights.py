@@ -111,6 +111,9 @@ class Weights(WeightsConfig):
 
     @staticmethod
     def list_gene_weights():
+        """
+        Lists all available gene weights configured in `geneInfo.conf`.
+        """
         dae_config = Config()
         wd = dae_config.daeDir
         config = ConfigParser.SafeConfigParser({'wd': wd})
@@ -122,6 +125,9 @@ class Weights(WeightsConfig):
 
     @staticmethod
     def load_gene_weights(name):
+        """
+        Creates and loads a gene weights instance by gene weights name.
+        """
         assert name in Weights.list_gene_weights()
         w = Weights(name)
         return w

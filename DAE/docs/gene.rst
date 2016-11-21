@@ -4,10 +4,23 @@ gene package
 Example usage of :ref:`Weights` class
 -------------------------------------
 
-Create an instance of a :ref:`Weights` class::
+You can list all available gene weights names using::
 
     In [1]: from gene.weights import Weights
     
+    In [2]: names = Weights.list_gene_weights()
+    
+    In [3]: names
+    Out[3]: ['LGD_rank', 'RVIS_rank', 'pLI_rank', 'pRec_rank']
+
+
+To create an instance of a gene weights class you can use 
+:ref:`load_gene_weights`::
+
+    In [4]: w = Weights.load_gene_weights('RVIS_rank')
+
+Alternatively you can create an instance of a :ref:`Weights` class::
+
     In [2]: w = Weights('RVIS_rank')
     
     In [3]: w.get_genes(wmax=5)
