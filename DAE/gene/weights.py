@@ -109,6 +109,23 @@ class Weights(WeightsConfig):
         """
         return self.df
 
+    @staticmethod
+    def list_gene_weights():
+        dae_config = Config()
+        wd = dae_config.daeDir
+        config = ConfigParser.SafeConfigParser({'wd': wd})
+        config.read(dae_config.geneInfoDBconfFile)
+
+        weights = config.get('geneWeights', 'weights')
+        names = [n.strip() for n in weights.split(',')]
+        return names
+
+    @staticmethod
+    def load_gene_weights(name):
+        assert name in Weights.list_gene_weights()
+        w = Weights(name)
+        return w
+
 
 class WeightsLoader(object):
     """
