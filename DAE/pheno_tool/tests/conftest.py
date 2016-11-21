@@ -5,10 +5,9 @@ Created on Nov 8, 2016
 '''
 import pytest
 from pheno.pheno_db import PhenoDB
-from pheno_tool.tool import VariantTypes
 from pheno_tool.family_filters import FamilyFilters
 from DAE import get_gene_sets_symNS, vDB
-from pheno_tool.genotype_helper import GenotypeHelper
+from pheno_tool.genotype_helper import GenotypeHelper, VariantTypes
 
 
 @pytest.fixture(scope='session')
@@ -22,6 +21,8 @@ def phdb(request):
 def default_request(request):
     data = {
         'effect_types': ['LGDs'],
+        'present_in_child': ['autism only', 'autism and unaffected'],
+        'present_in_parent': ['neither'],
     }
     req = VariantTypes(**data)
     return req
@@ -59,5 +60,5 @@ def autism_candidates_genes(request):
 
 @pytest.fixture(scope='session')
 def genotype_helper(request, all_ssc_studies):
-    helper = GenotypeHelper(all_ssc_studies, roles=['prb'])
+    helper = GenotypeHelper(all_ssc_studies)
     return helper

@@ -7,31 +7,26 @@ from pprint import pprint
 
 import pytest
 
-from pheno_tool.tool import PhenoTool, VariantTypes
+from pheno_tool.tool import PhenoTool
+from pheno_tool.genotype_helper import VariantTypes
 
 
 def test_pheno_tool_create_default(phdb, all_ssc_studies, default_request):
     assert default_request is not None
 
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
+    tool = PhenoTool(phdb, roles=['prb'])
     assert tool is not None
 
     assert tool.phdb is not None
 
 
-def test_build_families_variants(phdb, default_request, all_ssc_studies):
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
-    result = tool.get_families_variants(default_request)
+def test_tool_calc(phdb, default_request, genotype_helper):
+    tool = PhenoTool(phdb, roles=['prb'])
 
-    assert result is not None
-    assert 390 == len(result)
-
-
-def test_tool_calc(phdb, default_request, all_ssc_studies):
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
+    persons_variants = genotype_helper.get_persons_variants(default_request)
 
     r = tool.calc(
-        default_request,
+        persons_variants,
         'ssc_commonly_used.head_circumference',
         normalize_by=['pheno_common.age'],
         gender_split=True
@@ -57,18 +52,25 @@ def male_female_result(r):
     return r['M'], r['F']
 
 
-def test_tool_present_in_parent_ultra_rare(phdb, gene_set, all_ssc_studies):
+def test_tool_present_in_parent_ultra_rare(
+        phdb, gene_set, genotype_helper):
     assert 239 == len(gene_set)
 
-    pheno_request = VariantTypes(
+    variant_types = VariantTypes(
         effect_types=['LGDs'],
         gene_syms=gene_set,
+        present_in_child=['autism only', 'autism and unaffected'],
+        present_in_parent=['father only', 'mother only',
+                           'mother and father', 'neither'],
     )
+
+    persons_variants = genotype_helper.get_persons_variants(variant_types)
+
     tool = PhenoTool(
-        phdb, all_ssc_studies, roles=['prb', 'mom', 'dad'])
+        phdb, roles=['prb', 'mom', 'dad'])
 
     r = tool.calc(
-        pheno_request,
+        persons_variants,
         'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
         gender_split=True,
     )
@@ -87,11 +89,13 @@ def test_tool_present_in_parent_ultra_rare(phdb, gene_set, all_ssc_studies):
     assert 0.2 == pytest.approx(female.pvalue, abs=1E-1)
 
 
-def test_genotypes(phdb, default_request, all_ssc_studies):
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
+def test_genotypes(phdb, default_request, genotype_helper):
+    persons_variants = genotype_helper.get_persons_variants(default_request)
+
+    tool = PhenoTool(phdb, roles=['prb'])
 
     r = tool.calc(
-        default_request,
+        persons_variants,
         'ssc_commonly_used.head_circumference',
         normalize_by=['pheno_common.age'],
         gender_split=True,
@@ -106,11 +110,12 @@ def test_genotypes(phdb, default_request, all_ssc_studies):
     assert 3 == max(genotypes.values())
 
 
-def test_phenotypes(phdb, default_request, all_ssc_studies):
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
+def test_phenotypes(phdb, default_request, genotype_helper):
+    persons_variants = genotype_helper.get_persons_variants(default_request)
+    tool = PhenoTool(phdb, roles=['prb'])
 
     r = tool.calc(
-        default_request,
+        persons_variants,
         'ssc_commonly_used.head_circumference',
         normalize_by=['pheno_common.age'],
         gender_split=True
@@ -124,14 +129,16 @@ def test_phenotypes(phdb, default_request, all_ssc_studies):
     assert 372 == len(phenotypes)
     # assert 3 == max(genotypes.values())
 
-    pprint(phenotypes)
+    # pprint(phenotypes)
 
 
-def test_gender_split_false(phdb, default_request, all_ssc_studies):
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'])
+def test_gender_split_false(phdb, default_request, genotype_helper):
+    persons_variants = genotype_helper.get_persons_variants(default_request)
+
+    tool = PhenoTool(phdb, roles=['prb'])
 
     r = tool.calc(
-        default_request,
+        persons_variants,
         'ssc_commonly_used.head_circumference',
         normalize_by=['pheno_common.age'],
         gender_split=False
