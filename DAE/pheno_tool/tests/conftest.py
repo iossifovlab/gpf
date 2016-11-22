@@ -7,7 +7,7 @@ import pytest
 from pheno.pheno_db import PhenoDB
 from pheno_tool.family_filters import FamilyFilters
 from DAE import get_gene_sets_symNS, vDB
-from pheno_tool.genotype_helper import GenotypeHelper, VariantTypes
+from pheno_tool.genotype_helper import GenotypeHelper
 
 
 @pytest.fixture(scope='session')
@@ -24,8 +24,7 @@ def default_request(request):
         'present_in_child': ['autism only', 'autism and unaffected'],
         'present_in_parent': ['neither'],
     }
-    req = VariantTypes(**data)
-    return req
+    return data
 
 
 @pytest.fixture(scope='session')

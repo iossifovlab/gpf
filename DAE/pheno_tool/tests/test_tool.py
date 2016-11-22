@@ -8,12 +8,9 @@ from pprint import pprint
 import pytest
 
 from pheno_tool.tool import PhenoTool
-from pheno_tool.genotype_helper import VariantTypes
 
 
-def test_pheno_tool_create_default(phdb, all_ssc_studies, default_request):
-    assert default_request is not None
-
+def test_pheno_tool_create_default(phdb, all_ssc_studies):
     tool = PhenoTool(phdb, roles=['prb'])
     assert tool is not None
 
@@ -23,7 +20,7 @@ def test_pheno_tool_create_default(phdb, all_ssc_studies, default_request):
 def test_tool_calc(phdb, default_request, genotype_helper):
     tool = PhenoTool(phdb, roles=['prb'])
 
-    persons_variants = genotype_helper.get_persons_variants(default_request)
+    persons_variants = genotype_helper.get_persons_variants(**default_request)
 
     r = tool.calc(
         persons_variants,
@@ -56,15 +53,13 @@ def test_tool_present_in_parent_ultra_rare(
         phdb, gene_set, genotype_helper):
     assert 239 == len(gene_set)
 
-    variant_types = VariantTypes(
+    persons_variants = genotype_helper.get_persons_variants(
         effect_types=['LGDs'],
         gene_syms=gene_set,
         present_in_child=['autism only', 'autism and unaffected'],
         present_in_parent=['father only', 'mother only',
                            'mother and father', 'neither'],
     )
-
-    persons_variants = genotype_helper.get_persons_variants(variant_types)
 
     tool = PhenoTool(
         phdb, roles=['prb', 'mom', 'dad'])
@@ -90,7 +85,7 @@ def test_tool_present_in_parent_ultra_rare(
 
 
 def test_genotypes(phdb, default_request, genotype_helper):
-    persons_variants = genotype_helper.get_persons_variants(default_request)
+    persons_variants = genotype_helper.get_persons_variants(**default_request)
 
     tool = PhenoTool(phdb, roles=['prb'])
 
@@ -111,7 +106,7 @@ def test_genotypes(phdb, default_request, genotype_helper):
 
 
 def test_phenotypes(phdb, default_request, genotype_helper):
-    persons_variants = genotype_helper.get_persons_variants(default_request)
+    persons_variants = genotype_helper.get_persons_variants(**default_request)
     tool = PhenoTool(phdb, roles=['prb'])
 
     r = tool.calc(
@@ -133,7 +128,7 @@ def test_phenotypes(phdb, default_request, genotype_helper):
 
 
 def test_gender_split_false(phdb, default_request, genotype_helper):
-    persons_variants = genotype_helper.get_persons_variants(default_request)
+    persons_variants = genotype_helper.get_persons_variants(**default_request)
 
     tool = PhenoTool(phdb, roles=['prb'])
 

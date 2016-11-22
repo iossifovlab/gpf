@@ -71,8 +71,9 @@ class GenotypeHelper(object):
         self.denovo_studies = [st for st in studies if st.has_denovo]
         self.transmitted_studies = [st for st in studies if st.has_transmitted]
 
-    def get_variants(self, request):
-        query = request._dae_query_request()
+    def get_variants(self, **kwargs):
+        variant_types = VariantTypes(**kwargs)
+        query = variant_types._dae_query_request()
         query.update({
             'denovoStudies': self.denovo_studies,
             'transmittedStudies': self.transmitted_studies,
@@ -80,8 +81,8 @@ class GenotypeHelper(object):
         vs = dae_query_variants(query)
         return itertools.chain(*vs)
 
-    def get_persons_variants(self, pheno_request):
-        vs = self.get_variants(pheno_request)
+    def get_persons_variants(self, **kwargs):
+        vs = self.get_variants(**kwargs)
         seen = set([])
         result = Counter()
         for v in vs:
@@ -95,8 +96,8 @@ class GenotypeHelper(object):
                     print("skipping {}".format(vid))
         return result
 
-    def get_families_variants(self, pheno_request):
-        vs = self.get_variants(pheno_request)
+    def get_families_variants(self, **kwargs):
+        vs = self.get_variants(kwargs)
         seen = set([])
         result = Counter()
         for v in vs:

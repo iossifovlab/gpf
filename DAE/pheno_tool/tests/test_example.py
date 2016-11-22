@@ -6,7 +6,7 @@ Created on Nov 15, 2016
 from DAE import get_gene_sets_symNS, vDB
 from pheno.pheno_db import PhenoDB
 from pheno_tool.tool import PhenoTool
-from pheno_tool.genotype_helper import VariantTypes, GenotypeHelper
+from pheno_tool.genotype_helper import GenotypeHelper
 
 
 def test_example_1():
@@ -23,14 +23,13 @@ def test_example_1():
 
     tool = PhenoTool(phdb, roles=['prb'])
 
-    variant_types = VariantTypes(
+    helper = GenotypeHelper(studies)
+    persons_variants = helper.get_persons_variants(
         effect_types=['LGDs'],
         gene_syms=gene_syms,
         present_in_child=['autism only', 'autism and unaffected'],
         present_in_parent=['neither'],
     )
-    helper = GenotypeHelper(studies)
-    persons_variants = helper.get_persons_variants(variant_types)
 
     res = tool.calc(
         persons_variants,
@@ -78,7 +77,8 @@ def test_example_2():
 
     tool = PhenoTool(phdb, roles=['prb', 'mom', 'dad'])
 
-    variant_types = VariantTypes(
+    helper = GenotypeHelper(studies)
+    persons_variants = helper.get_persons_variants(
         effect_types=['LGDs'],
         gene_syms=gene_syms,
         rarity='rare',
@@ -87,8 +87,6 @@ def test_example_2():
         present_in_parent=['father only', 'mother only',
                            'mother and father', 'neither'],
     )
-    helper = GenotypeHelper(studies)
-    persons_variants = helper.get_persons_variants(variant_types)
 
     res = tool.calc(
         persons_variants,
