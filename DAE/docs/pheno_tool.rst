@@ -24,7 +24,7 @@ Then we are ready to create an PhenoTool instance::
 
     In [12]: from pheno_tool.tool import PhenoTool
     
-    In [13]: tool = PhenoTool(phdb, studies, roles=['prb'])
+    In [13]: tool = PhenoTool(phdb, roles=['prb'])
 
 Select a set of gene symbols to work with::
 
@@ -34,15 +34,22 @@ Select a set of gene symbols to work with::
     
     In [17]: gene_syms = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
 
-Create a variants query object::
+Create a genotype helper object and get persons variants::
 
-    In [18]: from pheno_tool.tool import PhenoRequest
+    In [18]: from pheno_tool.genotype_helper import GenotypeHelper
     
-    In [19]: query = PhenoRequest(effect_types=['LGDs'], gene_syms=gene_syms)
+    In [19]: genotype_helper = GenotypeHelper(studies)
+    
+    In [20]: persons_variants = genotype_helper.get_persons_variants(
+                effect_types=['LGDs'],
+                present_in_child=['autism only', 'autism and unaffected'],
+                present_in_parent=['neither'],
+                gene_syms=gene_syms)
 
 Now we are ready to the actual computations::
 
-    In [20]: res = tool.calc(query, 'ssc_commonly_used.head_circumference', 
+    In [21]: res = tool.calc(persons_variants, 
+        ...:     'ssc_commonly_used.head_circumference', 
         ...:     normalize_by=['pheno_common.age'],
         ...:     gender_split=False)
 
@@ -118,7 +125,33 @@ and as dictionaries::
       }
 
 
- 
+Example usage of :ref:`PhenoTool` class with siblings and probands
+-----------------------------------------
+
+Start with creating instance of :ref:`GenotypeHelper` and collect some
+persons variants::
+
+    In [19]: genotype_helper = GenotypeHelper(studies)
+
+    In [21]: persons_variants = genotype_helper.get_persons_variants(
+        ...:         effect_types=['nonsynonymous', ],
+        ...:         gene_syms=gene_syms,
+        ...:         present_in_child=[
+        ...:             'autism only', 'unaffected only', 'autism and unaffected'],
+        ...:         present_in_parent=[
+        ...:             'mother only', 'mother and father', 'neither'],
+        ...:    )
+
+Create an instance of :ref:`PhenoTool`::
+
+    In [22]: tool = PhenoTool(phdb, roles=['prb', 'sib'])
+    
+    In [23]: res = tool.calc(persons_variants, 'vineland_ii.community_raw_score')
+    
+    In [24]: res
+    Out[24]: PhenoResult: pvalue=1.43e-09; pos=3223 (neg=2206)
+
+
 ..
     pheno_tool.family_filters module
     --------------------------------
@@ -132,6 +165,14 @@ pheno_tool.tool module
 ----------------------
 
 .. automodule:: pheno_tool.tool
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pheno_tool.genotype_helper module
+----------------------
+
+.. automodule:: pheno_tool.genotype_helper
     :members:
     :undoc-members:
     :show-inheritance:

@@ -78,8 +78,6 @@ You can access individuals and measures values as a joined data frame by using
     :undoc-members:
     :show-inheritance:
 
-Submodules
-----------
 
 pheno.pheno_db module
 ---------------------
