@@ -115,11 +115,13 @@ class MysqlTransmittedQuery(TransmissionConfig):
         self.user = self._get_params('user')
         self.passwd = self._get_params('pass')
         self.host = self._get_params("host")
+        self.port = int(self._get_params("port"))
 
         assert self.host
         assert self.db
         assert self.user
         assert self.passwd
+        assert self.port
 
         self.connection = None
         self.query = copy.deepcopy(self.DEFAULT_QUERY)
@@ -129,10 +131,11 @@ class MysqlTransmittedQuery(TransmissionConfig):
         #         if not self.connection:
         #             self.connect()
         LOGGER.info("creating new mysql connection")
-        connection = mdb.connect(self.host,
-                                 self.user,
-                                 self.passwd,
-                                 self.db)
+        connection = mdb.connect(host=self.host,
+                                 port=self.port,
+                                 user=self.user,
+                                 passwd=self.passwd,
+                                 db=self.db)
 
         cursor = connection.cursor(mdb.cursors.DictCursor)
         cursor.execute(select)
