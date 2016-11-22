@@ -23,7 +23,7 @@ def test_wg_lgds():
 
 
 def test_get_single_gene_lgds(wg_study):
-    start = time.clock()
+    start = time.time()
     m = MysqlTransmittedQuery(wg_study)
 
     vs = m.get_transmitted_variants(
@@ -35,12 +35,12 @@ def test_get_single_gene_lgds(wg_study):
     res = [v for v in vs]
     assert 18884 == len(res)
 
-    print(": {:.2g}s (count={})".format(
-        time.clock() - start, len(res)))
+    print(": {}s (count={})".format(
+        time.time() - start, len(res)))
 
 
 def test_get_rare_lgds_for_family_variants(wg_study):
-    start = time.clock()
+    start = time.time()
     vs = wg_study.get_transmitted_variants(
         minParentsCalled=None,
         maxAltFreqPrcnt=1.0,
@@ -53,12 +53,12 @@ def test_get_rare_lgds_for_family_variants(wg_study):
     res = [v for v in vs]
     assert 75 == len(res)
 
-    print(": {:.2g}s (count={})".format(
-        time.clock() - start, len(res)))
+    print(": {}s (count={})".format(
+        time.time() - start, len(res)))
 
 
 def test_get_ultra_rare_lgds_for_family_variants(wg_study):
-    start = time.clock()
+    start = time.time()
     vs = wg_study.get_transmitted_variants(
         minParentsCalled=None,
         ultraRareOnly=True,
@@ -71,12 +71,12 @@ def test_get_ultra_rare_lgds_for_family_variants(wg_study):
     res = [v for v in vs]
     assert 44 == len(res)
 
-    print(": {:.2g}s (count={})".format(
-        time.clock() - start, len(res)))
+    print(": {}s (count={})".format(
+        time.time() - start, len(res)))
 
 
 def test_get_ultra_rare_lgds_variants(wg_study):
-    start = time.clock()
+    start = time.time()
     vs = wg_study.get_transmitted_variants(
         minParentsCalled=None,
         ultraRareOnly=True,
@@ -88,12 +88,12 @@ def test_get_ultra_rare_lgds_variants(wg_study):
     res = [v for v in vs]
     assert 10228 == len(res)
 
-    print(": {:.2g}s (count={})".format(
-        time.clock() - start, len(res)))
+    print(": {}s (count={})".format(
+        time.time() - start, len(res)))
 
 
 def test_get_family_ultra_rare_variants(wg_study):
-    start = time.clock()
+    start = time.time()
     vs = wg_study.get_transmitted_variants(
         minParentsCalled=None,
         ultraRareOnly=True,
@@ -105,5 +105,5 @@ def test_get_family_ultra_rare_variants(wg_study):
     res = [v for v in vs]
     assert 141213 == len(res)
 
-    print(": {:.2g}s (count={})".format(
-        time.clock() - start, len(res)))
+    print(": {}s (count={})".format(
+        time.time() - start, len(res)))
