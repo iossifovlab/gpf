@@ -10,7 +10,7 @@ def test_get_variants_denovo(
         autism_candidates_genes, genotype_helper):
 
     vs = genotype_helper.get_variants(
-        effect_types='LGDs',
+        effect_types=['LGDs'],
         gene_syms=autism_candidates_genes,
         present_in_child=['autism only', 'autism and unaffected'],
         present_in_parent=['neither'],)
@@ -106,7 +106,7 @@ def test_get_person_variants_father_all(
         autism_candidates_genes, genotype_helper):
 
     vs = genotype_helper.get_variants(
-        effect_types='Frame-shift,Nonsense,Splice-site',
+        effect_types=['Frame-shift', 'Nonsense', 'Splice-site'],
         gene_syms=autism_candidates_genes,
         rarity='rare',
         rarity_max=10.0,
@@ -117,7 +117,7 @@ def test_get_person_variants_father_all(
     assert 503 == len(variants)
 
     res = genotype_helper.get_persons_variants(
-        effect_types='Frame-shift,Nonsense,Splice-site',
+        effect_types=['Frame-shift', 'Nonsense', 'Splice-site'],
         gene_syms=autism_candidates_genes,
         rarity='rare',
         rarity_max=10.0,

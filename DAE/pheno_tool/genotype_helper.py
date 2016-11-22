@@ -3,10 +3,13 @@ Created on Nov 21, 2016
 
 @author: lubo
 '''
-from query_variants import dae_query_variants
+from query_variants import dae_query_variants, PRESENT_IN_CHILD_TYPES,\
+    PRESENT_IN_PARENT_TYPES
 import itertools
 from collections import Counter
 from Variant import variantInMembers
+from VariantAnnotation import get_effect_types
+from query_prepare import build_effect_types_list
 
 
 DEFAULT_STUDY = 'ALL SSC'
@@ -20,6 +23,13 @@ class VariantTypes(object):
     Constructor arguments are:
 
     `effect_types` -- list of effect types
+
+    `present_in_child` -- list of present in child specifiers ("autism only",
+    "unaffected only", "autism and unaffected", "proband only",
+    "sibling only", "proband and sibling", "neither").
+
+    `present_in_parent` -- list of present in parent specifiers ("mother only",
+    "father only", "mother and father", "neither")
 
     `rarity` -- one of `ultraRare`, `rare`, `interval`. Together with
     `ratiry_max` and `rarity_min` specifies the rarity of transmitted variants.
@@ -41,6 +51,10 @@ class VariantTypes(object):
         rarity_max=None,
         rarity_min=None,
     ):
+        assert self._check_present_in_child(present_in_child)
+        assert self._check_present_in_parent(present_in_parent)
+        assert self._check_effect_types(effect_types)
+        assert self._check_rarity(rarity, rarity_min, rarity_max)
 
         self.effect_types = effect_types
         self.gene_syms = gene_syms
@@ -61,6 +75,45 @@ class VariantTypes(object):
             'presentInParent': self.present_in_parent,
         }
         return data
+
+    @staticmethod
+    def _check_present_in_child(present_in_child):
+        assert isinstance(present_in_child, list)
+
+        return all([pic in PRESENT_IN_CHILD_TYPES
+                    for pic in present_in_child])
+
+    @staticmethod
+    def _check_present_in_parent(present_in_parent):
+        assert isinstance(present_in_parent, list)
+
+        return all([pip in PRESENT_IN_PARENT_TYPES
+                    for pip in present_in_parent])
+
+    @staticmethod
+    def _check_effect_types(effect_types):
+        assert isinstance(effect_types, list)
+
+        elist = build_effect_types_list(effect_types)
+        return all([et in get_effect_types(types=True, groups=True)
+                    for et in elist])
+
+    @staticmethod
+    def _check_rarity(rarity, rarity_min, rarity_max):
+        assert rarity in ['ultraRare', 'rare', 'interval', 'all']
+
+        if rarity == 'ultraRare':
+            assert rarity_min is None and rarity_max is None
+        if rarity == 'rare':
+            assert rarity_min is None and \
+                (rarity_max >= 0.0 and rarity_max <= 100.0)
+        if rarity == 'interval':
+            assert (rarity_min >= 0.0 and rarity_min <= 100.0) and \
+                (rarity_max >= 0.0 and rarity_max <= 100.0) and \
+                rarity_min <= rarity_max
+        if rarity == 'all':
+            assert rarity_min is None and rarity_max is None
+        return True
 
 
 class GenotypeHelper(object):
