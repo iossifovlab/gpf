@@ -141,3 +141,21 @@ def test_gender_split_false(phdb, default_request, genotype_helper):
 
     assert 374 == r.positive_count
     assert 2355 == r.negative_count
+
+
+def test_family_ids(phdb, default_request, genotype_helper):
+    persons_variants = genotype_helper.get_persons_variants(
+        family_ids=['11000'], **default_request)
+
+    tool = PhenoTool(phdb, roles=['prb'])
+
+    r = tool.calc(
+        persons_variants,
+        'ssc_commonly_used.head_circumference',
+        normalize_by=['pheno_common.age'],
+        gender_split=False,
+        family_ids=['11000'],
+    )
+
+    assert 0 == r.positive_count
+    assert 1 == r.negative_count

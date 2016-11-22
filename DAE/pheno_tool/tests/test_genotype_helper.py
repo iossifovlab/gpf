@@ -134,3 +134,21 @@ def test_get_person_variants_father_all(
 
     assert '13216.p1' in ps3
     assert '13216.fa' in ps3
+
+
+def test_get_lgds_variants_for_family(
+        autism_candidates_genes, genotype_helper):
+
+    vs = genotype_helper.get_variants(
+        effect_types=['LGDs'],
+        present_in_child=[
+            'autism only', 'unaffected only', 'autism and unaffected',
+            'neither'],
+        present_in_parent=[
+            'father only', 'mother only', 'mother and father',
+            'neither'],
+        rarity='all',
+        family_ids=['11000'],
+    )
+    variants = [v for v in vs]
+    assert 100 == len(variants)

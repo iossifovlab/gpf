@@ -172,8 +172,11 @@ class PhenoTool(object):
         return result
 
     def calc(self, persons_variants, measure_id, normalize_by=[],
-             gender_split=False):
+             gender_split=False, family_ids=None):
         df = self.normalize_measure_values_df(measure_id, normalize_by)
+
+        if family_ids:
+            df = df[df.family_id.isin(family_ids)]
 
         variants = pd.Series(0, index=df.index)
         df['variants'] = variants

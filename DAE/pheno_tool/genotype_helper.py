@@ -50,6 +50,7 @@ class VariantTypes(object):
         rarity='ultraRare',
         rarity_max=None,
         rarity_min=None,
+        family_ids=None,
     ):
         assert self._check_present_in_child(present_in_child)
         assert self._check_present_in_parent(present_in_parent)
@@ -63,6 +64,7 @@ class VariantTypes(object):
         self.rarity = rarity
         self.rarity_max = rarity_max
         self.rarity_min = rarity_min
+        self.family_ids = family_ids
 
     def _dae_query_request(self):
         data = {
@@ -73,6 +75,7 @@ class VariantTypes(object):
             'popFrequencyMin': self.rarity_min,
             'presentInChild': self.present_in_child,
             'presentInParent': self.present_in_parent,
+            'familyIds': self.family_ids,
         }
         return data
 
