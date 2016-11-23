@@ -115,7 +115,11 @@ class MysqlTransmittedQuery(TransmissionConfig):
         self.user = self._get_params('user')
         self.passwd = self._get_params('pass')
         self.host = self._get_params("host")
-        self.port = int(self._get_params("port"))
+        self.port = self._get_params("port")
+        if self.port is not None:
+            self.port = int(self.port)
+        else:
+            self.port = 3306
 
         assert self.host
         assert self.db
