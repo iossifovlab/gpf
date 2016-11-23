@@ -69,7 +69,7 @@ def test_q201_limit_get_everything_in_a_family(wg_study):
     report_time(start, res)
 
 
-@slow
+@veryslow
 def test_q201_get_everything_in_a_family(wg_study):
     start = time.time()
     vs = wg_study.get_transmitted_variants(
