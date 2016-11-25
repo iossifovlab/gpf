@@ -6,7 +6,6 @@ Created on Nov 15, 2016
 from DAE import get_gene_sets_symNS, vDB
 from pheno.pheno_db import PhenoDB
 from pheno_tool.tool import PhenoTool
-from pheno_tool.genotype_helper import GenotypeHelper
 
 
 def test_example_1():
@@ -21,20 +20,17 @@ def test_example_1():
     phdb = PhenoDB()
     phdb.load()
 
-    tool = PhenoTool(phdb, roles=['prb'])
+    tool = PhenoTool(phdb, studies, roles=['prb'],
+                     measure_id='ssc_commonly_used.head_circumference',
+                     normalize_by=['pheno_common.age']
+                     )
 
-    helper = GenotypeHelper(studies)
-    persons_variants = helper.get_persons_variants(
+    res = tool.calc(
         effect_types=['LGDs'],
         gene_syms=gene_syms,
         present_in_child=['autism only', 'autism and unaffected'],
         present_in_parent=['neither'],
     )
-
-    res = tool.calc(
-        persons_variants,
-        'ssc_commonly_used.head_circumference',
-        normalize_by=['pheno_common.age'])
 
     print(res)
     #     [
@@ -75,10 +71,12 @@ def test_example_2():
     phdb = PhenoDB()
     phdb.load()
 
-    tool = PhenoTool(phdb, roles=['prb', 'mom', 'dad'])
+    tool = PhenoTool(
+        phdb, studies, roles=['prb', 'mom', 'dad'],
+        measure_id='ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
+    )
 
-    helper = GenotypeHelper(studies)
-    persons_variants = helper.get_persons_variants(
+    res = tool.calc(
         effect_types=['LGDs'],
         gene_syms=gene_syms,
         rarity='rare',
@@ -86,11 +84,6 @@ def test_example_2():
         present_in_child=['autism only', 'autism and unaffected'],
         present_in_parent=['father only', 'mother only',
                            'mother and father', 'neither'],
-    )
-
-    res = tool.calc(
-        persons_variants,
-        'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
     )
 
     print(res)

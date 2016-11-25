@@ -11,6 +11,7 @@ import pandas as pd
 import statsmodels.api as sm
 from collections import Counter
 from VariantsDB import Person
+from pheno_tool.genotype_helper import GenotypeHelper
 
 
 class PhenoResult(object):
@@ -97,6 +98,7 @@ class PhenoTool(object):
         self.persons = None
         self.measure_id = measure_id
         self.normalize_by = normalize_by
+        self.genotype_helper = GenotypeHelper(studies)
 
     @classmethod
     def _assert_persons_equal(cls, p1, p2):
@@ -155,6 +157,23 @@ class PhenoTool(object):
             self.persons = self._persons(df)
         return self.persons
 
+    @staticmethod
+    def _normalize_df(df, measure_id, normalize_by=[]):
+        if not normalize_by:
+            dn = pd.Series(
+                index=df.index, data=df[measure_id].values)
+            df['normalized'] = dn
+            return df
+        else:
+            X = sm.add_constant(df[normalize_by])
+            y = df[measure_id]
+            model = sm.OLS(y, X)
+            fitted = model.fit()
+
+            dn = pd.Series(index=df.index, data=fitted.resid)
+            df['normalized'] = dn
+            return df
+
     def normalize_measure_values_df(self, measure_id, normalize_by=[]):
         """
         Returns a data frame containing values for the `measure_id`.
@@ -173,21 +192,7 @@ class PhenoTool(object):
 
         df = self.phdb.get_persons_values_df(measures, roles=self.roles)
         df.dropna(inplace=True)
-
-        if not normalize_by:
-            dn = pd.Series(
-                index=df.index, data=df[measure_id].values)
-            df['normalized'] = dn
-            return df
-        else:
-            X = sm.add_constant(df[normalize_by])
-            y = df[measure_id]
-            model = sm.OLS(y, X)
-            fitted = model.fit()
-
-            dn = pd.Series(index=df.index, data=fitted.resid)
-            df['normalized'] = dn
-            return df
+        return self._normalize_df(df, measure_id, normalize_by)
 
     @staticmethod
     def _calc_base_stats(arr):
@@ -242,18 +247,19 @@ class PhenoTool(object):
 
         return result
 
-    def calc(self, persons_variants, measure_id, normalize_by=[],
-             gender_split=False, family_ids=None):
-        df = self.normalize_measure_values_df(measure_id, normalize_by)
+    def calc(self, gender_split=False, **kwargs):
+        persons = self.list_of_subjects()
+        persons_variants = self.genotype_helper.get_persons_variants(**kwargs)
 
-        if family_ids:
-            df = df[df.family_id.isin(family_ids)]
+        df = self._normalize_df(self.df, self.measure_id, self.normalize_by)
 
         variants = pd.Series(0, index=df.index)
         df['variants'] = variants
 
         for index, row in df.iterrows():
             person_id = row['person_id']
+            assert person_id in persons
+
             var_count = persons_variants.get(person_id, 0)
             df.loc[index, 'variants'] = var_count
 

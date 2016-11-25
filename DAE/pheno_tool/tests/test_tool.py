@@ -11,22 +11,21 @@ from pheno_tool.tool import PhenoTool
 
 
 def test_pheno_tool_create_default(phdb, all_ssc_studies):
-    tool = PhenoTool(phdb, roles=['prb'])
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'],
+                     measure_id='ssc_commonly_used.head_circumference')
     assert tool is not None
 
     assert tool.phdb is not None
 
 
-def test_tool_calc(phdb, default_request, genotype_helper):
-    tool = PhenoTool(phdb, roles=['prb'])
-
-    persons_variants = genotype_helper.get_persons_variants(**default_request)
+def test_tool_calc(phdb, all_ssc_studies, default_request, genotype_helper):
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'],
+                     measure_id='ssc_commonly_used.head_circumference',
+                     normalize_by=['pheno_common.age'],)
 
     r = tool.calc(
-        persons_variants,
-        'ssc_commonly_used.head_circumference',
-        normalize_by=['pheno_common.age'],
-        gender_split=True
+        gender_split=True,
+        **default_request
     )
     assert r is not None
     print(r)
@@ -50,24 +49,21 @@ def male_female_result(r):
 
 
 def test_tool_present_in_parent_ultra_rare(
-        phdb, gene_set, genotype_helper):
-    assert 239 == len(gene_set)
+        phdb, all_ssc_studies, gene_set, genotype_helper):
 
-    persons_variants = genotype_helper.get_persons_variants(
+    tool = PhenoTool(
+        phdb, all_ssc_studies,
+        roles=['prb', 'mom', 'dad'],
+        measure_id='ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
+    )
+
+    r = tool.calc(
+        gender_split=True,
         effect_types=['LGDs'],
         gene_syms=gene_set,
         present_in_child=['autism only', 'autism and unaffected'],
         present_in_parent=['father only', 'mother only',
                            'mother and father', 'neither'],
-    )
-
-    tool = PhenoTool(
-        phdb, roles=['prb', 'mom', 'dad'])
-
-    r = tool.calc(
-        persons_variants,
-        'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
-        gender_split=True,
     )
     assert r is not None
     pprint(r)
@@ -84,16 +80,14 @@ def test_tool_present_in_parent_ultra_rare(
     assert 0.2 == pytest.approx(female.pvalue, abs=1E-1)
 
 
-def test_genotypes(phdb, default_request, genotype_helper):
-    persons_variants = genotype_helper.get_persons_variants(**default_request)
-
-    tool = PhenoTool(phdb, roles=['prb'])
+def test_genotypes(phdb, all_ssc_studies, default_request, genotype_helper):
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'],
+                     measure_id='ssc_commonly_used.head_circumference',
+                     normalize_by=['pheno_common.age'],)
 
     r = tool.calc(
-        persons_variants,
-        'ssc_commonly_used.head_circumference',
-        normalize_by=['pheno_common.age'],
         gender_split=True,
+        **default_request
     )
 
     genotypes = r['M'].genotypes
@@ -105,15 +99,15 @@ def test_genotypes(phdb, default_request, genotype_helper):
     assert 3 == max(genotypes.values())
 
 
-def test_phenotypes(phdb, default_request, genotype_helper):
-    persons_variants = genotype_helper.get_persons_variants(**default_request)
-    tool = PhenoTool(phdb, roles=['prb'])
+def test_phenotypes(phdb, all_ssc_studies, default_request, genotype_helper):
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'],
+                     measure_id='ssc_commonly_used.head_circumference',
+                     normalize_by=['pheno_common.age'],
+                     )
 
     r = tool.calc(
-        persons_variants,
-        'ssc_commonly_used.head_circumference',
-        normalize_by=['pheno_common.age'],
-        gender_split=True
+        gender_split=True,
+        **default_request
     )
 
     phenotypes = r['M'].phenotypes
@@ -127,35 +121,17 @@ def test_phenotypes(phdb, default_request, genotype_helper):
     # pprint(phenotypes)
 
 
-def test_gender_split_false(phdb, default_request, genotype_helper):
-    persons_variants = genotype_helper.get_persons_variants(**default_request)
-
-    tool = PhenoTool(phdb, roles=['prb'])
+def test_gender_split_false(phdb, all_ssc_studies, default_request):
+    tool = PhenoTool(
+        phdb, all_ssc_studies, roles=['prb'],
+        measure_id='ssc_commonly_used.head_circumference',
+        normalize_by=['pheno_common.age'],
+    )
 
     r = tool.calc(
-        persons_variants,
-        'ssc_commonly_used.head_circumference',
-        normalize_by=['pheno_common.age'],
-        gender_split=False
+        gender_split=False,
+        **default_request
     )
 
     assert 374 == r.positive_count
     assert 2355 == r.negative_count
-
-
-def test_family_ids(phdb, default_request, genotype_helper):
-    persons_variants = genotype_helper.get_persons_variants(
-        family_ids=['11000'], **default_request)
-
-    tool = PhenoTool(phdb, roles=['prb'])
-
-    r = tool.calc(
-        persons_variants,
-        'ssc_commonly_used.head_circumference',
-        normalize_by=['pheno_common.age'],
-        gender_split=False,
-        family_ids=['11000'],
-    )
-
-    assert 0 == r.positive_count
-    assert 1 == r.negative_count
