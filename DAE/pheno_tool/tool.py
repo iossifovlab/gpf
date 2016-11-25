@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from collections import Counter
+from VariantsDB import Person
 
 
 class PhenoResult(object):
@@ -80,16 +81,25 @@ class PhenoTool(object):
     Receives as argument an instance of PhenoDB class.
     """
 
-    def __init__(self, phdb, studies, roles, family_ids=None):
+    def __init__(self, phdb, studies, roles,
+                 measure_id, normalize_by=[]):
+
+        assert phdb.has_measure(measure_id)
+        assert all([phdb.has_measure(m) for m in normalize_by])
+
+        assert len(roles) >= 1
+        assert all([r in ['prb', 'sib', 'mom', 'dad'] for r in roles])
+
         self.phdb = phdb
         self.studies = studies
         self.roles = roles
-        self.family_ids = family_ids
 
         self.persons = None
+        self.measure_id = measure_id
+        self.normalize_by = normalize_by
 
-    @staticmethod
-    def _assert_persons_equal(p1, p2):
+    @classmethod
+    def _assert_persons_equal(cls, p1, p2):
         if p1.personId == p2.personId and \
                 p1.role == p2.role and \
                 p1.gender == p2.gender:
@@ -99,19 +109,50 @@ class PhenoTool(object):
             print("mismatched persons: {} != {}".format(p1, p2))
             return False
 
+    @classmethod
+    def _studies_persons(cls, studies, roles):
+        persons = {}
+        for st in studies:
+            for fam in st.families.values():
+                for person in fam.memberInOrder:
+                    if person.role in roles and person.personId not in persons:
+                        persons[person.personId] = person
+        return persons
+
+    @classmethod
+    def _measures_persons_df(cls, phdb, roles, measures, persons):
+        df = phdb.get_persons_values_df(measures, roles=roles)
+        df.dropna(inplace=True)
+
+        df = df[df.person_id.isin(persons)]
+
+        return df.copy()
+
+    @classmethod
+    def _persons(cls, df):
+        persons = {}
+        for _index, row in df.iterrows():
+            person = Person()
+            person.personId = row['person_id']
+            person.gender = row['gender']
+            person.role = row['role']
+            persons[person.personId] = person
+        return persons
+
     def list_of_subjects(self, rebuild=False):
-        if self.persons is None:
-            persons = {}
-            for st in self.studies:
-                for fid, fam in st.families.items():
-                    if self.family_ids is not None and \
-                            fid not in self.family_ids:
-                        continue
-                    for person in fam.memberInOrder:
-                        if person.role in self.roles and \
-                                person.personId not in persons:
-                            persons[person.personId] = person
-            self.persons = persons
+        if self.persons is None or rebuild:
+            persons = self._studies_persons(self.studies, self.roles)
+
+            measures = [self.measure_id]
+            measures.extend(self.normalize_by)
+
+            df = self._measures_persons_df(
+                self.phdb, self.roles,
+                measures,
+                persons)
+
+            self.df = df
+            self.persons = self._persons(df)
         return self.persons
 
     def normalize_measure_values_df(self, measure_id, normalize_by=[]):
