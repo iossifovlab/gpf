@@ -100,6 +100,8 @@ class PhenoTool(object):
         self.normalize_by = normalize_by
         self.genotype_helper = GenotypeHelper(studies)
 
+        self._build_subjects()
+
     @classmethod
     def _assert_persons_equal(cls, p1, p2):
         if p1.personId == p2.personId and \
@@ -141,21 +143,26 @@ class PhenoTool(object):
             persons[person.personId] = person
         return persons
 
+    def _build_subjects(self):
+        persons = self._studies_persons(self.studies, self.roles)
+        measures = [self.measure_id]
+        measures.extend(self.normalize_by)
+        df = self._measures_persons_df(
+            self.phdb, self.roles,
+            measures,
+            persons)
+        self.df = df
+        self.persons = self._persons(df)
+
     def list_of_subjects(self, rebuild=False):
         if self.persons is None or rebuild:
-            persons = self._studies_persons(self.studies, self.roles)
-
-            measures = [self.measure_id]
-            measures.extend(self.normalize_by)
-
-            df = self._measures_persons_df(
-                self.phdb, self.roles,
-                measures,
-                persons)
-
-            self.df = df
-            self.persons = self._persons(df)
+            self._build_subjects()
         return self.persons
+
+    def list_of_subjects_df(self, rebuild=False):
+        if self.df is None or rebuild:
+            self._build_subjects()
+        return self.df
 
     @staticmethod
     def _normalize_df(df, measure_id, normalize_by=[]):
@@ -248,7 +255,6 @@ class PhenoTool(object):
         return result
 
     def calc(self, gender_split=False, **kwargs):
-        persons = self.list_of_subjects()
         persons_variants = self.genotype_helper.get_persons_variants(**kwargs)
 
         df = self._normalize_df(self.df, self.measure_id, self.normalize_by)
@@ -258,7 +264,7 @@ class PhenoTool(object):
 
         for index, row in df.iterrows():
             person_id = row['person_id']
-            assert person_id in persons
+            assert person_id in self.persons
 
             var_count = persons_variants.get(person_id, 0)
             df.loc[index, 'variants'] = var_count
