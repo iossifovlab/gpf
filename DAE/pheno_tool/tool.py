@@ -80,9 +80,39 @@ class PhenoTool(object):
     Receives as argument an instance of PhenoDB class.
     """
 
-    def __init__(self, phdb, roles):
+    def __init__(self, phdb, studies, roles, family_ids=None):
         self.phdb = phdb
+        self.studies = studies
         self.roles = roles
+        self.family_ids = family_ids
+
+        self.persons_df = None
+
+    @staticmethod
+    def _assert_persons_equal(p1, p2):
+        if p1.personId == p2.personId and \
+                p1.role == p2.role and \
+                p1.gender == p2.gender:
+
+            return True
+        else:
+            print("mismatched persons: {} != {}".format(p1, p2))
+            return False
+
+    def list_of_subjects(self):
+        persons = {}
+        for st in self.studies:
+            for fid, fam in st.families.items():
+                if self.family_ids is not None and fid not in self.family_ids:
+                    continue
+                for person in fam.memberInOrder:
+                    if person.role in self.roles:
+                        if person.personId not in persons:
+                            persons[person.personId] = person
+                        else:
+                            self._assert_persons_equal(
+                                person, persons[person.personId])
+        return persons
 
     def normalize_measure_values_df(self, measure_id, normalize_by=[]):
         """

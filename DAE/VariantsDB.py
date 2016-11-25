@@ -80,8 +80,8 @@ class Person:
             self.atts = {}
 
     def __repr__(self):
-        return "Person({}; {})".format(
-            self.personId, self.role)
+        return "Person({}; {}; {})".format(
+            self.personId, self.role, self.gender)
 
 
 class StudyGroup:
