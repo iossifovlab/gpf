@@ -86,7 +86,7 @@ class PhenoTool(object):
         self.roles = roles
         self.family_ids = family_ids
 
-        self.persons_df = None
+        self.persons = None
 
     @staticmethod
     def _assert_persons_equal(p1, p2):
@@ -99,20 +99,20 @@ class PhenoTool(object):
             print("mismatched persons: {} != {}".format(p1, p2))
             return False
 
-    def list_of_subjects(self):
-        persons = {}
-        for st in self.studies:
-            for fid, fam in st.families.items():
-                if self.family_ids is not None and fid not in self.family_ids:
-                    continue
-                for person in fam.memberInOrder:
-                    if person.role in self.roles:
-                        if person.personId not in persons:
+    def list_of_subjects(self, rebuild=False):
+        if self.persons is None:
+            persons = {}
+            for st in self.studies:
+                for fid, fam in st.families.items():
+                    if self.family_ids is not None and \
+                            fid not in self.family_ids:
+                        continue
+                    for person in fam.memberInOrder:
+                        if person.role in self.roles and \
+                                person.personId not in persons:
                             persons[person.personId] = person
-                        else:
-                            self._assert_persons_equal(
-                                person, persons[person.personId])
-        return persons
+            self.persons = persons
+        return self.persons
 
     def normalize_measure_values_df(self, measure_id, normalize_by=[]):
         """

@@ -72,3 +72,13 @@ def test_pheno_tool_proband_and_siblings_subjects(phdb, all_ssc_studies):
     assert 5566 == len(persons)
     for p in persons.values():
         assert 'prb' == p.role or 'sib' == p.role
+
+
+def test_pheno_tool_probands_with_families(phdb, all_ssc_studies):
+    tool = PhenoTool(
+        phdb, all_ssc_studies, roles=['prb', 'sib', ],
+        family_ids=['11664', '12310', '11324', '11370'])
+
+    persons = tool.list_of_subjects()
+
+    assert 10 == len(persons)
