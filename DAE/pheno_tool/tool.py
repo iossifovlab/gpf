@@ -14,6 +14,70 @@ from VariantsDB import Person
 from pheno_tool.genotype_helper import GenotypeHelper
 
 
+class PhenoFilter(object):
+
+    def __init__(self, phdb, measure_id):
+        assert phdb.has_measure(measure_id)
+
+        self.phdb = phdb
+        self.measure_id = measure_id
+
+
+class PhenoFilterSet(PhenoFilter):
+
+    def __init__(self, phdb, measure_id, values_set):
+        super(PhenoFilterSet, self).__init__(phdb, measure_id)
+
+        measure_type = phdb.get_measure(measure_id).measure_type
+        assert measure_type == 'categorical'
+
+        assert isinstance(values_set, list) or isinstance(values_set, set)
+        self.value_set = values_set
+
+    def apply(self, df):
+        return df[df[self.measure_id].isin(self.value_set)]
+
+
+class PhenoFilterRange(PhenoFilter):
+
+    def __init__(self, phdb, measure_id, values_range):
+        super(PhenoFilterRange, self).__init__(phdb, measure_id)
+
+        measure_type = phdb.get_measure(measure_id).measure_type
+        assert measure_type == 'continuous' or measure_type == 'ordinal'
+
+        assert isinstance(values_range, list) or \
+            isinstance(values_range, tuple)
+        self.values_min, self.values_max = values_range
+
+    def apply(self, df):
+        if self.values_min is not None and self.values_max is not None:
+            return df[np.logical_and(
+                df[self.measure_id] >= self.values_min,
+                df[self.measure_id] <= self.values_max
+            )]
+        elif self.values_min is not None:
+            return df[df[self.measure_id] >= self.values_min]
+        elif self.values_max is not None:
+            return df[df[self.measure_id] <= self.values_max]
+        else:
+            return df[-np.isnan(df[self.measure_id])]
+
+
+class PhenoFilterBuilder(object):
+
+    def __init__(self, phdb):
+        self.phdb = phdb
+
+    def make_filter(self, measure_id, constrants):
+        measure = self.phdb.get_measure(measure_id)
+        assert measure is not None
+        if measure.measure_type == 'categorical':
+            return PhenoFilterSet(self.phdb, measure_id, constrants)
+        else:
+            return PhenoFilterRange(self.phdb, measure_id, constrants)
+
+
 class PhenoResult(object):
 
     def __init__(self, df, index=None):
@@ -83,7 +147,8 @@ class PhenoTool(object):
     """
 
     def __init__(self, phdb, studies, roles,
-                 measure_id, normalize_by=[]):
+                 measure_id, normalize_by=[],
+                 pheno_filters={}):
 
         assert phdb.has_measure(measure_id)
         assert all([phdb.has_measure(m) for m in normalize_by])
@@ -100,6 +165,11 @@ class PhenoTool(object):
         self.normalize_by = normalize_by
         self.genotype_helper = GenotypeHelper(studies)
 
+        filter_builder = PhenoFilterBuilder(phdb)
+
+        self.pheno_filters = [
+            filter_builder.make_filter(m, c) for m, c in pheno_filters.items()
+        ]
         self._build_subjects()
 
     @classmethod
@@ -130,7 +200,7 @@ class PhenoTool(object):
 
         df = df[df.person_id.isin(persons)]
 
-        return df.copy()
+        return df
 
     @classmethod
     def _persons(cls, df):
@@ -147,11 +217,18 @@ class PhenoTool(object):
         persons = self._studies_persons(self.studies, self.roles)
         measures = [self.measure_id]
         measures.extend(self.normalize_by)
+        for f in self.pheno_filters:
+            measures.append(f.measure_id)
+
         df = self._measures_persons_df(
             self.phdb, self.roles,
             measures,
             persons)
-        self.df = df
+
+        for f in self.pheno_filters:
+            df = f.apply(df)
+
+        self.df = df.copy()
         self.persons = self._persons(df)
 
     def list_of_subjects(self, rebuild=False):

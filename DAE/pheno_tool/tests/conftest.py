@@ -8,6 +8,7 @@ from pheno.pheno_db import PhenoDB
 from pheno_tool.family_filters import FamilyFilters
 from DAE import get_gene_sets_symNS, vDB
 from pheno_tool.genotype_helper import GenotypeHelper
+from pheno_tool.tool import PhenoFilterBuilder
 
 
 @pytest.fixture(scope='session')
@@ -61,3 +62,9 @@ def autism_candidates_genes(request):
 def genotype_helper(request, all_ssc_studies):
     helper = GenotypeHelper(all_ssc_studies)
     return helper
+
+
+@pytest.fixture(scope='session')
+def filter_builder(request, phdb):
+    builder = PhenoFilterBuilder(phdb)
+    return builder
