@@ -4,7 +4,8 @@ Created on Nov 25, 2016
 @author: lubo
 '''
 
-from pheno_tool.tool import PhenoFilterSet, PhenoFilterRange, PhenoTool
+from pheno_tool.pheno_common import PhenoFilterSet, PhenoFilterRange
+from pheno_tool.tool import PhenoTool
 
 
 def test_pheno_filter_set(phdb):
