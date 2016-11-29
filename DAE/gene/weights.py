@@ -109,6 +109,9 @@ class Weights(WeightsConfig):
         """
         return self.df
 
+    def values(self):
+        return self.df[self.name].values
+
     @staticmethod
     def list_gene_weights():
         """

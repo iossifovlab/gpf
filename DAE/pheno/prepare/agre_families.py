@@ -7,6 +7,7 @@ from pheno.utils.configuration import PhenoConfig
 import os
 
 import pandas as pd
+import numpy as np
 
 
 class AgreLoader(PhenoConfig):
@@ -44,3 +45,58 @@ class AgreLoader(PhenoConfig):
     def load_individuals(self):
         df = self._load_df(self.INDIVIDUALS)
         return df
+
+
+class PrepareIndividuals(AgreLoader):
+
+    def __init__(self, *args, **kwargs):
+        super(PrepareIndividuals, self).__init__(*args, **kwargs)
+
+    def _build_df_from_individuals(self):
+        individuals = self.load_individuals()
+        dtype = self._build_individuals_dtype()
+
+        values = []
+        for _index, row in individuals.iterrows():
+            t = self._build_individuals_row(row)
+            values.append(t)
+
+        persons = np.array(values, dtype)
+        persons = np.sort(persons, order=['familyId', 'roleOrder'])
+        df = pd.DataFrame(persons)
+
+        return df
+
+    def _build_individuals_dtype(self):
+        dtype = [('personId', 'S16'), ('familyId', 'S16'),
+                 ('roleId', 'S8'), ('role', 'S8'),
+                 ('roleOrder', int), ]
+        return dtype
+
+    def _build_role(self, row):
+        if row['Person'] == 1:
+            role = 'mo'
+            role_type = 'mom'
+            assert row['Sex'] == 'Female'
+        elif row['Person'] == 2:
+            role = 'fa'
+            role_type = 'dad'
+            assert row['Sex'] == 'Male'
+        elif row['Scored Affected Status'] != '':
+            role = 'p'
+            role_type = 'prb'
+        else:
+            role = 's'
+            role_type = 'sib'
+        return role, role_type
+
+    def _build_individuals_row(self, row):
+        print(row)
+        person_id = row['Individual Code']
+        family_id = row['AU']
+        role_id, role_type = self._build_role(row)
+        role_order = row['Person']
+
+        t = [person_id, family_id, role_id,
+             role_type, role_order, ]
+        return tuple(t)
