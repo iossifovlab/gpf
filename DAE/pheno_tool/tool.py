@@ -143,7 +143,20 @@ class PhenoTool(object):
     """
     Tool to estimate dependency between variants and phenotype measrues.
 
-    Receives as argument an instance of PhenoDB class.
+    Arguments of the constructor are:
+    'phdb' -- instance of `PhenoDB` class
+
+    `studies` -- list of studies
+
+    `roles` -- list of roles
+
+    `measure_id` -- measure ID
+
+    `normalize_by` -- list of continuous measures. Default value is an empty
+    list
+
+    `pheno_filters` -- dictionary of measure IDs and filter specifiers. Default
+    is empty dictionary.
     """
 
     def __init__(self, phdb, studies, roles,
@@ -332,6 +345,31 @@ class PhenoTool(object):
         return result
 
     def calc(self, gender_split=False, **kwargs):
+        """
+        `gender_split` -- should we split the result by gender or not. Default
+        is `False`.
+
+        `effect_types` -- list of effect types
+
+        `gene_syms` -- list of gene symbols
+
+        `present_in_child` -- list of present in child specifiers
+        ("autism only", "unaffected only", "autism and unaffected",
+        "proband only", "sibling only", "proband and sibling", "neither").
+
+        `present_in_parent` -- list of present in parent specifiers
+        ("mother only", "father only", "mother and father", "neither")
+
+        `rarity` -- one of `ultraRare`, `rare`, `interval`. Together with
+        `ratiry_max` and `rarity_min` specifies the rarity of transmitted
+        variants.
+
+        `rarity_max` -- used when *rarity* is `rare` or `interval`.
+        Specifies the upper boundary of the rarity (percents)
+
+        `rarity_min` -- used when *rarity* is `interval`. Specifies the lower
+        boundary of rarity (percents)
+        """
         persons_variants = self.genotype_helper.get_persons_variants(**kwargs)
 
         df = self._normalize_df(self.df, self.measure_id, self.normalize_by)

@@ -24,6 +24,8 @@ class VariantTypes(object):
 
     `effect_types` -- list of effect types
 
+    `gene_syms` -- list of gene symbols
+
     `present_in_child` -- list of present in child specifiers ("autism only",
     "unaffected only", "autism and unaffected", "proband only",
     "sibling only", "proband and sibling", "neither").
