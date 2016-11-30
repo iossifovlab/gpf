@@ -1,0 +1,42 @@
+'''
+Created on Nov 22, 2016
+
+@author: lubo
+'''
+from pheno_tool.tool import PhenoTool
+
+
+def test_siblings(phdb, autism_candidates_genes, all_ssc_studies):
+
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['sib'],
+                     measure_id='vineland_ii.community_raw_score')
+    res = tool.calc(
+        effect_types=['nonsynonymous', ],
+        gene_syms=autism_candidates_genes,
+        present_in_child=[
+            'autism only', 'unaffected only', 'autism and unaffected'],
+        present_in_parent=[
+            'mother only', 'mother and father', 'neither'],
+    )
+    print(res)
+
+    for vals in res.phenotypes.values():
+        assert vals['role'] == 'sib'
+
+
+def test_prb_or_sib(phdb, autism_candidates_genes, all_ssc_studies):
+
+    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'sib'],
+                     measure_id='vineland_ii.community_raw_score')
+    res = tool.calc(
+        effect_types=['nonsynonymous', ],
+        gene_syms=autism_candidates_genes,
+        present_in_child=[
+            'autism only', 'unaffected only', 'autism and unaffected'],
+        present_in_parent=[
+            'mother only', 'mother and father', 'neither'],
+    )
+    print(res)
+
+    for vals in res.phenotypes.values():
+        assert vals['role'] in set(['prb', 'sib'])

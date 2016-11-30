@@ -5,6 +5,7 @@ import operator
 
 
 from __builtin__ import str
+from VariantsDB import Study
 
 LOGGER = logging.getLogger(__name__)
 
@@ -184,7 +185,10 @@ def prepare_denovo_studies(data):
 
     dl = data['denovoStudies']
     if isinstance(dl, list):
-        dst = [vDB.get_studies(str(d)) for d in dl]
+        if all([isinstance(s, Study) for s in dl]):
+            dst = [dl]
+        else:
+            dst = [vDB.get_studies(str(d)) for d in dl]
     else:
         dst = [vDB.get_studies(str(dl))]
 
@@ -220,7 +224,10 @@ def prepare_transmitted_studies(data):
         tl = data['transmittedStudy']
 
     if isinstance(tl, list):
-        tst = [vDB.get_studies(str(t)) for t in tl]
+        if all([isinstance(s, Study) for s in tl]):
+            tst = [tl]
+        else:
+            tst = [vDB.get_studies(str(d)) for d in tl]
     else:
         tst = [vDB.get_studies(str(tl))]
 

@@ -6,35 +6,39 @@ Created on Nov 8, 2016
 import pytest
 from enrichment_tool.background import SamochaBackground
 from enrichment_tool.event_counters import GeneEventsCounter
+from enrichment_tool.config import children_stats_counter
 
 
 @pytest.fixture(scope='module')
 def background(request):
     bg = SamochaBackground()
-    bg.precompute()
     return bg
 
 
-def test_stats_autism_lgd(background, denovo_studies,
-                          gene_set, children_stats):
-    counter = GeneEventsCounter('autism', 'LGDs')
-    events = counter.events(denovo_studies)
+def test_stats_autism_lgd(background, autism_studies,
+                          gene_set):
+    counter = GeneEventsCounter()
+    results = counter.events(
+        autism_studies, 'prb', 'LGDs')
 
-    _, stats = background.calc_stats(
-        events,
+    children_stats = children_stats_counter(autism_studies, 'prb')
+
+    enrichment_results = background.calc_stats(
+        'LGDs',
+        results,
         gene_set,
-        children_stats['autism'])
+        children_stats)
 
-    assert stats is not None
+    assert enrichment_results is not None
 
-    assert 12.5358 == pytest.approx(stats.all_expected, 2)
-    assert 0.0 == pytest.approx(stats.all_pvalue, 4)
+    assert 12.5358 == pytest.approx(results['all'].expected, abs=1E-4)
+    assert 0.0 == pytest.approx(results['all'].pvalue, abs=1E-4)
 
-    assert 0.89924 == pytest.approx(stats.rec_expected, 2)
-    assert 0.0 == pytest.approx(stats.rec_pvalue, 4)
+    assert 0.89924 == pytest.approx(results['rec'].expected, abs=1E-4)
+    assert 0.0 == pytest.approx(results['rec'].pvalue, abs=1E-4)
 
-    assert 10.65059 == pytest.approx(stats.male_expected, 2)
-    assert 0.0 == pytest.approx(stats.male_pvalue, 4)
+    assert 10.65059 == pytest.approx(results['male'].expected, abs=1E-4)
+    assert 0.0 == pytest.approx(results['male'].pvalue, abs=1E-4)
 
-    assert 1.8831 == pytest.approx(stats.female_expected, 2)
-    assert 2E-07 == pytest.approx(stats.female_pvalue, 4)
+    assert 1.8853 == pytest.approx(results['female'].expected, abs=1E-4)
+    assert 0.0 == pytest.approx(results['female'].pvalue, abs=1E-4)

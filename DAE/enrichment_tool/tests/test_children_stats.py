@@ -6,10 +6,10 @@ Created on Nov 8, 2016
 from collections import Counter
 
 
-def test_count_unaffected(denovo_studies, children_stats):
+def test_count_unaffected(denovo_studies):
     seen = set()
     counter = Counter()
-    studies = denovo_studies.get_studies('unaffected')
+    studies = denovo_studies
     print([st.name for st in studies])
     for st in studies:
         for fid, fam in st.families.items():
@@ -28,13 +28,11 @@ def test_count_unaffected(denovo_studies, children_stats):
     assert counter['F'] > 0
     assert 2303 == counter['F'] + counter['M']
 
-    assert children_stats['unaffected'] == counter
 
-
-def test_children_stats_simple(children_stats):
-
-    assert 596 == children_stats['autism']['F']
-    assert 3367 == children_stats['autism']['M']
-
-    assert 1111 == children_stats['unaffected']['M']
-    assert 1192 == children_stats['unaffected']['F']
+# def test_children_stats_simple(children_stats):
+#
+#     assert 596 == children_stats['autism']['F']
+#     assert 3367 == children_stats['autism']['M']
+#
+#     assert 1111 == children_stats['unaffected']['M']
+#     assert 1192 == children_stats['unaffected']['F']

@@ -294,7 +294,7 @@ PRESENT_IN_CHILD_TYPES = [
 
 
 def prepare_present_in_child(data):
-    if "presentInChild" in data:
+    if "presentInChild" in data and data['presentInChild'] is not None:
         present_in_child = data['presentInChild']
         if isinstance(present_in_child, list):
             present_in_child = ','.join(present_in_child)
@@ -311,7 +311,7 @@ PRESENT_IN_PARENT_TYPES = [
 
 
 def prepare_present_in_parent(data):
-    if "presentInParent" in data:
+    if "presentInParent" in data and data['presentInParent'] is not None:
         present_in_parent = data['presentInParent']
         if isinstance(present_in_parent, list):
             present_in_parent = ','.join(present_in_parent)
@@ -618,9 +618,13 @@ def dae_query_families_with_variants(data):
     prepare_denovo_phenotype(data)
     prepare_denovo_study_type(data)
     prepare_gender_filter(data)
+    print(data)
 
     dstudies = prepare_denovo_studies(data)
     tstudies = prepare_transmitted_studies(data)
+    print(dstudies)
+    print(tstudies)
+
     if dstudies is None and tstudies is None:
         return []
 
@@ -650,6 +654,7 @@ def dae_query_variants(data):
 
     dstudies = prepare_denovo_studies(data)
     tstudies = prepare_transmitted_studies(data)
+
     if dstudies is None and tstudies is None:
         return []
 

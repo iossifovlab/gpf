@@ -56,6 +56,7 @@ class PrepareValueBase(V15Loader):
                 value_model = self.value_manager.MODEL
                 val = value_model()
                 val.value = value_model.value_decode(vrow[variable_name])
+                # print(vrow, variable_name, vrow[variable_name], val.value)
                 if value_model.isnull(val.value):
                     continue
                 val.id = None

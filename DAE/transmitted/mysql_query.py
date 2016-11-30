@@ -115,11 +115,17 @@ class MysqlTransmittedQuery(TransmissionConfig):
         self.user = self._get_params('user')
         self.passwd = self._get_params('pass')
         self.host = self._get_params("host")
+        self.port = self._get_params("port")
+        if self.port is not None:
+            self.port = int(self.port)
+        else:
+            self.port = 3306
 
         assert self.host
         assert self.db
         assert self.user
         assert self.passwd
+        assert self.port
 
         self.connection = None
         self.query = copy.deepcopy(self.DEFAULT_QUERY)
@@ -129,10 +135,11 @@ class MysqlTransmittedQuery(TransmissionConfig):
         #         if not self.connection:
         #             self.connect()
         LOGGER.info("creating new mysql connection")
-        connection = mdb.connect(self.host,
-                                 self.user,
-                                 self.passwd,
-                                 self.db)
+        connection = mdb.connect(host=self.host,
+                                 port=self.port,
+                                 user=self.user,
+                                 passwd=self.passwd,
+                                 db=self.db)
 
         cursor = connection.cursor(mdb.cursors.DictCursor)
         cursor.execute(select)
@@ -541,8 +548,10 @@ class MysqlTransmittedQuery(TransmissionConfig):
         except StopIteration:
             connection.close()
         except Exception as ex:
+            print("unexpected db error: %s", ex)
             LOGGER.error("unexpected db error: %s", ex)
-            connection.close()
+            if connection:
+                connection.close()
             raise StopIteration
 
     def get_families_with_transmitted_variants(self, **kwargs):
@@ -556,7 +565,7 @@ class MysqlTransmittedQuery(TransmissionConfig):
             "on tfv.summary_variant_id = tsv.id " \
             "where {}".format(where)
 
-        LOGGER.info("select: %s", select)
+        # LOGGER.info("select: %s", select)
         try:
             connection, cursor = self.execute(select)
             v = cursor.fetchone()

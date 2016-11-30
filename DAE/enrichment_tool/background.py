@@ -12,46 +12,26 @@ from scipy import stats
 import zlib
 
 from DAE import vDB, genomesDB
-from enrichment_tool.config import EnrichmentConfig, BackgroundConfig
+from enrichment_tool.config import BackgroundConfig
 import numpy as np
 import pandas as pd
-
-
-class StatsResults(EnrichmentConfig):
-
-    def __init__(self, config):
-        super(StatsResults, self).__init__(
-            config.phenotype, config.effect_type)
-        self.all_expected = None
-        self.all_pvalue = None
-        self.rec_expected = None
-        self.rec_pvalue = None
-        self.male_expected = None
-        self.male_pvalue = None
-        self.female_expected = None
-        self.female_pvalue = None
-
-    def __call__(self):
-        return self
-
-    def __repr__(self):
-        return "Stats({}, {}): all: {:.2f} (pv={:.2g}); " \
-            "rec: {:.2f} (pv={:.2g}); " \
-            "male: {:.2f} (pv={:.2g}); " \
-            "female: {:.2f} (pv={:.2g})".format(
-                self.phenotype, self.effect_type,
-                self.all_expected, self.all_pvalue,
-                self.rec_expected, self.rec_pvalue,
-                self.male_expected, self.male_pvalue,
-                self.female_expected, self.female_pvalue)
+from enrichment_tool.event_counters import overlap_enrichment_result_dict
 
 
 class BackgroundBase(BackgroundConfig):
 
-    def __init__(self):
+    def __init__(self, name, use_cache=False):
         super(BackgroundBase, self).__init__()
         self.background = None
-        self.name = None
+        self.name = name
+        assert self.name is not None
+
+        if not use_cache:
+            self.precompute()
+        else:
+            if not self.cache_load():
+                self.precompute()
+                self.cache_save()
 
     @property
     def cache_filename(self):
@@ -89,41 +69,38 @@ class BackgroundBase(BackgroundConfig):
 
 class BackgroundCommon(BackgroundBase):
 
-    def __init__(self):
-        super(BackgroundCommon, self).__init__()
+    def __init__(self, name, use_cache=False):
+        super(BackgroundCommon, self).__init__(name, use_cache)
 
     def _prob(self, gene_syms):
         return 1.0 * self._count(gene_syms) / self._total
 
-    def calc_stats(self, events, gene_set, children_stats):
+    def _calc_enrichment_results_stats(self, background_prob, result):
+        events_count = len(result.events)
+        result.expected = background_prob * events_count
+        result.pvalue = stats.binom_test(
+            len(result.overlapped),
+            events_count,
+            p=background_prob)
+
+    def calc_stats(self, effect_type, enrichment_results,
+                   gene_set, children_stats):
+
         gene_syms = [gs.upper() for gs in gene_set]
-        overlapped_events = events.overlap(gene_syms)
+        overlap_enrichment_result_dict(enrichment_results, gene_syms)
 
-        bg_prob = self._prob(gene_syms)
-        result = StatsResults(events)
+        background_prob = self._prob(gene_syms)
 
-        result.all_expected = bg_prob * events.all_count
-        result.all_pvalue = stats.binom_test(
-            overlapped_events.all_count,
-            events.all_count,
-            p=bg_prob)
+        self._calc_enrichment_results_stats(
+            background_prob, enrichment_results['all'])
+        self._calc_enrichment_results_stats(
+            background_prob, enrichment_results['rec'])
+        self._calc_enrichment_results_stats(
+            background_prob, enrichment_results['male'])
+        self._calc_enrichment_results_stats(
+            background_prob, enrichment_results['female'])
 
-        result.rec_expected = bg_prob * events.rec_count
-        result.rec_pvalue = stats.binom_test(
-            overlapped_events.rec_count,
-            events.rec_count, p=bg_prob)
-
-        result.male_expected = bg_prob * events.male_count
-        result.male_pvalue = stats.binom_test(
-            overlapped_events.male_count,
-            events.male_count, p=bg_prob)
-
-        result.female_expected = bg_prob * events.female_count
-        result.female_pvalue = stats.binom_test(
-            overlapped_events.female_count,
-            events.female_count, p=bg_prob)
-
-        return overlapped_events, result
+        return enrichment_results
 
 
 class SynonymousBackground(BackgroundCommon):
@@ -172,9 +149,9 @@ class SynonymousBackground(BackgroundCommon):
 
         return (background, foreground)
 
-    def __init__(self):
-        super(SynonymousBackground, self).__init__()
-        self.name = 'synonymousBackgroundModel'
+    def __init__(self, use_cache=False):
+        super(SynonymousBackground, self).__init__(
+            'synonymousBackgroundModel', use_cache)
 
     def precompute(self):
         self.background, self.foreground = \
@@ -240,9 +217,9 @@ class CodingLenBackground(BackgroundCommon):
                 back.append((str(row[1]), int(row[2])))
         return back
 
-    def __init__(self):
-        super(CodingLenBackground, self).__init__()
-        self.name = 'codingLenBackgroundModel'
+    def __init__(self, use_cache=False):
+        super(CodingLenBackground, self).__init__(
+            'codingLenBackgroundModel', use_cache)
 
     def precompute(self):
         back = self._load_and_prepare_build()
@@ -343,10 +320,9 @@ class SamochaBackground(BackgroundBase):
 
         return df
 
-    def __init__(self):
-        super(SamochaBackground, self).__init__()
-        self.name = 'samochaBackgroundModel'
-        # self.background = self._load_and_prepare_build()
+    def __init__(self, use_cache=False):
+        super(SamochaBackground, self).__init__(
+            'samochaBackgroundModel', use_cache)
 
     def precompute(self):
         self.background = self._load_and_prepare_build()
@@ -370,46 +346,51 @@ class SamochaBackground(BackgroundBase):
             ndarray,
             columns=['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
 
-    def calc_stats(self, events, gene_set, children_stats):
-        result = StatsResults(events)
+    def calc_stats(self, effect_type, enrichment_results,
+                   gene_set, children_stats):
 
-        overlapped_events = events.overlap(gene_set)
+        overlap_enrichment_result_dict(enrichment_results, gene_set)
 
-        eff = 'P_{}'.format(events.effect_type.upper())
+        eff = 'P_{}'.format(effect_type.upper())
         assert eff in self.background.columns
+
+        all_result = enrichment_results['all']
+        male_result = enrichment_results['male']
+        female_result = enrichment_results['female']
+        rec_result = enrichment_results['rec']
 
         gs = [g.upper() for g in gene_set]
         df = self.background[self.background['gene'].isin(gs)]
         p_boys = (df['M'] * df[eff]).sum()
         # result.male_expected = p_boys * events.male_count
-        result.male_expected = p_boys * children_stats['M']
+        male_result.expected = p_boys * children_stats['M']
 
         p_girls = (df['F'] * df[eff]).sum()
         # result.female_expected = p_girls * events.female_count
-        result.female_expected = p_boys * children_stats['F']
+        female_result.expected = p_boys * children_stats['F']
 
-        result.all_expected = result.male_expected + result.female_expected
+        all_result.expected = male_result.expected + female_result.expected
 
-        result.all_pvalue = poisson_test(
-            overlapped_events.all_count,
-            result.all_expected)
-        result.male_pvalue = poisson_test(
-            overlapped_events.male_count,
-            result.male_expected)
-        result.female_pvalue = poisson_test(
-            overlapped_events.female_count,
-            result.female_expected)
+        all_result.pvalue = poisson_test(
+            len(all_result.overlapped),
+            all_result.expected)
+        male_result.pvalue = poisson_test(
+            len(male_result.overlapped),
+            male_result.expected)
+        female_result.pvalue = poisson_test(
+            len(female_result.overlapped),
+            female_result.expected)
 
         # p = (p_boys + p_girls) / 2.0
         p = (children_stats['M'] * p_boys + children_stats['F'] * p_girls) / \
             (children_stats['M'] + children_stats['F'])
 #         result.rec_expected = \
 #             (children_stats['M'] + children_stats['F']) * p * p
-        result.rec_expected = (children_stats['M'] + children_stats['F']) * \
-            p * events.rec_count / events.all_count
+        rec_result.expected = (children_stats['M'] + children_stats['F']) * \
+            p * len(rec_result.events) / len(all_result.events)
 
-        result.rec_pvalue = poisson_test(
-            overlapped_events.rec_count,
-            result.rec_expected)
+        rec_result.pvalue = poisson_test(
+            len(rec_result.overlapped),
+            rec_result.expected)
 
-        return overlapped_events, result
+        return enrichment_results

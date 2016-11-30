@@ -597,6 +597,8 @@ class ValueModel(object):
 
     @classmethod
     def isnull(cls, value):
+        if value is None:
+            return True
         if isinstance(value, float) and np.isnan(value):
             return True
         if isinstance(value, str) and (value is None or value == 'nan'):
@@ -608,7 +610,9 @@ class ValueModel(object):
 
     @classmethod
     def value_encode(cls, val):
-        if isinstance(val, unicode):
+        if val is None:
+            return None
+        elif isinstance(val, unicode):
             return val
         elif isinstance(val, str):
             try:
@@ -621,7 +625,9 @@ class ValueModel(object):
 
     @classmethod
     def value_decode(cls, val):
-        if isinstance(val, unicode):
+        if val is None:
+            return None
+        elif isinstance(val, unicode):
             return val
         elif isinstance(val, str):
             return str(val).decode('utf-8')
