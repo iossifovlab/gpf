@@ -49,54 +49,123 @@ class AgreLoader(PhenoConfig):
 
 class PrepareIndividuals(AgreLoader):
 
+    class Family(object):
+
+        def __init__(self):
+            self.family_id = None
+            self.members = None
+
+    class Individual(object):
+
+        def __init__(self, row):
+            self.au = row['AU']
+            self.person = row['Person']
+            self.father = row['Father']
+            self.mother = row['Mother']
+            self.individual_code = row['Individual Code']
+            self.person_id = self.individual_code
+            self.gender = self._build_gender(row['Sex'])
+            self.role = self._build_role(row['Scored Affected Status'])
+
+            self.key = (self.au, self.person)
+
+        @staticmethod
+        def _build_gender(sex):
+            if sex.lower() == 'male':
+                return 'M'
+            elif sex.lower() == 'female':
+                return 'F'
+            else:
+                raise ValueError("unexpected value for gender: {}"
+                                 .format(sex))
+
+        @staticmethod
+        def _build_role(status):
+            if status == 'Autism' or \
+                    status == 'BroadSpectrum' or \
+                    status == 'NQA' or \
+                    status == 'ASD'or \
+                    status == 'PDD-NOS':
+                return 'prb'
+            elif isinstance(status, float) and np.isnan(status):
+                return 'sib'
+            elif status == 'Not Met':
+                return 'sib'
+            else:
+                print(type(status))
+                raise ValueError("unexpected value for role: {}"
+                                 .format(status))
+
     def __init__(self, *args, **kwargs):
         super(PrepareIndividuals, self).__init__(*args, **kwargs)
 
-    def _build_df_from_individuals(self):
-        individuals = self.load_individuals()
-        dtype = self._build_individuals_dtype()
+    def _build_individual(self, row):
+        return PrepareIndividuals.Individual(row)
 
-        values = []
-        for _index, row in individuals.iterrows():
-            t = self._build_individuals_row(row)
-            values.append(t)
+    def _build_individuals_df(self):
+        df = self.load_individuals()
+        individuals = self._build_individuals_dict(df)
+        assert individuals is not None
 
-        persons = np.array(values, dtype)
-        persons = np.sort(persons, order=['familyId', 'roleOrder'])
-        df = pd.DataFrame(persons)
+        return 1
 
-        return df
+    def _build_individuals_dict(self, df):
 
-    def _build_individuals_dtype(self):
-        dtype = [('personId', 'S16'), ('familyId', 'S16'),
-                 ('roleId', 'S8'), ('role', 'S8'),
-                 ('roleOrder', int), ]
-        return dtype
+        individuals = {}
+        for _index, row in df.iterrows():
+            individual = self._build_individual(row)
+            individuals[individual.key] = individual
 
-    def _build_role(self, row):
-        if row['Person'] == 1:
-            role = 'mo'
-            role_type = 'mom'
-            assert row['Sex'] == 'Female'
-        elif row['Person'] == 2:
-            role = 'fa'
-            role_type = 'dad'
-            assert row['Sex'] == 'Male'
-        elif row['Scored Affected Status'] != '':
-            role = 'p'
-            role_type = 'prb'
-        else:
-            role = 's'
-            role_type = 'sib'
-        return role, role_type
+        return individuals
 
-    def _build_individuals_row(self, row):
-        print(row)
-        person_id = row['Individual Code']
-        family_id = row['AU']
-        role_id, role_type = self._build_role(row)
-        role_order = row['Person']
+    def _build_families_dict(self, individuals):
+        pass
 
-        t = [person_id, family_id, role_id,
-             role_type, role_order, ]
-        return tuple(t)
+#     def _build_df_from_individuals(self):
+#         individuals = self.load_individuals()
+#         dtype = self._build_individuals_dtype()
+#
+#         values = []
+#         for _index, row in individuals.iterrows():
+#             t = self._build_individuals_row(row)
+#             values.append(t)
+#
+#         persons = np.array(values, dtype)
+#         persons = np.sort(persons, order=['familyId', 'roleOrder'])
+#         df = pd.DataFrame(persons)
+#
+#         return df
+
+#     def _build_individuals_dtype(self):
+#         dtype = [('personId', 'S16'), ('familyId', 'S16'),
+#                  ('roleId', 'S8'), ('role', 'S8'),
+#                  ('roleOrder', int), ]
+#         return dtype
+#
+#     def _build_role(self, row):
+#         if row['Person'] == 1:
+#             role = 'mo'
+#             role_type = 'mom'
+#             assert row['Sex'] == 'Female'
+#         elif row['Person'] == 2:
+#             role = 'fa'
+#             role_type = 'dad'
+#             assert row['Sex'] == 'Male'
+#         elif row['Scored Affected Status'] != '':
+#             role = 'p'
+#             role_type = 'prb'
+#         else:
+#             role = 's'
+#             role_type = 'sib'
+#         return role, role_type
+#
+#     def _build_individuals_row(self, row):
+#         print(row)
+#         person_id = row['Individual Code']
+#         family_id = row['AU']
+#         role_id, role_type = self._build_role(row)
+#         role_order = row['Person']
+#
+#         t = [person_id, family_id, role_id,
+#              role_type, role_order, ]
+#         return tuple(t)
