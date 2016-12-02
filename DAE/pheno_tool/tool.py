@@ -224,31 +224,15 @@ class PhenoTool(object):
 
         return result
 
-    def calc(self, variants, gender_split=False, **kwargs):
+    def calc(self, variants, gender_split=False):
         """
+        `variants` -- expects either variants type specification (instance of
+        :ref:`VariantsType` class) or already calculated variants from
+        :ref:`GenotypeHelper` class.
+
         `gender_split` -- should we split the result by gender or not. Default
         is `False`.
 
-        `effect_types` -- list of effect types
-
-        `gene_syms` -- list of gene symbols
-
-        `present_in_child` -- list of present in child specifiers
-        ("autism only", "unaffected only", "autism and unaffected",
-        "proband only", "sibling only", "proband and sibling", "neither").
-
-        `present_in_parent` -- list of present in parent specifiers
-        ("mother only", "father only", "mother and father", "neither")
-
-        `rarity` -- one of `ultraRare`, `rare`, `interval`. Together with
-        `ratiry_max` and `rarity_min` specifies the rarity of transmitted
-        variants.
-
-        `rarity_max` -- used when *rarity* is `rare` or `interval`.
-        Specifies the upper boundary of the rarity (percents)
-
-        `rarity_min` -- used when *rarity* is `interval`. Specifies the lower
-        boundary of rarity (percents)
         """
         if isinstance(variants, VT):
             persons_variants = self.genotype_helper.get_persons_variants(
