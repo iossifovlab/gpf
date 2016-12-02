@@ -8,6 +8,7 @@ from pprint import pprint
 import pytest
 
 from pheno_tool.tool import PhenoTool
+from pheno_tool.genotype_helper import VariantsType as VT
 
 
 def test_pheno_tool_create_default(phdb, all_ssc_studies):
@@ -24,8 +25,8 @@ def test_tool_calc(phdb, all_ssc_studies, default_request, genotype_helper):
                      normalize_by=['pheno_common.age'],)
 
     r = tool.calc(
+        VT(**default_request),
         gender_split=True,
-        **default_request
     )
     assert r is not None
     print(r)
@@ -58,12 +59,14 @@ def test_tool_present_in_parent_ultra_rare(
     )
 
     r = tool.calc(
+        VT(
+            effect_types=['LGDs'],
+            gene_syms=gene_set,
+            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_parent=['father only', 'mother only',
+                               'mother and father', 'neither']
+        ),
         gender_split=True,
-        effect_types=['LGDs'],
-        gene_syms=gene_set,
-        present_in_child=['autism only', 'autism and unaffected'],
-        present_in_parent=['father only', 'mother only',
-                           'mother and father', 'neither'],
     )
     assert r is not None
     pprint(r)
@@ -86,8 +89,8 @@ def test_genotypes(phdb, all_ssc_studies, default_request, genotype_helper):
                      normalize_by=['pheno_common.age'],)
 
     r = tool.calc(
+        VT(**default_request),
         gender_split=True,
-        **default_request
     )
 
     genotypes = r['M'].genotypes
@@ -106,8 +109,8 @@ def test_phenotypes(phdb, all_ssc_studies, default_request, genotype_helper):
                      )
 
     r = tool.calc(
+        VT(**default_request),
         gender_split=True,
-        **default_request
     )
 
     phenotypes = r['M'].phenotypes
@@ -129,8 +132,8 @@ def test_gender_split_false(phdb, all_ssc_studies, default_request):
     )
 
     r = tool.calc(
+        VT(**default_request),
         gender_split=False,
-        **default_request
     )
 
     assert 374 == r.positive_count

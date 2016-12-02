@@ -9,9 +9,10 @@ from scipy.stats.stats import ttest_ind
 from VariantsDB import Person
 import numpy as np
 import pandas as pd
-from pheno_tool.genotype_helper import GenotypeHelper
+from pheno_tool.genotype_helper import GenotypeHelper, VariantsType
 from pheno_tool.pheno_common import PhenoFilterBuilder, PhenoResult
 import statsmodels.api as sm
+from collections import Counter
 
 
 class PhenoTool(object):
@@ -219,7 +220,7 @@ class PhenoTool(object):
 
         return result
 
-    def calc(self, gender_split=False, **kwargs):
+    def calc(self, variants, gender_split=False, **kwargs):
         """
         `gender_split` -- should we split the result by gender or not. Default
         is `False`.
@@ -245,8 +246,14 @@ class PhenoTool(object):
         `rarity_min` -- used when *rarity* is `interval`. Specifies the lower
         boundary of rarity (percents)
         """
-        persons_variants = self.genotype_helper.get_persons_variants(**kwargs)
-
+        if isinstance(variants, VariantsType):
+            persons_variants = self.genotype_helper.get_persons_variants(
+                variants)
+        elif isinstance(variants, Counter):
+            persons_variants = variants
+        else:
+            raise ValueError(
+                "expected VariantsType object or persons variants")
         df = self._normalize_df(self.df, self.measure_id, self.normalize_by)
 
         variants = pd.Series(0, index=df.index)

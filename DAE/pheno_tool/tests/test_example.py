@@ -6,6 +6,7 @@ Created on Nov 15, 2016
 from DAE import get_gene_sets_symNS, vDB
 from pheno.pheno_db import PhenoDB
 from pheno_tool.tool import PhenoTool
+from pheno_tool.genotype_helper import VariantsType as VT
 
 
 def test_example_1():
@@ -26,10 +27,12 @@ def test_example_1():
                      )
 
     res = tool.calc(
-        effect_types=['LGDs'],
-        gene_syms=gene_syms,
-        present_in_child=['autism only', 'autism and unaffected'],
-        present_in_parent=['neither'],
+        VT(
+            effect_types=['LGDs'],
+            gene_syms=gene_syms,
+            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_parent=['neither'],
+        )
     )
 
     print(res)
@@ -77,13 +80,15 @@ def test_example_2():
     )
 
     res = tool.calc(
-        effect_types=['LGDs'],
-        gene_syms=gene_syms,
-        rarity='rare',
-        rarity_max=10.0,
-        present_in_child=['autism only', 'autism and unaffected'],
-        present_in_parent=['father only', 'mother only',
-                           'mother and father', 'neither'],
+        VT(
+            effect_types=['LGDs'],
+            gene_syms=gene_syms,
+            rarity='rare',
+            rarity_max=10.0,
+            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_parent=['father only', 'mother only',
+                               'mother and father', 'neither'],
+        )
     )
 
     print(res)

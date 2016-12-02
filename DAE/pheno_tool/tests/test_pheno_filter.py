@@ -6,6 +6,7 @@ Created on Nov 25, 2016
 
 from pheno_tool.pheno_common import PhenoFilterSet, PhenoFilterRange
 from pheno_tool.tool import PhenoTool
+from pheno_tool.genotype_helper import VariantsType as VT
 
 
 def test_pheno_filter_set(phdb):
@@ -127,12 +128,14 @@ def test_tool_with_filters_result_phenotype_and_genotype(
     assert 82 == len(persons)
 
     res = tool.calc(
-        effect_types=['nonsynonymous', ],
-        gene_syms=autism_candidates_genes,
-        present_in_child=[
-            'autism only', 'unaffected only', 'autism and unaffected'],
-        present_in_parent=[
-            'mother only', 'mother and father', 'neither'],
+        VT(
+            effect_types=['nonsynonymous', ],
+            gene_syms=autism_candidates_genes,
+            present_in_child=[
+                'autism only', 'unaffected only', 'autism and unaffected'],
+            present_in_parent=[
+                'mother only', 'mother and father', 'neither'],
+        )
     )
 
     assert len(res.phenotypes) == 82

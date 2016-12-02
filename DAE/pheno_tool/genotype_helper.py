@@ -16,7 +16,7 @@ DEFAULT_STUDY = 'ALL SSC'
 DEFAULT_TRANSMITTED = 'w1202s766e611'
 
 
-class VariantTypes(object):
+class VariantsType(object):
     """
     Represents query filters for finding family variants.
 
@@ -129,9 +129,10 @@ class GenotypeHelper(object):
         self.denovo_studies = [st for st in studies if st.has_denovo]
         self.transmitted_studies = [st for st in studies if st.has_transmitted]
 
-    def get_variants(self, **kwargs):
-        variant_types = VariantTypes(**kwargs)
-        query = variant_types._dae_query_request()
+    def get_variants(self, variants_type):
+        assert isinstance(variants_type, VariantsType)
+
+        query = variants_type._dae_query_request()
         query.update({
             'denovoStudies': self.denovo_studies,
             'transmittedStudies': self.transmitted_studies,
@@ -139,8 +140,8 @@ class GenotypeHelper(object):
         vs = dae_query_variants(query)
         return itertools.chain(*vs)
 
-    def get_persons_variants(self, **kwargs):
-        vs = self.get_variants(**kwargs)
+    def get_persons_variants(self, variants_type):
+        vs = self.get_variants(variants_type)
         seen = set([])
         result = Counter()
         for v in vs:
@@ -154,8 +155,8 @@ class GenotypeHelper(object):
                     print("skipping {}".format(vid))
         return result
 
-    def get_families_variants(self, **kwargs):
-        vs = self.get_variants(kwargs)
+    def get_families_variants(self, variants_type):
+        vs = self.get_variants(variants_type)
         seen = set([])
         result = Counter()
         for v in vs:
