@@ -4,15 +4,18 @@ Created on Nov 9, 2016
 @author: lubo
 '''
 
+from collections import Counter
+
 from scipy.stats.stats import ttest_ind
 
 from VariantsDB import Person
 import numpy as np
 import pandas as pd
-from pheno_tool.genotype_helper import GenotypeHelper, VariantsType
+from pheno_tool.genotype_helper import GenotypeHelper
+from pheno_tool.genotype_helper import VariantsType as VT
+
 from pheno_tool.pheno_common import PhenoFilterBuilder, PhenoResult
 import statsmodels.api as sm
-from collections import Counter
 
 
 class PhenoTool(object):
@@ -247,7 +250,7 @@ class PhenoTool(object):
         `rarity_min` -- used when *rarity* is `interval`. Specifies the lower
         boundary of rarity (percents)
         """
-        if isinstance(variants, VariantsType):
+        if isinstance(variants, VT):
             persons_variants = self.genotype_helper.get_persons_variants(
                 variants)
         elif isinstance(variants, Counter):

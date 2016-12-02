@@ -1,15 +1,10 @@
 #!/bin/env python
 
 from DAE import *
-from pheno_tool.tool import PhenoTool
-from pheno.pheno_db import PhenoDB
-from pheno_tool.genotype_helper import VariantsType as VT
+from pheno_tool.tool import *
 
 
 stds = vDB.get_studies('IossifovWE2014')
-
-phdb = PhenoDB()
-phdb.load()
 
 RR = {}
 for msrId in phdb.get_instrument_measures('vineland_ii'):
