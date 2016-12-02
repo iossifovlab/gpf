@@ -4,18 +4,16 @@ Created on Nov 8, 2016
 @author: lubo
 '''
 import pytest
-from pheno.pheno_db import PhenoDB
+
+import DAE
 from pheno_tool.family_filters import FamilyFilters
-from DAE import get_gene_sets_symNS, vDB
 from pheno_tool.genotype_helper import GenotypeHelper
 from pheno_tool.tool import PhenoFilterBuilder
 
 
 @pytest.fixture(scope='session')
 def phdb(request):
-    db = PhenoDB()
-    db.load()
-    return db
+    return DAE.phdb
 
 
 @pytest.fixture
@@ -35,17 +33,17 @@ def family_filters(request, phdb):
 
 @pytest.fixture(scope='session')
 def gene_set(request):
-    gt = get_gene_sets_symNS('main')
+    gt = DAE.get_gene_sets_symNS('main')
     gene_set = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
     return gene_set
 
 
 @pytest.fixture(scope='session')
 def all_ssc_studies(request):
-    studies = vDB.get_studies('ALL SSC')
+    studies = DAE.vDB.get_studies('ALL SSC')
     assert studies is not None
     assert 7 == len(studies)
-    transmitted_study = vDB.get_study('w1202s766e611')
+    transmitted_study = DAE.vDB.get_study('w1202s766e611')
     studies.append(transmitted_study)
     assert 8 == len(studies)
     return studies
@@ -53,7 +51,7 @@ def all_ssc_studies(request):
 
 @pytest.fixture(scope='session')
 def autism_candidates_genes(request):
-    gt = get_gene_sets_symNS('main')
+    gt = DAE.get_gene_sets_symNS('main')
     gene_syms = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
     return gene_syms
 
