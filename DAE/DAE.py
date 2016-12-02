@@ -14,6 +14,7 @@ from Sfari import SfariCollection
 from GenomesDB import GenomesDB
 
 from Config import *
+from pheno.pheno_db import PhenoDB
 config = Config()
 
 giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
@@ -43,6 +44,9 @@ def get_gene_sets_symNS(geneSetsDef, denovoStudies=None):
         if geneTerms.geneNS != 'sym':
             raise Exception('Only work with id or sym namespace')
     return geneTerms
+
+phdb = PhenoDB()
+phdb.load()
 
 if __name__ == "__main__":
     print "hi"

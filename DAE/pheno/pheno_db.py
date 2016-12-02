@@ -346,8 +346,10 @@ class PhenoDB(PhenoConfig):
     def load(self):
         """Loads basic families, instruments and measures data from
         the phenotype database."""
-        self._load_families()
-        self._load_instruments()
+        if self.families is None:
+            self._load_families()
+        if self.instruments is None:
+            self._load_instruments()
 
     def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
         """
