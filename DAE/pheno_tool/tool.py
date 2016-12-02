@@ -60,6 +60,7 @@ class PhenoTool(object):
             filter_builder.make_filter(m, c) for m, c in pheno_filters.items()
         ]
         self._build_subjects()
+        self._normalize_df(self.df, self.measure_id, self.normalize_by)
 
     @classmethod
     def _assert_persons_equal(cls, p1, p2):
@@ -254,8 +255,8 @@ class PhenoTool(object):
         else:
             raise ValueError(
                 "expected VariantsType object or persons variants")
-        df = self._normalize_df(self.df, self.measure_id, self.normalize_by)
 
+        df = self.df
         variants = pd.Series(0, index=df.index)
         df['variants'] = variants
 
