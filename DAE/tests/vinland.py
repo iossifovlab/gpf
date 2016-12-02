@@ -3,6 +3,8 @@
 from DAE import *
 from pheno_tool.tool import PhenoTool
 from pheno.pheno_db import PhenoDB
+from pheno_tool.genotype_helper import VariantsType as VT
+
 
 stds = vDB.get_studies('IossifovWE2014')
 
@@ -22,11 +24,14 @@ for msrId in phdb.get_instrument_measures('vineland_ii'):
         # for effT in ['LGDs','missense','synonymous']:
         for effT in ['LGDs']:
             print "working on", msrId, rl, effT, "..."
-            res = tool.calc(effect_types=[effT],
-                            present_in_parent=['neither'],
-                            present_in_child=['autism only',
-                                              'autism and unaffected',
-                                              'unaffected only'])
+            res = tool.calc(
+                VT(effect_types=[effT],
+                   present_in_parent=['neither'],
+                   present_in_child=['autism only',
+                                     'autism and unaffected',
+                                     'unaffected only']
+                   )
+            )
             cs.append("%.3f" % res.pvalue)
     RR[msrId] = cs
 
