@@ -4,21 +4,10 @@ Created on Aug 23, 2016
 @author: lubo
 '''
 from Config import Config
-import DAE
 import ConfigParser
 
 
 class PhenoConfig(object):
-
-    @staticmethod
-    def get_all_ssc_studies():
-        study_group = DAE.vDB.get_study_group('ALL SSC')
-        denovo_studies = study_group.get_attr('studies')
-        transmitted_studies = study_group.get_attr('transmittedStudies')
-        studies = []
-        studies.extend(DAE.vDB.get_studies(denovo_studies))
-        studies.extend(DAE.vDB.get_studies(transmitted_studies))
-        return studies
 
     def __init__(self, dae_config=None, config=None, pheno_db='ssc_v15',
                  *args, **kwargs):

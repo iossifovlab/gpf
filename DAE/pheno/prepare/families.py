@@ -7,6 +7,17 @@ import numpy as np
 import pandas as pd
 from pheno.models import PersonManager, PersonModel
 from pheno.utils.load_raw import V15Loader
+import DAE
+
+
+def get_all_ssc_studies():
+    study_group = DAE.vDB.get_study_group('ALL SSC')
+    denovo_studies = study_group.get_attr('studies')
+    transmitted_studies = study_group.get_attr('transmittedStudies')
+    studies = []
+    studies.extend(DAE.vDB.get_studies(denovo_studies))
+    studies.extend(DAE.vDB.get_studies(transmitted_studies))
+    return studies
 
 
 class PrepareIndividuals(V15Loader):
@@ -143,7 +154,7 @@ class PrepareIndividualsSSCPresent(V15Loader):
         for _index, val in df.person_id.iteritems():
             persons[val] = []
 
-        for st in self.get_all_ssc_studies():
+        for st in get_all_ssc_studies():
             print("processing study: {}".format(st.name))
             for _fid, fam in st.families.items():
                 for p in fam.memberInOrder:
@@ -182,7 +193,7 @@ class PrepareIndividualsGenderFromSSC(V15Loader):
         for _index, val in df.person_id.iteritems():
             persons[val] = []
 
-        for st in self.get_all_ssc_studies():
+        for st in get_all_ssc_studies():
             print("processing study: {}".format(st.name))
             for _fid, fam in st.families.items():
                 for p in fam.memberInOrder:
@@ -227,7 +238,7 @@ class CheckIndividualsGenderToSSC(V15Loader):
         for _index, val in df.person_id.iteritems():
             persons[val] = []
 
-        for st in self.get_all_ssc_studies():
+        for st in get_all_ssc_studies():
             print("processing study: {}".format(st.name))
             for _fid, fam in st.families.items():
                 for p in fam.memberInOrder:

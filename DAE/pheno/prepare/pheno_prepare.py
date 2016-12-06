@@ -107,3 +107,13 @@ def prepare_pheno_db_cache():
 
 def check_pheno_db_cache():
     check_pheno_families_cache()
+
+
+def prepare_agre_families():
+    import agre_families
+    p = agre_families.PrepareIndividuals()
+    p.prepare()
+
+
+def prepare_agre_pheno_db():
+    prepare_agre_families()

@@ -323,7 +323,7 @@ class PrepareIndividuals(AgreLoader):
 
     def prepare(self):
         df = self._build_individuals_df()
-        with PersonManager(config=self.config) as pm:
+        with PersonManager(pheno_db='agre', config=self.config) as pm:
             pm.drop_tables()
             pm.create_tables()
 
