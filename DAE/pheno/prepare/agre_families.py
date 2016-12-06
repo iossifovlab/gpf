@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import copy
 from collections import OrderedDict
+import itertools
 
 
 class AgreLoader(PhenoConfig):
@@ -59,6 +60,10 @@ class PrepareIndividuals(AgreLoader):
             self.father = None
             self.probands = {}
             self.siblings = {}
+
+        @property
+        def size(self):
+            return 2 + len(self.probands) + len(self.siblings)
 
         def __repr__(self):
             return "Family({family_id}, {mother}, {father}, " \
@@ -242,27 +247,45 @@ class PrepareIndividuals(AgreLoader):
         assert len(result) > 1
         return result
 
+    def _resolve_family_conflict(self, fam1, fam2, individuals):
+        self._remove_family(fam1, individuals)
+        self._remove_family(fam2, individuals)
+        print("conflicting families:\n\t{}\n<->\n\t{}".format(fam1, fam2))
+        if fam1.size >= fam2.size:
+            print("\tadding {}".format(fam1))
+            self._add_family(fam1, individuals)
+        else:
+            self._add_family(fam2, individuals)
+            print("\tadding {}".format(fam2))
+
+    def _remove_family(self, fam, individuals):
+        for p in itertools.chain([fam.mother], [fam.father],
+                                 fam.probands.values(),
+                                 fam.siblings.values()):
+            if p.person_id in individuals:
+                del individuals[p.person_id]
+
+    def _add_family(self, fam, individuals):
+        for order, p in enumerate(itertools.chain([fam.mother], [fam.father],
+                                                  fam.probands.values(),
+                                                  fam.siblings.values())):
+            if p.person_id in individuals:
+                # conflicting person:
+                other_person = individuals[p.person_id]
+                print("CONFLICTING PERSON: {} <-> {}".format(p, other_person))
+                return other_person
+            p.role_order = order
+            individuals[p.person_id] = p
+
     def _clean_individuals_dict(self, families):
         families = self._clean_families_without_probands(families)
         individuals = OrderedDict()
         for family in families.values():
-            print(family)
-            assert family.mother.person_id not in individuals
-            assert family.father.person_id not in individuals
-
-            individuals[family.mother.person_id] = family.mother
-            individuals[family.father.person_id] = family.father
-            family.mother.role_order = 0
-            family.father.role_order = 1
-            for order, p in enumerate(family.probands.values()):
-                assert p.person_id not in individuals
-                p.role_order = 20 + order
-                individuals[p.person_id] = p
-
-            for order, p in enumerate(family.siblings.values()):
-                assert p.person_id not in individuals
-                p.role_order = 30 + order
-                individuals[p.person_id] = p
+            conflict = self._add_family(family, individuals)
+            if conflict:
+                other_family = families[conflict.family_id]
+                self._resolve_family_conflict(
+                    family, other_family, individuals)
         assert len(individuals) > 0
         return individuals
 
@@ -287,7 +310,6 @@ class PrepareIndividuals(AgreLoader):
         return dtype
 
     def _build_individuals_row(self, p):
-        print(p)
         person_id = p.person_id
         family_id = p.family_id
         role = p.role
