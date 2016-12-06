@@ -6,6 +6,7 @@ Created on Nov 21, 2016
 from query_variants import dae_query_variants, PRESENT_IN_CHILD_TYPES,\
     PRESENT_IN_PARENT_TYPES
 import itertools
+import pandas as pd
 from collections import Counter
 from Variant import variantInMembers
 from VariantAnnotation import get_effect_types
@@ -154,6 +155,14 @@ class GenotypeHelper(object):
                 else:
                     print("skipping {}".format(vid))
         return result
+
+    def get_persons_variants_df(self, variants_type):
+        vs = self.get_persons_variants(variants_type)
+        df = pd.DataFrame(
+            data=[(k, v) for (k, v) in vs.items()],
+            columns=['person_id', 'variants'])
+        df.set_index('person_id', inplace=True, verify_integrity=True)
+        return df
 
     def get_families_variants(self, variants_type):
         vs = self.get_variants(variants_type)

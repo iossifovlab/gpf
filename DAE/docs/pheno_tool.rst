@@ -230,7 +230,7 @@ Example for iterating on many measures::
                               'autism and unaffected',
                               'unaffected only']
         )
-        persons_variants = genotype_helper.get_persons_variants(variants_type)
+        persons_variants = genotype_helper.get_persons_variants_df(variants_type)
         genotypes[et] = persons_variants
     
     result = {}

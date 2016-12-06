@@ -177,3 +177,24 @@ def test_get_lgds_variants_for_family(
     )
     variants = [v for v in vs]
     assert 100 == len(variants)
+
+
+def test_get_persons_variants_df_denovo(
+        autism_candidates_genes, genotype_helper):
+
+    res = genotype_helper.get_persons_variants_df(
+        VT(
+            effect_types=['LGDs'],
+            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_parent=['neither'],
+            gene_syms=autism_candidates_genes,
+        )
+    )
+    assert 137 == len(res)
+    print(res.head())
+    # assert 'person_id' in res.columns
+    assert 'variants' in res.columns
+    print(res.index)
+    print(res.loc['12645.p1', 'variants'])
+    assert 1 == res.loc['12645.p1', 'variants']
+    assert 1 == res.iloc[0, 0]

@@ -8,36 +8,50 @@ from DAE import *
 from pheno_tool.tool import *
 from pheno_tool.genotype_helper import GenotypeHelper
 
+from utils.profiler import profile
 
-studies = vDB.get_studies('IossifovWE2014')
-genotype_helper = GenotypeHelper(studies)
 
-effect_types = ['LGDs', 'missense', 'nonsynonymous']
+@profile("pheno_tool.prof")
+def main():
+    studies = vDB.get_studies('IossifovWE2014')
+    genotype_helper = GenotypeHelper(studies)
 
-genotypes = {}
-for et in effect_types:
-    variants_type = VT(
-        effect_types=[et],
-        present_in_parent=['neither'],
-        present_in_child=['autism only',
-                          'autism and unaffected',
-                          'unaffected only']
-    )
-    persons_variants = genotype_helper.get_persons_variants(variants_type)
-    genotypes[et] = persons_variants
+    effect_types = ['LGDs', 'missense', 'nonsynonymous']
 
-result = {}
+    genotypes = {}
+    for et in effect_types:
+        variants_type = VT(
+            effect_types=[et],
+            present_in_parent=['neither'],
+            present_in_child=['autism only',
+                              'autism and unaffected',
+                              'unaffected only']
+        )
+        persons_variants = genotype_helper.get_persons_variants_df(
+            variants_type)
+        genotypes[et] = persons_variants
 
-for measure_id in phdb.get_instrument_measures('vineland_ii'):
-    measure = phdb.get_measure(measure_id)
-    if measure.measure_type != "continuous":
-        continue
+    result = {}
 
-    cols = [measure_id]
-    for role in ['prb', 'sib']:
-        tool = PhenoTool(phdb, studies, roles=[role], measure_id=measure_id)
-        for et in effect_types:
-            print("working on: {}, {}, {}".format(measure_id, role, et))
-            res = tool.calc(genotypes[et])
-            cols.append("%.3f" % res.pvalue)
-    result[measure_id] = cols
+    for count, measure_id in enumerate(
+            phdb.get_instrument_measures('vineland_ii')):
+
+        measure = phdb.get_measure(measure_id)
+        if measure.measure_type != "continuous":
+            continue
+
+        cols = [measure_id]
+        for role in ['prb', 'sib']:
+            tool = PhenoTool(
+                phdb, studies, roles=[role], measure_id=measure_id)
+            for et in effect_types:
+                print("working on: {}, {}, {}".format(measure_id, role, et))
+                res = tool.calc(genotypes[et])
+                cols.append("%.3f" % res.pvalue)
+        result[measure_id] = cols
+        if count >= 5:
+            break
+
+
+if __name__ == "__main__":
+    main()

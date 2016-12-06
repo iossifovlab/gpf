@@ -17,6 +17,8 @@ from pheno_tool.genotype_helper import VariantsType as VT
 from pheno_tool.pheno_common import PhenoFilterBuilder, PhenoResult
 import statsmodels.api as sm
 
+# from utils.profiler import profile
+
 
 class PhenoTool(object):
     """
@@ -38,6 +40,7 @@ class PhenoTool(object):
     is empty dictionary.
     """
 
+    # @profile("pheno_tool_init.prof")
     def __init__(self, phdb, studies, roles,
                  measure_id, normalize_by=[],
                  pheno_filters={}):
@@ -224,6 +227,7 @@ class PhenoTool(object):
 
         return result
 
+    # @profile("pheno_tool_calc.prof")
     def calc(self, variants, gender_split=False):
         """
         `variants` -- expects either variants type specification (instance of
@@ -235,24 +239,29 @@ class PhenoTool(object):
 
         """
         if isinstance(variants, VT):
-            persons_variants = self.genotype_helper.get_persons_variants(
+            persons_variants = self.genotype_helper.get_persons_variants_df(
                 variants)
         elif isinstance(variants, Counter):
+
+            persons_variants = pd.DataFrame(
+                data=[(k, v) for k, v in variants.items()],
+                columns=['person_id', 'variants'])
+            persons_variants.set_index('person_id', inplace=True)
+        elif isinstance(variants, pd.DataFrame):
             persons_variants = variants
         else:
             raise ValueError(
                 "expected VariantsType object or persons variants")
 
-        df = self.df
-        variants = pd.Series(0, index=df.index)
-        df['variants'] = variants
+        if 'variants' in self.df:
+            # delete variants column
+            del self.df['variants']
 
-        for index, row in df.iterrows():
-            person_id = row['person_id']
-            assert person_id in self.persons
-
-            var_count = persons_variants.get(person_id, 0)
-            df.loc[index, 'variants'] = var_count
+        df = self.df.join(
+            persons_variants, on="person_id", rsuffix="_variants")
+        df.fillna(0, inplace=True)
+        self.df = df
+        # print(df.head())
 
         if not gender_split:
             return self._calc_stats(df, None)
