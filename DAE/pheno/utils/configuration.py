@@ -9,9 +9,12 @@ import ConfigParser
 
 class PhenoConfig(object):
 
-    def __init__(self, dae_config=None, config=None, pheno_db='ssc_v15',
-                 *args, **kwargs):
-        super(PhenoConfig, self).__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super(PhenoConfig, self).__init__()
+        self.pheno_db = kwargs.get('pheno_db', 'ssc_v15')
+        dae_config = kwargs.get('dae_config', None)
+        config = kwargs.get('config', None)
+
         if dae_config is None:
             self.dae_config = Config()
         else:

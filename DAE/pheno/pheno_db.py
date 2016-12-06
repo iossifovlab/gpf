@@ -144,8 +144,10 @@ class PhenoDB(PhenoConfig):
     * `measures` -- dictionary of all measures
     """
 
-    def __init__(self, dae_config=None, *args, **kwargs):
-        super(PhenoDB, self).__init__(dae_config, *args, **kwargs)
+    def __init__(self, pheno_db='ssc_v15', dae_config=None, *args, **kwargs):
+        super(PhenoDB, self).__init__(pheno_db=pheno_db, dae_config=dae_config,
+                                      config=None,
+                                      *args, **kwargs)
 
         self.families = None
         self.persons = None
@@ -179,7 +181,7 @@ class PhenoDB(PhenoConfig):
 
     def _load_measures_meta_df(self, df):
         variable_ids = df.variable_id.unique()
-        with MetaVariableManager() as vm:
+        with MetaVariableManager(pheno_db=self.pheno_db) as vm:
             meta_df = vm.load_df(where=self._where_variables(variable_ids))
 
             df = df.join(
@@ -215,7 +217,8 @@ class PhenoDB(PhenoConfig):
                         correlation_with,
                         role, gender,
                         where_variables)
-                with MetaVariableCorrelationManager() as vm:
+                with MetaVariableCorrelationManager(
+                        pheno_db=self.pheno_db) as vm:
                     df = vm.load_df(where)
                     self._rename_forward(df, [('variable_id', 'measure_id')])
                     df = df[['measure_id', 'coeff', 'pvalue']]
@@ -261,7 +264,7 @@ class PhenoDB(PhenoConfig):
         if measure_type is not None:
             clauses.append("stats='{}'".format(measure_type))
 
-        with VariableManager() as vm:
+        with VariableManager(pheno_db=self.pheno_db) as vm:
             df = vm.load_df(
                 where=' and '.join(['( {} )'.format(c) for c in clauses]))
 
@@ -329,6 +332,7 @@ class PhenoDB(PhenoConfig):
 
     def _load_families(self):
         families = defaultdict(list)
+        print(self.pheno_db)
         persons = self.get_persons()
 
         for p in persons.values():
@@ -351,7 +355,8 @@ class PhenoDB(PhenoConfig):
         if self.instruments is None:
             self._load_instruments()
 
-    def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
+    def get_persons_df(self, roles=None, person_ids=None, family_ids=None,
+                       present=1):
         """
         Returns a individuals information form phenotype database as a data
         frame.
@@ -371,10 +376,10 @@ class PhenoDB(PhenoConfig):
 
         Columns returned are: `person_id`, `family_id`, `role`, `gender`.
         """
-        where = ["ssc_present=1"]
+        where = ["ssc_present={}".format(present)]
         if roles:
             where.append(self._roles_clause(roles, 'role'))
-        with PersonManager() as pm:
+        with PersonManager(pheno_db=self.pheno_db) as pm:
             df = pm.load_df(where=' and '.join(where))
             try:
                 df.sort_values(['family_id', 'role_order'], inplace=True)
@@ -434,7 +439,7 @@ class PhenoDB(PhenoConfig):
         return self.measures[measure_id]
 
     def _get_values_df(self, value_manager, where):
-        with value_manager() as vm:
+        with value_manager(pheno_db=self.pheno_db) as vm:
             df = vm.load_df(where=where)
             return df
 

@@ -251,13 +251,13 @@ class PrepareIndividuals(AgreLoader):
     def _resolve_family_conflict(self, fam1, fam2, individuals):
         self._remove_family(fam1, individuals)
         self._remove_family(fam2, individuals)
-        print("conflicting families:\n\t{}\n<->\n\t{}".format(fam1, fam2))
+        # print("conflicting families:\n\t{}\n<->\n\t{}".format(fam1, fam2))
         if fam1.size >= fam2.size:
-            print("\tadding {}".format(fam1))
+            # print("\tadding {}".format(fam1))
             self._add_family(fam1, individuals)
         else:
             self._add_family(fam2, individuals)
-            print("\tadding {}".format(fam2))
+            # print("\tadding {}".format(fam2))
 
     def _remove_family(self, fam, individuals):
         for p in itertools.chain([fam.mother], [fam.father],
@@ -273,7 +273,8 @@ class PrepareIndividuals(AgreLoader):
             if p.person_id in individuals:
                 # conflicting person:
                 other_person = individuals[p.person_id]
-                print("CONFLICTING PERSON: {} <-> {}".format(p, other_person))
+                # print("CONFLICTING PERSON: {} <-> {}".format(
+                # p, other_person))
                 return other_person
             p.role_order = order
             individuals[p.person_id] = p
@@ -337,10 +338,10 @@ class PrepareIndividuals(AgreLoader):
                 p.gender = None
                 p.race = None
                 p.collection = 'agre'
-                p.ssc_present = None
+                p.ssc_present = 1
 
                 pm.save(p)
 
     @property
     def person_manager(self):
-        return PersonManager(config=self.config)
+        return PersonManager(pheno_db='agre', config=self.config)
