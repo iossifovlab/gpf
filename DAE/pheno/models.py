@@ -17,6 +17,10 @@ class ManagerBase(PhenoConfig):
 
     def __init__(self, *args, **kwargs):
         super(ManagerBase, self).__init__(*args, **kwargs)
+        if 'pheno_db' in kwargs:
+            self.pheno_db = kwargs['pheno_db']
+        else:
+            self.pheno_db = 'ssc_v15'
         self.db = None
 
     @classmethod
@@ -40,7 +44,8 @@ class ManagerBase(PhenoConfig):
         if self.db is not None:
             return self.db
         filename = os.path.join(
-            self['cache', 'dir'], 'pheno_db.sql')
+            self['cache_dir', 'dir'],
+            self[self.pheno_db, 'cache_file'])
 
         self.db = sqlite3.connect(filename, isolation_level="DEFERRED")
         return self.db
