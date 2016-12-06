@@ -20,7 +20,8 @@ class PhenoConfig(object):
         studies.extend(DAE.vDB.get_studies(transmitted_studies))
         return studies
 
-    def __init__(self, dae_config=None, config=None, *args, **kwargs):
+    def __init__(self, dae_config=None, config=None, pheno_db='ssc_v15',
+                 *args, **kwargs):
         super(PhenoConfig, self).__init__(*args, **kwargs)
         if dae_config is None:
             self.dae_config = Config()

@@ -11,6 +11,7 @@ import numpy as np
 import copy
 from collections import OrderedDict
 import itertools
+from pheno.models import PersonManager, PersonModel
 
 
 class AgreLoader(PhenoConfig):
@@ -18,7 +19,7 @@ class AgreLoader(PhenoConfig):
     INDIVIDUALS = 'AGRE_Pedigree_Catalog_10-05-2012.csv'
 
     def __init__(self, *args, **kwargs):
-        super(AgreLoader, self).__init__(*args, **kwargs)
+        super(AgreLoader, self).__init__(pheno_db='agre', *args, **kwargs)
 
     def load_table(self, table_name, roles=['prb'], dtype=None):
         result = []
@@ -320,20 +321,26 @@ class PrepareIndividuals(AgreLoader):
              role, role_order, ]
         return tuple(t)
 
-#     def _build_role(self, row):
-#         if row['Person'] == 1:
-#             role = 'mo'
-#             role_type = 'mom'
-#             assert row['Sex'] == 'Female'
-#         elif row['Person'] == 2:
-#             role = 'fa'
-#             role_type = 'dad'
-#             assert row['Sex'] == 'Male'
-#         elif row['Scored Affected Status'] != '':
-#             role = 'p'
-#             role_type = 'prb'
-#         else:
-#             role = 's'
-#             role_type = 'sib'
-#         return role, role_type
-#
+    def prepare(self):
+        df = self._build_individuals_df()
+        with PersonManager(config=self.config) as pm:
+            pm.drop_tables()
+            pm.create_tables()
+
+            for _index, row in df.iterrows():
+                p = PersonModel()
+                p.person_id = row['personId']
+                p.family_id = row['familyId']
+                p.role = row['role']
+                p.role_id = row['roleId']
+                p.role_order = row['roleOrder']
+                p.gender = None
+                p.race = None
+                p.collection = 'agre'
+                p.ssc_present = None
+
+                pm.save(p)
+
+    @property
+    def person_manager(self):
+        return PersonManager(config=self.config)
