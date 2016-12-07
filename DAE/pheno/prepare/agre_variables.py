@@ -8,7 +8,8 @@ import numpy as np
 from pheno.prepare.agre_families import AgreLoader
 from pheno.models import VariableModel, ContinuousValueManager,\
     ContinuousValueModel, VariableManager, CategoricalValueManager,\
-    OrdinalValueManager, PersonManager
+    OrdinalValueManager, PersonManager, OrdinalValueModel, \
+    CategoricalValueModel
 import math
 
 
@@ -143,6 +144,10 @@ class PrepareVariables(AgreLoader):
     def _save_variable(self, var, mdf):
         if var.stats == self.CONTINUOUS:
             self._save_continuous_variable(var, mdf)
+        elif var.stats == self.ORDINAL:
+            self._save_ordinal_variable(var, mdf)
+        elif var.stats == self.CATEGORICAL:
+            self._save_categorical_variable(var, mdf)
 
     def _save_continuous_variable(self, var, mdf):
         assert var.min_value <= var.max_value
@@ -157,6 +162,38 @@ class PrepareVariables(AgreLoader):
                 v.person_role = row['person_role']
                 v.variable_id = var.variable_id
                 v.value = ContinuousValueModel.value_decode(
+                    row[var.variable_name])
+                vm.save(v)
+
+    def _save_ordinal_variable(self, var, mdf):
+        assert var.min_value <= var.max_value
+        with VariableManager(pheno_db='agre', config=self.config) as vm:
+            vm.save(var)
+
+        with OrdinalValueManager(pheno_db='agre', config=self.config) as vm:
+            for _index, row in mdf.iterrows():
+                v = OrdinalValueModel()
+                v.family_id = row['family_id']
+                v.person_id = row['person_id']
+                v.person_role = row['person_role']
+                v.variable_id = var.variable_id
+                v.value = OrdinalValueModel.value_decode(
+                    row[var.variable_name])
+                vm.save(v)
+
+    def _save_categorical_variable(self, var, mdf):
+        with VariableManager(pheno_db='agre', config=self.config) as vm:
+            vm.save(var)
+
+        with CategoricalValueManager(
+                pheno_db='agre', config=self.config) as vm:
+            for _index, row in mdf.iterrows():
+                v = CategoricalValueModel()
+                v.family_id = row['family_id']
+                v.person_id = row['person_id']
+                v.person_role = row['person_role']
+                v.variable_id = var.variable_id
+                v.value = CategoricalValueModel.value_decode(
                     row[var.variable_name])
                 vm.save(v)
 
