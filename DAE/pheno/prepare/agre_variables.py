@@ -19,7 +19,30 @@ class PrepareVariables(AgreLoader):
     CATEGORICAL = 'categorical'
     UNKNOWN = 'unknown'
 
-    FILES = ["ADIR1", "ADOS11"]
+    INSTRUMENTS = [
+        "ADIR1",
+        "ADOS11", "ADOS21", "ADOS31", "ADOS41",
+        "AffChild1",
+        "AGRE_PhysMeas1",
+        "FatherH1",
+        "Hands1",
+        "Language_Questionnaire1",
+        "MotherH1",
+        "Mullen1",
+        "PhysExam1",
+        "PPVT1",
+        "PPVT_III1",
+        "Raven1",
+        "RBS1",
+        "Repetitive_Behavior_Scales1",
+        "SRS2_SRS20021",
+        "SRS_2006_Preschool1",
+        "SRS_20061",
+        "Stanford_Binet1",
+        "Unaffec1",
+        "VABS-II1",
+        "VINE1",
+    ]
 
     @property
     def continuous_min_rank(self):
@@ -112,9 +135,10 @@ class PrepareVariables(AgreLoader):
     def prepare(self):
         self._create_variable_table()
         self._create_value_tables()
-        persons = self.load_persons_df()
 
-        self._prepare_instrument(persons, 'ADOS')
+        persons = self.load_persons_df()
+        for instrument in self.INSTRUMENTS:
+            self._prepare_instrument(persons, instrument)
 
     def _prepare_instrument(self, persons, instrument_name):
         idf = self.load_instrument(instrument_name)

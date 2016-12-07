@@ -115,5 +115,12 @@ def prepare_agre_families():
     p.prepare()
 
 
+def prepare_agre_variables():
+    import agre_variables
+    p = agre_variables.PrepareVariables()
+    p.prepare()
+
+
 def prepare_agre_pheno_db():
     prepare_agre_families()
+    prepare_agre_variables()
