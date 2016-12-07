@@ -9,7 +9,7 @@ import os
 import pandas as pd
 import numpy as np
 import copy
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 import itertools
 from pheno.models import PersonManager, PersonModel
 
@@ -21,28 +21,42 @@ class AgreLoader(PhenoConfig):
     def __init__(self, *args, **kwargs):
         super(AgreLoader, self).__init__(pheno_db='agre', *args, **kwargs)
 
-    def load_table(self, table_name, roles=['prb'], dtype=None):
-        result = []
-        for data_dir in self._data_dirs(roles):
-            dirname = os.path.join(self['agre', 'dir'], data_dir)
-            assert os.path.isdir(dirname)
+    def _clear_duplicate_measurements(self, df):
+        counter = Counter(df.person_id)
+        to_fix = [k for k, v in counter.items() if v > 1]
+        to_delete = []
+        for person_id in to_fix:
+            print("fixing measurements for {}".format(person_id))
+            pdf = df[df.person_id == person_id]
+            keep = pdf.age.idxmax()
+            d = pdf[pdf.index != keep]
+            to_delete.extend(d.index.values)
 
-            filename = os.path.join(dirname, "{}.csv".format(table_name))
-            if not os.path.isfile(filename):
-                print("skipping {}...".format(filename))
-                continue
+        df.drop(to_delete, inplace=True)
 
-            print("processing table: {}".format(filename))
+    def load_instrument(self, instrument_name, dtype=None):
+        dirname = self['agre', 'dir']
+        assert os.path.isdir(dirname)
 
-            df = pd.read_csv(filename, low_memory=False, dtype=dtype)
-            result.append(df)
+        filename = os.path.join(dirname, "{}.csv".format(instrument_name))
+        assert os.path.isfile(filename)
+        print("processing table: {}".format(filename))
 
-        return result
+        df = pd.read_csv(filename, low_memory=False, sep='\t',
+                         na_values=[' '], dtype=dtype)
+        columns = [c for c in df.columns]
+        index = columns.index('Individual ID')
+        columns[index] = 'person_id'
+        df.columns = columns
+
+        self._clear_duplicate_measurements(df)
+        return df
 
     def _load_df(self, name, sep='\t', dtype=None):
         filename = os.path.join(self['agre', 'dir'], name)
         assert os.path.isfile(filename)
-        df = pd.read_csv(filename, low_memory=False, sep=sep, dtype=dtype)
+        df = pd.read_csv(filename, low_memory=False, sep=sep,
+                         na_values=[' '], dtype=dtype)
 
         return df
 

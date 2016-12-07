@@ -248,9 +248,9 @@ class VariableModel(object):
         variable_id varchar(128) NOT NULL PRIMARY KEY,
         table_name varchar(64) NOT NULL,
         variable_name varchar(64) NOT NULL,
-        domain varchar(64) NOT NULL,
+        domain varchar(64) NULL,
         domain_choice_label text NULL,
-        measurement_scale varchar(16) NOT NULL,
+        measurement_scale varchar(16) NULL,
         description text NULL,
         source varchar(64) NULL,
         domain_rank integer NULL,
@@ -291,12 +291,11 @@ class VariableModel(object):
     ]
 
     def __repr__(self):
-        return "Variable({}, {}, {}, {}, {})".format(
+        return "Variable({}, {}, {}, {})".format(
             self.variable_id,
-            self.domain,
-            self.domain_choice_label,
-            self.measurement_scale,
-            self.domain_rank)
+            self.individuals,
+            self.stats,
+            self.value_domain)
 
     def __init__(self):
         self.variable_id = None
@@ -636,6 +635,10 @@ class ValueModel(object):
             return str(val).decode('utf-8')
         else:
             return str(val)
+
+    def __repr__(self):
+        return "Value({},{},{})".format(
+            self.variable_id, self.person_id, self.value)
 
 
 class ValueManager(ManagerBase):

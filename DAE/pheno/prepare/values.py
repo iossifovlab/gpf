@@ -314,16 +314,19 @@ class PrepareValueClassification(PhenoConfig):
             variable = VariableModel.create_from_df(df.loc[0])
         with RawValueManager(config=self.config) as vm:
             df = vm.load_values(variable)
-            if len(df) == 0:
-                return self.UNKNOWN
-            if self.check_continuous(variable, df.value):
-                return self.CONTINUOUS
-            elif self.check_ordinal(variable, df.value):
-                return self.ORDINAL
-            elif self.check_categorical(variable, df.value):
-                return self.CATEGORICAL
+            return self.clasify_values(variable, df)
 
         return self.UNKNOWN
+
+    def clasify_values(self, variable, df):
+        if len(df) == 0:
+            return self.UNKNOWN
+        if self.check_continuous(variable, df.value):
+            return self.CONTINUOUS
+        elif self.check_ordinal(variable, df.value):
+            return self.ORDINAL
+        elif self.check_categorical(variable, df.value):
+            return self.CATEGORICAL
 
     def _create_value_tables(self):
         with ContinuousValueManager(config=self.config) as vm:
