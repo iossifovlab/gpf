@@ -259,10 +259,11 @@ class PrepareValueClassification(PhenoConfig):
                 variable.domain == 'meta.float_t'):
             return False
 
-        if rank < int(self[self.CONTINUOUS, 'min_rank']):
+        if rank < int(self.config.get(self.CONTINUOUS, 'min_rank')):
             return False
 
-        if individuals < int(self[self.CONTINUOUS, 'min_individuals']):
+        if individuals < int(self.config.get(
+                self.CONTINUOUS, 'min_individuals')):
             return False
         return True
 
@@ -283,11 +284,11 @@ class PrepareValueClassification(PhenoConfig):
         if not (dtype == self.ORDINAL or dtype == self.CONTINUOUS):
             return False
 
-        if rank < int(self[self.ORDINAL, 'min_rank']) or \
-                rank > int(self[self.ORDINAL, 'max_rank']):
+        if rank < int(self.config.get(self.ORDINAL, 'min_rank')) or \
+                rank > int(self.config.get(self.ORDINAL, 'max_rank')):
             return False
 
-        if individuals < int(self[self.ORDINAL, 'min_individuals']):
+        if individuals < int(self.config.get(self.ORDINAL, 'min_individuals')):
             return False
 
         return True
@@ -296,11 +297,12 @@ class PrepareValueClassification(PhenoConfig):
         rank = len(values.unique())
         individuals = len(values)
 
-        if rank < int(self[self.CATEGORICAL, 'min_rank']) or \
-                rank > int(self[self.CATEGORICAL, 'max_rank']):
+        if rank < int(self.config.get(self.CATEGORICAL, 'min_rank')) or \
+                rank > int(self.config.get(self.CATEGORICAL, 'max_rank')):
             return False
 
-        if individuals < int(self[self.CATEGORICAL, 'min_individuals']):
+        if individuals < int(self.config.get(
+                self.CATEGORICAL, 'min_individuals')):
             return False
 
         return True

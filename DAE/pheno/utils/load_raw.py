@@ -23,20 +23,20 @@ class V14Loader(PhenoConfig):
         super(V14Loader, self).__init__(*args, **kwargs)
 
     def load_df(self, name, dtype=None):
-        filename = os.path.join(self['ssc_v14', 'dir'], name)
+        filename = os.path.join(self.config.get('ssc_v14', 'dir'), name)
         assert os.path.isfile(filename)
         df = pd.read_csv(filename, low_memory=False, dtype=dtype)
 
         return df
 
     def load_main(self):
-        return self.load_df(self['dictionary', 'main'], dtype=str)
+        return self.load_df(self.config.get('dictionary', 'main'), dtype=str)
 
     def load_cdv(self):
-        return self.load_df(self['dictionary', 'cdv'], dtype=str)
+        return self.load_df(self.config.get('dictionary', 'cdv'), dtype=str)
 
     def load_ocuv(self):
-        return self.load_df(self['dictionary', 'ocuv'], dtype=str)
+        return self.load_df(self.config.get('dictionary', 'ocuv'), dtype=str)
 
 
 class V15Loader(PhenoConfig):
@@ -71,7 +71,7 @@ class V15Loader(PhenoConfig):
     def load_table(self, table_name, roles=['prb'], dtype=None):
         result = []
         for data_dir in self._data_dirs(roles):
-            dirname = os.path.join(self['ssc_v15', 'dir'], data_dir)
+            dirname = os.path.join(self.config.get('ssc_v15', 'dir'), data_dir)
             assert os.path.isdir(dirname)
 
             filename = os.path.join(dirname, "{}.csv".format(table_name))
@@ -87,7 +87,7 @@ class V15Loader(PhenoConfig):
         return result
 
     def _load_df(self, name, dtype=None):
-        filename = os.path.join(self['ssc_v15', 'dir'], name)
+        filename = os.path.join(self.config.get('ssc_v15', 'dir'), name)
         assert os.path.isfile(filename)
         df = pd.read_csv(filename, low_memory=False, sep='\t', dtype=dtype)
 

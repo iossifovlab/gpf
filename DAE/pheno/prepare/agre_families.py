@@ -35,7 +35,7 @@ class AgreLoader(PhenoConfig):
         df.drop(to_delete, inplace=True)
 
     def load_instrument(self, instrument_name, dtype=None):
-        dirname = self['agre', 'dir']
+        dirname = self.config.get('agre', 'dir')
         assert os.path.isdir(dirname)
 
         filename = os.path.join(dirname, "{}.csv".format(instrument_name))
@@ -53,7 +53,7 @@ class AgreLoader(PhenoConfig):
         return df
 
     def _load_df(self, name, sep='\t', dtype=None):
-        filename = os.path.join(self['agre', 'dir'], name)
+        filename = os.path.join(self.config.get('agre', 'dir'), name)
         assert os.path.isfile(filename)
         df = pd.read_csv(filename, low_memory=False, sep=sep,
                          na_values=[' '], dtype=dtype)

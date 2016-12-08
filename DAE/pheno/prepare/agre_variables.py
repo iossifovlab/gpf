@@ -46,35 +46,35 @@ class PrepareVariables(AgreLoader):
 
     @property
     def continuous_min_rank(self):
-        return int(self[self.CONTINUOUS, 'min_rank'])
+        return int(self.config.get(self.CONTINUOUS, 'min_rank'))
 
     @property
     def continuous_min_individuals(self):
-        return int(self[self.CONTINUOUS, 'min_individuals'])
+        return int(self.config.get(self.CONTINUOUS, 'min_individuals'))
 
     @property
     def ordinal_min_rank(self):
-        return int(self[self.ORDINAL, 'min_rank'])
+        return int(self.config.get(self.ORDINAL, 'min_rank'))
 
     @property
     def ordinal_max_rank(self):
-        return int(self[self.ORDINAL, 'max_rank'])
+        return int(self.config.get(self.ORDINAL, 'max_rank'))
 
     @property
     def ordinal_min_individuals(self):
-        return int(self[self.ORDINAL, 'min_individuals'])
+        return int(self.config.get(self.ORDINAL, 'min_individuals'))
 
     @property
     def categorical_min_rank(self):
-        return int(self[self.CATEGORICAL, 'min_rank'])
+        return int(self.config.get(self.CATEGORICAL, 'min_rank'))
 
     @property
     def categorical_max_rank(self):
-        return int(self[self.CATEGORICAL, 'max_rank'])
+        return int(self.config.get(self.CATEGORICAL, 'max_rank'))
 
     @property
     def categorical_min_individuals(self):
-        return int(self[self.CATEGORICAL, 'min_individuals'])
+        return int(self.config.get(self.CATEGORICAL, 'min_individuals'))
 
     def check_continuous_rank(self, rank, individuals):
         if rank < self.continuous_min_rank:
