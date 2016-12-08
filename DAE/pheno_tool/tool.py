@@ -196,6 +196,17 @@ class PhenoTool(object):
 
     @classmethod
     def _calc_stats(cls, data, gender):
+        if len(data) == 0:
+            result = PhenoResult(None, None)
+            result.positive_count = np.nan
+            result.positive_mean = np.nan
+            result.positive_deviation = np.nan
+
+            result.negative_count = np.nan
+            result.negative_mean = np.nan
+            result.negative_deviation = np.nan
+            return result
+
         positive_index = np.logical_and(
             data['variants'] != 0, ~np.isnan(data['variants']))
 

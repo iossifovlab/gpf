@@ -13,7 +13,7 @@ from pheno_tool.genotype_helper import GenotypeHelper
 
 # @profile("pheno_tool.prof")
 def main():
-    studies = vDB.get_studies('IossifovWE2014')
+    studies = vDB.get_studies('AGRE433')
     genotype_helper = GenotypeHelper(studies)
 
     effect_types = ['LGDs', 'missense', 'nonsynonymous']
@@ -29,14 +29,14 @@ def main():
         )
         persons_variants = genotype_helper.get_persons_variants_df(
             variants_type)
+        print("variants {}: {}".format(et, len(persons_variants)))
         genotypes[et] = persons_variants
 
     result = {}
 
-    phdb = phenoDB.get_pheno_db('ssc')
+    phdb = phenoDB.get_pheno_db('agre')
 
-    for count, measure_id in enumerate(
-            phdb.get_instrument_measures('vineland_ii')):
+    for measure_id in phdb.get_instrument_measures('VINE1'):
 
         measure = phdb.get_measure(measure_id)
         if measure.measure_type != "continuous":

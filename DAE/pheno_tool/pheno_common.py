@@ -88,6 +88,8 @@ class PhenoResult(object):
 
     @staticmethod
     def _select_genotype(df, index):
+        if df is None:
+            return None
         gdf = df[['person_id', 'gender', 'role', 'variants']]
         if index is not None:
             gdf = gdf[index]
@@ -95,6 +97,9 @@ class PhenoResult(object):
 
     @staticmethod
     def _select_phenotype(df, index):
+        if df is None:
+            return None
+
         columns = list(df.columns)
         del columns[columns.index('variants')]
         del columns[columns.index('family_id')]
@@ -117,6 +122,9 @@ class PhenoResult(object):
     @property
     def genotypes(self):
         result = Counter()
+        if self.genotypes_df is None:
+            return result
+
         for _index, row in self.genotypes_df.iterrows():
             result[row['person_id']] = row['variants']
         return result
@@ -124,6 +132,8 @@ class PhenoResult(object):
     @property
     def phenotypes(self):
         result = {}
+        if self.phenotypes_df is None:
+            return None
         for _index, row in self.phenotypes_df.iterrows():
             result[row['person_id']] = row.to_dict()
         return result
