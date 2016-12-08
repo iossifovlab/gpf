@@ -78,13 +78,13 @@ class PhenoResult(object):
         self.df = df
         self.genotypes_df = self._select_genotype(df, index)
         self.phenotypes_df = self._select_phenotype(df, index)
-        self.pvalue = None
-        self.positive_count = None
-        self.positive_mean = None
-        self.positive_deviation = None
-        self.negative_count = None
-        self.negative_mean = None
-        self.negative_deviation = None
+        self.pvalue = np.nan
+        self.positive_count = np.nan
+        self.positive_mean = np.nan
+        self.positive_deviation = np.nan
+        self.negative_count = np.nan
+        self.negative_mean = np.nan
+        self.negative_deviation = np.nan
 
     @staticmethod
     def _select_genotype(df, index):
