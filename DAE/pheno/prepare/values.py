@@ -319,6 +319,7 @@ class PrepareValueClassification(PhenoConfig):
         return self.UNKNOWN
 
     def clasify_values(self, variable, df):
+        print(len(df))
         if len(df) == 0:
             return self.UNKNOWN
         if self.check_continuous(variable, df.value):
@@ -327,6 +328,7 @@ class PrepareValueClassification(PhenoConfig):
             return self.ORDINAL
         elif self.check_categorical(variable, df.value):
             return self.CATEGORICAL
+        return self.UNKNOWN
 
     def _create_value_tables(self):
         with ContinuousValueManager(config=self.config) as vm:
