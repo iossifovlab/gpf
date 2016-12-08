@@ -47,6 +47,9 @@ class PhenoFactory(PhenoConfig):
         return [n for n in self._available]
 
     def get_pheno_db(self, dbname):
+        if not self.has_pheno_db(dbname):
+            raise ValueError("can't find pheno DB {}; available pheno DBs: {}"
+                             .format(dbname, self._available))
         import pheno_db
         phdb = pheno_db.PhenoDB(pheno_db=dbname)
         phdb.load()

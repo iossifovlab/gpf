@@ -11,7 +11,7 @@ class PhenoConfig(object):
 
     def __init__(self, **kwargs):
         super(PhenoConfig, self).__init__()
-        self.pheno_db = kwargs.get('pheno_db', 'ssc_v15')
+        self.pheno_db = kwargs.get('pheno_db', 'ssc')
         config = kwargs.get('config', None)
 
         if config:

@@ -144,7 +144,7 @@ class PhenoDB(PhenoConfig):
     * `measures` -- dictionary of all measures
     """
 
-    def __init__(self, pheno_db='ssc_v15', dae_config=None, *args, **kwargs):
+    def __init__(self, pheno_db='ssc', dae_config=None, *args, **kwargs):
         super(PhenoDB, self).__init__(pheno_db=pheno_db, dae_config=dae_config,
                                       config=None,
                                       *args, **kwargs)
