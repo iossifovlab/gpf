@@ -4,6 +4,8 @@ Created on Sep 10, 2016
 @author: lubo
 '''
 import numpy as np
+import pandas as pd
+
 from collections import defaultdict, OrderedDict
 
 from pheno.utils.configuration import PhenoConfig
@@ -181,12 +183,25 @@ class PhenoDB(PhenoConfig):
 
     def _load_measures_meta_df(self, df):
         variable_ids = df.variable_id.unique()
-        with MetaVariableManager(pheno_db=self.pheno_db) as vm:
-            meta_df = vm.load_df(where=self._where_variables(variable_ids))
+        try:
+            with MetaVariableManager(pheno_db=self.pheno_db) as vm:
+                meta_df = vm.load_df(where=self._where_variables(variable_ids))
+        except Exception:
+            print("can't load variables meta data...")
 
-            df = df.join(
-                meta_df.set_index('variable_id'), on='variable_id',
-                rsuffix='_val_meta')
+            size = len(df.index)
+            meta_df = pd.DataFrame(
+                data={
+                    'variable_id': df.variable_id.values,
+                    'has_siblings': np.zeros(size),
+                    'has_probands': np.zeros(size),
+                    'has_parents': np.zeros(size),
+                    'default_filter': [None] * size,
+                })
+        df = df.join(
+            meta_df.set_index('variable_id'), on='variable_id',
+            rsuffix='_val_meta')
+
         return df
 
     def get_measures_corellations_df(
@@ -477,6 +492,34 @@ class PhenoDB(PhenoConfig):
         clauses = ["{} = '{}'".format(column_name, role) for role in roles]
         return " ( {} ) ".format(' or '.join(clauses))
 
+    def _raw_get_measure_values_df(
+            self, measure, person_ids=None, family_ids=None, roles=None,
+            default_filter='skip'):
+
+        value_type = measure.measure_type
+        if value_type is None:
+            raise ValueError(
+                "bad measure: {}; unknown value type".format(
+                    measure.measure_id))
+        value_manager = self._get_value_manager(value_type)
+        clauses = ["variable_id = '{}'".format(measure.measure_id)]
+        if roles:
+            roles_clause = self._roles_clause(roles, 'person_role')
+            clauses.append(roles_clause)
+        if measure.default_filter is not None:
+            filter_clause = self._build_default_filter_clause(
+                measure, default_filter)
+            if filter_clause is not None:
+                clauses.append(filter_clause)
+        where = ' and '.join(clauses)
+        df = self._get_values_df(value_manager, where)
+        if person_ids:
+            df = df[df.person_id.isin(person_ids)]
+        if family_ids:
+            df = df[df.family_id.isin(family_ids)]
+        self._rename_value_column(measure.measure_id, df)
+        return df
+
     def get_measure_values_df(self, measure_id,
                               person_ids=None, family_ids=None,
                               roles=None,
@@ -505,35 +548,14 @@ class PhenoDB(PhenoConfig):
         """
 
         assert measure_id in self.measures
+        measure = self.measures[measure_id]
 
-        m = self.measures[measure_id]
-
-        value_type = m.measure_type
-        if value_type is None:
-            raise ValueError("bad measure: {}; unknown value type"
-                             .format(measure_id))
-        value_manager = self._get_value_manager(value_type)
-
-        clauses = ["variable_id = '{}'".format(measure_id)]
-        if roles:
-            roles_clause = self._roles_clause(roles, 'person_role')
-            clauses.append(roles_clause)
-
-        if m.default_filter is not None:
-            filter_clause = self._build_default_filter_clause(
-                m, default_filter)
-            if filter_clause is not None:
-                clauses.append(filter_clause)
-
-        where = ' and '.join(clauses)
-        df = self._get_values_df(value_manager, where)
-
-        if person_ids:
-            df = df[df.person_id.isin(person_ids)]
-        if family_ids:
-            df = df[df.family_id.isin(family_ids)]
-
-        self._rename_value_column(measure_id, df)
+        df = self._raw_get_measure_values_df(
+            measure,
+            person_ids=person_ids,
+            family_ids=family_ids,
+            roles=roles,
+            default_filter=default_filter)
 
         return df[['person_id', measure_id]]
 

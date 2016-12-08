@@ -124,3 +124,9 @@ def prepare_agre_variables():
 def prepare_agre_pheno_db():
     prepare_agre_families()
     prepare_agre_variables()
+
+
+def prepare_agre_pheno_db_meta():
+    import agre_meta
+    p = agre_meta.PrepareMetaVariables()
+    p.prepare()

@@ -488,6 +488,15 @@ class MetaVariableModel(object):
         self.has_parents = None
         self.default_filter = None
 
+    def __repr__(self):
+        return "MetaVariable({}, {}, {}, {}, {}, {})".format(
+            self.variable_id,
+            self.min_value,
+            self.max_value,
+            self.has_probands,
+            self.has_siblings,
+            self.has_parents)
+
     @staticmethod
     def to_tuple(v):
         return (
