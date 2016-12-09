@@ -347,7 +347,6 @@ class PhenoDB(PhenoConfig):
 
     def _load_families(self):
         families = defaultdict(list)
-        print(self.pheno_db)
         persons = self.get_persons()
 
         for p in persons.values():

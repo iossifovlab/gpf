@@ -520,7 +520,7 @@ class MetaVariableModel(object):
         v.has_siblings = row['has_siblings']
         v.has_parents = row['has_parents']
         v.default_filter = row['default_filter']
-        print("CREATE_FROM_DF:", v.default_filter, type(v.default_filter))
+        # print("CREATE_FROM_DF:", v.default_filter, type(v.default_filter))
         return v
 
 

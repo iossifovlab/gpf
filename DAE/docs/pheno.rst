@@ -1,16 +1,28 @@
 pheno package
 =============
 
+Pheno DB access
+---------------
+
+
+
+
+
 Example usage of :ref:`PhenoDB`
 -------------------------------
 
-The main class that ensures access to SSC the phenotype database is 
-:ref:`PhenoDB`. To start using the phenotype database you need to create an
-instance of this class::
+To access a pheno DB you need to import DAE and use a factory object named
+`phenoDB`::
 
-    In [1]: from pheno.pheno_db import PhenoDB
-    In [2]: phdb = PhenoDB()
-    In [3]: phdb.load()
+    In [1]: from DAE import *
+    
+    In [2]: phenoDB.get_pheno_db_names()
+    Out[2]: ['agre', 'ssc']
+    
+    In [3]: phdb = phenoDB.get_pheno_db('agre')
+
+The result of `get_pheno_db` is an instance of :ref:`PhenoDB` class. This is the
+main class that provides access to the phenotype database.
 
 
 To access values of given measure use::

@@ -13,9 +13,7 @@ class PhenoFactory(PhenoConfig):
     def __init__(self):
         super(PhenoFactory, self).__init__()
         dbs = self.config.get('pheno', 'dbs')
-        print("dbs: {}".format(dbs))
         available = [dbname.strip() for dbname in dbs.split(',')]
-        print("available: {}".format(available))
         available = [dbname for dbname in available
                      if self._check_pheno_db(dbname)]
         self._available = set(available)
@@ -34,8 +32,9 @@ class PhenoFactory(PhenoConfig):
         dbfile = os.path.join(
             self.config.get('cache_dir', 'dir'),
             self.config.get(dbname, 'cache_file'))
-        print("testing filename: {}".format(dbfile))
+
         if not os.path.isfile(dbfile):
+            print("cache file for {} not found: {}".format(dbname, dbfile))
             return False
 
         return True
