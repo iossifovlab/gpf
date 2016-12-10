@@ -24,8 +24,10 @@ class Weights(Preload):
             bars, bins = np.histogram(w.values(), 150)
             result.append({"weight": w.name,
                            "desc": w.desc,
-                           "min": float("{:.4G}".format(w.values().min())),
-                           "max": float("{:.4G}".format(w.values().max())),
+                           "min": float("{:.4G}".format(
+                               w.df[weight_name].min() - 1)),
+                           "max": float("{:.4G}".format(
+                               w.df[weight_name].max() + 1)),
                            "bars": bars,
                            "bins": bins,
                            "step": w.step, })

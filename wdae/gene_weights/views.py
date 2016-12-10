@@ -35,7 +35,8 @@ class GeneWeightsGetGenesView(views.APIView):
             wmax = None
         else:
             wmax = float(data['max'])
-        return weights.get_genes_by_weight(wname, wmin=wmin, wmax=wmax)
+        return weights.get_genes_by_weight(
+            wname, wmin=wmin, wmax=wmax)
 
     def post(self, request):
         data = self.request.data
@@ -66,10 +67,10 @@ class GeneWeightsPartitionsView(views.APIView):
         wmax = float(data["max"])
 
         total = 1.0 * len(df)
-
-        ldf = df[df.values < wmin]
-        rdf = df[df.values > wmax]
-        mdf = df[np.logical_and(df.values >= wmin, df.values <= wmax)]
+        ldf = df[df[weight_name] < wmin]
+        rdf = df[df[weight_name] > wmax]
+        mdf = df[np.logical_and(
+            df[weight_name] >= wmin, df[weight_name] <= wmax)]
 
         res = {"weights": weight_name,
                "wmin": wmin,
