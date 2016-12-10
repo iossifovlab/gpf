@@ -187,11 +187,11 @@ class Measures(Preload):
         if not self.has_measure(measure_id):
             raise ValueError("unsupported phenotype measure")
 
-        persons_df = self.phdb.get_persons_df(role='prb')
+        persons_df = self.phdb.get_persons_df(roles=['prb'])
 
         value_df = self.phdb.get_values_df(
             ['pheno_common.age', 'pheno_common.non_verbal_iq', measure_id],
-            role='prb')
+            roles=['prb'])
 
         df = persons_df.join(
             value_df.set_index('person_id'), on='person_id', rsuffix='_val')
