@@ -5,6 +5,7 @@ from api.sd.views import SequencingDenovoPreview, SequencingDenovoDownload
 from api.ssc.views import SSCPreview, SSCDownload
 from enrichment.views import EnrichmentView
 from reports.views import VariantReportsView, FamiliesDataDownloadView
+from api.vip.views import VIPPreview, VIPDownload
 
 
 urlpatterns = patterns(
@@ -32,6 +33,9 @@ urlpatterns = patterns(
 
     url(r'^sd_query_variants_preview$', SequencingDenovoPreview.as_view()),
     url(r'^sd_query_variants$', SequencingDenovoDownload.as_view()),
+
+    url(r'^vip_query_variants_preview$', VIPPreview.as_view()),
+    url(r'^vip_query_variants$', VIPDownload.as_view()),
 
     url(r'^reports/variant_reports/(?P<study_name>.+)$',
         VariantReportsView.as_view()),
