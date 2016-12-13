@@ -140,3 +140,7 @@ def prepare_vip_pheno_db():
     import vip_variables
     p = vip_variables.VipVariables()
     p.prepare()
+
+    import vip_meta
+    p = vip_meta.VipMetaVariables()
+    p.prepare()
