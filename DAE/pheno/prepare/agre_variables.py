@@ -11,6 +11,7 @@ from pheno.models import VariableModel, ContinuousValueManager,\
     OrdinalValueManager, PersonManager, OrdinalValueModel, \
     CategoricalValueModel
 import math
+import itertools
 
 
 class PrepareVariables(AgreLoader):
@@ -144,7 +145,8 @@ class PrepareVariables(AgreLoader):
         idf = self.load_instrument(instrument_name)
         df = idf.join(persons, on='person_id', rsuffix="_person")
 
-        for measure_name in df.columns[20:len(idf.columns)]:
+        for measure_name in itertools.chain(df.columns[16:17],
+                                            df.columns[20:len(idf.columns)]):
             print(measure_name)
             mdf = df[['person_id', measure_name,
                       'family_id', 'person_role']]
