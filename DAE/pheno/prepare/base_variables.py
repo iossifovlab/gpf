@@ -1,5 +1,5 @@
 '''
-Created on Dec 7, 2016
+Created on Dec 13, 2016
 
 @author: lubo
 '''
@@ -7,43 +7,71 @@ import itertools
 import math
 
 import numpy as np
-from pheno.models import VariableModel, ContinuousValueManager,\
-    ContinuousValueModel, VariableManager, CategoricalValueManager,\
-    OrdinalValueManager, PersonManager, OrdinalValueModel, \
-    CategoricalValueModel
-from pheno.prepare.agre_families import AgreLoader
-from pheno.prepare.base_variables import BaseVariables
+from pheno.models import ContinuousValueManager, CategoricalValueManager,\
+    OrdinalValueManager, VariableManager, PersonManager, VariableModel,\
+    ContinuousValueModel, OrdinalValueModel, CategoricalValueModel
 
 
-class PrepareVariables(AgreLoader, BaseVariables):
+class BaseVariables(object):
+    CONTINUOUS = 'continuous'
+    ORDINAL = 'ordinal'
+    CATEGORICAL = 'categorical'
+    UNKNOWN = 'unknown'
 
-    INSTRUMENTS = [
-        "ADIR1",
-        "ADOS11", "ADOS21", "ADOS31", "ADOS41",
-        "AffChild1",
-        "AGRE_PhysMeas1",
-        "FatherH1",
-        "Hands1",
-        "Language_Questionnaire1",
-        "MotherH1",
-        "Mullen1",
-        "PhysExam1",
-        "PPVT1",
-        "PPVT_III1",
-        "Raven1",
-        "RBS1",
-        "Repetitive_Behavior_Scales1",
-        "SRS2_SRS20021",
-        "SRS_2006_Preschool1",
-        "SRS_20061",
-        "Stanford_Binet1",
-        "Unaffec1",
-        "VABS-II1",
-        "VINE1",
-    ]
+    @property
+    def continuous_min_rank(self):
+        return int(self.config.get(self.CONTINUOUS, 'min_rank'))
 
-    def __init__(self, *args, **kwargs):
-        super(PrepareVariables, self).__init__(*args, **kwargs)
+    @property
+    def continuous_min_individuals(self):
+        return int(self.config.get(self.CONTINUOUS, 'min_individuals'))
+
+    @property
+    def ordinal_min_rank(self):
+        return int(self.config.get(self.ORDINAL, 'min_rank'))
+
+    @property
+    def ordinal_max_rank(self):
+        return int(self.config.get(self.ORDINAL, 'max_rank'))
+
+    @property
+    def ordinal_min_individuals(self):
+        return int(self.config.get(self.ORDINAL, 'min_individuals'))
+
+    @property
+    def categorical_min_rank(self):
+        return int(self.config.get(self.CATEGORICAL, 'min_rank'))
+
+    @property
+    def categorical_max_rank(self):
+        return int(self.config.get(self.CATEGORICAL, 'max_rank'))
+
+    @property
+    def categorical_min_individuals(self):
+        return int(self.config.get(self.CATEGORICAL, 'min_individuals'))
+
+    def check_continuous_rank(self, rank, individuals):
+        if rank < self.continuous_min_rank:
+            return False
+        if individuals < self.continuous_min_individuals:
+            return False
+        return True
+
+    def check_ordinal_rank(self, rank, individuals):
+        if rank < self.ordinal_min_rank or \
+                rank > self.ordinal_max_rank:
+            return False
+        if individuals < self.ordinal_min_individuals:
+            return False
+        return True
+
+    def check_categorical_rank(self, rank, individuals):
+        if rank < self.categorical_min_rank or \
+                rank > self.categorical_max_rank:
+            return False
+        if individuals < self.categorical_min_individuals:
+            return False
+        return True
 
     def _create_value_tables(self):
         with ContinuousValueManager(
@@ -74,14 +102,6 @@ class PrepareVariables(AgreLoader, BaseVariables):
             df.columns = columns
             df.set_index('person_id', inplace=True)
             return df
-
-    def prepare(self):
-        self._create_variable_table()
-        self._create_value_tables()
-
-        persons = self.load_persons_df()
-        for instrument in self.INSTRUMENTS:
-            self._prepare_instrument(persons, instrument)
 
     def _prepare_instrument(self, persons, instrument_name):
         idf = self.load_instrument(instrument_name)
@@ -119,10 +139,12 @@ class PrepareVariables(AgreLoader, BaseVariables):
 
     def _save_continuous_variable(self, var, mdf):
         assert var.min_value <= var.max_value
-        with VariableManager(pheno_db='agre', config=self.config) as vm:
+        with VariableManager(
+                pheno_db=self.pheno_db, config=self.config) as vm:
             vm.save(var)
 
-        with ContinuousValueManager(pheno_db='agre', config=self.config) as vm:
+        with ContinuousValueManager(
+                pheno_db=self.pheno_db, config=self.config) as vm:
             for _index, row in mdf.iterrows():
                 v = ContinuousValueModel()
                 v.family_id = row['family_id']
@@ -135,10 +157,12 @@ class PrepareVariables(AgreLoader, BaseVariables):
 
     def _save_ordinal_variable(self, var, mdf):
         assert var.min_value <= var.max_value
-        with VariableManager(pheno_db='agre', config=self.config) as vm:
+        with VariableManager(
+                pheno_db=self.pheno_db, config=self.config) as vm:
             vm.save(var)
 
-        with OrdinalValueManager(pheno_db='agre', config=self.config) as vm:
+        with OrdinalValueManager(
+                pheno_db=self.pheno_db, config=self.config) as vm:
             for _index, row in mdf.iterrows():
                 v = OrdinalValueModel()
                 v.family_id = row['family_id']
@@ -150,11 +174,12 @@ class PrepareVariables(AgreLoader, BaseVariables):
                 vm.save(v)
 
     def _save_categorical_variable(self, var, mdf):
-        with VariableManager(pheno_db='agre', config=self.config) as vm:
+        with VariableManager(
+                pheno_db=self.pheno_db, config=self.config) as vm:
             vm.save(var)
 
         with CategoricalValueManager(
-                pheno_db='agre', config=self.config) as vm:
+                pheno_db=self.pheno_db, config=self.config) as vm:
             for _index, row in mdf.iterrows():
                 v = CategoricalValueModel()
                 v.family_id = row['family_id']
@@ -211,6 +236,9 @@ class PrepareVariables(AgreLoader, BaseVariables):
 
     def _classify_values(self, var, df):
         values = df[var.variable_name]
+        if len(values) == 0:
+            return self.UNKNOWN
+        print(values.head())
         unique_values = values.unique()
         rank = len(unique_values)
         individuals = len(df)

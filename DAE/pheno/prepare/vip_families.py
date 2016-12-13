@@ -18,6 +18,7 @@ from pheno.models import PersonManager, PersonModel
 class VipLoader(PhenoConfig):
 
     INDIVIDUALS = 'svip.csv'
+    SUBDIR = "SVIP_16p11.2"
 
     def __init__(self, *args, **kwargs):
         super(VipLoader, self).__init__(pheno_db='vip', *args, **kwargs)
@@ -35,23 +36,29 @@ class VipLoader(PhenoConfig):
 
         df.drop(to_delete, inplace=True)
 
-#     def load_instrument(self, instrument_name, dtype=None):
-#         dirname = self.config.get('vip', 'dir')
-#         assert os.path.isdir(dirname)
-#
-#         filename = os.path.join(dirname, "{}.csv".format(instrument_name))
-#         assert os.path.isfile(filename)
-#         print("processing table: {}".format(filename))
-#
-#         df = pd.read_csv(filename, low_memory=False, sep='\t',
-#                          na_values=[' '], dtype=dtype)
-#         columns = [c for c in df.columns]
-#         index = columns.index('Individual ID')
-#         columns[index] = 'person_id'
-#         df.columns = columns
-#
-#         self._clear_duplicate_measurements(df)
-#         return df
+    def load_instrument(self, instrument_name, dtype=None):
+        dirname = self.config.get('vip', 'dir')
+        assert os.path.isdir(dirname)
+
+        filename = os.path.join(
+            dirname,
+            self.SUBDIR,
+            "{}.csv".format(instrument_name))
+        assert os.path.isfile(filename)
+        print("processing table: {}".format(filename))
+
+        df = pd.read_csv(filename, low_memory=False, sep=',',
+                         na_values=[' '], dtype=dtype)
+        columns = [c for c in df.columns]
+        columns[0] = 'person_id'
+        columns[5] = 'age'
+        for index in range(6, len(columns)):
+            parts = columns[index].split('.')
+            name = parts[-1]
+            columns[index] = name
+        df.columns = columns
+        self._clear_duplicate_measurements(df)
+        return df
 
     def _load_df(self, name, sep='\t', dtype=None):
         filename = os.path.join(self.config.get('vip', 'dir'), name)

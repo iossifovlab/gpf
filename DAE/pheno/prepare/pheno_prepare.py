@@ -136,3 +136,7 @@ def prepare_vip_pheno_db():
     import vip_families
     p = vip_families.PrepareIndividuals()
     p.prepare()
+
+    import vip_variables
+    p = vip_variables.VipVariables()
+    p.prepare()
