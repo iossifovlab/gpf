@@ -130,3 +130,9 @@ def prepare_agre_pheno_db_meta():
     import agre_meta
     p = agre_meta.PrepareMetaVariables()
     p.prepare()
+
+
+def prepare_vip_pheno_db():
+    import vip_families
+    p = vip_families.PrepareIndividuals()
+    p.prepare()
