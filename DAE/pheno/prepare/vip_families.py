@@ -54,7 +54,7 @@ class VipLoader(PhenoConfig):
         columns[5] = 'age'
         for index in range(6, len(columns)):
             parts = columns[index].split('.')
-            name = parts[-1]
+            name = '.'.join(parts[1:])
             columns[index] = name
         df.columns = columns
         self._clear_duplicate_measurements(df)
@@ -64,7 +64,10 @@ class VipLoader(PhenoConfig):
         filename = os.path.join(self.config.get('vip', 'dir'), name)
         assert os.path.isfile(filename)
         df = pd.read_csv(filename, low_memory=False, sep=sep,
-                         na_values=[' '], dtype=dtype)
+                         na_values=[' '],
+                         true_values=['yes', 'true', 'True'],
+                         false_values=['no', 'false', 'False'],
+                         dtype=dtype)
 
         return df
 

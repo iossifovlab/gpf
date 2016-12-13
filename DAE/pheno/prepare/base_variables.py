@@ -3,7 +3,6 @@ Created on Dec 13, 2016
 
 @author: lubo
 '''
-import itertools
 import math
 
 import numpy as np
@@ -103,18 +102,6 @@ class BaseVariables(object):
             df.set_index('person_id', inplace=True)
             return df
 
-    def _prepare_instrument(self, persons, instrument_name):
-        idf = self.load_instrument(instrument_name)
-        df = idf.join(persons, on='person_id', rsuffix="_person")
-
-        for measure_name in itertools.chain(df.columns[16:17],
-                                            df.columns[20:len(idf.columns)]):
-            print(measure_name)
-            mdf = df[['person_id', measure_name,
-                      'family_id', 'person_role']]
-            self._build_variable(instrument_name, measure_name,
-                                 mdf.dropna())
-
     def _build_variable(self, instrument_name, measure_name, mdf):
         measure_id = '{}.{}'.format(instrument_name, measure_name)
         print("building measure {}".format(measure_id))
@@ -191,7 +178,11 @@ class BaseVariables(object):
                 vm.save(v)
 
     @classmethod
-    def check_type(cls, values):
+    def check_value_type(cls, values):
+        boolean = all([isinstance(v, bool) for v in values])
+        if boolean:
+            return int
+
         try:
             vals = [v.strip() for v in values]
             fvals = [float(v) for v in vals if v != '']
@@ -211,7 +202,7 @@ class BaseVariables(object):
 
     @classmethod
     def check_values_domain(cls, values):
-        vtype = cls.check_type(values)
+        vtype = cls.check_value_type(values)
         if vtype == int:
             sdomain = [int(float(v)) for v in values]
         elif vtype == float:
@@ -238,7 +229,6 @@ class BaseVariables(object):
         values = df[var.variable_name]
         if len(values) == 0:
             return self.UNKNOWN
-        print(values.head())
         unique_values = values.unique()
         rank = len(unique_values)
         individuals = len(df)

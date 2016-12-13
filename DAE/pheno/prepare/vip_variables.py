@@ -37,12 +37,12 @@ class VipVariables(VipLoader, BaseVariables):
         'eah_adult_self',
         'eah_child_self',
         'eah_parent_child',
-        'education_history',
+        # 'education_history',
         'ehi_parent',
         'ehi_self',
         'feeding_c',
         'feeding_t',
-        'growth_measurements',
+        'growth_measurements',  # ???
         'htwhc',
         'lab_results',
         'loc_parent',
@@ -84,6 +84,16 @@ class VipVariables(VipLoader, BaseVariables):
 
     def __init__(self, *args, **kwargs):
         super(VipVariables, self).__init__(*args, **kwargs)
+
+    def _prepare_instrument(self, persons, instrument_name):
+        idf = self.load_instrument(instrument_name)
+        df = idf.join(persons, on='person_id', rsuffix="_person")
+
+        for measure_name in df.columns[5:len(idf.columns)]:
+            mdf = df[['person_id', measure_name,
+                      'family_id', 'person_role']]
+            self._build_variable(instrument_name, measure_name,
+                                 mdf.dropna())
 
     def prepare(self):
         self._create_variable_table()
