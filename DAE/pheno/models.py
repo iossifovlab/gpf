@@ -165,7 +165,7 @@ class PersonModel(object):
     BEGIN;
     CREATE TABLE IF NOT EXISTS person (
         person_id varchar(16) NOT NULL PRIMARY KEY,
-        family_id varchar(16) NOT NULL,
+        family_id varchar(32) NOT NULL,
         role varchar(16) NOT NULL,
         role_id varchar(8) NOT NULL,
         role_order int NOT NULL,

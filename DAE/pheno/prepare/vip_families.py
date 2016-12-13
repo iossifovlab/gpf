@@ -7,7 +7,6 @@ from collections import Counter, OrderedDict
 import copy
 import os
 
-import numpy as np
 import pandas as pd
 from pheno.utils.configuration import PhenoConfig
 import traceback
@@ -235,7 +234,7 @@ class PrepareIndividuals(VipLoader):
 
         return individuals
 
-    def _build_individuals_df(self):
+    def _build_individuals(self):
         df = self.load_individuals()
         individuals = self._build_individuals_dict(df)
         assert individuals is not None
@@ -246,8 +245,7 @@ class PrepareIndividuals(VipLoader):
         individuals = self._clean_individuals_dict(families)
         assert individuals is not None
 
-        df = self._build_df_from_individuals_dict(individuals)
-        return df
+        return individuals
 
     def _build_families_dict(self, individuals):
         families = {}
@@ -326,51 +324,20 @@ class PrepareIndividuals(VipLoader):
         assert len(individuals) > 0
         return individuals
 
-    def _build_df_from_individuals_dict(self, individuals):
-        dtype = self._build_individuals_dtype()
-
-        values = []
-        for individual in individuals.values():
-            t = self._build_individuals_row(individual)
-            values.append(t)
-
-        persons = np.array(values, dtype)
-        persons = np.sort(persons, order=['familyId', 'roleOrder'])
-        df = pd.DataFrame(persons)
-
-        return df
-
-    def _build_individuals_dtype(self):
-        dtype = [('personId', 'S16'), ('familyId', 'S16'),
-                 ('roleId', 'S8'), ('role', 'S8'),
-                 ('roleOrder', int), ]
-        return dtype
-
-    def _build_individuals_row(self, p):
-        person_id = p.person_id
-        family_id = p.family_id
-        role = p.role
-        role_id = p.role
-        role_order = p.role_order
-
-        t = [person_id, family_id, role_id,
-             role, role_order, ]
-        return tuple(t)
-
     def prepare(self):
-        df = self._build_individuals_df()
-        with PersonManager(pheno_db='vip', config=self.config) as pm:
+        individuals = self._build_individuals()
+        with PersonManager(pheno_db=self.pheno_db, config=self.config) as pm:
             pm.drop_tables()
             pm.create_tables()
 
-            for _index, row in df.iterrows():
+            for count, person in enumerate(individuals.values()):
                 p = PersonModel()
-                p.person_id = row['personId']
-                p.family_id = row['familyId']
-                p.role = row['role']
-                p.role_id = row['roleId']
-                p.role_order = row['roleOrder']
-                p.gender = None
+                p.person_id = person.person_id
+                p.family_id = person.family_id
+                p.role = person.role
+                p.role_id = person.role
+                p.role_order = count
+                p.gender = person.gender
                 p.race = None
                 p.collection = 'vip'
                 p.ssc_present = 1
