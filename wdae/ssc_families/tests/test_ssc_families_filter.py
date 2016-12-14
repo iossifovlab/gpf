@@ -23,7 +23,7 @@ class QuadFamiliesFilterTest(unittest.TestCase):
     def test_quad_filter_by_study_type(self):
         families = self.quad_filter.get_matching_families(
             study_type='cnv', study_name=None)
-        self.assertEquals(2225, len(families))
+        self.assertEquals(2224, len(families))
 
     def test_quad_filter_by_study_and_study_type(self):
         families = self.quad_filter.get_matching_families(

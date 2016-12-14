@@ -181,7 +181,7 @@ class Measures(Preload):
 #         return (instrument_name, measure_name)
 
     def get_values_df(self, measure_id):
-        return self.phdb.get_values_df([measure_id], role='prb')
+        return self.phdb.get_values_df([measure_id], roles=['prb'])
 
     def get_measure_df(self, measure_id):
         if not self.has_measure(measure_id):

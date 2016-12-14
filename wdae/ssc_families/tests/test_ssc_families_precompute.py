@@ -41,6 +41,6 @@ class Test(unittest.TestCase):
 
     def test_cnv_quads(self):
         self.assertEquals(
-            2225, len(self.precompute.quads('cnv')))
+            2224, len(self.precompute.quads('cnv')))
         self.assertEquals(
-            631, len(self.precompute.nonquads('cnv')))
+            632, len(self.precompute.nonquads('cnv')))

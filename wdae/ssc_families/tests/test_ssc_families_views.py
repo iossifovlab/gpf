@@ -62,9 +62,9 @@ class Test(APITestCase):
         self.assertEquals(2471, data['autism']['male'])
         self.assertEquals(389, data['autism']['female'])
 
-        self.assertEquals(2380, data['unaffected']['families'])
-        self.assertEquals(1190, data['unaffected']['male'])
-        self.assertEquals(1330, data['unaffected']['female'])
+        self.assertEquals(2378, data['unaffected']['families'])
+        self.assertEquals(1188, data['unaffected']['male'])
+        self.assertEquals(1329, data['unaffected']['female'])
 
     def test_families_counter_with_wrong_family_id(self):
         url = "/api/v2/ssc_dataset_families/counter"
@@ -86,13 +86,13 @@ class Test(APITestCase):
         data = response.data
 
         pprint(data)
-        self.assertEquals(2225, data['autism']['families'])
+        self.assertEquals(2224, data['autism']['families'])
         self.assertEquals(
             data['autism']['families'],
             data['autism']['male'] + data['autism']['female']
         )
 
-        self.assertEquals(2225, data['unaffected']['families'])  # 2703
+        self.assertEquals(2224, data['unaffected']['families'])  # 2703
         self.assertEquals(
             data['unaffected']['families'],
             data['unaffected']['male'] + data['unaffected']['female']

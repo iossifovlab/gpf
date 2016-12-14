@@ -40,7 +40,7 @@ class Test(unittest.TestCase):
     def test_quad_probands_count_cnv(self):
         families = self.quad_filter.get_matching_families(
             study_type='cnv', study_name=None)
-        self.assertEquals(2225, len(families))
+        self.assertEquals(2224, len(families))
 
         male_probands = self.gender_filter.filter_matching_probands(
             families, 'M', study_type='cnv', study_name=None)
@@ -48,7 +48,7 @@ class Test(unittest.TestCase):
         female_probands = self.gender_filter.filter_matching_probands(
             families, 'F', study_type='cnv', study_name=None)
 
-        self.assertEquals(2225, len(male_probands) + len(female_probands))
+        self.assertEquals(2224, len(male_probands) + len(female_probands))
 
         mismatched_probands = set(male_probands) & \
             set(self.gender_filter.get_matching_probands(
@@ -70,7 +70,7 @@ class Test(unittest.TestCase):
         families = set(
             self.quad_filter.get_matching_families(
                 study_type='cnv', study_name=None))
-        self.assertEquals(2225, len(families))
+        self.assertEquals(2224, len(families))
 
         self.assertEquals(0, len(self.MIXED_SIBLINGS_GENDER & families))
 
@@ -109,7 +109,7 @@ class Test(unittest.TestCase):
         families = set(
             self.quad_filter.get_matching_families(
                 study_type='cnv', study_name=None))
-        self.assertEquals(2225, len(families))
+        self.assertEquals(2224, len(families))
 
         male_probands = set(
             self.gender_filter.filter_matching_probands(
@@ -130,7 +130,7 @@ class Test(unittest.TestCase):
         study_type = 'cnv'
         families = self.quad_filter.get_matching_families(
             study_type=study_type, study_name=None)
-        self.assertEquals(2225, len(families))
+        self.assertEquals(2224, len(families))
 
         studies = [st for st in get_ssc_denovo_studies()
                    if st.get_attr('study.type').lower() == study_type]

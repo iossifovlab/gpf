@@ -81,7 +81,7 @@ class SSCFiltersTest(unittest.TestCase):
         }
 
         family_ids = self.ssc_family_base.prepare_families(data)
-        self.assertEquals(2225, len(family_ids['all']))
+        self.assertEquals(2224, len(family_ids['all']))
 
     def test_prepare_probands_gender_male(self):
         data = {

@@ -44,7 +44,7 @@ class PhenoStudyFilterTest(unittest.TestCase):
     def test_get_matching_probands_by_study_type(self):
         probands = self.study_filters.get_matching_probands_by_study_type(
             "CNV")
-        self.assertEquals(2850, len(probands))
+        self.assertEquals(2854, len(probands))
 
     def test_get_matching_probands_by_bad_study_name(self):
         with self.assertRaises(AssertionError):
@@ -54,7 +54,7 @@ class PhenoStudyFilterTest(unittest.TestCase):
         probands = self.study_filters.get_matching_probands_by_study(
             "LevyCNV2011")
 
-        self.assertEquals(858, len(probands))
+        self.assertEquals(862, len(probands))
 
     def test_filter_matching_probadnds_by_study_name(self):
         prbs1 = self.study_filters.get_matching_probands_by_study(
@@ -62,7 +62,7 @@ class PhenoStudyFilterTest(unittest.TestCase):
         prbs2 = self.study_filters.get_matching_probands_by_study(
             "IossifovWE2014")
 
-        self.assertEquals(858, len(prbs1))
+        self.assertEquals(862, len(prbs1))
         self.assertEquals(2508, len(prbs2))
 
         prbs = self.study_filters.filter_matching_probands_by_study(
@@ -74,7 +74,7 @@ class PhenoStudyFilterTest(unittest.TestCase):
             "LevyCNV2011")
         prbs = self.study_filters.filter_matching_probands_by_study_type(
             prbs1, "TG")
-        self.assertEquals(768, len(prbs))
+        self.assertEquals(772, len(prbs))
 
 
 class PhenoRaceFilterTest(unittest.TestCase):
