@@ -683,7 +683,7 @@ def dae_query_variants(data):
 
 
 def pedigree_data(v):
-    return [v.study.get_attr('study.phenotype'), v.pedigree]
+    return v.pedigree
 
 
 def augment_vars(v):
@@ -702,7 +702,7 @@ def augment_vars(v):
     v.atts["_ch_prof_"] = chProf
     v.atts["_prb_viq_"] = viq
     v.atts["_prb_nviq_"] = nviq
-    v.atts["_pedigree_"] = pedigree_data(v)
+    v.atts["_pedigree_"] = v.pedigree
     v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
     v._phenotype_ = v.study.get_attr('study.phenotype')
 

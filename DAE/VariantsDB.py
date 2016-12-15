@@ -32,7 +32,6 @@ from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
 from ConfigParser import NoOptionError
 
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -124,6 +123,13 @@ class Study:
         if self.vdb._config.has_option(self._configSection, 'description'):
             self.description = self.vdb._config.get(
                 self._configSection, 'description')
+        self.phdb = None
+        if self.name[:3] == 'VIP':
+            from pheno.pheno_db import PhenoDB
+            self.phdb = PhenoDB(pheno_db='vip')
+            self.phdb.load()
+            self.family_type = \
+                self.phdb.get_measure_values('pheno_common.family_type')
 
     def get_targeted_genes(self):
         if not self.vdb._config.has_option(self._configSection, "targetedGenes"):

@@ -9,7 +9,7 @@ import argparse
 
 from pheno.prepare.pheno_prepare import prepare_pheno_db_cache,\
     check_pheno_db_cache, prepare_agre_pheno_db, prepare_agre_pheno_db_meta,\
-    prepare_vip_pheno_db
+    prepare_vip_pheno_db, prepare_vip_pheno_db_common
 from pheno.prepare.meta_probands import PrepareMetaProbands
 from pheno.prepare.default_filters import PrepareDefaultFilters
 
@@ -25,6 +25,7 @@ CACHES = [
     'agre_pheno_db',
     'agre_pheno_db_meta',
     'vip_pheno_db',
+    'vip_pheno_db_common',
 ]
 
 if __name__ == '__main__':
@@ -83,3 +84,8 @@ if __name__ == '__main__':
     if 'vip_pheno_db' in args.cache or 'all' in args.cache:
         if args.recompute:
             prepare_vip_pheno_db()
+
+    if 'vip_pheno_db_common' in args.cache or 'all' in args.cache:
+        if args.recompute:
+            prepare_vip_pheno_db_common()
+

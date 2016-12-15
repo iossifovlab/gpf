@@ -273,12 +273,30 @@ class Variant:
     def pedigree(self):
         mbrs = self.memberInOrder
         bs = self.bestSt
+
+        ph = self.study.get_attr('study.phenotype')
+        if self.study.name[:3] == 'VIP':
+            ft = self.study.family_type.get(mbrs[2].personId, None)
+            if ft is None:
+                ph = 'intelectual disability'
+            elif ft == '16p-deletion':
+                ph = 'autism'
+            elif ft == '16p-duplication':
+                ph = 'schizophrenia'
+            elif ft == '16p-triplication':
+                ph = 'congenital heart disease'
+            else:
+                print("dont understand the family type: {}".format(ft))
+                ph = 'epilepsy'
+
         denovo_parent = self.denovo_parent()
         res = [reduce(operator.add, [[m.role,
                                       m.gender],
                                      variantCount(bs, c, self.location,
                                                   m.gender, denovo_parent)])
                for (c, m) in enumerate(mbrs)]
+        res = [ph, res]
+        print(res)
         return res
 
     def denovo_parent(self):
