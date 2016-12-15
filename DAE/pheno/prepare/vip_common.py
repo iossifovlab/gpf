@@ -28,12 +28,13 @@ class VipCommon(VipLoader, BaseVariables):
 #         return var
 
     def prepare(self):
-        idf = self.load_instrument('adi_r')
+        idf = self.load_instrument('svip_subjects')
+        print(idf.head())
         persons = self.load_persons_df()
 
         df = idf.join(persons, on='person_id', rsuffix='_person')
 
-        mdf = df[['person_id', 'family_type',
+        mdf = df[['person_id', 'genetic_status_16p',
                   'family_id', 'person_role']]
-        self._build_variable('pheno_common', 'family_type',
+        self._build_variable('pheno_common', 'genetic_status_16p',
                              mdf.dropna())

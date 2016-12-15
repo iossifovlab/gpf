@@ -60,7 +60,7 @@ def variantCount(bs, c, location=None, gender=None, denovoParent=None):
         if c != denovoParent:
             return [count]
         else:
-            return [1, 1]
+            return [1, 'd']
 
 
 def isVariant(bs, c, location=None, gender=None):
@@ -269,32 +269,40 @@ class Variant:
                 parentStr += mbrs[c].role
         return parentStr
 
+    VIP_COLORS = {
+        'deletion': '#e35252',
+        'duplication': '#98e352',
+        'triplication': '#b8008a',
+        'negative': '#aaaaaa',
+        'unknown': '#ffffff',
+    }
+
     @property
     def pedigree(self):
         mbrs = self.memberInOrder
         bs = self.bestSt
 
         ph = self.study.get_attr('study.phenotype')
+        colors = None
         if self.study.name[:3] == 'VIP':
-            ft = self.study.family_type.get(mbrs[2].personId, None)
-            if ft is None:
-                ph = 'intelectual disability'
-            elif ft == '16p-deletion':
-                ph = 'autism'
-            elif ft == '16p-duplication':
-                ph = 'schizophrenia'
-            elif ft == '16p-triplication':
-                ph = 'congenital heart disease'
-            else:
-                print("dont understand the family type: {}".format(ft))
-                ph = 'epilepsy'
+            colors = [
+                self.VIP_COLORS.get(
+                    self.study.genetic_status.get(p.personId, 'unknown'),
+                    '#ffffff')
+                for p in mbrs]
 
         denovo_parent = self.denovo_parent()
         res = [reduce(operator.add, [[m.role,
                                       m.gender],
                                      variantCount(bs, c, self.location,
-                                                  m.gender, denovo_parent)])
+                                                  m.gender, denovo_parent),
+                                     ])
                for (c, m) in enumerate(mbrs)]
+        # res = zip(res, colors)
+        # print(res)
+        if colors:
+            for l, c in zip(res, colors):
+                l.append(c)
         res = [ph, res]
         return res
 

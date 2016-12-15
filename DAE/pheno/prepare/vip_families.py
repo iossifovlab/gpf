@@ -53,7 +53,10 @@ class VipLoader(PhenoConfig):
         columns[5] = 'age'
         for index in range(6, len(columns)):
             parts = columns[index].split('.')
-            name = '.'.join(parts[1:])
+            if len(parts) == 1:
+                name = parts[0]
+            else:
+                name = '.'.join(parts[1:])
             columns[index] = name
         df.columns = columns
         self._clear_duplicate_measurements(df)
