@@ -217,9 +217,9 @@ class TransmissionLegacy(TransmissionConfig):
 
             for fmData in fmsData.split(";"):
                 cs = fmData.split(":")
-                if len(cs) != 3:
+                if len(cs) < 3:
                     raise Exception("Wrong family data format: " + fmData)
-                familyId, bestStateS, cntsS = cs
+                familyId, bestStateS, cntsS = cs[:3]
                 if familyIds and familyId not in familyIds:
                     continue
                 v = copy.copy(vs)
