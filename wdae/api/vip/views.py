@@ -32,12 +32,12 @@ class VIPPrepare(APIView, SSCFamilyBase):
         if data['presentInParent'] == 'neither':
             data['transmittedStudies'] = 'None'
         else:
-            data['transmittedStudies'] = 'w1202s766e611'  # FIXME
+            data['transmittedStudies'] = 'VIP-JHC'  # FIXME
 
         if data['presentInChild'] == 'neither':
             data['denovoStudies'] = 'None'
         else:
-            data['denovoStudies'] = 'ALL SSC'  # FIXME
+            data['denovoStudies'] = 'VIP-JHC'  # FIXME
 
         if 'phenoType' in data:
             del data['phenoType']
