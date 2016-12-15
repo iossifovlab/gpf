@@ -296,7 +296,6 @@ class Variant:
                                                   m.gender, denovo_parent)])
                for (c, m) in enumerate(mbrs)]
         res = [ph, res]
-        print(res)
         return res
 
     def denovo_parent(self):
