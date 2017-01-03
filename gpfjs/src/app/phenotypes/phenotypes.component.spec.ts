@@ -3,6 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 import { Http } from '@angular/http';
+import { MaterialModule } from '@angular/material';
 
 import { PhenotypesComponent } from './phenotypes.component';
 import { DatasetService, DatasetServiceInterface } from '../dataset/dataset.service';
@@ -20,6 +21,9 @@ describe('PhenotypesComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [PhenotypesComponent],
+      imports: [
+        MaterialModule.forRoot()
+      ],
       providers: [
         {
           provide: DatasetService,
