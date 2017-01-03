@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Phenotype } from '../dataset/dataset';
+import { DatasetService } from '../dataset/dataset.service';
 
 @Component({
   selector: 'gpf-phenotypes',
@@ -7,7 +9,11 @@ import { Component, OnInit } from '@angular/core';
 })
 export class PhenotypesComponent implements OnInit {
 
-  constructor() { }
+  private phenotypes: Phenotype[];
+
+  constructor(
+    private datasetService: DatasetService
+  ) { }
 
   ngOnInit() {
   }

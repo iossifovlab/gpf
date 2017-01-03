@@ -6,10 +6,19 @@ import 'rxjs/add/operator/toPromise';
 
 import { Dataset, IdDescription, Phenotype } from './dataset';
 
+export interface DatasetServiceInterface {
+  selectedDatasetId: string;
+  getDatasets(): Promise<IdDescription[]>;
+  getDataset(datasetId: string): Promise<Dataset>;
+  getPhenotypes(datasetId: string): Promise<Phenotype[]>;
+}
+
 @Injectable()
-export class DatasetService {
+export class DatasetService implements DatasetServiceInterface {
   private datasetUrl = 'dataset';
   private headers = new Headers({ 'Content-Type': 'application/json' });
+
+  selectedDatasetId: string = 'ssc';
 
   constructor(
     private http: Http
