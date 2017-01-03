@@ -9,7 +9,7 @@ import { DatasetService } from '../dataset/dataset.service';
 })
 export class PhenotypesComponent implements OnInit {
 
-  private phenotypes: Phenotype[];
+  phenotypes: Phenotype[];
 
   constructor(
     private datasetService: DatasetService
@@ -17,7 +17,9 @@ export class PhenotypesComponent implements OnInit {
 
   ngOnInit() {
     this.datasetService.getPhenotypes(this.datasetService.selectedDatasetId)
-      .then(pheno => { this.phenotypes = pheno; });
+      .then(pheno => {
+        this.phenotypes = pheno;
+      });
   }
 
 }

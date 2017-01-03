@@ -3,17 +3,15 @@
         <md-card-title><h4>Phenotypes</h4></md-card-title>
     </md-card-header>
     <md-card-content>
-        <div>
-            <md-checkbox>
-                <span class="phenotype-icon" style="background-color: #e35252;"></span>
-                autism
-            </md-checkbox>
-        </div>
-        <div>
-            <md-checkbox>
-                <span class="phenotype-icon"></span>
-                unaffected
-            </md-checkbox>
+        <div *ngIf="phenotypes">
+          <div *ngFor="let pheno of phenotypes">
+              <md-checkbox>
+                  <span 
+                    class="phenotype-icon" 
+                    [style.background-color]="pheno.color"></span>
+                  {{pheno.description}}
+              </md-checkbox>
+          </div>
         </div>
     </md-card-content>
 </md-card>

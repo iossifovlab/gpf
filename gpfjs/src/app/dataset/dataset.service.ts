@@ -85,7 +85,7 @@ export class DatasetService implements DatasetServiceInterface {
     if (data.data === undefined) {
       return <Phenotype[]>[];
     }
-    let result: Object[] = JSON.parse(data.data);
+    let result: Object[] = data.data;
 
     let output: Array<Phenotype> = new Array<Phenotype>();
     for (let obj of result) {
