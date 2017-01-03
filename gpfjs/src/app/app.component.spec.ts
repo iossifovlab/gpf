@@ -3,16 +3,26 @@
 import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { MaterialModule } from '@angular/material';
+import { PhenotypesComponent } from './phenotypes/phenotypes.component';
+import { DatasetService } from './dataset/dataset.service';
+import { DatasetServiceStub } from './dataset/dataset.service.spec';
 
 describe('AppComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [
-        AppComponent
+        AppComponent,
+        PhenotypesComponent,
       ],
       imports: [
         MaterialModule.forRoot()
       ],
+      providers: [
+        {
+          provide: DatasetService,
+          useValue: new DatasetServiceStub(undefined)
+        }
+      ]
     });
     TestBed.compileComponents();
   });

@@ -8,46 +8,7 @@ import { PhenotypesComponent } from './phenotypes.component';
 import { DatasetService, DatasetServiceInterface } from '../dataset/dataset.service';
 import { IdDescription, Dataset, Phenotype } from '../dataset/dataset';
 
-class DatasetServiceStub extends DatasetService implements DatasetServiceInterface {
-  selectedDatasetId: string;
-  getDatasets(): Promise<IdDescription[]> {
-    return Promise.resolve([
-      {
-        id: 'ssc',
-        description: 'SSC Description'
-      },
-      {
-        id: 'vip',
-        description: 'VIP Dataset'
-      }
-    ]);
-  }
-
-  getDataset(datasetId: string): Promise<Dataset> {
-    return Promise.resolve({
-      id: 'ssc',
-      description: 'SSC Dataset',
-      hasDenovo: true,
-      hasTransmitted: true,
-      hasCnv: true
-    });
-  }
-
-  getPhenotypes(): Promise<Phenotype[]> {
-    return Promise.resolve([
-      {
-        id: 'autism',
-        description: 'autism',
-        color: '#e35252'
-      },
-      {
-        id: 'unaffected',
-        description: 'unaffected',
-        color: '#ffffff'
-      }
-    ]);
-  }
-}
+import { DatasetServiceStub } from '../dataset/dataset.service.spec';
 
 let datasetService = new DatasetServiceStub(undefined);
 

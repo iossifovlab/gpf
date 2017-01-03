@@ -13,6 +13,48 @@ import { MockBackend } from '@angular/http/testing';
 import { Observable } from 'rxjs';
 
 
+export class DatasetServiceStub extends DatasetService {
+  selectedDatasetId: string;
+  getDatasets(): Promise<IdDescription[]> {
+    return Promise.resolve([
+      {
+        id: 'ssc',
+        description: 'SSC Description'
+      },
+      {
+        id: 'vip',
+        description: 'VIP Dataset'
+      }
+    ]);
+  }
+
+  getDataset(datasetId: string): Promise<Dataset> {
+    return Promise.resolve({
+      id: 'ssc',
+      description: 'SSC Dataset',
+      hasDenovo: true,
+      hasTransmitted: true,
+      hasCnv: true
+    });
+  }
+
+  getPhenotypes(): Promise<Phenotype[]> {
+    return Promise.resolve([
+      {
+        id: 'autism',
+        description: 'autism',
+        color: '#e35252'
+      },
+      {
+        id: 'unaffected',
+        description: 'unaffected',
+        color: '#ffffff'
+      }
+    ]);
+  }
+}
+
+
 describe('DatasetService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({

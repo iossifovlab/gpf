@@ -1,17 +1,16 @@
-<md-sidenav-layout >
+<md-sidenav-layout> <md-sidenav
+  #sidenav
+  mode="side"
+  class="app-sidenav"> Sidenav </md-sidenav> <md-toolbar color="primary">
+<button
+  class="app-icon-button"
+  (click)="sidenav.toggle()">
+  <i class="material-icons app-toolbar-menu">menu</i>
+</button>
+<h3>{{ title }}</h3>
+<span class="app-toolbar-filler"></span> </md-toolbar>
 
-  <md-sidenav #sidenav mode="side" class="app-sidenav">
-    Sidenav
-  </md-sidenav>
-
-  <md-toolbar color="primary">
-    <button class="app-icon-button" (click)="sidenav.toggle()">
-      <i class="material-icons app-toolbar-menu">menu</i>
-    </button>
-    <h3>{{ title }}</h3>
-    <span class="app-toolbar-filler"></span>
-  </md-toolbar>
-
-  <div class="app-content">
-  </div>
+<div class="app-content">
+  <gpf-phenotypes></gpf-phenotypes>
+</div>
 </md-sidenav-layout>
