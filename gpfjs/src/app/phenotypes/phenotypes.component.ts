@@ -16,6 +16,8 @@ export class PhenotypesComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.datasetService.getPhenotypes(this.datasetService.selectedDatasetId)
+      .then(pheno => { this.phenotypes = pheno; });
   }
 
 }

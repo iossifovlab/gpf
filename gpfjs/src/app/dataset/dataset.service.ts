@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import 'rxjs/add/operator/toPromise';
 
 import { Dataset, IdDescription, Phenotype } from './dataset';
+import { ConfigService } from '../config/config.service';
 
 export interface DatasetServiceInterface {
   selectedDatasetId: string;
@@ -21,7 +22,8 @@ export class DatasetService implements DatasetServiceInterface {
   selectedDatasetId: string = 'ssc';
 
   constructor(
-    private http: Http
+    private http: Http,
+    private config: ConfigService
   ) { }
 
   private handleIdDescriptionError(error: any): IdDescription[] {
@@ -31,10 +33,10 @@ export class DatasetService implements DatasetServiceInterface {
 
   private parseIdDescriptionResponse(response: Response): IdDescription[] {
     let data = response.json();
-    if (data.result === undefined) {
+    if (data.data === undefined) {
       return <IdDescription[]>[];
     }
-    let result: Object[] = JSON.parse(data.result);
+    let result: Object[] = JSON.parse(data.data);
 
     let output: Array<IdDescription> = new Array<IdDescription>();
     for (let obj of result) {
@@ -52,10 +54,10 @@ export class DatasetService implements DatasetServiceInterface {
 
   private parseDatasetResponse(response: Response): Dataset {
     let data = response.json();
-    if (data.result === undefined) {
+    if (data.data === undefined) {
       return undefined;
     }
-    let result: Object = JSON.parse(data.result);
+    let result: Object = JSON.parse(data.data);
     return new Dataset(
       result['id'],
       result['description'],
@@ -80,10 +82,10 @@ export class DatasetService implements DatasetServiceInterface {
 
   private parsePhenotypesResponse(response: Response): Phenotype[] {
     let data = response.json();
-    if (data.result === undefined) {
+    if (data.data === undefined) {
       return <Phenotype[]>[];
     }
-    let result: Object[] = JSON.parse(data.result);
+    let result: Object[] = JSON.parse(data.data);
 
     let output: Array<Phenotype> = new Array<Phenotype>();
     for (let obj of result) {
@@ -103,7 +105,7 @@ export class DatasetService implements DatasetServiceInterface {
   }
 
   getPhenotypes(datasetId: string): Promise<Phenotype[]> {
-    let url = `${this.datasetUrl}/${datasetId}/phenotype`;
+    let url = `${this.datasetUrl}/${datasetId}/phenotypes`;
     return this.http.get(url)
       .toPromise()
       .then(this.parsePhenotypesResponse)

@@ -20,7 +20,7 @@ describe('AppComponent', () => {
       providers: [
         {
           provide: DatasetService,
-          useValue: new DatasetServiceStub(undefined)
+          useValue: new DatasetServiceStub(undefined, undefined)
         }
       ]
     });

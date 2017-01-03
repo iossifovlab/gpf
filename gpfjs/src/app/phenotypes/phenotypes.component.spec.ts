@@ -11,7 +11,7 @@ import { IdDescription, Dataset, Phenotype } from '../dataset/dataset';
 
 import { DatasetServiceStub } from '../dataset/dataset.service.spec';
 
-let datasetService = new DatasetServiceStub(undefined);
+let datasetService = new DatasetServiceStub(undefined, undefined);
 
 
 describe('PhenotypesComponent', () => {

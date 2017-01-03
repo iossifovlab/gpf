@@ -4,31 +4,89 @@ FORMAT: 1A
 
 ## Group Dataset Configurations
 
-### Datasets [/datasets]
+### Datasets [/dataset]
 
 #### Get All Datasets [GET]
 Returns all supported datasets
 
 + Response 200 (application/json)
 
-        [
           {
-            "id": "we",
-            "description": "Sequencing de Novo Dataset"
-          },
-          {
-            "id": "ssc",
-            "description": "SSC Dataset"
-          },
-          {
-            "id": "vip",
-            "description": "VIP Dataset"
-          },
-          {
-            "id": "agre",
-            "description": "AGRE Dataset"
+            "data":
+                [
+                  {
+                    "id": "we",
+                    "description": "Sequencing de Novo Dataset"
+                  },
+                  {
+                    "id": "ssc",
+                    "description": "SSC Dataset"
+                  },
+                  {
+                    "id": "vip",
+                    "description": "VIP Dataset"
+                  },
+                  {
+                    "id": "agre",
+                    "description": "AGRE Dataset"
+                  }
+                ]
           }
-        ]
+### Dateset Details [/dateset/{dataset_id}]
+#### Get Dataset Details [GET]
+Returns dataset details given `dataset_id`.
++ Parameters
+  + dataset_id (string) - ID of a dataset returned by `/dataset` endpoint.
+
++ Response 200 (application/json)
+
+          {
+            "data":
+              {
+                id: 'ssc',
+                description: 'SSC Dataset',
+                hasDenovo: true,
+                hasTransmitted: true,
+                hasCnv: true
+              }
+          }
+
+
++ Response 404 (application/json)
+
+          {
+            "reason": "Dataset 'dataset_id' not found"
+          }
+
+### Dataset Phenotypes [/dataset/{dataset_id}/phenotypes]
+#### Get Dataset Phenotypes [GET]
+Returns all phenotypes in given dataset.
++ Parameters
+  + dataset_id (string) - ID of a dataset returned by `/dataset` endpoint.
+
++ Response 200 (application/json)
+
+          {
+            "data":
+              [
+                {
+                  id: 'autism',
+                  description: 'autism',
+                  color: '#e35252'
+                },
+                {
+                  id: 'unaffected',
+                  description: 'unaffected',
+                  color: '#ffffff'
+                }
+              ]
+          }
+
++ Response 404 (application/json)
+
+          {
+            "reason": "Dataset 'dataset_id' not found"
+          }
 
 ### Phenotypes [/phenotypes]
 #### Get All Phenotypes [GET]
@@ -36,38 +94,41 @@ Returns list of all phenotypes.
 
 + Response 200 (application/json)
 
-        [
           {
-            "id": "autism",
-            "description": "autism",
-            "color": "#e35252"
-          },
-          {
-            "id": "congenital_heart_disease",
-            "description": "congenital heart disease",
-            "color": "#b8008a"
-          },
-          {
-            "id": "epilepsy",
-            "description": "epilepsy",
-            "color": "#e3d252"
-          },
-          {
-            "id": "intelectual_disability",
-            "description": "intelectual disability",
-            "color": "#99d8e8"
-          },
-          {
-            "id": "schizophrenia",
-            "description": "schizophrenia",
-            "color": "#98e352"
-          },
-          {
-            "id": "unaffected",
-            "description": "unaffected",
-            "color": "#ffffff"
+            "data":
+                [
+                  {
+                    "id": "autism",
+                    "description": "autism",
+                    "color": "#e35252"
+                  },
+                  {
+                    "id": "congenital_heart_disease",
+                    "description": "congenital heart disease",
+                    "color": "#b8008a"
+                  },
+                  {
+                    "id": "epilepsy",
+                    "description": "epilepsy",
+                    "color": "#e3d252"
+                  },
+                  {
+                    "id": "intelectual_disability",
+                    "description": "intelectual disability",
+                    "color": "#99d8e8"
+                  },
+                  {
+                    "id": "schizophrenia",
+                    "description": "schizophrenia",
+                    "color": "#98e352"
+                  },
+                  {
+                    "id": "unaffected",
+                    "description": "unaffected",
+                    "color": "#ffffff"
+                  }
+                ]
           }
-        ]
 
 ### Phenotypes for Given Dataset [/phenotypes/{dataset_id}]
 
@@ -79,41 +140,44 @@ Returns list of all phenotypes available in dataset "dataset_id".
 
 + Response 200 (application/json)
 
-        [
-          {
-            "id": "autism",
-            "description": "autism",
-            "color": "#e35252"
-          },
-          {
-            "id": "congenital_heart_disease",
-            "description": "congenital heart disease",
-            "color": "#b8008a"
-          },
-          {
-            "id": "epilepsy",
-            "description": "epilepsy",
-            "color": "#e3d252"
-          },
-          {
-            "id": "intelectual_disability",
-            "description": "intelectual disability",
-            "color": "#99d8e8"
-          },
-          {
-            "id": "schizophrenia",
-            "description": "schizophrenia",
-            "color": "#98e352"
-          },
-          {
-            "id": "unaffected",
-            "description": "unaffected",
-            "color": "#ffffff"
-          }
-        ]
+            {
+              "data":
+                  [
+                    {
+                      "id": "autism",
+                      "description": "autism",
+                      "color": "#e35252"
+                    },
+                    {
+                      "id": "congenital_heart_disease",
+                      "description": "congenital heart disease",
+                      "color": "#b8008a"
+                    },
+                    {
+                      "id": "epilepsy",
+                      "description": "epilepsy",
+                      "color": "#e3d252"
+                    },
+                    {
+                      "id": "intelectual_disability",
+                      "description": "intelectual disability",
+                      "color": "#99d8e8"
+                    },
+                    {
+                      "id": "schizophrenia",
+                      "description": "schizophrenia",
+                      "color": "#98e352"
+                    },
+                    {
+                      "id": "unaffected",
+                      "description": "unaffected",
+                      "color": "#ffffff"
+                    }
+                  ]
+            }
 
 + Response 404 (application/json)
 
-        {
-          "reason": "Dataset 'dataset_id' not found"
-        }
+          {
+            "reason": "Dataset 'dataset_id' not found"
+          }

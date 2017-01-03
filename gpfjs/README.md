@@ -43,5 +43,5 @@ The GPF API is described into `docs/apiary.apib`. To run local development
 API server you can use [drakov](https://www.npmjs.com/package/drakov). To
 start `drakov` use:
 ```
-drakov -f docs/apiary.apib
+drakov --disableCORS -f docs/apiary.apib
 ```

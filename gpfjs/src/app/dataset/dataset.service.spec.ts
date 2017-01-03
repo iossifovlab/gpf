@@ -3,6 +3,7 @@
 import { TestBed, async, inject } from '@angular/core/testing';
 import { DatasetService } from './dataset.service';
 import { Dataset, Phenotype, IdDescription } from './dataset';
+import { ConfigService } from '../config/config.service';
 
 import {
   BaseRequestOptions, Http, HttpModule,
@@ -59,6 +60,7 @@ describe('DatasetService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
+        ConfigService,
         DatasetService,
         MockBackend,
         BaseRequestOptions,
@@ -110,7 +112,7 @@ describe('DatasetService', () => {
         mockBackend.connections.subscribe(conn => {
           conn.mockRespond(
             new Response(new ResponseOptions(
-              { body: { result: JSON.stringify(mockDatasetResponse) } }
+              { body: { data: JSON.stringify(mockDatasetResponse) } }
             )));
         });
 
@@ -143,7 +145,7 @@ describe('DatasetService', () => {
         mockBackend.connections.subscribe(conn => {
           conn.mockRespond(
             new Response(new ResponseOptions(
-              { body: '{"result": "ala bala"}' }
+              { body: '{"data": "ala bala"}' }
             )));
         });
 
@@ -162,7 +164,7 @@ describe('DatasetService', () => {
         mockBackend.connections.subscribe(conn => {
           conn.mockRespond(
             new Response(new ResponseOptions(
-              { body: { result: JSON.stringify(mockDatasetResponse[0]) } }
+              { body: { data: JSON.stringify(mockDatasetResponse[0]) } }
             )));
         });
 
@@ -198,7 +200,7 @@ describe('DatasetService', () => {
         mockBackend.connections.subscribe(conn => {
           conn.mockRespond(
             new Response(new ResponseOptions(
-              { body: '{"result": "ala bala"}' }
+              { body: '{"data": "ala bala"}' }
             )));
         });
 
@@ -217,7 +219,7 @@ describe('DatasetService', () => {
         mockBackend.connections.subscribe(conn => {
           conn.mockRespond(
             new Response(new ResponseOptions(
-              { body: { result: JSON.stringify(mockPhenotypeResponse) } }
+              { body: { data: JSON.stringify(mockPhenotypeResponse) } }
             )));
         });
 
@@ -259,7 +261,7 @@ describe('DatasetService', () => {
         mockBackend.connections.subscribe(conn => {
           conn.mockRespond(
             new Response(new ResponseOptions(
-              { body: '{"result": "ala bala"}' }
+              { body: '{"data": "ala bala"}' }
             )));
         });
 
