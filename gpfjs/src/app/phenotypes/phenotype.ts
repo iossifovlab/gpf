@@ -1,16 +1,11 @@
 import { IdDescription } from '../common/iddescription';
 
-
-export class Dataset extends IdDescription {
+export class Phenotype extends IdDescription {
   constructor(
     readonly id: string,
     readonly description: string,
-    readonly hasDenovo: boolean,
-    readonly hasTransmitted: boolean,
-    readonly hasCnv: boolean
+    readonly color: string
   ) {
     super(id, description);
   }
-
-
 }

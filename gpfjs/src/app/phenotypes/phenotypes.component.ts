@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Phenotype } from '../dataset/dataset';
+import { Phenotype } from '../phenotypes/phenotype';
 import { DatasetService } from '../dataset/dataset.service';
 
 @Component({

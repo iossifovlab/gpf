@@ -2,7 +2,9 @@
 
 import { TestBed, async, inject } from '@angular/core/testing';
 import { DatasetService } from './dataset.service';
-import { Dataset, Phenotype, IdDescription } from './dataset';
+import { IdDescription } from '../common/iddescription';
+import { Phenotype } from '../phenotypes/phenotype';
+import { Dataset } from '../dataset/dataset';
 import { ConfigService } from '../config/config.service';
 
 import {

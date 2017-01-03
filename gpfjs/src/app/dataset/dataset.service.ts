@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 
 import 'rxjs/add/operator/toPromise';
 
-import { Dataset, IdDescription, Phenotype } from './dataset';
+import { IdDescription } from '../common/iddescription';
+import { Phenotype } from '../phenotypes/phenotype';
+import { Dataset } from '../dataset/dataset';
 import { ConfigService } from '../config/config.service';
 
 export interface DatasetServiceInterface {
@@ -36,7 +38,10 @@ export class DatasetService implements DatasetServiceInterface {
     if (data.data === undefined) {
       return <IdDescription[]>[];
     }
-    let result: Object[] = JSON.parse(data.data);
+    let result: Object[] = data.data;
+    if (typeof result === 'string') {
+      result = JSON.parse(result);
+    }
 
     let output: Array<IdDescription> = new Array<IdDescription>();
     for (let obj of result) {
@@ -57,7 +62,10 @@ export class DatasetService implements DatasetServiceInterface {
     if (data.data === undefined) {
       return undefined;
     }
-    let result: Object = JSON.parse(data.data);
+    let result: Object[] = data.data;
+    if (typeof result === 'string') {
+      result = JSON.parse(result);
+    }
     return new Dataset(
       result['id'],
       result['description'],
@@ -86,6 +94,9 @@ export class DatasetService implements DatasetServiceInterface {
       return <Phenotype[]>[];
     }
     let result: Object[] = data.data;
+    if (typeof result === 'string') {
+      result = JSON.parse(result);
+    }
 
     let output: Array<Phenotype> = new Array<Phenotype>();
     for (let obj of result) {

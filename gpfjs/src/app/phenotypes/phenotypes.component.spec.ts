@@ -7,8 +7,9 @@ import { MaterialModule } from '@angular/material';
 
 import { PhenotypesComponent } from './phenotypes.component';
 import { DatasetService, DatasetServiceInterface } from '../dataset/dataset.service';
-import { IdDescription, Dataset, Phenotype } from '../dataset/dataset';
-
+import { IdDescription } from '../common/iddescription';
+import { Phenotype } from '../phenotypes/phenotype';
+import { Dataset } from '../dataset/dataset';
 import { DatasetServiceStub } from '../dataset/dataset.service.spec';
 
 let datasetService = new DatasetServiceStub(undefined, undefined);
