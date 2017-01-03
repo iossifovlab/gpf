@@ -1,13 +1,32 @@
-import { Phenotype } from './phenotype';
 
-export class Dataset {
+export class IdDescription {
 
-  id: string;
-  description: string;
+  constructor(
+    readonly id: string,
+    readonly description: string
+  ) { }
+}
 
-  has_denovo: boolean;
-  has_transmitted: boolean;
-  has_cnv: boolean;
+export class Phenotype extends IdDescription {
+  constructor(
+    readonly id: string,
+    readonly description: string,
+    readonly color: string
+  ) {
+    super(id, description);
+  }
+}
 
-  phenotypes: Phenotype[];
+export class Dataset extends IdDescription {
+  constructor(
+    readonly id: string,
+    readonly description: string,
+    readonly hasDenovo: boolean,
+    readonly hasTransmitted: boolean,
+    readonly hasCnv: boolean
+  ) {
+    super(id, description);
+  }
+
+
 }

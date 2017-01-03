@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import 'rxjs/add/operator/toPromise';
 
-import { Dataset } from './dataset';
+import { Dataset, IdDescription, Phenotype } from './dataset';
 
 @Injectable()
 export class DatasetService {
@@ -15,30 +15,89 @@ export class DatasetService {
     private http: Http
   ) { }
 
-  //  private handleError(error: any): Promise<any> {
-  //    console.error('An error occured', error);
-  //    return Promise.reject(error.message || error);
-  //  }
-  private handleError(error: any) {
-    console.error('An error occured', error);
-    return Observable.throw(error.message
-      ? error.message
-      : error.status
-        ? `${error.status} - ${error.statusText}`
-        : 'Server Error');
+  private handleIdDescriptionError(error: any): IdDescription[] {
+    console.error('error while parsing id/descriptions response: ', error);
+    return <IdDescription[]>[];
   }
 
-  private parseDatasetsResponse(res: Response): Dataset[] {
-    console.error(res.json());
+  private parseIdDescriptionResponse(response: Response): IdDescription[] {
+    let data = response.json();
+    if (data.result === undefined) {
+      return <IdDescription[]>[];
+    }
+    let result: Object[] = JSON.parse(data.result);
 
-    return res.json() as Dataset[];
-
+    let output: Array<IdDescription> = new Array<IdDescription>();
+    for (let obj of result) {
+      output.push(new IdDescription(obj['id'], obj['description']));
+    }
+    return output;
   }
 
-  getDatasets(): Observable<Dataset[]> {
+  getDatasets(): Promise<IdDescription[]> {
     return this.http.get(this.datasetUrl)
-      .map(this.parseDatasetsResponse)
-      .catch(this.handleError);
+      .toPromise()
+      .then(this.parseIdDescriptionResponse)
+      .catch(this.handleIdDescriptionError);
   }
 
+  private parseDatasetResponse(response: Response): Dataset {
+    let data = response.json();
+    if (data.result === undefined) {
+      return undefined;
+    }
+    let result: Object = JSON.parse(data.result);
+    return new Dataset(
+      result['id'],
+      result['description'],
+      result['hasDenovo'],
+      result['hasTransmitted'],
+      result['hasCnv']
+    );
+  }
+
+  private handleDatasetError(error: any): Dataset {
+    console.error('error while parsing dataset response: ', error);
+    return undefined;
+  }
+
+  getDataset(datasetId: string): Promise<Dataset> {
+    let url = `${this.datasetUrl}/${datasetId}`;
+    return this.http.get(url)
+      .toPromise()
+      .then(this.parseDatasetResponse)
+      .catch(this.handleDatasetError);
+  }
+
+  private parsePhenotypesResponse(response: Response): Phenotype[] {
+    let data = response.json();
+    if (data.result === undefined) {
+      return <Phenotype[]>[];
+    }
+    let result: Object[] = JSON.parse(data.result);
+
+    let output: Array<Phenotype> = new Array<Phenotype>();
+    for (let obj of result) {
+      let pheno = new Phenotype(
+        obj['id'],
+        obj['description'],
+        obj['color']
+      );
+      output.push(pheno);
+    }
+    return output;
+  }
+
+  private handlePhenotypesError(error: any): Phenotype[] {
+    console.error('error while parsing phenotypes response: ', error);
+    return <Phenotype[]>[];
+  }
+
+  getPhenotypes(datasetId: string): Promise<Phenotype[]> {
+    let url = `${this.datasetUrl}/${datasetId}/phenotype`;
+    return this.http.get(url)
+      .toPromise()
+      .then(this.parsePhenotypesResponse)
+      .catch(this.handlePhenotypesError);
+  }
 }
