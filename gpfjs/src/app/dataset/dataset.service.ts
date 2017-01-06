@@ -71,7 +71,8 @@ export class DatasetService implements DatasetServiceInterface {
       result['description'],
       result['hasDenovo'],
       result['hasTransmitted'],
-      result['hasCnv']
+      result['hasCnv'],
+      result['hasPhenoDb']
     );
   }
 
@@ -121,5 +122,13 @@ export class DatasetService implements DatasetServiceInterface {
       .toPromise()
       .then(this.parsePhenotypesResponse)
       .catch(this.handlePhenotypesError);
+  }
+
+  getStudytypes(datasetId: string): Promise<IdDescription[]> {
+    let url = `${this.datasetUrl}/${datasetId}/phenotypes`;
+    return this.http.get(url)
+      .toPromise()
+      .then(this.parseIdDescriptionResponse)
+      .catch(this.handleIdDescriptionError);
   }
 }

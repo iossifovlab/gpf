@@ -15,46 +15,74 @@ import {
 import { MockBackend } from '@angular/http/testing';
 import { Observable } from 'rxjs';
 
+const mockDatasetsResponse: IdDescription[] =
+  [
+    {
+      id: 'ssc',
+      description: 'SSC Description'
+    },
+    {
+      id: 'vip',
+      description: 'VIP Dataset'
+    }
+  ];
 
+const mockDatasetResponse: Dataset = {
+  id: 'ssc',
+  description: 'SSC Dataset',
+  hasDenovo: true,
+  hasTransmitted: true,
+  hasCnv: true,
+  hasPhenoDb: true
+};
+
+const mockPhenotypeResponse: Phenotype[] =
+  [
+    {
+      id: 'autism',
+      description: 'autism',
+      color: '#e35252'
+    },
+    {
+      id: 'unaffected',
+      description: 'unaffected',
+      color: '#ffffff'
+    }
+  ];
+
+const mockStudytypesResponse: IdDescription[] =
+  [
+    {
+      id: 'WE',
+      description: 'Whole Exome'
+    },
+    {
+      id: 'TG',
+      description: 'Targeted Genome'
+    },
+    {
+      id: 'WG',
+      description: 'Whole Genome'
+    }
+  ];
 export class DatasetServiceStub extends DatasetService {
   selectedDatasetId: string;
   getDatasets(): Promise<IdDescription[]> {
-    return Promise.resolve([
-      {
-        id: 'ssc',
-        description: 'SSC Description'
-      },
-      {
-        id: 'vip',
-        description: 'VIP Dataset'
-      }
-    ]);
+    return Promise.resolve(mockDatasetsResponse);
   }
 
   getDataset(datasetId: string): Promise<Dataset> {
-    return Promise.resolve({
-      id: 'ssc',
-      description: 'SSC Dataset',
-      hasDenovo: true,
-      hasTransmitted: true,
-      hasCnv: true
-    });
+    return Promise.resolve(mockDatasetResponse);
   }
 
   getPhenotypes(): Promise<Phenotype[]> {
-    return Promise.resolve([
-      {
-        id: 'autism',
-        description: 'autism',
-        color: '#e35252'
-      },
-      {
-        id: 'unaffected',
-        description: 'unaffected',
-        color: '#ffffff'
-      }
-    ]);
+    return Promise.resolve(mockPhenotypeResponse);
   }
+
+  getStudytypes(): Promise<IdDescription[]> {
+    return Promise.resolve(mockStudytypesResponse);
+  }
+
 }
 
 
@@ -84,29 +112,8 @@ describe('DatasetService', () => {
       expect(service).toBeDefined();
     })));
 
-  const mockDatasetResponse: Dataset[] = [
-    {
-      id: 'ssc',
-      description: 'SSC Dataset',
-      hasDenovo: true,
-      hasTransmitted: true,
-      hasCnv: true,
-    }
-  ];
 
-  const mockPhenotypeResponse: Phenotype[] =
-    [
-      {
-        id: 'autism',
-        description: 'autism',
-        color: '#e35252'
-      },
-      {
-        id: 'unaffected',
-        description: 'unaffected',
-        color: '#ffffff'
-      }
-    ];
+
   describe('getDatasets', () => {
     it('should parse correct response', async(inject(
       [DatasetService, MockBackend], (service, mockBackend) => {
@@ -121,7 +128,7 @@ describe('DatasetService', () => {
         const result: Promise<IdDescription[]> = service.getDatasets();
 
         result.then(res => {
-          expect(res.length).toEqual(1);
+          expect(res.length).toEqual(2);
         });
       })));
 
@@ -166,7 +173,7 @@ describe('DatasetService', () => {
         mockBackend.connections.subscribe(conn => {
           conn.mockRespond(
             new Response(new ResponseOptions(
-              { body: { data: JSON.stringify(mockDatasetResponse[0]) } }
+              { body: { data: JSON.stringify(mockDatasetResponse) } }
             )));
         });
 
@@ -174,9 +181,10 @@ describe('DatasetService', () => {
 
         result.then(res => {
           expect(res.id).toEqual('ssc');
-          expect(res.hasDenovo).toEqual(true);
-          expect(res.hasTransmitted).toEqual(true);
-          expect(res.hasCnv).toEqual(true);
+          expect(res.hasDenovo).toBe(true);
+          expect(res.hasTransmitted).toBe(true);
+          expect(res.hasCnv).toBe(true);
+          expect(res.hasPhenoDb).toBe(true);
         });
       })));
 

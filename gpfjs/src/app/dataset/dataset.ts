@@ -7,7 +7,8 @@ export class Dataset extends IdDescription {
     readonly description: string,
     readonly hasDenovo: boolean,
     readonly hasTransmitted: boolean,
-    readonly hasCnv: boolean
+    readonly hasCnv: boolean,
+    readonly hasPhenoDb: boolean
   ) {
     super(id, description);
   }

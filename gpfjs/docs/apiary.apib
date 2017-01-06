@@ -47,7 +47,8 @@ Returns dataset details given `dataset_id`.
                 description: 'SSC Dataset',
                 hasDenovo: true,
                 hasTransmitted: true,
-                hasCnv: true
+                hasCnv: true,
+                hasPhenoDb: true
               }
           }
 
@@ -107,6 +108,40 @@ Returns all phenotypes in given dataset.
           {
             "reason": "Dataset 'dataset_id' not found"
           }
+
+### Dataset Study Types [/dataset/{dataset_id}/studytypes]
+#### Get Dataset Study Types [GET]
+Returns all study types in given dataset.
++ Parameters
+  + dataset_id (string) - ID of a dataset returned by `/dataset` endpoint.
+
++ Response 200 (application/json)
+
+          {
+            "data":
+              [
+                {
+                  "id": "WE",
+                  "description": "Whole Exome"
+                },
+                {
+                  "id": "TG",
+                  "description": "Targeted Geneom"
+                },
+                {
+                  "id": "WG",
+                  "description": "Whole Genome"
+                }
+              ]
+          }
+
++ Response 404 (application/json)
+
+          {
+            "reason": "Dataset 'dataset_id' not found"
+          }
+
+
 
 ### Phenotypes [/phenotypes]
 #### Get All Phenotypes [GET]
