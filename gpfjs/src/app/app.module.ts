@@ -14,13 +14,15 @@ import { ConfigService } from './config/config.service';
 import {CustomRequestOptions } from './config/customrequest.options';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
+import { StudytypesComponent } from './studytypes/studytypes.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     PhenotypesComponent,
     GenderComponent,
-    VarianttypesComponent
+    VarianttypesComponent,
+    StudytypesComponent
   ],
   imports: [
     BrowserModule,

@@ -125,7 +125,7 @@ export class DatasetService implements DatasetServiceInterface {
   }
 
   getStudytypes(datasetId: string): Promise<IdDescription[]> {
-    let url = `${this.datasetUrl}/${datasetId}/phenotypes`;
+    let url = `${this.datasetUrl}/${datasetId}/studytypes`;
     return this.http.get(url)
       .toPromise()
       .then(this.parseIdDescriptionResponse)

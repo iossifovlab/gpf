@@ -6,7 +6,7 @@ import { Http } from '@angular/http';
 import { MaterialModule } from '@angular/material';
 
 import { PhenotypesComponent } from './phenotypes.component';
-import { DatasetService, DatasetServiceInterface } from '../dataset/dataset.service';
+import { DatasetService } from '../dataset/dataset.service';
 import { IdDescription } from '../common/iddescription';
 import { Phenotype } from '../phenotypes/phenotype';
 import { Dataset } from '../dataset/dataset';

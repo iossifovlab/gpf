@@ -121,7 +121,7 @@ describe('DatasetService', () => {
         mockBackend.connections.subscribe(conn => {
           conn.mockRespond(
             new Response(new ResponseOptions(
-              { body: { data: JSON.stringify(mockDatasetResponse) } }
+              { body: { data: JSON.stringify(mockDatasetsResponse) } }
             )));
         });
 
