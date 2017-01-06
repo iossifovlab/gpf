@@ -9,6 +9,7 @@ import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { StudytypesComponent } from './studytypes/studytypes.component';
 import { DatasetService } from './dataset/dataset.service';
 import { DatasetServiceStub } from './dataset/dataset.service.spec';
+import { EffecttypesComponent } from './effecttypes/effecttypes.component';
 
 describe('AppComponent', () => {
   beforeEach(() => {
@@ -19,6 +20,7 @@ describe('AppComponent', () => {
         GenderComponent,
         VarianttypesComponent,
         StudytypesComponent,
+        EffecttypesComponent,
       ],
       imports: [
         MaterialModule.forRoot()

@@ -15,6 +15,7 @@ import {CustomRequestOptions } from './config/customrequest.options';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { StudytypesComponent } from './studytypes/studytypes.component';
+import { EffecttypesComponent } from './effecttypes/effecttypes.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { StudytypesComponent } from './studytypes/studytypes.component';
     PhenotypesComponent,
     GenderComponent,
     VarianttypesComponent,
-    StudytypesComponent
+    StudytypesComponent,
+    EffecttypesComponent
   ],
   imports: [
     BrowserModule,

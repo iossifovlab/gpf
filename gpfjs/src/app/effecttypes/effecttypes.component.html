@@ -1,0 +1,27 @@
+<md-card class="genotype-card effect-card">
+    <md-card-header>
+        <md-card-title><h4>Effect Types</h4></md-card-title>
+    </md-card-header>
+    <md-card-content>
+        <div class="button-group">
+            <button md-raised-button 
+                (click)="selectAll()" 
+                class="genotype-button">All</button>
+            <button md-raised-button 
+                (click)="selectNone()" 
+                class="genotype-button">None</button>
+            <button md-raised-button 
+                (click)="selectLgds()" 
+                class="genotype-button">LGDs</button>
+            <button md-raised-button 
+                (click)="selectNonsynonymous()" 
+                class="genotype-button">Nonsynonymous</button>
+            <button md-raised-button 
+                (click)="selectUtrs()" 
+                class="genotype-button">UTRs</button>
+        </div>
+        <div>
+            
+        </div>
+    </md-card-content>
+</md-card>
