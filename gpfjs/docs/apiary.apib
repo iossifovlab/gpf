@@ -32,7 +32,7 @@ Returns all supported datasets
                   }
                 ]
           }
-### Dateset Details [/dateset/{dataset_id}]
+### Dateset Details [/dataset/{dataset_id}]
 #### Get Dataset Details [GET]
 Returns dataset details given `dataset_id`.
 + Parameters
@@ -143,96 +143,66 @@ Returns all study types in given dataset.
 
 
 
-### Phenotypes [/phenotypes]
-#### Get All Phenotypes [GET]
-Returns list of all phenotypes.
+### Effect Types Groups [/effecttypes/groups]
+
+#### Get Available Effect Types Groups [GET]
+Returns all availble effect types groups
 
 + Response 200 (application/json)
 
           {
             "data":
-                [
-                  {
-                    "id": "autism",
-                    "description": "autism",
-                    "color": "#e35252"
-                  },
-                  {
-                    "id": "congenital_heart_disease",
-                    "description": "congenital heart disease",
-                    "color": "#b8008a"
-                  },
-                  {
-                    "id": "epilepsy",
-                    "description": "epilepsy",
-                    "color": "#e3d252"
-                  },
-                  {
-                    "id": "intelectual_disability",
-                    "description": "intelectual disability",
-                    "color": "#99d8e8"
-                  },
-                  {
-                    "id": "schizophrenia",
-                    "description": "schizophrenia",
-                    "color": "#98e352"
-                  },
-                  {
-                    "id": "unaffected",
-                    "description": "unaffected",
-                    "color": "#ffffff"
-                  }
-                ]
+              [
+                {
+                  "id": "coding",
+                  "description": "Coding"
+                },
+                {
+                  "id": "noncoding",
+                  "description": "Noncoding"
+                },
+                {
+                  "id": "cnv",
+                  "description": "CNV"
+                },
+                {
+                  "id": "lgds",
+                  "description": "LGDs"
+                },
+                {
+                  "id": "nonsynonymous",
+                  "description": "Nonsynonymous"
+                },
+                {
+                  "id": "all",
+                  "description": "All"
+                },
+                {
+                  "id": "none",
+                  "description": "None"
+                }
+              ]
           }
 
-### Phenotypes for Given Dataset [/phenotypes/{dataset_id}]
 
-Returns list of all phenotypes available in dataset "dataset_id".
+### Effect Types in a Group [/effecttypes/groups/{group_id}]
 
-#### Get Phenotypes for Dataset [GET]
+#### Get Available Effect Types Groups [GET]
+Returns all availble effect types groups
 + Parameters
-  + dataset_id (string) - ID of a dataset returned by `/dataset` endpoint.
+  + group_id (string) - ID of an effect types group.
 
 + Response 200 (application/json)
 
-            {
-              "data":
-                  [
-                    {
-                      "id": "autism",
-                      "description": "autism",
-                      "color": "#e35252"
-                    },
-                    {
-                      "id": "congenital_heart_disease",
-                      "description": "congenital heart disease",
-                      "color": "#b8008a"
-                    },
-                    {
-                      "id": "epilepsy",
-                      "description": "epilepsy",
-                      "color": "#e3d252"
-                    },
-                    {
-                      "id": "intelectual_disability",
-                      "description": "intelectual disability",
-                      "color": "#99d8e8"
-                    },
-                    {
-                      "id": "schizophrenia",
-                      "description": "schizophrenia",
-                      "color": "#98e352"
-                    },
-                    {
-                      "id": "unaffected",
-                      "description": "unaffected",
-                      "color": "#ffffff"
-                    }
-                  ]
-            }
-
-+ Response 404 (application/json)
-
           {
-            "reason": "Dataset 'dataset_id' not found"
+            "data":
+              [
+                "Nonsense",
+                "Frame-shift",
+                "Splice-site",
+                "Missense",
+                "Non-frame-shift",
+                "noStart",
+                "noEnd"
+              ]
           }
