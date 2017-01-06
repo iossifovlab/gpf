@@ -5,6 +5,7 @@ import { AppComponent } from './app.component';
 import { MaterialModule } from '@angular/material';
 import { PhenotypesComponent } from './phenotypes/phenotypes.component';
 import { GenderComponent } from './gender/gender.component';
+import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { DatasetService } from './dataset/dataset.service';
 import { DatasetServiceStub } from './dataset/dataset.service.spec';
 
@@ -15,6 +16,7 @@ describe('AppComponent', () => {
         AppComponent,
         PhenotypesComponent,
         GenderComponent,
+        VarianttypesComponent,
       ],
       imports: [
         MaterialModule.forRoot()
