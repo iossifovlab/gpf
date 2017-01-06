@@ -45,4 +45,54 @@ describe('PhenotypesComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should have undefined phenotypes before OnInit', () => {
+    expect(component.phenotypes).toBe(undefined);
+  });
+
+  it('should have 2 phenotypes after OnInit', async(() => {
+    fixture.detectChanges();
+    fixture.whenStable().then(() => {
+      fixture.detectChanges();
+      expect(component.phenotypes).toBeTruthy();
+      expect(component.phenotypes.length).toBe(2);
+      expect(component.phenotypes[0].id).toBe('autism');
+      expect(component.phenotypes[1].id).toBe('unaffected');
+    });
+
+  }));
+
+  it('should have all 2 phenotypes selected after OnInit', async(() => {
+    fixture.detectChanges();
+    fixture.whenStable().then(() => {
+      fixture.detectChanges();
+      let selectedPhenotypes = component.getSelectedPhenotypes();
+      expect(selectedPhenotypes).toEqual(new Set(['autism', 'unaffected']));
+    });
+
+  }));
+
+  it('should have no phenotypes selected after OnInit', async(() => {
+    fixture.detectChanges();
+    fixture.whenStable().then(() => {
+      component.selectNone();
+      fixture.detectChanges();
+      let selectedPhenotypes = component.getSelectedPhenotypes();
+      expect(selectedPhenotypes).toEqual(new Set([]));
+    });
+
+  }));
+
+  it('should not throw error if selectNone is called before OnInit', () => {
+    component.selectNone();
+  });
+
+  it('should not throw error if selectAll is called before OnInit', () => {
+    component.selectAll();
+  });
+
+  it('should not throw error if getSelectedPhenotypes is called before OnInit', () => {
+    component.getSelectedPhenotypes();
+  });
+
 });

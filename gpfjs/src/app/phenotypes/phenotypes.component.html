@@ -3,9 +3,13 @@
         <md-card-title><h4>Phenotypes</h4></md-card-title>
     </md-card-header>
     <md-card-content>
+        <div class="row button-group">
+            <button md-raised-button (click)="selectAll()" class="genotype-button">All</button>
+            <button md-raised-button (click)="selectNone()" class="genotype-button">None</button>
+        </div>
         <div *ngIf="phenotypes">
-          <div *ngFor="let pheno of phenotypes">
-              <md-checkbox>
+          <div *ngFor="let pheno of phenotypes; let i=index">
+              <md-checkbox [(checked)]="phenotypesCheck[i]">
                   <span 
                     class="phenotype-icon" 
                     [style.background-color]="pheno.color"></span>
