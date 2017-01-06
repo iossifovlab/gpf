@@ -42,3 +42,32 @@ md-sidenav {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+
+.genotype-card {
+    width: 250px;
+    padding: 20px;
+    padding-top:10px;
+    margin: 10px;
+}
+
+.genotype-button {
+    padding: 0px;
+    margin: 0px;
+}
+
+[md-raised-button].genotype-button {
+    line-height: 12px;
+    width: 100%;
+    min-width: 20%;
+    padding: 4px;
+}
+
+.button-group {
+    padding-bottom: 5px;
+    display: flex;
+}
+
+.row {
+	display: flex;
+}

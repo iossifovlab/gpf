@@ -8,22 +8,3 @@
     border: 0.1px solid #aaaaaa;
 }
 
-.genotype-card {
-	width: 250px;
-}
-
-.gentotype-button {
-	padding: 0px;
-	margin: 0px;
-	width: 0px;
-	min-width: 0px;
-	line-height: 0px;
-}
-
-.button-group {
-	padding-bottom: 5px;
-	display: flex;
-	width: 0%;
-	min-width: 0px;
-	line-height: 0px;
-}

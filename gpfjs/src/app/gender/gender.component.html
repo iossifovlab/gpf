@@ -1,0 +1,20 @@
+<md-card class="genotype-card gender-card">
+    <md-card-header>
+        <md-card-title><h4>Child Gender</h4></md-card-title>
+    </md-card-header>
+    <md-card-content>
+        <div class="button-group">
+            <button md-raised-button (click)="selectAll()" class="genotype-button">All</button>
+            <button md-raised-button (click)="selectNone()" class="genotype-button">None</button>
+        </div>
+          <div>
+              <md-checkbox [(checked)]="male">
+                  <span class="gender-icon male" ></span>
+              </md-checkbox>
+              <md-checkbox [(checked)]="female">
+                  <span class="gender-icon female"></span>
+              </md-checkbox>
+              
+          </div>
+    </md-card-content>
+</md-card>

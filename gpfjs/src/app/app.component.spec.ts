@@ -4,6 +4,7 @@ import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { MaterialModule } from '@angular/material';
 import { PhenotypesComponent } from './phenotypes/phenotypes.component';
+import { GenderComponent } from './gender/gender.component';
 import { DatasetService } from './dataset/dataset.service';
 import { DatasetServiceStub } from './dataset/dataset.service.spec';
 
@@ -13,6 +14,7 @@ describe('AppComponent', () => {
       declarations: [
         AppComponent,
         PhenotypesComponent,
+        GenderComponent,
       ],
       imports: [
         MaterialModule.forRoot()
