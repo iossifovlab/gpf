@@ -1,73 +1,25 @@
 /* You can add global styles to this file, and also import other style files */
-@import '~@angular/material/core/theming/prebuilt/deeppurple-amber.css';
-
-@import '~https://fonts.googleapis.com/icon?family=Material+Icons';
 
 
-body {
-  margin: 0;
-  font-family: Roboto, sans-serif;
+.checkbox {
+	margin-top: 4px;
+	margin-bottom: 4px;
+}
+.checkbox+.checkbox {
+	margin-top: -4px;
 }
 
-md-toolbar-row {
-  justify-content: space-between;
+.row-eq-height {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display:         flex;
 }
 
-p {
-  margin: 16px;
+.panel {
+	height: 100%;
 }
 
-[md-raised-button] {
-  width: 100%;
-}
-
-md-grid-list {
-  max-width: 1403px;
-  margin: 16px;
-}
-
-md-sidenav-layout {
-  height: 100vh;
-}
-
-md-sidenav {
-  width: 320px;
-}
-
-.icon-20 {
-  font-size: 20px;
-}
-
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-
-.genotype-card {
-    width: 250px;
-    padding: 20px;
-    padding-top:10px;
-    margin: 10px;
-}
-
-.genotype-button {
-    padding: 0px;
-    margin: 0px;
-}
-
-[md-raised-button].genotype-button {
-    line-height: 12px;
-    width: 100%;
-    min-width: 20%;
-    padding: 4px;
-}
-
-.button-group {
-    padding-bottom: 5px;
-    display: flex;
-}
-
-.row {
-	display: flex;
+.panel-row {
+	margin-left: -15px;
 }

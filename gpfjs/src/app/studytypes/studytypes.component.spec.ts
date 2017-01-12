@@ -2,7 +2,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
-import { MaterialModule } from '@angular/material';
 
 import { StudytypesComponent } from './studytypes.component';
 import { Dataset } from '../dataset/dataset';
@@ -19,7 +18,6 @@ describe('StudytypesComponent', () => {
     TestBed.configureTestingModule({
       declarations: [StudytypesComponent],
       imports: [
-        MaterialModule.forRoot()
       ],
       providers: [
         {

@@ -2,7 +2,6 @@
 
 import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { MaterialModule } from '@angular/material';
 import { PhenotypesComponent } from './phenotypes/phenotypes.component';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
@@ -23,7 +22,6 @@ describe('AppComponent', () => {
         EffecttypesComponent,
       ],
       imports: [
-        MaterialModule.forRoot()
       ],
       providers: [
         {

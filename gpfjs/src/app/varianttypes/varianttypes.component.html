@@ -1,23 +1,31 @@
-<md-card class="genotype-card varianttypes-card">
-    <md-card-header>
-        <md-card-title><h4>Variant Types</h4></md-card-title>
-    </md-card-header>
-    <md-card-content>
-        <div class="button-group">
-            <button md-raised-button (click)="selectAll()" class="genotype-button">All</button>
-            <button md-raised-button (click)="selectNone()" class="genotype-button">None</button>
-        </div>
-        <div>
-            <md-checkbox [(checked)]="sub">
-                sub
-            </md-checkbox>
-            <md-checkbox [(checked)]="ins">
-                ins
-            </md-checkbox>
-            <md-checkbox [(checked)]="del">
-                del
-            </md-checkbox>
-            
-        </div>
-    </md-card-content>
-</md-card>
+<div class="varianttypes-card panel panel-default">
+  <div class="panel-heading">Variant Types</div>
+  <div class="panel-body">
+    <div class="btn-group btn-group-xs">
+      <button
+        (click)="selectAll()"
+        class="btn btn-default">All</button>
+      <button
+        (click)="selectNone()"
+        class="btn btn-default">None</button>
+    </div>
+    <div class="checkbox">
+      <label> <input
+        type="checkbox"
+        [(ngModel)]="sub"> sub
+      </label>
+    </div>
+    <div class="checkbox">
+      <label> <input
+        type="checkbox"
+        [(ngModel)]="ins"> ins
+      </label>
+    </div>
+    <div class="checkbox">
+      <label> <input
+        type="checkbox"
+        [(ngModel)]="del"> del
+      </label>
+    </div>
+  </div>
+</div>

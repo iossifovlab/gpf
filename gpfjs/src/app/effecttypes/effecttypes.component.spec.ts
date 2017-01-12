@@ -2,7 +2,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
-import { MaterialModule } from '@angular/material';
 
 import { EffecttypesComponent } from './effecttypes.component';
 
@@ -14,7 +13,6 @@ describe('EffecttypesComponent', () => {
     TestBed.configureTestingModule({
       declarations: [EffecttypesComponent],
       imports: [
-        MaterialModule.forRoot()
       ],
 
     })

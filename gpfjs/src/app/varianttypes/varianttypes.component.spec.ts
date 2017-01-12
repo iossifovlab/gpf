@@ -2,7 +2,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
-import { MaterialModule } from '@angular/material';
 
 import { VarianttypesComponent } from './varianttypes.component';
 
@@ -14,7 +13,6 @@ describe('VarianttypesComponent', () => {
     TestBed.configureTestingModule({
       declarations: [VarianttypesComponent],
       imports: [
-        MaterialModule.forRoot()
       ],
 
     })

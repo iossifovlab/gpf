@@ -1,18 +1,23 @@
-<md-card class="genotype-card studytypes-card">
-    <md-card-header>
-        <md-card-title><h4>Study Types</h4></md-card-title>
-    </md-card-header>
-    <md-card-content>
-        <div class="button-group">
-            <button md-raised-button (click)="selectAll()" class="genotype-button">All</button>
-            <button md-raised-button (click)="selectNone()" class="genotype-button">None</button>
-        </div>
-        <div *ngIf="studytypes">
-          <div *ngFor="let studytype of studytypes let i=index">
-              <md-checkbox [(checked)]="studytypesCheck[i]">
-                  {{studytype.id}}
-              </md-checkbox>
-          </div>
-        </div>
-    </md-card-content>
-</md-card>
+<div class="studytypes-card panel panel-default">
+  <div class="panel-heading">Study Types</div>
+  <div class="panel-body">
+    <div class="btn-group btn-group-xs">
+      <button
+        (click)="selectAll()"
+        class="btn btn-default">All</button>
+      <button
+        (click)="selectNone()"
+        class="btn btn-default">None</button>
+    </div>
+    <div *ngIf="studytypes">
+      <div
+        *ngFor="let studytype of studytypes let i=index"
+        class="checkbox">
+        <label> <input
+          type="checkbox"
+          [(ngModel)]="studytypesCheck[i]"> {{studytype.id}}
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
