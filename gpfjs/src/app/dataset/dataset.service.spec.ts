@@ -65,6 +65,38 @@ const mockStudytypesResponse: IdDescription[] =
       description: 'Whole Genome'
     }
   ];
+
+const mockEffecttypesGroups: IdDescription[] =
+  [
+    {
+      id: 'coding',
+      description: 'Coding'
+    },
+    {
+      id: 'noncoding',
+      description: 'Noncoding'
+    },
+    {
+      id: 'cnv',
+      description: 'CNV'
+    },
+    {
+      id: 'lgds',
+      description: 'LGDs'
+    },
+    {
+      id: 'nonsynonymous',
+      description: 'Nonsynonymous'
+    },
+    {
+      id: 'all',
+      description: 'All'
+    },
+    {
+      id: 'none',
+      description: 'None'
+    }
+  ];
 export class DatasetServiceStub extends DatasetService {
   selectedDatasetId: string;
   getDatasets(): Promise<IdDescription[]> {
@@ -83,6 +115,65 @@ export class DatasetServiceStub extends DatasetService {
     return Promise.resolve(mockStudytypesResponse);
   }
 
+  getEffectypesGroups(): Promise<IdDescription[]> {
+    return Promise.resolve(mockEffecttypesGroups);
+  }
+
+  getEffecttypesInGroup(groupId: string): Promise<string[]> {
+    return Promise.resolve(
+      [
+        'Nonsense',
+        'Frame-shift',
+        'Splice-site',
+        'Missense',
+        'Non-frame-shift',
+        'noStart',
+        'noEnd'
+      ]
+    );
+  }
+
+  getEffecttypesGroupsColumns(datasetId: string): Promise<IdDescription[]> {
+    return Promise.resolve(
+      [
+        {
+          id: 'coding',
+          description: 'Coding'
+        },
+        {
+          id: 'noncoding',
+          description: 'Noncoding'
+        }
+      ]
+    );
+  }
+
+  getEffecttypesGroupsButtons(datasetId: string): Promise<IdDescription[]> {
+    return Promise.resolve(
+      [
+        {
+          id: 'all',
+          description: 'All'
+        },
+        {
+          id: 'none',
+          description: 'None'
+        },
+        {
+          id: 'lgds',
+          description: 'LGDs'
+        },
+        {
+          id: 'nonsynonymous',
+          description: 'Nonsynonymous'
+        },
+        {
+          id: 'utrs',
+          description: 'UTRs'
+        }
+      ]
+    );
+  }
 }
 
 

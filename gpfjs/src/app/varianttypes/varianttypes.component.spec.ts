@@ -5,6 +5,11 @@ import { DebugElement } from '@angular/core';
 
 import { VarianttypesComponent } from './varianttypes.component';
 
+import { DatasetService } from '../dataset/dataset.service';
+import { DatasetServiceStub } from '../dataset/dataset.service.spec';
+
+let datasetService = new DatasetServiceStub(undefined, undefined);
+
 describe('VarianttypesComponent', () => {
   let component: VarianttypesComponent;
   let fixture: ComponentFixture<VarianttypesComponent>;
@@ -14,7 +19,12 @@ describe('VarianttypesComponent', () => {
       declarations: [VarianttypesComponent],
       imports: [
       ],
-
+      providers: [
+        {
+          provide: DatasetService,
+          useValue: datasetService
+        }
+      ]
     })
       .compileComponents();
   }));

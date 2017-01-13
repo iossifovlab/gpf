@@ -5,6 +5,11 @@ import { DebugElement } from '@angular/core';
 
 import { EffecttypesComponent } from './effecttypes.component';
 
+import { DatasetService } from '../dataset/dataset.service';
+import { DatasetServiceStub } from '../dataset/dataset.service.spec';
+
+let datasetService = new DatasetServiceStub(undefined, undefined);
+
 describe('EffecttypesComponent', () => {
   let component: EffecttypesComponent;
   let fixture: ComponentFixture<EffecttypesComponent>;
@@ -14,7 +19,12 @@ describe('EffecttypesComponent', () => {
       declarations: [EffecttypesComponent],
       imports: [
       ],
-
+      providers: [
+        {
+          provide: DatasetService,
+          useValue: datasetService
+        }
+      ]
     })
       .compileComponents();
   }));

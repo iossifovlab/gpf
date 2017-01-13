@@ -9,15 +9,9 @@ import { Phenotype } from '../phenotypes/phenotype';
 import { Dataset } from '../dataset/dataset';
 import { ConfigService } from '../config/config.service';
 
-export interface DatasetServiceInterface {
-  selectedDatasetId: string;
-  getDatasets(): Promise<IdDescription[]>;
-  getDataset(datasetId: string): Promise<Dataset>;
-  getPhenotypes(datasetId: string): Promise<Phenotype[]>;
-}
 
 @Injectable()
-export class DatasetService implements DatasetServiceInterface {
+export class DatasetService {
   private datasetUrl = 'dataset';
   private effecttypesUrl = 'effecttypes';
 

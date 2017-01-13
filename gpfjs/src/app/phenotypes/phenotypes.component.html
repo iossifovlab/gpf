@@ -11,7 +11,7 @@
           <div *ngFor="let pheno of phenotypes; let i=index" 
                 class="checkbox">
               <label>
-                <input type="checkbox" [(ngModel)]="phenotypesCheck[i]">
+                <input type="checkbox" [(checked)]="phenotypesCheck[i]">
                 <span 
                     class="phenotype-icon" 
                     [style.background-color]="pheno.color"></span>
