@@ -19,6 +19,8 @@ export interface DatasetServiceInterface {
 @Injectable()
 export class DatasetService implements DatasetServiceInterface {
   private datasetUrl = 'dataset';
+  private effecttypesUrl = 'effecttypes';
+
   private headers = new Headers({ 'Content-Type': 'application/json' });
 
   selectedDatasetId: string = 'ssc';
@@ -50,11 +52,44 @@ export class DatasetService implements DatasetServiceInterface {
     return output;
   }
 
-  getDatasets(): Promise<IdDescription[]> {
-    return this.http.get(this.datasetUrl)
+  private getIdDescriptions(url: string): Promise<IdDescription[]> {
+    return this.http.get(url)
       .toPromise()
       .then(this.parseIdDescriptionResponse)
       .catch(this.handleIdDescriptionError);
+  }
+
+  private handleStringsError(error: any): string[] {
+    console.error('error while strings response: ', error);
+    return [];
+  }
+
+  private parseStringsResponse(response: Response): string[] {
+    let data = response.json();
+    if (data.data === undefined) {
+      return [];
+    }
+    let result: Object[] = data.data;
+    if (typeof result === 'string') {
+      result = JSON.parse(result);
+    }
+
+    let output = new Array<string>();
+    for (let obj of result) {
+      output.push(<string>(obj));
+    }
+    return output;
+  }
+
+  private getStrings(url: string): Promise<string[]> {
+    return this.http.get(url)
+      .toPromise()
+      .then(this.parseStringsResponse)
+      .catch(this.handleStringsError);
+  }
+
+  getDatasets(): Promise<IdDescription[]> {
+    return this.getIdDescriptions(this.datasetUrl);
   }
 
   private parseDatasetResponse(response: Response): Dataset {
@@ -126,9 +161,27 @@ export class DatasetService implements DatasetServiceInterface {
 
   getStudytypes(datasetId: string): Promise<IdDescription[]> {
     let url = `${this.datasetUrl}/${datasetId}/studytypes`;
-    return this.http.get(url)
-      .toPromise()
-      .then(this.parseIdDescriptionResponse)
-      .catch(this.handleIdDescriptionError);
+    return this.getIdDescriptions(url);
   }
+
+  getEffecttypesGroups(): Promise<IdDescription[]> {
+    let url = `${this.effecttypesUrl}/group`;
+    return this.getIdDescriptions(url);
+  }
+
+  getEffecttypesInGroup(groupId: string): Promise<string[]> {
+    let url = `${this.effecttypesUrl}/group/${groupId}`;
+    return this.getStrings(url);
+  }
+
+  getEffecttypesGroupsColumns(datasetId: string): Promise<IdDescription[]> {
+    let url = `${this.effecttypesUrl}/dataset/${datasetId}/columns`;
+    return this.getIdDescriptions(url);
+  }
+
+  getEffecttypesGroupsButtons(datasetId: string): Promise<IdDescription[]> {
+    let url = `${this.effecttypesUrl}/dataset/${datasetId}/buttons`;
+    return this.getIdDescriptions(url);
+  }
+
 }

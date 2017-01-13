@@ -18,8 +18,18 @@
                 (click)="selectUtrs()" 
                 class="btn btn-default">UTRs</button>
         </div>
-        <div>
-            
+        <div *ngIf="columnGroups" class="row">
+            <div *ngFor="let column of columnGroups" class="effectypes-col">
+                <em>{{column.description}}</em>
+                <div *ngIf="buttonGroups">
+                    <div *ngFor="let effect of buttonGroups" class="checkbox">
+                        <label>
+                            <input type="checkbox">
+                            {{effect}}
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

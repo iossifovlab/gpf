@@ -138,12 +138,12 @@ Returns all study types in given dataset.
 + Response 404 (application/json)
 
           {
-            "reason": "Dataset 'dataset_id' not found"
+            "error": "Dataset 'dataset_id' not found"
           }
 
 
 
-### Effect Types Groups [/effecttypes/groups]
+### Effect Types Groups [/effecttype/group]
 
 #### Get Available Effect Types Groups [GET]
 Returns all availble effect types groups
@@ -185,24 +185,84 @@ Returns all availble effect types groups
           }
 
 
-### Effect Types in a Group [/effecttypes/groups/{group_id}]
+### Effect Types in a Group [/effecttypes/group/{group_id}]
 
 #### Get Available Effect Types Groups [GET]
-Returns all availble effect types groups
+Returns all availble effect types in a given groups
 + Parameters
   + group_id (string) - ID of an effect types group.
+
++ Response 200 (application/json)
+  + Body
+
+            {
+              "data":
+                [
+                  "Nonsense",
+                  "Frame-shift",
+                  "Splice-site",
+                  "Missense",
+                  "Non-frame-shift",
+                  "noStart",
+                  "noEnd"
+                ]
+            }
+
+
+### Effect Types Groups for given Dataset [/effecttypes/dataset/{dataset_id}/columns]
+
+#### Get Effect Types Groups for Given Dataset [GET]
+Returns all effect types groups for givent dataset.
++ Parameters
+  + dataset_id (string) - ID of a dataset
 
 + Response 200 (application/json)
 
           {
             "data":
-              [
-                "Nonsense",
-                "Frame-shift",
-                "Splice-site",
-                "Missense",
-                "Non-frame-shift",
-                "noStart",
-                "noEnd"
-              ]
+            [
+              {
+                "id":"coding",
+                "description": "Coding"
+              },
+              {
+                "id": "noncoding",
+                "description": "Noncoding"
+              }
+            ]
+          }
+
+### Effect Types Groups Buttons for Given Dataset [/effecttypes/dataset/{dataset_id}/buttons]
+
+#### Get Effect Types Groups for given Dataset [GET]
+Returns all effect types groups for givent dataset.
++ Parameters
+  + dataset_id (string) - ID of a dataset
+
++ Response 200 (application/json)
+
+          {
+            "data":
+            [
+              {
+                "id": "all",
+                "description": "All"
+              },
+              {
+                "id": "none",
+                "description": "None"
+              },
+              {
+                "id": "lgds",
+                "description": "LGDs"
+              },
+              {
+                "id": "nonsynonymous",
+                "description": "Nonsynonymous"
+              },
+              {
+                "id": "utrs",
+                "description": "UTRs"
+              }
+            ]
           }
