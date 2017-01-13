@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RequestOptions } from '@angular/http';
 
-import { MaterialModule } from '@angular/material';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { AppComponent } from './app.component';
 
@@ -30,7 +30,7 @@ import { EffecttypesComponent } from './effecttypes/effecttypes.component';
     BrowserModule,
     FormsModule,
     HttpModule,
-    MaterialModule.forRoot()
+    NgbModule
   ],
   providers: [
     ConfigService,

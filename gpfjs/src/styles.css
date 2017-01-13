@@ -1,6 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 
 
+label {
+	margin-bottom: 0px;
+}
 .checkbox {
 	margin-top: 4px;
 	margin-bottom: 4px;
@@ -16,10 +19,10 @@
   display:         flex;
 }
 
-.panel {
+.card {
 	height: 100%;
 }
 
-.panel-row {
+.card-row {
 	margin-left: -15px;
 }
