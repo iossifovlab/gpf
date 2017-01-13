@@ -97,6 +97,18 @@ const mockEffecttypesGroups: IdDescription[] =
       description: 'None'
     }
   ];
+
+const mockEffectypesInGroup: String[] =
+  [
+    'Nonsense',
+    'Frame-shift',
+    'Splice-site',
+    'Missense',
+    'Non-frame-shift',
+    'noStart',
+    'noEnd'
+  ];
+
 export class DatasetServiceStub extends DatasetService {
   selectedDatasetId: string;
   getDatasets(): Promise<IdDescription[]> {
@@ -120,17 +132,7 @@ export class DatasetServiceStub extends DatasetService {
   }
 
   getEffecttypesInGroup(groupId: string): Promise<string[]> {
-    return Promise.resolve(
-      [
-        'Nonsense',
-        'Frame-shift',
-        'Splice-site',
-        'Missense',
-        'Non-frame-shift',
-        'noStart',
-        'noEnd'
-      ]
-    );
+    return Promise.resolve(mockEffectypesInGroup);
   }
 
   getEffecttypesGroupsColumns(datasetId: string): Promise<IdDescription[]> {
@@ -374,4 +376,60 @@ describe('DatasetService', () => {
 
   });
 
+
+  describe('getEffectTypesInGroup', () => {
+    it('should parse correct response', async(inject(
+      [DatasetService, MockBackend], (service, mockBackend) => {
+
+        mockBackend.connections.subscribe(conn => {
+          conn.mockRespond(
+            new Response(new ResponseOptions(
+              { body: { data: JSON.stringify(mockEffectypesInGroup) } }
+            )));
+        });
+
+        const result: Promise<string[]> = service.getEffecttypesInGroup('coding');
+
+        result.then(res => {
+          expect(res.length).toEqual(7);
+          let et = res[0];
+
+
+
+        });
+      })));
+
+    it('should handle bad response', async(inject(
+      [DatasetService, MockBackend], (service, mockBackend) => {
+
+        mockBackend.connections.subscribe(conn => {
+          conn.mockRespond(
+            new Response(new ResponseOptions(
+              { body: '"ala bala"' }
+            )));
+        });
+
+        const result: Promise<Phenotype[]> = service.getPhenotypes('ssc');
+        result.then(res => {
+          expect(res.length).toEqual(0);
+        });
+      })));
+
+    it('should handle bad response 1', async(inject(
+      [DatasetService, MockBackend], (service, mockBackend) => {
+
+        mockBackend.connections.subscribe(conn => {
+          conn.mockRespond(
+            new Response(new ResponseOptions(
+              { body: '{"data": "ala bala"}' }
+            )));
+        });
+
+        const result: Promise<Phenotype[]> = service.getPhenotypes('ssc');
+        result.then(res => {
+          expect(res.length).toEqual(0);
+        });
+      })));
+
+  });
 });

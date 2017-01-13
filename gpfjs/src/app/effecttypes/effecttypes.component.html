@@ -21,8 +21,9 @@
         <div *ngIf="columnGroups" class="row">
             <div *ngFor="let column of columnGroups" class="effectypes-col">
                 <em>{{column.description}}</em>
-                <div *ngIf="buttonGroups">
-                    <div *ngFor="let effect of buttonGroups" class="checkbox">
+                <div *ngIf="effectTypesColumns">
+                    <div *ngFor="let effect of effectTypesColumns[column.id]" 
+                        class="checkbox">
                         <label>
                             <input type="checkbox">
                             {{effect}}

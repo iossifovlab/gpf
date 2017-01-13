@@ -67,10 +67,9 @@ export class DatasetService {
     if (typeof result === 'string') {
       result = JSON.parse(result);
     }
-
     let output = new Array<string>();
     for (let obj of result) {
-      output.push(<string>(obj));
+      output.push(<string>(obj.valueOf()));
     }
     return output;
   }

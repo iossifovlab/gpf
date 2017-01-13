@@ -13,7 +13,8 @@ export class EffecttypesComponent implements OnInit {
   buttonGroups: IdDescription[];
   columnGroups: IdDescription[];
 
-  private effectTypesColumns: Map<string, string[]>;
+  effectTypesColumns: Map<string, string[]>;
+
   private effectTypesButtons: Map<string, string[]>;
   private selectedEffectTypes = new Set<string>();
 
@@ -38,7 +39,11 @@ export class EffecttypesComponent implements OnInit {
               this.effectTypesButtons.set(group.id, effecttypes);
             });
         }
+      })
+      .then(() => {
+
       });
+
   }
 
   private initColumnGroups(): void {
