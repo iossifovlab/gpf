@@ -3,8 +3,9 @@ Created on Aug 23, 2016
 
 @author: lubo
 '''
-from Config import Config
 import ConfigParser
+
+from Config import Config
 
 
 class PhenoConfig(object):
