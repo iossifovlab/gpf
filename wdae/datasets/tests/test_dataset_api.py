@@ -26,6 +26,10 @@ class DatasetApiTest(APITestCase):
 
         self.assertIn('data', data)
         print(data)
+        data = data['data']
+        self.assertIn('genotypeBrowser', data)
+        gbdata = data['genotypeBrowser']
+        self.assertIsNone(gbdata['studyTypes'])
 
     def test_get_dataset_sd(self):
         url = '/api/v3/dataset/SD'
@@ -35,6 +39,10 @@ class DatasetApiTest(APITestCase):
 
         self.assertIn('data', data)
         print(data)
+        data = data['data']
+        self.assertIn('genotypeBrowser', data)
+        gbdata = data['genotypeBrowser']
+        self.assertEquals(['WE', 'TG'], gbdata['studyTypes'])
 
     def test_get_dataset_not_found(self):
         url = '/api/v3/dataset/ALA_BALA'

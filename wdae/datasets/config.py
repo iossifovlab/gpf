@@ -85,6 +85,10 @@ class DatasetConfig(object):
         has_transmitted = \
             self._get_boolean(section, 'genotypeBrowser.hasTransmitted')
         has_cnv = self._get_boolean(section, 'genotypeBrowser.hasCNV')
+        study_types = self._get_string(section, 'genotypeBrowser.studyTypes')
+        if study_types:
+            study_types = [st for st in study_types.split(',')]
+
         advanced_family_filters = \
             self._get_boolean(section, 'genotypeBrowser.advancedFamilyFilter')
 
@@ -93,6 +97,7 @@ class DatasetConfig(object):
             'hasDenovo': has_denovo,
             'hasTransmitted': has_transmitted,
             'hasCNV': has_cnv,
+            'studyTypes': study_types,
             'advancedFamilyFilters': advanced_family_filters
         }
 
