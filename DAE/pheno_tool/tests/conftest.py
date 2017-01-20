@@ -13,7 +13,7 @@ from pheno_tool.tool import PhenoFilterBuilder
 
 @pytest.fixture(scope='session')
 def phdb(request):
-    pf = DAE.phenoDB
+    pf = DAE.pheno
     db = pf.get_pheno_db('ssc')
     return db
 

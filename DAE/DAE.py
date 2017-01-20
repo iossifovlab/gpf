@@ -45,7 +45,7 @@ def get_gene_sets_symNS(geneSetsDef, denovoStudies=None):
             raise Exception('Only work with id or sym namespace')
     return geneTerms
 
-phenoDB = PhenoFactory()
+pheno = PhenoFactory()
 
 if __name__ == "__main__":
     print "hi"
