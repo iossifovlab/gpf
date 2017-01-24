@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 
+// import './rxjs-operators';
+
 @Component({
   selector: 'gpf-root',
   templateUrl: './app.component.html',
