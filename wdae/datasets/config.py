@@ -6,6 +6,30 @@ Created on Jan 20, 2017
 import ConfigParser
 
 from Config import Config
+import collections
+
+
+class PedigreeSelector(dict):
+
+    def __init__(self, pedigree_id, **kwargs):
+        self['id'] = pedigree_id
+        self['domain'] = self._parse_domain(kwargs['domain'])
+        self['default'] = self._parse_domain_value(kwargs['default'])
+        self['source'] = kwargs['source']
+        self['name'] = kwargs['name']
+
+    def _parse_domain_value(self, value):
+        (selector_id, selector_name, selector_color) = value.split(':')
+        return {
+            'id': selector_id,
+            'name': selector_name,
+            'color': selector_color,
+        }
+
+    def _parse_domain(self, domain):
+        values = domain.split(',')
+        result = [self._parse_domain_value(v) for v in values]
+        return result
 
 
 class DatasetConfig(object):
@@ -46,25 +70,6 @@ class DatasetConfig(object):
                 })
         return res
 
-    def get_phenotypes(self, phenotype_ids=None):
-        res = []
-        for section in self.config.sections():
-            (section_type, section_id) = self.split_section(section)
-            if section_id is None:
-                continue
-            if section_type != 'phenotype':
-                continue
-            if phenotype_ids and (section_id not in phenotype_ids):
-                continue
-            name = self.config.get(section, 'name')
-            color = self.config.get(section, 'color')
-            res.append({
-                'id': section_id,
-                'name': name,
-                'color': color,
-            })
-        return res
-
     def _get_boolean(self, section, option):
         res = False
         if self.config.has_option(section, option):
@@ -91,15 +96,39 @@ class DatasetConfig(object):
 
         advanced_family_filters = \
             self._get_boolean(section, 'genotypeBrowser.advancedFamilyFilter')
-
+        pedigree_selector = \
+            self._get_boolean(section, 'genotypeBrowser.pedigreeSelector')
         return {
             'mainForm': main_form,
             'hasDenovo': has_denovo,
             'hasTransmitted': has_transmitted,
             'hasCNV': has_cnv,
             'studyTypes': study_types,
-            'advancedFamilyFilters': advanced_family_filters
+            'advancedFamilyFilters': advanced_family_filters,
+            'pedigreeSelector': pedigree_selector,
         }
+
+    def _get_pedigree_selectors(self, section):
+        params = collections.defaultdict(dict)
+
+        options = self.config.options(section)
+        for option in options:
+            option_type, option_fullname = self.split_section(option)
+            if option_type != 'pedigree':
+                continue
+            pedigree_type, pedigree_option = \
+                self.split_section(option_fullname)
+            pedigree = params[pedigree_type]
+            value = self.config.get(section, option)
+            pedigree[pedigree_option] = value
+
+        if not params:
+            return None
+        result = {}
+        for key, value in params.items():
+            pedigree = PedigreeSelector(key, **value)
+            result[key] = pedigree
+        return result
 
     def get_dataset(self, dataset_id):
         section = 'dataset.{}'.format(dataset_id)
@@ -107,8 +136,6 @@ class DatasetConfig(object):
             return None
 
         name = self.config.get(section, 'name')
-        phenotypes = self.config.get(section, 'phenotypes').split(',')
-        phenotypes = self.get_phenotypes(phenotype_ids=set(phenotypes))
 
         studies = self.config.get(section, 'studies')
 
@@ -118,14 +145,16 @@ class DatasetConfig(object):
         phenotype_browser = self._get_boolean(section, 'phenotypeBrowser')
         genotype_browser = self._get_genotype_browser(section)
 
+        pedigree_selectors = self._get_pedigree_selectors(section)
+
         return {
             'id': dataset_id,
             'name': name,
             'studies': studies,
-            'phenotypes': phenotypes,
             'phenoDB': pheno_db,
             'enrichmentTool': enrichment_tool,
             'phenotypeGenotypeTool': pheno_geno_tool,
             'phenotypeBrowser': phenotype_browser,
             'genotypeBrowser': genotype_browser,
+            'pedigreeSelectors': pedigree_selectors,
         }

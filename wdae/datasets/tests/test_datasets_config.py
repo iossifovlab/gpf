@@ -6,6 +6,7 @@ Created on Jan 20, 2017
 
 import unittest
 from datasets.config import DatasetConfig
+from pprint import pprint
 
 
 class DatasetsConfigTest(unittest.TestCase):
@@ -21,25 +22,33 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertIsNotNone(datasets)
         self.assertEquals(3, len(datasets))
 
-    def test_phenotypes_simple(self):
-        phenotypes = self.dataset_config.get_phenotypes()
-        self.assertIsNotNone(phenotypes)
-        self.assertEquals(11, len(phenotypes))
-
     def test_dataset_sd(self):
         ds = self.dataset_config.get_dataset('SD')
         self.assertIsNotNone(ds)
 
         self.assertIsNone(ds['phenoDB'])
-        self.assertEquals(6, len(ds['phenotypes']))
+        self.assertEquals(1, len(ds['pedigreeSelectors']))
 
     def test_dataset_ssc(self):
         ds = self.dataset_config.get_dataset('SSC')
         self.assertIsNotNone(ds)
 
         self.assertEquals('ssc', ds['phenoDB'])
-        self.assertEquals(2, len(ds['phenotypes']))
+        self.assertIsNone(ds['pedigreeSelectors'])
 
     def test_dataset_not_found(self):
         ds = self.dataset_config.get_dataset('ala bala')
         self.assertIsNone(ds)
+
+    def test_dataset_vip(self):
+        ds = self.dataset_config.get_dataset('VIP')
+        self.assertIsNotNone(ds)
+
+        self.assertEquals('vip', ds['phenoDB'])
+        self.assertEquals(2, len(ds['pedigreeSelectors']))
+        pprint(ds['pedigreeSelectors'])
+        pedigrees = ds['pedigreeSelectors']
+
+        self.assertIn('16pstatus', pedigrees)
+        pedigree = pedigrees['16pstatus']
+        self.assertIn('name', pedigree)
