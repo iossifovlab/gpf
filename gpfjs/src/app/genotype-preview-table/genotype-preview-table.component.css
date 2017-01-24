@@ -1,0 +1,17 @@
+.gender-icon {
+    margin-top: 0px;
+    margin-bottom: -2px;
+    background-color: white;
+    border: 1px solid black;
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+}
+
+.gender-icon.male {
+    border-radius: 0px;
+}
+
+.gender-icon.female {
+    border-radius: 40px;
+}

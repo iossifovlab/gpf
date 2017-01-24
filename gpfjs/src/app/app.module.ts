@@ -16,6 +16,8 @@ import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { StudytypesComponent } from './studytypes/studytypes.component';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
+import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
+import { QueryService } from './query/query.service';
 
 @NgModule({
   declarations: [
@@ -24,7 +26,8 @@ import { EffecttypesComponent } from './effecttypes/effecttypes.component';
     GenderComponent,
     VarianttypesComponent,
     StudytypesComponent,
-    EffecttypesComponent
+    EffecttypesComponent,
+    GenotypePreviewTableComponent
   ],
   imports: [
     BrowserModule,
@@ -35,6 +38,7 @@ import { EffecttypesComponent } from './effecttypes/effecttypes.component';
   providers: [
     ConfigService,
     DatasetService,
+    QueryService,
     { provide: RequestOptions, useClass: CustomRequestOptions }
   ],
   bootstrap: [AppComponent]
