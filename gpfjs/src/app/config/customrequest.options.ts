@@ -13,8 +13,11 @@ export class CustomRequestOptions extends BaseRequestOptions {
     super();
   }
 
-  merge(options?: RequestOptionsArgs): RequestOptions {
-    options.url = Location.joinWithSlash(this.configService.baseUrl, options.url);
-    return super.merge(options);
+  merge(options?: RequestOptionsArgs): CustomRequestOptions {
+    if (options.url) options.url = Location.joinWithSlash(this.configService.baseUrl, options.url);
+    let result = <CustomRequestOptions> super.merge(options);
+    result.merge = this.merge;
+    result.configService = this.configService;
+    return result
   }
 }
