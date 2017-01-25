@@ -1,17 +1,632 @@
+label {
+	margin-bottom: 0px;
+}
+
+.container-form {
+	width: 1000px;
+}
+
+.radio-label {
+	margin-right: 10px;
+	margin-left: 5px;
+}
+
+.multicheckbox-button {
+	padding: 3px 6px;
+}
+
+
+.phenotype-icon {
+	margin-bottom: -3px;
+	margin-right: 3px;
+	margin-left: 3px;
+	display: inline-block;
+	/*background-color: ' + color + ';*/
+	width: 15px;
+	height: 15px;
+	border: 1px solid black;
+}
+
+.autism {
+	background-color: #e35252;
+}
+.congenital-heart-disease {
+	background-color: #b8008a;
+}
+.epilepsy {
+	background-color: #e3d252;
+}
+.intelectual-disability {
+	background-color: #99d8e8;
+}
+.schizophrenia {
+	background-color: #98e352;
+}
+.unaffected {
+	background-color: #ffffff;
+}
+
 .gender-icon {
-    margin-top: 0px;
-    margin-bottom: -2px;
-    background-color: white;
-    border: 1px solid black;
-    width: 18px;
-    height: 18px;
-    display: inline-block;
+	margin-top: 10px;
+	margin-bottom: -10px;
+	background-color: white;
+	border: 1px solid black;
+	width: 25px;
+	height: 25px;
+	display: inline-block;
+
 }
 
 .gender-icon.male {
-    border-radius: 0px;
+	border-radius: 0px;
+}
+.gender-icon.female {
+	border-radius: 50px;
 }
 
-.gender-icon.female {
-    border-radius: 40px;
+#submitBtn {
+	float: right;
+	margin-right: -30px;
+}
+
+.container-preview {
+	width: 1060px;
+	padding-left: 25px;
+}
+
+#previewContainer {
+	position: relative;
+}
+
+#previewTable {
+	table-layout: fixed;
+	margin-bottom: 151px;
+}
+
+.breaker {
+	width: 0;
+	padding: 0px !important;
+	border-left: none !important;
+}
+
+#previewTable th {
+	word-wrap: break-word;
+}
+
+.group-heading {
+	display: inline;
+	position: absolute;
+	left: 10px;
+	top: 26px;
+	z-index: 20;
+}
+
+#previewTable td {
+	white-space: nowrap;
+}
+
+#previewTable td, #previewTable th {
+	overflow: hidden;
+	vertical-align: inherit;
+}
+
+#preview {
+	min-height: 200px;
+}
+
+.table th {
+	text-align: center;
+}
+
+.table td {
+	text-align: center;
+	padding-left: 5px;
+	padding-right: 0px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.joined-heading {
+	display: block;
+	position: relative;
+	overflow: visible !important;
+	text-align: right !important;
+	padding-right: 15px !important;
+}
+
+table.tablesorter thead tr .header {
+	background-image: url(../images/bg.gif);
+	background-repeat: no-repeat;
+	background-position: center right;
+	cursor: pointer;
+}
+
+table.tablesorter thead tr .headerSortUp {
+	background-image: url(../images/asc.gif);
+}
+
+
+
+table.tablesorter thead tr .headerSortDown {
+	background-image: url(../images/desc.gif);
+}
+
+td.joined-td {
+	display: block;
+	height: 35px;
+	line-height: 35px !important;
+	border-bottom: none;
+}
+
+td.joined-td.first-td {
+	line-height: 56px !important;
+}
+
+td.joined-td.last-td {
+	line-height: 16px !important;
+}
+
+td.joined-td.no-top-border {
+	border-top: none !important;
+}
+
+.tripple-heading {
+	line-height: 8px !important;
+}
+
+td.tripple-td {
+	text-align: left;
+	padding-left: 25%;
+}
+
+.first-td.tripple-td span {
+	position: relative;
+	top: -6px;
+}
+
+.middle-td.tripple-td span {
+	position: relative;
+	top: 2px;
+}
+
+td.first-td.tripple-td {
+	/* line-height: 26px !important; */
+	height: 26px;
+}
+
+td.last-td.tripple-td {
+	/*line-height: 26px !important;*/
+	height: 26px;
+}
+
+td.middle-td {
+	line-height: 14px !important;
+	height: 14px;
+}
+
+.tripple-heading {
+	line-height: 8px !important;
+}
+
+.table-sidepanel {
+	background-color: rgba(255, 255, 255, 0.9);
+	position: fixed;
+	width: auto;
+	right: 50%;
+	bottom: 10px;
+	margin-right: -518px;
+	padding: 10px;
+	border: 1px solid black;
+	border-right: none;
+	border-color: #dddddd;
+	border-radius: 4px;
+}
+
+.table-container {
+	width: 78%;
+}
+
+#familyAdvancedRow select {
+	width: 100%;
+}
+
+.error {
+	border-color: #E0514A !important;
+	color: red;
+}
+
+#notifications-wrap {
+	z-index: 99999;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	padding-top: 9px;
+	margin-top: 0px;
+}
+#denovoReportTable tr.impact {
+	background-color: lightgrey;
+}
+
+.left-border {
+	border-left: 1px solid black !important;
+}
+
+.table-thicker-borders {
+	border-color: black;
+	border-left: 1px solid black;
+}
+
+table td.phenotype-label {
+	padding: 8px;
+}
+
+.thicker-border td {
+	border-top: 1px solid black;
+}
+
+pre {
+	margin: 0px;
+	min-height: 0px !important;
+}
+
+.pheno-description {
+	font-size: 11px;
+}
+
+td p {
+	text-align: center;
+	margin: 0px;
+	min-height: 0px !important;
+	font-family: monospace;
+}
+
+.centerText {
+	text-align: center;
+	vertical-align: middle !important;
+}
+
+.report-table {
+	margin-top: 20px;
+}
+
+.cursor-pointer {
+	cursor: pointer;
+}
+
+#static-header {
+	border-bottom: 1px black solid;
+	/* height: 55px; */
+	font-size: 28px;
+	font-family: 'Montserrat', sans-serif;
+	line-height: 51px;
+}
+
+.ui-select-toggle {
+	width: 736px;
+}
+
+.ui-select-search {
+	width: 736px;
+}
+
+#phenoMeasureInputHolderControls .ui-select-search {
+	width: 415px;
+}
+
+#phenoMeasureInputHolderControls .ui-select-toggle {
+	width: 400px;
+}
+
+#phenoMeasureInputHolderControls .ui-select-bootstrap > .ui-select-choices {
+	width: 412px;
+}
+
+div#phenoMeasureInput {
+	width: 428px;
+}
+
+#static-header img {
+	padding: 5px 10px 7px 22px;
+	max-height: 42px;
+}
+
+.multicheckbox-error {
+  border: 1px solid #E0514A;
+  padding-bottom: 8px;
+  border-radius: 4px;
+}
+
+.geneset-error {
+  border: 1px solid #E0514A;
+  border-radius: 4px;
+}
+
+/* loading */
+.loading {
+	background: url('../assets/ajax-loader.gif') center center no-repeat;
+	min-height: 190px;
+	min-width: 100px;
+}
+
+/*
+.loading-small {
+	background: url('../assets/ajax-loader.gif') center center no-repeat;
+	background-size: 20px 20px;
+	min-height: 40px;
+	min-width: 21px;
+}
+*/
+
+/* dialogs without title, probably waiters */
+.no-titlebar .ui-dialog-titlebar {
+	display: none;
+}
+
+.no-titlebar.ui-dialog.ui-widget.ui-widget-content {
+	border: 0px;
+	background: url("../assets/ajax-performing.gif") center center no-repeat;
+	min-height: 190px;
+	min-width: 100px;
+}
+
+.no-titlebar.ui-dialog.ui-widget.ui-widget-content {
+	position: absolute;
+	z-index: 101;
+	border: 0px;
+	background: url("../assets/ajax-performing.gif") center center no-repeat;
+	min-height: 190px;
+	min-width: 100px;
+}
+.radio-label {
+	display: inline;
+	margin-right: 10px;
+	margin-left: 5px;
+}
+
+#rarity .no-margin-left {
+	margin-left: 0px;
+}
+
+.medium-margin-left {
+	margin-left: 20px;
+}
+
+.hidden {
+	display: none;
+	visibility: hidden;
+}
+
+.gene-weight-container .ui-select-toggle,
+.gene-weight-container .ui-select-search,
+.gene-weight-container .ui-select-choices-content,
+.gene-weight-container .ui-select-match{
+	width: 350px;
+}
+
+.axis {
+	font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+	fill: none;
+	stroke: #000;
+	shape-rendering: crispEdges;
+}
+
+.histogram-slider {
+	margin-bottom: 10px;
+	width: 439px;
+	margin-left: 3px;
+	margin-top: 70px;
+}
+
+#sscPhenoHelpTable .header th,
+#sscPhenoHelpTable td {
+	vertical-align: middle;
+}
+
+#sscPhenoHelpTable table .header-fixed {
+	width: auto;
+}
+
+#sscPhenoHelpAnchor {
+	margin-left: 2px;
+	margin-top: 10px;
+}
+
+.modal-body {
+	max-height: 800px;	
+}
+
+.sscPhenoImageModal.modal {
+	margin-left: -560px;
+	margin-right: auto;
+	max-height: 800px;
+	width: 1200px;
+}
+
+li.right-separator {
+	border-right: 3px solid #848484;
+}
+
+#gene-weights-histogram {
+	margin-left: -74px;
+}
+
+div#gene-partitions {
+	font-size: 1.2em;
+}
+
+#left {
+	float: left;
+	width: 125px;
+}
+
+#less-than {
+	float: left;
+	width: 30px;
+}
+
+#greater-than  {
+	float: right;
+	width: 30px;
+}
+
+
+#middle {
+	float: left;
+	width: 125px;
+}
+
+#right {
+	width: 125px;
+	float: right;
+	margin-right: 20px;
+}
+
+
+
+#gene-partitions > span:not(:first-child) {
+	/* margin-left: 29px; */
+}
+
+.gene-weights-input {
+	width: 176px;
+}
+
+.partitions-text {
+	font-size: 11px;
+}
+
+.pheno-y-axis {
+
+}
+
+#previewGroup .tick {
+	font-size: 10px;
+}
+
+#family-pheno-measures-holder .ui-select-search {
+	width: 515px;
+}
+
+#family-pheno-measures-holder .ui-select-toggle {
+	width: 463px;
+}
+
+#family-pheno-measures-holder .ui-select-bootstrap > .ui-select-choices {
+	width: 512px;
+}
+
+#family-pheno-measures-holder #phenoMeasureInput {
+	margin-bottom: 10px;
+}
+
+#family-pheno-measures-holder .histogram-slider {
+	margin-top: 10px;
+	width: 483px;
+}
+
+#pheno-measure-histogram {
+	margin-left: -74px;
+}
+
+.glyphicon.glyphicon-remove {
+	background-position: -312px 0;
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	margin-top: 0px;
+	line-height: 14px;
+	vertical-align: text-top;
+	background-image: url("../assets/glyphicons-halflings.png");
+	background-repeat: no-repeat;
+}
+
+#phenoMeasureInput .btn.btn-xs.btn-link.pull-right {
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+
+.family-counter {
+	padding-bottom: 45px;
+	text-align: center;
+	/* margin-bottom: 10px; */
+}
+
+.family-counter .autism-portion {
+	margin-left: 434px;
+	margin-top: -30px;
+}
+
+.family-counter .female {
+	border-radius: 90%;
+	text-align: center;
+	height: 40px;
+	width: 40px;
+	font-size: 1em;
+}
+
+.family-counter .unaffected.female,
+.family-counter .unaffected.male,
+.family-counter .total.female,
+.family-counter .total.male {
+	border: 1px solid #333333;
+}
+
+.family-counter .male {
+	height: 40px;
+	width: 40px;
+}
+
+.family-counter .portion-separator {
+	height: 1px;
+	float: left;
+	width: 40px;
+}
+
+.family-counter .counter-text {
+	padding-top: 10px;
+}
+
+.family-counter .autism .counter-text {
+	color: white;
+}
+
+.family-counter .unaffected .counter-text {
+}
+
+
+.family-counter .separator {
+	font-size: 55px;
+	padding: 11px 3px 5px 0px;
+}
+
+.family-counter .separator.to-total {
+	padding-left: 5px;
+}
+
+.family-counter .total {
+	font-weight: bold;
+}
+
+.left-aligned {
+	float: left;
+}
+
+.effect-groups {
+	padding-left: 50px;
+}
+
+.effect-groups .effect-group-heading {
+	padding-left: 11px;
+}
+
+.slight-warning {
+    color: #AF3131;
+}
+
+.enrichment-models select {
+    width: 500px;
 }
