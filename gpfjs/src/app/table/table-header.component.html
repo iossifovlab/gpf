@@ -1,0 +1,25 @@
+<span style="font-weight: bold;">
+    <div style="float: left; clear: left; padding-left: 10px; height: 100%;">
+        <div style="height: 100%; display: table; ">
+            <div style="height: 100%; display: table-cell; vertical-align: middle; ">
+                <gpf-custom-template *ngIf="headerTemplateRef" [templateRef]=headerTemplateRef>
+                </gpf-custom-template>
+            </div>
+        </div>
+    </div>
+    
+    <div style="float: right; clear: right; margin-right: 0px; height: 100%">
+        <div style="height: 100%; display: table; ">
+            <div *ngFor="let child of subcolumnsChildren" style="display: table-row;">
+                <div style="display: table-cell; vertical-align: middle;">
+                    <a href="javascript: alert('a')" style="color:inherit; text-decoration: none;">
+                        <gpf-custom-template [templateRef]=child.headerTemplateRef></gpf-custom-template>
+                        <img src="bg.gif" style="height: 12px;">
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</span>
+

@@ -18,7 +18,7 @@ import { StudytypesComponent } from './studytypes/studytypes.component';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
-import { SplitAtColonPipe } from './utils/split-at-colon.pipe';
+import { GpfTableComponent, GpfCustomTemplateComponent, GpfTableColumnComponent, GpfTableCell, GpfTableSubcolumnComponent, GpfTableCellHeaderDirective, GpfTableCellContentDirective, GpfTableHeader } from './table/table.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +29,14 @@ import { SplitAtColonPipe } from './utils/split-at-colon.pipe';
     StudytypesComponent,
     EffecttypesComponent,
     GenotypePreviewTableComponent,
-    SplitAtColonPipe
+    GpfTableComponent,
+    GpfTableColumnComponent, 
+    GpfTableSubcolumnComponent,
+    GpfTableCellContentDirective,
+    GpfTableCellHeaderDirective,
+    GpfTableHeader,
+    GpfCustomTemplateComponent,
+    GpfTableCell
   ],
   imports: [
     BrowserModule,

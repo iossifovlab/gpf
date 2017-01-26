@@ -1,172 +1,90 @@
 <div class="gender-card card">
     <div class="card-header card-title">Genome Preview</div>
-    <div class="card-block" *ngIf="genotypePreviewsArray">
-        <p><strong>{{genotypePreviewsArray.count}} </strong></p>
-        <table id="previewTable" class="table table-bordered table-hover tablesorter table-fixed-header" data-vt-table-fixed-header>
-            <thead class="header">
-                <tr>
-                    <th
-                        class="joined-heading header" data-toggle="tooltip" title="{{COLUMN_SUBHEADINGS.FAMILY_ID}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.FAMILY_ID}}
-                        <span class="group-heading" data-toggle="tooltip" title="{{COLUMN_HEADINGS.FAMILY}}">{{COLUMN_HEADINGS.FAMILY}}</span>
-                    </th>
-                    <th class="joined-heading header" data-toggle="tooltip" 
-                        title="{{COLUMN_SUBHEADINGS.STDY}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.STDY}}
-                    </th>
-                    <th class="breaker header" style="width: 0px;"></th>
-                    
-                    
-                    <th
-                        class="joined-heading header" data-toggle="tooltip" title="{{COLUMN_SUBHEADINGS.LOC}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.LOC}}
-                        <span class="group-heading" data-toggle="tooltip" title="{{COLUMN_HEADINGS.VARIANT}}">{{COLUMN_HEADINGS.VARIANT}}</span>
-                    </th>
-                    <th class="joined-heading header" data-toggle="tooltip" 
-                        title="{{COLUMN_SUBHEADINGS.VAR}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.VAR}}
-                    </th>
-                    <th class="breaker header" style="width: 0px;"></th>
-                    
-                    
-    <!--				<th class="hidden header" id="family genotype" style="width: 62px;">{{COLUMN_HEADINGS.GENOTYPE}}</th>-->
-                    <th
-                        class="joined-heading pedigree-th header" data-toggle="tooltip" title="{{COLUMN_SUBHEADINGS.CH}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.CH}}
-                        <span class="group-heading" data-toggle="tooltip" title="{{COLUMN_HEADINGS.GENOTYPE}}">{{COLUMN_HEADINGS.GENOTYPE}}</span>
-                    </th>
-                    <th class="joined-heading header" id="{{COLUMN_SUBHEADINGS.PAR}}" data-toggle="tooltip">
-                        {{COLUMN_SUBHEADINGS.PAR}}
-                    </th>
-                    <th class="breaker header" style="width: 0px;"></th>
-                    
-                    
-                    
-                    
-                    <th 
-                        class="joined-heading header" data-toggle="tooltip" title="{{COLUMN_SUBHEADINGS.TYPE}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.TYPE}}
-                        <span class="group-heading" data-toggle="tooltip" title="{{COLUMN_HEADINGS.EFFECT}}">{{COLUMN_HEADINGS.EFFECT}}</span>
-                    </th>
-                    <th class="joined-heading header" id="{{COLUMN_SUBHEADINGS.GENE}}" data-toggle="tooltip" 
-                        title="{{COLUMN_SUBHEADINGS.GENE}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.GENE}}
-                    </th>
-                    <th class="breaker header" style="width: 0px;"></th>
-
-                    <th class="joined-heading tripple-heading header" data-toggle="tooltip" title="{{COLUMN_SUBHEADINGS.SSC}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.SSC}}
-                        <span class="group-heading" data-toggle="tooltip" title="{{COLUMN_HEADINGS.ALLELE}}">{{COLUMN_HEADINGS.ALLELE}}</span>
-                    </th>
-                    <th class="joined-heading tripple-heading header" id="{{COLUMN_SUBHEADINGS.EVS}}" data-toggle="tooltip"
-                        title="{{COLUMN_SUBHEADINGS.EVS}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.EVS}}
-                    </th>
-                    <th class="joined-heading tripple-heading header" id="{{COLUMN_SUBHEADINGS.E65}}" data-toggle="tooltip"
-                        title="{{COLUMN_SUBHEADINGS.E65}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.E65}}
-                    </th>
-                    <th class="breaker header" style="width: 0px;"></th>
-                    
-                    
-                    <th 
-                        class="joined-heading header" data-toggle="tooltip" title="{{COLUMN_SUBHEADINGS.MOM}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.MOM}}
-                        <span class="group-heading" data-toggle="tooltip" title="{{COLUMN_HEADINGS.RACES}}">{{COLUMN_HEADINGS.RACES}}</span>
-                    </th>
-                    <th class="joined-heading header" id="{{COLUMN_SUBHEADINGS.DAD}}" data-toggle="tooltip" 
-                        title="{{COLUMN_SUBHEADINGS.DAD}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.DAD}}
-                    </th>
-                    <th class="breaker header" style="width: 0px;"></th>
-                    
-                    <th 
-                        class="joined-heading header" data-toggle="tooltip" title="{{COLUMN_SUBHEADINGS.VIQ}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.VIQ}}
-                        <span class="group-heading" data-toggle="tooltip" title="{{COLUMN_HEADINGS.IQ}}">{{COLUMN_HEADINGS.IQ}}</span>
-                    </th>
-                    <th class="joined-heading header" id="{{COLUMN_SUBHEADINGS.NVIQ}}" data-toggle="tooltip" 
-                        title="{{COLUMN_SUBHEADINGS.NVIQ}}" style="width: 127px;">
-                        {{COLUMN_SUBHEADINGS.NVIQ}}
-                    </th>
-                    <th class="breaker header" style="width: 0px;"></th>
-                    
-                </tr>
-
-            </thead>
-            <tr *ngFor="let genotypePreview of genotypePreviewsArray.genotypePreviews">
-                <td data-toggle="tooltip" class="joined-td first-td" title="{{genotypePreview.familyId}}">{{genotypePreview.familyId}}</td>
-                <td data-toggle="tooltip" class="joined-td no-top-border last-td" title="{{genotypePreview.study}}">
-                    <a target="_blank" href="">{{genotypePreview.study}}</a> <!--#/variant_reports/reportSelect%3Dw1202s766e611 -->
-                </td>
-                <td class="breaker"></td>
-                
-                <td data-toggle="tooltip" class="joined-td first-td" title="{{genotypePreview.location}}">
-                    <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{genotypePreview.location}}">{{genotypePreview.location}}</a>
-                </td>
-                <td data-toggle="tooltip" class="joined-td no-top-border last-td" title="{{genotypePreview.variant}}">
-                    {{genotypePreview.variant}}
-                </td>
-                <td class="breaker"></td>
-                
-                <td data-toggle="tooltip" title="{{genotypePreview.familyGenotype}}"  style="padding: 0px; width: 100px;">
-                    <div data-vt-family-genotype-graphic data-vt-family-genotype-graphic-types="genotypePreview.pedigree">
-                    
-                    </div>
-                </td>
-                
-                <td class="breaker"></td>
-                
-                
-                <td data-toggle="tooltip" class="joined-td first-td" title="{{genotypePreview.worstEffectType}}">
-                    {{genotypePreview.worstEffectType}}
-                <td data-toggle="tooltip" class="joined-td no-top-border last-td" title="{{genotypePreview.genes}}">
-                    {{genotypePreview.genes}}
-                </td>
-                <td class="breaker"></td>
-                
-                <td *ngIf="genotypePreview.SSCfreq && 'nan' != genotypePreview.SSCfreq"
-                    data-toggle="tooltip" class="joined-td first-td tripple-td" 
-                    title="SSCFREQ {{genotypePreview.SSCfreq}}%">
-                    <span>SSCFREQ {{genotypePreview.SSCfreq}}%</span>
-                </td>
-                <td *ngIf="!genotypePreview.SSCfreq && 'nan' != genotypePreview.SSCfreq"
-                    data-toggle="tooltip" class="joined-td first-td tripple-td" 
-                    title="">
-                    <span>&nbsp;</span>
-                </td>
-                
-                <td *ngIf="genotypePreview.EVSfreq && 'nan' != genotypePreview.EVSfreq"
-                    data-toggle="tooltip" class="joined-td no-top-border middle-td tripple-td"
-                    title="EVS {{genotypePreview.EVSfreq}}%"><span>EVS {{genotypePreview.EVSfreq}}%</span></td>
-                <td *ngIf="!(genotypePreview.EVSfreq && 'nan' != genotypePreview.EVSfreq)"
-                    data-toggle="tooltip" class="joined-td no-top-border middle-td tripple-td"
-                    title=""><span>&nbsp;</span></td>
-
-                <td *ngIf="genotypePreview.E65freq && 'nan' != genotypePreview.E65freq"
-                    data-toggle="tooltip" class="joined-td no-top-border last-td tripple-td"
-                    title="E65 {{genotypePreview.E65freq}}%"><span>E65 {{genotypePreview.E65freq}}%</span></td>
-                <td *ngIf="!(genotypePreview.E65freq && 'nan' != genotypePreview.E65freq)"
-                    data-toggle="tooltip" class="joined-td no-top-border last-td tripple-td"
-                    title=""><span>&nbsp;</span></td>
-                <td class="breaker"></td>
-                
-                
-                <td data-toggle="tooltip" class="joined-td first-td" title="{{(genotypePreview.parentRaces) | splitAtColon:'before'}}">
-                    {{genotypePreview.parentRaces | splitAtColon:'before'}}
-                <td data-toggle="tooltip" class="joined-td no-top-border last-td" title="{{(genotypePreview.parentRaces) | splitAtColon:'after'}}">
-                    {{genotypePreview.parentRaces | splitAtColon:'after'}}
-                </td>
-                <td class="breaker"></td>
-                
-                <td  data-toggle="tooltip" class="joined-td first-td" title="{{genotypePreview.probandVerbalIQ}}">
-                    {{genotypePreview.probandVerbalIQ}}
-                <td data-toggle="tooltip" class="joined-td no-top-border last-td" title="{{genotypePreview.porbandNonVerbalIQ}}">
-                    {{genotypePreview.porbandNonVerbalIQ}}
-                </td>
-                <td class="breaker"></td>
-
-            </tr>
-        </table>
+    <div class="card-block" *ngIf="genotypePreviewsArray" style="text-align: center">
+        <p><strong>{{genotypePreviewsArray.total}} </strong></p>
+        <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
+            <gpf-table-column>
+                <span *gpf-table-cell-header>family</span>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>id</span>
+                    <span *gpf-table-cell-content="let data">{{data.familyId}}</span>
+                </gpf-table-subcolumn>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>stdy</span>
+                    <span *gpf-table-cell-content="let data">{{data.study}}</span>
+                </gpf-table-subcolumn>
+            </gpf-table-column>
+            <gpf-table-column>
+                <span *gpf-table-cell-header>variant</span>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>loc</span>
+                    <span *gpf-table-cell-content="let data">{{data.location}}</span>
+                </gpf-table-subcolumn>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>var</span>
+                    <span *gpf-table-cell-content="let data">{{data.variant}}</span>
+                </gpf-table-subcolumn>
+            </gpf-table-column>
+            <gpf-table-column>
+                <span *gpf-table-cell-header>genotype</span>
+                <span *gpf-table-cell-content="let data">{{data.pedigree}}</span>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>ch</span>
+                    <span *gpf-table-cell-content="let data"></span>
+                </gpf-table-subcolumn>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>par</span>
+                    <span *gpf-table-cell-content="let data"></span>
+                </gpf-table-subcolumn>
+            </gpf-table-column>
+            <gpf-table-column>
+                <span *gpf-table-cell-header>effect</span>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>type</span>
+                    <span *gpf-table-cell-content="let data">{{data.worstEffectType}}</span>
+                </gpf-table-subcolumn>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>gene</span>
+                    <span *gpf-table-cell-content="let data">{{data.genes}}</span>
+                </gpf-table-subcolumn>
+            </gpf-table-column>
+            <gpf-table-column>
+            <span *gpf-table-cell-header>allele freq</span>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>SSC</span>
+                    <span *gpf-table-cell-content="let data">{{data.SSCfreq}}</span>
+                </gpf-table-subcolumn>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>EVS</span>
+                    <span *gpf-table-cell-content="let data">{{data.EVSfreq}}</span>
+                </gpf-table-subcolumn>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>E65</span>
+                    <span *gpf-table-cell-content="let data">{{data.E65freq}}</span>
+                </gpf-table-subcolumn>
+            </gpf-table-column>
+            <gpf-table-column>
+            <span *gpf-table-cell-header>races</span>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>mom</span>
+                    <span *gpf-table-cell-content="let data">{{data.motherRace}}</span>
+                </gpf-table-subcolumn>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>dad</span>
+                    <span *gpf-table-cell-content="let data">{{data.fatherRace}}</span>
+                </gpf-table-subcolumn>
+            </gpf-table-column>
+            <gpf-table-column>
+            <span *gpf-table-cell-header>Proband IQ</span>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>vIQ</span>
+                    <span *gpf-table-cell-content="let data">{{data.probandVerbalIQ}}</span>
+                </gpf-table-subcolumn>
+                <gpf-table-subcolumn>
+                    <span *gpf-table-cell-header>NvIQ</span>
+                    <span *gpf-table-cell-content="let data">{{data.probandNonVerbalIQ}}</span>
+                </gpf-table-subcolumn>
+            </gpf-table-column>
+        </gpf-table>
     </div>
 </div>
