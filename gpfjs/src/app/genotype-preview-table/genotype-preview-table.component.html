@@ -11,14 +11,18 @@
                 </gpf-table-subcolumn>
                 <gpf-table-subcolumn>
                     <span *gpf-table-cell-header>stdy</span>
-                    <span *gpf-table-cell-content="let data">{{data.study}}</span>
+                    <span *gpf-table-cell-content="let data">
+                        <a target="_blank" href="">{{data.study}}</a>
+                    </span>
                 </gpf-table-subcolumn>
             </gpf-table-column>
             <gpf-table-column>
                 <span *gpf-table-cell-header>variant</span>
                 <gpf-table-subcolumn>
                     <span *gpf-table-cell-header>loc</span>
-                    <span *gpf-table-cell-content="let data">{{data.location}}</span>
+                    <span *gpf-table-cell-content="let data">
+                        <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{data.location}}">{{data.location}}</a>
+                    </span>
                 </gpf-table-subcolumn>
                 <gpf-table-subcolumn>
                     <span *gpf-table-cell-header>var</span>
@@ -52,15 +56,15 @@
             <span *gpf-table-cell-header>allele freq</span>
                 <gpf-table-subcolumn>
                     <span *gpf-table-cell-header>SSC</span>
-                    <span *gpf-table-cell-content="let data">{{data.SSCfreq}}</span>
+                    <span *gpf-table-cell-content="let data">{{data.SSCfreqPercentage || "&nbsp;"}}</span>
                 </gpf-table-subcolumn>
                 <gpf-table-subcolumn>
                     <span *gpf-table-cell-header>EVS</span>
-                    <span *gpf-table-cell-content="let data">{{data.EVSfreq}}</span>
+                    <span *gpf-table-cell-content="let data">{{data.EVSfreqPercentage || "&nbsp;"}}</span>
                 </gpf-table-subcolumn>
                 <gpf-table-subcolumn>
                     <span *gpf-table-cell-header>E65</span>
-                    <span *gpf-table-cell-content="let data">{{data.E65freq}}</span>
+                    <span *gpf-table-cell-content="let data">{{data.E65freqPercentage || "&nbsp;"}}</span>
                 </gpf-table-subcolumn>
             </gpf-table-column>
             <gpf-table-column>

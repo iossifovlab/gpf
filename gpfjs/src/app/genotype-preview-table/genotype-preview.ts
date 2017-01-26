@@ -46,6 +46,21 @@ export class GenotypePreview {
     this.motherRace = result[0];
     this.fatherRace = result[1];
   }
+  
+  get SSCfreqPercentage():string {
+    if (!this.SSCfreq || this.SSCfreq == "nan") return null;
+    return "SSC " + this.SSCfreq + " %";
+  }
+  
+  get EVSfreqPercentage():string {
+    if (!this.EVSfreq || this.EVSfreq == "nan") return null;
+    return "EVS " + this.EVSfreq + " %";
+  }
+  
+  get E65freqPercentage():string {
+    if (!this.E65freq || this.E65freq == "nan") return null;
+    return "E65 " + this.E65freq + " %";
+  }
 }
 
 
