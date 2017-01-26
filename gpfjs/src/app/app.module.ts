@@ -18,7 +18,8 @@ import { StudytypesComponent } from './studytypes/studytypes.component';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
-import { GpfTableComponent, GpfCustomTemplateComponent, GpfTableColumnComponent, GpfTableCell, GpfTableSubcolumnComponent, GpfTableCellHeaderDirective, GpfTableCellContentDirective, GpfTableHeader } from './table/table.component';
+
+import { GpfTableModule } from './table/table.module';
 
 @NgModule({
   declarations: [
@@ -29,20 +30,13 @@ import { GpfTableComponent, GpfCustomTemplateComponent, GpfTableColumnComponent,
     StudytypesComponent,
     EffecttypesComponent,
     GenotypePreviewTableComponent,
-    GpfTableComponent,
-    GpfTableColumnComponent, 
-    GpfTableSubcolumnComponent,
-    GpfTableCellContentDirective,
-    GpfTableCellHeaderDirective,
-    GpfTableHeader,
-    GpfCustomTemplateComponent,
-    GpfTableCell
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpModule,
-    NgbModule
+    NgbModule,
+    GpfTableModule
   ],
   providers: [
     ConfigService,
