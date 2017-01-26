@@ -22,16 +22,29 @@ export class GenotypePreview {
   EVSfreq: string;
   E65freq: string;
   genotypedParentsCount: string;
-  parentRaces: string;
+  motherRace: string;
+  fatherRace: string;
   childrenDescription: string;
   probandVerbalIQ: string;
-  porbandNonVerbalIQ: string;
+  probandNonVerbalIQ: string;
   validationStatus: string;
   pedigree: string;
   phenoInChS: string;
 
   constructor(
   ) {
+  }
+  
+  get parentRaces():string {
+    return this.motherRace + ":" + this.fatherRace;
+  }
+  
+  set parentRaces(parentRaces: string) {
+    let result = parentRaces.split(":");
+    if (result.length != 2) return;
+    
+    this.motherRace = result[0];
+    this.fatherRace = result[1];
   }
 }
 
