@@ -124,10 +124,10 @@ class DatasetConfig(object):
 
         if not params:
             return None
-        result = {}
+        result = []
         for key, value in params.items():
             pedigree = PedigreeSelector(key, **value)
-            result[key] = pedigree
+            result.append(pedigree)
         return result
 
     def get_dataset(self, dataset_id):
