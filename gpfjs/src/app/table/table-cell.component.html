@@ -1,3 +1,4 @@
-<div *ngFor="let child of subcolumnsChildren" style="text-align: center;">
-    <gpf-custom-template [templateRef]=child.contentTemplateRef [data]=data></gpf-custom-template>
+<div *ngFor="let child of columnInfo.subcolumnsChildren" style="text-align: center;">
+    <gpf-custom-template *ngIf="child.contentTemplateRef" [templateRef]=child.contentTemplateRef [data]=data></gpf-custom-template>
+    <span *ngIf="!child.contentTemplateRef">{{ data[child.field] }}</span>
 </div>

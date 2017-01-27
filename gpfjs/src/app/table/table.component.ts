@@ -20,30 +20,34 @@ export class GpfCustomTemplateComponent {
 }
 
 @Component({
-  selector: 'gpf-table-header',
-  templateUrl: './table-header.component.html'
-})
-export class GpfTableHeader {
-  @Input() subcolumnsChildren: QueryList<GpfTableSubcolumnComponent>;
-  @Input() headerTemplateRef: TemplateRef<any>;
-
-  constructor(private viewContainer: ViewContainerRef) { 
-    this.viewContainer = viewContainer;
-  }
-}
-
-@Component({
   selector: 'gpf-table-cell',
   templateUrl: './table-cell.component.html'
 })
 export class GpfTableCell {
-  @Input() subcolumnsChildren: QueryList<GpfTableSubcolumnComponent>;
+  @Input() columnInfo: GpfTableColumnComponent;
   @Input() data: any;
 
   constructor(private viewContainer: ViewContainerRef) { 
-    this.viewContainer = viewContainer;
   }
 }
+
+
+
+@Component({
+  selector: 'gpf-table-header',
+  templateUrl: './table-header.component.html'
+})
+export class GpfTableHeader {
+  @Input() columnInfo: GpfTableColumnComponent;
+
+  constructor(private viewContainer: ViewContainerRef) { 
+  }
+  
+  sortingColumnClicked(field: string): void {
+    this.columnInfo.table.sort(field);
+  }
+}
+
 
 
 
@@ -86,11 +90,13 @@ export class GpfTableCellHeaderDirective {
 export class GpfTableSubcolumnComponent implements OnInit {
   @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
   @ContentChildren(GpfTableCellHeaderDirective) headerChildren: QueryList<GpfTableCellHeaderDirective>;
+  @Input() field: string;
+  @Input() header: string;
 
   contentTemplateRef: TemplateRef<any>;
   headerTemplateRef: TemplateRef<any>;
 
-  constructor(private viewContainer: ViewContainerRef) { 
+  constructor(protected viewContainer: ViewContainerRef) { 
   }
 
   ngOnInit() {
@@ -98,8 +104,8 @@ export class GpfTableSubcolumnComponent implements OnInit {
   }
   
   ngAfterContentInit() {
-    this.contentTemplateRef = this.contentChildren.first.templateRef;
-    this.headerTemplateRef = this.headerChildren.first.templateRef;
+    if (this.contentChildren.first) this.contentTemplateRef = this.contentChildren.first.templateRef;
+    if (this.headerChildren.first) this.headerTemplateRef = this.headerChildren.first.templateRef;
   }
   
   ngAfterViewInit() {
@@ -114,12 +120,12 @@ export class GpfTableSubcolumnComponent implements OnInit {
     GpfTableHeader
   ]
 })
-export class GpfTableColumnComponent {
+export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
   @ContentChildren(GpfTableSubcolumnComponent) subcolumnsChildren: QueryList<GpfTableSubcolumnComponent>;
-  @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
-  @ContentChildren(GpfTableCellHeaderDirective) headerChildren: QueryList<GpfTableCellHeaderDirective>;
+  table: GpfTableComponent;
 
-  constructor() { 
+  constructor(viewContainer: ViewContainerRef) { 
+    super(viewContainer);
   }
 
 }
@@ -140,5 +146,17 @@ export class GpfTableComponent implements OnInit {
 
   ngOnInit() {
 
+  }
+  
+  ngAfterContentInit() {
+    this.columnsChildren.forEach((column)=> {
+      column.table = this;
+    });
+  }
+  
+  sort(field: string) {
+    this.dataSource.sort((a, b) => {
+      return a[field] - b[field];
+    });
   }
 }

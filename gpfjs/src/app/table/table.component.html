@@ -1,14 +1,13 @@
 <div style="display: table; border-collapse: collapse;">
     <div style="display: table-row; border: 1px solid #000;">
-        <gpf-table-header *ngFor="let column of columnsChildren" 
-            [subcolumnsChildren]="column.subcolumnsChildren" 
-            [headerTemplateRef]="column.headerChildren?.first?.templateRef"
+        <gpf-table-header *ngFor="let column of columnsChildren"
+            [columnInfo]="column"
             style="vertical-align: middle">
         </gpf-table-header>
     </div>
     <div style="display: table-row; border: 1px solid #000;" *ngFor="let data of dataSource">
-        <gpf-table-cell *ngFor="let column of columnsChildren" 
-            [subcolumnsChildren]="column.subcolumnsChildren" 
+        <gpf-table-cell *ngFor="let column of columnsChildren"
+            [columnInfo]="column"
             [data]=data 
             style="vertical-align: middle">
         </gpf-table-cell>
