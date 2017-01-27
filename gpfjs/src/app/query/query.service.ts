@@ -33,7 +33,7 @@ let FIELD_TO_OBJECT_PROPERTY = [
     [ "parent races", "parentRaces" ],
     [ "children description", "childrenDescription" ],
     [ "proband verbal iq", "probandVerbalIQ" ],
-    [ "proband non-verbal iq", "porbandNonVerbalIQ" ],
+    [ "proband non-verbal iq", "probandNonVerbalIQ" ],
     [ "validation status", "validationStatus" ],
     [ "_pedigree_", "pedigree" ],
     [ "phenoInChS", "phenoInChS"]
