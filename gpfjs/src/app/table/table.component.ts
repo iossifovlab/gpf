@@ -1,4 +1,4 @@
-import { Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
+import { ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
 
 
 // One bright day we should replace this with NgTemplateOutlet
@@ -39,6 +39,7 @@ export class GpfTableCell {
 })
 export class GpfTableHeader {
   @Input() columnInfo: GpfTableColumnComponent;
+  @Output() sortingFieldChange = new EventEmitter();
 
   constructor(private viewContainer: ViewContainerRef) { 
   }
@@ -126,13 +127,14 @@ export class GpfTableComponent {
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
   @Input() dataSource: any;
 
-  constructor(private viewContainer: ViewContainerRef) { 
+  constructor(private viewContainer: ViewContainerRef, private ref: ChangeDetectorRef) { 
   }
 
   
   sort(field: string) {
     this.dataSource.sort((a, b) => {
-      return a[field] - b[field];
+      return a[field].localeCompare(b[field]);
     });
+    console.log(this.dataSource);
   }
 }

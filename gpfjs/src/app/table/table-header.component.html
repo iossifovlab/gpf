@@ -12,7 +12,7 @@
     <div style="float: right; clear: right; margin-right: 0px; height: 100%">
         <div style="height: 100%; display: table; ">
             <div *ngFor="let child of columnInfo.subcolumnsChildren" style="display: table-row;">
-                <div style="display: table-cell; vertical-align: middle; cursor: pointer;" (click)="sortingColumnClicked(child.field)">
+                <div style="display: table-cell; vertical-align: middle; cursor: pointer;" (click)="sortingFieldChange.emit(child.field)">
                     <gpf-custom-template *ngIf="child.headerTemplateRef" [templateRef]=child.headerTemplateRef></gpf-custom-template>
                     <span *ngIf="!child.headerTemplateRef">{{ child.header }}</span>
                     <img src="bg.gif" style="height: 12px;">
