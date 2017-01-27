@@ -34,7 +34,7 @@ export class GpfTableHeader {
 
 @Component({
   selector: 'gpf-table-cell',
-  template: '<div *ngFor="let child of subcolumnsChildren" style="text-align: center;"><gpf-custom-template [templateRef]=child.contentTemplateRef [data]=data></gpf-custom-template></div>'
+  templateUrl: './table-cell.component.html'
 })
 export class GpfTableCell {
   @Input() subcolumnsChildren: QueryList<GpfTableSubcolumnComponent>;
