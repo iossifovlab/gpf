@@ -1,36 +1,34 @@
 <div class="effect-card card">
-    <div class="card-header card-title">Effect Types</div>
-    <div class="card-block">
-        <div class="btn-group btn-group-sm">
-            <button 
-                (click)="selectAll()" 
-                class="btn btn-default">All</button>
-            <button 
-                (click)="selectNone()" 
-                class="btn btn-default">None</button>
-            <button 
-                (click)="selectLgds()" 
-                class="btn btn-default">LGDs</button>
-            <button 
-                (click)="selectNonsynonymous()" 
-                class="btn btn-default">Nonsynonymous</button>
-            <button 
-                (click)="selectUtrs()" 
-                class="btn btn-default">UTRs</button>
-        </div>
-        <div *ngIf="columnGroups" class="row">
-            <div *ngFor="let column of columnGroups" class="effectypes-col">
-                <em>{{column.description}}</em>
-                <div *ngIf="effectTypesColumns">
-                    <div *ngFor="let effect of effectTypesColumns[column.id]" 
-                        class="checkbox">
-                        <label>
-                            <input type="checkbox">
-                            {{effect}}
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="card-header card-title">Effect Types</div>
+  <div class="card-block">
+    <div class="btn-group btn-group-sm">
+      <button
+        (click)="selectButtonGroup('ALL')"
+        class="btn btn-default">All</button>
+      <button
+        (click)="selectButtonGroup('NONE')"
+        class="btn btn-default">None</button>
+      <button
+        (click)="selectButtonGroup('LGDS')"
+        class="btn btn-default">LGDs</button>
+      <button
+        (click)="selectButtonGroup('NONSYNONYMOUS')"
+        class="btn btn-default">Nonsynonymous</button>
+      <button
+        (click)="selectButtonGroup('UTRS')"
+        class="btn btn-default">UTRs</button>
     </div>
+    <div
+      *ngFor="let column of columnGroups"
+      class="effectypes-col">
+      <em>{{column.name}}</em>
+
+      <div
+        *ngFor="let effect of effectTypesColumns.get(column.id)"
+        class="checkbox">
+        <label> <input type="checkbox"> {{effect}}
+        </label>
+      </div>
+    </div>
+  </div>
 </div>

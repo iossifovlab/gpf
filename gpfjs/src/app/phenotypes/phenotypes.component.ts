@@ -14,15 +14,24 @@ export class PhenotypesComponent implements OnInit {
 
   constructor(
     private datasetService: DatasetService
-  ) { }
+  ) {
+    this.phenotypes = [{
+      id: 'autism',
+      description: 'autism',
+      color: '#e35252'
+    },
+    {
+      id: 'unaffected',
+      description: 'unaffected',
+      color: '#ffffff'
+    }
+    ];
+
+  }
 
   ngOnInit() {
-    this.datasetService.getPhenotypes(this.datasetService.selectedDatasetId)
-      .then(pheno => {
-        this.phenotypes = pheno;
-        this.phenotypesCheck = new Array<boolean>(this.phenotypes.length);
-        this.selectAll();
-      });
+    this.phenotypesCheck = new Array<boolean>(this.phenotypes.length);
+    this.selectAll();
   }
 
 
