@@ -19,6 +19,7 @@ import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype
 import { QueryService } from './query/query.service';
 
 import { GpfTableModule } from './table/table.module';
+import { DatasetComponent } from './dataset/dataset.component';
 
 @NgModule({
   declarations: [
@@ -28,6 +29,7 @@ import { GpfTableModule } from './table/table.module';
     VarianttypesComponent,
     EffecttypesComponent,
     GenotypePreviewTableComponent,
+    DatasetComponent,
   ],
   imports: [
     BrowserModule,

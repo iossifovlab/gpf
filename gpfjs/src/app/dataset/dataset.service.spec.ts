@@ -114,11 +114,11 @@ const mockDatasetResponse: Dataset = {
 export class DatasetServiceStub extends DatasetService {
   selectedDatasetId: string;
   getDatasets(): Observable<IdName[]> {
-    return Observable.create(mockDatasetsResponse);
+    return Observable.of(mockDatasetsResponse);
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
-    return Observable.create(mockDatasetResponse);
+    return Observable.of(mockDatasetResponse);
   }
 
 }
@@ -192,7 +192,6 @@ describe('DatasetService', () => {
         });
 
       service.getDataset('VIP').subscribe(res => {
-        console.log('res: ', res);
         expect(res.id).toEqual('VIP');
         expect(res.pedigreeSelectors.length).toBe(2);
       });

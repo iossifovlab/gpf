@@ -26,7 +26,8 @@ export class DatasetService {
   ) { }
 
   getDatasets(): Observable<IdName[]> {
-    return this.http.get(this.datasetUrl)
+    return this.http
+      .get(this.datasetUrl)
       .map(res => {
         return IdName.fromJsonArray(res.json().data);
       });
@@ -35,7 +36,8 @@ export class DatasetService {
   getDataset(datasetId: string): Observable<Dataset> {
     let url = `{datasetUrl}/{datasetId}`;
 
-    return this.http.get(url)
+    return this.http
+      .get(url)
       .map(res => {
         return Dataset.fromJson(res.json().data);
       });
