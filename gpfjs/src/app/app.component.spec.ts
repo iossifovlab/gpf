@@ -5,7 +5,6 @@ import { AppComponent } from './app.component';
 import { PhenotypesComponent } from './phenotypes/phenotypes.component';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
-import { StudytypesComponent } from './studytypes/studytypes.component';
 import { DatasetService } from './dataset/dataset.service';
 import { DatasetServiceStub } from './dataset/dataset.service.spec';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
@@ -18,7 +17,6 @@ describe('AppComponent', () => {
         PhenotypesComponent,
         GenderComponent,
         VarianttypesComponent,
-        StudytypesComponent,
         EffecttypesComponent,
       ],
       imports: [

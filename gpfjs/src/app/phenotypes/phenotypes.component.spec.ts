@@ -44,10 +44,6 @@ describe('PhenotypesComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have undefined phenotypes before OnInit', () => {
-    expect(component.phenotypes).toBe(undefined);
-  });
-
   it('should have 2 phenotypes after OnInit', async(() => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {

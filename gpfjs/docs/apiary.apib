@@ -11,27 +11,22 @@ Returns all supported datasets
 
 + Response 200 (application/json)
 
-          {
-            "data":
-                [
-                  {
-                    "id": "we",
-                    "description": "Sequencing de Novo Dataset"
-                  },
-                  {
-                    "id": "ssc",
-                    "description": "SSC Dataset"
-                  },
-                  {
-                    "id": "vip",
-                    "description": "VIP Dataset"
-                  },
-                  {
-                    "id": "agre",
-                    "description": "AGRE Dataset"
-                  }
-                ]
-          }
+        {
+          "data": [
+            {
+              "id": "SD",
+              "name": "Sequencing de Novo Dataset"
+            },
+            {
+              "id": "SSC",
+              "name": "SSC Dataset"
+            },
+            {
+              "id": "VIP",
+              "name": "VIP Dataset"
+            }
+          ]
+        }
 ### Dateset Details [/dataset/{dataset_id}]
 #### Get Dataset Details [GET]
 Returns dataset details given `dataset_id`.
@@ -40,18 +35,85 @@ Returns dataset details given `dataset_id`.
 
 + Response 200 (application/json)
 
-          {
-            "data":
-              {
-                id: 'ssc',
-                description: 'SSC Dataset',
-                hasDenovo: true,
-                hasTransmitted: true,
-                hasCnv: true,
-                hasPhenoDb: true
-              }
-          }
+        {
+            "data": {
+                "id": "VIP",
+                "name": "VIP Dataset",
+                "studies": "VIP-JHC",
+                "studyTypes": "WE",
+                "phenoDB": "vip",
 
+                "phenotypeGenotypeTool": true,
+                "enrichmentTool": false,
+                "phenotypeBrowser": true,
+
+                "genotypeBrowser": {
+                    "hasDenovo": true,
+                    "hasCNV": false,
+                    "hasAdvancedFamilyFilters": false,
+                    "hasTransmitted": true,
+                    "hasPedigreeSelector": true,
+                    "hasStudyTypes": false,
+                    "mainForm": "vip"
+                },
+                "pedigreeSelectors": [
+                    {
+                        "id": "16pstatus",
+                        "name": "16p Status",
+                        "source": "phenoDB.pheno_common.genetic_status_16p",
+                        "defaultValue": {
+                            "color": "#aaaaaa",
+                            "id": "unknown",
+                            "name": "unknown"
+                        },
+                        "domain": [
+                            {
+                                "color": "#e35252",
+                                "id": "deletion",
+                                "name": "deletion"
+                            },
+                            {
+                                "color": "#b8008a",
+                                "id": "duplication",
+                                "name": "duplication"
+                            },
+                            {
+                                "color": "#e3d252",
+                                "id": "triplication",
+                                "name": "triplication"
+                            },
+                            {
+                                "color": "#ffffff",
+                                "id": "negative",
+                                "name": "negative"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "phenotypes",
+                        "name": "Phenotypes",
+                        "source": "legacy",
+                        "defaultValue": {
+                            "color": "#aaaaaa",
+                            "id": "unknown",
+                            "name": "unknown"
+                        },
+                        "domain": [
+                            {
+                                "color": "#e35252",
+                                "id": "autism",
+                                "name": "autism"
+                            },
+                            {
+                                "color": "#ffffff",
+                                "id": "unaffected",
+                                "name": "unaffected"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
 
 + Response 404 (application/json)
 
@@ -143,129 +205,6 @@ Returns all study types in given dataset.
 
 
 
-### Effect Types Groups [/effecttype/group]
-
-#### Get Available Effect Types Groups [GET]
-Returns all availble effect types groups
-
-+ Response 200 (application/json)
-
-          {
-            "data":
-              [
-                {
-                  "id": "coding",
-                  "description": "Coding"
-                },
-                {
-                  "id": "noncoding",
-                  "description": "Noncoding"
-                },
-                {
-                  "id": "cnv",
-                  "description": "CNV"
-                },
-                {
-                  "id": "lgds",
-                  "description": "LGDs"
-                },
-                {
-                  "id": "nonsynonymous",
-                  "description": "Nonsynonymous"
-                },
-                {
-                  "id": "all",
-                  "description": "All"
-                },
-                {
-                  "id": "none",
-                  "description": "None"
-                }
-              ]
-          }
-
-
-### Effect Types in a Group [/effecttypes/group/{group_id}]
-
-#### Get Available Effect Types Groups [GET]
-Returns all availble effect types in a given groups
-+ Parameters
-  + group_id (string) - ID of an effect types group.
-
-+ Response 200 (application/json)
-  + Body
-
-            {
-              "data":
-                [
-                  "Nonsense",
-                  "Frame-shift",
-                  "Splice-site",
-                  "Missense",
-                  "Non-frame-shift",
-                  "noStart",
-                  "noEnd"
-                ]
-            }
-
-
-### Effect Types Groups for given Dataset [/effecttypes/dataset/{dataset_id}/columns]
-
-#### Get Effect Types Groups for Given Dataset [GET]
-Returns all effect types groups for givent dataset.
-+ Parameters
-  + dataset_id (string) - ID of a dataset
-
-+ Response 200 (application/json)
-
-          {
-            "data":
-            [
-              {
-                "id":"coding",
-                "description": "Coding"
-              },
-              {
-                "id": "noncoding",
-                "description": "Noncoding"
-              }
-            ]
-          }
-
-### Effect Types Groups Buttons for Given Dataset [/effecttypes/dataset/{dataset_id}/buttons]
-
-#### Get Effect Types Groups for given Dataset [GET]
-Returns all effect types groups for givent dataset.
-+ Parameters
-  + dataset_id (string) - ID of a dataset
-
-+ Response 200 (application/json)
-
-          {
-            "data":
-            [
-              {
-                "id": "all",
-                "description": "All"
-              },
-              {
-                "id": "none",
-                "description": "None"
-              },
-              {
-                "id": "lgds",
-                "description": "LGDs"
-              },
-              {
-                "id": "nonsynonymous",
-                "description": "Nonsynonymous"
-              },
-              {
-                "id": "utrs",
-                "description": "UTRs"
-              }
-            ]
-          }
 
 ### Get Whole Genome data for Given Filters [/we_query_variants_preview]
 
@@ -1367,6 +1306,3 @@ Returns all effect types groups for givent dataset.
                 "phenoInChS"
              ]
           }
-
-
-
