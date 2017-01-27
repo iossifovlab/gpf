@@ -42,10 +42,6 @@ export class GpfTableHeader {
 
   constructor(private viewContainer: ViewContainerRef) { 
   }
-  
-  sortingColumnClicked(field: string): void {
-    this.columnInfo.table.sort(field);
-  }
 }
 
 
@@ -61,10 +57,6 @@ export class GpfTableCellContentDirective {
   constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef) {    
     this.templateRef = templateRef;
     this.viewContainer = viewContainer;
-  }
-
-  ngOnInit() {
-
   }
 }
 
@@ -87,7 +79,7 @@ export class GpfTableCellHeaderDirective {
   selector: 'gpf-table-subcolumn',
   template: '',
 })
-export class GpfTableSubcolumnComponent implements OnInit {
+export class GpfTableSubcolumnComponent {
   @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
   @ContentChildren(GpfTableCellHeaderDirective) headerChildren: QueryList<GpfTableCellHeaderDirective>;
   @Input() field: string;
@@ -99,17 +91,11 @@ export class GpfTableSubcolumnComponent implements OnInit {
   constructor(protected viewContainer: ViewContainerRef) { 
   }
 
-  ngOnInit() {
-   
-  }
-  
   ngAfterContentInit() {
     if (this.contentChildren.first) this.contentTemplateRef = this.contentChildren.first.templateRef;
     if (this.headerChildren.first) this.headerTemplateRef = this.headerChildren.first.templateRef;
   }
   
-  ngAfterViewInit() {
-  }
 }
 
 
@@ -122,7 +108,6 @@ export class GpfTableSubcolumnComponent implements OnInit {
 })
 export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
   @ContentChildren(GpfTableSubcolumnComponent) subcolumnsChildren: QueryList<GpfTableSubcolumnComponent>;
-  table: GpfTableComponent;
 
   constructor(viewContainer: ViewContainerRef) { 
     super(viewContainer);
@@ -137,22 +122,13 @@ export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.css']
 })
-export class GpfTableComponent implements OnInit {
+export class GpfTableComponent {
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
   @Input() dataSource: any;
 
   constructor(private viewContainer: ViewContainerRef) { 
   }
 
-  ngOnInit() {
-
-  }
-  
-  ngAfterContentInit() {
-    this.columnsChildren.forEach((column)=> {
-      column.table = this;
-    });
-  }
   
   sort(field: string) {
     this.dataSource.sort((a, b) => {
