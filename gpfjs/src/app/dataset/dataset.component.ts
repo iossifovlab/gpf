@@ -27,11 +27,7 @@ export class DatasetComponent implements OnInit {
           .getDataset(this.datasets[0].id)
           .subscribe(dataset => {
             this.selectedDataset = dataset;
-            console.log('selected dataset is: ', this.selectedDataset.id);
           });
-      },
-      (err) => {
-        alert(`Error receiving datasets: ${err}`);
       });
   }
 

@@ -6,6 +6,7 @@ import { PhenotypesComponent } from './phenotypes/phenotypes.component';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { DatasetService } from './dataset/dataset.service';
+import { DatasetComponent } from './dataset/dataset.component';
 import { DatasetServiceStub } from './dataset/dataset.service.spec';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
 
@@ -14,6 +15,7 @@ describe('AppComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         AppComponent,
+        DatasetComponent,
         PhenotypesComponent,
         GenderComponent,
         VarianttypesComponent,

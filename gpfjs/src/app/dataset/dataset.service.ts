@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { Headers, Http, Response } from '@angular/http';
 import { Observable } from 'rxjs';
 
-import 'rxjs/add/operator/toPromise';
-
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
 
@@ -11,6 +9,7 @@ import { Phenotype } from '../phenotypes/phenotype';
 import { Dataset } from '../dataset/dataset';
 import { ConfigService } from '../config/config.service';
 
+import 'rxjs/add/operator/map';
 
 @Injectable()
 export class DatasetService {
@@ -26,6 +25,7 @@ export class DatasetService {
   ) { }
 
   getDatasets(): Observable<IdName[]> {
+    console.log('getting datsets from: ', this.datasetUrl);
     return this.http
       .get(this.datasetUrl)
       .map(res => {
@@ -34,11 +34,13 @@ export class DatasetService {
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
-    let url = `{datasetUrl}/{datasetId}`;
+    let url = `${this.datasetUrl}/${datasetId}`;
+    console.log('getting a dataset from: ', url);
 
     return this.http
       .get(url)
       .map(res => {
+        console.log('datasets response: ', res);
         return Dataset.fromJson(res.json().data);
       });
   }
