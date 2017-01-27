@@ -33,14 +33,14 @@
                 <gpf-table-subcolumn header="gene" field="genes"></gpf-table-subcolumn>
             </gpf-table-column>
             <gpf-table-column header="allele freq">
-                <gpf-table-subcolumn header="SSC" field="SSCfreqPercentage">
-                    <span *gpf-table-cell-content="let data">{{data.SSCfreqPercentage || "&nbsp;"}}</span>
+                <gpf-table-subcolumn header="SSC" field="SSCfreq">
+                    <span *gpf-table-cell-content="let data">{{data.SSCfreq === null ? "&nbsp;" : "SSC " + data.SSCfreq + "%"}}</span>
                 </gpf-table-subcolumn>
-                <gpf-table-subcolumn header="EVS" field="EVSfreqPercentage">
-                    <span *gpf-table-cell-content="let data">{{data.EVSfreqPercentage || "&nbsp;"}}</span>
+                <gpf-table-subcolumn header="EVS" field="EVSfreq">
+                    <span *gpf-table-cell-content="let data">{{data.EVSfreq === null ? "&nbsp;" : "EVS " + data.EVSfreq + "%"}}</span>
                 </gpf-table-subcolumn>
-                <gpf-table-subcolumn header="E65" field="E65freqPercentage">
-                    <span *gpf-table-cell-content="let data">{{data.E65freqPercentage || "&nbsp;"}}</span>
+                <gpf-table-subcolumn header="E65" field="E65freq">
+                    <span *gpf-table-cell-content="let data">{{data.E65freq === null ? "&nbsp;"  : "E65 " +  data.E65freq + "%"}}</span>
                 </gpf-table-subcolumn>
             </gpf-table-column>
             <gpf-table-column header="races">

@@ -18,9 +18,9 @@ export class GenotypePreview {
   effectDetails: string;
   alternativeAlleleFrequency: string;
   alternativeAllelesCount: string;
-  SSCfreq: string;
-  EVSfreq: string;
-  E65freq: string;
+  SSCfreq: string | null;
+  EVSfreq: string | null;
+  E65freq: string | null;
   genotypedParentsCount: string;
   motherRace: string;
   fatherRace: string;
@@ -46,20 +46,32 @@ export class GenotypePreview {
     this.motherRace = result[0];
     this.fatherRace = result[1];
   }
-  
-  get SSCfreqPercentage():string {
-    if (!this.SSCfreq || this.SSCfreq == "nan") return null;
-    return "SSC " + this.SSCfreq + " %";
+    
+  set SSCfreqWithoutNan(SSCfreqString: string) {
+    if (SSCfreqString == "nan" || SSCfreqString == "") {
+      this.SSCfreq = null;
+    }
+    else {
+      this.SSCfreq = SSCfreqString;
+    }
   }
   
-  get EVSfreqPercentage():string {
-    if (!this.EVSfreq || this.EVSfreq == "nan") return null;
-    return "EVS " + this.EVSfreq + " %";
+  set EVSfreqWithoutNan(EVSfreqString: string) {
+    if (EVSfreqString == "nan" || EVSfreqString == "") {
+      this.EVSfreq = null;
+    }
+    else {
+      this.EVSfreq = EVSfreqString;
+    }
   }
   
-  get E65freqPercentage():string {
-    if (!this.E65freq || this.E65freq == "nan") return null;
-    return "E65 " + this.E65freq + " %";
+  set E65freqWithoutNan(E65freqString: string) {
+    if (E65freqString == "nan" || E65freqString == "") {
+      this.E65freq = null;
+    }
+    else {
+      this.E65freq = E65freqString;
+    }
   }
 }
 
