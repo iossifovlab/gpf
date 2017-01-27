@@ -130,10 +130,21 @@ export class GpfTableComponent {
   constructor(private viewContainer: ViewContainerRef, private ref: ChangeDetectorRef) { 
   }
 
-  
+ 
   sort(field: string) {
     this.dataSource.sort((a, b) => {
-      return a[field].localeCompare(b[field]);
+      let leftVal = a[field];
+      let rightVal = b[field];
+    
+      if (leftVal == null && rightVal == null) return 0;
+      if (leftVal == null) return -1;
+      if (rightVal == null) return 1;
+      
+      if (!isNaN(leftVal) && !isNaN(rightVal)) {
+        return +leftVal - +rightVal;
+      }
+      
+      return leftVal.localeCompare(rightVal);
     });
     console.log(this.dataSource);
   }
