@@ -1,6 +1,6 @@
 /* tslint:disable:no-unused-variable */
-
-import { TestBed, async, inject } from '@angular/core/testing';
+import { Injector } from '@angular/core';
+import { TestBed, getTestBed, async, inject, fakeAsync, tick } from '@angular/core/testing';
 import { DatasetService } from './dataset.service';
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
@@ -9,11 +9,11 @@ import { Dataset } from '../dataset/dataset';
 import { ConfigService } from '../config/config.service';
 
 import {
-  BaseRequestOptions, Http, HttpModule,
+  BaseRequestOptions, Http, HttpModule, XHRBackend,
   Response, ResponseOptions
 } from '@angular/http';
 
-import { MockBackend } from '@angular/http/testing';
+import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
 import { Observable } from 'rxjs';
 
 const mockDatasetsResponse: IdName[] =
@@ -23,11 +23,11 @@ const mockDatasetsResponse: IdName[] =
       name: 'Sequencing de Novo Dataset'
     },
     {
-      id: 'ssc',
+      id: 'SSC',
       name: 'SSC Description'
     },
     {
-      id: 'vip',
+      id: 'VIP',
       name: 'VIP Dataset'
     }
   ];
@@ -125,32 +125,112 @@ export class DatasetServiceStub extends DatasetService {
 
 
 describe('DatasetService', () => {
-  beforeEach(() => {
+  let mockBackend: MockBackend;
+
+  beforeEach(async(() => {
     TestBed.configureTestingModule({
       providers: [
         ConfigService,
         DatasetService,
+
         MockBackend,
         BaseRequestOptions,
         {
           provide: Http,
           deps: [MockBackend, BaseRequestOptions],
-          useFactory: (backend, options) => { return new Http(backend, options); }
-        }]
-    });
-  });
+          useFactory:
+          (backend: XHRBackend, defaultOptions: BaseRequestOptions) => {
+            return new Http(backend, defaultOptions);
+          }
+        }
+      ],
+      imports: [
+        HttpModule,
+      ],
 
-  it('should ...', inject([DatasetService], (service: DatasetService) => {
-    expect(service).toBeTruthy();
+    });
+    console.log('first before each called...');
+    getTestBed().compileComponents();
+    mockBackend = getTestBed().get(MockBackend);
   }));
 
-  it('should construct dataset service', async(inject(
-    [DatasetService, MockBackend], (service, mockBackend) => {
+  it('should parse correct response',
+    async(inject([DatasetService], (service) => {
+      console.log('test started...');
 
-      expect(service).toBeDefined();
-    })));
+      mockBackend.connections.subscribe(
+        (conn: MockConnection) => {
+          console.log('connection url', conn.request.url);
+          conn.mockRespond(
+            new Response(
+              new ResponseOptions(
+                {
+                  body: JSON.stringify({ data: mockDatasetsResponse })
+                }
+              )));
+          console.log('mock response setup...');
+        });
 
-
+      service.getDatasets().subscribe(res => {
+        expect(res.length).toBe(3);
+        expect(res[0].id).toEqual('SD');
+        expect(res[1].id).toEqual('SSC');
+        expect(res[2].id).toEqual('VIP');
+      });
+    })
+    ));
 
 
 });
+
+// describe('DatasetService', () => {
+//  beforeEach(() => {
+//    TestBed.configureTestingModule({
+//      providers: [
+//        ConfigService,
+//        DatasetService,
+//        MockBackend,
+//        BaseRequestOptions,
+//        {
+//          provide: Http,
+//          deps: [MockBackend, BaseRequestOptions],
+//          useFactory: (backend, options) => { return new Http(backend, options); }
+//        }]
+//    });
+//  });
+//  it('should ...', inject([DatasetService], (service: DatasetService) => {
+//    expect(service).toBeTruthy();
+//  }));
+//
+//  it('should construct dataset service', async(inject(
+//    [DatasetService, MockBackend], (service, mockBackend) => {
+//
+//      expect(service).toBeDefined();
+//    }))
+//  );
+//
+//
+//
+//  describe('getDatasets', () => {
+//    it('should parse correct response', async(inject(
+//      [DatasetService, MockBackend], (service, mockBackend) => {
+//        console.log('async inject test started...');
+//
+//        mockBackend.connections.subscribe(conn => {
+//          console.log('mocked response setup');
+//          conn.mockRespond(
+//            new Response(new ResponseOptions(
+//              { body: JSON.stringify({ data: mockDatasetsResponse }) }
+//            )));
+//        });
+//
+//        const result: Observable<IdName[]> = service.getDatasets();
+//
+//        result.subscribe(res => {
+//          expect(res.length).toEqual(2);
+//        });
+//      }))
+//    );
+//
+//  });
+// });

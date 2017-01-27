@@ -26,7 +26,10 @@ export class DatasetService {
   ) { }
 
   getDatasets(): Observable<IdName[]> {
-    return Observable.from([]);
+    return this.http.get(this.datasetUrl)
+      .map(res => {
+        return IdName.asIdNameArray(res.json().data);
+      });
   }
 
   getDataset(datasetId: string): Observable<Dataset> {

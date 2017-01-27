@@ -14,7 +14,6 @@ import { ConfigService } from './config/config.service';
 import {CustomRequestOptions } from './config/customrequest.options';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
-import { StudytypesComponent } from './studytypes/studytypes.component';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
@@ -27,7 +26,6 @@ import { GpfTableModule } from './table/table.module';
     PhenotypesComponent,
     GenderComponent,
     VarianttypesComponent,
-    StudytypesComponent,
     EffecttypesComponent,
     GenotypePreviewTableComponent,
   ],
