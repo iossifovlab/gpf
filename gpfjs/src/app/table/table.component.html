@@ -1,12 +1,12 @@
 <div style="display: table; border-collapse: collapse;">
-    <div style="display: table-row; border: 1px solid #000;">
+    <div style="display: table-row;">
         <gpf-table-header *ngFor="let column of columnsChildren"
             [columnInfo]="column"
             (sortingFieldChange)="sort($event);"
             style="vertical-align: middle">
         </gpf-table-header>
     </div>
-    <div style="display: table-row; border: 1px solid #000;" *ngFor="let data of dataSource">
+    <div style="display: table-row;" *ngFor="let data of dataSource">
         <gpf-table-cell *ngFor="let column of columnsChildren"
             [columnInfo]="column"
             [data]=data
