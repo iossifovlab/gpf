@@ -149,18 +149,15 @@ describe('DatasetService', () => {
       ],
 
     });
-    console.log('first before each called...');
     getTestBed().compileComponents();
     mockBackend = getTestBed().get(MockBackend);
   }));
 
-  it('should parse correct response',
+  it('getDatasets() should parse correct response',
     async(inject([DatasetService], (service) => {
-      console.log('test started...');
 
       mockBackend.connections.subscribe(
         (conn: MockConnection) => {
-          console.log('connection url', conn.request.url);
           conn.mockRespond(
             new Response(
               new ResponseOptions(
@@ -168,7 +165,6 @@ describe('DatasetService', () => {
                   body: JSON.stringify({ data: mockDatasetsResponse })
                 }
               )));
-          console.log('mock response setup...');
         });
 
       service.getDatasets().subscribe(res => {
@@ -178,59 +174,34 @@ describe('DatasetService', () => {
         expect(res[2].id).toEqual('VIP');
       });
     })
-    ));
+    )
+  );
+
+  it('getDataset() should parse correct response',
+    async(inject([DatasetService], (service) => {
+
+      mockBackend.connections.subscribe(
+        (conn: MockConnection) => {
+          conn.mockRespond(
+            new Response(
+              new ResponseOptions(
+                {
+                  body: JSON.stringify({ data: mockDatasetResponse })
+                }
+              )));
+        });
+
+      service.getDataset('VIP').subscribe(res => {
+        console.log('res: ', res);
+        expect(res.id).toEqual('VIP');
+        expect(res.pedigreeSelectors.length).toBe(2);
+      });
+
+    })
+    )
+  );
+
 
 
 });
 
-// describe('DatasetService', () => {
-//  beforeEach(() => {
-//    TestBed.configureTestingModule({
-//      providers: [
-//        ConfigService,
-//        DatasetService,
-//        MockBackend,
-//        BaseRequestOptions,
-//        {
-//          provide: Http,
-//          deps: [MockBackend, BaseRequestOptions],
-//          useFactory: (backend, options) => { return new Http(backend, options); }
-//        }]
-//    });
-//  });
-//  it('should ...', inject([DatasetService], (service: DatasetService) => {
-//    expect(service).toBeTruthy();
-//  }));
-//
-//  it('should construct dataset service', async(inject(
-//    [DatasetService, MockBackend], (service, mockBackend) => {
-//
-//      expect(service).toBeDefined();
-//    }))
-//  );
-//
-//
-//
-//  describe('getDatasets', () => {
-//    it('should parse correct response', async(inject(
-//      [DatasetService, MockBackend], (service, mockBackend) => {
-//        console.log('async inject test started...');
-//
-//        mockBackend.connections.subscribe(conn => {
-//          console.log('mocked response setup');
-//          conn.mockRespond(
-//            new Response(new ResponseOptions(
-//              { body: JSON.stringify({ data: mockDatasetsResponse }) }
-//            )));
-//        });
-//
-//        const result: Observable<IdName[]> = service.getDatasets();
-//
-//        result.subscribe(res => {
-//          expect(res.length).toEqual(2);
-//        });
-//      }))
-//    );
-//
-//  });
-// });

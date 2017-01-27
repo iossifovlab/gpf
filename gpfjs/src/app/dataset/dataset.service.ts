@@ -28,11 +28,16 @@ export class DatasetService {
   getDatasets(): Observable<IdName[]> {
     return this.http.get(this.datasetUrl)
       .map(res => {
-        return IdName.asIdNameArray(res.json().data);
+        return IdName.fromJsonArray(res.json().data);
       });
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
-    return Observable.create(null);
+    let url = `{datasetUrl}/{datasetId}`;
+
+    return this.http.get(url)
+      .map(res => {
+        return Dataset.fromJson(res.json().data);
+      });
   }
 }
