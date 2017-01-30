@@ -1,5 +1,4 @@
 import { ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
-import { GpfComparatorInterface } from './comparator.interface';
 
 // One bright day we should replace this with NgTemplateOutlet
 @Component({
@@ -87,7 +86,7 @@ export class GpfTableCellHeaderDirective {
 }
 
 
-class DefaultComparator implements GpfComparatorInterface {
+class DefaultComparator {
   constructor(private subcolumn: GpfTableSubcolumnComponent) {   
   }
 
@@ -117,7 +116,7 @@ export class GpfTableSubcolumnComponent {
   @ContentChildren(GpfTableCellHeaderDirective) headerChildren: QueryList<GpfTableCellHeaderDirective>;
   @Input() field: string;
   @Input() header: string;
-  @Input() comparator: GpfComparatorInterface = new DefaultComparator(this);
+  @Input() comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
 
   contentTemplateRef: TemplateRef<any>;
   headerTemplateRef: TemplateRef<any>;
@@ -130,14 +129,28 @@ export class GpfTableSubcolumnComponent {
     if (this.headerChildren.first) this.headerTemplateRef = this.headerChildren.first.templateRef;
   }
   
+  defaultComparator(a: any, b: any): number {
+    let leftVal = a[this.field];
+    let rightVal = b[this.field];
+  
+    if (leftVal == null && rightVal == null) return 0;
+    if (leftVal == null) return -1;
+    if (rightVal == null) return 1;
+    
+    if (!isNaN(leftVal) && !isNaN(rightVal)) {
+      return +leftVal - +rightVal;
+    }
+    
+    return leftVal.localeCompare(rightVal);
+  }
+  
   sort(data: any, ascending: boolean) {
-    console.log(this.comparator);
     data.sort((a, b) => {     
       if (ascending) {
-        return this.comparator.compare(a, b);
+        return this.comparator(a, b);
       }
       else {
-        return this.comparator.compare(b, a);       
+        return this.comparator(b, a);       
       }
     });
   }
