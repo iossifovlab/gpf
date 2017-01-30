@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
+import { ViewChild, HostListener, ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
 
 // One bright day we should replace this with NgTemplateOutlet
 @Component({
@@ -185,9 +185,15 @@ class SortInfo {
   styleUrls: ['./table.component.css']
 })
 export class GpfTableComponent {
+  @ViewChild('table') viewChildDiv: any;
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
   @Input() dataSource: any;
   private previousSortingInfo: SortInfo;
+  
+  @HostListener('window:scroll', ['$event']) 
+  onWindowScroll(event) {
+    //no-op, just run change detection
+  }
 
   constructor(private viewContainer: ViewContainerRef, private ref: ChangeDetectorRef) { 
   }
@@ -199,6 +205,10 @@ export class GpfTableComponent {
   
   get sortingInfo(): SortInfo {
     return this.previousSortingInfo;
+  }
+  
+  showFloatingHeader(): boolean {
+    return this.viewChildDiv.nativeElement.getBoundingClientRect().top < 0;
   }
  
 }
