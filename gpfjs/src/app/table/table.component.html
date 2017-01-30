@@ -2,7 +2,7 @@
     <div style="display: table-row;">
         <gpf-table-header *ngFor="let column of columnsChildren"
             [columnInfo]="column"
-            (sortingFieldChange)="sort($event);"
+            [(sortingInfo)]="sortingInfo"
             style="vertical-align: middle">
         </gpf-table-header>
     </div>

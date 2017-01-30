@@ -12,10 +12,12 @@
     <div style="float: right; clear: right; margin-right: 0px; height: 100%">
         <div style="height: 100%; display: table; ">
             <div *ngFor="let child of columnInfo.subcolumnsChildren" style="display: table-row;">
-                <div style="display: table-cell; vertical-align: middle; cursor: pointer; text-align: right" (click)="sortingFieldChange.emit(child.field)">
+                <div style="display: table-cell; vertical-align: middle; cursor: pointer; text-align: right" (click)="onSortClick(child)">
                     <gpf-custom-template *ngIf="child.headerTemplateRef" [templateRef]=child.headerTemplateRef></gpf-custom-template>
                     <span *ngIf="!child.headerTemplateRef">{{ child.header }}</span>
-                    <img src="bg.gif" style="height: 12px;">
+                    <img *ngIf="sortingInfo?.sortBySubcolumn != child" src="bg.gif" style="height: 12px;">
+                    <img *ngIf="sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc" src="asc.gif" style="height: 12px;">
+                    <img *ngIf="sortingInfo?.sortBySubcolumn == child && !sortingInfo?.sortOrderAsc" src="desc.gif" style="height: 12px;">
                 </div>
             </div>
 

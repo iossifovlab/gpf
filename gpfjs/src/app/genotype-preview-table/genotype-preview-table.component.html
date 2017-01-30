@@ -12,7 +12,7 @@
                 </gpf-table-subcolumn>
             </gpf-table-column>
             <gpf-table-column header="variant">
-                <gpf-table-subcolumn header="loc" field="location">
+                <gpf-table-subcolumn header="loc" field="location" comparator="{{ createLocationComparator() }}">
                     <span *gpf-table-cell-content="let data">
                         <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{data.location}}">{{data.location}}</a>
                     </span>

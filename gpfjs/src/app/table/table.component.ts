@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
-
+import { GpfComparatorInterface } from './comparator.interface';
 
 // One bright day we should replace this with NgTemplateOutlet
 @Component({
@@ -39,9 +39,21 @@ export class GpfTableCell {
 })
 export class GpfTableHeader {
   @Input() columnInfo: GpfTableColumnComponent;
-  @Output() sortingFieldChange = new EventEmitter();
+  @Output() sortingInfoChange = new EventEmitter();
+  @Input() sortingInfo: SortInfo;
 
   constructor(private viewContainer: ViewContainerRef) { 
+  }
+  
+  onSortClick(sortBySubcolumn: GpfTableSubcolumnComponent) {
+    let sortInfo: SortInfo;
+    if (this.sortingInfo && this.sortingInfo.sortBySubcolumn == sortBySubcolumn) {
+      sortInfo = new SortInfo(sortBySubcolumn, !this.sortingInfo.sortOrderAsc);
+    }
+    else {
+      sortInfo = new SortInfo(sortBySubcolumn, true);
+    }
+    this.sortingInfoChange.emit(sortInfo);
   }
 }
 
@@ -75,6 +87,26 @@ export class GpfTableCellHeaderDirective {
 }
 
 
+class DefaultComparator implements GpfComparatorInterface {
+  constructor(private subcolumn: GpfTableSubcolumnComponent) {   
+  }
+
+  compare(a: any, b: any): Number {
+    let leftVal = a[this.subcolumn.field];
+    let rightVal = b[this.subcolumn.field];
+  
+    if (leftVal == null && rightVal == null) return 0;
+    if (leftVal == null) return -1;
+    if (rightVal == null) return 1;
+    
+    if (!isNaN(leftVal) && !isNaN(rightVal)) {
+      return +leftVal - +rightVal;
+    }
+    
+    return leftVal.localeCompare(rightVal);
+  }
+}
+
 
 @Component({
   selector: 'gpf-table-subcolumn',
@@ -85,6 +117,7 @@ export class GpfTableSubcolumnComponent {
   @ContentChildren(GpfTableCellHeaderDirective) headerChildren: QueryList<GpfTableCellHeaderDirective>;
   @Input() field: string;
   @Input() header: string;
+  @Input() comparator: GpfComparatorInterface = new DefaultComparator(this);
 
   contentTemplateRef: TemplateRef<any>;
   headerTemplateRef: TemplateRef<any>;
@@ -95,6 +128,18 @@ export class GpfTableSubcolumnComponent {
   ngAfterContentInit() {
     if (this.contentChildren.first) this.contentTemplateRef = this.contentChildren.first.templateRef;
     if (this.headerChildren.first) this.headerTemplateRef = this.headerChildren.first.templateRef;
+  }
+  
+  sort(data: any, ascending: boolean) {
+    console.log(this.comparator);
+    data.sort((a, b) => {     
+      if (ascending) {
+        return this.comparator.compare(a, b);
+      }
+      else {
+        return this.comparator.compare(b, a);       
+      }
+    });
   }
   
 }
@@ -116,7 +161,10 @@ export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
 
 }
 
-
+class SortInfo {
+  constructor(public sortBySubcolumn: GpfTableSubcolumnComponent, public sortOrderAsc: boolean) { 
+  }
+}
 
 @Component({
   selector: 'gpf-table',
@@ -126,26 +174,18 @@ export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
 export class GpfTableComponent {
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
   @Input() dataSource: any;
+  private previousSortingInfo: SortInfo;
 
   constructor(private viewContainer: ViewContainerRef, private ref: ChangeDetectorRef) { 
   }
 
- 
-  sort(field: string) {
-    this.dataSource.sort((a, b) => {
-      let leftVal = a[field];
-      let rightVal = b[field];
-    
-      if (leftVal == null && rightVal == null) return 0;
-      if (leftVal == null) return -1;
-      if (rightVal == null) return 1;
-      
-      if (!isNaN(leftVal) && !isNaN(rightVal)) {
-        return +leftVal - +rightVal;
-      }
-      
-      return leftVal.localeCompare(rightVal);
-    });
-    console.log(this.dataSource);
+  set sortingInfo(sortingInfo: SortInfo) {
+    this.previousSortingInfo = sortingInfo;
+    sortingInfo.sortBySubcolumn.sort(this.dataSource, sortingInfo.sortOrderAsc);
   }
+  
+  get sortingInfo(): SortInfo {
+    return this.previousSortingInfo;
+  }
+ 
 }
