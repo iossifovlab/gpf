@@ -91,6 +91,10 @@ export class Dataset extends IdName {
     );
   }
 
+  static fromJsonArray(jsonArray: Array<Object>): Array<Dataset> {
+    return jsonArray.map((json) => Dataset.fromJson(json));
+  }
+
 
   constructor(
     readonly id: string,

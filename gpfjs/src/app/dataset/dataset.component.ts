@@ -11,7 +11,7 @@ import { IdName } from '../common/idname';
 })
 export class DatasetComponent implements OnInit {
 
-  datasets: IdName[];
+  datasets: Dataset[];
   selectedDataset: Dataset;
 
   constructor(private datasetService: DatasetService) {
@@ -22,12 +22,8 @@ export class DatasetComponent implements OnInit {
     this.datasetService.getDatasets().subscribe(
       (datasets) => {
         this.datasets = datasets;
-
-        this.datasetService
-          .getDataset(this.datasets[0].id)
-          .subscribe(dataset => {
-            this.selectedDataset = dataset;
-          });
+        this.selectedDataset = datasets[0];
+        console.log(this.selectedDataset);
       });
   }
 

@@ -11,22 +11,89 @@ Returns all supported datasets
 
 + Response 200 (application/json)
 
-        {
-          "data": [
-            {
-              "id": "SD",
-              "name": "Sequencing de Novo Dataset"
-            },
-            {
-              "id": "SSC",
-              "name": "SSC Dataset"
-            },
-            {
-              "id": "VIP",
-              "name": "VIP Dataset"
+          {
+              "data": [
+                {
+                  "id": "VIP",
+                  "name": "VIP Dataset",
+                  "studies": "VIP-JHC",
+                  "studyTypes": "WE",
+                  "phenoDB": "vip",
+
+                  "phenotypeGenotypeTool": true,
+                  "enrichmentTool": false,
+                  "phenotypeBrowser": true,
+
+                  "genotypeBrowser": {
+                      "hasDenovo": true,
+                      "hasCNV": false,
+                      "hasAdvancedFamilyFilters": false,
+                      "hasTransmitted": true,
+                      "hasPedigreeSelector": true,
+                      "hasStudyTypes": false,
+                      "mainForm": "vip"
+                  },
+                  "pedigreeSelectors": [
+                      {
+                          "id": "16pstatus",
+                          "name": "16p Status",
+                          "source": "phenoDB.pheno_common.genetic_status_16p",
+                          "defaultValue": {
+                              "color": "#aaaaaa",
+                              "id": "unknown",
+                              "name": "unknown"
+                          },
+                          "domain": [
+                              {
+                                  "color": "#e35252",
+                                  "id": "deletion",
+                                  "name": "deletion"
+                              },
+                              {
+                                  "color": "#b8008a",
+                                  "id": "duplication",
+                                  "name": "duplication"
+                              },
+                              {
+                                  "color": "#e3d252",
+                                  "id": "triplication",
+                                  "name": "triplication"
+                              },
+                              {
+                                  "color": "#ffffff",
+                                  "id": "negative",
+                                  "name": "negative"
+                              }
+                          ]
+                      },
+                      {
+                          "id": "phenotypes",
+                          "name": "Phenotypes",
+                          "source": "legacy",
+                          "defaultValue": {
+                              "color": "#aaaaaa",
+                              "id": "unknown",
+                              "name": "unknown"
+                          },
+                          "domain": [
+                              {
+                                  "color": "#e35252",
+                                  "id": "autism",
+                                  "name": "autism"
+                              },
+                              {
+                                  "color": "#ffffff",
+                                  "id": "unaffected",
+                                  "name": "unaffected"
+                              }
+                          ]
+                      }
+                  ]
+                }
+              ]
             }
-          ]
-        }
+
+
 ### Dateset Details [/dataset/{dataset_id}]
 #### Get Dataset Details [GET]
 Returns dataset details given `dataset_id`.
@@ -36,7 +103,8 @@ Returns dataset details given `dataset_id`.
 + Response 200 (application/json)
 
         {
-            "data": {
+            "data":
+              {
                 "id": "VIP",
                 "name": "VIP Dataset",
                 "studies": "VIP-JHC",

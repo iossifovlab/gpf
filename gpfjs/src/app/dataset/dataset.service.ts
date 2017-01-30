@@ -18,18 +18,19 @@ export class DatasetService {
   private headers = new Headers({ 'Content-Type': 'application/json' });
 
   selectedDatasetId: string = 'SD';
+  private cachedDatasets: Dataset[];
 
   constructor(
     private http: Http,
     private config: ConfigService
   ) { }
 
-  getDatasets(): Observable<IdName[]> {
+  getDatasets(): Observable<Dataset[]> {
     console.log('getting datsets from: ', this.datasetUrl);
     return this.http
       .get(this.datasetUrl)
       .map(res => {
-        return IdName.fromJsonArray(res.json().data);
+        return Dataset.fromJsonArray(res.json().data);
       });
   }
 
@@ -44,4 +45,5 @@ export class DatasetService {
         return Dataset.fromJson(res.json().data);
       });
   }
+
 }
