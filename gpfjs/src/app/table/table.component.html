@@ -1,15 +1,15 @@
 <div style="display: table; border-collapse: collapse;">
-    <div style="display: table-row; border: 1px solid #000;">
-        <gpf-table-header *ngFor="let column of columnsChildren" 
-            [subcolumnsChildren]="column.subcolumnsChildren" 
-            [headerTemplateRef]="column.headerChildren?.first?.templateRef"
+    <div style="display: table-row;">
+        <gpf-table-header *ngFor="let column of columnsChildren"
+            [columnInfo]="column"
+            [(sortingInfo)]="sortingInfo"
             style="vertical-align: middle">
         </gpf-table-header>
     </div>
-    <div style="display: table-row; border: 1px solid #000;" *ngFor="let data of dataSource">
-        <gpf-table-cell *ngFor="let column of columnsChildren" 
-            [subcolumnsChildren]="column.subcolumnsChildren" 
-            [data]=data 
+    <div style="display: table-row;" *ngFor="let data of dataSource">
+        <gpf-table-cell *ngFor="let column of columnsChildren"
+            [columnInfo]="column"
+            [data]=data
             style="vertical-align: middle">
         </gpf-table-cell>
     </div>

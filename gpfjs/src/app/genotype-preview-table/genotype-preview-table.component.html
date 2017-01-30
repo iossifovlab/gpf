@@ -3,91 +3,53 @@
     <div class="card-block" *ngIf="genotypePreviewsArray" style="text-align: center">
         <p><strong>{{genotypePreviewsArray.total}} </strong></p>
         <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
-            <gpf-table-column>
-                <span *gpf-table-cell-header>family</span>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>id</span>
-                    <span *gpf-table-cell-content="let data">{{data.familyId}}</span>
-                </gpf-table-subcolumn>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>stdy</span>
+            <gpf-table-column header="family">
+                <gpf-table-subcolumn header="id" field="familyId"></gpf-table-subcolumn>
+                <gpf-table-subcolumn header="stdy" field="study">
                     <span *gpf-table-cell-content="let data">
                         <a target="_blank" href="">{{data.study}}</a>
                     </span>
                 </gpf-table-subcolumn>
             </gpf-table-column>
-            <gpf-table-column>
-                <span *gpf-table-cell-header>variant</span>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>loc</span>
+            <gpf-table-column header="variant">
+                <gpf-table-subcolumn header="loc" field="location" comparator="{{ createLocationComparator() }}">
                     <span *gpf-table-cell-content="let data">
                         <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{data.location}}">{{data.location}}</a>
                     </span>
                 </gpf-table-subcolumn>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>var</span>
-                    <span *gpf-table-cell-content="let data">{{data.variant}}</span>
-                </gpf-table-subcolumn>
+                <gpf-table-subcolumn header="var" field="variant"></gpf-table-subcolumn>
             </gpf-table-column>
-            <gpf-table-column>
-                <span *gpf-table-cell-header>genotype</span>
+            <gpf-table-column header="genotype">
                 <span *gpf-table-cell-content="let data">{{data.pedigree}}</span>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>ch</span>
-                    <span *gpf-table-cell-content="let data"></span>
+                <gpf-table-subcolumn header="ch" field="ch">
+                    <span *gpf-table-cell-content=""></span>
                 </gpf-table-subcolumn>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>par</span>
-                    <span *gpf-table-cell-content="let data"></span>
+                <gpf-table-subcolumn header="par" field="par">
+                    <span *gpf-table-cell-content=""></span>
                 </gpf-table-subcolumn>
             </gpf-table-column>
-            <gpf-table-column>
-                <span *gpf-table-cell-header>effect</span>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>type</span>
-                    <span *gpf-table-cell-content="let data">{{data.worstEffectType}}</span>
+            <gpf-table-column header="effect">
+                <gpf-table-subcolumn header="type" field="worstEffectType"></gpf-table-subcolumn>
+                <gpf-table-subcolumn header="gene" field="genes"></gpf-table-subcolumn>
+            </gpf-table-column>
+            <gpf-table-column header="allele freq">
+                <gpf-table-subcolumn header="SSC" field="SSCfreq">
+                    <span *gpf-table-cell-content="let data">{{data.SSCfreq === null ? "&nbsp;" : "SSC " + data.SSCfreq + "%"}}</span>
                 </gpf-table-subcolumn>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>gene</span>
-                    <span *gpf-table-cell-content="let data">{{data.genes}}</span>
+                <gpf-table-subcolumn header="EVS" field="EVSfreq">
+                    <span *gpf-table-cell-content="let data">{{data.EVSfreq === null ? "&nbsp;" : "EVS " + data.EVSfreq + "%"}}</span>
+                </gpf-table-subcolumn>
+                <gpf-table-subcolumn header="E65" field="E65freq">
+                    <span *gpf-table-cell-content="let data">{{data.E65freq === null ? "&nbsp;"  : "E65 " +  data.E65freq + "%"}}</span>
                 </gpf-table-subcolumn>
             </gpf-table-column>
-            <gpf-table-column>
-            <span *gpf-table-cell-header>allele freq</span>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>SSC</span>
-                    <span *gpf-table-cell-content="let data">{{data.SSCfreqPercentage || "&nbsp;"}}</span>
-                </gpf-table-subcolumn>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>EVS</span>
-                    <span *gpf-table-cell-content="let data">{{data.EVSfreqPercentage || "&nbsp;"}}</span>
-                </gpf-table-subcolumn>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>E65</span>
-                    <span *gpf-table-cell-content="let data">{{data.E65freqPercentage || "&nbsp;"}}</span>
-                </gpf-table-subcolumn>
+            <gpf-table-column header="races">
+                <gpf-table-subcolumn header="mom" field="motherRace"></gpf-table-subcolumn>
+                <gpf-table-subcolumn header="dad" field="fatherRace"></gpf-table-subcolumn>
             </gpf-table-column>
-            <gpf-table-column>
-            <span *gpf-table-cell-header>races</span>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>mom</span>
-                    <span *gpf-table-cell-content="let data">{{data.motherRace}}</span>
-                </gpf-table-subcolumn>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>dad</span>
-                    <span *gpf-table-cell-content="let data">{{data.fatherRace}}</span>
-                </gpf-table-subcolumn>
-            </gpf-table-column>
-            <gpf-table-column>
-            <span *gpf-table-cell-header>Proband IQ</span>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>vIQ</span>
-                    <span *gpf-table-cell-content="let data">{{data.probandVerbalIQ}}</span>
-                </gpf-table-subcolumn>
-                <gpf-table-subcolumn>
-                    <span *gpf-table-cell-header>NvIQ</span>
-                    <span *gpf-table-cell-content="let data">{{data.probandNonVerbalIQ}}</span>
-                </gpf-table-subcolumn>
+            <gpf-table-column header="Proband IQ">
+                <gpf-table-subcolumn header="vIQ" field="probandVerbalIQ"></gpf-table-subcolumn>
+                <gpf-table-subcolumn header="NvIQ" field="probandNonVerbalIQ"></gpf-table-subcolumn>
             </gpf-table-column>
         </gpf-table>
     </div>
