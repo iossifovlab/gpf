@@ -1,6 +1,6 @@
 /* tslint:disable:no-unused-variable */
-
-import { TestBed, async, inject } from '@angular/core/testing';
+import { Injector } from '@angular/core';
+import { TestBed, getTestBed, async, inject, fakeAsync, tick } from '@angular/core/testing';
 import { DatasetService } from './dataset.service';
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
@@ -9,11 +9,11 @@ import { Dataset } from '../dataset/dataset';
 import { ConfigService } from '../config/config.service';
 
 import {
-  BaseRequestOptions, Http, HttpModule,
+  BaseRequestOptions, Http, HttpModule, XHRBackend,
   Response, ResponseOptions
 } from '@angular/http';
 
-import { MockBackend } from '@angular/http/testing';
+import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
 import { Observable } from 'rxjs';
 
 const mockDatasetsResponse: IdName[] =
@@ -23,11 +23,11 @@ const mockDatasetsResponse: IdName[] =
       name: 'Sequencing de Novo Dataset'
     },
     {
-      id: 'ssc',
+      id: 'SSC',
       name: 'SSC Description'
     },
     {
-      id: 'vip',
+      id: 'VIP',
       name: 'VIP Dataset'
     }
   ];
@@ -114,43 +114,93 @@ const mockDatasetResponse: Dataset = {
 export class DatasetServiceStub extends DatasetService {
   selectedDatasetId: string;
   getDatasets(): Observable<IdName[]> {
-    return Observable.create(mockDatasetsResponse);
+    return Observable.of(mockDatasetsResponse);
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
-    return Observable.create(mockDatasetResponse);
+    return Observable.of(mockDatasetResponse);
   }
 
 }
 
 
 describe('DatasetService', () => {
-  beforeEach(() => {
+  let mockBackend: MockBackend;
+
+  beforeEach(async(() => {
     TestBed.configureTestingModule({
       providers: [
         ConfigService,
         DatasetService,
+
         MockBackend,
         BaseRequestOptions,
         {
           provide: Http,
           deps: [MockBackend, BaseRequestOptions],
-          useFactory: (backend, options) => { return new Http(backend, options); }
-        }]
-    });
-  });
+          useFactory:
+          (backend: XHRBackend, defaultOptions: BaseRequestOptions) => {
+            return new Http(backend, defaultOptions);
+          }
+        }
+      ],
+      imports: [
+        HttpModule,
+      ],
 
-  it('should ...', inject([DatasetService], (service: DatasetService) => {
-    expect(service).toBeTruthy();
+    });
+    getTestBed().compileComponents();
+    mockBackend = getTestBed().get(MockBackend);
   }));
 
-  it('should construct dataset service', async(inject(
-    [DatasetService, MockBackend], (service, mockBackend) => {
+  it('getDatasets() should parse correct response',
+    async(inject([DatasetService], (service) => {
 
-      expect(service).toBeDefined();
-    })));
+      mockBackend.connections.subscribe(
+        (conn: MockConnection) => {
+          conn.mockRespond(
+            new Response(
+              new ResponseOptions(
+                {
+                  body: JSON.stringify({ data: mockDatasetsResponse })
+                }
+              )));
+        });
 
+      service.getDatasets().subscribe(res => {
+        expect(res.length).toBe(3);
+        expect(res[0].id).toEqual('SD');
+        expect(res[1].id).toEqual('SSC');
+        expect(res[2].id).toEqual('VIP');
+      });
+    })
+    )
+  );
+
+  it('getDataset() should parse correct response',
+    async(inject([DatasetService], (service) => {
+
+      mockBackend.connections.subscribe(
+        (conn: MockConnection) => {
+          conn.mockRespond(
+            new Response(
+              new ResponseOptions(
+                {
+                  body: JSON.stringify({ data: mockDatasetResponse })
+                }
+              )));
+        });
+
+      service.getDataset('VIP').subscribe(res => {
+        expect(res.id).toEqual('VIP');
+        expect(res.pedigreeSelectors.length).toBe(2);
+      });
+
+    })
+    )
+  );
 
 
 
 });
+

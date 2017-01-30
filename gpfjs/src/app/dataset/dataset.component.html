@@ -1,0 +1,53 @@
+
+<div *ngIf="datasets">
+  <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+
+    <div class="btn-group">
+      <div class="dropdown">
+        <button
+          class="btn btn-secondary dropdown-toggle navbar-brand"
+          type="button"
+          id="dropdownMenuButton"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false">{{selectedDataset.name}}</button>
+        <div
+          class="dropdown-menu"
+          aria-labelledby="dropdownMenuButton">
+          <a
+            *ngFor="let dataset of datasets"
+            class="dropdown-item"
+            href="#">{{ dataset.name }}</a>
+        </div>
+      </div>
+    </div>
+
+
+    <div
+      class="collapse navbar-collapse"
+      id="navbarNav">
+      <ul class="navbar-nav">
+        <li *ngIf="selectedDataset.genotypeBrowser" class="nav-item active">
+          <a
+            class="nav-link"
+            href="#">Genotype Browser<span class="sr-only">(current)</span>
+          </a>
+        </li>
+        <li *ngIf="selectedDataset.enrichmentTool" class="nav-item">
+          <a
+            class="nav-link"
+            href="#">Enrichment Tool</a>
+        </li>
+        <li *ngIf="selectedDataset.phenotypeGenotypeTool" class="nav-item">
+          <a
+            class="nav-link"
+            href="#">Phenotype Tool</a></li>
+        <li *ngIf="selectedDataset.phenotypeBrowser" class="nav-item">
+          <a
+            class="nav-link"
+            href="#">Phenotype Browser</a></li>
+      </ul>
+    </div>
+  </nav>
+
+</div>
