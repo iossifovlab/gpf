@@ -87,14 +87,15 @@ class DatasetConfig(object):
         has_transmitted = \
             self._get_boolean(section, 'genotypeBrowser.hasTransmitted')
         has_cnv = self._get_boolean(section, 'genotypeBrowser.hasCNV')
-        study_types = self._get_string(section, 'genotypeBrowser.studyTypes')
-        if study_types:
-            study_types = [st for st in study_types.split(',')]
+        study_types = self._get_boolean(
+            section, 'genotypeBrowser.hasStudyTypes')
 
         advanced_family_filters = \
-            self._get_boolean(section, 'genotypeBrowser.advancedFamilyFilter')
+            self._get_boolean(
+                section, 'genotypeBrowser.hasAdvancedFamilyFilter')
         pedigree_selector = \
-            self._get_boolean(section, 'genotypeBrowser.pedigreeSelector')
+            self._get_boolean(
+                section, 'genotypeBrowser.hasPedigreeSelector')
         return {
             'mainForm': main_form,
             'hasDenovo': has_denovo,
@@ -135,6 +136,9 @@ class DatasetConfig(object):
         name = self.config.get(section, 'name')
 
         studies = self.config.get(section, 'studies')
+        study_types = self._get_string(section, 'studyTypes')
+        if study_types:
+            study_types = [st for st in study_types.split(',')]
 
         pheno_db = self._get_string(section, 'phenoDB')
         enrichment_tool = self._get_boolean(section, 'enrichmentTool')
@@ -148,6 +152,7 @@ class DatasetConfig(object):
             'id': dataset_id,
             'name': name,
             'studies': studies,
+            'studyTypes': study_types,
             'phenoDB': pheno_db,
             'enrichmentTool': enrichment_tool,
             'phenotypeGenotypeTool': pheno_geno_tool,
