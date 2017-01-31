@@ -18,16 +18,18 @@
         (click)="selectButtonGroup('UTRS')"
         class="btn btn-default">UTRs</button>
     </div>
-    <div
-      *ngFor="let column of columnGroups"
-      class="effectypes-col">
-      <em>{{column.name}}</em>
-
+    <div class="row">
       <div
-        *ngFor="let effect of effectTypesColumns.get(column.id)"
-        class="checkbox">
-        <label> <input type="checkbox"> {{effect}}
-        </label>
+        *ngFor="let column of columnGroups"
+        class="effectypes-col col-lg-4">
+        <em>{{column.name}}</em>
+
+        <div
+          *ngFor="let effect of effectTypesColumns.get(column.id)"
+          class="checkbox">
+          <label> <input type="checkbox"> {{effect}}
+          </label>
+        </div>
       </div>
     </div>
   </div>

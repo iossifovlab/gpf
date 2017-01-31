@@ -3,21 +3,21 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
-import { PedigreeSelectorComponent } from './pedigreeselector.component';
+import { GenotypeBlockComponent } from './genotype-block.component';
 
-describe('PedigreeselectorComponent', () => {
-  let component: PedigreeSelectorComponent;
-  let fixture: ComponentFixture<PedigreeSelectorComponent>;
+describe('GenotypeBlockComponent', () => {
+  let component: GenotypeBlockComponent;
+  let fixture: ComponentFixture<GenotypeBlockComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PedigreeSelectorComponent ]
+      declarations: [ GenotypeBlockComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PedigreeSelectorComponent);
+    fixture = TestBed.createComponent(GenotypeBlockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

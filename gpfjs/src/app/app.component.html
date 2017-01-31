@@ -1,27 +1,11 @@
 <div>
   <h3>{{ title }}</h3>
-
   <gpf-dataset></gpf-dataset>
 
-  <div class="row row-eq-height">
-    <div class="col-lg-2">
-      <gpf-pedigreeselector></gpf-pedigreeselector>
-    </div>
-  
-    <div class="col-lg-2">
-      <gpf-phenotypes></gpf-phenotypes>
-    </div>
-    <div class="col-lg-1 panel-row">
-      <gpf-gender></gpf-gender>
-    </div>
-    <div class="col-lg-1 panel-row">
-      <gpf-varianttypes></gpf-varianttypes>
-    </div>
-    <div class="col-lg-3 panel-row">
-      <gpf-effecttypes></gpf-effecttypes>
-    </div>
-  </div>
+  <div class="container">
 
+    <gpf-genotype-block></gpf-genotype-block>
+  </div>
   <!--  
   <div class="">
     <gpf-genotype-preview-table></gpf-genotype-preview-table>

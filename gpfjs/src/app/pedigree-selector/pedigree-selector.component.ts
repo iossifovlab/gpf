@@ -3,9 +3,9 @@ import { DatasetService } from '../dataset/dataset.service';
 import { Dataset, PedigreeSelector } from '../dataset/dataset';
 
 @Component({
-  selector: 'gpf-pedigreeselector',
-  templateUrl: './pedigreeselector.component.html',
-  styleUrls: ['./pedigreeselector.component.css']
+  selector: 'gpf-pedigree-selector',
+  templateUrl: './pedigree-selector.component.html',
+  styleUrls: ['./pedigree-selector.component.css']
 })
 export class PedigreeSelectorComponent implements OnInit {
   selectedDataset: Dataset;

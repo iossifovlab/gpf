@@ -20,7 +20,8 @@ import { QueryService } from './query/query.service';
 
 import { GpfTableModule } from './table/table.module';
 import { DatasetComponent } from './dataset/dataset.component';
-import { PedigreeSelectorComponent } from './pedigreeselector/pedigreeselector.component';
+import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
+import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 
 @NgModule({
   declarations: [
@@ -32,6 +33,7 @@ import { PedigreeSelectorComponent } from './pedigreeselector/pedigreeselector.c
     GenotypePreviewTableComponent,
     DatasetComponent,
     PedigreeSelectorComponent,
+    GenotypeBlockComponent,
   ],
   imports: [
     BrowserModule,
