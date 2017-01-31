@@ -1,0 +1,56 @@
+
+<div
+  *ngIf="pedigreeSelectorSwitch()"
+  class="pedigree-selector-card card">
+
+
+  <div
+    *ngIf="pedigreeSelectorSwitch() == 'single'"
+    class="card-header card-title">{{ selectedPedigree.name }}</div>
+  <div
+    *ngIf="pedigreeSelectorSwitch() == 'multi'"
+    class="card-header card-title">
+    <div class="btn-group">
+      <div class="dropdown">
+        <button
+          class="btn btn-secondary dropdown-toggle"
+          type="button"
+          id="dropdownMenuButton"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false">{{selectedPedigree.name}}</button>
+        <div
+          class="dropdown-menu"
+          aria-labelledby="dropdownMenuButton">
+          <a
+            *ngFor="let pedigree of pedigrees; let i=index"
+            class="dropdown-item"
+            (click)="selectPedigree(i)"
+            href="#">{{ pedigree.name }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-block">
+    <div class="btn-group btn-group-sm">
+      <button
+        (click)="selectAll()"
+        class="btn btn-default">All</button>
+      <button
+        (click)="selectNone()"
+        class="btn btn-default">None</button>
+    </div>
+    <div
+      *ngFor="let selectorValue of selectedPedigree.domain; let i=index"
+      class="checkbox">
+      <label> <input
+        type="checkbox"
+        [(checked)]="pedigreeCheck[i]"> <span
+        class="pedigree-icon"
+        [style.background-color]="selectorValue.color"></span>
+        {{selectorValue.name}}
+      </label>
+    </div>
+  </div>
+</div>

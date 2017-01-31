@@ -20,6 +20,7 @@ import { QueryService } from './query/query.service';
 
 import { GpfTableModule } from './table/table.module';
 import { DatasetComponent } from './dataset/dataset.component';
+import { PedigreeSelectorComponent } from './pedigreeselector/pedigreeselector.component';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { DatasetComponent } from './dataset/dataset.component';
     EffecttypesComponent,
     GenotypePreviewTableComponent,
     DatasetComponent,
+    PedigreeSelectorComponent,
   ],
   imports: [
     BrowserModule,

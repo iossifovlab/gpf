@@ -96,7 +96,6 @@ export class EffecttypesComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.selectedDatasetId = this.datasetService.selectedDatasetId;
     this.selectButtonGroup('LGDS');
   }
 
@@ -143,7 +142,4 @@ export class EffecttypesComponent implements OnInit {
 
   }
 
-  selectEffectType(): void {
-    console.log("select effect type called...");
-  }
 }
