@@ -63,11 +63,8 @@ class DatasetConfig(object):
             if section_id is None:
                 continue
             if section_type == 'dataset':
-                section_name = self.config.get(section, 'name')
-                res.append({
-                    'id': section_id,
-                    'name': section_name
-                })
+                dataset = self.get_dataset(section_id)
+                res.append(dataset)
         return res
 
     def _get_boolean(self, section, option):
@@ -103,9 +100,9 @@ class DatasetConfig(object):
             'hasDenovo': has_denovo,
             'hasTransmitted': has_transmitted,
             'hasCNV': has_cnv,
-            'studyTypes': study_types,
-            'advancedFamilyFilters': advanced_family_filters,
-            'pedigreeSelector': pedigree_selector,
+            'hasStudyTypes': study_types,
+            'hasAdvancedFamilyFilters': advanced_family_filters,
+            'hasPedigreeSelector': pedigree_selector,
         }
 
     def _get_pedigree_selectors(self, section):
