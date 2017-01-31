@@ -1,5 +1,5 @@
-<div style="display: table; border-collapse: collapse;">
-    <div style="display: table-row;">
+<div #table style="display: table; border-collapse: collapse;">
+    <div style="display: table-row;" [style.visibility] = "showFloatingHeader() ? 'hidden' : 'visible'">
         <gpf-table-header *ngFor="let column of columnsChildren"
             [columnInfo]="column"
             [(sortingInfo)]="sortingInfo"
@@ -15,3 +15,17 @@
     </div>
 </div>
 
+<div style="display: table; border-collapse: collapse; position: fixed; top: 0px;  background-color: white;" [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
+    <div style="display: table-row;">
+        <gpf-table-header *ngFor="let column of columnsChildren"
+            [columnInfo]="column"
+            [(sortingInfo)]="sortingInfo"
+            style="vertical-align: middle">
+        </gpf-table-header>
+    </div>
+</div>
+
+
+<div style="position: fixed; bottom: 100px; right: 100px; background-color: white;" [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
+    LEGEND
+</div>
