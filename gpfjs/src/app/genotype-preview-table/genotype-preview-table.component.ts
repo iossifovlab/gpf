@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Input, Component, OnInit } from '@angular/core';
 import { QueryService } from '../query/query.service';
 import { GenotypePreview, GenotypePreviewsArray } from './genotype-preview';
 

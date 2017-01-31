@@ -1,3 +1,11 @@
+export class PedigreeData {
+  level: number;
+  gender: string;
+  color: string;
+  label: string;
+  smallLabel: string;
+}
+
 
 export class GenotypePreview {
   familyId: string;
@@ -28,7 +36,7 @@ export class GenotypePreview {
   probandVerbalIQ: string;
   probandNonVerbalIQ: string;
   validationStatus: string;
-  pedigree: string;
+  pedigree: PedigreeData[][];
   phenoInChS: string;
 
   constructor(

@@ -20,6 +20,7 @@ import { QueryService } from './query/query.service';
 
 import { GpfTableModule } from './table/table.module';
 import { DatasetComponent } from './dataset/dataset.component';
+import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { DatasetComponent } from './dataset/dataset.component';
     FormsModule,
     HttpModule,
     NgbModule,
-    GpfTableModule
+    GpfTableModule,
+    PedigreeChartModule
   ],
   providers: [
     ConfigService,
