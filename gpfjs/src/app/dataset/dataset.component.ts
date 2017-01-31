@@ -27,4 +27,9 @@ export class DatasetComponent implements OnInit {
       });
   }
 
+  selectDataset(index: number): void {
+    if (index >= 0 && index < this.datasets.length) {
+      this.selectedDataset = this.datasets[index];
+    }
+  }
 }
