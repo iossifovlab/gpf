@@ -1,0 +1,13 @@
+<svg:line *ngFor="let line of lines" 
+     [attr.x1]=line.startX
+     [attr.y1]=line.startY
+     [attr.x2]=line.endX
+     [attr.y2]=line.endY
+     stroke="black"
+     stroke-width="1" 
+/> 
+
+<svg:g gpf-pedigree-chart-member
+    *ngFor="let pedigree of pedigreeDataWithLayout" 
+    [attr.transform]="'translate(' +  pedigree.xUpperLeftCorner + ' ' + pedigree.yUpperLeftCorner + ') scale(' + pedigree.scaleFactor + ')'"
+    [pedigreeData]=pedigree.pedigreeData />
