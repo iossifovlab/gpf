@@ -22,6 +22,8 @@ import { GpfTableModule } from './table/table.module';
 import { DatasetComponent } from './dataset/dataset.component';
 import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
+import { GenesBlockComponent } from './genes-block/genes-block.component';
+import { RegionsBlockComponent } from './regions-block/regions-block.component';
 
 @NgModule({
   declarations: [
@@ -34,12 +36,14 @@ import { GenotypeBlockComponent } from './genotype-block/genotype-block.componen
     DatasetComponent,
     PedigreeSelectorComponent,
     GenotypeBlockComponent,
+    GenesBlockComponent,
+    RegionsBlockComponent,
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpModule,
-    NgbModule,
+    NgbModule.forRoot(),
     GpfTableModule
   ],
   providers: [
