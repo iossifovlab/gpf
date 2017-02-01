@@ -22,6 +22,9 @@ import { GpfTableModule } from './table/table.module';
 import { DatasetComponent } from './dataset/dataset.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 
+import { GeneWeightsComponent } from './gene-weights/gene-weights.component';
+import { GeneWeightsService } from './gene-weights/gene-weights.service';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -31,6 +34,7 @@ import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
     EffecttypesComponent,
     GenotypePreviewTableComponent,
     DatasetComponent,
+    GeneWeightsComponent
   ],
   imports: [
     BrowserModule,
@@ -44,9 +48,9 @@ import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
     ConfigService,
     DatasetService,
     QueryService,
-    { provide: RequestOptions, useClass: CustomRequestOptions }
+    { provide: RequestOptions, useClass: CustomRequestOptions },
+    GeneWeightsService
   ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
-
