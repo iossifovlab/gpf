@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, ViewChild } from '@angular/core';
+import { Input, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { GeneWeights } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
 import * as d3 from 'd3';
@@ -127,6 +127,7 @@ class LeftVerticalLine extends VerticalLine {
       .attr("x", -10)
       .attr("y", 15)
       .attr("dy", ".35em")
+      .attr("class", "partitions-text")
       .attr("text-anchor", "end")
     this.updateText();
   }
@@ -145,6 +146,7 @@ class RightVerticalLine extends VerticalLine {
       .attr("x", 10)
       .attr("y", 15)
       .attr("dy", ".35em")
+      .attr("class", "partitions-text")
       .attr("text-anchor", "start")
     this.updateText();
   }
@@ -157,8 +159,10 @@ class RightVerticalLine extends VerticalLine {
 }
 
 @Component({
+  encapsulation: ViewEncapsulation.None,
   selector: 'gpf-gene-weights',
-  templateUrl: './gene-weights.component.html'
+  templateUrl: './gene-weights.component.html',
+  styleUrls: ['./gene-weights.component.css']
 })
 export class GeneWeightsComponent {
   @Input() width: number;
@@ -184,8 +188,8 @@ export class GeneWeightsComponent {
       };
     }
 
-    let width = this.width - this.marginLeft * 2;
-    let height = this.height - this.marginTop * 2 - 100;
+    let width = 450;
+    let height = 50;
     let barWidth = width / geneWeights.bars.length;
     let outerSvg = d3.select(this.histogramContainer.nativeElement)
       .append("svg")
