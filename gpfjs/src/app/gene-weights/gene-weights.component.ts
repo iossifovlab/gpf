@@ -61,6 +61,7 @@ export class GeneWeightsComponent {
     this.geneWeightsService.getGeneWeights().subscribe(
       (geneWeights) => {
         this.geneWeightsArray = geneWeights;
+        this.selectedGeneWeights = geneWeights[0];
       });
   }
 }
