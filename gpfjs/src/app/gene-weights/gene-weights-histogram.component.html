@@ -1,8 +1,0 @@
-<svg [attr.width]="width" [attr.height]="height">
-  <g [attr.transform]="'translate(' + marginLeft +',' + marginTop + ')'">
-    <g #histogramContainer transform="translate(0, 50)"> </g>
-    <g gpf-histogram-range-selector-line [(x)]="rangeStartX" [minX]="minX" [maxX]="rangeEndX" [textOnRight]="false"></g>
-    <g gpf-histogram-range-selector-line [(x)]="rangeEndX" [minX]="rangeStartX" [maxX]="maxX" [textOnRight]="true"></g>
-    <text y=0 [attr.x]="(rangeStartX + rangeEndX) / 2" dy=".35em" text-anchor="middle" class="partitions-text">hello</text>
-  </g>
-</svg>

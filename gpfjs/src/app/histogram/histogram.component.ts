@@ -1,12 +1,12 @@
 import { Input, Component, OnInit, ViewChild, Output, EventEmitter, SimpleChanges } from '@angular/core';
-import { GeneWeights } from './gene-weights';
+import { GeneWeights } from '../gene-weights/gene-weights';
 import * as d3 from 'd3';
 
 @Component({
-  selector: 'gpf-gene-weights-histogram',
-  templateUrl: './gene-weights-histogram.component.html'
+  selector: 'gpf-histogram',
+  templateUrl: './histogram.component.html'
 })
-export class GeneWeightsHistogramComponent  {
+export class HistogramComponent  {
   @Output() rangeStartChange = new EventEmitter();
   @Input() rangeStart: number;
   @Output() rangeEndChange = new EventEmitter();
@@ -17,16 +17,24 @@ export class GeneWeightsHistogramComponent  {
   @Input() marginLeft = 100;
   @Input() marginTop = 30;
   @ViewChild('histogramContainer') histogramContainer: any;
-  @Input()  geneWeights: GeneWeights;
+
+  @Input() domainMin: number;
+  @Input() domainMax: number;
+  @Input() bins: Array<number>;
+  @Input() bars: Array<number>;
+
+  @Input() leftRangeText: string;
+  @Input() centerRangeText: string;
+  @Input() rightRangeText: string;
 
   private xScale: d3.ScaleLinear<number, number>;
 
   private svg: any;
   ngOnChanges(changes: SimpleChanges) {
-    if ("geneWeights" in changes) {
+    if ("domainMin" in changes || "domainMax" in changes || "bins" in changes || "bars" in changes) {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
-      this.redrawHistogram(this.geneWeights);
+      this.redrawHistogram();
     }
 
     if ("rangeStart" in changes || "rangeEnd" in changes) {
@@ -37,27 +45,27 @@ export class GeneWeightsHistogramComponent  {
     }
   }
 
-  redrawHistogram(geneWeights: GeneWeights) {
+  redrawHistogram() {
     let barsBinsArray = [];
-    for (var i = 0; i < geneWeights.bars.length; i++) {
+    for (var i = 0; i < this.bars.length; i++) {
       barsBinsArray[i] = {
-        bin: geneWeights.bins[i],
-        bar: geneWeights.bars[i]
+        bin: this.bins[i],
+        bar: this.bars[i]
       };
     }
 
     let width = 450;
     let height = 50;
-    let barWidth = width / geneWeights.bars.length;
+    let barWidth = width / this.bars.length;
     let svg = d3.select(this.histogramContainer.nativeElement)
 
     this.xScale = d3.scaleLinear()
-      .domain([geneWeights.min, geneWeights.max])
+      .domain([this.domainMin, this.domainMax])
       .rangeRound([0, width]);
 
     var y = d3.scaleLinear().range([height, 0]);
 
-    y.domain([0, d3.max(geneWeights.bars)]);
+    y.domain([0, d3.max(this.bars)]);
     // Add the x Axis
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
@@ -98,11 +106,11 @@ export class GeneWeightsHistogramComponent  {
   }
 
   get minX() {
-    return this.xScale(this.geneWeights.min);
+    return this.xScale(this.domainMin);
   }
 
   get maxX() {
-    return this.xScale(this.geneWeights.max);
+    return this.xScale(this.domainMax);
   }
 
 }

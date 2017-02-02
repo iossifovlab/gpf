@@ -1,9 +1,15 @@
-<gpf-gene-weights-histogram
+<gpf-histogram
   *ngIf="selectedGeneWeights"
   width="650" height="200"
-  [geneWeights]="selectedGeneWeights"
-  [(rangeStart)]=rangeStart [(rangeEnd)]=rangeEnd>
-</gpf-gene-weights-histogram>
+  [bins]="selectedGeneWeights.bins"
+  [bars]="selectedGeneWeights.bars"
+  [domainMin]="selectedGeneWeights.min"
+  [domainMax]="selectedGeneWeights.max"
+  [leftRangeText]="rangeStart"
+  [centerRangeText]="rangeStart"
+  [rightRangeText]="rangeStart"
+  [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+</gpf-histogram>
 <input
   required type="number"
   #inputRangeStart="ngModel"

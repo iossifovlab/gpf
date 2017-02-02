@@ -22,8 +22,7 @@ import { GpfTableModule } from './table/table.module';
 import { DatasetComponent } from './dataset/dataset.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 
-import { GeneWeightsHistogramComponent } from './gene-weights/gene-weights-histogram.component';
-import { HistogramRangeSelectorLine } from './gene-weights/histogram-range-selector-line.component';
+import { HistogramModule } from './histogram/histogram.module';
 import { GeneWeightsComponent, MinValidatorDirective, MaxValidatorDirective } from './gene-weights/gene-weights.component';
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
 
@@ -37,10 +36,8 @@ import { GeneWeightsService } from './gene-weights/gene-weights.service';
     GenotypePreviewTableComponent,
     DatasetComponent,
     GeneWeightsComponent,
-    GeneWeightsHistogramComponent,
     MinValidatorDirective,
-    MaxValidatorDirective,
-    HistogramRangeSelectorLine
+    MaxValidatorDirective
   ],
   imports: [
     BrowserModule,
@@ -48,7 +45,8 @@ import { GeneWeightsService } from './gene-weights/gene-weights.service';
     HttpModule,
     NgbModule,
     GpfTableModule,
-    PedigreeChartModule
+    PedigreeChartModule,
+    HistogramModule
   ],
   providers: [
     ConfigService,

@@ -1,5 +1,4 @@
 import { Input, Component, OnInit, ViewChild, ViewChildren, ViewEncapsulation, Output, EventEmitter, SimpleChanges, QueryList } from '@angular/core';
-import { GeneWeights } from './gene-weights';
 import * as d3 from 'd3';
 
 @Component({
@@ -8,7 +7,7 @@ import * as d3 from 'd3';
   templateUrl: './histogram-range-selector-line.component.html',
   styleUrls: ['./histogram-range-selector-line.component.css']
 })
-export class HistogramRangeSelectorLine {
+export class HistogramRangeSelectorLineComponent {
   @Input() x = 0;
   @Output() xChange = new EventEmitter();
   @Input() y = 0;
