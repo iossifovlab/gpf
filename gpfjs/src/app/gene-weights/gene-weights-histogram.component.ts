@@ -208,6 +208,11 @@ export class GeneWeightsHistogramComponent implements RangeChangeListener {
         this.rangeSelector.currentRange = [this.rangeStart, this.rangeEnd];
       }
     }
+    if ("geneWeights" in changes) {
+      let outerSvg = d3.select(this.histogramContainer.nativeElement).selectAll("svg").remove();
+      console.log(this.geneWeights);
+      this.redrawHistogram(this.geneWeights);
+    }
   }
 
   onRangeChange() {
@@ -265,7 +270,4 @@ export class GeneWeightsHistogramComponent implements RangeChangeListener {
     this.rangeSelector = new RangeSelector(outerSvg, x, x(geneWeights.min), x(geneWeights.max), height + 50, this);
   }
 
-  ngOnInit() {
-    this.redrawHistogram(this.geneWeights);
-  }
 }

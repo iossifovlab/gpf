@@ -1,10 +1,15 @@
-<gpf-gene-weights-histogram  *ngIf="geneWeights" width="650" height="200" [geneWeights]="geneWeights[0]" [(rangeStart)]=rangeStart [(rangeEnd)]=rangeEnd></gpf-gene-weights-histogram>
+<gpf-gene-weights-histogram
+  *ngIf="selectedGeneWeights"
+  width="650" height="200"
+  [geneWeights]="selectedGeneWeights"
+  [(rangeStart)]=rangeStart [(rangeEnd)]=rangeEnd>
+</gpf-gene-weights-histogram>
 <input
   required type="number"
   #inputRangeStart="ngModel"
   [ngModel]="rangeStart"
   (ngModelChange)="inputRangeStart.valid ? rangeStart = $event: null"
-  min="{{ initialRangeStart  }}"
+  min="{{ selectedGeneWeights?.min  }}"
   max="{{ rangeEnd  }}"
   placeholder="start">
 
@@ -14,15 +19,19 @@
   [ngModel]="rangeEnd"
   (ngModelChange)="inputRangeEnd.valid ? rangeEnd = $event: null"
   min="{{ rangeStart  }}"
-  max="{{ initialRangeEnd  }}"
+  max="{{ selectedGeneWeights?.max  }}"
   placeholder="end">
 
-<div [hidden]="inputRangeStart.valid"
+<div [hidden]="inputRangeStart.valid || !inputRangeStart.dirty"
      class="alert alert-danger">
   Start is invalid
 </div>
 
-<div [hidden]="inputRangeEnd.valid"
+<div [hidden]="inputRangeEnd.valid || !inputRangeStart.dirty"
      class="alert alert-danger">
   End is invalid
 </div>
+
+<select class="form-control" [(ngModel)]="selectedGeneWeights" required>
+  <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
+</select>

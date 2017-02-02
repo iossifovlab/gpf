@@ -37,23 +37,30 @@ export class MaxValidatorDirective implements Validator {
   templateUrl: './gene-weights.component.html'
 })
 export class GeneWeightsComponent {
-  geneWeights: GeneWeights[];
+  private internalSelectedGeneWeights: GeneWeights;
+
+  geneWeightsArray: GeneWeights[];
   rangeStart: number;
   rangeEnd: number;
-  initialRangeStart: number;
-  initialRangeEnd: number;
 
   constructor(private geneWeightsService: GeneWeightsService) {
 
   }
+
+  set selectedGeneWeights(selectedGeneWeights: GeneWeights) {
+    this.internalSelectedGeneWeights = selectedGeneWeights;
+    this.rangeStart = selectedGeneWeights.min;
+    this.rangeEnd = selectedGeneWeights.max;
+  }
+
+  get selectedGeneWeights() {
+    return this.internalSelectedGeneWeights;
+  }
+
   ngOnInit() {
     this.geneWeightsService.getGeneWeights().subscribe(
       (geneWeights) => {
-        this.initialRangeStart = geneWeights[0].min;
-        this.initialRangeEnd = geneWeights[0].max;
-        this.rangeStart = geneWeights[0].min;
-        this.rangeEnd = geneWeights[0].max;
-        this.geneWeights = geneWeights;
+        this.geneWeightsArray = geneWeights;
       });
   }
 }
