@@ -1,2 +1,28 @@
-<div #histogramContainer>
+<gpf-gene-weights-histogram  *ngIf="geneWeights" width="650" height="200" [geneWeights]="geneWeights[0]" [(rangeStart)]=rangeStart [(rangeEnd)]=rangeEnd></gpf-gene-weights-histogram>
+<input
+  required type="number"
+  #inputRangeStart="ngModel"
+  [ngModel]="rangeStart"
+  (ngModelChange)="inputRangeStart.valid ? rangeStart = $event: null"
+  min="{{ initialRangeStart  }}"
+  max="{{ rangeEnd  }}"
+  placeholder="start">
+
+<input
+  required type="number"
+  #inputRangeEnd="ngModel"
+  [ngModel]="rangeEnd"
+  (ngModelChange)="inputRangeEnd.valid ? rangeEnd = $event: null"
+  min="{{ rangeStart  }}"
+  max="{{ initialRangeEnd  }}"
+  placeholder="end">
+
+<div [hidden]="inputRangeStart.valid"
+     class="alert alert-danger">
+  Start is invalid
+</div>
+
+<div [hidden]="inputRangeEnd.valid"
+     class="alert alert-danger">
+  End is invalid
 </div>

@@ -22,7 +22,8 @@ import { GpfTableModule } from './table/table.module';
 import { DatasetComponent } from './dataset/dataset.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 
-import { GeneWeightsComponent } from './gene-weights/gene-weights.component';
+import { GeneWeightsHistogramComponent } from './gene-weights/gene-weights-histogram.component';
+import { GeneWeightsComponent, MinValidatorDirective, MaxValidatorDirective } from './gene-weights/gene-weights.component';
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
 
 @NgModule({
@@ -34,7 +35,10 @@ import { GeneWeightsService } from './gene-weights/gene-weights.service';
     EffecttypesComponent,
     GenotypePreviewTableComponent,
     DatasetComponent,
-    GeneWeightsComponent
+    GeneWeightsComponent,
+    GeneWeightsHistogramComponent,
+    MinValidatorDirective,
+    MaxValidatorDirective
   ],
   imports: [
     BrowserModule,
