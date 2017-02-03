@@ -28,6 +28,8 @@ export class HistogramComponent  {
   @Input() rightRangeText: string;
 
   private xScale: d3.ScaleLinear<number, number>;
+  private barsTotalSum: number;
+  private barWidth: number;
 
   private svg: any;
   ngOnChanges(changes: SimpleChanges) {
@@ -38,6 +40,7 @@ export class HistogramComponent  {
     }
 
     if ("rangeStart" in changes || "rangeEnd" in changes) {
+      this.estimateRangeTexts();
       this.svg.selectAll("rect").style("fill", (d, index, objects) => {
         return objects[index].x.baseVal.value < this.rangeStartX
             || objects[index].x.baseVal.value > this.rangeEndX
@@ -45,7 +48,27 @@ export class HistogramComponent  {
     }
   }
 
+  formatEstimateText(count: number) {
+    let perc = count/this.barsTotalSum * 100
+    return "~" + count.toFixed(0) + " (" +  perc.toFixed(2) +"%)";
+  }
+
+  estimateRangeTexts() {
+    let rangeStartIndex = this.rangeStartX/this.barWidth;
+    let rangeEndIndex = this.rangeEndX/this.barWidth;
+
+    let beforeRange = d3.sum(this.bars.slice(0, rangeStartIndex));
+    let insideRange = d3.sum(this.bars.slice(rangeStartIndex, rangeEndIndex));
+    let afterRange = d3.sum(this.bars.slice(rangeEndIndex));
+
+    this.leftRangeText = this.formatEstimateText(beforeRange);
+    this.centerRangeText = this.formatEstimateText(insideRange);
+    this.rightRangeText = this.formatEstimateText(afterRange);
+  }
+
   redrawHistogram() {
+    this.barsTotalSum = d3.sum(this.bars);
+
     let barsBinsArray = [];
     for (var i = 0; i < this.bars.length; i++) {
       barsBinsArray[i] = {
@@ -56,7 +79,7 @@ export class HistogramComponent  {
 
     let width = 450;
     let height = 50;
-    let barWidth = width / this.bars.length;
+    this.barWidth = width / this.bars.length;
     let svg = d3.select(this.histogramContainer.nativeElement)
 
     this.xScale = d3.scaleLinear()
@@ -81,7 +104,7 @@ export class HistogramComponent  {
       .enter().append("rect")
       .style("fill", "steelblue")
       .attr("x", (d: any) => { return this.xScale(d.bin);})
-      .attr("width", barWidth)
+      .attr("width", this.barWidth)
       .attr("y", function(d: any) { return y(d.bar); })
       .attr("height", function(d: any) { return height - y(d.bar); });
     this.svg = svg;
