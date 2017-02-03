@@ -20,13 +20,9 @@
                 <gpf-table-subcolumn header="var" field="variant"></gpf-table-subcolumn>
             </gpf-table-column>
             <gpf-table-column header="genotype">
-                <span *gpf-table-cell-content="let data">{{data.pedigree}}</span>
-                <gpf-table-subcolumn header="ch" field="ch">
-                    <span *gpf-table-cell-content=""></span>
-                </gpf-table-subcolumn>
-                <gpf-table-subcolumn header="par" field="par">
-                    <span *gpf-table-cell-content=""></span>
-                </gpf-table-subcolumn>
+                <span *gpf-table-cell-content="let data"><gpf-pedigree-chart [pedigreeData]=data.pedigree></gpf-pedigree-chart></span>
+                <gpf-table-subcolumn header="ch" field="ch"></gpf-table-subcolumn>
+                <gpf-table-subcolumn header="par" field="par"></gpf-table-subcolumn>
             </gpf-table-column>
             <gpf-table-column header="effect">
                 <gpf-table-subcolumn header="type" field="worstEffectType"></gpf-table-subcolumn>

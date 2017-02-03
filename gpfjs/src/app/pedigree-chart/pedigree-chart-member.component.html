@@ -1,0 +1,32 @@
+<svg:rect *ngIf="pedigreeData.gender=='M'"
+     x=0
+     y=0
+     width=21
+     height=21
+     stroke="black"
+     stroke-width="1"
+     fill-opacity="1"
+     [attr.fill]="pedigreeData.color"
+/>
+<svg:circle *ngIf="pedigreeData.gender=='F'"
+     cx=10.5
+     cy=10.5
+     r=10.5
+     stroke="black"
+     stroke-width="1"
+     fill-opacity="1"
+     [attr.fill]="pedigreeData.color"
+/>
+
+<svg:text *ngIf="pedigreeData.label" x="10.5" y="15" font-size="14" text-anchor="middle">
+     {{ pedigreeData.label }}
+</svg:text>
+
+<svg:g  *ngIf="pedigreeData.smallLabel">
+     <svg:text x="15.5" y="18" font-size="9" text-anchor="middle">
+          {{ pedigreeData.smallLabel }}
+     </svg:text>
+     <svg:line x1=10.5 y1=10.5 x2=21 y2=10.5 stroke="black" stroke-width="1" /> 
+     <svg:line x1=10.5 y1=10.5 x2=10.5 y2=21 stroke="black" stroke-width="1" /> 
+</svg:g>
+

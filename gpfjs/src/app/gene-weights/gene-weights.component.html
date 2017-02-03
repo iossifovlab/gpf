@@ -1,0 +1,43 @@
+<gpf-histogram
+  *ngIf="selectedGeneWeights"
+  width="650" height="200"
+  [bins]="selectedGeneWeights.bins"
+  [bars]="selectedGeneWeights.bars"
+  [domainMin]="selectedGeneWeights.min"
+  [domainMax]="selectedGeneWeights.max"
+  [beforeRangeText]="beforeRangeText"
+  [insideRangeText]="insideRangeText"
+  [afterRangeText]="afterRangeText"
+  [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+</gpf-histogram>
+<input
+  required type="number"
+  #inputRangeStart="ngModel"
+  [ngModel]="rangeStart"
+  (ngModelChange)="inputRangeStart.valid ? rangeStart = $event: null"
+  min="{{ selectedGeneWeights?.min  }}"
+  max="{{ rangeEnd  }}"
+  placeholder="start">
+
+<input
+  required type="number"
+  #inputRangeEnd="ngModel"
+  [ngModel]="rangeEnd"
+  (ngModelChange)="inputRangeEnd.valid ? rangeEnd = $event: null"
+  min="{{ rangeStart  }}"
+  max="{{ selectedGeneWeights?.max  }}"
+  placeholder="end">
+
+<div [hidden]="inputRangeStart.valid || !inputRangeStart.dirty"
+     class="alert alert-danger">
+  Start is invalid
+</div>
+
+<div [hidden]="inputRangeEnd.valid || !inputRangeStart.dirty"
+     class="alert alert-danger">
+  End is invalid
+</div>
+
+<select class="form-control" [(ngModel)]="selectedGeneWeights" required>
+  <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
+</select>

@@ -24,6 +24,11 @@ import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
+import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
+
+import { HistogramModule } from './histogram/histogram.module';
+import { GeneWeightsComponent, MinValidatorDirective, MaxValidatorDirective } from './gene-weights/gene-weights.component';
+import { GeneWeightsService } from './gene-weights/gene-weights.service';
 
 @NgModule({
   declarations: [
@@ -38,21 +43,26 @@ import { RegionsBlockComponent } from './regions-block/regions-block.component';
     GenotypeBlockComponent,
     GenesBlockComponent,
     RegionsBlockComponent,
+    GeneWeightsComponent,
+    MinValidatorDirective,
+    MaxValidatorDirective
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpModule,
     NgbModule.forRoot(),
-    GpfTableModule
+    GpfTableModule,
+    PedigreeChartModule,
+    HistogramModule
   ],
   providers: [
     ConfigService,
     DatasetService,
     QueryService,
-    { provide: RequestOptions, useClass: CustomRequestOptions }
+    { provide: RequestOptions, useClass: CustomRequestOptions },
+    GeneWeightsService
   ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
-
