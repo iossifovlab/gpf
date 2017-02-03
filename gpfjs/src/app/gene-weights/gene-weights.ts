@@ -26,3 +26,26 @@ export class GeneWeights {
     return jsonArray.map((json) => GeneWeights.fromJson(json));
   }
 }
+
+export class Partitions {
+
+  constructor(
+      readonly leftCount: number,
+      readonly leftPercent: number,
+      readonly midCount: number,
+      readonly midPercent: number,
+      readonly rightCount: number,
+      readonly rightPercent: number,
+  ) {}
+
+  static fromJson(json: any): Partitions {
+    return new Partitions(
+      +json['left']['count'],
+      +json['left']['percent'],
+      +json['mid']['count'],
+      +json['mid']['percent'],
+      +json['right']['count'],
+      +json['right']['percent'],
+    );
+  }
+}

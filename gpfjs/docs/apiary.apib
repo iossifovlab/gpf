@@ -2631,3 +2631,30 @@ Returns example gene weights
         "desc":"ExAC pRec rank"
      }
   ]
+
+### Get Whole Genome data for Given Filters [/gene_weights/partition]
+
+#### Get table data for given filters [POST]
+Returns all effect types groups for givent dataset.
++ Request (application/json)
+    + Body
+          {}
+
++ Response 200 (application/json)
+  {
+     "right":{
+        "count":5612,
+        "percent":0.30402513678964194
+     },
+     "mid":{
+        "count":10522,
+        "percent":0.5700200444227748
+     },
+     "weights":"LGD_rank",
+     "wmax":12841.0,
+     "wmin":2327.0,
+     "left":{
+        "count":2325,
+        "percent":0.1259548187875833
+     }
+  }
