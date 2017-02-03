@@ -23,9 +23,9 @@ export class HistogramComponent  {
   @Input() bins: Array<number>;
   @Input() bars: Array<number>;
 
-  @Input() leftRangeText: string;
-  @Input() centerRangeText: string;
-  @Input() rightRangeText: string;
+  @Input() beforeRangeText: string;
+  @Input() insideRangeText: string;
+  @Input() afterRangeText: string;
 
   private xScale: d3.ScaleLinear<number, number>;
   private barsTotalSum: number;
@@ -61,9 +61,9 @@ export class HistogramComponent  {
     let insideRange = d3.sum(this.bars.slice(rangeStartIndex, rangeEndIndex));
     let afterRange = d3.sum(this.bars.slice(rangeEndIndex));
 
-    this.leftRangeText = this.formatEstimateText(beforeRange);
-    this.centerRangeText = this.formatEstimateText(insideRange);
-    this.rightRangeText = this.formatEstimateText(afterRange);
+    this.beforeRangeText = this.formatEstimateText(beforeRange);
+    this.insideRangeText = this.formatEstimateText(insideRange);
+    this.afterRangeText = this.formatEstimateText(afterRange);
   }
 
   redrawHistogram() {

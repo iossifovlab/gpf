@@ -43,6 +43,10 @@ export class GeneWeightsComponent {
   rangeStart: number;
   rangeEnd: number;
 
+  beforeRangeText: string;
+  insideRangeText: string;
+  afterRangeText: string;
+
   constructor(private geneWeightsService: GeneWeightsService) {
 
   }
@@ -63,5 +67,11 @@ export class GeneWeightsComponent {
         this.geneWeightsArray = geneWeights;
         this.selectedGeneWeights = geneWeights[0];
       });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if ("rangeStart" in changes || "rangeEnd" in changes) {
+
+    }
   }
 }
