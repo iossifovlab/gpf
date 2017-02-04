@@ -9,6 +9,14 @@ import { DatasetService } from './dataset/dataset.service';
 import { DatasetComponent } from './dataset/dataset.component';
 import { DatasetServiceStub } from './dataset/dataset.service.spec';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
+import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
+import { RegionsBlockComponent } from './regions-block/regions-block.component';
+import { GenesBlockComponent } from './genes-block/genes-block.component';
+import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
+
+
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+
 
 describe('AppComponent', () => {
   beforeEach(() => {
@@ -20,8 +28,14 @@ describe('AppComponent', () => {
         GenderComponent,
         VarianttypesComponent,
         EffecttypesComponent,
+        GenotypeBlockComponent,
+        RegionsBlockComponent,
+        GenesBlockComponent,
+        PedigreeSelectorComponent,
       ],
       imports: [
+        NgbModule.forRoot(),
+
       ],
       providers: [
         {

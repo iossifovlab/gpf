@@ -16,22 +16,6 @@ import {
 import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
 import { Observable } from 'rxjs';
 
-const mockDatasetsResponse: IdName[] =
-  [
-    {
-      id: 'SD',
-      name: 'Sequencing de Novo Dataset'
-    },
-    {
-      id: 'SSC',
-      name: 'SSC Description'
-    },
-    {
-      id: 'VIP',
-      name: 'VIP Dataset'
-    }
-  ];
-
 const mockDatasetResponse: Dataset = {
   id: 'VIP',
   name: 'VIP Dataset',
@@ -113,8 +97,8 @@ const mockDatasetResponse: Dataset = {
 
 export class DatasetServiceStub extends DatasetService {
   selectedDatasetId: string;
-  getDatasets(): Observable<IdName[]> {
-    return Observable.of(mockDatasetsResponse);
+  getDatasets(): Observable<Dataset[]> {
+    return Observable.of([mockDatasetResponse]);
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
@@ -162,16 +146,14 @@ describe('DatasetService', () => {
             new Response(
               new ResponseOptions(
                 {
-                  body: JSON.stringify({ data: mockDatasetsResponse })
+                  body: JSON.stringify({ data: [mockDatasetResponse] })
                 }
               )));
         });
 
       service.getDatasets().subscribe(res => {
-        expect(res.length).toBe(3);
-        expect(res[0].id).toEqual('SD');
-        expect(res[1].id).toEqual('SSC');
-        expect(res[2].id).toEqual('VIP');
+        expect(res.length).toBe(1);
+        expect(res[0].id).toEqual('VIP');
       });
     })
     )

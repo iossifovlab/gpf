@@ -3,6 +3,8 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+
 import { RegionsBlockComponent } from './regions-block.component';
 
 describe('RegionsBlockComponent', () => {
@@ -11,9 +13,13 @@ describe('RegionsBlockComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ RegionsBlockComponent ]
+      declarations: [RegionsBlockComponent],
+      imports: [
+        NgbModule.forRoot(),
+
+      ],
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

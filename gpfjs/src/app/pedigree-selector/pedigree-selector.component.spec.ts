@@ -5,15 +5,30 @@ import { DebugElement } from '@angular/core';
 
 import { PedigreeSelectorComponent } from './pedigree-selector.component';
 
+import { Dataset } from '../dataset/dataset';
+import { DatasetService } from '../dataset/dataset.service';
+import { DatasetServiceStub } from '../dataset/dataset.service.spec';
+
+let datasetService = new DatasetServiceStub(undefined, undefined);
+
 describe('PedigreeselectorComponent', () => {
   let component: PedigreeSelectorComponent;
   let fixture: ComponentFixture<PedigreeSelectorComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PedigreeSelectorComponent ]
+      declarations: [PedigreeSelectorComponent],
+      imports: [
+      ],
+      providers: [
+        {
+          provide: DatasetService,
+          useValue: datasetService
+        }
+      ]
+
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

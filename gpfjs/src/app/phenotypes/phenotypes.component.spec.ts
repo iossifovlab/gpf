@@ -5,10 +5,9 @@ import { DebugElement } from '@angular/core';
 import { Http } from '@angular/http';
 
 import { PhenotypesComponent } from './phenotypes.component';
-import { DatasetService } from '../dataset/dataset.service';
-import { IdDescription } from '../common/iddescription';
 import { Phenotype } from '../phenotypes/phenotype';
 import { Dataset } from '../dataset/dataset';
+import { DatasetService } from '../dataset/dataset.service';
 import { DatasetServiceStub } from '../dataset/dataset.service.spec';
 
 let datasetService = new DatasetServiceStub(undefined, undefined);

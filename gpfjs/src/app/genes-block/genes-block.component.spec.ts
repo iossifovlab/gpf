@@ -3,6 +3,8 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+
 import { GenesBlockComponent } from './genes-block.component';
 
 describe('GenesBlockComponent', () => {
@@ -11,9 +13,12 @@ describe('GenesBlockComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ GenesBlockComponent ]
+      declarations: [GenesBlockComponent],
+      imports: [
+        NgbModule.forRoot(),
+      ],
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

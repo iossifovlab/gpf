@@ -11,7 +11,7 @@ import { AppComponent } from './app.component';
 import { PhenotypesComponent } from './phenotypes/phenotypes.component';
 import { DatasetService } from './dataset/dataset.service';
 import { ConfigService } from './config/config.service';
-import {CustomRequestOptions } from './config/customrequest.options';
+import { CustomRequestOptions } from './config/customrequest.options';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { EffecttypesComponent } from './effecttypes/effecttypes.component';
@@ -29,6 +29,8 @@ import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 import { HistogramModule } from './histogram/histogram.module';
 import { GeneWeightsComponent, MinValidatorDirective, MaxValidatorDirective } from './gene-weights/gene-weights.component';
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
+
+import { StoreModule } from '@ngrx/store';
 
 @NgModule({
   declarations: [
@@ -54,7 +56,8 @@ import { GeneWeightsService } from './gene-weights/gene-weights.service';
     NgbModule.forRoot(),
     GpfTableModule,
     PedigreeChartModule,
-    HistogramModule
+    HistogramModule,
+    StoreModule.provideStore({}),
   ],
   providers: [
     ConfigService,
