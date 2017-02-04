@@ -7,6 +7,7 @@ import { EffecttypesComponent } from './effecttypes.component';
 
 import { DatasetService } from '../dataset/dataset.service';
 import { DatasetServiceStub } from '../dataset/dataset.service.spec';
+import { Store } from '@ngrx/store';
 
 
 let datasetService = new DatasetServiceStub(undefined, undefined);
@@ -17,6 +18,7 @@ describe('EffecttypesComponent', () => {
   let fixture: ComponentFixture<EffecttypesComponent>;
 
   beforeEach(async(() => {
+    const storeSpy = jasmine.createSpyObj('Store', ['dispatch', 'subscribe', 'select', 'let']);
     TestBed.configureTestingModule({
       declarations: [EffecttypesComponent],
       imports: [
@@ -25,7 +27,12 @@ describe('EffecttypesComponent', () => {
         {
           provide: DatasetService,
           useValue: datasetService
+        },
+        {
+          provide: Store,
+          useValue: storeSpy
         }
+
       ]
     })
       .compileComponents();

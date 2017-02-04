@@ -22,14 +22,13 @@
       <div
         *ngFor="let column of columnGroups"
         class="effectypes-col col-lg-4">
-        <em>{{column.name}}</em>
+        
+        <gpf-effecttypes-column 
+        [columnName]="column.name"
+        [effectTypesLabels]="effectTypesColumns.get(column.id)"
+        [effectTypes]="effectTypes"></gpf-effecttypes-column>
+        
 
-        <div
-          *ngFor="let effect of effectTypesColumns.get(column.id)"
-          class="checkbox">
-          <label> <input type="checkbox"> {{effect}}
-          </label>
-        </div>
       </div>
     </div>
   </div>

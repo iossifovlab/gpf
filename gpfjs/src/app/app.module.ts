@@ -14,7 +14,7 @@ import { ConfigService } from './config/config.service';
 import { CustomRequestOptions } from './config/customrequest.options';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
-import { EffecttypesComponent } from './effecttypes/effecttypes.component';
+import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes/effecttypes.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
 
@@ -31,6 +31,7 @@ import { GeneWeightsComponent, MinValidatorDirective, MaxValidatorDirective } fr
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
 
 import { StoreModule } from '@ngrx/store';
+import { effectTypesReducer } from './effecttypes/effecttypes';
 
 @NgModule({
   declarations: [
@@ -39,6 +40,7 @@ import { StoreModule } from '@ngrx/store';
     GenderComponent,
     VarianttypesComponent,
     EffecttypesComponent,
+    EffecttypesColumnComponent,
     GenotypePreviewTableComponent,
     DatasetComponent,
     PedigreeSelectorComponent,
@@ -57,7 +59,9 @@ import { StoreModule } from '@ngrx/store';
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    StoreModule.provideStore({}),
+    StoreModule.provideStore({
+      effectTypes: effectTypesReducer,
+    }),
   ],
   providers: [
     ConfigService,

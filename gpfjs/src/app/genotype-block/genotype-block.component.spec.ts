@@ -14,6 +14,7 @@ import { PedigreeSelectorComponent } from '../pedigree-selector/pedigree-selecto
 import { Dataset } from '../dataset/dataset';
 import { DatasetService } from '../dataset/dataset.service';
 import { DatasetServiceStub } from '../dataset/dataset.service.spec';
+import { Store } from '@ngrx/store';
 
 let datasetService = new DatasetServiceStub(undefined, undefined);
 
@@ -23,6 +24,7 @@ describe('GenotypeBlockComponent', () => {
   let fixture: ComponentFixture<GenotypeBlockComponent>;
 
   beforeEach(async(() => {
+    const storeSpy = jasmine.createSpyObj('Store', ['dispatch', 'subscribe', 'select', 'let']);
     TestBed.configureTestingModule({
       declarations: [
         GenderComponent,
@@ -38,6 +40,10 @@ describe('GenotypeBlockComponent', () => {
         {
           provide: DatasetService,
           useValue: datasetService
+        },
+        {
+          provide: Store,
+          useValue: storeSpy
         }
       ]
     })

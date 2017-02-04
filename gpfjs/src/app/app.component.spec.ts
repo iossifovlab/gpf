@@ -17,9 +17,11 @@ import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
+import { Store } from '@ngrx/store';
 
 describe('AppComponent', () => {
   beforeEach(() => {
+    const storeSpy = jasmine.createSpyObj('Store', ['dispatch', 'subscribe', 'select', 'let']);
     TestBed.configureTestingModule({
       declarations: [
         AppComponent,
@@ -41,6 +43,10 @@ describe('AppComponent', () => {
         {
           provide: DatasetService,
           useValue: new DatasetServiceStub(undefined, undefined)
+        },
+        {
+          provide: Store,
+          useValue: storeSpy
         }
       ]
     });
