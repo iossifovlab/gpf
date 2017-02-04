@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { DatasetService } from '../dataset/dataset.service';
 import { IdName } from '../common/idname';
 
@@ -17,7 +17,12 @@ import {
   template: `
       <em>{{columnName}}</em>
       <div *ngFor="let effect of effectTypesLabels; let i=index" class="checkbox">
-        <label><input type="checkbox" [checked]="effectTypesValues[i]">{{effect}}</label>
+        <label>
+          <input 
+            #checkbox
+            type="checkbox"
+            [checked]="effectTypesValues[i]"
+            (checked)="checkEffectType(i, checkbox.value)">{{effect}}</label>
       </div>
   `
 })
@@ -25,6 +30,8 @@ export class EffecttypesColumnComponent implements OnInit {
   @Input() effectTypes: Observable<string[]>;
   @Input() columnName: string;
   @Input() effectTypesLabels: string[];
+
+  @Output() effectTypeSelected = new EventEmitter();
 
   effectTypesValues: boolean[];
 
@@ -44,6 +51,15 @@ export class EffecttypesColumnComponent implements OnInit {
       }
 
     });
+  }
+
+  checkEffectType(index: number, value: boolean) {
+    console.log('checking ', this.effectTypesLabels[index], value);
+
+    if (index < 0 || index > this.effectTypesValues.length) {
+      return;
+    }
+    console.log('checking ', this.effectTypesLabels[index], value);
   }
 };
 
