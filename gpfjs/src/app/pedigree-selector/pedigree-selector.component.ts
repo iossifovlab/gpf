@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { DatasetService } from '../dataset/dataset.service';
 import { Dataset, PedigreeSelector, DatasetsState } from '../dataset/dataset';
-import { PedigreeSelectorState, PEDIGREE_SELECTOR_INIT, PEDIGREE_SELECTOR_SET_CHECKED_VALUES, PEDIGREE_SELECTOR_CHECK_VALUE, PEDIGREE_SELECTOR_UNCHECK_VALUE } from './pedigree-selector'
+import {
+  PedigreeSelectorState, PEDIGREE_SELECTOR_INIT,
+  PEDIGREE_SELECTOR_SET_CHECKED_VALUES, PEDIGREE_SELECTOR_CHECK_VALUE,
+  PEDIGREE_SELECTOR_UNCHECK_VALUE
+} from './pedigree-selector'
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
@@ -42,16 +46,21 @@ export class PedigreeSelectorComponent implements OnInit {
     );
     this.pedigreeState.subscribe(
       pedigreeState => {
-        if (pedigreeState) {
-          let checkedValues = pedigreeState.checkedValues;
+        if (!pedigreeState) {
+          return;
+        }
+        this.selectedPedigree = pedigreeState.pedigree;
+        if (!this.selectedPedigree) {
+          return;
+        }
+        let checkedValues = pedigreeState.checkedValues;
 
-          for (let i = 0; i < this.selectedPedigree.domain.length; ++i) {
-            let pedigreeId = this.selectedPedigree.domain[i].id;
-            if (checkedValues.indexOf(pedigreeId) !== -1) {
-              this.pedigreeCheck[i] = true;
-            } else {
-              this.pedigreeCheck[i] = false;
-            }
+        for (let i = 0; i < this.selectedPedigree.domain.length; ++i) {
+          let pedigreeId = this.selectedPedigree.domain[i].id;
+          if (checkedValues.indexOf(pedigreeId) !== -1) {
+            this.pedigreeCheck[i] = true;
+          } else {
+            this.pedigreeCheck[i] = false;
           }
         }
       }
@@ -67,6 +76,9 @@ export class PedigreeSelectorComponent implements OnInit {
       return undefined;
     }
     if (this.selectedDataset.pedigreeSelectors.length === 0) {
+      return undefined;
+    }
+    if (!this.selectedPedigree || !this.selectedPedigree.domain) {
       return undefined;
     }
     if (this.selectedDataset.pedigreeSelectors.length === 1) {
@@ -106,7 +118,6 @@ export class PedigreeSelectorComponent implements OnInit {
       return;
     }
 
-    console.log('checking ', this.selectedPedigree.domain[index], value);
     this.store.dispatch({
       'type': value ? PEDIGREE_SELECTOR_CHECK_VALUE : PEDIGREE_SELECTOR_UNCHECK_VALUE,
       'payload': this.selectedPedigree.domain[index].id,

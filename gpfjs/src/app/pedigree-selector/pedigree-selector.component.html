@@ -41,18 +41,20 @@
         (click)="selectNone()"
         class="btn btn-default">None</button>
     </div>
-    <div
-      *ngFor="let selectorValue of selectedPedigree.domain; let i=index"
-      class="checkbox">
-      <label> <input
-        #checkbox
-        type="checkbox"
-        [checked]="pedigreeCheck[i]"
-        (change)="pedigreeCheckValue(i, checkbox.checked)"> <span
-        class="pedigree-icon"
-        [style.background-color]="selectorValue.color"></span>
-        {{selectorValue.name}}
-      </label>
+    <div *ngIf="selectedPedigree">
+      <div
+        *ngFor="let selectorValue of selectedPedigree.domain; let i=index"
+        class="checkbox">
+        <label> <input
+          #checkbox
+          type="checkbox"
+          [checked]="pedigreeCheck[i]"
+          (change)="pedigreeCheckValue(i, checkbox.checked)"> <span
+          class="pedigree-icon"
+          [style.background-color]="selectorValue.color"></span>
+          {{selectorValue.name}}
+        </label>
+      </div>
     </div>
   </div>
 </div>

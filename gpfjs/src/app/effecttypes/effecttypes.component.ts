@@ -46,7 +46,6 @@ export class EffecttypesColumnComponent implements OnInit {
     }
 
     this.effectTypes.subscribe(values => {
-      console.log('effectTypes changed...', values);
       for (let i = 0; i < this.effectTypesLabels.length; ++i) {
         if (values.indexOf(this.effectTypesLabels[i]) !== -1) {
           this.effectTypesValues[i] = true;
@@ -63,7 +62,6 @@ export class EffecttypesColumnComponent implements OnInit {
       return;
     }
 
-    console.log('checking ', this.effectTypesLabels[index], value);
     this.effectTypeEvent.emit(
       {
         'effectType': this.effectTypesLabels[index],
@@ -141,7 +139,6 @@ export class EffecttypesComponent implements OnInit {
   selectButtonGroup(groupId: string): void {
     let effectTypes: string[] = this.effectTypesButtons.get(groupId);
     if (effectTypes) {
-      console.log('set effect types event: ', effectTypes);
       this.store.dispatch({
         'type': EFFECT_TYPE_SET,
         'payload': effectTypes
@@ -150,7 +147,6 @@ export class EffecttypesComponent implements OnInit {
   }
 
   onEffectTypeChange(value: any): void {
-    console.log('onEffectTypeChange: ', value);
     if (value.checked) {
       this.store.dispatch({
         'type': EFFECT_TYPE_CHECK,
