@@ -8,7 +8,7 @@ import { VarianttypesComponent } from './varianttypes.component';
 import { DatasetService } from '../dataset/dataset.service';
 import { DatasetServiceStub } from '../dataset/dataset.service.spec';
 
-let datasetService = new DatasetServiceStub(undefined, undefined);
+let datasetService = undefined; // new DatasetServiceStub(undefined, undefined);
 
 describe('VarianttypesComponent', () => {
   let component: VarianttypesComponent;

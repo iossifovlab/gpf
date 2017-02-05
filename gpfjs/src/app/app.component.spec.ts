@@ -2,7 +2,6 @@
 
 import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
-import { PhenotypesComponent } from './phenotypes/phenotypes.component';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { DatasetService } from './dataset/dataset.service';
@@ -26,7 +25,6 @@ describe('AppComponent', () => {
       declarations: [
         AppComponent,
         DatasetComponent,
-        PhenotypesComponent,
         GenderComponent,
         VarianttypesComponent,
         EffecttypesComponent,
@@ -42,7 +40,7 @@ describe('AppComponent', () => {
       providers: [
         {
           provide: DatasetService,
-          useValue: new DatasetServiceStub(undefined, undefined)
+          useValue: undefined // new DatasetServiceStub(undefined, undefined)
         },
         {
           provide: Store,

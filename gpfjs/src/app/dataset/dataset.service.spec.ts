@@ -4,7 +4,6 @@ import { TestBed, getTestBed, async, inject, fakeAsync, tick } from '@angular/co
 import { DatasetService } from './dataset.service';
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
-import { Phenotype } from '../phenotypes/phenotype';
 import { Dataset } from '../dataset/dataset';
 import { ConfigService } from '../config/config.service';
 

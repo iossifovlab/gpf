@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { DatasetService } from '../dataset/dataset.service';
-import { Dataset, PedigreeSelector } from '../dataset/dataset';
+import { Dataset, PedigreeSelector, DatasetsState } from '../dataset/dataset';
+
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'gpf-pedigree-selector',
@@ -12,14 +15,19 @@ export class PedigreeSelectorComponent implements OnInit {
   selectedPedigree: PedigreeSelector;
   pedigrees: PedigreeSelector[];
   pedigreeCheck: boolean[];
+  datasetsState: Observable<DatasetsState>;
 
   constructor(
-    private datasetService: DatasetService,
-  ) { }
+    private store: Store<any>,
+  ) {
+    this.datasetsState = this.store.select('datasets');
+
+  }
 
   ngOnInit() {
-    this.datasetService.selectedDataset.subscribe(
-      dataset => {
+    this.datasetsState.subscribe(
+      datasetsState => {
+        let dataset = datasetsState.selectedDataset;
         if (dataset) {
           this.selectedDataset = dataset;
           if (dataset.pedigreeSelectors && dataset.pedigreeSelectors.length > 0) {

@@ -10,7 +10,7 @@ import { DatasetServiceStub } from '../dataset/dataset.service.spec';
 import { Store } from '@ngrx/store';
 
 
-let datasetService = new DatasetServiceStub(undefined, undefined);
+let datasetService = undefined; // new DatasetServiceStub(undefined, undefined);
 
 
 describe('EffecttypesComponent', () => {

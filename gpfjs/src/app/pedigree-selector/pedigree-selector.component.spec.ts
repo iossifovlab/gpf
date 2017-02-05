@@ -9,7 +9,7 @@ import { Dataset } from '../dataset/dataset';
 import { DatasetService } from '../dataset/dataset.service';
 import { DatasetServiceStub } from '../dataset/dataset.service.spec';
 
-let datasetService = new DatasetServiceStub(undefined, undefined);
+let datasetService = undefined; // new DatasetServiceStub(undefined, undefined);
 
 describe('PedigreeselectorComponent', () => {
   let component: PedigreeSelectorComponent;

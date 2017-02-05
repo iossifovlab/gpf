@@ -7,7 +7,7 @@ import { DatasetComponent } from './dataset.component';
 import { DatasetService } from './dataset.service';
 import { DatasetServiceStub } from '../dataset/dataset.service.spec';
 
-let datasetService = new DatasetServiceStub(undefined, undefined);
+let datasetService = undefined; // new DatasetServiceStub(undefined, undefined);
 
 
 describe('DatasetComponent', () => {

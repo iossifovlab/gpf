@@ -8,7 +8,6 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { AppComponent } from './app.component';
 
-import { PhenotypesComponent } from './phenotypes/phenotypes.component';
 import { DatasetService } from './dataset/dataset.service';
 import { ConfigService } from './config/config.service';
 import { CustomRequestOptions } from './config/customrequest.options';
@@ -34,11 +33,10 @@ import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 import { effectTypesReducer } from './effecttypes/effecttypes';
-
+import { datasetsReducer } from './dataset/dataset';
 @NgModule({
   declarations: [
     AppComponent,
-    PhenotypesComponent,
     GenderComponent,
     VarianttypesComponent,
     EffecttypesComponent,
@@ -63,6 +61,7 @@ import { effectTypesReducer } from './effecttypes/effecttypes';
     HistogramModule,
     StoreModule.provideStore({
       effectTypes: effectTypesReducer,
+      datasets: datasetsReducer,
     }),
     StoreDevtoolsModule.instrumentOnlyWithExtension(),
 

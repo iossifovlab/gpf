@@ -5,12 +5,15 @@ import { Observable } from 'rxjs';
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
 
-import { Phenotype } from '../phenotypes/phenotype';
-import { Dataset } from '../dataset/dataset';
+import {
+  Dataset, DatasetsState,
+  DATASETS_INIT, DATASETS_SELECT
+} from '../dataset/dataset';
 import { ConfigService } from '../config/config.service';
 
 import 'rxjs/add/operator/map';
 import { Subject, BehaviorSubject } from 'rxjs';
+import { Store } from '@ngrx/store';
 
 @Injectable()
 export class DatasetService {
@@ -18,19 +21,29 @@ export class DatasetService {
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
 
-  selectedDataset: Subject<Dataset> = new BehaviorSubject<Dataset>(null);
+  // selectedDataset: Subject<Dataset> = new BehaviorSubject<Dataset>(null);
+  datasetsStore: Observable<DatasetsState>;
 
   constructor(
     private http: Http,
-    private config: ConfigService
-  ) { }
+    private config: ConfigService,
+    private store: Store<any>
+  ) {
+
+    this.datasetsStore = store.select('datasets');
+  }
 
   getDatasets(): Observable<Dataset[]> {
     console.log('getting datsets from: ', this.datasetUrl);
     return this.http
       .get(this.datasetUrl)
       .map(res => {
-        return Dataset.fromJsonArray(res.json().data);
+        let datasets = Dataset.fromJsonArray(res.json().data);
+        this.store.dispatch({
+          'type': DATASETS_INIT,
+          'payload': datasets
+        });
+        return datasets;
       });
   }
 
@@ -47,6 +60,11 @@ export class DatasetService {
   }
 
   setSelectedDataset(dataset: Dataset): void {
-    this.selectedDataset.next(dataset);
+    this.store.dispatch({
+      'type': DATASETS_SELECT,
+      'payload': dataset
+
+    });
+    // this.selectedDataset.next(dataset);
   }
 }
