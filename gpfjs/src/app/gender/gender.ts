@@ -1,6 +1,6 @@
 
-export const CHECK_GENDER = 'CHECK_GENDER';
-export const UNCHECK_GENDER = 'UNCHECK_GENDER';
+export const CHECK_GENDER = 'GENDER_CHECK';
+export const UNCHECK_GENDER = 'GENDER_UNCHECK';
 
 
 export function genderReducer(state: Array<string> = new Array<string>(), action) {
