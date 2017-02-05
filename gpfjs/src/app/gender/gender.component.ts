@@ -1,4 +1,7 @@
-import { GenderState, GENDER_CHECK_ALL, GENDER_UNCHECK_ALL, GENDER_UNCHECK, GENDER_CHECK } from './gender';
+import {
+  GenderState, GENDER_CHECK_ALL,
+  GENDER_UNCHECK_ALL, GENDER_UNCHECK, GENDER_CHECK
+} from './gender';
 import { Component, OnInit } from '@angular/core';
 
 import { Store } from '@ngrx/store';

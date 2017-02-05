@@ -15,7 +15,11 @@ const initialState: GenderState = {
   male: true
 };
 
-export function genderReducer(state: GenderState = initialState, action) {
+export function genderReducer(
+  state: GenderState = initialState,
+  action): GenderState {
+
+
   switch (action.type) {
     case GENDER_CHECK:
       return Object.assign({}, state,
@@ -24,17 +28,15 @@ export function genderReducer(state: GenderState = initialState, action) {
       return Object.assign({}, state,
         { [action.payload]: false });
     case GENDER_CHECK_ALL:
-      return Object.assign({}, state,
-        {
-          female: true,
-          male: true
-        });
+      return {
+        female: true,
+        male: true
+      };
     case GENDER_UNCHECK_ALL:
-      return Object.assign({}, state,
-        {
-          female: false,
-          male: false
-        });
+      return {
+        female: false,
+        male: false
+      };
     default:
       return state;
   }

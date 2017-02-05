@@ -1,4 +1,13 @@
+import {
+  VariantTypesState,
+  VARIANT_TYPES_CHECK_ALL, VARIANT_TYPES_UNCHECK_ALL,
+  VARIANT_TYPES_UNCHECK, VARIANT_TYPES_CHECK
+} from './varianttypes';
 import { Component, OnInit } from '@angular/core';
+
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+
 
 @Component({
   selector: 'gpf-varianttypes',
@@ -10,34 +19,43 @@ export class VarianttypesComponent implements OnInit {
   ins: boolean = true;
   del: boolean = true;
 
-  constructor() { }
+  variantTypesState: Observable<VariantTypesState>;
+
+  constructor(
+    private store: Store<any>
+  ) {
+
+    this.variantTypesState = this.store.select('variantTypes');
+  }
 
   ngOnInit() {
+    this.variantTypesState.subscribe(
+      variantTypesState => {
+        this.sub = variantTypesState.sub;
+        this.ins = variantTypesState.ins;
+        this.del = variantTypesState.del;
+      }
+    );
   }
 
   selectAll(): void {
-    this.sub = true;
-    this.ins = true;
-    this.del = true;
+    this.store.dispatch({
+      'type': VARIANT_TYPES_CHECK_ALL,
+    });
   }
 
   selectNone(): void {
-    this.sub = false;
-    this.ins = false;
-    this.del = false;
+    this.store.dispatch({
+      'type': VARIANT_TYPES_UNCHECK_ALL,
+    });
   }
 
-  getSelectedVarianttypes(): Set<string> {
-    let selectedVariantTypes = new Set<string>();
-    if (this.sub) {
-      selectedVariantTypes.add('sub');
+  variantTypesCheckValue(variantType: string, value: boolean): void {
+    if (variantType === 'sub' || variantType === 'ins' || variantType === 'del') {
+      this.store.dispatch({
+        'type': value ? VARIANT_TYPES_CHECK : VARIANT_TYPES_UNCHECK,
+        'payload': variantType
+      });
     }
-    if (this.ins) {
-      selectedVariantTypes.add('ins');
-    }
-    if (this.del) {
-      selectedVariantTypes.add('del');
-    }
-    return selectedVariantTypes;
   }
 }

@@ -1,4 +1,6 @@
-<div class="varianttypes-card card" style="height: 50%;">
+<div
+  class="varianttypes-card card"
+  style="height: 50%;">
   <div class="card-header card-title">Variant Types</div>
   <div class="card-block">
     <div class="btn-group btn-group-sm">
@@ -11,20 +13,26 @@
     </div>
     <div class="checkbox">
       <label> <input
+        #checkbox
         type="checkbox"
-        [(checked)]="sub"> sub
+        [checked]="sub"
+        (change)="variantTypesCheckValue('sub',checkbox.checked)"> sub
       </label>
     </div>
     <div class="checkbox">
       <label> <input
+        #checkbox
         type="checkbox"
-        [(checked)]="ins"> ins
+        [checked]="ins"
+        (change)="variantTypesCheckValue('ins',checkbox.checked)"> ins
       </label>
     </div>
     <div class="checkbox">
       <label> <input
+        #checkbox
         type="checkbox"
-        [(checked)]="del"> del
+        [checked]="del"
+        (change)="variantTypesCheckValue('del',checkbox.checked)"> del
       </label>
     </div>
   </div>

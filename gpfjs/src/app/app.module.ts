@@ -36,6 +36,7 @@ import { effectTypesReducer } from './effecttypes/effecttypes';
 import { datasetsReducer } from './dataset/dataset';
 import { genderReducer } from './gender/gender'
 import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector'
+import { variantTypesReducer } from './varianttypes/varianttypes';
 
 @NgModule({
   declarations: [
@@ -63,10 +64,11 @@ import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector'
     PedigreeChartModule,
     HistogramModule,
     StoreModule.provideStore({
-      effectTypes: effectTypesReducer,
       datasets: datasetsReducer,
       pedigreeSelector: pedigreeSelectorReducer,
+      effectTypes: effectTypesReducer,
       gender: genderReducer,
+      variantTypes: variantTypesReducer,
     }),
     StoreDevtoolsModule.instrumentOnlyWithExtension(),
 
