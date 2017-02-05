@@ -45,8 +45,10 @@
       *ngFor="let selectorValue of selectedPedigree.domain; let i=index"
       class="checkbox">
       <label> <input
+        #checkbox
         type="checkbox"
-        [(checked)]="pedigreeCheck[i]"> <span
+        [checked]="pedigreeCheck[i]"
+        (change)="pedigreeCheckValue(i, checkbox.checked)"> <span
         class="pedigree-icon"
         [style.background-color]="selectorValue.color"></span>
         {{selectorValue.name}}
