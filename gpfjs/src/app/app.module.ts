@@ -34,6 +34,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 import { effectTypesReducer } from './effecttypes/effecttypes';
 import { datasetsReducer } from './dataset/dataset';
+import { genderReducer } from './gender/gender'
 import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector'
 
 @NgModule({
@@ -65,6 +66,7 @@ import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector'
       effectTypes: effectTypesReducer,
       datasets: datasetsReducer,
       pedigreeSelector: pedigreeSelectorReducer,
+      gender: genderReducer,
     }),
     StoreDevtoolsModule.instrumentOnlyWithExtension(),
 

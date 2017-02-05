@@ -9,13 +9,20 @@
         </div>
         <div class="checkbox">
           <label>
-            <input type="checkbox" [(checked)]="male">
+            <input #checkbox
+                type="checkbox" 
+                [checked]="male"
+                (change)="genderCheckValue('male',checkbox.checked)">
             <span class="gender-icon male" ></span>
           </label>
         </div>
         <div class="checkbox">
           <label>
-            <input type="checkbox" [(checked)]="female">
+            <input 
+                #checkbox
+                type="checkbox" 
+                [checked]="female"
+                (change)="genderCheckValue('female',checkbox.checked)">
             <span class="gender-icon female"></span>
           </label>
         </div>

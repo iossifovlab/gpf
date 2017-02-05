@@ -5,7 +5,7 @@ import {
   PedigreeSelectorState, PEDIGREE_SELECTOR_INIT,
   PEDIGREE_SELECTOR_SET_CHECKED_VALUES, PEDIGREE_SELECTOR_CHECK_VALUE,
   PEDIGREE_SELECTOR_UNCHECK_VALUE
-} from './pedigree-selector'
+} from './pedigree-selector';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
