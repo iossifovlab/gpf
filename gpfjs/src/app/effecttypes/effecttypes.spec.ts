@@ -4,8 +4,8 @@
 
 
 import {
-  CHECK_EFFECT_TYPE,
-  UNCHECK_EFFECT_TYPE,
+  EFFECT_TYPE_CHECK,
+  EFFECT_TYPE_UNCHECK,
   effectTypesReducer
 } from './effecttypes';
 
@@ -14,7 +14,7 @@ describe('EffectTypesReducer', () => {
   it('checknig effect type should add it', () => {
     let initialState = [];
     let finalState = ['Nonsense'];
-    let action = { type: CHECK_EFFECT_TYPE, payload: 'Nonsense' };
+    let action = { type: EFFECT_TYPE_CHECK, payload: 'Nonsense' };
 
     let result = effectTypesReducer(initialState, action);
     expect(result).toEqual(finalState);
@@ -23,7 +23,7 @@ describe('EffectTypesReducer', () => {
   it('checknig effect type twice should not change the state', () => {
     let initialState = ['Nonsense'];
     let finalState = ['Nonsense'];
-    let action = { type: CHECK_EFFECT_TYPE, payload: 'Nonsense' };
+    let action = { type: EFFECT_TYPE_CHECK, payload: 'Nonsense' };
 
     let result = effectTypesReducer(initialState, action);
     expect(result).toEqual(finalState);
@@ -33,7 +33,7 @@ describe('EffectTypesReducer', () => {
   it('checking different effect type should add it', () => {
     let initialState = ['Nonsense'];
     let finalState = ['Nonsense', 'Missense'];
-    let action = { type: CHECK_EFFECT_TYPE, payload: 'Missense' };
+    let action = { type: EFFECT_TYPE_CHECK, payload: 'Missense' };
 
     let result = effectTypesReducer(initialState, action);
     expect(result).toEqual(finalState);
@@ -42,7 +42,7 @@ describe('EffectTypesReducer', () => {
   it('unchecknig effect type should remove it', () => {
     let initialState = ['Nonsense'];
     let finalState = [];
-    let action = { type: UNCHECK_EFFECT_TYPE, payload: 'Nonsense' };
+    let action = { type: EFFECT_TYPE_UNCHECK, payload: 'Nonsense' };
 
     let result = effectTypesReducer(initialState, action);
     expect(result).toEqual(finalState);
@@ -51,7 +51,7 @@ describe('EffectTypesReducer', () => {
   it('unchecknig effect type twice should not change state', () => {
     let initialState = [];
     let finalState = [];
-    let action = { type: UNCHECK_EFFECT_TYPE, payload: 'Nonsense' };
+    let action = { type: EFFECT_TYPE_UNCHECK, payload: 'Nonsense' };
 
     let result = effectTypesReducer(initialState, action);
     expect(result).toEqual(finalState);

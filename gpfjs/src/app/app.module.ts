@@ -31,6 +31,8 @@ import { GeneWeightsComponent, MinValidatorDirective, MaxValidatorDirective } fr
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
 
 import { StoreModule } from '@ngrx/store';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+
 import { effectTypesReducer } from './effecttypes/effecttypes';
 
 @NgModule({
@@ -62,6 +64,8 @@ import { effectTypesReducer } from './effecttypes/effecttypes';
     StoreModule.provideStore({
       effectTypes: effectTypesReducer,
     }),
+    StoreDevtoolsModule.instrumentOnlyWithExtension(),
+
   ],
   providers: [
     ConfigService,

@@ -8,7 +8,8 @@ import { Observable } from 'rxjs';
 import {
   CODING,
   NONCODING,
-  CNV, ALL, LGDS, NONSYNONYMOUS, UTRS, CHECK_EFFECT_TYPE, UNCHECK_EFFECT_TYPE,
+  CNV, ALL, LGDS, NONSYNONYMOUS, UTRS,
+  EFFECT_TYPE_CHECK, EFFECT_TYPE_UNCHECK, EFFECT_TYPE_SET,
 } from './effecttypes';
 
 
@@ -22,7 +23,10 @@ import {
             #checkbox
             type="checkbox"
             [checked]="effectTypesValues[i]"
-            (change)="checkEffectType(i, checkbox.checked)">{{effect}}</label>
+            (change)="checkEffectType(i, checkbox.checked); 
+                      $event.stopPropagation()">
+          {{effect}}
+        </label>
       </div>
   `
 })
@@ -42,6 +46,7 @@ export class EffecttypesColumnComponent implements OnInit {
     }
 
     this.effectTypes.subscribe(values => {
+      console.log('effectTypes changed...', values);
       for (let i = 0; i < this.effectTypesLabels.length; ++i) {
         if (values.indexOf(this.effectTypesLabels[i]) !== -1) {
           this.effectTypesValues[i] = true;
@@ -134,19 +139,26 @@ export class EffecttypesComponent implements OnInit {
   }
 
   selectButtonGroup(groupId: string): void {
-
+    let effectTypes: string[] = this.effectTypesButtons.get(groupId);
+    if (effectTypes) {
+      console.log('set effect types event: ', effectTypes);
+      this.store.dispatch({
+        'type': EFFECT_TYPE_SET,
+        'payload': effectTypes
+      });
+    }
   }
 
   onEffectTypeChange(value: any): void {
     console.log('onEffectTypeChange: ', value);
-    if (value.value) {
+    if (value.checked) {
       this.store.dispatch({
-        'type': CHECK_EFFECT_TYPE,
+        'type': EFFECT_TYPE_CHECK,
         'payload': value.effectType
       });
     } else {
       this.store.dispatch({
-        'type': UNCHECK_EFFECT_TYPE,
+        'type': EFFECT_TYPE_UNCHECK,
         'payload': value.effectType
       });
 
