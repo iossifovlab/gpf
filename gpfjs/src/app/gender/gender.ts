@@ -4,7 +4,6 @@ export const GENDER_UNCHECK = 'GENDER_UNCHECK';
 export const GENDER_CHECK_ALL = 'GENDER_CHECK_ALL';
 export const GENDER_UNCHECK_ALL = 'GENDER_UNCHECK_ALL';
 
-// export type GenderState = Array<string>;
 
 export interface GenderState {
   female: boolean;
