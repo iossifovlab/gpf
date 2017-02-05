@@ -88,7 +88,6 @@ export class EffecttypesComponent implements OnInit {
   effectTypes: Observable<Array<string>>;
 
   constructor(
-    private datasetService: DatasetService,
     private store: Store<any>
   ) {
 
