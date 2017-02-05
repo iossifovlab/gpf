@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 import {
   CODING,
   NONCODING,
-  CNV, ALL, LGDS, NONSYNONYMOUS, UTRS,
+  CNV, ALL, LGDS, NONSYNONYMOUS, UTRS, CHECK_EFFECT_TYPE, UNCHECK_EFFECT_TYPE,
 } from './effecttypes';
 
 
@@ -22,7 +22,7 @@ import {
             #checkbox
             type="checkbox"
             [checked]="effectTypesValues[i]"
-            (checked)="checkEffectType(i, checkbox.value)">{{effect}}</label>
+            (change)="checkEffectType(i, checkbox.checked)">{{effect}}</label>
       </div>
   `
 })
@@ -31,7 +31,7 @@ export class EffecttypesColumnComponent implements OnInit {
   @Input() columnName: string;
   @Input() effectTypesLabels: string[];
 
-  @Output() effectTypeSelected = new EventEmitter();
+  @Output('effectTypeEvent') effectTypeEvent = new EventEmitter<any>();
 
   effectTypesValues: boolean[];
 
@@ -53,13 +53,17 @@ export class EffecttypesColumnComponent implements OnInit {
     });
   }
 
-  checkEffectType(index: number, value: boolean) {
-    console.log('checking ', this.effectTypesLabels[index], value);
-
+  checkEffectType(index: number, value: any) {
     if (index < 0 || index > this.effectTypesValues.length) {
       return;
     }
+
     console.log('checking ', this.effectTypesLabels[index], value);
+    this.effectTypeEvent.emit(
+      {
+        'effectType': this.effectTypesLabels[index],
+        'checked': value
+      });
   }
 };
 
@@ -131,6 +135,22 @@ export class EffecttypesComponent implements OnInit {
 
   selectButtonGroup(groupId: string): void {
 
+  }
+
+  onEffectTypeChange(value: any): void {
+    console.log('onEffectTypeChange: ', value);
+    if (value.value) {
+      this.store.dispatch({
+        'type': CHECK_EFFECT_TYPE,
+        'payload': value.effectType
+      });
+    } else {
+      this.store.dispatch({
+        'type': UNCHECK_EFFECT_TYPE,
+        'payload': value.effectType
+      });
+
+    }
   }
 
 }

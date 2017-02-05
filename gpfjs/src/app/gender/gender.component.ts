@@ -15,6 +15,7 @@ export class GenderComponent implements OnInit {
   }
 
   selectAll(): void {
+    console.log('selectAll() called...');
     this.male = true;
     this.female = true;
   }

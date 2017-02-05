@@ -26,7 +26,8 @@
         <gpf-effecttypes-column 
         [columnName]="column.name"
         [effectTypesLabels]="effectTypesColumns.get(column.id)"
-        [effectTypes]="effectTypes"></gpf-effecttypes-column>
+        [effectTypes]="effectTypes"
+        (effectTypeEvent)="onEffectTypeChange($event)"></gpf-effecttypes-column>
         
 
       </div>

@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@angular/compiler-cli": "^2.3.1",
+    "@ngrx/store-devtools": "^3.2.3",
     "@types/hammerjs": "^2.0.34",
     "@types/jasmine": "2.5.38",
     "@types/node": "^6.0.42",
