@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { DatasetService } from '../dataset/dataset.service';
 import { IdName } from '../common/idname';
+import { DatasetsState } from '../dataset/dataset';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
@@ -16,6 +17,7 @@ import {
 @Component({
   selector: 'gpf-effecttypes-column',
   template: `
+    <div class="effectypes-col">
       <em>{{columnName}}</em>
       <div *ngFor="let effect of effectTypesLabels; let i=index" class="checkbox">
         <label>
@@ -28,6 +30,7 @@ import {
           {{effect}}
         </label>
       </div>
+    </div>
   `
 })
 export class EffecttypesColumnComponent implements OnInit {
@@ -76,26 +79,30 @@ export class EffecttypesColumnComponent implements OnInit {
   styleUrls: ['./effecttypes.component.css']
 })
 export class EffecttypesComponent implements OnInit {
-
-  buttonGroups: IdName[];
-  columnGroups: IdName[];
-
-  effectTypesColumns: Map<string, string[]>;
+  codingColumn: string[] = CODING;
+  nonCodingColumn: string[] = NONCODING;
+  cnvColumn: string[] = CNV;
 
   private effectTypesButtons: Map<string, string[]>;
   private selectedEffectTypes = new Map<string, boolean>();
 
   effectTypes: Observable<Array<string>>;
+  datasetsState: Observable<DatasetsState>;
+  hasCNV: Observable<boolean>;
 
   constructor(
     private store: Store<any>
   ) {
 
     this.effectTypes = this.store.select('effectTypes');
-    console.log(this.effectTypes);
-
+    this.datasetsState = this.store.select('datasets');
+    this.hasCNV = this.datasetsState.map(datasetsState => {
+      if (!datasetsState || !datasetsState.selectedDataset) {
+        return false;
+      }
+      return datasetsState.selectedDataset.genotypeBrowser.hasCNV;
+    });
     this.initButtonGroups();
-    this.initColumnGroups();
   }
 
   ngOnInit() {
@@ -110,29 +117,6 @@ export class EffecttypesComponent implements OnInit {
     this.effectTypesButtons.set('LGDS', LGDS);
     this.effectTypesButtons.set('NONSYNONYMOUS', NONSYNONYMOUS);
     this.effectTypesButtons.set('UTRS', UTRS);
-
-    this.buttonGroups = [
-      { id: 'ALL', name: 'All' },
-      { id: 'NONE', name: 'None' },
-      { id: 'LGDS', name: 'LGDs' },
-      { id: 'NONSYNONYMOUS', name: 'Nonsynonymous' },
-      { id: 'UTRS', name: 'UTRs' },
-    ];
-  }
-
-  private initColumnGroups(): void {
-    this.effectTypesColumns = new Map<string, string[]>();
-
-    this.effectTypesColumns.set('CODING', CODING);
-    this.effectTypesColumns.set('NONCODING', NONCODING);
-    this.effectTypesColumns.set('CNV', CNV);
-
-    this.columnGroups = [
-      { id: 'CODING', name: 'Coding' },
-      { id: 'NONCODING', name: 'Noncoding' },
-      { id: 'CNV', name: 'CNV' },
-    ];
-
   }
 
   selectButtonGroup(groupId: string): void {
