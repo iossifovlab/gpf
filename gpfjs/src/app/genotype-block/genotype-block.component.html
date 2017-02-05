@@ -10,6 +10,8 @@
       <gpf-varianttypes></gpf-varianttypes>
     </div>
 
-    <gpf-effecttypes class="col-lg-6"></gpf-effecttypes>
+    
+    <gpf-effecttypes class="panel-row" [ngClass]="(hasCNV|async)?'col-lg-6':'col-lg-4'">
+    </gpf-effecttypes>
   </div>
 </div>

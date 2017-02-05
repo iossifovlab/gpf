@@ -1,49 +1,50 @@
 
-<div class="panel-row">
-  <div class="effect-card card">
-    <div class="card-header card-title">Effect Types</div>
-    <div class="card-block">
-      <div class="btn-group btn-group-sm">
-        <button
-          (click)="selectButtonGroup('ALL')"
-          class="btn btn-default">All</button>
-        <button
-          (click)="selectButtonGroup('NONE')"
-          class="btn btn-default">None</button>
-        <button
-          (click)="selectButtonGroup('LGDS')"
-          class="btn btn-default">LGDs</button>
-        <button
-          (click)="selectButtonGroup('NONSYNONYMOUS')"
-          class="btn btn-default">Nonsynonymous</button>
-        <button
-          (click)="selectButtonGroup('UTRS')"
-          class="btn btn-default">UTRs</button>
-      </div>
-      <div class="row">
+<div class="effect-card card">
+  <div class="card-header card-title">Effect Types</div>
+  <div class="card-block">
+    <div class="btn-group btn-group-sm">
+      <button
+        (click)="selectButtonGroup('ALL')"
+        class="btn btn-default">All</button>
+      <button
+        (click)="selectButtonGroup('NONE')"
+        class="btn btn-default">None</button>
+      <button
+        (click)="selectButtonGroup('LGDS')"
+        class="btn btn-default">LGDs</button>
+      <button
+        (click)="selectButtonGroup('NONSYNONYMOUS')"
+        class="btn btn-default">Nonsynonymous</button>
+      <button
+        (click)="selectButtonGroup('UTRS')"
+        class="btn btn-default">UTRs</button>
+    </div>
+    <div class="row">
 
-        <gpf-effecttypes-column class="col-lg-4"
-          [columnName]="'Coding'"
-          [effectTypesLabels]="codingColumn"
-          [effectTypes]="effectTypes"
-          (effectTypeEvent)="onEffectTypeChange($event)">
-        </gpf-effecttypes-column>
+      <gpf-effecttypes-column
+        [ngClass]="(hasCNV|async)?'col-lg-4':'col-lg-6'"
+        [columnName]="'Coding'"
+        [effectTypesLabels]="codingColumn"
+        [effectTypes]="effectTypes"
+        (effectTypeEvent)="onEffectTypeChange($event)">
+      </gpf-effecttypes-column>
 
-        <gpf-effecttypes-column class="col-lg-4"
-          [columnName]="'Noncoding'"
-          [effectTypesLabels]="nonCodingColumn"
-          [effectTypes]="effectTypes"
-          (effectTypeEvent)="onEffectTypeChange($event)">
-        </gpf-effecttypes-column>
+      <gpf-effecttypes-column
+        [ngClass]="(hasCNV|async)?'col-lg-4':'col-lg-6'"
+        [columnName]="'Noncoding'"
+        [effectTypesLabels]="nonCodingColumn"
+        [effectTypes]="effectTypes"
+        (effectTypeEvent)="onEffectTypeChange($event)">
+      </gpf-effecttypes-column>
 
-        <gpf-effecttypes-column *ngIf="hasCNV | async"
-          [columnName]="'CNV'"
-          [effectTypesLabels]="cnvColumn"
-          [effectTypes]="effectTypes"
-          (effectTypeEvent)="onEffectTypeChange($event)">
-        </gpf-effecttypes-column>
+      <gpf-effecttypes-column
+        *ngIf="hasCNV | async"
+        [columnName]="'CNV'"
+        [effectTypesLabels]="cnvColumn"
+        [effectTypes]="effectTypes"
+        (effectTypeEvent)="onEffectTypeChange($event)">
+      </gpf-effecttypes-column>
 
-      </div>
     </div>
   </div>
 </div>
