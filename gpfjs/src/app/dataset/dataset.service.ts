@@ -20,8 +20,6 @@ export class DatasetService {
   private datasetUrl = 'dataset';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
-
-  // selectedDataset: Subject<Dataset> = new BehaviorSubject<Dataset>(null);
   datasetsStore: Observable<DatasetsState>;
 
   constructor(

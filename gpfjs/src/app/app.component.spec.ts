@@ -7,7 +7,7 @@ import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { DatasetService } from './dataset/dataset.service';
 import { DatasetComponent } from './dataset/dataset.component';
 import { DatasetServiceStub } from './dataset/dataset.service.spec';
-import { EffecttypesComponent } from './effecttypes/effecttypes.component';
+import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes/effecttypes.component';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
@@ -16,7 +16,9 @@ import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { Store } from '@ngrx/store';
+import { gpfReducer } from './store/gpf-store';
+import { StoreModule } from '@ngrx/store';
+
 
 describe('AppComponent', () => {
   beforeEach(() => {
@@ -28,6 +30,7 @@ describe('AppComponent', () => {
         GenderComponent,
         VarianttypesComponent,
         EffecttypesComponent,
+        EffecttypesColumnComponent,
         GenotypeBlockComponent,
         RegionsBlockComponent,
         GenesBlockComponent,
@@ -35,17 +38,13 @@ describe('AppComponent', () => {
       ],
       imports: [
         NgbModule.forRoot(),
-
+        StoreModule.provideStore(gpfReducer),
       ],
       providers: [
         {
           provide: DatasetService,
-          useValue: undefined // new DatasetServiceStub(undefined, undefined)
+          useValue: new DatasetServiceStub()
         },
-        {
-          provide: Store,
-          useValue: storeSpy
-        }
       ]
     });
     TestBed.compileComponents();

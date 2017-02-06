@@ -14,6 +14,10 @@ import {
 
 import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
 import { Observable } from 'rxjs';
+import { gpfReducer } from '../store/gpf-store';
+import { StoreModule } from '@ngrx/store';
+
+
 
 const mockDatasetResponse: Dataset = {
   id: 'VIP',
@@ -94,8 +98,8 @@ const mockDatasetResponse: Dataset = {
 };
 
 
-export class DatasetServiceStub extends DatasetService {
-  selectedDatasetId: string;
+export class DatasetServiceStub {
+
   getDatasets(): Observable<Dataset[]> {
     return Observable.of([mockDatasetResponse]);
   }
@@ -104,8 +108,18 @@ export class DatasetServiceStub extends DatasetService {
     return Observable.of(mockDatasetResponse);
   }
 
-}
+  setSelectedDataset(dataset: Dataset): void {
+    console.log('setSelectedDataset() called...');
+    //    this.store.dispatch({
+    //      'type': DATASETS_SELECT,
+    //      'payload': dataset
+    //
+    //    });
+    // this.selectedDataset.next(dataset);
+  }
 
+
+}
 
 describe('DatasetService', () => {
   let mockBackend: MockBackend;
@@ -129,6 +143,7 @@ describe('DatasetService', () => {
       ],
       imports: [
         HttpModule,
+        StoreModule.provideStore(gpfReducer),
       ],
 
     });

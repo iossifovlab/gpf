@@ -7,7 +7,11 @@ import { DatasetComponent } from './dataset.component';
 import { DatasetService } from './dataset.service';
 import { DatasetServiceStub } from '../dataset/dataset.service.spec';
 
-let datasetService = undefined; // new DatasetServiceStub(undefined, undefined);
+
+import { gpfReducer } from '../store/gpf-store';
+import { StoreModule } from '@ngrx/store';
+
+let datasetService = new DatasetServiceStub();
 
 
 describe('DatasetComponent', () => {
@@ -17,7 +21,9 @@ describe('DatasetComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [DatasetComponent],
-      imports: [],
+      imports: [
+        StoreModule.provideStore(gpfReducer),
+      ],
       providers: [
         {
           provide: DatasetService,
