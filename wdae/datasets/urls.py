@@ -8,10 +8,10 @@ from datasets import views
 
 
 urlpatterns = [
-    url(r'^/dataset$',
+    url(r'^/$',
         views.DatasetView.as_view(),
         name="dataset_all"),
-    url(r'^/dataset/(?P<dataset_id>.+)$',
+    url(r'^/(?P<dataset_id>.+)$',
         views.DatasetView.as_view(),
         name="dataset"),
 
