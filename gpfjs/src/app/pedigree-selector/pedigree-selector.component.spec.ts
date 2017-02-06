@@ -5,11 +5,8 @@ import { DebugElement } from '@angular/core';
 
 import { PedigreeSelectorComponent } from './pedigree-selector.component';
 
-import { Dataset } from '../dataset/dataset';
-import { DatasetService } from '../dataset/dataset.service';
-import { DatasetServiceStub } from '../dataset/dataset.service.spec';
-
-let datasetService = undefined; // new DatasetServiceStub(undefined, undefined);
+import { gpfReducer } from '../store/gpf-store';
+import { StoreModule } from '@ngrx/store';
 
 describe('PedigreeselectorComponent', () => {
   let component: PedigreeSelectorComponent;
@@ -19,12 +16,9 @@ describe('PedigreeselectorComponent', () => {
     TestBed.configureTestingModule({
       declarations: [PedigreeSelectorComponent],
       imports: [
+        StoreModule.provideStore(gpfReducer),
       ],
       providers: [
-        {
-          provide: DatasetService,
-          useValue: datasetService
-        }
       ]
 
     })

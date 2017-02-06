@@ -5,6 +5,9 @@ import { DebugElement } from '@angular/core';
 
 import { GenderComponent } from './gender.component';
 
+import { gpfReducer } from '../store/gpf-store';
+import { StoreModule } from '@ngrx/store';
+
 describe('GenderComponent', () => {
   let component: GenderComponent;
   let fixture: ComponentFixture<GenderComponent>;
@@ -13,6 +16,7 @@ describe('GenderComponent', () => {
     TestBed.configureTestingModule({
       declarations: [GenderComponent],
       imports: [
+        StoreModule.provideStore(gpfReducer),
       ],
 
     })

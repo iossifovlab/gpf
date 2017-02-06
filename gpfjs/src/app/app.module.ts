@@ -32,11 +32,7 @@ import { GeneWeightsService } from './gene-weights/gene-weights.service';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
-import { effectTypesReducer } from './effecttypes/effecttypes';
-import { datasetsReducer } from './dataset/dataset';
-import { genderReducer } from './gender/gender';
-import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector';
-import { variantTypesReducer } from './varianttypes/varianttypes';
+import { gpfReducer } from './store/gpf-store';
 
 @NgModule({
   declarations: [
@@ -63,13 +59,7 @@ import { variantTypesReducer } from './varianttypes/varianttypes';
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    StoreModule.provideStore({
-      datasets: datasetsReducer,
-      pedigreeSelector: pedigreeSelectorReducer,
-      effectTypes: effectTypesReducer,
-      gender: genderReducer,
-      variantTypes: variantTypesReducer,
-    }),
+    StoreModule.provideStore(gpfReducer),
     StoreDevtoolsModule.instrumentOnlyWithExtension(),
 
   ],

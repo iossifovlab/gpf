@@ -3,14 +3,10 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
-import { EffecttypesComponent } from './effecttypes.component';
+import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes.component';
 
-import { DatasetService } from '../dataset/dataset.service';
-import { DatasetServiceStub } from '../dataset/dataset.service.spec';
-import { Store } from '@ngrx/store';
-
-
-let datasetService = undefined; // new DatasetServiceStub(undefined, undefined);
+import { gpfReducer } from '../store/gpf-store';
+import { StoreModule } from '@ngrx/store';
 
 
 describe('EffecttypesComponent', () => {
@@ -20,19 +16,14 @@ describe('EffecttypesComponent', () => {
   beforeEach(async(() => {
     const storeSpy = jasmine.createSpyObj('Store', ['dispatch', 'subscribe', 'select', 'let']);
     TestBed.configureTestingModule({
-      declarations: [EffecttypesComponent],
+      declarations: [
+        EffecttypesComponent,
+        EffecttypesColumnComponent,
+      ],
       imports: [
+        StoreModule.provideStore(gpfReducer),
       ],
       providers: [
-        {
-          provide: DatasetService,
-          useValue: datasetService
-        },
-        {
-          provide: Store,
-          useValue: storeSpy
-        }
-
       ]
     })
       .compileComponents();

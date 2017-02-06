@@ -8,15 +8,11 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { GenotypeBlockComponent } from './genotype-block.component';
 import { GenderComponent } from '../gender/gender.component';
 import { VarianttypesComponent } from '../varianttypes/varianttypes.component';
-import { EffecttypesComponent } from '../effecttypes/effecttypes.component';
+import { EffecttypesComponent, EffecttypesColumnComponent } from '../effecttypes/effecttypes.component';
 import { PedigreeSelectorComponent } from '../pedigree-selector/pedigree-selector.component';
 
-import { Dataset } from '../dataset/dataset';
-import { DatasetService } from '../dataset/dataset.service';
-import { DatasetServiceStub } from '../dataset/dataset.service.spec';
-import { Store } from '@ngrx/store';
-
-let datasetService = undefined; // new DatasetServiceStub(undefined, undefined);
+import { gpfReducer } from '../store/gpf-store';
+import { StoreModule } from '@ngrx/store';
 
 
 describe('GenotypeBlockComponent', () => {
@@ -30,21 +26,16 @@ describe('GenotypeBlockComponent', () => {
         GenderComponent,
         VarianttypesComponent,
         EffecttypesComponent,
+        EffecttypesColumnComponent,
         GenotypeBlockComponent,
         PedigreeSelectorComponent,
       ],
       imports: [
         NgbModule.forRoot(),
+        StoreModule.provideStore(gpfReducer),
+
       ],
       providers: [
-        {
-          provide: DatasetService,
-          useValue: datasetService
-        },
-        {
-          provide: Store,
-          useValue: storeSpy
-        }
       ]
     })
       .compileComponents();

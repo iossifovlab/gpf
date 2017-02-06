@@ -1,7 +1,4 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { DatasetService } from '../dataset/dataset.service';
-import { IdName } from '../common/idname';
-import { DatasetsState } from '../dataset/dataset';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
@@ -12,6 +9,8 @@ import {
   CNV, ALL, LGDS, NONSYNONYMOUS, UTRS,
   EFFECT_TYPE_CHECK, EFFECT_TYPE_UNCHECK, EFFECT_TYPE_SET,
 } from './effecttypes';
+import { DatasetsState } from '../dataset/dataset';
+import { GpfState } from '../store/gpf-store';
 
 
 @Component({
@@ -91,7 +90,7 @@ export class EffecttypesComponent implements OnInit {
   hasCNV: Observable<boolean>;
 
   constructor(
-    private store: Store<any>
+    private store: Store<GpfState>
   ) {
 
     this.effectTypes = this.store.select('effectTypes');

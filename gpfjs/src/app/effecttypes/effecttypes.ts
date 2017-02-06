@@ -4,20 +4,18 @@ export const EFFECT_TYPE_UNCHECK = 'EFFECT_TYPE_UNCHECK';
 export const EFFECT_TYPE_SET = 'EFFECT_TYPE_SET';
 
 
-export function effectTypesReducer(state: Array<string> = new Array<string>(), action): Array<string> {
+export type EffectTypesState = Array<string>;
+
+export function effectTypesReducer(
+  state: EffectTypesState = [], action): EffectTypesState {
   switch (action.type) {
     case EFFECT_TYPE_CHECK:
-      if (state.indexOf(action.payload) !== -1) {
-        return state;
-      } else {
-        return [...state, action.payload];
-      }
+      return [
+        ...state.filter(et => et !== action.payload),
+        action.payload
+      ];
     case EFFECT_TYPE_UNCHECK:
-      if (state.indexOf(action.payload) === -1) {
-        return state;
-      } else {
-        return state.filter(et => et !== action.payload);
-      }
+      return state.filter(et => et !== action.payload);
     case EFFECT_TYPE_SET:
       return [...action.payload];
     default:
