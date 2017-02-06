@@ -8,7 +8,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { AppComponent } from './app.component';
 
-import { DatasetService } from './dataset/dataset.service';
+import { DatasetsService } from './datasets/datasets.service';
 import { ConfigService } from './config/config.service';
 import { CustomRequestOptions } from './config/customrequest.options';
 import { GenderComponent } from './gender/gender.component';
@@ -18,7 +18,7 @@ import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype
 import { QueryService } from './query/query.service';
 
 import { GpfTableModule } from './table/table.module';
-import { DatasetComponent } from './dataset/dataset.component';
+import { DatasetsComponent } from './datasets/datasets.component';
 import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
@@ -42,7 +42,7 @@ import { gpfReducer } from './store/gpf-store';
     EffecttypesComponent,
     EffecttypesColumnComponent,
     GenotypePreviewTableComponent,
-    DatasetComponent,
+    DatasetsComponent,
     PedigreeSelectorComponent,
     GenotypeBlockComponent,
     GenesBlockComponent,
@@ -65,7 +65,7 @@ import { gpfReducer } from './store/gpf-store';
   ],
   providers: [
     ConfigService,
-    DatasetService,
+    DatasetsService,
     QueryService,
     { provide: RequestOptions, useClass: CustomRequestOptions },
     GeneWeightsService

@@ -4,9 +4,9 @@ import { TestBed, async } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { GenderComponent } from './gender/gender.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
-import { DatasetService } from './dataset/dataset.service';
-import { DatasetComponent } from './dataset/dataset.component';
-import { DatasetServiceStub } from './dataset/dataset.service.spec';
+import { DatasetsService } from './datasets/datasets.service';
+import { DatasetsComponent } from './datasets/datasets.component';
+import { DatasetsServiceStub } from './datasets/datasets.service.spec';
 import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes/effecttypes.component';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
@@ -26,7 +26,7 @@ describe('AppComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         AppComponent,
-        DatasetComponent,
+        DatasetsComponent,
         GenderComponent,
         VarianttypesComponent,
         EffecttypesComponent,
@@ -42,8 +42,8 @@ describe('AppComponent', () => {
       ],
       providers: [
         {
-          provide: DatasetService,
-          useValue: new DatasetServiceStub()
+          provide: DatasetsService,
+          useValue: new DatasetsServiceStub()
         },
       ]
     });

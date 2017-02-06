@@ -1,4 +1,4 @@
-import { DatasetsState } from '../dataset/dataset';
+import { DatasetsState } from '../datasets/datasets';
 import { Component, OnInit } from '@angular/core';
 
 import { Store } from '@ngrx/store';

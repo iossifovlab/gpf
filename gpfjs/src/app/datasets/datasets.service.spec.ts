@@ -1,10 +1,10 @@
 /* tslint:disable:no-unused-variable */
 import { Injector } from '@angular/core';
 import { TestBed, getTestBed, async, inject, fakeAsync, tick } from '@angular/core/testing';
-import { DatasetService } from './dataset.service';
+import { DatasetsService } from './datasets.service';
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
-import { Dataset } from '../dataset/dataset';
+import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 
 import {
@@ -98,7 +98,7 @@ const mockDatasetResponse: Dataset = {
 };
 
 
-export class DatasetServiceStub {
+export class DatasetsServiceStub {
 
   getDatasets(): Observable<Dataset[]> {
     return Observable.of([mockDatasetResponse]);
@@ -128,7 +128,7 @@ describe('DatasetService', () => {
     TestBed.configureTestingModule({
       providers: [
         ConfigService,
-        DatasetService,
+        DatasetsService,
 
         MockBackend,
         BaseRequestOptions,
@@ -152,7 +152,7 @@ describe('DatasetService', () => {
   }));
 
   it('getDatasets() should parse correct response',
-    async(inject([DatasetService], (service) => {
+    async(inject([DatasetsService], (service) => {
 
       mockBackend.connections.subscribe(
         (conn: MockConnection) => {
@@ -174,7 +174,7 @@ describe('DatasetService', () => {
   );
 
   it('getDataset() should parse correct response',
-    async(inject([DatasetService], (service) => {
+    async(inject([DatasetsService], (service) => {
 
       mockBackend.connections.subscribe(
         (conn: MockConnection) => {

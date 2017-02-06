@@ -3,7 +3,7 @@ import { combineReducers } from '@ngrx/store';
 
 
 
-import { DatasetsState, datasetsReducer } from '../dataset/dataset';
+import { DatasetsState, datasetsReducer } from '../datasets/datasets';
 import { EffectTypesState, effectTypesReducer } from '../effecttypes/effecttypes';
 import { GenderState, genderReducer } from '../gender/gender';
 import { PedigreeSelectorState, pedigreeSelectorReducer } from '../pedigree-selector/pedigree-selector';

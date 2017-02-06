@@ -8,7 +8,7 @@ import { IdName } from '../common/idname';
 import {
   Dataset, DatasetsState,
   DATASETS_INIT, DATASETS_SELECT
-} from '../dataset/dataset';
+} from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 
 import 'rxjs/add/operator/map';
@@ -16,8 +16,8 @@ import { Subject, BehaviorSubject } from 'rxjs';
 import { Store } from '@ngrx/store';
 
 @Injectable()
-export class DatasetService {
-  private datasetUrl = 'dataset';
+export class DatasetsService {
+  private datasetUrl = 'datasets';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
   datasetsStore: Observable<DatasetsState>;

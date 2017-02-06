@@ -1,27 +1,27 @@
 import { Component, OnInit } from '@angular/core';
-import { DatasetService } from './dataset.service';
-import { Dataset, DatasetsState } from './dataset';
+import { DatasetsService } from './datasets.service';
+import { Dataset, DatasetsState } from './datasets';
 
 import { IdName } from '../common/idname';
 
 
 @Component({
-  selector: 'gpf-dataset',
-  templateUrl: './dataset.component.html',
-  styleUrls: ['./dataset.component.css']
+  selector: 'gpf-datasets',
+  templateUrl: './datasets.component.html',
+  styleUrls: ['./datasets.component.css']
 })
-export class DatasetComponent implements OnInit {
+export class DatasetsComponent implements OnInit {
 
   datasets: Dataset[];
   selectedDataset: Dataset;
 
   constructor(
-    private datasetService: DatasetService,
+    private datasetsService: DatasetsService,
   ) {
   }
 
   ngOnInit() {
-    this.datasetService.getDatasets().subscribe(
+    this.datasetsService.getDatasets().subscribe(
       (datasets) => {
 
         this.datasets = datasets;
@@ -32,7 +32,7 @@ export class DatasetComponent implements OnInit {
   selectDataset(index: number): void {
     if (index >= 0 && index < this.datasets.length) {
       this.selectedDataset = this.datasets[index];
-      this.datasetService.setSelectedDataset(this.selectedDataset);
+      this.datasetsService.setSelectedDataset(this.selectedDataset);
     }
   }
 }
