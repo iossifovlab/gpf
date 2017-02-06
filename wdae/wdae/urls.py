@@ -12,7 +12,7 @@ urlpatterns = patterns(
     url(r'^api/v2/ssc_dataset_families', include('ssc_families.urls')),
     url(r'^api/v2/enrichment', include('enrichment.urls')),
 
-    url(r'^api/v3/datasets', include('datasets.urls')),
+    url(r'^api/v3/datasets', include('datasets_api.urls')),
     url(r'^api/v3/gene_weights', include('gene_weights.urls')),
     url(r'^api/v3/genotype_browser', include('genotype_browser.urls')),
 

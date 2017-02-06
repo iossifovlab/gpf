@@ -11,7 +11,7 @@ from pprint import pprint
 class DatasetApiTest(APITestCase):
 
     def test_get_datasets(self):
-        url = '/api/v3/dataset'
+        url = '/api/v3/datasets/'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
@@ -20,7 +20,7 @@ class DatasetApiTest(APITestCase):
         self.assertEquals(3, len(data['data']))
 
     def test_get_dataset_ssc(self):
-        url = '/api/v3/dataset/SSC'
+        url = '/api/v3/datasets/SSC'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
@@ -28,12 +28,14 @@ class DatasetApiTest(APITestCase):
         self.assertIn('data', data)
         print(data)
         data = data['data']
+        self.assertIsNone(data['studyTypes'])
+
         self.assertIn('genotypeBrowser', data)
         gbdata = data['genotypeBrowser']
-        self.assertIsNone(gbdata['studyTypes'])
+        self.assertFalse(gbdata['hasStudyTypes'])
 
     def test_get_dataset_sd(self):
-        url = '/api/v3/dataset/SD'
+        url = '/api/v3/datasets/SD'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
@@ -41,12 +43,13 @@ class DatasetApiTest(APITestCase):
         self.assertIn('data', data)
         pprint(data)
         data = data['data']
+        self.assertEquals(['WE', 'TG'], data['studyTypes'])
         self.assertIn('genotypeBrowser', data)
         gbdata = data['genotypeBrowser']
-        self.assertEquals(['WE', 'TG'], gbdata['studyTypes'])
+        self.assertIn('hasStudyTypes', gbdata)
 
     def test_get_dataset_not_found(self):
-        url = '/api/v3/dataset/ALA_BALA'
+        url = '/api/v3/datasets/ALA_BALA'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         data = response.data
@@ -55,7 +58,7 @@ class DatasetApiTest(APITestCase):
         pprint(data)
 
     def test_get_dataset_vip(self):
-        url = '/api/v3/dataset/VIP'
+        url = '/api/v3/datasets/VIP'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
@@ -65,8 +68,8 @@ class DatasetApiTest(APITestCase):
         data = data['data']
         self.assertIn('genotypeBrowser', data)
         gbdata = data['genotypeBrowser']
-        self.assertIsNone(gbdata['studyTypes'])
-        self.assertTrue(gbdata['pedigreeSelector'])
+        self.assertFalse(gbdata['hasStudyTypes'])
 
+        self.assertTrue(data['pedigreeSelectors'])
         pedigrees = data['pedigreeSelectors']
         self.assertEquals(2, len(pedigrees))
