@@ -3,9 +3,10 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
+import itertools
 
 
-class QueryBase(object):
+class EffectTypesBase(object):
     EFFECT_TYPES = [
         "3'UTR",
         "3'UTR-intron",
@@ -26,7 +27,98 @@ class QueryBase(object):
         'synonymous',
         'CDS',
         'CNV+',
-        'CNV-', ]
+        'CNV-',
+    ]
+
+    EFFECT_TYPES_MAPPING = {
+        "Nonsense": ["nonsense"],
+        "Frame-shift": ["frame-shift"],
+        "Splice-site": ["splice-site"],
+        "Missense": ["missense"],
+        "Non-frame-shift": ["no-frame-shift"],
+        "noStart": ["noStart"],
+        "noEnd": ["noEnd"],
+        "Synonymous": ["synonymous"],
+        "Non coding": ["non-coding"],
+        "Intron": ["intron"],
+        "Intergenic": ["intergenic"],
+        "3'-UTR": ["3'UTR", "3'UTR-intron"],
+        "5'-UTR": ["5'UTR", "5'UTR-intron"],
+        "CNV": ["CNV+", "CNV-"],
+        "CNV+": ["CNV+"],
+        "CNV-": ["CNV-"],
+    }
+
+    EFFECT_GROUPS = {
+        "coding": [
+            "Nonsense",
+            "Frame-shift",
+            "Splice-site",
+            "Missense",
+            "Non-frame-shift",
+            "noStart",
+            "noEnd",
+            "Synonymous",
+        ],
+        "noncoding": [
+            "Non coding",
+            "Intron",
+            "Intergenic",
+            "3'-UTR",
+            "5'-UTR",
+        ],
+        "cnv": [
+            "CNV+",
+            "CNV-"
+        ],
+        "lgds": [
+            "Frame-shift",
+            "Nonsense",
+            "Splice-site",
+        ],
+        "nonsynonymous": [
+            "Nonsense",
+            "Frame-shift",
+            "Splice-site",
+            "Missense",
+            "Non-frame-shift",
+            "noStart",
+            "noEnd",
+        ],
+        "utrs": [
+            "3'-UTR",
+            "5'-UTR",
+        ]
+    }
+
+    def _build_effect_types_groups(self, effect_types):
+        etl = [
+            self.EFFECT_GROUPS[
+                et.lower()] if et.lower() in self.EFFECT_GROUPS else [et]
+            for et in effect_types
+        ]
+        return list(itertools.chain.from_iterable(etl))
+
+    def _build_effect_types_list(self, effect_types):
+        etl = [
+            self.EFFECT_TYPES_MAPPING[et]
+            if et in self.EFFECT_TYPES_MAPPING else [et]
+            for et in effect_types]
+        return list(itertools.chain.from_iterable(etl))
+
+    def _build_(self):
+        pass
+
+    def build_effect_types(self, effect_types):
+        etl = [et.strip() for et in effect_types.split(',')]
+        etl = self._build_effect_types_groups(etl)
+        etl = self._build_effect_types_list(etl)
+
+        assert all([et in self.EFFECT_TYPES for et in etl])
+        return etl
+
+
+class QueryBase(EffectTypesBase):
 
     VARIANT_TYPES = [
         'del', 'ins', 'sub', 'CNV']

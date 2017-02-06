@@ -84,3 +84,10 @@ def test_get_legend_bad_pedigree(query):
     kwargs['pedigree_selector'] = 'ala bala'
     with pytest.raises(AssertionError):
         query.get_legend(**kwargs)
+
+
+def test_get_effect_types(query):
+    res = query.get_effect_types(**EXAMPLE_QUERY_SSC)
+    assert res is not None
+
+    assert set(['frame-shift', 'nonsense', 'splice-site']) == set(res)

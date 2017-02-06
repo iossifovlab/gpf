@@ -32,7 +32,7 @@ class QueryDataset(QueryBase):
         assert pedigree is not None
         return pedigree
 
-    def get_dataset(self, dataset_id):
+    def get_dataset(self, dataset_id, **kwargs):
         assert dataset_id is not None
         assert dataset_id in self.datasets
         dataset = self.datasets[dataset_id]
@@ -53,3 +53,9 @@ class QueryDataset(QueryBase):
             'name': pedigree['name'],
             'values': values
         }
+
+    def get_effect_types(self, **kwargs):
+        assert 'effect_types' in kwargs
+        effect_types = kwargs['effect_types']
+
+        return self.build_effect_types(effect_types)
