@@ -32,7 +32,7 @@ class PedigreeSelector(dict):
         return result
 
 
-class DatasetConfig(object):
+class DatasetsConfig(object):
 
     @staticmethod
     def split_section(section):
@@ -44,7 +44,7 @@ class DatasetConfig(object):
         return (section_type, section_name)
 
     def __init__(self, **kwargs):
-        super(DatasetConfig, self).__init__()
+        super(DatasetsConfig, self).__init__()
         config = kwargs.get('config', None)
 
         if config:

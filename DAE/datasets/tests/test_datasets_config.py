@@ -5,7 +5,7 @@ Created on Jan 20, 2017
 '''
 
 import unittest
-from datasets.config import DatasetConfig
+from datasets.config import DatasetsConfig
 from pprint import pprint
 
 
@@ -14,7 +14,7 @@ class DatasetsConfigTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(DatasetsConfigTest, cls).setUpClass()
-        cls.dataset_config = DatasetConfig()
+        cls.dataset_config = DatasetsConfig()
 
     def test_datasets_config_simple(self):
         datasets = self.dataset_config.get_datasets()
