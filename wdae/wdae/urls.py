@@ -14,6 +14,6 @@ urlpatterns = patterns(
 
     url(r'^api/v3/datasets', include('datasets.urls')),
     url(r'^api/v3/gene_weights', include('gene_weights.urls')),
-    url(r'^api/v3/query', include('query.urls')),
+    url(r'^api/v3/genotype_browser', include('genotype_browser.urls')),
 
 )

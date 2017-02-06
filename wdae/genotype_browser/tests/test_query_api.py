@@ -30,7 +30,7 @@ EXAMPLE_REQUEST = {
 
 
 class Test(APITestCase):
-    URL = "/api/v3/query/preview"
+    URL = "/api/v3/genotype_browser/preview"
 
     def test_query_preview(self):
         data = copy.deepcopy(EXAMPLE_REQUEST)
