@@ -23,9 +23,11 @@ export class HistogramComponent  {
   @Input() bins: Array<number>;
   @Input() bars: Array<number>;
 
-  @Input() beforeRangeText: string;
-  @Input() insideRangeText: string;
-  @Input() afterRangeText: string;
+  @Input() rangesCounts: Array<number>;
+
+  beforeRangeText: string;
+  insideRangeText: string;
+  afterRangeText: string;
 
   private xScale: d3.ScaleLinear<number, number>;
   private barsTotalSum: number;
@@ -41,29 +43,39 @@ export class HistogramComponent  {
 
     if ("rangeStart" in changes || "rangeEnd" in changes) {
       this.estimateRangeTexts();
+
       this.svg.selectAll("rect").style("fill", (d, index, objects) => {
         return objects[index].x.baseVal.value < this.rangeStartX
             || objects[index].x.baseVal.value > this.rangeEndX
              ? "lightsteelblue": "steelblue"})
     }
+
+    if ("rangesCounts" in changes ) {
+      if (this.rangesCounts && this.rangesCounts.length == 3) {
+        this.beforeRangeText = this.formatEstimateText(this.rangesCounts[0], false);
+        this.insideRangeText = this.formatEstimateText(this.rangesCounts[1], false);
+        this.afterRangeText  = this.formatEstimateText(this.rangesCounts[2], false);
+      }
+    }
   }
 
-  formatEstimateText(count: number) {
+  formatEstimateText(count: number, estimate: boolean = true) {
     let perc = count/this.barsTotalSum * 100
-    return "~" + count.toFixed(0) + " (" +  perc.toFixed(2) +"%)";
+    let string = estimate ? "~" : "";
+    return string + count.toFixed(0) + " (" +  perc.toFixed(2) +"%)";
   }
 
   estimateRangeTexts() {
     let rangeStartIndex = this.rangeStartX/this.barWidth;
     let rangeEndIndex = this.rangeEndX/this.barWidth;
 
-    let beforeRange = d3.sum(this.bars.slice(0, rangeStartIndex));
-    let insideRange = d3.sum(this.bars.slice(rangeStartIndex, rangeEndIndex));
-    let afterRange = d3.sum(this.bars.slice(rangeEndIndex));
+    let beforeRangeCount = d3.sum(this.bars.slice(0, rangeStartIndex));
+    let insideRangeCount = d3.sum(this.bars.slice(rangeStartIndex, rangeEndIndex));
+    let afterRangeCount  = d3.sum(this.bars.slice(rangeEndIndex));
 
-    this.beforeRangeText = this.formatEstimateText(beforeRange);
-    this.insideRangeText = this.formatEstimateText(insideRange);
-    this.afterRangeText = this.formatEstimateText(afterRange);
+    this.beforeRangeText = this.formatEstimateText(beforeRangeCount);
+    this.insideRangeText = this.formatEstimateText(insideRangeCount);
+    this.afterRangeText  = this.formatEstimateText(afterRangeCount);
   }
 
   redrawHistogram() {
