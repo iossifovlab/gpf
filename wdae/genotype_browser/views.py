@@ -67,4 +67,4 @@ class QueryPreviewView(views.APIView):
             print("error while processing genotype query")
             traceback.print_exc()
 
-            return Response(status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
