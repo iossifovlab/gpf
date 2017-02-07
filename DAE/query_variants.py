@@ -702,7 +702,7 @@ def augment_vars(v):
     v.atts["_ch_prof_"] = chProf
     v.atts["_prb_viq_"] = viq
     v.atts["_prb_nviq_"] = nviq
-    v.atts["_pedigree_"] = v.pedigree
+    v.atts["_pedigree_"] = str(v.pedigree)
     v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
     v._phenotype_ = v.study.get_attr('study.phenotype')
 
@@ -826,7 +826,7 @@ def generate_response(vs, atts=[], sep='\t'):
                     mavs.append(specialGeneEffects[att](
                         getattr(v, 'requestedGeneEffects')))
                 else:
-                    mavs.append(str(getattr(v, att)))
+                    mavs.append(getattr(v, att))
             except:
                 mavs.append("")
         hack = []
@@ -834,7 +834,9 @@ def generate_response(vs, atts=[], sep='\t'):
             if a in ['SSCfreq', 'EVSfreq', 'E65freq', ] and a not in v.atts:
                 a = a[:3] + '-' + a[3:]
             if a in v.atts:
-                val = str(v.atts[a]).replace(sep, ';').replace("'", '"')
+                val = v.atts[a]
+                if not isinstance(val, list):
+                    val = str(val).replace(sep, ';').replace("'", '"')
                 hack.append(val if val and val != 'False' and
                             val != 'None' else "")
             else:
