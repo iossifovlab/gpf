@@ -17,7 +17,9 @@ export const PEDIGREE_SELECTOR_UNCHECK_VALUE = 'PEDIGREE_SELECTOR_UNCHECK_VALUE'
 export const PEDIGREE_SELECTOR_SET_CHECKED_VALUES = 'PEDIGREE_SELECTOR_SET_CHECKED_VALUES';
 
 
-export function pedigreeSelectorReducer(state: PedigreeSelectorState = initialState, action) {
+export function pedigreeSelectorReducer(
+  state: PedigreeSelectorState = initialState, action) {
+
   switch (action.type) {
     case PEDIGREE_SELECTOR_INIT:
       return {
