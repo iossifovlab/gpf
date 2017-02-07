@@ -109,12 +109,14 @@ class EffectTypesBase(object):
     def _build_(self):
         pass
 
-    def build_effect_types(self, effect_types):
+    def build_effect_types(self, effect_types, safe=True):
         etl = [et.strip() for et in effect_types.split(',')]
         etl = self._build_effect_types_groups(etl)
         etl = self._build_effect_types_list(etl)
-
-        assert all([et in self.EFFECT_TYPES for et in etl])
+        if safe:
+            assert all([et in self.EFFECT_TYPES for et in etl])
+        else:
+            etl = [et for et in etl if et in self.EFFECT_TYPES]
         return etl
 
 

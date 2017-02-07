@@ -41,7 +41,14 @@ def test_build_effect_types_mixed(query_base):
 
 
 def test_build_effect_types_bad(query_base):
-    effect_types = "LGDs,CNV, noStart, not-an-effect-type"
+    effect_types = "LGDs, not-an-effect-type"
 
     with pytest.raises(AssertionError):
         query_base.build_effect_types(effect_types)
+
+
+def test_build_effect_types_bad_not_safe(query_base):
+    effect_types = "LGDs, not-an-effect-type"
+
+    res = query_base.build_effect_types(effect_types, safe=False)
+    assert set(['frame-shift', 'nonsense', 'splice-site']) == set(res)

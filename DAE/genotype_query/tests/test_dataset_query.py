@@ -6,6 +6,7 @@ Created on Feb 6, 2017
 import pytest
 import copy
 from pprint import pprint
+from DAE import vDB
 
 
 EXAMPLE_QUERY_SSC = {
@@ -25,7 +26,6 @@ EXAMPLE_QUERY_SSC = {
     "family_pheno_measure_max": 40,
     "family_pheno_measure": "abc.subscale_ii_lethargy",
     "dataset_id": "SSC",
-    "pedigree_selector": "phenotypes"
 }
 
 EXAMPLE_QUERY_VIP = {
@@ -56,11 +56,14 @@ def test_good_dataset_id(query):
 
 def test_example_query(query):
     query.get_variants(**EXAMPLE_QUERY_SSC)
-    query.get_legend(**EXAMPLE_QUERY_SSC)
+    dataset = query.get_dataset(EXAMPLE_QUERY_SSC['dataset_id'])
+
+    query.get_legend(dataset, **EXAMPLE_QUERY_SSC)
 
 
 def test_get_legend_ssc(query):
-    legend = query.get_legend(**EXAMPLE_QUERY_SSC)
+    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
+    legend = query.get_legend(dataset)
     assert legend is not None
     pprint(legend)
     assert 'name' in legend
@@ -70,7 +73,8 @@ def test_get_legend_ssc(query):
 
 
 def test_get_legend_vip(query):
-    legend = query.get_legend(**EXAMPLE_QUERY_VIP)
+    dataset = query.get_dataset(**EXAMPLE_QUERY_VIP)
+    legend = query.get_legend(dataset)
     assert legend is not None
     pprint(legend)
     assert 'name' in legend
@@ -80,10 +84,12 @@ def test_get_legend_vip(query):
 
 
 def test_get_legend_bad_pedigree(query):
+    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
     kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
+
     kwargs['pedigree_selector'] = 'ala bala'
     with pytest.raises(AssertionError):
-        query.get_legend(**kwargs)
+        query.get_legend(dataset, **kwargs)
 
 
 def test_get_effect_types(query):
@@ -91,3 +97,25 @@ def test_get_effect_types(query):
     assert res is not None
 
     assert set(['frame-shift', 'nonsense', 'splice-site']) == set(res)
+
+
+def test_get_denovo_studies(query):
+    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
+    denovo = query.get_denovo_studies(dataset, **EXAMPLE_QUERY_SSC)
+
+    assert denovo is not None
+    print([st.name for st in denovo])
+    assert all([st.has_denovo for st in denovo])
+
+    st = vDB.get_study('w1202s766e611')
+
+    assert not st.has_denovo
+    print(st.has_denovo)
+
+
+def test_get_transmitted_stuides(query):
+    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
+    transmitted = query.get_transmitted_studies(dataset, **EXAMPLE_QUERY_SSC)
+    assert transmitted
+
+    assert all([st.has_transmitted for st in transmitted])

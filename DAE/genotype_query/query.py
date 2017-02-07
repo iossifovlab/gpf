@@ -4,12 +4,14 @@ Created on Feb 6, 2017
 @author: lubo
 '''
 from common.query_base import QueryBase
+from DAE import vDB
+import itertools
 
 
 class QueryDataset(QueryBase):
 
     @staticmethod
-    def get_named(named_list, name):
+    def idlist_get(named_list, name):
         for el in named_list:
             if name == el['id']:
                 return el
@@ -20,7 +22,7 @@ class QueryDataset(QueryBase):
         for dataset in datasets:
             self.datasets[dataset['id']] = dataset
 
-    def get_variants(self, dataset_id, **kwargs):
+    def get_variants(self, dataset_id, safe=True, **kwargs):
         assert dataset_id is not None
         assert dataset_id in self.datasets
 
@@ -28,7 +30,7 @@ class QueryDataset(QueryBase):
         pedigrees = dataset['pedigreeSelectors']
         pedigree = pedigrees[0]
         if 'pedigree_selector' in kwargs:
-            pedigree = self.get_named(pedigrees, kwargs['pedigree_selector'])
+            pedigree = self.idlist_get(pedigrees, kwargs['pedigree_selector'])
         assert pedigree is not None
         return pedigree
 
@@ -40,13 +42,12 @@ class QueryDataset(QueryBase):
 
         return dataset
 
-    def get_legend(self, dataset_id, **kwargs):
-        dataset = self.get_dataset(dataset_id)
+    def get_legend(self, dataset, **kwargs):
         pedigree = self.get_pedigree_selector(dataset, **kwargs)
 
         values = pedigree['domain'][:]
         default_value = pedigree['default']
-        if self.get_named(values, default_value['id']) is None:
+        if self.idlist_get(values, default_value['id']) is None:
             values.append(default_value)
 
         return {
@@ -54,8 +55,19 @@ class QueryDataset(QueryBase):
             'values': values
         }
 
-    def get_effect_types(self, **kwargs):
+    def get_effect_types(self, safe=True, **kwargs):
         assert 'effect_types' in kwargs
         effect_types = kwargs['effect_types']
 
-        return self.build_effect_types(effect_types)
+        return self.build_effect_types(effect_types, safe)
+
+    def get_studies(self, dataset):
+        study_names = [st.strip() for st in dataset['studies'].split(',')]
+        studies = [vDB.get_studies(st) for st in study_names]
+        return [st for st in itertools.chain.from_iterable(studies)]
+
+    def get_denovo_studies(self, dataset, **kwargs):
+        return [st for st in self.get_studies(dataset) if st.has_denovo]
+
+    def get_transmitted_studies(self, dataset, **kwargs):
+        return [st for st in self.get_studies(dataset) if st.has_transmitted]
