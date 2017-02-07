@@ -8,13 +8,13 @@ from rest_framework.response import Response
 
 
 from helpers.logger import log_filter, LOGGER
-from datasets.config import DatasetConfig
+from datasets.config import DatasetsConfig
 
 
 class QueryPreviewView(views.APIView):
 
     def __init__(self):
-        self.datasets = DatasetConfig()
+        self.datasets = DatasetsConfig()
 
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 preview request: " +
