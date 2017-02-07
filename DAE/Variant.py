@@ -63,6 +63,32 @@ def variantCount(bs, c, location=None, gender=None, denovoParent=None):
             return [1, 'd']
 
 
+def variant_count_v3(bs, c, location=None, gender=None, denovoParent=None):
+    normal = 2
+    if location:
+        normal = normalRefCopyNumber(location, gender)
+        # print("variantCount: {}, {}, {}".format(
+        # location, gender, normalRefCN))
+        ref = bs[0, c]
+        # print("count: {}".format(count))
+        count = 0
+        if bs.shape[0] == 2:
+            alles = bs[1, c]
+            if alles != 0:
+                if ref == normal:
+                    print("location: {}, gender: {}, c: {}, normal: {}, bs: {}"
+                          .format(location, gender, c, normal, bs))
+                count = alles
+        elif bs.shape[0] == 1:
+            if normal != ref:
+                count = ref
+
+        if c != denovoParent:
+            return [count, 0]
+        else:
+            return [0, 1]
+
+
 def isVariant(bs, c, location=None, gender=None):
     normalRefCN = 2
 
@@ -304,6 +330,39 @@ class Variant:
             for l, c in zip(res, colors):
                 l.append(c)
         res = [ph, res]
+        return res
+
+    def pedigree_v3(self, legend):
+        def get_color(p):
+            return legend.get_color(p.phenotype)
+
+        denovo_parent = self.denovo_parent()
+
+        members = self.memberInOrder
+        bs = self.bestSt
+
+        mom = members[0]
+        dad = members[1]
+
+        res = [
+            [[self.familyId, mom.personId, '', '',
+              mom.gender, get_color(mom)],
+             variant_count_v3(bs, 0, self.location,
+                              mom.gender, denovo_parent)],
+            [[self.familyId, dad.personId, '', '',
+              dad.gender, get_color(dad)],
+             variant_count_v3(bs, 1, self.location,
+                              dad.gender, denovo_parent)]
+        ]
+
+        for c, p in enumerate(members[2:], 2):
+            res.append(
+                [[self.familyId, p.personId, mom.personId, dad.personId,
+                  p.gender, get_color(p)],
+                 variant_count_v3(bs, c, self.location,
+                                  dad.gender, denovo_parent)]
+            )
+        res = [reduce(operator.add, row) for row in res]
         return res
 
     def denovo_parent(self):

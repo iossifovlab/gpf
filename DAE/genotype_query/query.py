@@ -8,6 +8,27 @@ from DAE import vDB
 import itertools
 
 
+class PedigreeLegend(dict):
+
+    def __init__(self, pedigree_selector):
+        self.id = pedigree_selector['id']
+        self.name = pedigree_selector['name']
+        self.domain = pedigree_selector['domain']
+        self.values = dict([(v['id'], v) for v in self.domain])
+        self.default = pedigree_selector['default']
+        self['id'] = self.id
+        self['values'] = self.values
+        self['domain'] = self.domain
+        self['name'] = self.name
+
+    def get_color(self, value_id):
+        value = self.values.get(value_id, None)
+        if value is None:
+            return self.default['color']
+        else:
+            return value['color']
+
+
 class QueryDataset(QueryBase):
 
     @staticmethod
@@ -61,16 +82,7 @@ class QueryDataset(QueryBase):
 
     def get_legend(self, dataset, **kwargs):
         pedigree = self.get_pedigree_selector(dataset, **kwargs)
-
-        values = pedigree['domain'][:]
-        default_value = pedigree['default']
-        if self.idlist_get(values, default_value['id']) is None:
-            values.append(default_value)
-
-        return {
-            'name': pedigree['name'],
-            'values': values
-        }
+        return PedigreeLegend(pedigree)
 
     def get_effect_types(self, safe=True, **kwargs):
         assert 'effectTypes' in kwargs

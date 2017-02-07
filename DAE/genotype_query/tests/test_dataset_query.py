@@ -85,7 +85,7 @@ def test_get_legend_ssc(query):
     assert 'name' in legend
     assert 'values' in legend
 
-    assert 3 == len(legend['values'])
+    assert 2 == len(legend['values'])
 
 
 def test_get_legend_vip(query):
@@ -96,7 +96,7 @@ def test_get_legend_vip(query):
     assert 'name' in legend
     assert 'values' in legend
 
-    assert 5 == len(legend['values'])
+    assert 4 == len(legend['values'])
 
 
 def test_get_legend_bad_pedigree(query):
