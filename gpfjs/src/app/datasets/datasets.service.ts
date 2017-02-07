@@ -17,7 +17,7 @@ import { Store } from '@ngrx/store';
 
 @Injectable()
 export class DatasetsService {
-  private datasetUrl = 'datasets';
+  private datasetUrl = 'datasets/';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
   datasetsStore: Observable<DatasetsState>;

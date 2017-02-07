@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DatasetService } from '../dataset/dataset.service';
-import { Dataset, PedigreeSelector, DatasetsState } from '../dataset/dataset';
+import { Dataset, PedigreeSelector, DatasetsState } from '../datasets/datasets';
 import {
   PedigreeSelectorState, PEDIGREE_SELECTOR_INIT,
   PEDIGREE_SELECTOR_SET_CHECKED_VALUES, PEDIGREE_SELECTOR_CHECK_VALUE,

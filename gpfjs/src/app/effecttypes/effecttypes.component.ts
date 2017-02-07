@@ -9,7 +9,7 @@ import {
   CNV, ALL, LGDS, NONSYNONYMOUS, UTRS,
   EFFECT_TYPE_CHECK, EFFECT_TYPE_UNCHECK, EFFECT_TYPE_SET,
 } from './effecttypes';
-import { DatasetsState } from '../dataset/dataset';
+import { DatasetsState } from '../datasets/datasets';
 import { GpfState } from '../store/gpf-store';
 
 

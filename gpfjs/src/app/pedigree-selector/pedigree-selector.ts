@@ -1,5 +1,5 @@
 
-import { PedigreeSelector } from '../dataset/dataset';
+import { PedigreeSelector } from '../datasets/datasets';
 
 export interface PedigreeSelectorState {
   pedigree: PedigreeSelector;
