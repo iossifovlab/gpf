@@ -6,6 +6,7 @@ Created on Feb 6, 2017
 from common.query_base import QueryBase
 from DAE import vDB
 import itertools
+from query_variants import generate_response
 
 
 class PedigreeLegend(dict):
@@ -107,3 +108,42 @@ class QueryDataset(QueryBase):
             'effectTypes': self.get_effect_types(
                 safe=safe, dataset=dataset, **kwargs)
         }
+
+    def get_variants_preview(self, datasetId, safe=True, **kwargs):
+        dataset = self.get_dataset(datasetId=datasetId, safe=safe, **kwargs)
+        denovo = self.get_denovo_variants(dataset, safe, **kwargs)
+        legend = self.get_legend(dataset, **kwargs)
+
+        variants = itertools.chain.from_iterable([denovo])
+
+        def augment_vars(v):
+            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+
+            v.atts["_par_races_"] = 'NA:NA'
+            v.atts["_ch_prof_"] = chProf
+            v.atts["_prb_viq_"] = 'NA'
+            v.atts["_prb_nviq_"] = 'NA'
+            v.atts["_pedigree_"] = v.pedigree_v3(legend)
+            v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
+            v._phenotype_ = v.study.get_attr('study.phenotype')
+            return v
+
+        return generate_response(
+            itertools.imap(augment_vars, variants),
+            [
+                'effectType',
+                'effectDetails',
+                'all.altFreq',
+                'all.nAltAlls',
+                'SSCfreq',
+                'EVSfreq',
+                'E65freq',
+                'all.nParCalled',
+                '_par_races_',
+                '_ch_prof_',
+                '_prb_viq_',
+                '_prb_nviq_',
+                'valstatus',
+                "_pedigree_",
+                "phenoInChS"
+            ])
