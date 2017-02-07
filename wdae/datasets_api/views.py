@@ -7,13 +7,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from datasets.config import DatasetConfig
+from datasets.config import DatasetsConfig
 
 
 class DatasetView(APIView):
 
     def __init__(self):
-        self.dataset_config = DatasetConfig()
+        self.dataset_config = DatasetsConfig()
 
     def get(self, request, dataset_id=None):
 
