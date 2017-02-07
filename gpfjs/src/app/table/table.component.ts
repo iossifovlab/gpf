@@ -217,7 +217,6 @@ export class GpfTableComponent {
   }
 
   getScrollIndices(): Array<number> {
-    console.log(window.innerHeight);
     let visibleRowCount = window.innerHeight/this.calculateRowHeight();
     let maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount
 
