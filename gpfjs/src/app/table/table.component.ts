@@ -185,7 +185,7 @@ class SortInfo {
   styleUrls: ['./table.component.css']
 })
 export class GpfTableComponent {
-  @ViewChild('table') viewChildDiv: any;
+  @ViewChild('table') tableViewChild: any;
   @ViewChild('row') rowViewChild: any;
 
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
@@ -193,6 +193,7 @@ export class GpfTableComponent {
 
   private previousSortingInfo: SortInfo;
   private lastRowHeight = 80;
+  private drawOutsideVisibleCount = 5;
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event) {
@@ -212,13 +213,17 @@ export class GpfTableComponent {
   }
 
   showFloatingHeader(): boolean {
-    return this.viewChildDiv.nativeElement.getBoundingClientRect().top < 0;
+    return this.tableViewChild.nativeElement.getBoundingClientRect().top < 0;
   }
 
   getScrollIndices(): Array<number> {
-    let startIndex = Math.ceil(Math.max(0, -this.viewChildDiv.nativeElement.getBoundingClientRect().top/this.calculateRowHeight()));
-    startIndex =  Math.min(Math.max(0, startIndex - 5), this.dataSource.length - 20);
-    let endIndex = startIndex + 20;
+    console.log(window.innerHeight);
+    let visibleRowCount = window.innerHeight/this.calculateRowHeight();
+    let maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount
+
+    let startIndex = Math.ceil(Math.max(0, -this.tableViewChild.nativeElement.getBoundingClientRect().top/this.calculateRowHeight()));
+    startIndex =  Math.min(Math.max(0, startIndex - this.drawOutsideVisibleCount), this.dataSource.length - maxRowCountToDraw);
+    let endIndex = startIndex + maxRowCountToDraw;
     return [startIndex, endIndex];
   }
 
