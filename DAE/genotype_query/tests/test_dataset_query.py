@@ -10,7 +10,7 @@ from DAE import vDB
 
 
 EXAMPLE_QUERY_SSC = {
-    "effect_types": "Frame-shift,Nonsense,Splice-site",
+    "effectTypes": "Frame-shift,Nonsense,Splice-site",
     "gender": "female,male",
     "present_in_child": "autism and unaffected,autism only",
     "present_in_parent": "neither",
@@ -25,38 +25,54 @@ EXAMPLE_QUERY_SSC = {
     "family_pheno_measure_min": 1.08,
     "family_pheno_measure_max": 40,
     "family_pheno_measure": "abc.subscale_ii_lethargy",
-    "dataset_id": "SSC",
+    "datasetId": "SSC",
+    "pedigreeSelector": "phenotypes"
 }
 
 EXAMPLE_QUERY_VIP = {
-    "effect_types": "Frame-shift,Nonsense,Splice-site",
+    "effectTypes": "Frame-shift,Nonsense,Splice-site",
     "gender": "female,male",
     "present_in_child": "autism and unaffected,autism only",
     "present_in_parent": "neither",
     "variant_types": "CNV,del,ins,sub",
     "genes": "All",
-    "dataset_id": "VIP",
-    "pedigree_selector": "16pstatus"
+    "datasetId": "VIP",
+    "pedigreeSelector": "16pstatus"
+}
+
+EXAMPLE_QUERY_SD = {
+    "effectTypes": "Frame-shift,Nonsense,Splice-site",
+    "gender": "female,male",
+    "present_in_child": "autism and unaffected,autism only",
+    "present_in_parent": "neither",
+    "variant_types": "CNV,del,ins,sub",
+    "genes": "All",
+    "datasetId": "SD",
+    "pedigreeSelector": "phenotypes"
 }
 
 
 def test_none_dataset_id(query):
+    kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    kwargs['datasetId'] = None
     with pytest.raises(AssertionError):
-        query.get_variants(dataset_id=None)
+        query.get_variants(**kwargs)
 
 
 def test_bad_dataset_id(query):
+    kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    kwargs['datasetId'] = 'blah'
     with pytest.raises(AssertionError):
-        query.get_variants(dataset_id='blah')
+        query.get_variants(**kwargs)
 
 
 def test_good_dataset_id(query):
-    query.get_variants(dataset_id='SSC')
+    query.get_variants(**EXAMPLE_QUERY_SSC)
 
 
 def test_example_query(query):
     query.get_variants(**EXAMPLE_QUERY_SSC)
-    dataset = query.get_dataset(EXAMPLE_QUERY_SSC['dataset_id'])
+    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
 
     query.get_legend(dataset, **EXAMPLE_QUERY_SSC)
 
@@ -87,7 +103,7 @@ def test_get_legend_bad_pedigree(query):
     dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
     kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
 
-    kwargs['pedigree_selector'] = 'ala bala'
+    kwargs['pedigreeSelector'] = 'ala bala'
     with pytest.raises(AssertionError):
         query.get_legend(dataset, **kwargs)
 
@@ -119,3 +135,44 @@ def test_get_transmitted_stuides(query):
     assert transmitted
 
     assert all([st.has_transmitted for st in transmitted])
+
+
+def test_get_denovo_variants_ssc(query):
+    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
+    vs = query.get_denovo_variants(dataset, **EXAMPLE_QUERY_SSC)
+    res = [v for v in vs]
+    assert 634 == len(res)
+
+
+def test_get_denovo_variants_vip(query):
+    dataset = query.get_dataset(**EXAMPLE_QUERY_VIP)
+    vs = query.get_denovo_variants(dataset, **EXAMPLE_QUERY_VIP)
+    res = [v for v in vs]
+    assert 64 == len(res)
+
+
+def test_denovo_studies_persons_phenotype_ssc(query):
+    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
+    studies = query.get_denovo_studies(dataset=dataset, **EXAMPLE_QUERY_SSC)
+    for st in studies:
+        phenotype = st.get_attr('study.phenotype')
+        for fam in st.families.values():
+            for p in fam.memberInOrder:
+                if p.role == 'prb':
+                    assert p.phenotype == phenotype
+                else:
+                    assert p.phenotype == 'unaffected'
+
+
+def test_denovo_studies_persons_phenotype_sd(query):
+    dataset = query.get_dataset(**EXAMPLE_QUERY_SD)
+    studies = query.get_denovo_studies(dataset=dataset, **EXAMPLE_QUERY_SD)
+    for st in studies:
+        phenotype = st.get_attr('study.phenotype')
+        print(phenotype)
+        for fam in st.families.values():
+            for p in fam.memberInOrder:
+                if p.role == 'prb':
+                    assert p.phenotype == phenotype
+                else:
+                    assert p.phenotype == 'unaffected'
