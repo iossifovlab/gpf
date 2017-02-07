@@ -10,23 +10,13 @@ import copy
 
 EXAMPLE_REQUEST = {
     "effectTypes": "Frame-shift,Nonsense,Splice-site",
-    "families": "Advanced",
     "gender": "female,male",
     "presentInChild": "autism and unaffected,autism only",
     "presentInParent": "neither",
     "variantTypes": "CNV,del,ins,sub",
     "genes": "All",
-    "familyRace": "All",
-    "familyQuadTrio": "All",
-    "familyPrbGender": "All",
-    "familySibGender": "All",
-    "familyStudyType": "All",
-    "familyStudies": "All",
-    "familyPhenoMeasureMin": 1.08,
-    "familyPhenoMeasureMax": 40,
-    "familyPhenoMeasure": "abc.subscale_ii_lethargy",
     "datasetId": "SSC",
-    "pedigreeSelector": "phenotypes",
+    "pedigreeSelector": "phenotypes"
 }
 
 
