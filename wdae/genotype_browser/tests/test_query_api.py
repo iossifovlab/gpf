@@ -25,7 +25,8 @@ EXAMPLE_REQUEST = {
     "familyPhenoMeasureMin": 1.08,
     "familyPhenoMeasureMax": 40,
     "familyPhenoMeasure": "abc.subscale_ii_lethargy",
-    "dataset": "SSC"
+    "datasetId": "SSC",
+    "pedigreeSelector": "phenotypes",
 }
 
 
@@ -38,10 +39,22 @@ class Test(APITestCase):
         response = self.client.post(
             self.URL, data, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = response.data
+
+        self.assertIn('cols', res)
+        self.assertIn('rows', res)
+        self.assertIn('count', res)
+        self.assertIn('legend', res)
+
+        print(res['legend'])
+        print(res['count'])
+        self.assertEquals(3, len(res['legend']))
+        self.assertEquals(634, int(res['count']))
+        self.assertEquals(634, len(res['rows']))
 
     def test_missing_dataset(self):
         data = copy.deepcopy(EXAMPLE_REQUEST)
-        del data['dataset']
+        del data['datasetId']
 
         response = self.client.post(
             self.URL, data, format='json')
@@ -49,8 +62,8 @@ class Test(APITestCase):
 
     def test_bad_dataset(self):
         data = copy.deepcopy(EXAMPLE_REQUEST)
-        data['dataset'] = 'ala bala portokala'
+        data['datasetId'] = 'ala bala portokala'
 
         response = self.client.post(
             self.URL, data, format='json')
-        self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)

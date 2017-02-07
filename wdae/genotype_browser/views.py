@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from helpers.logger import log_filter, LOGGER
 from datasets.config import DatasetsConfig
 from genotype_query.query import QueryDataset
+import traceback
 
 
 class QueryPreviewView(views.APIView):
@@ -40,6 +41,8 @@ class QueryPreviewView(views.APIView):
         }
 
     def prepare_legend_response(self, data):
+        print(data)
+
         dataset = self.query.get_dataset(**data)
         legend = self.query.get_legend(dataset, **data)
         response = legend.domain[:]
@@ -52,12 +55,16 @@ class QueryPreviewView(views.APIView):
 
         data = request.data
         try:
-            res = {}
-            res['legend'] = self.prepare_legend_response(data)
+            legend = self.prepare_legend_response(data)
 
             variants = self.query.get_variants_preview(safe=True, **data)
-            res.update(variants)
+            res = self.prepare_variants_resonse(variants)
 
-            return Response(status=status.HTTP_200_OK)
+            res['legend'] = legend
+
+            return Response(res, status=status.HTTP_200_OK)
         except Exception:
-            return Response(res, status.HTTP_400_BAD_REQUEST)
+            print("error while processing genotype query")
+            traceback.print_exc()
+
+            return Response(status.HTTP_400_BAD_REQUEST)
