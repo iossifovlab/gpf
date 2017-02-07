@@ -1,4 +1,4 @@
-import { ViewChild, HostListener, ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
+import { ViewChildren, ViewChild, HostListener, ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
 
 // One bright day we should replace this with NgTemplateOutlet
 @Component({
@@ -9,9 +9,9 @@ export class GpfCustomTemplateComponent {
   @Input() data: any;
   @Input() templateRef: TemplateRef<any>;
 
-  constructor(private viewContainer: ViewContainerRef) { 
+  constructor(private viewContainer: ViewContainerRef) {
   }
-  
+
   ngAfterContentInit() {
     let childView = this.viewContainer.createEmbeddedView(this.templateRef, {$implicit: this.data});
     childView.detectChanges();
@@ -26,7 +26,7 @@ export class GpfTableCell {
   @Input() columnInfo: GpfTableColumnComponent;
   @Input() data: any;
 
-  constructor(private viewContainer: ViewContainerRef) { 
+  constructor(private viewContainer: ViewContainerRef) {
   }
 }
 
@@ -41,9 +41,9 @@ export class GpfTableHeader {
   @Output() sortingInfoChange = new EventEmitter();
   @Input() sortingInfo: SortInfo;
 
-  constructor(private viewContainer: ViewContainerRef) { 
+  constructor(private viewContainer: ViewContainerRef) {
   }
-  
+
   onSortClick(sortBySubcolumn: GpfTableSubcolumnComponent) {
     let sortInfo: SortInfo;
     if (this.sortingInfo && this.sortingInfo.sortBySubcolumn == sortBySubcolumn) {
@@ -66,7 +66,7 @@ export class GpfTableCellContentDirective {
   templateRef: TemplateRef<any>;
   viewContainer: ViewContainerRef
 
-  constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef) {    
+  constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef) {
     this.templateRef = templateRef;
     this.viewContainer = viewContainer;
   }
@@ -79,7 +79,7 @@ export class GpfTableCellHeaderDirective {
   templateRef: TemplateRef<any>;
   viewContainer: ViewContainerRef
 
-  constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef) {    
+  constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef) {
     this.templateRef = templateRef;
     this.viewContainer = viewContainer;
   }
@@ -87,21 +87,21 @@ export class GpfTableCellHeaderDirective {
 
 
 class DefaultComparator {
-  constructor(private subcolumn: GpfTableSubcolumnComponent) {   
+  constructor(private subcolumn: GpfTableSubcolumnComponent) {
   }
 
   compare(a: any, b: any): Number {
     let leftVal = a[this.subcolumn.field];
     let rightVal = b[this.subcolumn.field];
-  
+
     if (leftVal == null && rightVal == null) return 0;
     if (leftVal == null) return -1;
     if (rightVal == null) return 1;
-    
+
     if (!isNaN(leftVal) && !isNaN(rightVal)) {
       return +leftVal - +rightVal;
     }
-    
+
     return leftVal.localeCompare(rightVal);
   }
 }
@@ -121,40 +121,40 @@ export class GpfTableSubcolumnComponent {
   contentTemplateRef: TemplateRef<any>;
   headerTemplateRef: TemplateRef<any>;
 
-  constructor(protected viewContainer: ViewContainerRef) { 
+  constructor(protected viewContainer: ViewContainerRef) {
   }
 
   ngAfterContentInit() {
     if (this.contentChildren.first) this.contentTemplateRef = this.contentChildren.first.templateRef;
     if (this.headerChildren.first) this.headerTemplateRef = this.headerChildren.first.templateRef;
   }
-  
+
   defaultComparator(a: any, b: any): number {
     let leftVal = a[this.field];
     let rightVal = b[this.field];
-  
+
     if (leftVal == null && rightVal == null) return 0;
     if (leftVal == null) return -1;
     if (rightVal == null) return 1;
-    
+
     if (!isNaN(leftVal) && !isNaN(rightVal)) {
       return +leftVal - +rightVal;
     }
-    
+
     return leftVal.localeCompare(rightVal);
   }
-  
+
   sort(data: any, ascending: boolean) {
-    data.sort((a, b) => {     
+    data.sort((a, b) => {
       if (ascending) {
         return this.comparator(a, b);
       }
       else {
-        return this.comparator(b, a);       
+        return this.comparator(b, a);
       }
     });
   }
-  
+
 }
 
 
@@ -168,14 +168,14 @@ export class GpfTableSubcolumnComponent {
 export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
   @ContentChildren(GpfTableSubcolumnComponent) subcolumnsChildren: QueryList<GpfTableSubcolumnComponent>;
 
-  constructor(viewContainer: ViewContainerRef) { 
+  constructor(viewContainer: ViewContainerRef) {
     super(viewContainer);
   }
 
 }
 
 class SortInfo {
-  constructor(public sortBySubcolumn: GpfTableSubcolumnComponent, public sortOrderAsc: boolean) { 
+  constructor(public sortBySubcolumn: GpfTableSubcolumnComponent, public sortOrderAsc: boolean) {
   }
 }
 
@@ -186,29 +186,60 @@ class SortInfo {
 })
 export class GpfTableComponent {
   @ViewChild('table') viewChildDiv: any;
+  @ViewChild('row') rowViewChild: any;
+
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
   @Input() dataSource: any;
+
   private previousSortingInfo: SortInfo;
-  
-  @HostListener('window:scroll', ['$event']) 
+  private lastRowHeight = 80;
+
+  @HostListener('window:scroll', ['$event'])
   onWindowScroll(event) {
     //no-op, just run change detection
   }
 
-  constructor(private viewContainer: ViewContainerRef, private ref: ChangeDetectorRef) { 
+  constructor(private viewContainer: ViewContainerRef, private ref: ChangeDetectorRef) {
   }
 
   set sortingInfo(sortingInfo: SortInfo) {
     this.previousSortingInfo = sortingInfo;
     sortingInfo.sortBySubcolumn.sort(this.dataSource, sortingInfo.sortOrderAsc);
   }
-  
+
   get sortingInfo(): SortInfo {
     return this.previousSortingInfo;
   }
-  
+
   showFloatingHeader(): boolean {
     return this.viewChildDiv.nativeElement.getBoundingClientRect().top < 0;
   }
- 
+
+  getScrollIndices(): Array<number> {
+    let startIndex = Math.ceil(Math.max(0, -this.viewChildDiv.nativeElement.getBoundingClientRect().top/this.calculateRowHeight()));
+    startIndex =  Math.min(Math.max(0, startIndex - 5), this.dataSource.length - 20);
+    let endIndex = startIndex + 20;
+    return [startIndex, endIndex];
+  }
+
+  calculateRowHeight(): number {
+    if (this.rowViewChild && this.rowViewChild.nativeElement.getBoundingClientRect().height > 0) {
+      this.lastRowHeight = this.rowViewChild.nativeElement.getBoundingClientRect().height;
+    }
+
+    return this.lastRowHeight;
+  }
+
+  get totalTableHeight(): number {
+    return this.calculateRowHeight() * this.dataSource.length;
+  }
+
+  get beforeDataCellHeight(): number {
+    return this.getScrollIndices()[0] * this.calculateRowHeight();
+  }
+
+  get visibleData(): any {
+    let scrollIndices  = this.getScrollIndices();
+    return this.dataSource.slice(scrollIndices[0], scrollIndices[1]);
+  }
 }

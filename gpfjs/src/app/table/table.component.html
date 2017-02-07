@@ -1,4 +1,4 @@
-<div #table style="display: table; border-collapse: collapse;">
+<div #table style="display: table; border-collapse: collapse;" [style.height]="totalTableHeight + 'px'">
     <div style="display: table-row;" [style.visibility] = "showFloatingHeader() ? 'hidden' : 'visible'">
         <gpf-table-header *ngFor="let column of columnsChildren"
             [columnInfo]="column"
@@ -6,12 +6,20 @@
             style="vertical-align: middle">
         </gpf-table-header>
     </div>
-    <div style="display: table-row;" *ngFor="let data of dataSource">
+    <div style="display: table-row;" [style.height]="beforeDataCellHeight + 'px'">
+        <td *ngFor="let column of columnsChildren">
+        </td>
+    </div>
+    <div #row style="display: table-row;" *ngFor="let data of visibleData">
         <gpf-table-cell *ngFor="let column of columnsChildren"
             [columnInfo]="column"
             [data]=data
             style="vertical-align: middle">
         </gpf-table-cell>
+    </div>
+    <div style="display: table-row;">
+        <td *ngFor="let column of columnsChildren">
+        </td>
     </div>
 </div>
 
