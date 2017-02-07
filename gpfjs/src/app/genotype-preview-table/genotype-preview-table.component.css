@@ -1,5 +1,6 @@
 :host /deep/ gpf-table-cell {
     height: 80px;
+    max-height: 80px;
     border: 1px solid #dddddd;
     width: 150px;
     max-width: 150px;

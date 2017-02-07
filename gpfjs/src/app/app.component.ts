@@ -8,5 +8,10 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  genotypePreviewsArray: any;
   title = 'GPF: Genotypes and Phenotypes in Families';
+
+  updateGenotypePreviewsArray(genotypePreviewsArray) {
+    this.genotypePreviewsArray = genotypePreviewsArray;
+  }
 }

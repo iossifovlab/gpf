@@ -6,6 +6,7 @@ import 'rxjs/add/operator/toPromise';
 
 import { ConfigService } from '../config/config.service';
 import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-table/genotype-preview';
+import { QueryData } from './query';
 
 let FIELD_TO_OBJECT_PROPERTY = [
     [ "family id", "familyId" ],
@@ -41,7 +42,7 @@ let FIELD_TO_OBJECT_PROPERTY = [
 
 @Injectable()
 export class QueryService {
-  private genotypePreviewUrl = 'we_query_variants_preview';
+  private genotypePreviewUrl = 'genotype_browser/preview';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
   private fieldToObjectPropertyMap = new Map<string, string>();
@@ -69,9 +70,9 @@ export class QueryService {
     if (data.cols === undefined) {
       return new GenotypePreviewsArray(0);
     }
-    
+
     let genotypePreviewsArray = new GenotypePreviewsArray(data.count);
-    
+
     for (let row in data.rows) {
       let genotypePreview = new GenotypePreview();
       for (let elem in data.rows[row]) {
@@ -79,18 +80,18 @@ export class QueryService {
         let propertyValue = data.rows[row][elem];
         genotypePreview[propertyName] = propertyValue;
       }
-      
+
       genotypePreviewsArray.genotypePreviews.push(genotypePreview);
     }
-        
+
     return genotypePreviewsArray;
   }
 
-  getGenotypePreviewByFilter(): Promise<GenotypePreviewsArray> {
+  getGenotypePreviewByFilter(filter: QueryData): Promise<GenotypePreviewsArray> {
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let options = new RequestOptions({ headers: headers });
-    
-    return this.http.post(this.genotypePreviewUrl, {}, options)
+
+    return this.http.post(this.genotypePreviewUrl, filter, options)
       .toPromise()
       .then(this.parseGenotypePreviewResponse)
       .catch(this.handleGenotypePreviewError);
