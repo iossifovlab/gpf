@@ -28,5 +28,5 @@ def test_get_denovo_variants_sd(query):
     v = res[0]
     pedigree = v.pedigree_v3(legend)
     assert len(pedigree) == 4
-    prb = pedigree[3]
+    prb = pedigree[2]
     assert prb[1] == '11563.p1'
