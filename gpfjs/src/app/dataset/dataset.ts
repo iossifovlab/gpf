@@ -4,6 +4,10 @@ import { IdName } from '../common/idname';
 
 export class SelectorValue extends IdName {
   static fromJson(json: any): SelectorValue {
+    if (!json) {
+      return undefined;
+    }
+
     return new SelectorValue(
       json['id'],
       json['name'],
@@ -12,6 +16,9 @@ export class SelectorValue extends IdName {
   }
 
   static fromJsonArray(jsonArray: Array<Object>): Array<SelectorValue> {
+    if (!jsonArray) {
+      return undefined;
+    }
     return jsonArray.map((json) => SelectorValue.fromJson(json));
   }
 
@@ -26,6 +33,10 @@ export class SelectorValue extends IdName {
 
 export class PedigreeSelector extends IdName {
   static fromJson(json: any): PedigreeSelector {
+    if (!json) {
+      return undefined;
+    }
+
     return new PedigreeSelector(
       json['id'],
       json['name'],
@@ -35,6 +46,10 @@ export class PedigreeSelector extends IdName {
     );
   }
   static fromJsonArray(jsonArray: Array<Object>): Array<PedigreeSelector> {
+    if (!jsonArray) {
+      return undefined;
+    }
+
     return jsonArray.map((json) => PedigreeSelector.fromJson(json));
   }
 
@@ -77,6 +92,9 @@ export class GenotypeBrowser {
 
 export class Dataset extends IdName {
   static fromJson(json: any): Dataset {
+    if (!json) {
+      return undefined;
+    }
     return new Dataset(
       json['id'],
       json['name'],
@@ -92,6 +110,10 @@ export class Dataset extends IdName {
   }
 
   static fromJsonArray(jsonArray: Array<Object>): Array<Dataset> {
+    if (!jsonArray) {
+      return undefined;
+    }
+
     return jsonArray.map((json) => Dataset.fromJson(json));
   }
 

@@ -4,8 +4,9 @@ import { Injectable } from '@angular/core';
 export class ConfigService {
 
   // Drakov default url
+  // readonly baseUrl: string = 'http://localhost:8000/api/v3/';
   readonly baseUrl: string = 'http://localhost:3000';
-
+  
   constructor() { }
 
 

@@ -20,6 +20,10 @@ import { QueryService } from './query/query.service';
 
 import { GpfTableModule } from './table/table.module';
 import { DatasetComponent } from './dataset/dataset.component';
+import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
+import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
+import { GenesBlockComponent } from './genes-block/genes-block.component';
+import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 
 import { HistogramModule } from './histogram/histogram.module';
@@ -35,6 +39,10 @@ import { GeneWeightsService } from './gene-weights/gene-weights.service';
     EffecttypesComponent,
     GenotypePreviewTableComponent,
     DatasetComponent,
+    PedigreeSelectorComponent,
+    GenotypeBlockComponent,
+    GenesBlockComponent,
+    RegionsBlockComponent,
     GeneWeightsComponent,
     MinValidatorDirective,
     MaxValidatorDirective
@@ -43,7 +51,7 @@ import { GeneWeightsService } from './gene-weights/gene-weights.service';
     BrowserModule,
     FormsModule,
     HttpModule,
-    NgbModule,
+    NgbModule.forRoot(),
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule

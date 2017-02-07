@@ -5,7 +5,7 @@
     <div class="btn-group">
       <div class="dropdown">
         <button
-          class="btn btn-secondary dropdown-toggle navbar-brand"
+          class="dataset-selector btn btn-secondary dropdown-toggle navbar-brand"
           type="button"
           id="dropdownMenuButton"
           data-toggle="dropdown"
@@ -15,8 +15,9 @@
           class="dropdown-menu"
           aria-labelledby="dropdownMenuButton">
           <a
-            *ngFor="let dataset of datasets"
+            *ngFor="let dataset of datasets; let i=index"
             class="dropdown-item"
+            (click)="selectDataset(i)"
             href="#">{{ dataset.name }}</a>
         </div>
       </div>

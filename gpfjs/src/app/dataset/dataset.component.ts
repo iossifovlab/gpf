@@ -22,9 +22,14 @@ export class DatasetComponent implements OnInit {
     this.datasetService.getDatasets().subscribe(
       (datasets) => {
         this.datasets = datasets;
-        this.selectedDataset = datasets[0];
-        console.log(this.selectedDataset);
+        this.selectDataset(0);
       });
   }
 
+  selectDataset(index: number): void {
+    if (index >= 0 && index < this.datasets.length) {
+      this.selectedDataset = this.datasets[index];
+      this.datasetService.setSelectedDataset(this.selectedDataset);
+    }
+  }
 }

@@ -10,6 +10,7 @@ import { Dataset } from '../dataset/dataset';
 import { ConfigService } from '../config/config.service';
 
 import 'rxjs/add/operator/map';
+import { Subject, BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class DatasetService {
@@ -17,8 +18,7 @@ export class DatasetService {
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
 
-  selectedDatasetId: string = 'SD';
-  private cachedDatasets: Dataset[];
+  selectedDataset: Subject<Dataset> = new BehaviorSubject<Dataset>(null);
 
   constructor(
     private http: Http,
@@ -46,4 +46,7 @@ export class DatasetService {
       });
   }
 
+  setSelectedDataset(dataset: Dataset): void {
+    this.selectedDataset.next(dataset);
+  }
 }
