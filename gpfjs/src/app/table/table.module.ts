@@ -1,34 +1,36 @@
 import { NgModule } from '@angular/core';
 import { CommonModule }        from '@angular/common';
 
-import { GpfTableComponent, 
-         GpfCustomTemplateComponent, 
-         GpfTableColumnComponent, 
-         GpfTableCell, 
-         GpfTableSubcolumnComponent, 
-         GpfTableCellHeaderDirective, 
-         GpfTableCellContentDirective, 
-         GpfTableHeader } from './table.component';
+import { GpfTableComponent,
+         GpfCustomTemplateComponent,
+         GpfTableColumnComponent,
+         GpfTableCell,
+         GpfTableSubcolumnComponent,
+         GpfTableCellHeaderDirective,
+         GpfTableCellContentDirective,
+         GpfTableHeader,
+         GpfTableLegendDirective } from './table.component';
 
 @NgModule({
   declarations: [
     GpfTableComponent,
-    GpfTableColumnComponent, 
+    GpfTableColumnComponent,
     GpfTableSubcolumnComponent,
     GpfTableCellContentDirective,
     GpfTableCellHeaderDirective,
     GpfTableHeader,
     GpfCustomTemplateComponent,
-    GpfTableCell
+    GpfTableCell,
+    GpfTableLegendDirective
   ],
   exports: [
-    GpfTableComponent, 
-    GpfTableColumnComponent, 
-    GpfTableSubcolumnComponent, 
-    GpfTableCellContentDirective, 
-    GpfTableCellHeaderDirective
+    GpfTableComponent,
+    GpfTableColumnComponent,
+    GpfTableSubcolumnComponent,
+    GpfTableCellContentDirective,
+    GpfTableCellHeaderDirective,
+    GpfTableLegendDirective
   ],
   imports: [CommonModule]
 })
 export class GpfTableModule { }
-

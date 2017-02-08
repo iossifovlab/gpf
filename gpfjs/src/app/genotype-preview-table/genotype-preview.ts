@@ -115,8 +115,10 @@ export class GenotypePreview {
 export class GenotypePreviewsArray {
   genotypePreviews: GenotypePreview[] = [];
 
+
   constructor(
-    private total: number,
+    readonly total: number,
+    readonly legend: Array<any>
   ) {
   }
 }

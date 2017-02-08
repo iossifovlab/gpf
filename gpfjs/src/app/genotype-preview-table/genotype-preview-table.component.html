@@ -47,6 +47,12 @@
                 <gpf-table-subcolumn header="vIQ" field="probandVerbalIQ"></gpf-table-subcolumn>
                 <gpf-table-subcolumn header="NvIQ" field="probandNonVerbalIQ"></gpf-table-subcolumn>
             </gpf-table-column>
+            <div *gpf-table-legend style="text-align: left; border: 1px solid #dddddd; padding: 5px">
+              <div *ngFor="let legendItem of genotypePreviewsArray.legend">
+                <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
+                {{ legendItem.name }}
+              </div>
+            </div>
         </gpf-table>
     </div>
 </div>

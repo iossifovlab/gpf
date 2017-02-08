@@ -1,4 +1,4 @@
-import { ViewChildren, ViewChild, HostListener, ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
+import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
 
 // One bright day we should replace this with NgTemplateOutlet
 @Component({
@@ -63,26 +63,20 @@ export class GpfTableHeader {
   selector: '[gpf-table-cell-content]'
 })
 export class GpfTableCellContentDirective {
-  templateRef: TemplateRef<any>;
-  viewContainer: ViewContainerRef
-
-  constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef) {
-    this.templateRef = templateRef;
-    this.viewContainer = viewContainer;
-  }
+  constructor(
+    readonly templateRef: TemplateRef<any>,
+    readonly viewContainer: ViewContainerRef
+  ) { }
 }
 
 @Directive({
   selector: '[gpf-table-cell-header]'
 })
 export class GpfTableCellHeaderDirective {
-  templateRef: TemplateRef<any>;
-  viewContainer: ViewContainerRef
-
-  constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef) {
-    this.templateRef = templateRef;
-    this.viewContainer = viewContainer;
-  }
+  constructor(
+    readonly templateRef: TemplateRef<any>,
+    readonly viewContainer: ViewContainerRef
+  ) { }
 }
 
 
@@ -179,6 +173,17 @@ class SortInfo {
   }
 }
 
+
+@Directive({
+  selector: '[gpf-table-legend]'
+})
+export class GpfTableLegendDirective {
+  constructor(
+    readonly templateRef: TemplateRef<any>,
+    readonly viewContainer: ViewContainerRef
+  ) { }
+}
+
 @Component({
   selector: 'gpf-table',
   templateUrl: './table.component.html',
@@ -189,6 +194,7 @@ export class GpfTableComponent {
   @ViewChild('row') rowViewChild: any;
 
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
+  @ContentChild(GpfTableLegendDirective) legend: GpfTableLegendDirective;
   @Input() dataSource: any;
 
   private previousSortingInfo: SortInfo;

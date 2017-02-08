@@ -59,13 +59,13 @@ export class QueryService {
   private parseGenotypePreviewResponse(response: Response): GenotypePreviewsArray {
     let data = response.json();
     if (data.count === 0) {
-      return new GenotypePreviewsArray(0);
+      return new GenotypePreviewsArray(0, null);
     }
     if (data.cols === undefined) {
-      return new GenotypePreviewsArray(0);
+      return new GenotypePreviewsArray(0, null);
     }
 
-    let genotypePreviewsArray = new GenotypePreviewsArray(data.count);
+    let genotypePreviewsArray = new GenotypePreviewsArray(data.count, data.legend);
 
     for (let row in data.rows) {
       let genotypePreview = new GenotypePreview();
