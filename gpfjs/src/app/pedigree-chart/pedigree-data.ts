@@ -14,10 +14,7 @@ export class MatingUnit {
     readonly father: Individual
   ) {
     mother.matingUnits.push(this);
-    console.log("Pushing Mother");
-
     father.matingUnits.push(this);
-    console.log("Pushing Father");
   }
 }
 

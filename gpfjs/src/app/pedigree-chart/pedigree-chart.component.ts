@@ -37,7 +37,6 @@ export class PedigreeChartComponent {
         let mother = getOrCreateIndividual(elem.mother);
         let father = getOrCreateIndividual(elem.father);
         idsToMatingUnit.set(elem.mother + "," + elem.father, new MatingUnit(mother, father));
-        console.log("Creating mating unit " + elem.mother + "," + elem.father);
       }
       let parentNode = idsToMatingUnit.get(elem.mother + "," + elem.father);
 
