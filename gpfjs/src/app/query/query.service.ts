@@ -36,7 +36,7 @@ let FIELD_TO_OBJECT_PROPERTY = [
     [ "proband verbal iq", "probandVerbalIQ" ],
     [ "proband non-verbal iq", "probandNonVerbalIQ" ],
     [ "validation status", "validationStatus" ],
-    [ "_pedigree_", "pedigree" ],
+    [ "_pedigree_", "pedigreeDataFromArray" ],
     [ "phenoInChS", "phenoInChS"]
 ];
 
