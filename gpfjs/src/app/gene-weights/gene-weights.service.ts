@@ -12,7 +12,7 @@ import 'rxjs/add/operator/map';
 @Injectable()
 export class GeneWeightsService {
   private geneWeightsUrl = 'gene_weights';
-  private geneWeightsPartitionsUrl = 'gene_weights/partition';
+  private geneWeightsPartitionsUrl = 'gene_weights/partitions';
 
   constructor(
     private http: Http,
@@ -31,7 +31,7 @@ export class GeneWeightsService {
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let options = new RequestOptions({ headers: headers });
     return this.http
-      .post(this.geneWeightsPartitionsUrl, {}, options)
+      .post(this.geneWeightsPartitionsUrl, {weight: weight, min: min, max: max}, options)
       .map(res => {
         return Partitions.fromJson(res.json());
       });

@@ -80,7 +80,7 @@ export class GeneWeightsComponent {
       .debounceTime(300)
       .distinctUntilChanged()
       .switchMap(term => {
-        return this.geneWeightsService.getPartitions(this.selectedGeneWeights.desc, this.internalRangeStart, this.internalRangeEnd);
+        return this.geneWeightsService.getPartitions(this.selectedGeneWeights.weight, this.internalRangeStart, this.internalRangeEnd);
       })
       .catch(error => {
         console.log(error);
