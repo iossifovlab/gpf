@@ -29,9 +29,9 @@ export class QuerySubmitterComponent {
     queryData.datasetId = state.datasets.selectedDataset.id;
     queryData.effectTypes = state.effectTypes.reduce(arrayToCommaSeparatedReduce);
 
-    this.queryService.getGenotypePreviewByFilter(queryData)
-      .then(genotypePreviewsArray => {
+    this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
+      (genotypePreviewsArray) => {
         this.genotypePreviewsArrayChange.emit(genotypePreviewsArray);
-      });
+    });
   }
 }

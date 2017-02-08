@@ -56,13 +56,7 @@ export class QueryService {
     }
   }
 
-  private handleGenotypePreviewError(error: any): GenotypePreviewsArray {
-    console.error('error while parsing Genotype Preview response: ', error);
-    return new GenotypePreviewsArray(0);
-  }
-
-  private parseGenotypePreviewResponse = (response: Response): GenotypePreviewsArray => {
-
+  private parseGenotypePreviewResponse(response: Response): GenotypePreviewsArray {
     let data = response.json();
     if (data.count === 0) {
       return new GenotypePreviewsArray(0);
@@ -87,13 +81,13 @@ export class QueryService {
     return genotypePreviewsArray;
   }
 
-  getGenotypePreviewByFilter(filter: QueryData): Promise<GenotypePreviewsArray> {
+  getGenotypePreviewByFilter(filter: QueryData): Observable<GenotypePreviewsArray> {
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let options = new RequestOptions({ headers: headers });
 
     return this.http.post(this.genotypePreviewUrl, filter, options)
-      .toPromise()
-      .then(this.parseGenotypePreviewResponse)
-      .catch(this.handleGenotypePreviewError);
+      .map(res => {
+        return this.parseGenotypePreviewResponse(res)
+      });
   }
 }
