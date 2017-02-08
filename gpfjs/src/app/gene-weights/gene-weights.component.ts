@@ -9,6 +9,9 @@ import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/observable/of';
+import { Store } from '@ngrx/store';
+
+import { RANGE_CHANGE } from './gene-weights-store';
 
 @Directive({
   selector: '[min][formControlName],[min][formControl],[min][ngModel]',
@@ -54,7 +57,11 @@ export class GeneWeightsComponent {
 
   private rangesCounts: Array<number>;
 
-  constructor(private geneWeightsService: GeneWeightsService, private changeDetectorRef: ChangeDetectorRef) {
+  constructor(
+    private geneWeightsService: GeneWeightsService,
+    private changeDetectorRef: ChangeDetectorRef,
+    private store: Store<any>
+  )  {
 
   }
 
@@ -77,9 +84,13 @@ export class GeneWeightsComponent {
 
 
     this.partitions = this.rangeChanges
-      .debounceTime(300)
+      .debounceTime(100)
       .distinctUntilChanged()
       .switchMap(term => {
+        this.store.dispatch({
+          'type': RANGE_CHANGE,
+          'payload': [this.selectedGeneWeights.weight, this.internalRangeStart, this.internalRangeEnd]
+        });
         return this.geneWeightsService.getPartitions(this.selectedGeneWeights.weight, this.internalRangeStart, this.internalRangeEnd);
       })
       .catch(error => {

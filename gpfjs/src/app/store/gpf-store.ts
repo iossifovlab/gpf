@@ -8,7 +8,7 @@ import { EffectTypesState, effectTypesReducer } from '../effecttypes/effecttypes
 import { GenderState, genderReducer } from '../gender/gender';
 import { PedigreeSelectorState, pedigreeSelectorReducer } from '../pedigree-selector/pedigree-selector';
 import { VariantTypesState, variantTypesReducer } from '../varianttypes/varianttypes';
-
+import { GeneWeightsState, geneWeightsReducer } from '../gene-weights/gene-weights-store';
 
 
 export interface GpfState {
@@ -17,6 +17,7 @@ export interface GpfState {
   effectTypes: EffectTypesState;
   gender: GenderState;
   variantTypes: VariantTypesState;
+  geneWeights: GeneWeightsState;
 };
 
 const reducers = {
@@ -25,6 +26,7 @@ const reducers = {
   effectTypes: effectTypesReducer,
   gender: genderReducer,
   variantTypes: variantTypesReducer,
+  geneWeights: geneWeightsReducer
 };
 
 const productionReducer: ActionReducer<GpfState> = combineReducers(reducers);
