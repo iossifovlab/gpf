@@ -200,10 +200,11 @@ export class GpfTableComponent {
   private previousSortingInfo: SortInfo;
   private lastRowHeight = 80;
   private drawOutsideVisibleCount = 5;
+  private tableTopPosition = 0;
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event) {
-    //no-op, just run change detection
+    this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
   }
 
   constructor(private viewContainer: ViewContainerRef, private ref: ChangeDetectorRef) {
@@ -226,7 +227,7 @@ export class GpfTableComponent {
     let visibleRowCount = window.innerHeight/this.calculateRowHeight();
     let maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount
 
-    let startIndex = Math.ceil(Math.max(0, -this.tableViewChild.nativeElement.getBoundingClientRect().top/this.calculateRowHeight()));
+    let startIndex = Math.ceil(Math.max(0, -this.tableTopPosition/this.calculateRowHeight()));
     startIndex =  Math.min(Math.max(0, startIndex - this.drawOutsideVisibleCount), this.dataSource.length - maxRowCountToDraw);
     let endIndex = startIndex + maxRowCountToDraw;
     return [startIndex, endIndex];
