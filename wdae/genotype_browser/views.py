@@ -9,15 +9,15 @@ from rest_framework.response import Response
 
 from helpers.logger import log_filter, LOGGER
 from datasets.config import DatasetsConfig
-from genotype_query.query import QueryDataset
+from datasets.query import QueryDataset
 import traceback
 
 
 class QueryPreviewView(views.APIView):
 
     def __init__(self):
-        self.datasets = DatasetsConfig()
-        self.query = QueryDataset(self.datasets.get_datasets())
+        self.datasets_config = DatasetsConfig()
+        self.query = QueryDataset()
 
     def prepare_variants_resonse(self, variants):
         rows = []
@@ -40,11 +40,14 @@ class QueryPreviewView(views.APIView):
             'rows': rows
         }
 
-    def prepare_legend_response(self, data):
-        print(data)
+    def get_dataset_descriptor(self, data):
+        dataset_id = data['datasetId']
+        dataset_descriptor = self.datasets_config.get_dataset(dataset_id)
+        return dataset_descriptor
 
-        dataset = self.query.get_dataset(**data)
-        legend = self.query.get_legend(dataset, **data)
+    def prepare_legend_response(self, data):
+        dataset_descriptor = self.get_dataset_descriptor(data)
+        legend = self.query.get_legend(dataset_descriptor, **data)
         response = legend.domain[:]
         response.append(legend.default)
         return response
@@ -56,8 +59,12 @@ class QueryPreviewView(views.APIView):
         data = request.data
         try:
             legend = self.prepare_legend_response(data)
+            dataset_descriptor = self.get_dataset_descriptor(data)
 
-            variants = self.query.get_variants_preview(safe=True, **data)
+            variants = self.query.get_variants_preview(
+                safe=True,
+                dataset_descriptor=dataset_descriptor,
+                **data)
             res = self.prepare_variants_resonse(variants)
 
             res['legend'] = legend
