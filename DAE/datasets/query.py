@@ -39,20 +39,18 @@ class QueryDataset(QueryBase):
                 return el
         return None
 
-    def __init__(self, datasets):
-        self.datasets = {}
-        for dataset in datasets:
-            self.datasets[dataset['id']] = dataset
+    def __init__(self):
+        pass
 
-    def get_variants(self, datasetId, safe=True, **kwargs):
-        dataset = self.get_dataset(datasetId=datasetId, safe=safe, **kwargs)
-        denovo = self.get_denovo_variants(dataset, safe, **kwargs)
-
+    def get_variants(self, dataset_descriptor, safe=True, **kwargs):
+        denovo = self.get_denovo_variants(dataset_descriptor, safe, **kwargs)
         return itertools.chain.from_iterable([denovo])
 
-    def get_denovo_variants(self, dataset, safe=True, **kwargs):
-        denovo_studies = self.get_denovo_studies(dataset)
-        denovo_filters = self.get_denovo_filters(dataset, safe, **kwargs)
+    def get_denovo_variants(self, dataset_descriptor, safe=True, **kwargs):
+        denovo_studies = self.get_denovo_studies(
+            dataset_descriptor)
+        denovo_filters = self.get_denovo_filters(
+            dataset_descriptor, safe, **kwargs)
 
         seen_vs = set()
         for st in denovo_studies:
@@ -63,26 +61,26 @@ class QueryDataset(QueryBase):
                 yield v
                 seen_vs.add(v_key)
 
-    def get_pedigree_selector(self, dataset, **kwargs):
-        pedigrees = dataset['pedigreeSelectors']
+    def get_pedigree_selector(self, dataset_descriptor, **kwargs):
+        pedigrees = dataset_descriptor['pedigreeSelectors']
         pedigree = pedigrees[0]
         if 'pedigreeSelector' in kwargs:
             pedigree = self.idlist_get(pedigrees, kwargs['pedigreeSelector'])
         assert pedigree is not None
         return pedigree
 
-    def get_dataset(self, **kwargs):
-        assert 'datasetId' in kwargs
-        dataset_id = kwargs['datasetId']
+#     def get_dataset(self, **kwargs):
+#         assert 'datasetId' in kwargs
+#         dataset_id = kwargs['datasetId']
+#
+#         assert dataset_id in self.datasets
+#         dataset = self.datasets[dataset_id]
+#         assert dataset is not None
+#
+#         return dataset
 
-        assert dataset_id in self.datasets
-        dataset = self.datasets[dataset_id]
-        assert dataset is not None
-
-        return dataset
-
-    def get_legend(self, dataset, **kwargs):
-        pedigree = self.get_pedigree_selector(dataset, **kwargs)
+    def get_legend(self, dataset_descriptor, **kwargs):
+        pedigree = self.get_pedigree_selector(dataset_descriptor, **kwargs)
         return PedigreeLegend(pedigree)
 
     def get_effect_types(self, safe=True, **kwargs):
@@ -92,27 +90,36 @@ class QueryDataset(QueryBase):
 
         return self.build_effect_types(effect_types, safe)
 
-    def get_studies(self, dataset):
-        study_names = [st.strip() for st in dataset['studies'].split(',')]
+    def get_studies(self, dataset_descriptor):
+        study_names = [
+            st.strip() for st in dataset_descriptor['studies'].split(',')
+        ]
         studies = [vDB.get_studies(st) for st in study_names]
         return [st for st in itertools.chain.from_iterable(studies)]
 
-    def get_denovo_studies(self, dataset, **kwargs):
-        return [st for st in self.get_studies(dataset) if st.has_denovo]
+    def get_denovo_studies(self, dataset_descriptor, **kwargs):
+        return [
+            st for st in self.get_studies(dataset_descriptor)
+            if st.has_denovo
+        ]
 
-    def get_transmitted_studies(self, dataset, **kwargs):
-        return [st for st in self.get_studies(dataset) if st.has_transmitted]
+    def get_transmitted_studies(self, dataset_descriptor, **kwargs):
+        return [
+            st for st in self.get_studies(dataset_descriptor)
+            if st.has_transmitted
+        ]
 
-    def get_denovo_filters(self, dataset, safe=True, **kwargs):
+    def get_denovo_filters(self, dataset_descriptor, safe=True, **kwargs):
         return {
             'effectTypes': self.get_effect_types(
-                safe=safe, dataset=dataset, **kwargs)
+                safe=safe,
+                dataset_descriptor=dataset_descriptor,
+                **kwargs)
         }
 
-    def get_variants_preview(self, datasetId, safe=True, **kwargs):
-        dataset = self.get_dataset(datasetId=datasetId, safe=safe, **kwargs)
-        denovo = self.get_denovo_variants(dataset, safe, **kwargs)
-        legend = self.get_legend(dataset, **kwargs)
+    def get_variants_preview(self, dataset_descriptor, safe=True, **kwargs):
+        denovo = self.get_denovo_variants(dataset_descriptor, safe, **kwargs)
+        legend = self.get_legend(dataset_descriptor, **kwargs)
 
         variants = itertools.chain.from_iterable([denovo])
 

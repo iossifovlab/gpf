@@ -52,34 +52,18 @@ EXAMPLE_QUERY_SD = {
 }
 
 
-def test_none_dataset_id(query):
-    kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
-    kwargs['datasetId'] = None
-    with pytest.raises(AssertionError):
-        query.get_variants(**kwargs)
+def test_example_query(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_SSC['datasetId'])
+    query.get_variants(dataset_descriptor, **EXAMPLE_QUERY_SSC)
+
+    query.get_legend(dataset_descriptor, **EXAMPLE_QUERY_SSC)
 
 
-def test_bad_dataset_id(query):
-    kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
-    kwargs['datasetId'] = 'blah'
-    with pytest.raises(AssertionError):
-        query.get_variants(**kwargs)
-
-
-def test_good_dataset_id(query):
-    query.get_variants(**EXAMPLE_QUERY_SSC)
-
-
-def test_example_query(query):
-    query.get_variants(**EXAMPLE_QUERY_SSC)
-    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
-
-    query.get_legend(dataset, **EXAMPLE_QUERY_SSC)
-
-
-def test_get_legend_ssc(query):
-    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
-    legend = query.get_legend(dataset)
+def test_get_legend_ssc(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_SSC['datasetId'])
+    legend = query.get_legend(dataset_descriptor)
     assert legend is not None
     pprint(legend)
     assert 'name' in legend
@@ -88,9 +72,10 @@ def test_get_legend_ssc(query):
     assert 2 == len(legend['values'])
 
 
-def test_get_legend_vip(query):
-    dataset = query.get_dataset(**EXAMPLE_QUERY_VIP)
-    legend = query.get_legend(dataset)
+def test_get_legend_vip(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_VIP['datasetId'])
+    legend = query.get_legend(dataset_descriptor)
     assert legend is not None
     pprint(legend)
     assert 'name' in legend
@@ -99,13 +84,15 @@ def test_get_legend_vip(query):
     assert 4 == len(legend['values'])
 
 
-def test_get_legend_bad_pedigree(query):
-    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
+def test_get_legend_bad_pedigree(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_SSC['datasetId'])
+
     kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
 
     kwargs['pedigreeSelector'] = 'ala bala'
     with pytest.raises(AssertionError):
-        query.get_legend(dataset, **kwargs)
+        query.get_legend(dataset_descriptor, **kwargs)
 
 
 def test_get_effect_types(query):
@@ -115,9 +102,11 @@ def test_get_effect_types(query):
     assert set(['frame-shift', 'nonsense', 'splice-site']) == set(res)
 
 
-def test_get_denovo_studies(query):
-    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
-    denovo = query.get_denovo_studies(dataset, **EXAMPLE_QUERY_SSC)
+def test_get_denovo_studies(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_SD['datasetId'])
+
+    denovo = query.get_denovo_studies(dataset_descriptor, **EXAMPLE_QUERY_SSC)
 
     assert denovo is not None
     print([st.name for st in denovo])
@@ -129,31 +118,39 @@ def test_get_denovo_studies(query):
     print(st.has_denovo)
 
 
-def test_get_transmitted_stuides(query):
-    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
-    transmitted = query.get_transmitted_studies(dataset, **EXAMPLE_QUERY_SSC)
+def test_get_transmitted_stuides(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_SSC['datasetId'])
+
+    transmitted = query.get_transmitted_studies(
+        dataset_descriptor, **EXAMPLE_QUERY_SSC)
     assert transmitted
 
     assert all([st.has_transmitted for st in transmitted])
 
 
-def test_get_denovo_variants_ssc(query):
-    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
-    vs = query.get_denovo_variants(dataset, **EXAMPLE_QUERY_SSC)
+def test_get_denovo_variants_ssc(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_SSC['datasetId'])
+
+    vs = query.get_denovo_variants(dataset_descriptor, **EXAMPLE_QUERY_SSC)
     res = [v for v in vs]
     assert 634 == len(res)
 
 
-def test_get_denovo_variants_vip(query):
-    dataset = query.get_dataset(**EXAMPLE_QUERY_VIP)
-    vs = query.get_denovo_variants(dataset, **EXAMPLE_QUERY_VIP)
+def test_get_denovo_variants_vip(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_VIP['datasetId'])
+    vs = query.get_denovo_variants(dataset_descriptor, **EXAMPLE_QUERY_VIP)
     res = [v for v in vs]
     assert 64 == len(res)
 
 
-def test_denovo_studies_persons_phenotype_ssc(query):
-    dataset = query.get_dataset(**EXAMPLE_QUERY_SSC)
-    studies = query.get_denovo_studies(dataset=dataset, **EXAMPLE_QUERY_SSC)
+def test_denovo_studies_persons_phenotype_ssc(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_SD['datasetId'])
+    studies = query.get_denovo_studies(
+        dataset_descriptor=dataset_descriptor, **EXAMPLE_QUERY_SSC)
     for st in studies:
         phenotype = st.get_attr('study.phenotype')
         for fam in st.families.values():
@@ -164,9 +161,13 @@ def test_denovo_studies_persons_phenotype_ssc(query):
                     assert p.phenotype == 'unaffected'
 
 
-def test_denovo_studies_persons_phenotype_sd(query):
-    dataset = query.get_dataset(**EXAMPLE_QUERY_SD)
-    studies = query.get_denovo_studies(dataset=dataset, **EXAMPLE_QUERY_SD)
+def test_denovo_studies_persons_phenotype_sd(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_SD['datasetId'])
+
+    studies = query.get_denovo_studies(
+        dataset_descriptor=dataset_descriptor, **EXAMPLE_QUERY_SD)
+
     for st in studies:
         phenotype = st.get_attr('study.phenotype')
         print(phenotype)

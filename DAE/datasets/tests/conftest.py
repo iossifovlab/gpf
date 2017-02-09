@@ -5,7 +5,7 @@ Created on Feb 6, 2017
 '''
 import pytest
 from datasets.config import DatasetsConfig
-from genotype_query.query import QueryDataset
+from datasets.query import QueryDataset
 
 
 @pytest.fixture(scope='session')
@@ -15,6 +15,11 @@ def datasets(request):
 
 
 @pytest.fixture(scope='session')
+def datasets_config(request):
+    return DatasetsConfig()
+
+
+@pytest.fixture(scope='session')
 def query(request, datasets):
-    query = QueryDataset(datasets)
+    query = QueryDataset()
     return query

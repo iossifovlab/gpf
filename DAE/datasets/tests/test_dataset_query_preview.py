@@ -17,8 +17,10 @@ EXAMPLE_QUERY_SD = {
 }
 
 
-def test_get_denovo_variants_sd(query):
-    vs = query.get_variants_preview(**EXAMPLE_QUERY_SD)
+def test_get_denovo_variants_sd(query, datasets_config):
+    dataset_descriptor = datasets_config.get_dataset(
+        EXAMPLE_QUERY_SD['datasetId'])
+    vs = query.get_variants_preview(dataset_descriptor, **EXAMPLE_QUERY_SD)
     v = vs.next()
     print(v)
     v = vs.next()
