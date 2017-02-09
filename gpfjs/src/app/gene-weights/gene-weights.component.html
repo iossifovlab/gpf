@@ -21,8 +21,7 @@
       <input
         required type="number"
         #inputRangeStart="ngModel"
-        [ngModel]="rangeStart"
-        (ngModelChange)="inputRangeStart.valid ? rangeStart = $event: null"
+        [(ngModel)]="rangeStart"
         min="{{ selectedGeneWeights?.min  }}"
         max="{{ rangeEnd  }}"
         placeholder="start"
@@ -38,8 +37,7 @@
       <input
         required type="number"
         #inputRangeEnd="ngModel"
-        [ngModel]="rangeEnd"
-        (ngModelChange)="inputRangeEnd.valid ? rangeEnd = $event: null"
+        [(ngModel)]="rangeEnd"
         min="{{ rangeStart  }}"
         max="{{ selectedGeneWeights?.max  }}"
         placeholder="end"
