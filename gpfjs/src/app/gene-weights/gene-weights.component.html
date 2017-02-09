@@ -1,44 +1,57 @@
-<gpf-histogram
-  *ngIf="selectedGeneWeights"
-  width="650" height="200"
-  [bins]="selectedGeneWeights.bins"
-  [bars]="selectedGeneWeights.bars"
-  [domainMin]="selectedGeneWeights.min"
-  [domainMax]="selectedGeneWeights.max"
-  [rangesCounts]="rangesCounts"
-  [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-</gpf-histogram>
-<div>
-  <input
-    required type="number"
-    #inputRangeStart="ngModel"
-    [ngModel]="rangeStart"
-    (ngModelChange)="inputRangeStart.valid ? rangeStart = $event: null"
-    min="{{ selectedGeneWeights?.min  }}"
-    max="{{ rangeEnd  }}"
-    placeholder="start"
-    style="width: 100px; max-width: 100px">
+<div style="float: left">
+  <select class="form-control" [(ngModel)]="selectedGeneWeights" required style="width: 300px; position: relative; top: 50px">
+    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
+  </select>
+</div>
 
-  <input
-    required type="number"
-    #inputRangeEnd="ngModel"
-    [ngModel]="rangeEnd"
-    (ngModelChange)="inputRangeEnd.valid ? rangeEnd = $event: null"
-    min="{{ rangeStart  }}"
-    max="{{ selectedGeneWeights?.max  }}"
-    placeholder="end"
-    style="width: 100px; max-width: 100px">
+<div style="float: right">
+  <gpf-histogram
+    *ngIf="selectedGeneWeights"
+    width="650" height="200"
+    [bins]="selectedGeneWeights.bins"
+    [bars]="selectedGeneWeights.bars"
+    [domainMin]="selectedGeneWeights.min"
+    [domainMax]="selectedGeneWeights.max"
+    [rangesCounts]="rangesCounts"
+    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+  </gpf-histogram>
+  <div>
+    <div style="margin-left: 100px; width: 100px; max-width: 100px; float: left">
+      <label style="display: block">From:</label>
+      <input
+        required type="number"
+        #inputRangeStart="ngModel"
+        [ngModel]="rangeStart"
+        (ngModelChange)="inputRangeStart.valid ? rangeStart = $event: null"
+        min="{{ selectedGeneWeights?.min  }}"
+        max="{{ rangeEnd  }}"
+        placeholder="start"
+        style="width: 100px; max-width: 100px;">
 
-  <div [hidden]="inputRangeStart.valid || !inputRangeStart.dirty"
-       class="alert alert-danger">
-    Start is invalid
-  </div>
+      <div [hidden]="inputRangeStart.valid || !inputRangeStart.dirty"
+           class="alert alert-danger">
+        Start is invalid
+      </div>
+    </div>
+    <div style="margin-right: 100px; width: 100px; max-width: 100px; float: right">
+      <label style="display: block">To:</label>
+      <input
+        required type="number"
+        #inputRangeEnd="ngModel"
+        [ngModel]="rangeEnd"
+        (ngModelChange)="inputRangeEnd.valid ? rangeEnd = $event: null"
+        min="{{ rangeStart  }}"
+        max="{{ selectedGeneWeights?.max  }}"
+        placeholder="end"
+        style="width: 100px; max-width: 100px">
 
-  <div [hidden]="inputRangeEnd.valid || !inputRangeStart.dirty"
-       class="alert alert-danger">
-    End is invalid
+      <div [hidden]="inputRangeEnd.valid || !inputRangeStart.dirty"
+           class="alert alert-danger">
+        End is invalid
+      </div>
+    </div>
+
+
+
   </div>
 </div>
-<select class="form-control" [(ngModel)]="selectedGeneWeights" required>
-  <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
-</select>
