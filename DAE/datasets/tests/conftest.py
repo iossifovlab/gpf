@@ -5,25 +5,12 @@ Created on Feb 6, 2017
 '''
 import pytest
 from datasets.config import DatasetsConfig
-from datasets.query import QueryDataset
 from datasets.dataset import Dataset
-
-
-@pytest.fixture(scope='session')
-def datasets(request):
-    datasets_config = DatasetsConfig()
-    return datasets_config.get_datasets()
 
 
 @pytest.fixture(scope='session')
 def datasets_config(request):
     return DatasetsConfig()
-
-
-@pytest.fixture(scope='session')
-def query(request):
-    query = QueryDataset()
-    return query
 
 
 @pytest.fixture(scope='session')

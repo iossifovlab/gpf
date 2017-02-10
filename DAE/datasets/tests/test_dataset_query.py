@@ -80,8 +80,8 @@ def test_get_legend_bad_pedigree(ssc):
         ssc.get_pedigree_selector(**kwargs)
 
 
-def test_get_effect_types(query):
-    res = query.get_effect_types(**EXAMPLE_QUERY_SSC)
+def test_get_effect_types(ssc):
+    res = ssc.get_effect_types(**EXAMPLE_QUERY_SSC)
     assert res is not None
 
     assert set(['frame-shift', 'nonsense', 'splice-site']) == set(res)
