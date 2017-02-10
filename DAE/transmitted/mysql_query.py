@@ -230,8 +230,10 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
 
     PRESENT_IN_CHILD_MAPPING = {
         "autism only": " ( tfv.in_prb = 1 and tfv.in_sib = 0 ) ",
+        "affected only": " ( tfv.in_prb = 1 and tfv.in_sib = 0 ) ",
         "unaffected only": " ( tfv.in_sib = 1 and tfv.in_prb = 0 ) ",
         "autism and unaffected": " ( tfv.in_prb = 1 and tfv.in_sib = 1 ) ",
+        "affected and unaffected": " ( tfv.in_prb = 1 and tfv.in_sib = 1 ) ",
         "proband only": " ( tfv.in_prb = 1 and tfv.in_sib = 0 ) ",
         "sibling only": " ( tfv.in_sib = 1 and tfv.in_prb = 0 ) ",
         "proband and sibling": " ( tfv.in_prb = 1 and tfv.in_sib = 1 ) ",
@@ -239,7 +241,13 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         ("autism only", 'F'):
             " ( tfv.in_prb = 1 and tfv.in_sib = 0 and "
             " tfv.in_prb_gender = 'F' ) ",
+        ("affected only", 'F'):
+            " ( tfv.in_prb = 1 and tfv.in_sib = 0 and "
+            " tfv.in_prb_gender = 'F' ) ",
         ("autism only", 'M'):
+            " ( tfv.in_prb = 1 and tfv.in_sib = 0 and "
+            " tfv.in_prb_gender = 'M' ) ",
+        ("affected only", 'M'):
             " ( tfv.in_prb = 1 and tfv.in_sib = 0 and "
             " tfv.in_prb_gender = 'M' ) ",
         ("unaffected only", 'F'):
@@ -251,7 +259,13 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         ("autism and unaffected", 'F'):
             " ( tfv.in_prb = 1 and tfv.in_sib = 1 and "
             " ( tfv.in_prb_gender = 'F' or tfv.in_sib_gender = 'F' ) ) ",
+        ("affected and unaffected", 'F'):
+            " ( tfv.in_prb = 1 and tfv.in_sib = 1 and "
+            " ( tfv.in_prb_gender = 'F' or tfv.in_sib_gender = 'F' ) ) ",
         ("autism and unaffected", 'M'):
+            " ( tfv.in_prb = 1 and tfv.in_sib = 1 and "
+            " ( tfv.in_prb_gender = 'M' or tfv.in_sib_gender = 'M' ) ) ",
+        ("affected and unaffected", 'M'):
             " ( tfv.in_prb = 1 and tfv.in_sib = 1 and "
             " ( tfv.in_prb_gender = 'M' or tfv.in_sib_gender = 'M' ) ) ",
         ("neither", 'F'):
@@ -263,6 +277,9 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
     }
 
     def _build_present_in_child_where(self):
+        print(self['presentInChild'])
+        print(self)
+
         assert self['presentInChild']
         assert isinstance(self['presentInChild'], list)
         assert reduce(operator.and_,
@@ -336,6 +353,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             w = self._build_in_child_where()
             where.append(w)
         elif self['presentInChild']:
+            print(self['presentInChild'])
+            print(self)
             w = self._build_present_in_child_where()
             where.append(w)
 

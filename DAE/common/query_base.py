@@ -176,8 +176,10 @@ class PresentInBase(object):
     ]
 
     PRESENT_IN_CHILD_TYPES = [
+        "autism only",
         "affected only",
         "unaffected only",
+        "autism and unaffected",
         "affected and unaffected",
         "neither",
     ]
@@ -188,6 +190,9 @@ class PresentInBase(object):
         present_in_child = kwargs['presentInChild']
         if not present_in_child:
             return None
+        print(present_in_child)
+        print([pic in self.PRESENT_IN_CHILD_TYPES
+               for pic in present_in_child])
         if safe:
             assert all([pic in self.PRESENT_IN_CHILD_TYPES
                         for pic in present_in_child])
@@ -217,8 +222,6 @@ class PresentInBase(object):
             pip for pip in present_in_parent
             if pip in self.PRESENT_IN_PARENT_TYPES
         ]
-        if set(present_in_parent) == set(self.PRESENT_IN_PARENT_TYPES):
-            return None
         return present_in_parent
 
 
