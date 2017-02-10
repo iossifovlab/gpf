@@ -127,10 +127,28 @@ class EffectTypesBase(object):
         return self.build_effect_types(effect_types, safe)
 
 
-class QueryBase(EffectTypesBase):
-
+class VariantTypesBase(object):
     VARIANT_TYPES = [
-        'del', 'ins', 'sub', 'CNV']
+        'del', 'ins', 'sub', 'CNV'
+    ]
+
+    def get_variant_types(self, safe=True, **kwargs):
+        if 'variantTypes' not in kwargs:
+            return None
+        variant_types = kwargs['variantTypes']
+        if safe:
+            assert all([vt in self.VARIANT_TYPES for vt in variant_types])
+        variant_types = [
+            vt for vt in variant_types if vt in self.VARIANT_TYPES
+        ]
+        if not variant_types:
+            return None
+        if set(variant_types) == set(self.VARIANT_TYPES):
+            return None
+        return variant_types
+
+
+class QueryBase(EffectTypesBase, VariantTypesBase):
 
     PRESENT_IN_PARENT_TYPES = [
         "mother only", "father only",

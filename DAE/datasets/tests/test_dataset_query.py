@@ -14,7 +14,9 @@ EXAMPLE_QUERY_SSC = {
     "gender": "female,male",
     "present_in_child": "autism and unaffected,autism only",
     "present_in_parent": "neither",
-    "variant_types": "CNV,del,ins,sub",
+    "variantTypes": [
+        "CNV", "del", "ins", "sub",
+    ],
     "genes": "All",
     "family_race": "All",
     "family_quad_trio": "All",
@@ -37,7 +39,9 @@ EXAMPLE_QUERY_VIP = {
     "gender": "female,male",
     "present_in_child": "autism and unaffected,autism only",
     "present_in_parent": "neither",
-    "variant_types": "CNV,del,ins,sub",
+    "variantTypes": [
+        "CNV", "del", "ins", "sub",
+    ],
     "genes": "All",
     "datasetId": "VIP",
     "pedigreeSelector": {
@@ -51,7 +55,9 @@ EXAMPLE_QUERY_SD = {
     "gender": "female,male",
     "present_in_child": "autism and unaffected,autism only",
     "present_in_parent": "neither",
-    "variant_types": "CNV,del,ins,sub",
+    "variantTypes": [
+        "CNV", "del", "ins", "sub",
+    ],
     "genes": "All",
     "datasetId": "SD",
     "pedigreeSelector": {

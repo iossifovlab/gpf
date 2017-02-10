@@ -10,7 +10,9 @@ EXAMPLE_QUERY_SD = {
     "gender": "female,male",
     "presentInChild": "affected and unaffected,affected only",
     "presentInParent": "neither",
-    "variantTypes": "CNV,del,ins,sub",
+    "variantTypes": [
+        "CNV", "del", "ins", "sub",
+    ],
     "genes": "All",
     "datasetId": "SD",
     "pedigreeSelector": {
