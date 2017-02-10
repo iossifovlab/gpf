@@ -172,3 +172,19 @@ class Dataset(QueryBase):
                 "_pedigree_",
                 "phenoInChS"
             ])
+
+
+class DatasetsFactory(dict):
+
+    def __init__(self, datasets_config):
+        self.datasets_config = datasets_config
+
+    def get_dataset(self, dataset_id):
+        if dataset_id in self:
+            return self[dataset_id]
+        dataset_descriptor = self.datasets_config.get_dataset(dataset_id)
+        dataset = Dataset(dataset_descriptor)
+        dataset.load()
+
+        self[dataset_id] = dataset
+        return dataset
