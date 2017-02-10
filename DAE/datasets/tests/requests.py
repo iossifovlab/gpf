@@ -7,7 +7,7 @@ Created on Feb 10, 2017
 
 EXAMPLE_QUERY_SSC = {
     "effectTypes": "Frame-shift,Nonsense,Splice-site",
-    "gender": "female,male",
+    "gender": ["female", "male"],
     "present_in_child": "autism and unaffected,autism only",
     "present_in_parent": "neither",
     "variantTypes": [
@@ -32,7 +32,7 @@ EXAMPLE_QUERY_SSC = {
 
 EXAMPLE_QUERY_VIP = {
     "effectTypes": "Frame-shift,Nonsense,Splice-site",
-    "gender": "female,male",
+    "gender": ["female", "male"],
     "present_in_child": "autism and unaffected,autism only",
     "present_in_parent": "neither",
     "variantTypes": [
@@ -48,7 +48,7 @@ EXAMPLE_QUERY_VIP = {
 
 EXAMPLE_QUERY_SD = {
     "effectTypes": "Frame-shift,Nonsense,Splice-site",
-    "gender": "female,male",
+    "gender": ["female", "male"],
     "present_in_child": "autism and unaffected,autism only",
     "present_in_parent": "neither",
     "variantTypes": [

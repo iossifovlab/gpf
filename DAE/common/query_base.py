@@ -148,7 +148,28 @@ class VariantTypesBase(object):
         return variant_types
 
 
-class QueryBase(EffectTypesBase, VariantTypesBase):
+class ChildGenderBase(object):
+    GENDER = ['male', 'female']
+    GENDER_MAP = {'male': 'M', 'female': 'F'}
+
+    def get_child_gender(self, safe=True, **kwargs):
+        if 'gender' not in kwargs:
+            return None
+        gender = kwargs['gender']
+        if safe:
+            assert all([g in self.GENDER for g in gender])
+        gender = [
+            g for g in gender if g in self.GENDER
+        ]
+        if not gender:
+            return None
+        if set(gender) == set(self.GENDER):
+            return None
+
+        return [self.GENDER_MAP[g] for g in gender]
+
+
+class QueryBase(EffectTypesBase, VariantTypesBase, ChildGenderBase):
 
     PRESENT_IN_PARENT_TYPES = [
         "mother only", "father only",

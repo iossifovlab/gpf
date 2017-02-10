@@ -35,3 +35,23 @@ def test_variant_types_sub_del(ssc):
 
     for v in vs:
         assert 'del' in v.variant or 'sub' in v.variant
+
+
+def test_child_gender_male(ssc):
+    data = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    data['gender'] = ['male']
+
+    vs = ssc.get_denovo_variants(**data)
+
+    for v in vs:
+        assert 'M' in v.inChS
+
+
+def test_child_gender_female(ssc):
+    data = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    data['gender'] = ['female']
+
+    vs = ssc.get_denovo_variants(**data)
+
+    for v in vs:
+        assert 'F' in v.inChS

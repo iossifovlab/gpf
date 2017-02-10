@@ -153,6 +153,9 @@ class Dataset(QueryBase):
                 **kwargs),
             'variantTypes': self.get_variant_types(
                 safe=safe,
+                **kwargs),
+            'gender': self.get_child_gender(
+                safe=safe,
                 **kwargs)
         }
 
