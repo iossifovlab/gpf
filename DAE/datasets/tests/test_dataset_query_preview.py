@@ -3,23 +3,7 @@ Created on Feb 7, 2017
 
 @author: lubo
 '''
-
-
-EXAMPLE_QUERY_SD = {
-    "effectTypes": "Frame-shift,Nonsense,Splice-site",
-    "gender": "female,male",
-    "presentInChild": "affected and unaffected,affected only",
-    "presentInParent": "neither",
-    "variantTypes": [
-        "CNV", "del", "ins", "sub",
-    ],
-    "genes": "All",
-    "datasetId": "SD",
-    "pedigreeSelector": {
-        'id': "phenotype",
-        "checkedValues": ["autism", "unaffected"]
-    }
-}
+from datasets.tests.requests import EXAMPLE_QUERY_SD
 
 
 def test_get_denovo_variants_sd(sd):
