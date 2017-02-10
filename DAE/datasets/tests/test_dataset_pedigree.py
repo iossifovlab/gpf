@@ -12,7 +12,7 @@ def test_get_denovo_variants_sd(sd):
     vs = sd.get_denovo_variants(**EXAMPLE_QUERY_SD)
 
     res = [v for v in vs]
-    assert 1166 == len(res)
+    assert 937 == len(res)
 
     v = res[0]
     pedigree = v.pedigree_v3(legend)

@@ -390,18 +390,27 @@ class Variant:
 PRESENT_IN_CHILD_FILTER_MAPPING = {
     "autism only":
     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
+    "affected only":
+    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
     "unaffected only":
     lambda inCh: (len(inCh) == 4 and 's' == inCh[0]),
     "autism and unaffected":
+    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
+    "affected and unaffected":
     lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
     "neither":
     lambda inCh: len(inCh) == 0,
 
     ("autism only", 'F'):
     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
+    ("affected only", 'F'):
+    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
     ("unaffected only", 'F'):
     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
     ("autism and unaffected", 'F'):
+    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
+                  ('F' == inCh[3] or 'F' == inCh[7])),
+    ("affected and unaffected", 'F'):
     lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
                   ('F' == inCh[3] or 'F' == inCh[7])),
     ("neither", 'F'):
@@ -409,9 +418,14 @@ PRESENT_IN_CHILD_FILTER_MAPPING = {
 
     ("autism only", 'M'):
     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
+    ("affected only", 'M'):
+    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
     ("unaffected only", 'M'):
     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
     ("autism and unaffected", 'M'):
+    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
+                  ('M' == inCh[3] or 'M' == inCh[7])),
+    ("affected and unaffected", 'M'):
     lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
                   ('M' == inCh[3] or 'M' == inCh[7])),
     ("neither", 'M'):

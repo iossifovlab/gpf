@@ -286,9 +286,8 @@ PRESENT_IN_CHILD_TYPES = [
     "autism only",
     "unaffected only",
     "autism and unaffected",
-    "proband only",
-    "sibling only",
-    "proband and sibling",
+    "affected only",
+    "affected and unaffected",
     "neither",
 ]
 

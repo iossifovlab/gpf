@@ -156,6 +156,12 @@ class Dataset(QueryBase):
                 **kwargs),
             'gender': self.get_child_gender(
                 safe=safe,
+                **kwargs),
+            'presentInParent': self.get_present_in_parent(
+                safe=safe,
+                **kwargs),
+            'presentInChild': self.get_present_in_child(
+                safe=safe,
                 **kwargs)
         }
 

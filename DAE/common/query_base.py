@@ -169,22 +169,61 @@ class ChildGenderBase(object):
         return [self.GENDER_MAP[g] for g in gender]
 
 
-class QueryBase(EffectTypesBase, VariantTypesBase, ChildGenderBase):
-
+class PresentInBase(object):
     PRESENT_IN_PARENT_TYPES = [
         "mother only", "father only",
         "mother and father", "neither",
     ]
 
     PRESENT_IN_CHILD_TYPES = [
-        "autism only",
+        "affected only",
         "unaffected only",
-        "autism and unaffected",
-        "proband only",
-        "sibling only",
-        "proband and sibling",
+        "affected and unaffected",
         "neither",
     ]
+
+    def get_present_in_child(self, safe=True, **kwargs):
+        if 'presentInChild' not in kwargs:
+            return None
+        present_in_child = kwargs['presentInChild']
+        if not present_in_child:
+            return None
+        if safe:
+            assert all([pic in self.PRESENT_IN_CHILD_TYPES
+                        for pic in present_in_child])
+
+        present_in_child = [
+            pic for pic in present_in_child
+            if pic in self.PRESENT_IN_CHILD_TYPES
+        ]
+
+        if set(present_in_child) == set(self.PRESENT_IN_CHILD_TYPES):
+            return None
+        return present_in_child
+
+    def get_present_in_parent(self, safe=True, **kwargs):
+        if 'presentInParent' not in kwargs:
+            return None
+        present_in_parent = kwargs['presentInParent']
+        if not present_in_parent:
+            return None
+        if safe:
+            assert all([
+                pip in self.PRESENT_IN_PARENT_TYPES
+                for pip in present_in_parent
+            ])
+
+        present_in_parent = [
+            pip for pip in present_in_parent
+            if pip in self.PRESENT_IN_PARENT_TYPES
+        ]
+        if set(present_in_parent) == set(self.PRESENT_IN_PARENT_TYPES):
+            return None
+        return present_in_parent
+
+
+class QueryBase(EffectTypesBase, VariantTypesBase, ChildGenderBase,
+                PresentInBase):
 
     IN_CHILD_TYPES = [
         'prb',
