@@ -9,15 +9,15 @@ from rest_framework.response import Response
 
 from helpers.logger import log_filter, LOGGER
 from datasets.config import DatasetsConfig
-from datasets.query import QueryDataset
 import traceback
+from datasets.dataset import DatasetsFactory
 
 
 class QueryPreviewView(views.APIView):
 
     def __init__(self):
         self.datasets_config = DatasetsConfig()
-        self.query = QueryDataset()
+        self.datasets = DatasetsFactory(self.datasets_config)
 
     def prepare_variants_resonse(self, variants):
         rows = []
@@ -40,14 +40,8 @@ class QueryPreviewView(views.APIView):
             'rows': rows
         }
 
-    def get_dataset_descriptor(self, data):
-        dataset_id = data['datasetId']
-        dataset_descriptor = self.datasets_config.get_dataset(dataset_id)
-        return dataset_descriptor
-
-    def prepare_legend_response(self, data):
-        dataset_descriptor = self.get_dataset_descriptor(data)
-        legend = self.query.get_legend(dataset_descriptor, **data)
+    def prepare_legend_response(self, dataset, **data):
+        legend = dataset.get_pedigree_selector(**data)
         response = legend.domain[:]
         response.append(legend.default)
         return response
@@ -58,12 +52,12 @@ class QueryPreviewView(views.APIView):
 
         data = request.data
         try:
-            legend = self.prepare_legend_response(data)
-            dataset_descriptor = self.get_dataset_descriptor(data)
+            dataset_id = data['datasetId']
+            dataset = self.datasets.get_dataset(dataset_id)
 
-            variants = self.query.get_variants_preview(
+            legend = self.prepare_legend_response(dataset)
+            variants = dataset.get_variants_preview(
                 safe=True,
-                dataset_descriptor=dataset_descriptor,
                 **data)
             res = self.prepare_variants_resonse(variants)
 

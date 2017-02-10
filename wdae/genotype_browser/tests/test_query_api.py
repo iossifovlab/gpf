@@ -16,7 +16,7 @@ EXAMPLE_REQUEST = {
     "variantTypes": "CNV,del,ins,sub",
     "genes": "All",
     "datasetId": "SSC",
-    "pedigreeSelector": "phenotypes"
+    "pedigreeSelector": "phenotype"
 }
 
 
