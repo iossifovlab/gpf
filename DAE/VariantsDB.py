@@ -324,6 +324,7 @@ class Study:
                     p.phenotype = phenotype
                 else:
                     p.phenotype = 'unaffected'
+                p.atts['phenotype'] = p.phenotype
 
     def _load_family_data_SSCFams(self, reportF):
         rf = open(reportF)

@@ -30,5 +30,11 @@ def query(request):
 def ssc(request, datasets_config):
     desc = datasets_config.get_dataset('SSC')
     dataset = Dataset(desc)
-    dataset.load()
+    return dataset
+
+
+@pytest.fixture(scope='session')
+def vip(request, datasets_config):
+    desc = datasets_config.get_dataset('VIP')
+    dataset = Dataset(desc)
     return dataset

@@ -13,5 +13,15 @@ def test_dataset_ssc_load(ssc):
 
 
 def test_dataset_ssc_load_families(ssc):
-    families = ssc.load_families()
-    assert families
+    ssc.load_families()
+    assert ssc.families
+    assert ssc.persons
+
+
+def test_dataset_vip_supplement_pedigree_selector(vip):
+    assert vip is not None
+    vip.load_families()
+    vip.load_pedigree_selectors()
+
+    for p in vip.persons.values():
+        assert p.atts['16pstatus']
