@@ -26,7 +26,10 @@ EXAMPLE_QUERY_SSC = {
     "family_pheno_measure_max": 40,
     "family_pheno_measure": "abc.subscale_ii_lethargy",
     "datasetId": "SSC",
-    "pedigreeSelector": "phenotype"
+    "pedigreeSelector": {
+        'id': "phenotype",
+        "checkedValues": ["autism", "unaffected"]
+    }
 }
 
 EXAMPLE_QUERY_VIP = {
@@ -37,7 +40,10 @@ EXAMPLE_QUERY_VIP = {
     "variant_types": "CNV,del,ins,sub",
     "genes": "All",
     "datasetId": "VIP",
-    "pedigreeSelector": "16pstatus"
+    "pedigreeSelector": {
+        'id': "16pstatus",
+        'checkValues': ['duplication', 'triplication']
+    },
 }
 
 EXAMPLE_QUERY_SD = {
@@ -48,7 +54,10 @@ EXAMPLE_QUERY_SD = {
     "variant_types": "CNV,del,ins,sub",
     "genes": "All",
     "datasetId": "SD",
-    "pedigreeSelector": "phenotype"
+    "pedigreeSelector": {
+        'id': "phenotype",
+        "checkedValues": ["autism", "unaffected"]
+    }
 }
 
 

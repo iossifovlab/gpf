@@ -9,6 +9,34 @@ from query_variants import generate_response
 from common.query_base import QueryBase
 
 
+# class AllFilter(object):
+#
+#     def __call__(self, val):
+#         return True
+#
+#
+# class PedigreeSelectorFilter(object):
+#
+#     def __init__(self, pedigree_query):
+#         self.pedigree_query = pedigree_query
+#         self.id = pedigree_query['id']
+#         self.checked_values = set()
+#         for value in pedigree_query['checkedValues']:
+#             self.checked_values.add(value)
+#
+#     def __call__(self, variant):
+#         return variant.atts[self.id] in self.checked_values
+#
+#     @staticmethod
+#     def build(**kwargs):
+#         if 'pedigreeSelector' not in kwargs:
+#             return AllFilter()
+#         pedigree_query = kwargs['pedigreeSelector']
+#         assert 'id' in pedigree_query
+#         assert 'checkedValues' in pedigree_query
+#         return PedigreeSelectorFilter(pedigree_query)
+
+
 class Dataset(QueryBase):
 
     def __init__(self, dataset_descriptor):
@@ -111,7 +139,9 @@ class Dataset(QueryBase):
         pedigrees = self.descriptor['pedigreeSelectors']
         pedigree = pedigrees[0]
         if 'pedigreeSelector' in kwargs:
-            pedigree = self.idlist_get(pedigrees, kwargs['pedigreeSelector'])
+            assert 'id' in kwargs['pedigreeSelector']
+            pedigreeSelectorId = kwargs['pedigreeSelector']['id']
+            pedigree = self.idlist_get(pedigrees, pedigreeSelectorId)
         assert pedigree is not None
         return pedigree
 
