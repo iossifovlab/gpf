@@ -52,18 +52,8 @@ EXAMPLE_QUERY_SD = {
 }
 
 
-def test_example_query(query, datasets_config):
-    dataset_descriptor = datasets_config.get_dataset(
-        EXAMPLE_QUERY_SSC['datasetId'])
-    query.get_variants(dataset_descriptor, **EXAMPLE_QUERY_SSC)
-
-    query.get_legend(dataset_descriptor, **EXAMPLE_QUERY_SSC)
-
-
-def test_get_legend_ssc(query, datasets_config):
-    dataset_descriptor = datasets_config.get_dataset(
-        EXAMPLE_QUERY_SSC['datasetId'])
-    legend = query.get_legend(dataset_descriptor)
+def test_get_legend_ssc(ssc):
+    legend = ssc.get_legend(**EXAMPLE_QUERY_SSC)
     assert legend is not None
     pprint(legend)
     assert 'name' in legend
@@ -72,10 +62,8 @@ def test_get_legend_ssc(query, datasets_config):
     assert 2 == len(legend['values'])
 
 
-def test_get_legend_vip(query, datasets_config):
-    dataset_descriptor = datasets_config.get_dataset(
-        EXAMPLE_QUERY_VIP['datasetId'])
-    legend = query.get_legend(dataset_descriptor)
+def test_get_legend_vip(vip):
+    legend = vip.get_legend(**EXAMPLE_QUERY_VIP)
     assert legend is not None
     pprint(legend)
     assert 'name' in legend
@@ -84,15 +72,12 @@ def test_get_legend_vip(query, datasets_config):
     assert 4 == len(legend['values'])
 
 
-def test_get_legend_bad_pedigree(query, datasets_config):
-    dataset_descriptor = datasets_config.get_dataset(
-        EXAMPLE_QUERY_SSC['datasetId'])
-
+def test_get_legend_bad_pedigree(ssc):
     kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
 
     kwargs['pedigreeSelector'] = 'ala bala'
     with pytest.raises(AssertionError):
-        query.get_legend(dataset_descriptor, **kwargs)
+        ssc.get_legend(**kwargs)
 
 
 def test_get_effect_types(query):
@@ -129,19 +114,14 @@ def test_get_transmitted_stuides(query, datasets_config):
     assert all([st.has_transmitted for st in transmitted])
 
 
-def test_get_denovo_variants_ssc(query, datasets_config):
-    dataset_descriptor = datasets_config.get_dataset(
-        EXAMPLE_QUERY_SSC['datasetId'])
-
-    vs = query.get_denovo_variants(dataset_descriptor, **EXAMPLE_QUERY_SSC)
+def test_get_denovo_variants_ssc(ssc):
+    vs = ssc.get_denovo_variants(**EXAMPLE_QUERY_SSC)
     res = [v for v in vs]
     assert 634 == len(res)
 
 
-def test_get_denovo_variants_vip(query, datasets_config):
-    dataset_descriptor = datasets_config.get_dataset(
-        EXAMPLE_QUERY_VIP['datasetId'])
-    vs = query.get_denovo_variants(dataset_descriptor, **EXAMPLE_QUERY_VIP)
+def test_get_denovo_variants_vip(vip):
+    vs = vip.get_denovo_variants(**EXAMPLE_QUERY_VIP)
     res = [v for v in vs]
     assert 64 == len(res)
 

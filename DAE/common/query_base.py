@@ -148,3 +148,10 @@ class QueryBase(EffectTypesBase):
         'sibM',
         'sibF',
     ]
+
+    @staticmethod
+    def idlist_get(named_list, name):
+        for el in named_list:
+            if name == el['id']:
+                return el
+        return None

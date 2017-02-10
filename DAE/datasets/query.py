@@ -46,29 +46,6 @@ class QueryDataset(QueryBase):
         denovo = self.get_denovo_variants(dataset_descriptor, safe, **kwargs)
         return itertools.chain.from_iterable([denovo])
 
-    def get_denovo_variants(self, dataset_descriptor, safe=True, **kwargs):
-        denovo_studies = self.get_denovo_studies(
-            dataset_descriptor)
-        denovo_filters = self.get_denovo_filters(
-            dataset_descriptor, safe, **kwargs)
-
-        seen_vs = set()
-        for st in denovo_studies:
-            for v in st.get_denovo_variants(**denovo_filters):
-                v_key = v.familyId + v.location + v.variant
-                if v_key in seen_vs:
-                    continue
-                yield v
-                seen_vs.add(v_key)
-
-    def get_pedigree_selector(self, dataset_descriptor, **kwargs):
-        pedigrees = dataset_descriptor['pedigreeSelectors']
-        pedigree = pedigrees[0]
-        if 'pedigreeSelector' in kwargs:
-            pedigree = self.idlist_get(pedigrees, kwargs['pedigreeSelector'])
-        assert pedigree is not None
-        return pedigree
-
 #     def get_dataset(self, **kwargs):
 #         assert 'datasetId' in kwargs
 #         dataset_id = kwargs['datasetId']
@@ -78,10 +55,6 @@ class QueryDataset(QueryBase):
 #         assert dataset is not None
 #
 #         return dataset
-
-    def get_legend(self, dataset_descriptor, **kwargs):
-        pedigree = self.get_pedigree_selector(dataset_descriptor, **kwargs)
-        return PedigreeLegend(pedigree)
 
     def get_effect_types(self, safe=True, **kwargs):
         assert 'effectTypes' in kwargs
@@ -111,46 +84,46 @@ class QueryDataset(QueryBase):
 
     def get_denovo_filters(self, dataset_descriptor, safe=True, **kwargs):
         return {
-            'effectTypes': self.get_effect_types(
-                safe=safe,
-                dataset_descriptor=dataset_descriptor,
-                **kwargs)
-        }
+                'effectTypes': self.get_effect_types(
+                    safe=safe,
+                    dataset_descriptor=dataset_descriptor,
+                    **kwargs)
+            }
 
-    def get_variants_preview(self, dataset_descriptor, safe=True, **kwargs):
-        denovo = self.get_denovo_variants(dataset_descriptor, safe, **kwargs)
-        legend = self.get_legend(dataset_descriptor, **kwargs)
-
-        variants = itertools.chain.from_iterable([denovo])
-
-        def augment_vars(v):
-            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
-
-            v.atts["_par_races_"] = 'NA:NA'
-            v.atts["_ch_prof_"] = chProf
-            v.atts["_prb_viq_"] = 'NA'
-            v.atts["_prb_nviq_"] = 'NA'
-            v.atts["_pedigree_"] = v.pedigree_v3(legend)
-            v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
-            v._phenotype_ = v.study.get_attr('study.phenotype')
-            return v
-
-        return generate_response(
-            itertools.imap(augment_vars, variants),
-            [
-                'effectType',
-                'effectDetails',
-                'all.altFreq',
-                'all.nAltAlls',
-                'SSCfreq',
-                'EVSfreq',
-                'E65freq',
-                'all.nParCalled',
-                '_par_races_',
-                '_ch_prof_',
-                '_prb_viq_',
-                '_prb_nviq_',
-                'valstatus',
-                "_pedigree_",
-                "phenoInChS"
-            ])
+#     def get_variants_preview(self, dataset_descriptor, safe=True, **kwargs):
+#         denovo = self.get_denovo_variants(dataset_descriptor, safe, **kwargs)
+#         legend = self.get_legend(dataset_descriptor, **kwargs)
+#
+#         variants = itertools.chain.from_iterable([denovo])
+#
+#         def augment_vars(v):
+#             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+#
+#             v.atts["_par_races_"] = 'NA:NA'
+#             v.atts["_ch_prof_"] = chProf
+#             v.atts["_prb_viq_"] = 'NA'
+#             v.atts["_prb_nviq_"] = 'NA'
+#             v.atts["_pedigree_"] = v.pedigree_v3(legend)
+#             v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
+#             v._phenotype_ = v.study.get_attr('study.phenotype')
+#             return v
+#
+#         return generate_response(
+#             itertools.imap(augment_vars, variants),
+#             [
+#                 'effectType',
+#                 'effectDetails',
+#                 'all.altFreq',
+#                 'all.nAltAlls',
+#                 'SSCfreq',
+#                 'EVSfreq',
+#                 'E65freq',
+#                 'all.nParCalled',
+#                 '_par_races_',
+#                 '_ch_prof_',
+#                 '_prb_viq_',
+#                 '_prb_nviq_',
+#                 'valstatus',
+#                 "_pedigree_",
+#                 "phenoInChS"
+#             ])

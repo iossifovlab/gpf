@@ -4,10 +4,13 @@ Created on Feb 9, 2017
 @author: lubo
 '''
 from DAE import pheno
-from datasets.query import QueryDataset
+from datasets.query import QueryDataset, PedigreeLegend
+import itertools
+from query_variants import generate_response
+from common.query_base import QueryBase
 
 
-class Dataset(object):
+class Dataset(QueryBase):
 
     def __init__(self, dataset_descriptor):
         self.descriptor = dataset_descriptor
@@ -77,5 +80,65 @@ class Dataset(object):
             value = measure_values.get(p.personId, default_value)
             p.atts[pedigree_id] = value
 
-    def get_variants_preview(self, **kwargs):
-        pass
+    def get_pedigree_selector(self, **kwargs):
+        pedigrees = self.descriptor['pedigreeSelectors']
+        pedigree = pedigrees[0]
+        if 'pedigreeSelector' in kwargs:
+            pedigree = self.idlist_get(pedigrees, kwargs['pedigreeSelector'])
+        assert pedigree is not None
+        return pedigree
+
+    def get_legend(self, **kwargs):
+        pedigree = self.get_pedigree_selector(**kwargs)
+        return PedigreeLegend(pedigree)
+
+    def get_denovo_variants(self, safe=True, **kwargs):
+        denovo_filters = self.query.get_denovo_filters(
+            self.descriptor, safe, **kwargs)
+
+        seen_vs = set()
+        for st in self.denovo_studies:
+            for v in st.get_denovo_variants(**denovo_filters):
+                v_key = v.familyId + v.location + v.variant
+                if v_key in seen_vs:
+                    continue
+                yield v
+                seen_vs.add(v_key)
+
+    def get_variants_preview(self, safe=True, **kwargs):
+        denovo = self.get_denovo_variants(safe, **kwargs)
+        legend = self.get_legend(**kwargs)
+
+        variants = itertools.chain.from_iterable([denovo])
+
+        def augment_vars(v):
+            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+
+            v.atts["_par_races_"] = 'NA:NA'
+            v.atts["_ch_prof_"] = chProf
+            v.atts["_prb_viq_"] = 'NA'
+            v.atts["_prb_nviq_"] = 'NA'
+            v.atts["_pedigree_"] = v.pedigree_v3(legend)
+            v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
+            v._phenotype_ = v.study.get_attr('study.phenotype')
+            return v
+
+        return generate_response(
+            itertools.imap(augment_vars, variants),
+            [
+                'effectType',
+                'effectDetails',
+                'all.altFreq',
+                'all.nAltAlls',
+                'SSCfreq',
+                'EVSfreq',
+                'E65freq',
+                'all.nParCalled',
+                '_par_races_',
+                '_ch_prof_',
+                '_prb_viq_',
+                '_prb_nviq_',
+                'valstatus',
+                "_pedigree_",
+                "phenoInChS"
+            ])

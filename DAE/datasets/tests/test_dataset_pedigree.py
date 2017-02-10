@@ -17,11 +17,10 @@ EXAMPLE_QUERY_SD = {
 }
 
 
-def test_get_denovo_variants_sd(query, datasets_config):
-    dataset_descriptor = datasets_config.get_dataset(
-        EXAMPLE_QUERY_SD['datasetId'])
-    vs = query.get_denovo_variants(dataset_descriptor, **EXAMPLE_QUERY_SD)
-    legend = query.get_legend(dataset_descriptor, **EXAMPLE_QUERY_SD)
+def test_get_denovo_variants_sd(sd):
+    legend = sd.get_legend(**EXAMPLE_QUERY_SD)
+
+    vs = sd.get_denovo_variants(**EXAMPLE_QUERY_SD)
 
     res = [v for v in vs]
     assert 1166 == len(res)

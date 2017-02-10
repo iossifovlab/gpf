@@ -38,3 +38,10 @@ def vip(request, datasets_config):
     desc = datasets_config.get_dataset('VIP')
     dataset = Dataset(desc)
     return dataset
+
+
+@pytest.fixture(scope='session')
+def sd(request, datasets_config):
+    desc = datasets_config.get_dataset('SD')
+    dataset = Dataset(desc)
+    return dataset
