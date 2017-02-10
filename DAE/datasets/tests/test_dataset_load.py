@@ -25,3 +25,4 @@ def test_dataset_vip_supplement_pedigree_selector(vip):
 
     for p in vip.persons.values():
         assert p.atts['16pstatus']
+        assert p.atts['phenotype']

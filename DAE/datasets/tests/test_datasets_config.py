@@ -37,7 +37,7 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertIsNotNone(ds['pedigreeSelectors'])
         pedigree = ds['pedigreeSelectors'][0]
 
-        self.assertEquals('Phenotypes', pedigree['name'])
+        self.assertEquals('Phenotype', pedigree['name'])
 
     def test_dataset_not_found(self):
         ds = self.dataset_config.get_dataset('ala bala')

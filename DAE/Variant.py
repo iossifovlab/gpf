@@ -334,7 +334,7 @@ class Variant:
 
     def pedigree_v3(self, legend):
         def get_color(p):
-            return legend.get_color(p.phenotype)
+            return legend.get_color(p.atts[legend.id])
 
         denovo_parent = self.denovo_parent()
 

@@ -76,3 +76,6 @@ class Dataset(object):
         for p in self.persons.values():
             value = measure_values.get(p.personId, default_value)
             p.atts[pedigree_id] = value
+
+    def get_variants_preview(self, **kwargs):
+        pass

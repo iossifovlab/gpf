@@ -13,7 +13,7 @@ EXAMPLE_QUERY_SD = {
     "variantTypes": "CNV,del,ins,sub",
     "genes": "All",
     "datasetId": "SD",
-    "pedigreeSelector": "phenotypes"
+    "pedigreeSelector": "phenotype"
 }
 
 
