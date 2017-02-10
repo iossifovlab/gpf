@@ -10,13 +10,23 @@ import copy
 
 EXAMPLE_REQUEST_SSC = {
     "effectTypes": "Frame-shift,Nonsense,Splice-site",
-    "gender": "female,male",
-    "presentInChild": "autism and unaffected,autism only",
-    "presentInParent": "neither",
-    "variantTypes": "CNV,del,ins,sub",
+    "gender": ["female", "male"],
+    "presentInChild": [
+        "affected and unaffected",
+        "affected only",
+    ],
+    "presentInParent": [
+        "neither",
+    ],
+    "variantTypes": [
+        "CNV", "del", "ins", "sub",
+    ],
     "genes": "All",
     "datasetId": "SSC",
-    "pedigreeSelector": "phenotype"
+    "pedigreeSelector": {
+        "id": "phenotype",
+        "checkedValues": ["autism", "unaffected"]
+    }
 }
 
 
@@ -39,8 +49,8 @@ class Test(APITestCase):
         print(res['legend'])
         print(res['count'])
         self.assertEquals(3, len(res['legend']))
-        self.assertEquals(634, int(res['count']))
-        self.assertEquals(634, len(res['rows']))
+        self.assertEquals(422, int(res['count']))
+        self.assertEquals(422, len(res['rows']))
 
     def test_missing_dataset(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SSC)

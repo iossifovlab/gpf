@@ -10,13 +10,25 @@ import copy
 
 EXAMPLE_REQUEST_VIP = {
     "effectTypes": "Frame-shift,Nonsense,Splice-site",
-    "gender": "female,male",
-    "presentInChild": "autism and unaffected,autism only",
-    "presentInParent": "neither",
-    "variantTypes": "CNV,del,ins,sub",
+    "gender": ["female", "male"],
+    "presentInChild": [
+        "affected and unaffected",
+        "affected only",
+        "unaffected only",
+        "neither"
+    ],
+    "presentInParent": [
+        "neither",
+    ],
+    "variantTypes": [
+        "CNV", "del", "ins", "sub",
+    ],
     "genes": "All",
     "datasetId": "VIP",
-    "pedigreeSelector": "16pstatus"
+    "pedigreeSelector": {
+        "id": "16pstatus",
+        "checkedValues": ["deletion", "duplication"]
+    }
 }
 
 
