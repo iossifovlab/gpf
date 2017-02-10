@@ -119,6 +119,13 @@ class EffectTypesBase(object):
             etl = [et for et in etl if et in self.EFFECT_TYPES]
         return etl
 
+    def get_effect_types(self, safe=True, **kwargs):
+        assert 'effectTypes' in kwargs
+
+        effect_types = kwargs['effectTypes']
+
+        return self.build_effect_types(effect_types, safe)
+
 
 class QueryBase(EffectTypesBase):
 

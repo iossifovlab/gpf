@@ -17,6 +17,13 @@ class PedigreeSelector(dict):
         self['default'] = self._parse_domain_value(kwargs['default'])
         self['source'] = kwargs['source']
         self['name'] = kwargs['name']
+        self.id = self['id']
+        self.name = self['name']
+        self.domain = self['domain']
+        self.default = self['default']
+
+        self.values = dict([(v['id'], v) for v in self.domain])
+        self['values'] = self.values
 
     def _parse_domain_value(self, value):
         (selector_id, selector_name, selector_color) = value.split(':')
@@ -30,6 +37,10 @@ class PedigreeSelector(dict):
         values = domain.split(',')
         result = [self._parse_domain_value(v) for v in values]
         return result
+
+    def get_color(self, value_id):
+        value = self.values.get(value_id, self.default)
+        return value['color']
 
 
 class DatasetsConfig(object):

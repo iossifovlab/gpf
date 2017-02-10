@@ -18,7 +18,7 @@ EXAMPLE_QUERY_SD = {
 
 
 def test_get_denovo_variants_sd(sd):
-    legend = sd.get_legend(**EXAMPLE_QUERY_SD)
+    legend = sd.get_pedigree_selector(**EXAMPLE_QUERY_SD)
 
     vs = sd.get_denovo_variants(**EXAMPLE_QUERY_SD)
 

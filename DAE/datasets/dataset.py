@@ -3,8 +3,7 @@ Created on Feb 9, 2017
 
 @author: lubo
 '''
-from DAE import pheno
-from datasets.query import QueryDataset, PedigreeLegend
+from DAE import pheno, vDB
 import itertools
 from query_variants import generate_response
 from common.query_base import QueryBase
@@ -14,19 +13,47 @@ class Dataset(QueryBase):
 
     def __init__(self, dataset_descriptor):
         self.descriptor = dataset_descriptor
-        self.query = QueryDataset()
-        self.denovo_studies = None
-        self.transmitted_studies = None
         self.pheno_db = None
         self.families = None
-        self.denovo_studies = \
-            self.query.get_denovo_studies(self.descriptor)
-        self.transmitted_studies = \
-            self.query.get_transmitted_studies(self.descriptor)
-        self.pheno_db = self.load_pheno_db()
+
+        self._studies = None
+        self._denovo_studies = None
+        self._transmitted_studies = None
+
+        self.load_pheno_db()
+
+    @property
+    def studies(self):
+        if self._studies is None:
+            study_names = [
+                st.strip() for st in self.descriptor['studies'].split(',')
+            ]
+            studies = [vDB.get_studies(st) for st in study_names]
+            self._studies = [
+                st for st in itertools.chain.from_iterable(studies)
+            ]
+        return self._studies
+
+    @property
+    def denovo_studies(self):
+        if self._denovo_studies is None:
+            self._denovo_studies = [
+                st for st in self.studies
+                if st.has_denovo
+            ]
+        return self._denovo_studies
+
+    @property
+    def transmitted_studies(self):
+        if self._transmitted_studies is None:
+            self._transmitted_studies = [
+                st for st in self.studies
+                if st.has_transmitted
+            ]
+        return self._transmitted_studies
 
     def load(self):
-        self.families = self.load_families()
+        self.load_families()
         self.load_pedigree_selectors()
 
     def load_pheno_db(self):
@@ -35,7 +62,7 @@ class Dataset(QueryBase):
             pheno_id = self.descriptor['phenoDB']
             if pheno.has_pheno_db(pheno_id):
                 pheno_db = pheno.get_pheno_db(pheno_id)
-        return pheno_db
+        self.pheno_db = pheno_db
 
     def load_families(self):
         families = {}
@@ -88,13 +115,16 @@ class Dataset(QueryBase):
         assert pedigree is not None
         return pedigree
 
-    def get_legend(self, **kwargs):
-        pedigree = self.get_pedigree_selector(**kwargs)
-        return PedigreeLegend(pedigree)
+    def get_denovo_filters(self, safe=True, **kwargs):
+        return {
+            'effectTypes': self.get_effect_types(
+                safe=safe,
+                dataset_descriptor=self.descriptor,
+                **kwargs)
+        }
 
     def get_denovo_variants(self, safe=True, **kwargs):
-        denovo_filters = self.query.get_denovo_filters(
-            self.descriptor, safe, **kwargs)
+        denovo_filters = self.get_denovo_filters(safe, **kwargs)
 
         seen_vs = set()
         for st in self.denovo_studies:
@@ -107,7 +137,7 @@ class Dataset(QueryBase):
 
     def get_variants_preview(self, safe=True, **kwargs):
         denovo = self.get_denovo_variants(safe, **kwargs)
-        legend = self.get_legend(**kwargs)
+        legend = self.get_pedigree_selector(**kwargs)
 
         variants = itertools.chain.from_iterable([denovo])
 
