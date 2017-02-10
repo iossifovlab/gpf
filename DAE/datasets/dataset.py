@@ -150,6 +150,9 @@ class Dataset(QueryBase):
             'effectTypes': self.get_effect_types(
                 safe=safe,
                 dataset_descriptor=self.descriptor,
+                **kwargs),
+            'variantTypes': self.get_variant_types(
+                safe=safe,
                 **kwargs)
         }
 

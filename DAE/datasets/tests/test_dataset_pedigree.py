@@ -15,7 +15,10 @@ EXAMPLE_QUERY_SD = {
     ],
     "genes": "All",
     "datasetId": "SD",
-    "pedigreeSelector": "phenotype"
+    "pedigreeSelector": {
+        'id': "phenotype",
+        'checkedValues': ['autism', 'unaffected']
+    }
 }
 
 
