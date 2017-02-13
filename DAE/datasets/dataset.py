@@ -81,6 +81,8 @@ class Dataset(QueryBase):
         return self._transmitted_studies
 
     def load(self):
+        if self.families:
+            return
         self.load_families()
         self.load_pedigree_selectors()
 
@@ -145,6 +147,38 @@ class Dataset(QueryBase):
         assert pedigree is not None
         return pedigree
 
+    def filter_families_by_pedigree_selector(self, **kwargs):
+        if 'pedigreeSelector' not in kwargs:
+            return None
+        pedigree = self.get_pedigree_selector(**kwargs)
+        pedigree_id = pedigree.id
+
+        pedigree_checked_values = pedigree.get_checked_values(**kwargs)
+        if pedigree_checked_values is None:
+            return None
+        family_ids = set([])
+        for fid, fam in self.families.items():
+            for p in fam.memberInOrder[2:]:
+                if p.atts[pedigree_id] in pedigree_checked_values:
+                    family_ids.add(fid)
+                    continue
+        return family_ids
+
+    def get_family_ids(self, **kwargs):
+        family_filters = [
+            self.filter_families_by_pedigree_selector(**kwargs)
+        ]
+        family_filters = [ff for ff in family_filters if ff is not None]
+        if not family_filters:
+            return None
+        family_ids = reduce(
+            lambda f1, f2: f1 & f2,
+            family_filters
+        )
+        if not family_ids:
+            return None
+        return family_ids
+
     def get_denovo_filters(self, safe=True, **kwargs):
         return {
             'effectTypes': self.get_effect_types(
@@ -161,6 +195,9 @@ class Dataset(QueryBase):
                 safe=safe,
                 **kwargs),
             'presentInChild': self.get_present_in_child(
+                safe=safe,
+                **kwargs),
+            'familyIds': self.get_family_ids(
                 safe=safe,
                 **kwargs)
         }

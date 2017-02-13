@@ -42,6 +42,13 @@ class PedigreeSelector(dict):
         value = self.values.get(value_id, self.default)
         return value['color']
 
+    def get_checked_values(self, **kwargs):
+        checked = kwargs['pedigreeSelector']['checkedValues']
+        checked = [v for v in checked if v in self.values]
+        if len(checked) == len(self.values):
+            return None
+        return set(checked)
+
 
 class DatasetsConfig(object):
 

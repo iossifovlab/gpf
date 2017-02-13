@@ -17,6 +17,7 @@ def datasets_config(request):
 def ssc(request, datasets_config):
     desc = datasets_config.get_dataset('SSC')
     dataset = Dataset(desc)
+    dataset.load()
     return dataset
 
 
@@ -24,6 +25,7 @@ def ssc(request, datasets_config):
 def vip(request, datasets_config):
     desc = datasets_config.get_dataset('VIP')
     dataset = Dataset(desc)
+    dataset.load()
     return dataset
 
 
@@ -31,4 +33,5 @@ def vip(request, datasets_config):
 def sd(request, datasets_config):
     desc = datasets_config.get_dataset('SD')
     dataset = Dataset(desc)
+    dataset.load()
     return dataset
