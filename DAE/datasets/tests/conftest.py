@@ -5,7 +5,7 @@ Created on Feb 6, 2017
 '''
 import pytest
 from datasets.config import DatasetsConfig
-from datasets.dataset import Dataset
+from datasets.dataset import DatasetsFactory
 
 
 @pytest.fixture(scope='session')
@@ -14,24 +14,20 @@ def datasets_config(request):
 
 
 @pytest.fixture(scope='session')
-def ssc(request, datasets_config):
-    desc = datasets_config.get_dataset('SSC')
-    dataset = Dataset(desc)
-    dataset.load()
-    return dataset
+def datasets_factory(request, datasets_config):
+    return DatasetsFactory(datasets_config)
 
 
 @pytest.fixture(scope='session')
-def vip(request, datasets_config):
-    desc = datasets_config.get_dataset('VIP')
-    dataset = Dataset(desc)
-    dataset.load()
-    return dataset
+def ssc(request, datasets_factory):
+    return datasets_factory.get_dataset('SSC')
 
 
 @pytest.fixture(scope='session')
-def sd(request, datasets_config):
-    desc = datasets_config.get_dataset('SD')
-    dataset = Dataset(desc)
-    dataset.load()
-    return dataset
+def vip(request,  datasets_factory):
+    return datasets_factory.get_dataset('VIP')
+
+
+@pytest.fixture(scope='session')
+def sd(request,  datasets_factory):
+    return datasets_factory.get_dataset('SD')

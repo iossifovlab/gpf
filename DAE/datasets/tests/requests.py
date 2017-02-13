@@ -52,7 +52,7 @@ EXAMPLE_QUERY_VIP = {
     "datasetId": "VIP",
     "pedigreeSelector": {
         'id': "16pstatus",
-        'checkValues': ['duplication', 'triplication']
+        'checkedValues': ['duplication', 'triplication']
     },
 }
 
