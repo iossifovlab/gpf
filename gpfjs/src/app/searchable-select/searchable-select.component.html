@@ -1,5 +1,10 @@
 <div class="input-group" style="width: 100%; max-width: 100%;">
-  <input #searchBox id="search-box" (keyup)="search(searchBox.value)" style="width: 100%" value="{{ caption }}" (click)="searchBox.value=''; onFocus($event)" />
+  <input #searchBox id="search-box"
+    (keyup)="search(searchBox.value)"
+    style="width: 100%"
+    value="{{ caption }}"
+    placeholder="Select or start typing to search"
+    (click)="searchBox.value=''; onFocus($event)" />
 
 
   <span #inputGroup class="input-group-btn" style="position: static">
