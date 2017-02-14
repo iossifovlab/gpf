@@ -1,23 +1,5 @@
 import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
 
-// One bright day we should replace this with NgTemplateOutlet
-@Component({
-  selector: 'gpf-custom-template',
-  template: ''
-})
-export class GpfCustomTemplateComponent {
-  @Input() data: any;
-  @Input() templateRef: TemplateRef<any>;
-
-  constructor(private viewContainer: ViewContainerRef) {
-  }
-
-  ngAfterContentInit() {
-    let childView = this.viewContainer.createEmbeddedView(this.templateRef, {$implicit: this.data});
-    childView.detectChanges();
-  }
-}
-
 @Component({
   selector: 'gpf-table-cell',
   templateUrl: './table-cell.component.html'

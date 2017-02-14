@@ -35,6 +35,6 @@
 
 
 <div style="position: fixed; bottom: 100px; right: 100px; background-color: white;" [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
-    <gpf-custom-template *ngIf="legend.templateRef" [templateRef]=legend.templateRef>
-    </gpf-custom-template>
+    <template *ngIf="legend.templateRef" [ngTemplateOutlet]="legend.templateRef">
+    </template>
 </div>

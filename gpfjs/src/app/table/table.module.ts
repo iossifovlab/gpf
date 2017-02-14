@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule }        from '@angular/common';
 
 import { GpfTableComponent,
-         GpfCustomTemplateComponent,
          GpfTableColumnComponent,
          GpfTableCell,
          GpfTableSubcolumnComponent,
@@ -19,7 +18,6 @@ import { GpfTableComponent,
     GpfTableCellContentDirective,
     GpfTableCellHeaderDirective,
     GpfTableHeader,
-    GpfCustomTemplateComponent,
     GpfTableCell,
     GpfTableLegendDirective
   ],

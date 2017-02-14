@@ -2,8 +2,8 @@
     <div style="float: left; clear: left; padding-left: 10px; height: 100%;">
         <div style="height: 100%; display: table; ">
             <div style="height: 100%; display: table-cell; vertical-align: middle; ">
-                <gpf-custom-template *ngIf="columnInfo.headerTemplateRef" [templateRef]=columnInfo.headerTemplateRef>
-                </gpf-custom-template>
+                <template *ngIf="columnInfo.headerTemplateRef" [ngTemplateOutlet]="columnInfo.headerTemplateRef">
+                </template>
                 <span *ngIf="columnInfo.header">{{ columnInfo.header }}</span>
             </div>
         </div>
@@ -13,7 +13,8 @@
         <div style="height: 100%; display: table; ">
             <div *ngFor="let child of columnInfo.subcolumnsChildren" style="display: table-row;">
                 <div style="display: table-cell; vertical-align: middle; cursor: pointer; text-align: right" (click)="onSortClick(child)">
-                    <gpf-custom-template *ngIf="child.headerTemplateRef" [templateRef]=child.headerTemplateRef></gpf-custom-template>
+                    <template *ngIf="child.headerTemplateRef" [ngTemplateOutlet]="child.headerTemplateRef">
+                    </template>
                     <span *ngIf="!child.headerTemplateRef">{{ child.header }}</span>
                     <img *ngIf="sortingInfo?.sortBySubcolumn != child" src="bg.gif" style="height: 12px;">
                     <img *ngIf="sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc" src="asc.gif" style="height: 12px;">
