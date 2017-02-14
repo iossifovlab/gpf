@@ -1,0 +1,24 @@
+<div style="width: 300px; float: left">
+  <select [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
+    <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{collection.label}}</option>
+  </select>
+
+  <div *ngIf="selectedGeneSetsCollection?.types" style="text-align: left; border: 1px solid #dddddd; width: 100%">
+    <div *ngFor="let type of selectedGeneSetsCollection.types">
+      <input type="checkbox">
+      <span class="pedigree-icon" [style.background-color]="type.color"></span>
+      {{ type.name }}
+    </div>
+  </div>
+</div>
+
+<div style="width: 750px; float: right">
+  <gpf-searchable-select (searchTerm)="onSearch($event)" [caption]="selectedGeneSet?.name">
+    <gpf-searchable-select-item
+      *ngFor="let result of geneSets"
+      caption="{{result.name}} ({{result.count}}): {{ result.desc }}"
+      (select)="onSelect($event)"
+      [value]="result">
+    </gpf-searchable-select-item>
+  </gpf-searchable-select>
+</div>

@@ -30,6 +30,12 @@ import { HistogramModule } from './histogram/histogram.module';
 import { GeneWeightsComponent, MinValidatorDirective, MaxValidatorDirective } from './gene-weights/gene-weights.component';
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
 
+import { GeneSetsComponent } from './gene-sets/gene-sets.component';
+import { GeneSetsService } from './gene-sets/gene-sets.service';
+
+import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
+import { SearchableSelectItemComponent } from './searchable-select/searchable-select-item.component';
+
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
@@ -51,7 +57,10 @@ import { gpfReducer } from './store/gpf-store';
     GeneWeightsComponent,
     MinValidatorDirective,
     MaxValidatorDirective,
-    QuerySubmitterComponent
+    QuerySubmitterComponent,
+    GeneSetsComponent,
+    SearchableSelectComponent,
+    SearchableSelectItemComponent
   ],
   imports: [
     BrowserModule,
@@ -70,7 +79,8 @@ import { gpfReducer } from './store/gpf-store';
     DatasetsService,
     QueryService,
     { provide: RequestOptions, useClass: CustomRequestOptions },
-    GeneWeightsService
+    GeneWeightsService,
+    GeneSetsService
   ],
   bootstrap: [AppComponent]
 })
