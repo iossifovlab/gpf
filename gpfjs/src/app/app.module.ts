@@ -36,6 +36,8 @@ import { GeneSetsService } from './gene-sets/gene-sets.service';
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
 import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 
+import { BoldMatchingPipe } from './utils/bold-matching.pipe';
+
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
@@ -60,7 +62,8 @@ import { gpfReducer } from './store/gpf-store';
     QuerySubmitterComponent,
     GeneSetsComponent,
     SearchableSelectComponent,
-    SearchableSelectTemplateDirective
+    SearchableSelectTemplateDirective,
+    BoldMatchingPipe
   ],
   imports: [
     BrowserModule,

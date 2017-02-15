@@ -13,6 +13,7 @@ export class GeneSetsComponent {
   private geneSets: Array<GeneSet>;
   private internalSelectedGeneSet: any;
   private selectedGeneSet: GeneSet;
+  private searchQuery: string;
 
   constructor(
     private geneSetsService: GeneSetsService,
@@ -26,6 +27,7 @@ export class GeneSetsComponent {
   }
 
   onSearch(searchTerm) {
+    this.searchQuery = searchTerm;
     this.geneSetsService.getGeneSets().subscribe(
       (geneSets) => {
         this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
