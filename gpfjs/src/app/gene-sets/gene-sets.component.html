@@ -13,12 +13,15 @@
 </div>
 
 <div style="width: 750px; float: right">
-  <gpf-searchable-select (searchTerm)="onSearch($event)" [caption]="selectedGeneSet?.name">
-    <gpf-searchable-select-item
-      *ngFor="let result of geneSets"
-      caption="{{result.name}} ({{result.count}}): {{ result.desc }}"
-      (select)="onSelect($event)"
-      [value]="result">
-    </gpf-searchable-select-item>
+  <gpf-searchable-select
+    (search)="onSearch($event)"
+    (selectItem)="onSelect($event)"
+    [data]="geneSets"
+    caption="{{ selectedGeneSet ? selectedGeneSet.name + '(' + selectedGeneSet.count + '): ' + selectedGeneSet.desc : '' }}">
+    <div *gpf-searchable-select-template="let element">
+      <span data-toggle="tooltip" data-placement="bottom" title="{{element.name}} ({{element.count}}): {{ element.desc }}">
+        {{element.name}} ({{element.count}}): {{ element.desc }}
+      </span>
+    </div>
   </gpf-searchable-select>
 </div>

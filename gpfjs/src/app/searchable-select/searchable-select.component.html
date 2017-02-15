@@ -1,6 +1,6 @@
 <div class="input-group" style="width: 100%; max-width: 100%;">
   <input #searchBox id="search-box"
-    (keyup)="search(searchBox.value)"
+    (keyup)="searchBoxChange(searchBox.value)"
     style="width: 100%"
     value="{{ caption }}"
     placeholder="Select or start typing to search"
@@ -12,7 +12,14 @@
       <span class="caret"></span>
     </button>
     <div class="dropdown-menu dropdown-menu-right" style="width: 100%; overflow-x: hidden; max-height: 300px; overflow-y: scroll;">
-      <ng-content></ng-content>
+      <button *ngFor="let element of data"
+        class="dropdown-item"
+        type="button"
+        style="cursor: pointer"
+        (click)="onSelect(element)">
+        <template *ngIf="template?.templateRef" [ngTemplateOutlet]="template.templateRef" [ngOutletContext]="{$implicit: element}">
+        </template>
+       </button>
     </div>
   </span>
 </div>
