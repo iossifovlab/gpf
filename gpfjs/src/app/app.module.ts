@@ -12,6 +12,7 @@ import { DatasetsService } from './datasets/datasets.service';
 import { ConfigService } from './config/config.service';
 import { CustomRequestOptions } from './config/customrequest.options';
 import { GenderComponent } from './gender/gender.component';
+import { PresentInChildComponent } from './present-in-child/present-in-child.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes/effecttypes.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
@@ -63,7 +64,8 @@ import { gpfReducer } from './store/gpf-store';
     GeneSetsComponent,
     SearchableSelectComponent,
     SearchableSelectTemplateDirective,
-    BoldMatchingPipe
+    BoldMatchingPipe,
+    PresentInChildComponent
   ],
   imports: [
     BrowserModule,

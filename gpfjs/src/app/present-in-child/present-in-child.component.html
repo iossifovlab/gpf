@@ -1,0 +1,50 @@
+<div class="card">
+    <div class="card-header card-title">Present in Child</div>
+    <div class="card-block">
+        <div class="btn-group btn-group-sm">
+            <button (click)="selectAll()"
+                class="btn btn-default">All</button>
+            <button (click)="selectNone()"
+                class="btn btn-default">None</button>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input #autismOnlyCheckbox
+                type="checkbox"
+                [checked]="autismOnly"
+                (change)="presentInChildCheckValue('autismOnly',autismOnlyCheckbox.checked)">
+            autism only
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input
+                #unaffectedOnlyCheckbox
+                type="checkbox"
+                [checked]="unaffectedOnly"
+                (change)="presentInChildCheckValue('unaffectedOnly',unaffectedOnlyCheckbox.checked)">
+            unaffected only
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input
+                #autismUnaffectedCheckbox
+                type="checkbox"
+                [checked]="autismUnaffected"
+                (change)="presentInChildCheckValue('autismUnaffected',autismUnaffectedCheckbox.checked)">
+            autism and unaffected
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input
+                #neitherCheckbox
+                type="checkbox"
+                [checked]="neither"
+                (change)="presentInChildCheckValue('neither',neitherCheckbox.checked)">
+            neither
+          </label>
+        </div>
+    </div>
+</div>
