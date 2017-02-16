@@ -10,4 +10,13 @@ urlpatterns = [
     url(r'^/collections$',
         views.GeneSetsCollectionsView.as_view(),
         name="gene_sets_collections"),
+
+    url(r'^/gene_sets$',
+        views.GeneSetsView.as_view(),
+        name="gene_sets"),
+
+    url(r'^/gene_set_download$',
+        views.GeneSetDownloadView.as_view(),
+        name="gene_set_download"),
+
 ]

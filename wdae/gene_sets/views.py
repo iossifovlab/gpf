@@ -6,15 +6,91 @@ Created on Feb 16, 2017
 from rest_framework import views, status
 from rest_framework.response import Response
 from gene.gene_set_collections import GeneSetsCollections
+from django.http.response import StreamingHttpResponse
 
 
 class GeneSetsCollectionsView(views.APIView):
 
     def __init__(self):
-
         self.gscs = GeneSetsCollections()
 
     def get(self, request):
         response = self.gscs.get_gene_sets_collections()
         return Response(response, status=status.HTTP_200_OK, )
 
+
+class GeneSetsView(views.APIView):
+
+    def __init__(self):
+        self.gscs = GeneSetsCollections()
+
+    def post(self, request):
+        data = request.data
+        if 'geneSetsCollection' not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        gene_sets_collection_id = data['geneSetsCollection']
+
+        if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if 'geneSetsTypes' in data:
+            gene_sets_types = data['geneSetsTypes']
+        else:
+            gene_sets_types = []
+
+        gene_sets = self.gscs.get_gene_sets(
+            gene_sets_collection_id, gene_sets_types)
+
+        response = [
+            {
+                'count': gs['count'],
+                'name': gs['name'],
+                'desc': gs['desc'],
+            }
+            for gs in gene_sets
+        ]
+
+        return Response(response, status=status.HTTP_200_OK)
+
+
+class GeneSetDownloadView(views.APIView):
+
+    def __init__(self):
+        self.gscs = GeneSetsCollections()
+
+    def post(self, request):
+        data = request.data
+        if 'geneSetsCollection' not in data or 'geneSet' not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        gene_sets_collection_id = data['geneSetsCollection']
+        gene_set_id = data['geneSet']
+
+        if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if 'geneSetsTypes' in data:
+            gene_sets_types = data['geneSetsTypes']
+        else:
+            gene_sets_types = []
+
+        gene_set = self.gscs.get_gene_set(
+            gene_sets_collection_id,
+            gene_set_id,
+            gene_sets_types
+        )
+
+        if gene_set is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        result = map(lambda s: "{}\r\n".format(s), gene_set['syms'])
+        title = "{}: {}".format(gene_set['name'], gene_set['desc'])
+        result.append(title)
+
+        response = StreamingHttpResponse(
+            result,
+            content_type='text/csv')
+
+        response['Content-Disposition'] = 'attachment; filename=geneset.csv'
+        response['Expires'] = '0'
+
+        return response
