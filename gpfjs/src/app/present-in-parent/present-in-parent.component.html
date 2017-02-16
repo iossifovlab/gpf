@@ -1,0 +1,65 @@
+<div class="card">
+    <div class="card-header card-title">Present in Parent</div>
+    <div class="card-block">
+        <div class="btn-group btn-group-sm">
+            <button (click)="selectAll()"
+                class="btn btn-default">All</button>
+            <button (click)="selectNone()"
+                class="btn btn-default">None</button>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input #motherOnlyCheckbox
+                type="checkbox"
+                [checked]="motherOnly"
+                (change)="presentInChildCheckValue('motherOnly',motherOnlyCheckbox.checked)">
+            mother only
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input
+                #fatherOnlyCheckbox
+                type="checkbox"
+                [checked]="fatherOnly"
+                (change)="presentInChildCheckValue('fatherOnly',fatherOnlyCheckbox.checked)">
+            father only
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input
+                #motherFatherCheckbox
+                type="checkbox"
+                [checked]="motherFather"
+                (change)="presentInChildCheckValue('motherFather',motherFatherCheckbox.checked)">
+            mother and father
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input
+                #neitherCheckbox
+                type="checkbox"
+                [checked]="neither"
+                (change)="presentInChildCheckValue('neither',neitherCheckbox.checked)">
+            neither
+          </label>
+        </div>
+
+        <div *ngIf="motherOnly || fatherOnly || motherFather">
+          <div>Rarity:</div>
+          <div>
+            <input #ultraRareRadio type="radio" name="rarity" (change)="ultraRareValueChange(ultraRareRadio.checked)" value="ultraRare">Ultra Rare<br>
+            <input type="radio" name="rarity" (change)="rarityChangeValue(0, 100)" value="all" checked>All
+            <input type="radio" name="rarity" (change)="rarityChangeValue(0, 1.0)" value="rare">Rare
+            <input #interval type="radio" name="rarity" (change)="rarityChangeValue(0, 1.0)" value="interval">Interval
+          </div>
+          <div *ngIf="!ultraRare">
+            <input type="number" step="0.01" style="width: 100px" [(ngModel)]="rarityIntervalStart" (change)="interval.checked=true">%-
+            <input type="number" step="0.01" style="width: 100px" [(ngModel)]="rarityIntervalEnd" (change)="interval.checked=true">%
+          </div>
+        </div>
+
+    </div>
+</div>

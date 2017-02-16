@@ -19,7 +19,7 @@ const initialState: PresentInChildState = {
   neither: false
 };
 
-export function presentInReducer(
+export function presentInChildReducer(
   state: PresentInChildState = initialState,
   action): PresentInChildState {
 
