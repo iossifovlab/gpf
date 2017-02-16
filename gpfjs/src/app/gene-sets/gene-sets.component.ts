@@ -22,8 +22,6 @@ export class GeneSetsComponent {
   ngOnInit() {
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
-        console.log("A");
-        console.log(geneSetsCollections);
         this.geneSetsCollections = geneSetsCollections;
     });
   }
