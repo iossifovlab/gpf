@@ -27,6 +27,7 @@ import { GenotypeBlockComponent } from './genotype-block/genotype-block.componen
 import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { GeneSymbolsComponent } from './gene-symbols/gene-symbols.component';
 import { RegionsFilterComponent } from './regions-filter/regions-filter.component';
+import { RegionsFilterValidatorDirective } from './regions-filter/regions-filter.validator';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 
@@ -72,7 +73,8 @@ import { gpfReducer } from './store/gpf-store';
     PresentInChildComponent,
     PresentInParentComponent,
     GeneSymbolsComponent,
-    RegionsFilterComponent
+    RegionsFilterComponent,
+    RegionsFilterValidatorDirective
   ],
   imports: [
     BrowserModule,

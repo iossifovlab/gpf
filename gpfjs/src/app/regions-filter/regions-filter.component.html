@@ -1,1 +1,6 @@
-<input type="text" [(ngModel)]="regionsFilter">
+<input #regionsFilterInput="ngModel" type="text" [(ngModel)]="regionsFilter" regionsFilter>
+
+<div [hidden]="regionsFilterInput.valid"
+     class="alert alert-danger">
+  invalid
+</div>
