@@ -4,29 +4,14 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 
-import ConfigParser
 from collections import OrderedDict
 
-from Config import Config
 import numpy as np
 import pandas as pd
+from gene.config import GeneInfoConfig
 
 
-class WeightsConfig(object):
-    """
-    Helper class for accessing DAE and geneInfo configuration.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(WeightsConfig, self).__init__(*args, **kwargs)
-        self.dae_config = Config()
-
-        wd = self.dae_config.daeDir
-        self.config = ConfigParser.SafeConfigParser({'wd': wd})
-        self.config.read(self.dae_config.geneInfoDBconfFile)
-
-
-class Weights(WeightsConfig):
+class Weights(GeneInfoConfig):
     """
     Represents gene weights.
 
@@ -113,20 +98,6 @@ class Weights(WeightsConfig):
         return self.df[self.name].values
 
     @staticmethod
-    def list_gene_weights():
-        """
-        Lists all available gene weights configured in `geneInfo.conf`.
-        """
-        dae_config = Config()
-        wd = dae_config.daeDir
-        config = ConfigParser.SafeConfigParser({'wd': wd})
-        config.read(dae_config.geneInfoDBconfFile)
-
-        weights = config.get('geneWeights', 'weights')
-        names = [n.strip() for n in weights.split(',')]
-        return names
-
-    @staticmethod
     def load_gene_weights(name):
         """
         Creates and loads a gene weights instance by gene weights name.
@@ -145,7 +116,7 @@ class WeightsLoader(object):
 
     def __init__(self, *args, **kwargs):
         super(WeightsLoader, self).__init__(*args, **kwargs)
-        self.config = WeightsConfig()
+        self.config = GeneInfoConfig()
         self.weights = OrderedDict()
         self._load()
 
