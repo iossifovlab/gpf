@@ -13,26 +13,26 @@
     </div>
     <div class="checkbox">
       <label> <input
-        #checkbox
+        #subCheckbox
         type="checkbox"
         [checked]="sub"
-        (change)="variantTypesCheckValue('sub',checkbox.checked)"> sub
+        (change)="variantTypesCheckValue('sub',subCheckbox.checked)"> sub
       </label>
     </div>
     <div class="checkbox">
       <label> <input
-        #checkbox
+        #insCheckbox
         type="checkbox"
         [checked]="ins"
-        (change)="variantTypesCheckValue('ins',checkbox.checked)"> ins
+        (change)="variantTypesCheckValue('ins',insCheckbox.checked)"> ins
       </label>
     </div>
     <div class="checkbox">
       <label> <input
-        #checkbox
+        #delCheckbox
         type="checkbox"
         [checked]="del"
-        (change)="variantTypesCheckValue('del',checkbox.checked)"> del
+        (change)="variantTypesCheckValue('del',delCheckbox.checked)"> del
       </label>
     </div>
   </div>

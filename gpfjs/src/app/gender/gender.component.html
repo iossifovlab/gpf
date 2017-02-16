@@ -2,27 +2,27 @@
     <div class="card-header card-title">Child Gender</div>
     <div class="card-block">
         <div class="btn-group btn-group-sm">
-            <button (click)="selectAll()" 
+            <button (click)="selectAll()"
                 class="btn btn-default">All</button>
-            <button (click)="selectNone()" 
+            <button (click)="selectNone()"
                 class="btn btn-default">None</button>
         </div>
         <div class="checkbox">
           <label>
-            <input #checkbox
-                type="checkbox" 
+            <input #maleCheckbox
+                type="checkbox"
                 [checked]="male"
-                (change)="genderCheckValue('male',checkbox.checked)">
+                (change)="genderCheckValue('male',maleCheckbox.checked)">
             <span class="gender-icon male" ></span>
           </label>
         </div>
         <div class="checkbox">
           <label>
-            <input 
-                #checkbox
-                type="checkbox" 
+            <input
+                #femaleCheckbox
+                type="checkbox"
                 [checked]="female"
-                (change)="genderCheckValue('female',checkbox.checked)">
+                (change)="genderCheckValue('female',femaleCheckbox.checked)">
             <span class="gender-icon female"></span>
           </label>
         </div>
