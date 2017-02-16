@@ -146,14 +146,14 @@ class DenovoGeneSetsCollection(object):
         ]
 
         if gene_sets_types == []:
-            gene_sets_types = ['autims']
+            gene_sets_types = ['autism']
         syms = self._get_gene_set_syms(gene_set_id, gene_sets_types)
 
         return {
             "name": gene_set_id,
             "count": len(syms),
             "syms": syms,
-            "desc": "{} ({})".format(gene_set_id, ",".join(gene_sets_types)),
+            "desc": "{} ({})".format(gene_set_id, ";".join(gene_sets_types)),
         }
 
 
@@ -226,6 +226,7 @@ class GeneSetsCollections(GeneInfoConfig):
         gsc = self.get_gene_sets_collection(gene_sets_collection_id)
         if gsc is None:
             return None
+
         return gsc.get_gene_sets(gene_sets_types)
 
     def get_gene_set(
