@@ -1,0 +1,62 @@
+'''
+Created on Feb 16, 2017
+
+@author: lubo
+'''
+import pytest
+from gene.gene_set_collections import GeneSetsCollections
+
+
+@pytest.fixture(scope='session')
+def gscs(request):
+    res = GeneSetsCollections()
+    return res
+
+
+def test_denovo_gene_sets_types(gscs):
+    denovo = gscs.get_gene_sets_collection('denovo')
+    assert denovo is not None
+    assert denovo.gene_sets_types == \
+        [
+            'autism',
+            'congenital heart disease',
+            'epilepsy',
+            'intelectual disability',
+            'schizophrenia',
+            'unaffected'
+        ]
+
+
+def test_denovo_get_gene_set_lgds_autism(gscs):
+    lgds = gscs.get_gene_set('denovo', 'LGDs', ['autism'])
+    assert lgds is not None
+    assert lgds['count'] == 546
+    assert lgds['name'] == 'LGDs'
+
+
+def test_denovo_get_gene_set_lgds_autism_and_epilepsy(gscs):
+    lgds = gscs.get_gene_set('denovo', 'LGDs', ['autism', 'epilepsy'])
+    assert lgds is not None
+    assert lgds['count'] == 576
+    assert lgds['name'] == 'LGDs'
+
+
+def test_denovo_get_gene_sets_autism(gscs):
+    gene_sets = gscs.get_gene_sets('denovo', ['autism'])
+    assert gene_sets is not None
+    assert len(gene_sets) == 16
+    gs = gene_sets[0]
+    assert gs['count'] == 546
+    assert gs['name'] == 'LGDs'
+
+
+def test_denovo_get_gene_sets_autism_and_epilepsy(gscs):
+    gene_sets = gscs.get_gene_sets(
+        'denovo',
+        gene_sets_types=['autism', 'epilepsy'])
+    assert gene_sets is not None
+    assert len(gene_sets) == 16
+    gs = gene_sets[0]
+    # print(gs)
+    assert gs['count'] == 576
+    assert gs['name'] == 'LGDs'
