@@ -1,6 +1,6 @@
 <div style="width: 300px; float: left">
   <select [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
-    <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{collection.label}}</option>
+    <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{collection.desc}}</option>
   </select>
 
   <div *ngIf="selectedGeneSetsCollection?.types" style="text-align: left; border: 1px solid #dddddd; width: 100%">

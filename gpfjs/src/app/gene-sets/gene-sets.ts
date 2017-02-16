@@ -1,15 +1,15 @@
 export class GeneSetsCollection {
 
   constructor(
-      readonly value: string,
-      readonly label: string,
+      readonly name: string,
+      readonly desc: string,
       readonly types: Array<any>
   ) {}
 
   static fromJson(json: any): GeneSetsCollection {
     return new GeneSetsCollection(
-      json['val'],
-      json['label'],
+      json['name'],
+      json['desc'],
       json['types']
     );
   }

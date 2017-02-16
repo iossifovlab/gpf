@@ -11,8 +11,8 @@ import 'rxjs/add/operator/map';
 
 @Injectable()
 export class GeneSetsService {
-  private geneSetsUrl = 'gene_sets';
-  private geneSetsSearchUrl = 'gene_sets_list';
+  private geneSetsCollectionsUrl = 'gene_sets/gene_sets_collections';
+  private geneSetsSearchUrl = 'gene_sets/gene_sets';
 
   constructor(
     private http: Http,
@@ -21,15 +21,17 @@ export class GeneSetsService {
 
   getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
     return this.http
-      .get(this.geneSetsUrl)
+      .get(this.geneSetsCollectionsUrl)
       .map(res => {
-        return GeneSetsCollection.fromJsonArray(res.json().gene_sets);
+        return GeneSetsCollection.fromJsonArray(res.json());
       });
   }
 
-  getGeneSets(): Observable<GeneSet[]> {
+  getGeneSets(selectedGeneSetsCollection:string, searchTerm: string): Observable<GeneSet[]> {
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers });
     return this.http
-      .get(this.geneSetsSearchUrl)
+      .post(this.geneSetsSearchUrl, {geneSetsCollection: selectedGeneSetsCollection, geneSetsTypes: []}, options)
       .map(res => {
         return GeneSet.fromJsonArray(res.json());
       });

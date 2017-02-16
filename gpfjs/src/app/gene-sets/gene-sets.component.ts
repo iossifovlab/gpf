@@ -21,14 +21,16 @@ export class GeneSetsComponent {
 
   ngOnInit() {
     this.geneSetsService.getGeneSetsCollections().subscribe(
-      (geneSets) => {
-        this.geneSetsCollections = geneSets;
+      (geneSetsCollections) => {
+        console.log("A");
+        console.log(geneSetsCollections);
+        this.geneSetsCollections = geneSetsCollections;
     });
   }
 
   onSearch(searchTerm) {
     this.searchQuery = searchTerm;
-    this.geneSetsService.getGeneSets().subscribe(
+    this.geneSetsService.getGeneSets(this.selectedGeneSetsCollection.name, searchTerm).subscribe(
       (geneSets) => {
         this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
     });
@@ -44,6 +46,8 @@ export class GeneSetsComponent {
 
   set selectedGeneSetsCollection(selectedGeneSet: any) {
     this.internalSelectedGeneSet = selectedGeneSet;
+    this.selectedGeneSet = null;
+    this.geneSets = null;
     this.onSearch("");
   }
 }
