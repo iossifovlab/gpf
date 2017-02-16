@@ -56,10 +56,19 @@
             <input #interval type="radio" name="rarity" (change)="rarityChangeValue(0, 1.0)" value="interval">Interval
           </div>
           <div *ngIf="!ultraRare">
-            <input type="number" step="0.01" min="0" max="{{ rarityIntervalEnd }}" style="width: 100px" [(ngModel)]="rarityIntervalStart" (change)="interval.checked=true">%-
-            <input type="number" step="0.01" min="{{ rarityIntervalStart }}" max="100" style="width: 100px" [(ngModel)]="rarityIntervalEnd" (change)="interval.checked=true">%
+            <input #inputRangeStart="ngModel" type="number" step="0.01" min=0 max="{{ rarityIntervalEnd }}" style="width: 100px" [(ngModel)]="rarityIntervalStart" (change)="interval.checked=true">%-
+            <input #inputRangeEnd="ngModel" type="number" step="0.01" min="{{ rarityIntervalStart }}" max=100 style="width: 100px" [(ngModel)]="rarityIntervalEnd" (change)="interval.checked=true">%
+
+            <div [hidden]="inputRangeStart.valid"
+                 class="alert alert-danger">
+              Start is invalid
+            </div>
+
+            <div [hidden]="inputRangeEnd.valid"
+                 class="alert alert-danger">
+              End is invalid
+            </div>
           </div>
         </div>
-
     </div>
 </div>
