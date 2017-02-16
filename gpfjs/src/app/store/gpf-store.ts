@@ -11,6 +11,7 @@ import { VariantTypesState, variantTypesReducer } from '../varianttypes/variantt
 import { GeneWeightsState, geneWeightsReducer } from '../gene-weights/gene-weights-store';
 import { PresentInChildState, presentInChildReducer } from '../present-in-child/present-in-child';
 import { PresentInParentState, presentInParentReducer } from '../present-in-parent/present-in-parent';
+import { GeneSymbolsState, geneSymbolsReducer } from '../gene-symbols/gene-symbols';
 
 export interface GpfState {
   datasets: DatasetsState;
@@ -21,6 +22,7 @@ export interface GpfState {
   geneWeights: GeneWeightsState;
   presentInChild: PresentInChildState;
   presentInParent: PresentInParentState;
+  geneSymbols: GeneSymbolsState;
 };
 
 const reducers = {
@@ -31,7 +33,8 @@ const reducers = {
   variantTypes: variantTypesReducer,
   geneWeights: geneWeightsReducer,
   presentInChild: presentInChildReducer,
-  presentInParent: presentInParentReducer
+  presentInParent: presentInParentReducer,
+  geneSymbols: geneSymbolsReducer
 };
 
 const productionReducer: ActionReducer<GpfState> = combineReducers(reducers);
