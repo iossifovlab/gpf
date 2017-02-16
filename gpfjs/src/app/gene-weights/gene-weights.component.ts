@@ -1,5 +1,5 @@
-import { Input, Component, OnInit, ViewChild, ViewEncapsulation, Output, EventEmitter, Directive, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
-import { FormControl, NG_VALIDATORS, Validator, Validators, ValidatorFn, AbstractControl } from '@angular/forms';
+import { Input, Component, OnInit, ViewChild, ViewEncapsulation, Output, EventEmitter, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { GeneWeights, Partitions } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
 import { Subject }           from 'rxjs/Subject';
@@ -12,33 +12,6 @@ import 'rxjs/add/observable/of';
 import { Store } from '@ngrx/store';
 
 import { RANGE_CHANGE } from './gene-weights-store';
-
-@Directive({
-  selector: '[min][formControlName],[min][formControl],[min][ngModel]',
-  providers: [{provide: NG_VALIDATORS, useExisting: MinValidatorDirective, multi: true}],
-  host: {'[attr.min]': 'min ? min : null'}
-})
-export class MinValidatorDirective implements Validator {
-  @Input() min: number;
-
-  validate(control: AbstractControl): {[key: string]: any} {
-    return control.value >= this.min ? null : {'min': true};
-  }
-}
-
-@Directive({
-  selector: '[max][formControlName],[max][formControl],[max][ngModel]',
-  providers: [{provide: NG_VALIDATORS, useExisting: MaxValidatorDirective, multi: true}],
-  host: {'[attr.max]': 'max ? max : null'}
-})
-export class MaxValidatorDirective implements Validator {
-  @Input() max: number;
-
-  validate(control: AbstractControl): {[key: string]: any} {
-    return control.value <= this.max ? null : {'max': true};
-  }
-}
-
 
 @Component({
   encapsulation: ViewEncapsulation.None,

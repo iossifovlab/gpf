@@ -29,7 +29,7 @@ import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 
 import { HistogramModule } from './histogram/histogram.module';
-import { GeneWeightsComponent, MinValidatorDirective, MaxValidatorDirective } from './gene-weights/gene-weights.component';
+import { GeneWeightsComponent } from './gene-weights/gene-weights.component';
 import { GeneWeightsService } from './gene-weights/gene-weights.service';
 
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
@@ -39,6 +39,7 @@ import { SearchableSelectComponent } from './searchable-select/searchable-select
 import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
+import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
 
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
