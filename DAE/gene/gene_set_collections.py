@@ -78,16 +78,17 @@ class DenovoGeneSetsType(object):
 
 
 class DenovoGeneSetsCollection(object):
+    GENE_SETS_TYPES = [
+        'autism',
+        'congenital heart disease',
+        'epilepsy',
+        'intelectual disability',
+        'schizophrenia',
+        'unaffected'
+    ]
 
     def __init__(self):
-        self.gene_sets_types = [
-            'autism',
-            'congenital heart disease',
-            'epilepsy',
-            'intelectual disability',
-            'schizophrenia',
-            'unaffected'
-        ]
+        self.gene_sets_types = self.GENE_SETS_TYPES
         self.gene_sets_collection_desc = None
         self.gene_sets_names = None
 
@@ -185,12 +186,16 @@ class GeneSetsCollections(GeneInfoConfig):
             formatStr = giDB.getGeneTermAtt(gsc_id, "webFormatStr")
             if not label or not formatStr:
                 continue
+            gene_sets_types = []
+            if gsc_id == 'denovo':
+                gene_sets_types = DenovoGeneSetsCollection.GENE_SETS_TYPES
+
             self.gene_sets_collections_desc.append(
                 {
                     'desc': label,
                     'name': gsc_id,
                     'format': formatStr.split("|"),
-                    'types': [],
+                    'types': gene_sets_types,
                 }
             )
 
