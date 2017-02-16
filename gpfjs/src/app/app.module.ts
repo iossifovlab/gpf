@@ -26,6 +26,7 @@ import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { GeneSymbolsComponent } from './gene-symbols/gene-symbols.component';
+import { RegionsFilterComponent } from './regions-filter/regions-filter.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { PedigreeChartModule } from './pedigree-chart/pedigree-chart.module';
 
@@ -70,7 +71,8 @@ import { gpfReducer } from './store/gpf-store';
     BoldMatchingPipe,
     PresentInChildComponent,
     PresentInParentComponent,
-    GeneSymbolsComponent
+    GeneSymbolsComponent,
+    RegionsFilterComponent
   ],
   imports: [
     BrowserModule,
