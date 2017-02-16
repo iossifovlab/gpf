@@ -20,6 +20,12 @@ class GeneSetsCollectionsView(views.APIView):
 
 
 class GeneSetsView(views.APIView):
+    """
+        {
+        "geneSetsCollection": "denovo",
+        "geneSetsTypes": ["autism", "epilepsy"]
+        }
+    """
 
     def __init__(self):
         self.gscs = GeneSetsCollections()
@@ -54,6 +60,13 @@ class GeneSetsView(views.APIView):
 
 
 class GeneSetDownloadView(views.APIView):
+    """
+        {
+        "geneSetsCollection": "denovo",
+        "geneSet": "LGDs",
+        "geneSetsTypes": ["autism", "epilepsy"]
+        }
+    """
 
     def __init__(self):
         self.gscs = GeneSetsCollections()
