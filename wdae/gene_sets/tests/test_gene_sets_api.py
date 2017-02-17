@@ -11,7 +11,7 @@ from rest_framework.test import APITestCase
 class Test(APITestCase):
 
     def test_gene_sets_collections(self):
-        url = "/api/v3/gene_sets/collections"
+        url = "/api/v3/gene_sets/gene_sets_collections"
         response = self.client.get(url,)
         self.assertEqual(200, response.status_code)
 
