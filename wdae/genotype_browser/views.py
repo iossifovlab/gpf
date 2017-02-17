@@ -8,16 +8,19 @@ from rest_framework.response import Response
 
 
 from helpers.logger import log_filter, LOGGER
-from datasets.config import DatasetsConfig
 import traceback
-from datasets.dataset import DatasetsFactory
+import preloaded
 
 
 class QueryPreviewView(views.APIView):
 
     def __init__(self):
-        self.datasets_config = DatasetsConfig()
-        self.datasets = DatasetsFactory(self.datasets_config)
+        register = preloaded.register.get_register()
+        self.datasets = register.get('datasets')
+        assert self.datasets is not None
+
+        self.datasets_config = self.datasets.get_config()
+        self.datasets_factory = self.datasets.get_factory()
 
     def prepare_variants_resonse(self, variants):
         rows = []
@@ -53,7 +56,7 @@ class QueryPreviewView(views.APIView):
         data = request.data
         try:
             dataset_id = data['datasetId']
-            dataset = self.datasets.get_dataset(dataset_id)
+            dataset = self.datasets_factory.get_dataset(dataset_id)
 
             legend = self.prepare_legend_response(dataset)
             variants = dataset.get_variants_preview(
