@@ -40,6 +40,9 @@ class GeneSetsCollection(object):
     def get_gene_sets_types(self):
         return []
 
+    def get_gene_sets_types_legend(self):
+        return []
+
     def get_gene_set(self, gene_set_id, gene_sets_types=[], **kwargs):
         assert self.gene_set_collection is not None
 
@@ -86,6 +89,38 @@ class DenovoGeneSetsCollection(object):
         'schizophrenia',
         'unaffected'
     ]
+    GENE_SETS_TYPES_LEGEND = {
+        "autism": {
+            "color": "#e35252 ",
+            "id": "autism",
+            "name": "autism"
+        },
+        "congenital heart disease": {
+            "color": "#b8008a ",
+            "id": "congenital heart disease",
+            "name": "congenital heart disease"
+        },
+        "epilepsy": {
+            "color": "#e3d252 ",
+            "id": "epilepsy",
+            "name": "epilepsy"
+        },
+        "intelectual disability": {
+            "color": "#99d8e8 ",
+            "id": "intelectual disability",
+            "name": "intelectual disability"
+        },
+        "schizophrenia": {
+            "color": "#98e352 ",
+            "id": "schizophrenia",
+            "name": "schizophrenia"
+        },
+        "unaffected": {
+            "color": "#ffffff ",
+            "id": "unaffected",
+            "name": "unaffected"
+        },
+    }
 
     def __init__(self):
         self.gene_sets_types = self.GENE_SETS_TYPES
@@ -106,6 +141,13 @@ class DenovoGeneSetsCollection(object):
 
     def get_gene_sets_types(self):
         return self.gene_sets_types
+
+    def get_gene_sets_types_legend(self):
+        result = [
+            self.GENE_SETS_TYPES_LEGEND[gt]
+            for gt in self.get_gene_sets_types()
+        ]
+        return result
 
     def get_gene_sets(self, gene_sets_types=[], **kwargs):
         gene_sets_types = [
@@ -188,8 +230,10 @@ class GeneSetsCollections(GeneInfoConfig):
                 continue
             gene_sets_types = []
             if gsc_id == 'denovo':
-                gene_sets_types = DenovoGeneSetsCollection.GENE_SETS_TYPES
-
+                gene_sets_types = [
+                    DenovoGeneSetsCollection.GENE_SETS_TYPES_LEGEND[gt]
+                    for gt in DenovoGeneSetsCollection.GENE_SETS_TYPES
+                ]
             self.gene_sets_collections_desc.append(
                 {
                     'desc': label,
