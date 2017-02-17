@@ -5,7 +5,7 @@
 
   <div *ngIf="selectedGeneSetsCollection?.types" style="text-align: left; border: 1px solid #dddddd; width: 100%">
     <div *ngFor="let type of selectedGeneSetsCollection.types">
-      <input type="checkbox">
+      <input type="checkbox" [ngModel]="isSelectedGeneType(type)" (ngModelChange)="setSelectedGeneType(type, $event)">
       <span class="pedigree-icon" [style.background-color]="type.color"></span>
       {{ type.name }}
     </div>

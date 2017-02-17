@@ -1,6 +1,6 @@
 import {
   GeneSetsState, GENE_SETS_COLLECTION_CHANGE,
-  GENE_SET_CHANGE
+  GENE_SET_CHANGE, GENE_SETS_TYPES_ADD, GENE_SETS_TYPES_REMOVE
 } from './gene-sets-state';
 import { Component } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
@@ -19,8 +19,9 @@ export class GeneSetsComponent {
   private internalSelectedGeneSetsCollection: GeneSetsCollection;
   private selectedGeneSet: GeneSet;
   private searchQuery: string;
-
+  private geneSetsTypes: Set<any>;
   private geneSetsState: Observable<GeneSetsState>;
+
 
   constructor(
     private geneSetsService: GeneSetsService,
@@ -38,6 +39,7 @@ export class GeneSetsComponent {
           this.onSearch("");
         }
         this.selectedGeneSet = geneSets.geneSet;
+        this.geneSetsTypes = geneSets.geneSetsTypes;
       }
     );
     this.geneSetsService.getGeneSetsCollections().subscribe(
@@ -58,6 +60,17 @@ export class GeneSetsComponent {
     this.store.dispatch({
       'type': GENE_SET_CHANGE,
       'payload': event
+    });
+  }
+
+  isSelectedGeneType(geneType): boolean {
+    return this.geneSetsTypes.has(geneType);
+  }
+
+  setSelectedGeneType(geneType, value) {
+    this.store.dispatch({
+      'type': value ? GENE_SETS_TYPES_ADD : GENE_SETS_TYPES_REMOVE ,
+      'payload': geneType
     });
   }
 
