@@ -22,8 +22,10 @@ class GeneSetsCollectionsView(views.APIView):
 class GeneSetsView(views.APIView):
     """
         {
-        "geneSetsCollection": "denovo",
-        "geneSetsTypes": ["autism", "epilepsy"]
+        "geneSetsCollection": "main",
+        "geneSetsTypes": ["autism", "epilepsy"],
+        "filter": "ivan",
+        "limit": 100
         }
     """
 
@@ -55,6 +57,16 @@ class GeneSetsView(views.APIView):
             }
             for gs in gene_sets
         ]
+        if 'filter' in data:
+            f = data['filter'].lower()
+            response = [
+                r for r in response
+                if f in r['name'].lower() or f in r['desc'].lower()
+            ]
+
+        if 'limit' in data:
+            limit = int(data['limit'])
+            response = response[:limit]
 
         return Response(response, status=status.HTTP_200_OK)
 
