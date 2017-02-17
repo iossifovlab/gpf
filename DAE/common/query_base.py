@@ -260,9 +260,13 @@ class GeneSymsBase(object):
 
     @classmethod
     def get_gene_syms(cls, **kwargs):
-        return cls.get_gene_symbols(**kwargs) | \
+        result = cls.get_gene_symbols(**kwargs) | \
             cls.get_gene_weights(**kwargs) | \
             cls.get_gene_set(**kwargs)
+        if result:
+            return result
+        else:
+            return None
 
 
 class QueryBase(EffectTypesBase, VariantTypesBase, ChildGenderBase,

@@ -36,3 +36,8 @@ def test_gene_weights_rvis_5():
 
     r = GeneSymsBase.get_gene_syms(**query)
     assert set(['CSMD1', 'RYR1', 'LRP1', 'PLEC', 'UBR4']) == r
+
+
+def test_empty_query():
+    r = GeneSymsBase.get_gene_syms()
+    assert r is None

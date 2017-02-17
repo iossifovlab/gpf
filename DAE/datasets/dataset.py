@@ -153,6 +153,9 @@ class Dataset(QueryBase):
 
     def get_denovo_filters(self, safe=True, **kwargs):
         return {
+            'geneSyms': self.get_gene_syms(
+                safe=safe,
+                **kwargs),
             'effectTypes': self.get_effect_types(
                 safe=safe,
                 dataset_descriptor=self.descriptor,
