@@ -119,6 +119,17 @@ class Dataset(QueryBase):
         assert pedigree is not None
         return pedigree
 
+    def get_phenotypes(self):
+        kwargs = {
+            'pedigreeSelector': {'id': 'phenotype'}
+        }
+        phenotype_selector = self.get_pedigree_selector(**kwargs)
+        result = [
+            p['id'] for p in phenotype_selector.domain
+        ]
+        print(result)
+        return result
+
     def filter_families_by_pedigree_selector(self, **kwargs):
         if 'pedigreeSelector' not in kwargs:
             return None
