@@ -3,31 +3,92 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
+from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 import preloaded
+import traceback
+import precompute
+from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 
 
-class EnrichmentModelsView(APIView):
-
+class EnrichmentModelsMixin(object):
     BACKGROUND_MODELS = [
-        {'name': 'synonymousBackgroundModel',
-         'desc':
-         'Background model based on synonymous variants in transmitted'},
-        {'name': 'codingLenBackgroundModel',
-         'desc': 'Genes coding lenght background model'},
-        {'name': 'samochaBackgroundModel',
-         'desc': 'Background model described in Samocha et al',
-         }
+        {
+            'name': 'synonymousBackgroundModel',
+            'desc':
+            'Background model based on synonymous variants in transmitted'
+        },
+        {
+            'name': 'codingLenBackgroundModel',
+            'desc': 'Genes coding lenght background model'
+        },
+        {
+            'name': 'samochaBackgroundModel',
+            'desc': 'Background model described in Samocha et al',
+        }
     ]
 
     COUNTING_MODELS = [
-        {'name': 'enrichmentEventsCounting',
-         'desc': 'Counting events'},
-        {'name': 'enrichmentGeneCounting',
-         'desc': 'Counting affected genes'},
+        {
+            'name': 'enrichmentEventsCounting',
+            'desc': 'Counting events'
+        },
+        {
+            'name': 'enrichmentGeneCounting',
+            'desc': 'Counting affected genes'
+        },
     ]
+
+    def get_default_background_name(self):
+        config = settings.ENRICHMENT_CONFIG
+        background_name = config['enrichmentBackgroundModel']
+        return background_name
+
+    def get_default_counting_name(self):
+        config = settings.ENRICHMENT_CONFIG
+        counting_name = config['enrichmentCountingModel']
+        return counting_name
+
+    def get_background_model(self, query):
+        background_name = None
+        if 'enrichmentModel' in query:
+            enrichment_model = query['enrichmentModel']
+            background_name = enrichment_model.get('background', None)
+        if background_name is None:
+            background_name = self.get_default_background_name()
+        if precompute.register.has_key(background_name):  # @IgnorePep8
+            background = precompute.register.get(background_name)
+        else:
+            background_name = self.get_default_background_name()
+            background = precompute.register.get(background_name)
+        return background
+
+    def get_counting_model(self, query):
+        counting_name = None
+        if 'enrichmentModel' in query:
+            enrichment_model = query['enrichmentModel']
+            counting_name = enrichment_model.get('counting', None)
+        if counting_name is None:
+            counting_name = self.get_default_counting_name()
+
+        if counting_name == 'enrichmentEventsCounting':
+            counter_model = EventsCounter()
+        elif counting_name == 'enrichmentGeneCounting':
+            counter_model = GeneEventsCounter()
+        else:
+            raise KeyError('wrong denovo counter: {}'.format(counting_name))
+        return counter_model
+
+    def get_enrichment_model(self, data):
+        return {
+            'background': self.get_background_model(data),
+            'counting': self.get_counting_model(data),
+        }
+
+
+class EnrichmentModelsView(APIView, EnrichmentModelsMixin):
 
     def get(self, request, dataset_id, enrichment_model_type):
         if enrichment_model_type == 'background':
@@ -38,7 +99,7 @@ class EnrichmentModelsView(APIView):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-class EnrichmentTestView(APIView):
+class EnrichmentTestView(APIView, EnrichmentModelsMixin):
 
     def __init__(self):
         register = preloaded.register.get_register()
@@ -49,7 +110,6 @@ class EnrichmentTestView(APIView):
         self.datasets_factory = self.datasets.get_factory()
 
     def post(self, request, dataset_id):
-
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -57,4 +117,19 @@ class EnrichmentTestView(APIView):
         if not dataset_desc:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        return Response(dataset_desc)
+        query = request.data
+        dataset = self.datasets_factory.get_dataset(dataset_id)
+
+        gene_syms = dataset.get_gene_syms(**query)
+        if gene_syms is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            enrichment_model = self.get_enrichment_model(query)
+
+            return Response(dataset_desc)
+        except Exception:
+            print("error while processing genotype query")
+            traceback.print_exc()
+
+            return Response(status=status.HTTP_400_BAD_REQUEST)
