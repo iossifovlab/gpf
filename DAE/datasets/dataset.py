@@ -261,7 +261,7 @@ class DatasetsFactory(dict):
     def get_dataset(self, dataset_id):
         if dataset_id in self:
             return self[dataset_id]
-        dataset_descriptor = self.datasets_config.get_dataset(dataset_id)
+        dataset_descriptor = self.datasets_config.get_dataset_desc(dataset_id)
         dataset = Dataset(dataset_descriptor)
         dataset.load()
 

@@ -81,7 +81,7 @@ class DatasetsConfig(object):
             if section_id is None:
                 continue
             if section_type == 'dataset':
-                dataset = self.get_dataset(section_id)
+                dataset = self.get_dataset_desc(section_id)
                 res.append(dataset)
         return res
 
@@ -146,7 +146,7 @@ class DatasetsConfig(object):
             result.append(pedigree)
         return result
 
-    def get_dataset(self, dataset_id):
+    def get_dataset_desc(self, dataset_id):
         section = 'dataset.{}'.format(dataset_id)
         if not self.config.has_section(section):
             return None

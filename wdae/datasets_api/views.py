@@ -22,7 +22,7 @@ class DatasetView(APIView):
         if dataset_id is None:
             res = self.dataset_config.get_datasets()
             return Response({'data': res})
-        res = self.dataset_config.get_dataset(dataset_id)
+        res = self.dataset_config.get_dataset_desc(dataset_id)
         if res:
             return Response({'data': res})
         return Response({'error': 'Dataset {} not found'.format(dataset_id)},

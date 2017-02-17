@@ -23,14 +23,14 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertEquals(3, len(datasets))
 
     def test_dataset_sd(self):
-        ds = self.dataset_config.get_dataset('SD')
+        ds = self.dataset_config.get_dataset_desc('SD')
         self.assertIsNotNone(ds)
 
         self.assertIsNone(ds['phenoDB'])
         self.assertEquals(1, len(ds['pedigreeSelectors']))
 
     def test_dataset_ssc(self):
-        ds = self.dataset_config.get_dataset('SSC')
+        ds = self.dataset_config.get_dataset_desc('SSC')
         self.assertIsNotNone(ds)
 
         self.assertEquals('ssc', ds['phenoDB'])
@@ -40,11 +40,11 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertEquals('Phenotype', pedigree['name'])
 
     def test_dataset_not_found(self):
-        ds = self.dataset_config.get_dataset('ala bala')
+        ds = self.dataset_config.get_dataset_desc('ala bala')
         self.assertIsNone(ds)
 
     def test_dataset_vip(self):
-        ds = self.dataset_config.get_dataset('VIP')
+        ds = self.dataset_config.get_dataset_desc('VIP')
         self.assertIsNotNone(ds)
 
         self.assertEquals('vip', ds['phenoDB'])
