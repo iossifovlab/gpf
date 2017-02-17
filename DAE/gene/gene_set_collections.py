@@ -246,11 +246,6 @@ class GeneSetsCollections(GeneInfoConfig):
         return self.gene_sets_collections_desc
 
     def has_gene_sets_collection(self, gsc_id):
-        print(self.get_gene_sets_collections())
-        print([
-            gsc['name'] == gsc_id
-            for gsc in self.get_gene_sets_collections()
-        ])
         return any([
             gsc['name'] == gsc_id
             for gsc in self.get_gene_sets_collections()
