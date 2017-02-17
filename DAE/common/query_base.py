@@ -4,6 +4,7 @@ Created on Feb 6, 2017
 @author: lubo
 '''
 import itertools
+from gene.weights import Weights
 
 
 class EffectTypesBase(object):
@@ -238,12 +239,34 @@ class GeneSymsBase(object):
 
         return set([r.strip() for r in result])
 
-    def get_gene_syms(self, **kwargs):
+    @staticmethod
+    def get_gene_weights(**kwargs):
+        if 'geneWeights' not in kwargs:
+            return set([])
+        gene_weights = kwargs['geneWeights']
+        if 'weights' not in gene_weights:
+            return set([])
+        weights_id = gene_weights['weights']
+        if weights_id not in Weights.list_gene_weights():
+            return set([])
+        weights = Weights(weights_id)
+        range_start = gene_weights.get('rangeStart', None)
+        range_end = gene_weights.get('rangeEnd', None)
+        return weights.get_genes(wmin=range_start, wmax=range_end)
+
+    @staticmethod
+    def get_gene_set(**kwargs):
         return set([])
+
+    @classmethod
+    def get_gene_syms(cls, **kwargs):
+        return cls.get_gene_symbols(**kwargs) | \
+            cls.get_gene_weights(**kwargs) | \
+            cls.get_gene_set(**kwargs)
 
 
 class QueryBase(EffectTypesBase, VariantTypesBase, ChildGenderBase,
-                PresentInBase):
+                PresentInBase, GeneSymsBase):
 
     IN_CHILD_TYPES = [
         'prb',

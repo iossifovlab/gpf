@@ -20,3 +20,19 @@ def test_gene_syms_new_lines():
     r = GeneSymsBase.get_gene_symbols(**query)
 
     assert r == set(['a', 'b', 'c', 'd'])
+
+
+def test_gene_weights_rvis_5():
+    query = {
+        'geneWeights': {
+            'weights': 'RVIS_rank',
+            'rangeStart': 0,
+            'rangeEnd': 5
+        }
+    }
+
+    r = GeneSymsBase.get_gene_weights(**query)
+    assert set(['CSMD1', 'RYR1', 'LRP1', 'PLEC', 'UBR4']) == r
+
+    r = GeneSymsBase.get_gene_syms(**query)
+    assert set(['CSMD1', 'RYR1', 'LRP1', 'PLEC', 'UBR4']) == r
