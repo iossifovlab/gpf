@@ -7,7 +7,7 @@ import itertools
 from gene.weights import Weights
 
 
-class EffectTypesBase(object):
+class EffectTypesMixin(object):
     EFFECT_TYPES = [
         "3'UTR",
         "3'UTR-intron",
@@ -269,7 +269,7 @@ class GeneSymsBase(object):
             return None
 
 
-class QueryBase(EffectTypesBase, VariantTypesBase, ChildGenderBase,
+class QueryBase(EffectTypesMixin, VariantTypesBase, ChildGenderBase,
                 PresentInBase, GeneSymsBase):
 
     IN_CHILD_TYPES = [
