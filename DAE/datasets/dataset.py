@@ -7,6 +7,7 @@ from DAE import pheno, vDB
 import itertools
 from query_variants import generate_response
 from common.query_base import QueryBase
+from collections import Counter
 
 
 class Dataset(QueryBase):
@@ -19,6 +20,8 @@ class Dataset(QueryBase):
         self._studies = None
         self._denovo_studies = None
         self._transmitted_studies = None
+        self._children_stats = None
+        self._phenotypes = None
 
         self.load_pheno_db()
 
@@ -51,6 +54,25 @@ class Dataset(QueryBase):
                 if st.has_transmitted
             ]
         return self._transmitted_studies
+
+    @property
+    def children_stats(self):
+        if self._children_stats is None:
+            self._children_stats = {}
+            for phenotype in self.get_phenotypes():
+                seen = set()
+                counter = Counter()
+                for fid, fam in self.families.items():
+                    for p in fam.memberInOrder[2:]:
+                        iid = "{}:{}".format(fid, p.personId)
+                        if iid in seen:
+                            continue
+                        if p.phenotype != phenotype:
+                            continue
+                        counter[p.gender] += 1
+                        seen.add(iid)
+                self._children_stats[phenotype] = counter
+        return self._children_stats
 
     def load(self):
         if self.families:
@@ -120,15 +142,17 @@ class Dataset(QueryBase):
         return pedigree
 
     def get_phenotypes(self):
-        kwargs = {
-            'pedigreeSelector': {'id': 'phenotype'}
-        }
-        phenotype_selector = self.get_pedigree_selector(**kwargs)
-        result = [
-            p['id'] for p in phenotype_selector.domain
-        ]
-        print(result)
-        return result
+        if self._phenotypes is None:
+            kwargs = {
+                'pedigreeSelector': {'id': 'phenotype'}
+            }
+            phenotype_selector = self.get_pedigree_selector(**kwargs)
+            result = [
+                p['id'] for p in phenotype_selector.domain
+            ]
+            print(result)
+            self._phenotypes = result
+        return self._phenotypes
 
     def filter_families_by_pedigree_selector(self, **kwargs):
         if 'pedigreeSelector' not in kwargs:
