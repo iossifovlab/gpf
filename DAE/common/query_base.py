@@ -225,6 +225,23 @@ class PresentInBase(object):
         return present_in_parent
 
 
+class GeneSymsBase(object):
+
+    @staticmethod
+    def get_gene_symbols(**kwargs):
+        if 'geneSymbols' not in kwargs:
+            return set([])
+
+        gene_symbols = kwargs['geneSymbols']
+        gene_symbols = gene_symbols.replace(',', ' ')
+        result = gene_symbols.split()
+
+        return set([r.strip() for r in result])
+
+    def get_gene_syms(self, **kwargs):
+        return set([])
+
+
 class QueryBase(EffectTypesBase, VariantTypesBase, ChildGenderBase,
                 PresentInBase):
 
