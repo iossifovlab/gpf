@@ -6,7 +6,7 @@ Created on Feb 17, 2017
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from datasets.config import DatasetsConfig
+import preloaded
 
 
 class EnrichmentModelsView(APIView):
@@ -41,15 +41,19 @@ class EnrichmentModelsView(APIView):
 class EnrichmentTestView(APIView):
 
     def __init__(self):
-        self.data = {}
-        self.dataset_config = DatasetsConfig()
+        register = preloaded.register.get_register()
+        self.datasets = register.get('datasets')
+        assert self.datasets is not None
+
+        self.datasets_config = self.datasets.get_config()
+        self.datasets_factory = self.datasets.get_factory()
 
     def post(self, request, dataset_id):
 
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        dataset_desc = self.dataset_config.get_dataset_desc(dataset_id)
+        dataset_desc = self.datasets_config.get_dataset_desc(dataset_id)
         if not dataset_desc:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

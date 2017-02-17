@@ -7,22 +7,24 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from datasets.config import DatasetsConfig
+import preloaded
 
 
 class DatasetView(APIView):
 
     def __init__(self):
-        self.dataset_config = DatasetsConfig()
+        register = preloaded.register.get_register()
+        self.datasets = register.get('datasets')
+        assert self.datasets is not None
+
+        self.datasets_config = self.datasets.get_config()
+        self.datasets_factory = self.datasets.get_factory()
 
     def get(self, request, dataset_id=None):
-
-        print("dataset view get called...")
-
         if dataset_id is None:
-            res = self.dataset_config.get_datasets()
+            res = self.datasets_config.get_datasets()
             return Response({'data': res})
-        res = self.dataset_config.get_dataset_desc(dataset_id)
+        res = self.datasets_config.get_dataset_desc(dataset_id)
         if res:
             return Response({'data': res})
         return Response({'error': 'Dataset {} not found'.format(dataset_id)},
