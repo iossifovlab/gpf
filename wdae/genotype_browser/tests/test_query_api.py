@@ -9,7 +9,7 @@ import copy
 
 
 EXAMPLE_REQUEST_SSC = {
-    "effectTypes": "Frame-shift,Nonsense,Splice-site",
+    "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
     "gender": ["female", "male"],
     "presentInChild": [
         "affected and unaffected",
