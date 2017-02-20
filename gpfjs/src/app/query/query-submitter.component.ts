@@ -1,3 +1,4 @@
+import { GeneSymbolsState } from '../gene-symbols/gene-symbols'
 import { Component, Output, EventEmitter } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { QueryData, Rarity } from './query';
@@ -62,6 +63,15 @@ export class QuerySubmitterComponent {
     return rarity;
   }
 
+
+  private prepareGeneSymbols(geneSymbols: GeneSymbolsState): string[] {
+    // let result = new Array<string>();
+    let result = geneSymbols.geneSymbols
+      .split(/[,\s]/)
+      .filter(s => s !== '')
+      .map(s => s.toUpperCase());
+    return result;
+  }
   prepareQuery(state: any) {
     let queryData = new QueryData();
     let arrayToCommaSeparatedReduce = (acc, x, idx, source) => {
@@ -90,6 +100,8 @@ export class QuerySubmitterComponent {
 
     queryData.presentInParent = this.preparePresentInParent(state.presentInParent);
     queryData.rarity = this.prepareRarity(state.presentInParent);
+
+    queryData.geneSymbols = this.prepareGeneSymbols(state.geneSymbols);
 
     this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
       (genotypePreviewsArray) => {

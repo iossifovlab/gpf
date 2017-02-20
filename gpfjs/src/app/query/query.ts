@@ -11,7 +11,7 @@ export class QueryData {
   presentInParent: any;
   rarity: Rarity;
   variantTypes: string[];
-  genes: string;
+  geneSymbols: string[];
   datasetId: string;
   pedigreeSelector: any;
 }

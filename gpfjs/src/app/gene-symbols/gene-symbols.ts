@@ -6,7 +6,7 @@ export interface GeneSymbolsState {
 };
 
 const initialState: GeneSymbolsState = {
-  geneSymbols: ""
+  geneSymbols: ''
 };
 
 export function geneSymbolsReducer(
