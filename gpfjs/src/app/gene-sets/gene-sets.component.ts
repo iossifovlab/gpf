@@ -5,8 +5,10 @@ import {
 import { Component } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet } from './gene-sets';
-import { Observable } from 'rxjs';
+import { Subject } from 'rxjs/Subject';
+import { Observable } from 'rxjs/Observable';
 import { Store } from '@ngrx/store';
+
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -22,6 +24,8 @@ export class GeneSetsComponent {
   private geneSetsTypes: Set<any>;
   private geneSetsState: Observable<GeneSetsState>;
 
+  private geneSetsQueryChange = new Subject<[string, string, Array<string>]>();
+  private geneSetsResult: Observable<GeneSet[]>;
 
   constructor(
     private geneSetsService: GeneSetsService,
@@ -64,21 +68,41 @@ export class GeneSetsComponent {
         }
       }
     );
+
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
         this.geneSetsCollections = geneSetsCollections;
     });
-  }
 
-  onSearch(searchTerm) {
-    if (!this.selectedGeneSetsCollection) return;
+    this.geneSetsResult = this.geneSetsQueryChange
+      .debounceTime(1000)
+      .distinctUntilChanged()
+      .switchMap(term => {
+        return this.geneSetsService.getGeneSets(term[0], term[1], term[2]);
+      })
+      .catch(error => {
+        console.log(error);
+        return null;
+      });
 
-    this.searchQuery = searchTerm;
-    this.geneSets = null;
-    this.geneSetsService.getGeneSets(this.selectedGeneSetsCollection.name, searchTerm, this.geneSetsTypes).subscribe(
+    this.geneSetsResult.subscribe(
       (geneSets) => {
         this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
     });
+  }
+
+  onSearch(searchTerm: string) {
+    if (!this.selectedGeneSetsCollection) return;
+
+    let geneSetsTypesNames = new Array<string>();
+    this.geneSetsTypes.forEach((value) => {
+      geneSetsTypesNames.push(value.id);
+    });
+
+    this.searchQuery = searchTerm;
+    this.geneSets = null;
+
+    this.geneSetsQueryChange.next([this.selectedGeneSetsCollection.name, searchTerm, geneSetsTypesNames]);
   }
 
   onSelect(event: GeneSet) {

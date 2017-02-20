@@ -27,14 +27,7 @@ export class GeneSetsService {
       });
   }
 
-  getGeneSets(selectedGeneSetsCollection:string, searchTerm: string, geneSetsTypes: Set<any>): Observable<GeneSet[]> {
-    let geneSetsTypesNames = new Array<string>();
-
-    geneSetsTypes.forEach((value) => {
-      geneSetsTypesNames.push(value.id);
-    });
-
-
+  getGeneSets(selectedGeneSetsCollection:string, searchTerm: string, geneSetsTypesNames: Array<string>): Observable<GeneSet[]> {
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let options = new RequestOptions({ headers: headers });
     return this.http
