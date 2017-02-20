@@ -44,14 +44,16 @@ export function presentInParentReducer(
 
 
   switch (action.type) {
-    case PRESENT_IN_PARENT_CHECK:
-      var newState = Object.assign({}, state,
-                     { [action.payload]: true });
+    case PRESENT_IN_PARENT_CHECK: {
+      let newState = Object.assign({}, state,
+        { [action.payload]: true });
       return resetInterval(newState);
-    case PRESENT_IN_PARENT_UNCHECK:
-      var newState = Object.assign({}, state,
-                     { [action.payload]: false });
+    }
+    case PRESENT_IN_PARENT_UNCHECK: {
+      let newState = Object.assign({}, state,
+        { [action.payload]: false });
       return resetInterval(newState);
+    }
     case PRESENT_IN_PARENT_RANGE_START_CHANGE:
       return Object.assign({}, state,
         { rarityIntervalStart: action.payload });
@@ -61,24 +63,26 @@ export function presentInParentReducer(
     case PRESENT_IN_PARENT_ULTRA_RARE_CHANGE:
       return Object.assign({}, state,
         { ultraRare: action.payload });
-    case PRESENT_IN_PARENT_CHECK_ALL:
-      var newStateAll = Object.assign({}, state,
-                        {
-                          motherOnly: true,
-                          fatherOnly: true,
-                          motherFather: true,
-                          neither: true
-                        });
+    case PRESENT_IN_PARENT_CHECK_ALL: {
+      let newStateAll = Object.assign({}, state,
+        {
+          motherOnly: true,
+          fatherOnly: true,
+          motherFather: true,
+          neither: true
+        });
       return resetInterval(newStateAll);
-    case PRESENT_IN_PARENT_UNCHECK_ALL:
-      var newStateAll = Object.assign({}, state,
-                        {
-                          motherOnly: false,
-                          fatherOnly: false,
-                          motherFather: false,
-                          neither: false
-                        });
+    }
+    case PRESENT_IN_PARENT_UNCHECK_ALL: {
+      let newStateAll = Object.assign({}, state,
+        {
+          motherOnly: false,
+          fatherOnly: false,
+          motherFather: false,
+          neither: false
+        });
       return resetInterval(newStateAll);
+    }
     default:
       return state;
   }
