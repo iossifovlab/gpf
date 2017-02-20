@@ -207,6 +207,9 @@ class Dataset(QueryBase):
             'presentInChild': self.get_present_in_child(
                 safe=safe,
                 **kwargs),
+            'regionS': self.get_regions(
+                safe=safe,
+                **kwargs),
             'familyIds': self.get_family_ids(
                 safe=safe,
                 **kwargs)
