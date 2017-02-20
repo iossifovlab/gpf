@@ -5,46 +5,48 @@ export const PRESENT_IN_CHILD_CHECK_ALL = 'PRESENT_IN_CHILD_CHECK_ALL';
 export const PRESENT_IN_CHILD_UNCHECK_ALL = 'PRESENT_IN_CHILD_UNCHECK_ALL';
 
 
-export interface PresentInChildState {
-  autismOnly: boolean;
-  unaffectedOnly: boolean;
-  autismUnaffected: boolean;
-  neither: boolean;
-};
+export type PresentInChildState = Array<string>;
 
-const initialState: PresentInChildState = {
-  autismOnly: true,
-  unaffectedOnly: false,
-  autismUnaffected: true,
-  neither: false
-};
+//export interface PresentInChildState {
+//  affectedOnly: boolean;
+//  unaffectedOnly: boolean;
+//  affectedUnaffected: boolean;
+//  neither: boolean;
+//};
+
+//const initialState: PresentInChildState = {
+//  affectedOnly: true,
+//  unaffectedOnly: false,
+//  affectedUnaffected: true,
+//  neither: false
+//};
+
+const initialState: PresentInChildState = [
+  'affected only',
+  'affected and unaffected'
+];
 
 export function presentInChildReducer(
-  state: PresentInChildState = initialState,
-  action): PresentInChildState {
+  state: PresentInChildState = initialState, action): PresentInChildState {
 
 
   switch (action.type) {
     case PRESENT_IN_CHILD_CHECK:
-      return Object.assign({}, state,
-        { [action.payload]: true });
+      return [
+        ...state.filter(et => et !== action.payload),
+        action.payload
+      ];
     case PRESENT_IN_CHILD_UNCHECK:
-      return Object.assign({}, state,
-        { [action.payload]: false });
+      return state.filter(et => et !== action.payload);
     case PRESENT_IN_CHILD_CHECK_ALL:
-      return {
-        autismOnly: true,
-        unaffectedOnly: true,
-        autismUnaffected: true,
-        neither: true
-      };
+      return [
+        'affected only',
+        'unaffected only',
+        'affected and unaffected',
+        'neither'
+      ];
     case PRESENT_IN_CHILD_UNCHECK_ALL:
-      return {
-        autismOnly: false,
-        unaffectedOnly: false,
-        autismUnaffected: false,
-        neither: false
-      };
+      return [];
     default:
       return state;
   }
