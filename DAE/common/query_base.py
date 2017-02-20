@@ -111,7 +111,7 @@ class EffectTypesMixin(object):
         pass
 
     def build_effect_types(self, effect_types, safe=True):
-        etl = [et.strip() for et in effect_types.split(',')]
+        etl = [et.strip() for et in effect_types]
         etl = self._build_effect_types_groups(etl)
         etl = self._build_effect_types_list(etl)
         if safe:
@@ -234,10 +234,11 @@ class GeneSymsBase(object):
             return set([])
 
         gene_symbols = kwargs['geneSymbols']
-        gene_symbols = gene_symbols.replace(',', ' ')
-        result = gene_symbols.split()
+        if isinstance(gene_symbols, str):
+            gene_symbols = gene_symbols.replace(',', ' ')
+            gene_symbols = gene_symbols.split()
 
-        return set([r.strip() for r in result])
+        return set([g.strip() for g in gene_symbols])
 
     @staticmethod
     def get_gene_weights(**kwargs):
