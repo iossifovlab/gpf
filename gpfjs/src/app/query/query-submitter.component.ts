@@ -1,7 +1,8 @@
+import { GeneSetsState } from '../gene-sets/gene-sets-state'
 import { GeneSymbolsState } from '../gene-symbols/gene-symbols'
 import { Component, Output, EventEmitter } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { QueryData, Rarity } from './query';
+import { QueryData, Rarity, GeneSet } from './query';
 import { QueryService } from './query.service';
 import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-table/genotype-preview';
 import { PresentInParentState } from '../present-in-parent/present-in-parent';
@@ -72,6 +73,25 @@ export class QuerySubmitterComponent {
       .map(s => s.toUpperCase());
     return result;
   }
+
+  private prepareGeneSet(geneSetsState: GeneSetsState): GeneSet {
+    if (!geneSetsState.geneSetsCollection ||
+      !geneSetsState.geneSet) {
+      return {
+        geneSetsCollection: null,
+        geneSet: null
+      };
+    }
+    let geneSetsTypes = Array
+      .from(geneSetsState.geneSetsTypes)
+      .map(t => t.id);
+    return {
+      geneSetsCollection: geneSetsState.geneSetsCollection.name,
+      geneSet: geneSetsState.geneSet.name,
+      geneSetsTypes: geneSetsTypes
+    };
+  }
+
   prepareQuery(state: any) {
     let queryData = new QueryData();
     let arrayToCommaSeparatedReduce = (acc, x, idx, source) => {
@@ -102,6 +122,7 @@ export class QuerySubmitterComponent {
     queryData.rarity = this.prepareRarity(state.presentInParent);
 
     queryData.geneSymbols = this.prepareGeneSymbols(state.geneSymbols);
+    queryData.geneSet = this.prepareGeneSet(state.geneSets);
 
     this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
       (genotypePreviewsArray) => {

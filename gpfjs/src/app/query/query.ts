@@ -4,6 +4,12 @@ export interface Rarity {
   maxFreq: number;
 };
 
+export interface GeneSet {
+  geneSetsCollection: string;
+  geneSet: string;
+  geneSetsTypes?: string[];
+}
+
 export class QueryData {
   effectTypes: string;
   gender: string[];
@@ -12,6 +18,7 @@ export class QueryData {
   rarity: Rarity;
   variantTypes: string[];
   geneSymbols: string[];
+  geneSet: GeneSet;
   datasetId: string;
   pedigreeSelector: any;
 }

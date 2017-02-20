@@ -1,11 +1,5 @@
 export class GeneSetsCollection {
 
-  constructor(
-      readonly name: string,
-      readonly desc: string,
-      readonly types: Array<any>
-  ) {}
-
   static fromJson(json: any): GeneSetsCollection {
     return new GeneSetsCollection(
       json['name'],
@@ -17,16 +11,15 @@ export class GeneSetsCollection {
   static fromJsonArray(jsonArray: Array<Object>): Array<GeneSetsCollection> {
     return jsonArray.map((json) => GeneSetsCollection.fromJson(json));
   }
+
+  constructor(
+    readonly name: string,
+    readonly desc: string,
+    readonly types: Array<any>
+  ) { }
 }
 
 export class GeneSet {
-
-  constructor(
-      readonly name: string,
-      readonly count: number,
-      readonly desc: string
-  ) {}
-
   static fromJson(json: any): GeneSet {
     return new GeneSet(
       json['name'],
@@ -38,4 +31,11 @@ export class GeneSet {
   static fromJsonArray(jsonArray: Array<Object>): Array<GeneSet> {
     return jsonArray.map((json) => GeneSet.fromJson(json));
   }
+
+  constructor(
+    readonly name: string,
+    readonly count: number,
+    readonly desc: string
+  ) { }
+
 }

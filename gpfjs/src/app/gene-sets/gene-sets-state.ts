@@ -9,7 +9,7 @@ export const GENE_SETS_TYPES_REMOVE = 'GENE_SETS_TYPES_REMOVE';
 
 export interface GeneSetsState {
   geneSetsCollection: GeneSetsCollection;
-  geneSetsTypes: Set<any>,
+  geneSetsTypes: Set<any>;
   geneSet: GeneSet;
 };
 
@@ -31,16 +31,18 @@ export function geneSetsReducer(
     case GENE_SET_CHANGE:
       return Object.assign({}, state,
         { geneSet: action.payload });
-    case GENE_SETS_TYPES_ADD:
-      var newSet = new Set<any>(state.geneSetsTypes);
+    case GENE_SETS_TYPES_ADD: {
+      let newSet = new Set<any>(state.geneSetsTypes);
       newSet.add(action.payload);
       return Object.assign({}, state,
         { geneSetsTypes: newSet });
-    case GENE_SETS_TYPES_REMOVE:
-      var newSet = new Set<any>(state.geneSetsTypes);
+    }
+    case GENE_SETS_TYPES_REMOVE: {
+      let newSet = new Set<any>(state.geneSetsTypes);
       newSet.delete(action.payload);
       return Object.assign({}, state,
         { geneSetsTypes: newSet });
+    }
     default:
       return state;
   }
