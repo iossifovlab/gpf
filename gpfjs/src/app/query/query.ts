@@ -1,3 +1,5 @@
+import { GeneWeightsState } from '../gene-weights/gene-weights-store';
+
 export interface Rarity {
   ultraRare: boolean;
   minFreq: number;
@@ -18,6 +20,7 @@ export class QueryData {
   rarity: Rarity;
   variantTypes: string[];
   geneSymbols: string[];
+  geneWeights: GeneWeightsState;
   geneSet: GeneSet;
   datasetId: string;
   pedigreeSelector: any;

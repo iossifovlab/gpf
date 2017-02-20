@@ -1,5 +1,6 @@
 import { GeneSetsState } from '../gene-sets/gene-sets-state'
 import { GeneSymbolsState } from '../gene-symbols/gene-symbols'
+import { GeneWeightsState } from '../gene-weights/gene-weights-store'
 import { Component, Output, EventEmitter } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { QueryData, Rarity, GeneSet } from './query';
@@ -64,9 +65,7 @@ export class QuerySubmitterComponent {
     return rarity;
   }
 
-
   private prepareGeneSymbols(geneSymbols: GeneSymbolsState): string[] {
-    // let result = new Array<string>();
     let result = geneSymbols.geneSymbols
       .split(/[,\s]/)
       .filter(s => s !== '')
@@ -91,6 +90,7 @@ export class QuerySubmitterComponent {
       geneSetsTypes: geneSetsTypes
     };
   }
+
 
   prepareQuery(state: any) {
     let queryData = new QueryData();
@@ -123,6 +123,7 @@ export class QuerySubmitterComponent {
 
     queryData.geneSymbols = this.prepareGeneSymbols(state.geneSymbols);
     queryData.geneSet = this.prepareGeneSet(state.geneSets);
+    queryData.geneWeights = state.geneWeights;
 
     this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
       (genotypePreviewsArray) => {
