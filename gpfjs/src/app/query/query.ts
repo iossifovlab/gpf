@@ -24,4 +24,5 @@ export class QueryData {
   geneSet: GeneSet;
   datasetId: string;
   pedigreeSelector: any;
+  regions: string[];
 }
