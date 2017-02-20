@@ -1,6 +1,6 @@
-import { GeneSetsState } from '../gene-sets/gene-sets-state'
-import { GeneSymbolsState } from '../gene-symbols/gene-symbols'
-import { GeneWeightsState } from '../gene-weights/gene-weights-store'
+import { GeneSetsState } from '../gene-sets/gene-sets-state';
+import { GeneSymbolsState } from '../gene-symbols/gene-symbols';
+import { GeneWeightsState } from '../gene-weights/gene-weights-store';
 import { Component, Output, EventEmitter } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { QueryData, Rarity, GeneSet } from './query';
