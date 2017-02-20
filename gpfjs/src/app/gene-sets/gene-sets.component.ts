@@ -30,16 +30,38 @@ export class GeneSetsComponent {
     this.geneSetsState = this.store.select('geneSets');
   }
 
+  isGeneSetsTypesUpdated(geneSetsTypes: Set<any>): boolean {
+    if (!this.geneSetsTypes && geneSetsTypes) return true;
+    if (this.geneSetsTypes && !geneSetsTypes) return true;
+    if (this.geneSetsTypes.size !== geneSetsTypes.size) return true;
+    for (var a in this.geneSetsTypes) {
+      if (!geneSetsTypes.has(a)) return true;
+    }
+
+    return false;
+  }
+
   ngOnInit() {
     this.geneSetsState.subscribe(
       geneSets => {
+        let refreshData = false;
+
         if (this.internalSelectedGeneSetsCollection != geneSets.geneSetsCollection) {
           this.internalSelectedGeneSetsCollection = geneSets.geneSetsCollection;
           this.geneSets = null;
-          this.onSearch("");
+          this.searchQuery = "";
+          refreshData = true;
         }
         this.selectedGeneSet = geneSets.geneSet;
-        this.geneSetsTypes = geneSets.geneSetsTypes;
+
+        if (this.isGeneSetsTypesUpdated(geneSets.geneSetsTypes)) {
+          this.geneSetsTypes = geneSets.geneSetsTypes;
+          refreshData = true;
+        }
+
+        if (refreshData) {
+          this.onSearch(this.searchQuery);
+        }
       }
     );
     this.geneSetsService.getGeneSetsCollections().subscribe(
@@ -49,8 +71,11 @@ export class GeneSetsComponent {
   }
 
   onSearch(searchTerm) {
+    if (!this.selectedGeneSetsCollection) return;
+
     this.searchQuery = searchTerm;
-    this.geneSetsService.getGeneSets(this.selectedGeneSetsCollection.name, searchTerm).subscribe(
+    this.geneSets = null;
+    this.geneSetsService.getGeneSets(this.selectedGeneSetsCollection.name, searchTerm, this.geneSetsTypes).subscribe(
       (geneSets) => {
         this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
     });

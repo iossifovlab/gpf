@@ -27,11 +27,21 @@ export class GeneSetsService {
       });
   }
 
-  getGeneSets(selectedGeneSetsCollection:string, searchTerm: string): Observable<GeneSet[]> {
+  getGeneSets(selectedGeneSetsCollection:string, searchTerm: string, geneSetsTypes: Set<any>): Observable<GeneSet[]> {
+    let geneSetsTypesNames = new Array<string>();
+
+    geneSetsTypes.forEach((value) => {
+      geneSetsTypesNames.push(value.id);
+    });
+
+
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let options = new RequestOptions({ headers: headers });
     return this.http
-      .post(this.geneSetsSearchUrl, {geneSetsCollection: selectedGeneSetsCollection, geneSetsTypes: []}, options)
+      .post(this.geneSetsSearchUrl, {
+        geneSetsCollection: selectedGeneSetsCollection,
+        filter: searchTerm, geneSetsTypes: geneSetsTypesNames
+      }, options)
       .map(res => {
         return GeneSet.fromJsonArray(res.json());
       });
