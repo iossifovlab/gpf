@@ -5,6 +5,7 @@ Created on Feb 6, 2017
 '''
 import itertools
 from gene.weights import Weights
+import re
 
 
 class EffectTypesMixin(object):
@@ -111,6 +112,11 @@ class EffectTypesMixin(object):
         pass
 
     def build_effect_types(self, effect_types, safe=True):
+        print("effect_types type: {}".format(type(effect_types)))
+        if isinstance(effect_types, str) or \
+                isinstance(effect_types, unicode):
+            effect_types = effect_types.replace(',', ' ')
+            effect_types = effect_types.split()
         etl = [et.strip() for et in effect_types]
         etl = self._build_effect_types_groups(etl)
         etl = self._build_effect_types_list(etl)
@@ -128,7 +134,7 @@ class EffectTypesMixin(object):
         return self.build_effect_types(effect_types, safe)
 
 
-class VariantTypesBase(object):
+class VariantTypesMixin(object):
     VARIANT_TYPES = [
         'del', 'ins', 'sub', 'CNV'
     ]
@@ -149,7 +155,7 @@ class VariantTypesBase(object):
         return variant_types
 
 
-class ChildGenderBase(object):
+class ChildGenderMixin(object):
     GENDER = ['male', 'female']
     GENDER_MAP = {'male': 'M', 'female': 'F'}
 
@@ -170,7 +176,7 @@ class ChildGenderBase(object):
         return [self.GENDER_MAP[g] for g in gender]
 
 
-class PresentInBase(object):
+class PresentInMixin(object):
     PRESENT_IN_PARENT_TYPES = [
         "mother only", "father only",
         "mother and father", "neither",
@@ -226,7 +232,7 @@ class PresentInBase(object):
         return present_in_parent
 
 
-class GeneSymsBase(object):
+class GeneSymsMixin(object):
 
     @staticmethod
     def get_gene_symbols(**kwargs):
@@ -234,7 +240,8 @@ class GeneSymsBase(object):
             return set([])
 
         gene_symbols = kwargs['geneSymbols']
-        if isinstance(gene_symbols, str):
+        if isinstance(gene_symbols, str) or \
+                isinstance(gene_symbols, unicode):
             gene_symbols = gene_symbols.replace(',', ' ')
             gene_symbols = gene_symbols.split()
 
@@ -245,9 +252,9 @@ class GeneSymsBase(object):
         if 'geneWeights' not in kwargs:
             return set([])
         gene_weights = kwargs['geneWeights']
-        if 'weights' not in gene_weights:
+        if 'weight' not in gene_weights:
             return set([])
-        weights_id = gene_weights['weights']
+        weights_id = gene_weights['weight']
         if weights_id not in Weights.list_gene_weights():
             return set([])
         weights = Weights(weights_id)
@@ -270,8 +277,55 @@ class GeneSymsBase(object):
             return None
 
 
-class QueryBase(EffectTypesMixin, VariantTypesBase, ChildGenderBase,
-                PresentInBase, GeneSymsBase):
+class RegionsMixin(object):
+    REGION_REGEXP1 = re.compile("([1-9,X][0-9]?):(\d+)-(\d+)")
+    REGION_REGEXP2 = re.compile(
+        "^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)"
+        "(-([\d]{1,3}(,?[\d]{3})*))?$")
+
+    @classmethod
+    def get_regions(cls, **kwargs):
+        if('regions' not in kwargs):
+            return None
+        regions = kwargs['regions']
+        if isinstance(regions, str) or \
+                isinstance(regions, unicode):
+            regions = regions.split()
+        result = []
+        for region in regions:
+            result.append(cls.get_region(region))
+        return [r for r in result if r]
+
+    @classmethod
+    def get_region(cls, region):
+        res = cls.parse(region)
+        if not res:
+            return None
+        chrome, start, end = res
+        return "{}:{}-{}".format(chrome, start, end)
+
+    @classmethod
+    def parse(cls, region):
+        m = cls.REGION_REGEXP2.match(region)
+        if not m:
+            return None
+        chrome, start, end = m.group(2), m.group(3), m.group(6)
+        if not start:
+            return None
+        start = int(start.replace(',', ''))
+        if not end:
+            end = start
+        else:
+            end = int(end.replace(',', ''))
+
+        if start > end:
+            return None
+        return chrome, start, end
+
+
+class QueryBase(
+    EffectTypesMixin, VariantTypesMixin, ChildGenderMixin,
+        PresentInMixin, GeneSymsMixin, RegionsMixin):
 
     IN_CHILD_TYPES = [
         'prb',

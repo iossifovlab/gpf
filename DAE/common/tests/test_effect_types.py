@@ -5,12 +5,12 @@ Created on Feb 6, 2017
 '''
 
 import pytest
-from common.query_base import EffectTypesBase
+from common.query_base import EffectTypesMixin
 
 
 @pytest.fixture(scope='session')
 def query_base(request):
-    query = EffectTypesBase()
+    query = EffectTypesMixin()
     return query
 
 
