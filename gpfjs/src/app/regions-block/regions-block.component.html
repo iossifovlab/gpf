@@ -2,13 +2,13 @@
   <div class="card">
     <div class="card-header">Regions</div>
     <div class="card-block">
-      <ngb-tabset>
-        <ngb-tab title="All">
+      <ngb-tabset (tabChange)="onTabChange($event)">
+        <ngb-tab id="all-regions" title="All">
             <template ngbTabContent>
                 <p>All Regions</p>
             </template>
         </ngb-tab>
-        <ngb-tab title="Regions Filter">
+        <ngb-tab id="regions-filter" title="Regions Filter">
             <template ngbTabContent>
                 <gpf-regions-filter></gpf-regions-filter>
             </template>

@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { REGIONS_BLOCK_TAB_DESELECT } from '../store/common';
+import { Store } from '@ngrx/store';
 
 @Component({
   selector: 'gpf-regions-block',
@@ -7,9 +9,19 @@ import { Component, OnInit } from '@angular/core';
 })
 export class RegionsBlockComponent implements OnInit {
 
-  constructor() { }
+  constructor(
+    private store: Store<any>
+  ) { }
 
   ngOnInit() {
+  }
+
+  onTabChange(event) {
+    this.store.dispatch({
+      'type': REGIONS_BLOCK_TAB_DESELECT,
+      'payload': event.activeId
+    });
+    console.log(event);
   }
 
 }
