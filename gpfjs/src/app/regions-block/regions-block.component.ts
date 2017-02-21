@@ -21,7 +21,6 @@ export class RegionsBlockComponent implements OnInit {
       'type': REGIONS_BLOCK_TAB_DESELECT,
       'payload': event.activeId
     });
-    console.log(event);
   }
 
 }
