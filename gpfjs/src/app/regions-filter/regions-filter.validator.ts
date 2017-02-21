@@ -14,10 +14,14 @@ export class RegionsFilterValidatorDirective implements Validator {
 
     let valid = true;
     for (var line of control.value.split(/\s+/)) {
-      if (! /^(chr)?([0-9xX]|[0-1][0-9]|2[0-2]):[0-9]+(\-[0-9]+)?$/ig.test(line)) {
+      var match = line.match(/^(?:chr)?(?:[0-9xX]|[0-1][0-9]|2[0-2]):([0-9]+)(?:\-([0-9]+))?$/i)
+      if (match === null) {
         valid = false;
       }
-    }
+      else if (+match[1] > +match[2]) {
+        valid = false;
+      }
+     }
     return valid ? null : {'regionsFilter': true};
   }
 }
