@@ -12,9 +12,9 @@ import { Observable } from 'rxjs';
   templateUrl: './present-in-child.component.html',
 })
 export class PresentInChildComponent implements OnInit {
-  autismOnly: boolean = true;
+  affectedOnly: boolean = true;
   unaffectedOnly: boolean = true;
-  autismUnaffected: boolean = true;
+  affectedUnaffected: boolean = true;
   neither: boolean = true;
 
   presentInChildState: Observable<PresentInChildState>;
@@ -28,11 +28,11 @@ export class PresentInChildComponent implements OnInit {
 
   ngOnInit() {
     this.presentInChildState.subscribe(
-      genderState => {
-        this.autismOnly = genderState.autismOnly;
-        this.unaffectedOnly = genderState.unaffectedOnly;
-        this.autismUnaffected = genderState.autismUnaffected;
-        this.neither = genderState.neither;
+      state => {
+        this.affectedOnly = state.indexOf('affected only') !== -1;
+        this.unaffectedOnly = state.indexOf('unaffected only') !== -1;
+        this.affectedUnaffected = state.indexOf('affected and unaffected') !== -1;
+        this.neither = state.indexOf('neither') !== -1;
       }
     );
   }
@@ -50,11 +50,9 @@ export class PresentInChildComponent implements OnInit {
   }
 
   presentInChildCheckValue(key: string, value: boolean): void {
-    if (key === 'autismOnly' || key === 'unaffectedOnly' || key === 'autismUnaffected' || key === 'neither') {
-      this.store.dispatch({
-        'type': value ? PRESENT_IN_CHILD_CHECK : PRESENT_IN_CHILD_UNCHECK,
-        'payload': key
-      });
-    }
+    this.store.dispatch({
+      'type': value ? PRESENT_IN_CHILD_CHECK : PRESENT_IN_CHILD_UNCHECK,
+      'payload': key
+    });
   }
 }

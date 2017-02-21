@@ -1,15 +1,4 @@
 export class GeneWeights {
-
-  constructor(
-      readonly bars: number[],
-      readonly weight: string,
-      readonly min: number,
-      readonly max: number,
-      readonly step: number,
-      readonly bins: number[],
-      readonly desc: string,
-  ) {}
-
   static fromJson(json: any): GeneWeights {
     return new GeneWeights(
       json['bars'],
@@ -25,19 +14,20 @@ export class GeneWeights {
   static fromJsonArray(jsonArray: Array<Object>): Array<GeneWeights> {
     return jsonArray.map((json) => GeneWeights.fromJson(json));
   }
+
+  constructor(
+    readonly bars: number[],
+    readonly weight: string,
+    readonly min: number,
+    readonly max: number,
+    readonly step: number,
+    readonly bins: number[],
+    readonly desc: string,
+  ) { }
+
 }
 
 export class Partitions {
-
-  constructor(
-      readonly leftCount: number,
-      readonly leftPercent: number,
-      readonly midCount: number,
-      readonly midPercent: number,
-      readonly rightCount: number,
-      readonly rightPercent: number,
-  ) {}
-
   static fromJson(json: any): Partitions {
     return new Partitions(
       +json['left']['count'],
@@ -48,4 +38,14 @@ export class Partitions {
       +json['right']['percent'],
     );
   }
+
+  constructor(
+    readonly leftCount: number,
+    readonly leftPercent: number,
+    readonly midCount: number,
+    readonly midPercent: number,
+    readonly rightCount: number,
+    readonly rightPercent: number,
+  ) { }
+
 }

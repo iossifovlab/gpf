@@ -9,35 +9,35 @@ import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-tabl
 import { QueryData } from './query';
 
 let FIELD_TO_OBJECT_PROPERTY = [
-    [ "family id", "familyId" ],
-    [ "study", "study" ],
-    [ "study phenotype", "studyPhenotype" ],
-    [ "location", "location" ],
-    [ "variant", "variant" ],
-    [ "family genotype", "familyGenotype" ],
-    [ "from parent", "fromParent" ],
-    [ "in child", "inChild" ],
-    [ "worst requested effect", "worstRequestedEffect" ],
-    [ "genes", "genes" ],
-    [ "count", "count" ],
-    [ "all effects", "allEffects" ],
-    [ "requested effects", "requestedEffects" ],
-    [ "population type", "populationType" ],
-    [ "worst effect type", "worstEffectType" ],
-    [ "effect details", "effectDetails" ],
-    [ "alternative allele frequency", "alternativeAlleleFrequency" ],
-    [ "number of alternative alleles", "alternativeAllelesCount" ],
-    [ "SSCfreq", "SSCfreqWithoutNan" ],
-    [ "EVSfreq", "EVSfreqWithoutNan" ],
-    [ "E65freq", "E65freqWithoutNan" ],
-    [ "number of genotyped parents", "genotypedParentsCount" ],
-    [ "parent races", "parentRaces" ],
-    [ "children description", "childrenDescription" ],
-    [ "proband verbal iq", "probandVerbalIQ" ],
-    [ "proband non-verbal iq", "probandNonVerbalIQ" ],
-    [ "validation status", "validationStatus" ],
-    [ "_pedigree_", "pedigreeDataFromArray" ],
-    [ "phenoInChS", "phenoInChS"]
+  ["family id", "familyId"],
+  ["study", "study"],
+  ["study phenotype", "studyPhenotype"],
+  ["location", "location"],
+  ["variant", "variant"],
+  ["family genotype", "familyGenotype"],
+  ["from parent", "fromParent"],
+  ["in child", "inChild"],
+  ["worst requested effect", "worstRequestedEffect"],
+  ["genes", "genes"],
+  ["count", "count"],
+  ["all effects", "allEffects"],
+  ["requested effects", "requestedEffects"],
+  ["population type", "populationType"],
+  ["worst effect type", "worstEffectType"],
+  ["effect details", "effectDetails"],
+  ["alternative allele frequency", "alternativeAlleleFrequency"],
+  ["number of alternative alleles", "alternativeAllelesCount"],
+  ["SSCfreq", "SSCfreqWithoutNan"],
+  ["EVSfreq", "EVSfreqWithoutNan"],
+  ["E65freq", "E65freqWithoutNan"],
+  ["number of genotyped parents", "genotypedParentsCount"],
+  ["parent races", "parentRaces"],
+  ["children description", "childrenDescription"],
+  ["proband verbal iq", "probandVerbalIQ"],
+  ["proband non-verbal iq", "probandNonVerbalIQ"],
+  ["validation status", "validationStatus"],
+  ["_pedigree_", "pedigreeDataFromArray"],
+  ["phenoInChS", "phenoInChS"]
 ];
 
 @Injectable()
@@ -51,8 +51,10 @@ export class QueryService {
     private http: Http,
     private config: ConfigService
   ) {
-    for (let idx in FIELD_TO_OBJECT_PROPERTY){
-      this.fieldToObjectPropertyMap.set(FIELD_TO_OBJECT_PROPERTY[idx][0], FIELD_TO_OBJECT_PROPERTY[idx][1]);
+    for (let idx in FIELD_TO_OBJECT_PROPERTY) {
+      this.fieldToObjectPropertyMap.set(
+        FIELD_TO_OBJECT_PROPERTY[idx][0], 
+        FIELD_TO_OBJECT_PROPERTY[idx][1]);
     }
   }
 

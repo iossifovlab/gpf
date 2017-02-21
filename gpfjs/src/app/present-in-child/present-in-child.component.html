@@ -9,11 +9,11 @@
         </div>
         <div class="checkbox">
           <label>
-            <input #autismOnlyCheckbox
+            <input #affectedOnlyCheckbox
                 type="checkbox"
-                [checked]="autismOnly"
-                (change)="presentInChildCheckValue('autismOnly',autismOnlyCheckbox.checked)">
-            autism only
+                [checked]="affectedOnly"
+                (change)="presentInChildCheckValue('affected only',affectedOnlyCheckbox.checked)">
+            affected only
           </label>
         </div>
         <div class="checkbox">
@@ -22,18 +22,18 @@
                 #unaffectedOnlyCheckbox
                 type="checkbox"
                 [checked]="unaffectedOnly"
-                (change)="presentInChildCheckValue('unaffectedOnly',unaffectedOnlyCheckbox.checked)">
+                (change)="presentInChildCheckValue('unaffected only',unaffectedOnlyCheckbox.checked)">
             unaffected only
           </label>
         </div>
         <div class="checkbox">
           <label>
             <input
-                #autismUnaffectedCheckbox
+                #affectedUnaffectedCheckbox
                 type="checkbox"
-                [checked]="autismUnaffected"
-                (change)="presentInChildCheckValue('autismUnaffected',autismUnaffectedCheckbox.checked)">
-            autism and unaffected
+                [checked]="affectedUnaffected"
+                (change)="presentInChildCheckValue('affected and unaffected',affectedUnaffectedCheckbox.checked)">
+            affected and unaffected
           </label>
         </div>
         <div class="checkbox">
