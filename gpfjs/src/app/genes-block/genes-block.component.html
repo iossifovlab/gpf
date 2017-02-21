@@ -2,23 +2,23 @@
   <div class="card">
     <div class="card-header">Genes</div>
     <div class="card-block">
-      <ngb-tabset>
-        <ngb-tab title="All">
+      <ngb-tabset (tabChange)="onTabChange($event)">
+        <ngb-tab id="all-genes" title="All">
             <template ngbTabContent>
                 <p>All Genes</p>
             </template>
         </ngb-tab>
-        <ngb-tab title="Gene Symbols">
+        <ngb-tab id="gene-symbols" title="Gene Symbols">
             <template ngbTabContent>
                 <gpf-gene-symbols></gpf-gene-symbols>
             </template>
         </ngb-tab>
-        <ngb-tab title="Gene Sets">
+        <ngb-tab id="gene-sets" title="Gene Sets">
             <template ngbTabContent>
                 <gpf-gene-sets></gpf-gene-sets>
             </template>
         </ngb-tab>
-        <ngb-tab title="Gene Weights">
+        <ngb-tab id="gene-weights" title="Gene Weights">
             <template ngbTabContent>
                 <gpf-gene-weights width="650" height="200"></gpf-gene-weights>
             </template>

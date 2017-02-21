@@ -1,4 +1,5 @@
 import { GeneSetsCollection, GeneSet } from './gene-sets';
+import { GENES_BLOCK_TAB_DESELECT } from '../store/common';
 
 export const GENE_SETS_COLLECTION_CHANGE = 'GENE_SETS_COLLECTION_CHANGE';
 export const GENE_SET_CHANGE = 'GENE_SET_CHANGE';
@@ -41,6 +42,8 @@ export function geneSetsReducer(
       newSet.delete(action.payload);
       return Object.assign({}, state,
         { geneSetsTypes: newSet });
+    case GENES_BLOCK_TAB_DESELECT:
+      return initialState;
     default:
       return state;
   }

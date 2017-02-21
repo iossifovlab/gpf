@@ -1,3 +1,4 @@
+import { GENES_BLOCK_TAB_DESELECT } from '../store/common';
 export const GENE_SYMBOLS_CHANGE = 'GENE_SYMBOLS_CHANGE';
 
 
@@ -18,6 +19,8 @@ export function geneSymbolsReducer(
     case GENE_SYMBOLS_CHANGE:
       return Object.assign({}, state,
         { geneSymbols: action.payload });
+    case GENES_BLOCK_TAB_DESELECT:
+      return initialState;
     default:
       return state;
   }
