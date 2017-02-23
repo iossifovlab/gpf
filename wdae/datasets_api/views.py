@@ -39,6 +39,7 @@ class DatasetView(APIView):
         print(user)
         print(user.is_anonymous())
         print(user.is_authenticated())
+        print(user.is_staff)
 
         if dataset_id is None:
             res = self.datasets_config.get_datasets()
