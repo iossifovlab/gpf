@@ -49,7 +49,6 @@ class DatasetApiTest(APITestCase):
         self.assertIn('accessRights', data)
         self.assertTrue(data['accessRights'])
 
-
     def test_get_dataset_sd(self):
         self.client.login(email='admin@example.com', password='secret')
 
@@ -76,10 +75,5 @@ class DatasetApiTest(APITestCase):
         self.assertIn('data', data)
         pprint(data)
         data = data['data']
-        self.assertIn('genotypeBrowser', data)
-        gbdata = data['genotypeBrowser']
-        self.assertFalse(gbdata['hasStudyTypes'])
-
-        self.assertTrue(data['pedigreeSelectors'])
-        pedigrees = data['pedigreeSelectors']
-        self.assertEquals(2, len(pedigrees))
+        self.assertIn('accessRights', data)
+        self.assertTrue(data['accessRights'])
