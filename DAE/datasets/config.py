@@ -91,8 +91,8 @@ class DatasetsConfig(object):
             res = self.config.getboolean(section, option)
         return res
 
-    def _get_string(self, section, option):
-        res = None
+    def _get_string(self, section, option, default_value=None):
+        res = default_value
         if self.config.has_option(section, option):
             res = self.config.get(section, option)
         return res
@@ -154,6 +154,9 @@ class DatasetsConfig(object):
         name = self.config.get(section, 'name')
 
         studies = self.config.get(section, 'studies')
+
+        visibility = self._get_string(section, 'visibility', 'AUTHENTICATED')
+
         study_types = self._get_string(section, 'studyTypes')
         if study_types:
             study_types = [st for st in study_types.split(',')]
@@ -171,6 +174,7 @@ class DatasetsConfig(object):
             'name': name,
             'studies': studies,
             'studyTypes': study_types,
+            'visibility': visibility,
             'phenoDB': pheno_db,
             'enrichmentTool': enrichment_tool,
             'phenotypeGenotypeTool': pheno_geno_tool,

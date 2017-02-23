@@ -29,6 +29,9 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertIsNone(ds['phenoDB'])
         self.assertEquals(1, len(ds['pedigreeSelectors']))
 
+        self.assertIn('visibility', ds)
+        self.assertEquals('ALL', ds['visibility'])
+
     def test_dataset_ssc(self):
         ds = self.dataset_config.get_dataset_desc('SSC')
         self.assertIsNotNone(ds)
@@ -38,6 +41,9 @@ class DatasetsConfigTest(unittest.TestCase):
         pedigree = ds['pedigreeSelectors'][0]
 
         self.assertEquals('Phenotype', pedigree['name'])
+
+        self.assertIn('visibility', ds)
+        self.assertEquals('AUTHENTICATED', ds['visibility'])
 
     def test_dataset_not_found(self):
         ds = self.dataset_config.get_dataset_desc('ala bala')
@@ -55,3 +61,6 @@ class DatasetsConfigTest(unittest.TestCase):
         p16p = pedigrees[0]
         self.assertIn('16pstatus', p16p['id'])
         self.assertIn('name', p16p)
+
+        self.assertIn('visibility', ds)
+        self.assertEquals('AUTHENTICATED', ds['visibility'])
