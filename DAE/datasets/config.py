@@ -7,6 +7,7 @@ import ConfigParser
 
 from Config import Config
 import collections
+from pprint import pprint
 
 
 class PedigreeSelector(dict):
@@ -105,6 +106,10 @@ class DatasetsConfig(object):
         has_transmitted = \
             self._get_boolean(section, 'genotypeBrowser.hasTransmitted')
         has_cnv = self._get_boolean(section, 'genotypeBrowser.hasCNV')
+        has_present_in_child = self._get_boolean(
+            section, 'genotypeBrowser.hasPresentInChild')
+        has_present_in_parent = self._get_boolean(
+            section, 'genotypeBrowser.hasPresentInParent')
         study_types = self._get_boolean(
             section, 'genotypeBrowser.hasStudyTypes')
 
@@ -118,6 +123,8 @@ class DatasetsConfig(object):
             'mainForm': main_form,
             'hasDenovo': has_denovo,
             'hasTransmitted': has_transmitted,
+            'hasPresentInChild': has_present_in_child,
+            'hasPresentInParent': has_present_in_parent,
             'hasCNV': has_cnv,
             'hasStudyTypes': study_types,
             'hasAdvancedFamilyFilters': advanced_family_filters,
@@ -166,6 +173,7 @@ class DatasetsConfig(object):
         pheno_geno_tool = self._get_boolean(section, 'phenoGenoTool')
         phenotype_browser = self._get_boolean(section, 'phenotypeBrowser')
         genotype_browser = self._get_genotype_browser(section)
+        pprint(genotype_browser)
 
         pedigree_selectors = self._get_pedigree_selectors(section)
 
