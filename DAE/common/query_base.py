@@ -112,7 +112,6 @@ class EffectTypesMixin(object):
         pass
 
     def build_effect_types(self, effect_types, safe=True):
-        print("effect_types type: {}".format(type(effect_types)))
         if isinstance(effect_types, str) or \
                 isinstance(effect_types, unicode):
             effect_types = effect_types.replace(',', ' ')
