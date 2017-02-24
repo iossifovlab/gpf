@@ -1,3 +1,4 @@
+import { DatasetsState } from '../datasets/datasets';
 import {
   VariantTypesState,
   VARIANT_TYPES_CHECK_ALL, VARIANT_TYPES_UNCHECK_ALL,
@@ -18,14 +19,25 @@ export class VarianttypesComponent implements OnInit {
   sub: boolean = true;
   ins: boolean = true;
   del: boolean = true;
+  cnv: boolean = true;
 
   variantTypesState: Observable<VariantTypesState>;
+  hasCNV: Observable<boolean>;
 
   constructor(
     private store: Store<any>
   ) {
 
     this.variantTypesState = this.store.select('variantTypes');
+
+    let datasetsState: Observable<DatasetsState> = this.store.select('datasets');
+    this.hasCNV = datasetsState.map(state => {
+      if (!state || !state.selectedDataset) {
+        return false;
+      }
+      return state.selectedDataset.genotypeBrowser.hasCNV;
+    });
+
   }
 
   ngOnInit() {
