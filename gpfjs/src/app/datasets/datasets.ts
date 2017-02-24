@@ -67,22 +67,22 @@ export class PedigreeSelector extends IdName {
 export class GenotypeBrowser {
   static fromJson(json: any): GenotypeBrowser {
     return new GenotypeBrowser(
-      json['hasDenovo'],
+      json['hasPedigreeSelector'],
+      json['hasPresentInChild'],
+      json['hasPresentInParent'],
       json['hasCNV'],
       json['hasAdvancedFamilyFilters'],
-      json['hasTransmitted'],
-      json['hasPedigreeSelector'],
       json['hasStudyTypes'],
       json['mainForm']
     );
   }
 
   constructor(
-    readonly hasDenovo: boolean,
+    readonly hasPedigreeSelector: boolean,
+    readonly hasPresentInChild: boolean,
+    readonly hasPresentInParent: boolean,
     readonly hasCNV: boolean,
     readonly hasAdvancedFamilyFilters: boolean,
-    readonly hasTransmitted: boolean,
-    readonly hasPedigreeSelector: boolean,
     readonly hasStudyTypes: boolean,
     readonly mainForm: string
   ) {
