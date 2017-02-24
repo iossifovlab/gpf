@@ -47,7 +47,7 @@ class EnrichmentBuilder(object):
             return 'prb'
 
     def build_phenotype(self, phenotype):
-        results = []
+        results = {}
         studies = self.dataset.denovo_studies
         studies = [
             st for st in studies
@@ -62,7 +62,7 @@ class EnrichmentBuilder(object):
                 self.dataset.children_stats[phenotype])
 
             row = RowResult(phenotype, effect_type)(enrichment_results)
-            results.append(row)
+            results[effect_type] = row
 
         res = PhenotypeResult(phenotype)(results)
         return res
@@ -72,7 +72,7 @@ class EnrichmentBuilder(object):
 
         for phenotype in self.dataset.get_phenotypes():
             res = self.build_phenotype(phenotype)
-            results(res)
+            results(phenotype, res)
         self.result = results
         return self.result
 
@@ -220,35 +220,14 @@ class PhenotypeResult(object):
 
     def __init__(self, phenotype):
         self.phenotype = phenotype
-        self._result = {}
+        self.result = {}
 
-    def __call__(self, results):
-        for r in results:
-            self._result[r.effect_type.lower()] = r
+    def __call__(self, result):
+        self.result = result
         return self
 
-    def __repr__(self):
-        return "{}".format(self._result)
-
-    def __getattr__(self, effect_type):
-        et = effect_type.lower()
-        if et not in self._result:
-            raise AttributeError("bad effect type: {}".format(effect_type))
-        return self._result[et]
-
-    def __getitem__(self, effect_type):
-        et = effect_type.lower()
-        if et not in self._result:
-            raise KeyError("bad effect type: {}".format(effect_type))
-        return self._result[et]
-
-    def __contains__(self, effect_type):
-        return effect_type.lower() in self._result
-
     def serialize(self):
-        res = {}
-        res['phenotype'] = self.phenotype
-        res['results'] = [r.serialize() for r in self._result.values()]
+        res = dict([(k, v.serialize()) for k, v in self.result.items()])
         return res
 
 
@@ -257,8 +236,8 @@ class EnrichmentResult(object):
     def __init__(self):
         self.results = {}
 
-    def __call__(self, phenotype_result):
-        self.results[phenotype_result.phenotype] = phenotype_result
+    def __call__(self, phenotype, phenotype_result):
+        self.results[phenotype] = phenotype_result
 
     def serialize(self):
         res = dict([(k, v.serialize()) for k, v in self.results.items()])
