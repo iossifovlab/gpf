@@ -7,7 +7,7 @@ import ConfigParser
 
 from Config import Config
 import collections
-from pprint import pprint
+# from pprint import pprint
 
 
 class PedigreeSelector(dict):
@@ -173,7 +173,7 @@ class DatasetsConfig(object):
         pheno_geno_tool = self._get_boolean(section, 'phenoGenoTool')
         phenotype_browser = self._get_boolean(section, 'phenotypeBrowser')
         genotype_browser = self._get_genotype_browser(section)
-        pprint(genotype_browser)
+        # pprint(genotype_browser)
 
         pedigree_selectors = self._get_pedigree_selectors(section)
 
