@@ -1,0 +1,30 @@
+<div class="study-types-card card">
+    <div class="card-header card-title">Study Types</div>
+    <div class="card-block">
+        <div class="btn-group btn-group-sm">
+            <button (click)="selectAll()"
+                class="btn btn-default">All</button>
+            <button (click)="selectNone()"
+                class="btn btn-default">None</button>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input #weCheckbox
+                type="checkbox"
+                [checked]="we"
+                (change)="studyTypesCheckValue('we',wgCheckbox.checked)">
+            <span>WG</span>
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input
+                #tgCheckbox
+                type="checkbox"
+                [checked]="tg"
+                (change)="studyTypesCheckValue('tg',tgCheckbox.checked)">
+            <span>TG</span>
+          </label>
+        </div>
+    </div>
+</div>

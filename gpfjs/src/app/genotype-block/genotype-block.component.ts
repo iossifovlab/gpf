@@ -14,6 +14,7 @@ export class GenotypeBlockComponent implements OnInit {
   hasPedigreeSelector: Observable<boolean>;
   hasPresentInChild: Observable<boolean>;
   hasPresentInParent: Observable<boolean>;
+  hasStudyTypes: Observable<boolean>;
 
   constructor(
     private store: Store<any>
@@ -43,6 +44,12 @@ export class GenotypeBlockComponent implements OnInit {
         return false;
       }
       return state.selectedDataset.genotypeBrowser.hasPresentInParent;
+    });
+    this.hasStudyTypes = datasetsState.map(state => {
+      if (!state || !state.selectedDataset) {
+        return false;
+      }
+      return state.selectedDataset.genotypeBrowser.hasStudyTypes;
     });
   }
 

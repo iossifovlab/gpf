@@ -14,6 +14,7 @@ import { PresentInParentState, presentInParentReducer } from '../present-in-pare
 import { GeneSymbolsState, geneSymbolsReducer } from '../gene-symbols/gene-symbols';
 import { RegionsFilterState, regionsFilterReducer } from '../regions-filter/regions-filter';
 import { GeneSetsState, geneSetsReducer } from '../gene-sets/gene-sets-state';
+import { StudyTypesState, studyTypesReducer } from '../study-types/study-types';
 
 export interface GpfState {
   datasets: DatasetsState;
@@ -40,7 +41,8 @@ const reducers = {
   presentInParent: presentInParentReducer,
   geneSymbols: geneSymbolsReducer,
   regionsFilter: regionsFilterReducer,
-  geneSets: geneSetsReducer
+  geneSets: geneSetsReducer,
+  studyTypes: studyTypesReducer,
 };
 
 const productionReducer: ActionReducer<GpfState> = combineReducers(reducers);

@@ -20,7 +20,9 @@
 		  </div>
 		</div>
 
-
+        <div *ngIf="hasStudyTypes | async" class="col-lg-2">
+            <gpf-study-types></gpf-study-types>
+        </div>
 		<gpf-effecttypes class="panel-row col-lg-4"> </gpf-effecttypes>
 	</div>
 
