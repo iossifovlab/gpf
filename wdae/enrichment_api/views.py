@@ -11,6 +11,7 @@ import preloaded
 import traceback
 import precompute
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
+from common.query_base import GeneSymsMixin
 
 
 class EnrichmentModelsMixin(object):
@@ -108,6 +109,18 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
 
         self.datasets_config = self.datasets.get_config()
         self.datasets_factory = self.datasets.get_factory()
+
+    def enrichment_description(self, query):
+        gene_set = GeneSymsMixin.get_gene_set(**query)
+        if gene_set:
+            pass
+        gene_weights = GeneSymsMixin.get_gene_weights()
+        if gene_weights:
+            pass
+        gene_syms = GeneSymsMixin.get_gene_symbols()
+        if gene_syms:
+            pass
+        return None
 
     def post(self, request, dataset_id):
         if dataset_id is None:
