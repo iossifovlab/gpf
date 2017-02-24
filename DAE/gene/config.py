@@ -5,6 +5,7 @@ Created on Feb 16, 2017
 '''
 from Config import Config
 import ConfigParser
+from GeneInfoDB import GeneInfoDB
 
 
 class GeneInfoConfig(object):
@@ -19,6 +20,9 @@ class GeneInfoConfig(object):
         wd = self.dae_config.daeDir
         self.config = ConfigParser.SafeConfigParser({'wd': wd})
         self.config.read(self.dae_config.geneInfoDBconfFile)
+        print(self.dae_config.geneInfoDBconfFile, self.dae_config.daeDir)
+        self.gene_info = GeneInfoDB(
+            self.dae_config.geneInfoDBconfFile, self.dae_config.daeDir)
 
     @staticmethod
     def list_gene_weights():

@@ -8,6 +8,7 @@ import itertools
 from query_variants import generate_response
 from common.query_base import QueryBase
 from collections import Counter
+from datasets.config import DatasetsConfig
 
 
 class Dataset(QueryBase):
@@ -268,8 +269,11 @@ class Dataset(QueryBase):
 
 class DatasetsFactory(dict):
 
-    def __init__(self, datasets_config):
-        self.datasets_config = datasets_config
+    def __init__(self, datasets_config=None):
+        if datasets_config is None:
+            self.datasets_config = DatasetsConfig()
+        else:
+            self.datasets_config = datasets_config
 
     def get_dataset(self, dataset_id):
         if dataset_id in self:

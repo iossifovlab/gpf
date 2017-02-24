@@ -111,9 +111,11 @@ class GeneInfoDB:
             return self.config.get('geneTerms.' + id, attName)
 
     def getGeneTerms(self,id="main",inNS="sym"):
+        print(id)
         fl = self.config.get('geneTerms.' + id, "file")
-    
+        print(fl)
         gt = loadGeneTerm(fl)
+        print(gt)
         if not inNS:
             return gt
         if gt.geneNS == inNS:

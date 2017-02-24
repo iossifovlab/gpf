@@ -122,6 +122,7 @@ def _ReadMappingFile(inputFile):
     return r
         
 def loadGeneTerm(path):
+    print("loadGeneTerm")
     if path.endswith("-map.txt"):
         return _ReadMappingFile(path)
     elif path.endswith(".gmt"):

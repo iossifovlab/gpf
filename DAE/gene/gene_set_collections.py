@@ -5,35 +5,60 @@ Created on Feb 16, 2017
 '''
 from gene.config import GeneInfoConfig
 import sqlite3
-from DAE import giDB, get_gene_sets_symNS
-from denovo_gene_sets import build_denovo_gene_sets
+# from denovo_gene_sets import build_denovo_gene_sets
+from GeneTerms import loadGeneTerm
+import traceback
 
 
 class CacheMixin(object):
     pass
 
 
-class GeneSetsCollection(object):
+class GeneSetsCollection(GeneInfoConfig):
 
     def __init__(self, gene_sets_collection_id):
+        super(GeneSetsCollection, self).__init__()
+
         assert gene_sets_collection_id != 'denovo'
         self.gsc_id = gene_sets_collection_id
         self.gene_sets_descriptions = None
+        self.gene_sets_collections = None
+
+    def _load(self):
+        try:
+            geneTerms = self.gene_info.getGeneTerms(self.gsc_id)
+        except:
+            traceback.print_exc()
+            geneTerms = loadGeneTerm(self.gsc_id)
+
+        if geneTerms.geneNS == 'id':
+            def rF(x):
+                if x in self.gene_info.genes:
+                    return self.gene_info.genes[x].sym
+            geneTerms.renameGenes("sym", rF)
+
+        if geneTerms.geneNS != 'sym':
+            raise Exception('Only work with id or sym namespace')
+        return geneTerms
 
     def load(self):
-        self.gene_sets_collection = get_gene_sets_symNS(self.gsc_id)
+        if self.gene_sets_collections:
+            return self.gene_sets_collections
+
+        self.gene_sets_collections = self._load()
+
         self.gene_sets_descriptions = [
             {
                 'name': key,
                 'desc': value,
-                'count': len(self.gene_sets_collection.t2G[key].keys())
+                'count': len(self.gene_sets_collections.t2G[key].keys())
             }
-            for key, value in self.gene_sets_collection.tDesc.items()
+            for key, value in self.gene_sets_collections.tDesc.items()
         ]
-        return self.gene_sets_collection
+        return self.gene_sets_collections
 
     def get_gene_sets(self, gene_sets_types=[], **kwargs):
-        assert self.gene_sets_collection is not None
+        assert self.gene_sets_collections is not None
         assert self.gene_sets_descriptions is not None
         return self.gene_sets_descriptions
 
@@ -128,7 +153,7 @@ class DenovoGeneSetsCollection(object):
         self.gene_sets_names = None
 
     def load(self):
-        computed = build_denovo_gene_sets()
+        computed = {}  # build_denovo_gene_sets()
         self.gene_sets_collection = {}
         for gene_sets_type, gene_term in computed.items():
             self.gene_sets_collection[gene_sets_type] = \
@@ -223,9 +248,9 @@ class GeneSetsCollections(GeneInfoConfig):
             return self.gene_sets_collections_desc
 
         self.gene_sets_collections_desc = []
-        for gsc_id in giDB.getGeneTermIds():
-            label = giDB.getGeneTermAtt(gsc_id, "webLabel")
-            formatStr = giDB.getGeneTermAtt(gsc_id, "webFormatStr")
+        for gsc_id in self.gene_info.getGeneTermIds():
+            label = self.gene_info.getGeneTermAtt(gsc_id, "webLabel")
+            formatStr = self.gene_info.getGeneTermAtt(gsc_id, "webFormatStr")
             if not label or not formatStr:
                 continue
             gene_sets_types = []
