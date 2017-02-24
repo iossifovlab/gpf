@@ -143,7 +143,8 @@ class VariantTypesMixin(object):
             return None
         variant_types = kwargs['variantTypes']
         if safe:
-            assert all([vt in self.VARIANT_TYPES for vt in variant_types])
+            pass
+            # assert all([vt in self.VARIANT_TYPES for vt in variant_types])
         variant_types = [
             vt for vt in variant_types if vt in self.VARIANT_TYPES
         ]
