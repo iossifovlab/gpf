@@ -5,7 +5,7 @@ Created on Feb 6, 2017
 '''
 import pytest
 from datasets.config import DatasetsConfig
-from datasets.dataset import DatasetsFactory
+from datasets.datasets_factory import DatasetsFactory
 
 
 @pytest.fixture(scope='session')
