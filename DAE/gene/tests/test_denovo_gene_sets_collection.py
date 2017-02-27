@@ -44,7 +44,7 @@ def test_denovo_get_gene_set_lgds_autism_and_epilepsy(gscs):
 def test_denovo_get_gene_sets_autism(gscs):
     gene_sets = gscs.get_gene_sets('denovo', ['autism'])
     assert gene_sets is not None
-    assert len(gene_sets) == 16
+    assert len(gene_sets) == 14
     gs = gene_sets[0]
     assert gs['count'] == 546
     assert gs['name'] == 'LGDs'
@@ -55,7 +55,7 @@ def test_denovo_get_gene_sets_autism_and_epilepsy(gscs):
         'denovo',
         gene_sets_types=['autism', 'epilepsy'])
     assert gene_sets is not None
-    assert len(gene_sets) == 16
+    assert len(gene_sets) == 14
     gs = gene_sets[0]
     # print(gs)
     assert gs['count'] == 576

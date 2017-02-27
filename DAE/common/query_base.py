@@ -6,7 +6,7 @@ Created on Feb 6, 2017
 import itertools
 from gene.weights import Weights, WeightsLoader
 import re
-from gene.gene_set_collections import GeneSetsCollections
+# from gene.gene_set_collections import GeneSetsCollections
 
 
 class EffectTypesMixin(object):
@@ -291,20 +291,20 @@ class GeneSymsMixin(object):
         gene_sets_types = query.get('geneSetsTypes', [])
         return gene_sets_collection, gene_set, gene_sets_types
 
-    @classmethod
-    def get_gene_set(cls, **kwargs):
-        gene_sets_collection, gene_set, gene_sets_types = \
-            GeneSymsMixin.get_gene_set_query(**kwargs)
-        if not gene_sets_collection or not gene_set:
-            return set([])
-        if gene_sets_types is None:
-            gene_sets_types = []
-        if cls.GENE_SETS_LOADER is None:
-            cls.GENE_SETS_LOADER = GeneSetsCollections()
-        genes = cls.GENE_SETS_LOADER.get_gene_set(
-            gene_sets_collection, gene_set, gene_sets_types)
-        print(genes)
-        return set([])
+#     @classmethod
+#     def get_gene_set(cls, **kwargs):
+#         gene_sets_collection, gene_set, gene_sets_types = \
+#             GeneSymsMixin.get_gene_set_query(**kwargs)
+#         if not gene_sets_collection or not gene_set:
+#             return set([])
+#         if gene_sets_types is None:
+#             gene_sets_types = []
+#         if cls.GENE_SETS_LOADER is None:
+#             cls.GENE_SETS_LOADER = GeneSetsCollections()
+#         genes = cls.GENE_SETS_LOADER.get_gene_set(
+#             gene_sets_collection, gene_set, gene_sets_types)
+#         print(genes)
+#         return set([])
 
     @classmethod
     def get_gene_syms(cls, **kwargs):
