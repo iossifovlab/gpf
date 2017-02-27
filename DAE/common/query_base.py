@@ -4,7 +4,7 @@ Created on Feb 6, 2017
 @author: lubo
 '''
 import itertools
-from gene.weights import Weights, WeightsLoader
+from gene.weights import Weights
 import re
 # from gene.gene_set_collections import GeneSetsCollections
 
@@ -234,8 +234,6 @@ class PresentInMixin(object):
 
 
 class GeneSymsMixin(object):
-    GENE_WEIGHTS_LOADER = None
-    GENE_SETS_LOADER = None
 
     @staticmethod
     def get_gene_symbols(**kwargs):
@@ -249,19 +247,6 @@ class GeneSymsMixin(object):
             gene_symbols = gene_symbols.split()
 
         return set([g.strip() for g in gene_symbols])
-
-    @classmethod
-    def get_gene_weights(cls, **kwargs):
-        weights_id, range_start, range_end = \
-            GeneSymsMixin.get_gene_weights_query(**kwargs)
-        if not weights_id:
-            return set([])
-        if cls.GENE_WEIGHTS_LOADER is None:
-            cls.GENE_WEIGHTS_LOADER = WeightsLoader()
-        if weights_id not in cls.GENE_WEIGHTS_LOADER:
-            return set([])
-        weights = cls.GENE_SETS_LOADER[weights_id]
-        return weights.get_genes(wmin=range_start, wmax=range_end)
 
     @staticmethod
     def get_gene_weights_query(**kwargs):
@@ -284,37 +269,13 @@ class GeneSymsMixin(object):
         query = kwargs['geneSet']
         if 'geneSet' not in query or 'geneSetsCollection' not in query:
             return None, None, None
+        print(query)
         gene_sets_collection = query['geneSetsCollection']
         gene_set = query['geneSet']
         if not gene_sets_collection or not gene_set:
             return None, None, None
         gene_sets_types = query.get('geneSetsTypes', [])
         return gene_sets_collection, gene_set, gene_sets_types
-
-#     @classmethod
-#     def get_gene_set(cls, **kwargs):
-#         gene_sets_collection, gene_set, gene_sets_types = \
-#             GeneSymsMixin.get_gene_set_query(**kwargs)
-#         if not gene_sets_collection or not gene_set:
-#             return set([])
-#         if gene_sets_types is None:
-#             gene_sets_types = []
-#         if cls.GENE_SETS_LOADER is None:
-#             cls.GENE_SETS_LOADER = GeneSetsCollections()
-#         genes = cls.GENE_SETS_LOADER.get_gene_set(
-#             gene_sets_collection, gene_set, gene_sets_types)
-#         print(genes)
-#         return set([])
-
-    @classmethod
-    def get_gene_syms(cls, **kwargs):
-        result = cls.get_gene_symbols(**kwargs) | \
-            cls.get_gene_weights(**kwargs) | \
-            cls.get_gene_set(**kwargs)
-        if result:
-            return result
-        else:
-            return None
 
 
 class RegionsMixin(object):

@@ -6,12 +6,16 @@ Created on Feb 9, 2017
 from DAE import pheno, vDB
 import itertools
 from query_variants import generate_response
-from common.query_base import QueryBase
+from common.query_base import QueryBase, GeneSymsMixin
 from collections import Counter
 from datasets.config import DatasetsConfig
+from gene.gene_set_collections import GeneSetsCollections
+from gene.weights import WeightsLoader
 
 
 class Dataset(QueryBase):
+    GENE_WEIGHTS_LOADER = None
+    GENE_SETS_LOADER = None
 
     def __init__(self, dataset_descriptor):
         self.descriptor = dataset_descriptor
@@ -74,6 +78,45 @@ class Dataset(QueryBase):
                         seen.add(iid)
                 self._children_stats[phenotype] = counter
         return self._children_stats
+
+    @classmethod
+    def get_gene_set(cls, **kwargs):
+        print(kwargs)
+        gene_sets_collection, gene_set, gene_sets_types = \
+            GeneSymsMixin.get_gene_set_query(**kwargs)
+        if not gene_sets_collection or not gene_set:
+            return set([])
+        if gene_sets_types is None:
+            gene_sets_types = []
+        if cls.GENE_SETS_LOADER is None:
+            cls.GENE_SETS_LOADER = GeneSetsCollections()
+        genes = cls.GENE_SETS_LOADER.get_gene_set(
+            gene_sets_collection, gene_set, gene_sets_types)
+        print(genes)
+        return genes['syms']
+
+    @classmethod
+    def get_gene_weights(cls, **kwargs):
+        weights_id, range_start, range_end = \
+            GeneSymsMixin.get_gene_weights_query(**kwargs)
+        if not weights_id:
+            return set([])
+        if cls.GENE_WEIGHTS_LOADER is None:
+            cls.GENE_WEIGHTS_LOADER = WeightsLoader()
+        if weights_id not in cls.GENE_WEIGHTS_LOADER:
+            return set([])
+        weights = cls.GENE_SETS_LOADER[weights_id]
+        return weights.get_genes(wmin=range_start, wmax=range_end)
+
+    @classmethod
+    def get_gene_syms(cls, **kwargs):
+        result = cls.get_gene_symbols(**kwargs) | \
+            cls.get_gene_weights(**kwargs) | \
+            cls.get_gene_set(**kwargs)
+        if result:
+            return result
+        else:
+            return None
 
     def load(self):
         if self.families:

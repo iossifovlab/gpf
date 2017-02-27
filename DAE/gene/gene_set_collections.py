@@ -73,13 +73,13 @@ class GeneSetsCollection(GeneInfoConfig):
         return []
 
     def get_gene_set(self, gene_set_id, gene_sets_types=[], **kwargs):
-        assert self.gene_set_collection is not None
+        assert self.gene_sets_collections is not None
 
-        if gene_set_id not in self.gene_set_collection.t2G:
+        if gene_set_id not in self.gene_sets_collections.t2G:
             return None
-        syms = self.gene_set_collection.t2G[gene_set_id].keys()
+        syms = set(self.gene_sets_collections.t2G[gene_set_id].keys())
         count = len(syms)
-        desc = self.gene_set_collection.tDesc[gene_set_id]
+        desc = self.gene_sets_collections.tDesc[gene_set_id]
 
         return {
             "name": gene_set_id,
