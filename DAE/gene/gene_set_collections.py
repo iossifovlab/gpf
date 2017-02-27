@@ -245,11 +245,11 @@ class DenovoGeneSetsCollection(object):
         if mmin and measure:
             return {ge['sym']
                     for v in vs for ge in v.requestedGeneEffects
-                    if v.familyId in measure and measure[v.familyId] >= mmin}
+                    if measure.get(v.familyId, -1000) >= mmin}
         if mmax and measure:
             return {ge['sym']
                     for v in vs for ge in v.requestedGeneEffects
-                    if v.familyId in measure and measure[v.familyId] < mmax}
+                    if measure.get(v.familyId, 1000) < mmax}
         return None
 
     @staticmethod
@@ -351,8 +351,23 @@ class DenovoGeneSetsCollection(object):
         }
         return res
 
+    def get_measure(self, measure_id):
+        from pheno.pheno_factory import PhenoFactory
+        pf = PhenoFactory()
+        pheno_db = pf.get_pheno_db('ssc')
+        assert pheno_db is not None
+
+        nvIQ = pheno_db.get_measure_values(measure_id)
+        assert nvIQ is not None
+
+        res = {}
+        for person_id, value in nvIQ.items():
+            family_id = person_id.split('.')[0]
+            res[family_id] = value
+        return res
+
     def prb_set(self, studies):
-        nvIQ = {}  # get_measure('pcdv.ssc_diagnosis_nonverbal_iq')
+        nvIQ = self.get_measure('pheno_common.non_verbal_iq')
 
         res = {
             "LGDs": self.genes_sets(
