@@ -163,6 +163,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         cachename = self.config.get('cache', 'file')
         if not os.path.exists(cachename):
             return None
+
         with open(cachename, 'r') as infile:
             result = cPickle.load(infile)
             print(result)
@@ -170,6 +171,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def save_cache(self, computed):
         cachename = self.config.get('cache', 'file')
+        os.makedirs(os.path.dirname(cachename))
         with open(cachename, 'w') as outfile:
             cPickle.dump(computed, outfile)
 
