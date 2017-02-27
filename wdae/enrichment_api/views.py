@@ -172,6 +172,8 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
             result = builder.build()
             result = builder.serialize()
             result['desc'] = desc
+            result['children_stats'] = dataset.enrichment_children_stats
+            result['selector_domain'] = dataset.enrichment_selector_domain()
 
             return Response(result)
         except Exception:

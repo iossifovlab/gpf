@@ -102,6 +102,18 @@ class Dataset(QueryBase):
                 self._enrichment_families.update(st.families)
         return self._enrichment_families
 
+    def enrichment_selector_domain(self):
+        if not self.descriptor.get('enrichmentTool', None):
+            return None
+        selector = self.descriptor['enrichmentTool']['selector']
+        selector = self.get_pedigree_selector(
+            pedigreeSelector={'id': selector})
+        assert selector is not None
+        enrichment_selector_domain = [
+            s['id'] for s in selector['domain']
+        ]
+        return enrichment_selector_domain
+
     @property
     def enrichment_children_stats(self):
         if not self.descriptor.get('enrichmentTool', None):
