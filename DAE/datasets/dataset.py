@@ -29,6 +29,7 @@ class Dataset(QueryBase):
         self._denovo_studies = None
         self._transmitted_studies = None
         self._children_stats = None
+        self._enrichment_children_stats = None
         self._phenotypes = None
 
         self.load_pheno_db()
@@ -53,6 +54,15 @@ class Dataset(QueryBase):
                 if st.has_denovo
             ]
         return self._denovo_studies
+
+    @property
+    def enrichment_denovo_studies(self):
+        study_types = self.descriptor['enrichmentTool']['studyTypes']
+        studies = []
+        for st in self.denovo_studies:
+            if st.get_attr('study.type') in study_types:
+                studies.append(st)
+        return studies
 
     @property
     def transmitted_studies(self):
@@ -87,46 +97,40 @@ class Dataset(QueryBase):
         if not self._enrichment_families:
             study_types = self.descriptor['enrichmentTool']['studyTypes']
             assert study_types
-            families = {}
-            for st in self.denovo_studies:
-                if st.get_attr('study.type') not in study_types:
-                    continue
-                families.update(st.families)
-            self._enrichment_families = families
+            self._enrichment_families = {}
+            for st in self.enrichment_denovo_studies:
+                self._enrichment_families.update(st.families)
         return self._enrichment_families
 
     @property
     def enrichment_children_stats(self):
         if not self.descriptor.get('enrichmentTool', None):
             return None
-        print(self.descriptor['enrichmentTool']['selector'])
-        selector = self.descriptor['enrichmentTool']['selector']
-        study_types = self.descriptor['enrichmentTool']['studyTypes']
-        selector = self.get_pedigree_selector(
-            pedigreeSelector={'id': selector})
-        assert selector is not None
-        print(selector)
-        selector_id = selector['id']
-        print(study_types)
-        enrichment_selector_domain = [
-            s['id'] for s in selector['domain']
-        ]
-        print(enrichment_selector_domain)
-        result = {}
-        for selector_value in enrichment_selector_domain:
-            seen = set()
-            counter = Counter()
-            for fid, fam in self.enrichment_families.items():
-                for p in fam.memberInOrder[2:]:
-                    iid = "{}:{}".format(fid, p.personId)
-                    if iid in seen:
-                        continue
-                    if p.atts[selector_id] != selector_value:
-                        continue
-                    counter[p.gender] += 1
-                    seen.add(iid)
-            result[selector_value] = counter
-        return result
+        if self._enrichment_children_stats is None:
+            selector = self.descriptor['enrichmentTool']['selector']
+            selector = self.get_pedigree_selector(
+                pedigreeSelector={'id': selector})
+            assert selector is not None
+            selector_id = selector['id']
+            enrichment_selector_domain = [
+                s['id'] for s in selector['domain']
+            ]
+            result = {}
+            for selector_value in enrichment_selector_domain:
+                seen = set()
+                counter = Counter()
+                for fid, fam in self.enrichment_families.items():
+                    for p in fam.memberInOrder[2:]:
+                        iid = "{}:{}".format(fid, p.personId)
+                        if iid in seen:
+                            continue
+                        if p.atts[selector_id] != selector_value:
+                            continue
+                        counter[p.gender] += 1
+                        seen.add(iid)
+                result[selector_value] = counter
+            self._enrichment_children_stats = result
+        return self._enrichment_children_stats
 
     @classmethod
     def get_gene_set(cls, **kwargs):
