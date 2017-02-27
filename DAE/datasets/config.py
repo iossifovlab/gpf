@@ -7,7 +7,7 @@ import ConfigParser
 
 from Config import Config
 import collections
-# from pprint import pprint
+from pprint import pprint
 
 
 class PedigreeSelector(dict):
@@ -131,6 +131,18 @@ class DatasetsConfig(object):
             'hasPedigreeSelector': pedigree_selector,
         }
 
+    def _get_enrichment_tool(self, section):
+        if not self._get_boolean(section, 'enrichmentTool'):
+            return None
+        selector = self._get_string(section, 'enrichmentTool.selector')
+        study_types = self._get_string(section, 'enrichmentTool.studyTypes')
+        if study_types:
+            study_types = [st.strip() for st in study_types.split(',')]
+        return {
+            'selector': selector,
+            'studyTypes': study_types,
+        }
+
     def _get_pedigree_selectors(self, section):
         params = collections.defaultdict(dict)
 
@@ -169,10 +181,11 @@ class DatasetsConfig(object):
             study_types = [st for st in study_types.split(',')]
 
         pheno_db = self._get_string(section, 'phenoDB')
-        enrichment_tool = self._get_boolean(section, 'enrichmentTool')
         pheno_geno_tool = self._get_boolean(section, 'phenoGenoTool')
         phenotype_browser = self._get_boolean(section, 'phenotypeBrowser')
         genotype_browser = self._get_genotype_browser(section)
+        enrichment_tool = self._get_enrichment_tool(section)
+        pprint(enrichment_tool)
         # pprint(genotype_browser)
 
         pedigree_selectors = self._get_pedigree_selectors(section)
