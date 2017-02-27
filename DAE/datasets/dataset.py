@@ -21,6 +21,9 @@ class Dataset(QueryBase):
         self.descriptor = dataset_descriptor
         self.pheno_db = None
         self.families = None
+        self.persons = None
+
+        self._enrichment_families = None
 
         self._studies = None
         self._denovo_studies = None
@@ -78,6 +81,52 @@ class Dataset(QueryBase):
                         seen.add(iid)
                 self._children_stats[phenotype] = counter
         return self._children_stats
+
+    @property
+    def enrichment_families(self):
+        if not self._enrichment_families:
+            study_types = self.descriptor['enrichmentTool']['studyTypes']
+            assert study_types
+            families = {}
+            for st in self.denovo_studies:
+                if st.get_attr('study.type') not in study_types:
+                    continue
+                families.update(st.families)
+            self._enrichment_families = families
+        return self._enrichment_families
+
+    @property
+    def enrichment_children_stats(self):
+        if not self.descriptor.get('enrichmentTool', None):
+            return None
+        print(self.descriptor['enrichmentTool']['selector'])
+        selector = self.descriptor['enrichmentTool']['selector']
+        study_types = self.descriptor['enrichmentTool']['studyTypes']
+        selector = self.get_pedigree_selector(
+            pedigreeSelector={'id': selector})
+        assert selector is not None
+        print(selector)
+        selector_id = selector['id']
+        print(study_types)
+        enrichment_selector_domain = [
+            s['id'] for s in selector['domain']
+        ]
+        print(enrichment_selector_domain)
+        result = {}
+        for selector_value in enrichment_selector_domain:
+            seen = set()
+            counter = Counter()
+            for fid, fam in self.enrichment_families.items():
+                for p in fam.memberInOrder[2:]:
+                    iid = "{}:{}".format(fid, p.personId)
+                    if iid in seen:
+                        continue
+                    if p.atts[selector_id] != selector_value:
+                        continue
+                    counter[p.gender] += 1
+                    seen.add(iid)
+            result[selector_value] = counter
+        return result
 
     @classmethod
     def get_gene_set(cls, **kwargs):
@@ -160,10 +209,10 @@ class Dataset(QueryBase):
                 assert self.pheno_db is not None
                 measure_id = '{}.{}'.format(instrument, measure)
                 assert self.pheno_db.has_measure(measure_id)
-                self.supplement_pedigree_selector(
+                self._augment_pedigree_selector(
                     pedigree_selector, measure_id)
 
-    def supplement_pedigree_selector(self, pedigree_selector, measure_id):
+    def _augment_pedigree_selector(self, pedigree_selector, measure_id):
         assert self.families
         pedigree_id = pedigree_selector['id']
         default_value = pedigree_selector['default']['id']
