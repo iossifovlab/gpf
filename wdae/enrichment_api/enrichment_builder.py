@@ -33,10 +33,11 @@ class EnrichmentBuilder(object):
     def build_phenotype(self, phenotype):
         results = {}
         studies = self.dataset.denovo_studies
-        studies = [
-            st for st in studies
-            if phenotype == st.get_attr('study.phenotype')
-        ]
+        if phenotype != 'unaffected':
+            studies = [
+                st for st in studies
+                if phenotype == st.get_attr('study.phenotype')
+            ]
         for effect_type in self.EFFECT_TYPES:
             enrichment_results = self.tool.calc(
                 studies,

@@ -22,7 +22,7 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
-    def test_gene_set_denovo_lgds_rec(self):
+    def test_gene_set_denovo_lgds_rec_sd(self):
         data = {
             'enrichmentBackgroundModel': 'synonymousBackgroundModel',
             'enrichmentCountingModel': 'enrichmentGeneCounting',
@@ -39,10 +39,10 @@ class Test(APITestCase):
         pprint(response.data)
         data = response.data
 
-        assert 546 == data['autism']['LGDs']['all']['count']
-        assert 45 == data['autism']['LGDs']['rec']['count']
+        self.assertEquals(546, data['autism']['LGDs']['all']['count'])
+        self.assertEquals(45, data['autism']['LGDs']['rec']['count'])
 
-    def test_gene_set_denovo_main_autism_candidates(self):
+    def test_gene_set_denovo_main_autism_candidates_sd(self):
         data = {
             'enrichmentBackgroundModel': 'synonymousBackgroundModel',
             'enrichmentCountingModel': 'enrichmentGeneCounting',
@@ -58,5 +58,27 @@ class Test(APITestCase):
         pprint(response.data)
         data = response.data
 
-        assert 546 == data['autism']['LGDs']['all']['count']
-        assert 45 == data['autism']['LGDs']['rec']['count']
+        self.assertEquals(546, data['autism']['LGDs']['all']['count'])
+        self.assertEquals(45, data['autism']['LGDs']['rec']['count'])
+
+        self.assertEquals(222, data['unaffected']['LGDs']['all']['count'])
+
+    def test_gene_set_denovo_lgds_rec_ssc(self):
+        data = {
+            'enrichmentBackgroundModel': 'synonymousBackgroundModel',
+            'enrichmentCountingModel': 'enrichmentGeneCounting',
+            'geneSet': {
+                'geneSetsCollection': 'denovo',
+                'geneSet': 'LGDs.Recurrent',
+                'geneSetsTypes': ['autism'],
+            }
+        }
+        url = '/api/v3/enrichment/test/SSC'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        pprint(response.data)
+        data = response.data
+
+        self.assertEquals(388, data['autism']['LGDs']['all']['count'])
+        self.assertEquals(28, data['autism']['LGDs']['rec']['count'])
