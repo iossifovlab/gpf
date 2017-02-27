@@ -68,7 +68,6 @@ class EnrichmentBuilder(object):
         return res
 
     def serialize_helper(self, result):
-        print(type(result))
         if isinstance(result, EnrichmentResult):
             return self.serialize_enrichment_result(result)
         else:

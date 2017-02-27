@@ -12,6 +12,7 @@ import traceback
 import precompute
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 from common.query_base import GeneSymsMixin
+from enrichment_api.enrichment_builder import EnrichmentBuilder
 
 
 class EnrichmentModelsMixin(object):
@@ -111,15 +112,38 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
         self.datasets_factory = self.datasets.get_factory()
 
     def enrichment_description(self, query):
-        gene_set = GeneSymsMixin.get_gene_set(**query)
+        gene_sets_collection, gene_set, gene_sets_types = \
+            GeneSymsMixin.get_gene_set_query(**query)
         if gene_set:
-            pass
-        gene_weights = GeneSymsMixin.get_gene_weights()
-        if gene_weights:
-            pass
+            if gene_sets_types:
+                desc = "Gene Set: {} - {} ({})".format(
+                    gene_sets_collection,
+                    gene_set,
+                    ','.join(gene_sets_types))
+            else:
+                desc = "Gene Set: {} - {}".format(
+                    gene_sets_collection,
+                    gene_set)
+            return desc
+        weights_id, range_start, range_end = \
+            GeneSymsMixin.get_gene_weights_query(**query)
+        if weights_id:
+            if range_start and range_end:
+                desc = "Gene Weights: {} from {} upto {}".format(
+                    weights_id, range_start, range_end)
+            elif range_start:
+                desc = "Gene Weights: {} from {}".format(
+                    weights_id, range_start)
+            elif range_end:
+                desc = "Gene Weights: {} upto {}".format(
+                    weights_id, range_end)
+            else:
+                desc = "Gene Weights: {}".format(weights_id)
+            return desc
         gene_syms = GeneSymsMixin.get_gene_symbols()
         if gene_syms:
-            pass
+            desc = "Gene Symbols: {}".format(gene_syms)
+            return desc
         return None
 
     def post(self, request, dataset_id):
@@ -134,13 +158,22 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
         dataset = self.datasets_factory.get_dataset(dataset_id)
 
         gene_syms = dataset.get_gene_syms(**query)
+        print(gene_syms)
         if gene_syms is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
+        desc = self.enrichment_description(query)
+        desc = "{} ({})".format(desc, len(gene_syms))
         try:
             enrichment_model = self.get_enrichment_model(query)
+            builder = EnrichmentBuilder(
+                dataset,
+                enrichment_model,
+                gene_syms)
+            result = builder.build()
+            result = builder.serialize()
+            result['desc'] = desc
 
-            return Response(dataset_desc)
+            return Response(result)
         except Exception:
             print("error while processing genotype query")
             traceback.print_exc()
