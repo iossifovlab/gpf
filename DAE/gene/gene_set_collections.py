@@ -3,6 +3,7 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+import os
 from gene.config import GeneInfoConfig
 import sqlite3
 # from denovo_gene_sets import build_denovo_gene_sets
@@ -10,6 +11,7 @@ from GeneTerms import loadGeneTerm, GeneTerms
 import traceback
 from DAE import vDB
 from itertools import groupby
+from ipykernel.serialize import cPickle
 
 
 class CacheMixin(object):
@@ -107,7 +109,7 @@ class DenovoGeneSetsType(object):
         return keys
 
 
-class DenovoGeneSetsCollection(object):
+class DenovoGeneSetsCollection(GeneInfoConfig):
     GENE_SETS_TYPES = [
         'autism',
         'congenital heart disease',
@@ -151,12 +153,32 @@ class DenovoGeneSetsCollection(object):
     DENOVO_STUDIES_COLLECTION = "ALL WHOLE EXOME"
 
     def __init__(self):
+        super(DenovoGeneSetsCollection, self).__init__()
+
         self.gene_sets_types = self.GENE_SETS_TYPES
         self.gene_sets_collection_desc = None
         self.gene_sets_names = None
 
+    def load_cache(self):
+        cachename = self.config.get('cache', 'file')
+        if not os.path.exists(cachename):
+            return None
+        with open(cachename, 'r') as infile:
+            result = cPickle.load(infile)
+            print(result)
+            return result
+
+    def save_cache(self, computed):
+        cachename = self.config.get('cache', 'file')
+        with open(cachename, 'w') as outfile:
+            cPickle.dump(computed, outfile)
+
     def load(self):
-        computed = self.build_denovo_gene_sets()
+        computed = self.load_cache()
+        if computed is None:
+            computed = self.build_denovo_gene_sets()
+            self.save_cache(computed)
+
         self.gene_sets_collection = {}
         for gene_sets_type, gene_term in computed.items():
             self.gene_sets_collection[gene_sets_type] = \
