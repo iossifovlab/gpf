@@ -14,6 +14,7 @@ import { PresentInParentState, presentInParentReducer } from '../present-in-pare
 import { GeneSymbolsState, geneSymbolsReducer } from '../gene-symbols/gene-symbols';
 import { RegionsFilterState, regionsFilterReducer } from '../regions-filter/regions-filter';
 import { GeneSetsState, geneSetsReducer } from '../gene-sets/gene-sets-state';
+import { UsersState, usersReducer } from '../users/users-store';
 
 export interface GpfState {
   datasets: DatasetsState;
@@ -27,6 +28,7 @@ export interface GpfState {
   geneSymbols: GeneSymbolsState;
   regionsFilter: RegionsFilterState;
   geneSets: GeneSetsState;
+  users: UsersState;
 };
 
 const reducers = {
@@ -40,7 +42,8 @@ const reducers = {
   presentInParent: presentInParentReducer,
   geneSymbols: geneSymbolsReducer,
   regionsFilter: regionsFilterReducer,
-  geneSets: geneSetsReducer
+  geneSets: geneSetsReducer,
+  users: usersReducer
 };
 
 const productionReducer: ActionReducer<GpfState> = combineReducers(reducers);

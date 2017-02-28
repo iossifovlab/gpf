@@ -41,6 +41,9 @@ import { GeneSetsService } from './gene-sets/gene-sets.service';
 import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
 import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 
+import { UsersComponent } from './users/users.component';
+import { UsersService } from './users/users.service';
+
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
 import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
 
@@ -74,7 +77,8 @@ import { gpfReducer } from './store/gpf-store';
     PresentInParentComponent,
     GeneSymbolsComponent,
     RegionsFilterComponent,
-    RegionsFilterValidatorDirective
+    RegionsFilterValidatorDirective,
+    UsersComponent
   ],
   imports: [
     BrowserModule,
@@ -94,7 +98,8 @@ import { gpfReducer } from './store/gpf-store';
     QueryService,
     { provide: RequestOptions, useClass: CustomRequestOptions },
     GeneWeightsService,
-    GeneSetsService
+    GeneSetsService,
+    UsersService
   ],
   bootstrap: [AppComponent]
 })

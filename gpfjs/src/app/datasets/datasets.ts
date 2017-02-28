@@ -98,6 +98,7 @@ export class Dataset extends IdName {
     return new Dataset(
       json['id'],
       json['name'],
+      json['accessRights'],
       json['studies'],
       json['studyTypes'],
       json['phenoDB'],
@@ -113,7 +114,6 @@ export class Dataset extends IdName {
     if (!jsonArray) {
       return undefined;
     }
-
     return jsonArray.map((json) => Dataset.fromJson(json));
   }
 
@@ -121,6 +121,7 @@ export class Dataset extends IdName {
   constructor(
     readonly id: string,
     readonly name: string,
+    readonly accessRights: boolean,
     readonly studies: string[],
     readonly studyTypes: string[],
     readonly phenoDB: string,
@@ -164,4 +165,3 @@ export function datasetsReducer(state: DatasetsState = initialDatasetState, acti
       return state;
   }
 }
-

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response } from '@angular/http';
+import { Headers, Http, Response, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs';
 
 import { IdDescription } from '../common/iddescription';
@@ -32,9 +32,10 @@ export class DatasetsService {
   }
 
   getDatasets(): Observable<Dataset[]> {
+    let options = new RequestOptions({ withCredentials: true });
     console.log('getting datsets from: ', this.datasetUrl);
     return this.http
-      .get(this.datasetUrl)
+      .get(this.datasetUrl, options)
       .map(res => {
         let datasets = Dataset.fromJsonArray(res.json().data);
         this.store.dispatch({

@@ -1,8 +1,13 @@
+import {
+  UsersState
+} from '../users/users-store';
 import { Component, OnInit } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, DatasetsState } from './datasets';
 
 import { IdName } from '../common/idname';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
 
 
 @Component({
@@ -15,18 +20,26 @@ export class DatasetsComponent implements OnInit {
   datasets: Dataset[];
   selectedDataset: Dataset;
 
+  usersState: Observable<UsersState>;
+
   constructor(
+    private store: Store<any>,
     private datasetsService: DatasetsService,
   ) {
+    this.usersState = this.store.select('users');
   }
 
   ngOnInit() {
-    this.datasetsService.getDatasets().subscribe(
-      (datasets) => {
+    this.usersState.subscribe(
+      state => {
+        this.datasetsService.getDatasets().subscribe(
+          (datasets) => {
 
-        this.datasets = datasets;
-        this.selectDataset(0);
-      });
+            this.datasets = datasets;
+            this.selectDataset(0);
+          });
+      }
+    );
   }
 
   selectDataset(index: number): void {

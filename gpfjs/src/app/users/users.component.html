@@ -1,0 +1,15 @@
+<div *ngIf="displayedUsername">
+  {{ displayedUsername }}
+  <input type="button" class="btn" type="button" (click)="logout()" value="Logout" />
+</div>
+<div *ngIf="!displayedUsername" class="dropdown">
+
+  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown">
+    Login
+  </button>
+  <div class="dropdown-menu dropdown-menu-right">
+    Username:<input [(ngModel)]="username" type="text">
+    Password:<input [(ngModel)]="password" type="password">
+    <input type="button" value="Submit" (click)="login()">
+  </div>
+</div>

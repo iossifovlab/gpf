@@ -18,7 +18,8 @@
             *ngFor="let dataset of datasets; let i=index"
             class="dropdown-item"
             (click)="selectDataset(i)"
-            href="#">{{ dataset.name }}</a>
+            href="#"
+            [style.opacity]="dataset.accessRights ? 1.0 : 0.3">{{ dataset.name }}</a>
         </div>
       </div>
     </div>
@@ -49,6 +50,8 @@
             href="#">Phenotype Browser</a></li>
       </ul>
     </div>
+
+    <gpf-users></gpf-users>
   </nav>
 
 </div>
