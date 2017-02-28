@@ -51,6 +51,7 @@ import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 import { gpfReducer } from './store/gpf-store';
+import { StudyTypesComponent } from './study-types/study-types.component';
 
 @NgModule({
   declarations: [
@@ -78,7 +79,8 @@ import { gpfReducer } from './store/gpf-store';
     GeneSymbolsComponent,
     RegionsFilterComponent,
     RegionsFilterValidatorDirective,
-    UsersComponent
+    UsersComponent,
+    StudyTypesComponent
   ],
   imports: [
     BrowserModule,

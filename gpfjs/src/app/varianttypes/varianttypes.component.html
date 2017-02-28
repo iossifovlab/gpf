@@ -1,6 +1,5 @@
 <div
-  class="varianttypes-card card"
-  style="height: 50%;">
+  class="varianttypes-card card">
   <div class="card-header card-title">Variant Types</div>
   <div class="card-block">
     <div class="btn-group btn-group-sm">
@@ -35,5 +34,14 @@
         (change)="variantTypesCheckValue('del',delCheckbox.checked)"> del
       </label>
     </div>
+
+    <div *ngIf="hasCNV | async" class="checkbox">
+      <label> <input
+        #cnvCheckbox
+        type="checkbox"
+        [checked]="cnv"
+        (change)="variantTypesCheckValue('cnv',cnvCheckbox.checked)"> CNV
+      </label>
+    </div>    
   </div>
 </div>

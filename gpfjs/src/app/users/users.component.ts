@@ -8,8 +8,8 @@ import { USER_LOGIN, USER_LOGOUT } from './users-store'
   templateUrl: './users.component.html',
 })
 export class UsersComponent implements OnInit {
-  private username: string;
-  private password: string;
+  private username = "admin@iossifovlab.com";
+  private password = "secret";
   private displayedUsername: string;
 
   constructor(
@@ -25,9 +25,9 @@ export class UsersComponent implements OnInit {
     this.usersService.getUserInfo().subscribe(
       (username) => {
         this.displayedUsername = username;
-        this.store.dispatch({
+        /*this.store.dispatch({
           'type': username ? USER_LOGIN : USER_LOGOUT,
-        });
+        });*/
     });
   }
 

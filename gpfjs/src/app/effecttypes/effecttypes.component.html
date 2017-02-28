@@ -22,15 +22,15 @@
     <div class="row">
 
       <gpf-effecttypes-column
-        [ngClass]="(hasCNV|async)?'col-lg-4':'col-lg-6'"
         [columnName]="'Coding'"
         [effectTypesLabels]="codingColumn"
         [effectTypes]="effectTypes"
-        (effectTypeEvent)="onEffectTypeChange($event)">
+        (effectTypeEvent)="onEffectTypeChange($event)"
+        class="col-lg-6">
       </gpf-effecttypes-column>
 
+      <div class="col-lg-6">
       <gpf-effecttypes-column
-        [ngClass]="(hasCNV|async)?'col-lg-4':'col-lg-6'"
         [columnName]="'Noncoding'"
         [effectTypesLabels]="nonCodingColumn"
         [effectTypes]="effectTypes"
@@ -44,7 +44,7 @@
         [effectTypes]="effectTypes"
         (effectTypeEvent)="onEffectTypeChange($event)">
       </gpf-effecttypes-column>
-
+      </div>
     </div>
   </div>
 </div>

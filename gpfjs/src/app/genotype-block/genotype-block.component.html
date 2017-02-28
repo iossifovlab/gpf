@@ -1,28 +1,29 @@
 
 <div class="genotype-block">
-  <div class="row row-eq-height">
-    <div class="col-lg-4">
-      <gpf-pedigree-selector></gpf-pedigree-selector>
-    </div>
+	<div class="row row-eq-height">
+		<div *ngIf="hasPedigreeSelector | async" class="col-lg-3">
+			<gpf-pedigree-selector></gpf-pedigree-selector>
+		</div>
+		<div *ngIf="hasPresentInChild | async" class="col-lg-3">
+			<gpf-present-in-child></gpf-present-in-child>
+		</div>
+		<div *ngIf="hasPresentInParent | async" class="col-lg-3">
+			<gpf-present-in-parent></gpf-present-in-parent>
+		</div>
 
-    <div class="col-lg-2 panel-row">
-      <gpf-gender></gpf-gender>
-      <gpf-varianttypes></gpf-varianttypes>
-    </div>
+		<div class="col-lg-2 panel-row">
+		  <div style="height: 50%;">
+			<gpf-gender></gpf-gender>
+		  </div>
+		  <div style="height: 50%;">
+			<gpf-varianttypes></gpf-varianttypes>
+		  </div>
+		</div>
 
+        <div *ngIf="hasStudyTypes | async" class="col-lg-2">
+            <gpf-study-types></gpf-study-types>
+        </div>
+		<gpf-effecttypes class="panel-row col-lg-4"> </gpf-effecttypes>
+	</div>
 
-    <gpf-effecttypes
-      class="panel-row"
-      [ngClass]="(hasCNV|async)?'col-lg-6':'col-lg-4'">
-    </gpf-effecttypes>
-  </div>
-
-  <div class="row row-eq-height">
-    <div class="col-lg-4">
-      <gpf-present-in-child></gpf-present-in-child>
-    </div>
-    <div class="col-lg-4">
-      <gpf-present-in-parent></gpf-present-in-parent>
-    </div>
-  </div>
 </div>

@@ -1,5 +1,5 @@
-<div class="gender-card card">
-    <div class="card-header card-title">Child Gender</div>
+<div class="study-types-card card">
+    <div class="card-header card-title">Study Types</div>
     <div class="card-block">
         <div class="btn-group btn-group-sm">
             <button (click)="selectAll()"
@@ -9,21 +9,21 @@
         </div>
         <div class="checkbox">
           <label>
-            <input #maleCheckbox
+            <input #weCheckbox
                 type="checkbox"
-                [checked]="male"
-                (change)="genderCheckValue('male',maleCheckbox.checked)">
-            <span class="gender-icon male" ></span>
+                [checked]="we"
+                (change)="studyTypesCheckValue('we',wgCheckbox.checked)">
+            <span>WG</span>
           </label>
         </div>
         <div class="checkbox">
           <label>
             <input
-                #femaleCheckbox
+                #tgCheckbox
                 type="checkbox"
-                [checked]="female"
-                (change)="genderCheckValue('female',femaleCheckbox.checked)">
-            <span class="gender-icon female"></span>
+                [checked]="tg"
+                (change)="studyTypesCheckValue('tg',tgCheckbox.checked)">
+            <span>TG</span>
           </label>
         </div>
     </div>
