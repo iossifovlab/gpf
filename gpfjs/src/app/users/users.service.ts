@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import 'rxjs/add/operator/toPromise';
 
 import { ConfigService } from '../config/config.service';
-
+import { CookieService } from 'angular2-cookie/core';
 
 @Injectable()
 export class UsersService {
@@ -15,14 +15,17 @@ export class UsersService {
 
   constructor(
     private http: Http,
-    private config: ConfigService
+    private config: ConfigService,
+    private cookieService: CookieService
   ) {
 
   }
 
   logout(): Observable<boolean> {
-    let options = new RequestOptions({ withCredentials: true });
-
+    let csrfToken = this.cookieService.get("csrftoken");
+    let headers = new Headers({ 'X-CSRFToken': csrfToken });
+    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    
     return this.http.post(this.logoutUrl, {}, options)
       .map(res => {
         return true;
@@ -30,7 +33,9 @@ export class UsersService {
   }
 
   login(username: string, password: string): Observable<boolean> {
-    let options = new RequestOptions({ withCredentials: true });
+    let csrfToken = this.cookieService.get("csrftoken");
+    let headers = new Headers({ 'X-CSRFToken': csrfToken });
+    let options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return this.http.post(this.loginUrl, { username: username, password: password }, options)
       .map(res => {

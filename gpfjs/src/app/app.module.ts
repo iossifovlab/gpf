@@ -53,6 +53,9 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { gpfReducer } from './store/gpf-store';
 import { StudyTypesComponent } from './study-types/study-types.component';
 
+import { CookieService } from 'angular2-cookie/services/cookies.service';
+
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -91,7 +94,7 @@ import { StudyTypesComponent } from './study-types/study-types.component';
     PedigreeChartModule,
     HistogramModule,
     StoreModule.provideStore(gpfReducer),
-    StoreDevtoolsModule.instrumentOnlyWithExtension(),
+    StoreDevtoolsModule.instrumentOnlyWithExtension()
 
   ],
   providers: [
@@ -101,7 +104,8 @@ import { StudyTypesComponent } from './study-types/study-types.component';
     { provide: RequestOptions, useClass: CustomRequestOptions },
     GeneWeightsService,
     GeneSetsService,
-    UsersService
+    UsersService,
+    CookieService
   ],
   bootstrap: [AppComponent]
 })
