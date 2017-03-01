@@ -58,6 +58,7 @@ import { CookieService } from 'angular2-cookie/services/cookies.service';
 import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component'
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component'
 import { GpfTabsetComponent } from './tabset/tabset.component'
+import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component'
 
 @NgModule({
   declarations: [
@@ -89,7 +90,8 @@ import { GpfTabsetComponent } from './tabset/tabset.component'
     StudyTypesComponent,
     GenotypeBrowserComponent,
     GpfTabsetComponent,
-    EnrichmentToolComponent
+    EnrichmentToolComponent,
+    EnrichmentModelsComponent
   ],
   imports: [
     BrowserModule,
