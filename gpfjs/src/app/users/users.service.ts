@@ -35,16 +35,19 @@ export class UsersService {
     return this.http.post(this.loginUrl, { username: username, password: password }, options)
       .map(res => {
         return true;
+      })
+      .catch(error => {
+        return Observable.of(false);
       });
   }
 
-  getUserInfo(): Observable<string> {
+  getUserInfo(): Observable<any> {
     let options = new RequestOptions({ withCredentials: true });
 
     return this.http
       .get(this.userInfoUrl, options)
       .map(res => {
-        return res.json().email;
+        return res.json();
       });
   }
 }

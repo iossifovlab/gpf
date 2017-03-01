@@ -11,5 +11,8 @@
     Username:<input [(ngModel)]="username" type="text">
     Password:<input [(ngModel)]="password" type="password">
     <input type="button" value="Submit" (click)="login()">
+    <div *ngIf="loginError" class="alert alert-danger">
+      Wrong username or password
+    </div>
   </div>
 </div>

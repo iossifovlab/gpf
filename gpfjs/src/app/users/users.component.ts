@@ -8,9 +8,10 @@ import { USER_LOGIN, USER_LOGOUT } from './users-store'
   templateUrl: './users.component.html',
 })
 export class UsersComponent implements OnInit {
-  private username = "admin@iossifovlab.com";
-  private password = "secret";
+  private username;
+  private password;
   private displayedUsername: string;
+  private loginError = false;
 
   constructor(
     private store: Store<any>,
@@ -23,18 +24,25 @@ export class UsersComponent implements OnInit {
 
   reloadUserData() {
     this.usersService.getUserInfo().subscribe(
-      (username) => {
-        this.displayedUsername = username;
-        /*this.store.dispatch({
-          'type': username ? USER_LOGIN : USER_LOGOUT,
-        });*/
+      (userData) => {
+        this.displayedUsername = userData.email;
+        this.store.dispatch({
+          'type': userData.loggedIn ? USER_LOGIN : USER_LOGOUT,
+        });
     });
   }
 
   login() {
     this.usersService.login(this.username, this.password).subscribe(
       (res) => {
-        this.reloadUserData();
+        if (res) {
+          this.reloadUserData();
+          this.loginError = false;
+        }
+        else {
+          this.loginError = true;
+        }
+
     });
   }
 
