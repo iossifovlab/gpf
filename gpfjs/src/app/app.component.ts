@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
 import { Dataset } from './datasets/datasets';
 
-// import './rxjs-operators';
-
 @Component({
   selector: 'gpf-root',
   templateUrl: './app.component.html',

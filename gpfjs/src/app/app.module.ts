@@ -56,6 +56,7 @@ import { StudyTypesComponent } from './study-types/study-types.component';
 import { CookieService } from 'angular2-cookie/services/cookies.service';
 
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component'
+import { GpfTabsetComponent } from './tabset/tabset.component'
 
 @NgModule({
   declarations: [
@@ -85,7 +86,8 @@ import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.co
     RegionsFilterValidatorDirective,
     UsersComponent,
     StudyTypesComponent,
-    GenotypeBrowserComponent
+    GenotypeBrowserComponent,
+    GpfTabsetComponent
   ],
   imports: [
     BrowserModule,
