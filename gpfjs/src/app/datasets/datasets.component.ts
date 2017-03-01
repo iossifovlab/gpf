@@ -1,7 +1,7 @@
 import {
   UsersState
 } from '../users/users-store';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, DatasetsState } from './datasets';
 
@@ -19,6 +19,7 @@ export class DatasetsComponent implements OnInit {
   private registerAlertVisible = false;
   datasets: Dataset[];
   selectedDataset: Dataset;
+  @Output() selectedDatasetChange = new EventEmitter<Dataset>();
 
   usersState: Observable<UsersState>;
 
@@ -48,6 +49,7 @@ export class DatasetsComponent implements OnInit {
         this.selectedDataset = this.datasets[index];
         this.datasetsService.setSelectedDataset(this.selectedDataset);
         this.registerAlertVisible = false;
+        this.selectedDatasetChange.emit(this.selectedDataset);
       }
       else {
         this.registerAlertVisible = true;

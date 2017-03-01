@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Dataset } from './datasets/datasets';
 
 // import './rxjs-operators';
 
@@ -8,6 +9,7 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
+  selectedDataset: Dataset;
   genotypePreviewsArray: any;
   title = 'GPF: Genotypes and Phenotypes in Families';
 
