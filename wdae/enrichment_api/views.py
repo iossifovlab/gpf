@@ -92,7 +92,7 @@ class EnrichmentModelsMixin(object):
 
 class EnrichmentModelsView(APIView, EnrichmentModelsMixin):
 
-    def get(self, request, dataset_id, enrichment_model_type):
+    def get(self, request, enrichment_model_type):
         if enrichment_model_type == 'background':
             return Response(self.BACKGROUND_MODELS)
         if enrichment_model_type == 'counting':
