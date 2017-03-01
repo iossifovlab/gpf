@@ -125,6 +125,18 @@ export class QueryData {
     };
   }
 
+  private static prepareRegionsFilter(state: any): string[] {
+    let regionsFilter: string = state.regionsFilter.regionsFilter;
+    let result = regionsFilter
+      .split(/[\s]/)
+      .map(s => s.replace(/[,]/g, ''))
+      .filter(s => s !== '');
+    if (result.length === 0) {
+      return null;
+    }
+    return result;
+  }
+
   private static prepareGeneSymbols(state: any): string[] {
     let geneSymbols: GeneSymbolsState = state.geneSymbols;
     let result = geneSymbols.geneSymbols
@@ -171,6 +183,7 @@ export class QueryData {
     query.geneSymbols = QueryData.prepareGeneSymbols(state);
     query.geneSet = QueryData.prepareGeneSet(state);
     query.geneWeights = QueryData.prepareGeneWeights(state);
+    query.regions = QueryData.prepareRegionsFilter(state);
 
     return query;
   }
