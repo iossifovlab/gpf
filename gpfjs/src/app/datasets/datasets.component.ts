@@ -16,7 +16,7 @@ import { Observable } from 'rxjs';
   styleUrls: ['./datasets.component.css']
 })
 export class DatasetsComponent implements OnInit {
-
+  private registerAlertVisible = false;
   datasets: Dataset[];
   selectedDataset: Dataset;
 
@@ -44,8 +44,14 @@ export class DatasetsComponent implements OnInit {
 
   selectDataset(index: number): void {
     if (index >= 0 && index < this.datasets.length) {
-      this.selectedDataset = this.datasets[index];
-      this.datasetsService.setSelectedDataset(this.selectedDataset);
+      if (this.datasets[index].accessRights) {
+        this.selectedDataset = this.datasets[index];
+        this.datasetsService.setSelectedDataset(this.selectedDataset);
+        this.registerAlertVisible = false;
+      }
+      else {
+        this.registerAlertVisible = true;
+      }
     }
   }
 }
