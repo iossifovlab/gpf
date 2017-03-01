@@ -37,6 +37,8 @@ export class UsersComponent implements OnInit {
       (res) => {
         if (res) {
           this.reloadUserData();
+          this.username = null;
+          this.password = null;
           this.loginError = false;
         }
         else {
