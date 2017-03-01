@@ -242,7 +242,7 @@ class Dataset(QueryBase):
     def get_pedigree_selector(self, **kwargs):
         pedigrees = self.descriptor['pedigreeSelectors']
         pedigree = pedigrees[0]
-        if 'pedigreeSelector' in kwargs:
+        if kwargs.get('pedigreeSelector', None):
             assert 'id' in kwargs['pedigreeSelector']
             pedigreeSelectorId = kwargs['pedigreeSelector']['id']
             pedigree = self.idlist_get(pedigrees, pedigreeSelectorId)
@@ -263,7 +263,7 @@ class Dataset(QueryBase):
         return self._phenotypes
 
     def filter_families_by_pedigree_selector(self, **kwargs):
-        if 'pedigreeSelector' not in kwargs:
+        if not kwargs.get('pedigreeSelector', None):
             return None
         pedigree = self.get_pedigree_selector(**kwargs)
         pedigree_id = pedigree.id
