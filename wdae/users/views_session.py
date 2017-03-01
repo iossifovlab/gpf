@@ -60,6 +60,6 @@ def logout(request):
 def get_user_info(request):
     user = request.user
     if user.is_authenticated():
-        return Response({'email': user.email}, status.HTTP_200_OK)
+        return Response({'loggedIn': True, 'email': user.email}, status.HTTP_200_OK)
     else:
-        return Response(status.HTTP_200_OK)
+        return Response({'loggedIn': False}, status.HTTP_200_OK)
