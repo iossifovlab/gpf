@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { GENES_BLOCK_TAB_DESELECT } from '../store/common';
 import { Store } from '@ngrx/store';
 
@@ -8,6 +8,7 @@ import { Store } from '@ngrx/store';
   styleUrls: ['./genes-block.component.css']
 })
 export class GenesBlockComponent implements OnInit {
+  @Input() showAllTab = true;
 
   constructor(
     private store: Store<any>

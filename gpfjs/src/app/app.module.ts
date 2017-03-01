@@ -55,6 +55,7 @@ import { StudyTypesComponent } from './study-types/study-types.component';
 
 import { CookieService } from 'angular2-cookie/services/cookies.service';
 
+import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component'
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component'
 import { GpfTabsetComponent } from './tabset/tabset.component'
 
@@ -87,7 +88,8 @@ import { GpfTabsetComponent } from './tabset/tabset.component'
     UsersComponent,
     StudyTypesComponent,
     GenotypeBrowserComponent,
-    GpfTabsetComponent
+    GpfTabsetComponent,
+    EnrichmentToolComponent
   ],
   imports: [
     BrowserModule,

@@ -3,7 +3,7 @@
     <div class="card-header">Genes</div>
     <div class="card-block">
       <ngb-tabset (tabChange)="onTabChange($event)">
-        <ngb-tab id="all-genes" title="All">
+        <ngb-tab *ngIf="showAllTab" id="all-genes" title="All">
             <template ngbTabContent>
                 <p>All Genes</p>
             </template>

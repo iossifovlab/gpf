@@ -11,7 +11,7 @@
       </ngb-tab>
       <ngb-tab *ngIf="selectedDataset?.enrichmentTool" title="Enrichment Tool">
           <template ngbTabContent>
-            <div class="container">Enrichment Tool</div>
+            <gpf-enrichment-tool></gpf-enrichment-tool>
           </template>
       </ngb-tab>
       <ngb-tab *ngIf="selectedDataset?.phenotypeGenotypeTool" title="Phenotype Tool">
