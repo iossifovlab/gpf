@@ -286,7 +286,7 @@ class RegionsMixin(object):
 
     @classmethod
     def get_regions(cls, **kwargs):
-        if('regions' not in kwargs):
+        if not kwargs.get('regions', None):
             return None
         regions = kwargs['regions']
         if isinstance(regions, str) or \
