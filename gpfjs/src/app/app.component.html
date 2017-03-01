@@ -31,21 +31,5 @@
 
     <gpf-users></gpf-users>
   </nav>
-
-
-
-  <div class="container">
-    <gpf-genes-block></gpf-genes-block>
-    <gpf-regions-block></gpf-regions-block>
-    <gpf-genotype-block></gpf-genotype-block>
-    <gpf-query-submitter (genotypePreviewsArrayChange)="genotypePreviewsArray = $event"></gpf-query-submitter>
-  </div>
-  <!--
-  <div class="">
-    <gpf-gene-weights width="650" height="200"></gpf-gene-weights>
-  </div>
-  -->
-  <div class="">
-    <gpf-genotype-preview-table [genotypePreviewsArray]=genotypePreviewsArray></gpf-genotype-preview-table>
-  </div>
+  <gpf-genotype-browser></gpf-genotype-browser>
 </div>

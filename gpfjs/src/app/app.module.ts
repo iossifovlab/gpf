@@ -55,6 +55,7 @@ import { StudyTypesComponent } from './study-types/study-types.component';
 
 import { CookieService } from 'angular2-cookie/services/cookies.service';
 
+import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component'
 
 @NgModule({
   declarations: [
@@ -83,7 +84,8 @@ import { CookieService } from 'angular2-cookie/services/cookies.service';
     RegionsFilterComponent,
     RegionsFilterValidatorDirective,
     UsersComponent,
-    StudyTypesComponent
+    StudyTypesComponent,
+    GenotypeBrowserComponent
   ],
   imports: [
     BrowserModule,

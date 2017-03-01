@@ -1,0 +1,10 @@
+<div class="container">
+  <gpf-genes-block></gpf-genes-block>
+  <gpf-regions-block></gpf-regions-block>
+  <gpf-genotype-block></gpf-genotype-block>
+  <gpf-query-submitter (genotypePreviewsArrayChange)="genotypePreviewsArray = $event"></gpf-query-submitter>
+</div>
+
+<div class="">
+  <gpf-genotype-preview-table [genotypePreviewsArray]=genotypePreviewsArray></gpf-genotype-preview-table>
+</div>
