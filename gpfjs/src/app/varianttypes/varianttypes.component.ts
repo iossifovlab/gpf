@@ -19,7 +19,7 @@ export class VarianttypesComponent implements OnInit {
   sub: boolean = true;
   ins: boolean = true;
   del: boolean = true;
-  cnv: boolean = true;
+  CNV: boolean = true;
 
   variantTypesState: Observable<VariantTypesState>;
   hasCNV: Observable<boolean>;
@@ -46,6 +46,7 @@ export class VarianttypesComponent implements OnInit {
         this.sub = variantTypesState.sub;
         this.ins = variantTypesState.ins;
         this.del = variantTypesState.del;
+        this.CNV = variantTypesState.CNV;
       }
     );
   }

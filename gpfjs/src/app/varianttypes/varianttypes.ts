@@ -3,14 +3,14 @@ export interface VariantTypesState {
   sub: boolean;
   ins: boolean;
   del: boolean;
-  cnv: boolean;
+  CNV: boolean;
 };
 
 const initialState: VariantTypesState = {
   sub: true,
   ins: true,
   del: true,
-  cnv: true,
+  CNV: true,
 };
 
 export const VARIANT_TYPES_CHECK = 'VARIANT_TYPES_CHECK';
@@ -35,14 +35,14 @@ export function variantTypesReducer(
         sub: true,
         ins: true,
         del: true,
-        cnv: true,
+        CNV: true,
       };
     case VARIANT_TYPES_UNCHECK_ALL:
       return {
         sub: false,
         ins: false,
         del: false,
-        cnv: true,
+        CNV: true,
       };
     default:
       return state;
