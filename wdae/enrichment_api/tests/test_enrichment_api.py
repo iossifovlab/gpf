@@ -17,13 +17,14 @@ class Test(APITestCase):
             'enrichmentBackgroundModel': 'synonymousBackgroundModel',
             'enrichmentCountingModel': 'enrichmentGeneCounting',
         }
-        url = '/api/v3/enrichment/test/SD'
+        url = '/api/v3/enrichment/test'
 
         response = self.client.post(url, data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_gene_set_denovo_lgds_rec_sd(self):
         data = {
+            'datasetId': 'SD',
             'enrichmentBackgroundModel': 'synonymousBackgroundModel',
             'enrichmentCountingModel': 'enrichmentGeneCounting',
             'geneSet': {
@@ -32,7 +33,7 @@ class Test(APITestCase):
                 'geneSetsTypes': ['autism'],
             }
         }
-        url = '/api/v3/enrichment/test/SD'
+        url = '/api/v3/enrichment/test'
 
         response = self.client.post(url, data, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
@@ -44,6 +45,7 @@ class Test(APITestCase):
 
     def test_gene_set_denovo_main_autism_candidates_sd(self):
         data = {
+            'datasetId': 'SD',
             'enrichmentBackgroundModel': 'synonymousBackgroundModel',
             'enrichmentCountingModel': 'enrichmentGeneCounting',
             'geneSet': {
@@ -51,7 +53,7 @@ class Test(APITestCase):
                 'geneSet': 'autism candidates from Iossifov PNAS 2015',
             }
         }
-        url = '/api/v3/enrichment/test/SD'
+        url = '/api/v3/enrichment/test'
 
         response = self.client.post(url, data, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
@@ -65,6 +67,7 @@ class Test(APITestCase):
 
     def test_gene_set_denovo_lgds_rec_ssc(self):
         data = {
+            'datasetId': 'SSC',
             'enrichmentBackgroundModel': 'synonymousBackgroundModel',
             'enrichmentCountingModel': 'enrichmentGeneCounting',
             'geneSet': {
@@ -73,7 +76,7 @@ class Test(APITestCase):
                 'geneSetsTypes': ['autism'],
             }
         }
-        url = '/api/v3/enrichment/test/SSC'
+        url = '/api/v3/enrichment/test'
 
         response = self.client.post(url, data, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)

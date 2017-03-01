@@ -146,7 +146,9 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
             return desc
         return None
 
-    def post(self, request, dataset_id):
+    def post(self, request):
+        query = request.data
+        dataset_id = query.get('datasetId', None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -154,7 +156,6 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
         if not dataset_desc:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        query = request.data
         dataset = self.datasets_factory.get_dataset(dataset_id)
 
         gene_syms = dataset.get_gene_syms(**query)

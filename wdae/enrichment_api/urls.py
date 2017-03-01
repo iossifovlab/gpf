@@ -12,7 +12,7 @@ urlpatterns = [
         views.EnrichmentModelsView.as_view(),
         name="enrichment_models"),
 
-    url(r'^/test/(?P<dataset_id>.+)$',
+    url(r'^/test$',
         views.EnrichmentTestView.as_view(),
         name="enrichment_test"),
 
