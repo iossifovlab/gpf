@@ -6,22 +6,21 @@ Created on Feb 6, 2017
 from rest_framework import views, status
 from rest_framework.response import Response
 from users.authentication import SessionAuthenticationWithoutCSRF
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework import permissions
 
 from helpers.logger import log_filter, LOGGER
 import traceback
 import preloaded
+from rest_framework.exceptions import NotAuthenticated
+
 
 class IsDatasetAllowed(permissions.BasePermission):
+
     def has_object_permission(self, request, view, dataset):
         user = request.user
 
-        print("has_object_permission",dataset.descriptor['visibility'], user.is_authenticated())
+        print("has_object_permission", dataset.descriptor[
+              'visibility'], user.is_authenticated())
 
         access_rights = False
         if dataset.descriptor['visibility'] == 'ALL':
@@ -34,6 +33,7 @@ class IsDatasetAllowed(permissions.BasePermission):
             access_rights = True
 
         return access_rights
+
 
 class QueryPreviewView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
@@ -93,6 +93,11 @@ class QueryPreviewView(views.APIView):
             res['legend'] = legend
 
             return Response(res, status=status.HTTP_200_OK)
+        except NotAuthenticated:
+            print("error while processing genotype query")
+            traceback.print_exc()
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
         except Exception:
             print("error while processing genotype query")
             traceback.print_exc()

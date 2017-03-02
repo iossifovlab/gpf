@@ -35,7 +35,8 @@ class DatasetApiTest(APITestCase):
         cls.user.delete()
 
     def test_get_dataset_ssc(self):
-        res = self.client.login(email='admin@example.com', password='secret')
+        res = self.client.login(
+            email='admin@example.com', password='secret')
         print(res)
 
         url = '/api/v3/datasets/SSC'
