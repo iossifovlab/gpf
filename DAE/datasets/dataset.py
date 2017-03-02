@@ -356,14 +356,9 @@ class Dataset(QueryBase):
 
     def get_transmitted_variants(self, safe=True, **kwargs):
         transmitted_filters = self.get_transmitted_filters(safe=safe, **kwargs)
-        seen_vs = set()
         for st in self.transmitted_studies:
             for v in st.get_transmitted_variants(**transmitted_filters):
-                v_key = v.familyId + v.location + v.variant
-                if v_key in seen_vs:
-                    continue
                 yield v
-                seen_vs.add(v_key)
 
     def get_variants_preview(self, safe=True, **kwargs):
         denovo = self.get_denovo_variants(safe=safe, **kwargs)

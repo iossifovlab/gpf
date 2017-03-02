@@ -106,15 +106,15 @@ Q1 = {
 }
 
 
-def test_transmitted_filters_vip(vip):
-    query = build_vip_query()
-    filters = vip.get_transmitted_filters(safe=True, **query)
-    print(filters)
-    for k, v in QUERY.items():
-        if k == 'effectTypes':
-            assert set(filters[k]) == set(v)
-        else:
-            assert filters[k] == v
+# def test_transmitted_filters_vip(vip):
+#     query = build_vip_query()
+#     filters = vip.get_transmitted_filters(safe=True, **query)
+#     print(filters)
+#     for k, v in QUERY.items():
+#         if k == 'effectTypes':
+#             assert set(filters[k]) == set(v)
+#         else:
+#             assert filters[k] == v
 
 
 def test_transmitted_query_vip(vip):
@@ -129,14 +129,48 @@ def test_transmitted_query_vip(vip):
     assert 606 == count(res)
     for v in res:
         assert 'mom' in v.fromParentS
-#         chrome, pos = location_parse(v.location)
-#         assert chrome == '1'
-#         assert pos >= 1600000
-#         assert pos <= 1700000
 
 
 def test_transmitted_check_vip(vip):
     st = vip.transmitted_studies[0]
     assert st
     vs = st.get_transmitted_variants(**Q1)
-    assert 606 == count(vs)
+    res = [v for v in vs]
+    assert 606 == count(res)
+
+Q_DATASET = {
+    'minParentsCalled': 0,
+    'minAltFreqPrcnt': -1,
+    'geneSyms': None,
+    'gender': None,
+    'study': 'VIP-JHC',
+    'familyIds': None,
+    'limit': 2000,
+    'regionS': None,
+    'effectTypes': ['frame-shift', 'nonsense', 'splice-site'],
+    'inChild': None,
+    'TMM_ALL': False,
+    'presentInChild': ['neither'],
+    'variantTypes': ['CNV', 'del', 'ins', 'sub'],
+    'presentInParent': ['mother only'],
+    'ultraRareOnly': True,
+    'maxAltFreqPrcnt': 100.0
+}
+Q_LEGACY = {
+    'minParentsCalled': 0,
+    'minAltFreqPrcnt': -1,
+    'geneSyms': None,
+    'gender': None,
+    'study': 'VIP-JHC',
+    'familyIds': None,
+    'limit': 2000,
+    'regionS': None,
+    'effectTypes': ['frame-shift', 'nonsense', 'splice-site'],
+    'inChild': None,
+    'TMM_ALL': False,
+    'presentInChild': ['neither'],
+    'variantTypes': ['CNV', 'del', 'ins', 'sub'],
+    'presentInParent': ['mother only'],
+    'ultraRareOnly': True,
+    'maxAltFreqPrcnt': 100.0
+}
