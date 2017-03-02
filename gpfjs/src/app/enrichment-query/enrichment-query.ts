@@ -11,6 +11,23 @@ export interface GeneSetState {
 
 
 export class EnrichmentQueryData extends CommonQueryData {
+  enrichmentBackgroundModel: string;
+  enrichmentCountingModel: string;
+
+  protected static prepareEnrichmentBackgroundModel(state: any): string {
+    if (!state || !state.enrichmentModels || !state.enrichmentModels.background) {
+      return null;
+    }
+    return state.enrichmentModels.background.id;
+  }
+
+  protected static prepareEnrichmentCountingModel(state: any): string {
+    if (!state || !state.enrichmentModels || !state.enrichmentModels.counting) {
+      return null;
+    }
+    return state.enrichmentModels.counting.id;
+  }
+
   static prepare(state: any): EnrichmentQueryData {
     let query = new EnrichmentQueryData();
 
@@ -18,6 +35,9 @@ export class EnrichmentQueryData extends CommonQueryData {
     query.geneSymbols = EnrichmentQueryData.prepareGeneSymbols(state);
     query.geneSet = EnrichmentQueryData.prepareGeneSet(state);
     query.geneWeights = EnrichmentQueryData.prepareGeneWeights(state);
+
+    query.enrichmentBackgroundModel = EnrichmentQueryData.prepareEnrichmentBackgroundModel(state);
+    query.enrichmentCountingModel = EnrichmentQueryData.prepareEnrichmentCountingModel(state);
 
     return query;
   }
