@@ -16,6 +16,7 @@ import { RegionsFilterState, regionsFilterReducer } from '../regions-filter/regi
 import { GeneSetsState, geneSetsReducer } from '../gene-sets/gene-sets-state';
 import { UsersState, usersReducer } from '../users/users-store';
 import { StudyTypesState, studyTypesReducer } from '../study-types/study-types';
+import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-models/enrichment-models-state';
 
 export interface GpfState {
   datasets: DatasetsState;
@@ -30,6 +31,7 @@ export interface GpfState {
   regionsFilter: RegionsFilterState;
   geneSets: GeneSetsState;
   users: UsersState;
+  enrichmentModels: EnrichmentModelsState;
 };
 
 const reducers = {
@@ -46,6 +48,7 @@ const reducers = {
   geneSets: geneSetsReducer,
   users: usersReducer,
   studyTypes: studyTypesReducer,
+  enrichmentModels: enrichmentModelsReducer
 };
 
 const productionReducer: ActionReducer<GpfState> = combineReducers(reducers);

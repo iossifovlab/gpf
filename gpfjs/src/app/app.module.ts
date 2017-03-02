@@ -59,6 +59,7 @@ import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.compo
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component'
 import { GpfTabsetComponent } from './tabset/tabset.component'
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component'
+import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service'
 
 @NgModule({
   declarations: [
@@ -113,7 +114,8 @@ import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models
     GeneWeightsService,
     GeneSetsService,
     UsersService,
-    CookieService
+    CookieService,
+    EnrichmentModelsService
   ],
   bootstrap: [AppComponent]
 })

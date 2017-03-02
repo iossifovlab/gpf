@@ -2,7 +2,7 @@
   <div class="card">
     <div class="card-header">Enrichment Models</div>
     <div class="card-block">
-      <ngb-tabset>
+      <ngb-tabset (tabChange)="onTabChange($event)">
         <ngb-tab title="Default">
             <template ngbTabContent>
               <p>Default</p>
@@ -10,7 +10,18 @@
         </ngb-tab>
         <ngb-tab title="Select Models">
             <template ngbTabContent>
-              <p>Default</p>
+              <div *ngIf="enrichmentModels?.backgrounds" style="display:inline-block; width: 300px; padding: 15px">
+                Background Models:
+                <select style="width: 100%" [(ngModel)]="selectedBackground">
+                  <option *ngFor="let background of enrichmentModels.backgrounds" [ngValue]="background">{{background.id}}</option>
+                </select>
+              </div>
+              <div *ngIf="enrichmentModels?.countings" style="display:inline-block; width: 300px; padding: 15px">
+                Counting Models:
+                <select style="width: 100%" [(ngModel)]="selectedCounting">
+                  <option *ngFor="let counting of enrichmentModels.countings" [ngValue]="counting">{{counting.id}}</option>
+                </select>
+              </div>
             </template>
         </ngb-tab>
       </ngb-tabset>
