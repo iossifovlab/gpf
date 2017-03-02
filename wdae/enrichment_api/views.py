@@ -13,7 +13,7 @@ import precompute
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 from common.query_base import GeneSymsMixin
 from enrichment_api.enrichment_builder import EnrichmentBuilder
-
+from users.authentication import SessionAuthenticationWithoutCSRF
 
 class EnrichmentModelsMixin(object):
     BACKGROUND_MODELS = [
@@ -95,6 +95,8 @@ class EnrichmentModelsView(APIView, EnrichmentModelsMixin):
 
 
 class EnrichmentTestView(APIView, EnrichmentModelsMixin):
+
+    authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
         register = preloaded.register.get_register()
