@@ -51,10 +51,11 @@ class EnrichmentBuilder(object):
         return results
 
     def build(self):
-        results = {}
+        results = []
         for phenotype in self.dataset.get_phenotypes():
             res = self.build_phenotype(phenotype)
-            results[phenotype] = res
+            res['selector'] = phenotype
+            results.append(res)
         self.result = results
         return self.result
 
@@ -71,6 +72,12 @@ class EnrichmentBuilder(object):
     def serialize_helper(self, result):
         if isinstance(result, EnrichmentResult):
             return self.serialize_enrichment_result(result)
+        elif isinstance(result, list):
+            return [
+                self.serialize_helper(v) for v in result
+            ]
+        elif isinstance(result, str):
+            return result
         else:
             return dict([
                 (k, self.serialize_helper(v)) for k, v in result.items()
