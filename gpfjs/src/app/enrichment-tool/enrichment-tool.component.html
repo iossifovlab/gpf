@@ -1,5 +1,6 @@
 <div class="container">
   <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
   <gpf-enrichment-models></gpf-enrichment-models>
-  <gpf-enrichment-query-submitter></gpf-enrichment-query-submitter>
+  <gpf-enrichment-query-submitter (enrichmentResultsChange)="enrichmentResults=$event"></gpf-enrichment-query-submitter>
+  {{ enrichmentResults }}
 </div>
