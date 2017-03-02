@@ -3,6 +3,7 @@ import { GeneSetsState } from '../gene-sets/gene-sets-state';
 import { GeneSymbolsState } from '../gene-symbols/gene-symbols';
 import { GeneWeightsState } from '../gene-weights/gene-weights-store';
 import { PresentInParentState } from '../present-in-parent/present-in-parent';
+import { CommonQueryData } from './common-query-data';
 
 export interface Rarity {
   ultraRare: boolean;
@@ -22,23 +23,16 @@ export interface PedigreeSelectorState {
 }
 
 
-export class QueryData {
+export class QueryData extends CommonQueryData {
   effectTypes: string;
   gender: string[];
   presentInChild: string[];
   presentInParent: any;
   rarity: Rarity;
   variantTypes: string[];
-  geneSymbols: string[];
-  geneWeights: GeneWeightsState;
-  geneSet: GeneSetState;
-  datasetId: string;
   pedigreeSelector: PedigreeSelectorState;
   regions: string[];
 
-  private static prepareDatasetId(state: any): string {
-    return state.datasets.selectedDataset.id;
-  }
   private static prepareEffectTypes(state: any): string {
     return state.effectTypes;
   }
@@ -135,38 +129,6 @@ export class QueryData {
       return null;
     }
     return result;
-  }
-
-  private static prepareGeneSymbols(state: any): string[] {
-    let geneSymbols: GeneSymbolsState = state.geneSymbols;
-    let result = geneSymbols.geneSymbols
-      .split(/[,\s]/)
-      .filter(s => s !== '')
-      .map(s => s.toUpperCase());
-    return result;
-  }
-
-  private static prepareGeneSet(state: any): GeneSetState {
-    let geneSetsState: GeneSetsState = state.geneSets;
-    if (!geneSetsState.geneSetsCollection ||
-      !geneSetsState.geneSet) {
-      return {
-        geneSetsCollection: null,
-        geneSet: null
-      };
-    }
-    let geneSetsTypes = Array
-      .from(geneSetsState.geneSetsTypes)
-      .map(t => t.id);
-    return {
-      geneSetsCollection: geneSetsState.geneSetsCollection.name,
-      geneSet: geneSetsState.geneSet.name,
-      geneSetsTypes: geneSetsTypes
-    };
-  }
-
-  private static prepareGeneWeights(state: any): GeneWeightsState {
-    return state.geneWeights;
   }
 
   static prepare(state: any): QueryData {

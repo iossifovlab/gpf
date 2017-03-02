@@ -61,6 +61,9 @@ import { GpfTabsetComponent } from './tabset/tabset.component'
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component'
 import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service'
 
+import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
+import { EnrichmentQuerySubmitterComponent } from './enrichment-query/enrichment-query-submitter.component';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -92,7 +95,8 @@ import { EnrichmentModelsService } from './enrichment-models/enrichment-models.s
     GenotypeBrowserComponent,
     GpfTabsetComponent,
     EnrichmentToolComponent,
-    EnrichmentModelsComponent
+    EnrichmentModelsComponent,
+    EnrichmentQuerySubmitterComponent
   ],
   imports: [
     BrowserModule,
@@ -115,7 +119,8 @@ import { EnrichmentModelsService } from './enrichment-models/enrichment-models.s
     GeneSetsService,
     UsersService,
     CookieService,
-    EnrichmentModelsService
+    EnrichmentModelsService,
+    EnrichmentQueryService
   ],
   bootstrap: [AppComponent]
 })
