@@ -54,10 +54,7 @@ class EnrichmentModelsMixin(object):
         return counting_name
 
     def get_background_model(self, query):
-        background_name = None
-        if 'enrichmentModel' in query:
-            enrichment_model = query['enrichmentModel']
-            background_name = enrichment_model.get('background', None)
+        background_name = query.get('enrichmentBackgroundModel', None)
         if background_name is None:
             background_name = self.get_default_background_name()
         if precompute.register.has_key(background_name):  # @IgnorePep8
@@ -68,10 +65,7 @@ class EnrichmentModelsMixin(object):
         return background
 
     def get_counting_model(self, query):
-        counting_name = None
-        if 'enrichmentModel' in query:
-            enrichment_model = query['enrichmentModel']
-            counting_name = enrichment_model.get('counting', None)
+        counting_name = query.get('enrichmentCountingModel', None)
         if counting_name is None:
             counting_name = self.get_default_counting_name()
 
@@ -83,16 +77,16 @@ class EnrichmentModelsMixin(object):
             raise KeyError('wrong denovo counter: {}'.format(counting_name))
         return counter_model
 
-    def get_enrichment_model(self, data):
+    def get_enrichment_model(self, query):
         return {
-            'background': self.get_background_model(data),
-            'counting': self.get_counting_model(data),
+            'background': self.get_background_model(query),
+            'counting': self.get_counting_model(query),
         }
 
 
 class EnrichmentModelsView(APIView, EnrichmentModelsMixin):
 
-    def get(self, request, enrichment_model_type):
+    def get(self, request, dataset_id, enrichment_model_type):
         if enrichment_model_type == 'background':
             return Response(self.BACKGROUND_MODELS)
         if enrichment_model_type == 'counting':
