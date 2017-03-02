@@ -105,6 +105,10 @@ def overlap_enrichment_result_dict(enrichment_results, gene_syms):
 
 class CounterBase(object):
 
+    @property
+    def name(self):
+        raise NotImplemented()
+
     def get_variants(self, denovo_studies, in_child, effect_types):
         variants = []
         for st in denovo_studies:
@@ -136,6 +140,10 @@ class CounterBase(object):
 
 class EventsCounter(CounterBase):
 
+    @property
+    def name(self):
+        return 'enrichmentEventsCounting'
+
     def events(self, denovo_studies, in_child, effect_types):
         variants = self.get_variants(denovo_studies, in_child, effect_types)
         male_variants = [v for v in variants if v.inChS[3] == 'M']
@@ -152,6 +160,10 @@ class EventsCounter(CounterBase):
 
 
 class GeneEventsCounter(CounterBase):
+
+    @property
+    def name(self):
+        return 'enrichmentGeneCounting'
 
     def events(self, denovo_studies, in_child, effect_types):
         variants = self.get_variants(denovo_studies, in_child, effect_types)
