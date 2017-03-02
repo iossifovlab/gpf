@@ -174,3 +174,44 @@ Q_LEGACY = {
     'ultraRareOnly': True,
     'maxAltFreqPrcnt': 100.0
 }
+
+
+Q_DENOVO_ONLY = {
+    'geneSymbols': [],
+    'gender': ['female', 'male'],
+    'safe': True,
+    'rarity': {
+        'maxFreq': None,
+        'minFreq': None,
+        'ultraRare': None
+    },
+    'regions': None,
+    'effectTypes': ['Nonsense', 'Frame-shift', 'Splice-site'],
+    'presentInChild': None,
+    'datasetId': 'VIP',
+    'variantTypes': ['sub', 'ins', 'del', 'CNV'],
+    'presentInParent': ['neither'],
+    'geneWeights': {
+        'rangeEnd': 0,
+        'weight': None,
+        'rangeStart': 0
+    },
+    'pedigreeSelector': {
+        'checkedValues': ['triplication'],
+        'id': '16pstatus'
+    },
+    'geneSet': {
+        'geneSet': None,
+        'geneSetsCollection': None
+    }
+}
+
+
+def test_denovo_query_vip(vip):
+    vs = vip.get_transmitted_variants(**Q_DENOVO_ONLY)
+    assert vs is not None
+    assert 0 == count(vs)
+
+    vs = vip.get_variants(**Q_DENOVO_ONLY)
+    assert vs is not None
+    assert 1 == count(vs)
