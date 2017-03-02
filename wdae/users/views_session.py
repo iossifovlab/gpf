@@ -12,8 +12,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import django.contrib.auth
-from django.views.decorators.csrf import csrf_exempt
-from authentication import DpfSessionAuthentication
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from authentication import SessionAuthenticationWithUnauthenticatedCSRF, SessionAuthenticationWithoutCSRF
 from rest_framework.decorators import authentication_classes
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
@@ -40,6 +40,7 @@ def register(request):
         return Response(serialized._errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
+@authentication_classes((SessionAuthenticationWithUnauthenticatedCSRF, ))
 def login(request):
     username = request.data['username']
     password = request.data['password']
@@ -50,16 +51,17 @@ def login(request):
     return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
-@authentication_classes((DpfSessionAuthentication, BasicAuthentication))
+@authentication_classes((SessionAuthentication, ))
 def logout(request):
     django.contrib.auth.logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@ensure_csrf_cookie
 @api_view(['GET'])
 def get_user_info(request):
     user = request.user
     if user.is_authenticated():
-        return Response({'email': user.email}, status.HTTP_200_OK)
+        return Response({'loggedIn': True, 'email': user.email}, status.HTTP_200_OK)
     else:
-        return Response(status.HTTP_200_OK)
+        return Response({'loggedIn': False}, status.HTTP_200_OK)

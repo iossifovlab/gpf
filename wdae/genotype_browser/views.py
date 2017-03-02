@@ -5,14 +5,39 @@ Created on Feb 6, 2017
 '''
 from rest_framework import views, status
 from rest_framework.response import Response
-
+from users.authentication import SessionAuthenticationWithoutCSRF
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework import permissions
 
 from helpers.logger import log_filter, LOGGER
 import traceback
 import preloaded
 
+class IsDatasetAllowed(permissions.BasePermission):
+    def has_object_permission(self, request, view, dataset):
+        user = request.user
+
+        print("has_object_permission",dataset.descriptor['visibility'], user.is_authenticated())
+
+        access_rights = False
+        if dataset.descriptor['visibility'] == 'ALL':
+            access_rights = True
+        if dataset.descriptor['visibility'] == 'AUTHENTICATED' \
+                and user.is_authenticated():
+            access_rights = True
+        if dataset.descriptor['visibility'] == 'STAFF' \
+                and user.is_staff:
+            access_rights = True
+
+        return access_rights
 
 class QueryPreviewView(views.APIView):
+    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         register = preloaded.register.get_register()
@@ -57,6 +82,7 @@ class QueryPreviewView(views.APIView):
         try:
             dataset_id = data['datasetId']
             dataset = self.datasets_factory.get_dataset(dataset_id)
+            self.check_object_permissions(request, dataset)
 
             legend = self.prepare_legend_response(dataset)
             variants = dataset.get_variants_preview(
