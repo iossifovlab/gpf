@@ -8,7 +8,7 @@ from enrichment_api import views
 
 
 urlpatterns = [
-    url(r'^/models/(?P<enrichment_model_type>.+)$',
+    url(r'^/models',
         views.EnrichmentModelsView.as_view(),
         name="enrichment_models"),
 

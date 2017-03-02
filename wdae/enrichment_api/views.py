@@ -86,13 +86,12 @@ class EnrichmentModelsMixin(object):
 
 class EnrichmentModelsView(APIView, EnrichmentModelsMixin):
 
-    def get(self, request, dataset_id, enrichment_model_type):
-        if enrichment_model_type == 'background':
-            return Response(self.BACKGROUND_MODELS)
-        if enrichment_model_type == 'counting':
-            return Response(self.COUNTING_MODELS)
-
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    def get(self, request):
+        result = {
+            'background': self.BACKGROUND_MODELS,
+            'counting': self.COUNTING_MODELS,
+        }
+        return Response(result)
 
 
 class EnrichmentTestView(APIView, EnrichmentModelsMixin):
