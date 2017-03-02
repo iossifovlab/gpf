@@ -10,6 +10,7 @@ from Variant import Variant, parseGeneEffect, filter_gene_effect
 from transmitted.base_query import TransmissionConfig
 import logging
 from common.query_base import QueryBase
+import traceback
 
 
 LOGGER = logging.getLogger(__name__)
@@ -277,9 +278,6 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
     }
 
     def _build_present_in_child_where(self):
-        print(self['presentInChild'])
-        print(self)
-
         assert self['presentInChild']
         assert isinstance(self['presentInChild'], list)
         assert reduce(operator.and_,
@@ -353,8 +351,6 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             w = self._build_in_child_where()
             where.append(w)
         elif self['presentInChild']:
-            print(self['presentInChild'])
-            print(self)
             w = self._build_present_in_child_where()
             where.append(w)
 
@@ -474,6 +470,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             connection.close()
         except Exception as ex:
             LOGGER.error("unexpected db error: %s", ex)
+            traceback.print_exc()
             print("unexpected db error: {}".format(ex))
             # connection.close()
             raise StopIteration
@@ -520,6 +517,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             connection.close()
         except Exception as ex:
             print("unexpected db error: %s", ex)
+            traceback.print_exc()
             LOGGER.error("unexpected db error: %s", ex)
             if connection:
                 connection.close()

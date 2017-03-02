@@ -6,7 +6,7 @@ Created on Feb 10, 2017
 
 
 EXAMPLE_QUERY_SSC = {
-    "effectTypes": "Frame-shift,Nonsense,Splice-site",
+    'effectTypes': ['Frame-shift', 'Nonsense', 'Splice-site'],
     "gender": ["female", "male"],
     "presentInChild": [
         "affected and unaffected",
@@ -36,14 +36,14 @@ EXAMPLE_QUERY_SSC = {
 }
 
 EXAMPLE_QUERY_VIP = {
-    "effectTypes": "Frame-shift,Nonsense,Splice-site",
+    'effectTypes': ['Frame-shift', 'Nonsense', 'Splice-site'],
     "gender": ["female", "male"],
     "presentInChild": [
         "affected and unaffected",
         "affected only",
     ],
     "presentInParent": [
-        "neither"
+        'mother only', "neither"
     ],
     "variantTypes": [
         "CNV", "del", "ins", "sub",
@@ -57,7 +57,7 @@ EXAMPLE_QUERY_VIP = {
 }
 
 EXAMPLE_QUERY_SD = {
-    "effectTypes": "Frame-shift,Nonsense,Splice-site",
+    'effectTypes': ['Frame-shift', 'Nonsense', 'Splice-site'],
     "gender": ["female", "male"],
     "presentInChild": [
         "affected and unaffected",

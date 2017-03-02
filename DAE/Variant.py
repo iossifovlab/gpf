@@ -310,7 +310,8 @@ class Variant:
 
         ph = self.study.get_attr('study.phenotype')
         colors = None
-        if self.study.name[:3] == 'VIP':
+        if self.study.name[:3] == 'VIP' and \
+                hasattr(self.study, 'genetic_status'):
             colors = [
                 self.VIP_COLORS.get(
                     self.study.genetic_status.get(p.personId, 'unknown'),

@@ -166,6 +166,25 @@ class TransmissionLegacy(TransmissionConfig):
                                  regionS=None,
                                  TMM_ALL=False,
                                  limit=None):
+        query = {
+            'study': self.study.name,
+            'inChild': inChild,
+            'presentInChild': presentInChild,
+            'gender': gender,
+            'presentInParent': presentInParent,
+            'minParentsCalled': minParentsCalled,
+            'maxAltFreqPrcnt': maxAltFreqPrcnt,
+            'minAltFreqPrcnt': minAltFreqPrcnt,
+            'ultraRareOnly': ultraRareOnly,
+            'variantTypes': variantTypes,
+            'effectTypes': effectTypes,
+            'geneSyms': geneSyms,
+            'familyIds': familyIds,
+            'regionS': regionS,
+            'TMM_ALL': TMM_ALL,
+            'limit': limit
+        }
+        print(query)
 
         transmittedVariantsTOOMANYFile = \
             self._get_params('indexFile') + "-TOOMANY.txt.bgz"

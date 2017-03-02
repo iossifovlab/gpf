@@ -315,6 +315,7 @@ class Dataset(QueryBase):
             'presentInChild': self.get_present_in_child(
                 safe=safe,
                 **kwargs),
+            'inChild': None,
             'regionS': self.get_regions(
                 safe=safe,
                 **kwargs),
@@ -322,6 +323,24 @@ class Dataset(QueryBase):
                 safe=safe,
                 **kwargs)
         }
+
+    def get_transmitted_filters(self, safe=True, **kwargs):
+        filters = self.get_denovo_filters(safe=safe, **kwargs)
+        transmitted_filters = {
+            'ultraRareOnly': self.get_ultra_rare(
+                safe=safe, **kwargs),
+            'minAltFreqPrcnt': self.get_min_alt_freq(
+                safe=safe, **kwargs),
+            'maxAltFreqPrcnt': self.get_max_alt_freq(
+                safe=safe, **kwargs),
+            'minParentsCalled': self.get_min_parents_called(
+                safe=safe, **kwargs),
+            'limit': self.get_limit(
+                safe=safe, **kwargs),
+            'TMM_ALL': False,
+        }
+        filters.update(transmitted_filters)
+        return filters
 
     def get_denovo_variants(self, safe=True, **kwargs):
         denovo_filters = self.get_denovo_filters(safe, **kwargs)
@@ -335,11 +354,23 @@ class Dataset(QueryBase):
                 yield v
                 seen_vs.add(v_key)
 
+    def get_transmitted_variants(self, safe=True, **kwargs):
+        transmitted_filters = self.get_transmitted_filters(safe=safe, **kwargs)
+        seen_vs = set()
+        for st in self.transmitted_studies:
+            for v in st.get_transmitted_variants(**transmitted_filters):
+                v_key = v.familyId + v.location + v.variant
+                if v_key in seen_vs:
+                    continue
+                yield v
+                seen_vs.add(v_key)
+
     def get_variants_preview(self, safe=True, **kwargs):
-        denovo = self.get_denovo_variants(safe, **kwargs)
+        denovo = self.get_denovo_variants(safe=safe, **kwargs)
+        transmitted = self.get_transmitted_variants(safe=safe, **kwargs)
         legend = self.get_pedigree_selector(**kwargs)
 
-        variants = itertools.chain.from_iterable([denovo])
+        variants = itertools.chain.from_iterable([denovo, transmitted])
 
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))

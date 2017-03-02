@@ -144,15 +144,14 @@ class VariantTypesMixin(object):
             return None
         variant_types = kwargs['variantTypes']
         if safe:
-            pass
-            # assert all([vt in self.VARIANT_TYPES for vt in variant_types])
+            assert all([vt in self.VARIANT_TYPES for vt in variant_types])
         variant_types = [
             vt for vt in variant_types if vt in self.VARIANT_TYPES
         ]
         if not variant_types:
             return None
-        if set(variant_types) == set(self.VARIANT_TYPES):
-            return None
+        #         if set(variant_types) == set(self.VARIANT_TYPES):
+        #             return None
         return variant_types
 
 
@@ -198,9 +197,6 @@ class PresentInMixin(object):
         present_in_child = kwargs['presentInChild']
         if not present_in_child:
             return None
-        print(present_in_child)
-        print([pic in self.PRESENT_IN_CHILD_TYPES
-               for pic in present_in_child])
         if safe:
             assert all([pic in self.PRESENT_IN_CHILD_TYPES
                         for pic in present_in_child])
@@ -231,6 +227,48 @@ class PresentInMixin(object):
             if pip in self.PRESENT_IN_PARENT_TYPES
         ]
         return present_in_parent
+
+
+class RarityMixin(object):
+
+    @classmethod
+    def get_ultra_rare(cls, safe=True, **kwargs):
+        rarity = kwargs.get('rarity', None)
+        if not rarity:
+            return None
+        ultra_rare = rarity.get('ultraRare', None)
+        ultra_rare = bool(ultra_rare)
+        return ultra_rare
+
+    @classmethod
+    def get_max_alt_freq(cls, safe=True, **kwargs):
+        rarity = kwargs.get('rarity', None)
+        if not rarity:
+            return None
+
+        max_alt_freq = rarity.get('maxFreq', None)
+        if max_alt_freq is None:
+            return 100.0
+        if max_alt_freq >= 100.0:
+            return 100.0
+        return max_alt_freq
+
+    @classmethod
+    def get_min_alt_freq(cls, safe=True, **kwargs):
+        rarity = kwargs.get('rarity', None)
+        if not rarity:
+            return None
+
+        min_alt_freq = rarity.get('minFreq', None)
+        if min_alt_freq is None:
+            return -1
+        if min_alt_freq <= 0.0:
+            return -1
+        return min_alt_freq
+
+    @classmethod
+    def get_min_parents_called(cls, safe=True, **kwargs):
+        return 0
 
 
 class GeneSymsMixin(object):
@@ -269,7 +307,6 @@ class GeneSymsMixin(object):
         query = kwargs['geneSet']
         if 'geneSet' not in query or 'geneSetsCollection' not in query:
             return None, None, None
-        print(query)
         gene_sets_collection = query['geneSetsCollection']
         gene_set = query['geneSet']
         if not gene_sets_collection or not gene_set:
@@ -326,7 +363,8 @@ class RegionsMixin(object):
 
 class QueryBase(
     EffectTypesMixin, VariantTypesMixin, ChildGenderMixin,
-        PresentInMixin, GeneSymsMixin, RegionsMixin):
+        PresentInMixin, GeneSymsMixin, RegionsMixin,
+        RarityMixin):
 
     IN_CHILD_TYPES = [
         'prb',
@@ -343,3 +381,11 @@ class QueryBase(
             if name == el['id']:
                 return el
         return None
+
+    @staticmethod
+    def get_limit(safe=True, **kwargs):
+        limit = kwargs.get('limit', None)
+        if limit is None:
+            return None
+        limit = int(limit)
+        return limit
