@@ -55,14 +55,15 @@ import { StudyTypesComponent } from './study-types/study-types.component';
 
 import { CookieService } from 'angular2-cookie/services/cookies.service';
 
-import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component'
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component'
 import { GpfTabsetComponent } from './tabset/tabset.component'
+
+import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component'
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component'
 import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service'
-
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
 import { EnrichmentQuerySubmitterComponent } from './enrichment-query/enrichment-query-submitter.component';
+import { EnrichmentTableComponent, EnrichmentTableRowComponent } from './enrichment-table/enrichment-table.component'
 
 @NgModule({
   declarations: [
@@ -96,7 +97,9 @@ import { EnrichmentQuerySubmitterComponent } from './enrichment-query/enrichment
     GpfTabsetComponent,
     EnrichmentToolComponent,
     EnrichmentModelsComponent,
-    EnrichmentQuerySubmitterComponent
+    EnrichmentQuerySubmitterComponent,
+    EnrichmentTableComponent,
+    EnrichmentTableRowComponent
   ],
   imports: [
     BrowserModule,
