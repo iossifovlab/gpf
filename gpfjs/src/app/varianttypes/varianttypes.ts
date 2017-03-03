@@ -42,7 +42,7 @@ export function variantTypesReducer(
         sub: false,
         ins: false,
         del: false,
-        CNV: true,
+        CNV: false,
       };
     default:
       return state;
