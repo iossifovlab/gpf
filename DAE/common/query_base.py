@@ -288,9 +288,9 @@ class GeneSymsMixin(object):
 
     @staticmethod
     def get_gene_weights_query(**kwargs):
-        if 'geneWeights' not in kwargs:
+        gene_weights = kwargs.get('geneWeights', None)
+        if gene_weights is None:
             return None, None, None
-        gene_weights = kwargs['geneWeights']
         if 'weight' not in gene_weights:
             return None, None, None
         weights_id = gene_weights['weight']
