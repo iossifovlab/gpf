@@ -10,6 +10,7 @@ from common.query_base import QueryBase, GeneSymsMixin
 from collections import Counter
 from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
+from datasets.phenotype_base import PhenotypeQueryDelegate
 
 
 class Dataset(QueryBase):
@@ -32,6 +33,11 @@ class Dataset(QueryBase):
         self._phenotypes = None
 
         self.load_pheno_db()
+        if self.pheno_db is not None:
+            self.__pheno_delegate = PhenotypeQueryDelegate(self)
+
+    def __getattr__(self, name):
+        return getattr(self.__pheno_delegate, name)
 
     @property
     def name(self):

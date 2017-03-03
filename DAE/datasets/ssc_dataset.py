@@ -10,3 +10,4 @@ class SSCDataset(Dataset):
 
     def __init__(self, dataset_descriptor):
         super(SSCDataset, self).__init__(dataset_descriptor)
+        assert self.name == 'SSC'

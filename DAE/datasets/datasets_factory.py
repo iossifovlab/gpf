@@ -5,6 +5,7 @@ Created on Feb 27, 2017
 '''
 from datasets.config import DatasetsConfig
 from datasets.dataset import Dataset
+from datasets.ssc_dataset import SSCDataset
 
 
 class DatasetsFactory(dict):
@@ -19,7 +20,10 @@ class DatasetsFactory(dict):
         if dataset_id in self:
             return self[dataset_id]
         dataset_descriptor = self.datasets_config.get_dataset_desc(dataset_id)
-        dataset = Dataset(dataset_descriptor)
+        if dataset_id == 'SSC':
+            dataset = SSCDataset(dataset_descriptor)
+        else:
+            dataset = Dataset(dataset_descriptor)
         dataset.load()
 
         self[dataset_id] = dataset
