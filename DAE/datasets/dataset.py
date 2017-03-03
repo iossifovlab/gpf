@@ -365,6 +365,7 @@ class Dataset(QueryBase):
                 yield v
 
     def get_variants(self, safe=True, **kwargs):
+        print("get_variants: {}".format(kwargs))
         denovo = self.get_denovo_variants(safe=safe, **kwargs)
         transmitted = self.get_transmitted_variants(safe=safe, **kwargs)
         variants = itertools.chain.from_iterable([denovo, transmitted])
