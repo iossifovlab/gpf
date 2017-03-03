@@ -150,8 +150,8 @@ class VariantTypesMixin(object):
         ]
         if not variant_types:
             return None
-        #         if set(variant_types) == set(self.VARIANT_TYPES):
-        #             return None
+        if set(variant_types) == set(self.VARIANT_TYPES):
+            return None
         return variant_types
 
 
@@ -244,13 +244,13 @@ class RarityMixin(object):
     def get_max_alt_freq(cls, safe=True, **kwargs):
         rarity = kwargs.get('rarity', None)
         if not rarity:
-            return None
+            return -1
 
         max_alt_freq = rarity.get('maxFreq', None)
         if max_alt_freq is None:
-            return 100.0
+            return -1
         if max_alt_freq >= 100.0:
-            return 100.0
+            return -1
         return max_alt_freq
 
     @classmethod

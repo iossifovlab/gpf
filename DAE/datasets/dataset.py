@@ -356,21 +356,23 @@ class Dataset(QueryBase):
 
     def get_transmitted_variants(self, safe=True, **kwargs):
         transmitted_filters = self.get_transmitted_filters(safe=safe, **kwargs)
-        seen_vs = set()
+        present_in_parent = transmitted_filters.get('presentInParent', None)
+        if present_in_parent and present_in_parent == ['neither']:
+            return
+
         for st in self.transmitted_studies:
             for v in st.get_transmitted_variants(**transmitted_filters):
-                v_key = v.familyId + v.location + v.variant
-                if v_key in seen_vs:
-                    continue
                 yield v
-                seen_vs.add(v_key)
 
-    def get_variants_preview(self, safe=True, **kwargs):
+    def get_variants(self, safe=True, **kwargs):
         denovo = self.get_denovo_variants(safe=safe, **kwargs)
         transmitted = self.get_transmitted_variants(safe=safe, **kwargs)
-        legend = self.get_pedigree_selector(**kwargs)
-
         variants = itertools.chain.from_iterable([denovo, transmitted])
+        return variants
+
+    def get_variants_preview(self, safe=True, **kwargs):
+        variants = self.get_variants(safe=safe, **kwargs)
+        legend = self.get_pedigree_selector(**kwargs)
 
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))

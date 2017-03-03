@@ -231,6 +231,8 @@ class TransmissionLegacy(TransmissionConfig):
                         if chrom == chrom and pos == posL and var == varL:
                             flns.append(fdL)
                     if len(flns) != 1:
+                        print("Error: chrome: {}, posI: {}, flns: {}".format(
+                            chrom, posI, flns))
                         raise Exception('TOOMANY mismatch')
                     fmsData = flns[0]
 
