@@ -34,6 +34,10 @@ class Dataset(QueryBase):
         self.load_pheno_db()
 
     @property
+    def name(self):
+        return self.descriptor['id']
+
+    @property
     def studies(self):
         if self._studies is None:
             study_names = [
