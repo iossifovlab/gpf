@@ -26,14 +26,14 @@ const initialState: PresentInParentState = {
 
   rarityIntervalStart: 0,
   rarityIntervalEnd: 100,
-  ultraRare: false
+  ultraRare: true
 };
 
 function resetInterval(state: PresentInParentState) {
   if (!state.motherOnly && !state.fatherOnly && !state.motherFather) {
     state.rarityIntervalStart = 0;
     state.rarityIntervalEnd = 100;
-    state.ultraRare = false;
+    state.ultraRare = true;
   }
   return state;
 }

@@ -23,6 +23,8 @@ export class PresentInParentComponent implements OnInit {
   rarityIntervalEndInternal: number;
   ultraRare: boolean;
 
+  rarityRadio: string;
+
   presentInParentState: Observable<PresentInParentState>;
 
   constructor(
@@ -103,4 +105,26 @@ export class PresentInParentComponent implements OnInit {
       'payload': ultraRare
     });
   }
+
+  rarityRadioChange(rarity: string): void {
+    console.log('rarity radio changed: ', rarity);
+    this.ultraRareValueChange(false);
+    switch (rarity) {
+      case 'all':
+        this.rarityRadio = 'all';
+        this.rarityChangeValue(0, 100);
+        break;
+      case 'rare':
+        this.rarityRadio = 'rare';
+        this.rarityChangeValue(0, 1);
+        break;
+      case 'interval':
+        this.rarityRadio = 'interval';
+        this.rarityChangeValue(0, 100);
+        break;
+      default:
+        console.log('unexpected rarity: ', rarity);
+    }
+  }
+
 }
