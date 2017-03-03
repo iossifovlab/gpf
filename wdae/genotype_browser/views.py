@@ -87,6 +87,7 @@ class QueryPreviewView(views.APIView):
             legend = self.prepare_legend_response(dataset)
             variants = dataset.get_variants_preview(
                 safe=True,
+                limit=2000,
                 **data)
             res = self.prepare_variants_resonse(variants)
 
