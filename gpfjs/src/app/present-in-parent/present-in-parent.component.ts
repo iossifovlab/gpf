@@ -120,7 +120,7 @@ export class PresentInParentComponent implements OnInit {
         break;
       case 'interval':
         this.rarityRadio = 'interval';
-        this.rarityChangeValue(0, 100);
+        this.rarityChangeValue(0, 1);
         break;
       default:
         console.log('unexpected rarity: ', rarity);
