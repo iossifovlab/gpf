@@ -24,7 +24,7 @@ export function geneWeightsReducer(
         weight: action.payload[0],
         rangeStart: action.payload[1],
         rangeEnd: action.payload[2]
-      }
+      };
     case GENES_BLOCK_TAB_DESELECT:
       return initialState;
     default:
