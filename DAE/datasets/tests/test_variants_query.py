@@ -40,3 +40,30 @@ def test_get_variants_with_gene_weights(sd):
     vs = sd.get_variants(**query)
     assert vs is not None
     assert 5 == count(vs)
+
+
+def test_get_variants_with_null_gene_weights(sd):
+    query = {
+        "datasetId": "SD",
+        "effectTypes": [
+            "Splice-site"
+        ],
+        "gender": None,
+        "variantTypes": ["del"],
+        "presentInChild": None,
+        "presentInParent": None,
+        "rarity": None,
+        "pedigreeSelector": {
+            "id": "phenotype",
+            "checkedValues": [
+                "autism"
+            ]
+        },
+        "geneSymbols": None,
+        "geneSet": None,
+        "geneWeights": None,
+        "regions": None
+    }
+    vs = sd.get_variants(**query)
+    assert vs is not None
+    assert 5 == count(vs)
