@@ -169,7 +169,7 @@ class Dataset(QueryBase):
             cls.GENE_WEIGHTS_LOADER = WeightsLoader()
         if weights_id not in cls.GENE_WEIGHTS_LOADER:
             return set([])
-        weights = cls.GENE_SETS_LOADER[weights_id]
+        weights = cls.GENE_WEIGHTS_LOADER[weights_id]
         return weights.get_genes(wmin=range_start, wmax=range_end)
 
     @classmethod

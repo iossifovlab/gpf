@@ -127,9 +127,9 @@ class EffectTypesMixin(object):
         return etl
 
     def get_effect_types(self, safe=True, **kwargs):
-        assert 'effectTypes' in kwargs
-
-        effect_types = kwargs['effectTypes']
+        effect_types = kwargs.get('effectTypes', None)
+        if effect_types is None:
+            return None
 
         return self.build_effect_types(effect_types, safe)
 
@@ -140,9 +140,9 @@ class VariantTypesMixin(object):
     ]
 
     def get_variant_types(self, safe=True, **kwargs):
-        if 'variantTypes' not in kwargs:
+        variant_types = kwargs.get('variantTypes', None)
+        if variant_types is None:
             return None
-        variant_types = kwargs['variantTypes']
         if safe:
             assert all([vt in self.VARIANT_TYPES for vt in variant_types])
         variant_types = [
@@ -160,9 +160,9 @@ class ChildGenderMixin(object):
     GENDER_MAP = {'male': 'M', 'female': 'F'}
 
     def get_child_gender(self, safe=True, **kwargs):
-        if 'gender' not in kwargs:
+        gender = kwargs.get('gender', None)
+        if gender is None:
             return None
-        gender = kwargs['gender']
         if safe:
             assert all([g in self.GENDER for g in gender])
         gender = [
@@ -275,10 +275,10 @@ class GeneSymsMixin(object):
 
     @staticmethod
     def get_gene_symbols(**kwargs):
-        if 'geneSymbols' not in kwargs:
+        gene_symbols = kwargs.get('geneSymbols', None)
+        if gene_symbols is None:
             return set([])
 
-        gene_symbols = kwargs['geneSymbols']
         if isinstance(gene_symbols, str) or \
                 isinstance(gene_symbols, unicode):
             gene_symbols = gene_symbols.replace(',', ' ')
@@ -302,9 +302,9 @@ class GeneSymsMixin(object):
 
     @staticmethod
     def get_gene_set_query(**kwargs):
-        if 'geneSet' not in kwargs:
+        query = kwargs.get('geneSet', None)
+        if query is None:
             return None, None, None
-        query = kwargs['geneSet']
         if 'geneSet' not in query or 'geneSetsCollection' not in query:
             return None, None, None
         gene_sets_collection = query['geneSetsCollection']
