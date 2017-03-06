@@ -1,3 +1,7 @@
 .regions-block {
 	padding-top: 20px;
 }
+
+.regions-block /deep/ .tab-content {
+	padding: 10px;
+}

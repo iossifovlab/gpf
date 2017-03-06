@@ -1,29 +1,29 @@
 <div class="genes-block">
-  <div class="card">
-    <div class="card-header">Genes</div>
-    <div class="card-block">
-      <ngb-tabset (tabChange)="onTabChange($event)">
-        <ngb-tab *ngIf="showAllTab" id="all-genes" title="All">
-            <template ngbTabContent>
-                <p>All Genes</p>
-            </template>
-        </ngb-tab>
-        <ngb-tab id="gene-symbols" title="Gene Symbols">
-            <template ngbTabContent>
-                <gpf-gene-symbols></gpf-gene-symbols>
-            </template>
-        </ngb-tab>
-        <ngb-tab id="gene-sets" title="Gene Sets">
-            <template ngbTabContent>
-                <gpf-gene-sets></gpf-gene-sets>
-            </template>
-        </ngb-tab>
-        <ngb-tab id="gene-weights" title="Gene Weights">
-            <template ngbTabContent>
-                <gpf-gene-weights width="650" height="200"></gpf-gene-weights>
-            </template>
-        </ngb-tab>
-      </ngb-tabset>
-    </div>
+  <div class="card" style="height: 250px">
+    <gpf-tabset (tabChange)="onTabChange($event)">
+      <div class="gpf-tabset-left" style="margin-right: 10px">
+        Genes
+      </div>
+      <ngb-tab *ngIf="showAllTab" id="all-genes" title="All">
+          <template ngbTabContent>
+              <p>All Genes</p>
+          </template>
+      </ngb-tab>
+      <ngb-tab id="gene-symbols" title="Gene Symbols">
+          <template ngbTabContent>
+              <gpf-gene-symbols></gpf-gene-symbols>
+          </template>
+      </ngb-tab>
+      <ngb-tab id="gene-sets" title="Gene Sets">
+          <template ngbTabContent>
+              <gpf-gene-sets></gpf-gene-sets>
+          </template>
+      </ngb-tab>
+      <ngb-tab id="gene-weights" title="Gene Weights">
+          <template ngbTabContent>
+              <gpf-gene-weights width="650" height="200"></gpf-gene-weights>
+          </template>
+      </ngb-tab>
+    </gpf-tabset>
   </div>
 </div>
