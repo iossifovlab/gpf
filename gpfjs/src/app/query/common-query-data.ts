@@ -25,6 +25,9 @@ export class CommonQueryData {
       .split(/[,\s]/)
       .filter(s => s !== '')
       .map(s => s.toUpperCase());
+    if (result.length === 0) {
+      return null;
+    }
     return result;
   }
 
@@ -32,10 +35,7 @@ export class CommonQueryData {
     let geneSetsState: GeneSetsState = state.geneSets;
     if (!geneSetsState.geneSetsCollection ||
       !geneSetsState.geneSet) {
-      return {
-        geneSetsCollection: null,
-        geneSet: null
-      };
+      return null;
     }
     let geneSetsTypes = Array
       .from(geneSetsState.geneSetsTypes)
@@ -48,7 +48,11 @@ export class CommonQueryData {
   }
 
   protected static prepareGeneWeights(state: any): GeneWeightsState {
-    return state.geneWeights;
+    let weightsState: GeneWeightsState = state.geneWeights;
+    if (weightsState.weight === null || weightsState.weight === undefined) {
+      return null;
+    }
+    return weightsState;
   }
 
 
