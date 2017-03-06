@@ -68,7 +68,7 @@ import { EnrichmentTableComponent, EnrichmentTableRowComponent } from './enrichm
 import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component'
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service'
 
-import { EncodeUriPipe } from './utils/encode-uri.pipe';
+import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
 
 @NgModule({
@@ -107,7 +107,7 @@ import { EncodeUriPipe } from './utils/encode-uri.pipe';
     EnrichmentTableComponent,
     EnrichmentTableRowComponent,
     FullscreenLoadingComponent,
-    EncodeUriPipe
+    EncodeUriComponentPipe
   ],
   imports: [
     BrowserModule,
