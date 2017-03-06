@@ -171,7 +171,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def save_cache(self, computed):
         cachename = self.config.get('cache', 'file')
-        os.makedirs(os.path.dirname(cachename), exist_ok=True)
+        cachedir = os.path.dirname(cachename)
+        if not os.path.exists(cachedir):
+            os.makedirs(cachedir)
         with open(cachename, 'w') as outfile:
             cPickle.dump(computed, outfile)
 
