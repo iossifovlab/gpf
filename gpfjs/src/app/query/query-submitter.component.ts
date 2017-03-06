@@ -7,6 +7,7 @@ import { QueryData, Rarity, GeneSetState } from './query';
 import { QueryService } from './query.service';
 import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-table/genotype-preview';
 import { PresentInParentState } from '../present-in-parent/present-in-parent';
+import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 
 @Component({
   selector: 'gpf-query-submitter',
@@ -17,7 +18,8 @@ export class QuerySubmitterComponent {
 
   constructor(
     private store: Store<any>,
-    private queryService: QueryService
+    private queryService: QueryService,
+    private loadingService: FullscreenLoadingService
   ) { }
 
 
@@ -30,8 +32,10 @@ export class QuerySubmitterComponent {
     let queryData = QueryData.prepare(state);
     console.log('query: ', queryData);
 
+    this.loadingService.setLoadingStart();
     this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
       (genotypePreviewsArray) => {
+        this.loadingService.setLoadingStop();
         this.genotypePreviewsArrayChange.emit(genotypePreviewsArray);
       });
   }

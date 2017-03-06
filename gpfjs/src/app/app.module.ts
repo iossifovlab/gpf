@@ -65,6 +65,9 @@ import { EnrichmentQueryService } from './enrichment-query/enrichment-query.serv
 import { EnrichmentQuerySubmitterComponent } from './enrichment-query/enrichment-query-submitter.component';
 import { EnrichmentTableComponent, EnrichmentTableRowComponent } from './enrichment-table/enrichment-table.component'
 
+import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component'
+import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service'
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -99,7 +102,8 @@ import { EnrichmentTableComponent, EnrichmentTableRowComponent } from './enrichm
     EnrichmentModelsComponent,
     EnrichmentQuerySubmitterComponent,
     EnrichmentTableComponent,
-    EnrichmentTableRowComponent
+    EnrichmentTableRowComponent,
+    FullscreenLoadingComponent
   ],
   imports: [
     BrowserModule,
@@ -123,7 +127,8 @@ import { EnrichmentTableComponent, EnrichmentTableRowComponent } from './enrichm
     UsersService,
     CookieService,
     EnrichmentModelsService,
-    EnrichmentQueryService
+    EnrichmentQueryService,
+    FullscreenLoadingService
   ],
   bootstrap: [AppComponent]
 })
