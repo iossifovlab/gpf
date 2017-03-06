@@ -209,8 +209,15 @@ export class GpfTableComponent {
     let visibleRowCount = window.innerHeight/this.calculateRowHeight();
     let maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount
 
-    let startIndex = Math.ceil(Math.max(0, -this.tableTopPosition/this.calculateRowHeight()));
-    startIndex =  Math.min(Math.max(0, startIndex - this.drawOutsideVisibleCount), this.dataSource.length - maxRowCountToDraw);
+    let startIndex = Math.ceil(-this.tableTopPosition/this.calculateRowHeight()) - this.drawOutsideVisibleCount;
+    
+    //We should display at least maxRowCountToDraw rows, even at the bottom of the page
+    let maxStartIndex = this.dataSource.length - maxRowCountToDraw;
+    startIndex = Math.min(startIndex , maxStartIndex);
+
+    //Make sure we always start from index 0 or above
+    startIndex = Math.max(0, startIndex);
+
     let endIndex = startIndex + maxRowCountToDraw;
     return [startIndex, endIndex];
   }
