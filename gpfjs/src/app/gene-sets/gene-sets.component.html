@@ -27,4 +27,7 @@
       </span>
     </div>
   </gpf-searchable-select>
+  <div *ngIf="selectedGeneSet">
+    Count: {{ selectedGeneSet.count }} (<a href="https://localhost:8000/api/gene_set_download?gene_name={{selectedGeneSet.name | encodeUri}}&gene_set={{selectedGeneSetsCollection.name | encodeUri}}">Download</a>)
+  </div>
 </div>
