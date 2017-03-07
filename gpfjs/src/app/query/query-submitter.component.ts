@@ -8,6 +8,7 @@ import { QueryService } from './query.service';
 import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-table/genotype-preview';
 import { PresentInParentState } from '../present-in-parent/present-in-parent';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
+import { ConfigService } from '../config/config.service';
 
 @Component({
   selector: 'gpf-query-submitter',
@@ -19,6 +20,7 @@ export class QuerySubmitterComponent {
   constructor(
     private store: Store<any>,
     private queryService: QueryService,
+    private configService: ConfigService,
     private loadingService: FullscreenLoadingService
   ) { }
 
