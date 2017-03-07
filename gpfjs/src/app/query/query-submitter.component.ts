@@ -39,4 +39,13 @@ export class QuerySubmitterComponent {
         this.genotypePreviewsArrayChange.emit(genotypePreviewsArray);
       });
   }
+
+
+  onSubmit(event) {
+    this.store.take(1).subscribe(s => {
+      let queryData = QueryData.prepare(s);
+      event.target.queryData.value = JSON.stringify(queryData);
+      event.target.submit();
+    });
+  }
 }

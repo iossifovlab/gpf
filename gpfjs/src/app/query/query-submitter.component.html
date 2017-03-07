@@ -1,1 +1,5 @@
 <input type="button" value="Preview" (click)="submitQuery()">
+<form (ngSubmit)="onSubmit($event)" action="http://localhost:8000/api/v3/genotype_browser/preview" method="post">
+  <input name="queryData" type="hidden">
+  <button type="submit">Download</button>
+</form>
