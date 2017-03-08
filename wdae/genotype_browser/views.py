@@ -5,6 +5,8 @@ Created on Feb 6, 2017
 '''
 from rest_framework import views, status
 from rest_framework.response import Response
+from django.http.response import StreamingHttpResponse
+
 from users.authentication import SessionAuthenticationWithoutCSRF
 from rest_framework import permissions
 
@@ -12,6 +14,9 @@ from helpers.logger import log_filter, LOGGER
 import traceback
 import preloaded
 from rest_framework.exceptions import NotAuthenticated
+import json
+from query_variants import generate_response, join_line
+import itertools
 
 
 class IsDatasetAllowed(permissions.BasePermission):
@@ -35,7 +40,7 @@ class IsDatasetAllowed(permissions.BasePermission):
         return access_rights
 
 
-class QueryPreviewView(views.APIView):
+class QueryBaseView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
 
@@ -46,6 +51,12 @@ class QueryPreviewView(views.APIView):
 
         self.datasets_config = self.datasets.get_config()
         self.datasets_factory = self.datasets.get_factory()
+
+
+class QueryPreviewView(QueryBaseView):
+
+    def __init__(self):
+        super(QueryPreviewView, self).__init__()
 
     def prepare_variants_resonse(self, variants):
         rows = []
@@ -104,3 +115,84 @@ class QueryPreviewView(views.APIView):
             traceback.print_exc()
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class QueryDownloadView(QueryBaseView):
+
+    def __init__(self):
+        super(QueryDownloadView, self).__init__()
+
+    def _parse_query_params(self, data):
+        print(data)
+        res = {str(k): str(v) for k, v in data.items()}
+        assert 'queryData' in res
+        query = json.loads(res['queryData'])
+        print(query)
+        return query
+
+    def prepare_variants(self, variants):
+        def augment_vars(v):
+            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+
+            v.atts["_par_races_"] = 'NA:NA'
+            v.atts["_ch_prof_"] = chProf
+            v.atts["_prb_viq_"] = 'NA'
+            v.atts["_prb_nviq_"] = 'NA'
+            v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
+            v._phenotype_ = v.study.get_attr('study.phenotype')
+            return v
+
+        return generate_response(
+            itertools.imap(augment_vars, variants),
+            [
+                'effectType',
+                'effectDetails',
+                'all.altFreq',
+                'all.nAltAlls',
+                'SSCfreq',
+                'EVSfreq',
+                'E65freq',
+                'all.nParCalled',
+                '_par_races_',
+                '_ch_prof_',
+                '_prb_viq_',
+                '_prb_nviq_',
+                'valstatus',
+            ])
+
+    def post(self, request):
+        LOGGER.info(log_filter(request, "query v3 download request: " +
+                               str(request.data)))
+
+        data = self._parse_query_params(request.data)
+
+        try:
+            dataset_id = data['datasetId']
+            dataset = self.datasets_factory.get_dataset(dataset_id)
+            self.check_object_permissions(request, dataset)
+
+            variants = dataset.get_variants(
+                safe=True,
+                **data)
+
+            generator = self.prepare_variants(variants)
+            response = StreamingHttpResponse(
+                itertools.chain(
+                    itertools.imap(join_line, generator)),
+                content_type='text/csv')
+
+            response['Content-Disposition'] = 'attachment; filename=unruly.csv'
+            response['Expires'] = '0'
+            return response
+        except NotAuthenticated:
+            print("error while processing genotype query")
+            traceback.print_exc()
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        except Exception:
+            print("error while processing genotype query")
+            traceback.print_exc()
+
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        return response

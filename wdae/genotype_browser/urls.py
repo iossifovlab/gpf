@@ -9,6 +9,10 @@ from genotype_browser import views
 urlpatterns = [
     url(r'^/preview$',
         views.QueryPreviewView.as_view(),
-        name="dataset_all"),
+        name="genotype_browser_preview"),
+
+    url(r'^/download$',
+        views.QueryDownloadView.as_view(),
+        name="genotype_browser_download"),
 
 ]
