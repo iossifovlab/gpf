@@ -7,6 +7,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from gene.gene_set_collections import GeneSetsCollections
 from django.http.response import StreamingHttpResponse
+import itertools
 
 
 class GeneSetsCollectionsView(views.APIView):
@@ -103,13 +104,12 @@ class GeneSetDownloadView(views.APIView):
             gene_set_id,
             gene_sets_types
         )
-
         if gene_set is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        result = map(lambda s: "{}\r\n".format(s), gene_set['syms'])
-        title = "{}: {}".format(gene_set['name'], gene_set['desc'])
-        result.append(title)
+        gene_syms = map(lambda s: "{}\r\n".format(s), gene_set['syms'])
+        title = '"{}: {}\r\n"'.format(gene_set['name'], gene_set['desc'])
+        result = itertools.chain([title], gene_syms)
 
         response = StreamingHttpResponse(
             result,
