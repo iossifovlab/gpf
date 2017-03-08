@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from gene.gene_set_collections import GeneSetsCollections
 from django.http.response import StreamingHttpResponse
 import itertools
+from django.utils.http import urlencode
 
 
 class GeneSetsCollectionsView(views.APIView):
@@ -33,6 +34,11 @@ class GeneSetsView(views.APIView):
     def __init__(self):
         self.gscs = GeneSetsCollections()
 
+    @staticmethod
+    def _build_download_url(query):
+        url = 'gene_sets/gene_set_download'
+        return '{}?{}'.format(url, urlencode(query))
+
     def post(self, request):
         data = request.data
         if 'geneSetsCollection' not in data:
@@ -55,12 +61,11 @@ class GeneSetsView(views.APIView):
                 'count': gs['count'],
                 'name': gs['name'],
                 'desc': gs['desc'],
-                'download': '/api/v3/gene_sets/gene_set_download',
-                'query': {
-                    'geneSetCollection': gene_sets_collection_id,
+                'download': self._build_download_url({
+                    'geneSetsCollection': gene_sets_collection_id,
                     'geneSet': gs['name'],
-                    'geneSetsTypes': gene_sets_types
-                }
+                    'geneSetsTypes': ','.join(gene_sets_types)
+                })
             }
             for gs in gene_sets
         ]
@@ -92,6 +97,9 @@ class GeneSetDownloadView(views.APIView):
 
     def post(self, request):
         data = request.data
+        return self._build_response(data)
+
+    def _build_response(self, data):
         if 'geneSetsCollection' not in data or 'geneSet' not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data['geneSetsCollection']
@@ -114,7 +122,7 @@ class GeneSetDownloadView(views.APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         gene_syms = map(lambda s: "{}\r\n".format(s), gene_set['syms'])
-        title = '"{}: {}\r\n"'.format(gene_set['name'], gene_set['desc'])
+        title = '"{}: {}"\r\n'.format(gene_set['name'], gene_set['desc'])
         result = itertools.chain([title], gene_syms)
 
         response = StreamingHttpResponse(
@@ -125,3 +133,15 @@ class GeneSetDownloadView(views.APIView):
         response['Expires'] = '0'
 
         return response
+
+    def _parse_query_params(self, data):
+        print(data)
+        res = {str(k): str(v) for k, v in data.items()}
+        if 'geneSetsTypes' in res:
+            res['geneSetsTypes'] = res['geneSetsTypes'].split(',')
+        print(res)
+        return res
+
+    def get(self, request):
+        data = self._parse_query_params(request.query_params)
+        return self._build_response(data)
