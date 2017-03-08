@@ -166,7 +166,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         with open(cachename, 'r') as infile:
             result = cPickle.load(infile)
-            print(result)
             return result
 
     def save_cache(self, computed):
@@ -244,6 +243,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         if gene_sets_types == []:
             gene_sets_types = ['autism']
         syms = self._get_gene_set_syms(gene_set_id, gene_sets_types)
+        if not syms:
+            return None
 
         return {
             "name": gene_set_id,
