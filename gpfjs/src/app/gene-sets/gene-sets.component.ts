@@ -1,8 +1,9 @@
+import { ConfigService } from '../config/config.service';
 import {
   GeneSetsState, GENE_SETS_COLLECTION_CHANGE,
   GENE_SET_CHANGE, GENE_SETS_TYPES_ADD, GENE_SETS_TYPES_REMOVE
 } from './gene-sets-state';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { Subject } from 'rxjs/Subject';
@@ -15,7 +16,7 @@ import { Store } from '@ngrx/store';
   templateUrl: './gene-sets.component.html',
   styleUrls: ['./gene-sets.component.css']
 })
-export class GeneSetsComponent {
+export class GeneSetsComponent implements OnInit {
   private geneSetsCollections: Array<GeneSetsCollection>;
   private geneSets: Array<GeneSet>;
   private internalSelectedGeneSetsCollection: GeneSetsCollection;
@@ -29,8 +30,9 @@ export class GeneSetsComponent {
 
   constructor(
     private geneSetsService: GeneSetsService,
-    private store: Store<any>
-  )  {
+    private store: Store<any>,
+    private config: ConfigService,
+  ) {
     this.geneSetsState = this.store.select('geneSets');
   }
 
@@ -50,10 +52,10 @@ export class GeneSetsComponent {
       geneSets => {
         let refreshData = false;
 
-        if (this.internalSelectedGeneSetsCollection != geneSets.geneSetsCollection) {
+        if (this.internalSelectedGeneSetsCollection !== geneSets.geneSetsCollection) {
           this.internalSelectedGeneSetsCollection = geneSets.geneSetsCollection;
           this.geneSets = null;
-          this.searchQuery = "";
+          this.searchQuery = '';
           refreshData = true;
         }
         this.selectedGeneSet = geneSets.geneSet;
@@ -72,7 +74,7 @@ export class GeneSetsComponent {
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
         this.geneSetsCollections = geneSetsCollections;
-    });
+      });
 
     this.geneSetsResult = this.geneSetsQueryChange
       .debounceTime(1000)
@@ -88,11 +90,13 @@ export class GeneSetsComponent {
     this.geneSetsResult.subscribe(
       (geneSets) => {
         this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
-    });
+      });
   }
 
   onSearch(searchTerm: string) {
-    if (!this.selectedGeneSetsCollection) return;
+    if (!this.selectedGeneSetsCollection) {
+      return;
+    }
 
     let geneSetsTypesNames = new Array<string>();
     this.geneSetsTypes.forEach((value) => {
@@ -102,7 +106,8 @@ export class GeneSetsComponent {
     this.searchQuery = searchTerm;
     this.geneSets = null;
 
-    this.geneSetsQueryChange.next([this.selectedGeneSetsCollection.name, searchTerm, geneSetsTypesNames]);
+    this.geneSetsQueryChange.next(
+      [this.selectedGeneSetsCollection.name, searchTerm, geneSetsTypesNames]);
   }
 
   onSelect(event: GeneSet) {
@@ -118,7 +123,7 @@ export class GeneSetsComponent {
 
   setSelectedGeneType(geneType, value) {
     this.store.dispatch({
-      'type': value ? GENE_SETS_TYPES_ADD : GENE_SETS_TYPES_REMOVE ,
+      'type': value ? GENE_SETS_TYPES_ADD : GENE_SETS_TYPES_REMOVE,
       'payload': geneType
     });
   }
@@ -132,5 +137,9 @@ export class GeneSetsComponent {
       'type': GENE_SETS_COLLECTION_CHANGE,
       'payload': selectedGeneSetsCollection
     });
+  }
+
+  getDownloadLink(selectedGeneSet: GeneSet): string {
+    return `${this.config.baseUrl}${selectedGeneSet.download}`;
   }
 }

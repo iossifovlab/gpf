@@ -4,7 +4,7 @@ export class GeneSetsCollection {
     return new GeneSetsCollection(
       json['name'],
       json['desc'],
-      json['types']
+      json['types'],
     );
   }
 
@@ -15,8 +15,9 @@ export class GeneSetsCollection {
   constructor(
     readonly name: string,
     readonly desc: string,
-    readonly types: Array<any>
+    readonly types: Array<any>,
   ) { }
+
 }
 
 export class GeneSet {
@@ -24,7 +25,8 @@ export class GeneSet {
     return new GeneSet(
       json['name'],
       +json['count'],
-      json['desc']
+      json['desc'],
+      json['download']
     );
   }
 
@@ -35,7 +37,8 @@ export class GeneSet {
   constructor(
     readonly name: string,
     readonly count: number,
-    readonly desc: string
+    readonly desc: string,
+    readonly download: string,
   ) { }
 
 }
