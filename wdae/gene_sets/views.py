@@ -55,6 +55,12 @@ class GeneSetsView(views.APIView):
                 'count': gs['count'],
                 'name': gs['name'],
                 'desc': gs['desc'],
+                'download': '/api/v3/gene_sets/gene_set_download',
+                'query': {
+                    'geneSetCollection': gene_sets_collection_id,
+                    'geneSet': gs['name'],
+                    'geneSetsTypes': gene_sets_types
+                }
             }
             for gs in gene_sets
         ]
