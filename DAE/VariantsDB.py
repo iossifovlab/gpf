@@ -128,8 +128,8 @@ class Study:
             from pheno.pheno_db import PhenoDB
             self.phdb = PhenoDB(pheno_db='vip')
             self.phdb.load()
-            self.family_type = \
-                self.phdb.get_measure_values('pheno_common.family_type')
+            self.genetic_status = \
+                self.phdb.get_measure_values('pheno_common.genetic_status_16p')
 
     def get_targeted_genes(self):
         if not self.vdb._config.has_option(self._configSection, "targetedGenes"):
