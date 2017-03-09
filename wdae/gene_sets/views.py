@@ -9,8 +9,6 @@ from gene.gene_set_collections import GeneSetsCollections
 from django.http.response import StreamingHttpResponse
 import itertools
 from django.utils.http import urlencode
-from django.views.decorators.csrf import csrf_exempt
-from users.authentication import SessionAuthenticationWithoutCSRF
 
 
 class GeneSetsCollectionsView(views.APIView):
@@ -32,7 +30,6 @@ class GeneSetsView(views.APIView):
         "limit": 100
         }
     """
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
         self.gscs = GeneSetsCollections()
@@ -42,7 +39,6 @@ class GeneSetsView(views.APIView):
         url = 'gene_sets/gene_set_download'
         return '{}?{}'.format(url, urlencode(query))
 
-    @csrf_exempt
     def post(self, request):
         data = request.data
         if 'geneSetsCollection' not in data:
