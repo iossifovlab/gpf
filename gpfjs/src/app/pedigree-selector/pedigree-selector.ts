@@ -1,8 +1,12 @@
-
 import { PedigreeSelector } from '../datasets/datasets';
+import { ArrayNotEmpty } from "class-validator"
 
-export interface PedigreeSelectorState {
+export class PedigreeSelectorState {
   pedigree: PedigreeSelector;
+
+  @ArrayNotEmpty({
+    message: "select at least one"
+  })
   checkedValues: string[];
 };
 

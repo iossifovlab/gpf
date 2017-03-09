@@ -8,6 +8,8 @@ import {
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-pedigree-selector',
@@ -20,19 +22,20 @@ export class PedigreeSelectorComponent implements OnInit {
   pedigrees: PedigreeSelector[];
   pedigreeCheck: boolean[];
   datasetsState: Observable<DatasetsState>;
-  pedigreeState: Observable<PedigreeSelectorState>;
+  pedigreeState: Observable<[PedigreeSelectorState, boolean, ValidationError[]]>;
+  errors: string[];
 
   constructor(
     private store: Store<any>,
   ) {
     this.datasetsState = this.store.select('datasets');
-    this.pedigreeState = this.store.select('pedigreeSelector');
+    this.pedigreeState = toObservableWithValidation(PedigreeSelectorState, this.store.select('pedigreeSelector'));
 
   }
 
   ngOnInit() {
     this.datasetsState.subscribe(
-      datasetsState => {
+      (datasetsState) => {
         let dataset = datasetsState.selectedDataset;
         if (dataset) {
           this.selectedDataset = dataset;
@@ -44,7 +47,10 @@ export class PedigreeSelectorComponent implements OnInit {
       }
     );
     this.pedigreeState.subscribe(
-      pedigreeState => {
+      ([pedigreeState, isValid, validationErrors]) => {
+        console.log(pedigreeState, isValid, validationErrors);
+        this.errors = validationErrorsToStringArray(validationErrors);
+        
         if (!pedigreeState) {
           return;
         }
