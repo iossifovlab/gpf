@@ -4,6 +4,7 @@ from django.conf.urls import patterns, url, include
 urlpatterns = patterns(
     '',
     url(r'^$', 'variants_angular.views.index'),
+    # url(r'^$', 'gpfjs.views.index'),
     url(r'^api/', include('api.urls')),
     url(r'^api/users/', include('users.urls')),
     url(r'^api/v2/pheno_reports', include('pheno_report.urls')),

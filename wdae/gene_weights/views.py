@@ -7,6 +7,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from preloaded.register import get_register
 import numpy as np
+from users.authentication import SessionAuthenticationWithoutCSRF
 
 
 class GeneWeightsListView(views.APIView):
@@ -18,6 +19,7 @@ class GeneWeightsListView(views.APIView):
 
 
 class GeneWeightsGetGenesView(views.APIView):
+    authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def prepare_data(self, data):
         register = get_register()
@@ -45,6 +47,7 @@ class GeneWeightsGetGenesView(views.APIView):
 
 
 class GeneWeightsPartitionsView(views.APIView):
+    authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
         self.weights = get_register().get('gene_weights')
