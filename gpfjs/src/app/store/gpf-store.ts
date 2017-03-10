@@ -17,10 +17,16 @@ import { GeneSetsState, geneSetsReducer } from '../gene-sets/gene-sets-state';
 import { UsersState, usersReducer } from '../users/users-store';
 import { StudyTypesState, studyTypesReducer } from '../study-types/study-types';
 import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-models/enrichment-models-state';
+import { ValidateNested } from "class-validator"
+import {Type } from "class-transformer";
 
-export interface GpfState {
+export class GpfState {
   datasets: DatasetsState;
+
+  @Type(() => PedigreeSelectorState)
+  @ValidateNested()
   pedigreeSelector: PedigreeSelectorState;
+
   effectTypes: EffectTypesState;
   gender: GenderState;
   variantTypes: VariantTypesState;

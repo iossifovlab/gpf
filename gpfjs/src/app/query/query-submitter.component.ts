@@ -9,6 +9,9 @@ import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-tabl
 import { PresentInParentState } from '../present-in-parent/present-in-parent';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
+import { toObservableWithValidation } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
+import { GpfState } from "../store/gpf-store";
 
 @Component({
   selector: 'gpf-query-submitter',
@@ -26,7 +29,11 @@ export class QuerySubmitterComponent {
 
 
   submitQuery() {
-    this.store.take(1).subscribe(s => this.prepareQuery(s));
+    toObservableWithValidation(GpfState, this.store.take(1)).subscribe(([s, valid, errors]) => {
+      if (valid) {
+        this.prepareQuery(s);
+      }
+    });
   }
 
   prepareQuery(state: any) {
