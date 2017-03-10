@@ -16,9 +16,12 @@
                     <template *ngIf="child.headerTemplateRef" [ngTemplateOutlet]="child.headerTemplateRef">
                     </template>
                     <span *ngIf="!child.headerTemplateRef">{{ child.header }}</span>
-                    <img *ngIf="sortingInfo?.sortBySubcolumn != child" src="bg.gif" style="height: 12px;">
-                    <img *ngIf="sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc" src="asc.gif" style="height: 12px;">
-                    <img *ngIf="sortingInfo?.sortBySubcolumn == child && !sortingInfo?.sortOrderAsc" src="desc.gif" style="height: 12px;">
+                    <img *ngIf="sortingInfo?.sortBySubcolumn != child" 
+                        src="assets/bg.gif" style="height: 12px;">
+                    <img *ngIf="sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc" 
+                        src="assets/asc.gif" style="height: 12px;">
+                    <img *ngIf="sortingInfo?.sortBySubcolumn == child && !sortingInfo?.sortOrderAsc" 
+                        src="assets/desc.gif" style="height: 12px;">
                 </div>
             </div>
 
