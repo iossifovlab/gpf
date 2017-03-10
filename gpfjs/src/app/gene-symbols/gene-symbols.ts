@@ -1,8 +1,11 @@
 import { GENES_BLOCK_TAB_DESELECT } from '../store/common';
+import { IsNotEmpty } from "class-validator";
 export const GENE_SYMBOLS_CHANGE = 'GENE_SYMBOLS_CHANGE';
+export const GENE_SYMBOLS_INIT = 'GENE_SYMBOLS_INIT';
 
 
-export interface GeneSymbolsState {
+export class GeneSymbolsState {
+  @IsNotEmpty()
   geneSymbols: string;
 };
 
@@ -11,7 +14,7 @@ const initialState: GeneSymbolsState = {
 };
 
 export function geneSymbolsReducer(
-  state: GeneSymbolsState = initialState,
+  state: GeneSymbolsState = null,
   action): GeneSymbolsState {
 
 
@@ -19,8 +22,10 @@ export function geneSymbolsReducer(
     case GENE_SYMBOLS_CHANGE:
       return Object.assign({}, state,
         { geneSymbols: action.payload });
-    case GENES_BLOCK_TAB_DESELECT:
+    case GENE_SYMBOLS_INIT:
       return initialState;
+    case GENES_BLOCK_TAB_DESELECT:
+      return null;
     default:
       return state;
   }

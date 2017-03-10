@@ -21,6 +21,11 @@ export class CommonQueryData {
 
   protected static prepareGeneSymbols(state: any): string[] {
     let geneSymbols: GeneSymbolsState = state.geneSymbols;
+
+    if (geneSymbols === null) {
+      return null;
+    }
+
     let result = geneSymbols.geneSymbols
       .split(/[,\s]/)
       .filter(s => s !== '')

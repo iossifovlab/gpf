@@ -30,6 +30,7 @@ export class QuerySubmitterComponent {
 
   submitQuery() {
     toObservableWithValidation(GpfState, this.store.take(1)).subscribe(([s, valid, errors]) => {
+      console.log(errors);
       if (valid) {
         this.prepareQuery(s);
       }

@@ -1,5 +1,5 @@
 import {
-  GeneSymbolsState, GENE_SYMBOLS_CHANGE
+  GeneSymbolsState, GENE_SYMBOLS_CHANGE, GENE_SYMBOLS_INIT
 } from './gene-symbols';
 import { Component, OnInit } from '@angular/core';
 
@@ -23,9 +23,15 @@ export class GeneSymbolsComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': GENE_SYMBOLS_INIT,
+    });
+
     this.geneSymbolsState.subscribe(
       geneSymbolsState => {
-        this.geneSymbolsInternal = geneSymbolsState.geneSymbols;
+        if (geneSymbolsState) {
+          this.geneSymbolsInternal = geneSymbolsState.geneSymbols;
+        }
       }
     );
   }
