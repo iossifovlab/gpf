@@ -1,6 +1,6 @@
 import { ConfigService } from '../config/config.service';
 import {
-  GeneSetsState, GENE_SETS_COLLECTION_CHANGE,
+  GeneSetsState, GENE_SETS_INIT, GENE_SETS_COLLECTION_CHANGE,
   GENE_SET_CHANGE, GENE_SETS_TYPES_ADD, GENE_SETS_TYPES_REMOVE
 } from './gene-sets-state';
 import { Component, OnInit } from '@angular/core';
@@ -9,7 +9,8 @@ import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
 import { Store } from '@ngrx/store';
-
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -23,17 +24,19 @@ export class GeneSetsComponent implements OnInit {
   private selectedGeneSet: GeneSet;
   private searchQuery: string;
   private geneSetsTypes: Set<any>;
-  private geneSetsState: Observable<GeneSetsState>;
+  private geneSetsState: Observable<[GeneSetsState, boolean, ValidationError[]]>;
 
   private geneSetsQueryChange = new Subject<[string, string, Array<string>]>();
   private geneSetsResult: Observable<GeneSet[]>;
+
+  private errors: string[];
 
   constructor(
     private geneSetsService: GeneSetsService,
     private store: Store<any>,
     private config: ConfigService,
   ) {
-    this.geneSetsState = this.store.select('geneSets');
+    this.geneSetsState = toObservableWithValidation(GeneSetsState, this.store.select('geneSets'));
   }
 
   isGeneSetsTypesUpdated(geneSetsTypes: Set<any>): boolean {
@@ -48,8 +51,17 @@ export class GeneSetsComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': GENE_SETS_INIT,
+    });
+
     this.geneSetsState.subscribe(
-      geneSets => {
+      ([geneSets, isValid, validationErrors])  => {
+        if (geneSets == null) {
+          return;
+        }
+        this.errors = validationErrorsToStringArray(validationErrors);
+
         let refreshData = false;
 
         if (this.internalSelectedGeneSetsCollection !== geneSets.geneSetsCollection) {

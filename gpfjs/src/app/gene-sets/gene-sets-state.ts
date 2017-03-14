@@ -1,16 +1,19 @@
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { GENES_BLOCK_TAB_DESELECT } from '../store/common';
+import { IsNotEmpty } from "class-validator";
 
 export const GENE_SETS_COLLECTION_CHANGE = 'GENE_SETS_COLLECTION_CHANGE';
 export const GENE_SET_CHANGE = 'GENE_SET_CHANGE';
 export const GENE_SETS_TYPES_ADD = 'GENE_SETS_TYPES_ADD';
 export const GENE_SETS_TYPES_REMOVE = 'GENE_SETS_TYPES_REMOVE';
+export const GENE_SETS_INIT = 'GENE_SETS_INIT';
 
 
-
-export interface GeneSetsState {
+export class GeneSetsState {
   geneSetsCollection: GeneSetsCollection;
   geneSetsTypes: Set<any>;
+  
+  @IsNotEmpty()
   geneSet: GeneSet;
 };
 
@@ -21,7 +24,7 @@ const initialState: GeneSetsState = {
 };
 
 export function geneSetsReducer(
-  state: GeneSetsState = initialState,
+  state: GeneSetsState = null,
   action): GeneSetsState {
 
 
@@ -44,8 +47,10 @@ export function geneSetsReducer(
       return Object.assign({}, state,
         { geneSetsTypes: newSet });
     }
-    case GENES_BLOCK_TAB_DESELECT:
+    case GENE_SETS_INIT:
       return initialState;
+    case GENES_BLOCK_TAB_DESELECT:
+      return null;
     default:
       return state;
   }

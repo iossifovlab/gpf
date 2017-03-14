@@ -20,6 +20,7 @@ export class SearchableSelectComponent {
   onFocus(event) {
     event.stopPropagation();
     this.inputGroupSpan.nativeElement.classList.add("show");
+    this.onSelect(null);
   }
 
   onSelect(value) {
