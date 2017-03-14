@@ -15,6 +15,10 @@ export class GenesBlockComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': GENES_BLOCK_TAB_DESELECT,
+      'payload': null
+    });
   }
 
   onTabChange(event) {
