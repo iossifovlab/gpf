@@ -4,9 +4,15 @@ export const GENDER_UNCHECK = 'GENDER_UNCHECK';
 export const GENDER_CHECK_ALL = 'GENDER_CHECK_ALL';
 export const GENDER_UNCHECK_ALL = 'GENDER_UNCHECK_ALL';
 
+import { Equals, ValidateIf } from "class-validator";
 
-export interface GenderState {
+export class GenderState {
   female: boolean;
+
+  @ValidateIf(o => !o.female)
+  @Equals(true, {
+    message: "select at least one"
+  })
   male: boolean;
 };
 

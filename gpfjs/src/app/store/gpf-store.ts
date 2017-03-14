@@ -28,7 +28,11 @@ export class GpfState {
   pedigreeSelector: PedigreeSelectorState;
 
   effectTypes: EffectTypesState;
+
+  @Type(() => GenderState)
+  @ValidateNested()
   gender: GenderState;
+
   variantTypes: VariantTypesState;
   geneWeights: GeneWeightsState;
   presentInChild: PresentInChildState;
