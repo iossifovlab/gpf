@@ -1,39 +1,43 @@
-<div style="width: 300px; float: left">
-  <select class="form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
-    <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{collection.desc}}</option>
-  </select>
+<div style="style='overflow:hidden'">
+  <div style="width: 300px; float: left">
+    <select class="form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
+      <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{collection.desc}}</option>
+    </select>
 
-  <div *ngIf="selectedGeneSetsCollection?.types" style="text-align: left; border: 1px solid #dddddd; width: 100%">
-    <div *ngFor="let type of selectedGeneSetsCollection.types">
-      <input type="checkbox" [ngModel]="isSelectedGeneType(type)" (ngModelChange)="setSelectedGeneType(type, $event)">
-      <span class="pedigree-icon" [style.background-color]="type.color"></span>
-      {{ type.name }}
+    <div *ngIf="selectedGeneSetsCollection?.types" style="text-align: left; border: 1px solid #dddddd; width: 100%">
+      <div *ngFor="let type of selectedGeneSetsCollection.types">
+        <input type="checkbox" [ngModel]="isSelectedGeneType(type)" (ngModelChange)="setSelectedGeneType(type, $event)">
+        <span class="pedigree-icon" [style.background-color]="type.color"></span>
+        {{ type.name }}
+      </div>
     </div>
   </div>
+
+
+  <div style="width: 750px; float: right">
+    <gpf-searchable-select
+      (search)="onSearch($event)"
+      (selectItem)="onSelect($event)"
+      [data]="geneSets"
+      caption="{{ selectedGeneSet ? selectedGeneSet.name + '(' + selectedGeneSet.count + '): ' + selectedGeneSet.desc : '' }}">
+      <div *gpf-searchable-select-template="let element">
+        <span
+          data-toggle="tooltip"
+          data-placement="bottom"
+          title="{{element.name}} ({{element.count}}): {{ element.desc }}"
+          innerHtml="{{element.name | boldMatching: searchQuery}} ({{element.count}}): {{ element.desc | boldMatching: searchQuery }} ">
+        </span>
+      </div>
+    </gpf-searchable-select>
+    <div *ngIf="selectedGeneSet">
+      Count: {{ selectedGeneSet.count }}
+      (<a href="{{ getDownloadLink(selectedGeneSet) }}">Download</a>)
+    </div>
+  </div>
+  <div style="clear: both;">
 </div>
 
-<div style="width: 750px; float: right">
-  <gpf-searchable-select
-    (search)="onSearch($event)"
-    (selectItem)="onSelect($event)"
-    [data]="geneSets"
-    caption="{{ selectedGeneSet ? selectedGeneSet.name + '(' + selectedGeneSet.count + '): ' + selectedGeneSet.desc : '' }}">
-    <div *gpf-searchable-select-template="let element">
-      <span
-        data-toggle="tooltip"
-        data-placement="bottom"
-        title="{{element.name}} ({{element.count}}): {{ element.desc }}"
-        innerHtml="{{element.name | boldMatching: searchQuery}} ({{element.count}}): {{ element.desc | boldMatching: searchQuery }} ">
-      </span>
-    </div>
-  </gpf-searchable-select>
-  <div *ngIf="selectedGeneSet">
-    Count: {{ selectedGeneSet.count }}
-    (<a href="{{ getDownloadLink(selectedGeneSet) }}">Download</a>)
-  </div>
-</div>
-<div style="clear: both;">
-<div *ngIf="errors?.length > 0" class="alert alert-danger">
+<div *ngIf="errors?.length > 0" class="alert alert-danger" style="margin-top: 20px">
   <ul>
     <li *ngFor="let error of errors">
       {{ error }}
