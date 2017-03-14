@@ -1,5 +1,6 @@
 import { GENES_BLOCK_TAB_DESELECT } from '../store/common';
-export const RANGE_CHANGE = 'RANGE_CHANGE';
+export const GENE_WEIGHTS_RANGE_CHANGE = 'GENE_WEIGHTS_RANGE_CHANGE';
+export const GENE_WEIGHTS_INIT = 'GENE_WEIGHTS_INIT';
 
 export interface GeneWeightsState {
   weight: string;
@@ -19,14 +20,16 @@ export function geneWeightsReducer(
 ): GeneWeightsState {
 
   switch (action.type) {
-    case RANGE_CHANGE:
+    case GENE_WEIGHTS_RANGE_CHANGE:
       return {
         weight: action.payload[0],
         rangeStart: action.payload[1],
         rangeEnd: action.payload[2]
       };
-    case GENES_BLOCK_TAB_DESELECT:
+    case GENE_WEIGHTS_INIT:
       return initialState;
+    case GENES_BLOCK_TAB_DESELECT:
+        return null;
     default:
       return state;
   }

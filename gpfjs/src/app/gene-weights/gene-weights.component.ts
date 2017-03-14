@@ -11,7 +11,7 @@ import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/observable/of';
 import { Store } from '@ngrx/store';
 
-import { RANGE_CHANGE } from './gene-weights-store';
+import { GENE_WEIGHTS_RANGE_CHANGE, GENE_WEIGHTS_INIT } from './gene-weights-store';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
@@ -49,6 +49,10 @@ export class GeneWeightsComponent {
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': GENE_WEIGHTS_INIT,
+    });
+
     this.geneWeightsService.getGeneWeights().subscribe(
       (geneWeights) => {
         this.geneWeightsArray = geneWeights;
@@ -61,7 +65,7 @@ export class GeneWeightsComponent {
       .distinctUntilChanged()
       .switchMap(term => {
         this.store.dispatch({
-          'type': RANGE_CHANGE,
+          'type': GENE_WEIGHTS_RANGE_CHANGE,
           'payload': [this.selectedGeneWeights.weight, this.internalRangeStart, this.internalRangeEnd]
         });
         return this.geneWeightsService.getPartitions(this.selectedGeneWeights.weight, this.internalRangeStart, this.internalRangeEnd);

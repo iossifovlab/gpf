@@ -59,6 +59,11 @@ export class CommonQueryData {
 
   protected static prepareGeneWeights(state: any): GeneWeightsState {
     let weightsState: GeneWeightsState = state.geneWeights;
+
+    if (weightsState === null) {
+      return null;
+    }
+
     if (weightsState.weight === null || weightsState.weight === undefined) {
       return null;
     }
