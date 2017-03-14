@@ -1,5 +1,5 @@
 <div style="width: 300px; float: left">
-  <select [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
+  <select class="form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
     <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{collection.desc}}</option>
   </select>
 
@@ -28,7 +28,7 @@
     </div>
   </gpf-searchable-select>
   <div *ngIf="selectedGeneSet">
-    Count: {{ selectedGeneSet.count }} 
+    Count: {{ selectedGeneSet.count }}
     (<a href="{{ getDownloadLink(selectedGeneSet) }}">Download</a>)
   </div>
 </div>
