@@ -10,8 +10,8 @@ import * as d3 from 'd3';
 export class HistogramRangeSelectorLineComponent {
   @Input() x = 0;
   @Output() xChange = new EventEmitter();
-  @Input() y = 0;
-  @Input() height = 100;
+  @Input() y = 10;
+  @Input() height = 90;
 
   @Input() minX: number;
   @Input() maxX: number;
