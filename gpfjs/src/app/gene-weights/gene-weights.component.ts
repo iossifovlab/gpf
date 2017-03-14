@@ -81,10 +81,12 @@ export class GeneWeightsComponent {
   set rangeStart(range: number) {
     if (!this.selectedGeneWeights
         || range > this.internalRangeEnd
-        || range < 0) {
+        || range < 0
+        || range === null) {
       return;
     }
     this.internalRangeStart = range;
+    console.log("rangeStart", range);
     this.rangeChanges.next([this.internalRangeStart, this.internalRangeEnd]);
   }
 
@@ -95,10 +97,12 @@ export class GeneWeightsComponent {
   set rangeEnd(range: number) {
     if (!this.selectedGeneWeights
         || range > this.selectedGeneWeights.max
-        || range < this.internalRangeStart) {
+        || range < this.internalRangeStart
+        || range === null) {
       return;
     }
     this.internalRangeEnd = range;
+    console.log("rangeEnd", this.internalRangeStart, this.internalRangeEnd);
     this.rangeChanges.next([this.internalRangeStart, this.internalRangeEnd]);
   }
 
