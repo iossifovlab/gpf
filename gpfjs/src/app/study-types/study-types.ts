@@ -6,9 +6,16 @@ export const STUDY_TYPES_UNCHECK = 'STUDY_TYPES_UNCHECK';
 export const STUDY_TYPES_CHECK_ALL = 'STUDY_TYPES_CHECK_ALL';
 export const STUDY_TYPES_UNCHECK_ALL = 'STUDY_TYPES_UNCHECK_ALL';
 
+import { Equals, ValidateIf } from "class-validator";
 
-export interface StudyTypesState {
+
+export class StudyTypesState {
   we: boolean;
+
+  @ValidateIf(o => !o.we)
+  @Equals(true, {
+    message: "select at least one"
+  })
   tg: boolean;
 };
 

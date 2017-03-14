@@ -52,6 +52,10 @@ export class GpfState {
 
   users: UsersState;
   enrichmentModels: EnrichmentModelsState;
+
+  @Type(() => StudyTypesState)
+  @ValidateNested()
+  studyTypes: StudyTypesState
 };
 
 const reducers = {

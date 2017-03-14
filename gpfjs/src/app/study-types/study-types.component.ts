@@ -4,7 +4,8 @@ import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
-
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-study-types',
@@ -15,18 +16,22 @@ export class StudyTypesComponent implements OnInit {
   we: boolean = true;
   tg: boolean = true;
 
-  studyTypesState: Observable<StudyTypesState>;
+  studyTypesState: Observable<[StudyTypesState, boolean, ValidationError[]]>;
+
+  private errors: string[];
 
   constructor(
     private store: Store<any>
   ) {
 
-    this.studyTypesState = this.store.select('studyTypes');
+    this.studyTypesState = toObservableWithValidation(StudyTypesState, this.store.select('studyTypes'));
   }
 
   ngOnInit() {
     this.studyTypesState.subscribe(
-      state => {
+      ([state, isValid, validationErrors]) => {
+        this.errors = validationErrorsToStringArray(validationErrors);
+
         this.we = state.we;
         this.tg = state.tg;
       }

@@ -12,7 +12,7 @@
             <input #weCheckbox
                 type="checkbox"
                 [checked]="we"
-                (change)="studyTypesCheckValue('we',wgCheckbox.checked)">
+                (change)="studyTypesCheckValue('we',weCheckbox.checked)">
             <span>WG</span>
           </label>
         </div>
@@ -26,5 +26,12 @@
             <span>TG</span>
           </label>
         </div>
+    </div>
+    <div *ngIf="errors?.length > 0" class="alert alert-danger">
+      <ul>
+        <li *ngFor="let error of errors">
+          {{ error }}
+        </li>
+      </ul>
     </div>
 </div>
