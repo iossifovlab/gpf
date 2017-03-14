@@ -5,6 +5,8 @@ import { Component, OnInit } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-gene-symbols',
@@ -12,14 +14,14 @@ import { Observable } from 'rxjs';
 })
 export class GeneSymbolsComponent implements OnInit {
   geneSymbolsInternal: string;
-
-  geneSymbolsState: Observable<GeneSymbolsState>;
+  errors: string[];
+  geneSymbolsState: Observable<[GeneSymbolsState, boolean, ValidationError[]]>;
 
   constructor(
     private store: Store<any>
   ) {
 
-    this.geneSymbolsState = this.store.select('geneSymbols');
+    this.geneSymbolsState = toObservableWithValidation(GeneSymbolsState, this.store.select('geneSymbols'));
   }
 
   ngOnInit() {
@@ -28,7 +30,9 @@ export class GeneSymbolsComponent implements OnInit {
     });
 
     this.geneSymbolsState.subscribe(
-      geneSymbolsState => {
+      ([geneSymbolsState, isValid, validationErrors]) => {
+        this.errors = validationErrorsToStringArray(validationErrors);
+
         if (geneSymbolsState) {
           this.geneSymbolsInternal = geneSymbolsState.geneSymbols;
         }
