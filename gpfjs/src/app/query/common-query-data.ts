@@ -38,6 +38,11 @@ export class CommonQueryData {
 
   protected static prepareGeneSet(state: any): GeneSetState {
     let geneSetsState: GeneSetsState = state.geneSets;
+
+    if (geneSetsState === null) {
+      return null;
+    }
+
     if (!geneSetsState.geneSetsCollection ||
       !geneSetsState.geneSet) {
       return null;

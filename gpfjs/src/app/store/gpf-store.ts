@@ -40,7 +40,12 @@ export class GpfState {
   geneSymbols: GeneSymbolsState;
 
   regionsFilter: RegionsFilterState;
+
+  @Type(() => GeneSetsState)
+  @ValidateIf(o => o.geneSets !== null)
+  @ValidateNested()
   geneSets: GeneSetsState;
+
   users: UsersState;
   enrichmentModels: EnrichmentModelsState;
 };
