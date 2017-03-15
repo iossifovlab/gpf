@@ -10,6 +10,7 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
 import { ActivatedRoute, Params, Router } from '@angular/router';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'gpf-datasets',
@@ -31,6 +32,7 @@ export class DatasetsComponent implements OnInit {
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
+    private location: Location
   ) {
     this.usersState = this.store.select('users');
   }
@@ -73,8 +75,8 @@ export class DatasetsComponent implements OnInit {
 
   selectDataset(index: number): void {
     if (index >= 0 && index < this.datasets.length) {
+      this.selectedDataset = this.datasets[index];
       if (this.datasets[index].accessRights) {
-        this.selectedDataset = this.datasets[index];
         this.datasetsService.setSelectedDataset(this.selectedDataset);
         this.registerAlertVisible = false;
         this.selectedDatasetChange.emit(this.selectedDataset);
