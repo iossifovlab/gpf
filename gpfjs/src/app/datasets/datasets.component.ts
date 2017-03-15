@@ -9,6 +9,7 @@ import { IdName } from '../common/idname';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
+import { ActivatedRoute, Params } from '@angular/router';
 
 @Component({
   selector: 'gpf-datasets',
@@ -23,24 +24,46 @@ export class DatasetsComponent implements OnInit {
 
   usersState: Observable<UsersState>;
 
+  selectedDatasetId: string;
+
   constructor(
     private store: Store<any>,
     private datasetsService: DatasetsService,
+    private route: ActivatedRoute
   ) {
     this.usersState = this.store.select('users');
   }
 
   ngOnInit() {
+    this.route.params.subscribe(
+      (params: Params) => {
+        this.selectedDatasetId = params['dataset'];
+        this.selectDatasetById();
+      }
+    );
+
     this.usersState.subscribe(
       state => {
         this.datasetsService.getDatasets().subscribe(
           (datasets) => {
-
             this.datasets = datasets;
-            this.selectDataset(0);
+            this.selectDatasetById();
           });
       }
     );
+  }
+
+  selectDatasetById() {
+    if (!this.datasets) {
+      return;
+    }
+
+    for (let idx in this.datasets) {
+      if (this.datasets[idx].id === this.selectedDatasetId) {
+        this.selectDataset(+idx);
+        return;
+      }
+    }
   }
 
   selectDataset(index: number): void {

@@ -70,6 +70,35 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
+import { RouterModule, Routes } from '@angular/router';
+
+const appRoutes: Routes = [
+  {
+    path: '',
+    redirectTo: 'SD',
+    pathMatch: 'full'
+  },
+  {
+    path: ':dataset',
+    component: DatasetsComponent,
+    children: [
+      {
+        path: '',
+        redirectTo: 'browser',
+        pathMatch: 'full'
+      },
+      {
+        path: 'browser',
+        component: GenotypeBrowserComponent
+      },
+      {
+        path: 'enrichment',
+        component: EnrichmentToolComponent
+      },
+    ]
+  },
+];
+
 
 @NgModule({
   declarations: [
@@ -118,7 +147,8 @@ import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
     PedigreeChartModule,
     HistogramModule,
     StoreModule.provideStore(gpfReducer),
-    StoreDevtoolsModule.instrumentOnlyWithExtension()
+    StoreDevtoolsModule.instrumentOnlyWithExtension(),
+    RouterModule.forRoot(appRoutes)
 
   ],
   providers: [

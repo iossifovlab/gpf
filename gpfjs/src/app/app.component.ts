@@ -7,11 +7,5 @@ import { Dataset } from './datasets/datasets';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  selectedDataset: Dataset;
-  genotypePreviewsArray: any;
   title = 'GPF: Genotypes and Phenotypes in Families';
-
-  updateGenotypePreviewsArray(genotypePreviewsArray) {
-    this.genotypePreviewsArray = genotypePreviewsArray;
-  }
 }

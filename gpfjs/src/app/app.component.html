@@ -1,33 +1,5 @@
 <gpf-fullscreen-loading></gpf-fullscreen-loading>
 <div>
   <h3>{{ title }}</h3>
-    <gpf-tabset>
-      <div class="gpf-tabset-left">
-        <gpf-datasets (selectedDatasetChange)="selectedDataset=$event"></gpf-datasets>
-      </div>
-      <ngb-tab *ngIf="selectedDataset?.genotypeBrowser" title="Genotype Browser">
-          <template ngbTabContent>
-            <gpf-genotype-browser></gpf-genotype-browser>
-          </template>
-      </ngb-tab>
-      <ngb-tab *ngIf="selectedDataset?.enrichmentTool" title="Enrichment Tool">
-          <template ngbTabContent>
-            <gpf-enrichment-tool></gpf-enrichment-tool>
-          </template>
-      </ngb-tab>
-      <ngb-tab *ngIf="selectedDataset?.phenotypeGenotypeTool" title="Phenotype Tool">
-          <template ngbTabContent>
-            <div class="container">Phenotype Tool</div>
-          </template>
-      </ngb-tab>
-      <ngb-tab *ngIf="selectedDataset?.phenotypeBrowser" title="Phenotype Browser">
-          <template ngbTabContent>
-            <div class="container">Phenotype Browser</div>
-          </template>
-      </ngb-tab>
-      <div class="gpf-tabset-right">
-        <gpf-users></gpf-users>
-      </div>
-    </gpf-tabset>
-
+  <router-outlet></router-outlet>
 </div>

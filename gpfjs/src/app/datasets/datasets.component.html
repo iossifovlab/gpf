@@ -1,24 +1,48 @@
-<div *ngIf="datasets" class="btn-group">
-  <div class="dropdown">
-    <button
-      class="dataset-selector btn btn-secondary dropdown-toggle navbar-brand"
-      type="button"
-      id="dropdownMenuButton"
-      data-toggle="dropdown"
-      aria-haspopup="true"
-      aria-expanded="false">{{selectedDataset.name}}</button>
-    <div
-      class="dropdown-menu"
-      aria-labelledby="dropdownMenuButton">
-      <a
-        *ngFor="let dataset of datasets; let i=index"
-        class="dropdown-item"
-        (click)="selectDataset(i)"
-        href="#"
-        [style.opacity]="dataset.accessRights ? 1.0 : 0.3">{{ dataset.name }}</a>
+<nav class="navbar navbar-light bg-faded navbar-toggleable-md">
+  <span class="nav-item">
+    <div *ngIf="datasets" class="btn-group">
+      <div class="dropdown">
+        <button
+          class="dataset-selector btn btn-secondary dropdown-toggle navbar-brand"
+          type="button"
+          id="dropdownMenuButton"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false">{{selectedDataset.name}}</button>
+        <div
+          class="dropdown-menu"
+          aria-labelledby="dropdownMenuButton">
+          <a
+            *ngFor="let dataset of datasets; let i=index"
+            class="dropdown-item"
+            routerLink="/{{ dataset.id }}"
+            routerLinkActive="active"
+            [style.opacity]="dataset.accessRights ? 1.0 : 0.3">{{ dataset.name }}</a>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+  </span>
+  <ul class="navbar-nav mr-auto">
+    <li *ngIf="selectedDataset?.genotypeBrowser" class="nav-item">
+      <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
+    </li>
+    <li *ngIf="selectedDataset?.enrichmentTool" class="nav-item">
+      <a class="nav-link" routerLink="enrichment" routerLinkActive="active">Enrichment Tool</a>
+    </li>
+    <li *ngIf="selectedDataset?.phenotypeGenotypeTool" class="nav-item">
+      <a class="nav-link" routerLink="phenotypeTool" routerLinkActive="active">Phenotype Tool</a>
+    </li>
+    <li *ngIf="selectedDataset?.phenotypeBrowser" class="nav-item">
+      <a class="nav-link" routerLink="phenotypeBrowser" routerLinkActive="active">Phenotype Browser</a>
+    </li>
+  </ul>
+  <span class="nav-item">
+    <gpf-users></gpf-users>
+  </span>
+</nav>
+
+<router-outlet></router-outlet>
+
 
 <div *ngIf="registerAlertVisible"
      class="alert alert-danger"
