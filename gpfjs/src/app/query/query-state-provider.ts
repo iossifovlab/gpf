@@ -8,7 +8,7 @@ import { GenderComponent } from '../gender/gender.component'
 
 export class QueryStateProvider {
   getState() {
-    return "AA";
+    return null;
   }
 }
 
@@ -19,10 +19,7 @@ export class QueryStateCollector {
 
   collectState() {
     let directState = this.directContentChildren.map((children) => children.getState());
-    console.log("directState", directState);
     let indirectState = this.contentChildren.reduce((acc, current) => acc.concat(current.collectState()), []);
-    console.log("indirectState", indirectState);
-
     return directState.concat(indirectState);
   }
 }

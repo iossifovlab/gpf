@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
 import { QueryStateProvider } from '../query/query-state-provider'
+import { QueryData } from '../query/query'
 
 @Component({
   selector: 'gpf-gender',
@@ -60,5 +61,15 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
         'payload': gender
       });
     }
+  }
+
+  getState() {
+    return this.genderState.take(1).map(
+      ([genderState, isValid, validationErrors]) => {
+        if (!isValid) {
+          throw "invalid state"
+        }
+        return { gender: QueryData.trueFalseToStringArray(genderState) }
+    });
   }
 }

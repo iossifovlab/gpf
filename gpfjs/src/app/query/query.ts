@@ -36,7 +36,7 @@ export class QueryData extends CommonQueryData {
   private static prepareEffectTypes(state: any): string {
     return state.effectTypes;
   }
-  private static trueFalseToStringArray(obj: any): string[] {
+  public static trueFalseToStringArray(obj: any): string[] {
     let values = Array<string>();
     for (let key of Object.keys(obj)) {
       if (obj[key]) {
