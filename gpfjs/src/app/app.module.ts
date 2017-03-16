@@ -75,10 +75,15 @@ import { RouterModule, Routes } from '@angular/router';
 const appRoutes: Routes = [
   {
     path: '',
+    redirectTo: 'datasets',
+    pathMatch: 'full'
+  },
+  {
+    path: 'datasets',
     component: DatasetsComponent
   },
   {
-    path: ':dataset',
+    path: 'datasets/:dataset',
     component: DatasetsComponent,
     children: [
       {

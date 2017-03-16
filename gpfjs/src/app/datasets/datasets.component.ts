@@ -62,7 +62,7 @@ export class DatasetsComponent implements OnInit {
     }
 
     if (!this.selectedDatasetId) {
-      this.router.navigate([this.datasets[0].id]);
+      this.router.navigate([this.datasets[0].id], { relativeTo: this.route });
     }
 
     for (let idx in this.datasets) {

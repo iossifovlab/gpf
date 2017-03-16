@@ -1,6 +1,6 @@
 <nav class="navbar navbar-light bg-faded navbar-toggleable-md">
   <span class="nav-item">
-    <div *ngIf="datasets" class="btn-group">
+    <div *ngIf="selectedDataset" class="btn-group">
       <div class="dropdown">
         <button
           class="dataset-selector btn btn-secondary dropdown-toggle navbar-brand"
@@ -15,7 +15,7 @@
           <a
             *ngFor="let dataset of datasets; let i=index"
             class="dropdown-item"
-            routerLink="/{{ dataset.id }}"
+            routerLink="../{{ dataset.id }}"
             routerLinkActive="active"
             [style.opacity]="dataset.accessRights ? 1.0 : 0.3">{{ dataset.name }}</a>
         </div>
