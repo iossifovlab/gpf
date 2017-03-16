@@ -3,7 +3,7 @@ import {
   GeneSetsState, GENE_SETS_INIT, GENE_SETS_COLLECTION_CHANGE,
   GENE_SET_CHANGE, GENE_SETS_TYPES_ADD, GENE_SETS_TYPES_REMOVE
 } from './gene-sets-state';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { Subject } from 'rxjs/Subject';
@@ -11,13 +11,15 @@ import { Observable } from 'rxjs/Observable';
 import { Store } from '@ngrx/store';
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { QueryStateProvider } from '../query/query-state-provider'
 
 @Component({
   selector: 'gpf-gene-sets',
   templateUrl: './gene-sets.component.html',
-  styleUrls: ['./gene-sets.component.css']
+  styleUrls: ['./gene-sets.component.css'],
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSetsComponent) }]
 })
-export class GeneSetsComponent implements OnInit {
+export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   private geneSetsCollections: Array<GeneSetsCollection>;
   private geneSets: Array<GeneSet>;
   private internalSelectedGeneSetsCollection: GeneSetsCollection;
@@ -36,8 +38,10 @@ export class GeneSetsComponent implements OnInit {
     private store: Store<any>,
     private config: ConfigService,
   ) {
+    super();
     this.geneSetsState = toObservableWithValidation(GeneSetsState, this.store.select('geneSets'));
   }
+
 
   isGeneSetsTypesUpdated(geneSetsTypes: Set<any>): boolean {
     if (!this.geneSetsTypes && geneSetsTypes) return true;

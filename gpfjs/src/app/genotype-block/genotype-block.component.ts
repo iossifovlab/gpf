@@ -1,15 +1,18 @@
 import { DatasetsState } from '../datasets/datasets';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
+import { QueryStateCollector } from '../query/query-state-provider'
+
 @Component({
   selector: 'gpf-genotype-block',
   templateUrl: './genotype-block.component.html',
-  styleUrls: ['./genotype-block.component.css']
+  styleUrls: ['./genotype-block.component.css'],
+  providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => GenotypeBlockComponent) }]
 })
-export class GenotypeBlockComponent implements OnInit {
+export class GenotypeBlockComponent extends QueryStateCollector implements OnInit {
   hasCNV: Observable<boolean>;
   hasPedigreeSelector: Observable<boolean>;
   hasPresentInChild: Observable<boolean>;
@@ -19,7 +22,7 @@ export class GenotypeBlockComponent implements OnInit {
   constructor(
     private store: Store<any>
   ) {
-
+    super();
     let datasetsState: Observable<DatasetsState> = this.store.select('datasets');
     this.hasCNV = datasetsState.map(state => {
       if (!state || !state.selectedDataset) {

@@ -2,19 +2,21 @@ import {
   GenderState, GENDER_CHECK_ALL,
   GENDER_UNCHECK_ALL, GENDER_UNCHECK, GENDER_CHECK
 } from './gender';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { QueryStateProvider } from '../query/query-state-provider'
 
 @Component({
   selector: 'gpf-gender',
   templateUrl: './gender.component.html',
-  styleUrls: ['./gender.component.css']
+  styleUrls: ['./gender.component.css'],
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GenderComponent) }]
 })
-export class GenderComponent implements OnInit {
+export class GenderComponent extends QueryStateProvider implements OnInit {
   male: boolean = true;
   female: boolean = true;
 
@@ -24,7 +26,7 @@ export class GenderComponent implements OnInit {
   constructor(
     private store: Store<any>
   ) {
-
+    super();
     this.genderState = toObservableWithValidation(GenderState, this.store.select('gender'));
   }
 
