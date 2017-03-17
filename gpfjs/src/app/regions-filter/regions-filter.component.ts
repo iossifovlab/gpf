@@ -1,5 +1,5 @@
 import {
-  RegionsFilterState, REGIONS_FILTER_CHANGE
+  RegionsFilterState, REGIONS_FILTER_CHANGE, REGIONS_FILTER_INIT
 } from './regions-filter';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
@@ -25,6 +25,10 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': REGIONS_FILTER_INIT,
+    });
+
     this.regionsFilterState.subscribe(
       regionsFilterState => {
         this.regionsFilterInternal = regionsFilterState.regionsFilter;
