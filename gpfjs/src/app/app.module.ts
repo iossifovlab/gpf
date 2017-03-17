@@ -18,7 +18,6 @@ import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes/effecttypes.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
-import { QuerySubmitterComponent } from './query/query-submitter.component';
 
 import { GpfTableModule } from './table/table.module';
 import { DatasetsComponent } from './datasets/datasets.component';
@@ -120,7 +119,6 @@ const appRoutes: Routes = [
     GeneWeightsComponent,
     MinValidatorDirective,
     MaxValidatorDirective,
-    QuerySubmitterComponent,
     GeneSetsComponent,
     SearchableSelectComponent,
     SearchableSelectTemplateDirective,

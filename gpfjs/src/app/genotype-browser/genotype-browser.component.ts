@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import 'rxjs/add/operator/zip';
 
 @Component({
@@ -14,14 +15,24 @@ import 'rxjs/add/operator/zip';
 export class GenotypeBrowserComponent extends QueryStateCollector {
   genotypePreviewsArray: any;
 
+  private selectedDatasetId: string;
 
   constructor(
     private store: Store<any>,
     private queryService: QueryService,
     private configService: ConfigService,
-    private loadingService: FullscreenLoadingService
+    private loadingService: FullscreenLoadingService,
+    private route: ActivatedRoute,
   ) {
     super();
+  }
+
+  ngOnInit() {
+    this.route.parent.params.subscribe(
+      (params: Params) => {
+        this.selectedDatasetId = params['dataset'];
+      }
+    );
   }
 
   submitQuery() {
@@ -30,7 +41,9 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
     Observable.zip(...state)
     .subscribe(
       state => {
-        let queryData = Object.assign({}, {datasetId: "SD"} , ...state);
+        let queryData = Object.assign({},
+                                      {datasetId: this.selectedDatasetId},
+                                      ...state);
         this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
           (genotypePreviewsArray) => {
             this.genotypePreviewsArray = genotypePreviewsArray;
@@ -46,7 +59,9 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
     Observable.zip(...state)
     .subscribe(
       state => {
-        let queryData = Object.assign({}, ...state);
+        let queryData = Object.assign({},
+                                      {datasetId: this.selectedDatasetId},
+                                      ...state);
         event.target.queryData.value = JSON.stringify(queryData);
         event.target.submit();
         console.log(Object.assign({}, ...state))
