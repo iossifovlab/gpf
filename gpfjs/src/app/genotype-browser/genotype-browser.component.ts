@@ -50,7 +50,10 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
             this.loadingService.setLoadingStop();
           });
       },
-      error => null
+      error => {
+        console.log(error);
+        this.loadingService.setLoadingStop();
+      }
     )
   }
 

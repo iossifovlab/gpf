@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { QueryStateCollector } from '../query/query-state-provider'
-import { EnrichmentQueryData } from '../enrichment-query/enrichment-query';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
@@ -47,7 +46,10 @@ export class EnrichmentToolComponent extends QueryStateCollector {
             this.loadingService.setLoadingStop();
           });
       },
-      error => console.log(error)
+      error => {
+        console.log(error);
+        this.loadingService.setLoadingStop();
+      }
     )
   }
 }
