@@ -1,5 +1,4 @@
 import { Component, OnInit, forwardRef } from '@angular/core';
-import { REGIONS_BLOCK_TAB_DESELECT } from '../store/common';
 import { Store } from '@ngrx/store';
 import { QueryStateCollector } from '../query/query-state-provider'
 
@@ -9,22 +8,11 @@ import { QueryStateCollector } from '../query/query-state-provider'
   styleUrls: ['./regions-block.component.css'],
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => RegionsBlockComponent) }]
 })
-export class RegionsBlockComponent extends QueryStateCollector implements OnInit {
+export class RegionsBlockComponent extends QueryStateCollector {
 
   constructor(
     private store: Store<any>
   ) {
     super();
   }
-
-  ngOnInit() {
-  }
-
-  onTabChange(event) {
-    this.store.dispatch({
-      'type': REGIONS_BLOCK_TAB_DESELECT,
-      'payload': event.activeId
-    });
-  }
-
 }

@@ -1,4 +1,3 @@
-import { GENES_BLOCK_TAB_DESELECT } from '../store/common';
 export const GENE_WEIGHTS_RANGE_CHANGE = 'GENE_WEIGHTS_RANGE_CHANGE';
 export const GENE_WEIGHTS_INIT = 'GENE_WEIGHTS_INIT';
 
@@ -28,8 +27,6 @@ export function geneWeightsReducer(
       };
     case GENE_WEIGHTS_INIT:
       return initialState;
-    case GENES_BLOCK_TAB_DESELECT:
-        return null;
     default:
       return state;
   }

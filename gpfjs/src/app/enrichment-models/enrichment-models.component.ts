@@ -1,5 +1,5 @@
-import { EnrichmentModelsState, ENRICHMENT_BACKGROUND_CHANGE, ENRICHMENT_COUNTING_CHANGE } from './enrichment-models-state';
-import { ENRICHMENT_MODELS_TAB_DESELECT } from '../store/common';
+import { EnrichmentModelsState, ENRICHMENT_BACKGROUND_CHANGE, ENRICHMENT_COUNTING_CHANGE,
+         ENRICHMENT_MODELS_TAB_DESELECT } from './enrichment-models-state';
 import { Component, OnInit, forwardRef } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
 import { EnrichmentModels } from './enrichment-models';

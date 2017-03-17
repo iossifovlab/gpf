@@ -1,9 +1,8 @@
-import { ENRICHMENT_MODELS_TAB_DESELECT } from '../store/common';
 import { IdDescription } from '../common/iddescription';
 
 export const ENRICHMENT_BACKGROUND_CHANGE = 'ENRICHMENT_BACKGROUND_CHANGE';
 export const ENRICHMENT_COUNTING_CHANGE = 'ENRICHMENT_COUNTING_CHANGE';
-
+export const ENRICHMENT_MODELS_TAB_DESELECT = 'ENRICHMENT_MODELS_TAB_DESELECT'
 
 
 export interface EnrichmentModelsState {
