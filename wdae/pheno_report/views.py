@@ -14,6 +14,9 @@ from preloaded.register import get_register
 from helpers.logger import log_filter, LOGGER
 from pheno_families.views import PhenoFamilyBase
 from pheno_report import pheno_request, pheno_tool
+from rest_framework.authentication import TokenAuthentication,\
+    SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 class PhenoViewBase(views.APIView, PhenoFamilyBase):
@@ -51,6 +54,8 @@ class PhenoViewBase(views.APIView, PhenoFamilyBase):
 
 
 class PhenoReportView(PhenoViewBase):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     @staticmethod
     def migrate_response(response):
@@ -82,6 +87,10 @@ class PhenoReportView(PhenoViewBase):
 
 
 class PhenoReportDownloadView(PhenoViewBase):
+    authentication_classes = (TokenAuthentication,
+                              SessionAuthentication,
+                              BasicAuthentication)
+    permission_classes = (AllowAny,)
 
     def build_response(self, tool):
         table = tool.build_data_table()

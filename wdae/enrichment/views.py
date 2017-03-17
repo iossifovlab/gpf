@@ -22,6 +22,8 @@ from rest_framework import status
 from helpers.dae_query import prepare_query_dict
 from enrichment.counters import DenovoStudies
 from enrichment.enrichment_builder import EnrichmentBuilder, RowResult
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import AllowAny
 
 # from helpers.profiler import profile
 
@@ -56,6 +58,8 @@ class EnrichmentModelsView(APIView):
 
 
 class EnrichmentView(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (AllowAny,)
 
     def __init__(self):
         self.data = {}
