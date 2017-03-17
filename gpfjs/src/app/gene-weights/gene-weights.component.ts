@@ -1,4 +1,6 @@
-import { Input, Component, OnInit, ViewChild, ViewEncapsulation, Output, EventEmitter, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { Input, Component, OnInit, ViewChild, ViewEncapsulation, Output,
+         EventEmitter, OnChanges, SimpleChanges, ChangeDetectorRef, forwardRef
+       } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { GeneWeights, Partitions } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
@@ -10,15 +12,17 @@ import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/observable/of';
 import { Store } from '@ngrx/store';
+import { QueryStateProvider } from '../query/query-state-provider'
 
 import { GENE_WEIGHTS_RANGE_CHANGE, GENE_WEIGHTS_INIT } from './gene-weights-store';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'gpf-gene-weights',
-  templateUrl: './gene-weights.component.html'
+  templateUrl: './gene-weights.component.html',
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneWeightsComponent) }]
 })
-export class GeneWeightsComponent {
+export class GeneWeightsComponent extends QueryStateProvider {
   private rangeChanges = new Subject<Array<number >>();
   private partitions: Observable<Partitions>;
 
@@ -35,7 +39,7 @@ export class GeneWeightsComponent {
     private changeDetectorRef: ChangeDetectorRef,
     private store: Store<any>
   )  {
-
+    super();
   }
 
   set selectedGeneWeights(selectedGeneWeights: GeneWeights) {
@@ -112,5 +116,15 @@ export class GeneWeightsComponent {
 
   get rangeEnd() {
     return this.internalRangeEnd;
+  }
+
+  getState() {
+    return this.store.select('geneWeights').take(1).map(
+      (geneWeights) => {
+        // if (!isValid) {
+        //   throw "invalid state"
+        // }
+        return { geneWeights: geneWeights }
+    });
   }
 }
