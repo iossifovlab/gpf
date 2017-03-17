@@ -184,7 +184,7 @@ class TransmissionLegacy(TransmissionConfig):
             'TMM_ALL': TMM_ALL,
             'limit': limit
         }
-        print(query)
+        # print(query)
 
         transmittedVariantsTOOMANYFile = \
             self._get_params('indexFile') + "-TOOMANY.txt.bgz"
