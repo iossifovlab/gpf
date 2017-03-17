@@ -17,44 +17,21 @@ import { GeneSetsState, geneSetsReducer } from '../gene-sets/gene-sets-state';
 import { UsersState, usersReducer } from '../users/users-store';
 import { StudyTypesState, studyTypesReducer } from '../study-types/study-types';
 import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-models/enrichment-models-state';
-import { ValidateNested, ValidateIf } from "class-validator"
-import { Type } from "class-transformer";
 
-export class GpfState {
+export interface GpfState {
   datasets: DatasetsState;
-
-  @Type(() => PedigreeSelectorState)
-  @ValidateNested()
   pedigreeSelector: PedigreeSelectorState;
-
   effectTypes: EffectTypesState;
-
-  @Type(() => GenderState)
-  @ValidateNested()
   gender: GenderState;
-
   variantTypes: VariantTypesState;
   geneWeights: GeneWeightsState;
   presentInChild: PresentInChildState;
   presentInParent: PresentInParentState;
-
-  @Type(() => GeneSymbolsState)
-  @ValidateIf(o => o.geneSymbols !== null)
-  @ValidateNested()
   geneSymbols: GeneSymbolsState;
-
   regionsFilter: RegionsFilterState;
-
-  @Type(() => GeneSetsState)
-  @ValidateIf(o => o.geneSets !== null)
-  @ValidateNested()
   geneSets: GeneSetsState;
-
   users: UsersState;
   enrichmentModels: EnrichmentModelsState;
-
-  @Type(() => StudyTypesState)
-  @ValidateNested()
   studyTypes: StudyTypesState
 };
 
