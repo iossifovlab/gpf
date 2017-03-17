@@ -1,7 +1,10 @@
 export const REGIONS_FILTER_CHANGE = 'REGIONS_FILTER_CHANGE';
 export const REGIONS_FILTER_INIT = 'REGIONS_FILTER_INIT';
+import { RegionsFilterValidator } from './regions-filter.validator'
+import { Validate } from "class-validator";
 
-export interface RegionsFilterState {
+export class RegionsFilterState {
+  @Validate(RegionsFilterValidator)
   regionsFilter: string;
 };
 

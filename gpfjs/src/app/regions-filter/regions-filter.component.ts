@@ -6,6 +6,8 @@ import { Component, OnInit, forwardRef } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { QueryStateProvider } from '../query/query-state-provider'
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-regions-filter',
@@ -15,13 +17,15 @@ import { QueryStateProvider } from '../query/query-state-provider'
 export class RegionsFilterComponent extends QueryStateProvider implements OnInit {
   regionsFilterInternal: string;
 
-  regionsFilterState: Observable<RegionsFilterState>;
+  regionsFilterState: Observable<[RegionsFilterState, boolean, ValidationError[]]>;
+  private flashingAlert = false;
+  private errors: string[];
 
   constructor(
     private store: Store<any>
   ) {
     super();
-    this.regionsFilterState = this.store.select('regionsFilter');
+    this.regionsFilterState = toObservableWithValidation(RegionsFilterState ,this.store.select('regionsFilter'));
   }
 
   ngOnInit() {
@@ -30,7 +34,8 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
     });
 
     this.regionsFilterState.subscribe(
-      regionsFilterState => {
+      ([regionsFilterState, isValid, validationErrors]) => {
+        this.errors = validationErrorsToStringArray(validationErrors);
         this.regionsFilterInternal = regionsFilterState.regionsFilter;
       }
     );
@@ -49,7 +54,13 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
 
   getState() {
     return this.regionsFilterState.take(1).map(
-      (regionsFilterState) => {
+      ([regionsFilterState, isValid, validationErrors]) => {
+        if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+          throw "invalid state"
+        }
+
         let regionsFilter: string = regionsFilterState.regionsFilter;
         let result = regionsFilter
           .split(/[\s]/)
@@ -58,9 +69,7 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
         if (result.length === 0) {
           return {};
         }
-        // if (!isValid) {
-        //   throw "invalid state"
-        // }
+
         return { regions: result }
     });
   }
