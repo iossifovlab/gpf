@@ -158,4 +158,20 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   getDownloadLink(selectedGeneSet: GeneSet): string {
     return `${this.config.baseUrl}${selectedGeneSet.download}`;
   }
+
+  getState() {
+    return this.geneSetsState.take(1).map(
+      ([geneSetsState, isValid, validationErrors]) => {
+        if (!isValid) {
+          throw "invalid state"
+        }
+
+        let geneSetsTypes = Array.from(geneSetsState.geneSetsTypes).map(t => t.id);
+        return { geneSet :{
+          geneSetsCollection: geneSetsState.geneSetsCollection.name,
+          geneSet: geneSetsState.geneSet.name,
+          geneSetsTypes: geneSetsTypes
+        }};
+    });
+  }
 }
