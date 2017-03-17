@@ -4,16 +4,18 @@ import {
   VARIANT_TYPES_CHECK_ALL, VARIANT_TYPES_UNCHECK_ALL,
   VARIANT_TYPES_UNCHECK, VARIANT_TYPES_CHECK
 } from './varianttypes';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-
+import { QueryStateProvider } from '../query/query-state-provider'
+import { QueryData } from '../query/query'
 
 @Component({
   selector: 'gpf-varianttypes',
   templateUrl: './varianttypes.component.html',
-  styleUrls: ['./varianttypes.component.css']
+  styleUrls: ['./varianttypes.component.css'],
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => VarianttypesComponent) }]
 })
 export class VarianttypesComponent implements OnInit {
   sub: boolean = true;
@@ -70,5 +72,15 @@ export class VarianttypesComponent implements OnInit {
         'payload': variantType
       });
     }
+  }
+
+  getState() {
+    return this.variantTypesState.take(1).map(
+      (variantTypes) => {
+        // if (!isValid) {
+        //   throw "invalid state"
+        // }
+        return { variantTypes: QueryData.trueFalseToStringArray(variantTypes) }
+    });
   }
 }
