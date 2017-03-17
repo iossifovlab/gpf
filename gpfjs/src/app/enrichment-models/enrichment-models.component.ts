@@ -1,17 +1,19 @@
 import { EnrichmentModelsState, ENRICHMENT_BACKGROUND_CHANGE, ENRICHMENT_COUNTING_CHANGE } from './enrichment-models-state';
 import { ENRICHMENT_MODELS_TAB_DESELECT } from '../store/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
 import { EnrichmentModels } from './enrichment-models';
 import { IdDescription } from '../common/iddescription';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { QueryStateProvider } from '../query/query-state-provider'
 
 @Component({
   selector: 'gpf-enrichment-models',
   templateUrl: './enrichment-models.component.html',
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => EnrichmentModelsComponent) }]
 })
-export class EnrichmentModelsComponent implements OnInit {
+export class EnrichmentModelsComponent extends QueryStateProvider implements OnInit {
   private enrichmentModels: EnrichmentModels;
   private internalSelectedBackground: IdDescription;
   private internalSelectedCounting: IdDescription;
@@ -21,6 +23,7 @@ export class EnrichmentModelsComponent implements OnInit {
     private store: Store<any>,
     private enrichmentModelsService: EnrichmentModelsService,
   ) {
+    super();
     this.enrichmentModelsState = this.store.select('enrichmentModels');
   }
 
@@ -64,6 +67,32 @@ export class EnrichmentModelsComponent implements OnInit {
     this.store.dispatch({
       'type': ENRICHMENT_MODELS_TAB_DESELECT,
       'payload': event.activeId
+    });
+  }
+
+  getState() {
+    return this.enrichmentModelsState.take(1).map(
+      (enrichmentModels) => {
+        // if (!isValid) {
+        //   throw "invalid state"
+        // }
+
+        let enrichmentBackgroundModel = null;
+        let enrichmentCountingModel = null
+
+        if (enrichmentModels && enrichmentModels.background) {
+          enrichmentBackgroundModel = enrichmentModels.background.id
+        }
+
+        if (enrichmentModels && enrichmentModels.counting) {
+          enrichmentCountingModel = enrichmentModels.counting.id
+        }
+
+
+        return {
+          enrichmentBackgroundModel: enrichmentBackgroundModel,
+          enrichmentCountingModel: enrichmentCountingModel
+         }
     });
   }
 }
