@@ -1,6 +1,16 @@
 /* You can add global styles to this file, and also import other style files */
 
 
+@keyframes example {
+    from {background-color: red;}
+    to {background-color: inherit;}
+}
+
+/* The element to apply the animation to */
+.flashing {
+	animation: example 0.3s linear infinite alternate;
+}
+
 label {
 	margin-bottom: 0px;
 }

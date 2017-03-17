@@ -19,6 +19,8 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
   errors: string[];
   geneSymbolsState: Observable<[GeneSymbolsState, boolean, ValidationError[]]>;
 
+  private flashingAlert: boolean = false;
+
   constructor(
     private store: Store<any>
   ) {
@@ -56,10 +58,11 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
     return this.geneSymbolsState.take(1).map(
       ([geneSymbols, isValid, validationErrors]) => {
         if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
           throw "invalid state"
         }
-
-        console.log(geneSymbols.geneSymbols)
 
         let result = geneSymbols.geneSymbols
           .split(/[,\s]/)
