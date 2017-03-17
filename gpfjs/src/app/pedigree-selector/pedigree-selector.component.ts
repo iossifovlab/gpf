@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 import { Dataset, PedigreeSelector, DatasetsState } from '../datasets/datasets';
 import {
   PedigreeSelectorState, PEDIGREE_SELECTOR_INIT,
@@ -10,11 +10,13 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { QueryStateProvider } from '../query/query-state-provider'
 
 @Component({
   selector: 'gpf-pedigree-selector',
   templateUrl: './pedigree-selector.component.html',
-  styleUrls: ['./pedigree-selector.component.css']
+  styleUrls: ['./pedigree-selector.component.css'],
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PedigreeSelectorComponent) }]
 })
 export class PedigreeSelectorComponent implements OnInit {
   selectedDataset: Dataset;
@@ -50,7 +52,7 @@ export class PedigreeSelectorComponent implements OnInit {
       ([pedigreeState, isValid, validationErrors]) => {
         console.log(pedigreeState, isValid, validationErrors);
         this.errors = validationErrorsToStringArray(validationErrors);
-        
+
         if (!pedigreeState) {
           return;
         }
@@ -127,6 +129,20 @@ export class PedigreeSelectorComponent implements OnInit {
       'type': value ? PEDIGREE_SELECTOR_CHECK_VALUE : PEDIGREE_SELECTOR_UNCHECK_VALUE,
       'payload': this.selectedPedigree.domain[index].id,
 
+    });
+  }
+
+  getState() {
+    return this.pedigreeState.take(1).map(
+      ([pedigreeState, isValid, validationErrors]) => {
+        if (!isValid) {
+          throw "invalid state"
+        }
+
+        return { pedigreeSelector: {
+          id: pedigreeState.pedigree.id,
+          checkedValues: pedigreeState.checkedValues
+        }};
     });
   }
 }
