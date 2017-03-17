@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
@@ -11,7 +11,7 @@ import {
 } from './effecttypes';
 import { DatasetsState } from '../datasets/datasets';
 import { GpfState } from '../store/gpf-store';
-
+import { QueryStateProvider } from '../query/query-state-provider'
 
 @Component({
   selector: 'gpf-effecttypes-column',
@@ -20,11 +20,11 @@ import { GpfState } from '../store/gpf-store';
       <em>{{columnName}}</em>
       <div *ngFor="let effect of effectTypesLabels; let i=index" class="checkbox">
         <label>
-          <input 
+          <input
             #checkbox
             type="checkbox"
             [checked]="effectTypesValues[i]"
-            (change)="checkEffectType(i, checkbox.checked); 
+            (change)="checkEffectType(i, checkbox.checked);
                       $event.stopPropagation()">
           {{effect}}
         </label>
@@ -75,9 +75,10 @@ export class EffecttypesColumnComponent implements OnInit {
 @Component({
   selector: 'gpf-effecttypes',
   templateUrl: './effecttypes.component.html',
-  styleUrls: ['./effecttypes.component.css']
+  styleUrls: ['./effecttypes.component.css'],
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => EffecttypesComponent) }]
 })
-export class EffecttypesComponent implements OnInit {
+export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   codingColumn: string[] = CODING;
   nonCodingColumn: string[] = NONCODING;
   cnvColumn: string[] = CNV;
@@ -92,7 +93,7 @@ export class EffecttypesComponent implements OnInit {
   constructor(
     private store: Store<GpfState>
   ) {
-
+    super();
     this.effectTypes = this.store.select('effectTypes');
     this.datasetsState = this.store.select('datasets');
     this.hasCNV = this.datasetsState.map(datasetsState => {
@@ -141,6 +142,16 @@ export class EffecttypesComponent implements OnInit {
       });
 
     }
+  }
+
+  getState() {
+    return this.effectTypes.take(1).map(
+      (effectTypes) => {
+        // if (!isValid) {
+        //   throw "invalid state"
+        // }
+        return { effectTypes: effectTypes }
+    });
   }
 
 }
