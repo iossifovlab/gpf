@@ -18,6 +18,8 @@ from rest_framework import status
 from helpers.dae_query import prepare_query_dict
 from enrichment.enrichment_builder import EnrichmentBuilder, RowResult,\
     PHENOTYPES, EFFECT_TYPES, DenovoStudies, ChildrenStats
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import AllowAny
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 
 # from helpers.profiler import profile
@@ -53,6 +55,8 @@ class EnrichmentModelsView(APIView):
 
 
 class EnrichmentView(APIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (AllowAny,)
 
     def __init__(self):
         self.data = {}
@@ -181,6 +185,14 @@ class EnrichmentView(APIView):
                     res.append(tres)
             result[phenotype] = res
         return result
+
+#         for phenotype, tests in self.result.items():
+#             res = []
+#             for t in tests:
+#                 tres = self.serialize_response_test(t)
+#                 res.append(tres)
+#             result[phenotype] = res
+#         return result
 
     def serialize(self):
         res1 = self.serialize_response_common_data()

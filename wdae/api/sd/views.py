@@ -13,6 +13,9 @@ from django.http.response import StreamingHttpResponse
 import itertools
 from rest_framework.parsers import JSONParser, FormParser
 from helpers.wdae_query_variants import wdae_query_wrapper
+from rest_framework.authentication import TokenAuthentication,\
+    SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import AllowAny
 
 
 class SequencingDenovoPrepare(APIView):
@@ -27,6 +30,8 @@ class SequencingDenovoPrepare(APIView):
 
 
 class SequencingDenovoPreview(SequencingDenovoPrepare):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (AllowAny,)
 
     def post(self, request):
 
@@ -47,6 +52,10 @@ class SequencingDenovoPreview(SequencingDenovoPrepare):
 
 
 class SequencingDenovoDownload(SequencingDenovoPrepare):
+    authentication_classes = (TokenAuthentication,
+                              SessionAuthentication,
+                              BasicAuthentication)
+    permission_classes = (AllowAny,)
 
     parser_classes = (JSONParser, FormParser,)
 
