@@ -9,7 +9,7 @@ import { Component, OnInit, forwardRef } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { QueryStateProvider } from '../query/query-state-provider'
-import { QueryData } from '../query/query'
+import { QueryData, Rarity } from '../query/query'
 
 @Component({
   selector: 'gpf-present-in-parent',
@@ -151,7 +151,25 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
           result.push('neither');
         }
 
-        return { presentInParent: result }
+        let rarity: Rarity = {
+          ultraRare: presentInParentState.ultraRare,
+          minFreq: presentInParentState.rarityIntervalStart,
+          maxFreq: presentInParentState.rarityIntervalEnd
+        };
+        if (rarity.ultraRare) {
+          rarity.minFreq = null;
+          rarity.maxFreq = null;
+        } else {
+          rarity.ultraRare = null;
+          if (rarity.minFreq <= 0.0) {
+            rarity.minFreq = null;
+          }
+          if (rarity.maxFreq >= 100.0) {
+            rarity.maxFreq = null;
+          }
+        }
+
+        return { presentInParent: result, rarity: rarity }
     });
   }
 }
