@@ -14,7 +14,7 @@ import { QueryData } from '../query/query'
   templateUrl: './present-in-child.component.html',
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PresentInChildComponent) }]
 })
-export class PresentInChildComponent implements OnInit {
+export class PresentInChildComponent extends QueryStateProvider implements OnInit {
   affectedOnly: boolean = true;
   unaffectedOnly: boolean = true;
   affectedUnaffected: boolean = true;
@@ -25,7 +25,7 @@ export class PresentInChildComponent implements OnInit {
   constructor(
     private store: Store<any>
   ) {
-
+    super();
     this.presentInChildState = this.store.select('presentInChild');
   }
 
@@ -60,12 +60,12 @@ export class PresentInChildComponent implements OnInit {
   }
 
   getState() {
-  return this.presentInChildState.take(1).map(
-    (presentInChildState) => {
-      // if (!isValid) {
-      //   throw "invalid state"
-      // }
-      return { presentInChild: presentInChildState }
-  });
-}
+    return this.presentInChildState.take(1).map(
+      (presentInChildState) => {
+        // if (!isValid) {
+        //   throw "invalid state"
+        // }
+        return { presentInChild: presentInChildState }
+    });
+  }
 }

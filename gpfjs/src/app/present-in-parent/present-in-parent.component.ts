@@ -16,7 +16,7 @@ import { QueryData } from '../query/query'
   templateUrl: './present-in-parent.component.html',
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PresentInParentComponent) }]
 })
-export class PresentInParentComponent implements OnInit {
+export class PresentInParentComponent extends QueryStateProvider implements OnInit {
   motherOnly: boolean;
   fatherOnly: boolean;
   motherFather: boolean;
@@ -33,7 +33,7 @@ export class PresentInParentComponent implements OnInit {
   constructor(
     private store: Store<any>
   ) {
-
+    super();
     this.presentInParentState = this.store.select('presentInParent');
   }
 
