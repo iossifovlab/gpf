@@ -2,8 +2,15 @@
   <gpf-genes-block></gpf-genes-block>
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
-  <gpf-query-submitter (genotypePreviewsArrayChange)="genotypePreviewsArray = $event"></gpf-query-submitter>
-  <button (click)="printState()">Collect</button>
+
+  <input type="button" value="Preview" (click)="submitQuery()">
+  <form
+      (ngSubmit)="onSubmit($event)"
+      action="{{ configService.baseUrl }}genotype_browser/download" method="post">
+    <input name="queryData" type="hidden">
+    <button type="submit">Download</button>
+  </form>
+
 </div>
 
 <div class="">

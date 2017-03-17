@@ -1,7 +1,0 @@
-<input type="button" value="Preview" (click)="submitQuery()">
-<form 
-    (ngSubmit)="onSubmit($event)" 
-    action="{{ configService.baseUrl }}genotype_browser/download" method="post">
-  <input name="queryData" type="hidden">
-  <button type="submit">Download</button>
-</form>
