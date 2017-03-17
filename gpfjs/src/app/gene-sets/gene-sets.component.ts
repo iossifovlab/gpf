@@ -32,6 +32,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   private geneSetsResult: Observable<GeneSet[]>;
 
   private errors: string[];
+  private flashingAlert = false;
 
   constructor(
     private geneSetsService: GeneSetsService,
@@ -163,6 +164,9 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     return this.geneSetsState.take(1).map(
       ([geneSetsState, isValid, validationErrors]) => {
         if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
           throw "invalid state"
         }
 
