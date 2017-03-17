@@ -4,14 +4,17 @@ import {
   PRESENT_IN_PARENT_CHECK, PRESENT_IN_PARENT_RANGE_START_CHANGE,
   PRESENT_IN_PARENT_RANGE_END_CHANGE, PRESENT_IN_PARENT_ULTRA_RARE_CHANGE
 } from './present-in-parent';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { QueryStateProvider } from '../query/query-state-provider'
+import { QueryData } from '../query/query'
 
 @Component({
   selector: 'gpf-present-in-parent',
   templateUrl: './present-in-parent.component.html',
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PresentInParentComponent) }]
 })
 export class PresentInParentComponent implements OnInit {
   motherOnly: boolean;
@@ -127,4 +130,28 @@ export class PresentInParentComponent implements OnInit {
     }
   }
 
+  getState() {
+    return this.presentInParentState.take(1).map(
+      (presentInParentState) => {
+        // if (!isValid) {
+        //   throw "invalid state"
+        // }
+
+        let result = new Array<string>();
+        if (presentInParentState.fatherOnly) {
+          result.push('father only');
+        }
+        if (presentInParentState.motherOnly) {
+          result.push('mother only');
+        }
+        if (presentInParentState.motherFather) {
+          result.push('mother and father');
+        }
+        if (presentInParentState.neither) {
+          result.push('neither');
+        }
+
+        return { presentInParent: result }
+    });
+  }
 }
