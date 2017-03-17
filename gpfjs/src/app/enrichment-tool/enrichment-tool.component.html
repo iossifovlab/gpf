@@ -1,6 +1,6 @@
 <div class="container">
   <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
   <gpf-enrichment-models></gpf-enrichment-models>
-  <gpf-enrichment-query-submitter (enrichmentResultsChange)="enrichmentResults=$event"></gpf-enrichment-query-submitter>
+  <input type="button" value="Enrichment Test" (click)="submitQuery()">
   <gpf-enrichment-table [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
 </div>

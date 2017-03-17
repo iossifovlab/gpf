@@ -61,7 +61,6 @@ import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.compo
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component'
 import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service'
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
-import { EnrichmentQuerySubmitterComponent } from './enrichment-query/enrichment-query-submitter.component';
 import { EnrichmentTableComponent, EnrichmentTableRowComponent } from './enrichment-table/enrichment-table.component'
 
 import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component'
@@ -134,7 +133,6 @@ const appRoutes: Routes = [
     GpfTabsetComponent,
     EnrichmentToolComponent,
     EnrichmentModelsComponent,
-    EnrichmentQuerySubmitterComponent,
     EnrichmentTableComponent,
     EnrichmentTableRowComponent,
     FullscreenLoadingComponent,
