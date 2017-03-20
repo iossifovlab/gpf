@@ -11,10 +11,15 @@ export function IsLessThanOrEqual(property: string, validationOptions?: Validati
             validator: {
                 validate(value: any, args: ValidationArguments) {
                     const [relatedPropertyName] = args.constraints;
-                    const relatedValue = (args.object as any)[relatedPropertyName];
-                    return  typeof value === "number" &&
-                           typeof relatedValue === "number" &&
-                           value <= relatedValue;
+                    try {
+                      var relatedValue = relatedPropertyName.split('.').reduce((a, b) => a[b], (args.object as any));
+                      return typeof value === "number" &&
+                             typeof relatedValue === "number" &&
+                             value <= relatedValue;
+                    }
+                    catch (exception) {
+                      return false;
+                    }
                 },
                 defaultMessage(args: ValidationArguments) {
                   const [relatedPropertyName] = args.constraints;
