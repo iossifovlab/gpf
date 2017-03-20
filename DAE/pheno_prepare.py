@@ -16,6 +16,8 @@ from pheno.models import PersonManager
 from collections import Counter
 from pheno.prepare.base_variables import BaseVariables
 from pheno.utils.configuration import PhenoConfig
+from pheno.prepare.base_meta_variables import BaseMetaVariables
+from pheno.pheno_db import PhenoDB
 
 __all__ = []
 __version__ = 0.1
@@ -27,29 +29,35 @@ TESTRUN = 0
 PROFILE = 0
 
 
-def load_persons(families_file):
-    assert os.path.isfile(families_file)
+class PrepareIndividuals(PhenoConfig):
 
-    df = pd.read_csv(families_file, sep='\t')
-    assert 'familyId' in df.columns
-    assert 'personId' in df.columns
+    def __init__(self, pheno_db, *args, **kwargs):
+        super(PrepareIndividuals, self).__init__(
+            pheno_db=pheno_db, *args, **kwargs)
 
-    columns = list(df.columns)
-    columns[columns.index('familyId')] = 'family_id'
-    columns[columns.index('personId')] = 'person_id'
-    df.columns = columns
-    df['role_order'] = np.arange(len(df))
-    df['role_id'] = df.role
+    def load_persons(self, families_file):
+        assert os.path.isfile(families_file)
 
-    return df
+        df = pd.read_csv(families_file, sep='\t')
+        assert 'familyId' in df.columns
+        assert 'personId' in df.columns
 
+        columns = list(df.columns)
+        columns[columns.index('familyId')] = 'family_id'
+        columns[columns.index('personId')] = 'person_id'
+        df.columns = columns
+        df['role_order'] = np.arange(len(df))
+        df['role_id'] = df.role
 
-def save_persons(persons, pheno_db):
-    with PersonManager(pheno_db=pheno_db) as pm:
-        pm.drop_tables()
-        pm.create_tables()
+        return df
 
-        pm.save_df(persons)
+    def prepare(self, families_file):
+        persons_df = self.load_persons(families_file)
+        with PersonManager(pheno_db=self.pheno_db) as pm:
+            pm.drop_tables()
+            pm.create_tables()
+
+            pm.save_df(persons_df)
 
 
 class PrepareVariables(PhenoConfig, BaseVariables):
@@ -118,6 +126,15 @@ class PrepareVariables(PhenoConfig, BaseVariables):
                           'family_id', 'person_role']]
                 self._build_variable(instrument_name, measure_name,
                                      mdf.dropna())
+
+
+class PrepareMetaVariables(PhenoConfig, BaseMetaVariables):
+
+    def __init__(self, pheno_db, *args, **kwargs):
+        super(PrepareMetaVariables, self).__init__(
+            pheno_db=pheno_db, *args, **kwargs)
+        self.phdb = PhenoDB(self.pheno_db)
+        self.phdb.load()
 
 
 class CLIError(Exception):
@@ -198,11 +215,15 @@ USAGE
             raise CLIError(
                 "output filename should be specified")
 
-        persons = load_persons(families_filename)
-        save_persons(persons, pheno_db)
+        prep_inidividuals = PrepareIndividuals(pheno_db)
+        prep_inidividuals.prepare(families_filename)
 
         prep_variables = PrepareVariables(pheno_db)
         prep_variables.prepare(instruments_directory)
+
+        prep_meta = PrepareMetaVariables(pheno_db)
+        prep_meta.prepare()
+
         return 0
     except KeyboardInterrupt:
         return 0
