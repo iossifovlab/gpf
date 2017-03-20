@@ -15,11 +15,13 @@ export class GeneWeightsState {
   @IsNumber()
   @Min(0)
   @IsLessThanOrEqual("rangeEnd")
+  @IsMoreThanOrEqual("weight.min")
   rangeStart: number;
 
   @IsNumber()
   @Min(0)
   @IsMoreThanOrEqual("rangeStart")
+  @IsLessThanOrEqual("weight.max")
   rangeEnd: number;
 };
 
