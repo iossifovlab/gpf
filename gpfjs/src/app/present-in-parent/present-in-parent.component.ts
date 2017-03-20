@@ -1,5 +1,5 @@
 import {
-  PresentInParentState, PRESENT_IN_PARENT_CHECK_ALL,
+  PresentInParentState, PRESENT_IN_PARENT_INIT, PRESENT_IN_PARENT_CHECK_ALL,
   PRESENT_IN_PARENT_UNCHECK_ALL, PRESENT_IN_PARENT_UNCHECK,
   PRESENT_IN_PARENT_CHECK, PRESENT_IN_PARENT_RANGE_START_CHANGE,
   PRESENT_IN_PARENT_RANGE_END_CHANGE, PRESENT_IN_PARENT_ULTRA_RARE_CHANGE
@@ -10,6 +10,8 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { QueryStateProvider } from '../query/query-state-provider'
 import { QueryData, Rarity } from '../query/query'
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-present-in-parent',
@@ -28,18 +30,27 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
 
   rarityRadio: string;
 
-  presentInParentState: Observable<PresentInParentState>;
+  presentInParentState: Observable<[PresentInParentState, boolean, ValidationError[]]>;
+
+  private errors: string[];
+  private flashingAlert = false;
 
   constructor(
     private store: Store<any>
   ) {
     super();
-    this.presentInParentState = this.store.select('presentInParent');
+    this.presentInParentState = toObservableWithValidation(PresentInParentState, this.store.select('presentInParent'));
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': PRESENT_IN_PARENT_INIT,
+    });
+
     this.presentInParentState.subscribe(
-      presentInParentState => {
+      ([presentInParentState, isValid, validationErrors]) => {
+        this.errors = validationErrorsToStringArray(validationErrors);
+
         this.motherOnly = presentInParentState.motherOnly;
         this.fatherOnly = presentInParentState.fatherOnly;
         this.motherFather = presentInParentState.motherFather;
@@ -132,10 +143,13 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
 
   getState() {
     return this.presentInParentState.take(1).map(
-      (presentInParentState) => {
-        // if (!isValid) {
-        //   throw "invalid state"
-        // }
+      ([presentInParentState, isValid, validationErrors]) => {
+        if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
+           throw "invalid state"
+        }
 
         let result = new Array<string>();
         if (presentInParentState.fatherOnly) {

@@ -6,9 +6,17 @@ export const PRESENT_IN_PARENT_UNCHECK_ALL = 'PRESENT_IN_PARENT_UNCHECK_ALL';
 export const PRESENT_IN_PARENT_RANGE_START_CHANGE = 'PRESENT_IN_PARENT_RANGE_START_CHANGE';
 export const PRESENT_IN_PARENT_RANGE_END_CHANGE = 'PRESENT_IN_PARENT_RANGE_END_CHANGE';
 export const PRESENT_IN_PARENT_ULTRA_RARE_CHANGE = 'PRESENT_IN_PARENT_ULTRA_RARE_CHANGE';
+export const PRESENT_IN_PARENT_INIT = 'PRESENT_IN_PARENT_INIT';
 
-export interface PresentInParentState {
+import { Equals, ValidateIf } from "class-validator";
+
+export class PresentInParentState {
+  @ValidateIf(o => !o.fatherOnly && !o.motherFather && !o.neither)
+  @Equals(true, {
+    message: "select at least one"
+  })
   motherOnly: boolean;
+
   fatherOnly: boolean;
   motherFather: boolean;
   neither: boolean;
@@ -39,7 +47,7 @@ function resetInterval(state: PresentInParentState) {
 }
 
 export function presentInParentReducer(
-  state: PresentInParentState = initialState,
+  state: PresentInParentState = null,
   action): PresentInParentState {
 
 
@@ -83,6 +91,8 @@ export function presentInParentReducer(
         });
       return resetInterval(newStateAll);
     }
+    case PRESENT_IN_PARENT_INIT:
+      return initialState;
     default:
       return state;
   }
