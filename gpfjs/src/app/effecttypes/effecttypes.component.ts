@@ -4,14 +4,17 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
 import {
+  EffectTypesState,
   CODING,
   NONCODING,
   CNV, ALL, LGDS, NONSYNONYMOUS, UTRS,
-  EFFECT_TYPE_CHECK, EFFECT_TYPE_UNCHECK, EFFECT_TYPE_SET,
+  EFFECT_TYPE_INIT, EFFECT_TYPE_CHECK, EFFECT_TYPE_UNCHECK, EFFECT_TYPE_SET,
 } from './effecttypes';
 import { DatasetsState } from '../datasets/datasets';
 import { GpfState } from '../store/gpf-store';
 import { QueryStateProvider } from '../query/query-state-provider'
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-effecttypes-column',
@@ -33,7 +36,7 @@ import { QueryStateProvider } from '../query/query-state-provider'
   `
 })
 export class EffecttypesColumnComponent implements OnInit {
-  @Input() effectTypes: Observable<string[]>;
+  @Input() effectTypes: Observable<[EffectTypesState, boolean, ValidationError[]]>;
   @Input() columnName: string;
   @Input() effectTypesLabels: string[];
 
@@ -47,16 +50,17 @@ export class EffecttypesColumnComponent implements OnInit {
       this.effectTypesValues[i] = false;
     }
 
-    this.effectTypes.subscribe(values => {
-      for (let i = 0; i < this.effectTypesLabels.length; ++i) {
-        if (values.indexOf(this.effectTypesLabels[i]) !== -1) {
-          this.effectTypesValues[i] = true;
-        } else {
-          this.effectTypesValues[i] = false;
+    this.effectTypes.subscribe(
+      ([values, valid, errors]) => {
+        for (let i = 0; i < this.effectTypesLabels.length; ++i) {
+          if (values.selected.indexOf(this.effectTypesLabels[i]) !== -1) {
+            this.effectTypesValues[i] = true;
+          } else {
+            this.effectTypesValues[i] = false;
+          }
         }
       }
-
-    });
+    );
   }
 
   checkEffectType(index: number, value: any) {
@@ -86,15 +90,18 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   private effectTypesButtons: Map<string, string[]>;
   private selectedEffectTypes = new Map<string, boolean>();
 
-  effectTypes: Observable<Array<string>>;
+  effectTypes: Observable<[EffectTypesState, boolean, ValidationError[]]>;
   datasetsState: Observable<DatasetsState>;
   hasCNV: Observable<boolean>;
+
+  private errors: string[];
+  private flashingAlert = false;
 
   constructor(
     private store: Store<GpfState>
   ) {
     super();
-    this.effectTypes = this.store.select('effectTypes');
+    this.effectTypes = toObservableWithValidation(EffectTypesState, this.store.select('effectTypes'));
     this.datasetsState = this.store.select('datasets');
     this.hasCNV = this.datasetsState.map(datasetsState => {
       if (!datasetsState || !datasetsState.selectedDataset) {
@@ -106,7 +113,16 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': EFFECT_TYPE_INIT,
+    });
     this.selectButtonGroup('LGDS');
+
+    this.effectTypes.subscribe(
+      ([values, valid, validationErrors]) => {
+        this.errors = validationErrorsToStringArray(validationErrors);
+      }
+    );
   }
 
   private initButtonGroups(): void {
@@ -146,11 +162,14 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
 
   getState() {
     return this.effectTypes.take(1).map(
-      (effectTypes) => {
-        // if (!isValid) {
-        //   throw "invalid state"
-        // }
-        return { effectTypes: effectTypes }
+      ([effectTypes, isValid, validationErrors]) => {
+        if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
+           throw "invalid state"
+        }
+        return { effectTypes: effectTypes.selected }
     });
   }
 
