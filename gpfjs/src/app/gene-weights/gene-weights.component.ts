@@ -13,8 +13,13 @@ import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/observable/of';
 import { Store } from '@ngrx/store';
 import { QueryStateProvider } from '../query/query-state-provider'
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
-import { GENE_WEIGHTS_RANGE_CHANGE, GENE_WEIGHTS_INIT } from './gene-weights-store';
+import { GeneWeightsState, GENE_WEIGHTS_CHANGE, GENE_WEIGHTS_INIT,
+         GENE_WEIGHTS_RANGE_START_CHANGE, GENE_WEIGHTS_RANGE_END_CHANGE
+
+ } from './gene-weights-store';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
@@ -23,7 +28,7 @@ import { GENE_WEIGHTS_RANGE_CHANGE, GENE_WEIGHTS_INIT } from './gene-weights-sto
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneWeightsComponent) }]
 })
 export class GeneWeightsComponent extends QueryStateProvider {
-  private rangeChanges = new Subject<Array<number >>();
+  private rangeChanges = new Subject<[string, number, number]>();
   private partitions: Observable<Partitions>;
 
   private internalSelectedGeneWeights: GeneWeights;
@@ -33,6 +38,11 @@ export class GeneWeightsComponent extends QueryStateProvider {
   private internalRangeEnd: number;
 
   private rangesCounts: Array<number>;
+  private geneWeightsState: Observable<[GeneWeightsState, boolean, ValidationError[]]>;
+
+  private errors: string[];
+  private flashingAlert = false;
+
 
   constructor(
     private geneWeightsService: GeneWeightsService,
@@ -40,12 +50,27 @@ export class GeneWeightsComponent extends QueryStateProvider {
     private store: Store<any>
   )  {
     super();
+    this.geneWeightsState = toObservableWithValidation(GeneWeightsState, this.store.select('geneWeights'));
+    this.geneWeightsState.subscribe(
+      ([geneWeightsState, isValid, validationErrors]) => {
+        this.errors = validationErrorsToStringArray(validationErrors);
+
+        this.internalSelectedGeneWeights = geneWeightsState.weight;
+        this.internalRangeStart = geneWeightsState.rangeStart;
+        this.internalRangeEnd = geneWeightsState.rangeEnd;
+
+        if (isValid) {
+          this.rangeChanges.next([geneWeightsState.weight.weight, this.internalRangeStart, this.internalRangeEnd]);
+        }
+      }
+    );
   }
 
   set selectedGeneWeights(selectedGeneWeights: GeneWeights) {
-    this.internalSelectedGeneWeights = selectedGeneWeights;
-    this.rangeStart = selectedGeneWeights.min;
-    this.rangeEnd = selectedGeneWeights.max;
+    this.store.dispatch({
+      'type': GENE_WEIGHTS_CHANGE,
+      'payload': [selectedGeneWeights, selectedGeneWeights.min, selectedGeneWeights.max]
+    });
   }
 
   get selectedGeneWeights() {
@@ -67,12 +92,8 @@ export class GeneWeightsComponent extends QueryStateProvider {
     this.partitions = this.rangeChanges
       .debounceTime(100)
       .distinctUntilChanged()
-      .switchMap(term => {
-        this.store.dispatch({
-          'type': GENE_WEIGHTS_RANGE_CHANGE,
-          'payload': [this.selectedGeneWeights.weight, this.internalRangeStart, this.internalRangeEnd]
-        });
-        return this.geneWeightsService.getPartitions(this.selectedGeneWeights.weight, this.internalRangeStart, this.internalRangeEnd);
+      .switchMap(([weight, internalRangeStart, internalRangeEnd]) => {
+        return this.geneWeightsService.getPartitions(weight, internalRangeStart, internalRangeEnd);
       })
       .catch(error => {
         console.log(error);
@@ -87,15 +108,10 @@ export class GeneWeightsComponent extends QueryStateProvider {
 
 
   set rangeStart(range: number) {
-    if (!this.selectedGeneWeights
-        || range > this.internalRangeEnd
-        || range < 0
-        || range === null) {
-      return;
-    }
-    this.internalRangeStart = range;
-    console.log("rangeStart", range);
-    this.rangeChanges.next([this.internalRangeStart, this.internalRangeEnd]);
+    this.store.dispatch({
+      'type': GENE_WEIGHTS_RANGE_START_CHANGE,
+      'payload': range
+    });
   }
 
   get rangeStart() {
@@ -103,15 +119,10 @@ export class GeneWeightsComponent extends QueryStateProvider {
   }
 
   set rangeEnd(range: number) {
-    if (!this.selectedGeneWeights
-        || range > this.selectedGeneWeights.max
-        || range < this.internalRangeStart
-        || range === null) {
-      return;
-    }
-    this.internalRangeEnd = range;
-    console.log("rangeEnd", this.internalRangeStart, this.internalRangeEnd);
-    this.rangeChanges.next([this.internalRangeStart, this.internalRangeEnd]);
+    this.store.dispatch({
+      'type': GENE_WEIGHTS_RANGE_END_CHANGE,
+      'payload': range
+    });
   }
 
   get rangeEnd() {
@@ -119,12 +130,19 @@ export class GeneWeightsComponent extends QueryStateProvider {
   }
 
   getState() {
-    return this.store.select('geneWeights').take(1).map(
-      (geneWeights) => {
-        // if (!isValid) {
-        //   throw "invalid state"
-        // }
-        return { geneWeights: geneWeights }
+    return this.geneWeightsState.take(1).map(
+      ([geneWeightsState, isValid, validationErrors]) => {
+        if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
+           throw "invalid geneWeights state"
+        }
+        return { geneWeights: {
+          weight: geneWeightsState.weight.weight,
+          rangeStart: geneWeightsState.rangeStart,
+          rangeEnd: geneWeightsState.rangeEnd
+        }}
     });
   }
 }

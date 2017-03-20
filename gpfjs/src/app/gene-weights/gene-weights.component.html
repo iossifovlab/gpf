@@ -26,11 +26,6 @@
         max="{{ rangeEnd  }}"
         placeholder="start"
         style="width: 100px; max-width: 100px;">
-
-      <div [hidden]="inputRangeStart.valid || !inputRangeStart.dirty"
-           class="alert alert-danger">
-        Start is invalid
-      </div>
     </div>
     <div style="margin-right: 100px; width: 100px; max-width: 100px; float: right">
       <label style="display: block">To:</label>
@@ -42,14 +37,15 @@
         max="{{ selectedGeneWeights?.max  }}"
         placeholder="end"
         style="width: 100px; max-width: 100px">
-
-      <div [hidden]="inputRangeEnd.valid || !inputRangeStart.dirty"
-           class="alert alert-danger">
-        End is invalid
-      </div>
     </div>
+  </div>
+  <div style="clear: both"></div>
 
-
-
+  <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
+    <ul>
+      <li *ngFor="let error of errors">
+        {{ error }}
+      </li>
+    </ul>
   </div>
 </div>

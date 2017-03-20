@@ -1,9 +1,21 @@
-export const GENE_WEIGHTS_RANGE_CHANGE = 'GENE_WEIGHTS_RANGE_CHANGE';
 export const GENE_WEIGHTS_INIT = 'GENE_WEIGHTS_INIT';
+export const GENE_WEIGHTS_RANGE_START_CHANGE = 'GENE_WEIGHTS_RANGE_START_CHANGE';
+export const GENE_WEIGHTS_RANGE_END_CHANGE = 'GENE_WEIGHTS_RANGE_END_CHANGE';
+export const GENE_WEIGHTS_CHANGE = 'GENE_WEIGHTS_CHANGE';
 
-export interface GeneWeightsState {
-  weight: string;
+import { GeneWeights } from './gene-weights';
+import { IsNotEmpty, IsNumber, Min, Max } from "class-validator";
+
+export class GeneWeightsState {
+  @IsNotEmpty()
+  weight: GeneWeights;
+
+  @IsNumber()
+  @Min(0)
   rangeStart: number;
+
+  @IsNumber()
+  @Min(0)
   rangeEnd: number;
 };
 
@@ -19,7 +31,13 @@ export function geneWeightsReducer(
 ): GeneWeightsState {
 
   switch (action.type) {
-    case GENE_WEIGHTS_RANGE_CHANGE:
+    case GENE_WEIGHTS_RANGE_START_CHANGE:
+      return Object.assign({}, state,
+        { rangeStart: action.payload });
+    case GENE_WEIGHTS_RANGE_END_CHANGE:
+      return Object.assign({}, state,
+        { rangeEnd: action.payload });
+    case GENE_WEIGHTS_CHANGE:
       return {
         weight: action.payload[0],
         rangeStart: action.payload[1],
