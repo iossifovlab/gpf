@@ -80,12 +80,7 @@
                 min=0
                 max="{{ rarityIntervalEnd }}"
                 style="width: 63px"
-                [(ngModel)]="rarityIntervalStart"
-                (change)="interval.checked=true">%-
-            <div [hidden]="inputRangeStart.valid"
-                 class="alert alert-danger">
-              Start is invalid
-            </div>
+                [(ngModel)]="rarityIntervalStart">%-
             </div>
             <div *ngIf="rarityRadio == 'rare' || rarityRadio == 'interval'">
             <span *ngIf="rarityRadio == 'rare'">Max: </span>
@@ -96,12 +91,7 @@
                 min="{{ rarityIntervalStart }}"
                 max=100
                 style="width: 63px"
-                [(ngModel)]="rarityIntervalEnd"
-                (change)="interval.checked=true">%
-            <div [hidden]="inputRangeEnd.valid"
-                 class="alert alert-danger">
-              End is invalid
-            </div>
+                [(ngModel)]="rarityIntervalEnd">%
             </div>
           </div>
         </div>

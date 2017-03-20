@@ -8,7 +8,9 @@ export const PRESENT_IN_PARENT_RANGE_END_CHANGE = 'PRESENT_IN_PARENT_RANGE_END_C
 export const PRESENT_IN_PARENT_ULTRA_RARE_CHANGE = 'PRESENT_IN_PARENT_ULTRA_RARE_CHANGE';
 export const PRESENT_IN_PARENT_INIT = 'PRESENT_IN_PARENT_INIT';
 
-import { Equals, ValidateIf } from "class-validator";
+import { Equals, ValidateIf, Min, Max } from "class-validator";
+import { IsLessThanOrEqual } from "../utils/is-less-than-validator"
+import { IsMoreThanOrEqual } from "../utils/is-more-than-validator"
 
 export class PresentInParentState {
   @ValidateIf(o => !o.fatherOnly && !o.motherFather && !o.neither)
@@ -21,8 +23,19 @@ export class PresentInParentState {
   motherFather: boolean;
   neither: boolean;
 
+  @ValidateIf(o => !o.ultraRare)
+  @Min(0)
+  @Max(100)
+  @IsLessThanOrEqual("rarityIntervalEnd")
   rarityIntervalStart: number;
+
+
+  @ValidateIf(o => !o.ultraRare)
+  @Min(0)
+  @Max(100)
+  @IsMoreThanOrEqual("rarityIntervalEnd")
   rarityIntervalEnd: number;
+
   ultraRare: boolean;
 };
 
