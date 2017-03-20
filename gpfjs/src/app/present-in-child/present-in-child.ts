@@ -3,9 +3,16 @@ export const PRESENT_IN_CHILD_CHECK = 'PRESENT_IN_CHILD_CHECK';
 export const PRESENT_IN_CHILD_UNCHECK = 'PRESENT_IN_CHILD_UNCHECK';
 export const PRESENT_IN_CHILD_CHECK_ALL = 'PRESENT_IN_CHILD_CHECK_ALL';
 export const PRESENT_IN_CHILD_UNCHECK_ALL = 'PRESENT_IN_CHILD_UNCHECK_ALL';
+export const PRESENT_IN_CHILD_INIT = 'PRESENT_IN_CHILD_INIT';
 
+import { ArrayNotEmpty } from "class-validator"
 
-export type PresentInChildState = Array<string>;
+export class PresentInChildState {
+  @ArrayNotEmpty({
+    message: "select at least one"
+  })
+  selected: Array<string>;
+}
 
 //export interface PresentInChildState {
 //  affectedOnly: boolean;
@@ -21,32 +28,38 @@ export type PresentInChildState = Array<string>;
 //  neither: false
 //};
 
-const initialState: PresentInChildState = [
-  'affected only',
-  'affected and unaffected'
-];
+const initialState: PresentInChildState = {
+  selected : [
+    'affected only',
+    'affected and unaffected'
+  ]
+};
 
 export function presentInChildReducer(
-  state: PresentInChildState = initialState, action): PresentInChildState {
+  state: PresentInChildState = null, action): PresentInChildState {
 
 
   switch (action.type) {
     case PRESENT_IN_CHILD_CHECK:
-      return [
-        ...state.filter(et => et !== action.payload),
-        action.payload
-      ];
+      return Object.assign({}, state,
+        { selected: [...state.selected.filter(et => et !== action.payload),
+                    action.payload ]});
     case PRESENT_IN_CHILD_UNCHECK:
-      return state.filter(et => et !== action.payload);
+      return Object.assign({}, state,
+        { selected: state.selected.filter(et => et !== action.payload) });
     case PRESENT_IN_CHILD_CHECK_ALL:
-      return [
+    return Object.assign({}, state,
+      { selected: [
         'affected only',
         'unaffected only',
         'affected and unaffected',
         'neither'
-      ];
+      ]});
     case PRESENT_IN_CHILD_UNCHECK_ALL:
-      return [];
+      return Object.assign({}, state,
+        { selected: [] });
+    case PRESENT_IN_CHILD_INIT:
+      return initialState;
     default:
       return state;
   }

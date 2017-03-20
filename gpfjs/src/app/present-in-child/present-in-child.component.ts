@@ -1,5 +1,5 @@
 import {
-  PresentInChildState, PRESENT_IN_CHILD_CHECK_ALL,
+  PresentInChildState, PRESENT_IN_CHILD_CHECK_ALL, PRESENT_IN_CHILD_INIT,
   PRESENT_IN_CHILD_UNCHECK_ALL, PRESENT_IN_CHILD_UNCHECK, PRESENT_IN_CHILD_CHECK
 } from './present-in-child';
 import { Component, OnInit, forwardRef } from '@angular/core';
@@ -8,6 +8,8 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { QueryStateProvider } from '../query/query-state-provider'
 import { QueryData } from '../query/query'
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-present-in-child',
@@ -20,22 +22,33 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
   affectedUnaffected: boolean = true;
   neither: boolean = true;
 
-  presentInChildState: Observable<PresentInChildState>;
+  presentInChildState: Observable<[PresentInChildState, boolean, ValidationError[]]>;
+
+  private errors: string[];
+  private flashingAlert = false;
 
   constructor(
     private store: Store<any>
   ) {
     super();
-    this.presentInChildState = this.store.select('presentInChild');
+    this.presentInChildState = toObservableWithValidation(PresentInChildState, this.store.select('presentInChild'));
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': PRESENT_IN_CHILD_INIT,
+    });
+
     this.presentInChildState.subscribe(
-      state => {
-        this.affectedOnly = state.indexOf('affected only') !== -1;
-        this.unaffectedOnly = state.indexOf('unaffected only') !== -1;
-        this.affectedUnaffected = state.indexOf('affected and unaffected') !== -1;
-        this.neither = state.indexOf('neither') !== -1;
+      ([state, isValid, validationErrors]) => {
+        console.log("presentInChildState", state)
+
+        this.errors = validationErrorsToStringArray(validationErrors);
+
+        this.affectedOnly = state.selected.indexOf('affected only') !== -1;
+        this.unaffectedOnly = state.selected.indexOf('unaffected only') !== -1;
+        this.affectedUnaffected = state.selected.indexOf('affected and unaffected') !== -1;
+        this.neither = state.selected.indexOf('neither') !== -1;
       }
     );
   }
@@ -61,11 +74,14 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
 
   getState() {
     return this.presentInChildState.take(1).map(
-      (presentInChildState) => {
-        // if (!isValid) {
-        //   throw "invalid state"
-        // }
-        return { presentInChild: presentInChildState }
+      ([state, isValid, validationErrors]) => {
+        if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
+           throw "invalid state"
+        }
+        return { presentInChild: state.selected }
     });
   }
 }
