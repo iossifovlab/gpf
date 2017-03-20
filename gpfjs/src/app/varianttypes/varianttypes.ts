@@ -1,6 +1,12 @@
+import { Equals, ValidateIf } from "class-validator";
 
-export interface VariantTypesState {
+export class VariantTypesState {
+  @ValidateIf(o => !o.ins && !o.del)
+  @Equals(true, {
+    message: "select at least one"
+  })
   sub: boolean;
+
   ins: boolean;
   del: boolean;
   CNV: boolean;
@@ -17,6 +23,7 @@ export const VARIANT_TYPES_CHECK = 'VARIANT_TYPES_CHECK';
 export const VARIANT_TYPES_UNCHECK = 'VARIANT_TYPES_UNCHECK';
 export const VARIANT_TYPES_CHECK_ALL = 'VARIANT_TYPES_CHECK_ALL';
 export const VARIANT_TYPES_UNCHECK_ALL = 'VARIANT_TYPES_UNCHECK_ALL';
+export const VARIANT_TYPES_INIT = 'VARIANT_TYPES_INIT';
 
 
 export function variantTypesReducer(
