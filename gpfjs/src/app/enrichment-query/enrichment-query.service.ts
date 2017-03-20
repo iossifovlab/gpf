@@ -6,7 +6,6 @@ import 'rxjs/add/operator/toPromise';
 
 import { ConfigService } from '../config/config.service';
 import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-table/genotype-preview';
-import { EnrichmentQueryData } from './enrichment-query';
 import { EnrichmentResults } from './enrichment-result';
 
 @Injectable()
@@ -22,7 +21,7 @@ export class EnrichmentQueryService {
 
   }
 
-  getEnrichmentTest(filter: EnrichmentQueryData): Observable<EnrichmentResults> {
+  getEnrichmentTest(filter): Observable<EnrichmentResults> {
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
 
