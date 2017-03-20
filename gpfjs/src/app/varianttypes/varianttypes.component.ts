@@ -104,7 +104,7 @@ export class VarianttypesComponent implements OnInit {
 
           throw "invalid state"
         }
-        return { variantTypes: variantTypes }
+        return { variantTypes: variantTypes.selected }
     });
   }
 }
