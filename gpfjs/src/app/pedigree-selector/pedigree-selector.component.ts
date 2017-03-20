@@ -25,7 +25,9 @@ export class PedigreeSelectorComponent implements OnInit {
   pedigreeCheck: boolean[];
   datasetsState: Observable<DatasetsState>;
   pedigreeState: Observable<[PedigreeSelectorState, boolean, ValidationError[]]>;
+
   errors: string[];
+  private flashingAlert = false;
 
   constructor(
     private store: Store<any>,
@@ -136,6 +138,9 @@ export class PedigreeSelectorComponent implements OnInit {
     return this.pedigreeState.take(1).map(
       ([pedigreeState, isValid, validationErrors]) => {
         if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
           throw "invalid state"
         }
 

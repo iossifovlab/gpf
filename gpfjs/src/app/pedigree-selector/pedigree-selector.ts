@@ -22,7 +22,7 @@ export const PEDIGREE_SELECTOR_SET_CHECKED_VALUES = 'PEDIGREE_SELECTOR_SET_CHECK
 
 
 export function pedigreeSelectorReducer(
-  state: PedigreeSelectorState = initialState, action) {
+  state: PedigreeSelectorState = null, action) {
 
   switch (action.type) {
     case PEDIGREE_SELECTOR_INIT:
