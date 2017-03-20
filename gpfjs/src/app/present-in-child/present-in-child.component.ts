@@ -41,8 +41,6 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
 
     this.presentInChildState.subscribe(
       ([state, isValid, validationErrors]) => {
-        console.log("presentInChildState", state)
-
         this.errors = validationErrorsToStringArray(validationErrors);
 
         this.affectedOnly = state.selected.indexOf('affected only') !== -1;
