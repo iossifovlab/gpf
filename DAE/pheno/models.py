@@ -214,8 +214,8 @@ class PersonModel(object):
         p.role_id = row['role_id']
         p.role_order = row['role_order']
         p.gender = row['gender']
-        p.collection = row['collection']
-        p.ssc_present = row['ssc_present']
+        # p.collection = row['collection']
+        # p.ssc_present = row['ssc_present']
 
         return p
 
