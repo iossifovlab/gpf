@@ -5,6 +5,8 @@ export const GENE_WEIGHTS_CHANGE = 'GENE_WEIGHTS_CHANGE';
 
 import { GeneWeights } from './gene-weights';
 import { IsNotEmpty, IsNumber, Min, Max } from "class-validator";
+import { IsLessThanOrEqual } from "../utils/is-less-than-validator"
+import { IsMoreThanOrEqual } from "../utils/is-more-than-validator"
 
 export class GeneWeightsState {
   @IsNotEmpty()
@@ -12,10 +14,12 @@ export class GeneWeightsState {
 
   @IsNumber()
   @Min(0)
+  @IsLessThanOrEqual("rangeEnd")
   rangeStart: number;
 
   @IsNumber()
   @Min(0)
+  @IsMoreThanOrEqual("rangeStart")
   rangeEnd: number;
 };
 
