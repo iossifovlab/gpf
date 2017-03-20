@@ -14,7 +14,7 @@ const initialState: GeneWeightsState = {
 };
 
 export function geneWeightsReducer(
-  state: GeneWeightsState = initialState,
+  state: GeneWeightsState = null,
   action
 ): GeneWeightsState {
 

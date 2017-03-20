@@ -13,7 +13,7 @@ const initialState: RegionsFilterState = {
 };
 
 export function regionsFilterReducer(
-  state: RegionsFilterState = initialState,
+  state: RegionsFilterState = null,
   action): RegionsFilterState {
 
 

@@ -13,7 +13,7 @@ const initialState: GeneSymbolsState = {
 };
 
 export function geneSymbolsReducer(
-  state: GeneSymbolsState = initialState,
+  state: GeneSymbolsState = null,
   action): GeneSymbolsState {
 
   switch (action.type) {

@@ -23,7 +23,7 @@ const initialState: GeneSetsState = {
 };
 
 export function geneSetsReducer(
-  state: GeneSetsState = initialState,
+  state: GeneSetsState = null,
   action): GeneSetsState {
 
 
