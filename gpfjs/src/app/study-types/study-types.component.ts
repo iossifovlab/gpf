@@ -1,29 +1,34 @@
 import { StudyTypesState, STUDY_TYPES_CHECK_ALL, STUDY_TYPES_UNCHECK_ALL, STUDY_TYPES_UNCHECK, STUDY_TYPES_CHECK } from './study-types';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { QueryStateProvider } from '../query/query-state-provider'
+import { QueryData } from '../query/query'
 
 @Component({
   selector: 'gpf-study-types',
   templateUrl: './study-types.component.html',
-  styleUrls: ['./study-types.component.css']
+  styleUrls: ['./study-types.component.css'],
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => StudyTypesComponent) }]
+
 })
-export class StudyTypesComponent implements OnInit {
+export class StudyTypesComponent extends QueryStateProvider implements OnInit {
   we: boolean = true;
   tg: boolean = true;
 
   studyTypesState: Observable<[StudyTypesState, boolean, ValidationError[]]>;
 
   private errors: string[];
+  private flashingAlert = false;
 
   constructor(
     private store: Store<any>
   ) {
-
+    super();
     this.studyTypesState = toObservableWithValidation(StudyTypesState, this.store.select('studyTypes'));
   }
 
@@ -59,5 +64,17 @@ export class StudyTypesComponent implements OnInit {
     }
   }
 
+  getState() {
+    return this.studyTypesState.take(1).map(
+      ([studyTypesState, isValid, validationErrors]) => {
+        if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
+          throw "invalid state"
+        }
+        return { studyType: QueryData.trueFalseToStringArray(studyTypesState) }
+    });
+  }
 
 }
