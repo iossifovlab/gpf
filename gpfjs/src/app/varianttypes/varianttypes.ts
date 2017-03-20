@@ -1,56 +1,38 @@
-import { Equals, ValidateIf } from "class-validator";
+import { ArrayNotEmpty } from "class-validator";
 
 export class VariantTypesState {
-  @ValidateIf(o => !o.ins && !o.del)
-  @Equals(true, {
+  @ArrayNotEmpty({
     message: "select at least one"
   })
-  sub: boolean;
-
-  ins: boolean;
-  del: boolean;
-  CNV: boolean;
-};
+  selected: Array<string>;
+}
 
 const initialState: VariantTypesState = {
-  sub: true,
-  ins: true,
-  del: true,
-  CNV: true,
+  selected: []
 };
+
 
 export const VARIANT_TYPES_CHECK = 'VARIANT_TYPES_CHECK';
 export const VARIANT_TYPES_UNCHECK = 'VARIANT_TYPES_UNCHECK';
-export const VARIANT_TYPES_CHECK_ALL = 'VARIANT_TYPES_CHECK_ALL';
-export const VARIANT_TYPES_UNCHECK_ALL = 'VARIANT_TYPES_UNCHECK_ALL';
+export const VARIANT_TYPES_SET = 'VARIANT_TYPES_SET';
 export const VARIANT_TYPES_INIT = 'VARIANT_TYPES_INIT';
 
 
 export function variantTypesReducer(
-  state: VariantTypesState = initialState,
-  action): VariantTypesState {
-
+  state: VariantTypesState = null, action): VariantTypesState {
   switch (action.type) {
     case VARIANT_TYPES_CHECK:
       return Object.assign({}, state,
-        { [action.payload]: true });
+        { selected: [...state.selected.filter(et => et !== action.payload),
+                    action.payload ]});
     case VARIANT_TYPES_UNCHECK:
       return Object.assign({}, state,
-        { [action.payload]: false });
-    case VARIANT_TYPES_CHECK_ALL:
-      return {
-        sub: true,
-        ins: true,
-        del: true,
-        CNV: true,
-      };
-    case VARIANT_TYPES_UNCHECK_ALL:
-      return {
-        sub: false,
-        ins: false,
-        del: false,
-        CNV: false,
-      };
+        { selected: state.selected.filter(et => et !== action.payload) });
+    case VARIANT_TYPES_SET:
+      return Object.assign({}, state,
+        { selected: [...action.payload] });
+    case VARIANT_TYPES_INIT:
+      return initialState;
     default:
       return state;
   }

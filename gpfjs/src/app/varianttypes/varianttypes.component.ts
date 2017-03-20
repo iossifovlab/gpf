@@ -1,7 +1,7 @@
 import { DatasetsState } from '../datasets/datasets';
 import {
   VariantTypesState, VARIANT_TYPES_INIT,
-  VARIANT_TYPES_CHECK_ALL, VARIANT_TYPES_UNCHECK_ALL,
+  VARIANT_TYPES_SET,
   VARIANT_TYPES_UNCHECK, VARIANT_TYPES_CHECK
 } from './varianttypes';
 import { Component, OnInit, forwardRef } from '@angular/core';
@@ -26,7 +26,7 @@ export class VarianttypesComponent implements OnInit {
   CNV: boolean = true;
 
   variantTypesState: Observable<[VariantTypesState, boolean, ValidationError[]]>;
-  hasCNV: Observable<boolean>;
+  hasCNV: boolean = false;
 
   private errors: string[];
   private flashingAlert = false;
@@ -38,11 +38,14 @@ export class VarianttypesComponent implements OnInit {
     this.variantTypesState = toObservableWithValidation(VariantTypesState, this.store.select('variantTypes'));
 
     let datasetsState: Observable<DatasetsState> = this.store.select('datasets');
-    this.hasCNV = datasetsState.map(state => {
+    datasetsState.subscribe(state => {
       if (!state || !state.selectedDataset) {
-        return false;
+        this.hasCNV = false;
+        this.selectAll();
+        return;
       }
-      return state.selectedDataset.genotypeBrowser.hasCNV;
+      this.hasCNV = state.selectedDataset.genotypeBrowser.hasCNV;
+      this.selectAll();
     });
 
   }
@@ -56,28 +59,35 @@ export class VarianttypesComponent implements OnInit {
       ([variantTypesState, isValid, validationErrors]) => {
         this.errors = validationErrorsToStringArray(validationErrors);
 
-        this.sub = variantTypesState.sub;
-        this.ins = variantTypesState.ins;
-        this.del = variantTypesState.del;
-        this.CNV = variantTypesState.CNV;
+        this.sub = variantTypesState.selected.indexOf('sub') !== -1;
+        this.ins = variantTypesState.selected.indexOf('ins') !== -1;
+        this.del = variantTypesState.selected.indexOf('del') !== -1;
+        this.CNV = variantTypesState.selected.indexOf('CNV') !== -1;
       }
     );
   }
 
   selectAll(): void {
+    let payload = ['sub', 'ins', 'del'];
+    if (this.hasCNV) {
+      console.log(this.hasCNV);
+      payload.push('CNV');
+    }
     this.store.dispatch({
-      'type': VARIANT_TYPES_CHECK_ALL,
+      'type': VARIANT_TYPES_SET,
+      'payload': payload
     });
   }
 
   selectNone(): void {
     this.store.dispatch({
-      'type': VARIANT_TYPES_UNCHECK_ALL,
+      'type': VARIANT_TYPES_SET,
+      'payload': []
     });
   }
 
   variantTypesCheckValue(variantType: string, value: boolean): void {
-    if (variantType === 'sub' || variantType === 'ins' || variantType === 'del') {
+    if (variantType === 'sub' || variantType === 'ins' || variantType === 'del' || variantType === 'CNV') {
       this.store.dispatch({
         'type': value ? VARIANT_TYPES_CHECK : VARIANT_TYPES_UNCHECK,
         'payload': variantType
@@ -94,7 +104,7 @@ export class VarianttypesComponent implements OnInit {
 
           throw "invalid state"
         }
-        return { variantTypes: QueryData.trueFalseToStringArray(variantTypes) }
+        return { variantTypes: variantTypes }
     });
   }
 }
