@@ -3,6 +3,7 @@ export const GENDER_CHECK = 'GENDER_CHECK';
 export const GENDER_UNCHECK = 'GENDER_UNCHECK';
 export const GENDER_CHECK_ALL = 'GENDER_CHECK_ALL';
 export const GENDER_UNCHECK_ALL = 'GENDER_UNCHECK_ALL';
+export const GENDER_INIT = 'GENDER_INIT';
 
 import { Equals, ValidateIf } from "class-validator";
 
@@ -22,7 +23,7 @@ const initialState: GenderState = {
 };
 
 export function genderReducer(
-  state: GenderState = initialState,
+  state: GenderState = null,
   action): GenderState {
 
 
@@ -43,6 +44,8 @@ export function genderReducer(
         female: false,
         male: false
       };
+    case GENDER_INIT:
+      return initialState;
     default:
       return state;
   }

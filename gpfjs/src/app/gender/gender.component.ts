@@ -1,5 +1,5 @@
 import {
-  GenderState, GENDER_CHECK_ALL,
+  GenderState, GENDER_CHECK_ALL, GENDER_INIT,
   GENDER_UNCHECK_ALL, GENDER_UNCHECK, GENDER_CHECK
 } from './gender';
 import { Component, OnInit, forwardRef } from '@angular/core';
@@ -23,6 +23,7 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
 
   genderState: Observable<[GenderState, boolean, ValidationError[]]>;
   private errors: string[];
+  private flashingAlert = false;
 
   constructor(
     private store: Store<any>
@@ -32,6 +33,10 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': GENDER_INIT,
+    });
+
     this.genderState.subscribe(
       ([genderState, isValid, validationErrors]) => {
         this.errors = validationErrorsToStringArray(validationErrors);
@@ -67,6 +72,9 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
     return this.genderState.take(1).map(
       ([genderState, isValid, validationErrors]) => {
         if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
           throw "invalid state"
         }
         return { gender: QueryData.trueFalseToStringArray(genderState) }
