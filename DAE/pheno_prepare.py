@@ -87,14 +87,13 @@ class PrepareVariables(PhenoConfig, BaseVariables):
                          na_values=[' '], dtype=dtype)
         columns = [c for c in df.columns]
         columns[0] = 'person_id'
-        columns[1] = 'age'
-        for index in range(2, len(columns)):
-            parts = columns[index].split('.')
-            if len(parts) == 1:
-                name = parts[0]
-            else:
-                name = '.'.join(parts[1:])
-            columns[index] = name
+        #         for index in range(2, len(columns)):
+        #             parts = columns[index].split('.')
+        #             if len(parts) == 1:
+        #                 name = parts[0]
+        #             else:
+        #                 name = '.'.join(parts[1:])
+        #             columns[index] = name
         df.columns = columns
         self._clear_duplicate_measurements(df)
         return df
@@ -121,7 +120,7 @@ class PrepareVariables(PhenoConfig, BaseVariables):
 
             df = instrument_df.join(persons, on='person_id', rsuffix="_person")
 
-            for measure_name in df.columns[2:len(instrument_df.columns)]:
+            for measure_name in df.columns[1:len(instrument_df.columns)]:
                 mdf = df[['person_id', measure_name,
                           'family_id', 'person_role']]
                 self._build_variable(instrument_name, measure_name,
