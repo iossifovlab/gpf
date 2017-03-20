@@ -50,6 +50,6 @@ export function studyTypesReducer(
     case STUDY_TYPES_INIT:
       return initialState;
     default:
-      return null;
+      return state;
   }
 };
