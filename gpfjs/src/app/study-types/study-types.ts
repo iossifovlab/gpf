@@ -5,6 +5,7 @@ export const STUDY_TYPES_CHECK = 'STUDY_TYPES_CHECK';
 export const STUDY_TYPES_UNCHECK = 'STUDY_TYPES_UNCHECK';
 export const STUDY_TYPES_CHECK_ALL = 'STUDY_TYPES_CHECK_ALL';
 export const STUDY_TYPES_UNCHECK_ALL = 'STUDY_TYPES_UNCHECK_ALL';
+export const STUDY_TYPES_INIT = 'STUDY_TYPES_INIT';
 
 import { Equals, ValidateIf } from "class-validator";
 
@@ -25,7 +26,7 @@ const initialState: StudyTypesState = {
 };
 
 export function studyTypesReducer(
-  state: StudyTypesState = initialState,
+  state: StudyTypesState = null,
   action): StudyTypesState {
 
 
@@ -46,7 +47,9 @@ export function studyTypesReducer(
         we: false,
         tg: false
       };
+    case STUDY_TYPES_INIT:
+      return initialState;
     default:
-      return state;
+      return null;
   }
 };

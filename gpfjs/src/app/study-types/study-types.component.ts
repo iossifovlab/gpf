@@ -1,4 +1,4 @@
-import { StudyTypesState, STUDY_TYPES_CHECK_ALL, STUDY_TYPES_UNCHECK_ALL, STUDY_TYPES_UNCHECK, STUDY_TYPES_CHECK } from './study-types';
+import { StudyTypesState, STUDY_TYPES_INIT, STUDY_TYPES_CHECK_ALL, STUDY_TYPES_UNCHECK_ALL, STUDY_TYPES_UNCHECK, STUDY_TYPES_CHECK } from './study-types';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Store } from '@ngrx/store';
@@ -33,6 +33,10 @@ export class StudyTypesComponent extends QueryStateProvider implements OnInit {
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': STUDY_TYPES_INIT,
+    });
+
     this.studyTypesState.subscribe(
       ([state, isValid, validationErrors]) => {
         this.errors = validationErrorsToStringArray(validationErrors);
