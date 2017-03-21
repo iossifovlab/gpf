@@ -51,10 +51,6 @@ export class VarianttypesComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.store.dispatch({
-      'type': VARIANT_TYPES_INIT,
-    });
-
     this.variantTypesState.subscribe(
       ([variantTypesState, isValid, validationErrors]) => {
         this.errors = validationErrorsToStringArray(validationErrors);
