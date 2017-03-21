@@ -7,6 +7,8 @@ import { IdDescription } from '../common/iddescription';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { QueryStateProvider } from '../query/query-state-provider'
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-enrichment-models',
@@ -17,14 +19,17 @@ export class EnrichmentModelsComponent extends QueryStateProvider implements OnI
   private enrichmentModels: EnrichmentModels;
   private internalSelectedBackground: IdDescription;
   private internalSelectedCounting: IdDescription;
-  private enrichmentModelsState: Observable<EnrichmentModelsState>;
+  private enrichmentModelsState: Observable<[EnrichmentModelsState, boolean, ValidationError[]]>;
+
+  private errors: string[];
+  private flashingAlert = false;
 
   constructor(
     private store: Store<any>,
     private enrichmentModelsService: EnrichmentModelsService,
   ) {
     super();
-    this.enrichmentModelsState = this.store.select('enrichmentModels');
+    this.enrichmentModelsState = toObservableWithValidation(EnrichmentModelsState, this.store.select('enrichmentModels'));
   }
 
   ngOnInit() {
@@ -34,7 +39,9 @@ export class EnrichmentModelsComponent extends QueryStateProvider implements OnI
 
 
     this.enrichmentModelsState.subscribe(
-      state => {
+      ([state, isValid, validationErrors]) => {
+        this.errors = validationErrorsToStringArray(validationErrors);
+
         this.internalSelectedBackground = state.background;
         this.internalSelectedCounting = state.counting;
       }
@@ -70,10 +77,13 @@ export class EnrichmentModelsComponent extends QueryStateProvider implements OnI
 
   getState() {
     return this.enrichmentModelsState.take(1).map(
-      (enrichmentModels) => {
-        // if (!isValid) {
-        //   throw "invalid state"
-        // }
+      ([enrichmentModels, isValid, validationErrors]) => {
+        if (!isValid) {
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
+          throw "invalid enrichment models state"
+        }
 
         let enrichmentBackgroundModel = null;
         let enrichmentCountingModel = null

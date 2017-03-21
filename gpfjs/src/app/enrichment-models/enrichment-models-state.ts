@@ -1,13 +1,17 @@
 import { IdDescription } from '../common/iddescription';
+import { IsNotEmpty } from "class-validator";
 
 export const ENRICHMENT_BACKGROUND_CHANGE = 'ENRICHMENT_BACKGROUND_CHANGE';
 export const ENRICHMENT_COUNTING_CHANGE = 'ENRICHMENT_COUNTING_CHANGE';
 export const ENRICHMENT_MODELS_INIT = 'ENRICHMENT_MODELS_INIT'
 
 
-export interface EnrichmentModelsState {
-    background: IdDescription,
-    counting: IdDescription
+export class EnrichmentModelsState {
+    @IsNotEmpty()
+    background: IdDescription;
+
+    @IsNotEmpty()
+    counting: IdDescription;
 };
 
 const initialState: EnrichmentModelsState = {
