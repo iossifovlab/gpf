@@ -29,7 +29,7 @@ class IvanchoSubmittedDoubleGenesQueryTests(unittest.TestCase):
         vs.next()
 
         for v in vs:
-            gl = v[9].split(';')
+            gl = v[8].split(';')
             self.assertEqual(1, gl.count('FMR1'))
 
 

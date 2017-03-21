@@ -36,7 +36,7 @@ class PedigreeSelector(dict):
 
     def _parse_domain(self, domain):
         values = domain.split(',')
-        result = [self._parse_domain_value(v) for v in values]
+        result = [self._parse_domain_value(v.strip()) for v in values]
         return result
 
     def get_color(self, value_id):
@@ -98,6 +98,13 @@ class DatasetsConfig(object):
             res = self.config.get(section, option)
         return res
 
+    def _get_string_list(self, section, option, default_value=None):
+        res = default_value
+        if self.config.has_option(section, option):
+            res = self.config.get(section, option)
+            res = [r.strip() for r in res.split(',')]
+        return res
+
     def _get_genotype_browser(self, section):
         if not self._get_boolean(section, 'genotypeBrowser'):
             return None
@@ -130,6 +137,40 @@ class DatasetsConfig(object):
             'hasAdvancedFamilyFilters': advanced_family_filters,
             'hasPedigreeSelector': pedigree_selector,
         }
+
+    def _get_genotype_browser_pheno_columns(self, section):
+        result = {}
+        columns = self._get_string_list(
+            section, 'genotypeBrowser.pheno.columns')
+        if not columns:
+            return None
+
+        for col in columns:
+            column = self._get_genotype_browser_pheno_column(section, col)
+            result[col] = column
+        result['columns'] = columns
+
+        return result
+
+    def _get_genotype_browser_pheno_column(self, section, col_id):
+        prefix = 'genotypeBrowser.pheno.{}'.format(col_id)
+        name = self._get_string(
+            section, '{}.{}'.format(prefix, 'name'))
+        sources = self._get_string_list(
+            section, '{}.{}'.format(prefix, 'sources'))
+        labels = self._get_string_list(
+            section, '{}.{}'.format(prefix, 'labels'))
+        column = {}
+        column['name'] = name
+        values = []
+        for source, label in zip(sources, labels):
+            values.append(
+                {
+                    'source': source,
+                    'label': label,
+                })
+        column['values'] = values
+        return column
 
     def _get_enrichment_tool(self, section):
         if not self._get_boolean(section, 'enrichmentTool'):
