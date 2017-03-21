@@ -1,5 +1,5 @@
 import { EnrichmentModelsState, ENRICHMENT_BACKGROUND_CHANGE, ENRICHMENT_COUNTING_CHANGE,
-         ENRICHMENT_MODELS_TAB_DESELECT } from './enrichment-models-state';
+         ENRICHMENT_MODELS_INIT } from './enrichment-models-state';
 import { Component, OnInit, forwardRef } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
 import { EnrichmentModels } from './enrichment-models';
@@ -28,6 +28,11 @@ export class EnrichmentModelsComponent extends QueryStateProvider implements OnI
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': ENRICHMENT_MODELS_INIT,
+    });
+
+
     this.enrichmentModelsState.subscribe(
       state => {
         this.internalSelectedBackground = state.background;
@@ -61,13 +66,6 @@ export class EnrichmentModelsComponent extends QueryStateProvider implements OnI
 
   get selectedCounting() {
     return this.internalSelectedCounting;
-  }
-
-  onTabChange(event) {
-    this.store.dispatch({
-      'type': ENRICHMENT_MODELS_TAB_DESELECT,
-      'payload': event.activeId
-    });
   }
 
   getState() {

@@ -2,7 +2,7 @@ import { IdDescription } from '../common/iddescription';
 
 export const ENRICHMENT_BACKGROUND_CHANGE = 'ENRICHMENT_BACKGROUND_CHANGE';
 export const ENRICHMENT_COUNTING_CHANGE = 'ENRICHMENT_COUNTING_CHANGE';
-export const ENRICHMENT_MODELS_TAB_DESELECT = 'ENRICHMENT_MODELS_TAB_DESELECT'
+export const ENRICHMENT_MODELS_INIT = 'ENRICHMENT_MODELS_INIT'
 
 
 export interface EnrichmentModelsState {
@@ -16,7 +16,7 @@ const initialState: EnrichmentModelsState = {
 };
 
 export function enrichmentModelsReducer(
-  state: EnrichmentModelsState = initialState,
+  state: EnrichmentModelsState = null,
   action): EnrichmentModelsState {
 
 
@@ -27,7 +27,7 @@ export function enrichmentModelsReducer(
     case ENRICHMENT_COUNTING_CHANGE:
       return Object.assign({}, state,
         { counting: action.payload });
-    case ENRICHMENT_MODELS_TAB_DESELECT:
+    case ENRICHMENT_MODELS_INIT:
       return initialState;
     default:
       return state;

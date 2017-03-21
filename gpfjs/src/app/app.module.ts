@@ -57,6 +57,7 @@ import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.co
 import { GpfTabsetComponent } from './tabset/tabset.component'
 
 import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component'
+import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component'
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component'
 import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service'
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
@@ -134,7 +135,8 @@ const appRoutes: Routes = [
     EnrichmentTableComponent,
     EnrichmentTableRowComponent,
     FullscreenLoadingComponent,
-    EncodeUriComponentPipe
+    EncodeUriComponentPipe,
+    EnrichmentModelsBlockComponent
   ],
   imports: [
     BrowserModule,
