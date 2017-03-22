@@ -23,8 +23,27 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
     private configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private route: ActivatedRoute,
+    private router: Router
   ) {
     super();
+  }
+
+  ngAfterViewInit() {
+    this.store.subscribe(
+      (param) => {
+        let state = this.collectState();
+        Observable.zip(...state)
+        .subscribe(
+          state => {
+            this.genotypePreviewsArray = null
+            this.router.navigate(['.', Object.assign({}, ...state)], { relativeTo: this.route });
+          },
+          error => {
+            console.log(error);
+          }
+        )
+      }
+    )
   }
 
   ngOnInit() {
@@ -44,6 +63,8 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
                                       ...state);
+
+        this.router.navigate(['.', Object.assign({}, ...state)], { relativeTo: this.route });
         this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
           (genotypePreviewsArray) => {
             this.genotypePreviewsArray = genotypePreviewsArray;
