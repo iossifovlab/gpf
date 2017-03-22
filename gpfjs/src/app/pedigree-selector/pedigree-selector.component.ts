@@ -52,7 +52,6 @@ export class PedigreeSelectorComponent implements OnInit {
     );
     this.pedigreeState.subscribe(
       ([pedigreeState, isValid, validationErrors]) => {
-        console.log(pedigreeState, isValid, validationErrors);
         this.errors = validationErrorsToStringArray(validationErrors);
 
         if (!pedigreeState) {
