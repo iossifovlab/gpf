@@ -39,6 +39,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
             this.router.navigate(['.', Object.assign({}, ...state)], { relativeTo: this.route });
           },
           error => {
+            this.genotypePreviewsArray = null
             console.log(error);
           }
         )
