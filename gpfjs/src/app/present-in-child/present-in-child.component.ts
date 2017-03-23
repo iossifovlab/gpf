@@ -1,6 +1,7 @@
 import {
   PresentInChildState, PRESENT_IN_CHILD_CHECK_ALL, PRESENT_IN_CHILD_INIT,
-  PRESENT_IN_CHILD_UNCHECK_ALL, PRESENT_IN_CHILD_UNCHECK, PRESENT_IN_CHILD_CHECK
+  PRESENT_IN_CHILD_SET,  PRESENT_IN_CHILD_UNCHECK_ALL,
+  PRESENT_IN_CHILD_UNCHECK, PRESENT_IN_CHILD_CHECK
 } from './present-in-child';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
@@ -10,6 +11,7 @@ import { QueryStateProvider } from '../query/query-state-provider'
 import { QueryData } from '../query/query'
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-present-in-child',
@@ -28,7 +30,8 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
   private flashingAlert = false;
 
   constructor(
-    private store: Store<any>
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.presentInChildState = toObservableWithValidation(PresentInChildState, this.store.select('presentInChild'));
@@ -38,6 +41,17 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
     this.store.dispatch({
       'type': PRESENT_IN_CHILD_INIT,
     });
+
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['presentInChild']) {
+          this.store.dispatch({
+            'type': PRESENT_IN_CHILD_SET,
+            'payload': state['presentInChild']
+          });
+        }
+      }
+    );
 
     this.presentInChildState.subscribe(
       ([state, isValid, validationErrors]) => {

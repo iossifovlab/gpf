@@ -4,6 +4,7 @@ export const PRESENT_IN_CHILD_UNCHECK = 'PRESENT_IN_CHILD_UNCHECK';
 export const PRESENT_IN_CHILD_CHECK_ALL = 'PRESENT_IN_CHILD_CHECK_ALL';
 export const PRESENT_IN_CHILD_UNCHECK_ALL = 'PRESENT_IN_CHILD_UNCHECK_ALL';
 export const PRESENT_IN_CHILD_INIT = 'PRESENT_IN_CHILD_INIT';
+export const PRESENT_IN_CHILD_SET = 'PRESENT_IN_CHILD_SET';
 
 import { ArrayNotEmpty } from "class-validator"
 
@@ -58,6 +59,9 @@ export function presentInChildReducer(
     case PRESENT_IN_CHILD_UNCHECK_ALL:
       return Object.assign({}, state,
         { selected: [] });
+    case PRESENT_IN_CHILD_SET:
+      return Object.assign({}, state,
+        { selected: action.payload });
     case PRESENT_IN_CHILD_INIT:
       return initialState;
     default:

@@ -52,7 +52,6 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnI
               });
             }
           }
-
         }
         if (state['pedigreeSelector'] && state['pedigreeSelector']['checkedValues']) {
           this.store.dispatch({
