@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 import { QueryStateProvider } from '../query/query-state-provider'
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-regions-filter',
@@ -22,7 +23,8 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
   private errors: string[];
 
   constructor(
-    private store: Store<any>
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.regionsFilterState = toObservableWithValidation(RegionsFilterState ,this.store.select('regionsFilter'));
@@ -32,6 +34,17 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
     this.store.dispatch({
       'type': REGIONS_FILTER_INIT,
     });
+
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['regions']) {
+          this.store.dispatch({
+            'type': REGIONS_FILTER_CHANGE,
+            'payload': state['regions'].join("\n")
+          });
+        }
+      }
+    )
 
     this.regionsFilterState.subscribe(
       ([regionsFilterState, isValid, validationErrors]) => {

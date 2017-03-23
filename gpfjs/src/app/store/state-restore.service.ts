@@ -17,7 +17,6 @@ export class StateRestoreService {
   onParamsUpdate(jsonEncodedState: string) {
     if (jsonEncodedState && jsonEncodedState.length > 0) {
       let currentState = JSON.parse(jsonEncodedState);
-      console.log("url state", currentState);
       this.state.next(currentState);
     }
   }
