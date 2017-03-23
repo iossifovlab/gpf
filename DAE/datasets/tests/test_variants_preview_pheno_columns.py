@@ -61,16 +61,12 @@ def test_get_denovo_variants_vip(vip):
     count = 0
     for v in vs:
         count += 1
-        pprint(v)
-        fid = v[0]
-        fam = families.get(fid, None)
-        if fam:
-            print(fam, fam.atts)
-    print(count)
     assert count == 18
 
+    pprint(v)
 
-#     nviq, viq, status = v[-3:]
-#     assert '101.0' == nviq
-#     assert '110.0' == viq
-#     assert 'white' == status
+    assert len(v) == 32
+    nviq, viq, status = v[-3:]
+    assert '110.0' == nviq
+    assert '76.0' == viq
+    assert 'deletion' == status
