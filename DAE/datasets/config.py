@@ -156,16 +156,16 @@ class DatasetsConfig(object):
         prefix = 'genotypeBrowser.pheno.{}'.format(col_id)
         name = self._get_string(
             section, '{}.{}'.format(prefix, 'name'))
-        sources = self._get_string_list(
-            section, '{}.{}'.format(prefix, 'sources'))
-        labels = self._get_string_list(
-            section, '{}.{}'.format(prefix, 'labels'))
+        slots = self._get_string_list(
+            section, '{}.{}'.format(prefix, 'slots'))
         column = {}
         column['name'] = name
         values = []
-        for source, label in zip(sources, labels):
+        for slot in slots:
+            role, source, label = slot.split(':')
             values.append(
                 {
+                    'role': role,
                     'source': source,
                     'label': label,
                 })
