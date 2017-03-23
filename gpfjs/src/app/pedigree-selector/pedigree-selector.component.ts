@@ -11,6 +11,7 @@ import { Observable } from 'rxjs';
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
 import { QueryStateProvider } from '../query/query-state-provider'
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-pedigree-selector',
@@ -31,11 +32,36 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnI
 
   constructor(
     private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.datasetsState = this.store.select('datasets');
     this.pedigreeState = toObservableWithValidation(PedigreeSelectorState, this.store.select('pedigreeSelector'));
 
+  }
+
+  restoreStateSubscribe() {
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['pedigreeSelector'] && state['pedigreeSelector']['id']) {
+          for (let pedigree of  this.pedigrees) {
+            if (pedigree.id == state['pedigreeSelector']['id']) {
+              this.store.dispatch({
+                'type': PEDIGREE_SELECTOR_INIT,
+                'payload': pedigree,
+              });
+            }
+          }
+
+        }
+        if (state['pedigreeSelector'] && state['pedigreeSelector']['checkedValues']) {
+          this.store.dispatch({
+            'type': PEDIGREE_SELECTOR_SET_CHECKED_VALUES,
+            'payload': state['pedigreeSelector']['checkedValues'],
+          });
+        }
+      }
+    );
   }
 
   ngOnInit() {
@@ -48,6 +74,7 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnI
             this.pedigrees = dataset.pedigreeSelectors;
             this.selectPedigree(0);
           }
+          this.restoreStateSubscribe();
         }
       }
     );
