@@ -11,8 +11,6 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
       let valid = true;
       for (var line of text.split(/\s+/)) {
         var match = line.match(/^(?:chr)?(?:[0-9xX]|[0-1][0-9]|2[0-2]):([0-9,]+)(?:\-([0-9,]+))?$/i)
-        console.log(line);
-        console.log(match);
         if (match === null) {
           valid = false;
         }
