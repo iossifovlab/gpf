@@ -826,7 +826,7 @@ def generate_response(vs, atts=[], sep='\t'):
                         getattr(v, 'requestedGeneEffects')))
                 else:
                     mavs.append(getattr(v, att))
-            except:
+            except Exception:
                 mavs.append("")
         hack = []
         for a in atts:

@@ -197,6 +197,7 @@ class Dataset(QueryBase):
             return
         self.load_families()
         self.load_pedigree_selectors()
+        self.load_pheno_columns()
 
     def load_pheno_db(self):
         pheno_db = None
@@ -217,6 +218,18 @@ class Dataset(QueryBase):
         for fam in self.families.values():
             for p in fam.memberInOrder:
                 self.persons[p.personId] = p
+
+    def load_pheno_columns(self):
+        pheno_columns = self.get_pheno_columns()
+        for (role, source, label) in pheno_columns:
+            assert self.pheno_db.has_measure(source), \
+                'missing measure {}'.format(source)
+            values = self.pheno_db.get_persons_values_df(
+                [source], roles=[role])
+            for fid, fam in self.families.items():
+                fvalues = values[values.family_id == fid]
+                fam.atts[label] = \
+                    ','.join([str(v) for v in fvalues[source].values])
 
     def load_pedigree_selectors(self):
         pedigree_selectors = self.descriptor['pedigreeSelectors']
@@ -381,9 +394,48 @@ class Dataset(QueryBase):
         variants = itertools.chain.from_iterable([denovo, transmitted])
         return variants
 
+    COMMON_COLUMNS = [
+        'effectType',
+        'effectDetails',
+        'all.altFreq',
+        'all.nAltAlls',
+        'SSCfreq',
+        'EVSfreq',
+        'E65freq',
+        'all.nParCalled',
+        '_par_races_',
+        '_ch_prof_',
+        '_prb_viq_',
+        '_prb_nviq_',
+        'valstatus',
+        "_pedigree_",
+        "phenoInChS",
+    ]
+
+    def get_pheno_columns(self):
+        gb = self.descriptor['genotypeBrowser']
+        pheno_columns = gb.get('phenoColumns', [])
+        if not pheno_columns:
+            return []
+        columns = []
+        for pheno_column in pheno_columns:
+            slots = pheno_column['slots']
+            columns.extend([
+                (s['role'], s['source'], s['label']) for s in slots])
+        return columns
+
+    def augment_pheno_columns_variants(self, v):
+        pass
+
     def get_variants_preview(self, safe=True, **kwargs):
         variants = self.get_variants(safe=safe, **kwargs)
         legend = self.get_pedigree_selector(**kwargs)
+        pheno_columns = self.get_pheno_columns()
+        columns = self.COMMON_COLUMNS[:]
+        columns.extend([label for (_, _, label) in pheno_columns])
+        families = {}
+        if pheno_columns and self.pheno_db:
+            families = self.pheno_db.families
 
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
@@ -394,25 +446,13 @@ class Dataset(QueryBase):
             v.atts["_prb_nviq_"] = 'NA'
             v.atts["_pedigree_"] = v.pedigree_v3(legend)
             v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
+            family = families.get(v.familyId, None)
+            fatts = family.atts if family else {}
+            for (_role, _source, label) in pheno_columns:
+                v.atts[label] = fatts.get(label, '')
             v._phenotype_ = v.study.get_attr('study.phenotype')
             return v
 
         return generate_response(
-            itertools.imap(augment_vars, variants),
-            [
-                'effectType',
-                'effectDetails',
-                'all.altFreq',
-                'all.nAltAlls',
-                'SSCfreq',
-                'EVSfreq',
-                'E65freq',
-                'all.nParCalled',
-                '_par_races_',
-                '_ch_prof_',
-                '_prb_viq_',
-                '_prb_nviq_',
-                'valstatus',
-                "_pedigree_",
-                "phenoInChS"
-            ])
+            itertools.imap(augment_vars, variants), columns
+        )
