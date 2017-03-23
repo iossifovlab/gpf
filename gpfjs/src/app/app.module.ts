@@ -69,6 +69,7 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
 import { RouterModule, Routes } from '@angular/router';
+import { StateRestoreService } from './store/state-restore.service'
 
 const appRoutes: Routes = [
   {
@@ -162,7 +163,8 @@ const appRoutes: Routes = [
     CookieService,
     EnrichmentModelsService,
     EnrichmentQueryService,
-    FullscreenLoadingService
+    FullscreenLoadingService,
+    StateRestoreService
   ],
   bootstrap: [AppComponent]
 })

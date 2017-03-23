@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
 import { QueryStateProvider } from '../query/query-state-provider'
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-gene-symbols',
@@ -22,7 +23,8 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
   private flashingAlert: boolean = false;
 
   constructor(
-    private store: Store<any>
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.geneSymbolsState = toObservableWithValidation(GeneSymbolsState, this.store.select('geneSymbols'));
@@ -32,6 +34,15 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
     this.store.dispatch({
       'type': GENE_SYMBOLS_INIT,
     });
+
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        this.store.dispatch({
+          'type': GENE_SYMBOLS_CHANGE,
+          'payload': state['geneSymbols'].join("\n")
+        });
+      }
+    )
 
     this.geneSymbolsState.subscribe(
       ([geneSymbolsState, isValid, validationErrors]) => {
@@ -75,5 +86,4 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
         return { geneSymbols: result }
     });
   }
-
 }

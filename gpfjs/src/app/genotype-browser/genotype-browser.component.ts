@@ -6,6 +6,7 @@ import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
 import { ActivatedRoute, Params, Router } from '@angular/router';
+import { StateRestoreService } from '../store/state-restore.service'
 import 'rxjs/add/operator/zip';
 
 @Component({
@@ -23,7 +24,8 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
     private configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
   }
@@ -36,7 +38,8 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
         .subscribe(
           state => {
             this.genotypePreviewsArray = null
-            this.router.navigate(['.', Object.assign({}, ...state)], { relativeTo: this.route });
+            let stateObject = Object.assign({}, ...state);
+            this.router.navigate(['.', { state: JSON.stringify(stateObject)}], { relativeTo: this.route });
           },
           error => {
             this.genotypePreviewsArray = null
@@ -45,6 +48,12 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
         )
       }
     )
+
+    this.route.params.take(1).subscribe(
+      (params: Params) => {
+        this.stateRestoreService.onParamsUpdate(params['state'])
+      }
+    );
   }
 
   ngOnInit() {
@@ -64,8 +73,6 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
                                       ...state);
-
-        this.router.navigate(['.', Object.assign({}, ...state)], { relativeTo: this.route });
         this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
           (genotypePreviewsArray) => {
             this.genotypePreviewsArray = genotypePreviewsArray;
