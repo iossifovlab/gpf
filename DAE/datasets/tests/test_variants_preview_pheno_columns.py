@@ -1,0 +1,76 @@
+'''
+Created on Mar 23, 2017
+
+@author: lubo
+'''
+
+
+from datasets.tests.requests import EXAMPLE_QUERY_SSC, EXAMPLE_QUERY_VIP
+from pprint import pprint
+import copy
+
+
+def test_get_denovo_variants_ssc(ssc):
+    query = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    query['familyIds'] = ['11825']
+
+    vs = ssc.get_variants_preview(**query)
+    v = vs.next()
+    pprint(v)
+    assert len(v) == 33
+    nviq, viq, mom, dad = v[-4:]
+    assert 'Proband IQs.NvIQ' == nviq
+    assert 'Proband IQs.vIQ' == viq
+    assert 'Races.Mom' == mom
+    assert 'Races.Dad' == dad
+
+    v = vs.next()
+    pprint(v)
+
+    assert len(v) == 33
+
+    nviq, viq, mom, dad = v[-4:]
+    assert '101.0' == nviq
+    assert '110.0' == viq
+    assert 'white' == mom
+    assert 'asian' == dad
+
+
+def test_get_denovo_variants_vip(vip):
+    query = copy.deepcopy(EXAMPLE_QUERY_VIP)
+    query['presentInParent'] = ['neither']
+    query['pedigreeSelector'] = {
+        'id': "16pstatus",
+        'checkedValues': [
+            'deletion', 'duplication', 'triplication', 'negative'
+        ]
+    }
+
+    vs = vip.get_variants_preview(**query)
+    v = vs.next()
+    pprint(v)
+    assert len(v) == 32
+    nviq, viq, status = v[-3:]
+    assert 'Proband IQs.NvIQ' == nviq
+    assert 'Proband IQs.vIQ' == viq
+    assert '16p Status.16p' == status
+
+    assert len(v) == 32
+    families = vip.pheno_db.families
+    print(families.keys())
+    count = 0
+    for v in vs:
+        count += 1
+        pprint(v)
+        fid = v[0]
+        fam = families.get(fid, None)
+        if fam:
+            print(fam, fam.atts)
+    print(count)
+    assert count == 18
+
+
+#     nviq, viq, status = v[-3:]
+#     assert '101.0' == nviq
+#     assert '110.0' == viq
+#     assert 'white' == status

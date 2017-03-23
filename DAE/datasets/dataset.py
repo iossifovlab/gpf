@@ -226,10 +226,14 @@ class Dataset(QueryBase):
                 'missing measure {}'.format(source)
             values = self.pheno_db.get_persons_values_df(
                 [source], roles=[role])
-            for fid, fam in self.families.items():
+            values.dropna(inplace=True)
+            for fid in values['family_id'].unique():
+                fam = self.pheno_db.families.get(fid, None)
+                if not fam:
+                    continue
                 fvalues = values[values.family_id == fid]
-                fam.atts[label] = \
-                    ','.join([str(v) for v in fvalues[source].values])
+                if len(fvalues) > 0:
+                    fam.atts[label] = fvalues[source].values[0]
 
     def load_pedigree_selectors(self):
         pedigree_selectors = self.descriptor['pedigreeSelectors']
@@ -419,13 +423,12 @@ class Dataset(QueryBase):
             return []
         columns = []
         for pheno_column in pheno_columns:
+            name = pheno_column['name']
             slots = pheno_column['slots']
             columns.extend([
-                (s['role'], s['source'], s['label']) for s in slots])
+                (s['role'], s['source'], '{}.{}'.format(name, s['label']))
+                for s in slots])
         return columns
-
-    def augment_pheno_columns_variants(self, v):
-        pass
 
     def get_variants_preview(self, safe=True, **kwargs):
         variants = self.get_variants(safe=safe, **kwargs)
@@ -447,7 +450,9 @@ class Dataset(QueryBase):
             v.atts["_pedigree_"] = v.pedigree_v3(legend)
             v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
             family = families.get(v.familyId, None)
+            print(family)
             fatts = family.atts if family else {}
+            print(fatts)
             for (_role, _source, label) in pheno_columns:
                 v.atts[label] = fatts.get(label, '')
             v._phenotype_ = v.study.get_attr('study.phenotype')
