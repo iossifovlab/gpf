@@ -47,6 +47,8 @@ class DatasetApiTest(APITestCase):
         self.assertIn('genotypeBrowser', data)
         gbdata = data['genotypeBrowser']
         self.assertIn('hasStudyTypes', gbdata)
+        pprint(gbdata)
+        self.assertIn('phenoColumns', gbdata)
 
     def test_get_dataset_not_found(self):
         url = '/api/v3/datasets/ALA_BALA'
@@ -73,3 +75,6 @@ class DatasetApiTest(APITestCase):
         self.assertTrue(data['pedigreeSelectors'])
         pedigrees = data['pedigreeSelectors']
         self.assertEquals(2, len(pedigrees))
+
+        pprint(gbdata)
+        self.assertIn('phenoColumns', gbdata)
