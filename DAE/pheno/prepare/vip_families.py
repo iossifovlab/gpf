@@ -261,7 +261,7 @@ class PrepareIndividuals(VipLoader):
                     assert father is not None
                     assert mother is not None
 
-                    family_id = "{mom}_{dad}".format(
+                    family_id = "{mom}-{dad}".format(
                         mom=mother.person_id, dad=father.person_id)
                     if family_id in families:
                         family = families[family_id]
