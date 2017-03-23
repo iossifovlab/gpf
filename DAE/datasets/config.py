@@ -126,6 +126,9 @@ class DatasetsConfig(object):
         pedigree_selector = \
             self._get_boolean(
                 section, 'genotypeBrowser.hasPedigreeSelector')
+        pheno_columns = \
+            self._get_genotype_browser_pheno_columns(section)
+
         return {
             'mainForm': main_form,
             'hasDenovo': has_denovo,
@@ -136,10 +139,11 @@ class DatasetsConfig(object):
             'hasStudyTypes': study_types,
             'hasAdvancedFamilyFilters': advanced_family_filters,
             'hasPedigreeSelector': pedigree_selector,
+            'phenoColumns': pheno_columns,
         }
 
     def _get_genotype_browser_pheno_columns(self, section):
-        result = {}
+        result = []
         columns = self._get_string_list(
             section, 'genotypeBrowser.pheno.columns')
         if not columns:
@@ -147,8 +151,7 @@ class DatasetsConfig(object):
 
         for col in columns:
             column = self._get_genotype_browser_pheno_column(section, col)
-            result[col] = column
-        result['columns'] = columns
+            result.append(column)
 
         return result
 
@@ -160,16 +163,16 @@ class DatasetsConfig(object):
             section, '{}.{}'.format(prefix, 'slots'))
         column = {}
         column['name'] = name
-        values = []
+        column_slots = []
         for slot in slots:
             role, source, label = slot.split(':')
-            values.append(
+            column_slots.append(
                 {
                     'role': role,
                     'source': source,
                     'label': label,
                 })
-        column['values'] = values
+        column['slots'] = column_slots
         return column
 
     def _get_enrichment_tool(self, section):
