@@ -10,6 +10,7 @@ import { toObservableWithValidation, validationErrorsToStringArray } from '../ut
 import { ValidationError } from "class-validator";
 import { QueryStateProvider } from '../query/query-state-provider'
 import { QueryData } from '../query/query'
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-gender',
@@ -26,7 +27,8 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
   private flashingAlert = false;
 
   constructor(
-    private store: Store<any>
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.genderState = toObservableWithValidation(GenderState, this.store.select('gender'));
@@ -36,6 +38,25 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
     this.store.dispatch({
       'type': GENDER_INIT,
     });
+
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['gender']) {
+          this.store.dispatch({
+            'type': GENDER_UNCHECK_ALL
+          });
+
+          for (let gender of state['gender']) {
+            if (gender === 'female' || gender === 'male') {
+              this.store.dispatch({
+                'type': GENDER_CHECK,
+                'payload': gender
+              });
+            }
+          }
+        }
+      }
+    )
 
     this.genderState.subscribe(
       ([genderState, isValid, validationErrors]) => {
