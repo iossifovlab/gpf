@@ -12,6 +12,7 @@ import { Store } from '@ngrx/store';
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
 import { QueryStateProvider } from '../query/query-state-provider'
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -38,6 +39,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     private geneSetsService: GeneSetsService,
     private store: Store<any>,
     private config: ConfigService,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.geneSetsState = toObservableWithValidation(GeneSetsState, this.store.select('geneSets'));
@@ -91,6 +93,20 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
         this.geneSetsCollections = geneSetsCollections;
+        this.stateRestoreService.state.subscribe(
+          (state) => {
+            if (state['geneSet'] && state['geneSet']['geneSetsCollection']) {
+              for (let geneSetCollection of this.geneSetsCollections) {
+                if (geneSetCollection.name == state['geneSet']['geneSetsCollection']) {
+                  this.store.dispatch({
+                    'type': GENE_SETS_COLLECTION_CHANGE,
+                    'payload': geneSetCollection
+                  });
+                }
+              }
+            }
+          }
+        )
       });
 
     this.geneSetsResult = this.geneSetsQueryChange
@@ -107,6 +123,20 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     this.geneSetsResult.subscribe(
       (geneSets) => {
         this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
+        this.stateRestoreService.state.subscribe(
+          (state) => {
+            if (state['geneSet'] && state['geneSet']['geneSet']) {
+              for (let geneSet of this.geneSets) {
+                if (geneSet.name == state['geneSet']['geneSet']) {
+                  this.store.dispatch({
+                    'type': GENE_SET_CHANGE,
+                    'payload': geneSet
+                  });
+                }
+              }
+            }
+          }
+        )
       });
   }
 
