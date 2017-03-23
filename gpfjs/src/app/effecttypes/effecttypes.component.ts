@@ -15,6 +15,7 @@ import { GpfState } from '../store/gpf-store';
 import { QueryStateProvider } from '../query/query-state-provider'
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-effecttypes-column',
@@ -98,7 +99,8 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   private flashingAlert = false;
 
   constructor(
-    private store: Store<GpfState>
+    private store: Store<GpfState>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.effectTypes = toObservableWithValidation(EffectTypesState, this.store.select('effectTypes'));
@@ -117,6 +119,17 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
       'type': EFFECT_TYPE_INIT,
     });
     this.selectButtonGroup('LGDS');
+
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['effectTypes']) {
+          this.store.dispatch({
+            'type': EFFECT_TYPE_SET,
+            'payload': state['effectTypes']
+          });
+        }
+      }
+    )
 
     this.effectTypes.subscribe(
       ([values, valid, validationErrors]) => {
