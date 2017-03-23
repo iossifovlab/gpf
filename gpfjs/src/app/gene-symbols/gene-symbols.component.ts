@@ -37,10 +37,12 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
 
     this.stateRestoreService.state.subscribe(
       (state) => {
-        this.store.dispatch({
-          'type': GENE_SYMBOLS_CHANGE,
-          'payload': state['geneSymbols'].join("\n")
-        });
+        if (state['geneSymbols']) {
+          this.store.dispatch({
+            'type': GENE_SYMBOLS_CHANGE,
+            'payload': state['geneSymbols'].join("\n")
+          });
+        }
       }
     )
 
