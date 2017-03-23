@@ -12,6 +12,7 @@ import { QueryStateProvider } from '../query/query-state-provider'
 import { QueryData } from '../query/query'
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-varianttypes',
@@ -32,7 +33,8 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
   private flashingAlert = false;
 
   constructor(
-    private store: Store<any>
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.variantTypesState = toObservableWithValidation(VariantTypesState, this.store.select('variantTypes'));
@@ -41,11 +43,22 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
     datasetsState.subscribe(state => {
       if (!state || !state.selectedDataset) {
         this.hasCNV = false;
-        this.selectAll();
-        return;
       }
-      this.hasCNV = state.selectedDataset.genotypeBrowser.hasCNV;
+      else {
+        this.hasCNV = state.selectedDataset.genotypeBrowser.hasCNV;
+      }
       this.selectAll();
+
+      this.stateRestoreService.state.subscribe(
+        (state) => {
+          if (state['variantTypes']) {
+            this.store.dispatch({
+              'type': VARIANT_TYPES_SET,
+              'payload': state['variantTypes']
+            });
+          }
+        }
+      )
     });
 
   }
