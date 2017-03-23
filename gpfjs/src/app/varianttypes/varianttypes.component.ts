@@ -19,7 +19,7 @@ import { ValidationError } from "class-validator";
   styleUrls: ['./varianttypes.component.css'],
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => VarianttypesComponent) }]
 })
-export class VarianttypesComponent implements OnInit {
+export class VarianttypesComponent extends QueryStateProvider implements OnInit {
   sub: boolean = true;
   ins: boolean = true;
   del: boolean = true;
@@ -34,7 +34,7 @@ export class VarianttypesComponent implements OnInit {
   constructor(
     private store: Store<any>
   ) {
-
+    super();
     this.variantTypesState = toObservableWithValidation(VariantTypesState, this.store.select('variantTypes'));
 
     let datasetsState: Observable<DatasetsState> = this.store.select('datasets');

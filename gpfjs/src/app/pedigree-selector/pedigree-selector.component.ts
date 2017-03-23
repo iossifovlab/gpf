@@ -18,7 +18,7 @@ import { QueryStateProvider } from '../query/query-state-provider'
   styleUrls: ['./pedigree-selector.component.css'],
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PedigreeSelectorComponent) }]
 })
-export class PedigreeSelectorComponent implements OnInit {
+export class PedigreeSelectorComponent extends QueryStateProvider implements OnInit {
   selectedDataset: Dataset;
   selectedPedigree: PedigreeSelector;
   pedigrees: PedigreeSelector[];
@@ -32,6 +32,7 @@ export class PedigreeSelectorComponent implements OnInit {
   constructor(
     private store: Store<any>,
   ) {
+    super();
     this.datasetsState = this.store.select('datasets');
     this.pedigreeState = toObservableWithValidation(PedigreeSelectorState, this.store.select('pedigreeSelector'));
 
