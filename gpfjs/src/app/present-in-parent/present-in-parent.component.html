@@ -54,22 +54,22 @@
                 type="radio"
                 name="rarity"
                 (change)="ultraRareValueChange(ultraRareRadio.checked)"
-                value="ultraRare" checked>Ultra Rare<br/>
+                value="ultraRare" [checked]="rarityRadio == 'ultraRare'">Ultra Rare<br/>
             <input #allRadio
                 type="radio"
                 name="rarity"
                 (change)="rarityRadioChange('all')"
-                value="all">All
+                value="all" [checked]="rarityRadio == 'all'">All
             <input #rareRadio
                 type="radio"
                 name="rarity"
                 (change)="rarityRadioChange('rare')"
-                value="rare">Rare
+                value="rare" [checked]="rarityRadio == 'rare'">Rare
             <input #intervalRadio
                 type="radio"
                 name="rarity"
                 (change)="rarityRadioChange('interval')"
-                value="interval">Interval
+                value="interval" [checked]="rarityRadio == 'interval'">Interval
           </div>
           <div class='row'>
             <div *ngIf="rarityRadio == 'interval'">

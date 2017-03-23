@@ -12,6 +12,7 @@ import { QueryStateProvider } from '../query/query-state-provider'
 import { QueryData, Rarity } from '../query/query'
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-present-in-parent',
@@ -36,16 +37,117 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   private flashingAlert = false;
 
   constructor(
-    private store: Store<any>
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.presentInParentState = toObservableWithValidation(PresentInParentState, this.store.select('presentInParent'));
+  }
+
+  restoreCheckedState(state) {
+    for (let key of state) {
+      if (key == 'father only') {
+        this.store.dispatch({
+          'type': PRESENT_IN_PARENT_CHECK,
+          'payload': 'fatherOnly'
+        });
+      }
+      if (key == 'mother only') {
+        this.store.dispatch({
+          'type': PRESENT_IN_PARENT_CHECK,
+          'payload': 'motherOnly'
+        });
+      }
+      if (key == 'mother and father') {
+        this.store.dispatch({
+          'type': PRESENT_IN_PARENT_CHECK,
+          'payload': 'motherFather'
+        });
+      }
+      if (key == 'neither') {
+        this.store.dispatch({
+          'type': PRESENT_IN_PARENT_CHECK,
+          'payload': 'neither'
+        });
+      }
+    }
+  }
+
+  restoreRarity(state) {
+    if (state['ultraRare']) {
+      this.store.dispatch({
+        'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
+        'payload': true
+      });
+    }
+    else {
+      this.store.dispatch({
+        'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
+        'payload': false
+      });
+
+      if (state['minFreq']
+        ) {
+        this.store.dispatch({
+          'type': PRESENT_IN_PARENT_RANGE_START_CHANGE,
+          'payload': state['minFreq']
+        });
+      }
+
+      if (state['maxFreq']
+        ) {
+        this.store.dispatch({
+          'type': PRESENT_IN_PARENT_RANGE_END_CHANGE,
+          'payload': state['maxFreq']
+        });
+      }
+
+      this.restoreRadioButtonState(state);
+    }
+  }
+
+  restoreRadioButtonState(state) {
+    this.rarityRadio = "ultraRare";     //Default
+    console.log("radio", state['minFreq'], state['maxFreq'])
+    if (!state['ultraRare']) {
+      if (state['minFreq'] && state['minFreq'] > 0) {
+        this.rarityRadio = "interval";
+      }
+      else {
+        if (state['maxFreq'] && state['maxFreq'] < 100) {
+          this.rarityRadio = "rare";
+        }
+        else {
+          this.rarityRadio = "all";
+        }
+      }
+    }
+  }
+
+  restoreStateSubscribe() {
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['presentInParent'] && state['presentInParent']['presentInParent']) {
+          console.log("presentInParent", state['presentInParent'])
+          this.store.dispatch({
+            'type': PRESENT_IN_PARENT_UNCHECK_ALL,
+          });
+          this.restoreCheckedState(state['presentInParent']['presentInParent'])
+        }
+
+        if (state['presentInParent'] && state['presentInParent']['rarity']) {
+          this.restoreRarity(state['presentInParent']['rarity'])
+        }
+      }
+    );
   }
 
   ngOnInit() {
     this.store.dispatch({
       'type': PRESENT_IN_PARENT_INIT,
     });
+
+    this.restoreStateSubscribe();
 
     this.presentInParentState.subscribe(
       ([presentInParentState, isValid, validationErrors]) => {
@@ -114,6 +216,9 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   ultraRareValueChange(ultraRare: boolean) {
+    if (ultraRare) {
+      this.rarityRadio = "ultraRare"; 
+    }
     this.store.dispatch({
       'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
       'payload': ultraRare
@@ -183,7 +288,7 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
           }
         }
 
-        return { presentInParent: result, rarity: rarity }
+        return { presentInParent: { presentInParent: result, rarity: rarity }}
     });
   }
 }
