@@ -8,6 +8,7 @@ import { toObservableWithValidation, validationErrorsToStringArray } from '../ut
 import { ValidationError } from "class-validator";
 import { QueryStateProvider } from '../query/query-state-provider'
 import { QueryData } from '../query/query'
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-study-types',
@@ -26,7 +27,8 @@ export class StudyTypesComponent extends QueryStateProvider implements OnInit {
   private flashingAlert = false;
 
   constructor(
-    private store: Store<any>
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.studyTypesState = toObservableWithValidation(StudyTypesState, this.store.select('studyTypes'));
@@ -36,6 +38,25 @@ export class StudyTypesComponent extends QueryStateProvider implements OnInit {
     this.store.dispatch({
       'type': STUDY_TYPES_INIT,
     });
+
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['studyType']) {
+          this.store.dispatch({
+            'type': STUDY_TYPES_UNCHECK_ALL,
+          });
+
+          for (let studyType of state['studyType']) {
+            if (studyType === 'we' || studyType === 'tg') {
+              this.store.dispatch({
+                'type': STUDY_TYPES_CHECK,
+                'payload': studyType
+              });
+            }
+          }
+        }
+      }
+    )
 
     this.studyTypesState.subscribe(
       ([state, isValid, validationErrors]) => {
