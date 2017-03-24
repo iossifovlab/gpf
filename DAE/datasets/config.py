@@ -7,7 +7,7 @@ import ConfigParser
 
 from Config import Config
 import collections
-from pprint import pprint
+# from pprint import pprint
 
 
 class PedigreeSelector(dict):
@@ -128,6 +128,8 @@ class DatasetsConfig(object):
                 section, 'genotypeBrowser.hasPedigreeSelector')
         pheno_columns = \
             self._get_genotype_browser_pheno_columns(section)
+        family_filters = \
+            self._get_genotype_browser_family_filters(section)
 
         return {
             'mainForm': main_form,
@@ -140,6 +142,48 @@ class DatasetsConfig(object):
             'hasAdvancedFamilyFilters': advanced_family_filters,
             'hasPedigreeSelector': pedigree_selector,
             'phenoColumns': pheno_columns,
+            'familyFilters': family_filters,
+        }
+
+    def _get_genotype_browser_family_filters(self, section):
+        result = []
+        filters = self._get_string_list(
+            section, 'genotypeBrowser.familyFilters.filters')
+        if not filters:
+            return None
+
+        for f in filters:
+            family_filter = self._get_genotype_browser_family_filter(
+                section, f)
+            result.append(family_filter)
+        return result
+
+    def _get_genotype_browser_family_filter(self, section, f):
+        prefix = 'genotypeBrowser.familyFilters.{}'.format(f)
+        name = self._get_string(
+            section, '{}.{}'.format(prefix, 'name'))
+        measure_type = self._get_string(
+            section, '{}.{}'.format(prefix, 'type'))
+        mf = self._get_string(
+            section, '{}.{}'.format(prefix, 'filter'))
+        mf = mf.split(':')
+        if 'single' == mf[0]:
+            filter_type, role, measure = mf
+            measure_filter = {
+                'filter_type': filter_type,
+                'role': role,
+                'measure': measure
+            }
+        elif 'multi' == mf[0]:
+            filter_type, role = mf
+            measure_filter = {
+                'filter_type': filter_type,
+                'role': role
+            }
+        return {
+            'name': name,
+            'measure_type': measure_type,
+            'measure_filter': measure_filter
         }
 
     def _get_genotype_browser_pheno_columns(self, section):
@@ -229,8 +273,6 @@ class DatasetsConfig(object):
         phenotype_browser = self._get_boolean(section, 'phenotypeBrowser')
         genotype_browser = self._get_genotype_browser(section)
         enrichment_tool = self._get_enrichment_tool(section)
-        pprint(enrichment_tool)
-        # pprint(genotype_browser)
 
         pedigree_selectors = self._get_pedigree_selectors(section)
 
