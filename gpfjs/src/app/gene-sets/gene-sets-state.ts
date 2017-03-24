@@ -6,7 +6,7 @@ export const GENE_SET_CHANGE = 'GENE_SET_CHANGE';
 export const GENE_SETS_TYPES_ADD = 'GENE_SETS_TYPES_ADD';
 export const GENE_SETS_TYPES_REMOVE = 'GENE_SETS_TYPES_REMOVE';
 export const GENE_SETS_INIT = 'GENE_SETS_INIT';
-
+export const GENE_SETS_TYPES_CLEAR = 'GENE_SETS_TYPES_CLEAR';
 
 export class GeneSetsState {
   geneSetsCollection: GeneSetsCollection;
@@ -43,6 +43,11 @@ export function geneSetsReducer(
     case GENE_SETS_TYPES_REMOVE: {
       let newSet = new Set<any>(state.geneSetsTypes);
       newSet.delete(action.payload);
+      return Object.assign({}, state,
+        { geneSetsTypes: newSet });
+    }
+    case GENE_SETS_TYPES_CLEAR: {
+      let newSet = new Set<any>();
       return Object.assign({}, state,
         { geneSetsTypes: newSet });
     }

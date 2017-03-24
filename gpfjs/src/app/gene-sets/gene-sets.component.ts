@@ -1,7 +1,8 @@
 import { ConfigService } from '../config/config.service';
 import {
   GeneSetsState, GENE_SETS_INIT, GENE_SETS_COLLECTION_CHANGE,
-  GENE_SET_CHANGE, GENE_SETS_TYPES_ADD, GENE_SETS_TYPES_REMOVE
+  GENE_SETS_TYPES_CLEAR,  GENE_SET_CHANGE,
+  GENE_SETS_TYPES_ADD, GENE_SETS_TYPES_REMOVE
 } from './gene-sets-state';
 import { Component, OnInit, forwardRef } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
@@ -57,6 +58,44 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     return false;
   }
 
+  restoreStateSubscribe() {
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['geneSet'] && state['geneSet']['geneSetsCollection']) {
+          for (let geneSetCollection of this.geneSetsCollections) {
+            if (geneSetCollection.name == state['geneSet']['geneSetsCollection']) {
+              this.store.dispatch({
+                'type': GENE_SETS_COLLECTION_CHANGE,
+                'payload': geneSetCollection
+              });
+
+              if (state['geneSet']['geneSetsTypes']) {
+                this.restoreGeneTypes(state['geneSet']['geneSetsTypes'], geneSetCollection);
+              }
+            }
+          }
+        }
+      }
+    )
+  }
+
+  restoreGeneTypes(state, geneSetCollection: GeneSetsCollection) {
+    this.store.dispatch({
+      'type': GENE_SETS_TYPES_CLEAR
+    });
+
+    for (let geneType of geneSetCollection.types) {
+      for (let restoredGeneType of state) {
+        if (geneType.name == restoredGeneType) {
+          this.store.dispatch({
+            'type': GENE_SETS_TYPES_ADD,
+            'payload': geneType
+          });
+        }
+      }
+    }
+  }
+
   ngOnInit() {
     this.store.dispatch({
       'type': GENE_SETS_INIT,
@@ -93,21 +132,9 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
         this.geneSetsCollections = geneSetsCollections;
-        this.stateRestoreService.state.subscribe(
-          (state) => {
-            if (state['geneSet'] && state['geneSet']['geneSetsCollection']) {
-              for (let geneSetCollection of this.geneSetsCollections) {
-                if (geneSetCollection.name == state['geneSet']['geneSetsCollection']) {
-                  this.store.dispatch({
-                    'type': GENE_SETS_COLLECTION_CHANGE,
-                    'payload': geneSetCollection
-                  });
-                }
-              }
-            }
-          }
-        )
-      });
+        this.restoreStateSubscribe();
+      }
+    );
 
     this.geneSetsResult = this.geneSetsQueryChange
       .debounceTime(1000)
