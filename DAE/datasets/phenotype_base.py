@@ -6,12 +6,7 @@ Created on Mar 2, 2017
 import numpy as np
 
 
-class PhenotypeQueryDelegate(object):
-
-    def __init__(self, dataset):
-        self.dataset = dataset
-        assert self.dataset.pheno_db is not None
-        self.pheno_db = self.dataset.pheno_db
+class PhenotypeQueryMixin(object):
 
     def _select_continous_measure_df(self, measure_id, mmin, mmax, roles=None):
         df = self.pheno_db.get_persons_values_df([measure_id], roles=roles)
@@ -31,6 +26,7 @@ class PhenotypeQueryDelegate(object):
 
     def get_families_by_measure_continuous(
             self, measure_id, mmin=None, mmax=None, roles=None):
+        assert self.pheno_db is not None
 
         selected = self._select_continous_measure_df(
             measure_id, mmin, mmax, roles=roles)
@@ -38,6 +34,8 @@ class PhenotypeQueryDelegate(object):
 
     def get_persons_by_measure_continuous(
             self, measure_id, mmin=None, mmax=None, roles=None):
+        assert self.pheno_db is not None
+
         selected = self._select_continous_measure_df(
             measure_id, mmin, mmax, roles=roles)
         return set(selected.person_id.values)
@@ -57,19 +55,15 @@ class PhenotypeQueryDelegate(object):
 
     def get_families_by_measure_categorical(
             self, measure_id, selection, roles=None):
+        assert self.pheno_db is not None
 
         selected = self._select_categorical_measure_df(
             measure_id, selection=selection, roles=roles)
         return set(selected.family_id.values)
 
     def get_measure_domain_categorical(self, measure_id):
+        assert self.pheno_db is not None
+
         m = self.pheno_db.get_measure(measure_id)
         assert m.measure_type == 'categorical'
         return set(m.value_domain.split(','))
-
-
-class SSCFamilyQueryDelegate(PhenotypeQueryDelegate):
-
-    def __init__(self, dataset):
-        super(SSCFamilyQueryDelegate, self).__init__(dataset)
-        assert self.dataset.name == 'SSC'

@@ -18,16 +18,6 @@ EXAMPLE_QUERY_SSC = {
     "variantTypes": [
         "CNV", "del", "ins", "sub",
     ],
-    "genes": "All",
-    "family_race": "All",
-    "family_quad_trio": "All",
-    "family_prb_gender": "All",
-    "family_sib_gender": "All",
-    "family_study_type": "All",
-    "family_studies": "All",
-    "family_pheno_measure_min": 1.08,
-    "family_pheno_measure_max": 40,
-    "family_pheno_measure": "abc.subscale_ii_lethargy",
     "datasetId": "SSC",
     "pedigreeSelector": {
         'id': "phenotype",

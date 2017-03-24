@@ -7,7 +7,8 @@ import pytest
 import numpy as np
 
 import DAE
-from datasets.phenotype_base import SSCFamilyQueryDelegate
+import copy
+from datasets.tests.requests import EXAMPLE_QUERY_SSC
 
 
 @pytest.fixture(scope='session')
@@ -18,7 +19,7 @@ def ssc_pheno(request):
 
 
 def test_verbal_iq_interval_ssc(ssc, ssc_pheno):
-    fd = SSCFamilyQueryDelegate(ssc)
+    fd = ssc
     assert fd is not None
 
     family_ids = fd.get_families_by_measure_continuous(
@@ -37,7 +38,7 @@ def test_verbal_iq_interval_ssc(ssc, ssc_pheno):
 
 
 def test_head_circumference_interval(ssc, ssc_pheno):
-    fd = SSCFamilyQueryDelegate(ssc)
+    fd = ssc
     assert fd is not None
 
     family_ids = fd.get_families_by_measure_continuous(
@@ -58,7 +59,7 @@ def test_head_circumference_interval(ssc, ssc_pheno):
 
 
 def test_experiment_with_categorical_measure_filter(ssc, ssc_pheno):
-    fd = SSCFamilyQueryDelegate(ssc)
+    fd = ssc
     assert fd is not None
 
     domain = fd.get_measure_domain_categorical('pheno_common.race')
@@ -75,3 +76,34 @@ def test_experiment_with_categorical_measure_filter(ssc, ssc_pheno):
     family_ids = fd.get_families_by_measure_categorical(
         'pheno_common.race', ['native-hawaiian', 'native-american'])
     assert 20 == len(family_ids)
+
+
+def test_family_ids_simple_denovo(ssc):
+    query = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    query['familyIds'] = ['11563']
+    del query['pedigreeSelector']
+
+    vs = ssc.get_variants(**query)
+    count = 0
+    for v in vs:
+        count += 1
+        assert v.familyId == '11563'
+
+    assert 1 == count
+
+
+def test_family_ids_simple_transmitted(ssc):
+    query = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    query['familyIds'] = ['11563']
+    query['presentInParent'] = ['mother only']
+    query['rarity'] = {'ultraRare': 'true'}
+
+    del query['pedigreeSelector']
+
+    vs = ssc.get_variants(**query)
+    count = 0
+    for v in vs:
+        count += 1
+        assert v.familyId == '11563'
+
+    assert 1 == count

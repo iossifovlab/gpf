@@ -10,10 +10,10 @@ from common.query_base import QueryBase, GeneSymsMixin
 from collections import Counter
 from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
-from datasets.phenotype_base import PhenotypeQueryDelegate
+from datasets.phenotype_base import PhenotypeQueryMixin
 
 
-class Dataset(QueryBase):
+class Dataset(QueryBase, PhenotypeQueryMixin):
     GENE_WEIGHTS_LOADER = None
     GENE_SETS_LOADER = None
 
@@ -33,11 +33,6 @@ class Dataset(QueryBase):
         self._phenotypes = None
 
         self.load_pheno_db()
-        if self.pheno_db is not None:
-            self.__pheno_delegate = PhenotypeQueryDelegate(self)
-
-    def __getattr__(self, name):
-        return getattr(self.__pheno_delegate, name)
 
     @property
     def name(self):
@@ -308,7 +303,8 @@ class Dataset(QueryBase):
 
     def get_family_ids(self, **kwargs):
         family_filters = [
-            self.filter_families_by_pedigree_selector(**kwargs)
+            super(Dataset, self).get_family_ids(**kwargs),
+            self.filter_families_by_pedigree_selector(**kwargs),
         ]
         family_filters = [ff for ff in family_filters if ff is not None]
         if not family_filters:

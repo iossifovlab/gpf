@@ -361,10 +361,21 @@ class RegionsMixin(object):
         return chrome, start, end
 
 
+class FamiliesMixin(object):
+
+    @staticmethod
+    def get_family_ids(safe=True, **kwargs):
+        family_ids = kwargs.get('familyIds', None)
+        if not family_ids:
+            return None
+        return family_ids
+
+
 class QueryBase(
     EffectTypesMixin, VariantTypesMixin, ChildGenderMixin,
         PresentInMixin, GeneSymsMixin, RegionsMixin,
-        RarityMixin):
+        RarityMixin,
+        FamiliesMixin):
 
     IN_CHILD_TYPES = [
         'prb',

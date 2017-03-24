@@ -10,7 +10,35 @@ from pprint import pprint
 import copy
 
 
-def test_get_denovo_variants_ssc(ssc):
+def test_get_denovo_variants_ssc_11563(ssc):
+    query = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    query['familyIds'] = ['11563']
+
+    vs = ssc.get_variants_preview(**query)
+    v = vs.next()
+    pprint(v)
+    assert len(v) == 33
+    nviq, viq, mom, dad = v[-4:]
+    assert 'Proband IQs.NvIQ' == nviq
+    assert 'Proband IQs.vIQ' == viq
+    assert 'Races.Mom' == mom
+    assert 'Races.Dad' == dad
+
+    v = vs.next()
+    pprint(v)
+
+    assert len(v) == 33
+
+    assert '11563' == v[0]
+
+    nviq, viq, mom, dad = v[-4:]
+    assert '101.0' == nviq
+    assert '110.0' == viq
+    assert 'white' == mom
+    assert 'asian' == dad
+
+
+def test_get_denovo_variants_ssc_11825(ssc):
     query = copy.deepcopy(EXAMPLE_QUERY_SSC)
     query['familyIds'] = ['11825']
 
@@ -29,11 +57,13 @@ def test_get_denovo_variants_ssc(ssc):
 
     assert len(v) == 33
 
+    assert '11825' == v[0]
+
     nviq, viq, mom, dad = v[-4:]
-    assert '101.0' == nviq
-    assert '110.0' == viq
+    assert '135.0' == nviq
+    assert '115.0' == viq
     assert 'white' == mom
-    assert 'asian' == dad
+    assert 'white' == dad
 
 
 def test_get_denovo_variants_vip(vip):
