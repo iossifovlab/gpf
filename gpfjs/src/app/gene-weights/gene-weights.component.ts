@@ -15,6 +15,7 @@ import { Store } from '@ngrx/store';
 import { QueryStateProvider } from '../query/query-state-provider'
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
+import { StateRestoreService } from '../store/state-restore.service'
 
 import { GeneWeightsState, GENE_WEIGHTS_CHANGE, GENE_WEIGHTS_INIT,
          GENE_WEIGHTS_RANGE_START_CHANGE, GENE_WEIGHTS_RANGE_END_CHANGE
@@ -47,7 +48,8 @@ export class GeneWeightsComponent extends QueryStateProvider {
   constructor(
     private geneWeightsService: GeneWeightsService,
     private changeDetectorRef: ChangeDetectorRef,
-    private store: Store<any>
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   )  {
     super();
     this.geneWeightsState = toObservableWithValidation(GeneWeightsState, this.store.select('geneWeights'));
@@ -77,6 +79,37 @@ export class GeneWeightsComponent extends QueryStateProvider {
     return this.internalSelectedGeneWeights;
   }
 
+  restoreStateSubscribe() {
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['geneWeights'] && state['geneWeights']['weight']) {
+          for (let geneWeight of this.geneWeightsArray) {
+            if (geneWeight.weight == state['geneWeights']['weight']) {
+              this.store.dispatch({
+                'type': GENE_WEIGHTS_CHANGE,
+                'payload': [geneWeight, geneWeight.min, geneWeight.max]
+              });
+            }
+          }
+        }
+
+        if (state['geneWeights'] && state['geneWeights']['rangeStart']) {
+          this.store.dispatch({
+            'type': GENE_WEIGHTS_RANGE_START_CHANGE,
+            'payload': state['geneWeights']['rangeStart']
+          });
+        }
+
+        if (state['geneWeights'] && state['geneWeights']['rangeEnd']) {
+          this.store.dispatch({
+            'type': GENE_WEIGHTS_RANGE_END_CHANGE,
+            'payload': state['geneWeights']['rangeEnd']
+          });
+        }
+      }
+    )
+  }
+
   ngOnInit() {
     this.store.dispatch({
       'type': GENE_WEIGHTS_INIT,
@@ -86,6 +119,8 @@ export class GeneWeightsComponent extends QueryStateProvider {
       (geneWeights) => {
         this.geneWeightsArray = geneWeights;
         this.selectedGeneWeights = geneWeights[0];
+
+        this.restoreStateSubscribe();
     });
 
 
