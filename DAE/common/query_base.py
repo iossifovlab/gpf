@@ -368,7 +368,7 @@ class FamiliesMixin(object):
         family_ids = kwargs.get('familyIds', None)
         if not family_ids:
             return None
-        return family_ids
+        return set(family_ids)
 
 
 class QueryBase(

@@ -301,14 +301,20 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                     continue
         return family_ids
 
-    def get_family_ids(self, **kwargs):
+    def get_family_ids(self, safe=True, **kwargs):
         family_filters = [
             super(Dataset, self).get_family_ids(**kwargs),
             self.filter_families_by_pedigree_selector(**kwargs),
         ]
+        if self.pheno_db:
+            pheno_filters = self.get_family_pheno_filters(safe=safe, **kwargs)
+            family_filters.extend(pheno_filters)
+
         family_filters = [ff for ff in family_filters if ff is not None]
         if not family_filters:
             return None
+        assert all([isinstance(ff, set) for ff in family_filters])
+
         family_ids = reduce(
             lambda f1, f2: f1 & f2,
             family_filters

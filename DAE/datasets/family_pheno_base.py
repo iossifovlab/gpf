@@ -68,12 +68,12 @@ class FamilyPhenoQueryMixin(object):
         assert m.measure_type == 'categorical'
         return set(m.value_domain.split(','))
 
-    def get_family_filters(self, safe=True, **kwargs):
+    def get_family_pheno_filters(self, safe=True, **kwargs):
         assert self.pheno_db is not None
 
         pheno_filters = kwargs.get('phenoFilters', None)
         if not pheno_filters:
-            return None
+            return []
         assert isinstance(pheno_filters, list)
 
         result = []
