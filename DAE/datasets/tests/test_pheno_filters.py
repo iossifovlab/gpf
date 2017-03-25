@@ -150,5 +150,4 @@ def test_pheno_filter_combine_variants_a2(ssc):
 
     vs = ssc.get_variants(**query)
     vs = list(vs)
-    assert len(vs) == 1
-    assert vs[0].familyId == '11483'
+    assert len(vs) == 7
