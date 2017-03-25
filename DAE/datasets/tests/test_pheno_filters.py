@@ -128,3 +128,27 @@ def test_pheno_filter_combine_variants(ssc):
     vs = list(vs)
     assert len(vs) == 1
     assert vs[0].familyId == '11483'
+
+
+def test_pheno_filter_combine_variants_a2(ssc):
+    query = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    query['phenoFilters'] = [
+        {
+            'measure_type': 'categorical',
+            'measure': 'pheno_common.race',
+            'role': 'prb',
+            'selection': ['native-hawaiian', 'white'],
+        },
+        {
+            'measure_type': 'continuous',
+            'measure': 'pheno_common.non_verbal_iq',
+            'role': 'prb',
+            'mmin': 80,
+            'mmax': 80
+        }
+    ]
+
+    vs = ssc.get_variants(**query)
+    vs = list(vs)
+    assert len(vs) == 1
+    assert vs[0].familyId == '11483'

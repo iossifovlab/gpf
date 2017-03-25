@@ -321,7 +321,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         )
         if not family_ids:
             return None
-        return family_ids
+        return list(family_ids)
 
     def get_denovo_filters(self, safe=True, **kwargs):
         return {
