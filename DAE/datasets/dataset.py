@@ -10,10 +10,10 @@ from common.query_base import QueryBase, GeneSymsMixin
 from collections import Counter
 from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
-from datasets.phenotype_base import PhenotypeQueryMixin
+from datasets.family_pheno_base import FamilyPhenoQueryMixin
 
 
-class Dataset(QueryBase, PhenotypeQueryMixin):
+class Dataset(QueryBase, FamilyPhenoQueryMixin):
     GENE_WEIGHTS_LOADER = None
     GENE_SETS_LOADER = None
 

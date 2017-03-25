@@ -128,8 +128,8 @@ class DatasetsConfig(object):
                 section, 'genotypeBrowser.hasPedigreeSelector')
         pheno_columns = \
             self._get_genotype_browser_pheno_columns(section)
-        family_filters = \
-            self._get_genotype_browser_family_filters(section)
+        pheno_filters = \
+            self._get_genotype_browser_pheno_filters(section)
 
         return {
             'mainForm': main_form,
@@ -142,24 +142,24 @@ class DatasetsConfig(object):
             'hasAdvancedFamilyFilters': advanced_family_filters,
             'hasPedigreeSelector': pedigree_selector,
             'phenoColumns': pheno_columns,
-            'familyFilters': family_filters,
+            'phenoFilters': pheno_filters,
         }
 
-    def _get_genotype_browser_family_filters(self, section):
+    def _get_genotype_browser_pheno_filters(self, section):
         result = []
         filters = self._get_string_list(
-            section, 'genotypeBrowser.familyFilters.filters')
+            section, 'genotypeBrowser.phenoFilters.filters')
         if not filters:
             return None
 
         for f in filters:
-            family_filter = self._get_genotype_browser_family_filter(
+            pheno_filter = self._get_genotype_browser_pheno_filter(
                 section, f)
-            result.append(family_filter)
+            result.append(pheno_filter)
         return result
 
-    def _get_genotype_browser_family_filter(self, section, f):
-        prefix = 'genotypeBrowser.familyFilters.{}'.format(f)
+    def _get_genotype_browser_pheno_filter(self, section, f):
+        prefix = 'genotypeBrowser.phenoFilters.{}'.format(f)
         name = self._get_string(
             section, '{}.{}'.format(prefix, 'name'))
         measure_type = self._get_string(

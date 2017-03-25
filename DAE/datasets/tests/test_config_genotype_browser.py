@@ -22,25 +22,25 @@ def test_vip_pheno_columns(datasets_config):
     assert 'slots' in pheno_columns[0]
 
 
-def test_ssc_family_filters(datasets_config):
+def test_ssc_pheno_filters(datasets_config):
     ssc = datasets_config.get_dataset_desc('SSC')
 
-    family_filters = ssc['genotypeBrowser']['familyFilters']
-    assert family_filters is not None
-    pprint(family_filters)
+    pheno_filters = ssc['genotypeBrowser']['phenoFilters']
+    assert pheno_filters is not None
+    pprint(pheno_filters)
 
-    assert 'name' in family_filters[0]
-    assert 'measure_type' in family_filters[0]
-    assert 'measure_filter' in family_filters[0]
+    assert 'name' in pheno_filters[0]
+    assert 'measure_type' in pheno_filters[0]
+    assert 'measure_filter' in pheno_filters[0]
 
 
-def test_vip_family_filters(datasets_config):
+def test_vip_pheno_filters(datasets_config):
     ssc = datasets_config.get_dataset_desc('VIP')
 
-    family_filters = ssc['genotypeBrowser']['familyFilters']
-    assert family_filters is not None
-    pprint(family_filters)
+    pheno_filters = ssc['genotypeBrowser']['phenoFilters']
+    assert pheno_filters is not None
+    pprint(pheno_filters)
 
-    assert 'name' in family_filters[0]
-    assert 'measure_type' in family_filters[0]
-    assert 'measure_filter' in family_filters[0]
+    assert 'name' in pheno_filters[0]
+    assert 'measure_type' in pheno_filters[0]
+    assert 'measure_filter' in pheno_filters[0]
