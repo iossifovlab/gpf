@@ -9,12 +9,14 @@ import copy
 
 
 def test_get_denovo_variants_sd(sd):
-    legend = sd.get_pedigree_selector(**EXAMPLE_QUERY_SD)
+    query = copy.deepcopy(EXAMPLE_QUERY_SD)
+    query['familyIds'] = ['11563']
 
-    vs = sd.get_denovo_variants(**EXAMPLE_QUERY_SD)
+    legend = sd.get_pedigree_selector(**query)
+    vs = sd.get_denovo_variants(**query)
 
     res = [v for v in vs]
-    assert 632 == len(res)
+    assert 1 == len(res)
 
     v = res[0]
     pedigree = v.pedigree_v3(legend)
