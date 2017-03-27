@@ -59,6 +59,16 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             ]
         return self._denovo_studies
 
+    def get_denovo_studies(self, safe=True, **kwargs):
+        study_types = self.get_study_types(safe=safe, **kwargs)
+        print("study_types".format(study_types))
+        if study_types is not None:
+            return filter(
+                lambda st: st.get_attr('study.type').lower() in study_types,
+                self.denovo_studies)
+        else:
+            return self.denovo_studies
+
     @property
     def enrichment_denovo_studies(self):
         study_types = self.descriptor['enrichmentTool']['studyTypes']
@@ -76,6 +86,15 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 if st.has_transmitted
             ]
         return self._transmitted_studies
+
+    def get_transmitted_studies(self, safe=True, **kwargs):
+        study_types = self.get_study_types(safe=safe, **kwargs)
+        if study_types is not None:
+            return filter(
+                lambda st: st.get_attr('study.type').lower() in study_types,
+                self.transmitted_studies)
+        else:
+            return self.transmitted_studies
 
     @property
     def children_stats(self):
@@ -375,7 +394,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         denovo_filters = self.get_denovo_filters(safe, **kwargs)
 
         seen_vs = set()
-        for st in self.denovo_studies:
+        for st in self.get_denovo_studies(safe=safe, **kwargs):
             for v in st.get_denovo_variants(**denovo_filters):
                 v_key = v.familyId + v.location + v.variant
                 if v_key in seen_vs:
@@ -389,7 +408,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if present_in_parent and present_in_parent == ['neither']:
             return
 
-        for st in self.transmitted_studies:
+        for st in self.get_transmitted_studies(safe=safe, **kwargs):
             for v in st.get_transmitted_variants(**transmitted_filters):
                 yield v
 
@@ -452,9 +471,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             v.atts["_pedigree_"] = v.pedigree_v3(legend)
             v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
             family = families.get(v.familyId, None)
-            print(family)
             fatts = family.atts if family else {}
-            print(fatts)
             for (_role, _source, label) in pheno_columns:
                 v.atts[label] = fatts.get(label, '')
             v._phenotype_ = v.study.get_attr('study.phenotype')

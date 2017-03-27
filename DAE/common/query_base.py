@@ -139,20 +139,43 @@ class VariantTypesMixin(object):
         'del', 'ins', 'sub', 'CNV'
     ]
 
-    def get_variant_types(self, safe=True, **kwargs):
+    @classmethod
+    def get_variant_types(cls, safe=True, **kwargs):
         variant_types = kwargs.get('variantTypes', None)
         if variant_types is None:
             return None
         if safe:
-            assert all([vt in self.VARIANT_TYPES for vt in variant_types])
+            assert all([vt in cls.VARIANT_TYPES for vt in variant_types])
         variant_types = [
-            vt for vt in variant_types if vt in self.VARIANT_TYPES
+            vt for vt in variant_types if vt in cls.VARIANT_TYPES
         ]
         if not variant_types:
             return None
-        if set(variant_types) == set(self.VARIANT_TYPES):
+        if set(variant_types) == set(cls.VARIANT_TYPES):
             return None
         return variant_types
+
+
+class StudyTypesMixin(object):
+    STUDY_TYPES = [
+        'we', 'wg', 'tg',
+    ]
+
+    def get_study_types(self, safe=True, **kwargs):
+        study_types = kwargs.get('studyTypes', None)
+        if study_types is None:
+            return None
+        study_types = [st.lower() for st in study_types]
+        if safe:
+            assert all([vt in self.STUDY_TYPES for vt in study_types])
+        study_types = [
+            st for st in study_types if vt in self.STUDY_TYPES
+        ]
+        if not study_types:
+            return None
+        if set(study_types) == set(self.STUDY_TYPES):
+            return None
+        return study_types
 
 
 class ChildGenderMixin(object):
@@ -372,8 +395,13 @@ class FamiliesMixin(object):
 
 
 class QueryBase(
-    EffectTypesMixin, VariantTypesMixin, ChildGenderMixin,
-        PresentInMixin, GeneSymsMixin, RegionsMixin,
+        EffectTypesMixin,
+        VariantTypesMixin,
+        StudyTypesMixin,
+        ChildGenderMixin,
+        PresentInMixin,
+        GeneSymsMixin,
+        RegionsMixin,
         RarityMixin,
         FamiliesMixin):
 

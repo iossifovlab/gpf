@@ -49,13 +49,6 @@ EXAMPLE_QUERY_VIP = {
 EXAMPLE_QUERY_SD = {
     'effectTypes': ['Frame-shift', 'Nonsense', 'Splice-site'],
     "gender": ["female", "male"],
-    "presentInChild": [
-        "affected and unaffected",
-        "affected only",
-    ],
-    "presentInParent": [
-        "neither"
-    ],
     "variantTypes": [
         "CNV", "del", "ins", "sub",
     ],
