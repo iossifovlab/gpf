@@ -98,7 +98,7 @@ export class StudyTypesComponent extends QueryStateProvider implements OnInit {
 
           throw "invalid state"
         }
-        return { studyType: QueryData.trueFalseToStringArray(studyTypesState) }
+        return { studyTypes: QueryData.trueFalseToStringArray(studyTypesState) }
     });
   }
 
