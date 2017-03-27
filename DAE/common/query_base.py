@@ -214,40 +214,50 @@ class PresentInMixin(object):
         "neither",
     ]
 
-    def get_present_in_child(self, safe=True, **kwargs):
+    @classmethod
+    def get_present_in_child(cls, safe=True, **kwargs):
         if 'presentInChild' not in kwargs:
             return None
         present_in_child = kwargs['presentInChild']
         if not present_in_child:
             return None
         if safe:
-            assert all([pic in self.PRESENT_IN_CHILD_TYPES
+            assert all([pic in cls.PRESENT_IN_CHILD_TYPES
                         for pic in present_in_child])
 
         present_in_child = [
             pic for pic in present_in_child
-            if pic in self.PRESENT_IN_CHILD_TYPES
+            if pic in cls.PRESENT_IN_CHILD_TYPES
         ]
 
-        if set(present_in_child) == set(self.PRESENT_IN_CHILD_TYPES):
+        if set(present_in_child) == set(cls.PRESENT_IN_CHILD_TYPES):
             return None
         return present_in_child
 
-    def get_present_in_parent(self, safe=True, **kwargs):
-        if 'presentInParent' not in kwargs:
+    @classmethod
+    def _get_present_in_parent_root(cls, safe=True, **kwargs):
+        present_in_parent = kwargs.get('presentInParent', None)
+        if not present_in_parent:
             return None
-        present_in_parent = kwargs['presentInParent']
+        if 'presentInParent' in present_in_parent:
+            present_in_parent = present_in_parent['presentInParent']
+        return present_in_parent
+
+    @classmethod
+    def get_present_in_parent(cls, safe=True, **kwargs):
+        present_in_parent = \
+            cls._get_present_in_parent_root(safe=safe, **kwargs)
         if not present_in_parent:
             return None
         if safe:
             assert all([
-                pip in self.PRESENT_IN_PARENT_TYPES
+                pip in cls.PRESENT_IN_PARENT_TYPES
                 for pip in present_in_parent
             ])
 
         present_in_parent = [
             pip for pip in present_in_parent
-            if pip in self.PRESENT_IN_PARENT_TYPES
+            if pip in cls.PRESENT_IN_PARENT_TYPES
         ]
         return present_in_parent
 
@@ -255,8 +265,18 @@ class PresentInMixin(object):
 class RarityMixin(object):
 
     @classmethod
+    def _get_rarity_root(cls, safe=True, **kwargs):
+        if 'rarity' in kwargs:
+            return kwargs['rarity']
+        elif 'presentInParent' in kwargs:
+            present_in_parent = kwargs['presentInParent']
+            if isinstance(present_in_parent, dict):
+                return present_in_parent.get('rarity', None)
+        return None
+
+    @classmethod
     def get_ultra_rare(cls, safe=True, **kwargs):
-        rarity = kwargs.get('rarity', None)
+        rarity = cls._get_rarity_root(safe=safe, **kwargs)
         if not rarity:
             return None
         ultra_rare = rarity.get('ultraRare', None)
@@ -265,7 +285,7 @@ class RarityMixin(object):
 
     @classmethod
     def get_max_alt_freq(cls, safe=True, **kwargs):
-        rarity = kwargs.get('rarity', None)
+        rarity = cls._get_rarity_root(safe=safe, **kwargs)
         if not rarity:
             return -1
 
@@ -278,7 +298,7 @@ class RarityMixin(object):
 
     @classmethod
     def get_min_alt_freq(cls, safe=True, **kwargs):
-        rarity = kwargs.get('rarity', None)
+        rarity = cls._get_rarity_root(safe=safe, **kwargs)
         if not rarity:
             return None
 
