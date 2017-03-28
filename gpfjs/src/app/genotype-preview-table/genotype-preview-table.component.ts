@@ -12,6 +12,24 @@ export class GenotypePreviewTableComponent {
   @Input() phenoColumns: Array<PhenoColumn>;
   constructor(
   ) { }
+  
+  additionalDataComparator(field: string) {
+    return (a: any, b: any) => {
+      let leftVal = a["additionalData"][field];
+      let rightVal = b["additionalData"][field];
+
+      if (leftVal == null && rightVal == null) return 0;
+      if (leftVal == null) return -1;
+      if (rightVal == null) return 1;
+
+      if (!isNaN(leftVal) && !isNaN(rightVal)) {
+        return +leftVal - +rightVal;
+      }
+
+      return leftVal.localeCompare(rightVal);
+    }
+  }
+
 
   locationComparator(a: any, b: any): number {
     let XYMStringToNum = (str:string): number => {
