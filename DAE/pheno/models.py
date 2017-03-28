@@ -171,7 +171,8 @@ class PersonModel(object):
         role_order int NOT NULL,
         gender varchar(1) NULL,
         collection varchar(32) NULL,
-        ssc_present bool NULL
+        ssc_present bool NULL,
+        sample_id varchar(32) NULL
     );
     COMMIT;
     """
@@ -191,6 +192,7 @@ class PersonModel(object):
         'gender',
         'collection',
         'ssc_present',
+        'sample_id',
     ]
 
     TABLE = 'person'
@@ -204,6 +206,7 @@ class PersonModel(object):
         self.gender = None
         self.collection = None
         self.ssc_present = None
+        self.sample_id = None
 
     @staticmethod
     def create_from_df(row):
@@ -214,6 +217,7 @@ class PersonModel(object):
         p.role_id = row['role_id']
         p.role_order = row['role_order']
         p.gender = row['gender']
+        p.sample_id = row['sample_id']
         # p.collection = row['collection']
         # p.ssc_present = row['ssc_present']
 
@@ -230,6 +234,7 @@ class PersonModel(object):
             p.gender,
             p.collection,
             p.ssc_present,
+            p.sample_id,
         )
 
 
