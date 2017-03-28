@@ -214,7 +214,8 @@ class DatasetsConfig(object):
                 {
                     'role': role,
                     'source': source,
-                    'label': label,
+                    'name': label,
+                    'id': '{}.{}'.format(name, label),
                 })
         column['slots'] = column_slots
         return column

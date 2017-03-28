@@ -447,7 +447,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             name = pheno_column['name']
             slots = pheno_column['slots']
             columns.extend([
-                (s['role'], s['source'], '{}.{}'.format(name, s['label']))
+                (s['role'], s['source'], '{}.{}'.format(name, s['name']))
                 for s in slots])
         return columns
 
