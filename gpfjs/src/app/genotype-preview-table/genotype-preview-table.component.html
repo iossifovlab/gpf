@@ -39,14 +39,13 @@
                     <span *gpf-table-cell-content="let data">{{data.E65freq === null ? "&nbsp;"  : "E65 " +  data.E65freq + "%"}}</span>
                 </gpf-table-subcolumn>
             </gpf-table-column>
-            <gpf-table-column header="races">
-                <gpf-table-subcolumn header="mom" field="motherRace"></gpf-table-subcolumn>
-                <gpf-table-subcolumn header="dad" field="fatherRace"></gpf-table-subcolumn>
+
+            <gpf-table-column *ngFor="let column of phenoColumns" header="{{ column.name }}">
+              <gpf-table-subcolumn *ngFor="let slot of column.slots" header="{{ slot.name }}" field="motherRace">
+                <span *gpf-table-cell-content="let data">{{ data.additionalData[slot.id] }}</span>
+              </gpf-table-subcolumn>
             </gpf-table-column>
-            <gpf-table-column header="Proband IQ">
-                <gpf-table-subcolumn header="vIQ" field="probandVerbalIQ"></gpf-table-subcolumn>
-                <gpf-table-subcolumn header="NvIQ" field="probandNonVerbalIQ"></gpf-table-subcolumn>
-            </gpf-table-column>
+
             <div *gpf-table-legend style="text-align: left; border: 1px solid #dddddd; padding: 5px">
               <div *ngFor="let legendItem of genotypePreviewsArray.legend">
                 <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>

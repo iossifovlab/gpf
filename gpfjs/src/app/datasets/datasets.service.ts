@@ -47,7 +47,7 @@ export class DatasetsService {
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
-    let url = `${this.datasetUrl}/${datasetId}`;
+    let url = `${this.datasetUrl}${datasetId}`;
     console.log('getting a dataset from: ', url);
 
     return this.http

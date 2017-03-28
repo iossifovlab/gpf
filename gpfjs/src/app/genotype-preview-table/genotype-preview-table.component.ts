@@ -1,5 +1,6 @@
 import { Input, Component } from '@angular/core';
 import { GenotypePreview, GenotypePreviewsArray } from './genotype-preview';
+import { PhenoColumn } from '../datasets/datasets';
 
 @Component({
   selector: 'gpf-genotype-preview-table',
@@ -8,7 +9,7 @@ import { GenotypePreview, GenotypePreviewsArray } from './genotype-preview';
 })
 export class GenotypePreviewTableComponent {
   @Input() genotypePreviewsArray: GenotypePreviewsArray
-
+  @Input() phenoColumns: Array<PhenoColumn>;
   constructor(
   ) { }
 

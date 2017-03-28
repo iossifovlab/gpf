@@ -31,10 +31,7 @@ let FIELD_TO_OBJECT_PROPERTY = [
   ["EVSfreq", "EVSfreqWithoutNan"],
   ["E65freq", "E65freqWithoutNan"],
   ["number of genotyped parents", "genotypedParentsCount"],
-  ["parent races", "parentRaces"],
   ["children description", "childrenDescription"],
-  ["proband verbal iq", "probandVerbalIQ"],
-  ["proband non-verbal iq", "probandNonVerbalIQ"],
   ["validation status", "validationStatus"],
   ["_pedigree_", "pedigreeDataFromArray"],
   ["phenoInChS", "phenoInChS"]
@@ -74,12 +71,18 @@ export class QueryService {
       for (let elem in data.rows[row]) {
         let propertyName = this.fieldToObjectPropertyMap.get(data.cols[elem]);
         let propertyValue = data.rows[row][elem];
-        genotypePreview[propertyName] = propertyValue;
+
+        if (propertyName) {
+          genotypePreview[propertyName] = propertyValue;
+        }
+        else {
+          genotypePreview.additionalData[data.cols[elem]] = propertyValue
+        }
       }
 
       genotypePreviewsArray.genotypePreviews.push(genotypePreview);
     }
-
+    console.log(genotypePreviewsArray)
     return genotypePreviewsArray;
   }
 

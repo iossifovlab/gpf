@@ -7,6 +7,8 @@ import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loadi
 import { ConfigService } from '../config/config.service';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { StateRestoreService } from '../store/state-restore.service'
+import { DatasetsService } from '../datasets/datasets.service';
+import { Dataset } from '../datasets/datasets';
 import 'rxjs/add/operator/zip';
 
 @Component({
@@ -17,6 +19,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
   genotypePreviewsArray: any;
 
   private selectedDatasetId: string;
+  private selectedDataset: Dataset;
 
   constructor(
     private store: Store<any>,
@@ -25,7 +28,8 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
     private loadingService: FullscreenLoadingService,
     private route: ActivatedRoute,
     private router: Router,
-    private stateRestoreService: StateRestoreService
+    private stateRestoreService: StateRestoreService,
+    private datasetsService: DatasetsService,
   ) {
     super();
   }
@@ -60,6 +64,10 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
     this.route.parent.params.subscribe(
       (params: Params) => {
         this.selectedDatasetId = params['dataset'];
+        this.datasetsService.getDataset(this.selectedDatasetId).subscribe(
+          (dataset: Dataset) => {
+            this.selectedDataset = dataset;
+        })
       }
     );
   }

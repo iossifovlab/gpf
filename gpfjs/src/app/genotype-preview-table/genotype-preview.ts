@@ -62,6 +62,7 @@ export class GenotypePreview {
   validationStatus: string;
   pedigree: PedigreeData[];
   phenoInChS: string;
+  additionalData: any = new Map<string, any>();
 
   constructor(
   ) {

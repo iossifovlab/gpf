@@ -64,6 +64,48 @@ export class PedigreeSelector extends IdName {
   }
 }
 
+export class PhenoColumnSlot {
+  static fromJson(json: any): PhenoColumnSlot {
+    return new PhenoColumnSlot(
+      json['id'],
+      json['name']
+    );
+  }
+
+  static fromJsonArray(jsonArray: Array<Object>): Array<PhenoColumnSlot> {
+    if (!jsonArray) {
+      return undefined;
+    }
+    return jsonArray.map((json) => PhenoColumnSlot.fromJson(json));
+  }
+
+  constructor(
+    readonly id: string,
+    readonly name: string,
+  ) {}
+}
+
+export class PhenoColumn {
+  static fromJson(json: any): PhenoColumn {
+    return new PhenoColumn(
+      json['name'],
+      PhenoColumnSlot.fromJsonArray(json['slots']),
+    );
+  }
+
+  static fromJsonArray(jsonArray: Array<Object>): Array<PhenoColumn> {
+    if (!jsonArray) {
+      return undefined;
+    }
+    return jsonArray.map((json) => PhenoColumn.fromJson(json));
+  }
+
+  constructor(
+    readonly name: string,
+    readonly slots: Array<PhenoColumnSlot>
+  ) {}
+}
+
 export class GenotypeBrowser {
   static fromJson(json: any): GenotypeBrowser {
     return new GenotypeBrowser(
@@ -73,7 +115,8 @@ export class GenotypeBrowser {
       json['hasCNV'],
       json['hasAdvancedFamilyFilters'],
       json['hasStudyTypes'],
-      json['mainForm']
+      json['mainForm'],
+      PhenoColumn.fromJsonArray(json['phenoColumns'])
     );
   }
 
@@ -84,7 +127,8 @@ export class GenotypeBrowser {
     readonly hasCNV: boolean,
     readonly hasAdvancedFamilyFilters: boolean,
     readonly hasStudyTypes: boolean,
-    readonly mainForm: string
+    readonly mainForm: string,
+    readonly phenoColumns: Array<PhenoColumn>
   ) {
 
   }
