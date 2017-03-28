@@ -187,6 +187,10 @@ export class GpfTableComponent {
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event) {
     this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
+
+    if (this.rowViewChild && this.rowViewChild.nativeElement.getBoundingClientRect().height > 0) {
+      this.lastRowHeight = this.rowViewChild.nativeElement.getBoundingClientRect().height;
+    }
   }
 
   constructor(private viewContainer: ViewContainerRef, private ref: ChangeDetectorRef) {
@@ -206,11 +210,11 @@ export class GpfTableComponent {
   }
 
   getScrollIndices(): Array<number> {
-    let visibleRowCount = window.innerHeight/this.calculateRowHeight();
+    let visibleRowCount = window.innerHeight/this.lastRowHeight;
     let maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount
 
-    let startIndex = Math.ceil(-this.tableTopPosition/this.calculateRowHeight()) - this.drawOutsideVisibleCount;
-    
+    let startIndex = Math.ceil(-this.tableTopPosition/this.lastRowHeight) - this.drawOutsideVisibleCount;
+
     //We should display at least maxRowCountToDraw rows, even at the bottom of the page
     let maxStartIndex = this.dataSource.length - maxRowCountToDraw;
     startIndex = Math.min(startIndex , maxStartIndex);
@@ -222,20 +226,12 @@ export class GpfTableComponent {
     return [startIndex, endIndex];
   }
 
-  calculateRowHeight(): number {
-    if (this.rowViewChild && this.rowViewChild.nativeElement.getBoundingClientRect().height > 0) {
-      this.lastRowHeight = this.rowViewChild.nativeElement.getBoundingClientRect().height;
-    }
-
-    return this.lastRowHeight;
-  }
-
   get totalTableHeight(): number {
-    return this.calculateRowHeight() * this.dataSource.length;
+    return this.lastRowHeight * this.dataSource.length;
   }
 
   get beforeDataCellHeight(): number {
-    return this.getScrollIndices()[0] * this.calculateRowHeight();
+    return this.getScrollIndices()[0] * this.lastRowHeight;
   }
 
   get visibleData(): any {
