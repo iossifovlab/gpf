@@ -19,8 +19,8 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
   regionsFilterInternal: string;
 
   regionsFilterState: Observable<[RegionsFilterState, boolean, ValidationError[]]>;
-  private flashingAlert = false;
-  private errors: string[];
+  flashingAlert = false;
+  errors: string[];
 
   constructor(
     private store: Store<any>,

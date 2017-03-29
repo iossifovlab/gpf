@@ -41,8 +41,8 @@ export class GeneWeightsComponent extends QueryStateProvider {
   private rangesCounts: Array<number>;
   private geneWeightsState: Observable<[GeneWeightsState, boolean, ValidationError[]]>;
 
-  private errors: string[];
-  private flashingAlert = false;
+  errors: string[];
+  flashingAlert = false;
 
 
   constructor(

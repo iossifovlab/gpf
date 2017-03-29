@@ -18,7 +18,7 @@ import { Location } from '@angular/common';
   styleUrls: ['./datasets.component.css']
 })
 export class DatasetsComponent implements OnInit {
-  private registerAlertVisible = false;
+  registerAlertVisible = false;
   datasets: Dataset[];
   selectedDataset: Dataset;
   @Output() selectedDatasetChange = new EventEmitter<Dataset>();

@@ -22,10 +22,10 @@ import { StateRestoreService } from '../store/state-restore.service'
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSetsComponent) }]
 })
 export class GeneSetsComponent extends QueryStateProvider implements OnInit {
-  private geneSetsCollections: Array<GeneSetsCollection>;
-  private geneSets: Array<GeneSet>;
+  geneSetsCollections: Array<GeneSetsCollection>;
+  geneSets: Array<GeneSet>;
   private internalSelectedGeneSetsCollection: GeneSetsCollection;
-  private selectedGeneSet: GeneSet;
+  selectedGeneSet: GeneSet;
   private searchQuery: string;
   private geneSetsTypes: Set<any>;
   private geneSetsState: Observable<[GeneSetsState, boolean, ValidationError[]]>;
@@ -33,8 +33,8 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   private geneSetsQueryChange = new Subject<[string, string, Array<string>]>();
   private geneSetsResult: Observable<GeneSet[]>;
 
-  private errors: string[];
-  private flashingAlert = false;
+  errors: string[];
+  flashingAlert = false;
 
   constructor(
     private geneSetsService: GeneSetsService,

@@ -9,7 +9,7 @@ import { NgbTabset, NgbTab } from  '@ng-bootstrap/ng-bootstrap';
 })
 export class GpfTabsetComponent extends NgbTabset {
   @ViewChild('ngTemplateOutletContainer', { read: ViewContainerRef })
-  private ngTemplateOutletContainer: ViewContainerRef;
+  ngTemplateOutletContainer: ViewContainerRef;
 
   getTabById(id: string): NgbTab {
     let tabsWithId: NgbTab[] = this.tabs.filter(tab => tab.id === id);

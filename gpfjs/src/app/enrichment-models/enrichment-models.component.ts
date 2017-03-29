@@ -16,13 +16,13 @@ import { ValidationError } from "class-validator";
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => EnrichmentModelsComponent) }]
 })
 export class EnrichmentModelsComponent extends QueryStateProvider implements OnInit {
-  private enrichmentModels: EnrichmentModels;
+  enrichmentModels: EnrichmentModels;
   private internalSelectedBackground: IdDescription;
   private internalSelectedCounting: IdDescription;
   private enrichmentModelsState: Observable<[EnrichmentModelsState, boolean, ValidationError[]]>;
 
-  private errors: string[];
-  private flashingAlert = false;
+  errors: string[];
+  flashingAlert = false;
 
   constructor(
     private store: Store<any>,

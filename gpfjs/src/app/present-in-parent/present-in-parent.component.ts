@@ -33,8 +33,8 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
 
   presentInParentState: Observable<[PresentInParentState, boolean, ValidationError[]]>;
 
-  private errors: string[];
-  private flashingAlert = false;
+  errors: string[];
+  flashingAlert = false;
 
   constructor(
     private store: Store<any>,
@@ -217,7 +217,7 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
 
   ultraRareValueChange(ultraRare: boolean) {
     if (ultraRare) {
-      this.rarityRadio = "ultraRare"; 
+      this.rarityRadio = "ultraRare";
     }
     this.store.dispatch({
       'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,

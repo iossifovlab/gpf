@@ -23,8 +23,8 @@ export class StudyTypesComponent extends QueryStateProvider implements OnInit {
 
   studyTypesState: Observable<[StudyTypesState, boolean, ValidationError[]]>;
 
-  private errors: string[];
-  private flashingAlert = false;
+  errors: string[];
+  flashingAlert = false;
 
   constructor(
     private store: Store<any>,

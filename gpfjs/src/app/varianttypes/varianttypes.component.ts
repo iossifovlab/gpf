@@ -29,8 +29,8 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
   variantTypesState: Observable<[VariantTypesState, boolean, ValidationError[]]>;
   hasCNV: boolean = false;
 
-  private errors: string[];
-  private flashingAlert = false;
+  errors: string[];
+  flashingAlert = false;
 
   constructor(
     private store: Store<any>,

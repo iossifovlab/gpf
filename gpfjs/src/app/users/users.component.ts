@@ -10,7 +10,7 @@ import { USER_LOGIN, USER_LOGOUT } from './users-store'
 export class UsersComponent implements OnInit {
   private username;
   private password;
-  private displayedUsername: string;
+  displayedUsername: string;
   private loginError = false;
 
   constructor(

@@ -23,8 +23,8 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
   female: boolean = true;
 
   genderState: Observable<[GenderState, boolean, ValidationError[]]>;
-  private errors: string[];
-  private flashingAlert = false;
+  errors: string[];
+  flashingAlert = false;
 
   constructor(
     private store: Store<any>,

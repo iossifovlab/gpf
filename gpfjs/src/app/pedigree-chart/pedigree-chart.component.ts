@@ -8,7 +8,7 @@ import { Individual, MatingUnit } from './pedigree-data';
 })
 export class PedigreeChartComponent {
   @Input() pedigreeData: PedigreeData[];
-  private levels: Array<Array <Individual> >;
+  levels: Array<Array <Individual> >;
 
   ngOnChanges(changes: SimpleChanges) {
     this.levels = new Array<Array <Individual> >();

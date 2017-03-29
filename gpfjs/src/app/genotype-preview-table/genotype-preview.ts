@@ -10,7 +10,7 @@ export class PedigreeData {
     readonly id: string,
     readonly father: string,
     readonly mother: string,
-    readonly gender: Gender,
+    readonly gender: string,
     readonly color: string,
     readonly label: string,
     readonly smallLabel: string

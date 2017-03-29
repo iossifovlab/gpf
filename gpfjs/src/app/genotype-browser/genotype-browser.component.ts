@@ -19,12 +19,12 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
   genotypePreviewsArray: any;
 
   private selectedDatasetId: string;
-  private selectedDataset: Dataset;
+  selectedDataset: Dataset;
 
   constructor(
     private store: Store<any>,
     private queryService: QueryService,
-    private configService: ConfigService,
+    readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private route: ActivatedRoute,
     private router: Router,

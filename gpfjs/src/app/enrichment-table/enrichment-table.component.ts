@@ -36,7 +36,7 @@ export class EnrichmentTableRowComponent {
   styleUrls: ['./enrichment-table.component.css']
 })
 export class EnrichmentTableComponent {
-  @Input() private enrichmentResults: EnrichmentResults;
+  @Input() enrichmentResults: EnrichmentResults;
 
   ngOnChanges(changes: any) {
     console.log(this.enrichmentResults)

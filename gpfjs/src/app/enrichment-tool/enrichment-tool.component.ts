@@ -11,7 +11,7 @@ import { Observable } from 'rxjs';
   templateUrl: './enrichment-tool.component.html',
 })
 export class EnrichmentToolComponent extends QueryStateCollector {
-  private enrichmentResults: EnrichmentResults;
+  enrichmentResults: EnrichmentResults;
   private selectedDatasetId: string;
 
   constructor(

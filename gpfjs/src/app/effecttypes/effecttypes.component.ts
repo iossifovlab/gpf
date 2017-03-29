@@ -95,8 +95,8 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   datasetsState: Observable<DatasetsState>;
   hasCNV: Observable<boolean>;
 
-  private errors: string[];
-  private flashingAlert = false;
+  errors: string[];
+  flashingAlert = false;
 
   constructor(
     private store: Store<GpfState>,

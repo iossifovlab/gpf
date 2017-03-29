@@ -26,8 +26,8 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
 
   presentInChildState: Observable<[PresentInChildState, boolean, ValidationError[]]>;
 
-  private errors: string[];
-  private flashingAlert = false;
+  errors: string[];
+  flashingAlert = false;
 
   constructor(
     private store: Store<any>,

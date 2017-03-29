@@ -9,7 +9,7 @@ import { FullscreenLoadingService } from './fullscreen-loading.service';
   styleUrls: ['./fullscreen-loading.component.css']
 })
 export class FullscreenLoadingComponent {
-  private showLoading = false;
+  showLoading = false;
 
   constructor(
     private fullscreenLoadingService: FullscreenLoadingService
