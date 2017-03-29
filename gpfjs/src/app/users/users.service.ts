@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import 'rxjs/add/operator/toPromise';
 
 import { ConfigService } from '../config/config.service';
-import { CookieService } from 'angular2-cookie/core';
+import { CookieService } from 'ngx-cookie';
 
 @Injectable()
 export class UsersService {
@@ -25,7 +25,7 @@ export class UsersService {
     let csrfToken = this.cookieService.get("csrftoken");
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
-    
+
     return this.http.post(this.logoutUrl, {}, options)
       .map(res => {
         return true;

@@ -51,7 +51,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { gpfReducer } from './store/gpf-store';
 import { StudyTypesComponent } from './study-types/study-types.component';
 
-import { CookieService } from 'angular2-cookie/services/cookies.service';
+import { CookieModule } from 'ngx-cookie';
 
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component'
 import { GpfTabsetComponent } from './tabset/tabset.component'
@@ -149,7 +149,8 @@ const appRoutes: Routes = [
     HistogramModule,
     StoreModule.provideStore(gpfReducer),
     StoreDevtoolsModule.instrumentOnlyWithExtension(),
-    RouterModule.forRoot(appRoutes)
+    RouterModule.forRoot(appRoutes),
+    CookieModule.forRoot()
 
   ],
   providers: [
@@ -160,7 +161,6 @@ const appRoutes: Routes = [
     GeneWeightsService,
     GeneSetsService,
     UsersService,
-    CookieService,
     EnrichmentModelsService,
     EnrichmentQueryService,
     FullscreenLoadingService,
