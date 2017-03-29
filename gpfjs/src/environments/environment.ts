@@ -5,5 +5,6 @@
 
 export const environment = {
   production: false,
-  apiPath: 'http://localhost:8000/api/v3/'
+  apiPath: 'http://localhost:8000/api/v3/',
+  imgPathPrefix: 'assets/'
 };

@@ -1,4 +1,5 @@
 import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'gpf-table-cell',
@@ -35,6 +36,10 @@ export class GpfTableHeader {
       sortInfo = new SortInfo(sortBySubcolumn, true);
     }
     this.sortingInfoChange.emit(sortInfo);
+  }
+
+  get imgPathPrefix() {
+    return environment.imgPathPrefix
   }
 }
 
