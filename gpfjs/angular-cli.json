@@ -11,6 +11,7 @@
         "assets",
         "favicon.ico"
       ],
+      "deployUrl": "/static/gpfjs",
       "index": "index.html",
       "main": "main.ts",
       "test": "test.ts",
