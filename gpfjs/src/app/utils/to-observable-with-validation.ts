@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { transformAndValidate } from "class-transformer-validator";
 import { ValidationError } from "class-validator";
 
-export const toObservableWithValidation = <T>(targetClass, observable: Observable<T>): Observable<[T, boolean, ValidationError[]]> => {
+export const toObservableWithValidation = <T>(targetClass, observable: Observable<object>): Observable<[T, boolean, ValidationError[]]> => {
   return observable.switchMap(value => {
     return Observable.fromPromise(transformAndValidate(targetClass, value)).map(validationState => {
       return [value, true, []];
