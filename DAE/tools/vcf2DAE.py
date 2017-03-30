@@ -4,7 +4,7 @@ import sys, commands, optparse
 
 def main():
    #copy of options for vcf2DAEc.py
-   usage = "usage: %prog [options]"
+   usage = "usage: %prog [options] <families pedigree file> <list of de novos file>"
    parser = optparse.OptionParser(usage=usage)
    #parser.add_option("-p", "--pedFile", dest="pedFile", default="data/svip.ped",
    #     metavar="pedFile", help="pedigree file and family-name should be mother and father combination, not PED format")
@@ -23,43 +23,54 @@ def main():
         metavar="tooManyThresholdFamilies", help="threshold for TOOMANY to printout [defaylt: 10]")
 
    ox, args = parser.parse_args()
+
+   tExt = lambda xxx: '.zZqZz{:d}'.format(xxx) if isinstance(xxx,int) else '.zZqZz{:s}'.format(xxx)
+   #tmp files' extension
+
    #main procedure
    #cmd = ' '.join( ['vcf2DAEc.py', '-p', ox.pedFile, '-d', ox.dataFile, '-x', ox.project, '-l', ox.lab, \
    cmd = ' '.join( ['vcf2DAEc.py', '-p', args[0], '-d', args[1], '-x', ox.project, '-l', ox.lab, \
-			'-o', 'x0.'+ox.outputPrefix, '-m', str(ox.minPercentOfGenotypeSamples), \
-			'-t', str(ox.tooManyThresholdFamilies), ' > trans.'+ox.outputPrefix+'.SUB.txt'] )
+                        '-o', ox.outputPrefix+tExt(0), '-m', str(ox.minPercentOfGenotypeSamples), \
+                        '-t', str(ox.tooManyThresholdFamilies), ' > '+ox.outputPrefix+'-complex.txt'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
+   if status: raise Exception("FAILURE AT: " + cmd)
    #family file 
-   cmd = ' '.join( ['\\mv', 'x0.'+ox.outputPrefix+'-families.txt', ox.outputPrefix+'-families.txt'] )
+   cmd = ' '.join( ['\\mv', ox.outputPrefix+tExt(0)+'-families.txt', ox.outputPrefix+'-families.txt'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
+   if status: raise Exception("FAILURE AT: " + cmd)
    #HW
-   cmd = ' '.join( ['hw.py -c', 'x0.'+ox.outputPrefix+'.txt', 'x1.'+ox.outputPrefix+'.txt'] )
+   cmd = ' '.join( ['hw.py -c', ox.outputPrefix+tExt(0)+'.txt', ox.outputPrefix+tExt(1)+'.txt'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
+   if status: raise Exception("FAILURE AT: " + cmd)
    #TOOMANY bgzip
-   cmd = ' '.join( ['\\mv', 'x0.'+ox.outputPrefix+'-TOOMANY.txt', ox.outputPrefix+'-TOOMANY.txt;', \
-		    'bgzip -f', ox.outputPrefix+'-TOOMANY.txt;', \
-		    '\\mv', ox.outputPrefix+'-TOOMANY.txt.gz', ox.outputPrefix+'-TOOMANY.txt.bgz;', \
-		    'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix+'-TOOMANY.txt.bgz'] )
+   cmd = ' '.join( ['\\mv', ox.outputPrefix+tExt(0)+'-TOOMANY.txt', ox.outputPrefix+'-TOOMANY.txt;', \
+                    'bgzip -f', ox.outputPrefix+'-TOOMANY.txt;', \
+                    '\\mv', ox.outputPrefix+'-TOOMANY.txt.gz', ox.outputPrefix+'-TOOMANY.txt.bgz;', \
+                    'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix+'-TOOMANY.txt.bgz'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
+   if status: raise Exception("FAILURE AT: " + cmd)
    #annotate
-   cmd = ' '.join( ['annotate_variants.py -c chr -p position -v variant ', 'x1.'+ox.outputPrefix+'.txt', \
-		    '| bgzip -c > x2.'+ox.outputPrefix+'.txt.bgz'] )
+   cmd = ' '.join( ['annotate_variants.py -c chr -p position -v variant ', ox.outputPrefix+tExt(1)+'.txt', \
+                    '| bgzip -c > ', ox.outputPrefix+tExt(2)+'.txt.bgz'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
+   if status: raise Exception("FAILURE AT: " + cmd)
    #annotate freq
-   cmd = ' '.join( ['annotateFreqTransm.py', 'x2.'+ox.outputPrefix+'.txt.bgz', 'iterative ', \
-		  '| bgzip -c > ', ox.outputPrefix+'.txt.bgz;', \
-		    'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix+'.txt.bgz'] )
+   cmd = ' '.join( ['annotateFreqTransm.py', ox.outputPrefix+tExt(2)+'.txt.bgz', 'iterative ', \
+                  '| bgzip -c > ', ox.outputPrefix+'.txt.bgz;', \
+                    'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix+'.txt.bgz'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
+   if status: raise Exception("FAILURE AT: " + cmd)
    #remove tmp files
-   cmd = ' '.join( ['\\rm', 'x?.'+ox.outputPrefix+'.txt*'] )
+   cmd = ' '.join( ['\\rm', ox.outputPrefix+tExt('*')+'.txt*'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
+   if status: raise Exception("FAILURE AT: " + cmd)
 
 if __name__ == "__main__":
    main()

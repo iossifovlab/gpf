@@ -20,8 +20,7 @@ from ped2NucFam import *
 ##FORMAT=<ID=QA,Number=A,Type=Integer,Description="Sum of quality of the alternate observations">
 #
 # [('GT', (0, 0)), ('AD', (8, 0)), ('DP', 8), ('GQ', 0), ('PL', (0, 0, 234))]
-#   genotype	     		   read depth  GT qual
-
+#   genotype                       read depth  GT qual
 def getGQ( dx ):
    try:
 	return list(dx['GQ'])
@@ -29,9 +28,9 @@ def getGQ( dx ):
 	return [dx['GQ']]
    except KeyError, e:
 	if ('QR' in dx) and ('QA' in dx):
-		return [dx['QR']] + list(dx['QA'])
+	        return [dx['QR']] + list(dx['QA'])
 	else:
-		return []
+	        return []
 
 def percentageGentype( data ):
    tlx = len(data.samples)
@@ -69,18 +68,39 @@ def getGT( sample, data ):
 	#print data.ref, data.alts, dx['GT'], dx['NR'], dx['NV']
 	try:
 	   if (len(cnt[:]) == len(list(dx['NR']) + list(dx['NV']))):
-	   	cnt[:] = list(dx['NR']) + list(dx['NV'])
+	        cnt[:] = list(dx['NR']) + list(dx['NV'])
 	   else:
-		for ix in list(dx['GT']):
-		   if ix == 0:	cnt[ix] = dx['NR'][ix]
-		   else:	cnt[ix] = dx['NV'][ix-1]
-		#print data.ref, data.alts, dx['GT'], dx['NR'], dx['NV'], cnt
+	        for ix in list(dx['GT']):
+	           if ix == 0:  cnt[ix] = dx['NR'][ix]
+	           else:        cnt[ix] = dx['NV'][ix-1]
+	        #print data.ref, data.alts, dx['GT'], dx['NR'], dx['NV'], cnt
 	except ValueError, e:
-		pass
-		print e, data.ref, data.alts, dx['GT'], dx['NR'], dx['NV']
-		#cnt[:] = [dx['NR']] + list(dx['NV'])
+	        pass
+	        print e, data.ref, data.alts, dx['GT'], dx['NR'], dx['NV']
+	        #cnt[:] = [dx['NR']] + list(dx['NV'])
 
    return True, GT, cnt, GQ
+
+#add more data on fam Info
+def makeFamInfoConv( fInfo, pInfo ):
+   for k, v in fInfo.items():
+        lx = len(v['ids'])
+        sx = numpy.zeros( (lx,), dtype=numpy.int )
+        for n,mx in enumerate(v['newIds']):
+                s = pInfo[mx].sex
+                if s == '1': sx[n] = 1
+        v['isMale'] = sx
+
+        cl = len(v['famaIndex'])
+        idxMF = numpy.zeros( (cl,3,), dtype=numpy.int )
+	nC = range(lx)
+        for n,(a,b) in enumerate(v['famaIndex'].items()):
+                idxMF[n,:] = [a,b.fa,b.ma]
+                nC.remove( a )
+        v['iFM'] = idxMF
+	v['notChild'] = numpy.array(nC)
+
+   #print fInfo
 
 def getVrtFam( fam, data ):
    flag = True
@@ -98,7 +118,7 @@ def getVrtFam( fam, data ):
 	cnt[n,:] = cx
 
 	strx.append( '/'.join(map(str,gq)) )
-
+   #print GT
    return flag, GT, cnt, ','.join(strx)
 
 def array2str( mx, ix, delim='' ):
@@ -115,27 +135,20 @@ def array2str( mx, ix, delim='' ):
 
    return strx
 
-def fixNonAutoX( GT, fam, pInfo ):
+def fixNonAutoX( GT, isM ): #fam, pInfo ):
    #Sex (1=male; 2=female; other=unknown)
    #assume [numFam]x[genotype count] and genotype are 0,1,2 
- 
-   #father
-   if sum(GT[1,:]) == 2 and sum( GT[1,:] == 1 ) > 0:
-	return False
-   else:
-	GT[1,GT[1,:]==2] = 1
 
-   for n, pid in enumerate(fam[2:]):
-	if pInfo[pid].sex != '1': continue
+   for n, im in enumerate(isM):
+        if im == 0: continue #female
 
-	ix = n+2
-	if sum(GT[ix,:]) == 2 and sum( GT[ix,:] == 1 ) > 0:
- 	       return False
-	else:
-        	GT[ix,GT[ix,:]==2] = 1
+        if sum(GT[n,:]) == 2 and sum( GT[n,:] == 1 ) > 0:
+               return False
+        else:
+                GT[n,GT[n,:]==2] = 1
 
    return True
-
+ 
 # possible hap state
 def hapState( cn ):
    if cn == 0: return [0]
@@ -143,16 +156,59 @@ def hapState( cn ):
 
    return [1]
 
-# primitive version of checking de-novo
-def isDenovo( st ):
-   for ix in xrange(st.shape[1]):
-	ms = hapState( st[0,ix] )
-	fs = hapState( st[1,ix] )
-	#print ms, fs
-	ps = set([a+b for a, b in itertools.product(ms,fs)] )
-	flag = sum([ x not in ps for x in st[2:,ix]])
+# mendel State
+#
+#(fa, ma, child) copy number
+#       (ma,fa):(child) -- number of alleles
+mStat = {  \
+  #regular autosome 2 copies for all
+  (2,2,2):{\
+          (2,2):[2],  (2,1):[1,2],  (2,0):[1],  \
+          (1,2):[1,2],(1,1):[0,1,2],(1,0):[0,1],\
+          (0,2):[1],  (0,1):[0,1],  (0,0):[0] },\
+  #X and male child, only from ma
+  (1,2,1):{\
+          (1,2):[1], (1,1):[0,1], (1,0):[0],   \
+          (0,2):[1], (0,1):[0,1], (0,0):[0] }, \
+  #X and female child
+  (1,2,2):{\
+          (1,2):[2], (1,1):[1,2], (1,0):[1],  \
+          (0,2):[1], (0,1):[0,1], (0,0):[0] } }
 
-	if flag > 0: return True
+# primitive version of checking de-novo
+# autosome
+def isDenovo( st, fm ): # fm : fa and ma index 
+   assert sum(st.sum(1) != 2) == 0, 'copy number assume to be 2 for all'
+   #mendel state for copy number 2 for all
+   mdl = mStat[(2,2,2)]
+   #all of them have ref state
+   if sum(st[:,0] != 2) == 0: return False
+
+   for c,f,m in fm: #fa ma child index
+        for n,s in enumerate(st[c,:]):
+           if s not in mdl[(st[f,n],st[m,n])]:
+                #print st
+                return True
+           #print f,m,c,n,s, (st[f,n],st[m,n])
+
+   return False
+
+def isDenovoNonAutosomalX( st, fm, isM ): # fm : fa and ma index, isM: is Male array of 0 1(True) 
+   assert sum(st.sum(1) != (2-isM)) == 0, 'copy number assume to be 2 for female, '+ \
+                                          'and 1 for male male({:s}) copy({:s})'.format( \
+                                          ','.join(map(str,isM)), ','.join( ['/'.join(map(str,s)) for s in st] ) )
+   #mendel state for copy number, accordingly 
+   mdl = [mStat[(1,2,2)],mStat[(1,2,1)]]
+   #all of them have ref state
+   if sum(st[:,0] != (2-isM)) == 0:
+        #print 'ref only', ','.join( ['/'.join(map(str,s)) for s in st] ), ','.join(map(str,isM))
+        return False
+   
+   for c,f,m in fm: #fa ma child index
+        for n,s in enumerate(st[c,:]):
+           if s not in mdl[isM[c]][(st[f,n],st[m,n])]:
+                return True
+           #print f,m,c,n,s, (st[f,n],st[m,n])
 
    return False
 
@@ -160,8 +216,8 @@ def isDenovo( st ):
 def printSome( output, pos=None, wsize=1000 ):
    if pos == None:
 	for k in sorted(output.keys()):
-		v = output[k]
-		print >> v[0], v[1]
+	        v = output[k]
+	        print >> v[0], v[1]
 
 	output.clear()
 	return
@@ -184,7 +240,7 @@ def main():
    usage = "usage: %prog [options]"
    parser = optparse.OptionParser(usage=usage)
    parser.add_option("-p", "--pedFile", dest="pedFile", default="data/svip.ped",
-	metavar="pedFile", help="pedigree file and family-name should be mother and father combination, not PED format")
+        metavar="pedFile", help="pedigree file and family-name should be mother and father combination, not PED format")
    parser.add_option("-d", "--dataFile", dest="dataFile", default="data/svip-FB-vars.vcf.gz",
         metavar="dataFile", help="VCF format variant file")
 
@@ -207,6 +263,13 @@ def main():
    #fInfo: each fam has mom, dad and child personal ID, old and new Ids
    #pInfo: each person has raw info from "PED" file
    fInfo, pInfo = procFamInfo( pfile )
+   #add more info to fInfo such as 
+   #    notChild: who is not children
+   #    iFM     : fa and ma index for each child in families
+   #    isMale  : sex info in the order of ids and newIds (they have the same order)
+   makeFamInfoConv( fInfo, pInfo )
+
+   #print family Info in a format
    FAMOUT = ox.outputPrefix +'-families.txt'
    printFamData( fInfo, pInfo, proj=ox.project, lab=ox.lab, out=open(FAMOUT,'w') )
 
@@ -239,11 +302,11 @@ def main():
 	
 	#print output and make it empty
 	if cchr != chrom:
-		printSome( output )
-		cchr = chrom
+	        printSome( output )
+	        cchr = chrom
 	#reduce burden of computer memory
 	if len(output) > 10000:
-		printSome( output, pos=rx.pos )
+	        printSome( output, pos=rx.pos )
 
 	nonAutoX = False
 	if chrom == 'X' and (not vrtF.isPseudoAutosomalX(px[0])): nonAutoX = True
@@ -251,22 +314,30 @@ def main():
 	dx = []
 	#save ok families, check whether autosomal or de novo
 	for fid in fam:
-		flag, GT, cnt, qual = getVrtFam( fInfo[fid]['ids'], rx )
-		#if 4235521 in px and fid == '14752.x6.m0-14752.x8':
-		#	print fInfo[fid]
-		#	print fid, flag, array2str(GT,1,delim=' '), '-', array2str(cnt,1,delim=' '), qual
-		if not flag: continue #print px, vx, rx.chrom, rx.pos, rx.ref, rx.alts
+                fIx = fInfo[fid]
+	        flag, GT, cnt, qual = getVrtFam( fIx['ids'], rx )
+	        #if 4235521 in px and fid == '14752.x6.m0-14752.x8':
+	        #       print fInfo[fid]
+	        #       print fid, flag, array2str(GT,1,delim=' '), '-', array2str(cnt,1,delim=' '), qual
+	        if not flag: continue #print px, vx, rx.chrom, rx.pos, rx.ref, rx.alts
 
-		if nonAutoX:
-			flag = fixNonAutoX( GT, fInfo[fid]['ids'], pInfo )
-			if not flag: continue
+	        if nonAutoX:
+	                flag = fixNonAutoX( GT, fIx['isMale'] ) #fInfo[fid]['ids'], pInfo )
+	                if not flag: continue #fail to fix
 
-		if isDenovo( GT ):
-			#print GT
-			continue
+                        flag = isDenovoNonAutosomalX( GT, fIx['iFM'], fIx['isMale'] )
+                        if flag: continue # denovo
+                else:
+	                flag = isDenovo( GT, fIx['iFM'] ) #isDenovo( GT ):
+	                #print GT
+	                if flag: continue # denovo
 
-		dx.append( [fInfo[fid]['newFid'], GT, cnt, qual] )
-	#skip none found
+                #NOTE: main data set
+	        #dx.append( [fIx['newFid'], GT, cnt, qual] )
+                dx.append( [fIx['newFid'], GT, cnt, fIx['notChild']] )
+                #notChild(index who is not child of any in this family)
+
+	#NOTE: skip none found
 	if len(dx) < 1: continue
 	#skip if failed families are more than certain threshold
 	#if len(dx)/(1.*len(fam))*100. < ox.minPercentOfGenotypeFamilies: continue
@@ -275,49 +346,48 @@ def main():
 	nPcntC = (1.*nPC)/(2*len(fam))*100.
 	for n, (p,v) in enumerate(izip( px, vx )):
 	   ix = n+1
+           # ref is index 0 and vx (variants) has only alternatives
+
 	   #some occasion '*' as one of alternatives
 	   if v.find( '*' ) >= 0: continue 
 
 	   strx = []
 	   cAlt, tAll = 0, 0
-	   for x in dx:
-		if sum(x[1][:,ix]) < 1: continue
+	   for (fid,GT,cnt,nCi) in dx: #dx: fid, GT, cnt, notChild(index who is not child of any in this family)
+                #assume that all the ill-regualr genotype for X Y are correct
+                #assume that all of auto have 2 copy, X non-Autosomal 1, and Y male(1) and female(0)
+                tAll += sum(GT[nCi,:].sum(1))
 
-		cAlt += sum(x[1][:2,ix])
+	        if sum(GT[:,ix]) < 1: continue
 
-		strx.append( x[0] +':'+ array2str(x[1],ix,delim='') +':'+ array2str(x[2],ix,delim=' '))
-		#	     +':'+ x[3] )
+	        cAlt += sum(GT[nCi,ix])
+                # only concern about non children
+
+	        strx.append( fid +':'+ array2str(GT,ix,delim='') +':'+ array2str(cnt,ix,delim=' '))
 
 	   fC = len(strx)
 	   if fC < 1: continue
 
 	   strx = ';'.join( strx )
 	   #print strx
-	   #assume that all of auto have 2 copy, X non-Autosomal 1, and Y male(1) and female(0)
-	   if nonAutoX:
-		tAll = 3*(nPC/2)
-	   elif chrom == 'Y':
-		continue
-		#tAll = nPC/2
-	   else:
-		tAll = 2*nPC
+	    
 	   #chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
 	   #fid:bestState:counts:qualityScore
 	   #11948:2112/0110:40 20 20 40/0 20 20 0:0:0;... writing format
 	   freqAlt = (1.*cAlt)/tAll*100.
 
-	   pix = 0
-	   while (p,pix) in output: pix += 1
+	   #pix = 0
+	   #while (p,pix) in output: pix += 1
 
-	   if v.startswith( 'SUB' ):
-		print >> sys.stdout, '\t'.join( [chrom, str(p), v, strx, str(nPC), digitP(nPcntC), str(cAlt),digitP(freqAlt)])
-		continue
+	   if v.startswith( 'complex' ) or (p,v) in output:
+	        print >> sys.stdout, '\t'.join( [chrom, str(p), v, strx, str(nPC), digitP(nPcntC), str(cAlt),digitP(freqAlt)])
+	        continue
 
 	   if fC >= ox.tooManyThresholdFamilies:
-		output[(p,pix)] = (out, '\t'.join( [chrom, str(p), v, 'TOOMANY', str(nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)]) )
-		output[(p,pix+1)] = (outTOOMANY, '\t'.join( [chrom, str(p), v, strx] ) )
+	        output[(p,v)] = (out, '\t'.join( [chrom, str(p), v, 'TOOMANY', str(nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)]) )
+	        output[(p,v+'*')] = (outTOOMANY, '\t'.join( [chrom, str(p), v, strx] ) )
 	   else:
-		output[(p,pix)] = (out, '\t'.join( [chrom, str(p), v, strx, str(nPC), digitP(nPcntC), str(cAlt),digitP(freqAlt)]) )
+	        output[(p,v)] = (out, '\t'.join( [chrom, str(p), v, strx, str(nPC), digitP(nPcntC), str(cAlt),digitP(freqAlt)]) )
 
    printSome( output )
 

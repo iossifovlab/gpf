@@ -4,7 +4,7 @@ import sys, commands, optparse
 
 def main():
    #copy of options for dnv2DAEc.py
-   usage = "usage: %prog [options]" # <pedFile> <data VCF file>"
+   usage = "usage: %prog [options] <families pedigree file> <list of de novos file>"
    parser = optparse.OptionParser(usage=usage)
    #parser.add_option("-p", "--pedFile", dest="pedFile", default="xxx.txt",
    #     metavar="pedFile", help="Pedgree file with certain format")
@@ -26,6 +26,8 @@ def main():
    #     metavar="columnNames", help="column names for pId,chrom,pos,ref,alt [defualt:pId,chrom,pos,ref,alt]")
    parser.add_option("-i", "--personIdColumn", dest="personIdColumn", default="personId", \
 			metavar="personIdColumn", help="column names for personId")
+   parser.add_option("-w", "--locColumn", dest="locColumn", default="",    metavar="locColumn", \
+                        help="column names for location chr:pos format")
    parser.add_option("-c", "--chrColumn", dest="chrColumn", default="chr", metavar="chrColumn", \
 			help="column names for chromosome")
    parser.add_option("-p", "--posColumn", dest="posColumn", default="pos", metavar="posColumn", \
@@ -37,37 +39,37 @@ def main():
 
    ox, args = parser.parse_args()
 
+   tExt = lambda xxx: '.zZqZz{:d}'.format(xxx) if isinstance(xxx,int) else '.zZqZz{:s}'.format(xxx)
+   #tmp files' extension
+
    #main conversion
-   columnNames = '{:s},{:s},{:s},{:s},{:s}'.format( ox.personIdColumn, \
+   columnNames = '{:s},{:s},{:s},{:s},{:s},{:s}'.format( ox.personIdColumn, ox.locColumn, \
 					        ox.chrColumn, ox.posColumn, ox.refColumn, ox.altColumn )
    #cmd = ' '.join( ['dnv2DAEc.py', '-p', ox.pedFile, '-d', ox.dataFile, '-x', ox.project, '-l', ox.lab, \
    cmd = ' '.join( ['dnv2DAEc.py', '-p', args[0], '-d', args[1], '-x', ox.project, '-l', ox.lab, \
-			'-o', 'x0.'+ox.outputPrefix, '-m', '"{:s}"'.format( ox.delimiter ), \
-			'-c', '"{:s}"'.format(columnNames), ' > dnv.'+ox.outputPrefix+'.SUB.txt'] )
-			#'-c', '"{:s}"'.format(ox.columnNames), ' > dnv.'+ox.outputPrefix+'.SUB.txt'] )
+			'-o', ox.outputPrefix+tExt(0), '-m', '"{:s}"'.format( ox.delimiter ), \
+			'-c', '"{:s}"'.format(columnNames), ' > '+ox.outputPrefix+'-complex.txt'] )
+			#'-c', '"{:s}"'.format(ox.columnNames), ' > '+ox.outputPrefix+'-complex.txt'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
    if status: raise Exception("FAILURE AT: " + cmd)
-
    #tmp families info to target info
-   cmd = ' '.join( ['\\mv', 'x0.'+ox.outputPrefix+'-families.txt', ox.outputPrefix+'-families.txt'] )
+   cmd = ' '.join( ['\\mv', ox.outputPrefix+tExt(0)+'-families.txt', ox.outputPrefix+'-families.txt'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
    if status: raise Exception("FAILURE AT: " + cmd)
-
    #annotate variant
-   cmd = ' '.join( ['annotate_variants.py -x location -v variant ', 'x0.'+ox.outputPrefix+'.txt', 'x1.'+ox.outputPrefix+'.txt'] )
+   cmd = ' '.join( ['annotate_variants.py -x location -v variant ', ox.outputPrefix+tExt(0)+'.txt', ox.outputPrefix+tExt(1)+'.txt'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
    if status: raise Exception("FAILURE AT: " + cmd)
-
    #annotate freqency
-   cmd = ' '.join( ['annotateFreqTransm.py', 'x1.'+ox.outputPrefix+'.txt', 'direct > ', ox.outputPrefix+'.txt'] )
+   cmd = ' '.join( ['annotateFreqTransm.py', ox.outputPrefix+tExt(1)+'.txt', 'direct > ', ox.outputPrefix+'.txt'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out 
-
+   if status: raise Exception("FAILURE AT: " + cmd)
    #remove tmp files
-   cmd = ' '.join( ['\\rm', 'x?.'+ox.outputPrefix+'.txt*'] )
+   cmd = ' '.join( ['\\rm', ox.outputPrefix+tExt('*')+'.txt*'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
    if status: raise Exception("FAILURE AT: " + cmd)

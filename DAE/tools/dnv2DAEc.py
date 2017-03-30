@@ -59,8 +59,35 @@ def childState( ped ):
 
    return strx
 
-columnInfo=namedtuple( 'VrtInfo', 'pid,chrom,pos,ref,alt'.split(',') )
-defaultCol = columnInfo( *['pid','chrom','pos','ref','alt'] )
+columnInfo=namedtuple( 'VrtInfo', 'pid,loc,chrom,pos,ref,alt'.split(',') )
+
+def checkHeader( colI, hdr ):
+   hdrS = set(hdr)
+
+   for cn in 'familyId,location,variant,bestState,inChild'.split(','):
+     if cn in hdrS:
+	raise Exception('The column name "%s" SHOULD be RENAMED since conflicting with an OUTPUT column name'% cn )
+
+   for cn in [colI.pid, colI.ref, colI.alt]:
+       if cn not in hdrS:
+             raise Exception('The column %s not found in the file header: ' %cn + "\n".join(hdr))
+
+   if colI.loc == '':
+       for cn in [colI.chrom, colI.pos]:
+          if cn not in hdrS:
+             raise Exception('The column %s not found in the file header: ' %cn + "\n".join(hdr))
+   else:
+      if colI.loc not in hdrS:
+	raise Exception('The column %s not found in the file header: ' %colI.loc + "\n".join(hdr))
+
+def getLoc( rx, colI ):
+   if colI.loc == '':
+	return rx[colI.chrom], rx[colI.pos]
+
+   ch, pos = rx[colI.loc].split(':')
+   return ch, pos
+
+defaultCol = columnInfo( *['pid','','chrom','pos','ref','alt'] )
 #pos of all vrt are the same 
 #below: vrt is based on chrom pos ref alt
 def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout ): #cI :column info - see above
@@ -86,8 +113,10 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
    for k, v in fVrt.items():
 	terms = v[0]
 
-        fid, nfid, chrom = k, famInfo[k]['newFid'], rx[cI.chrom] #'CHROM']
-	px, vx = vrtF.vcf2cshlFormat2( int(rx[cI.pos]), rx[cI.ref], [rx[cI.alt]] )
+	chrom, pos = getLoc( rx, cI )
+
+        fid, nfid = k, famInfo[k]['newFid'] #, rx[cI.chrom] #'CHROM']
+	px, vx = vrtF.vcf2cshlFormat2( int(pos), rx[cI.ref], [rx[cI.alt]] )
         #px, vx = callVariant( int(rx[cI.pos]), rx[cI.ref], [rx[cI.alt]] ) #int(rx['POS']), rx['REF'], [rx['ALT']] )
 
 	cS = []
@@ -132,7 +161,7 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
 
         #print ped
 	#print terms['SP_id'] #'\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], bSts, ','.join( cS )] )     
-	if vx[0].startswith( 'SUB' ):
+	if vx[0].startswith( 'complex' ):
 		print >> sys.stdout, '\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], bSts, ','.join( cS )] + [terms[h] for h in header] )
 		continue
 
@@ -180,21 +209,22 @@ def main():
    denovo = defaultdict( list )
    hdr = []
    colI = columnInfo( *(ox.columnNames.split(',')) )
+
    with open( ox.dataFile ) as ifile:
       line = ifile.readline().strip('\n')
       hdr = line.translate(None,'[*]').split(ox.delimiter)
 
-      hdrS = set(hdr)
-      for cn in [colI.chrom, colI.pos, colI.ref, colI.alt]:
-         if cn not in hdrS:
-             raise Exception('The column %s not found in the file header: ' %cn + "\n".join(hdr))
+      #check header
+      checkHeader( colI, hdr )
+ 
       for line in ifile:
         terms = procLine( line, delimiter=ox.delimiter )
         rx = {k:v for k, v in izip(hdr,terms)}
 	rx['terms'] = terms
 	#
 	#idx = ','.join( ['%4s' %(rx['CHROM']), '%12s' %(rx['POS']), rx['REF'], rx['ALT']] )
-	idx = ','.join( ['%4s' %(rx[colI.chrom]), '%12s' %(rx[colI.pos]), rx[colI.ref], rx[colI.alt]] )
+        chrom, pos = getLoc( rx, colI )
+	idx = ','.join( ['%4s' %(chrom), '%12s' %(pos), rx[colI.ref], rx[colI.alt]] )
 	denovo[idx].append( rx )
 
    print >> out, '\t'.join( 'familyId,location,variant,bestState,inChild'.split(',') \
