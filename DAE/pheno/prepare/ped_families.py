@@ -3,3 +3,251 @@ Created on Mar 28, 2017
 
 @author: lubo
 '''
+import copy
+import traceback
+import itertools
+import pandas as pd
+import numpy as np
+
+
+class PedPrepareIndividuals(object):
+
+    class Family(object):
+
+        def __init__(self, family_id):
+            self.family_id = family_id
+            self.mother = None
+            self.father = None
+            self.probands = {}
+            self.siblings = {}
+
+        @property
+        def size(self):
+            return 2 + len(self.probands) + len(self.siblings)
+
+        def __repr__(self):
+            return "Family({family_id}, {mother}, {father}, " \
+                "{probands}, {siblings})".format(
+                    family_id=self.family_id,
+                    mother=self.mother,
+                    father=self.father,
+                    probands=self.probands,
+                    siblings=self.siblings)
+
+        def add_mother(self, mother):
+            assert self.mother is None
+            assert mother.role is None
+            assert mother.family_id is None
+            mother = copy.deepcopy(mother)
+            assert mother is not None
+
+            mother.role = 'mom'
+            mother.family_id = self.family_id
+            self.mother = mother
+
+        def add_father(self, father):
+            assert self.father is None
+            assert father.role is None
+            assert father.family_id is None
+            father = copy.deepcopy(father)
+            assert father is not None
+
+            father.role = 'dad'
+            father.family_id = self.family_id
+            self.father = father
+
+        def add_child(self, p):
+            p = copy.deepcopy(p)
+            if p.proband_sibling == 'prb':
+                self.add_proband(p)
+            elif p.proband_sibling == 'sib':
+                self.add_sibling(p)
+
+        def add_proband(self, p):
+            assert p.proband_sibling == 'prb'
+            assert p.person_id not in self.probands
+            assert p.role is None
+            assert p.family_id is None
+
+            p.role = 'prb'
+            p.family_id = self.family_id
+            self.probands[p.person_id] = p
+
+        def add_sibling(self, p):
+            assert p.proband_sibling == 'sib'
+            assert p.person_id not in self.siblings
+            assert p.role is None
+            assert p.family_id is None
+
+            p.role = 'sib'
+            p.family_id = self.family_id
+            self.siblings[p.person_id] = p
+
+    class Individual(object):
+
+        def __repr__(self):
+            return "Individual({person_id}, {gender}, {role}, {family_id}, " \
+                "{father}, {mother})" \
+                .format(
+                    person_id=self.person_id,
+                    gender=self.gender,
+                    role=self.role,
+                    family_id=self.family_id,
+                    father=self.father,
+                    mother=self.mother,
+                )
+
+        def __init__(self, row):
+            self.father = row['dadId']
+            self.mother = row['momId']
+            self.person_id = row['personId']
+            self.family = row['familyId']
+            self.gender = self._build_gender(row['gender'])
+            self.proband_sibling = self._build_proband_sibling(row['status'])
+            self._sample_id = self._build_sample_id(row['sampleId'])
+            self.role = None
+            self.family_id = None
+
+            self.key = (self.family, self.person_id)
+            assert self.person_id is not None
+
+        @property
+        def sample_id(self):
+            if self._sample_id:
+                return self._sample_id
+            else:
+                return self.person_id
+
+        def __eq__(self, other):
+            return self.father == other.father and \
+                self.mother == other.mother and \
+                self.person_id == other.person_id and \
+                self.gender == other.gender and \
+                self.proband_sibling == other.proband_sibling and \
+                self.family_id == other.family_id and \
+                self.key == other.key and \
+                self.sample_id == other.sample_id
+            # self.role == other.role and \
+
+        def __ne__(self, other):
+            return not self.__eq__(other)
+
+        def _build_sample_id(self, sample_id):
+            if isinstance(sample_id, float) and np.isnan(sample_id):
+                return None
+            elif sample_id is None:
+                return None
+
+            return str(sample_id)
+
+        @staticmethod
+        def _build_family_id(person_id):
+            parts = person_id.split('.')
+            assert len(parts) == 2
+            return parts[0]
+
+        @staticmethod
+        def _build_gender(sex):
+            if sex == 1:
+                return 'M'
+            elif sex == 2:
+                return 'F'
+            else:
+                raise ValueError("unexpected value for gender: {}"
+                                 .format(sex))
+
+        @staticmethod
+        def _build_proband_sibling(status):
+            if status == 1:
+                return 'sib'
+            elif status == 2:
+                return 'prb'
+            else:
+                print("unexpected status: {}".format(status))
+                raise ValueError("unexpected value for status: {}"
+                                 .format(status))
+
+    def __init__(self, pedfilename):
+        self.pedfilename = pedfilename
+
+    def _build_individuals_dict(self, df):
+        individuals = {}
+        for _index, row in df.iterrows():
+            individual = PedPrepareIndividuals.Individual(row)
+
+            if individual.key not in individuals:
+                individuals[individual.key] = individual
+            elif individuals[individual.key] != individual:
+                print("---------------------------------------------")
+                print("Mismatched individuals:")
+                print(">\t{}".format(individual))
+                print(">\t{}".format(individuals[individual.key]))
+                print("---------------------------------------------")
+
+        return individuals
+
+    def load_pedfile(self, pedfilename):
+        df = pd.read_csv(pedfilename, sep='\t')
+        assert list(df.columns) == [
+            'familyId', 'personId', 'dadId', 'momId',
+            'gender', 'status', 'sampleId']
+        return df
+
+    def _build_individuals(self):
+        df = self.load_pedfile(self.pedfilename)
+        individuals = self._build_individuals_dict(df)
+        assert individuals is not None
+
+        families = self._build_families_dict(individuals)
+        assert families is not None
+
+        return individuals
+
+    def _build_families_dict(self, individuals):
+        families = {}
+        for p in individuals.values():
+            if p.father != '0' and p.mother != '0':
+                try:
+                    father = individuals[(p.family, p.father)]
+                    mother = individuals[(p.family, p.mother)]
+
+                    assert father is not None
+                    assert mother is not None
+
+                    family_id = "{mom}-{dad}".format(
+                        mom=mother.person_id, dad=father.person_id)
+                    if family_id in families:
+                        family = families[family_id]
+                    else:
+                        family = PedPrepareIndividuals.Family(family_id)
+                        family.add_mother(mother)
+                        family.add_father(father)
+
+                    family.add_child(p)
+                    families[family_id] = family
+                    assert family.father is not None
+                    assert family.mother is not None
+
+                except AssertionError:
+                    print("----------------------------------------------")
+                    print("Problem creating family: {}".format(family_id))
+                    traceback.print_exc()
+                    print("\tmother: {}".format(mother))
+                    print("\tfather: {}".format(father))
+                    print("\tchild:  {}".format(p))
+                    print("----------------------------------------------")
+
+        return families
+
+    def _add_family(self, fam, individuals):
+        for order, p in enumerate(itertools.chain([fam.mother], [fam.father],
+                                                  fam.probands.values(),
+                                                  fam.siblings.values())):
+            if p.person_id in individuals:
+                # conflicting person:
+                other_person = individuals[p.person_id]
+                # print("CONFLICTING PERSON: {} <-> {}".format(
+                # p, other_person))
+                return other_person
+            p.role_order = order
+            individuals[p.person_id] = p
