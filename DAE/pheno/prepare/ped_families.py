@@ -3,14 +3,16 @@ Created on Mar 28, 2017
 
 @author: lubo
 '''
-import copy
 import traceback
 import itertools
 import pandas as pd
 import numpy as np
+from pheno.utils.configuration import PhenoConfig
+from collections import OrderedDict
+from pheno.models import PersonManager
 
 
-class PedPrepareIndividuals(object):
+class NucPedPrepareIndividuals(PhenoConfig):
 
     class Family(object):
 
@@ -18,8 +20,8 @@ class PedPrepareIndividuals(object):
             self.family_id = family_id
             self.mother = None
             self.father = None
-            self.probands = {}
-            self.siblings = {}
+            self.probands = OrderedDict()
+            self.siblings = OrderedDict()
 
         @property
         def size(self):
@@ -38,10 +40,11 @@ class PedPrepareIndividuals(object):
             assert self.mother is None
             assert mother.role is None
             assert mother.family_id is None
-            mother = copy.deepcopy(mother)
             assert mother is not None
 
             mother.role = 'mom'
+            mother.role_id = mother.role
+            mother.role_order = 0
             mother.family_id = self.family_id
             self.mother = mother
 
@@ -49,15 +52,15 @@ class PedPrepareIndividuals(object):
             assert self.father is None
             assert father.role is None
             assert father.family_id is None
-            father = copy.deepcopy(father)
             assert father is not None
 
             father.role = 'dad'
+            father.role_id = father.role
+            father.role_order = 1
             father.family_id = self.family_id
             self.father = father
 
         def add_child(self, p):
-            p = copy.deepcopy(p)
             if p.proband_sibling == 'prb':
                 self.add_proband(p)
             elif p.proband_sibling == 'sib':
@@ -70,6 +73,8 @@ class PedPrepareIndividuals(object):
             assert p.family_id is None
 
             p.role = 'prb'
+            p.role_id = p.role
+            p.role_order = len(self.probands) + 11
             p.family_id = self.family_id
             self.probands[p.person_id] = p
 
@@ -80,6 +85,8 @@ class PedPrepareIndividuals(object):
             assert p.family_id is None
 
             p.role = 'sib'
+            p.role_id = p.role
+            p.role_order = len(self.siblings) + 21
             p.family_id = self.family_id
             self.siblings[p.person_id] = p
 
@@ -107,6 +114,8 @@ class PedPrepareIndividuals(object):
             self.sample_id = self._build_sample_id(row['sampleId'])
             self.role = None
             self.family_id = None
+            self.collection = None
+            self.ssc_present = None
 
             self.key = (self.family, self.person_id)
             assert self.person_id is not None
@@ -160,13 +169,15 @@ class PedPrepareIndividuals(object):
                 raise ValueError("unexpected value for status: {}"
                                  .format(status))
 
-    def __init__(self, pedfilename):
+    def __init__(self, pedfilename, config, *args, **kwargs):
+        super(NucPedPrepareIndividuals, self).__init__(
+            pheno_db='output', config=config, *args, **kwargs)
         self.pedfilename = pedfilename
 
     def _build_individuals_dict(self, df):
         individuals = {}
         for _index, row in df.iterrows():
-            individual = PedPrepareIndividuals.Individual(row)
+            individual = NucPedPrepareIndividuals.Individual(row)
 
             if individual.key not in individuals:
                 individuals[individual.key] = individual
@@ -219,7 +230,7 @@ class PedPrepareIndividuals(object):
                     if family_id in families:
                         family = families[family_id]
                     else:
-                        family = PedPrepareIndividuals.Family(family_id)
+                        family = NucPedPrepareIndividuals.Family(family_id)
                         family.add_mother(mother)
                         family.add_father(father)
 
@@ -251,3 +262,10 @@ class PedPrepareIndividuals(object):
                 return other_person
             p.role_order = order
             individuals[p.person_id] = p
+
+    def save(self):
+        with PersonManager(pheno_db=self.pheno_db, config=self.config) as pm:
+            pm.drop_tables()
+            pm.create_tables()
+            for p in self.individuals.values():
+                pm.save(p)
