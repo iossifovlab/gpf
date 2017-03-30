@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 '''
-pheno_prepare -- prepares a pheno DB cache file
+pheno2DAE -- prepares a DAE pheno DB cache
 
 '''
 
@@ -27,7 +27,7 @@ __version__ = 0.1
 __date__ = '2017-03-20'
 __updated__ = '2017-03-20'
 
-DEBUG = 1
+DEBUG = 0
 TESTRUN = 0
 PROFILE = 0
 
