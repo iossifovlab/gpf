@@ -20,5 +20,6 @@ urlpatterns = patterns(
     url(r'^api/v3/genotype_browser', include('genotype_browser.urls')),
     url(r'^api/v3/enrichment', include('enrichment_api.urls')),
     url(r'^api/v3/users/', include('users.urls_session')),
+    url(r'^api/v3/measures', include('measures_api.urls')),
 
 )
