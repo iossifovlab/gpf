@@ -89,7 +89,7 @@ class PrepareIndividuals(PhenoConfig):
 
 class PrepareVariables(PhenoConfig, BaseVariables):
 
-    def __init__(self, config, *args, **kwargs):
+    def __init__(self, config, individuals, *args, **kwargs):
         super(PrepareVariables, self).__init__(
             pheno_db='output', config=config, *args, **kwargs)
 

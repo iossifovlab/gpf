@@ -104,19 +104,12 @@ class PedPrepareIndividuals(object):
             self.family = row['familyId']
             self.gender = self._build_gender(row['gender'])
             self.proband_sibling = self._build_proband_sibling(row['status'])
-            self._sample_id = self._build_sample_id(row['sampleId'])
+            self.sample_id = self._build_sample_id(row['sampleId'])
             self.role = None
             self.family_id = None
 
             self.key = (self.family, self.person_id)
             assert self.person_id is not None
-
-        @property
-        def sample_id(self):
-            if self._sample_id:
-                return self._sample_id
-            else:
-                return self.person_id
 
         def __eq__(self, other):
             return self.father == other.father and \
@@ -202,6 +195,13 @@ class PedPrepareIndividuals(object):
         assert families is not None
 
         return individuals
+
+    def build(self):
+        self.individuals = self._build_individuals()
+        self.individuals_with_sample_id = {
+            k: v for k, v in self.individuals.items()
+            if v.sample_id is not None
+        }
 
     def _build_families_dict(self, individuals):
         families = {}
