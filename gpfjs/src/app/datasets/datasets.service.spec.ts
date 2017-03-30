@@ -12,13 +12,13 @@ import {
   Response, ResponseOptions
 } from '@angular/http';
 
-import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
+// import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
 import { Observable } from 'rxjs';
 import { gpfReducer } from '../store/gpf-store';
 import { StoreModule } from '@ngrx/store';
 
 
-
+/*
 const mockDatasetResponse: Dataset = {
   id: 'VIP',
   name: 'VIP Dataset',
@@ -200,3 +200,4 @@ describe('DatasetService', () => {
 
 });
 
+*/

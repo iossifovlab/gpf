@@ -2,7 +2,7 @@
  * New typescript file
  */
 
-
+/*
 import {
   EFFECT_TYPE_CHECK,
   EFFECT_TYPE_UNCHECK,
@@ -58,3 +58,4 @@ describe('EffectTypesReducer', () => {
   });
 
 });
+*/
