@@ -7,20 +7,14 @@ pheno2DAE -- prepares a DAE pheno DB cache
 
 import sys
 import os
-import pandas as pd
-import numpy as np
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import traceback
-from pheno.models import PersonManager
-from collections import Counter
-from pheno.prepare.base_variables import BaseVariables
-from pheno.utils.configuration import PhenoConfig
-from pheno.prepare.base_meta_variables import BaseMetaVariables
-from pheno.pheno_db import PhenoDB
 import ConfigParser
 from pprint import pprint
+from pheno.prepare.nuc_ped_prepare import NucPedPrepareIndividuals,\
+    NucPedPrepareVariables, NucPedPrepareMetaVariables
 
 __all__ = []
 __version__ = 0.1
@@ -54,106 +48,6 @@ def config_pheno_db(output):
     config.set('categorical', 'max_rank', '7')
 
     return config
-
-
-class PrepareIndividuals(PhenoConfig):
-
-    def __init__(self, config, *args, **kwargs):
-        super(PrepareIndividuals, self).__init__(
-            pheno_db='output', config=config, *args, **kwargs)
-
-    def load_persons(self, families_file):
-        assert os.path.isfile(families_file)
-
-        df = pd.read_csv(families_file, sep='\t')
-        assert 'familyId' in df.columns
-        assert 'personId' in df.columns
-
-        columns = list(df.columns)
-        columns[columns.index('familyId')] = 'family_id'
-        columns[columns.index('personId')] = 'person_id'
-        df.columns = columns
-        df['role_order'] = np.arange(len(df))
-        df['role_id'] = df.role
-
-        return df
-
-    def prepare(self, families_file):
-        persons_df = self.load_persons(families_file)
-        with PersonManager(pheno_db=self.pheno_db, config=self.config) as pm:
-            pm.drop_tables()
-            pm.create_tables()
-
-            pm.save_df(persons_df)
-
-
-class PrepareVariables(PhenoConfig, BaseVariables):
-
-    def __init__(self, config, *args, **kwargs):
-        super(PrepareVariables, self).__init__(
-            pheno_db='output', config=config, *args, **kwargs)
-
-    def _clear_duplicate_measurements(self, df):
-        counter = Counter(df.person_id)
-        to_fix = [k for k, v in counter.items() if v > 1]
-        to_delete = []
-        for person_id in to_fix:
-            print("fixing measurements for {}".format(person_id))
-            pdf = df[df.person_id == person_id]
-            keep = pdf.age.idxmax()
-            d = pdf[pdf.index != keep]
-            to_delete.extend(d.index.values)
-
-        df.drop(to_delete, inplace=True)
-
-    def load_instrument(self, filename, dtype=None):
-        assert os.path.isfile(filename)
-        print("processing table: {}".format(filename))
-
-        df = pd.read_csv(filename, low_memory=False, sep=',',
-                         na_values=[' '], dtype=dtype)
-        columns = [c for c in df.columns]
-        columns[0] = 'person_id'
-        df.columns = columns
-        self._clear_duplicate_measurements(df)
-        return df
-
-    def prepare(self, instruments_directory):
-        self._create_variable_table()
-        self._create_value_tables()
-
-        persons = self.load_persons_df()
-
-        all_filenames = [
-            os.path.join(instruments_directory, f)
-            for f in os.listdir(instruments_directory)
-            if os.path.isfile(os.path.join(instruments_directory, f))]
-        print(all_filenames)
-        for filename in all_filenames:
-            basename = os.path.basename(filename)
-            instrument_name, ext = os.path.splitext(basename)
-            print(basename)
-            print(instrument_name, ext)
-            if ext != '.csv':
-                continue
-            instrument_df = self.load_instrument(filename)
-
-            df = instrument_df.join(persons, on='person_id', rsuffix="_person")
-
-            for measure_name in df.columns[1:len(instrument_df.columns)]:
-                mdf = df[['person_id', measure_name,
-                          'family_id', 'person_role']]
-                self._build_variable(instrument_name, measure_name,
-                                     mdf.dropna())
-
-
-class PrepareMetaVariables(PhenoConfig, BaseMetaVariables):
-
-    def __init__(self, config, *args, **kwargs):
-        super(PrepareMetaVariables, self).__init__(
-            pheno_db='output', config=config, *args, **kwargs)
-        self.phdb = PhenoDB(self.pheno_db, config=config)
-        self.phdb.load()
 
 
 class CLIError(Exception):
@@ -237,13 +131,13 @@ USAGE
         config = config_pheno_db(output)
         pprint(config)
 
-        prep_inidividuals = PrepareIndividuals(config)
-        prep_inidividuals.prepare(families_filename)
+        prep_individuals = NucPedPrepareIndividuals(config)
+        prep_individuals.prepare(families_filename)
 
-        prep_variables = PrepareVariables(config)
-        prep_variables.prepare(instruments_directory)
+        prep_variables = NucPedPrepareVariables(config)
+        prep_variables.prepare(prep_individuals, instruments_directory)
 
-        prep_meta = PrepareMetaVariables(config)
+        prep_meta = NucPedPrepareMetaVariables(config)
         prep_meta.prepare()
 
         return 0

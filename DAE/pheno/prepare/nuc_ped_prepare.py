@@ -12,6 +12,8 @@ from collections import OrderedDict, Counter
 from pheno.models import PersonManager
 from pheno.prepare.base_variables import BaseVariables
 import os
+from pheno.prepare.base_meta_variables import BaseMetaVariables
+from pheno.pheno_db import PhenoDB
 
 
 class NucPedPrepareIndividuals(PhenoConfig):
@@ -271,6 +273,10 @@ class NucPedPrepareIndividuals(PhenoConfig):
             for p in self.individuals.values():
                 pm.save(p)
 
+    def prepare(self, pedfilename):
+        self.build(pedfilename)
+        self.save()
+
 
 class NucPedPrepareVariables(PhenoConfig, BaseVariables):
 
@@ -354,3 +360,12 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
                           'family_id', 'person_role']]
                 self._build_variable(instrument_name, measure_name,
                                      mdf.dropna())
+
+
+class NucPedPrepareMetaVariables(PhenoConfig, BaseMetaVariables):
+
+    def __init__(self, config, *args, **kwargs):
+        super(NucPedPrepareMetaVariables, self).__init__(
+            pheno_db='output', config=config, *args, **kwargs)
+        self.phdb = PhenoDB(self.pheno_db, config=config)
+        self.phdb.load()
