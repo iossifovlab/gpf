@@ -8,7 +8,7 @@ import { PhenoFilter } from '../datasets/datasets';
 })
 export class PhenoFiltersComponent implements OnInit {
   @Input() phenoFilters: Array<PhenoFilter>;
-
+  @Input() datasetId: string;
 
   constructor() { }
 
@@ -19,9 +19,19 @@ export class PhenoFiltersComponent implements OnInit {
     if (!this.phenoFilters) {
       return null;
     }
-    
+
     return this.phenoFilters.filter(
       (phenoFilter: PhenoFilter) => phenoFilter.measureType == 'categorical'
+    );
+  }
+
+  get continuousPhenoFilters() {
+    if (!this.phenoFilters) {
+      return null;
+    }
+
+    return this.phenoFilters.filter(
+      (phenoFilter: PhenoFilter) => phenoFilter.measureType == 'continuous'
     );
   }
 

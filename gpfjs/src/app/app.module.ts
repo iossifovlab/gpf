@@ -71,7 +71,11 @@ import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 import { RouterModule, Routes } from '@angular/router';
 import { StateRestoreService } from './store/state-restore.service';
 import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
-import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component'
+import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
+import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
+import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';
+import { CategoricalFilterComponent } from './categorical-filter/categorical-filter.component'
+import { MeasuresService } from './measures/measures.service'
 
 const appRoutes: Routes = [
   {
@@ -141,7 +145,10 @@ const appRoutes: Routes = [
     EncodeUriComponentPipe,
     EnrichmentModelsBlockComponent,
     PhenoFiltersComponent,
-    FamilyFiltersBlockComponent
+    FamilyFiltersBlockComponent,
+    ContinuousFilterComponent,
+    MultiContinuousFilterComponent,
+    CategoricalFilterComponent
   ],
   imports: [
     BrowserModule,
@@ -168,7 +175,8 @@ const appRoutes: Routes = [
     EnrichmentModelsService,
     EnrichmentQueryService,
     FullscreenLoadingService,
-    StateRestoreService
+    StateRestoreService,
+    MeasuresService
   ],
   bootstrap: [AppComponent]
 })

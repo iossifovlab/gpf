@@ -2,7 +2,10 @@
   <gpf-genes-block></gpf-genes-block>
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
-  <gpf-family-filters-block [advancedFilters]="selectedDataset?.genotypeBrowser?.phenoFilters"></gpf-family-filters-block>
+  <gpf-family-filters-block
+    [advancedFilters]="selectedDataset?.genotypeBrowser?.phenoFilters"
+    [datasetId]=selectedDataset?.id>
+  </gpf-family-filters-block>
 
   <input type="button" value="Preview" (click)="submitQuery()">
   <form
@@ -15,5 +18,8 @@
 </div>
 
 <div class="">
-  <gpf-genotype-preview-table [phenoColumns]="selectedDataset?.genotypeBrowser?.phenoColumns" [genotypePreviewsArray]=genotypePreviewsArray></gpf-genotype-preview-table>
+  <gpf-genotype-preview-table
+    [phenoColumns]="selectedDataset?.genotypeBrowser?.phenoColumns"
+    [genotypePreviewsArray]=genotypePreviewsArray>
+  </gpf-genotype-preview-table>
 </div>

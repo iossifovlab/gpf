@@ -17,7 +17,8 @@
       <ngb-tab id="gene-sets" title="Advanced">
           <template ngbTabContent>
               <gpf-pheno-filters
-                [phenoFilters]="advancedFilters">
+                [phenoFilters]="advancedFilters"
+                [datasetId]=datasetId>
               </gpf-pheno-filters>
           </template>
       </ngb-tab>

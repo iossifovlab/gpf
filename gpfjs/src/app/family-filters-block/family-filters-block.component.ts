@@ -8,6 +8,7 @@ import { PhenoFilter } from '../datasets/datasets';
 })
 export class FamilyFiltersBlockComponent implements OnInit {
   @Input() advancedFilters: Array<PhenoFilter>;
+  @Input() datasetId: string;
 
   constructor() { }
 
