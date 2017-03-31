@@ -1,0 +1,26 @@
+<div class="family-filters-block">
+  <div class="card">
+    <gpf-tabset #tabset>
+      <div class="gpf-tabset-left" style="margin-right: 10px">
+        Families
+      </div>
+      <ngb-tab id="all-genes" title="All">
+          <template ngbTabContent>
+              <p>All</p>
+          </template>
+      </ngb-tab>
+      <ngb-tab id="gene-symbols" title="Family Ids">
+          <template ngbTabContent>
+              <p>IDs</p>
+          </template>
+      </ngb-tab>
+      <ngb-tab id="gene-sets" title="Advanced">
+          <template ngbTabContent>
+              <gpf-pheno-filters
+                [phenoFilters]="advancedFilters">
+              </gpf-pheno-filters>
+          </template>
+      </ngb-tab>
+    </gpf-tabset>
+  </div>
+</div>

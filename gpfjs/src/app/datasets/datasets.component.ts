@@ -49,6 +49,7 @@ export class DatasetsComponent implements OnInit {
       state => {
         this.datasetsService.getDatasets().subscribe(
           (datasets) => {
+            console.log(datasets);
             this.datasets = datasets;
             this.selectDatasetById();
           });

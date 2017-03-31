@@ -2,6 +2,7 @@
   <gpf-genes-block></gpf-genes-block>
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
+  <gpf-family-filters-block [advancedFilters]="selectedDataset?.genotypeBrowser?.phenoFilters"></gpf-family-filters-block>
 
   <input type="button" value="Preview" (click)="submitQuery()">
   <form

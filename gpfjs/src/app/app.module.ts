@@ -69,7 +69,9 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
 import { RouterModule, Routes } from '@angular/router';
-import { StateRestoreService } from './store/state-restore.service'
+import { StateRestoreService } from './store/state-restore.service';
+import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
+import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component'
 
 const appRoutes: Routes = [
   {
@@ -137,7 +139,9 @@ const appRoutes: Routes = [
     EnrichmentTableRowComponent,
     FullscreenLoadingComponent,
     EncodeUriComponentPipe,
-    EnrichmentModelsBlockComponent
+    EnrichmentModelsBlockComponent,
+    PhenoFiltersComponent,
+    FamilyFiltersBlockComponent
   ],
   imports: [
     BrowserModule,

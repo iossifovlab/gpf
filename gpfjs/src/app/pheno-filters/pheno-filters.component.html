@@ -1,0 +1,7 @@
+<div *ngFor="let categoricalPhenoFilter of categoricalPhenoFilters" >
+  <select class="form-control" required>
+    <option *ngFor="let value of categoricalPhenoFilter.measureFilter.domain">
+      {{value}}
+    </option>
+  </select>
+</div>

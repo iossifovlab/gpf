@@ -1,0 +1,7 @@
+.family-filters-block {
+    padding-top: 20px;
+}
+
+.family-filters-block /deep/ .tab-content {
+	padding: 10px;
+}

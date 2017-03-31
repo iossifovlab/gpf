@@ -106,6 +106,47 @@ export class PhenoColumn {
   ) {}
 }
 
+export class MeasureFilter {
+  static fromJson(json: any): MeasureFilter {
+    return new MeasureFilter(
+      json['role'],
+      json['filter_type'],
+      json['measure'],
+      json['domain']
+    );
+  }
+
+  constructor(
+    readonly role: string,
+    readonly filterType: string,
+    readonly measure: string,
+    readonly domain: Array<string>
+  ) {}
+}
+
+export class PhenoFilter {
+  static fromJson(json: any): PhenoFilter {
+    return new PhenoFilter(
+      json['name'],
+      json['measure_type'],
+      MeasureFilter.fromJson(json['measure_filter']),
+    );
+  }
+
+  static fromJsonArray(jsonArray: Array<Object>): Array<PhenoFilter> {
+    if (!jsonArray) {
+      return undefined;
+    }
+    return jsonArray.map((json) => PhenoFilter.fromJson(json));
+  }
+
+  constructor(
+    readonly name: string,
+    readonly measureType: string,
+    readonly measureFilter: MeasureFilter
+  ) {}
+}
+
 export class GenotypeBrowser {
   static fromJson(json: any): GenotypeBrowser {
     return new GenotypeBrowser(
@@ -116,7 +157,8 @@ export class GenotypeBrowser {
       json['hasAdvancedFamilyFilters'],
       json['hasStudyTypes'],
       json['mainForm'],
-      PhenoColumn.fromJsonArray(json['phenoColumns'])
+      PhenoColumn.fromJsonArray(json['phenoColumns']),
+      PhenoFilter.fromJsonArray(json['phenoFilters'])
     );
   }
 
@@ -128,7 +170,8 @@ export class GenotypeBrowser {
     readonly hasAdvancedFamilyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly mainForm: string,
-    readonly phenoColumns: Array<PhenoColumn>
+    readonly phenoColumns: Array<PhenoColumn>,
+    readonly phenoFilters: Array<PhenoFilter>
   ) {
 
   }
