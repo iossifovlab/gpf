@@ -89,7 +89,7 @@ class PrepareIndividuals(PhenoConfig):
 
 class PrepareVariables(PhenoConfig, BaseVariables):
 
-    def __init__(self, config, individuals, *args, **kwargs):
+    def __init__(self, config, *args, **kwargs):
         super(PrepareVariables, self).__init__(
             pheno_db='output', config=config, *args, **kwargs)
 
@@ -114,13 +114,6 @@ class PrepareVariables(PhenoConfig, BaseVariables):
                          na_values=[' '], dtype=dtype)
         columns = [c for c in df.columns]
         columns[0] = 'person_id'
-        #         for index in range(2, len(columns)):
-        #             parts = columns[index].split('.')
-        #             if len(parts) == 1:
-        #                 name = parts[0]
-        #             else:
-        #                 name = '.'.join(parts[1:])
-        #             columns[index] = name
         df.columns = columns
         self._clear_duplicate_measurements(df)
         return df

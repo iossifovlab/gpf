@@ -8,8 +8,10 @@ import itertools
 import pandas as pd
 import numpy as np
 from pheno.utils.configuration import PhenoConfig
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from pheno.models import PersonManager
+from pheno.prepare.base_variables import BaseVariables
+import os
 
 
 class NucPedPrepareIndividuals(PhenoConfig):
@@ -169,10 +171,9 @@ class NucPedPrepareIndividuals(PhenoConfig):
                 raise ValueError("unexpected value for status: {}"
                                  .format(status))
 
-    def __init__(self, pedfilename, config, *args, **kwargs):
+    def __init__(self, config, *args, **kwargs):
         super(NucPedPrepareIndividuals, self).__init__(
             pheno_db='output', config=config, *args, **kwargs)
-        self.pedfilename = pedfilename
 
     def _build_individuals_dict(self, df):
         individuals = {}
@@ -197,8 +198,8 @@ class NucPedPrepareIndividuals(PhenoConfig):
             'gender', 'status', 'sampleId']
         return df
 
-    def _build_individuals(self):
-        df = self.load_pedfile(self.pedfilename)
+    def _build_individuals(self, pedfilename):
+        df = self.load_pedfile(pedfilename)
         individuals = self._build_individuals_dict(df)
         assert individuals is not None
 
@@ -207,8 +208,8 @@ class NucPedPrepareIndividuals(PhenoConfig):
 
         return individuals
 
-    def build(self):
-        self.individuals = self._build_individuals()
+    def build(self, pedfilename):
+        self.individuals = self._build_individuals(pedfilename)
         self.individuals_with_sample_id = {
             k: v for k, v in self.individuals.items()
             if v.sample_id is not None
@@ -269,3 +270,89 @@ class NucPedPrepareIndividuals(PhenoConfig):
             pm.create_tables()
             for p in self.individuals.values():
                 pm.save(p)
+
+
+class NucPedPrepareVariables(PhenoConfig, BaseVariables):
+
+    def __init__(self, config, *args, **kwargs):
+        super(NucPedPrepareVariables, self).__init__(
+            pheno_db='output', config=config, *args, **kwargs)
+
+    def _clear_duplicate_measurements(self, df):
+        counter = Counter(df.person_id)
+        to_fix = [k for k, v in counter.items() if v > 1]
+        to_delete = []
+        for person_id in to_fix:
+            print("fixing measurements for {}".format(person_id))
+            pdf = df[df.person_id == person_id]
+            keep = pdf.age.idxmax()
+            d = pdf[pdf.index != keep]
+            to_delete.extend(d.index.values)
+
+        df.drop(to_delete, inplace=True)
+
+    def _adjust_measurments_with_sample_id(self, df, individuals):
+        to_append = []
+        for individual in individuals.individuals_with_sample_id.values():
+            pdf = df[df.person_id == individual.sample_id]
+            assert len(pdf) == 1
+            adf = pdf.copy()
+            adf.person_id = individual.person_id
+
+            to_append.append(adf)
+            print(adf.person_id)
+
+        return df.append(to_append)
+
+    def load_instrument(self, individuals, filename, dtype=None):
+        assert os.path.isfile(filename)
+        print("processing table: {}".format(filename))
+
+        df = pd.read_csv(filename, low_memory=False, sep=',',
+                         na_values=[' '], dtype=dtype)
+        columns = [c for c in df.columns]
+        columns[0] = 'person_id'
+
+        for index in range(1, len(columns)):
+            parts = columns[index].split('.')
+            if len(parts) == 1:
+                name = parts[0]
+            else:
+                name = '.'.join(parts[1:])
+            columns[index] = name
+
+        df.columns = columns
+        self._clear_duplicate_measurements(df)
+        df = self._adjust_measurments_with_sample_id(df, individuals)
+        return df
+
+    def prepare(self, instruments_directory, individuals):
+        self._create_variable_table()
+        self._create_value_tables()
+
+        persons = self.load_persons_df()
+
+        all_filenames = [
+            os.path.join(instruments_directory, f)
+            for f in os.listdir(instruments_directory)
+            if os.path.isfile(os.path.join(instruments_directory, f))]
+        print(all_filenames)
+        for filename in all_filenames:
+            basename = os.path.basename(filename)
+            instrument_name, ext = os.path.splitext(basename)
+            print(basename)
+            print(instrument_name, ext)
+            if ext != '.csv':
+                continue
+            instrument_df = self.load_instrument(filename, individuals)
+
+            df = instrument_df.join(persons, on='person_id', rsuffix="_person")
+
+            for measure_name in df.columns[1:len(instrument_df.columns)]:
+                mdf = df[['person_id', measure_name,
+                          'family_id', 'person_role']]
+                self._build_variable(instrument_name, measure_name,
+                                     mdf.dropna())
+
+    def build(self, pedindividuals, instruments_directory):
+        pass
