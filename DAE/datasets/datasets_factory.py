@@ -3,6 +3,8 @@ Created on Feb 27, 2017
 
 @author: lubo
 '''
+import copy
+
 from datasets.config import DatasetsConfig
 from datasets.dataset import Dataset
 
@@ -31,7 +33,7 @@ class DatasetsFactory(dict):
         for desc in datasets_description:
             dataset_id = desc['id']
             dataset_description = self[dataset_id].descriptor
-            result.append(dataset_description)
+            result.append(copy.deepcopy(dataset_description))
         return result
 
     def get_description_dataset(self, dataset_id):
@@ -39,4 +41,4 @@ class DatasetsFactory(dict):
         if dataset is None:
             return None
         dataset_description = self[dataset_id].descriptor
-        return dataset_description
+        return copy.deepcopy(dataset_description)
