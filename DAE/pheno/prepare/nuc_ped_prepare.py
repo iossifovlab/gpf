@@ -305,8 +305,8 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
         return df.append(to_append)
 
     def load_instrument(self, individuals, filename, dtype=None):
-        assert os.path.isfile(filename)
         print("processing table: {}".format(filename))
+        assert os.path.isfile(filename)
 
         df = pd.read_csv(filename, low_memory=False, sep=',',
                          na_values=[' '], dtype=dtype)
@@ -326,7 +326,7 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
         df = self._adjust_measurments_with_sample_id(df, individuals)
         return df
 
-    def prepare(self, instruments_directory, individuals):
+    def prepare(self, pedindividuals, instruments_directory):
         self._create_variable_table()
         self._create_value_tables()
 
@@ -344,15 +344,13 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
             print(instrument_name, ext)
             if ext != '.csv':
                 continue
-            instrument_df = self.load_instrument(filename, individuals)
+            instrument_df = self.load_instrument(pedindividuals, filename)
 
-            df = instrument_df.join(persons, on='person_id', rsuffix="_person")
+            df = instrument_df.join(
+                persons, on='person_id', how='right', rsuffix="_person")
 
             for measure_name in df.columns[1:len(instrument_df.columns)]:
                 mdf = df[['person_id', measure_name,
                           'family_id', 'person_role']]
                 self._build_variable(instrument_name, measure_name,
                                      mdf.dropna())
-
-    def build(self, pedindividuals, instruments_directory):
-        pass
