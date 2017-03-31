@@ -122,7 +122,12 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnI
     return 'multi';
   }
 
-  selectPedigree(index: number): void {
+  selectPedigreeClicked(index: number, event): void {
+    event.preventDefault();
+    this.selectPedigree(index);
+  }
+
+  selectPedigree(index): void {
     if (index >= 0 && index < this.pedigrees.length) {
       this.selectedPedigree = this.pedigrees[index];
       this.store.dispatch({

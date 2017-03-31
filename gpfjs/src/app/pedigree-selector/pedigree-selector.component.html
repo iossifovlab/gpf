@@ -25,7 +25,7 @@
           <a
             *ngFor="let pedigree of pedigrees; let i=index"
             class="dropdown-item"
-            (click)="selectPedigree(i)"
+            (click)="selectPedigreeClicked(i, $event)"
             href="#">{{ pedigree.name }}</a>
         </div>
       </div>
