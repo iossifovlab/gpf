@@ -291,8 +291,9 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
         for person_id in to_fix:
             print("fixing measurements for {}".format(person_id))
             pdf = df[df.person_id == person_id]
-            keep = pdf.age.idxmax()
+            keep = pdf.index.max()
             d = pdf[pdf.index != keep]
+            print("to keep: {}; to delete: {}".format(keep, d.index.values))
             to_delete.extend(d.index.values)
 
         df.drop(to_delete, inplace=True)
@@ -301,13 +302,17 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
         to_append = []
         for individual in individuals.individuals_with_sample_id.values():
             pdf = df[df.person_id == individual.sample_id]
+            if len(pdf) == 0:
+                continue
+            print(len(pdf))
             assert len(pdf) == 1
             adf = pdf.copy()
             adf.person_id = individual.person_id
 
             to_append.append(adf)
             print(adf.person_id)
-
+        if len(to_append) == 0:
+            return df
         return df.append(to_append)
 
     def load_instrument(
@@ -324,10 +329,7 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
         for index in range(1, len(columns)):
             parts = columns[index].split('.')
             parts = [p for p in parts if p.strip() != instrument_name.strip()]
-            if len(parts) == 1:
-                name = parts[0]
-            else:
-                name = '.'.join(parts[1:])
+            name = '.'.join(parts)
             columns[index] = name
 
         df.columns = columns
@@ -362,8 +364,14 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
             for measure_name in df.columns[1:len(instrument_df.columns)]:
                 mdf = df[['person_id', measure_name,
                           'family_id', 'person_role']]
+                vdf = mdf.dropna()
+                if len(vdf) == 0:
+                    continue
+                print(measure_name)
+                print(vdf.head())
+                assert len(vdf) > 0
                 self._build_variable(instrument_name, measure_name,
-                                     mdf.dropna())
+                                     vdf)
 
 
 class NucPedPrepareMetaVariables(PhenoConfig, BaseMetaVariables):
