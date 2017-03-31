@@ -171,8 +171,7 @@ class PersonModel(object):
         role_order int NOT NULL,
         gender varchar(1) NULL,
         collection varchar(32) NULL,
-        ssc_present bool NULL,
-        sample_id varchar(32) NULL
+        ssc_present bool NULL
     );
     COMMIT;
     """
