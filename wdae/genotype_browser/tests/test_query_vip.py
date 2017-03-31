@@ -79,7 +79,7 @@ class Test(APITestCase):
         print(res['legend'])
         print(res['count'])
         self.assertEquals(5, len(res['legend']))
-        self.assertEquals(60, int(res['count']))
-        self.assertEquals(60, len(res['rows']))
+        self.assertEquals(62, int(res['count']))
+        self.assertEquals(62, len(res['rows']))
 
         print(res['rows'])

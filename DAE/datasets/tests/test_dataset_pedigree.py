@@ -54,7 +54,7 @@ def test_filter_families_by_pedigree_selector_triplication_vip(vip):
     ]
     family_ids = vip.filter_families_by_pedigree_selector(**kwargs)
     assert family_ids is not None
-    assert len(family_ids) == 1
+    assert len(family_ids) == 2
 
 
 def test_get_family_ids_all_vip(vip):

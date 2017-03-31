@@ -275,12 +275,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             if source == 'legacy':
                 assert pedigree_selector['id'] == 'phenotype'
             else:
-                parts = [p.strip() for p in source.split('.')]
-                assert 3 == len(parts)
-                pheno_db, instrument, measure = parts
-                assert pheno_db == 'phenoDB'
                 assert self.pheno_db is not None
-                measure_id = '{}.{}'.format(instrument, measure)
+                measure_id = source
                 assert self.pheno_db.has_measure(measure_id)
                 self._augment_pedigree_selector(
                     pedigree_selector, measure_id)
