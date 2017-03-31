@@ -1,5 +1,9 @@
-<select class="form-control" required>
-  <option *ngFor="let measure of measures">
+<select class="form-control" [(ngModel)]="selectedMeasure" required>
+  <option *ngFor="let measure of measures" [ngValue]="measure">
     {{ measure.name }}
   </option>
 </select>
+<gpf-continuous-filter
+  [datasetId]=datasetId
+  [measureName]=selectedMeasure?.name>
+</gpf-continuous-filter>

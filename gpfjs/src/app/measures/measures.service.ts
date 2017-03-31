@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Http, RequestOptions, URLSearchParams } from '@angular/http';
+import { Http, RequestOptions, URLSearchParams, Headers } from '@angular/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
-import { ContinuousMeasure } from './measures'
+import { ContinuousMeasure, HistogramData } from './measures'
 
 @Injectable()
 export class MeasuresService {
   private continuousMeasuresUrl = 'measures/type/continuous';
+  private measureHistogramUrl = 'measures/histogram';
 
   constructor(
     private http: Http,
@@ -24,6 +25,16 @@ export class MeasuresService {
       .get(this.continuousMeasuresUrl, requestOptions)
       .map(res => {
         return ContinuousMeasure.fromJsonArray(res.json());
+      });
+  }
+
+  getMeasureHistogram(datasetId: string, measureName: string) {
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers });
+    return this.http
+      .post(this.measureHistogramUrl, { datasetId: datasetId, measure: measureName }, options)
+      .map(res => {
+        return HistogramData.fromJson(res.json());
       });
   }
 }

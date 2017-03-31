@@ -6,11 +6,13 @@
     </gpf-categorical-filter>
   </div>
 </div>
-<div style="float: right">
-  <div *ngFor="let continuousPhenoFilter of continuousPhenoFilters" >
-    <gpf-multi-continuous-filter
-      [name]=continuousPhenoFilter.name
-      [datasetId]=datasetId>
-    </gpf-multi-continuous-filter>
+<div style="float: right; width: 700px">
+  <div>
+    <div *ngFor="let continuousPhenoFilter of continuousPhenoFilters" >
+      <gpf-multi-continuous-filter
+        [name]=continuousPhenoFilter.name
+        [datasetId]=datasetId>
+      </gpf-multi-continuous-filter>
+    </div>
   </div>
 </div>

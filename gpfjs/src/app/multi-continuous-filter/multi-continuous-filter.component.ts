@@ -12,6 +12,7 @@ export class MultiContinuousFilterComponent implements OnInit {
   @Input() datasetId: string;
 
   measures: Array<ContinuousMeasure>;
+  selectedMeasure: ContinuousMeasure;
 
   constructor(
     private measuresService: MeasuresService
