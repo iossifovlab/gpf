@@ -8,27 +8,3 @@
   [rangesCounts]="rangesCounts"
   [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
 </gpf-histogram>
-<div>
-  <div style="margin-left: 100px; width: 100px; max-width: 100px; float: left">
-    <label style="display: block">From:</label>
-    <input
-      required type="number"
-      #inputRangeStart="ngModel"
-      [(ngModel)]="rangeStart"
-      min="{{ histogramData?.min  }}"
-      max="{{ rangeEnd  }}"
-      placeholder="start"
-      style="width: 100px; max-width: 100px;">
-  </div>
-  <div style="margin-right: 100px; width: 100px; max-width: 100px; float: right">
-    <label style="display: block">To:</label>
-    <input
-      required type="number"
-      #inputRangeEnd="ngModel"
-      [(ngModel)]="rangeEnd"
-      min="{{ rangeStart  }}"
-      max="{{ histogramData?.max  }}"
-      placeholder="end"
-      style="width: 100px; max-width: 100px">
-  </div>
-</div>

@@ -6,3 +6,29 @@
     <text y=0 [attr.x]="(rangeStartX + rangeEndX) / 2" dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}</text>
   </g>
 </svg>
+
+<div>
+  <div style="margin-left: 100px; width: 100px; max-width: 100px; float: left">
+    <label style="display: block">From:</label>
+    <input
+      required type="number"
+      #inputRangeStart="ngModel"
+      [(ngModel)]="rangeStart"
+      min="{{ domainMin  }}"
+      max="{{ rangeEnd  }}"
+      placeholder="start"
+      style="width: 100px; max-width: 100px;">
+  </div>
+  <div style="margin-right: 100px; width: 100px; max-width: 100px; float: right">
+    <label style="display: block">To:</label>
+    <input
+      required type="number"
+      #inputRangeEnd="ngModel"
+      [(ngModel)]="rangeEnd"
+      min="{{ rangeStart  }}"
+      max="{{ domainMax  }}"
+      placeholder="end"
+      style="width: 100px; max-width: 100px">
+  </div>
+</div>
+<div style="clear: both"></div>

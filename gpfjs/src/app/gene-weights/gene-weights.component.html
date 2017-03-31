@@ -15,32 +15,6 @@
     [rangesCounts]="rangesCounts"
     [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
   </gpf-histogram>
-  <div>
-    <div style="margin-left: 100px; width: 100px; max-width: 100px; float: left">
-      <label style="display: block">From:</label>
-      <input
-        required type="number"
-        #inputRangeStart="ngModel"
-        [(ngModel)]="rangeStart"
-        min="{{ selectedGeneWeights?.min  }}"
-        max="{{ rangeEnd  }}"
-        placeholder="start"
-        style="width: 100px; max-width: 100px;">
-    </div>
-    <div style="margin-right: 100px; width: 100px; max-width: 100px; float: right">
-      <label style="display: block">To:</label>
-      <input
-        required type="number"
-        #inputRangeEnd="ngModel"
-        [(ngModel)]="rangeEnd"
-        min="{{ rangeStart  }}"
-        max="{{ selectedGeneWeights?.max  }}"
-        placeholder="end"
-        style="width: 100px; max-width: 100px">
-    </div>
-  </div>
-  <div style="clear: both"></div>
-
   <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
     <ul>
       <li *ngFor="let error of errors">

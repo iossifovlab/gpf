@@ -3,6 +3,7 @@ import { CommonModule }        from '@angular/common';
 
 import { HistogramComponent } from './histogram.component';
 import { HistogramRangeSelectorLineComponent } from './histogram-range-selector-line.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -12,6 +13,9 @@ import { HistogramRangeSelectorLineComponent } from './histogram-range-selector-
   exports: [
     HistogramComponent,
   ],
-  imports: [CommonModule]
+  imports: [
+    CommonModule,
+    FormsModule
+  ]
 })
 export class HistogramModule { }
