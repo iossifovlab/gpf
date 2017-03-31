@@ -45,7 +45,7 @@ def config_pheno_db(output):
     config.add_section('categorical')
     config.set('categorical', 'min_individuals', '20')
     config.set('categorical', 'min_rank', '2')
-    config.set('categorical', 'max_rank', '7')
+    config.set('categorical', 'max_rank', '17')
 
     return config
 

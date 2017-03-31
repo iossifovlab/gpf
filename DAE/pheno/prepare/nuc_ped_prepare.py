@@ -310,7 +310,9 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
 
         return df.append(to_append)
 
-    def load_instrument(self, individuals, filename, dtype=None):
+    def load_instrument(
+            self, individuals, instrument_name, filename, dtype=None):
+
         print("processing table: {}".format(filename))
         assert os.path.isfile(filename)
 
@@ -321,6 +323,7 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
 
         for index in range(1, len(columns)):
             parts = columns[index].split('.')
+            parts = [p for p in parts if p.strip() != instrument_name.strip()]
             if len(parts) == 1:
                 name = parts[0]
             else:
@@ -350,7 +353,8 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
             print(instrument_name, ext)
             if ext != '.csv':
                 continue
-            instrument_df = self.load_instrument(pedindividuals, filename)
+            instrument_df = self.load_instrument(
+                pedindividuals, instrument_name, filename)
 
             df = instrument_df.join(
                 persons, on='person_id', how='right', rsuffix="_person")
