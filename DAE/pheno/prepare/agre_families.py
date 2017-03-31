@@ -320,7 +320,7 @@ class PrepareIndividuals(AgreLoader):
         return df
 
     def _build_individuals_dtype(self):
-        dtype = [('personId', 'S16'), ('familyId', 'S16'),
+        dtype = [('personId', 'S16'), ('familyId', 'S32'),
                  ('roleId', 'S8'), ('role', 'S8'),
                  ('roleOrder', int), ]
         return dtype
