@@ -543,7 +543,7 @@ class ValueModel(object):
     CREATE TABLE IF NOT EXISTS {table} (
         person_id varchar(16) NOT NULL,
         variable_id varchar(128) NOT NULL,
-        family_id varchar(16) NOT NULL,
+        family_id varchar(32) NOT NULL,
         person_role varchar(8) NOT NULL,
         value {sql_type} NOT NULL,
         PRIMARY KEY (person_id, variable_id)
