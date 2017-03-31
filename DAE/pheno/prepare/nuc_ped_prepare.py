@@ -304,13 +304,11 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
             pdf = df[df.person_id == individual.sample_id]
             if len(pdf) == 0:
                 continue
-            print(len(pdf))
             assert len(pdf) == 1
             adf = pdf.copy()
             adf.person_id = individual.person_id
 
             to_append.append(adf)
-            print(adf.person_id)
         if len(to_append) == 0:
             return df
         return df.append(to_append)
@@ -367,11 +365,10 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
                 vdf = mdf.dropna()
                 if len(vdf) == 0:
                     continue
-                print(measure_name)
-                print(vdf.head())
                 assert len(vdf) > 0
-                self._build_variable(instrument_name, measure_name,
-                                     vdf)
+                self._build_variable(
+                    instrument_name, measure_name,
+                    vdf)
 
 
 class NucPedPrepareMetaVariables(PhenoConfig, BaseMetaVariables):
