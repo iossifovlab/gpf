@@ -119,7 +119,7 @@ class NucPedPrepareIndividuals(PhenoConfig):
             self.role = None
             self.family_id = None
             self.collection = None
-            self.ssc_present = None
+            self.ssc_present = True
 
             self.key = (self.family, self.person_id)
             assert self.person_id is not None
