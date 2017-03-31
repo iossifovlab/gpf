@@ -256,7 +256,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         genotype_browser = self.descriptor['genotypeBrowser']
         if 'phenoFilters' not in genotype_browser:
             return
-        pheno_filters = genotype_browser['phenoFilters']
+        pheno_filters = genotype_browser.get('phenoFilters', None)
+        if not pheno_filters:
+            return None
         print(pheno_filters)
         for pf in pheno_filters:
             if pf['measure_type'] == 'categorical':
