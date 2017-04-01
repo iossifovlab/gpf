@@ -1,6 +1,9 @@
 <div class="container">
   <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
   <gpf-enrichment-models-block></gpf-enrichment-models-block>
-  <input type="button" value="Enrichment Test" (click)="submitQuery()">
+  
+  <div class="form-block">
+    <input class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
+  </div>
   <gpf-enrichment-table [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
 </div>

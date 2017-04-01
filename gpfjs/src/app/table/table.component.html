@@ -1,4 +1,4 @@
-<div #table style="display: table; border-collapse: collapse;" [style.height]="totalTableHeight + 'px'">
+<div #table style="width: 100%; display: table; border-collapse: collapse;" [style.height]="totalTableHeight + 'px'">
     <div style="display: table-row;" [style.visibility] = "showFloatingHeader() ? 'hidden' : 'visible'">
         <gpf-table-header *ngFor="let column of columnsChildren"
             [columnInfo]="column"

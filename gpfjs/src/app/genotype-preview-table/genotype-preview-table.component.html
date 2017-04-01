@@ -1,7 +1,6 @@
-<div class="gender-card card">
-    <div class="card-header card-title">Genome Preview</div>
-    <div class="card-block" *ngIf="genotypePreviewsArray" style="text-align: center">
-        <p><strong>{{genotypePreviewsArray.total}} </strong></p>
+<div class="genome-preview">
+    <div *ngIf="genotypePreviewsArray">
+        <p class="overview">{{genotypePreviewsArray.total}}</p>
         <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
             <gpf-table-column header="family">
                 <gpf-table-subcolumn header="id" field="familyId"></gpf-table-subcolumn>

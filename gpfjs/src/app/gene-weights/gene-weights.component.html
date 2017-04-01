@@ -1,25 +1,26 @@
-<div style="float: left">
-  <select class="form-control" [(ngModel)]="selectedGeneWeights" required style="width: 300px; position: relative; top: 50px">
-    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
-  </select>
-</div>
-
-<div style="float: right">
-  <gpf-histogram
-    *ngIf="selectedGeneWeights"
-    width="650" height="200"
-    [bins]="selectedGeneWeights.bins"
-    [bars]="selectedGeneWeights.bars"
-    [domainMin]="selectedGeneWeights.min"
-    [domainMax]="selectedGeneWeights.max"
-    [rangesCounts]="rangesCounts"
-    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-  </gpf-histogram>
-  <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
-    <ul>
-      <li *ngFor="let error of errors">
-        {{ error }}
-      </li>
-    </ul>
-  </div>
+<div class="row">
+    <div class="col-sm-3">
+          <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
+		    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
+		  </select>
+    </div>
+    <div class="col-sm-9">
+          <gpf-histogram
+		    *ngIf="selectedGeneWeights"
+		    width="650" height="145"
+		    [bins]="selectedGeneWeights.bins"
+		    [bars]="selectedGeneWeights.bars"
+		    [domainMin]="selectedGeneWeights.min"
+		    [domainMax]="selectedGeneWeights.max"
+		    [rangesCounts]="rangesCounts"
+		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+		  </gpf-histogram>
+		  <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
+		    <ul>
+		      <li *ngFor="let error of errors">
+		        {{ error }}
+		      </li>
+		    </ul>
+		  </div>
+    </div>
 </div>

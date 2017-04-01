@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 @Component({
   selector: 'gpf-enrichment-tool',
   templateUrl: './enrichment-tool.component.html',
+  styleUrls: ['./enrichment-tool.component.css']
 })
 export class EnrichmentToolComponent extends QueryStateCollector {
   enrichmentResults: EnrichmentResults;

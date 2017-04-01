@@ -15,7 +15,7 @@ export class HistogramComponent  {
   @Input() width: number;
   @Input() height: number;
   @Input() marginLeft = 100;
-  @Input() marginTop = 30;
+  @Input() marginTop = 10;
   @ViewChild('histogramContainer') histogramContainer: any;
 
   @Input() domainMin: number;

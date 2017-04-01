@@ -1,5 +1,5 @@
-<div style="style='overflow:hidden'">
-  <div style="width: 300px; float: left">
+<div class="row">
+  <div class="col-sm-3">
     <select class="form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
       <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{collection.desc}}</option>
     </select>
@@ -13,8 +13,7 @@
     </div>
   </div>
 
-
-  <div style="width: 750px; float: right">
+  <div class="col-sm-9">
     <gpf-searchable-select
       (search)="onSearch($event)"
       (selectItem)="onSelect($event)"
@@ -33,14 +32,13 @@
       Count: {{ selectedGeneSet.count }}
       (<a href="{{ getDownloadLink(selectedGeneSet) }}">Download</a>)
     </div>
-  </div>
-  <div style="clear: both;">
+	
+	<div *ngIf="errors?.length > 0" class="alert alert-danger" style="margin-top: 20px" [class.flashing]="flashingAlert">
+	  <ul>
+	    <li *ngFor="let error of errors">
+	      {{ error }}
+	    </li>
+	  </ul>
+	</div>
 </div>
-
-<div *ngIf="errors?.length > 0" class="alert alert-danger" style="margin-top: 20px" [class.flashing]="flashingAlert">
-  <ul>
-    <li *ngFor="let error of errors">
-      {{ error }}
-    </li>
-  </ul>
 </div>

@@ -1,4 +1,4 @@
-<textarea #regionsFilterInput="ngModel" type="text" [(ngModel)]="regionsFilter"  style="width: 100%; margin: 10px">
+<textarea #regionsFilterInput="ngModel" type="text" [(ngModel)]="regionsFilter" class="form-control">
 </textarea>
 <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
   <ul>

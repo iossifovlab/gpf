@@ -1,3 +1,9 @@
+:host /deep/ gpf-table {
+	display: inline-block;
+	width: 100%;
+	margin-bottom: 50px;
+}
+
 :host /deep/ gpf-table-cell {
     height: 80px;
     max-height: 80px;
@@ -5,15 +11,18 @@
     width: 150px;
     max-width: 150px;
     overflow: hidden;
+    padding: 8px;
+    text-align: center;
 }
 
 :host /deep/ gpf-table-header {
     width: 150px;
     height: 100px;
     border: 1px solid #dddddd;
-    padding-top: 8px;
-    padding-bottom: 8px;
-    font-size: 90%;
+    padding: 8px;
+    font-size: 0.9em;
+    background: #eee;
+    font-weight: 500;
 }
 
 .pedigree-icon {
@@ -24,4 +33,15 @@
     width: 15px;
     height: 15px;
     border: 0.1px solid #aaaaaa;
+}
+
+.genome-preview {
+	margin-top: 20px;
+}
+
+.genome-preview .overview {
+	border-top: 1px solid rgba(0,0,0,0.125);
+    padding-top: 20px;
+    font-size: 0.75em;
+    font-weight: 500;
 }

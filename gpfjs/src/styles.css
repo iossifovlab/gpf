@@ -1,5 +1,34 @@
 /* You can add global styles to this file, and also import other style files */
 
+body {
+	font-family: 'Roboto', sans-serif;
+}
+
+#logo {
+	padding: 10px 20px;
+}
+
+#logo h3 {
+   font-size: 20px;
+   display: inline;
+   vertical-align: -3px;
+}
+
+#logo img {
+	display: inline-block;
+	height: 30px;
+	width: auto;
+	margin-right: 10px; 
+}
+
+a {
+	color: #2a6395;
+}
+
+input, button {
+    font-family: 'Roboto', sans-serif;
+}
+
 
 @keyframes example {
     from {background-color: red;}
@@ -19,7 +48,7 @@ label {
 	margin-bottom: 4px;
 }
 .checkbox+.checkbox {
-	margin-top: -4px;
+	margin-top: -2px;
 }
 
 .row-eq-height {
@@ -35,4 +64,77 @@ label {
 
 .card-row {
 	margin-left: -15px;
+}
+
+.form-block {
+    margin-top: 20px;
+    border-radius: 3px;
+}
+
+.form-block-title {
+	font-weight: 500;
+	width: 120px;
+}
+
+.form-block .nav-item {
+	font-size: 0.9em;
+}
+
+
+.form-block .navbar {
+    padding: 10px 20px;	
+}
+
+.form-block .tab-content {
+	padding: 20px;
+	border-top: 1px solid rgba(0,0,0,.125);
+	font-size: 0.9em;
+}
+
+.nav-pills .nav-link.active {
+	background-color: #2a6395;
+}
+
+.btn {
+	cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #2a6395;
+    border-color: #2a6395;
+}
+
+.btn-primary:hover {
+    background-color: #173f62;
+}
+
+.btn-right {
+	float: right;
+}
+
+.form-block .alert {
+    margin-bottom: 0px;
+    margin-top: 20px;	
+}
+
+.form-block .alert ul {
+    margin: 0;
+    padding-left: 1em;
+}
+
+.btn-default {
+	background-color: #eee;
+	border: 1px solid #ddd;
+}
+
+#search-box {
+	border: 1px solid #ccc;
+	border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    padding-left: 10px;
+}
+
+.username-field {
+	font-size: 0.9em;
+	margin-right: 5px;
 }

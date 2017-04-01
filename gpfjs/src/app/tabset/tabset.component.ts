@@ -33,5 +33,9 @@ export class GpfTabsetComponent extends NgbTabset {
       }
     }
   }
+  
+  get activeTab() {
+    return this.getTabById(this.activeId)
+  }
 
 }

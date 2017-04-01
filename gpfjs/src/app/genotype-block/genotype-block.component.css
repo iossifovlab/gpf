@@ -1,4 +1,29 @@
 .genotype-block {
-	padding-top: 20px;
-	padding-bottom: 20px;
+	padding: 20px;
+	border: 1px solid rgba(0,0,0,.125);
+	background-color: #fafafa;
+}
+
+
+:host /deep/ .card-block {
+	flex: none;
+	padding: 0.75em 0 0;
+	
+}
+
+:host /deep/ .card-block .btn-group {
+    margin-bottom: 0.5em;
+}
+
+:host /deep/ .card-header {
+    background-color: transparent;
+    padding: 0 0 0.25em;
+    font-weight: 500;
+    
+}
+
+:host /deep/ .card {
+	border: none;
+	background-color: transparent;
+	font-size: 0.9em;
 }
