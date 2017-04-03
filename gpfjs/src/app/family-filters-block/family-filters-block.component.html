@@ -11,10 +11,10 @@
               <p>IDs</p>
           </template>
       </ngb-tab>
-      <ngb-tab id="gene-sets" title="Advanced">
+      <ngb-tab *ngIf="genotypeBrowserConfig?.hasAdvancedFamilyFilters" id="gene-sets" title="Advanced">
           <template ngbTabContent>
               <gpf-pheno-filters
-                [phenoFilters]="advancedFilters"
+                [phenoFilters]="genotypeBrowserConfig?.phenoFilters"
                 [datasetId]=datasetId>
               </gpf-pheno-filters>
           </template>

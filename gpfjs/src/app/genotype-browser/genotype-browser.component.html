@@ -3,7 +3,7 @@
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
   <gpf-family-filters-block
-    [advancedFilters]="selectedDataset?.genotypeBrowser?.phenoFilters"
+    [genotypeBrowserConfig]="selectedDataset?.genotypeBrowser"
     [datasetId]=selectedDataset?.id>
   </gpf-family-filters-block>
 

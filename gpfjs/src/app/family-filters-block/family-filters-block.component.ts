@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { PhenoFilter } from '../datasets/datasets';
+import { GenotypeBrowser } from '../datasets/datasets';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -7,7 +7,7 @@ import { PhenoFilter } from '../datasets/datasets';
   styleUrls: ['./family-filters-block.component.css']
 })
 export class FamilyFiltersBlockComponent implements OnInit {
-  @Input() advancedFilters: Array<PhenoFilter>;
+  @Input() genotypeBrowserConfig: GenotypeBrowser;
   @Input() datasetId: string;
 
   constructor() { }
