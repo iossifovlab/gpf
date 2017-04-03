@@ -3,7 +3,8 @@
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
   <gpf-family-filters-block
-    [genotypeBrowserConfig]="selectedDataset?.genotypeBrowser"
+    *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
+    [phenoFilters]="selectedDataset?.genotypeBrowser?.phenoFilters"
     [datasetId]=selectedDataset?.id>
   </gpf-family-filters-block>
 
