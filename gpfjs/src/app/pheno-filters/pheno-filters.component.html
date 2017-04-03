@@ -1,18 +1,20 @@
-<div style="float: left; width: 300px">
-  <div *ngFor="let categoricalPhenoFilter of categoricalPhenoFilters" >
-    <gpf-categorical-filter
-      [name]=categoricalPhenoFilter.name
-      [domain]=categoricalPhenoFilter.measureFilter.domain>
-    </gpf-categorical-filter>
+<div class="row">
+  <div class="col-sm-3">
+    <div *ngFor="let categoricalPhenoFilter of categoricalPhenoFilters" class="categorical-filter">
+      <gpf-categorical-filter
+        [name]=categoricalPhenoFilter.name
+        [domain]=categoricalPhenoFilter.measureFilter.domain>
+      </gpf-categorical-filter>
+    </div>
   </div>
-</div>
-<div style="float: right; width: 700px">
-  <div>
-    <div *ngFor="let continuousPhenoFilter of continuousPhenoFilters" >
-      <gpf-multi-continuous-filter
-        [name]=continuousPhenoFilter.name
-        [datasetId]=datasetId>
-      </gpf-multi-continuous-filter>
+  <div class="col-sm-9">
+    <div>
+      <div *ngFor="let continuousPhenoFilter of continuousPhenoFilters" >
+        <gpf-multi-continuous-filter
+          [name]=continuousPhenoFilter.name
+          [datasetId]=datasetId>
+        </gpf-multi-continuous-filter>
+      </div>
     </div>
   </div>
 </div>
