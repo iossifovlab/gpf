@@ -6,6 +6,8 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./family-ids.component.css']
 })
 export class FamilyIdsComponent implements OnInit {
+  flashingAlert = false;
+  errors: string[];
 
   constructor() { }
 
