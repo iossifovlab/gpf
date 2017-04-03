@@ -75,7 +75,8 @@ import { FamilyFiltersBlockComponent } from './family-filters-block/family-filte
 import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';
 import { CategoricalFilterComponent } from './categorical-filter/categorical-filter.component'
-import { MeasuresService } from './measures/measures.service'
+import { MeasuresService } from './measures/measures.service';
+import { FamilyIdsComponent } from './family-ids/family-ids.component'
 
 const appRoutes: Routes = [
   {
@@ -148,7 +149,8 @@ const appRoutes: Routes = [
     FamilyFiltersBlockComponent,
     ContinuousFilterComponent,
     MultiContinuousFilterComponent,
-    CategoricalFilterComponent
+    CategoricalFilterComponent,
+    FamilyIdsComponent
   ],
   imports: [
     BrowserModule,

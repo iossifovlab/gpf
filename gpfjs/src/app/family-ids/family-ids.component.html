@@ -1,0 +1,9 @@
+<textarea type="text" [(ngModel)]="familyIds" class="form-control">
+</textarea>
+<div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
+  <ul>
+    <li *ngFor="let error of errors">
+      {{ error }}
+    </li>
+  </ul>
+</div>
