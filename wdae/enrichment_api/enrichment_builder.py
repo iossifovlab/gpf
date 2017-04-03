@@ -32,7 +32,7 @@ class EnrichmentBuilder(object):
 
     def build_phenotype(self, phenotype):
         results = {}
-        studies = self.dataset.denovo_studies
+        studies = self.dataset.enrichment_denovo_studies
         if phenotype != 'unaffected':
             studies = [
                 st for st in studies
@@ -44,7 +44,7 @@ class EnrichmentBuilder(object):
                 self.in_child(phenotype),
                 effect_type,
                 self.gene_syms,
-                self.dataset.children_stats[phenotype])
+                self.dataset.enrichment_children_stats[phenotype])
 
             results[effect_type] = enrichment_results
 
