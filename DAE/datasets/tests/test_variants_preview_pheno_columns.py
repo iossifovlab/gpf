@@ -79,13 +79,14 @@ def test_get_denovo_variants_vip(vip):
     vs = vip.get_variants_preview(**query)
     v = vs.next()
     pprint(v)
-    assert len(v) == 32
-    nviq, viq, status = v[-3:]
+    assert len(v) == 33
+    nviq, viq, status, diagnossis = v[-4:]
     assert 'Proband IQs.NvIQ' == nviq
     assert 'Proband IQs.vIQ' == viq
-    assert '16p Status.16p' == status
+    assert 'Status.16p' == status
+    assert 'Status.Diagnosis' == diagnossis
 
-    assert len(v) == 32
+    assert len(v) == 33
     families = vip.pheno_db.families
     print(families.keys())
     count = 0

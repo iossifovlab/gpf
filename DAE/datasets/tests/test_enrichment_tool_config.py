@@ -17,11 +17,11 @@ def test_enrichment_children_stats_sd(sd):
     assert children_stats['intelectual disability']['F'] == 85
     assert children_stats['intelectual disability']['M'] == 66
 
-    assert children_stats['autism']['M'] == 3363  # 3367
+    assert children_stats['autism']['M'] == 3367  # 3367
     assert children_stats['autism']['F'] == 596
 
-    assert children_stats['congenital heart disease']['F'] == 458  # 467
-    assert children_stats['congenital heart disease']['M'] == 771  # 762
+    assert children_stats['congenital heart disease']['F'] == 467  # 467
+    assert children_stats['congenital heart disease']['M'] == 762  # 762
 
     assert children_stats['epilepsy']['F'] == 106
     assert children_stats['epilepsy']['M'] == 158
@@ -29,5 +29,5 @@ def test_enrichment_children_stats_sd(sd):
     assert children_stats['schizophrenia']['F'] == 248
     assert children_stats['schizophrenia']['M'] == 716
 
-    assert children_stats['unaffected']['F'] == 1055  # 1192
-    assert children_stats['unaffected']['M'] == 977  # 1111
+    assert children_stats['unaffected']['F'] == 1192  # 1192
+    assert children_stats['unaffected']['M'] == 1111  # 1111
