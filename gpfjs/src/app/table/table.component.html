@@ -23,7 +23,9 @@
     </div>
 </div>
 
-<div style="display: table; border-collapse: collapse; position: fixed; top: 0px;  background-color: white;" [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
+<div style="display: table; border-collapse: collapse; position: fixed; top: 0px;  background-color: white;"
+  [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'"
+  style.width="{{ tableWidth }}px">
     <div style="display: table-row;">
         <gpf-table-header *ngFor="let column of columnsChildren"
             [columnInfo]="column"
@@ -34,7 +36,8 @@
 </div>
 
 
-<div style="position: fixed; bottom: 100px; right: 100px; background-color: white;" [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
+<div style="position: fixed; bottom: 100px; right: 100px; background-color: white;"
+  [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
     <template *ngIf="legend.templateRef" [ngTemplateOutlet]="legend.templateRef">
     </template>
 </div>

@@ -189,9 +189,12 @@ export class GpfTableComponent {
   private drawOutsideVisibleCount = 5;
   private tableTopPosition = 0;
 
+  tableWidth = 0;
+
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event) {
     this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
+    this.tableWidth = this.tableViewChild.nativeElement.getBoundingClientRect().width;
 
     if (this.rowViewChild && this.rowViewChild.nativeElement.getBoundingClientRect().height > 0) {
       this.lastRowHeight = this.rowViewChild.nativeElement.getBoundingClientRect().height;
