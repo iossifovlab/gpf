@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Dataset } from './datasets/datasets';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'gpf-root',
@@ -8,4 +9,8 @@ import { Dataset } from './datasets/datasets';
 })
 export class AppComponent {
   title = 'GPF: Genotypes and Phenotypes in Families';
+
+  get imgPathPrefix() {
+    return environment.imgPathPrefix
+  }
 }
