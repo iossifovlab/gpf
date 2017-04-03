@@ -154,15 +154,16 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             for selector_value in enrichment_selector_domain:
                 seen = set()
                 counter = Counter()
-                for fid, fam in self.enrichment_families.items():
-                    for p in fam.memberInOrder[2:]:
-                        iid = "{}:{}".format(fid, p.personId)
-                        if iid in seen:
-                            continue
-                        if p.atts[selector_id] != selector_value:
-                            continue
-                        counter[p.gender] += 1
-                        seen.add(iid)
+                for st in self.enrichment_denovo_studies:
+                    for fid, fam in st.families.items():
+                        for p in fam.memberInOrder[2:]:
+                            iid = "{}:{}".format(fid, p.personId)
+                            if iid in seen:
+                                continue
+                            if p.atts[selector_id] != selector_value:
+                                continue
+                            counter[p.gender] += 1
+                            seen.add(iid)
                 result[selector_value] = counter
             self._enrichment_children_stats = result
         return self._enrichment_children_stats
@@ -314,7 +315,6 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             result = [
                 p['id'] for p in phenotype_selector.domain
             ]
-            print(result)
             self._phenotypes = result
         return self._phenotypes
 
