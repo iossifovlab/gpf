@@ -1,31 +1,55 @@
 import { Component, OnInit, Input, forwardRef } from '@angular/core';
 import { PhenoFilter } from '../datasets/datasets';
-import { QueryStateCollector } from '../query/query-state-provider'
+import { QueryStateProvider } from '../query/query-state-provider'
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { Store } from '@ngrx/store';
 import {
-  PhenoFiltersState, PHENO_FILTERS_INIT
+  PhenoFilterState, PhenoFiltersState, CategoricalFilterState,
+  ContinuousFilterState,  PHENO_FILTERS_INIT
 } from './pheno-filters';
 import { Observable } from 'rxjs/Observable';
 import { ValidationError } from "class-validator";
+import { validate } from "class-validator";
+import { plainToClass } from "class-transformer";
 
 @Component({
   selector: 'gpf-pheno-filters',
   templateUrl: './pheno-filters.component.html',
   styleUrls: ['./pheno-filters.component.css'],
-  providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => PhenoFiltersComponent) }]
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PhenoFiltersComponent) }]
 })
-export class PhenoFiltersComponent extends QueryStateCollector implements OnInit {
+export class PhenoFiltersComponent extends QueryStateProvider implements OnInit {
   @Input() phenoFilters: Array<PhenoFilter>;
   @Input() datasetId: string;
 
-private PhenoFiltersState: Observable<[PhenoFiltersState, boolean, ValidationError[]]>;
+  private phenoFiltersState: Observable<[PhenoFiltersState, boolean, ValidationError[]]>;
 
   constructor(
     private store: Store<any>
   ) {
     super();
-    this.PhenoFiltersState = toObservableWithValidation(PhenoFiltersState, this.store.select('phenoFilters'));
+
+    this.phenoFiltersState = this.store.select("phenoFilters").switchMap(
+      (phenoFiltersState: PhenoFiltersState) => {
+        let filters = phenoFiltersState.phenoFilters.map(
+          (value) => {
+            if (value.measureType == "categorical") {
+              return plainToClass(CategoricalFilterState, value)
+            }
+            else {
+              return plainToClass(ContinuousFilterState, value)
+            }
+        })
+
+        return Observable.fromPromise(validate(filters)).map(validationState => {
+          return [filters, true, []];
+        })
+        .catch(errors => {
+          return Observable.of([filters, false, errors]);
+        });
+
+      }
+    );
   }
 
   ngOnInit() {
@@ -52,6 +76,19 @@ private PhenoFiltersState: Observable<[PhenoFiltersState, boolean, ValidationErr
     return this.phenoFilters.filter(
       (phenoFilter: PhenoFilter) => phenoFilter.measureType == 'continuous'
     );
+  }
+
+  getState() {
+    return this.phenoFiltersState.take(1).map(
+      ([phenoFiltersState, isValid, validationErrors]) => {
+        if (!isValid) {
+          //this.flashingAlert = true;
+          //setTimeout(()=>{ this.flashingAlert = false }, 1000)
+
+          throw "invalid state"
+        }
+        return { phenoFilters: phenoFiltersState }
+    });
   }
 
 }

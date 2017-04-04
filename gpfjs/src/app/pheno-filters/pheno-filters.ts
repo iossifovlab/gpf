@@ -10,10 +10,10 @@ import { Validate } from "class-validator";
 export class PhenoFilterState {
   measure: string;
   role: string;
-  measureType: string;
 
   constructor(
-    readonly id: string
+    readonly id: string,
+    readonly measureType: string,
   ) {}
 }
 
@@ -23,7 +23,7 @@ export class CategoricalFilterState extends PhenoFilterState {
   constructor(
     id: string
   ) {
-    super(id);
+    super(id, 'categorical');
   }
 };
 
@@ -34,7 +34,7 @@ export class ContinuousFilterState extends PhenoFilterState {
   constructor(
     id: string
   ) {
-    super(id);
+    super(id, 'continuous');
   }
 };
 
