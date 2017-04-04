@@ -262,9 +262,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             return None
         print(pheno_filters)
         for pf in pheno_filters:
-            if pf['measure_type'] == 'categorical':
-                mf = pf['measure_filter']
-                if mf['filter_type'] == 'single':
+            if pf['measureType'] == 'categorical':
+                mf = pf['measureFilter']
+                if mf['filterType'] == 'single':
                     measure_id = mf['measure']
                     measure = self.pheno_db.get_measure(measure_id)
                     mf['domain'] = measure.value_domain.split(',')
