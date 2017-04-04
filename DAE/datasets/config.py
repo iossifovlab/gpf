@@ -170,20 +170,20 @@ class DatasetsConfig(object):
         if 'single' == mf[0]:
             filter_type, role, measure = mf
             measure_filter = {
-                'filter_type': filter_type,
+                'filterType': filter_type,
                 'role': role,
                 'measure': measure
             }
         elif 'multi' == mf[0]:
             filter_type, role = mf
             measure_filter = {
-                'filter_type': filter_type,
+                'filterType': filter_type,
                 'role': role
             }
         return {
             'name': name,
-            'measure_type': measure_type,
-            'measure_filter': measure_filter
+            'measureType': measure_type,
+            'measureFilter': measure_filter
         }
 
     def _get_genotype_browser_pheno_columns(self, section):
