@@ -1,6 +1,6 @@
 {{ name }}:
-<select class="form-control" required>
-  <option *ngFor="let value of domain">
+<select class="form-control" [(ngModel)]="selectedValue" required>
+  <option *ngFor="let value of domain" [ngValue]="value">
     {{value}}
   </option>
 </select>

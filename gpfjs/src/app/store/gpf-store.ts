@@ -17,6 +17,7 @@ import { GeneSetsState, geneSetsReducer } from '../gene-sets/gene-sets-state';
 import { UsersState, usersReducer } from '../users/users-store';
 import { StudyTypesState, studyTypesReducer } from '../study-types/study-types';
 import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-models/enrichment-models-state';
+import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
 
 export interface GpfState {
   datasets: DatasetsState;
@@ -32,7 +33,8 @@ export interface GpfState {
   geneSets: GeneSetsState;
   users: UsersState;
   enrichmentModels: EnrichmentModelsState;
-  studyTypes: StudyTypesState
+  studyTypes: StudyTypesState;
+  phenoFilters: PhenoFiltersState;
 };
 
 const reducers = {
@@ -49,7 +51,8 @@ const reducers = {
   geneSets: geneSetsReducer,
   users: usersReducer,
   studyTypes: studyTypesReducer,
-  enrichmentModels: enrichmentModelsReducer
+  enrichmentModels: enrichmentModelsReducer,
+  phenoFilters: phenoFiltersReducer
 };
 
 const productionReducer: ActionReducer<GpfState> = combineReducers(reducers);
