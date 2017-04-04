@@ -118,7 +118,7 @@ class FamilyPhenoQueryMixin(object):
 
     def _filter_categorical_filter(self, safe=True, **kwargs):
         measure_id = kwargs.get('measure', None)
-        measure_type = kwargs.get('measure_type', None)
+        measure_type = kwargs.get('measureType', None)
 
         if safe:
             assert measure_type == 'categorical'
