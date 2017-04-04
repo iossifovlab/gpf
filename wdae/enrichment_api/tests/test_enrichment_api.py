@@ -41,7 +41,7 @@ class Test(APITestCase):
         data = response.data
 
         self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
-        self.assertEquals(45, data['result'][0]['LGDs']['rec']['count'])
+        self.assertEquals(39, data['result'][0]['LGDs']['rec']['count'])
 
     def test_gene_set_denovo_main_autism_candidates_sd(self):
         data = {
@@ -61,10 +61,10 @@ class Test(APITestCase):
         data = response.data
 
         self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
-        self.assertEquals(45, data['result'][0]['LGDs']['rec']['count'])
+        self.assertEquals(39, data['result'][0]['LGDs']['rec']['count'])
 
         self.assertEquals('unaffected', data['result'][5]['selector'])
-        self.assertEquals(222, data['result'][5]['LGDs']['all']['count'])
+        self.assertEquals(220, data['result'][5]['LGDs']['all']['count'])
 
     def test_gene_set_denovo_lgds_rec_ssc(self):
         data = {
@@ -84,5 +84,5 @@ class Test(APITestCase):
         pprint(response.data)
         data = response.data
 
-        self.assertEquals(388, data['result'][0]['LGDs']['all']['count'])
+        self.assertEquals(386, data['result'][0]['LGDs']['all']['count'])
         self.assertEquals(28, data['result'][0]['LGDs']['rec']['count'])

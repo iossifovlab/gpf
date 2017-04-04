@@ -68,12 +68,12 @@ class Test(APITestCase):
         res = self.res[0]
         self.assertEquals('autism', res['selector'])
 
-        self.assertEquals(39, res['missense']['rec']['count'])
-        self.assertEquals(9, res['missense']['rec']['overlapped'])
+        self.assertEquals(386, res['missense']['rec']['count'])
+        self.assertEquals(20, res['missense']['rec']['overlapped'])
 
     def test_autism_synonymous_rec(self):
         res = self.res[0]
         self.assertEquals('autism', res['selector'])
 
-        self.assertEquals(39, res['synonymous']['rec']['count'])
-        self.assertEquals(9, res['synonymous']['rec']['overlapped'])
+        self.assertEquals(76, res['synonymous']['rec']['count'])
+        self.assertEquals(4, res['synonymous']['rec']['overlapped'])
