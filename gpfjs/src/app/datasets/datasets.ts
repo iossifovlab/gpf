@@ -110,7 +110,7 @@ export class MeasureFilter {
   static fromJson(json: any): MeasureFilter {
     return new MeasureFilter(
       json['role'],
-      json['filter_type'],
+      json['filterType'],
       json['measure'],
       json['domain']
     );
@@ -128,8 +128,8 @@ export class PhenoFilter {
   static fromJson(json: any): PhenoFilter {
     return new PhenoFilter(
       json['name'],
-      json['measure_type'],
-      MeasureFilter.fromJson(json['measure_filter']),
+      json['measureType'],
+      MeasureFilter.fromJson(json['measureFilter']),
     );
   }
 
