@@ -15,8 +15,8 @@ import {
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => MultiContinuousFilterComponent) }]
 })
 export class MultiContinuousFilterComponent extends QueryStateCollector implements OnInit {
-  @Input() name: string;
   @Input() datasetId: string;
+  @Input() continuousFilterConfig: any;
 
   measures: Array<ContinuousMeasure>;
   internalSelectedMeasure: ContinuousMeasure;
@@ -31,7 +31,11 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   ngOnInit() {
     this.store.dispatch({
       'type': PHENO_FILTERS_ADD_CONTINUOUS,
-      'payload': this.name
+      'payload': {
+        'name': this.continuousFilterConfig.name,
+        'role': this.continuousFilterConfig.measureFilter.role,
+        'measure': null
+      }
     });
 
     this.measuresService.getContinuousMeasures(this.datasetId).subscribe(
@@ -45,7 +49,7 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   this.store.dispatch({
     'type': PHENO_FILTERS_CHANGE_MEASURE,
     'payload': {
-      'id': this.name,
+      'id': this.continuousFilterConfig.name,
       'measure': measure.name
     }
   });

@@ -14,8 +14,7 @@ import { ValidationError } from "class-validator";
   styleUrls: ['./categorical-filter.component.css']
 })
 export class CategoricalFilterComponent implements OnInit {
-  @Input() name: string;
-  @Input() domain: Array<string>;
+  @Input() categoricalFilterConfig: any;
 
   constructor(
     private store: Store<any>
@@ -24,7 +23,11 @@ export class CategoricalFilterComponent implements OnInit {
   ngOnInit() {
     this.store.dispatch({
       'type': PHENO_FILTERS_ADD_CATEGORICAL,
-      'payload': this.name
+      'payload': {
+        'name': this.categoricalFilterConfig.name,
+        'role': this.categoricalFilterConfig.measureFilter.role,
+        'measure': this.categoricalFilterConfig.measureFilter.measure
+      }
     });
   }
 
@@ -32,7 +35,7 @@ export class CategoricalFilterComponent implements OnInit {
     this.store.dispatch({
       'type': PHENO_FILTERS_CATEGORICAL_SET_SELECTION,
       'payload': {
-        'id': this.name,
+        'id': this.categoricalFilterConfig.name,
         'selection': [value]
       }
     });

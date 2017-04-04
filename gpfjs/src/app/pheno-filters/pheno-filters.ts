@@ -8,12 +8,11 @@ export const PHENO_FILTERS_CATEGORICAL_SET_SELECTION = 'PHENO_FILTERS_CATEGORICA
 import { Validate } from "class-validator";
 
 export class PhenoFilterState {
-  measure: string;
-  role: string;
-
   constructor(
     readonly id: string,
     readonly measureType: string,
+    readonly role: string,
+    public measure: string,
   ) {}
 }
 
@@ -21,9 +20,11 @@ export class CategoricalFilterState extends PhenoFilterState {
   selection: Array<string>;
 
   constructor(
-    id: string
+    id: string,
+    role: string,
+    measure: string
   ) {
-    super(id, 'categorical');
+    super(id, 'categorical', role, measure);
   }
 };
 
@@ -32,9 +33,11 @@ export class ContinuousFilterState extends PhenoFilterState {
   mmax: number;
 
   constructor(
-    id: string
+    id: string,
+    role: string,
+    measure: string
   ) {
-    super(id, 'continuous');
+    super(id, 'continuous', role, measure);
   }
 };
 
@@ -97,11 +100,21 @@ export function phenoFiltersReducer(
       return Object.assign({}, state,
         { phenoFilters: newPhenoFilters });
     case PHENO_FILTERS_ADD_CONTINUOUS:
-      var newPhenoFilters = [...state.phenoFilters, new ContinuousFilterState(action.payload)]
+      var newPhenoFilters = [...state.phenoFilters,
+        new ContinuousFilterState(
+          action.payload.name,
+          action.payload.role,
+          action.payload.measure
+        )]
       return Object.assign({}, state,
         { phenoFilters: newPhenoFilters });
     case PHENO_FILTERS_ADD_CATEGORICAL:
-      var newPhenoFilters = [...state.phenoFilters, new CategoricalFilterState(action.payload)]
+      var newPhenoFilters = [...state.phenoFilters,
+        new CategoricalFilterState(
+          action.payload.name,
+          action.payload.role,
+          action.payload.measure
+        )]
       return Object.assign({}, state,
         { phenoFilters: newPhenoFilters });
     case PHENO_FILTERS_INIT:
