@@ -3,7 +3,7 @@ export const PHENO_FILTERS_ADD_CONTINUOUS = 'PHENO_FILTERS_ADD_CONTINUOUS';
 export const PHENO_FILTERS_ADD_CATEGORICAL = 'PHENO_FILTERS_ADD_CATEGORICAL';
 export const PHENO_FILTERS_CHANGE_MEASURE = 'PHENO_FILTERS_CHANGE_MEASURE';
 export const PHENO_FILTERS_CONTINUOUS_SET_MIN = 'PHENO_FILTERS_CONTINUOUS_SET_MIN';
-export const PHENO_FILTERS_CONTINUOUS_SET_MAX = 'PHENO_FILTERS_CONTINUOUS_SET_MIN';
+export const PHENO_FILTERS_CONTINUOUS_SET_MAX = 'PHENO_FILTERS_CONTINUOUS_SET_MAX';
 export const PHENO_FILTERS_CATEGORICAL_SET_SELECTION = 'PHENO_FILTERS_CATEGORICAL_SET_SELECTION';
 import { Validate } from "class-validator";
 
@@ -58,6 +58,39 @@ export function phenoFiltersReducer(
           if (currentElement.id == action.payload.id) {
             return Object.assign({}, currentElement,
               { selection: action.payload.selection });
+          }
+          return currentElement;
+      });
+      return Object.assign({}, state,
+        { phenoFilters: newPhenoFilters });
+    case PHENO_FILTERS_CHANGE_MEASURE:
+      var newPhenoFilters = state.phenoFilters.map(
+        (currentElement) => {
+          if (currentElement.id == action.payload.id) {
+            return Object.assign({}, currentElement,
+              { measure: action.payload.measure });
+          }
+          return currentElement;
+      });
+      return Object.assign({}, state,
+        { phenoFilters: newPhenoFilters });
+    case PHENO_FILTERS_CONTINUOUS_SET_MIN:
+      var newPhenoFilters = state.phenoFilters.map(
+        (currentElement) => {
+          if (currentElement.id == action.payload.id) {
+            return Object.assign({}, currentElement,
+              { mmin: action.payload.value });
+          }
+          return currentElement;
+      });
+      return Object.assign({}, state,
+        { phenoFilters: newPhenoFilters });
+    case PHENO_FILTERS_CONTINUOUS_SET_MAX:
+      var newPhenoFilters = state.phenoFilters.map(
+        (currentElement) => {
+          if (currentElement.id == action.payload.id) {
+            return Object.assign({}, currentElement,
+              { mmax: action.payload.value });
           }
           return currentElement;
       });
