@@ -18,6 +18,7 @@ import { UsersState, usersReducer } from '../users/users-store';
 import { StudyTypesState, studyTypesReducer } from '../study-types/study-types';
 import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-models/enrichment-models-state';
 import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
+import { FamilyIdsState, familyIdsReducer} from '../family-ids/family-ids';
 
 export interface GpfState {
   datasets: DatasetsState;
@@ -35,6 +36,7 @@ export interface GpfState {
   enrichmentModels: EnrichmentModelsState;
   studyTypes: StudyTypesState;
   phenoFilters: PhenoFiltersState;
+  familyIds: FamilyIdsState;
 };
 
 const reducers = {
@@ -52,7 +54,8 @@ const reducers = {
   users: usersReducer,
   studyTypes: studyTypesReducer,
   enrichmentModels: enrichmentModelsReducer,
-  phenoFilters: phenoFiltersReducer
+  phenoFilters: phenoFiltersReducer,
+  familyIds: familyIdsReducer
 };
 
 const productionReducer: ActionReducer<GpfState> = combineReducers(reducers);
