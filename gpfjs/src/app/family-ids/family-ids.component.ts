@@ -61,7 +61,14 @@ export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
           throw "invalid state"
         }
 
-        return { familyIds: familyIdsState.familyIds }
+        let result = familyIdsState.familyIds
+          .split(/[,\s]/)
+          .filter(s => s !== '');
+        if (result.length === 0) {
+          return {};
+        }
+
+        return { familyIds: result }
     });
   }
 
