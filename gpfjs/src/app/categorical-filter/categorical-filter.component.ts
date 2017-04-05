@@ -1,12 +1,10 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { Store } from '@ngrx/store';
 import {
-  PhenoFiltersState, PHENO_FILTERS_ADD_CATEGORICAL,
+  PhenoFiltersState, CategoricalFilterState, PHENO_FILTERS_ADD_CATEGORICAL,
   PHENO_FILTERS_CATEGORICAL_SET_SELECTION
 } from '../pheno-filters/pheno-filters';
 import { Observable } from 'rxjs/Observable';
-import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-categorical-filter',
@@ -16,9 +14,14 @@ import { ValidationError } from "class-validator";
 export class CategoricalFilterComponent implements OnInit {
   @Input() categoricalFilterConfig: any;
 
+  private phenoFiltersState: Observable<PhenoFiltersState>;
+  private internalSelectedValue: string;
+
   constructor(
     private store: Store<any>
-  ) { }
+  ) {
+    this.phenoFiltersState = this.store.select('phenoFilters');
+  }
 
   ngOnInit() {
     this.store.dispatch({
@@ -29,6 +32,22 @@ export class CategoricalFilterComponent implements OnInit {
         'measure': this.categoricalFilterConfig.measureFilter.measure
       }
     });
+
+    this.phenoFiltersState.subscribe(
+      (filtersState) => {
+        for (let filter of filtersState.phenoFilters) {
+          let categoricalFilter = filter as CategoricalFilterState;
+          if (filter.id == this.categoricalFilterConfig.name) {
+            if (!categoricalFilter.selection || categoricalFilter.selection.length == 0) {
+              this.internalSelectedValue = null;
+            }
+            else {
+              this.internalSelectedValue = categoricalFilter.selection[0];
+            }
+          }
+        }
+      }
+    );
   }
 
   set selectedValue(value) {
@@ -42,7 +61,17 @@ export class CategoricalFilterComponent implements OnInit {
   }
 
   get selectedValue(): string {
-    return "";
+    return this.internalSelectedValue;
+  }
+
+  clear() {
+    this.store.dispatch({
+      'type': PHENO_FILTERS_CATEGORICAL_SET_SELECTION,
+      'payload': {
+        'id': this.categoricalFilterConfig.name,
+        'selection': []
+      }
+    });
   }
 
 }

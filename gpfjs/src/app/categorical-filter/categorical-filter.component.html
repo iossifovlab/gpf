@@ -1,6 +1,13 @@
 {{ categoricalFilterConfig.name }}:
-<select class="form-control" [(ngModel)]="selectedValue" required>
-  <option *ngFor="let value of categoricalFilterConfig.measureFilter.domain" [ngValue]="value">
-    {{value}}
-  </option>
-</select>
+<div class="input-group">
+  <select class="form-control" [(ngModel)]="selectedValue" required>
+    <option *ngFor="let value of categoricalFilterConfig.measureFilter.domain" [ngValue]="value">
+      {{value}}
+    </option>
+  </select>
+  <span class="input-group-btn">
+    <button class="btn" (click)="clear()">
+      &times;
+    </button>
+  </span>
+</div>

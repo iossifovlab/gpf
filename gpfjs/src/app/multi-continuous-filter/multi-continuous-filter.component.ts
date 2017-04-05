@@ -7,6 +7,7 @@ import {
   PhenoFiltersState, PHENO_FILTERS_ADD_CONTINUOUS,
   PHENO_FILTERS_CHANGE_MEASURE
 } from '../pheno-filters/pheno-filters';
+import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'gpf-multi-continuous-filter',
@@ -21,11 +22,14 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   measures: Array<ContinuousMeasure>;
   internalSelectedMeasure: ContinuousMeasure;
 
+  private phenoFiltersState: Observable<PhenoFiltersState>;
+
   constructor(
     private store: Store<any>,
     private measuresService: MeasuresService
   ) {
     super();
+    this.phenoFiltersState = this.store.select('phenoFilters');
   }
 
   ngOnInit() {
@@ -43,21 +47,55 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
         this.measures = measures;
       }
     )
+
+
+    this.phenoFiltersState.subscribe(
+      (filtersState) => {
+        for (let filter of filtersState.phenoFilters) {
+          if (filter.id == this.continuousFilterConfig.name) {
+            if (!filter.measure) {
+              this.internalSelectedMeasure = null;
+              break;
+            }
+
+            if (this.measures) {
+              for (let measure of this.measures) {
+                if (measure.name == filter.measure) {
+                  this.internalSelectedMeasure = measure;
+                  break;
+                }
+              }
+            }
+            
+            break;
+          }
+        }
+      }
+    );
   }
 
   set selectedMeasure(measure) {
-  this.store.dispatch({
-    'type': PHENO_FILTERS_CHANGE_MEASURE,
-    'payload': {
-      'id': this.continuousFilterConfig.name,
-      'measure': measure.name
-    }
-  });
-  this.internalSelectedMeasure = measure;
-}
+    this.store.dispatch({
+      'type': PHENO_FILTERS_CHANGE_MEASURE,
+      'payload': {
+        'id': this.continuousFilterConfig.name,
+        'measure': measure.name
+      }
+    });
+  }
 
   get selectedMeasure(): ContinuousMeasure {
     return this.internalSelectedMeasure;
+  }
+
+  clear() {
+    this.store.dispatch({
+      'type': PHENO_FILTERS_CHANGE_MEASURE,
+      'payload': {
+        'id': this.continuousFilterConfig.name,
+        'measure': null
+      }
+    });
   }
 
 }
