@@ -1,3 +1,4 @@
+{{ continuousFilterConfig?.name }}:
 <select class="form-control" [(ngModel)]="selectedMeasure" required>
   <option *ngFor="let measure of measures" [ngValue]="measure">
     {{ measure.name }}
