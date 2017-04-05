@@ -22,7 +22,7 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
   @Input() phenoFilters: Array<PhenoFilter>;
   @Input() datasetId: string;
 
-  private phenoFiltersState: Observable<[PhenoFiltersState, boolean, ValidationError[]]>;
+  private phenoFiltersState: Observable<[Array<PhenoFilterState>, boolean, ValidationError[]]>;
 
   constructor(
     private store: Store<any>
@@ -87,7 +87,13 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
 
           throw "invalid state"
         }
-        return { phenoFilters: phenoFiltersState }
+        let phenoFilters = phenoFiltersState.filter(
+          (filter) => {
+            return !filter.isEmpty();
+          }
+        );
+
+        return { phenoFilters: phenoFilters }
     });
   }
 

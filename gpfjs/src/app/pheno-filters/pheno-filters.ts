@@ -14,6 +14,11 @@ export class PhenoFilterState {
     readonly role: string,
     public measure: string,
   ) {}
+
+  isEmpty() {
+    return this.measure == null
+           || this.measure.length == 0;
+  }
 }
 
 export class CategoricalFilterState extends PhenoFilterState {
@@ -25,6 +30,11 @@ export class CategoricalFilterState extends PhenoFilterState {
     measure: string
   ) {
     super(id, 'categorical', role, measure);
+  }
+
+  isEmpty() {
+    return this.selection.length == 0
+           || super.isEmpty();
   }
 };
 
