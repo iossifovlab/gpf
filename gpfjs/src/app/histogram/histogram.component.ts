@@ -7,10 +7,11 @@ import * as d3 from 'd3';
   templateUrl: './histogram.component.html'
 })
 export class HistogramComponent  {
+  private internalRangeStart: number;
+  private internalRangeEnd: number;
+
   @Output() rangeStartChange = new EventEmitter();
-  @Input() rangeStart: number;
   @Output() rangeEndChange = new EventEmitter();
-  @Input() rangeEnd: number;
 
   @Input() width: number;
   @Input() height: number;
@@ -34,20 +35,12 @@ export class HistogramComponent  {
   private barWidth: number;
 
   private svg: any;
+
   ngOnChanges(changes: SimpleChanges) {
     if ("domainMin" in changes || "domainMax" in changes || "bins" in changes || "bars" in changes) {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
-    }
-
-    if ("rangeStart" in changes || "rangeEnd" in changes) {
-      this.estimateRangeTexts();
-
-      this.svg.selectAll("rect").style("fill", (d, index, objects) => {
-        return objects[index].x.baseVal.value < this.rangeStartX
-            || objects[index].x.baseVal.value > this.rangeEndX
-             ? "lightsteelblue": "steelblue"})
     }
 
     if ("rangesCounts" in changes ) {
@@ -57,6 +50,18 @@ export class HistogramComponent  {
         this.afterRangeText  = this.formatEstimateText(this.rangesCounts[2], false);
       }
     }
+  }
+
+  onRangeChange() {
+    if (!this.rangeStart || !this.rangeEnd || !this.xScale) {
+      return;
+    }
+
+    this.estimateRangeTexts();
+    this.svg.selectAll("rect").style("fill", (d, index, objects) => {
+      return objects[index].x.baseVal.value < this.rangeStartX
+          || objects[index].x.baseVal.value > this.rangeEndX
+           ? "lightsteelblue": "steelblue"})
   }
 
   formatEstimateText(count: number, estimate: boolean = true) {
@@ -120,6 +125,8 @@ export class HistogramComponent  {
       .attr("y", function(d: any) { return y(d.bar); })
       .attr("height", function(d: any) { return height - y(d.bar); });
     this.svg = svg;
+
+    this.onRangeChange();
   }
 
   get rangeStartX() {
@@ -128,7 +135,6 @@ export class HistogramComponent  {
 
   set rangeStartX(x: number) {
     this.rangeStart = this.xScale.invert(x);
-    this.rangeStartChange.emit(this.rangeStart);
   }
 
   get rangeEndX() {
@@ -137,7 +143,6 @@ export class HistogramComponent  {
 
   set rangeEndX(x: number) {
     this.rangeEnd = this.xScale.invert(x);
-    this.rangeEndChange.emit(this.rangeEnd);
   }
 
   get minX() {
@@ -146,6 +151,28 @@ export class HistogramComponent  {
 
   get maxX() {
     return this.xScale(this.domainMax);
+  }
+
+  @Input()
+  set rangeStart(rangeStart) {
+    this.internalRangeStart = rangeStart;
+    this.onRangeChange();
+    this.rangeStartChange.emit(this.internalRangeStart);
+  }
+
+  get rangeStart() {
+    return this.internalRangeStart;
+  }
+
+  @Input()
+  set rangeEnd(rangeEnd) {
+    this.internalRangeEnd = rangeEnd;
+    this.onRangeChange();
+    this.rangeEndChange.emit(this.internalRangeEnd);
+  }
+
+  get rangeEnd() {
+    return this.internalRangeEnd;
   }
 
 }
