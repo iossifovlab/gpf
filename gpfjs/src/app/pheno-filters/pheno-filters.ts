@@ -21,7 +21,7 @@ export class PhenoFilterState {
 
   isEmpty() {
     return this.measure == null
-           || this.measure.length == 0;
+        || this.measure.length == 0;
   }
 }
 
@@ -38,7 +38,7 @@ export class CategoricalFilterState extends PhenoFilterState {
 
   isEmpty() {
     return this.selection.length == 0
-           || super.isEmpty();
+        || super.isEmpty();
   }
 };
 
@@ -111,7 +111,9 @@ export function phenoFiltersReducer(
               {
                 measure: action.payload.measure,
                 domainMin: action.payload.domainMin,
-                domainMax: action.payload.domainMax
+                domainMax: action.payload.domainMax,
+                mmin: action.payload.domainMin,
+                mmax: action.payload.domainMax
               });
           }
           return currentElement;
