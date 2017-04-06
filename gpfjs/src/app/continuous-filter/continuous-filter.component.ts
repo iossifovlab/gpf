@@ -8,6 +8,8 @@ import {
 } from '../pheno-filters/pheno-filters';
 import { StateRestoreService } from '../store/state-restore.service'
 import { Observable } from 'rxjs/Observable';
+import { Subject }           from 'rxjs/Subject';
+import { Partitions } from '../gene-weights/gene-weights';
 
 @Component({
   selector: 'gpf-continuous-filter',
@@ -15,6 +17,9 @@ import { Observable } from 'rxjs/Observable';
   styleUrls: ['./continuous-filter.component.css']
 })
 export class ContinuousFilterComponent implements OnInit {
+  private rangeChanges = new Subject<[string, string, number, number]>();
+  private partitions: Observable<Partitions>;
+
   @Input() filterId: string;
   @Input() datasetId: string;
   @Input() measureName: string;
@@ -23,7 +28,7 @@ export class ContinuousFilterComponent implements OnInit {
   internalRangeStart: number;
   internalRangeEnd: number;
 
-  rangesCounts = [0, 0, 0];
+  rangesCounts: Array<number>;
 
   private phenoFiltersState: Observable<PhenoFiltersState>;
 
@@ -45,10 +50,34 @@ export class ContinuousFilterComponent implements OnInit {
           if (filter.id == this.filterId) {
             this.internalRangeStart = categoricalFilter.mmin;
             this.internalRangeEnd = categoricalFilter.mmax;
+
+            this.rangeChanges.next([
+              this.datasetId,
+              this.measureName,
+              this.internalRangeStart,
+              this.internalRangeEnd
+            ]);
           }
         }
       }
     );
+
+    this.partitions = this.rangeChanges
+      .debounceTime(100)
+      .distinctUntilChanged()
+      .switchMap(([datasetId, measureName, internalRangeStart, internalRangeEnd]) => {
+        return this.measuresService
+          .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd);
+      })
+      .catch(error => {
+        console.log(error);
+        return null;
+      });
+
+    this.partitions.subscribe(
+      (partitions) => {
+        this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
+    });
   }
 
   restoreContinuousFilter(state) {

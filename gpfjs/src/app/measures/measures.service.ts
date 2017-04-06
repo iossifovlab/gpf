@@ -3,11 +3,13 @@ import { Http, RequestOptions, URLSearchParams, Headers } from '@angular/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
 import { ContinuousMeasure, HistogramData } from './measures'
+import { Partitions } from '../gene-weights/gene-weights';
 
 @Injectable()
 export class MeasuresService {
   private continuousMeasuresUrl = 'measures/type/continuous';
   private measureHistogramUrl = 'measures/histogram';
+  private measurePartitionsUrl = 'measures/partitions';
 
   constructor(
     private http: Http,
@@ -35,6 +37,21 @@ export class MeasuresService {
       .post(this.measureHistogramUrl, { datasetId: datasetId, measure: measureName }, options)
       .map(res => {
         return HistogramData.fromJson(res.json());
+      });
+  }
+
+  getMeasurePartitions(datasetId: string, measureName: string, rangeStart: number, rangeEnd: number) {
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers });
+    return this.http
+      .post(this.measurePartitionsUrl, {
+        datasetId: datasetId,
+        measure: measureName,
+        min: rangeStart,
+        max: rangeEnd
+      }, options)
+      .map(res => {
+        return Partitions.fromJson(res.json());
       });
   }
 }
