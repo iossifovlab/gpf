@@ -56,6 +56,10 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
           }
         );
 
+        if (validationObservables.length == 0) {
+          return Observable.of([[], true, []]);
+        }
+
         return Observable.combineLatest(validationObservables).map(validationState => {
           return [filteredPhenoFilters, true, []];
         })
@@ -74,6 +78,7 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
 
     this.phenoFiltersState.subscribe(
       ([phenoFiltersState, isValid, validationErrors]) => {
+        console.log("errors", validationErrors)
         this.errors = validationErrorsToStringArray(validationErrors);
     });
   }
