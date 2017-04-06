@@ -5,9 +5,11 @@ import { QueryStateCollector } from '../query/query-state-provider'
 import { Store } from '@ngrx/store';
 import {
   PhenoFiltersState, PHENO_FILTERS_ADD_CONTINUOUS,
-  PHENO_FILTERS_CHANGE_MEASURE
+  PHENO_FILTERS_CHANGE_MEASURE, PHENO_FILTERS_CONTINUOUS_SET_MIN,
+  PHENO_FILTERS_CONTINUOUS_SET_MAX
 } from '../pheno-filters/pheno-filters';
 import { Observable } from 'rxjs/Observable';
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-multi-continuous-filter',
@@ -26,7 +28,8 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
 
   constructor(
     private store: Store<any>,
-    private measuresService: MeasuresService
+    private measuresService: MeasuresService,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.phenoFiltersState = this.store.select('phenoFilters');
@@ -45,6 +48,14 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
     this.measuresService.getContinuousMeasures(this.datasetId).subscribe(
       (measures) => {
         this.measures = measures;
+
+        this.stateRestoreService.state.subscribe(
+          (state) => {
+            if (state['phenoFilters']) {
+              this.restoreContinuousFilter(state['phenoFilters']);
+            }
+          }
+        )
       }
     )
 
@@ -66,12 +77,27 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
                 }
               }
             }
-            
+
             break;
           }
         }
       }
     );
+  }
+
+  restoreContinuousFilter(state) {
+    for (let filter of state) {
+      if (filter.id == this.continuousFilterConfig.name) {
+        this.store.dispatch({
+          'type': PHENO_FILTERS_CHANGE_MEASURE,
+          'payload': {
+            'id': this.continuousFilterConfig.name,
+            'measure': filter.measure
+          }
+        });
+        break;
+      }
+    }
   }
 
   set selectedMeasure(measure) {

@@ -3,9 +3,12 @@ import { MeasuresService } from '../measures/measures.service'
 import { HistogramData } from '../measures/measures'
 import { Store } from '@ngrx/store';
 import {
-  PhenoFiltersState, PHENO_FILTERS_ADD_CATEGORICAL,
+  ContinuousFilterState, PhenoFiltersState, PHENO_FILTERS_ADD_CATEGORICAL,
   PHENO_FILTERS_CONTINUOUS_SET_MIN, PHENO_FILTERS_CONTINUOUS_SET_MAX
 } from '../pheno-filters/pheno-filters';
+import { StateRestoreService } from '../store/state-restore.service'
+import { Observable } from 'rxjs/Observable';
+
 @Component({
   selector: 'gpf-continuous-filter',
   templateUrl: './continuous-filter.component.html',
@@ -22,12 +25,54 @@ export class ContinuousFilterComponent implements OnInit {
 
   rangesCounts = [0, 0, 0];
 
+  private phenoFiltersState: Observable<PhenoFiltersState>;
+
   constructor(
     private measuresService: MeasuresService,
-    private store: Store<any>
-  ) { }
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
+  ) {
+    this.phenoFiltersState = this.store.select('phenoFilters');
+  }
 
   ngOnInit() {
+
+
+    this.phenoFiltersState.subscribe(
+      (filtersState) => {
+        for (let filter of filtersState.phenoFilters) {
+          let categoricalFilter = filter as ContinuousFilterState;
+          if (filter.id == this.filterId) {
+            this.internalRangeStart = categoricalFilter.mmin;
+            this.internalRangeEnd = categoricalFilter.mmax;
+          }
+        }
+      }
+    );
+  }
+
+  restoreContinuousFilter(state) {
+    for (let filter of state) {
+      if (filter.id == this.filterId) {
+        this.store.dispatch({
+          'type': PHENO_FILTERS_CONTINUOUS_SET_MIN,
+          'payload': {
+            'id': this.filterId,
+            'value': filter.mmin
+          }
+        });
+
+        this.store.dispatch({
+          'type': PHENO_FILTERS_CONTINUOUS_SET_MAX,
+          'payload': {
+            'id': this.filterId,
+            'value': filter.mmax
+          }
+        });
+
+        break;
+      }
+    }
   }
 
   ngOnChanges() {
@@ -37,6 +82,14 @@ export class ContinuousFilterComponent implements OnInit {
           this.histogramData = histogramData;
           this.rangeStart = histogramData.min;
           this.rangeEnd = histogramData.max;
+
+          this.stateRestoreService.state.subscribe(
+            (state) => {
+              if (state['phenoFilters']) {
+                this.restoreContinuousFilter(state['phenoFilters']);
+              }
+            }
+          )
         }
       )
     }
@@ -50,7 +103,6 @@ export class ContinuousFilterComponent implements OnInit {
         'value': value
       }
     });
-    this.internalRangeStart = value;
   }
 
   get rangeStart(): number {
@@ -65,7 +117,6 @@ export class ContinuousFilterComponent implements OnInit {
         'value': value
       }
     });
-    this.internalRangeEnd = value;
   }
 
   get rangeEnd(): number {

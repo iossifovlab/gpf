@@ -62,7 +62,6 @@ export class CategoricalFilterComponent implements OnInit {
 
   restoreCategoricalFilter(state) {
     for (let filter of state) {
-      console.log("categorical rstore", state);
       if (filter.id == this.categoricalFilterConfig.name) {
         this.store.dispatch({
           'type': PHENO_FILTERS_CATEGORICAL_SET_SELECTION,
@@ -71,7 +70,6 @@ export class CategoricalFilterComponent implements OnInit {
             'selection': filter.selection
           }
         });
-        console.log("categorical rstore dipatch", filter);
         break;
       }
     }
