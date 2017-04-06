@@ -98,7 +98,7 @@ export class ContinuousFilterComponent implements OnInit {
 
   restoreContinuousFilter(state) {
     for (let filter of state) {
-      if (filter.id == this.filterId) {
+      if (filter.id == this.filterId && filter.measure == this.measureName) {
         this.store.dispatch({
           'type': PHENO_FILTERS_CONTINUOUS_SET_MIN,
           'payload': {
