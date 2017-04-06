@@ -34,6 +34,9 @@ export class HistogramComponent  {
   private barsTotalSum: number;
   private barWidth: number;
 
+  private lastValidStart = 0;
+  private lastValidEnd = 0;
+
   private svg: any;
 
   ngOnChanges(changes: SimpleChanges) {
@@ -130,7 +133,16 @@ export class HistogramComponent  {
   }
 
   get rangeStartX() {
-    return this.xScale(this.rangeStart);
+    let rangeStart = this.rangeStart;
+    if (rangeStart > this.rangeEnd
+        || rangeStart > this.domainMax
+        || rangeStart < this.domainMin ) {
+      rangeStart = this.lastValidStart;
+    }
+    else {
+      this.lastValidStart = rangeStart;
+    }
+    return this.xScale(rangeStart);
   }
 
   set rangeStartX(x: number) {
@@ -138,7 +150,16 @@ export class HistogramComponent  {
   }
 
   get rangeEndX() {
-    return this.xScale(this.rangeEnd);
+    let rangeEnd = this.rangeEnd;
+    if (rangeEnd > this.domainMax
+        || rangeEnd < this.rangeStart
+        || rangeEnd < this.domainMin ) {
+      rangeEnd = this.lastValidEnd;
+    }
+    else {
+      this.lastValidEnd = rangeEnd;
+    }
+    return this.xScale(rangeEnd);
   }
 
   set rangeEndX(x: number) {
