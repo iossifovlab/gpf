@@ -1,6 +1,8 @@
 <div class="genome-preview">
     <div *ngIf="genotypePreviewsArray">
-        <p class="overview">{{genotypePreviewsArray.total}}</p>
+        <p class="overview">
+          {{genotypePreviewsArray.total}} variants selected ({{ genotypePreviewsArray.genotypePreviews.length }} shown)
+        </p>
         <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
             <gpf-table-column header="family">
                 <gpf-table-subcolumn header="id" field="familyId"></gpf-table-subcolumn>
