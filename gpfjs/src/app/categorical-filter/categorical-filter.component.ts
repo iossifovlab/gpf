@@ -5,6 +5,7 @@ import {
   PHENO_FILTERS_CATEGORICAL_SET_SELECTION
 } from '../pheno-filters/pheno-filters';
 import { Observable } from 'rxjs/Observable';
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-categorical-filter',
@@ -18,7 +19,8 @@ export class CategoricalFilterComponent implements OnInit {
   private internalSelectedValue: string;
 
   constructor(
-    private store: Store<any>
+    private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     this.phenoFiltersState = this.store.select('phenoFilters');
   }
@@ -48,6 +50,31 @@ export class CategoricalFilterComponent implements OnInit {
         }
       }
     );
+
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['phenoFilters']) {
+          this.restoreCategoricalFilter(state['phenoFilters']);
+        }
+      }
+    )
+  }
+
+  restoreCategoricalFilter(state) {
+    for (let filter of state) {
+      console.log("categorical rstore", state);
+      if (filter.id == this.categoricalFilterConfig.name) {
+        this.store.dispatch({
+          'type': PHENO_FILTERS_CATEGORICAL_SET_SELECTION,
+          'payload': {
+            'id': this.categoricalFilterConfig.name,
+            'selection': filter.selection
+          }
+        });
+        console.log("categorical rstore dipatch", filter);
+        break;
+      }
+    }
   }
 
   set selectedValue(value) {

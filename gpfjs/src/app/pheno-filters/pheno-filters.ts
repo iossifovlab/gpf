@@ -22,7 +22,7 @@ export class PhenoFilterState {
 }
 
 export class CategoricalFilterState extends PhenoFilterState {
-  selection: Array<string>;
+  selection = [];
 
   constructor(
     id: string,
