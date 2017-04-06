@@ -212,6 +212,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         self.load_families()
         self.load_pedigree_selectors()
         self.load_pheno_columns()
+        self.load_pheno_filters()
 
     def load_pheno_db(self):
         pheno_db = None
@@ -248,6 +249,22 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 fvalues = values[values.family_id == fid]
                 if len(fvalues) > 0:
                     fam.atts[label] = fvalues[source].values[0]
+
+    def load_pheno_filters(self):
+        if self.pheno_db is None:
+            return
+        genotype_browser = self.descriptor['genotypeBrowser']
+        if 'phenoFilters' not in genotype_browser:
+            return
+        pheno_filters = genotype_browser['phenoFilters']
+        print(pheno_filters)
+        for pf in pheno_filters:
+            if pf['measure_type'] == 'categorical':
+                mf = pf['measure_filter']
+                if mf['filter_type'] == 'single':
+                    measure_id = mf['measure']
+                    measure = self.pheno_db.get_measure(measure_id)
+                    mf['domain'] = measure.value_domain.split(',')
 
     def load_pedigree_selectors(self):
         pedigree_selectors = self.descriptor['pedigreeSelectors']

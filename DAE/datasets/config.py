@@ -207,6 +207,7 @@ class DatasetsConfig(object):
             section, '{}.{}'.format(prefix, 'slots'))
         column = {}
         column['name'] = name
+
         column_slots = []
         for slot in slots:
             role, source, label = slot.split(':')

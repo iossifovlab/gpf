@@ -15,6 +15,7 @@ from common.query_base import GeneSymsMixin
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from users.authentication import SessionAuthenticationWithoutCSRF
 
+
 class EnrichmentModelsMixin(object):
     BACKGROUND_MODELS = [
         {
