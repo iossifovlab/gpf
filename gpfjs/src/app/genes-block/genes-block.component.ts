@@ -1,5 +1,4 @@
 import { Component, Input, forwardRef, ViewChild } from '@angular/core';
-import { Store } from '@ngrx/store';
 import { QueryStateCollector } from '../query/query-state-provider'
 import { StateRestoreService } from '../store/state-restore.service'
 
@@ -14,7 +13,6 @@ export class GenesBlockComponent extends QueryStateCollector {
   @ViewChild('tabset') ngbTabset;
 
   constructor(
-    private store: Store<any>,
     private stateRestoreService: StateRestoreService
   ) {
     super();

@@ -7,7 +7,7 @@ import {
 } from './family-ids';
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
-
+import { StateRestoreService } from '../store/state-restore.service'
 
 @Component({
   selector: 'gpf-family-ids',
@@ -23,6 +23,7 @@ export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
 
   constructor(
     private store: Store<any>,
+    private stateRestoreService: StateRestoreService
   ) {
     super();
     this.familyIdsState = toObservableWithValidation(FamilyIdsState ,this.store.select('familyIds'));
@@ -39,6 +40,17 @@ export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
         this.familyIdsInternal = familyIdsState.familyIds;
       }
     );
+
+    this.stateRestoreService.state.subscribe(
+      (state) => {
+        if (state['familyIds']) {
+          this.store.dispatch({
+            'type': FAMILY_IDS_CHANGE,
+            'payload': state['familyIds'].join("\n")
+          });
+        }
+      }
+    )
   }
 
   set familyIds(regionsFilter: string) {

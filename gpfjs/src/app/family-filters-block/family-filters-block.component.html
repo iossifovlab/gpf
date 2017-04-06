@@ -4,14 +4,14 @@
       <div class="gpf-tabset-left">
         Families
       </div>
-      <ngb-tab id="all-genes" title="All">
+      <ngb-tab id="all-families" title="All">
       </ngb-tab>
-      <ngb-tab id="gene-symbols" title="Family Ids">
+      <ngb-tab id="family-ids" title="Family Ids">
           <template ngbTabContent>
               <gpf-family-ids></gpf-family-ids>
           </template>
       </ngb-tab>
-      <ngb-tab *ngIf="phenoFilters" id="gene-sets" title="Advanced">
+      <ngb-tab *ngIf="phenoFilters" id="pheno-ffilters" title="Advanced">
           <template ngbTabContent>
               <gpf-pheno-filters
                 [phenoFilters]="phenoFilters"
