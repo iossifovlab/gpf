@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, forwardRef } from '@angular/core';
+import { Component, OnInit, Input, forwardRef, ViewChild } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service'
 import { ContinuousMeasure } from '../measures/measures'
 import { QueryStateCollector } from '../query/query-state-provider'
@@ -20,9 +20,13 @@ import { StateRestoreService } from '../store/state-restore.service'
 export class MultiContinuousFilterComponent extends QueryStateCollector implements OnInit {
   @Input() datasetId: string;
   @Input() continuousFilterConfig: any;
+  @ViewChild("inputGroup") inputGroupSpan: any;
+  @ViewChild("searchBox") searchBox: any;
 
   measures: Array<ContinuousMeasure>;
+  filteredMeasures: Array<ContinuousMeasure>;
   internalSelectedMeasure: ContinuousMeasure;
+  searchString: string;
 
   private phenoFiltersState: Observable<PhenoFiltersState>;
 
@@ -48,6 +52,7 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
     this.measuresService.getContinuousMeasures(this.datasetId).subscribe(
       (measures) => {
         this.measures = measures;
+        this.searchBoxChange('');
 
         this.stateRestoreService.state.subscribe(
           (state) => {
@@ -107,9 +112,9 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
       'type': PHENO_FILTERS_CHANGE_CONTINUOUS_MEASURE,
       'payload': {
         'id': this.continuousFilterConfig.name,
-        'measure': measure.name,
-        'domainMin': measure.min,
-        'domainMax': measure.max
+        'measure': measure  ? measure.name : null,
+        'domainMin': measure ? measure.min : 0,
+        'domainMax': measure ? measure.max : 0
       }
     });
   }
@@ -119,15 +124,25 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   }
 
   clear() {
-    this.store.dispatch({
-      'type': PHENO_FILTERS_CHANGE_CONTINUOUS_MEASURE,
-      'payload': {
-        'id': this.continuousFilterConfig.name,
-        'measure': null,
-        'domainMin': 0,
-        'domainMax': 0
+    this.selectedMeasure = null;
+    this.searchBox.nativeElement.value = '';
+    this.searchBoxChange('');
+  }
+
+  onFocus(event) {
+    event.stopPropagation();
+    this.inputGroupSpan.nativeElement.classList.add("show");
+    this.selectedMeasure = null;
+  }
+
+  searchBoxChange(searchFieldValue) {
+    this.searchString = searchFieldValue;
+
+    this.filteredMeasures = this.measures.filter(
+      (value) => {
+        return ~value.name.indexOf(searchFieldValue);
       }
-    });
+    )
   }
 
 }
