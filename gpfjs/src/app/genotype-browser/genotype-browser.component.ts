@@ -43,9 +43,6 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
           state => {
             this.genotypePreviewsArray = null
             let stateObject = Object.assign({}, ...state);
-
-            console.log("state", stateObject)
-
             this.router.navigate(['.', { state: JSON.stringify(stateObject)}], { relativeTo: this.route });
           },
           error => {
@@ -107,7 +104,6 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
                                       ...state);
         event.target.queryData.value = JSON.stringify(queryData);
         event.target.submit();
-        console.log(Object.assign({}, ...state))
       },
       error => null
     )

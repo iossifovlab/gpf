@@ -28,7 +28,6 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   ngAfterViewInit() {
     this.stateRestoreService.state.subscribe(
       (state) => {
-        console.log("families", state);
         if ("familyIds" in state) {
           this.ngbTabset.select("family-ids")
         }
