@@ -39,9 +39,14 @@ class ManagerBase(PhenoConfig):
     def connect(self):
         if self.db is not None:
             return self.db
+        '''
         filename = os.path.join(
             self.config.get('cache_dir', 'dir'),
             self.config.get(self.pheno_db, 'cache_file'))
+        '''
+        filename = self.config.get(self.pheno_db, 'cache_file')
+        if filename[0] != '/':
+            filename = os.path.join(self.config.get('cache_dir', 'dir'),filename)
         # print("connecting to {}".format(filename))
         # traceback.print_stack()
 
@@ -171,8 +176,7 @@ class PersonModel(object):
         role_order int NOT NULL,
         gender varchar(1) NULL,
         collection varchar(32) NULL,
-        ssc_present bool NULL,
-        sample_id varchar(32) NULL
+        ssc_present bool NULL
     );
     COMMIT;
     """
@@ -544,7 +548,7 @@ class ValueModel(object):
     CREATE TABLE IF NOT EXISTS {table} (
         person_id varchar(16) NOT NULL,
         variable_id varchar(128) NOT NULL,
-        family_id varchar(16) NOT NULL,
+        family_id varchar(32) NOT NULL,
         person_role varchar(8) NOT NULL,
         value {sql_type} NOT NULL,
         PRIMARY KEY (person_id, variable_id)

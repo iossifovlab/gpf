@@ -79,7 +79,7 @@ class FamilyPhenoQueryMixin(object):
         result = []
         for pheno_filter in pheno_filters:
             print(pheno_filter)
-            measure_type = pheno_filter['measure_type']
+            measure_type = pheno_filter['measureType']
 
             if measure_type == 'continuous':
                 family_ids = self._filter_continuous_filter(**pheno_filter)
@@ -97,7 +97,7 @@ class FamilyPhenoQueryMixin(object):
 
     def _filter_continuous_filter(self, safe=True, **kwargs):
         measure_id = kwargs.get('measure', None)
-        measure_type = kwargs.get('measure_type', None)
+        measure_type = kwargs.get('measureType', None)
         if safe:
             assert measure_type == 'continuous'
             assert self.pheno_db.has_measure(measure_id)
@@ -118,7 +118,7 @@ class FamilyPhenoQueryMixin(object):
 
     def _filter_categorical_filter(self, safe=True, **kwargs):
         measure_id = kwargs.get('measure', None)
-        measure_type = kwargs.get('measure_type', None)
+        measure_type = kwargs.get('measureType', None)
 
         if safe:
             assert measure_type == 'categorical'

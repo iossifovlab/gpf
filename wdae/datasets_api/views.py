@@ -38,12 +38,16 @@ class DatasetView(APIView):
         user = request.user
 
         if dataset_id is None:
-            res = self.datasets_config.get_datasets()
+            res = self.datasets_factory.get_description_datasets()
             res = [self.augment_accessibility(ds, user) for ds in res]
             return Response({'data': res})
-        res = self.datasets_config.get_dataset_desc(dataset_id)
-        if res:
-            res = self.augment_accessibility(res, user)
-            return Response({'data': res})
-        return Response({'error': 'Dataset {} not found'.format(dataset_id)},
-                        status=status.HTTP_404_NOT_FOUND)
+        else:
+            res = self.datasets_factory.get_description_dataset(dataset_id)
+            if res:
+                res = self.augment_accessibility(res, user)
+                return Response({'data': res})
+            return Response(
+                {
+                    'error': 'Dataset {} not found'.format(dataset_id)
+                },
+                status=status.HTTP_404_NOT_FOUND)

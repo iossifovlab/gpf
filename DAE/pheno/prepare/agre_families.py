@@ -320,9 +320,9 @@ class PrepareIndividuals(AgreLoader):
         return df
 
     def _build_individuals_dtype(self):
-        dtype = [('personId', 'S16'), ('familyId', 'S16'),
+        dtype = [('personId', 'S16'), ('familyId', 'S32'),
                  ('roleId', 'S8'), ('role', 'S8'),
-                 ('roleOrder', int), ]
+                 ('roleOrder', int), ('gender', 'S1')]
         return dtype
 
     def _build_individuals_row(self, p):
@@ -331,9 +331,10 @@ class PrepareIndividuals(AgreLoader):
         role = p.role
         role_id = p.role
         role_order = p.role_order
+        gender = p.gender
 
         t = [person_id, family_id, role_id,
-             role, role_order, ]
+             role, role_order, gender]
         return tuple(t)
 
     def prepare(self):
@@ -349,8 +350,7 @@ class PrepareIndividuals(AgreLoader):
                 p.role = row['role']
                 p.role_id = row['roleId']
                 p.role_order = row['roleOrder']
-                p.gender = None
-                p.race = None
+                p.gender = row['gender']
                 p.collection = 'agre'
                 p.ssc_present = 1
 

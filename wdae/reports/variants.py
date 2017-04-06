@@ -446,6 +446,8 @@ class VariantReports(precompute.register.Precompute):
     def deserialize(self, data):
         res = {}
         for (study_name, study_description) in self.studies:
+            if study_name not in data:
+                continue
             assert study_name in data
             sr = StudyVariantReports(study_name, study_description)
             sdict = cPickle.loads(zlib.decompress(data[study_name]))

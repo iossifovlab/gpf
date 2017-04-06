@@ -120,9 +120,9 @@ class DatasetsConfig(object):
         study_types = self._get_boolean(
             section, 'genotypeBrowser.hasStudyTypes')
 
-        advanced_family_filters = \
+        family_filters = \
             self._get_boolean(
-                section, 'genotypeBrowser.hasAdvancedFamilyFilter')
+                section, 'genotypeBrowser.hasFamilyFilters')
         pedigree_selector = \
             self._get_boolean(
                 section, 'genotypeBrowser.hasPedigreeSelector')
@@ -139,7 +139,7 @@ class DatasetsConfig(object):
             'hasPresentInParent': has_present_in_parent,
             'hasCNV': has_cnv,
             'hasStudyTypes': study_types,
-            'hasAdvancedFamilyFilters': advanced_family_filters,
+            'hasFamilyFilters': family_filters,
             'hasPedigreeSelector': pedigree_selector,
             'phenoColumns': pheno_columns,
             'phenoFilters': pheno_filters,
@@ -170,20 +170,20 @@ class DatasetsConfig(object):
         if 'single' == mf[0]:
             filter_type, role, measure = mf
             measure_filter = {
-                'filter_type': filter_type,
+                'filterType': filter_type,
                 'role': role,
                 'measure': measure
             }
         elif 'multi' == mf[0]:
             filter_type, role = mf
             measure_filter = {
-                'filter_type': filter_type,
+                'filterType': filter_type,
                 'role': role
             }
         return {
             'name': name,
-            'measure_type': measure_type,
-            'measure_filter': measure_filter
+            'measureType': measure_type,
+            'measureFilter': measure_filter
         }
 
     def _get_genotype_browser_pheno_columns(self, section):

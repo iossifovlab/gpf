@@ -695,6 +695,7 @@ class PhenoDB(PhenoConfig):
 
         df = persons_df.join(
             value_df.set_index('person_id'), on='person_id', rsuffix='_val')
+        df.dropna(inplace=True)
 
         return df
 

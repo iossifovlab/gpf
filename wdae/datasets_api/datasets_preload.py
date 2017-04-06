@@ -18,7 +18,7 @@ class DatasetsPreload(Preload):
     def load(self):
         for ds in self.dataset_config.get_datasets():
             dataset_id = ds['id']
-            self.factory.get(dataset_id)
+            self.factory.get_dataset(dataset_id)
 
     def get(self):
         return self

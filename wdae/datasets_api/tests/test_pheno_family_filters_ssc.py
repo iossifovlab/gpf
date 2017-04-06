@@ -61,13 +61,13 @@ class Test(APITestCase):
             },
             "phenoFilters": [
                 {
-                    'measure_type': 'categorical',
+                    'measureType': 'categorical',
                     'measure': 'pheno_common.race',
                     'role': 'prb',
                     'selection': ['native-hawaiian', 'white'],
                 },
                 {
-                    'measure_type': 'continuous',
+                    'measureType': 'continuous',
                     'measure': 'pheno_common.non_verbal_iq',
                     'role': 'prb',
                     'mmin': 80,
