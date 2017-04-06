@@ -7,10 +7,10 @@
 	    <text y=0 [attr.x]="(rangeStartX + rangeEndX) / 2" dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}</text>
 	  </g>
 	</svg>
-	
+
 	<div class="histogram-controls">
 	<div class="histogram-to">
-	        <label>To</label>
+	        <label>To (Max: {{ domainMax }})</label>
 	        <input
 	          class="form-control"
 	          required type="number"
@@ -21,7 +21,7 @@
 	          placeholder="end">
 	    </div>
 	    <div class="histogram-from">
-	        <label>From</label>
+	        <label>From (Min: {{ domainMin }})</label>
 	        <input
 	          class="form-control"
 	          required type="number"
