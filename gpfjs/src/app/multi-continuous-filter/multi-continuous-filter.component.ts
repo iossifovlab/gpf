@@ -5,7 +5,7 @@ import { QueryStateCollector } from '../query/query-state-provider'
 import { Store } from '@ngrx/store';
 import {
   PhenoFiltersState, PHENO_FILTERS_ADD_CONTINUOUS,
-  PHENO_FILTERS_CHANGE_MEASURE, PHENO_FILTERS_CONTINUOUS_SET_MIN,
+  PHENO_FILTERS_CHANGE_CONTINUOUS_MEASURE, PHENO_FILTERS_CONTINUOUS_SET_MIN,
   PHENO_FILTERS_CONTINUOUS_SET_MAX
 } from '../pheno-filters/pheno-filters';
 import { Observable } from 'rxjs/Observable';
@@ -89,10 +89,12 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
     for (let filter of state) {
       if (filter.id == this.continuousFilterConfig.name) {
         this.store.dispatch({
-          'type': PHENO_FILTERS_CHANGE_MEASURE,
+          'type': PHENO_FILTERS_CHANGE_CONTINUOUS_MEASURE,
           'payload': {
             'id': this.continuousFilterConfig.name,
-            'measure': filter.measure
+            'measure': filter.measure,
+            'domainMin': filter.domainMin,
+            'domainMax': filter.domainMax
           }
         });
         break;
@@ -102,10 +104,12 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
 
   set selectedMeasure(measure) {
     this.store.dispatch({
-      'type': PHENO_FILTERS_CHANGE_MEASURE,
+      'type': PHENO_FILTERS_CHANGE_CONTINUOUS_MEASURE,
       'payload': {
         'id': this.continuousFilterConfig.name,
-        'measure': measure.name
+        'measure': measure.name,
+        'domainMin': measure.min,
+        'domainMax': measure.max
       }
     });
   }
@@ -116,10 +120,12 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
 
   clear() {
     this.store.dispatch({
-      'type': PHENO_FILTERS_CHANGE_MEASURE,
+      'type': PHENO_FILTERS_CHANGE_CONTINUOUS_MEASURE,
       'payload': {
         'id': this.continuousFilterConfig.name,
-        'measure': null
+        'measure': null,
+        'domainMin': 0,
+        'domainMax': 0
       }
     });
   }

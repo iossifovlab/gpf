@@ -9,7 +9,7 @@ import {
 } from './pheno-filters';
 import { Observable } from 'rxjs/Observable';
 import { ValidationError } from "class-validator";
-import { validate } from "class-validator";
+import { validateOrReject } from "class-validator";
 import { plainToClass } from "class-transformer";
 
 @Component({
@@ -23,6 +23,8 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
   @Input() datasetId: string;
 
   private phenoFiltersState: Observable<[Array<PhenoFilterState>, boolean, ValidationError[]]>;
+  errors: string[];
+  flashingAlert = false;
 
   constructor(
     private store: Store<any>
@@ -31,21 +33,34 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
 
     this.phenoFiltersState = this.store.select("phenoFilters").switchMap(
       (phenoFiltersState: PhenoFiltersState) => {
-        let filters = phenoFiltersState.phenoFilters.map(
+        let filtersWithClass = phenoFiltersState.phenoFilters.map(
           (value) => {
             if (value.measureType == "categorical") {
-              return plainToClass(CategoricalFilterState, value)
+              return plainToClass(CategoricalFilterState, value);
             }
             else {
-              return plainToClass(ContinuousFilterState, value)
+              return plainToClass(ContinuousFilterState, value);
             }
         })
 
-        return Observable.fromPromise(validate(filters)).map(validationState => {
-          return [filters, true, []];
+
+        let filteredPhenoFilters = filtersWithClass.filter(
+          (filter) => {
+            return !filter.isEmpty();
+          }
+        );
+
+        let validationObservables = filteredPhenoFilters.map(
+          (value) => {
+            return Observable.fromPromise(validateOrReject(value))
+          }
+        );
+
+        return Observable.combineLatest(validationObservables).map(validationState => {
+          return [filteredPhenoFilters, true, []];
         })
         .catch(errors => {
-          return Observable.of([filters, false, errors]);
+          return Observable.of([filteredPhenoFilters, false, errors]);
         });
 
       }
@@ -55,6 +70,11 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
   ngOnInit() {
     this.store.dispatch({
       'type': PHENO_FILTERS_INIT,
+    });
+
+    this.phenoFiltersState.subscribe(
+      ([phenoFiltersState, isValid, validationErrors]) => {
+        this.errors = validationErrorsToStringArray(validationErrors);
     });
   }
 
@@ -80,20 +100,14 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
 
   getState() {
     return this.phenoFiltersState.take(1).map(
-      ([phenoFiltersState, isValid, validationErrors]) => {
+      ([filteredPhenoFilters, isValid, validationErrors]) => {
         if (!isValid) {
-          //this.flashingAlert = true;
-          //setTimeout(()=>{ this.flashingAlert = false }, 1000)
+          this.flashingAlert = true;
+          setTimeout(()=>{ this.flashingAlert = false }, 1000)
 
           throw "invalid state"
         }
-        let phenoFilters = phenoFiltersState.filter(
-          (filter) => {
-            return !filter.isEmpty();
-          }
-        );
-
-        return { phenoFilters: phenoFilters }
+        return { phenoFilters: filteredPhenoFilters }
     });
   }
 

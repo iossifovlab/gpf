@@ -2,10 +2,14 @@ export const PHENO_FILTERS_INIT = 'PHENO_FILTERS_INIT';
 export const PHENO_FILTERS_ADD_CONTINUOUS = 'PHENO_FILTERS_ADD_CONTINUOUS';
 export const PHENO_FILTERS_ADD_CATEGORICAL = 'PHENO_FILTERS_ADD_CATEGORICAL';
 export const PHENO_FILTERS_CHANGE_MEASURE = 'PHENO_FILTERS_CHANGE_MEASURE';
+export const PHENO_FILTERS_CHANGE_CONTINUOUS_MEASURE = 'PHENO_FILTERS_CHANGE_CONTINUOUS_MEASURE';
 export const PHENO_FILTERS_CONTINUOUS_SET_MIN = 'PHENO_FILTERS_CONTINUOUS_SET_MIN';
 export const PHENO_FILTERS_CONTINUOUS_SET_MAX = 'PHENO_FILTERS_CONTINUOUS_SET_MAX';
 export const PHENO_FILTERS_CATEGORICAL_SET_SELECTION = 'PHENO_FILTERS_CATEGORICAL_SET_SELECTION';
 import { Validate } from "class-validator";
+import { IsNumber, Min, Max } from "class-validator";
+import { IsLessThanOrEqual } from "../utils/is-less-than-validator"
+import { IsMoreThanOrEqual } from "../utils/is-more-than-validator"
 
 export class PhenoFilterState {
   constructor(
@@ -39,8 +43,20 @@ export class CategoricalFilterState extends PhenoFilterState {
 };
 
 export class ContinuousFilterState extends PhenoFilterState {
+  @IsNumber()
+  @Min(0)
+  @IsLessThanOrEqual("mmax")
+  @IsMoreThanOrEqual("domainMin")
   mmin: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsMoreThanOrEqual("mmin")
+  @IsLessThanOrEqual("domainMax")
   mmax: number;
+
+  domainMin: number;
+  domainMax: number;
 
   constructor(
     id: string,
@@ -82,6 +98,21 @@ export function phenoFiltersReducer(
           if (currentElement.id == action.payload.id) {
             return Object.assign({}, currentElement,
               { measure: action.payload.measure });
+          }
+          return currentElement;
+      });
+      return Object.assign({}, state,
+        { phenoFilters: newPhenoFilters });
+    case PHENO_FILTERS_CHANGE_CONTINUOUS_MEASURE:
+      var newPhenoFilters = state.phenoFilters.map(
+        (currentElement) => {
+          if (currentElement.id == action.payload.id) {
+            return Object.assign({}, currentElement,
+              {
+                measure: action.payload.measure,
+                domainMin: action.payload.domainMin,
+                domainMax: action.payload.domainMax
+              });
           }
           return currentElement;
       });

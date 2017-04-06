@@ -10,6 +10,9 @@ import { StateRestoreService } from '../store/state-restore.service'
 import { Observable } from 'rxjs/Observable';
 import { Subject }           from 'rxjs/Subject';
 import { Partitions } from '../gene-weights/gene-weights';
+import { validateOrReject } from "class-validator";
+import { plainToClass } from "class-transformer";
+import { ValidationError } from "class-validator";
 
 @Component({
   selector: 'gpf-continuous-filter',
@@ -30,27 +33,40 @@ export class ContinuousFilterComponent implements OnInit {
 
   rangesCounts: Array<number>;
 
-  private phenoFiltersState: Observable<PhenoFiltersState>;
+  private phenoFiltersState: Observable<[ContinuousFilterState, boolean, ValidationError[]]>;
 
   constructor(
     private measuresService: MeasuresService,
     private store: Store<any>,
     private stateRestoreService: StateRestoreService
   ) {
-    this.phenoFiltersState = this.store.select('phenoFilters');
+
+    this.phenoFiltersState = this.store.select("phenoFilters").switchMap(
+      (phenoFiltersState: PhenoFiltersState) => {
+        let filtered = phenoFiltersState.phenoFilters.filter(
+          (value) => {
+            return value.measureType == "continuous"
+                && value.id == this.filterId;
+          }
+        );
+        let filter = plainToClass(ContinuousFilterState, filtered[0]);
+        return Observable.fromPromise(validateOrReject(filter)).map(validationState => {
+          return [filter, true, []];
+        })
+        .catch(errors => {
+          return Observable.of([filter, false, errors]);
+        });
+      }
+    );
   }
 
   ngOnInit() {
-
-
     this.phenoFiltersState.subscribe(
-      (filtersState) => {
-        for (let filter of filtersState.phenoFilters) {
-          let categoricalFilter = filter as ContinuousFilterState;
-          if (filter.id == this.filterId) {
-            this.internalRangeStart = categoricalFilter.mmin;
-            this.internalRangeEnd = categoricalFilter.mmax;
-
+      ([categoricalFilter, isValid, validationErrors]) => {
+        if (categoricalFilter.id == this.filterId) {
+          this.internalRangeStart = categoricalFilter.mmin;
+          this.internalRangeEnd = categoricalFilter.mmax;
+          if (isValid) {
             this.rangeChanges.next([
               this.datasetId,
               this.measureName,
