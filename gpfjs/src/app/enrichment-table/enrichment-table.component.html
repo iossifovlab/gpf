@@ -11,7 +11,7 @@
     <th colspan="4">Female</th>
   </tr>
   <tr>
-    <th style="max-width: 50px; width: 50px">&nbsp;</th>
+    <th class="selector-cell">&nbsp;</th>
     <th>&nbsp;</th>
     <th class="value-cell">N</th>
     <th class="value-cell">O</th>
@@ -32,7 +32,15 @@
   </tr>
   <ng-container *ngFor="let enrichmentResult of enrichmentResults.results">
     <tr>
-      <td rowspan="4">{{ enrichmentResult.selector }}</td>
+      <td rowspan="4" class="selector-cell">
+        <div>
+          {{ enrichmentResult.selector }}
+        </div>
+        <div class="children-stats">
+          F:{{ enrichmentResult?.childrenStats?.female }}
+          M:{{ enrichmentResult?.childrenStats?.male }}
+        </div>
+      </td>
     </tr>
     <tr gpf-enrichment-table-row label="LGDs" [effectResult]="enrichmentResult.LGDs">
     </tr>

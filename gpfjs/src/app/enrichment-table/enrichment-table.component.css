@@ -4,7 +4,7 @@ table {
 
 table, th, td {
     border: 1px solid #dddddd;
-    
+
 }
 
 td {
@@ -32,4 +32,14 @@ th {
     padding-top: 20px;
     font-size: 0.8em;
     margin-bottom: 50px;
+}
+
+.children-stats {
+  font-family: monospace;
+}
+
+.selector-cell {
+  max-width: 100px;
+  width: 100px;
+  text-align: center;
 }
