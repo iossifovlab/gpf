@@ -38,13 +38,13 @@ export function geneSetsReducer(
       let newSet = new Set<any>(state.geneSetsTypes);
       newSet.add(action.payload);
       return Object.assign({}, state,
-        { geneSetsTypes: newSet });
+        { geneSetsTypes: newSet, geneSet: null });
     }
     case GENE_SETS_TYPES_REMOVE: {
       let newSet = new Set<any>(state.geneSetsTypes);
       newSet.delete(action.payload);
       return Object.assign({}, state,
-        { geneSetsTypes: newSet });
+        { geneSetsTypes: newSet, geneSet: null });
     }
     case GENE_SETS_TYPES_CLEAR: {
       let newSet = new Set<any>();

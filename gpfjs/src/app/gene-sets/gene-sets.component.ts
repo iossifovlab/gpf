@@ -132,6 +132,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
         this.geneSetsCollections = geneSetsCollections;
+        this.selectedGeneSetsCollection = geneSetsCollections[0];
         this.restoreStateSubscribe();
       }
     );
@@ -211,6 +212,10 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
       'type': GENE_SETS_COLLECTION_CHANGE,
       'payload': selectedGeneSetsCollection
     });
+
+    if (selectedGeneSetsCollection.types.length > 0) {
+      this.setSelectedGeneType(selectedGeneSetsCollection.types[0], true);
+    }
   }
 
   getDownloadLink(selectedGeneSet: GeneSet): string {
