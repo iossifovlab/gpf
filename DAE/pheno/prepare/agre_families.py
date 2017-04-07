@@ -339,7 +339,7 @@ class PrepareIndividuals(AgreLoader):
 
     def prepare(self):
         df = self._build_individuals_df()
-        with PersonManager(pheno_db='agre', config=self.config) as pm:
+        with PersonManager(dbfile=self.get_dbfile()) as pm:
             pm.drop_tables()
             pm.create_tables()
 
@@ -358,4 +358,4 @@ class PrepareIndividuals(AgreLoader):
 
     @property
     def person_manager(self):
-        return PersonManager(pheno_db='agre', config=self.config)
+        return PersonManager(dbfile=self.get_dbfile())

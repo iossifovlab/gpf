@@ -6,6 +6,7 @@ Created on Aug 23, 2016
 import ConfigParser
 
 from Config import Config
+import os
 # import traceback
 
 
@@ -27,6 +28,16 @@ class PhenoConfig(object):
             wd = dae_config.daeDir
             self.config = ConfigParser.SafeConfigParser({'wd': wd})
             self.config.read(dae_config.phenoDBconfFile)
+
+    def get_dbfile(self, dbname=None):
+        if dbname is None:
+            dbfile = self.config.get(self.pheno_db, 'cache_file')
+        else:
+            dbfile = self.config.get(dbname, 'cache_file')
+
+        if dbfile[0] != '/':
+            dbfile = os.path.join(self.config.get('cache_dir', 'dir'), dbfile)
+        return dbfile
 
 #         print("PhenoConfig: pheno_db={}; config={}".format(
 #             self.pheno_db, self.config))

@@ -187,8 +187,7 @@ class PhenoDB(PhenoConfig):
         variable_ids = df.variable_id.unique()
         try:
             with MetaVariableManager(
-                    pheno_db=self.pheno_db,
-                    config=self.config) as vm:
+                    dbfile=self.get_dbfile()) as vm:
                 meta_df = vm.load_df(where=self._where_variables(variable_ids))
         except Exception:
             print("can't load variables meta data...")
@@ -237,8 +236,7 @@ class PhenoDB(PhenoConfig):
                         role, gender,
                         where_variables)
                 with MetaVariableCorrelationManager(
-                        pheno_db=self.pheno_db,
-                        config=self.config) as vm:
+                        dbfile=self.get_dbfile()) as vm:
                     df = vm.load_df(where)
                     self._rename_forward(df, [('variable_id', 'measure_id')])
                     df = df[['measure_id', 'coeff', 'pvalue']]
@@ -285,8 +283,7 @@ class PhenoDB(PhenoConfig):
             clauses.append("stats='{}'".format(measure_type))
 
         with VariableManager(
-                pheno_db=self.pheno_db,
-                config=self.config) as vm:
+                dbfile=self.get_dbfile()) as vm:
             df = vm.load_df(
                 where=' and '.join(['( {} )'.format(c) for c in clauses]))
 
@@ -400,9 +397,7 @@ class PhenoDB(PhenoConfig):
         where = ["ssc_present={}".format(present)]
         if roles:
             where.append(self._roles_clause(roles, 'role'))
-        with PersonManager(
-                pheno_db=self.pheno_db,
-                config=self.config) as pm:
+        with PersonManager(dbfile=self.get_dbfile()) as pm:
             df = pm.load_df(where=' and '.join(where))
             try:
                 df.sort_values(['family_id', 'role_order'], inplace=True)
@@ -462,9 +457,7 @@ class PhenoDB(PhenoConfig):
         return self.measures[measure_id]
 
     def _get_values_df(self, value_manager, where):
-        with value_manager(
-                pheno_db=self.pheno_db,
-                config=self.config) as vm:
+        with value_manager(dbfile=self.get_dbfile()) as vm:
             df = vm.load_df(where=where)
             return df
 
@@ -738,7 +731,7 @@ class PhenoDB(PhenoConfig):
             "variable_id IN " \
             "(SELECT variable_id FROM value_raw WHERE person_id='{}')" \
             .format(person_id)
-        with RawValueManager() as vm:
+        with RawValueManager(dbfile=self.get_dbfile()) as vm:
             instruments = vm._execute(query)
         return dict([(i[0], self.instruments[i[0]]) for i in instruments
                      if i[0] in self.instruments])

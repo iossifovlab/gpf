@@ -9,15 +9,15 @@ import sqlite3
 import pandas as pd
 import numpy as np
 
-from pheno.utils.configuration import PhenoConfig
 import traceback
 
 
-class ManagerBase(PhenoConfig):
+class ManagerBase(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, dbfile, *args, **kwargs):
         super(ManagerBase, self).__init__(*args, **kwargs)
         self.db = None
+        self.dbfile = dbfile
 
     @classmethod
     def insert(cls):
@@ -39,18 +39,10 @@ class ManagerBase(PhenoConfig):
     def connect(self):
         if self.db is not None:
             return self.db
-        '''
-        filename = os.path.join(
-            self.config.get('cache_dir', 'dir'),
-            self.config.get(self.pheno_db, 'cache_file'))
-        '''
-        filename = self.config.get(self.pheno_db, 'cache_file')
-        if filename[0] != '/':
-            filename = os.path.join(self.config.get('cache_dir', 'dir'),filename)
         # print("connecting to {}".format(filename))
         # traceback.print_stack()
 
-        self.db = sqlite3.connect(filename, isolation_level="DEFERRED")
+        self.db = sqlite3.connect(self.dbfile, isolation_level="DEFERRED")
         return self.db
 
     def is_connected(self):
