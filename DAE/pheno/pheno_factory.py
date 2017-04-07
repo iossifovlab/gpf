@@ -29,13 +29,7 @@ class PhenoFactory(PhenoConfig):
             print("section: {} option {} not found".format(
                 dbname, 'cache_file'))
             return False
-        '''
-        dbfile = os.path.join(
-            self.config.get('cache_dir', 'dir'),
-            self.config.get(dbname, 'cache_file'))
-        '''
         dbfile = self.get_dbfile(dbname=dbname)
-        print("checking dbfile: {}".format(dbfile))
         if not os.path.isfile(dbfile):
             print("cache file for {} not found: {}".format(dbname, dbfile))
             return False
