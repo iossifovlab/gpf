@@ -50,6 +50,9 @@ export class EnrichmentModelsComponent extends QueryStateProvider implements OnI
     this.enrichmentModelsService.getBackgroundModels().subscribe(
       (res) => {
         this.enrichmentModels = res;
+
+        this.selectedBackground = res.backgrounds[0];
+        this.selectedCounting = res.countings[0];
       });
   }
 
