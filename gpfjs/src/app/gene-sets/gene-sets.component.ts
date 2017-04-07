@@ -190,7 +190,15 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     });
 
     this.searchQuery = searchTerm;
-    this.geneSets = null;
+
+    if (this.geneSets) {
+      this.geneSets = this.geneSets.filter(
+        (value) => {
+          return value.name.indexOf(searchTerm) >= 0 ||
+                 value.desc.indexOf(searchTerm) >= 0;
+        }
+      )
+    }
 
     this.geneSetsQueryChange.next(
       [this.selectedGeneSetsCollection.name, searchTerm, geneSetsTypesNames]);
@@ -201,6 +209,10 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
       'type': GENE_SET_CHANGE,
       'payload': event
     });
+
+    if (event == null) {
+      this.onSearch('');
+    }
   }
 
   isSelectedGeneType(geneType): boolean {
