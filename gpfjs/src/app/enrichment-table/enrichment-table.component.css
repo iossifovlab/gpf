@@ -43,3 +43,9 @@ th {
   width: 100px;
   text-align: center;
 }
+
+.description {
+  text-align: center;
+  width: 100%;
+  font-weight: bold;
+}
