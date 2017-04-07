@@ -120,7 +120,18 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
 
         if (this.isGeneSetsTypesUpdated(geneSets.geneSetsTypes)) {
           this.geneSetsTypes = geneSets.geneSetsTypes;
-          refreshData = true;
+
+          if (this.internalSelectedGeneSetsCollection
+            && this.internalSelectedGeneSetsCollection.types.length  > 0
+            && geneSets.geneSetsTypes.size == 0) {
+
+            this.geneSets = null;
+            refreshData = false;
+            this.errors.push("Select at least one gene type");
+          }
+          else {
+            refreshData = true;
+          }
         }
 
         if (refreshData) {
