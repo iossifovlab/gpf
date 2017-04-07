@@ -105,7 +105,8 @@ class JoinFiles:
            
 
 chrInd = {}
-faiFN="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa.fai"
+# faiFN="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa.fai"
+faiFN=genomesDB.get_genome().genomicIndexFile
 FAIF = open(faiFN)
 chrName = [ ln.split("\t")[0]  for ln in FAIF ]
 FAIF.close()

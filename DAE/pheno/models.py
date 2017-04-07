@@ -39,9 +39,14 @@ class ManagerBase(PhenoConfig):
     def connect(self):
         if self.db is not None:
             return self.db
+        '''
         filename = os.path.join(
             self.config.get('cache_dir', 'dir'),
             self.config.get(self.pheno_db, 'cache_file'))
+        '''
+        filename = self.config.get(self.pheno_db, 'cache_file')
+        if filename[0] != '/':
+            filename = os.path.join(self.config.get('cache_dir', 'dir'),filename)
         # print("connecting to {}".format(filename))
         # traceback.print_stack()
 

@@ -1,4 +1,5 @@
 
+import sys
 from itertools import izip
 
 #is autosomal X for hg19
@@ -12,13 +13,13 @@ def isPseudoAutosomalX( pos ):
 def trimStr( pos, ref, alt ):
    for n,s in enumerate(izip(ref[::-1],alt[::-1])):
 	if s[0] != s[1]: break
-
-   if n == 0:
-      if ref[-1] != alt[-1]:	
-	r, a = ref[:], alt[:]
-      else:
-	r, a = ref[:-1], alt[:-1]
+   #not made simple
+   if ref[-(n+1)] == alt[-(n+1)]:
+        r, a = ref[:-(n+1)], alt[:-(n+1)]
    else:
+     if n == 0:
+        r, a = ref[:], alt[:]
+     else:
    	r, a = ref[:-n], alt[:-n]
 
    if len(r) == 0 or len(a) == 0:
@@ -34,6 +35,9 @@ def trimStr( pos, ref, alt ):
 
 def cshlFormat( pos, ref, alt ):
    p, r, a = trimStr( pos, ref, alt )
+   if len(r) == len(a) and len(r) == 0:
+        print >> sys.stderr, 'ref {:s} is the same as alt {:s}'.format( ref, alt )
+        return p, 'complex('+ r +'->'+ a +')'
 
    if len(r) == len(a) and len(r) == 1:
 	wx = 'sub('+ r +'->'+ a +')'
@@ -48,7 +52,7 @@ def cshlFormat( pos, ref, alt ):
 	wx = 'ins('+ a +')'
 	return p, wx
 
-   return p, 'SUB('+ r +'->'+ a +')'
+   return p, 'complex('+ r +'->'+ a +')'
 
 def vcf2cshlFormat2( pos, ref, alts ):
    vrt, pxx = list(), list()
@@ -60,3 +64,13 @@ def vcf2cshlFormat2( pos, ref, alts ):
 
    return pxx, vrt	
 
+def main():
+   print "IN: vcf2cshlFormat2( 1, 'A', ['AA','AC','G','GA','AC','ACAAC'] )"
+   print vcf2cshlFormat2( 1, 'A', ['AA','AC','G','GA','AC','ACAAC'] )
+   print "IN: vcf2cshlFormat2( 1, 'AA', ['AA','AC','AAA','A','AC','CA','ACAAC','CAAAAA'] )"
+   print vcf2cshlFormat2( 1, 'AA', ['AA','AC','AAA','A','AC','CA','ACAAC','CAAAAA'] )
+   print "IN: vcf2cshlFormat2( 1, 'AAAAAA', ['AAAAAC','AAA','A','ACAAAA','CAAAAAA','AACAAC','CAAAAA'] )"
+   print vcf2cshlFormat2( 1, 'AAAAAA', ['AAAAAC','AAA','A','ACAAAA','CAAAAAA','AACAAC','CAAAAA'] )
+
+if __name__ == "__main__":
+   main()
