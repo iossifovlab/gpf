@@ -1,3 +1,4 @@
+#!/bin/env python
 # encoding: utf-8
 '''
 transmitted_to_myisam -- creates MySQL tables for given transmitted study.
@@ -673,6 +674,7 @@ USAGE
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
         return 2
+
 
 if __name__ == "__main__":
     sys.exit(main())
