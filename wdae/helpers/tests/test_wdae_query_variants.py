@@ -48,7 +48,7 @@ TBL1XR1''',
             u'geneWeight': u'',
             u'geneWeightMax': u'',
             u'geneWeightMin': u'',
-            u'phenoType': u'autism,congenital heart disease,epilepsy,intelectual disability,schizophrenia,unaffected',
+            u'phenoType': u'autism,congenital heart disease,epilepsy,intellectual disability,schizophrenia,unaffected',
             u'studyType': u'WE,TG',
             u'variantTypes': u'sub,ins,del'
         }

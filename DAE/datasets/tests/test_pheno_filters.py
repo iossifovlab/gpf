@@ -11,7 +11,7 @@ def test_verbal_iq_interval_ssc(ssc):
     query = copy.deepcopy(EXAMPLE_QUERY_SSC)
     query['phenoFilters'] = [
         {
-            'measure_type': 'continuous',
+            'measureType': 'continuous',
             'measure': 'pheno_common.verbal_iq',
             'role': 'prb',
             'mmin': 10,
@@ -28,7 +28,7 @@ def test_head_circumference_interval(ssc):
     query = copy.deepcopy(EXAMPLE_QUERY_SSC)
     query['phenoFilters'] = [
         {
-            'measure_type': 'continuous',
+            'measureType': 'continuous',
             'measure': 'ssc_commonly_used.head_circumference',
             'role': 'prb',
             'mmin': 49,
@@ -45,7 +45,7 @@ def test_categorical_measure_filter_race_hawaiian(ssc):
     query = copy.deepcopy(EXAMPLE_QUERY_SSC)
     query['phenoFilters'] = [
         {
-            'measure_type': 'categorical',
+            'measureType': 'categorical',
             'measure': 'pheno_common.race',
             'role': 'prb',
             'selection': ['native-hawaiian'],
@@ -60,7 +60,7 @@ def test_categorical_measure_filter_race_native_american(ssc):
     query = copy.deepcopy(EXAMPLE_QUERY_SSC)
     query['phenoFilters'] = [
         {
-            'measure_type': 'categorical',
+            'measureType': 'categorical',
             'measure': 'pheno_common.race',
             'role': 'prb',
             'selection': ['native-american'],
@@ -75,7 +75,7 @@ def test_head_circumference_interval_variants(ssc):
     query = copy.deepcopy(EXAMPLE_QUERY_SSC)
     query['phenoFilters'] = [
         {
-            'measure_type': 'continuous',
+            'measureType': 'continuous',
             'measure': 'ssc_commonly_used.head_circumference',
             'role': 'prb',
             'mmin': 49,
@@ -92,7 +92,7 @@ def test_categorical_measure_filter_race_hawaiian_variants(ssc):
     query = copy.deepcopy(EXAMPLE_QUERY_SSC)
     query['phenoFilters'] = [
         {
-            'measure_type': 'categorical',
+            'measureType': 'categorical',
             'measure': 'pheno_common.race',
             'role': 'prb',
             'selection': ['native-hawaiian'],
@@ -110,13 +110,13 @@ def test_pheno_filter_combine_variants(ssc):
     query = copy.deepcopy(EXAMPLE_QUERY_SSC)
     query['phenoFilters'] = [
         {
-            'measure_type': 'categorical',
+            'measureType': 'categorical',
             'measure': 'pheno_common.race',
             'role': 'prb',
             'selection': ['native-hawaiian'],
         },
         {
-            'measure_type': 'continuous',
+            'measureType': 'continuous',
             'measure': 'pheno_common.non_verbal_iq',
             'role': 'prb',
             'mmin': 80,
@@ -134,13 +134,13 @@ def test_pheno_filter_combine_variants_a2(ssc):
     query = copy.deepcopy(EXAMPLE_QUERY_SSC)
     query['phenoFilters'] = [
         {
-            'measure_type': 'categorical',
+            'measureType': 'categorical',
             'measure': 'pheno_common.race',
             'role': 'prb',
             'selection': ['native-hawaiian', 'white'],
         },
         {
-            'measure_type': 'continuous',
+            'measureType': 'continuous',
             'measure': 'pheno_common.non_verbal_iq',
             'role': 'prb',
             'mmin': 80,

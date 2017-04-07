@@ -16,7 +16,7 @@ PHENOTYPES = [
     'autism',
     'congenital heart disease',
     'epilepsy',
-    'intelectual disability',
+    'intellectual disability',
     'schizophrenia',
     'unaffected',
 ]

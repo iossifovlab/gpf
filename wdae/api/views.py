@@ -203,7 +203,7 @@ def pheno_types_filters(request):
     all_result = ['autism',
                   'congenital heart disease',
                   'epilepsy',
-                  'intelectual disability',
+                  'intellectual disability',
                   'schizophrenia',
                   'unaffected']
 
@@ -390,7 +390,7 @@ def gene_set_phenotypes(request):
     return Response(['autism',
                      'congenital heart disease',
                      "epilepsy",
-                     'intelectual disability',
+                     'intellectual disability',
                      'schizophrenia',
                      'unaffected'])
 
@@ -416,7 +416,7 @@ def study_tab_phenotypes(request, study_tab):
         return Response(['autism',
                          'congenital heart disease',
                          "epilepsy",
-                         'intelectual disability',
+                         'intellectual disability',
                          'schizophrenia',
                          'unaffected'])
     return Response()

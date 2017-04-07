@@ -37,7 +37,7 @@ class Test(unittest.TestCase):
         self.assertEquals(['autism',
                            'congenital heart disease',
                            'epilepsy',
-                           'intelectual disability',
+                           'intellectual disability',
                            'schizophrenia',
                            'unaffected'], fr.phenotypes)
 
