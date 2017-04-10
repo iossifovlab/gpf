@@ -427,8 +427,8 @@ class PhenoReportBase(object):
     H5 = '.'
 
     def _out_df_table(self, out, df):
-        from tabulate import tabulate
-        out.write(tabulate(df, headers="keys", tablefmt="grid"))
+        # from tabulate import tabulate
+        # out.write(tabulate(df, headers="keys", tablefmt="grid"))
         out.write('\n')
 
     def _out_header(self, out, title, line):

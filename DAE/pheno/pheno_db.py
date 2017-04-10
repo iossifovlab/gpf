@@ -14,6 +14,7 @@ from pheno.models import PersonManager, VariableManager, \
     OrdinalValueManager, CategoricalValueManager, RawValueManager,\
     MetaVariableManager, MetaVariableCorrelationManager
 from VariantsDB import Person, Family
+from sqlalchemy.orm.scoping import instrument
 
 
 class Instrument(object):
@@ -157,6 +158,24 @@ class PhenoDB(PhenoConfig):
         self.persons = None
         self.instruments = None
         self.measures = {}
+        self.age = self._load_common_config('age')
+        self.nonverbal_iq = self._load_common_config('nonverbal_iq')
+
+    def _load_common_config(self, name):
+        if self.config.has_option(self.pheno_db, name):
+            age = self.config.get(self.pheno_db, name)
+            parts = age.split(':')
+            if len(parts) == 1:
+                instrument_name = None
+                measure_name = parts[0]
+            elif len(parts) == 2:
+                instrument_name = parts[0]
+                measure_name = parts[1]
+            return {
+                'name': name,
+                'instrument_name': instrument_name,
+                'measure_name': measure_name,
+            }
 
     @staticmethod
     def _check_nan(val):
