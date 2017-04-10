@@ -76,10 +76,8 @@ def roles_split(df, measure_ids):
 
 
 def names(col1, col2):
-    assert '.' in col1
-    assert '.' in col2
-    name1 = col1.split('.')[1]
-    name2 = col2.split('.')[1]
+    name1 = col1.split('.')[-1]
+    name2 = col2.split('.')[-1]
     return (name1, name2)
 
 
@@ -118,15 +116,21 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
     ax.set_xlabel(name1)
     ax.set_ylabel(name2)
 
-    x = dmale[col1]
-    X = sm.add_constant(x)
-    y = dmale[col2]
-    res_male = sm.OLS(y, X).fit()
+    try:
+        x = dmale[col1]
+        X = sm.add_constant(x)
+        y = dmale[col2]
+        res_male = sm.OLS(y, X).fit()
+    except ValueError:
+        res_male = None
 
-    x = dfemale[col1]
-    X = sm.add_constant(x)
-    y = dfemale[col2]
-    res_female = sm.OLS(y, X).fit()
+    try:
+        x = dfemale[col1]
+        X = sm.add_constant(x)
+        y = dfemale[col2]
+        res_female = sm.OLS(y, X).fit()
+    except ValueError:
+        res_female = None
 
     if jitter is None:
         jmale1 = jmale2 = np.zeros(len(dmale[col1]))
@@ -151,8 +155,10 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
         label='female')
 
     [color_male, color_female] = gender_palette()
-    ax.plot(dmale[col1], res_male.predict(), color=color_male)
-    ax.plot(dfemale[col1], res_female.predict(), color=color_female)
+    if res_male:
+        ax.plot(dmale[col1], res_male.predict(), color=color_male)
+    if res_female:
+        ax.plot(dfemale[col1], res_female.predict(), color=color_female)
 
     male_female_legend(color_male, color_female, ax)
     return res_male, res_female
