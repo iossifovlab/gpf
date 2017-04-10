@@ -79,6 +79,8 @@ import { CategoricalFilterComponent } from './categorical-filter/categorical-fil
 import { MeasuresService } from './measures/measures.service';
 import { FamilyIdsComponent } from './family-ids/family-ids.component'
 
+import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
+
 const appRoutes: Routes = [
   {
     path: '',
@@ -151,7 +153,8 @@ const appRoutes: Routes = [
     ContinuousFilterComponent,
     MultiContinuousFilterComponent,
     CategoricalFilterComponent,
-    FamilyIdsComponent
+    FamilyIdsComponent,
+    NumberWithExpPipe
   ],
   imports: [
     BrowserModule,
