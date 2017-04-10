@@ -49,7 +49,7 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
       }
       this.selectAll();
 
-      this.stateRestoreService.state.subscribe(
+      this.stateRestoreService.getState(this.constructor.name).subscribe(
         (state) => {
           if (state['variantTypes']) {
             this.store.dispatch({

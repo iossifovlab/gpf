@@ -20,7 +20,7 @@ export class RegionsBlockComponent extends QueryStateCollector {
   }
 
   ngAfterViewInit() {
-  this.stateRestoreService.state.subscribe(
+  this.stateRestoreService.getState(this.constructor.name).subscribe(
     (state) => {
       if ("regions" in state) {
         this.ngbTabset.select("regions-filter")

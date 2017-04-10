@@ -39,7 +39,7 @@ export class StudyTypesComponent extends QueryStateProvider implements OnInit {
       'type': STUDY_TYPES_INIT,
     });
 
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['studyType']) {
           this.store.dispatch({

@@ -35,7 +35,7 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
       'type': GENE_SYMBOLS_INIT,
     });
 
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['geneSymbols']) {
           this.store.dispatch({

@@ -41,7 +41,7 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnI
   }
 
   restoreStateSubscribe() {
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['pedigreeSelector'] && state['pedigreeSelector']['id']) {
           for (let pedigree of  this.pedigrees) {

@@ -19,7 +19,7 @@ export class GenesBlockComponent extends QueryStateCollector {
   }
 
   ngAfterViewInit() {
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if ("geneSymbols" in state) {
           this.ngbTabset.select("gene-symbols")

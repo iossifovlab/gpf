@@ -120,7 +120,7 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
     });
     this.selectButtonGroup('LGDS');
 
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['effectTypes']) {
           this.store.dispatch({

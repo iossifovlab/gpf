@@ -38,8 +38,8 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
     this.store.dispatch({
       'type': GENDER_INIT,
     });
-
-    this.stateRestoreService.state.subscribe(
+    console.log(this);
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['gender']) {
           this.store.dispatch({

@@ -80,7 +80,7 @@ export class GeneWeightsComponent extends QueryStateProvider {
   }
 
   restoreStateSubscribe() {
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['geneWeights'] && state['geneWeights']['weight']) {
           for (let geneWeight of this.geneWeightsArray) {

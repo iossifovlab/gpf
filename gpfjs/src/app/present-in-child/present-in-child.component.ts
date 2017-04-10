@@ -42,7 +42,7 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
       'type': PRESENT_IN_CHILD_INIT,
     });
 
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['presentInChild']) {
           this.store.dispatch({

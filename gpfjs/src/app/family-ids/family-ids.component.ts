@@ -41,7 +41,7 @@ export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
       }
     );
 
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['familyIds']) {
           this.store.dispatch({

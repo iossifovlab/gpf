@@ -35,7 +35,7 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
       'type': REGIONS_FILTER_INIT,
     });
 
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['regions']) {
           this.store.dispatch({

@@ -59,7 +59,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   }
 
   restoreStateSubscribe() {
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['geneSet'] && state['geneSet']['geneSetsCollection']) {
           for (let geneSetCollection of this.geneSetsCollections) {
@@ -162,7 +162,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     this.geneSetsResult.subscribe(
       (geneSets) => {
         this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
-        this.stateRestoreService.state.subscribe(
+        this.stateRestoreService.getState(this.constructor.name + "geneSet").subscribe(
           (state) => {
             if (state['geneSet'] && state['geneSet']['geneSet']) {
               for (let geneSet of this.geneSets) {

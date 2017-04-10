@@ -8,9 +8,10 @@ import 'rxjs/add/operator/map';
 
 @Injectable()
 export class StateRestoreService {
-  public state = new ReplaySubject<any>(1);
+  private state = new ReplaySubject<any>(1);
   private firstUrl: string;
   private emptyObjectSend = false;
+  private subscribedKeys = new Set<String>();
 
   constructor(
     private router: Router
@@ -29,6 +30,16 @@ export class StateRestoreService {
         }
       }
     )
+  }
+
+  getState(key: string): Observable<any> {
+    if (this.subscribedKeys.has(key)) {
+      return Observable.of({});
+    }
+    else {
+      this.subscribedKeys.add(key);
+      return this.state;
+    }
   }
 
   onParamsUpdate(jsonEncodedState: string) {

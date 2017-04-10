@@ -51,7 +51,7 @@ export class CategoricalFilterComponent implements OnInit {
       }
     );
 
-    this.stateRestoreService.state.subscribe(
+    this.stateRestoreService.getState(this.constructor.name + this.categoricalFilterConfig.name).subscribe(
       (state) => {
         if (state['phenoFilters']) {
           this.restoreCategoricalFilter(state['phenoFilters']);
