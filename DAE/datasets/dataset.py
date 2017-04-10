@@ -299,10 +299,11 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     def get_pedigree_selector(self, **kwargs):
         pedigrees = self.descriptor['pedigreeSelectors']
         pedigree = pedigrees[0]
-        if kwargs.get('pedigreeSelector', None):
+        pedigree_selector_request = kwargs.get('pedigreeSelector', None)
+        if pedigree_selector_request:
             assert 'id' in kwargs['pedigreeSelector']
-            pedigreeSelectorId = kwargs['pedigreeSelector']['id']
-            pedigree = self.idlist_get(pedigrees, pedigreeSelectorId)
+            selector_id = kwargs['pedigreeSelector']['id']
+            pedigree = self.idlist_get(pedigrees, selector_id)
         assert pedigree is not None
         return pedigree
 
