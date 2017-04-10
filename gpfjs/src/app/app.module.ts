@@ -61,7 +61,8 @@ import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrich
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component'
 import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service'
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
-import { EnrichmentTableComponent, EnrichmentTableRowComponent } from './enrichment-table/enrichment-table.component'
+import { EnrichmentTableComponent } from './enrichment-table/enrichment-table.component'
+import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table-row.component'
 
 import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component'
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service'

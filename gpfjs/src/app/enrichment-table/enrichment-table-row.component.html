@@ -1,0 +1,49 @@
+<td>{{ label }}</td>
+<td [style.background-color]="getBackgroundColor(effectResult.all)">
+  {{ effectResult.all.count | number: "1.0-2"  }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.all)">
+  {{ effectResult.all.overlapped | number: "1.0-2"  }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.all)">
+  {{ effectResult.all.expected | number: "1.2-2" }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.all)">
+  {{ effectResult.all.pvalue | number: "1.2-4"  }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.rec)">
+  {{ effectResult.rec.count | number: "1.0-2"  }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.rec)">
+  {{ effectResult.rec.overlapped | number: "1.0-2" }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.rec)">
+  {{ effectResult.rec.expected  | number: "1.2-2"}}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.rec)">
+  {{ effectResult.rec.pvalue | number: "1.2-4"}}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.male)">
+  {{ effectResult.male.count | number: "1.0-2"  }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.male)">
+  {{ effectResult.male.overlapped | number: "1.0-2" }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.male)">
+  {{ effectResult.male.expected | number: "1.2-2" }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.male)">
+  {{ effectResult.male.pvalue | number: "1.2-4"}}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.female)">
+  {{ effectResult.female.count | number: "1.0-2"  }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.female)">
+  {{ effectResult.female.overlapped | number: "1.0-2" }}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.female)">
+  {{ effectResult.female.expected  | number: "1.2-2"}}
+</td>
+<td [style.background-color]="getBackgroundColor(effectResult.female)">
+  {{ effectResult.female.pvalue | number: "1.2-4"}}
+</td>
