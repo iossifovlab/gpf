@@ -22,6 +22,9 @@ def main():
    parser.add_option("-t", "--tooManyThresholdFamilies", dest="tooManyThresholdFamilies", type=int, default=10,
         metavar="tooManyThresholdFamilies", help="threshold for TOOMANY to printout [defaylt: 10]")
 
+   parser.add_option("-s", "--missingInfoAsNone", action="store_true", dest="missingInfoAsNone", default=False,
+                  metavar="missingInfoAsNone", help="missing sample Genotype will be filled with 'None' for many VCF files input")
+
    ox, args = parser.parse_args()
 
    tExt = lambda xxx: '.zZqZz{:d}'.format(xxx) if isinstance(xxx,int) else '.zZqZz{:s}'.format(xxx)
@@ -29,9 +32,11 @@ def main():
 
    #main procedure
    #cmd = ' '.join( ['vcf2DAEc.py', '-p', ox.pedFile, '-d', ox.dataFile, '-x', ox.project, '-l', ox.lab, \
-   cmd = ' '.join( ['vcf2DAEc.py', '-p', args[0], '-d', args[1], '-x', ox.project, '-l', ox.lab, \
+   cmd = ' '.join( ['vcf2DAEc.py', '-p', args[0], '-d "'+ args[1] +'" -x', ox.project, '-l', ox.lab, \
                         '-o', ox.outputPrefix+tExt(0), '-m', str(ox.minPercentOfGenotypeSamples), \
-                        '-t', str(ox.tooManyThresholdFamilies), ' > '+ox.outputPrefix+'-complex.txt'] )
+                        '-t', str(ox.tooManyThresholdFamilies)] )
+   if ox.missingInfoAsNone: cmd +=  ' '.join( [' --missingInfoAsNone',' > '+ox.outputPrefix+'-complex.txt'] )
+   else: cmd += ' > '+ox.outputPrefix+'-complex.txt'
    status, out = commands.getstatusoutput( cmd )
    print status, out
    if status: raise Exception("FAILURE AT: " + cmd)
