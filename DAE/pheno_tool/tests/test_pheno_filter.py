@@ -11,7 +11,8 @@ from pheno_tool.genotype_helper import VariantsType as VT
 
 def test_pheno_filter_set(phdb):
     df = phdb.get_persons_values_df(['pheno_common.race'])
-    assert 11283 == len(df)
+    # assert 11283 == len(df)
+    assert 10893 == len(df)
 
     f = PhenoFilterSet(phdb, 'pheno_common.race', set(['white']))
     res_df = f.apply(df)

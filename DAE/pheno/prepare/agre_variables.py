@@ -47,26 +47,26 @@ class PrepareVariables(AgreLoader, BaseVariables):
 
     def _create_value_tables(self):
         with ContinuousValueManager(
-                pheno_db=self.pheno_db, config=self.config) as vm:
+                dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
         with CategoricalValueManager(
-                pheno_db=self.pheno_db, config=self.config) as vm:
+                dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
         with OrdinalValueManager(
-                pheno_db=self.pheno_db, config=self.config) as vm:
+                dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
 
     def _create_variable_table(self):
         with VariableManager(
-                pheno_db=self.pheno_db, config=self.config) as vm:
+                dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
 
     def load_persons_df(self):
-        with PersonManager(pheno_db=self.pheno_db, config=self.config) as pm:
+        with PersonManager(dbfile=self.get_dbfile()) as pm:
             df = pm.load_df()
             columns = [c for c in df.columns]
             index = columns.index('role')
@@ -119,10 +119,10 @@ class PrepareVariables(AgreLoader, BaseVariables):
 
     def _save_continuous_variable(self, var, mdf):
         assert var.min_value <= var.max_value
-        with VariableManager(pheno_db='agre', config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             vm.save(var)
 
-        with ContinuousValueManager(pheno_db='agre', config=self.config) as vm:
+        with ContinuousValueManager(dbfile=self.get_dbfile()) as vm:
             for _index, row in mdf.iterrows():
                 v = ContinuousValueModel()
                 v.family_id = row['family_id']
@@ -135,10 +135,10 @@ class PrepareVariables(AgreLoader, BaseVariables):
 
     def _save_ordinal_variable(self, var, mdf):
         assert var.min_value <= var.max_value
-        with VariableManager(pheno_db='agre', config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             vm.save(var)
 
-        with OrdinalValueManager(pheno_db='agre', config=self.config) as vm:
+        with OrdinalValueManager(dbfile=self.get_dbfile()) as vm:
             for _index, row in mdf.iterrows():
                 v = OrdinalValueModel()
                 v.family_id = row['family_id']
@@ -150,11 +150,11 @@ class PrepareVariables(AgreLoader, BaseVariables):
                 vm.save(v)
 
     def _save_categorical_variable(self, var, mdf):
-        with VariableManager(pheno_db='agre', config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             vm.save(var)
 
         with CategoricalValueManager(
-                pheno_db='agre', config=self.config) as vm:
+                dbfile=self.get_dbfile()) as vm:
             for _index, row in mdf.iterrows():
                 v = CategoricalValueModel()
                 v.family_id = row['family_id']

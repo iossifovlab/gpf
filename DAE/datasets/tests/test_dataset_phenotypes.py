@@ -18,7 +18,7 @@ def test_phenotypes_sd(sd):
         'autism',
         'congenital heart disease',
         'epilepsy',
-        'intelectual disability',
+        'intellectual disability',
         'schizophrenia',
         'unaffected'
     ] == phenotypes
@@ -34,8 +34,8 @@ def test_children_stats_sd(sd):
     children_stats = sd.children_stats
     print(children_stats)
 
-    assert children_stats['intelectual disability']['F'] == 85
-    assert children_stats['intelectual disability']['M'] == 66
+    assert children_stats['intellectual disability']['F'] == 85
+    assert children_stats['intellectual disability']['M'] == 66
 
     # assert children_stats['autism']['M'] == 3367
     # assert children_stats['autism']['F'] == 596

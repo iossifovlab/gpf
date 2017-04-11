@@ -61,7 +61,7 @@ class Test(unittest.TestCase):
         for phenotype in ['autism',
                           'congenital heart disease',
                           "epilepsy",
-                          'intelectual disability',
+                          'intellectual disability',
                           'schizophrenia']:
             gene_terms = build_prb_set_by_phenotype(all_denovo_studies,
                                                     phenotype)
@@ -80,6 +80,6 @@ class Test(unittest.TestCase):
         self.assertIn('autism', res)
         self.assertIn('congenital heart disease', res)
         self.assertIn('epilepsy', res)
-        self.assertIn('intelectual disability', res)
+        self.assertIn('intellectual disability', res)
         self.assertIn('schizophrenia', res)
         self.assertIn('unaffected', res)

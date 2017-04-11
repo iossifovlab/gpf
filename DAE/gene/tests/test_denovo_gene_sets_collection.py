@@ -21,7 +21,7 @@ def test_denovo_gene_sets_types(gscs):
             'autism',
             'congenital heart disease',
             'epilepsy',
-            'intelectual disability',
+            'intellectual disability',
             'schizophrenia',
             'unaffected'
         ]

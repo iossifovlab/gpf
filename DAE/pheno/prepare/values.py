@@ -23,7 +23,7 @@ class PrepareValueBase(V15Loader):
         self.value_manager = value_manager
 
     def _load_tables(self):
-        with VariableManager(config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             df = vm.load_df(where=self.WHERE_DOMAIN)
 
             tables = df.table_name.unique()
@@ -38,7 +38,7 @@ class PrepareValueBase(V15Loader):
                     table_name,
                     self.WHERE_DOMAIN)
 
-        with VariableManager(config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             where = build_where(self.WHERE_DOMAIN)
             df = vm.load_df(where=where)
             return df
@@ -74,19 +74,19 @@ class PrepareValueBase(V15Loader):
         dfs = self.load_table(
             table, ['prb', 'sib', 'father', 'mother'],
             dtype=str)
-        with self.value_manager(config=self.config) as vm:
+        with self.value_manager(dbfile=self.get_dbfile()) as vm:
             for _index, variable in variables.iterrows():
                 self._build_variable_values(vm, variable, dfs)
 
     def prepare_variable(self, variable, dfs):
         assert isinstance(variable, VariableModel)
 
-        with self.value_manager(config=self.config) as vm:
+        with self.value_manager(dbfile=self.get_dbfile()) as vm:
             self._build_variable_values(vm, variable, dfs)
 
     def prepare(self):
         tables = self._load_tables()
-        with self.value_manager(config=self.config) as vm:
+        with self.value_manager(dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
 
@@ -308,13 +308,13 @@ class PrepareValueClassification(PhenoConfig):
         return True
 
     def classify_variable(self, variable_id):
-        with VariableManager(config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             df = vm.load_df(where="variable_id = '{}'".format(variable_id))
             assert len(df) <= 1
             if len(df) == 0:
                 return self.UNKNOWN
             variable = VariableModel.create_from_df(df.loc[0])
-        with RawValueManager(config=self.config) as vm:
+        with RawValueManager(dbfile=self.get_dbfile()) as vm:
             df = vm.load_values(variable)
             return self.clasify_values(variable, df)
 
@@ -333,13 +333,13 @@ class PrepareValueClassification(PhenoConfig):
         return self.UNKNOWN
 
     def _create_value_tables(self):
-        with ContinuousValueManager(config=self.config) as vm:
+        with ContinuousValueManager(dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
-        with CategoricalValueManager(config=self.config) as vm:
+        with CategoricalValueManager(dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
-        with OrdinalValueManager(config=self.config) as vm:
+        with OrdinalValueManager(dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
 
@@ -353,7 +353,7 @@ class PrepareValueClassification(PhenoConfig):
 
         vals = pd.Series(df.index)
 
-        with ContinuousValueManager(config=self.config) as valm:
+        with ContinuousValueManager(dbfile=self.get_dbfile()) as valm:
             for vindex, row in df.iterrows():
                 value = ContinuousValueModel.create_from_df(row)
                 valm.save(value)
@@ -365,7 +365,7 @@ class PrepareValueClassification(PhenoConfig):
             variable.min_value, variable.max_value)
 
         assert variable.min_value <= variable.max_value
-        with VariableManager(config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             vm.save(variable)
 
     def _prepare_ordinal_variable(self, variable, df):
@@ -377,7 +377,7 @@ class PrepareValueClassification(PhenoConfig):
 
         vals = pd.Series(df.index)
 
-        with OrdinalValueManager(config=self.config) as valm:
+        with OrdinalValueManager(dbfile=self.get_dbfile()) as valm:
             for vindex, row in df.iterrows():
                 value = OrdinalValueModel.create_from_df(row)
                 valm.save(value)
@@ -389,7 +389,7 @@ class PrepareValueClassification(PhenoConfig):
             variable.min_value, variable.max_value)
 
         assert variable.min_value <= variable.max_value
-        with VariableManager(config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             vm.save(variable)
 
     def _prepare_categorical_variable(self, variable, df):
@@ -400,9 +400,9 @@ class PrepareValueClassification(PhenoConfig):
         variable.individuals = len(df.value)
         variable.value_domain = ",".join(df.value.unique())
 
-        with VariableManager(config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             vm.save(variable)
-        with CategoricalValueManager(config=self.config) as valm:
+        with CategoricalValueManager(dbfile=self.get_dbfile()) as valm:
             for _vindex, value in df.iterrows():
                 value = CategoricalValueModel.create_from_df(value)
                 valm.save(value)
@@ -410,11 +410,11 @@ class PrepareValueClassification(PhenoConfig):
     def prepare(self):
         self._create_value_tables()
 
-        with VariableManager(config=self.config) as variable_manager:
+        with VariableManager(dbfile=self.get_dbfile()) as variable_manager:
             variables = variable_manager.load_df()
 
         for _index, variable in variables.iterrows():
-            with RawValueManager(config=self.config) as vm:
+            with RawValueManager(dbfile=self.get_dbfile()) as vm:
                 df = vm.load_df(
                     where="variable_id = '{}'"
                     .format(variable.variable_id))

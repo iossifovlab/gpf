@@ -325,7 +325,7 @@ def build_denovo_gene_sets():
     result = {}
     denovo_studies = get_all_denovo_studies()
     all_phenotypes = ['autism', 'congenital heart disease',
-                      "epilepsy", 'intelectual disability', 'schizophrenia']
+                      "epilepsy", 'intellectual disability', 'schizophrenia']
     for phenotype in all_phenotypes:
         gene_terms = build_prb_set_by_phenotype(denovo_studies, phenotype)
         result[phenotype] = gene_terms

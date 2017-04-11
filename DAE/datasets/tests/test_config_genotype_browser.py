@@ -30,8 +30,8 @@ def test_ssc_pheno_filters(datasets_config):
     pprint(pheno_filters)
 
     assert 'name' in pheno_filters[0]
-    assert 'measure_type' in pheno_filters[0]
-    assert 'measure_filter' in pheno_filters[0]
+    assert 'measureType' in pheno_filters[0]
+    assert 'measureFilter' in pheno_filters[0]
 
 
 def test_vip_pheno_filters(datasets_config):
@@ -42,5 +42,5 @@ def test_vip_pheno_filters(datasets_config):
     pprint(pheno_filters)
 
     assert 'name' in pheno_filters[0]
-    assert 'measure_type' in pheno_filters[0]
-    assert 'measure_filter' in pheno_filters[0]
+    assert 'measureType' in pheno_filters[0]
+    assert 'measureFilter' in pheno_filters[0]

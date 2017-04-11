@@ -34,7 +34,7 @@ class CommonBase(object):
         return ['autism',
                 'congenital heart disease',
                 'epilepsy',
-                'intelectual disability',
+                'intellectual disability',
                 'schizophrenia',
                 'unaffected']
 

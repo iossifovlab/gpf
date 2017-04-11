@@ -11,7 +11,7 @@ from GeneTerms import loadGeneTerm, GeneTerms
 import traceback
 from DAE import vDB
 from itertools import groupby
-from ipykernel.serialize import cPickle
+import cPickle
 
 
 class CacheMixin(object):
@@ -114,7 +114,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         'autism',
         'congenital heart disease',
         'epilepsy',
-        'intelectual disability',
+        'intellectual disability',
         'schizophrenia',
         'unaffected'
     ]
@@ -134,10 +134,10 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             "id": "epilepsy",
             "name": "epilepsy"
         },
-        "intelectual disability": {
+        "intellectual disability": {
             "color": "#99d8e8 ",
-            "id": "intelectual disability",
-            "name": "intelectual disability"
+            "id": "intellectual disability",
+            "name": "intellectual disability"
         },
         "schizophrenia": {
             "color": "#98e352 ",

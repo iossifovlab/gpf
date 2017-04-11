@@ -100,7 +100,7 @@ class PrepareVariables(V15Loader):
     def prepare(self):
         loader = V14Loader()
 
-        with VariableManager(config=self.config) as vm:
+        with VariableManager(dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
             print("loading main dictionary")

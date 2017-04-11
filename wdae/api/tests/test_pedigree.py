@@ -87,7 +87,7 @@ class Test(APITestCase):
             "no-frame-shift,nonsense,splice-site,synonymous,noEnd,noStart,"
             "3'UTR,3'UTR-intron,5'UTR,5'UTR-intron",
             'phenoType': 'autism,congenital heart disease,'
-            'epilepsy,intelectual disability,schizophrenia,unaffected',
+            'epilepsy,intellectual disability,schizophrenia,unaffected',
             'variantTypes': 'del,ins,sub',
             'transmittedStudies': None,
             'studyType': 'TG,WE'}

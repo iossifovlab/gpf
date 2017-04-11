@@ -27,7 +27,7 @@ class Test(APITestCase):
                 "genes": "Gene Sets",
                 "phenoType":
                 "autism,congenital heart disease,epilepsy,"
-                "intelectual disability,schizophrenia,unaffected",
+                "intellectual disability,schizophrenia,unaffected",
                 "studyType": "TG,WE",
                 "variantTypes": "del,ins,sub",
         }
@@ -49,7 +49,7 @@ class Test(APITestCase):
                 "genes": "Gene Sets",
                 "phenoType":
                 "autism,congenital heart disease,epilepsy,"
-                "intelectual disability,schizophrenia,unaffected",
+                "intellectual disability,schizophrenia,unaffected",
                 "studyType": "TG,WE",
                 "variantTypes": "del,ins,sub",
         }

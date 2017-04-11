@@ -82,7 +82,7 @@ class PrepareIndividuals(V15Loader):
 
     def prepare(self):
         df = self._build_df_from_individuals()
-        with PersonManager(pheno_db=self.pheno_db, config=self.config) as pm:
+        with PersonManager(dbfile=self.get_dbfile()) as pm:
             pm.drop_tables()
             pm.create_tables()
 
@@ -138,7 +138,7 @@ class PrepareIndividualsGender(V15Loader):
         return df
 
     def prepare(self):
-        with PersonManager(config=self.config) as pm:
+        with PersonManager(dbfile=self.get_dbfile()) as pm:
             df = pm.load_df()
             self._build_gender(df)
             pm.save_df(df)
@@ -177,7 +177,7 @@ class PrepareIndividualsSSCPresent(V15Loader):
         return df
 
     def prepare(self):
-        with PersonManager(config=self.config) as pm:
+        with PersonManager(dbfile=self.get_dbfile()) as pm:
             df = pm.load_df()
             self._build_ssc_present(df)
             pm.save_df(df)
@@ -221,7 +221,7 @@ class PrepareIndividualsGenderFromSSC(V15Loader):
         return df
 
     def prepare(self):
-        with PersonManager(config=self.config) as pm:
+        with PersonManager(dbfile=self.get_dbfile()) as pm:
             df = pm.load_df(where='gender is null and ssc_present=1')
             self._build_gender_from_ssc(df)
 
@@ -271,6 +271,6 @@ class CheckIndividualsGenderToSSC(V15Loader):
                         p.study, p.personId, p.gender))
 
     def check(self):
-        with PersonManager(config=self.config) as pm:
+        with PersonManager(dbfile=self.get_dbfile()) as pm:
             df = pm.load_df(where='ssc_present=1')
             self._check_gender_to_ssc(df)

@@ -1,4 +1,4 @@
-#!/usr/local/bin/python2.7
+#!/usr/bin/env python
 # encoding: utf-8
 '''
 myisam_transmitted_import -- import transmitted variants into MySQL
@@ -212,12 +212,16 @@ USAGE
         # handle keyboard interrupt
         return 0
     except Exception, e:
+        import traceback
+        traceback.print_exc()
+
         if DEBUG or TESTRUN:
             raise(e)
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
         return 2
+
 
 if __name__ == "__main__":
     sys.exit(main())

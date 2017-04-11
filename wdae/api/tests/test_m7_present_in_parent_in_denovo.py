@@ -87,7 +87,7 @@ class Test(APITestCase):
             'limit': 2000,
             'geneTerm': 'LGDs',
             'geneSet': 'denovo',
-            'gene_set_phenotype': 'intelectual disability',
+            'gene_set_phenotype': 'intellectual disability',
         }
 
         response = self.client.post(url, request, format='json')
@@ -111,7 +111,7 @@ class Test(APITestCase):
             'limit': 2000,
             'geneTerm': 'LGDs',
             'geneSet': 'denovo',
-            'gene_set_phenotype': 'intelectual disability',
+            'gene_set_phenotype': 'intellectual disability',
         }
 
         response = self.client.post(url, request, format='json')

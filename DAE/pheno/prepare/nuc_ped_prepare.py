@@ -267,7 +267,7 @@ class NucPedPrepareIndividuals(PhenoConfig):
             individuals[p.person_id] = p
 
     def save(self):
-        with PersonManager(pheno_db=self.pheno_db, config=self.config) as pm:
+        with PersonManager(dbfile=self.get_dbfile()) as pm:
             pm.drop_tables()
             pm.create_tables()
             for p in self.individuals.values():

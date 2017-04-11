@@ -12,12 +12,6 @@ from django.contrib.auth import get_user_model
 EXAMPLE_REQUEST_VIP = {
     "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
     "gender": ["female", "male"],
-    "presentInChild": [
-        "affected and unaffected",
-        "affected only",
-        "unaffected only",
-        "neither"
-    ],
     "presentInParent": [
         "neither",
     ],
@@ -28,7 +22,11 @@ EXAMPLE_REQUEST_VIP = {
     "datasetId": "VIP",
     "pedigreeSelector": {
         "id": "16pstatus",
-        "checkedValues": ["deletion", "duplication"]
+        "checkedValues": [
+            "deletion",
+            "duplication",
+            "triplication",
+            "negative"]
     }
 }
 
@@ -60,10 +58,12 @@ class Test(APITestCase):
 
     URL = "/api/v3/genotype_browser/preview"
 
-    def test_query_preview(self):
+    def setUp(self):
+        APITestCase.setUp(self)
         self.client.login(
             email='admin@example.com', password='secret')
 
+    def test_query_preview(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
 
         response = self.client.post(
@@ -76,10 +76,35 @@ class Test(APITestCase):
         self.assertIn('count', res)
         self.assertIn('legend', res)
 
-        print(res['legend'])
         print(res['count'])
-        self.assertEquals(5, len(res['legend']))
-        self.assertEquals(62, int(res['count']))
-        self.assertEquals(62, len(res['rows']))
+        self.assertEquals(64, int(res['count']))
+        self.assertEquals(64, len(res['rows']))
 
-        print(res['rows'])
+        print(res['legend'])
+        self.assertEquals(5, len(res['legend']))
+        self.assertEquals('deletion', res['legend'][0]['id'])
+
+    def test_query_preview_other_pedigree_selector(self):
+        data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
+        data['pedigreeSelector'] = {
+            "id": "phenotype",
+            "checkedValues": ["autism", "unaffected"]
+        }
+
+        response = self.client.post(
+            self.URL, data, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = response.data
+
+        self.assertIn('cols', res)
+        self.assertIn('rows', res)
+        self.assertIn('count', res)
+        self.assertIn('legend', res)
+
+        print(res['count'])
+        self.assertEquals(64, int(res['count']))
+        self.assertEquals(64, len(res['rows']))
+
+        print(res['legend'])
+        self.assertEquals(3, len(res['legend']))
+        self.assertEquals('autism', res['legend'][0]['id'])

@@ -14,8 +14,8 @@ def test_enrichment_children_stats_sd(sd):
     children_stats = sd.enrichment_children_stats
     print(children_stats)
 
-    assert children_stats['intelectual disability']['F'] == 85
-    assert children_stats['intelectual disability']['M'] == 66
+    assert children_stats['intellectual disability']['F'] == 85
+    assert children_stats['intellectual disability']['M'] == 66
 
     assert children_stats['autism']['M'] == 3367  # 3367
     assert children_stats['autism']['F'] == 596

@@ -95,7 +95,8 @@ class QueryPreviewView(QueryBaseView):
             dataset = self.datasets_factory.get_dataset(dataset_id)
             self.check_object_permissions(request, dataset)
 
-            legend = self.prepare_legend_response(dataset)
+            legend = self.prepare_legend_response(dataset, **data)
+
             variants = dataset.get_variants_preview(
                 safe=True,
                 limit=2000,
