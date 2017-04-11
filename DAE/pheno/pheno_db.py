@@ -14,7 +14,6 @@ from pheno.models import PersonManager, VariableManager, \
     OrdinalValueManager, CategoricalValueManager, RawValueManager,\
     MetaVariableManager, MetaVariableCorrelationManager
 from VariantsDB import Person, Family
-from sqlalchemy.orm.scoping import instrument
 
 
 class Instrument(object):
