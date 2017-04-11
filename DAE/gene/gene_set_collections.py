@@ -11,7 +11,7 @@ from GeneTerms import loadGeneTerm, GeneTerms
 import traceback
 from DAE import vDB
 from itertools import groupby
-from ipykernel.serialize import cPickle
+import cPickle
 
 
 class CacheMixin(object):
