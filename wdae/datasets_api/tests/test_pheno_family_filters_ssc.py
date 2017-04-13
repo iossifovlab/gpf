@@ -80,4 +80,4 @@ class Test(APITestCase):
         data = response.data
 
         pprint(data)
-        self.assertEquals('7', data['count'])
+        self.assertEquals('5', data['count'])
