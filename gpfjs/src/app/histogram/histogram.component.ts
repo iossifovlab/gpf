@@ -56,7 +56,7 @@ export class HistogramComponent  {
   }
 
   onRangeChange() {
-    if (!this.rangeStart || !this.rangeEnd || !this.xScale) {
+    if (!this.xScale) {
       return;
     }
 
