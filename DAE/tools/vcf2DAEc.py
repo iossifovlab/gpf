@@ -9,35 +9,14 @@ import itertools
 #from vcf2DAEutil import *
 import variantFormat as vrtF
 from ped2NucFam import *
-
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality, the Phred-scaled marginal (or unconditional) probability of the called genotype">
-##FORMAT=<ID=GL,Number=G,Type=Float,Description="Genotype Likelihood, log10-scaled likelihoods of the data given the called genotype for each possible genotype generated from the reference and alternate alleles given the sample ploidy">
-##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
-##FORMAT=<ID=RO,Number=1,Type=Integer,Description="Reference allele observation count">
-##FORMAT=<ID=QR,Number=1,Type=Integer,Description="Sum of quality of the reference observations">
-##FORMAT=<ID=AO,Number=A,Type=Integer,Description="Alternate allele observation count">
-##FORMAT=<ID=QA,Number=A,Type=Integer,Description="Sum of quality of the alternate observations">
-#
-# [('GT', (0, 0)), ('AD', (8, 0)), ('DP', 8), ('GQ', 0), ('PL', (0, 0, 234))]
-#   genotype                       read depth  GT qual
-def getGQ( dx ):
-   try:
-	return list(dx['GQ'])
-   except TypeError, e:
-	return [dx['GQ']]
-   except KeyError, e:
-	if ('QR' in dx) and ('QA' in dx):
-	        return [dx['QR']] + list(dx['QA'])
-	else:
-	        return []
+import vrtIOutil as vIO
 
 def percentageGentype( data ):
    tlx = len(data.samples)
    clx = 0
    for k, v in data.samples.items():
 	#print >> sys.stderr, v['GT'][0], v['GT']
-	if v['GT'][0] == None: continue
+	if v['GT'][0] is None: continue
 	clx += 1
 
    return 100.*clx/tlx
@@ -49,37 +28,22 @@ def getGT( sample, data ):
 	print sample, 'not found on ', sorted(data.samples.keys())
 	exit(1)
 
-   GQ  = getGQ( dx )
+   #GQ  = getGQ( dx )
 
    GT  = numpy.zeros( (len(data.alts)+1,), dtype=numpy.int)
    cnt = numpy.zeros( (len(data.alts)+1,), dtype=numpy.int)
 
-   if None in dx['GT']:
-	return False, GT, cnt, GQ
+   if dx['GT'][0] is None:
+	return False, GT, cnt#, GQ
 
    gt = list(dx['GT'])
    for ix in gt: GT[ix] += 1
 
-   if ('RO' in dx) and ('AO' in dx):
-	cnt[:] = [dx['RO']] + list(dx['AO'])
-   elif 'AD' in dx:
-	cnt[:] = list(dx['AD'])
-   elif ('NR' in dx) and ('NV' in dx):
-	#print data.ref, data.alts, dx['GT'], dx['NR'], dx['NV']
-	try:
-	   if (len(cnt[:]) == len(list(dx['NR']) + list(dx['NV']))):
-	        cnt[:] = list(dx['NR']) + list(dx['NV'])
-	   else:
-	        for ix in list(dx['GT']):
-	           if ix == 0:  cnt[ix] = dx['NR'][ix]
-	           else:        cnt[ix] = dx['NV'][ix-1]
-	        #print data.ref, data.alts, dx['GT'], dx['NR'], dx['NV'], cnt
-	except ValueError, e:
-	        pass
-	        print e, data.ref, data.alts, dx['GT'], dx['NR'], dx['NV']
-	        #cnt[:] = [dx['NR']] + list(dx['NV'])
+   cx = vIO.getCount(dx)
+   if len(cx) == len(cnt):	cnt[:] = cx
+   #if cx and cnt not agree, then ignore
 
-   return True, GT, cnt, GQ
+   return True, GT, cnt #, GQ
 
 #add more data on fam Info
 def makeFamInfoConv( fInfo, pInfo ):
@@ -107,19 +71,20 @@ def getVrtFam( fam, data ):
 
    GT  = numpy.zeros( (len(fam), len(data.alts)+1,), dtype=numpy.int)
    cnt = numpy.zeros( (len(fam), len(data.alts)+1,), dtype=numpy.int)
-   strx = []
+   #strx = []
    #print fam
    for n, pid in enumerate(fam):
-	fx, gt, cx, gq = getGT( pid, data )
+	#fx, gt, cx, gq = getGT( pid, data )
+	fx, gt, cx = getGT( pid, data )
 
 	if not fx: flag = False
 
 	GT[n,:]  = gt
 	cnt[n,:] = cx
 
-	strx.append( '/'.join(map(str,gq)) )
+	#strx.append( '/'.join(map(str,gq)) )
    #print GT
-   return flag, GT, cnt, ','.join(strx)
+   return flag, GT, cnt#, ','.join(strx)
 
 def array2str( mx, ix, delim='' ):
    n0, n1, n2 = mx[:,0], mx[:,ix], mx.sum(1)
@@ -255,9 +220,15 @@ def main():
    parser.add_option("-t", "--tooManyThresholdFamilies", dest="tooManyThresholdFamilies", type=int, default=10,
         metavar="tooManyThresholdFamilies", help="threshold for TOOMANY to printout [defaylt: 10]")
 
+   parser.add_option("-s", "--missingInfoAsNone", action="store_true", dest="missingInfoAsNone", default=False,
+                  metavar="missingInfoAsNone", help="missing sample Genotype will be filled with 'None' for many VCF files input")
 
    ox, args = parser.parse_args()
    pfile, dfile = ox.pedFile, ox.dataFile
+
+   missingInfoAsRef = True
+   if ox.missingInfoAsNone:
+	missingInfoAsRef = False#; print NNN
 
    #print famFile
    #fInfo: each fam has mom, dad and child personal ID, old and new Ids
@@ -287,7 +258,8 @@ def main():
    print >> outTOOMANY, '\t'.join( 'chr,position,variant,familyData'.split(',') )
 
    fam = [x for x in sorted(fInfo.keys())]
-   vf = pysam.VariantFile( dfile )
+   #vf = pysam.VariantFile( dfile )
+   vf = vIO.vcfFiles( dfile, missingInfoAsRef=missingInfoAsRef )
    
    digitP = lambda x: '{:.4f}'.format(x)
    cchr = ''
@@ -315,7 +287,8 @@ def main():
 	#save ok families, check whether autosomal or de novo
 	for fid in fam:
                 fIx = fInfo[fid]
-	        flag, GT, cnt, qual = getVrtFam( fIx['ids'], rx )
+	        #flag, GT, cnt, qual = getVrtFam( fIx['ids'], rx )
+		flag, GT, cnt = getVrtFam( fIx['ids'], rx )
 	        #if 4235521 in px and fid == '14752.x6.m0-14752.x8':
 	        #       print fInfo[fid]
 	        #       print fid, flag, array2str(GT,1,delim=' '), '-', array2str(cnt,1,delim=' '), qual
