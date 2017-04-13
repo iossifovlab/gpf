@@ -1,0 +1,163 @@
+'''
+Created on Apr 13, 2017
+
+@author: lubo
+'''
+from rest_framework.test import APITestCase
+from rest_framework import status
+
+from django.contrib.auth import get_user_model
+import copy
+
+
+EXAMPLE_REQUEST_SSC = {
+    "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
+    "gender": ["female", "male"],
+    "presentInChild": [
+        "affected and unaffected",
+        "affected only",
+    ],
+    "presentInParent": [
+        "neither",
+    ],
+    "variantTypes": [
+        "CNV", "del", "ins", "sub",
+    ],
+    "genes": "All",
+    "datasetId": "SSC",
+    "pedigreeSelector": {
+        "id": "phenotype",
+        "checkedValues": ["autism", "unaffected"]
+    }
+}
+
+
+class Test(APITestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(Test, cls).setUpClass()
+
+        User = get_user_model()
+        u = User.objects.create(
+            email="admin@example.com",
+            first_name="First",
+            last_name="Last",
+            is_staff=True,
+            is_active=True,
+            researcher_id="0001000")
+        u.set_password("secret")
+        u.save()
+
+        cls.user = u
+        cls.user.save()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(Test, cls).tearDownClass()
+        cls.user.delete()
+
+    def setUp(self):
+        APITestCase.setUp(self)
+        self.client.login(
+            email='admin@example.com', password='secret')
+
+    URL = "/api/v3/family_counters/counters"
+
+    def test_query_counter_all(self):
+
+        data = copy.deepcopy(EXAMPLE_REQUEST_SSC)
+
+        response = self.client.post(
+            self.URL, data, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = response.data
+        print(res)
+        self.assertEquals(2206, res['unaffected']['all'])
+        self.assertEquals(1171, res['unaffected']['F'])
+        self.assertEquals(1035, res['unaffected']['M'])
+
+    def test_query_counter_with_single_family_id(self):
+
+        data = copy.deepcopy(EXAMPLE_REQUEST_SSC)
+        data['familyIds'] = ['11110']
+
+        response = self.client.post(
+            self.URL, data, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = response.data
+        print(res)
+
+        self.assertEquals(1, res['unaffected']['all'])
+        self.assertEquals(0, res['unaffected']['F'])
+        self.assertEquals(1, res['unaffected']['M'])
+
+        self.assertEquals(1, res['autism']['all'])
+        self.assertEquals(0, res['autism']['F'])
+        self.assertEquals(1, res['autism']['M'])
+
+    def test_query_counter_with_nonverbal_iq(self):
+
+        data = copy.deepcopy(EXAMPLE_REQUEST_SSC)
+        data['phenoFilters'] = [
+            {
+                'measureType': 'continuous',
+                'measure': 'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
+                'role': 'prb',
+                'mmin': 80,
+                'mmax': 80
+            }
+        ]
+
+        response = self.client.post(
+            self.URL, data, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = response.data
+        print(res)
+
+        self.assertEquals(25, res['unaffected']['all'])
+        self.assertEquals(10, res['unaffected']['F'])
+        self.assertEquals(15, res['unaffected']['M'])
+
+        self.assertEquals(29, res['autism']['all'])
+        self.assertEquals(3, res['autism']['F'])
+        self.assertEquals(26, res['autism']['M'])
+
+    def test_query_counter_with_nonverbal_iq_and_race(self):
+
+        data = copy.deepcopy(EXAMPLE_REQUEST_SSC)
+        data['phenoFilters'] = [
+            {
+                'measureType': 'continuous',
+                'measure': 'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
+                'role': 'prb',
+                'mmin': 80,
+                'mmax': 80,
+            },
+            {
+                'measureType': 'categorical',
+                'measure': 'pheno_common.race',
+                'role': 'dad',
+                'selection': ['african-amer'],
+            },
+            {
+                'measureType': 'categorical',
+                'measure': 'pheno_common.race',
+                'role': 'mom',
+                'selection': ['african-amer'],
+            },
+        ]
+
+        response = self.client.post(
+            self.URL, data, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = response.data
+        print(res)
+
+        self.assertEquals(2, res['unaffected']['all'])
+        self.assertEquals(2, res['unaffected']['F'])
+        self.assertEquals(0, res['unaffected']['M'])
+
+        self.assertEquals(2, res['autism']['all'])
+        self.assertEquals(0, res['autism']['F'])
+        self.assertEquals(2, res['autism']['M'])
