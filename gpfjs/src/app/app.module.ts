@@ -82,6 +82,7 @@ import { FamilyIdsComponent } from './family-ids/family-ids.component'
 import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
 import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector/pheno-measure-selector.component';
+import { PhenoToolMeasureComponent } from './pheno-tool-measure/pheno-tool-measure.component';
 
 const appRoutes: Routes = [
   {
@@ -162,7 +163,8 @@ const appRoutes: Routes = [
     FamilyIdsComponent,
     NumberWithExpPipe,
     PhenoToolComponent,
-    PhenoMeasureSelectorComponent
+    PhenoMeasureSelectorComponent,
+    PhenoToolMeasureComponent
   ],
   imports: [
     BrowserModule,
