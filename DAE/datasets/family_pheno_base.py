@@ -127,7 +127,7 @@ class FamilyPhenoQueryMixin(object):
             assert m.measure_type == 'categorical'
 
         role = kwargs.get('role', None)
-        if role is None:
+        if role is not None:
             roles = [role]
         else:
             roles = None

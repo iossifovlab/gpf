@@ -354,8 +354,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             lambda f1, f2: f1 & f2,
             family_filters
         )
-        if not family_ids:
-            return None
+        #         if not family_ids:
+        #             return None
         return list(family_ids)
 
     def get_denovo_filters(self, safe=True, **kwargs):
@@ -408,7 +408,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def get_denovo_variants(self, safe=True, **kwargs):
         denovo_filters = self.get_denovo_filters(safe, **kwargs)
-
+        if denovo_filters.get('familyIds', None) == []:
+            raise StopIteration()
         seen_vs = set()
         for st in self.get_denovo_studies(safe=safe, **kwargs):
             for v in st.get_denovo_variants(**denovo_filters):
@@ -420,6 +421,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def get_transmitted_variants(self, safe=True, **kwargs):
         transmitted_filters = self.get_transmitted_filters(safe=safe, **kwargs)
+        if transmitted_filters.get('familyIds', None) == []:
+            raise StopIteration()
         present_in_parent = transmitted_filters.get('presentInParent', None)
         if present_in_parent and present_in_parent == ['neither']:
             return
