@@ -1,5 +1,4 @@
 import { Component, OnInit, Input, forwardRef, ViewChild } from '@angular/core';
-import { MeasuresService } from '../measures/measures.service'
 import { ContinuousMeasure } from '../measures/measures'
 import { QueryStateCollector } from '../query/query-state-provider'
 import { Store } from '@ngrx/store';
@@ -20,19 +19,14 @@ import { StateRestoreService } from '../store/state-restore.service'
 export class MultiContinuousFilterComponent extends QueryStateCollector implements OnInit {
   @Input() datasetId: string;
   @Input() continuousFilterConfig: any;
-  @ViewChild("inputGroup") inputGroupSpan: any;
-  @ViewChild("searchBox") searchBox: any;
 
   measures: Array<ContinuousMeasure>;
-  filteredMeasures: Array<ContinuousMeasure>;
   internalSelectedMeasure: ContinuousMeasure;
-  searchString: string;
 
   private phenoFiltersState: Observable<PhenoFiltersState>;
 
   constructor(
     private store: Store<any>,
-    private measuresService: MeasuresService,
     private stateRestoreService: StateRestoreService
   ) {
     super();
@@ -48,22 +42,6 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
         'measure': null
       }
     });
-
-    this.measuresService.getContinuousMeasures(this.datasetId).subscribe(
-      (measures) => {
-        this.measures = measures;
-        this.searchBoxChange('');
-
-        this.stateRestoreService.getState(this.constructor.name + this.continuousFilterConfig.name).subscribe(
-          (state) => {
-            if (state['phenoFilters']) {
-              this.restoreContinuousFilter(state['phenoFilters']);
-            }
-          }
-        )
-      }
-    )
-
 
     this.phenoFiltersState.subscribe(
       (filtersState) => {
@@ -123,24 +101,14 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
     return this.internalSelectedMeasure;
   }
 
-  clear() {
-    this.selectedMeasure = null;
-    this.searchBox.nativeElement.value = '';
-    this.searchBoxChange('');
-  }
+  updateMeasures(measures) {
+    this.measures = measures;
 
-  onFocus(event) {
-    event.stopPropagation();
-    this.inputGroupSpan.nativeElement.classList.add("show");
-    this.selectedMeasure = null;
-  }
-
-  searchBoxChange(searchFieldValue) {
-    this.searchString = searchFieldValue;
-
-    this.filteredMeasures = this.measures.filter(
-      (value) => {
-        return ~value.name.indexOf(searchFieldValue);
+    this.stateRestoreService.getState(this.constructor.name + this.continuousFilterConfig.name).subscribe(
+      (state) => {
+        if (state['phenoFilters']) {
+          this.restoreContinuousFilter(state['phenoFilters']);
+        }
       }
     )
   }
