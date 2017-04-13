@@ -80,6 +80,8 @@ import { MeasuresService } from './measures/measures.service';
 import { FamilyIdsComponent } from './family-ids/family-ids.component'
 
 import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
+import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
+import { PhenoMeasureSelectorComponent } from './pheno-measure-selector/pheno-measure-selector.component';
 
 const appRoutes: Routes = [
   {
@@ -107,6 +109,10 @@ const appRoutes: Routes = [
       {
         path: 'enrichment',
         component: EnrichmentToolComponent
+      },
+      {
+        path: 'phenoTool',
+        component: PhenoToolComponent
       },
     ]
   },
@@ -154,7 +160,9 @@ const appRoutes: Routes = [
     MultiContinuousFilterComponent,
     CategoricalFilterComponent,
     FamilyIdsComponent,
-    NumberWithExpPipe
+    NumberWithExpPipe,
+    PhenoToolComponent,
+    PhenoMeasureSelectorComponent
   ],
   imports: [
     BrowserModule,
