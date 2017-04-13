@@ -1,0 +1,24 @@
+<div class="container">
+  <gpf-genes-block [showAllTab]="true"></gpf-genes-block>
+  <gpf-pheno-measure-selector [datasetId]="selectedDatasetId"></gpf-pheno-measure-selector>
+
+  <div class="genotype-block form-block">
+  	<div class="row row-eq-height">
+  		<gpf-present-in-parent></gpf-present-in-parent>
+  		<gpf-effecttypes class="panel-row col-lg-4"> </gpf-effecttypes>
+  	</div>
+
+  </div>
+
+
+  <gpf-family-filters-block
+    *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
+    [phenoFilters]="selectedDataset?.genotypeBrowser?.phenoFilters"
+    [datasetId]=selectedDataset?.id>
+  </gpf-family-filters-block>
+
+
+  <div class="form-block">
+    <input class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
+  </div>
+</div>
