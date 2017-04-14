@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, SimpleChanges } from '@angular/core';
 import { PhenoToolResults, PhenoToolResult } from '../pheno-tool/pheno-tool-results';
 import * as d3 from 'd3';
 
@@ -19,11 +19,18 @@ export class PhenoToolResultsChartComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
+
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
     this.yScale = d3.scaleLinear().range([this.innerHeight, 0]);
     this.calcMinMax();
 
     let svg = d3.select(this.innerGroup.nativeElement)
-    svg.append("g").call(d3.axisLeft(this.yScale));
+    svg.selectAll(".axis").remove();
+    svg.append("g")
+      .attr("class", "axis")
+      .call(d3.axisLeft(this.yScale));
   }
 
   addRange(phenoToolResult: PhenoToolResult, outputValues: Array<number>) {
