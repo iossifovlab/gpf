@@ -85,6 +85,7 @@ import { PhenoMeasureSelectorComponent } from './pheno-measure-selector/pheno-me
 import { PhenoToolMeasureComponent } from './pheno-tool-measure/pheno-tool-measure.component';
 import { PhenoToolGenotypeBlockComponent } from './pheno-tool-genotype-block/pheno-tool-genotype-block.component';
 import { PhenoToolService } from './pheno-tool/pheno-tool.service';
+import { PhenoToolResultsChartComponent } from './pheno-tool-results-chart/pheno-tool-results-chart.component';
 
 const appRoutes: Routes = [
   {
@@ -167,7 +168,8 @@ const appRoutes: Routes = [
     PhenoToolComponent,
     PhenoMeasureSelectorComponent,
     PhenoToolMeasureComponent,
-    PhenoToolGenotypeBlockComponent
+    PhenoToolGenotypeBlockComponent,
+    PhenoToolResultsChartComponent
   ],
   imports: [
     BrowserModule,

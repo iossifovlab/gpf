@@ -1,0 +1,9 @@
+<p>
+  pheno-tool-results-chart works!
+</p>
+
+<svg [attr.width]="width" [attr.height]="height">
+  <g *ngFor="let result of phenoToolResults.results">
+    <text >{{ result.effect }}</text>
+  </g>
+</svg>
