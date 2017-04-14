@@ -5,12 +5,11 @@ import { Observable } from 'rxjs';
 import 'rxjs/add/operator/toPromise';
 
 import { ConfigService } from '../config/config.service';
-import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-table/genotype-preview';
-import { EnrichmentResults } from './enrichment-result';
+import { PhenoToolResults } from './pheno-tool-results';
 
 @Injectable()
-export class EnrichmentQueryService {
-  private genotypePreviewUrl = 'enrichment/test';
+export class PhenoToolService {
+  private phenoToolUrl = 'pheno_tool';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
 
@@ -21,13 +20,13 @@ export class EnrichmentQueryService {
 
   }
 
-  getEnrichmentTest(filter): Observable<EnrichmentResults> {
+  getPhenoToolResults(filter): Observable<any> {
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
 
-    return this.http.post(this.genotypePreviewUrl, filter, options)
+    return this.http.post(this.phenoToolUrl, filter, options)
       .map(res => {
-        return EnrichmentResults.fromJson(res.json());
+        return PhenoToolResults.fromJson(res.json());;
       });
   }
 }

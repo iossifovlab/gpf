@@ -84,6 +84,7 @@ import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector/pheno-measure-selector.component';
 import { PhenoToolMeasureComponent } from './pheno-tool-measure/pheno-tool-measure.component';
 import { PhenoToolGenotypeBlockComponent } from './pheno-tool-genotype-block/pheno-tool-genotype-block.component';
+import { PhenoToolService } from './pheno-tool/pheno-tool.service';
 
 const appRoutes: Routes = [
   {
@@ -194,7 +195,8 @@ const appRoutes: Routes = [
     EnrichmentQueryService,
     FullscreenLoadingService,
     StateRestoreService,
-    MeasuresService
+    MeasuresService,
+    PhenoToolService
   ],
   bootstrap: [AppComponent]
 })

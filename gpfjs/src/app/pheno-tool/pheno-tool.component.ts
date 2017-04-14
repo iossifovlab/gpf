@@ -5,6 +5,8 @@ import { Dataset } from '../datasets/datasets';
 import { QueryStateCollector } from '../query/query-state-provider'
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { Observable } from 'rxjs';
+import { PhenoToolService } from './pheno-tool.service'
+import { PhenoToolResults } from './pheno-tool-results';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -15,10 +17,13 @@ export class PhenoToolComponent extends QueryStateCollector implements OnInit {
   selectedDatasetId: string;
   selectedDataset: Dataset;
 
+  phenoToolResults: PhenoToolResults;
+
   constructor(
     private route: ActivatedRoute,
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
+    private phenoToolService: PhenoToolService
   ) {
     super();
   }
@@ -36,18 +41,20 @@ export class PhenoToolComponent extends QueryStateCollector implements OnInit {
   }
 
   submitQuery() {
-    console.log(this);
-    //this.loadingService.setLoadingStart();
+    this.loadingService.setLoadingStart();
     let state = this.collectState();
-
-    console.log("PT ST1", state);
     Observable.zip(...state)
     .subscribe(
       state => {
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
                                       ...state);
-        console.log("PT ST2", queryData);
+        this.phenoToolService.getPhenoToolResults(queryData).subscribe(
+          (phenoToolResults) => {
+            this.phenoToolResults = phenoToolResults;
+            console.log(this.phenoToolResults);
+            this.loadingService.setLoadingStop();
+          });
 
       },
       error => {
