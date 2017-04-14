@@ -32,6 +32,11 @@
   [color]="'blue'"
   [fillColor]="'blue'">
 </svg:g>
+
+<svg:text x="40" [attr.y]="maleEndY" text-anchor="middle">
+  {{effectResults.maleResult.pValue | numberWithExp: "1.0-1"  }}
+</svg:text>
+
 <svg:g gpf-pheno-tool-results-chart-per-result
   transform="translate(100, 0)"
   [results]="effectResults.femaleResult.negative"
@@ -46,3 +51,7 @@
   [color]="'red'"
   [fillColor]="'red'">
 </svg:g>
+
+<svg:text x="110" [attr.y]="femaleEndY" text-anchor="middle">
+  {{effectResults.femaleResult.pValue | numberWithExp: "1.0-1" }}
+</svg:text>

@@ -15,4 +15,22 @@ export class PhenoToolResultsChartPerEffectComponent implements OnInit {
 
   }
 
+  get maleEndY() {
+    let endNegative = this.effectResults.maleResult.negative.mean -
+                      this.effectResults.maleResult.negative.deviation;
+
+    let endPositive = this.effectResults.maleResult.positive.mean -
+                      this.effectResults.maleResult.positive.deviation;
+    return this.yScale(Math.min(endNegative, endPositive)) + 20;
+  }
+
+  get femaleEndY() {
+    let endNegative = this.effectResults.femaleResult.negative.mean -
+                      this.effectResults.femaleResult.negative.deviation;
+
+    let endPositive = this.effectResults.femaleResult.positive.mean -
+                      this.effectResults.femaleResult.positive.deviation;
+    return this.yScale(Math.min(endNegative, endPositive)) + 20;
+  }
+
 }
