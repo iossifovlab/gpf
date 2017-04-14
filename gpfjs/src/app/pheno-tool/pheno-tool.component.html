@@ -13,4 +13,7 @@
   <div class="form-block">
     <input class="btn btn-md btn-primary" type="button" value="Report" (click)="submitQuery()">
   </div>
+
+  <gpf-pheno-tool-results-chart *ngIf="phenoToolResults" [phenoToolResults]="phenoToolResults">
+  </gpf-pheno-tool-results-chart>
 </div>

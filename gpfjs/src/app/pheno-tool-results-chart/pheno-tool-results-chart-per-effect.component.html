@@ -1,0 +1,48 @@
+<svg:text x="50" y="-55">
+  {{effectResults.effect}}
+</svg:text>
+
+<svg:text x="30" y="-35">
+  {{effectResults.maleResult.positive.count}}
+</svg:text>
+
+<svg:text x="30" y="-15">
+  {{effectResults.maleResult.negative.count}}
+</svg:text>
+
+<svg:text x="100" y="-35">
+  {{effectResults.femaleResult.positive.count}}
+</svg:text>
+
+<svg:text x="100" y="-15">
+  {{effectResults.femaleResult.negative.count}}
+</svg:text>
+
+<svg:g gpf-pheno-tool-results-chart-per-result
+  transform="translate(30, 0)"
+  [results]="effectResults.maleResult.negative"
+  [yScale]="yScale"
+  [color]="'blue'"
+  [fillColor]="'white'">
+</svg:g>
+<svg:g gpf-pheno-tool-results-chart-per-result
+  transform="translate(50, 0)"
+  [results]="effectResults.maleResult.positive"
+  [yScale]="yScale"
+  [color]="'blue'"
+  [fillColor]="'blue'">
+</svg:g>
+<svg:g gpf-pheno-tool-results-chart-per-result
+  transform="translate(100, 0)"
+  [results]="effectResults.femaleResult.negative"
+  [yScale]="yScale"
+  [color]="'red'"
+  [fillColor]="'white'">
+</svg:g>
+<svg:g gpf-pheno-tool-results-chart-per-result
+  transform="translate(120, 0)"
+  [results]="effectResults.femaleResult.positive"
+  [yScale]="yScale"
+  [color]="'red'"
+  [fillColor]="'red'">
+</svg:g>

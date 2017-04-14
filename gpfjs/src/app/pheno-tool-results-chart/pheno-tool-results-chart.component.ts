@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ViewChild } from '@angular/core';
 import { PhenoToolResults, PhenoToolResult } from '../pheno-tool/pheno-tool-results';
 import * as d3 from 'd3';
 
@@ -8,16 +8,22 @@ import * as d3 from 'd3';
   styleUrls: ['./pheno-tool-results-chart.component.css']
 })
 export class PhenoToolResultsChartComponent implements OnInit {
+  @ViewChild('innerGroup') innerGroup: any;
   @Input() phenoToolResults: PhenoToolResults;
-  @Input() width = 450;
-  @Input() height = 1060;
+  @Input() width = 1060;
+  @Input() height = 700;
+  @Input() innerHeight = 450;
   yScale: d3.ScaleLinear<number, number>;
+
 
   constructor() { }
 
   ngOnInit() {
-    this.yScale = d3.scaleLinear().range([this.height, 0]);
+    this.yScale = d3.scaleLinear().range([this.innerHeight, 0]);
     this.calcMinMax();
+
+    let svg = d3.select(this.innerGroup.nativeElement)
+    svg.append("g").call(d3.axisLeft(this.yScale));
   }
 
   addRange(phenoToolResult: PhenoToolResult, outputValues: Array<number>) {

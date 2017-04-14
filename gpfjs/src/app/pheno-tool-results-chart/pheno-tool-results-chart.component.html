@@ -1,9 +1,38 @@
-<p>
-  pheno-tool-results-chart works!
-</p>
-
 <svg [attr.width]="width" [attr.height]="height">
-  <g *ngFor="let result of phenoToolResults.results">
-    <text >{{ result.effect }}</text>
+
+  <text x="0" y="45">
+    with hit
+  </text>
+
+  <text x="0" y="65">
+    without hit
+  </text>
+
+  <g #innerGroup transform="translate(20, 80)">
+    <g *ngFor="let result of phenoToolResults.results; let i = index"
+        gpf-pheno-tool-results-chart-per-effect
+        [attr.transform]="'translate(' + (i * 150 + 100) +',0)'"
+        [effectResults]="result"
+        [yScale]="yScale">
+    </g>
+  </g>
+
+
+  <g transform="translate(800, 500)">
+    <rect x="0" y="0" width="150" height="65" fill-opacity="0"
+          stroke-width="2" stroke="black">
+    </rect>
+    <circle cx="10" cy="10" r="3" stroke="blue" fill="blue" stroke-width="2">
+    </circle>
+    <text x="20" y="15">male with hit</text>
+    <circle cx="10" cy="25" r="3" stroke="blue" fill="white" stroke-width="2">
+    </circle>
+    <text x="20" y="30">male without hit</text>
+    <circle cx="10" cy="40" r="3" stroke="red" fill="red" stroke-width="2">
+    </circle>
+    <text x="20" y="45">female with hit</text>
+    <circle cx="10" cy="55" r="3" stroke="red" fill="white" stroke-width="2">
+    </circle>
+    <text x="20" y="60">male without hit</text>
   </g>
 </svg>
