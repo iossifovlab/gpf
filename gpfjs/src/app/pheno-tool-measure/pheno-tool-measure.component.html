@@ -1,10 +1,25 @@
-  <div class="pheno-tool-measure-block form-block">
-    <div class="row">
-      <div class="col-lg-6">
-    	  <gpf-pheno-measure-selector [datasetId]="datasetId"></gpf-pheno-measure-selector>
+<div class="pheno-tool-measure-block form-block">
+  <div class="row">
+    <div class="col-lg-6">
+      Proband Pheno Measure
+  	  <gpf-pheno-measure-selector [datasetId]="datasetId"
+                                  [(selectedMeasure)]="selectedMeasure">
+      </gpf-pheno-measure-selector>
+    </div>
+    <div class="col-lg-6">
+      Normalized by:
+      <div>
+        <label>
+          <input type="checkbox">
+          age
+        </label>
       </div>
-      <div class="col-lg-6">
-        Normalized by:
+      <div>
+        <label>
+          <input type="checkbox">
+          non verbal IQ
+        </label>
       </div>
     </div>
   </div>
+</div>

@@ -14,8 +14,11 @@ export class QueryStateProvider {
 
 
 export class QueryStateCollector {
-  @ViewChildren(forwardRef(() => QueryStateProvider)) directContentChildren: QueryList<QueryStateProvider>;
-  @ViewChildren(forwardRef(() => QueryStateCollector)) contentChildren: QueryList<QueryStateCollector>;
+  @ViewChildren(forwardRef(() => QueryStateProvider))
+  directContentChildren: QueryList<QueryStateProvider>;
+
+  @ViewChildren(forwardRef(() => QueryStateCollector))
+  contentChildren: QueryList<QueryStateCollector>;
 
   collectState() {
     let directState = this.directContentChildren.map((children) => children.getState());

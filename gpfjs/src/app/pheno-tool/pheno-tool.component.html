@@ -1,15 +1,7 @@
 <div class="container">
   <gpf-genes-block [showAllTab]="true"></gpf-genes-block>
   <gpf-pheno-tool-measure [datasetId]="selectedDatasetId"></gpf-pheno-tool-measure>
-
-  <div class="genotype-block form-block">
-  	<div class="row row-eq-height">
-  		<gpf-present-in-parent></gpf-present-in-parent>
-  		<gpf-effecttypes class="panel-row col-lg-4"> </gpf-effecttypes>
-  	</div>
-
-  </div>
-
+  <gpf-pheno-tool-genotype-block></gpf-pheno-tool-genotype-block>
 
   <gpf-family-filters-block
     *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
@@ -19,6 +11,6 @@
 
 
   <div class="form-block">
-    <input class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
+    <input class="btn btn-md btn-primary" type="button" value="Report" (click)="submitQuery()">
   </div>
 </div>
