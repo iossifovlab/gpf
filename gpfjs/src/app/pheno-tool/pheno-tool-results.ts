@@ -5,6 +5,14 @@ export class PhenoToolResult {
     readonly mean: number,
   ) { }
 
+  get rangeStart() {
+    return this.mean - this.deviation;
+  }
+
+  get rangeEnd() {
+    return this.mean + this.deviation;
+  }
+
   static fromJson(json: any): PhenoToolResult {
     return new PhenoToolResult(
       json['count'],

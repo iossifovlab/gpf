@@ -17,11 +17,11 @@ export class PhenoToolResultsChartPerResultComponent implements OnInit {
   }
 
   get startY() {
-    return this.yScale(this.results.mean - this.results.deviation);
+    return this.yScale(this.results.rangeStart);
   }
 
   get endY() {
-    return this.yScale(this.results.mean + this.results.deviation);
+    return this.yScale(this.results.rangeEnd);
   }
 
   get centerY() {
