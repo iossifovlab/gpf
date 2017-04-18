@@ -15,7 +15,7 @@ import traceback
 import preloaded
 from rest_framework.exceptions import NotAuthenticated
 import json
-from query_variants import generate_response, join_line
+from query_variants import join_line
 import itertools
 
 
@@ -128,38 +128,7 @@ class QueryDownloadView(QueryBaseView):
         res = {str(k): str(v) for k, v in data.items()}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
-        print(query)
         return query
-
-    def prepare_variants(self, variants):
-        def augment_vars(v):
-            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
-
-            v.atts["_par_races_"] = 'NA:NA'
-            v.atts["_ch_prof_"] = chProf
-            v.atts["_prb_viq_"] = 'NA'
-            v.atts["_prb_nviq_"] = 'NA'
-            v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
-            v._phenotype_ = v.study.get_attr('study.phenotype')
-            return v
-
-        return generate_response(
-            itertools.imap(augment_vars, variants),
-            [
-                'effectType',
-                'effectDetails',
-                'all.altFreq',
-                'all.nAltAlls',
-                'SSCfreq',
-                'EVSfreq',
-                'E65freq',
-                'all.nParCalled',
-                '_par_races_',
-                '_ch_prof_',
-                '_prb_viq_',
-                '_prb_nviq_',
-                'valstatus',
-            ])
 
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 download request: " +
@@ -172,11 +141,8 @@ class QueryDownloadView(QueryBaseView):
             dataset = self.datasets_factory.get_dataset(dataset_id)
             self.check_object_permissions(request, dataset)
 
-            variants = dataset.get_variants(
-                safe=True,
-                **data)
+            generator = dataset.get_variants_csv(safe=True, **data)
 
-            generator = self.prepare_variants(variants)
             response = StreamingHttpResponse(
                 itertools.chain(
                     itertools.imap(join_line, generator)),

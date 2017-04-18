@@ -447,12 +447,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         'EVSfreq',
         'E65freq',
         'all.nParCalled',
-        '_par_races_',
         '_ch_prof_',
-        '_prb_viq_',
-        '_prb_nviq_',
         'valstatus',
-        "_pedigree_",
         "phenoInChS",
     ]
 
@@ -475,6 +471,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         legend = self.get_pedigree_selector(**kwargs)
         pheno_columns = self.get_pheno_columns()
         columns = self.COMMON_COLUMNS[:]
+        columns.append('_pedigree_')
         columns.extend([label for (_, _, label) in pheno_columns])
         families = {}
         if pheno_columns and self.pheno_db:
@@ -483,11 +480,32 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
 
-            v.atts["_par_races_"] = 'NA:NA'
             v.atts["_ch_prof_"] = chProf
-            v.atts["_prb_viq_"] = 'NA'
-            v.atts["_prb_nviq_"] = 'NA'
             v.atts["_pedigree_"] = v.pedigree_v3(legend)
+            family = families.get(v.familyId, None)
+            fatts = family.atts if family else {}
+            for (_role, _source, label) in pheno_columns:
+                v.atts[label] = fatts.get(label, '')
+            v._phenotype_ = v.study.get_attr('study.phenotype')
+            return v
+
+        return generate_response(
+            itertools.imap(augment_vars, variants), columns
+        )
+
+    def get_variants_csv(self, safe=True, **kwargs):
+        variants = self.get_variants(safe=safe, **kwargs)
+        pheno_columns = self.get_pheno_columns()
+        columns = self.COMMON_COLUMNS[:]
+        columns.extend([label for (_, _, label) in pheno_columns])
+        families = {}
+        if pheno_columns and self.pheno_db:
+            families = self.pheno_db.families
+
+        def augment_vars(v):
+            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+
+            v.atts["_ch_prof_"] = chProf
             v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
             family = families.get(v.familyId, None)
             fatts = family.atts if family else {}
