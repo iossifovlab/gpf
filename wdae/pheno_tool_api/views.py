@@ -6,7 +6,8 @@ from users.authentication import SessionAuthenticationWithoutCSRF
 from rest_framework.exceptions import NotAuthenticated
 import preloaded
 import traceback
-from pheno_tool.tool import PhenoTool, VT
+from pheno_tool.tool import PhenoTool
+from pheno_tool_api.genotype_helper import GenotypeHelper
 
 # Create your views here.
 class PhenoToolView(APIView):
@@ -39,18 +40,13 @@ class PhenoToolView(APIView):
         }
 
     @classmethod
-    def calc_by_effect(cls, effect, tool, gene_syms_set, query_data):
-        gene_syms = []
-        if gene_syms_set:
-            gene_syms = list(gene_syms_set)
+    def calc_by_effect(cls, effect, tool, data, dataset):
+        data['effectTypes'] = [effect]
 
-        result = tool.calc(
-            VT(
-                effect_types=[effect],
-                gene_syms=list(gene_syms),
-                present_in_child=['autism only', 'autism and unaffected'],
-                present_in_parent=query_data['presentInParent']['presentInParent'],
-        ), gender_split=True)
+        variants = dataset.get_variants(safe=True,**data)
+        variants_df = GenotypeHelper.to_persons_variants_df(variants)
+
+        result = tool.calc(variants_df, gender_split=True)
         return {
             "effect": effect,
             "maleResults": cls.get_result_by_gender(result, 'M'),
@@ -67,8 +63,7 @@ class PhenoToolView(APIView):
                 measure_id=data['measureId'],
             )
 
-            gene_syms = dataset.get_gene_syms(**data)
-            results = [self.calc_by_effect(effect, tool, gene_syms, data)
+            results = [self.calc_by_effect(effect, tool, data, dataset)
                         for effect in data['effectTypes']];
 
             response = {
