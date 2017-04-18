@@ -1,0 +1,14 @@
+'''
+Created on Nov 16, 2015
+
+@author: lubo
+'''
+from django.conf.urls import url
+from pheno_tool_api import views
+
+
+urlpatterns = [
+    url(r'^$',
+        views.PhenoToolView.as_view(),
+        name="pheno_tool"),
+]
