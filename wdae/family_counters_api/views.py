@@ -33,15 +33,25 @@ class FamilyCounters(QueryBaseView):
             pprint.pprint(pedigree_selector)
             res = {}
             for s in pedigree_selector['domain']:
-                res[s['id']] = Counter()
-            res[pedigree_selector['default']['id']] = Counter()
+                pprint.pprint(s)
+                res[s['id']] = {
+                    'count': Counter(),
+                    'color': s['color'],
+                    'name': s['name']
+                }
+            s = pedigree_selector['default']
+            res[s['id']] = {
+                'count': Counter(),
+                'color': s['color'],
+                'name': s['name']
+            }
 
             for fid in family_ids:
                 fam = dataset.families[fid]
                 for p in fam.memberInOrder[2:]:
                     family_group = p.atts[pedigree_selector_id]
-                    res[family_group]['all'] += 1
-                    res[family_group][p.gender] += 1
+                    res[family_group]['count']['all'] += 1
+                    res[family_group]['count'][p.gender] += 1
 
             pprint.pprint(res)
             return Response(res, status=status.HTTP_200_OK)

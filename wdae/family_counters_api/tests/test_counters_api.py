@@ -73,9 +73,9 @@ class Test(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = response.data
         print(res)
-        self.assertEquals(2206, res['unaffected']['all'])
-        self.assertEquals(1171, res['unaffected']['F'])
-        self.assertEquals(1035, res['unaffected']['M'])
+        self.assertEquals(2206, res['unaffected']['count']['all'])
+        self.assertEquals(1171, res['unaffected']['count']['F'])
+        self.assertEquals(1035, res['unaffected']['count']['M'])
 
     def test_query_counter_with_single_family_id(self):
 
@@ -88,13 +88,13 @@ class Test(APITestCase):
         res = response.data
         print(res)
 
-        self.assertEquals(1, res['unaffected']['all'])
-        self.assertEquals(0, res['unaffected']['F'])
-        self.assertEquals(1, res['unaffected']['M'])
+        self.assertEquals(1, res['unaffected']['count']['all'])
+        self.assertEquals(0, res['unaffected']['count']['F'])
+        self.assertEquals(1, res['unaffected']['count']['M'])
 
-        self.assertEquals(1, res['autism']['all'])
-        self.assertEquals(0, res['autism']['F'])
-        self.assertEquals(1, res['autism']['M'])
+        self.assertEquals(1, res['autism']['count']['all'])
+        self.assertEquals(0, res['autism']['count']['F'])
+        self.assertEquals(1, res['autism']['count']['M'])
 
     def test_query_counter_with_nonverbal_iq(self):
 
@@ -115,13 +115,13 @@ class Test(APITestCase):
         res = response.data
         print(res)
 
-        self.assertEquals(25, res['unaffected']['all'])
-        self.assertEquals(10, res['unaffected']['F'])
-        self.assertEquals(15, res['unaffected']['M'])
+        self.assertEquals(25, res['unaffected']['count']['all'])
+        self.assertEquals(10, res['unaffected']['count']['F'])
+        self.assertEquals(15, res['unaffected']['count']['M'])
 
-        self.assertEquals(29, res['autism']['all'])
-        self.assertEquals(3, res['autism']['F'])
-        self.assertEquals(26, res['autism']['M'])
+        self.assertEquals(29, res['autism']['count']['all'])
+        self.assertEquals(3, res['autism']['count']['F'])
+        self.assertEquals(26, res['autism']['count']['M'])
 
     def test_query_counter_with_nonverbal_iq_and_race(self):
 
@@ -154,10 +154,10 @@ class Test(APITestCase):
         res = response.data
         print(res)
 
-        self.assertEquals(2, res['unaffected']['all'])
-        self.assertEquals(2, res['unaffected']['F'])
-        self.assertEquals(0, res['unaffected']['M'])
+        self.assertEquals(2, res['unaffected']['count']['all'])
+        self.assertEquals(2, res['unaffected']['count']['F'])
+        self.assertEquals(0, res['unaffected']['count']['M'])
 
-        self.assertEquals(2, res['autism']['all'])
-        self.assertEquals(0, res['autism']['F'])
-        self.assertEquals(2, res['autism']['M'])
+        self.assertEquals(2, res['autism']['count']['all'])
+        self.assertEquals(0, res['autism']['count']['F'])
+        self.assertEquals(2, res['autism']['count']['M'])
