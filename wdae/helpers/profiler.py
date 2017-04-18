@@ -13,8 +13,10 @@ import tempfile
 
 try:
     PROFILE_LOG_BASE = settings.PROFILE_LOG_BASE
-except:
+except Exception:
     PROFILE_LOG_BASE = tempfile.gettempdir()
+
+# PROFILE_LOG_BASE = tempfile.mkdtemp(prefix="py_profile.", suffix=".prof")
 
 
 def profile(log_file):

@@ -9,6 +9,7 @@ from gene.gene_set_collections import GeneSetsCollections
 from django.http.response import StreamingHttpResponse
 import itertools
 from django.utils.http import urlencode
+# from helpers.profiler import profile
 
 
 class GeneSetsCollectionsView(views.APIView):
@@ -39,6 +40,7 @@ class GeneSetsView(views.APIView):
         url = 'gene_sets/gene_set_download'
         return '{}?{}'.format(url, urlencode(query))
 
+    # @profile('/home/lubo/gene_sets.prof')
     def post(self, request):
         data = request.data
         if 'geneSetsCollection' not in data:
@@ -56,6 +58,18 @@ class GeneSetsView(views.APIView):
         gene_sets = self.gscs.get_gene_sets(
             gene_sets_collection_id, gene_sets_types)
 
+        response = gene_sets
+        if 'filter' in data:
+            f = data['filter'].lower()
+            response = [
+                r for r in response
+                if f in r['name'].lower() or f in r['desc'].lower()
+            ]
+
+        if 'limit' in data:
+            limit = int(data['limit'])
+            response = response[:limit]
+
         response = [
             {
                 'count': gs['count'],
@@ -67,18 +81,8 @@ class GeneSetsView(views.APIView):
                     'geneSetsTypes': ','.join(gene_sets_types)
                 })
             }
-            for gs in gene_sets
+            for gs in response
         ]
-        if 'filter' in data:
-            f = data['filter'].lower()
-            response = [
-                r for r in response
-                if f in r['name'].lower() or f in r['desc'].lower()
-            ]
-
-        if 'limit' in data:
-            limit = int(data['limit'])
-            response = response[:limit]
 
         return Response(response, status=status.HTTP_200_OK)
 
