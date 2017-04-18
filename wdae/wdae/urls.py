@@ -21,5 +21,6 @@ urlpatterns = patterns(
     url(r'^api/v3/enrichment', include('enrichment_api.urls')),
     url(r'^api/v3/users/', include('users.urls_session')),
     url(r'^api/v3/measures', include('measures_api.urls')),
+    url(r'^api/v3/family_counters', include('family_counters_api.urls')),
     url(r'^api/v3/pheno_tool', include('pheno_tool_api.urls')),
 )
