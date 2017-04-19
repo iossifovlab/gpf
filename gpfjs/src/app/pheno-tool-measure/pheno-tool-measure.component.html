@@ -21,5 +21,13 @@
         </label>
       </div>
     </div>
+
+    <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert" style="width: 100%">
+      <ul>
+        <li *ngFor="let error of errors">
+          {{ error }}
+        </li>
+      </ul>
+    </div>
   </div>
 </div>
