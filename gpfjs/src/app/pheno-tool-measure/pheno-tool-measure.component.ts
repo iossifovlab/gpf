@@ -5,7 +5,8 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { PhenoToolMeasureState, PHENO_TOOL_MEASURE_CHANGE,
-         PHENO_TOOL_MEASURE_INIT } from './pheno-tool-measure';
+  PHENO_TOOL_MEASURE_INIT, PHENO_TOOL_NORMALIZE_BY_CHECK,
+  PHENO_TOOL_NORMALIZE_BY_UNCHECK }  from './pheno-tool-measure';
 import { ValidationError } from "class-validator";
 
 @Component({
@@ -66,10 +67,26 @@ export class PhenoToolMeasureComponent extends QueryStateProvider implements OnI
         }
 
         return {
-          measureId: state.measure.name
+          measureId: state.measure.name,
+          normalizeBy: state.normalizeBy
         }
       }
     );
+  }
+
+  onNormalizeByChange(value: any, event): void {
+    if (event.target.checked) {
+      this.store.dispatch({
+        'type': PHENO_TOOL_NORMALIZE_BY_CHECK,
+        'payload': value
+      });
+    } else {
+      this.store.dispatch({
+        'type': PHENO_TOOL_NORMALIZE_BY_UNCHECK,
+        'payload': value
+      });
+
+    }
   }
 
 }

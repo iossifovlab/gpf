@@ -10,13 +10,17 @@
       Normalized by:
       <div>
         <label>
-          <input type="checkbox">
+          <input
+            type="checkbox"
+            (change)="onNormalizeByChange('age', $event);">
           age
         </label>
       </div>
       <div>
         <label>
-          <input type="checkbox">
+          <input
+            type="checkbox"
+            (change)="onNormalizeByChange('non-verbal iq', $event);">
           non verbal IQ
         </label>
       </div>
