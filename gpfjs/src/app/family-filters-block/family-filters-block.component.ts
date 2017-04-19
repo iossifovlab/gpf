@@ -3,6 +3,7 @@ import { Component, OnInit, Input, forwardRef, ViewChild,
 import { PhenoFilter } from '../datasets/datasets';
 import { QueryStateCollector } from '../query/query-state-provider'
 import { StateRestoreService } from '../store/state-restore.service'
+import { Subject } from 'rxjs/Subject';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -15,6 +16,8 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   @Input() datasetId: string;
   @ViewChild('tabset') ngbTabset;
 
+  private ngUnsubscribe: Subject<void> = new Subject<void>();
+
   constructor(
     private stateRestoreService: StateRestoreService,
     private changeDetectorRef: ChangeDetectorRef
@@ -26,18 +29,25 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   }
 
   ngAfterViewInit() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
-        if ("familyIds" in state) {
-          this.ngbTabset.select("family-ids")
-        }
-        else if ("phenoFilters" in state) {
-          this.ngbTabset.select("pheno-filters")
-        }
+    this.stateRestoreService.getState(this.constructor.name)
+      .takeUntil(this.ngUnsubscribe)
+      .subscribe(
+        (state) => {
+          if ("familyIds" in state) {
+            this.ngbTabset.select("family-ids")
+          }
+          else if ("phenoFilters" in state) {
+            this.ngbTabset.select("pheno-filters")
+          }
 
-        this.changeDetectorRef.detectChanges()
-      }
-    )
+          this.changeDetectorRef.detectChanges()
+        }
+      )
+  }
+
+  ngOnDestroy() {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
 }
