@@ -4,7 +4,8 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
 import {
-  PHENO_TOOL_ALL, PHENO_TOOL_OTHERS, PHENO_TOOL_CNV, PHENO_TOOL_LGDS
+  PHENO_TOOL_ALL, PHENO_TOOL_OTHERS, PHENO_TOOL_CNV, PHENO_TOOL_LGDS,
+  PHENO_TOOL_INITIAL_VALUES
 } from './pheno-tool-effect-types';
 import { DatasetsState } from '../datasets/datasets';
 import { GpfState } from '../store/gpf-store';
@@ -30,5 +31,7 @@ export class PhenoToolEffectTypesComponent extends EffecttypesComponent  {
     this.effectTypesButtons.set('PHENO_TOOL_ALL', PHENO_TOOL_ALL);
   }
 
-
+  selectInitialValues() {
+    this.selectEffectTypesSet(PHENO_TOOL_INITIAL_VALUES);
+  }
 }

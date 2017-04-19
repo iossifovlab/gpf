@@ -118,7 +118,8 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
     this.store.dispatch({
       'type': EFFECT_TYPE_INIT,
     });
-    this.selectButtonGroup('LGDS');
+
+    this.selectInitialValues();
 
     this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
@@ -138,6 +139,10 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
     );
   }
 
+  selectInitialValues() {
+    this.selectButtonGroup('LGDS');
+  }
+
   private initButtonGroups(): void {
     this.effectTypesButtons = new Map<string, string[]>();
 
@@ -150,6 +155,10 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
 
   selectButtonGroup(groupId: string): void {
     let effectTypes: string[] = this.effectTypesButtons.get(groupId);
+    this.selectEffectTypesSet(effectTypes);
+  }
+
+  selectEffectTypesSet(effectTypes): void {
     if (effectTypes) {
       this.store.dispatch({
         'type': EFFECT_TYPE_SET,
