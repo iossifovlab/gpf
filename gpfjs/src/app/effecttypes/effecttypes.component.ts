@@ -88,7 +88,7 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   nonCodingColumn: string[] = NONCODING;
   cnvColumn: string[] = CNV;
 
-  private effectTypesButtons: Map<string, string[]>;
+  effectTypesButtons: Map<string, string[]>;
   private selectedEffectTypes = new Map<string, boolean>();
 
   effectTypes: Observable<[EffectTypesState, boolean, ValidationError[]]>;
