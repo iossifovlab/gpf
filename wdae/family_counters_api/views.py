@@ -17,6 +17,39 @@ class FamilyCounters(QueryBaseView):
         super(FamilyCounters, self).__init__()
 
     def post(self, request):
+        """
+        {
+            "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
+            "gender": ["female", "male"],
+            "presentInChild": [
+                "affected and unaffected",
+                "affected only"
+            ],
+            "presentInParent": [
+                "neither"
+            ],
+            "variantTypes": [
+                "CNV", "del", "ins", "sub"
+            ],
+            "genes": "All",
+            "datasetId": "SSC",
+            "pedigreeSelector": {
+                "id": "phenotype",
+                "checkedValues": ["autism", "unaffected"]
+            },
+            "phenoFilters": [
+                {
+                    "measureType": "continuous",
+                    "measure":
+                    "ssc_core_descriptive.ssc_diagnosis_nonverbal_iq",
+                    "role": "prb",
+                    "mmin": 80,
+                    "mmax": 80
+                }
+            ]
+        }
+
+        """
         data = request.data
         try:
             dataset_id = data['datasetId']
@@ -53,6 +86,7 @@ class FamilyCounters(QueryBaseView):
                     res[family_group]['count']['all'] += 1
                     res[family_group]['count'][p.gender] += 1
 
+            res = [res[s['id']] for s in pedigree_selector['domain']]
             pprint.pprint(res)
             return Response(res, status=status.HTTP_200_OK)
         except NotAuthenticated:
