@@ -13,12 +13,15 @@ from collections import Counter
 
 
 class FamilyCounters(QueryBaseView):
-    def __init__(self):
-        super(FamilyCounters, self).__init__()
+    """
+Example:
 
-    def post(self, request):
-        """
         {
+            "datasetId": "SSC",
+            "pedigreeSelector": {
+                "id": "phenotype",
+                "checkedValues": ["autism", "unaffected"]
+            },
             "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
             "gender": ["female", "male"],
             "presentInChild": [
@@ -32,11 +35,6 @@ class FamilyCounters(QueryBaseView):
                 "CNV", "del", "ins", "sub"
             ],
             "genes": "All",
-            "datasetId": "SSC",
-            "pedigreeSelector": {
-                "id": "phenotype",
-                "checkedValues": ["autism", "unaffected"]
-            },
             "phenoFilters": [
                 {
                     "measureType": "continuous",
@@ -49,7 +47,12 @@ class FamilyCounters(QueryBaseView):
             ]
         }
 
-        """
+    """
+
+    def __init__(self):
+        super(FamilyCounters, self).__init__()
+
+    def post(self, request):
         data = request.data
         try:
             dataset_id = data['datasetId']
