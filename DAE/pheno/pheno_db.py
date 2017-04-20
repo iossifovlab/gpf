@@ -14,6 +14,7 @@ from pheno.models import PersonManager, VariableManager, \
     OrdinalValueManager, CategoricalValueManager, RawValueManager,\
     MetaVariableManager, MetaVariableCorrelationManager
 from VariantsDB import Person, Family
+import copy
 
 
 class Instrument(object):
@@ -175,6 +176,24 @@ class PhenoDB(PhenoConfig):
                 'instrument_name': instrument_name,
                 'measure_name': measure_name,
             }
+
+    def get_age_measure_id(self, measure_id):
+        age = copy.copy(self.age)
+        return self._get_configured_measure_id(age, measure_id)
+
+    def get_nonverbal_iq_measure_id(self, measure_id):
+        nonverbal_iq = copy.copy(self.nonverbal_iq)
+        return self._get_configured_measure_id(nonverbal_iq, measure_id)
+
+    def _get_configured_measure_id(self, base_measure_config, measure_id):
+        assert self.has_measure(measure_id)
+        if base_measure_config.get('instrument_name', None) is None:
+            measure = self.get_measure(measure_id)
+            base_measure_config['instrument_name'] = measure.instrument_name
+        age_id = "{instrument_name}.{measure_name}".format(
+            **base_measure_config)
+        assert self.has_measure(age_id)
+        return age_id
 
     @staticmethod
     def _check_nan(val):
