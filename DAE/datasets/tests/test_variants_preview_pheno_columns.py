@@ -17,7 +17,7 @@ def test_get_denovo_variants_ssc_11563(ssc):
     vs = ssc.get_variants_preview(**query)
     v = vs.next()
     pprint(v)
-    assert len(v) == 33
+    assert len(v) == 30
     nviq, viq, mom, dad = v[-4:]
     assert 'Proband IQs.NvIQ' == nviq
     assert 'Proband IQs.vIQ' == viq
@@ -27,7 +27,7 @@ def test_get_denovo_variants_ssc_11563(ssc):
     v = vs.next()
     pprint(v)
 
-    assert len(v) == 33
+    assert len(v) == 30
 
     assert '11563' == v[0]
 
@@ -45,7 +45,7 @@ def test_get_denovo_variants_ssc_11825(ssc):
     vs = ssc.get_variants_preview(**query)
     v = vs.next()
     pprint(v)
-    assert len(v) == 33
+    assert len(v) == 30
     nviq, viq, mom, dad = v[-4:]
     assert 'Proband IQs.NvIQ' == nviq
     assert 'Proband IQs.vIQ' == viq
@@ -55,7 +55,7 @@ def test_get_denovo_variants_ssc_11825(ssc):
     v = vs.next()
     pprint(v)
 
-    assert len(v) == 33
+    assert len(v) == 30
 
     assert '11825' == v[0]
 
@@ -79,14 +79,14 @@ def test_get_denovo_variants_vip(vip):
     vs = vip.get_variants_preview(**query)
     v = vs.next()
     pprint(v)
-    assert len(v) == 33
+    assert len(v) == 30
     nviq, viq, status, diagnossis = v[-4:]
     assert 'Proband IQs.NvIQ' == nviq
     assert 'Proband IQs.vIQ' == viq
     assert 'Status.16p' == status
     assert 'Status.Diagnosis' == diagnossis
 
-    assert len(v) == 33
+    assert len(v) == 30
     families = vip.pheno_db.families
     print(families.keys())
     count = 0
