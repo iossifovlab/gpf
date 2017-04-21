@@ -7,6 +7,7 @@ Created on Apr 21, 2017
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
+from pprint import pprint
 
 
 class Test(APITestCase):
@@ -63,3 +64,23 @@ class Test(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('base_image_url', response.data)
         self.assertIn('measures', response.data)
+
+    def test_instruments_vip(self):
+        url = "{}?dataset_id=VIP".format(self.URL)
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        print(response.data)
+        self.assertIn('default', response.data)
+        self.assertIn('instruments', response.data)
+        self.assertEquals(67, len(response.data['instruments']))
+
+    def test_measures_vip_diagnosis_summary(self):
+        url = "{}?dataset_id=VIP&instrument=diagnosis_summary".format(
+            self.MEASURES_URL)
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertIn('base_image_url', response.data)
+        self.assertIn('measures', response.data)
+
+        pprint(response.data['measures'])
+        self.assertEquals(18, len(response.data['measures']))
