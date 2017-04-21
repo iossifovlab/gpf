@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, url, include
+from django.contrib import admin
 
-
+admin.autodiscover()
 urlpatterns = patterns(
     '',
     url(r'^$', 'variants_angular.views.index'),
@@ -24,4 +25,5 @@ urlpatterns = patterns(
     url(r'^api/v3/family_counters', include('family_counters_api.urls')),
     url(r'^api/v3/pheno_tool', include('pheno_tool_api.urls')),
     url(r'^api/v3/pheno_browser', include('pheno_browser_api.urls')),
+    url(r'^admin/', include(admin.site.urls)),
 )

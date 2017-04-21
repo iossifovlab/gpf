@@ -278,6 +278,8 @@ class DatasetsConfig(object):
 
         pedigree_selectors = self._get_pedigree_selectors(section)
 
+        authorized_groups = self._get_string_list(section, 'authorizedGroups')
+
         return {
             'id': dataset_id,
             'name': name,
@@ -290,4 +292,5 @@ class DatasetsConfig(object):
             'phenotypeBrowser': phenotype_browser,
             'genotypeBrowser': genotype_browser,
             'pedigreeSelectors': pedigree_selectors,
+            'authorizedGroups': authorized_groups
         }

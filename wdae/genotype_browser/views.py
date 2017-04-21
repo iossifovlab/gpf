@@ -17,27 +17,17 @@ from rest_framework.exceptions import NotAuthenticated
 import json
 from query_variants import join_line
 import itertools
+from datasets_api.models import Dataset
+from guardian.utils import get_anonymous_user
 
 
 class IsDatasetAllowed(permissions.BasePermission):
 
-    def has_object_permission(self, request, view, dataset):
+    def has_object_permission(self, request, view, dataset_id):
         user = request.user
-
-        print("has_object_permission", dataset.descriptor[
-              'visibility'], user.is_authenticated())
-
-        access_rights = False
-        if dataset.descriptor['visibility'] == 'ALL':
-            access_rights = True
-        if dataset.descriptor['visibility'] == 'AUTHENTICATED' \
-                and user.is_authenticated():
-            access_rights = True
-        if dataset.descriptor['visibility'] == 'STAFF' \
-                and user.is_staff:
-            access_rights = True
-
-        return access_rights
+        datasetObject = Dataset.objects.get(dataset_id=dataset_id)
+        return user.has_perm('datasets_api.view', datasetObject) or\
+               get_anonymous_user().has_perm('datasets_api.view', datasetObject)
 
 
 class QueryBaseView(views.APIView):
@@ -93,7 +83,7 @@ class QueryPreviewView(QueryBaseView):
         try:
             dataset_id = data['datasetId']
             dataset = self.datasets_factory.get_dataset(dataset_id)
-            self.check_object_permissions(request, dataset)
+            self.check_object_permissions(request, dataset_id)
 
             legend = self.prepare_legend_response(dataset, **data)
 

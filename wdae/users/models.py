@@ -8,7 +8,7 @@ import uuid
 from django.db import models
 from django.core.mail import send_mail
 # from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 from django.conf import settings
 
@@ -86,7 +86,7 @@ class WdaeUserManager(BaseUserManager):
         return user
 
 
-class WdaeUser(AbstractBaseUser):
+class WdaeUser(AbstractBaseUser, PermissionsMixin):
     app_label = 'api'
     first_name = models.CharField(max_length='100')
     last_name = models.CharField(max_length='100')
@@ -128,16 +128,6 @@ class WdaeUser(AbstractBaseUser):
     def get_short_name(self):
         "Returns the short name for the user."
         return self.first_name
-
-    @property
-    def is_superuser(self):
-        return self.is_staff
-
-    def has_perm(self, perm, obj=None):
-        return self.is_staff
-
-    def has_module_perms(self, app_label):
-        return self.is_staff
 
     def reset_password(self):
         self.set_password(uuid.uuid4())
