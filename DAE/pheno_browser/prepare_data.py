@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 from DAE import pheno
 from pheno_browser.graphs import draw_linregres, draw_measure_violinplot,\
     draw_distribution
+from pheno_browser.models import VariableBrowserModelManager,\
+    VariableBrowserModel
 
 
 class PreparePhenoBrowserBase(object):
@@ -19,6 +21,7 @@ class PreparePhenoBrowserBase(object):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         self.pheno_db = pheno.get_pheno_db(pheno_db)
+        self.browser_db = "{}_browser.db".format(pheno_db)
 
     def load_measure(self, measure):
         df = self.pheno_db.get_persons_values_df([measure.measure_id])
@@ -69,30 +72,48 @@ class PreparePhenoBrowserBase(object):
         return filepath
 
     def save_fig(self, measure, suffix):
-        #         filepath = self.figure_filepath(
-        #             measure, "{}_small".format(suffix))
-        #         plt.savefig(filepath, dpi=self.SMALL_DPI)
+        small_filepath = self.figure_filepath(
+            measure, "{}_small".format(suffix))
+        plt.savefig(small_filepath, dpi=self.SMALL_DPI)
 
         filepath = self.figure_filepath(measure, suffix)
         plt.savefig(filepath, dpi=self.LARGE_DPI)
         plt.close()
-        return filepath
+        return small_filepath, filepath
 
-    def build_regression_by_age(self, measure):
+    def build_regression_by_age(self, measure, res):
+        age_id = self.pheno_db.get_age_measure_id(measure.measure_id)
+        if measure.measure_id == age_id:
+            return None, None
+
         df = self.load_measure_and_age(measure)
         if df is None:
             return None, None
 
         dd = df[df.role == 'prb']
         if len(dd) > 5:
-            print(dd.head())
             res_male, res_female = draw_linregres(
                 dd, 'age', measure.measure_id, jitter=0.3)
-            self.save_fig(measure, "prb_regression_by_age")
-            return res_male, res_female
+            res.pvalue_correlation_age_male = res_male.pvalues['age'] \
+                if res_male is not None else None
+            res.pvalue_correlation_age_female = res_female.pvalues['age'] \
+                if res_female is not None else None
+
+            (res.figure_correlation_age_small,
+             res.figure_correlation_age) = \
+                self.save_fig(measure, "prb_regression_by_age")
+            return (res.pvalue_correlation_age_male,
+                    res.pvalue_correlation_age_female)
         return None, None
 
-    def build_regression_by_nviq(self, measure):
+    def build_regression_by_nviq(self, measure, res):
+        nviq_id = self.pheno_db.get_nonverbal_iq_measure_id(measure.measure_id)
+        if measure.measure_id == nviq_id:
+            return None, None
+        age_id = self.pheno_db.get_age_measure_id(measure.measure_id)
+        if measure.measure_id == age_id:
+            return None, None
+
         df = self.load_measure_and_nonverbal_iq(measure)
         if df is None:
             return None, None
@@ -101,26 +122,54 @@ class PreparePhenoBrowserBase(object):
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
                 dd, 'nonverbal_iq', measure.measure_id, jitter=0.3)
-            # self._figure_caption(caption)
-            self.save_fig(measure, "prb_regression_by_nviq")
-            return res_male, res_female
+            res.pvalue_correlation_nviq_male = \
+                res_male.pvalues['nonverbal_iq'] \
+                if res_male is not None else None
+            res.pvalue_correlation_nviq_female = \
+                res_female.pvalues['nonverbal_iq'] \
+                if res_female is not None else None
+
+            (res.figure_correlation_nviq_small,
+             res.figure_correlation_nviq_small) = self.save_fig(
+                 measure, "prb_regression_by_nviq")
+            return (res.pvalue_correlation_nviq_male,
+                    res.pvalue_correlation_nviq_female)
         return None, None
 
-    def build_values_figure(self, measure):
+    def build_values_violinplot(self, measure, res):
         df = self.load_measure(measure)
         draw_measure_violinplot(df, measure.measure_id)
-        self.save_fig(measure, "violinplot")
+        (res.figure_distribution_small,
+         res.figure_distribution) = self.save_fig(measure, "violinplot")
 
     def build_values_distribution(self, measure):
         df = self.load_measure(measure)
         draw_distribution(df, measure.measure_id)
-        self.save_fig(measure, "distribution")
+        return self.save_fig(measure, "distribution")
 
     def run(self):
-        for instrument in self.pheno_db.instruments.values():
-            print("processing instrument: {}".format(instrument.name))
-            for measure in instrument.measures.values():
-                print("\tprocessing measure: {}".format(measure.name))
-                if measure.measure_type == 'continuous':
-                    self.build_values_distribution(measure)
-                    break
+        with VariableBrowserModelManager(dbfile=self.browser_db) as vm:
+            vm.drop_tables()
+            vm.create_tables()
+
+            for instrument in self.pheno_db.instruments.values():
+                print("processing instrument: {}".format(instrument.name))
+
+                for count, measure in enumerate(instrument.measures.values()):
+                    print("{}.\tprocessing measure: {}".format(
+                        count, measure.name))
+                    if measure.measure_type == 'continuous':
+                        v = VariableBrowserModel()
+                        v.measure_id = measure.measure_id
+                        v.instrument_name = measure.instrument_name
+                        v.measure_name = measure.measure_name
+                        v.measure_type = measure.measure_type
+                        v.domain = measure.value_domain
+
+                        self.build_values_violinplot(measure, v)
+                        self.build_regression_by_nviq(measure, v)
+                        self.build_regression_by_age(measure, v)
+
+                        print(v.to_tuple(v))
+
+                        vm.save(v)

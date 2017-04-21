@@ -6,17 +6,30 @@ Created on Apr 7, 2017
 from pheno.models import ManagerBase
 
 
-class MetaVariableCorrelationModel(object):
+class VariableBrowserModel(object):
     SCHEMA_CREATE = """
     BEGIN;
     CREATE TABLE IF NOT EXISTS {table} (
-        variable_id varchar(128) NOT NULL,
-        correlation_with varchar(128) NOT NULL,
-        role varchar(16) NOT NULL,
-        gender varchar(1) NOT NULL,
-        coeff real NULL,
-        pvalue real NULL,
-        PRIMARY KEY (variable_id, correlation_with, role, gender)
+        measure_id varchar(128) NOT NULL,
+        instrument_name varcahr(64) NOT NULL,
+        measure_name varchar(64) NOT NULL,
+        measure_type varchar(16),
+
+        figure_distribution_small varchar(256),
+        figure_distribution varchar(256),
+        values_domain varchar(128),
+
+        figure_correlation_nviq_small varchar(256),
+        figure_correlation_nviq varchar(256),
+        pvalue_correlation_nviq_male real,
+        pvalue_correlation_nviq_female real,
+
+        figure_correlation_age_small varchar(256),
+        figure_correlation_age varchar(256),
+        pvalue_correlation_age_male real,
+        pvalue_correlation_age_female real,
+
+        PRIMARY KEY (measure_id)
     );
     COMMIT;
     """
@@ -29,52 +42,103 @@ class MetaVariableCorrelationModel(object):
     COMMIT;
     """
 
-    TABLE = 'meta_variable_correlation'
+    TABLE = 'variable_browser'
 
     COLUMNS = [
-        'variable_id',
-        'correlation_with',
-        'role',
-        'gender',
-        'coeff',
-        'pvalue',
+        'measure_id',
+        'instrument_name',
+        'measure_name',
+        'measure_type',
+
+        'figure_distribution_small',
+        'figure_distribution',
+        'values_domain',
+
+        'figure_correlation_nviq_small',
+        'figure_correlation_nviq',
+        'pvalue_correlation_nviq_male',
+        'pvalue_correlation_nviq_female',
+
+        'figure_correlation_age_small',
+        'figure_correlation_age',
+        'pvalue_correlation_age_male',
+        'pvalue_correlation_age_female',
+
     ]
 
     def __init__(self):
-        self.variable_id = None
-        self.correlation_with = None
-        self.role = None
-        self.gender = None
-        self.coeff = None
-        self.pvalue = None
+        self.measure_id = None
+        self.instrument_name = None
+        self.measure_name = None
+        self.measure_type = None
+
+        self.figure_distribution_small = None
+        self.figure_distribution = None
+        self.values_domain = None
+
+        self.figure_correlation_nviq_small = None
+        self.figure_correlation_nviq = None
+        self.pvalue_correlation_nviq_male = None
+        self.pvalue_correlation_nviq_female = None
+
+        self.figure_correlation_age_small = None
+        self.figure_correlation_age = None
+        self.pvalue_correlation_age_male = None
+        self.pvalue_correlation_age_female = None
 
     @staticmethod
     def to_tuple(v):
         return (
-            v.variable_id,
-            v.correlation_with,
-            v.role,
-            v.gender,
-            v.coeff,
-            v.pvalue,
+            v.measure_id,
+            v.instrument_name,
+            v.measure_name,
+            v.measure_type,
+
+            v.figure_distribution_small,
+            v.figure_distribution,
+            v.values_domain,
+
+            v.figure_correlation_nviq_small,
+            v.figure_correlation_nviq,
+            v.pvalue_correlation_nviq_male,
+            v.pvalue_correlation_nviq_female,
+
+            v.figure_correlation_age_small,
+            v.figure_correlation_age,
+            v.pvalue_correlation_age_male,
+            v.pvalue_correlation_age_female,
         )
 
     @staticmethod
     def create_from_df(row):
-        v = MetaVariableCorrelationModel()
+        v = VariableBrowserModel()
 
-        v.variable_id = row['variable_id']
-        v.correlation_with = row['correlation_with']
-        v.role = row['role']
-        v.gender = row['gender']
-        v.coeff = row['coeff']
-        v.pvalue = row['pvalue']
+        v.measure_id = row['measure_id']
+        v.instrument_name = row['instrument_name']
+        v.measure_name = row['measure_name']
+        v.measure_type = row['measure_type']
+
+        v.figure_distribution_small = row['figure_distribution_small']
+        v.figure_distribution = row['figure_distribution']
+        v.values_domain = row['values_domain']
+
+        v.figure_correlation_nviq_small = row['figure_correlation_nviq_small']
+        v.figure_correlation_nviq = row['figure_correlation_nviq']
+        v.pvalue_correlation_nviq_male = row['pvalue_correlation_nviq_male']
+        v.pvalue_correlation_nviq_female = \
+            row['pvalue_correlation_nviq_female']
+
+        v.figure_correlation_age_small = row['figure_correlation_age_small']
+        v.figure_correlation_age = row['figure_correlation_age']
+        v.pvalue_correlation_age_male = row['pvalue_correlation_age_male']
+        v.pvalue_correlation_age_female = row['pvalue_correlation_age_female']
+
         return v
 
 
-class MetaVariableCorrelationManager(ManagerBase):
+class VariableBrowserModelManager(ManagerBase):
 
-    MODEL = MetaVariableCorrelationModel
+    MODEL = VariableBrowserModel
 
     def __init__(self, *args, **kwargs):
-        super(MetaVariableCorrelationManager, self).__init__(*args, **kwargs)
+        super(VariableBrowserModelManager, self).__init__(*args, **kwargs)

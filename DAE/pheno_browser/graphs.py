@@ -11,6 +11,7 @@ import seaborn as sns
 import statsmodels.api as sm
 
 from collections import defaultdict
+import traceback
 
 
 def roles():
@@ -122,6 +123,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
         y = dmale[col2]
         res_male = sm.OLS(y, X).fit()
     except ValueError:
+        traceback.print_exc()
         res_male = None
 
     try:
@@ -130,6 +132,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
         y = dfemale[col2]
         res_female = sm.OLS(y, X).fit()
     except ValueError:
+        traceback.print_exc()
         res_female = None
 
     if jitter is None:
