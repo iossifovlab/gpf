@@ -83,6 +83,8 @@ class PreparePhenoBrowserBase(object):
 
     def build_regression_by_age(self, measure, res):
         age_id = self.pheno_db.get_age_measure_id(measure.measure_id)
+        if age_id is None:
+            return None, None
         if measure.measure_id == age_id:
             return None, None
 
@@ -108,6 +110,8 @@ class PreparePhenoBrowserBase(object):
 
     def build_regression_by_nviq(self, measure, res):
         nviq_id = self.pheno_db.get_nonverbal_iq_measure_id(measure.measure_id)
+        if nviq_id is None:
+            return None, None
         if measure.measure_id == nviq_id:
             return None, None
         age_id = self.pheno_db.get_age_measure_id(measure.measure_id)

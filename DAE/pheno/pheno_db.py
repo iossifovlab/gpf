@@ -192,8 +192,10 @@ class PhenoDB(PhenoConfig):
             base_measure_config['instrument_name'] = measure.instrument_name
         age_id = "{instrument_name}.{measure_name}".format(
             **base_measure_config)
-        assert self.has_measure(age_id)
-        return age_id
+        if self.has_measure(age_id):
+            return age_id
+        else:
+            return None
 
     @staticmethod
     def _check_nan(val):
