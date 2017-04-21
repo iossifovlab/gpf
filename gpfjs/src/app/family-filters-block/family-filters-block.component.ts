@@ -14,6 +14,7 @@ import { Subject } from 'rxjs/Subject';
 export class FamilyFiltersBlockComponent extends QueryStateCollector implements OnInit {
   @Input() phenoFilters: Array<PhenoFilter>;
   @Input() datasetId: string;
+  @Input() genotypeBrowserState: Object;
   @ViewChild('tabset') ngbTabset;
 
   private ngUnsubscribe: Subject<void> = new Subject<void>();

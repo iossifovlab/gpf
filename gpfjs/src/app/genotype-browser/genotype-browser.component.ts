@@ -19,6 +19,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
   genotypePreviewsArray: any;
 
   private selectedDatasetId: string;
+  private genotypeBrowserState: Object;
   selectedDataset: Dataset;
 
   constructor(
@@ -43,6 +44,9 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
           state => {
             this.genotypePreviewsArray = null
             let stateObject = Object.assign({}, ...state);
+            this.genotypeBrowserState = Object.assign({},
+                                          { datasetId: this.selectedDatasetId },
+                                          stateObject);;
             this.router.navigate(['.', { state: JSON.stringify(stateObject)}], { relativeTo: this.route });
           },
           error => {

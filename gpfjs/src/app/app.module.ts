@@ -90,6 +90,9 @@ import { PhenoToolResultsChartPerEffectComponent } from './pheno-tool-results-ch
 import { PhenoToolResultsChartPerResultComponent } from './pheno-tool-results-chart/pheno-tool-results-chart-per-result.component';
 import { PhenoToolEffectTypesComponent } from './pheno-tool-effect-types/pheno-tool-effect-types.component';
 
+import { FamilyCountersComponent } from './family-counters/family-counters.component';
+import { FamilyCountersService } from './family-counters/family-counters.service';
+
 const appRoutes: Routes = [
   {
     path: '',
@@ -175,7 +178,8 @@ const appRoutes: Routes = [
     PhenoToolResultsChartComponent,
     PhenoToolResultsChartPerEffectComponent,
     PhenoToolResultsChartPerResultComponent,
-    PhenoToolEffectTypesComponent
+    PhenoToolEffectTypesComponent,
+    FamilyCountersComponent
   ],
   imports: [
     BrowserModule,
@@ -204,7 +208,8 @@ const appRoutes: Routes = [
     FullscreenLoadingService,
     StateRestoreService,
     MeasuresService,
-    PhenoToolService
+    PhenoToolService,
+    FamilyCountersService
   ],
   bootstrap: [AppComponent]
 })

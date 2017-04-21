@@ -1,0 +1,36 @@
+.gender-icon {
+  border: 1px solid black;
+  height: 40px;
+  width: 40px;
+  display: inline-block;
+  text-align: center;
+  font-size: 1em;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.gender-icon.inverted {
+  border: 1px solid white;
+  color: white;
+}
+
+.gender-icon.male {
+  border-radius: 0px;
+}
+
+.gender-icon.female {
+  border-radius: 40px;
+}
+
+.portion-separator {
+  height: 1px;
+  float: left;
+  width: 20px;
+}
+
+.separator {
+  font-size: 28px;
+}
+
+.family-counter-container {
+  line-height: 40px;
+}
