@@ -161,3 +161,22 @@ class Test(APITestCase):
         self.assertEquals(2, res[0]['count']['all'])
         self.assertEquals(0, res[0]['count']['F'])
         self.assertEquals(2, res[0]['count']['M'])
+
+    def test_query_counter_with_single_wrong_family_id(self):
+
+        data = copy.deepcopy(EXAMPLE_REQUEST_SSC)
+        data['familyIds'] = ['aaa']
+
+        response = self.client.post(
+            self.URL, data, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = response.data
+        print(res)
+
+        self.assertEquals(0, res[0]['count']['all'])
+        self.assertEquals(0, res[0]['count']['F'])
+        self.assertEquals(0, res[0]['count']['M'])
+
+        self.assertEquals(0, res[1]['count']['all'])
+        self.assertEquals(0, res[1]['count']['F'])
+        self.assertEquals(0, res[1]['count']['M'])

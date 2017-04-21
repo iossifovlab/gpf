@@ -83,14 +83,15 @@ Example:
             }
 
             for fid in family_ids:
-                fam = dataset.families[fid]
+                fam = dataset.families.get(fid, None)
+                if fam is None:
+                    continue
                 for p in fam.memberInOrder[2:]:
                     family_group = p.atts[pedigree_selector_id]
                     res[family_group]['count']['all'] += 1
                     res[family_group]['count'][p.gender] += 1
 
             res = [res[s['id']] for s in pedigree_selector['domain']]
-            pprint.pprint(res)
             return Response(res, status=status.HTTP_200_OK)
         except NotAuthenticated:
             print("error while processing genotype query")
