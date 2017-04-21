@@ -31,6 +31,10 @@ class VariableBrowserModel(object):
 
         PRIMARY KEY (measure_id)
     );
+
+    CREATE INDEX IF NOT EXISTS {table}_instrument_name
+        ON {table} (instrument_name);
+
     COMMIT;
     """
 

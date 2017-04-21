@@ -23,4 +23,5 @@ urlpatterns = patterns(
     url(r'^api/v3/measures', include('measures_api.urls')),
     url(r'^api/v3/family_counters', include('family_counters_api.urls')),
     url(r'^api/v3/pheno_tool', include('pheno_tool_api.urls')),
+    url(r'^api/v3/pheno_browser', include('pheno_browser_api.urls')),
 )

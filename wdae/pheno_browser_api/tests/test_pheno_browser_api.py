@@ -1,0 +1,65 @@
+'''
+Created on Apr 21, 2017
+
+@author: lubo
+'''
+
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.contrib.auth import get_user_model
+
+
+class Test(APITestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(Test, cls).setUpClass()
+
+        User = get_user_model()
+        u = User.objects.create(
+            email="admin@example.com",
+            first_name="First",
+            last_name="Last",
+            is_staff=True,
+            is_active=True,
+            researcher_id="0001000")
+        u.set_password("secret")
+        u.save()
+
+        cls.user = u
+        cls.user.save()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(Test, cls).tearDownClass()
+        cls.user.delete()
+
+    def setUp(self):
+        APITestCase.setUp(self)
+
+        self.client.login(
+            email='admin@example.com', password='secret')
+
+    URL = "/api/v3/pheno_browser/instruments"
+    MEASURES_URL = "/api/v3/pheno_browser/measures"
+
+    def test_instruments_missing_dataset_id(self):
+        response = self.client.get(self.URL)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    def test_instruments_ssc(self):
+        url = "{}?dataset_id=SSC".format(self.URL)
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        print(response.data)
+        self.assertIn('default', response.data)
+        self.assertIn('instruments', response.data)
+        self.assertEquals(58, len(response.data['instruments']))
+
+    def test_measures_ssc_commonly_used(self):
+        url = "{}?dataset_id=SSC&instrument=ssc_commonly_used".format(
+            self.MEASURES_URL)
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertIn('base_image_url', response.data)
+        self.assertIn('measures', response.data)
