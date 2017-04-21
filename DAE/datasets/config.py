@@ -264,8 +264,6 @@ class DatasetsConfig(object):
 
         studies = self.config.get(section, 'studies')
 
-        visibility = self._get_string(section, 'visibility', 'AUTHENTICATED')
-
         study_types = self._get_string(section, 'studyTypes')
         if study_types:
             study_types = [st for st in study_types.split(',')]
@@ -285,7 +283,6 @@ class DatasetsConfig(object):
             'name': name,
             'studies': studies,
             'studyTypes': study_types,
-            'visibility': visibility,
             'phenoDB': pheno_db,
             'enrichmentTool': enrichment_tool,
             'phenotypeGenotypeTool': pheno_geno_tool,
