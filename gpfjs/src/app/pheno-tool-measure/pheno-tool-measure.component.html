@@ -10,16 +10,28 @@
       Normalized by:
       <div>
         <label>
-          <input type="checkbox">
+          <input
+            type="checkbox"
+            (change)="onNormalizeByChange('age', $event);">
           age
         </label>
       </div>
       <div>
         <label>
-          <input type="checkbox">
+          <input
+            type="checkbox"
+            (change)="onNormalizeByChange('non-verbal iq', $event);">
           non verbal IQ
         </label>
       </div>
+    </div>
+
+    <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert" style="width: 100%">
+      <ul>
+        <li *ngFor="let error of errors">
+          {{ error }}
+        </li>
+      </ul>
     </div>
   </div>
 </div>

@@ -5,7 +5,8 @@
   <gpf-family-filters-block
     *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
     [phenoFilters]="selectedDataset?.genotypeBrowser?.phenoFilters"
-    [datasetId]=selectedDataset?.id>
+    [datasetId]="selectedDataset?.id"
+    [genotypeBrowserState]="genotypeBrowserState">
   </gpf-family-filters-block>
 
   <div class="form-block">

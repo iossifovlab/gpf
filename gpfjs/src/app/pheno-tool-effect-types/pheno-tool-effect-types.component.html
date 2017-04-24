@@ -1,0 +1,46 @@
+
+<div class="effect-card card">
+  <div class="card-header card-title">Effect Types</div>
+  <div class="card-block">
+    <div class="btn-group btn-group-sm">
+      <button
+        (click)="selectButtonGroup('PHENO_TOOL_ALL')"
+        class="btn btn-default">All</button>
+      <button
+        (click)="selectButtonGroup('NONE')"
+        class="btn btn-default">None</button>
+    </div>
+    <div class="row">
+      <div class="col-lg-4">
+        <gpf-effecttypes-column
+          [effectTypesLabels]="phenoToolLGDs"
+          [effectTypes]="effectTypes"
+          (effectTypeEvent)="onEffectTypeChange($event)">
+        </gpf-effecttypes-column>
+      </div>
+
+      <div class="col-lg-4">
+        <gpf-effecttypes-column
+          [effectTypesLabels]="phenoToolOthers"
+          [effectTypes]="effectTypes"
+          (effectTypeEvent)="onEffectTypeChange($event)">
+        </gpf-effecttypes-column>
+      </div>
+      <div class="col-lg-4">
+        <gpf-effecttypes-column
+          *ngIf="hasCNV | async"
+          [effectTypesLabels]="phenoToolCNV"
+          [effectTypes]="effectTypes"
+          (effectTypeEvent)="onEffectTypeChange($event)">
+        </gpf-effecttypes-column>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
+    <ul>
+      <li *ngFor="let error of errors">
+        {{ error }}
+      </li>
+    </ul>
+  </div>
+</div>
