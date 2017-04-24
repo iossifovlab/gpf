@@ -3,7 +3,6 @@ Created on Apr 24, 2017
 
 @author: lubo
 '''
-import itertools
 from collections import Counter
 
 
@@ -29,12 +28,16 @@ class StudiesGenotypeHelper(GenotypeHelper):
         self.in_child = in_child
 
     def get_variants(self, effect_types):
-        variants = []
+        seen_vs = set()
         for st in self.denovo_studies:
             vs = st.get_denovo_variants(
                 inChild=self.in_child, effectTypes=effect_types)
-            variants.append(vs)
-        return list(itertools.chain(*variants))
+            for v in vs:
+                v_key = v.familyId + v.location + v.variant
+                if v_key in seen_vs:
+                    continue
+                yield v
+                seen_vs.add(v_key)
 
     def get_children_stats(self):
         seen = set()
@@ -68,7 +71,8 @@ class DatasetGenotypeHelper(GenotypeHelper):
         variants = self.dataset.get_variants(
             person_grouping=self.person_grouping_id,
             person_grouping_selector=[self.person_grouping_selector],
-            effect_types=effect_types)
+            effectTypes=effect_types,
+            studyTypes=['WE'])
         return list(variants)
 
     def get_children_stats(self):

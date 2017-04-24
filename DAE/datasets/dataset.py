@@ -77,6 +77,35 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             ]
         return self._transmitted_studies
 
+    def _get_phenotype_filter(self, safe=True, **kwargs):
+        person_grouping = self.get_pedigree_selector(
+            safe=safe, default=False, ** kwargs)
+        if person_grouping is None:
+            return None
+        if person_grouping['id'] != 'phenotype':
+            return None
+        selected_phenotypes = person_grouping.get_checked_values(
+            safe=safe, **kwargs)
+
+        if not selected_phenotypes:
+            return None
+        if 'unaffected' not in selected_phenotypes:
+            def f(v):
+                return 'prb' in v.inChS and \
+                    v.study.get_attr('study.phenotype') in selected_phenotypes
+            return f
+
+        selected_phenotypes.remove('unaffected')
+        if selected_phenotypes == set():
+            def f(v):
+                return 'sib' in v.inChS
+            return f
+
+        def fm(v):
+            return 'sib' in v.inChS or \
+                v.study.get_attr('study.phenotype') in selected_phenotypes
+        return fm
+
     def get_in_child(self, safe=True, **kwargs):
         _res = QueryBase.get_in_child(**kwargs)
 
@@ -354,6 +383,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         pedigree = self.get_pedigree_selector(**kwargs)
         pedigree_id = pedigree.id
 
+        if pedigree_id == 'phenotype':
+            return None
+
         pedigree_checked_values = pedigree.get_checked_values(**kwargs)
         if pedigree_checked_values is None:
             return None
@@ -463,10 +495,18 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 yield v
 
     def get_variants(self, safe=True, **kwargs):
+        phenotype_filter = self._get_phenotype_filter(**kwargs)
+
         denovo = self.get_denovo_variants(safe=safe, **kwargs)
         transmitted = self.get_transmitted_variants(safe=safe, **kwargs)
         variants = itertools.chain.from_iterable([denovo, transmitted])
-        return variants
+        if phenotype_filter is None:
+            for v in variants:
+                yield v
+        else:
+            for v in variants:
+                if phenotype_filter(v):
+                    yield v
 
     COMMON_COLUMNS = [
         'effectType',
