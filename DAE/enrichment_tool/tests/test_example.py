@@ -7,6 +7,7 @@ from enrichment_tool.background import SamochaBackground
 from DAE import get_gene_sets_symNS, vDB
 from enrichment_tool.tool import EnrichmentTool
 from enrichment_tool.event_counters import GeneEventsCounter
+from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
 
 def test_simple_example():
@@ -29,21 +30,25 @@ def test_simple_example():
     # create enrichment tool
     tool = EnrichmentTool(background, GeneEventsCounter())
 
+    gh = GH.from_studies(autism_studies, 'prb', 'LGDs')
     enrichment_results = tool.calc(
-        autism_studies,
-        'prb',
         'LGDs',
-        gene_set)
+        gene_set,
+        gh.get_variants(),
+        gh.get_children_stats())
+
     print(enrichment_results['all'])
     print(enrichment_results['rec'])
     print(enrichment_results['male'])
     print(enrichment_results['female'])
 
+    gh = GH.from_studies(autism_studies, 'sib', 'LGDs')
     enrichment_results = tool.calc(
-        denovo_studies,
-        'sib',
         'LGDs',
-        gene_set)
+        gene_set,
+        gh.get_variants(),
+        gh.get_children_stats())
+
     print(enrichment_results['all'])
     print(enrichment_results['rec'])
     print(enrichment_results['male'])

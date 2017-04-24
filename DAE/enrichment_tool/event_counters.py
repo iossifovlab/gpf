@@ -109,15 +109,15 @@ class CounterBase(object):
     def name(self):
         raise NotImplemented()
 
-    def get_variants(self, denovo_studies, in_child, effect_types):
-        variants = []
-        for st in denovo_studies:
-            vs = st.get_denovo_variants(
-                inChild=in_child, effectTypes=effect_types)
-            variants.append(vs)
-        return list(itertools.chain(*variants))
+#     def get_variants(self, denovo_studies, in_child, effect_types):
+#         variants = []
+#         for st in denovo_studies:
+#             vs = st.get_denovo_variants(
+#                 inChild=in_child, effectTypes=effect_types)
+#             variants.append(vs)
+#         return list(itertools.chain(*variants))
 
-    def events(self, denovo_studies, in_child, effect_types):
+    def events(self, variants):
         raise NotImplementedError()
 
     def _create_event_result(self):
@@ -144,8 +144,7 @@ class EventsCounter(CounterBase):
     def name(self):
         return 'enrichmentEventsCounting'
 
-    def events(self, denovo_studies, in_child, effect_types):
-        variants = self.get_variants(denovo_studies, in_child, effect_types)
+    def events(self, variants):
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']
 
@@ -165,8 +164,7 @@ class GeneEventsCounter(CounterBase):
     def name(self):
         return 'enrichmentGeneCounting'
 
-    def events(self, denovo_studies, in_child, effect_types):
-        variants = self.get_variants(denovo_studies, in_child, effect_types)
+    def events(self, variants):
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']
 

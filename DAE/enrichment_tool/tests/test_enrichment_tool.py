@@ -7,6 +7,7 @@ from enrichment_tool.tool import EnrichmentTool
 import pytest
 from enrichment_tool.background import SamochaBackground
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
+from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
 
 @pytest.fixture(scope='module')
@@ -21,12 +22,13 @@ def test_enrichment_tool_gene_events(autism_studies,
     tool = EnrichmentTool(background, GeneEventsCounter())
     assert tool is not None
 
+    gh = GH.from_studies(autism_studies, 'prb', 'LGDs')
+
     enrichment_results = tool.calc(
-        autism_studies,
-        'prb',
         'LGDs',
         gene_set,
-        children_stats=None)
+        gh.get_variants(),
+        gh.get_children_stats())
     assert enrichment_results is not None
 
     print(enrichment_results['all'])
@@ -58,12 +60,13 @@ def test_enrichment_tool_events(autism_studies,
     tool = EnrichmentTool(background, EventsCounter())
     assert tool is not None
 
+    gh = GH.from_studies(autism_studies, 'prb', 'LGDs')
+
     enrichment_results = tool.calc(
-        autism_studies,
-        'prb',
         'LGDs',
         gene_set,
-        children_stats=None)
+        gh.get_variants(),
+        gh.get_children_stats())
     assert enrichment_results is not None
 
     print(enrichment_results['all'])
