@@ -30,11 +30,11 @@ def test_simple_example():
     # create enrichment tool
     tool = EnrichmentTool(background, GeneEventsCounter())
 
-    gh = GH.from_studies(autism_studies, 'prb', 'LGDs')
+    gh = GH.from_studies(autism_studies, 'prb')
     enrichment_results = tool.calc(
         'LGDs',
         gene_set,
-        gh.get_variants(),
+        gh.get_variants('LGDs'),
         gh.get_children_stats())
 
     print(enrichment_results['all'])
@@ -42,11 +42,11 @@ def test_simple_example():
     print(enrichment_results['male'])
     print(enrichment_results['female'])
 
-    gh = GH.from_studies(autism_studies, 'sib', 'LGDs')
+    gh = GH.from_studies(autism_studies, 'sib')
     enrichment_results = tool.calc(
         'LGDs',
         gene_set,
-        gh.get_variants(),
+        gh.get_variants('LGDs'),
         gh.get_children_stats())
 
     print(enrichment_results['all'])

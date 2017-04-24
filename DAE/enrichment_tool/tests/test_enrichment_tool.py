@@ -22,12 +22,12 @@ def test_enrichment_tool_gene_events(autism_studies,
     tool = EnrichmentTool(background, GeneEventsCounter())
     assert tool is not None
 
-    gh = GH.from_studies(autism_studies, 'prb', 'LGDs')
+    gh = GH.from_studies(autism_studies, 'prb')
 
     enrichment_results = tool.calc(
         'LGDs',
         gene_set,
-        gh.get_variants(),
+        gh.get_variants('LGDs'),
         gh.get_children_stats())
     assert enrichment_results is not None
 
@@ -60,12 +60,12 @@ def test_enrichment_tool_events(autism_studies,
     tool = EnrichmentTool(background, EventsCounter())
     assert tool is not None
 
-    gh = GH.from_studies(autism_studies, 'prb', 'LGDs')
+    gh = GH.from_studies(autism_studies, 'prb')
 
     enrichment_results = tool.calc(
         'LGDs',
         gene_set,
-        gh.get_variants(),
+        gh.get_variants('LGDs'),
         gh.get_children_stats())
     assert enrichment_results is not None
 

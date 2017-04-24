@@ -48,8 +48,8 @@ def test_synonymous_background_stats_default(background):
 def test_stats_autism_lgd(background, autism_studies,
                           gene_set):
     counter = GeneEventsCounter()
-    gh = GH.from_studies(autism_studies, 'prb', 'LGDs')
-    variants = gh.get_variants()
+    gh = GH.from_studies(autism_studies, 'prb')
+    variants = gh.get_variants('LGDs')
     children_stats = gh.get_children_stats()
 
     events = counter.events(variants)
@@ -79,8 +79,8 @@ def test_stats_autism_lgd(background, autism_studies,
 def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
                                       gene_set):
     counter = GeneEventsCounter()
-    gh = GH.from_studies(schizophrenia_studies, 'prb', 'LGDs')
-    variants = gh.get_variants()
+    gh = GH.from_studies(schizophrenia_studies, 'prb')
+    variants = gh.get_variants('LGDs')
     children_stats = gh.get_children_stats()
 
     events = counter.events(variants)
@@ -110,8 +110,8 @@ def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
 def test_stats_unaffected_with_missense(background, unaffected_studies,
                                         gene_set):
     counter = GeneEventsCounter()
-    gh = GH.from_studies(unaffected_studies, 'sib', 'missense')
-    variants = gh.get_variants()
+    gh = GH.from_studies(unaffected_studies, 'sib')
+    variants = gh.get_variants('missense')
     children_stats = gh.get_children_stats()
 
     events = counter.events(variants)

@@ -18,8 +18,8 @@ def background(request):
 def test_stats_autism_lgd(background, autism_studies,
                           gene_set):
     counter = GeneEventsCounter()
-    gh = GH.from_studies(autism_studies, 'prb', 'LGDs')
-    variants = gh.get_variants()
+    gh = GH.from_studies(autism_studies, 'prb')
+    variants = gh.get_variants('LGDs')
     children_stats = gh.get_children_stats()
 
     results = counter.events(variants)
