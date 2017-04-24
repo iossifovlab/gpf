@@ -44,7 +44,14 @@ class PedigreeSelector(dict):
         return value['color']
 
     def get_checked_values(self, **kwargs):
-        checked = kwargs['pedigreeSelector']['checkedValues']
+        print(kwargs)
+        if 'pedigreeSelector' in kwargs:
+            checked = kwargs['pedigreeSelector']['checkedValues']
+        elif 'person_grouping' in kwargs:
+            checked = kwargs['person_grouping_selector']
+        else:
+            return None
+
         checked = [v for v in checked if v in self.values]
         if len(checked) == len(self.values):
             return None

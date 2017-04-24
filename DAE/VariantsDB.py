@@ -313,6 +313,8 @@ class Study:
         self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
         phenotype = self.get_attr('study.phenotype')
         for fam in self.families.values():
+            fam.phenotype = phenotype
+            fam.atts['phenotype'] = phenotype
             for p in fam.memberInOrder:
                 if p.role == 'prb':
                     p.phenotype = phenotype

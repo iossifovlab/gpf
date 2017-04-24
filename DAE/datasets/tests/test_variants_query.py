@@ -66,6 +66,37 @@ def test_get_variants_with_null_gene_weights(sd):
     }
     vs = sd.get_variants(**query)
     assert vs is not None
+    assert 3 == count(vs)
+
+
+def test_get_variants_with_autism_and_unaffected(sd):
+    query = {
+        "datasetId": "SD",
+        "effectTypes": [
+            "Splice-site"
+        ],
+        "gender": None,
+        "variantTypes": ["del"],
+        "presentInChild": None,
+        "presentInParent": None,
+        "rarity": None,
+        "pedigreeSelector": {
+            "id": "phenotype",
+            "checkedValues": [
+                "autism",
+                "unaffected",
+            ]
+        },
+        "geneSymbols": None,
+        "geneSet": None,
+        "geneWeights": None,
+        "regions": None
+    }
+    vs = sd.get_variants(**query)
+    assert vs is not None
+    vs = list(vs)
+    for v in vs:
+        print(v.inChS)
     assert 5 == count(vs)
 
 
