@@ -4,6 +4,7 @@ Created on Nov 8, 2016
 @author: lubo
 '''
 from collections import Counter
+from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
 
 def test_count_unaffected(denovo_studies):
@@ -29,10 +30,31 @@ def test_count_unaffected(denovo_studies):
     assert 2303 == counter['F'] + counter['M']
 
 
-# def test_children_stats_simple(children_stats):
-#
-#     assert 596 == children_stats['autism']['F']
-#     assert 3367 == children_stats['autism']['M']
-#
-#     assert 1111 == children_stats['unaffected']['M']
-#     assert 1192 == children_stats['unaffected']['F']
+def test_children_stats_simple(autism_studies, unaffected_studies):
+
+    gh = GH.from_studies(autism_studies, 'prb')
+    children_stats = gh.get_children_stats()
+
+    assert 596 == children_stats['F']
+    assert 3367 == children_stats['M']
+
+    gh = GH.from_studies(unaffected_studies, 'sib')
+    children_stats = gh.get_children_stats()
+
+    assert 1111 == children_stats['M']
+    assert 1192 == children_stats['F']
+
+
+def test_children_stats_dataset(sd):
+    gh = GH.from_dataset(sd, 'phenotype', 'autism')
+    children_stats = gh.get_children_stats()
+
+    assert 596 == children_stats['F']
+    assert 3367 == children_stats['M']
+
+    # gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_dataset(sd, 'phenotype', 'unaffected')
+    children_stats = gh.get_children_stats()
+
+    assert 1111 == children_stats['M']
+    assert 1192 == children_stats['F']

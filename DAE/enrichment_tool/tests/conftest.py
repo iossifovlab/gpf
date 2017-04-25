@@ -7,6 +7,7 @@ import pytest
 from DAE import get_gene_sets_symNS, vDB
 from datasets.config import DatasetsConfig
 from datasets.datasets_factory import DatasetsFactory
+from enrichment_tool.background import SamochaBackground
 
 
 @pytest.fixture(scope='session')
@@ -68,3 +69,10 @@ def vip(request,  datasets_factory):
 @pytest.fixture(scope='session')
 def sd(request,  datasets_factory):
     return datasets_factory.get_dataset('SD')
+
+
+@pytest.fixture(scope='module')
+def samocha_background(request):
+    bg = SamochaBackground()
+    bg.precompute()
+    return bg

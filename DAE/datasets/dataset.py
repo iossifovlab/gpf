@@ -7,7 +7,6 @@ from DAE import pheno, vDB
 import itertools
 from query_variants import generate_response
 from common.query_base import QueryBase, GeneSymsMixin
-from collections import Counter
 from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
 from datasets.family_pheno_base import FamilyPhenoQueryMixin
@@ -152,34 +151,34 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         studies = self.transmitted_studies[:]
         return self._filter_studies(studies, safe, **kwargs)
 
-    @property
-    def children_stats(self):
-        if self._children_stats is None:
-            self._children_stats = {}
-            for phenotype in self.get_phenotypes():
-                seen = set()
-                counter = Counter()
-                for fid, fam in self.families.items():
-                    for p in fam.memberInOrder[2:]:
-                        iid = "{}:{}".format(fid, p.personId)
-                        if iid in seen:
-                            continue
-                        if p.phenotype != phenotype:
-                            continue
-                        counter[p.gender] += 1
-                        seen.add(iid)
-                self._children_stats[phenotype] = counter
-        return self._children_stats
+#     @property
+#     def children_stats(self):
+#         if self._children_stats is None:
+#             self._children_stats = {}
+#             for phenotype in self.get_phenotypes():
+#                 seen = set()
+#                 counter = Counter()
+#                 for fid, fam in self.families.items():
+#                     for p in fam.memberInOrder[2:]:
+#                         iid = "{}:{}".format(fid, p.personId)
+#                         if iid in seen:
+#                             continue
+#                         if p.phenotype != phenotype:
+#                             continue
+#                         counter[p.gender] += 1
+#                         seen.add(iid)
+#                 self._children_stats[phenotype] = counter
+#         return self._children_stats
 
-    @property
-    def enrichment_families(self):
-        if not self._enrichment_families:
-            study_types = self.descriptor['enrichmentTool']['studyTypes']
-            assert study_types
-            self._enrichment_families = {}
-            for st in self.enrichment_denovo_studies:
-                self._enrichment_families.update(st.families)
-        return self._enrichment_families
+#     @property
+#     def enrichment_families(self):
+#         if not self._enrichment_families:
+#             study_types = self.descriptor['enrichmentTool']['studyTypes']
+#             assert study_types
+#             self._enrichment_families = {}
+#             for st in self.enrichment_denovo_studies:
+#                 self._enrichment_families.update(st.families)
+#         return self._enrichment_families
 
     def enrichment_selector_domain(self):
         if not self.descriptor.get('enrichmentTool', None):
@@ -193,36 +192,36 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         ]
         return enrichment_selector_domain
 
-    @property
-    def enrichment_children_stats(self):
-        if not self.descriptor.get('enrichmentTool', None):
-            return None
-        if self._enrichment_children_stats is None:
-            selector = self.descriptor['enrichmentTool']['selector']
-            selector = self.get_pedigree_selector(
-                pedigreeSelector={'id': selector})
-            assert selector is not None
-            selector_id = selector['id']
-            enrichment_selector_domain = [
-                s['id'] for s in selector['domain']
-            ]
-            result = {}
-            for selector_value in enrichment_selector_domain:
-                seen = set()
-                counter = Counter()
-                for st in self.enrichment_denovo_studies:
-                    for fid, fam in st.families.items():
-                        for p in fam.memberInOrder[2:]:
-                            iid = "{}:{}".format(fid, p.personId)
-                            if iid in seen:
-                                continue
-                            if p.atts[selector_id] != selector_value:
-                                continue
-                            counter[p.gender] += 1
-                            seen.add(iid)
-                result[selector_value] = counter
-            self._enrichment_children_stats = result
-        return self._enrichment_children_stats
+#     @property
+#     def enrichment_children_stats(self):
+#         if not self.descriptor.get('enrichmentTool', None):
+#             return None
+#         if self._enrichment_children_stats is None:
+#             selector = self.descriptor['enrichmentTool']['selector']
+#             selector = self.get_pedigree_selector(
+#                 pedigreeSelector={'id': selector})
+#             assert selector is not None
+#             selector_id = selector['id']
+#             enrichment_selector_domain = [
+#                 s['id'] for s in selector['domain']
+#             ]
+#             result = {}
+#             for selector_value in enrichment_selector_domain:
+#                 seen = set()
+#                 counter = Counter()
+#                 for st in self.enrichment_denovo_studies:
+#                     for fid, fam in st.families.items():
+#                         for p in fam.memberInOrder[2:]:
+#                             iid = "{}:{}".format(fid, p.personId)
+#                             if iid in seen:
+#                                 continue
+#                             if p.atts[selector_id] != selector_value:
+#                                 continue
+#                             counter[p.gender] += 1
+#                             seen.add(iid)
+#                 result[selector_value] = counter
+#             self._enrichment_children_stats = result
+#         return self._enrichment_children_stats
 
     @classmethod
     def get_gene_set(cls, **kwargs):

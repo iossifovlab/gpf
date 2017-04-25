@@ -26,6 +26,7 @@ class StudiesGenotypeHelper(GenotypeHelper):
         super(StudiesGenotypeHelper, self).__init__()
         self.denovo_studies = denovo_studies
         self.in_child = in_child
+        self._children_stats = None
 
     def _get_variants(self, effect_types):
         seen_vs = set()
@@ -43,6 +44,8 @@ class StudiesGenotypeHelper(GenotypeHelper):
         return list(self._get_variants(effect_types))
 
     def get_children_stats(self):
+        if self._children_stats is not None:
+            return self._children_stats
         seen = set()
         counter = Counter()
         for st in self.denovo_studies:
@@ -56,7 +59,8 @@ class StudiesGenotypeHelper(GenotypeHelper):
 
                     counter[p.gender] += 1
                     seen.add(iid)
-        return counter
+        self._children_stats = counter
+        return self._children_stats
 
 
 class DatasetGenotypeHelper(GenotypeHelper):
@@ -68,6 +72,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
         self.person_grouping = self.dataset.get_pedigree_selector(
             person_grouping=person_grouping)
         assert self.person_grouping['id'] == self.person_grouping_id
+        self._children_stats = None
 
     def get_variants(self, effect_types):
         variants = self.dataset.get_variants(
@@ -78,4 +83,21 @@ class DatasetGenotypeHelper(GenotypeHelper):
         return list(variants)
 
     def get_children_stats(self):
-        raise NotImplementedError()
+        if self._children_stats is not None:
+            return self._children_stats
+        seen = set()
+        counter = Counter()
+        for st in self.dataset.enrichment_denovo_studies:
+            for fid, fam in st.families.items():
+                for p in fam.memberInOrder[2:]:
+                    iid = "{}:{}".format(fid, p.personId)
+                    if iid in seen:
+                        continue
+                    if p.atts[self.person_grouping_id] != \
+                            self.person_grouping_selector:
+                        continue
+
+                    counter[p.gender] += 1
+                    seen.add(iid)
+        self._children_stats = counter
+        return self._children_stats
