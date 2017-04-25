@@ -10,7 +10,7 @@ from VariantAnnotation import get_effect_types
 from enrichment_tool.tool import EnrichmentTool
 from query_prepare import build_effect_types_list
 from enrichment_tool.config import children_stats_counter
-
+from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
 PHENOTYPES = [
     'autism',
@@ -251,13 +251,15 @@ class EnrichmentBuilder(object):
 
     def build_phenotype(self, phenotype):
         results = []
+        gh = GH.from_studies(
+            self.denovo_studies.get_studies(phenotype),
+            self.in_child(phenotype))
         for effect_type in EFFECT_TYPES:
             enrichment_results = self.tool.calc(
-                    self.denovo_studies.get_studies(phenotype),
-                    self.in_child(phenotype),
-                    effect_type,
-                    self.gene_set,
-                    self.children_stats[phenotype])
+                effect_type,
+                self.gene_set,
+                gh.get_variants(effect_type),
+                gh.get_children_stats())
 
             row = RowResult(phenotype, effect_type)(enrichment_results)
             results.append(row)

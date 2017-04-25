@@ -31,9 +31,12 @@ class PrecomputeRegister(object):
             raise KeyError("precompute object <%s> already registered" % key)
 
         data = self.store.retrieve(key)
+        print("trying to find precomputed {}".format(key))
         if data:
+            print("precomputed {} found... loading...".format(key))
             precompute.deserialize(data)
         else:
+            print("precomputed {} NOT found... computing...".format(key))
             precompute.precompute()
             data = precompute.serialize()
             self.store.store(key, data)

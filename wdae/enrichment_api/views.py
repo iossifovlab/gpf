@@ -142,13 +142,6 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
             return desc
         return None
 
-    def augment_children_stats(self, result, children_stats):
-        for res in result:
-            selector = res['selector']
-            stats = children_stats[selector]
-            res['childrenStats'] = stats
-        return result
-
     def post(self, request):
         query = request.data
         dataset_id = query.get('datasetId', None)
@@ -175,9 +168,6 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
                 gene_syms)
             result = builder.build()
             result = builder.serialize()
-            result = self.augment_children_stats(
-                result,
-                dataset.enrichment_children_stats)
             enrichment = {
                 'desc': desc,
                 'result': result
