@@ -29,8 +29,10 @@ def register(key, preload):
 
 def get(key):
     global _REGISTER
+    print("trying to find preloaded {}".format(key))
 
     try:
+        print("preloading {} found... loading...".format(key))
         value = _REGISTER.get(key)
     finally:
         pass
