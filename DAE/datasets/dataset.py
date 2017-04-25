@@ -106,7 +106,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return fm
 
     def get_in_child(self, safe=True, **kwargs):
-        _res = QueryBase.get_in_child(**kwargs)
+        _res = super(Dataset, self).get_in_child(**kwargs)
 
         person_grouping = self.get_pedigree_selector(
             safe=safe, default=False, ** kwargs)
