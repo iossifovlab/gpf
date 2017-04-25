@@ -7,13 +7,11 @@ Created on Feb 17, 2017
 
 def test_phenotypes_ssc(ssc):
     phenotypes = ssc.get_phenotypes()
-    print(phenotypes)
     assert ['autism', 'unaffected'] == phenotypes
 
 
 def test_phenotypes_sd(sd):
     phenotypes = sd.get_phenotypes()
-    print(phenotypes)
     assert [
         'autism',
         'congenital heart disease',
@@ -26,5 +24,4 @@ def test_phenotypes_sd(sd):
 
 def test_phenotypes_vip(vip):
     phenotypes = vip.get_phenotypes()
-    print(phenotypes)
     assert ['autism', 'unaffected'] == phenotypes
