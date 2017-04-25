@@ -58,14 +58,14 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             ]
         return self._denovo_studies
 
-    @property
-    def enrichment_denovo_studies(self):
-        study_types = self.descriptor['enrichmentTool']['studyTypes']
-        studies = []
-        for st in self.denovo_studies:
-            if st.get_attr('study.type') in study_types:
-                studies.append(st)
-        return studies
+#     @property
+#     def enrichment_denovo_studies(self):
+#         study_types = self.descriptor['enrichmentTool']['studyTypes']
+#         studies = []
+#         for st in self.denovo_studies:
+#             if st.get_attr('study.type') in study_types:
+#                 studies.append(st)
+#         return studies
 
     @property
     def transmitted_studies(self):

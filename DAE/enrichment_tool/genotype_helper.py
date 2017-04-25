@@ -65,13 +65,18 @@ class StudiesGenotypeHelper(GenotypeHelper):
 
 class DatasetGenotypeHelper(GenotypeHelper):
 
-    def __init__(self, dataset, person_grouping, person_grouping_selector):
+    def __init__(
+            self, dataset, person_grouping,
+            person_grouping_selector,
+            study_types=['WE']):
+
         self.dataset = dataset
         self.person_grouping_id = person_grouping
         self.person_grouping_selector = person_grouping_selector
         self.person_grouping = self.dataset.get_pedigree_selector(
             person_grouping=person_grouping)
         assert self.person_grouping['id'] == self.person_grouping_id
+        self.study_types = study_types
         self._children_stats = None
 
     def get_variants(self, effect_types):
@@ -87,7 +92,9 @@ class DatasetGenotypeHelper(GenotypeHelper):
             return self._children_stats
         seen = set()
         counter = Counter()
-        for st in self.dataset.enrichment_denovo_studies:
+        enrichment_studies = self.dataset.get_denovo_studies(
+            studyTypes=self.study_types)
+        for st in enrichment_studies:
             for fid, fam in st.families.items():
                 for p in fam.memberInOrder[2:]:
                     iid = "{}:{}".format(fid, p.personId)
