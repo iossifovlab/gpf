@@ -39,6 +39,7 @@ class EffectTypesMixin(object):
         "Splice-site": ["splice-site"],
         "Missense": ["missense"],
         "Non-frame-shift": ["no-frame-shift"],
+        "Non-frame-shift-newStop": ["no-frame-shift-newStop"],
         "noStart": ["noStart"],
         "noEnd": ["noEnd"],
         "Synonymous": ["synonymous"],
@@ -78,6 +79,7 @@ class EffectTypesMixin(object):
             "Frame-shift",
             "Nonsense",
             "Splice-site",
+            "Non-frame-shift-newStop",
         ],
         "nonsynonymous": [
             "Nonsense",

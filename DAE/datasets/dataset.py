@@ -226,7 +226,6 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     @classmethod
     def get_gene_set(cls, **kwargs):
-        print(kwargs)
         gene_sets_collection, gene_set, gene_sets_types = \
             GeneSymsMixin.get_gene_set_query(**kwargs)
         if not gene_sets_collection or not gene_set:
@@ -237,7 +236,6 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             cls.GENE_SETS_LOADER = GeneSetsCollections()
         genes = cls.GENE_SETS_LOADER.get_gene_set(
             gene_sets_collection, gene_set, gene_sets_types)
-        print(genes)
         return genes['syms']
 
     @classmethod

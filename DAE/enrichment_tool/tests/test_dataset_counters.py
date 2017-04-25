@@ -54,6 +54,7 @@ def test_variants_unaffected_with_effect_type_lgd(sd, unaffected_studies):
                 "Not Found:",
                 ov.familyId, ov.location, ov.study.name,
                 ov.inChS, ov.variant, ov.geneEffect)
+        assert found
 
     for ov in variants:
         found = False
@@ -68,6 +69,7 @@ def test_variants_unaffected_with_effect_type_lgd(sd, unaffected_studies):
                 "Not Found:",
                 ov.familyId, ov.location, ov.study.name,
                 ov.inChS, ov.variant, ov.geneEffect)
+        assert found
 
     assert 232 == len(other_variants)
     assert len(other_variants) == len(variants)
