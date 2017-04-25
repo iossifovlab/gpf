@@ -203,8 +203,10 @@ class ChildGenderMixin(object):
 
 class PresentInMixin(object):
     PRESENT_IN_PARENT_TYPES = [
-        "mother only", "father only",
-        "mother and father", "neither",
+        "mother only",
+        "father only",
+        "mother and father",
+        "neither",
     ]
 
     PRESENT_IN_CHILD_TYPES = [
@@ -250,7 +252,7 @@ class PresentInMixin(object):
         present_in_parent = \
             cls._get_present_in_parent_root(safe=safe, **kwargs)
         if not present_in_parent:
-            return None
+            return ['neither']
         if safe:
             assert all([
                 pip in cls.PRESENT_IN_PARENT_TYPES

@@ -75,7 +75,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
         self._children_stats = None
 
     def get_variants(self, effect_types):
-        variants = self.dataset.get_variants(
+        variants = self.dataset.get_denovo_variants(
             person_grouping=self.person_grouping_id,
             person_grouping_selector=[self.person_grouping_selector],
             effectTypes=effect_types,
