@@ -27,7 +27,7 @@ class StudiesGenotypeHelper(GenotypeHelper):
         self.denovo_studies = denovo_studies
         self.in_child = in_child
 
-    def get_variants(self, effect_types):
+    def _get_variants(self, effect_types):
         seen_vs = set()
         for st in self.denovo_studies:
             vs = st.get_denovo_variants(
@@ -38,6 +38,9 @@ class StudiesGenotypeHelper(GenotypeHelper):
                     continue
                 yield v
                 seen_vs.add(v_key)
+
+    def get_variants(self, effect_types):
+        return list(self._get_variants(effect_types))
 
     def get_children_stats(self):
         seen = set()
@@ -64,7 +67,6 @@ class DatasetGenotypeHelper(GenotypeHelper):
         self.person_grouping_selector = person_grouping_selector
         self.person_grouping = self.dataset.get_pedigree_selector(
             person_grouping=person_grouping)
-        print(self.person_grouping)
         assert self.person_grouping['id'] == self.person_grouping_id
 
     def get_variants(self, effect_types):

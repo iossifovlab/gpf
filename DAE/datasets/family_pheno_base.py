@@ -78,7 +78,6 @@ class FamilyPhenoQueryMixin(object):
 
         result = []
         for pheno_filter in pheno_filters:
-            print(pheno_filter)
             measure_type = pheno_filter['measureType']
 
             if measure_type == 'continuous':

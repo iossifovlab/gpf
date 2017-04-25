@@ -7,7 +7,6 @@ import ConfigParser
 
 from Config import Config
 import collections
-# from pprint import pprint
 
 
 class PedigreeSelector(dict):
@@ -44,7 +43,6 @@ class PedigreeSelector(dict):
         return value['color']
 
     def get_checked_values(self, **kwargs):
-        print(kwargs)
         if 'pedigreeSelector' in kwargs:
             checked = kwargs['pedigreeSelector']['checkedValues']
         elif 'person_grouping' in kwargs:

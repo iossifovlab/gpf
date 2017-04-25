@@ -19,7 +19,7 @@ def test_variants_unaffected_with_effect_type_lgd(unaffected_studies):
         assert 'sib' in v.inChS
         count += 1
     print(count)
-    assert 243 == count
+    assert 232 == count
 
 
 def test_variants_unaffected_with_effect_type_missense(unaffected_studies):
@@ -34,7 +34,7 @@ def test_variants_unaffected_with_effect_type_missense(unaffected_studies):
         assert 'missense' == v.requestedGeneEffects[0]['eff']
         count += 1
     print(count)
-    assert 1616 == count
+    assert 1482 == count
 
 
 def test_variants_unaffected_with_effect_type_synonimous(unaffected_studies):
@@ -49,7 +49,7 @@ def test_variants_unaffected_with_effect_type_synonimous(unaffected_studies):
         assert 'synonymous' == v.requestedGeneEffects[0]['eff']
         count += 1
     print(count)
-    assert 686 == count
+    assert 627 == count
 
 
 def test_variants_autism_with_effect_type_lgd(autism_studies):
