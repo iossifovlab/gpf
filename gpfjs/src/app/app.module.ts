@@ -92,6 +92,8 @@ import { PhenoToolEffectTypesComponent } from './pheno-tool-effect-types/pheno-t
 
 import { FamilyCountersComponent } from './family-counters/family-counters.component';
 import { FamilyCountersService } from './family-counters/family-counters.service';
+import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
+import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
 
 const appRoutes: Routes = [
   {
@@ -124,6 +126,10 @@ const appRoutes: Routes = [
         path: 'phenoTool',
         component: PhenoToolComponent
       },
+      {
+        path: 'phenotypeBrowser',
+        component: PhenoBrowserComponent
+      }
     ]
   },
 ];
@@ -179,7 +185,8 @@ const appRoutes: Routes = [
     PhenoToolResultsChartPerEffectComponent,
     PhenoToolResultsChartPerResultComponent,
     PhenoToolEffectTypesComponent,
-    FamilyCountersComponent
+    FamilyCountersComponent,
+    PhenoBrowserComponent
   ],
   imports: [
     BrowserModule,
@@ -209,7 +216,8 @@ const appRoutes: Routes = [
     StateRestoreService,
     MeasuresService,
     PhenoToolService,
-    FamilyCountersService
+    FamilyCountersService,
+    PhenoBrowserService
   ],
   bootstrap: [AppComponent]
 })
