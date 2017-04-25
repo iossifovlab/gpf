@@ -134,5 +134,5 @@ def test_stats_unaffected_with_missense(background, unaffected_studies,
     assert 20.69687 == pytest.approx(er['male'].expected, abs=1E-2)
     assert 0.8228654 == pytest.approx(er['male'].pvalue, abs=1E-4)
 
-    assert 25.368269 == pytest.approx(er['female'].expected, abs=1E-2)
-    assert 0.47852 == pytest.approx(er['female'].pvalue, abs=1E-4)
+    assert 25.3034 == pytest.approx(er['female'].expected, abs=1E-2)
+    assert 0.41914 == pytest.approx(er['female'].pvalue, abs=1E-4)
