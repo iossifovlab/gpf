@@ -19,20 +19,17 @@ class Command(BaseCommand):
         u, _ = User.objects.get_or_create(email='lchorbadjiev@elsys-bg.org')
         u.is_staff = False
         u.is_active = True
-        u.researcher_id = '10020'
         u.set_password('paslubo')
         u.save()
 
         u, _ = User.objects.get_or_create(email='ivan.iossifov@gmail.com')
         u.is_staff = False
         u.is_active = True
-        u.researcher_id = '10021'
         u.set_password('pasivan')
         u.save()
 
         u, _ = User.objects.get_or_create(email='researcher@iossifovlab.com')
         u.is_staff = False
         u.is_active = True
-        u.researcher_id = '10022'
         u.set_password('passecret')
         u.save()
