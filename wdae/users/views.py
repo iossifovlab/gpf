@@ -12,7 +12,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from models import VerificationPath
+from models import VerificationPath, send_verif_email, _create_verif_path
 from serializers import UserSerializer
 
 
@@ -31,12 +31,13 @@ def register(request):
         researcher_id = serialized.validated_data['researcher_id']
         email = BaseUserManager.normalize_email(
             serialized.validated_data['email'])
+        print("EM", email)
 
-        created_user = user.objects.create_user(email, researcher_id)
-        created_user.first_name = serialized.validated_data['first_name']
-        created_user.last_name = serialized.validated_data['last_name']
-
-        created_user.save()
+        created_user = user.objects.get(email=email)
+        created_user.register_preexisting_user(
+            serialized.validated_data['first_name'],
+            serialized.validated_data['last_name']
+        )
         return Response(serialized.data, status=status.HTTP_201_CREATED)
     else:
         return Response(serialized._errors, status=status.HTTP_400_BAD_REQUEST)

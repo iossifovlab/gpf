@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.utils.timezone
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
@@ -22,7 +23,6 @@ class Migration(migrations.Migration):
                 ('first_name', models.CharField(max_length=b'100')),
                 ('last_name', models.CharField(max_length=b'100')),
                 ('email', models.EmailField(unique=True, max_length=254)),
-                ('researcher_id', models.CharField(max_length=b'100', null=True, blank=True)),
                 ('is_staff', models.BooleanField(default=False)),
                 ('is_active', models.BooleanField(default=False)),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now)),
@@ -34,23 +34,11 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='Researcher',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('first_name', models.CharField(max_length=b'100')),
-                ('last_name', models.CharField(max_length=b'100')),
-                ('email', models.EmailField(unique=True, max_length=254)),
-            ],
-            options={
-                'db_table': 'researchers',
-            },
-        ),
-        migrations.CreateModel(
             name='ResearcherId',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('researcher_id', models.CharField(unique=True, max_length=b'100')),
-                ('researcher', models.ManyToManyField(to='users.Researcher')),
+                ('researcher', models.ManyToManyField(to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'db_table': 'researcherid',

@@ -14,27 +14,6 @@ from django.conf import settings
 
 from helpers.logger import LOGGER
 
-
-class Researcher(models.Model):
-    first_name = models.CharField(max_length='100')
-    last_name = models.CharField(max_length='100')
-    email = models.EmailField(unique=True)
-
-    def __str__(self):
-        return self.first_name + ' ' + self.last_name + ' ' + self.email
-
-    class Meta:
-        db_table = 'researchers'
-
-
-class ResearcherId(models.Model):
-    researcher = models.ManyToManyField(Researcher)
-    researcher_id = models.CharField(max_length='100', unique=True)
-
-    class Meta:
-        db_table = 'researcherid'
-
-
 class VerificationPath(models.Model):
     path = models.CharField(max_length='255', unique=True)
 
@@ -44,68 +23,20 @@ class VerificationPath(models.Model):
     class Meta:
         db_table = 'verification_paths'
 
-
-class WdaeUserManager(BaseUserManager):
-
-    def _create_user(self, email, password, researcher_id=None,
-                     is_staff=False, is_active=False):
-        """
-        Creates and saves a User with the given email and password.
-        """
-
-        now = timezone.now()
-        if not email:
-            raise ValueError('The given email must be set')
-
-        email = self.normalize_email(email)
-        user = self.model(email=email)
-        user.date_joined = now
-        user.set_password(password)
-        user.is_staff = is_staff
-        user.is_active = is_active
-
-        if(not user.is_staff):
-            user.verification_path = _create_verif_path()
-            user.researcher_id = researcher_id
-        user.save(using=self._db)
-
-        return user
-
-    def create_user(self, email, researcher_id, password=None,):
-        user = self._create_user(email, uuid.uuid4(), researcher_id)
-        send_verif_email(user)
-
-        return user
-
-    def create_superuser(self, email, password, **extra_fields):
-        user = self._create_user(email, password, None, True, True)
-        user.first_name = extra_fields['first_name']
-        user.last_name = extra_fields['last_name']
-        user.save()
-
-        return user
-
-
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
     app_label = 'api'
     first_name = models.CharField(max_length='100')
     last_name = models.CharField(max_length='100')
     email = models.EmailField(unique=True)
-    researcher_id = models.CharField(
-        max_length='100',
-        blank=True,
-        null=True)
     verification_path = models.OneToOneField(
         VerificationPath,
         blank=True, null=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(default=timezone.now)
-
-    objects = WdaeUserManager()
+    date_joined = models.DateTimeField(null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['researcher_id', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def email_user(self, subject, message, from_email=None):
         override = None
@@ -134,6 +65,19 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         self.verification_path = _create_verif_path()
         self.save()
         send_reset_email(self)
+
+    def register_preexisting_user(self, first_name, last_name):
+        now = timezone.now()
+
+        self.date_joined = now
+        self.first_name = first_name
+        self.last_name = last_name
+
+        if(not self.is_staff):
+            self.verification_path = _create_verif_path()
+        self.save()
+
+        send_verif_email(self)
 
     @staticmethod
     def change_password(verification_path, new_password):
@@ -221,3 +165,10 @@ def _create_verif_path():
     verif_path.save()
 
     return verif_path
+
+class ResearcherId(models.Model):
+    researcher = models.ManyToManyField(WdaeUser)
+    researcher_id = models.CharField(max_length='100', unique=True)
+
+    class Meta:
+        db_table = 'researcherid'

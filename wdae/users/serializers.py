@@ -2,9 +2,8 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
-from models import Researcher
 from django.contrib.auth.models import BaseUserManager
-
+from users.models import WdaeUser
 
 class UserSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length='100')
@@ -22,20 +21,13 @@ class UserSerializer(serializers.Serializer):
 
         print("res_id: {}".format(res_id))
         try:
-            res = Researcher.objects.get(email=email)
+            res = user_model.objects.get(email=email)
             researcher_ids = res.researcherid_set.all()
             researcher_id_set = set(
                 [rid.researcher_id for rid in researcher_ids])
             if res_id not in researcher_id_set:
-                raise Researcher.DoesNotExist
-
-        except Researcher.DoesNotExist:
+                raise WdaeUser.DoesNotExist
+            return data
+        except WdaeUser.DoesNotExist:
             raise serializers.ValidationError(
                 'A researcher with these credentials was not found.')
-
-        try:
-            user_model.objects.get(email=data['email'])
-            raise serializers.ValidationError(
-                'A user with the same email already exists')
-        except user_model().DoesNotExist:
-            return data
