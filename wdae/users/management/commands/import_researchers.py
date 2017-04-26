@@ -6,7 +6,7 @@ from users.models import WdaeUser, ResearcherId
 from django.contrib.auth.models import BaseUserManager, Group
 
 
-class Command(BaseCommand):
+class ImportResearchersCommand(BaseCommand):
     args = '<file> <file> ...'
     help = 'Creates researchers from csv. ' \
         'Required column names for the csv file - LastName, Email and Id.'
@@ -23,7 +23,6 @@ class Command(BaseCommand):
         )
 
     def handle_researcher(self, res, additional_groups):
-        rid = res['Id']
         email = BaseUserManager.normalize_email(res['Email'])
 
         user, created = WdaeUser.objects.get_or_create(email=email,
@@ -32,7 +31,7 @@ class Command(BaseCommand):
         if created:
             print("created researcher:{}".format(res))
         else:
-            print("Updating researcher id/groups for:{}".format(res))
+            print("Updating researcher:{}".format(res))
 
         user.groups.clear()
         groups = additional_groups + res['Groups'].split(':')
@@ -43,8 +42,28 @@ class Command(BaseCommand):
             group, _ = Group.objects.get_or_create(name=group_name)
             group.user_set.add(user)
 
-        res_id, _ = ResearcherId.objects.get_or_create(researcher_id=rid)
-        res_id.researcher.add(user)
+        for rid in set(res['Id'].split(':')):
+            if rid == "":
+                continue
+            res_id, _ = ResearcherId.objects.get_or_create(researcher_id=rid)
+            res_id.researcher.add(user)
+
+        if "FirstName" in res:
+            user.first_name = res["FirstName"]
+
+        if "Superuser" in res:
+            user.is_superuser = res["Superuser"] == 'True'
+
+        if "Staff" in res:
+            user.is_staff = res["Staff"] == 'True'
+
+        if "Active" in res:
+            user.is_active = res["Active"] == 'True'
+
+        if "Password" in res:
+            user.password = res["Password"]
+
+        user.save()
 
     def handle(self, *args, **options):
         if(len(args) < 1):

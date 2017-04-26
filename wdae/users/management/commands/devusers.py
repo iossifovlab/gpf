@@ -18,13 +18,13 @@ class Command(BaseCommand):
         u, _ = User.objects.get_or_create(email='admin@iossifovlab.com')
         u.is_staff = True
         u.is_active = True
-
+        u.is_superuser = True
         u.set_password('secret')
         u.save()
 
         u, _ = User.objects.get_or_create(email='research@iossifovlab.com')
         u.is_staff = False
         u.is_active = True
-        u.researcher_id = '10001'
+        u.is_superuser = False
         u.set_password('secret')
         u.save()
