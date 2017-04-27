@@ -23,6 +23,39 @@ class VerificationPath(models.Model):
     class Meta:
         db_table = 'verification_paths'
 
+
+class WdaeUserManager(BaseUserManager):
+
+    def _create_user(self, email, password):
+        """
+        Creates and saves a User with the given email and password.
+        """
+        if not email:
+            raise ValueError('The given email must be set')
+
+        email = self.normalize_email(email)
+        user = self.model(email=email)
+        user.set_password(password)
+
+        user.save(using=self._db)
+
+        return user
+
+    def create_user(self, email, password=None,):
+        user = self._create_user(email, password)
+        return user
+
+    def create_superuser(self, email, password, **extra_fields):
+        user = self._create_user(email, password)
+
+        user.is_superuser = True
+        user.is_active = True
+        user.is_staff  =True
+
+        user.save()
+
+        return user
+
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
     app_label = 'api'
     first_name = models.CharField(max_length='100')
@@ -37,6 +70,8 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
+
+    objects = WdaeUserManager()
 
     def email_user(self, subject, message, from_email=None):
         override = None
@@ -85,10 +120,11 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
         user = WdaeUser.objects.get(verification_path=verif_path)
         user.set_password(new_password)
-        user.verification_path.delete()
         user.verification_path = None
         user.is_active = True
         user.save()
+
+        verif_path.delete()
 
         return user
 
