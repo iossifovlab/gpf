@@ -22,7 +22,14 @@ class Command(BaseCommand):
                   e.g. -g GROUP1 -g GROUP2',
         )
 
-    def handle_researcher(self, res, additional_groups):
+        parser.add_argument(
+            '-r',
+            action='store_true',
+            dest='replace',
+            help='Replace all groups and researcher ids for users in the file',
+        )
+
+    def handle_researcher(self, res, additional_groups, replace):
         email = BaseUserManager.normalize_email(res['Email'])
 
         user, created = WdaeUser.objects.get_or_create(email=email,
@@ -33,15 +40,17 @@ class Command(BaseCommand):
         else:
             print("Updating researcher:{}".format(res))
 
-        user.groups.clear()
+        if replace:
+            user.groups.clear()
         groups = additional_groups + res['Groups'].split(':')
-
         for group_name in set(groups):
             if group_name == "":
                 continue
             group, _ = Group.objects.get_or_create(name=group_name)
             group.user_set.add(user)
 
+        if replace:
+            user.researcherid_set.clear()
         for rid in set(res['Id'].split(':')):
             if rid == "":
                 continue
@@ -76,7 +85,8 @@ class Command(BaseCommand):
                     resreader = csv.DictReader(csvfile)
 
                     for res in resreader:
-                        self.handle_researcher(res, options['groups'])
+                        self.handle_researcher(res, options['groups'],
+                                               options['replace'])
 
             except csv.Error:
                 raise CommandError(
