@@ -14,16 +14,6 @@ from django.conf import settings
 
 from helpers.logger import LOGGER
 
-class VerificationPath(models.Model):
-    path = models.CharField(max_length='255', unique=True)
-
-    def __str__(self):
-        return str(self.path)
-
-    class Meta:
-        db_table = 'verification_paths'
-
-
 class WdaeUserManager(BaseUserManager):
 
     def _create_user(self, email, password):
@@ -61,9 +51,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length='100')
     last_name = models.CharField(max_length='100')
     email = models.EmailField(unique=True)
-    verification_path = models.OneToOneField(
-        VerificationPath,
-        blank=True, null=True)
+
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(null=True)
@@ -97,9 +85,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     def reset_password(self):
         self.set_password(uuid.uuid4())
-        self.verification_path = _create_verif_path()
         self.save()
-        send_reset_email(self)
+
+        verif_path = _create_verif_path(self)
+        send_reset_email(self, verif_path)
 
     def register_preexisting_user(self, first_name, last_name):
         now = timezone.now()
@@ -109,18 +98,16 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         self.last_name = last_name
 
         if(not self.is_staff):
-            self.verification_path = _create_verif_path()
+            verif_path = _create_verif_path(self)
+            send_verif_email(self, verif_path)
         self.save()
-
-        send_verif_email(self)
 
     @staticmethod
     def change_password(verification_path, new_password):
         verif_path = VerificationPath.objects.get(path=verification_path)
 
-        user = WdaeUser.objects.get(verification_path=verif_path)
+        user = verif_path.user
         user.set_password(new_password)
-        user.verification_path = None
         user.is_active = True
         user.save()
 
@@ -135,18 +122,18 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         db_table = 'users'
 
 
-def send_verif_email(user):
+def send_verif_email(user, verif_path):
     email = _create_verif_email(
         settings.EMAIL_VERIFICATION_HOST,
-        settings.EMAIL_VERIFICATION_PATH, str(user.verification_path.path))
+        settings.EMAIL_VERIFICATION_PATH, str(verif_path.path))
     user.email_user(email['subject'], email['message'])
 
 
-def send_reset_email(user):
+def send_reset_email(user, verif_path):
     ''' Returns dict - subject and message of the email '''
     email = _create_reset_mail(
         settings.EMAIL_VERIFICATION_HOST,
-        settings.EMAIL_VERIFICATION_PATH, str(user.verification_path))
+        settings.EMAIL_VERIFICATION_PATH, str(verif_path.path))
 
     user.email_user(email['subject'], email['message'])
 
@@ -195,8 +182,9 @@ def _build_email_template(settings):
     }
 
 
-def _create_verif_path():
+def _create_verif_path(user):
     verif_path = VerificationPath()
+    verif_path.user = user
     verif_path.path = uuid.uuid4()
     verif_path.save()
 
@@ -208,3 +196,13 @@ class ResearcherId(models.Model):
 
     class Meta:
         db_table = 'researcherid'
+
+class VerificationPath(models.Model):
+    path = models.CharField(max_length='255', unique=True)
+    user = models.OneToOneField(WdaeUser)
+
+    def __str__(self):
+        return str(self.path)
+
+    class Meta:
+        db_table = 'verification_paths'

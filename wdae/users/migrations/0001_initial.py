@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-import django.utils.timezone
 from django.conf import settings
 
 
@@ -25,7 +24,7 @@ class Migration(migrations.Migration):
                 ('email', models.EmailField(unique=True, max_length=254)),
                 ('is_staff', models.BooleanField(default=False)),
                 ('is_active', models.BooleanField(default=False)),
-                ('date_joined', models.DateTimeField(default=django.utils.timezone.now)),
+                ('date_joined', models.DateTimeField(null=True)),
                 ('groups', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Group', blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', verbose_name='groups')),
                 ('user_permissions', models.ManyToManyField(related_query_name='user', related_name='user_set', to='auth.Permission', blank=True, help_text='Specific permissions for this user.', verbose_name='user permissions')),
             ],
@@ -49,14 +48,10 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('path', models.CharField(unique=True, max_length=b'255')),
+                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'db_table': 'verification_paths',
             },
-        ),
-        migrations.AddField(
-            model_name='wdaeuser',
-            name='verification_path',
-            field=models.OneToOneField(null=True, blank=True, to='users.VerificationPath'),
         ),
     ]
