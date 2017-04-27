@@ -6,7 +6,7 @@ from users.models import WdaeUser, ResearcherId
 from django.contrib.auth.models import BaseUserManager, Group
 
 
-class ImportResearchersCommand(BaseCommand):
+class Command(BaseCommand):
     args = '<file> <file> ...'
     help = 'Creates researchers from csv. ' \
         'Required column names for the csv file - LastName, Email and Id.'
