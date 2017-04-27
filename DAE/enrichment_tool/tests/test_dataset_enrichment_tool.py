@@ -1,20 +1,22 @@
 '''
-Created on Nov 8, 2016
+Created on Apr 25, 2017
 
 @author: lubo
 '''
-from enrichment_tool.tool import EnrichmentTool
 import pytest
+
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
+from enrichment_tool.tool import EnrichmentTool
 
 
-def test_enrichment_tool_gene_events(autism_studies,
+def test_enrichment_tool_gene_events(sd,
                                      samocha_background, gene_set):
     tool = EnrichmentTool(samocha_background, GeneEventsCounter())
     assert tool is not None
 
-    gh = GH.from_studies(autism_studies, 'prb')
+    # gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_dataset(sd, 'phenotype', 'autism')
 
     enrichment_results = tool.calc(
         'LGDs',
@@ -47,12 +49,13 @@ def test_enrichment_tool_gene_events(autism_studies,
     assert 0.0 == pytest.approx(er['female'].pvalue, abs=1E-2)
 
 
-def test_enrichment_tool_events(autism_studies,
+def test_enrichment_tool_events(sd,
                                 samocha_background, gene_set):
     tool = EnrichmentTool(samocha_background, EventsCounter())
     assert tool is not None
 
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_dataset(sd, 'phenotype', 'autism')
+    # gh = GH.from_studies(autism_studies, 'prb')
 
     enrichment_results = tool.calc(
         'LGDs',

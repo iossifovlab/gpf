@@ -30,12 +30,12 @@ def test_filter_families_by_pedigree_selector_all_ssc(ssc):
     assert family_ids is None
 
 
-def test_filter_families_by_pedigree_selector_autism_ssc(ssc):
-    kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
-    kwargs['pedigreeSelector']['checkedValues'] = ['autism']
-    family_ids = ssc.filter_families_by_pedigree_selector(**kwargs)
-    assert family_ids is not None
-    assert len(family_ids) == 2851
+# def test_filter_families_by_pedigree_selector_autism_ssc(ssc):
+#     kwargs = copy.deepcopy(EXAMPLE_QUERY_SSC)
+#     kwargs['pedigreeSelector']['checkedValues'] = ['autism']
+#     family_ids = ssc.filter_families_by_pedigree_selector(**kwargs)
+#     assert family_ids is not None
+#     assert len(family_ids) == 2851
 
 
 def test_filter_families_by_pedigree_selector_all_vip(vip):

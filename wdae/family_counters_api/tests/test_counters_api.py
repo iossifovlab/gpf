@@ -180,3 +180,63 @@ class Test(APITestCase):
         self.assertEquals(0, res[1]['count']['all'])
         self.assertEquals(0, res[1]['count']['F'])
         self.assertEquals(0, res[1]['count']['M'])
+
+    def test_query_counter_with_bapq_average(self):
+        query = {
+            "datasetId": "SSC",
+            "presentInChild": [
+                "affected only",
+                "affected and unaffected"
+            ],
+            "presentInParent": {
+                "presentInParent": [
+                    "neither"
+                ],
+                "rarity": {
+                    "ultraRare": True,
+                    "minFreq": None,
+                    "maxFreq": None
+                }
+            },
+            "gender": [
+                "female",
+                "male"
+            ],
+            "variantTypes": [
+                "sub",
+                "ins",
+                "del",
+                "CNV"
+            ],
+            "effectTypes": [
+                "Nonsense",
+                "Frame-shift",
+                "Splice-site"
+            ],
+            "phenoFilters": [
+                {
+                    "id": "Proband Pheno Measure",
+                    "measureType": "continuous",
+                    "role": "prb",
+                    "measure": "bapq.average",
+                    "domainMin": 1,
+                    "domainMax": 4,
+                    "mmin": 1,
+                    "mmax": 3.0816666666666666
+                }
+            ]
+        }
+
+        response = self.client.post(
+            self.URL, query, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = response.data
+        print(res)
+
+        self.assertEquals(0, res[0]['count']['all'])
+        self.assertEquals(0, res[0]['count']['F'])
+        self.assertEquals(0, res[0]['count']['M'])
+
+        self.assertEquals(0, res[1]['count']['all'])
+        self.assertEquals(0, res[1]['count']['F'])
+        self.assertEquals(0, res[1]['count']['M'])

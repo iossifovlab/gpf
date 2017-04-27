@@ -6,7 +6,7 @@ Created on Nov 8, 2016
 import pytest
 from enrichment_tool.background import SamochaBackground
 from enrichment_tool.event_counters import GeneEventsCounter
-from enrichment_tool.config import children_stats_counter
+from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
 
 @pytest.fixture(scope='module')
@@ -18,10 +18,11 @@ def background(request):
 def test_stats_autism_lgd(background, autism_studies,
                           gene_set):
     counter = GeneEventsCounter()
-    results = counter.events(
-        autism_studies, 'prb', 'LGDs')
+    gh = GH.from_studies(autism_studies, 'prb')
+    variants = gh.get_variants('LGDs')
+    children_stats = gh.get_children_stats()
 
-    children_stats = children_stats_counter(autism_studies, 'prb')
+    results = counter.events(variants)
 
     enrichment_results = background.calc_stats(
         'LGDs',

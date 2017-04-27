@@ -5,6 +5,9 @@ Created on Nov 8, 2016
 '''
 import pytest
 from DAE import get_gene_sets_symNS, vDB
+from datasets.config import DatasetsConfig
+from datasets.datasets_factory import DatasetsFactory
+from enrichment_tool.background import SamochaBackground
 
 
 @pytest.fixture(scope='session')
@@ -41,3 +44,35 @@ def unaffected_studies(request, denovo_studies):
 # def children_stats(request):
 #     denovo_studies = DenovoStudies()
 #     return ChildrenStats.build(denovo_studies)
+
+
+@pytest.fixture(scope='session')
+def datasets_config(request):
+    return DatasetsConfig()
+
+
+@pytest.fixture(scope='session')
+def datasets_factory(request, datasets_config):
+    return DatasetsFactory(datasets_config)
+
+
+@pytest.fixture(scope='session')
+def ssc(request, datasets_factory):
+    return datasets_factory.get_dataset('SSC')
+
+
+@pytest.fixture(scope='session')
+def vip(request,  datasets_factory):
+    return datasets_factory.get_dataset('VIP')
+
+
+@pytest.fixture(scope='session')
+def sd(request,  datasets_factory):
+    return datasets_factory.get_dataset('SD')
+
+
+@pytest.fixture(scope='module')
+def samocha_background(request):
+    bg = SamochaBackground()
+    bg.precompute()
+    return bg

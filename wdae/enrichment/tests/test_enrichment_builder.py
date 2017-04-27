@@ -123,7 +123,7 @@ class EnrichmentBuilderTest(unittest.TestCase):
         self.assertEquals(111, res.LGDs.female.count)
         self.assertEquals(4, res.LGDs.female.overlapped_count)
 
-        self.assertEquals(782, res.Missense.female.count)
+        self.assertEquals(780, res.Missense.female.count)
         self.assertEquals(29, res.Missense.female.overlapped_count)
 
         self.assertEquals(306, res.Synonymous.female.count)

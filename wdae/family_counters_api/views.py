@@ -8,8 +8,6 @@ from rest_framework.response import Response
 from genotype_browser.views import QueryBaseView
 from rest_framework.exceptions import NotAuthenticated
 import traceback
-import pprint
-from collections import Counter
 
 
 class FamilyCounters(QueryBaseView):
@@ -66,18 +64,16 @@ Example:
             pedigree_selector = dataset.get_pedigree_selector(**data)
             pedigree_selector_id = pedigree_selector['id']
 
-            pprint.pprint(pedigree_selector)
             res = {}
             for s in pedigree_selector['domain']:
-                pprint.pprint(s)
                 res[s['id']] = {
-                    'count': Counter(),
+                    'count': {'M': 0, 'F': 0, 'all': 0},
                     'color': s['color'],
                     'name': s['name']
                 }
             s = pedigree_selector['default']
             res[s['id']] = {
-                'count': Counter(),
+                'count': {'M': 0, 'F': 0, 'all': 0},
                 'color': s['color'],
                 'name': s['name']
             }

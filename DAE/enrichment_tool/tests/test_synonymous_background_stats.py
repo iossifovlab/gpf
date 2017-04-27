@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from enrichment_tool.background import SynonymousBackground
 from enrichment_tool.event_counters import GeneEventsCounter
-from enrichment_tool.config import children_stats_counter
+from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
 
 @pytest.fixture(scope='module')
@@ -48,10 +48,12 @@ def test_synonymous_background_stats_default(background):
 def test_stats_autism_lgd(background, autism_studies,
                           gene_set):
     counter = GeneEventsCounter()
-    events = counter.events(
-        autism_studies, 'prb', 'LGDs')
+    gh = GH.from_studies(autism_studies, 'prb')
+    variants = gh.get_variants('LGDs')
+    children_stats = gh.get_children_stats()
 
-    children_stats = children_stats_counter(autism_studies, 'prb')
+    events = counter.events(variants)
+
     enrichment_results = background.calc_stats(
         'LGDs',
         events,
@@ -77,9 +79,11 @@ def test_stats_autism_lgd(background, autism_studies,
 def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
                                       gene_set):
     counter = GeneEventsCounter()
-    events = counter.events(schizophrenia_studies,
-                            'prb', 'LGDs')
-    children_stats = children_stats_counter(schizophrenia_studies, 'prb')
+    gh = GH.from_studies(schizophrenia_studies, 'prb')
+    variants = gh.get_variants('LGDs')
+    children_stats = gh.get_children_stats()
+
+    events = counter.events(variants)
 
     enrichment_results = background.calc_stats(
         'LGDs',
@@ -106,9 +110,11 @@ def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
 def test_stats_unaffected_with_missense(background, unaffected_studies,
                                         gene_set):
     counter = GeneEventsCounter()
-    events = counter.events(
-        unaffected_studies, 'sib', 'missense')
-    children_stats = children_stats_counter(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, 'sib')
+    variants = gh.get_variants('missense')
+    children_stats = gh.get_children_stats()
+
+    events = counter.events(variants)
 
     enrichment_results = background.calc_stats(
         'missense',
@@ -128,5 +134,5 @@ def test_stats_unaffected_with_missense(background, unaffected_studies,
     assert 20.69687 == pytest.approx(er['male'].expected, abs=1E-2)
     assert 0.8228654 == pytest.approx(er['male'].pvalue, abs=1E-4)
 
-    assert 25.368269 == pytest.approx(er['female'].expected, abs=1E-2)
-    assert 0.47852 == pytest.approx(er['female'].pvalue, abs=1E-4)
+    assert 25.3034 == pytest.approx(er['female'].expected, abs=1E-2)
+    assert 0.41914 == pytest.approx(er['female'].pvalue, abs=1E-4)

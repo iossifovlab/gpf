@@ -5,6 +5,7 @@ Created on Feb 17, 2017
 '''
 from enrichment_tool.tool import EnrichmentTool
 from enrichment_tool.event_counters import EnrichmentResult
+from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
 
 class EnrichmentBuilder(object):
@@ -30,31 +31,41 @@ class EnrichmentBuilder(object):
         else:
             return 'prb'
 
-    def build_phenotype(self, phenotype):
+    def build_person_grouping_selector(
+            self, person_grouping, person_grouping_selector):
+
         results = {}
-        studies = self.dataset.enrichment_denovo_studies
-        if phenotype != 'unaffected':
-            studies = [
-                st for st in studies
-                if phenotype == st.get_attr('study.phenotype')
-            ]
+        gh = GH.from_dataset(
+            self.dataset,
+            person_grouping,
+            person_grouping_selector)
+
         for effect_type in self.EFFECT_TYPES:
             enrichment_results = self.tool.calc(
-                studies,
-                self.in_child(phenotype),
                 effect_type,
                 self.gene_syms,
-                self.dataset.enrichment_children_stats[phenotype])
+                gh.get_variants(effect_type),
+                gh.get_children_stats())
 
             results[effect_type] = enrichment_results
-
+        results['childrenStats'] = gh.get_children_stats()
+        results['selector'] = person_grouping_selector
         return results
 
     def build(self):
         results = []
-        for phenotype in self.dataset.get_phenotypes():
-            res = self.build_phenotype(phenotype)
-            res['selector'] = phenotype
+        enrichment_config = self.dataset.descriptor.get('enrichmentTool')
+        assert enrichment_config is not None
+        person_grouping_id = enrichment_config['selector']
+        person_grouping = self.dataset.get_pedigree_selector(
+            default=False,
+            person_grouping=person_grouping_id)
+        print(person_grouping)
+
+        for person_grouping_selector in person_grouping.domain:
+            res = self.build_person_grouping_selector(
+                person_grouping_id,
+                person_grouping_selector['id'])
             results.append(res)
         self.result = results
         return self.result
@@ -76,7 +87,8 @@ class EnrichmentBuilder(object):
             return [
                 self.serialize_helper(v) for v in result
             ]
-        elif isinstance(result, str):
+        elif isinstance(result, str) or isinstance(result, int) or \
+                isinstance(result, float):
             return result
         else:
             return dict([

@@ -7,7 +7,6 @@ from DAE import pheno, vDB
 import itertools
 from query_variants import generate_response
 from common.query_base import QueryBase, GeneSymsMixin
-from collections import Counter
 from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
 from datasets.family_pheno_base import FamilyPhenoQueryMixin
@@ -59,24 +58,14 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             ]
         return self._denovo_studies
 
-    def get_denovo_studies(self, safe=True, **kwargs):
-        study_types = self.get_study_types(safe=safe, **kwargs)
-        print("study_types".format(study_types))
-        if study_types is not None:
-            return filter(
-                lambda st: st.get_attr('study.type').lower() in study_types,
-                self.denovo_studies)
-        else:
-            return self.denovo_studies
-
-    @property
-    def enrichment_denovo_studies(self):
-        study_types = self.descriptor['enrichmentTool']['studyTypes']
-        studies = []
-        for st in self.denovo_studies:
-            if st.get_attr('study.type') in study_types:
-                studies.append(st)
-        return studies
+#     @property
+#     def enrichment_denovo_studies(self):
+#         study_types = self.descriptor['enrichmentTool']['studyTypes']
+#         studies = []
+#         for st in self.denovo_studies:
+#             if st.get_attr('study.type') in study_types:
+#                 studies.append(st)
+#         return studies
 
     @property
     def transmitted_studies(self):
@@ -87,90 +76,83 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             ]
         return self._transmitted_studies
 
-    def get_transmitted_studies(self, safe=True, **kwargs):
+    def _get_phenotype_filter(self, safe=True, **kwargs):
+        person_grouping = self.get_pedigree_selector(
+            safe=safe, default=False, ** kwargs)
+        if person_grouping is None:
+            return None
+        if person_grouping['id'] != 'phenotype':
+            return None
+        selected_phenotypes = person_grouping.get_checked_values(
+            safe=safe, **kwargs)
+
+        if not selected_phenotypes:
+            return None
+        if 'unaffected' not in selected_phenotypes:
+            def f(v):
+                return 'prb' in v.inChS and \
+                    v.study.get_attr('study.phenotype') in selected_phenotypes
+            return f
+
+        selected_phenotypes.remove('unaffected')
+        if selected_phenotypes == set():
+            def f(v):
+                return 'sib' in v.inChS
+            return f
+
+        def fm(v):
+            return 'sib' in v.inChS or \
+                v.study.get_attr('study.phenotype') in selected_phenotypes
+        return fm
+
+    def get_in_child(self, safe=True, **kwargs):
+        _res = super(Dataset, self).get_in_child(**kwargs)
+
+        person_grouping = self.get_pedigree_selector(
+            safe=safe, default=False, ** kwargs)
+        if person_grouping is not None and \
+                person_grouping['id'] == 'phenotype':
+            selected_phenotypes = person_grouping.get_checked_values(
+                safe=safe, **kwargs)
+            if not selected_phenotypes:
+                return None
+            if 'unaffected' not in selected_phenotypes:
+                return 'prb'
+            if selected_phenotypes == set(['unaffected']):
+                return 'sib'
+        return None
+
+    def get_denovo_studies(self, safe=True, **kwargs):
+        studies = self.denovo_studies[:]
+        return self._filter_studies(studies, safe, **kwargs)
+
+    def _filter_studies(self, studies, safe, **kwargs):
         study_types = self.get_study_types(safe=safe, **kwargs)
         if study_types is not None:
-            return filter(
+            studies = filter(
                 lambda st: st.get_attr('study.type').lower() in study_types,
-                self.transmitted_studies)
-        else:
-            return self.transmitted_studies
+                studies)
+        person_grouping = self.get_pedigree_selector(
+            safe=safe, default=False, **kwargs)
+        if person_grouping is not None and \
+                person_grouping['id'] == 'phenotype':
+            selected_phenotypes = person_grouping.get_checked_values(
+                safe=safe, **kwargs)
+            if selected_phenotypes is not None and \
+                    'unaffected' not in selected_phenotypes:
+                studies = filter(
+                    lambda st: st.get_attr(
+                        'study.phenotype') in selected_phenotypes,
+                    studies
+                )
+        return studies
 
-    @property
-    def children_stats(self):
-        if self._children_stats is None:
-            self._children_stats = {}
-            for phenotype in self.get_phenotypes():
-                seen = set()
-                counter = Counter()
-                for fid, fam in self.families.items():
-                    for p in fam.memberInOrder[2:]:
-                        iid = "{}:{}".format(fid, p.personId)
-                        if iid in seen:
-                            continue
-                        if p.phenotype != phenotype:
-                            continue
-                        counter[p.gender] += 1
-                        seen.add(iid)
-                self._children_stats[phenotype] = counter
-        return self._children_stats
-
-    @property
-    def enrichment_families(self):
-        if not self._enrichment_families:
-            study_types = self.descriptor['enrichmentTool']['studyTypes']
-            assert study_types
-            self._enrichment_families = {}
-            for st in self.enrichment_denovo_studies:
-                self._enrichment_families.update(st.families)
-        return self._enrichment_families
-
-    def enrichment_selector_domain(self):
-        if not self.descriptor.get('enrichmentTool', None):
-            return None
-        selector = self.descriptor['enrichmentTool']['selector']
-        selector = self.get_pedigree_selector(
-            pedigreeSelector={'id': selector})
-        assert selector is not None
-        enrichment_selector_domain = [
-            s['id'] for s in selector['domain']
-        ]
-        return enrichment_selector_domain
-
-    @property
-    def enrichment_children_stats(self):
-        if not self.descriptor.get('enrichmentTool', None):
-            return None
-        if self._enrichment_children_stats is None:
-            selector = self.descriptor['enrichmentTool']['selector']
-            selector = self.get_pedigree_selector(
-                pedigreeSelector={'id': selector})
-            assert selector is not None
-            selector_id = selector['id']
-            enrichment_selector_domain = [
-                s['id'] for s in selector['domain']
-            ]
-            result = {}
-            for selector_value in enrichment_selector_domain:
-                seen = set()
-                counter = Counter()
-                for st in self.enrichment_denovo_studies:
-                    for fid, fam in st.families.items():
-                        for p in fam.memberInOrder[2:]:
-                            iid = "{}:{}".format(fid, p.personId)
-                            if iid in seen:
-                                continue
-                            if p.atts[selector_id] != selector_value:
-                                continue
-                            counter[p.gender] += 1
-                            seen.add(iid)
-                result[selector_value] = counter
-            self._enrichment_children_stats = result
-        return self._enrichment_children_stats
+    def get_transmitted_studies(self, safe=True, **kwargs):
+        studies = self.transmitted_studies[:]
+        return self._filter_studies(studies, safe, **kwargs)
 
     @classmethod
     def get_gene_set(cls, **kwargs):
-        print(kwargs)
         gene_sets_collection, gene_set, gene_sets_types = \
             GeneSymsMixin.get_gene_set_query(**kwargs)
         if not gene_sets_collection or not gene_set:
@@ -181,7 +163,6 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             cls.GENE_SETS_LOADER = GeneSetsCollections()
         genes = cls.GENE_SETS_LOADER.get_gene_set(
             gene_sets_collection, gene_set, gene_sets_types)
-        print(genes)
         return genes['syms']
 
     @classmethod
@@ -260,7 +241,6 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         pheno_filters = genotype_browser.get('phenoFilters', None)
         if not pheno_filters:
             return None
-        print(pheno_filters)
         for pf in pheno_filters:
             if pf['measureType'] == 'categorical':
                 mf = pf['measureFilter']
@@ -296,23 +276,24 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             value = measure_values.get(p.personId, default_value)
             p.atts[pedigree_id] = value
 
-    def get_pedigree_selector(self, **kwargs):
+    def get_pedigree_selector(self, default=True, **kwargs):
         pedigrees = self.descriptor['pedigreeSelectors']
-        pedigree = pedigrees[0]
         pedigree_selector_request = kwargs.get('pedigreeSelector', None)
         if pedigree_selector_request:
             assert 'id' in kwargs['pedigreeSelector']
             selector_id = kwargs['pedigreeSelector']['id']
-            pedigree = self.idlist_get(pedigrees, selector_id)
-        assert pedigree is not None
-        return pedigree
+            return self.idlist_get(pedigrees, selector_id)
+        elif 'person_grouping' in kwargs:
+            return self.idlist_get(pedigrees, kwargs['person_grouping'])
+        if default:
+            return pedigrees[0]
+
+        return None
 
     def get_phenotypes(self):
         if self._phenotypes is None:
-            kwargs = {
-                'pedigreeSelector': {'id': 'phenotype'}
-            }
-            phenotype_selector = self.get_pedigree_selector(**kwargs)
+            phenotype_selector = self.get_pedigree_selector(
+                person_grouping='phenotype')
             result = [
                 p['id'] for p in phenotype_selector.domain
             ]
@@ -320,10 +301,15 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return self._phenotypes
 
     def filter_families_by_pedigree_selector(self, **kwargs):
-        if not kwargs.get('pedigreeSelector', None):
+        if not kwargs.get('pedigreeSelector', None) and \
+                not kwargs.get('person_grouping', None):
             return None
+
         pedigree = self.get_pedigree_selector(**kwargs)
         pedigree_id = pedigree.id
+
+        if pedigree_id == 'phenotype':
+            return None
 
         pedigree_checked_values = pedigree.get_checked_values(**kwargs)
         if pedigree_checked_values is None:
@@ -379,7 +365,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             'presentInChild': self.get_present_in_child(
                 safe=safe,
                 **kwargs),
-            'inChild': None,
+            'inChild': self.get_in_child(
+                safe=safe,
+                **kwargs),
             'regionS': self.get_regions(
                 safe=safe,
                 **kwargs),
@@ -432,11 +420,18 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 yield v
 
     def get_variants(self, safe=True, **kwargs):
-        print("get_variants: {}".format(kwargs))
+        phenotype_filter = self._get_phenotype_filter(**kwargs)
+
         denovo = self.get_denovo_variants(safe=safe, **kwargs)
         transmitted = self.get_transmitted_variants(safe=safe, **kwargs)
         variants = itertools.chain.from_iterable([denovo, transmitted])
-        return variants
+        if phenotype_filter is None:
+            for v in variants:
+                yield v
+        else:
+            for v in variants:
+                if phenotype_filter(v):
+                    yield v
 
     COMMON_COLUMNS = [
         'effectType',

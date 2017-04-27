@@ -39,6 +39,7 @@ class EffectTypesMixin(object):
         "Splice-site": ["splice-site"],
         "Missense": ["missense"],
         "Non-frame-shift": ["no-frame-shift"],
+        "Non-frame-shift-newStop": ["no-frame-shift-newStop"],
         "noStart": ["noStart"],
         "noEnd": ["noEnd"],
         "Synonymous": ["synonymous"],
@@ -78,6 +79,7 @@ class EffectTypesMixin(object):
             "Frame-shift",
             "Nonsense",
             "Splice-site",
+            "Non-frame-shift-newStop",
         ],
         "nonsynonymous": [
             "Nonsense",
@@ -201,8 +203,10 @@ class ChildGenderMixin(object):
 
 class PresentInMixin(object):
     PRESENT_IN_PARENT_TYPES = [
-        "mother only", "father only",
-        "mother and father", "neither",
+        "mother only",
+        "father only",
+        "mother and father",
+        "neither",
     ]
 
     PRESENT_IN_CHILD_TYPES = [
@@ -248,7 +252,7 @@ class PresentInMixin(object):
         present_in_parent = \
             cls._get_present_in_parent_root(safe=safe, **kwargs)
         if not present_in_parent:
-            return None
+            return ['neither']
         if safe:
             assert all([
                 pip in cls.PRESENT_IN_PARENT_TYPES
@@ -312,6 +316,13 @@ class RarityMixin(object):
     @classmethod
     def get_min_parents_called(cls, safe=True, **kwargs):
         return 0
+
+
+class InChildMixin(object):
+
+    @staticmethod
+    def get_in_child(**kwargs):
+        return None
 
 
 class GeneSymsMixin(object):
@@ -420,6 +431,7 @@ class QueryBase(
         StudyTypesMixin,
         ChildGenderMixin,
         PresentInMixin,
+        InChildMixin,
         GeneSymsMixin,
         RegionsMixin,
         RarityMixin,
