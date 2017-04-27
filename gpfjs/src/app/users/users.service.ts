@@ -12,6 +12,7 @@ export class UsersService {
   private logoutUrl = 'users/logout';
   private loginUrl = 'users/login';
   private userInfoUrl = 'users/get_user_info';
+  private registerUrl = 'users/register';
 
   constructor(
     private http: Http,
@@ -53,6 +54,25 @@ export class UsersService {
       .get(this.userInfoUrl, options)
       .map(res => {
         return res.json();
+      });
+  }
+
+  register(username: string, firstName: string, lastName: string, researcherId: string): Observable<boolean> {
+    let csrfToken = this.cookieService.get("csrftoken");
+    let headers = new Headers({ 'X-CSRFToken': csrfToken });
+    let options = new RequestOptions({ headers: headers, withCredentials: true });
+
+    return this.http.post(this.registerUrl, {
+      username: username,
+      firstName: firstName,
+      lastName: lastName,
+      researcherId: researcherId
+    }, options)
+      .map(res => {
+        return true;
+      })
+      .catch(error => {
+        return Observable.of(false);
       });
   }
 }

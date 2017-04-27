@@ -92,6 +92,8 @@ import { PhenoToolEffectTypesComponent } from './pheno-tool-effect-types/pheno-t
 
 import { FamilyCountersComponent } from './family-counters/family-counters.component';
 import { FamilyCountersService } from './family-counters/family-counters.service';
+import { RegistrationComponent } from './registration/registration.component';
+import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 
 const appRoutes: Routes = [
   {
@@ -179,7 +181,9 @@ const appRoutes: Routes = [
     PhenoToolResultsChartPerEffectComponent,
     PhenoToolResultsChartPerResultComponent,
     PhenoToolEffectTypesComponent,
-    FamilyCountersComponent
+    FamilyCountersComponent,
+    RegistrationComponent,
+    ForgotPasswordComponent
   ],
   imports: [
     BrowserModule,
@@ -211,6 +215,12 @@ const appRoutes: Routes = [
     PhenoToolService,
     FamilyCountersService
   ],
+
+  entryComponents: [
+    RegistrationComponent,
+    ForgotPasswordComponent
+  ],
+
   bootstrap: [AppComponent]
 })
 export class AppModule { }

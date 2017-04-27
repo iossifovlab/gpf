@@ -2,10 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { UsersService } from './users.service';
 import { Store } from '@ngrx/store';
 import { USER_LOGIN, USER_LOGOUT } from './users-store'
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { RegistrationComponent } from '../registration/registration.component';
+import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
 
 @Component({
   selector: 'gpf-users',
-  templateUrl: './users.component.html',
+  templateUrl: './users.component.html'
 })
 export class UsersComponent implements OnInit {
   private username;
@@ -14,6 +17,7 @@ export class UsersComponent implements OnInit {
   private loginError = false;
 
   constructor(
+    private modalService: NgbModal,
     private store: Store<any>,
     private usersService: UsersService
   ) { }
@@ -53,6 +57,15 @@ export class UsersComponent implements OnInit {
       (res) => {
         this.reloadUserData();
     });
+  }
+
+
+  showRegister() {
+    this.modalService.open(RegistrationComponent);
+  }
+
+  showForgotPassword() {
+    this.modalService.open(ForgotPasswordComponent);
   }
 
 }

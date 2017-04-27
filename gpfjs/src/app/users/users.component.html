@@ -8,11 +8,26 @@
     Login
   </button>
   <div class="dropdown-menu dropdown-menu-right">
-    Username:<input [(ngModel)]="username" type="text">
-    Password:<input [(ngModel)]="password" type="password">
-    <input type="button" value="Submit" (click)="login()">
+    <label>
+      Username:<input [(ngModel)]="username" type="text">
+    </label>
+    <label>
+      Password:<input [(ngModel)]="password" type="password">
+    </label>
+    <button class="btn btn-sm btn-outline-primary" (click)="login()">
+      Login
+    </button>
     <div *ngIf="loginError" class="alert alert-danger">
       Wrong username or password
+    </div>
+
+    <div>
+      <button class="btn btn-sm btn-outline-primary" (click)="showRegister()">
+        Register
+      </button>
+      <button class="btn btn-sm btn-outline-primary" (click)="showForgotPassword()">
+        Forgot password?
+      </button>
     </div>
   </div>
 </div>
