@@ -55,7 +55,7 @@ Example:
         try:
             dataset_id = data['datasetId']
             dataset = self.datasets_factory.get_dataset(dataset_id)
-            self.check_object_permissions(request, dataset)
+            self.check_object_permissions(request, dataset_id)
 
             family_ids = dataset.get_family_ids(**data)
             if family_ids is None:
