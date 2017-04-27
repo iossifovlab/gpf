@@ -11,6 +11,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 from django.conf import settings
+from guardian.conf import settings as guardian_settings
 
 from helpers.logger import LOGGER
 
@@ -189,6 +190,13 @@ def _create_verif_path(user):
     verif_path.save()
 
     return verif_path
+
+def get_anonymous_user_instance(CurrentUserModel):
+    user, created = CurrentUserModel.objects.get_or_create(
+        email=guardian_settings.ANONYMOUS_USER_NAME,
+        defaults = {'is_active': True})
+    user.set_unusable_password()
+    return user
 
 class ResearcherId(models.Model):
     researcher = models.ManyToManyField(WdaeUser)
