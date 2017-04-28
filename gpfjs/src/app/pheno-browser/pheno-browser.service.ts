@@ -47,7 +47,11 @@ export class PhenoBrowserService {
 
     return this.http
       .get(this.measuresUrl, options)
-      .map((response) => PhenoMeasures.fromJson(response.json()))
-      .map((phenoMeasures) => PhenoMeasures.addBasePath(phenoMeasures));
+      .map((response) => {
+        let result = PhenoMeasures.fromJson(response.json());
+        console.log(result);
+        return result
+      })
+      .map(PhenoMeasures.addBasePath);
   }
 }
