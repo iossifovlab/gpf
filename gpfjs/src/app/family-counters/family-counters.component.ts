@@ -14,9 +14,7 @@ import { FamilyCountersService } from './family-counters.service';
 export class FamilyCountersComponent implements AfterViewInit {
   @Input() genotypeBrowserState: Object;
 
-  private objects: FamilyObjectArray;
-  private inView: boolean;
-  private familyObjectArray: Observable<FamilyObjectArray>;
+  familyObjectArray: Observable<FamilyObjectArray>;
 
   constructor(
     private store: Store<any>,
@@ -25,9 +23,7 @@ export class FamilyCountersComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.inView = true;
     this.familyObjectArray = this.store
-      .takeWhile(() => this.inView)
       .debounceTime(300)
       .switchMap(() => this.familyCountersService.getCounters(this.genotypeBrowserState));
   }
