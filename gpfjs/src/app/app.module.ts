@@ -94,6 +94,8 @@ import { FamilyCountersComponent } from './family-counters/family-counters.compo
 import { FamilyCountersService } from './family-counters/family-counters.service';
 import { RegistrationComponent } from './registration/registration.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
+import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
+import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
 
 const appRoutes: Routes = [
   {
@@ -126,6 +128,10 @@ const appRoutes: Routes = [
         path: 'phenoTool',
         component: PhenoToolComponent
       },
+      {
+        path: 'phenotypeBrowser',
+        component: PhenoBrowserComponent
+      }
     ]
   },
 ];
@@ -183,7 +189,8 @@ const appRoutes: Routes = [
     PhenoToolEffectTypesComponent,
     FamilyCountersComponent,
     RegistrationComponent,
-    ForgotPasswordComponent
+    ForgotPasswordComponent,
+    PhenoBrowserComponent
   ],
   imports: [
     BrowserModule,
@@ -213,7 +220,8 @@ const appRoutes: Routes = [
     StateRestoreService,
     MeasuresService,
     PhenoToolService,
-    FamilyCountersService
+    FamilyCountersService,
+    PhenoBrowserService
   ],
 
   entryComponents: [
