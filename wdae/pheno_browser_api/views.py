@@ -11,6 +11,7 @@ from rest_framework import status
 
 import preloaded
 from pheno_browser.models import VariableBrowserModelManager
+from django.conf import settings
 
 
 class PhenoInstrumentsView(APIView):
@@ -50,6 +51,10 @@ class PhenoMeasuresView(APIView):
         assert self.datasets is not None
 
         self.datasets_factory = self.datasets.get_factory()
+        self.base_url = getattr(
+            settings,
+            "PHENO_BROWSER_BASE_URL",
+            "/static/pheno_browser/")
 
     def get(self, request):
         if 'dataset_id' not in request.query_params:
@@ -83,6 +88,6 @@ class PhenoMeasuresView(APIView):
 
             res.append(m)
         return Response({
-            'base_image_url': '/static/pheno_browser/',
+            'base_image_url': self.base_url,
             'measures': res,
         })
