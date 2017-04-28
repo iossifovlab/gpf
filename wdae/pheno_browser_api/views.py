@@ -3,6 +3,7 @@ Created on Apr 21, 2017
 
 @author: lubo
 '''
+import numpy as np
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -38,6 +39,10 @@ class PhenoInstrumentsView(APIView):
         return Response(res)
 
 
+def isnan(val):
+    return val is None or np.isnan(val)
+
+
 class PhenoMeasuresView(APIView):
     def __init__(self):
         register = preloaded.register.get_register()
@@ -65,7 +70,18 @@ class PhenoMeasuresView(APIView):
             df = vm.load_df(where="instrument_name='{}'".format(instrument))
         res = []
         for row in df.itertuples():
-            res.append(dict(row._asdict()))
+            m = dict(row._asdict())
+            print(m)
+            if isnan(m['pvalue_correlation_nviq_male']):
+                m['pvalue_correlation_nviq_male'] = "NaN"
+            if isnan(m['pvalue_correlation_age_male']):
+                m['pvalue_correlation_age_male'] = "NaN"
+            if isnan(m['pvalue_correlation_nviq_female']):
+                m['pvalue_correlation_nviq_female'] = "NaN"
+            if isnan(m['pvalue_correlation_age_female']):
+                m['pvalue_correlation_age_female'] = "NaN"
+
+            res.append(m)
         return Response({
             'base_image_url': '/static/pheno_browser/',
             'measures': res,

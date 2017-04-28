@@ -8,6 +8,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from pprint import pprint
+from users.management.commands import reload_datasets_perm
 
 
 class Test(APITestCase):
@@ -15,6 +16,7 @@ class Test(APITestCase):
     @classmethod
     def setUpClass(cls):
         super(Test, cls).setUpClass()
+        reload_datasets_perm.Command().handle()
 
         User = get_user_model()
         u = User.objects.create(
@@ -22,8 +24,7 @@ class Test(APITestCase):
             first_name="First",
             last_name="Last",
             is_staff=True,
-            is_active=True,
-            researcher_id="0001000")
+            is_active=True)
         u.set_password("secret")
         u.save()
 
@@ -84,3 +85,14 @@ class Test(APITestCase):
 
         pprint(response.data['measures'])
         self.assertEquals(18, len(response.data['measures']))
+
+    def test_measures_vip_bad_json(self):
+        problem_urls = [
+            "{}?dataset_id=VIP&instrument=svip_neuro_exam",
+            "{}?dataset_id=VIP&instrument=svip_subjects",
+        ]
+        urls = [u.format(self.MEASURES_URL)for u in problem_urls]
+
+        for url in urls:
+            response = self.client.get(url)
+            self.assertEqual(status.HTTP_200_OK, response.status_code)
