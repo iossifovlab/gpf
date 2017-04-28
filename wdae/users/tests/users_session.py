@@ -59,3 +59,52 @@ class ResearcherRegistrationTest(APITestCase):
         self.assertEqual(
             response.data['researcherId'], id1.researcher_id)
         self.assertEqual(response.data['email'], self.res.email)
+
+
+class UserAuthenticationTest(APITestCase):
+
+    def setUp(self):
+        self.user = WdaeUser.objects.create(email="test@example.com",
+                                            first_name="Ivan",
+                                            last_name="Testov")
+        self.user.set_password("pass")
+        self.user.is_active = True
+        self.user.save()
+
+    def test_successful_auth(self):
+        data = {
+            'username': 'test@example.com',
+            'password': 'pass',
+        }
+
+        response = self.client.post(
+            '/api/v3/users/login', data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_failed_auth(self):
+        data = {
+            'username': 'bad@example.com',
+            'password': 'pass'
+        }
+
+        response = self.client.post(
+            '/api/v3/users/login', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_user_info_after_auth(self):
+        self.user.is_staff = True
+        self.user.save()
+
+        data = {
+            'username': 'test@example.com',
+            'password': 'pass',
+        }
+
+        response = self.client.post(
+            '/api/v3/users/login', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        response = self.client.get('/api/v3/users/get_user_info')
+        self.assertEqual(response.data['loggedIn'], True)
+        self.assertEqual(response.data['email'], 'test@example.com')
