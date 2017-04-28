@@ -70,7 +70,7 @@ class PhenoMeasuresView(APIView):
             df = vm.load_df(where="instrument_name='{}'".format(instrument))
         res = []
         for row in df.itertuples():
-            m = dict(row._asdict())
+            m = dict(vars(row))
             print(m)
             if isnan(m['pvalue_correlation_nviq_male']):
                 m['pvalue_correlation_nviq_male'] = "NaN"
