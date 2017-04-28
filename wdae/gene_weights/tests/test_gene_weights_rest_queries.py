@@ -20,8 +20,7 @@ class Test(APITestCase):
                                 first_name="First",
                                 last_name="Last",
                                 is_staff=True,
-                                is_active=True,
-                                researcher_id="0001000")
+                                is_active=True)
         u.set_password("secret")
         u.save()
 
