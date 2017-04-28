@@ -12,4 +12,6 @@ urlpatterns = patterns(
     url(r'^login$', 'login'),
     url(r'^logout$', 'logout'),
     url(r'^get_user_info$', 'get_user_info'),
+    url(r'^reset_password', 'reset_password'),
+    url(r'^change_password', 'change_password'),
 )
