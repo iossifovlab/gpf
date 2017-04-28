@@ -97,6 +97,8 @@ import { ForgotPasswordComponent } from './forgot-password/forgot-password.compo
 import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
 import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
+import { PhenoBrowserModalContent } from './pheno-browser/pheno-browser-modal-content.component';
+
 
 const appRoutes: Routes = [
   {
@@ -195,7 +197,8 @@ const appRoutes: Routes = [
     RegistrationComponent,
     ForgotPasswordComponent,
     PhenoBrowserComponent,
-    ResetPasswordComponent
+    ResetPasswordComponent,
+    PhenoBrowserModalContent
   ],
   imports: [
     BrowserModule,
@@ -231,7 +234,8 @@ const appRoutes: Routes = [
 
   entryComponents: [
     RegistrationComponent,
-    ForgotPasswordComponent
+    ForgotPasswordComponent,
+    PhenoBrowserModalContent
   ],
 
   bootstrap: [AppComponent]

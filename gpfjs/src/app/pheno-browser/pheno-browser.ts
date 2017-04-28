@@ -76,7 +76,16 @@ export class PhenoMeasures {
       json['measures'].map((phenoMeasure) => PhenoMeasure.fromJson(phenoMeasure)));
   }
 
+
   static addBasePath(phenoMeasures: PhenoMeasures): PhenoMeasures {
+    let basePath = environment.basePath + phenoMeasures.baseImageUrl;
+    let addBaseUrlIfNotNull = (currentPath: string, basePath: string) => {
+      if(currentPath) {
+        return basePath + currentPath;
+      }
+      return null;
+    }
+
     return new PhenoMeasures(
       phenoMeasures.baseImageUrl,
       phenoMeasures.measures.map(phenoMeasure => new PhenoMeasure(
@@ -84,16 +93,16 @@ export class PhenoMeasures {
         phenoMeasure.instrumentName,
         phenoMeasure.valuesDomain,
 
-        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureDistribution,
-        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureDistributionSmall,
+        addBaseUrlIfNotNull(phenoMeasure.figureDistribution, basePath),
+        addBaseUrlIfNotNull(phenoMeasure.figureDistributionSmall, basePath),
 
-        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureCorrelationNviq,
-        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureCorrelationNviqSmall,
+        addBaseUrlIfNotNull(phenoMeasure.figureCorrelationNviq, basePath),
+        addBaseUrlIfNotNull(phenoMeasure.figureCorrelationNviqSmall, basePath),
         phenoMeasure.pvalueCorrelationNviqMale,
         phenoMeasure.pvalueCorrelationNviqFemale,
 
-        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureCorrelationAge,
-        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureCorrelationAgeSmall,
+        addBaseUrlIfNotNull(phenoMeasure.figureCorrelationAge, basePath),
+        addBaseUrlIfNotNull(phenoMeasure.figureCorrelationAgeSmall, basePath),
         phenoMeasure.pvalueCorrelationAgeMale,
         phenoMeasure.pvalueCorrelationAgeFemale,
 
