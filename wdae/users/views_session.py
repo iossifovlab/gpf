@@ -3,6 +3,7 @@ Created on Aug 10, 2016
 
 @author: lubo
 '''
+from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager
 from django.db.models.signals import post_save
@@ -51,14 +52,18 @@ def register(request):
         researcher_id = serialized.validated_data['researcherId']
         email = BaseUserManager.normalize_email(
             serialized.validated_data['email'])
-        print("EM", email)
 
         created_user = user.objects.get(email=email)
-        created_user.register_preexisting_user(
-            serialized.validated_data['firstName'],
-            serialized.validated_data['lastName']
-        )
-        return Response(serialized.data, status=status.HTTP_201_CREATED)
+        try:
+            created_user.register_preexisting_user(
+                serialized.validated_data['firstName'],
+                serialized.validated_data['lastName']
+            )
+            return Response(serialized.data, status=status.HTTP_201_CREATED)
+        except IntegrityError:
+            return Response(serialized._errors,
+                status=status.HTTP_400_BAD_REQUEST)
+
     else:
         return Response(serialized._errors, status=status.HTTP_400_BAD_REQUEST)
 

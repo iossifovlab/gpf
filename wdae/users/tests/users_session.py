@@ -1,8 +1,3 @@
-'''
-Created on May 25, 2015
-
-@author: lubo
-'''
 from users.models import WdaeUser, VerificationPath, ResearcherId
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework.test import APITestCase
@@ -41,7 +36,19 @@ class ResearcherRegistrationTest(APITestCase):
             'lastName': 'bad_last_name'
         }
 
-        response = self.client.post('/api/v3/users/register', data, format='json')
+        response = self.client.post('/api/v3/users/register', data,
+            format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_reset_pass_without_registration(self):
+        [id1] = self.res.researcherid_set.all()
+        data = {
+            'email': self.res.email
+        }
+        pprint(data)
+
+        response = self.client.post('/api/v3/users/reset_password', data,
+            format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_successful_register(self):
@@ -54,12 +61,130 @@ class ResearcherRegistrationTest(APITestCase):
         }
         pprint(data)
 
-        response = self.client.post('/api/v3/users/register', data, format='json')
+        response = self.client.post('/api/v3/users/register', data,
+            format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             response.data['researcherId'], id1.researcher_id)
         self.assertEqual(response.data['email'], self.res.email)
 
+    def test_register_twice(self):
+            [id1] = self.res.researcherid_set.all()
+            data = {
+                'firstName': self.res.first_name,
+                'lastName': self.res.last_name,
+                'researcherId': id1.researcher_id,
+                'email': self.res.email
+            }
+            pprint(data)
+
+            response = self.client.post('/api/v3/users/register', data,
+                format='json')
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(
+                response.data['researcherId'], id1.researcher_id)
+            self.assertEqual(response.data['email'], self.res.email)
+
+
+            response = self.client.post('/api/v3/users/register', data,
+                format='json')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_registration_all_steps(self):
+        [id1] = self.res.researcherid_set.all()
+        data = {
+            'firstName': self.res.first_name,
+            'lastName': self.res.last_name,
+            'researcherId': id1.researcher_id,
+            'email': self.res.email
+        }
+        pprint(data)
+
+        response = self.client.post('/api/v3/users/register', data,
+            format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.data['researcherId'], id1.researcher_id)
+        self.assertEqual(response.data['email'], self.res.email)
+
+        verifPath = self.res.verificationpath.path
+
+        data = {
+            'verifPath': verifPath,
+        }
+        response = self.client.post('/api/v3/users/check_verif_path', data,
+            format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = {
+            'verifPath': verifPath,
+            'password': 'testpas'
+        }
+        response = self.client.post('/api/v3/users/change_password', data,
+            format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = {
+            'username': self.res.email,
+            'password': 'testpas',
+        }
+
+        response = self.client.post(
+            '/api/v3/users/login', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class UsersAPITest(APITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(UsersAPITest, cls).setUpClass()
+
+        cls.res = WdaeUser()
+        cls.res.first_name = 'fname'
+        cls.res.last_name = 'lname'
+        cls.res.email = 'fake@fake.com'
+        cls.res.is_active = True
+        cls.res.save()
+
+        cls.research_id = ResearcherId()
+        cls.research_id.researcher_id = '11aa--bb'
+        cls.research_id.save()
+
+        cls.research_id.researcher.add(cls.res)
+
+    def test_invalid_verif_path(self):
+        data = {
+            'verifPath': 'dasdasdasdasdsa',
+        }
+        response = self.client.post('/api/v3/users/check_verif_path', data,
+            format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_reset_pass(self):
+        [id1] = self.res.researcherid_set.all()
+        data = {
+            'email': self.res.email
+        }
+        pprint(data)
+
+        response = self.client.post('/api/v3/users/reset_password', data,
+            format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_register_existing_user(self):
+        [id1] = self.res.researcherid_set.all()
+        data = {
+            'firstName': self.res.first_name,
+            'lastName': self.res.last_name,
+            'researcherId': id1.researcher_id,
+            'email': self.res.email
+        }
+        pprint(data)
+
+        response = self.client.post('/api/v3/users/register', data,
+            format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 class UserAuthenticationTest(APITestCase):
 
