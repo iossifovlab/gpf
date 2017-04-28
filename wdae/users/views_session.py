@@ -41,8 +41,7 @@ def change_password(request):
 
     user = get_user_model().change_password(verif_path, password)
 
-    return Response({'username': user.email, 'password': password},
-                    status.HTTP_201_CREATED)
+    return Response({}, status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 def register(request):
