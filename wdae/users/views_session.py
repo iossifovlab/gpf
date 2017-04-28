@@ -27,7 +27,7 @@ def reset_password(request):
     email = request.data['email']
     user_model = get_user_model()
     try:
-        user = user_model.objects.get(email=email)
+        user = user_model.objects.get(email=email, is_active=True)
         user.reset_password()
 
         return Response({}, status.HTTP_200_OK)
@@ -48,19 +48,23 @@ def change_password(request):
 def register(request):
     serialized = UserSerializer(data=request.data)
     if serialized.is_valid():
-        user = get_user_model()
+        user_model = get_user_model()
         researcher_id = serialized.validated_data['researcherId']
         email = BaseUserManager.normalize_email(
             serialized.validated_data['email'])
 
-        created_user = user.objects.get(email=email)
         try:
-            created_user.register_preexisting_user(
+            preexisting_user = user_model.objects.get(email=email,
+                is_active=False)
+            preexisting_user.register_preexisting_user(
                 serialized.validated_data['firstName'],
                 serialized.validated_data['lastName']
             )
             return Response(serialized.data, status=status.HTTP_201_CREATED)
         except IntegrityError:
+            return Response(serialized._errors,
+                status=status.HTTP_400_BAD_REQUEST)
+        except user_model.DoesNotExist:
             return Response(serialized._errors,
                 status=status.HTTP_400_BAD_REQUEST)
 
