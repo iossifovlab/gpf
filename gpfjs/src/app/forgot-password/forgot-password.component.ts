@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -7,13 +7,17 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./forgot-password.component.css']
 })
 export class ForgotPasswordComponent implements OnInit {
-  @Output() onClose = new EventEmitter();
+  email: string;
+  registerError = "";
 
   constructor(
-    private activeModal: NgbActiveModal
+    readonly activeModal: NgbActiveModal
   ) { }
 
   ngOnInit() {
   }
 
+  register() {
+
+  }
 }
