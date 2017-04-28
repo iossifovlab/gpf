@@ -96,13 +96,9 @@ import { RegistrationComponent } from './registration/registration.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
 import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
+import { ResetPasswordComponent } from './reset-password/reset-password.component';
 
 const appRoutes: Routes = [
-  {
-    path: '',
-    redirectTo: 'datasets',
-    pathMatch: 'full'
-  },
   {
     path: 'datasets',
     component: DatasetsComponent
@@ -111,11 +107,6 @@ const appRoutes: Routes = [
     path: 'datasets/:dataset',
     component: DatasetsComponent,
     children: [
-      {
-        path: '',
-        redirectTo: 'browser',
-        pathMatch: 'full'
-      },
       {
         path: 'browser',
         component: GenotypeBrowserComponent
@@ -131,8 +122,21 @@ const appRoutes: Routes = [
       {
         path: 'phenotypeBrowser',
         component: PhenoBrowserComponent
+      },
+      {
+        path: '**',
+        redirectTo: 'browser'
       }
     ]
+  },
+  {
+    path: '**',
+    redirectTo: 'datasets'
+  },
+  {
+    path: 'validate/:validateString',
+    component: ResetPasswordComponent,
+    outlet: 'popup'
   },
 ];
 
@@ -190,7 +194,8 @@ const appRoutes: Routes = [
     FamilyCountersComponent,
     RegistrationComponent,
     ForgotPasswordComponent,
-    PhenoBrowserComponent
+    PhenoBrowserComponent,
+    ResetPasswordComponent
   ],
   imports: [
     BrowserModule,
