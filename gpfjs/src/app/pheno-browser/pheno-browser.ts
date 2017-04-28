@@ -1,3 +1,5 @@
+import { environment } from '../../environments/environment';
+
 export type PhenoInstrument = string;
 
 export class PhenoInstruments {
@@ -71,7 +73,34 @@ export class PhenoMeasures {
   static fromJson(json: Object): PhenoMeasures {
     return new PhenoMeasures(
       json['base_image_url'],
-      json['measures'].map((phenoMeasure) => PhenoMeasure.fromJson(phenoMeasure))
+      json['measures'].map((phenoMeasure) => PhenoMeasure.fromJson(phenoMeasure)));
+  }
+
+  static addBasePath(phenoMeasures: PhenoMeasures): PhenoMeasures {
+    return new PhenoMeasures(
+      phenoMeasures.baseImageUrl,
+      phenoMeasures.measures.map(phenoMeasure => new PhenoMeasure(
+        phenoMeasure.index,
+        phenoMeasure.instrumentName,
+        phenoMeasure.valuesDomain,
+
+        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureDistribution,
+        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureDistributionSmall,
+
+        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureCorrelationNviq,
+        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureCorrelationNviqSmall,
+        phenoMeasure.pvalueCorrelationNviqMale,
+        phenoMeasure.pvalueCorrelationNviqFemale,
+
+        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureCorrelationAge,
+        environment.basePath + phenoMeasures.baseImageUrl + phenoMeasure.figureCorrelationAgeSmall,
+        phenoMeasure.pvalueCorrelationAgeMale,
+        phenoMeasure.pvalueCorrelationAgeFemale,
+
+        phenoMeasure.measureId,
+        phenoMeasure.measureName,
+        phenoMeasure.measureType,
+      ))
     )
   }
 }

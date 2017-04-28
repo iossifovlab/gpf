@@ -15,17 +15,66 @@
   </div>
   <div class="form-block">
     <div class="row">
-      <div class="col-lg-12">
-        {{ measuresToShow | async | json }}
-        <!-- <gpf-table *ngIf="selectedInstrument | async" [dataSource]="selectedInstrument | async" style="display: inline-block">
-          <gpf-table-column></gpf-table-column>
-          <gpf-table-column></gpf-table-column>
-          <gpf-table-column></gpf-table-column>
-          <gpf-table-column></gpf-table-column>
-          <gpf-table-column></gpf-table-column>
-          <gpf-table-column></gpf-table-column>
-          <gpf-table-column></gpf-table-column>
-        </gpf-table> -->
+      <div [hidden]="!(measuresToShow$ | async)" class="col-lg-12">
+        <gpf-table [dataSource]="(measuresToShow$ | async)?.measures" style="display: inline-block">
+          <gpf-table-column>
+            <gpf-table-subcolumn header="Proband Pheno Measure" field="measureName"></gpf-table-subcolumn>
+          </gpf-table-column>
+          <gpf-table-column>
+            <gpf-table-subcolumn [sortable]="false" header="Pheno Measure Values" field="figureDistributionSmall">
+              <span *gpf-table-cell-content="let data">
+                <img class="table-chart" [src]="data.figureDistributionSmall" />
+              </span>
+            </gpf-table-subcolumn>
+          </gpf-table-column>
+          <gpf-table-column>
+            <gpf-table-subcolumn header="Minimum" field="valuesDomain[0]"></gpf-table-subcolumn>
+            <gpf-table-subcolumn header="Maximum" field="valuesDomain[1]"></gpf-table-subcolumn>
+          </gpf-table-column>
+          <gpf-table-column>
+            <gpf-table-subcolumn
+              [sortable]="false"
+              header="Correlation by Non-Verbal IQ"
+              field="figureCorrelationNviqSmall">
+              <span *gpf-table-cell-content="let data">
+                <img class="table-chart" [src]="data.figureCorrelationNviqSmall" />
+              </span>
+            </gpf-table-subcolumn>
+          </gpf-table-column>
+          <gpf-table-column header="P Value">
+            <gpf-table-subcolumn header="male" field="pvalueCorrelationNviqMale">
+                <span *gpf-table-cell-content="let data">
+                  {{ data.pvalueCorrelationNviqMale | numberWithExp: "1.2-4" }}
+                </span>
+            </gpf-table-subcolumn>
+            <gpf-table-subcolumn header="female" field="pvalueCorrelationNviqFemale">
+                <span *gpf-table-cell-content="let data">
+                  {{ data.pvalueCorrelationNviqFemale | numberWithExp: "1.2-4" }}
+                </span></gpf-table-subcolumn>
+          </gpf-table-column>
+          <gpf-table-column>
+            <gpf-table-subcolumn
+              [sortable]="false"
+              header="Correlation by Age"
+              field="figureCorrelationAgeSmall">
+              <span *gpf-table-cell-content="let data">
+                <img class="table-chart" [src]="data.figureCorrelationAgeSmall" />
+              </span>
+            </gpf-table-subcolumn>
+          </gpf-table-column>
+          <gpf-table-column header="P Value">
+            <gpf-table-subcolumn header="male" field="pvalueCorrelationAgeMale">
+                <span *gpf-table-cell-content="let data">
+                  {{ data.pvalueCorrelationAgeMale | numberWithExp: "1.2-4" }}
+                </span>
+            </gpf-table-subcolumn>
+            <gpf-table-subcolumn header="female" field="pvalueCorrelationAgeFemale">
+                <span *gpf-table-cell-content="let data">
+                  {{ data.pvalueCorrelationAgeFemale | numberWithExp: "1.2-4" }}
+                </span>
+            </gpf-table-subcolumn>
+          </gpf-table-column>
+        </gpf-table>
       </div>
     </div>
   </div>

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
-import { Subject } from 'rxjs/Subject';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
@@ -14,18 +14,17 @@ import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browse
 })
 export class PhenoBrowserComponent implements OnInit {
 
-  private selectedChanges$: Subject<PhenoInstrument> = new Subject<PhenoInstrument>();
-  private measuresToShow: Observable<PhenoMeasures>;
+  private selectedChanges$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
+  measuresToShow$: Observable<PhenoMeasures>;
 
   private datasetId: string;
-  private instruments: Observable<PhenoInstruments>;
+  instruments: Observable<PhenoInstruments>;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private phenoBrowserService: PhenoBrowserService
   ) { }
-
 
   ngOnInit() {
     this.route.parent.params.take(1).subscribe(
@@ -34,10 +33,9 @@ export class PhenoBrowserComponent implements OnInit {
         this.initInstruments(this.datasetId);
       }
     );
-    this.measuresToShow = this.selectedChanges$
+    this.measuresToShow$ = this.selectedChanges$
       .switchMap((newSelection) => this.phenoBrowserService.getMeasures(this.datasetId, newSelection))
       .share();
-
   }
 
   initInstruments(datasetId: string): void {

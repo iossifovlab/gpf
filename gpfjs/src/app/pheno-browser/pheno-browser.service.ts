@@ -34,10 +34,7 @@ export class PhenoBrowserService {
 
     return this.http
       .get(this.instrumentsUrl, options)
-      .map((response: Response) => response.json() as PhenoInstruments)
-      .map((phenoInstruments) => {
-        return new PhenoInstruments(phenoInstruments.instruments[4], phenoInstruments.instruments);
-      })
+      .map((response: Response) => response.json() as PhenoInstruments);
   }
 
   getMeasures(datasetId: string, instrument: PhenoInstrument): Observable<PhenoMeasures> {
@@ -50,6 +47,7 @@ export class PhenoBrowserService {
 
     return this.http
       .get(this.measuresUrl, options)
-      .map((response: Response) => PhenoMeasures.fromJson(response.json()))
+      .map((response) => PhenoMeasures.fromJson(response.json()))
+      .map((phenoMeasures) => PhenoMeasures.addBasePath(phenoMeasures));
   }
 }
