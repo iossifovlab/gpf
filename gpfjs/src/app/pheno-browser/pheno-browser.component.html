@@ -23,7 +23,7 @@
           <gpf-table-column>
             <gpf-table-subcolumn [sortable]="false" header="Pheno Measure Values" field="figureDistributionSmall">
               <span *gpf-table-cell-content="let data">
-                <img class="table-chart" [src]="data.figureDistributionSmall" />
+                <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
               </span>
             </gpf-table-subcolumn>
           </gpf-table-column>
@@ -45,7 +45,7 @@
               header="Correlation by Non-Verbal IQ"
               field="figureCorrelationNviqSmall">
               <span *gpf-table-cell-content="let data">
-                <img class="table-chart" [src]="data.figureCorrelationNviqSmall" />
+                <img *ngIf="data.figureCorrelationNviqSmall" class="table-chart" [src]="data.figureCorrelationNviqSmall" />
               </span>
             </gpf-table-subcolumn>
           </gpf-table-column>
@@ -66,7 +66,7 @@
               header="Correlation by Age"
               field="figureCorrelationAgeSmall">
               <span *gpf-table-cell-content="let data">
-                <img class="table-chart" [src]="data.figureCorrelationAgeSmall" />
+                <img *ngIf="data.figureCorrelationAgeSmall" class="table-chart" [src]="data.figureCorrelationAgeSmall" />
               </span>
             </gpf-table-subcolumn>
           </gpf-table-column>
