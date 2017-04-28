@@ -15,6 +15,7 @@ export class ResetPasswordComponent {
   verifPath: string;
 
   resetPasswordError = "";
+  verifPathValid = false;
 
   private modalView;
 
@@ -28,6 +29,17 @@ export class ResetPasswordComponent {
   ngAfterViewInit() {
     this.verifPath = this.route.snapshot.params["validateString"];
     this.modalView = this.modalService.open(this.content);
+
+    this.usersService.checkVerification(this.verifPath).subscribe(
+      (res) => {
+        if (res) {
+          this.verifPathValid = true;
+        }
+        else {
+          this.verifPathValid = false;
+          this.resetPasswordError = "Invalid verification URL";
+        }
+    });
 
     this.modalView.result.then(
       (result) => {

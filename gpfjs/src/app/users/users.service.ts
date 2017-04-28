@@ -15,6 +15,7 @@ export class UsersService {
   private registerUrl = 'users/register';
   private resetPasswordUrl = 'users/reset_password';
   private changePasswordUrl = 'users/change_password';
+  private checkVerificationUrl = 'users/check_verif_path';
 
   constructor(
     private http: Http,
@@ -99,6 +100,22 @@ export class UsersService {
 
     return this.http.post(this.changePasswordUrl, {
       password: password, verifPath: verifPath
+    }, options)
+      .map(res => {
+        return true;
+      })
+      .catch(error => {
+        return Observable.of(false);
+      });
+  }
+
+  checkVerification(verifPath: string): Observable<boolean> {
+    let csrfToken = this.cookieService.get("csrftoken");
+    let headers = new Headers({ 'X-CSRFToken': csrfToken });
+    let options = new RequestOptions({ headers: headers, withCredentials: true });
+
+    return this.http.post(this.checkVerificationUrl, {
+      verifPath: verifPath
     }, options)
       .map(res => {
         return true;

@@ -31,7 +31,7 @@ export class ForgotPasswordComponent implements OnInit {
           this.activeModal.close('Close click');
         }
         else {
-          this.resetPasswordError = "Registration Failed";
+          this.resetPasswordError = "Reset Password Failed";
         }
 
     });
