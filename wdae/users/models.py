@@ -173,9 +173,9 @@ def _create_reset_mail(host, path, verification_path):
 def _build_email_template(settings):
     subject = settings['subject']
     message = settings['initial_message']
-    message += '{0}{1}{2}'.format(settings['host'],
-                                  settings['path'],
-                                  settings['verification_path'])
+    path = settings['path'].format(settings['verification_path'])
+
+    message += '{0}{1}'.format(settings['host'], path)
 
     return {
         'subject': subject,
