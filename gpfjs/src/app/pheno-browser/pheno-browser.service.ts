@@ -43,11 +43,11 @@ export class PhenoBrowserService {
     options.search = new URLSearchParams();
 
     options.search.set('dataset_id', datasetId);
-    options.search.set('measure', instrument);
+    options.search.set('instrument', instrument);
 
     return this.http
       .get(this.measuresUrl, options)
       .map((response) => PhenoMeasures.fromJson(response.json()))
-      .map((phenoMeasures) => PhenoMeasures.addBasePath(phenoMeasures));
+      .map(PhenoMeasures.addBasePath);
   }
 }

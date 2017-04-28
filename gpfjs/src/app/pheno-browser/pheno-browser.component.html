@@ -28,8 +28,16 @@
             </gpf-table-subcolumn>
           </gpf-table-column>
           <gpf-table-column>
-            <gpf-table-subcolumn header="Minimum" field="valuesDomain[0]"></gpf-table-subcolumn>
-            <gpf-table-subcolumn header="Maximum" field="valuesDomain[1]"></gpf-table-subcolumn>
+            <gpf-table-subcolumn header="Minimum" field="valuesDomain" [comparator]="minDomainComparator">
+              <span *gpf-table-cell-content="let data">
+                {{ data.valuesDomain[0] }}
+              </span>
+            </gpf-table-subcolumn>
+            <gpf-table-subcolumn header="Maximum" field="valuesDomain" [comparator]="maxDomainComparator">
+              <span *gpf-table-cell-content="let data">
+                {{ data.valuesDomain[1] }}
+              </span>
+            </gpf-table-subcolumn>
           </gpf-table-column>
           <gpf-table-column>
             <gpf-table-subcolumn

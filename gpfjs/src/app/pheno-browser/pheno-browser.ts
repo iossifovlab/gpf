@@ -42,7 +42,7 @@ export class PhenoMeasure {
     return new PhenoMeasure(
       json['Index'] as number,
       json['instrument_name'],
-      json['values_domain'] as ValuesDomain,
+      JSON.parse(json['values_domain']) as ValuesDomain,
 
       json['figure_distribution'],
       json['figure_distribution_small'],
