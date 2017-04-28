@@ -55,16 +55,16 @@ export class PhenoBrowserComponent implements OnInit {
     let leftVal = a.valuesDomain[0];
     let rightVal = b.valuesDomain[0];
 
-    return this.compare(leftVal, rightVal);
+    return PhenoBrowserComponent.compare(leftVal, rightVal);
   }
   maxDomainComparator(a: any, b: any): number {
     let leftVal = a.valuesDomain[1];
     let rightVal = b.valuesDomain[1];
 
-    return this.compare(leftVal, rightVal);
+    return PhenoBrowserComponent.compare(leftVal, rightVal);
   }
 
-  private compare(leftVal: any, rightVal:any): number {
+  static compare(leftVal: any, rightVal:any): number {
     if (leftVal == null && rightVal == null) return 0;
     if (leftVal == null) return -1;
     if (rightVal == null) return 1;
