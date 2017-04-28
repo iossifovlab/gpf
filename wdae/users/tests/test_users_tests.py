@@ -3,7 +3,7 @@ Created on May 25, 2015
 
 @author: lubo
 '''
-from users.models import WdaeUser, VerificationPath, Researcher, ResearcherId
+from users.models import WdaeUser, VerificationPath, ResearcherId
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework.test import APITestCase
 from rest_framework import status
@@ -22,8 +22,7 @@ class Test(APITestCase):
                                 first_name="First",
                                 last_name="Last",
                                 is_staff=True,
-                                is_active=True,
-                                researcher_id="0001000")
+                                is_active=True)
         u.set_password("secret")
         u.save()
 
@@ -57,17 +56,17 @@ class Test(APITestCase):
         u = WdaeUser.objects.create(
             email="iossifov@cshl.edu",
             first_name="Ivan",
-            last_name="Iossifov",
-            researcher_id="1")
+            last_name="Iossifov")
         u.set_password("pasivan")
         u.is_staff = True
+        u.is_superuser = True
 
         u.save()
 
-        all_users = WdaeUser.objects.all()
-        user = all_users[1]
+        user = WdaeUser.objects.get(email="iossifov@cshl.edu")
         self.assertEqual("iossifov@cshl.edu", user.email)
         self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
         self.assertEqual("Ivan", user.first_name)
         self.assertEqual("Iossifov", user.last_name)
 
@@ -77,14 +76,14 @@ class Test(APITestCase):
 
         user = self.user
         user.reset_password()
-        self.assertTrue(user.verification_path)
+        self.assertTrue(user.verificationpath)
 
         u = authenticate(email='admin@example.com', password='secret')
         self.assertFalse(u)
 
-        path = user.verification_path.path
+        path = user.verificationpath.path
         vp = VerificationPath.objects.get(path=path)
-        u = WdaeUser.objects.get(verification_path=vp)
+        u = vp.user
         self.assertTrue(u)
         self.assertEqual(user.id, u.id)
 
@@ -107,7 +106,7 @@ class SuperUserTestCase(APITestCase):
                                 last_name="Last",
                                 is_staff=True,
                                 is_active=True,
-                                researcher_id="0001000")
+                                is_superuser=True)
         u.set_password("secret")
         u.save()
 
@@ -139,14 +138,14 @@ class SuperUserTestCase(APITestCase):
 
         user = self.user
         user.reset_password()
-        self.assertTrue(user.verification_path)
+        self.assertTrue(user.verificationpath)
 
         u = authenticate(email='admin@example.com', password='secret')
         self.assertFalse(u)
 
-        path = user.verification_path.path
+        path = user.verificationpath.path
         vp = VerificationPath.objects.get(path=path)
-        u = WdaeUser.objects.get(verification_path=vp)
+        u = vp.user
         self.assertTrue(u)
         self.assertEqual(user.id, u.id)
 
@@ -163,7 +162,7 @@ class ResearcherRegistrationTest(APITestCase):
     def setUpClass(cls):
         super(ResearcherRegistrationTest, cls).setUpClass()
 
-        cls.res = Researcher()
+        cls.res = WdaeUser()
         cls.res.first_name = 'fname'
         cls.res.last_name = 'lname'
         cls.res.email = 'fake@fake.com'
@@ -174,7 +173,6 @@ class ResearcherRegistrationTest(APITestCase):
         cls.research_id.save()
 
         cls.research_id.researcher.add(cls.res)
-        cls.research_id.save()
 
     @classmethod
     def tearDownClass(cls):
@@ -213,7 +211,7 @@ class ResearcherWithTwoIdsRegistrationTest(APITestCase):
     def setUp(self):
         super(ResearcherWithTwoIdsRegistrationTest, self).setUp()
 
-        self.res = Researcher()
+        self.res = WdaeUser()
         self.res.first_name = 'fname'
         self.res.last_name = 'lname'
         self.res.email = 'fake@fake.com'
@@ -224,14 +222,12 @@ class ResearcherWithTwoIdsRegistrationTest(APITestCase):
         self.research_id1.save()
 
         self.research_id1.researcher.add(self.res)
-        self.research_id1.save()
 
         self.research_id2 = ResearcherId()
         self.research_id2.researcher_id = '101.2'
         self.research_id2.save()
 
         self.research_id2.researcher.add(self.res)
-        self.research_id2.save()
 
     def tearDown(self):
         super(ResearcherWithTwoIdsRegistrationTest, self).tearDown()
@@ -259,7 +255,8 @@ class ResearcherWithTwoIdsRegistrationTest(APITestCase):
         self.assertEquals('fname', user.first_name)
         self.assertEquals('lname', user.last_name)
         self.assertEquals('fake@fake.com', user.email)
-        self.assertEquals('101.1', user.researcher_id)
+        self.assertIn('101.1',
+            user.researcherid_set.values_list('researcher_id', flat=True).all())
 
     def test_successful_register2(self):
         data = {
@@ -280,7 +277,8 @@ class ResearcherWithTwoIdsRegistrationTest(APITestCase):
         self.assertEquals('fname', user.first_name)
         self.assertEquals('lname', user.last_name)
         self.assertEquals('fake@fake.com', user.email)
-        self.assertEquals('101.2', user.researcher_id)
+        self.assertIn('101.2',
+            user.researcherid_set.values_list('researcher_id', flat=True).all())
 
 
 class UserAuthenticationTest(APITestCase):
@@ -288,8 +286,7 @@ class UserAuthenticationTest(APITestCase):
     def setUp(self):
         self.user = WdaeUser.objects.create(email="test@example.com",
                                             first_name="Ivan",
-                                            last_name="Testov",
-                                            researcher_id="ala bala")
+                                            last_name="Testov")
         self.user.set_password("pass")
         self.user.is_active = True
         self.user.save()
