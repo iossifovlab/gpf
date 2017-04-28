@@ -14,7 +14,7 @@ import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browse
 })
 export class PhenoBrowserComponent implements OnInit {
 
-  private selectedChanges$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
+  selectedChanges$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
   measuresToShow$: Observable<PhenoMeasures>;
 
   private datasetId: string;

@@ -1,5 +1,8 @@
+let basePath = '';
+
 export const environment = {
   production: true,
-  apiPath: '/api/v3/',
+  basePath: basePath,
+  apiPath: basePath + '/api/v3/',
   imgPathPrefix: '/gpf/assets/'
 };
