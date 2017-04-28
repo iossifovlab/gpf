@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { UsersService } from '../users/users.service';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -8,16 +9,31 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 })
 export class ForgotPasswordComponent implements OnInit {
   email: string;
-  registerError = "";
+  resetPasswordError = "";
 
   constructor(
-    readonly activeModal: NgbActiveModal
+    readonly activeModal: NgbActiveModal,
+    private usersService: UsersService
   ) { }
 
   ngOnInit() {
   }
 
-  register() {
+  resetPassword() {
+    this.usersService.resetPassword(
+      this.email
+    ).subscribe(
+      (res) => {
+        if (res) {
+          this.email = null;
+          this.resetPasswordError = "";
 
+          this.activeModal.close('Close click');
+        }
+        else {
+          this.resetPasswordError = "Registration Failed";
+        }
+
+    });
   }
 }

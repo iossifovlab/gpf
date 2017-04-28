@@ -13,6 +13,7 @@ export class UsersService {
   private loginUrl = 'users/login';
   private userInfoUrl = 'users/get_user_info';
   private registerUrl = 'users/register';
+  private resetPasswordUrl = 'users/reset_password';
 
   constructor(
     private http: Http,
@@ -68,6 +69,20 @@ export class UsersService {
       lastName: lastName,
       researcherId: researcherId
     }, options)
+      .map(res => {
+        return true;
+      })
+      .catch(error => {
+        return Observable.of(false);
+      });
+  }
+
+  resetPassword(email: string): Observable<boolean> {
+    let csrfToken = this.cookieService.get("csrftoken");
+    let headers = new Headers({ 'X-CSRFToken': csrfToken });
+    let options = new RequestOptions({ headers: headers, withCredentials: true });
+
+    return this.http.post(this.resetPasswordUrl, { email: email }, options)
       .map(res => {
         return true;
       })
