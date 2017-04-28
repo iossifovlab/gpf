@@ -18,7 +18,7 @@ body {
 	display: inline-block;
 	height: 30px;
 	width: auto;
-	margin-right: 10px; 
+	margin-right: 10px;
 }
 
 a {
@@ -82,7 +82,7 @@ label {
 
 
 .form-block .navbar {
-    padding: 10px 20px;	
+    padding: 10px 20px;
 }
 
 .form-block .tab-content {
@@ -114,7 +114,7 @@ label {
 
 .form-block .alert {
     margin-bottom: 0px;
-    margin-top: 20px;	
+    margin-top: 20px;
 }
 
 .form-block .alert ul {
@@ -137,4 +137,16 @@ label {
 .username-field {
 	font-size: 0.9em;
 	margin-right: 5px;
+}
+
+.modal-fullscreen .modal-dialog {
+  max-width: 1200px;
+}
+
+.modal-fullscreen .pheno-browser-fullscreen-image {
+  max-width: 100%;
+}
+
+.clickable {
+  cursor: pointer;
 }

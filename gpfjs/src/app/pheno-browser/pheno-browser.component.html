@@ -23,7 +23,9 @@
           <gpf-table-column>
             <gpf-table-subcolumn [sortable]="false" header="Pheno Measure Values" field="figureDistributionSmall">
               <span *gpf-table-cell-content="let data">
-                <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
+                <a [class.clickable]="!!data.figureDistribution" (click)="openModal(content, data.figureDistribution)">
+                  <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
+                </a>
               </span>
             </gpf-table-subcolumn>
           </gpf-table-column>
@@ -45,7 +47,9 @@
               header="Correlation by Non-Verbal IQ"
               field="figureCorrelationNviqSmall">
               <span *gpf-table-cell-content="let data">
-                <img *ngIf="data.figureCorrelationNviqSmall" class="table-chart" [src]="data.figureCorrelationNviqSmall" />
+                <a [class.clickable]="!!data.figureCorrelationNviq" (click)="openModal(content, data.figureCorrelationNviq)">
+                  <img *ngIf="data.figureCorrelationNviqSmall" class="table-chart" [src]="data.figureCorrelationNviqSmall" />
+                </a>
               </span>
             </gpf-table-subcolumn>
           </gpf-table-column>
@@ -66,7 +70,9 @@
               header="Correlation by Age"
               field="figureCorrelationAgeSmall">
               <span *gpf-table-cell-content="let data">
-                <img *ngIf="data.figureCorrelationAgeSmall" class="table-chart" [src]="data.figureCorrelationAgeSmall" />
+                <a [class.clickable]="!!data.figureCorrelationAge" (click)="openModal(content, data.figureCorrelationAge)">
+                  <img *ngIf="data.figureCorrelationAgeSmall" class="table-chart" [src]="data.figureCorrelationAgeSmall" />
+                </a>
               </span>
             </gpf-table-subcolumn>
           </gpf-table-column>

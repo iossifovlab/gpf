@@ -1,16 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { NgbModal, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
+import { PhenoBrowserModalContent } from './pheno-browser-modal-content.component';
 
 @Component({
   selector: 'gpf-pheno-browser',
   templateUrl: './pheno-browser.component.html',
-  styleUrls: ['./pheno-browser.component.css']
+  styleUrls: ['./pheno-browser.component.css'],
 })
 export class PhenoBrowserComponent implements OnInit {
 
@@ -23,7 +25,8 @@ export class PhenoBrowserComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private phenoBrowserService: PhenoBrowserService
+    private phenoBrowserService: PhenoBrowserService,
+    private modalService: NgbModal
   ) { }
 
   ngOnInit() {
@@ -49,6 +52,15 @@ export class PhenoBrowserComponent implements OnInit {
 
   emitInstrument(instrument: PhenoInstrument) {
     this.selectedChanges$.next(instrument);
+  }
+
+  openModal(content, imageUrl) {
+    if(imageUrl) {
+      const modalRef = this.modalService.open(PhenoBrowserModalContent, {
+        windowClass: "modal-fullscreen"
+      });
+      modalRef.componentInstance.imageUrl = imageUrl;
+    }
   }
 
   minDomainComparator(a: any, b: any): number {

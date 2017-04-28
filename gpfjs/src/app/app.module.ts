@@ -96,6 +96,7 @@ import { RegistrationComponent } from './registration/registration.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { PhenoBrowserComponent } from './pheno-browser/pheno-browser.component';
 import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
+import { PhenoBrowserModalContent } from './pheno-browser/pheno-browser-modal-content.component';
 
 const appRoutes: Routes = [
   {
@@ -190,7 +191,8 @@ const appRoutes: Routes = [
     FamilyCountersComponent,
     RegistrationComponent,
     ForgotPasswordComponent,
-    PhenoBrowserComponent
+    PhenoBrowserComponent,
+    PhenoBrowserModalContent
   ],
   imports: [
     BrowserModule,
@@ -226,7 +228,8 @@ const appRoutes: Routes = [
 
   entryComponents: [
     RegistrationComponent,
-    ForgotPasswordComponent
+    ForgotPasswordComponent,
+    PhenoBrowserModalContent
   ],
 
   bootstrap: [AppComponent]
