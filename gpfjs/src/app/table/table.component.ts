@@ -17,7 +17,8 @@ export class GpfTableCell {
 
 @Component({
   selector: 'gpf-table-header',
-  templateUrl: './table-header.component.html'
+  templateUrl: './table-header.component.html',
+  styleUrls: ['./table-header.component.css']
 })
 export class GpfTableHeader {
   @Input() columnInfo: GpfTableColumnComponent;
@@ -98,6 +99,7 @@ export class GpfTableSubcolumnComponent {
   @Input() field: string;
   @Input() header: string;
   @Input() comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
+  @Input() sortable: boolean = true;
 
   contentTemplateRef: TemplateRef<any>;
   headerTemplateRef: TemplateRef<any>;
@@ -182,7 +184,7 @@ export class GpfTableComponent {
 
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
   @ContentChild(GpfTableLegendDirective) legend: GpfTableLegendDirective;
-  @Input() dataSource: any;
+  @Input() dataSource: Array<any>;
 
   private previousSortingInfo: SortInfo;
   private lastRowHeight = 80;
@@ -218,6 +220,9 @@ export class GpfTableComponent {
   }
 
   getScrollIndices(): Array<number> {
+    if(!this.dataSource) {
+      return [0, 0]
+    }
     let visibleRowCount = window.innerHeight/this.lastRowHeight;
     let maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount
 
@@ -235,6 +240,9 @@ export class GpfTableComponent {
   }
 
   get totalTableHeight(): number {
+    if(!this.dataSource) {
+      return 0;
+    }
     return this.lastRowHeight * this.dataSource.length;
   }
 
@@ -242,7 +250,10 @@ export class GpfTableComponent {
     return this.getScrollIndices()[0] * this.lastRowHeight;
   }
 
-  get visibleData(): any {
+  get visibleData(): Array<any> {
+    if(!this.dataSource) {
+      return [];
+    }
     let scrollIndices  = this.getScrollIndices();
     return this.dataSource.slice(scrollIndices[0], scrollIndices[1]);
   }

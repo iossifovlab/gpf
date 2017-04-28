@@ -12,15 +12,15 @@
     <div style="float: right; clear: right; margin-right: 0px; height: 100%">
         <div style="height: 100%; display: table; ">
             <div *ngFor="let child of columnInfo.subcolumnsChildren" style="display: table-row;">
-                <div style="display: table-cell; vertical-align: middle; cursor: pointer; text-align: right" (click)="onSortClick(child)">
+                <div [class.clickable]="child.sortable" style="display: table-cell; vertical-align: middle; text-align: right" (click)="child.sortable && onSortClick(child)">
                     <template *ngIf="child.headerTemplateRef" [ngTemplateOutlet]="child.headerTemplateRef">
                     </template>
                     <span *ngIf="!child.headerTemplateRef">{{ child.header }}</span>
-                    <img *ngIf="sortingInfo?.sortBySubcolumn != child"
+                    <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn != child"
                         src="{{imgPathPrefix}}bg.gif" style="height: 12px;">
-                    <img *ngIf="sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc"
+                    <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc"
                         src="{{imgPathPrefix}}asc.gif" style="height: 12px;">
-                    <img *ngIf="sortingInfo?.sortBySubcolumn == child && !sortingInfo?.sortOrderAsc"
+                    <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn == child && !sortingInfo?.sortOrderAsc"
                         src="{{imgPathPrefix}}desc.gif" style="height: 12px;">
                 </div>
             </div>
