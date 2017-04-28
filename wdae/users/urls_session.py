@@ -14,4 +14,5 @@ urlpatterns = patterns(
     url(r'^get_user_info$', 'get_user_info'),
     url(r'^reset_password', 'reset_password'),
     url(r'^change_password', 'change_password'),
+    url(r'^check_verif_path', 'check_verif_path'),
 )

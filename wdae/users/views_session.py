@@ -89,3 +89,14 @@ def get_user_info(request):
         return Response({'loggedIn': True, 'email': user.email}, status.HTTP_200_OK)
     else:
         return Response({'loggedIn': False}, status.HTTP_200_OK)
+
+@api_view(['POST'])
+def check_verif_path(request):
+    verif_path = request.data['verifPath']
+    try:
+        VerificationPath.objects.get(path=verif_path)
+        return Response({}, status=status.HTTP_200_OK)
+    except VerificationPath.DoesNotExist:
+        return Response({
+            'errors': 'Verification path does not exist.'},
+            status=status.HTTP_400_BAD_REQUEST)
