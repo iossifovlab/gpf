@@ -80,8 +80,8 @@ def test_get_denovo_variants_vip(vip):
     assert 'Status.Diagnosis' == diagnossis
 
     assert len(v) == 30
-    families = vip.pheno_db.families
+    _families = vip.pheno_db.families
     count = 0
     for v in vs:
         count += 1
-    assert count == 18
+    assert count == 34

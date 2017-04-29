@@ -69,7 +69,7 @@ def test_get_denovo_variants_ssc(ssc):
 def test_get_denovo_variants_vip(vip):
     vs = vip.get_denovo_variants(**EXAMPLE_QUERY_VIP)
     res = [v for v in vs]
-    assert 3 == len(res)
+    assert 19 == len(res)
 
 
 def test_denovo_studies_persons_phenotype_ssc(ssc):
