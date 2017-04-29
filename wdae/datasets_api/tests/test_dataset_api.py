@@ -44,13 +44,11 @@ class DatasetApiTest(APITestCase):
         data = response.data
 
         self.assertIn('data', data)
-        pprint(data)
         data = data['data']
         self.assertEquals(['WE', 'TG'], data['studyTypes'])
         self.assertIn('genotypeBrowser', data)
         gbdata = data['genotypeBrowser']
         self.assertIn('hasStudyTypes', gbdata)
-        pprint(gbdata)
         self.assertIn('phenoColumns', gbdata)
 
     def test_get_dataset_not_found(self):
@@ -60,7 +58,6 @@ class DatasetApiTest(APITestCase):
         data = response.data
 
         self.assertIn('error', data)
-        pprint(data)
 
     def test_get_dataset_vip(self):
         url = '/api/v3/datasets/VIP'
@@ -69,7 +66,6 @@ class DatasetApiTest(APITestCase):
         data = response.data
 
         self.assertIn('data', data)
-        pprint(data)
         data = data['data']
         self.assertIn('genotypeBrowser', data)
         gbdata = data['genotypeBrowser']
@@ -79,5 +75,4 @@ class DatasetApiTest(APITestCase):
         pedigrees = data['pedigreeSelectors']
         self.assertEquals(2, len(pedigrees))
 
-        pprint(gbdata)
         self.assertIn('phenoColumns', gbdata)
