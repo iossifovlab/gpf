@@ -63,7 +63,6 @@ class Test(unittest.TestCase):
 
     def test_calc(self):
         result = self.tool.calc()
-        print(result)
         self.assertIsNotNone(result)
 
     def test_counts(self):
@@ -71,9 +70,6 @@ class Test(unittest.TestCase):
         [male, female] = result
 
         counters = self.tool.counters()
-        print(counters)
-        print(male)
-        print(female)
 
         self.assertEquals(
             counters['autism']['male'],

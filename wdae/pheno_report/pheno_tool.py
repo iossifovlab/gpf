@@ -107,7 +107,6 @@ class PhenoTool(object):
         dtype = self._build_narray_dtype()
         result = np.array(rows, dtype=dtype)
 
-        # print(result[np.isnan(result['value'])])
         assert not np.any(np.isnan(result['value']))
 
         return result

@@ -5,8 +5,8 @@ Created on Jan 20, 2017
 '''
 from rest_framework.test import APITestCase
 from rest_framework import status
-from pprint import pprint
 from users.management.commands import reload_datasets_perm
+
 
 class DatasetApiTest(APITestCase):
     @classmethod

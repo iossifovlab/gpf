@@ -139,11 +139,9 @@ class GeneSetDownloadView(views.APIView):
         return response
 
     def _parse_query_params(self, data):
-        print(data)
         res = {str(k): str(v) for k, v in data.items()}
         if 'geneSetsTypes' in res:
             res['geneSetsTypes'] = res['geneSetsTypes'].split(',')
-        print(res)
         return res
 
     def get(self, request):

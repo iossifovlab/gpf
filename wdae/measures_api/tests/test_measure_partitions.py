@@ -22,7 +22,6 @@ class Test(APITestCase):
         }
         response = self.client.post(self.URL, data, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        print(response.data)
         data = response.data
         {
             'right': {

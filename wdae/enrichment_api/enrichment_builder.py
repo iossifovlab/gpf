@@ -60,7 +60,6 @@ class EnrichmentBuilder(object):
         person_grouping = self.dataset.get_pedigree_selector(
             default=False,
             person_grouping=person_grouping_id)
-        print(person_grouping)
 
         for person_grouping_selector in person_grouping.domain:
             res = self.build_person_grouping_selector(

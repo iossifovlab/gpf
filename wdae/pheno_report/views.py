@@ -39,11 +39,8 @@ class PhenoViewBase(views.APIView, PhenoFamilyBase):
 
         try:
             req = pheno_request.Request(request.data)
-            print("request created")
             tool = pheno_tool.PhenoTool(req)
-            print("tool created")
             response = self.build_response(tool)
-            print("response created")
             return response
 
         except ValueError as ex:
@@ -117,12 +114,10 @@ class PhenoMeasuresHelpView(views.APIView):
     def get(self, request):
         register = get_register()
         measures = register.get('pheno_measures')
-        print(request.query_params)
         if 'instrument' not in request.query_params:
             instrument = None
         else:
             instrument = request.query_params['instrument']
-        print(instrument)
 
         return Response({'measures': measures.load_desc(instrument)})
 
@@ -151,13 +146,11 @@ class PhenoMeasureHistogramView(views.APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         df = self.measures.get_values_df(pheno_measure)
-        print(df.head())
         m = df[pheno_measure]
         bars, bins = np.histogram(
             df[np.logical_not(np.isnan(m.values))][pheno_measure].values, 25)
 
         measure = self.measures.phdb.measures[pheno_measure]
-        print(measure)
 
         result = {
             "measure": pheno_measure,
@@ -168,7 +161,6 @@ class PhenoMeasureHistogramView(views.APIView):
             "bins": bins,
             "step": (measure.max_value - measure.min_value) / 1000.0,
         }
-        print(result)
 
         return Response(result, status=status.HTTP_200_OK)
 

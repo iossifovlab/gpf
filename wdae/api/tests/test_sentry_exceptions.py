@@ -4,44 +4,10 @@ Created on Apr 5, 2016
 @author: lubo
 '''
 from rest_framework import status
-from rest_framework.test import APITestCase
+from users.tests.base_tests import BaseAuthenticatedUserTest
 
 
-class Tests(APITestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(Tests, cls).setUpClass()
-        from django.contrib.auth import get_user_model
-        from rest_framework.authtoken.models import Token
-
-        User = get_user_model()
-        u = User.objects.create(email="admin@example.com",
-                                first_name="First",
-                                last_name="Last",
-                                is_staff=True,
-                                is_active=True,
-                                researcher_id="0001000")
-        u.set_password("secret")
-        u.save()
-
-        cls.user = u
-        _token = Token.objects.get_or_create(user=u)
-        cls.user.save()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(Tests, cls).tearDownClass()
-        cls.user.delete()
-
-    def setUp(self):
-        from rest_framework.authtoken.models import Token
-
-        APITestCase.setUp(self)
-
-        self.client.login(email='admin@example.com', password='secret')
-        token = Token.objects.get(user__email='admin@example.com')
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+class Tests(BaseAuthenticatedUserTest):
 
     def test_sentry_ssc_download_exception_request(self):
         data = {
@@ -85,7 +51,6 @@ class Tests(APITestCase):
         self.assertEquals(status.HTTP_200_OK, response.status_code)
 
     def test_gene_list_exception(self):
-        # @IgnorePep8
         url = '/api/gene_set_list2?' \
             'desc=true&filter=&gene_set=main&key=true&page_count=200'
         response = self.client.get(url)

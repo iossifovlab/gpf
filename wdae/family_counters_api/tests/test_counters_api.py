@@ -3,11 +3,11 @@ Created on Apr 13, 2017
 
 @author: lubo
 '''
-from rest_framework.test import APITestCase
+import copy
+
 from rest_framework import status
 
-from django.contrib.auth import get_user_model
-import copy
+from users.tests.base_tests import BaseAuthenticatedUserTest
 
 
 EXAMPLE_REQUEST_SSC = {
@@ -32,35 +32,7 @@ EXAMPLE_REQUEST_SSC = {
 }
 
 
-class Test(APITestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(Test, cls).setUpClass()
-
-        User = get_user_model()
-        u = User.objects.create(
-            email="admin@example.com",
-            first_name="First",
-            last_name="Last",
-            is_staff=True,
-            is_active=True,
-            researcher_id="0001000")
-        u.set_password("secret")
-        u.save()
-
-        cls.user = u
-        cls.user.save()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(Test, cls).tearDownClass()
-        cls.user.delete()
-
-    def setUp(self):
-        APITestCase.setUp(self)
-        self.client.login(
-            email='admin@example.com', password='secret')
+class Test(BaseAuthenticatedUserTest):
 
     URL = "/api/v3/family_counters/counters"
 
@@ -72,7 +44,6 @@ class Test(APITestCase):
             self.URL, data, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = response.data
-        print(res)
         self.assertEquals(2206, res[1]['count']['all'])
         self.assertEquals(1171, res[1]['count']['F'])
         self.assertEquals(1035, res[1]['count']['M'])
@@ -86,7 +57,6 @@ class Test(APITestCase):
             self.URL, data, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = response.data
-        print(res)
 
         self.assertEquals(1, res[1]['count']['all'])
         self.assertEquals(0, res[1]['count']['F'])
@@ -113,7 +83,6 @@ class Test(APITestCase):
             self.URL, data, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = response.data
-        print(res)
 
         self.assertEquals(25, res[1]['count']['all'])
         self.assertEquals(10, res[1]['count']['F'])
@@ -152,7 +121,6 @@ class Test(APITestCase):
             self.URL, data, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = response.data
-        print(res)
 
         self.assertEquals(2, res[1]['count']['all'])
         self.assertEquals(2, res[1]['count']['F'])
@@ -171,7 +139,6 @@ class Test(APITestCase):
             self.URL, data, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = response.data
-        print(res)
 
         self.assertEquals(0, res[0]['count']['all'])
         self.assertEquals(0, res[0]['count']['F'])
@@ -231,7 +198,6 @@ class Test(APITestCase):
             self.URL, query, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         res = response.data
-        print(res)
 
         self.assertEquals(0, res[0]['count']['all'])
         self.assertEquals(0, res[0]['count']['F'])

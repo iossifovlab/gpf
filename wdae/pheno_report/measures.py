@@ -111,7 +111,6 @@ class Measures(Preload):
             measure_type='continuous'
         )
         for _index, row in measures.iterrows():
-            # print("loading measure: {}".format(row['measure_id']))
             if not row['has_probands']:
                 continue
             desc = self._build_measure_description(row)
@@ -365,7 +364,6 @@ class MeasuresDescription(object):
             stats='continuous'
         )
         for _index, row in measures.iterrows():
-            # print("loading measure: {}".format(row['measure_id']))
             if not row['has_probands']:
                 continue
             desc = self._build_measure_description(row)

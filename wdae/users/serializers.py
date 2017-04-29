@@ -5,6 +5,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import BaseUserManager
 from users.models import WdaeUser
 
+
 class UserSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length='100')
     middle_name = serializers.CharField(max_length='100', required=False)

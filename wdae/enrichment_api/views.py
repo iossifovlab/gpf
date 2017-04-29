@@ -155,7 +155,6 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
         dataset = self.datasets_factory.get_dataset(dataset_id)
 
         gene_syms = dataset.get_gene_syms(**query)
-        print(gene_syms)
         if gene_syms is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         desc = self.enrichment_description(query)

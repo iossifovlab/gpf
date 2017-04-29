@@ -4,7 +4,6 @@ Created on Mar 23, 2016
 @author: lubo
 '''
 from rest_framework.test import APITestCase
-from pprint import pprint
 
 
 class Test(APITestCase):
@@ -85,7 +84,6 @@ class Test(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.data
 
-        pprint(data)
         self.assertEquals(2224, data['autism']['families'])
         self.assertEquals(
             data['autism']['families'],
@@ -109,8 +107,6 @@ class Test(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.data
 
-        pprint(data)
-
         self.assertEquals(4, data['autism']['families'])
 
     def test_family_ids_counter_with_commas(self):
@@ -124,8 +120,6 @@ class Test(APITestCase):
         self.assertEqual(200, response.status_code)
         data = response.data
 
-        pprint(data)
-
         self.assertEquals(4, data['autism']['families'])
 
     def test_family_ids_counter_with_spaces(self):
@@ -138,7 +132,5 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
         data = response.data
-
-        pprint(data)
 
         self.assertEquals(4, data['autism']['families'])

@@ -14,13 +14,11 @@ class Test(APITestCase):
         url = '/api/v2/enrichment/models/background'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data)
 
     def test_enrichment_counting_models(self):
         url = '/api/v2/enrichment/models/counting'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data)
 
     def test_enrichment_test(self):
         data = {

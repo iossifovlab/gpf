@@ -3,43 +3,11 @@ Created on Mar 25, 2017
 
 @author: lubo
 '''
-from rest_framework.test import APITestCase
 from rest_framework import status
-from pprint import pprint
-from django.contrib.auth import get_user_model
-from users.management.commands import reload_datasets_perm
+from users.tests.base_tests import BaseAuthenticatedUserTest
 
 
-class Test(APITestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(Test, cls).setUpClass()
-        reload_datasets_perm.Command().handle()
-
-        User = get_user_model()
-        u = User.objects.create(
-            email="admin@example.com",
-            first_name="First",
-            last_name="Last",
-            is_staff=True,
-            is_active=True,
-            is_superuser=True)
-        u.set_password("secret")
-        u.save()
-
-        cls.user = u
-        cls.user.save()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(Test, cls).tearDownClass()
-        cls.user.delete()
-
-    def setUp(self):
-        APITestCase.setUp(self)
-        self.client.login(
-            email='admin@example.com', password='secret')
+class Test(BaseAuthenticatedUserTest):
 
     def test_pheno_family_filters(self):
         url = '/api/v3/genotype_browser/preview'
@@ -81,5 +49,4 @@ class Test(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
 
-        pprint(data)
         self.assertEquals('5', data['count'])

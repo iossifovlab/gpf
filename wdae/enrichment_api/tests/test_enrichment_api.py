@@ -7,7 +7,6 @@ Created on Feb 17, 2017
 
 from rest_framework import status
 from rest_framework.test import APITestCase
-from pprint import pprint
 
 
 class Test(APITestCase):
@@ -37,7 +36,6 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
-        pprint(response.data)
         data = response.data
 
         self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
@@ -57,7 +55,6 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
-        pprint(response.data)
         data = response.data
 
         self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
@@ -81,7 +78,6 @@ class Test(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
-        pprint(response.data)
         data = response.data
 
         self.assertEquals(386, data['result'][0]['LGDs']['all']['count'])

@@ -8,7 +8,6 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework.test import APITestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from pprint import pprint
 
 
 class Test(APITestCase):
@@ -197,7 +196,6 @@ class ResearcherRegistrationTest(APITestCase):
             'researcher_id': id1.researcher_id,
             'email': self.res.email
         }
-        pprint(data)
 
         response = self.client.post('/api/users/register', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

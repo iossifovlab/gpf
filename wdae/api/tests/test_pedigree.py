@@ -3,49 +3,15 @@ Created on Jan 4, 2016
 
 @author: lubo
 '''
-import unittest
-from rest_framework.test import APITestCase
 from rest_framework import status
 import json
 from query_variants import prepare_denovo_filters, get_denovo_variants
 from DAE import vDB
 from Variant import normalRefCopyNumber
+from users.tests.base_tests import BaseAuthenticatedUserTest
 
 
-class Test(APITestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(Test, cls).setUpClass()
-        from django.contrib.auth import get_user_model
-        from rest_framework.authtoken.models import Token
-
-        User = get_user_model()
-        u = User.objects.create(email="admin@example.com",
-                                first_name="First",
-                                last_name="Last",
-                                is_staff=True,
-                                is_active=True,
-                                researcher_id="0001000")
-        u.set_password("secret")
-        u.save()
-
-        cls.user = u
-        Token.objects.get_or_create(user=u)
-        cls.user.save()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(Test, cls).tearDownClass()
-        cls.user.delete()
-
-    def setUp(self):
-        from rest_framework.authtoken.models import Token
-        APITestCase.setUp(self)
-
-        self.client.login(email='admin@example.com', password='secret')
-        token = Token.objects.get(user__email='admin@example.com')
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+class Test(BaseAuthenticatedUserTest):
 
     def test_chrome_X_pedigree(self):
         data = {
@@ -110,7 +76,6 @@ class Test(APITestCase):
                 normal = normalRefCopyNumber(location, gender)
                 # location, gender, normalRefCN))
                 ref = bs[0, c]
-                # print("count: {}".format(count))
                 if bs.shape[0] == 2:
                     alles = bs[1, c]
                     if alles != 0:
@@ -122,6 +87,3 @@ class Test(APITestCase):
                                   .format(location, gender, c, normal))
                             print("bs: {}".format(bs))
                             print("------------------------------------------")
-
-if __name__ == "__main__":
-    unittest.main()

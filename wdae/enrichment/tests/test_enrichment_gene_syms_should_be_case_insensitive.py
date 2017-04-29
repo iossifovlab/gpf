@@ -70,22 +70,16 @@ class Test(APITestCase):
         self.assertIsNotNone(background.background)
 
         for gs in background.background['gene']:
-            if gs != gs.upper():
-                print(gs)
             self.assertEquals(gs, gs.upper())
 
     def test_synonymous_background_case_insensitive(self):
         background = precompute.register.get('synonymousBackgroundModel')
         for gs in background.background['sym']:
-            if gs != gs.upper():
-                print(gs)
             self.assertEquals(gs, gs.upper())
 
     def test_coding_length_background_case_insensitive(self):
         background = precompute.register.get('codingLenBackgroundModel')
         for gs in background.background['sym']:
-            if gs != gs.upper():
-                print(gs)
             self.assertEquals(gs, gs.upper())
 
     def test_mixed_case_gene_syms_upper_case_coding_length_background(self):

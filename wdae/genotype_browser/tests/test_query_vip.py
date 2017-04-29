@@ -3,10 +3,9 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
-from rest_framework.test import APITestCase
 from rest_framework import status
 import copy
-from django.contrib.auth import get_user_model
+from users.tests.base_tests import BaseAuthenticatedUserTest
 
 
 EXAMPLE_REQUEST_VIP = {
@@ -31,37 +30,9 @@ EXAMPLE_REQUEST_VIP = {
 }
 
 
-class Test(APITestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(Test, cls).setUpClass()
-
-        User = get_user_model()
-        u = User.objects.create(
-            email="admin@example.com",
-            first_name="First",
-            last_name="Last",
-            is_staff=True,
-            is_active=True,
-            researcher_id="0001000")
-        u.set_password("secret")
-        u.save()
-
-        cls.user = u
-        cls.user.save()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(Test, cls).tearDownClass()
-        cls.user.delete()
+class Test(BaseAuthenticatedUserTest):
 
     URL = "/api/v3/genotype_browser/preview"
-
-    def setUp(self):
-        APITestCase.setUp(self)
-        self.client.login(
-            email='admin@example.com', password='secret')
 
     def test_query_preview(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
@@ -76,11 +47,9 @@ class Test(APITestCase):
         self.assertIn('count', res)
         self.assertIn('legend', res)
 
-        print(res['count'])
         self.assertEquals(64, int(res['count']))
         self.assertEquals(64, len(res['rows']))
 
-        print(res['legend'])
         self.assertEquals(5, len(res['legend']))
         self.assertEquals('deletion', res['legend'][0]['id'])
 
@@ -101,10 +70,8 @@ class Test(APITestCase):
         self.assertIn('count', res)
         self.assertIn('legend', res)
 
-        print(res['count'])
         self.assertEquals(64, int(res['count']))
         self.assertEquals(64, len(res['rows']))
 
-        print(res['legend'])
         self.assertEquals(3, len(res['legend']))
         self.assertEquals('autism', res['legend'][0]['id'])

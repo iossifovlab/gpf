@@ -30,9 +30,7 @@ class IvanchoSubmittedDoubleGenesQueryTests(unittest.TestCase):
         vs.next()
 
         for v in vs:
-            print(v)
             gl = v[9].split(';')
-            print(gl)
             self.assertEqual(1, gl.count('FMR1'))
 
 
@@ -64,6 +62,5 @@ class AlexPopovSubmittedBadRegionQueryTests(unittest.TestCase):
         vs = wdae_query_wrapper(self.TEST_DATA)
 
         vs.next()
-
         for v in vs:
             self.assertIsNotNone(v)

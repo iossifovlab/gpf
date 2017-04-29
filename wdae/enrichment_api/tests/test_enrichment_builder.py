@@ -8,7 +8,6 @@ from rest_framework.test import APITestCase
 from enrichment_api.views import EnrichmentModelsMixin
 from datasets.config import DatasetsConfig
 from enrichment_api.enrichment_builder import EnrichmentBuilder
-from pprint import pprint
 from datasets.datasets_factory import DatasetsFactory
 from gene.gene_set_collections import GeneSetsCollections
 
@@ -26,7 +25,6 @@ class Test(APITestCase):
         gsc = gscs.get_gene_sets_collection('main')
 
         gene_set = gsc.get_gene_set('chromatin modifiers')
-        pprint(gene_set)
 
         builder = EnrichmentBuilder(dataset, model, gene_set['syms'])
         builder.build()
@@ -34,7 +32,6 @@ class Test(APITestCase):
 
     def test_enrichment_builder(self):
         self.assertIsNotNone(self.res)
-        pprint(self.res)
 
     def test_autism_lgds_all(self):
         res = self.res[0]

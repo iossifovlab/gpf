@@ -13,7 +13,6 @@ class Test(APITestCase):
 
     def test_measures_continuous(self):
         url = self.URL.format('continuous')
-        print(url)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -22,7 +21,6 @@ class Test(APITestCase):
         self.assertEquals(526, len(data))
 
         last = data[-1]
-        print(last)
 
         self.assertEquals(last['measure'], 'pheno_common.verbal_iq')
         self.assertEquals(last['max'], 167.0)
@@ -30,7 +28,6 @@ class Test(APITestCase):
 
     def test_measures_categorical(self):
         url = self.URL.format('categorical')
-        print(url)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -38,7 +35,6 @@ class Test(APITestCase):
         self.assertEquals(1025, len(data))
 
         last = data[-1]
-        print(last)
 
         self.assertEquals(last['measure'], 'pheno_common.race')
         self.assertEquals(

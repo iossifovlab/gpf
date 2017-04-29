@@ -14,5 +14,3 @@ class Test(APITestCase):
             "/api/v2/pheno_reports/measures_help?instrument=ssc_commonly_used"
         response = self.client.get(url, format='json')
         self.assertEqual(200, response.status_code)
-
-        print(response.data)

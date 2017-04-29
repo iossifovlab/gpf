@@ -25,9 +25,9 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     def has_object_permission(self, request, view, dataset_id):
         user = request.user
-        datasetObject = Dataset.objects.get(dataset_id=dataset_id)
-        return user.has_perm('datasets_api.view', datasetObject) or\
-               get_anonymous_user().has_perm('datasets_api.view', datasetObject)
+        dataset_object = Dataset.objects.get(dataset_id=dataset_id)
+        return user.has_perm('datasets_api.view', dataset_object) or\
+            get_anonymous_user().has_perm('datasets_api.view', dataset_object)
 
 
 class QueryBaseView(views.APIView):
@@ -114,7 +114,6 @@ class QueryDownloadView(QueryBaseView):
         super(QueryDownloadView, self).__init__()
 
     def _parse_query_params(self, data):
-        print(data)
         res = {str(k): str(v) for k, v in data.items()}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
