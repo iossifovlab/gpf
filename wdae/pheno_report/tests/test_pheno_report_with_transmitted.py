@@ -55,6 +55,3 @@ class Test(unittest.TestCase):
         fit = st.get_families_with_transmitted_variants(**query)
         families = [f for f in fit]
         self.assertEquals(2462, len(families))
-
-if __name__ == "__main__":
-    unittest.main()

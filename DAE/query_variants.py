@@ -452,7 +452,6 @@ def fix_region(region):
         return None
 
     try:
-        print(res.groups())
         chromo = res.groups()[1]
         if chromo.lower() != 'x' and not (22 >= int(chromo) >= 1):
             return None
@@ -617,12 +616,9 @@ def dae_query_families_with_variants(data):
     prepare_denovo_phenotype(data)
     prepare_denovo_study_type(data)
     prepare_gender_filter(data)
-    print(data)
 
     dstudies = prepare_denovo_studies(data)
     tstudies = prepare_transmitted_studies(data)
-    print(dstudies)
-    print(tstudies)
 
     if dstudies is None and tstudies is None:
         return []

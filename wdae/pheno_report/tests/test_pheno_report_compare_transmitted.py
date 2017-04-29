@@ -42,6 +42,3 @@ class Test(unittest.TestCase):
         self.assertEquals(42, len(mfamilies))
 
         self.assertEquals(set(tfamilies), set(mfamilies))
-
-if __name__ == "__main__":
-    unittest.main()

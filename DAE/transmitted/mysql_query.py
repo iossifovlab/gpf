@@ -534,7 +534,6 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             "on tfv.summary_variant_id = tsv.id " \
             "where {}".format(where)
 
-        # LOGGER.info("select: %s", select)
         try:
             connection, cursor = self.execute(select)
             v = cursor.fetchone()
