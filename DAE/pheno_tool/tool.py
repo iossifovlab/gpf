@@ -272,7 +272,6 @@ class PhenoTool(object):
             persons_variants, on="person_id", rsuffix="_variants")
         df.fillna(0, inplace=True)
         self.df = df
-        # print(df.head())
 
         if not gender_split:
             return self._calc_stats(df, None)

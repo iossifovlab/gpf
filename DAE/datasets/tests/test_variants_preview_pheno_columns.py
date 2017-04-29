@@ -6,7 +6,6 @@ Created on Mar 23, 2017
 
 
 from datasets.tests.requests import EXAMPLE_QUERY_SSC, EXAMPLE_QUERY_VIP
-from pprint import pprint
 import copy
 
 
@@ -16,7 +15,6 @@ def test_get_denovo_variants_ssc_11563(ssc):
 
     vs = ssc.get_variants_preview(**query)
     v = vs.next()
-    pprint(v)
     assert len(v) == 30
     nviq, viq, mom, dad = v[-4:]
     assert 'Proband IQs.NvIQ' == nviq
@@ -25,7 +23,6 @@ def test_get_denovo_variants_ssc_11563(ssc):
     assert 'Races.Dad' == dad
 
     v = vs.next()
-    pprint(v)
 
     assert len(v) == 30
 
@@ -44,7 +41,6 @@ def test_get_denovo_variants_ssc_11825(ssc):
 
     vs = ssc.get_variants_preview(**query)
     v = vs.next()
-    pprint(v)
     assert len(v) == 30
     nviq, viq, mom, dad = v[-4:]
     assert 'Proband IQs.NvIQ' == nviq
@@ -53,8 +49,6 @@ def test_get_denovo_variants_ssc_11825(ssc):
     assert 'Races.Dad' == dad
 
     v = vs.next()
-    pprint(v)
-
     assert len(v) == 30
 
     assert '11825' == v[0]
@@ -78,7 +72,6 @@ def test_get_denovo_variants_vip(vip):
 
     vs = vip.get_variants_preview(**query)
     v = vs.next()
-    pprint(v)
     assert len(v) == 30
     nviq, viq, status, diagnossis = v[-4:]
     assert 'Proband IQs.NvIQ' == nviq
@@ -88,18 +81,7 @@ def test_get_denovo_variants_vip(vip):
 
     assert len(v) == 30
     families = vip.pheno_db.families
-    print(families.keys())
     count = 0
     for v in vs:
         count += 1
     assert count == 18
-
-#     pprint(v)
-#
-#     assert len(v) == 32
-#     nviq, viq, status = v[-3:]
-#     print(nviq, viq, status)
-#
-#     assert '110.0' == nviq
-#     assert '76.0' == viq
-#     assert 'deletion' == status

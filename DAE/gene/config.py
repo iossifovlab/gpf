@@ -20,7 +20,6 @@ class GeneInfoConfig(object):
         wd = self.dae_config.daeDir
         self.config = ConfigParser.SafeConfigParser({'wd': wd})
         self.config.read(self.dae_config.geneInfoDBconfFile)
-        print(self.dae_config.geneInfoDBconfFile, self.dae_config.daeDir)
         self.gene_info = GeneInfoDB(
             self.dae_config.geneInfoDBconfFile, self.dae_config.daeDir)
 

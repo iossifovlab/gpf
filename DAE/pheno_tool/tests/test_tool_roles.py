@@ -21,7 +21,6 @@ def test_siblings(phdb, autism_candidates_genes, all_ssc_studies):
                 'mother only', 'mother and father', 'neither'],
         )
     )
-    print(res)
 
     for vals in res.phenotypes.values():
         assert vals['role'] == 'sib'
@@ -41,7 +40,6 @@ def test_prb_or_sib(phdb, autism_candidates_genes, all_ssc_studies):
                 'mother only', 'mother and father', 'neither'],
         )
     )
-    print(res)
 
     for vals in res.phenotypes.values():
         assert vals['role'] in set(['prb', 'sib'])

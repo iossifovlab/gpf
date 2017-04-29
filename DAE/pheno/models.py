@@ -39,8 +39,6 @@ class ManagerBase(object):
     def connect(self):
         if self.db is not None:
             return self.db
-        # print("connecting to {}".format(filename))
-        # traceback.print_stack()
 
         self.db = sqlite3.connect(self.dbfile, isolation_level="DEFERRED")
         return self.db
@@ -521,7 +519,6 @@ class MetaVariableModel(object):
         v.has_siblings = row['has_siblings']
         v.has_parents = row['has_parents']
         v.default_filter = row['default_filter']
-        # print("CREATE_FROM_DF:", v.default_filter, type(v.default_filter))
         return v
 
 

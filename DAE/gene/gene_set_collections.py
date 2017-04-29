@@ -31,7 +31,7 @@ class GeneSetsCollection(GeneInfoConfig):
     def _load(self):
         try:
             gene_sets_collection = self.gene_info.getGeneTerms(self.gsc_id)
-        except:
+        except Exception:
             traceback.print_exc()
             gene_sets_collection = loadGeneTerm(self.gsc_id)
 

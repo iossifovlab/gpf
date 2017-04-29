@@ -18,35 +18,7 @@ def test_dae_query():
     vs = dae_query_variants(query)
 
     for v in itertools.chain(*vs):
-        print(v)
-        print("geneEffect: {}".format(
-            getattr(v, 'geneEffect')))
-        print("requestedGeneEffect: {}".format(
-            getattr(v, 'requestedGeneEffects')))
-
-        # assert getattr(v, 'geneEffect') == getattr(v, 'requestedGeneEffects')
-        print("effectType: {}".format(
-            v.atts['effectType']))
-
-
-# def test_all_ssc_effect_type_vs_worst_effect_type():
-#     query = {
-#         'denovoStudies': 'ALL SSC',
-#         # 'effectTypes': 'nonsense,frame-shift,splice-site',
-#         'effectTypes': "Missense,Non-frame-shift,Synonymous,noEnd,noStart",
-#     }
-#
-#     vs = dae_query_variants(query)
-#     count = 0
-#     for v in itertools.chain(*vs):
-#         effect_type = v.atts['effectType']
-#         worst_effect = v.requestedGeneEffects[0]['eff']
-#         count += 1
-#         print(v.atts)
-#         assert effect_type == worst_effect
-#
-#     assert count > 0
-#     print(count)
+        assert v
 
 
 def test_effect_type_vs_worst_effect_counterexample():
@@ -68,12 +40,10 @@ def test_effect_type_vs_worst_effect_counterexample():
         effect_type = v.atts['effectType']
         worst_effect = v.requestedGeneEffects[0]['eff']
         count += 1
-        print(v.atts)
         assert 'nonsense' == effect_type
         assert 'missense' == worst_effect
 
     assert count == 1
-    print(count)
 
 
 def variant_response_dict(v):
@@ -95,11 +65,11 @@ def test_effect_type_genes_list():
         count += 1
         d = variant_response_dict(v)
 
-        print(d['all effects'])
-        print(d['worst effect'])
-        print(d['genes'])
-        print(" ")
+        assert 'worst requested effect' in d
+        assert 'all effects' in d
+        assert 'genes' in d
 
-        assert d['worst effect'] == v.requestedGeneEffects[0]['eff']
+        assert d['worst requested effect'] == \
+            v.requestedGeneEffects[0]['eff']
 
     assert 19 == count

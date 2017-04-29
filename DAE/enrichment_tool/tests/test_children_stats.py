@@ -11,7 +11,6 @@ def test_count_unaffected(denovo_studies):
     seen = set()
     counter = Counter()
     studies = denovo_studies
-    print([st.name for st in studies])
     for st in studies:
         for fid, fam in st.families.items():
             for p in fam.memberInOrder[2:]:
@@ -23,7 +22,6 @@ def test_count_unaffected(denovo_studies):
 
                 counter[p.gender] += 1
                 seen.add(iid)
-    print(counter)
 
     assert counter['M'] > 0
     assert counter['F'] > 0

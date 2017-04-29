@@ -14,8 +14,6 @@ def test_experiments():
     expected_pvalue = 0.5546078
 
     pvalue = poisson_test(observed, expected)
-    print(pvalue)
-    print(expected_pvalue)
     assert expected_pvalue == pytest.approx(pvalue, abs=1E-3)
 
     observed = 4
@@ -23,8 +21,6 @@ def test_experiments():
     expected_pvalue = 0.839
 
     pvalue = poisson_test(observed, expected)
-    print(pvalue)
-    print(expected_pvalue)
     assert expected_pvalue == pytest.approx(pvalue, abs=1E-3)
 
 

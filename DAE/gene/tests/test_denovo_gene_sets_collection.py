@@ -57,7 +57,6 @@ def test_denovo_get_gene_sets_autism_and_epilepsy(gscs):
     assert gene_sets is not None
     assert len(gene_sets) == 16
     gs = gene_sets[0]
-    # print(gs)
     assert gs['count'] == 576
     assert gs['name'] == 'LGDs'
 

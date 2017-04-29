@@ -43,7 +43,6 @@ def test_list_gene_weights():
     assert names is not None
 
     assert 'LGD_rank' in names
-    print(names)
 
 
 def test_load_gene_weights():

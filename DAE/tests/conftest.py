@@ -11,6 +11,8 @@ def pytest_addoption(parser):
                      help="run slow tests")
     parser.addoption("--runveryslow", action="store_true",
                      help="run very slow tests")
+    parser.addoption("--ssc_wg", action="store_true",
+                     help="run SSC WG tests")
 
 
 def slow():

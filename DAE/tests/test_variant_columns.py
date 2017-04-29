@@ -16,9 +16,7 @@ def test_dae_query():
     vs = dae_query_variants(query)
 
     for v in itertools.chain(*vs):
-        print(v)
-        print(getattr(v, 'geneEffect'))
-        print(getattr(v, 'requestedGeneEffects'))
+        assert v
 
 
 def test_do_query():
@@ -30,7 +28,7 @@ def test_do_query():
     vs = do_query_variants(query)
 
     for v in vs:
-        print(v)
+        assert v
 
 
 def test_variant_phenotype_augment_attribute():
@@ -43,7 +41,6 @@ def test_variant_phenotype_augment_attribute():
 
     for v in itertools.chain(*vs):
         v = augment_vars(v)
-        print(v.atts)
         assert '_phenotype_' in v.atts
         assert 'autism' == v.atts['_phenotype_']
         assert 'autism' == getattr(v, '_phenotype_')

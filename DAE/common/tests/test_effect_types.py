@@ -27,7 +27,12 @@ def test_build_effect_types_lgds(query_base):
 
     res = query_base.build_effect_types(effect_types)
     assert res is not None
-    assert set(['frame-shift', 'nonsense', 'splice-site']) == set(res)
+    assert set([
+        'frame-shift',
+        'nonsense',
+        'splice-site',
+        'no-frame-shift-newStop'
+    ]) == set(res)
 
 
 def test_build_effect_types_mixed(query_base):
@@ -37,6 +42,7 @@ def test_build_effect_types_mixed(query_base):
     assert res is not None
     assert set([
         'frame-shift', 'nonsense', 'splice-site',
+        'no-frame-shift-newStop',
         'CNV+', 'CNV-', 'noStart']) == set(res)
 
 
@@ -51,4 +57,9 @@ def test_build_effect_types_bad_not_safe(query_base):
     effect_types = "LGDs, not-an-effect-type"
 
     res = query_base.build_effect_types(effect_types, safe=False)
-    assert set(['frame-shift', 'nonsense', 'splice-site']) == set(res)
+    assert set([
+        'frame-shift',
+        'nonsense',
+        'splice-site',
+        'no-frame-shift-newStop',
+    ]) == set(res)

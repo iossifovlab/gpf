@@ -55,12 +55,10 @@ def test_studies_probands_and_siblings(phdb, all_ssc_studies):
 def test_report_wrong_probands_roles(phdb, all_ssc_studies):
     wrong_probands = set(["11664.p2", "12310.p2", "11324.p2", "11370.p2"])
     for st in all_ssc_studies:
-        print(st.name)
         for fam in st.families.values():
             for person in fam.memberInOrder:
                 if person.personId not in wrong_probands:
                     continue
-                print(">\t{}".format(person))
 
 
 def test_studies_proband_and_siblings_subjects(phdb, all_ssc_studies):

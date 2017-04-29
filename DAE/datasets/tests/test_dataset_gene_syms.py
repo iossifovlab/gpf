@@ -14,4 +14,3 @@ def test_get_gene_syms_sd(sd):
         }
     }
     res = sd.get_gene_set_query(**kwargs)
-    print(res)

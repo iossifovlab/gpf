@@ -25,7 +25,6 @@ def test_gscs_get_gene_set_collection_main(gscs):
 
 def test_gscs_get_main_gene_sets(gscs):
     main_gene_sets = gscs.get_gene_sets('main')
-    print(main_gene_sets)
     assert 15 == len(main_gene_sets)
 
 

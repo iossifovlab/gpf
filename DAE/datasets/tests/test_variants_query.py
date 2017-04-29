@@ -95,8 +95,6 @@ def test_get_variants_with_autism_and_unaffected(sd):
     vs = sd.get_variants(**query)
     assert vs is not None
     vs = list(vs)
-    for v in vs:
-        print(v.inChS)
     assert 5 == count(vs)
 
 

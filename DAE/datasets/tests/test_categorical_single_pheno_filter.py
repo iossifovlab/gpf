@@ -3,7 +3,6 @@ Created on Mar 30, 2017
 
 @author: lubo
 '''
-from pprint import pprint
 
 
 def test_mother_race_filter_ssc(ssc):
@@ -12,6 +11,4 @@ def test_mother_race_filter_ssc(ssc):
         if pf['measureType'] == 'categorical':
             mf = pf['measureFilter']
             if mf['filterType'] == 'single':
-                pprint(mf)
                 assert 'domain' in mf
-                pprint(mf['domain'])

@@ -3,7 +3,6 @@ Created on Nov 16, 2016
 
 @author: lubo
 '''
-from pprint import pprint
 from pheno_tool.genotype_helper import VariantsType as VT
 
 
@@ -103,7 +102,6 @@ def test_get_single_gene_persons_variants_all(
                                'mother and father', 'neither'],
         )
     )
-    pprint(res)
     assert 6 == len(res)
 
 
@@ -191,10 +189,6 @@ def test_get_persons_variants_df_denovo(
         )
     )
     assert 137 == len(res)
-    print(res.head())
-    # assert 'person_id' in res.columns
     assert 'variants' in res.columns
-    print(res.index)
-    print(res.loc['12645.p1', 'variants'])
     assert 1 == res.loc['12645.p1', 'variants']
     assert 1 == res.iloc[0, 0]

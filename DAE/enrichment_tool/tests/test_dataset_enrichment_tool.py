@@ -25,11 +25,6 @@ def test_enrichment_tool_gene_events(sd,
         gh.get_children_stats())
     assert enrichment_results is not None
 
-    print(enrichment_results['all'])
-    print(enrichment_results['rec'])
-    print(enrichment_results['male'])
-    print(enrichment_results['female'])
-
     er = enrichment_results
     assert 546 == len(er['all'].events)
     assert 39 == len(er['rec'].events)
@@ -63,11 +58,6 @@ def test_enrichment_tool_events(sd,
         gh.get_variants('LGDs'),
         gh.get_children_stats())
     assert enrichment_results is not None
-
-    print(enrichment_results['all'])
-    print(enrichment_results['rec'])
-    print(enrichment_results['male'])
-    print(enrichment_results['female'])
 
     er = enrichment_results
 

@@ -6,7 +6,6 @@ Created on Jan 20, 2017
 
 import unittest
 from datasets.config import DatasetsConfig
-from pprint import pprint
 
 
 class DatasetsConfigTest(unittest.TestCase):
@@ -29,8 +28,8 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertIsNone(ds['phenoDB'])
         self.assertEquals(1, len(ds['pedigreeSelectors']))
 
-        self.assertIn('visibility', ds)
-        self.assertEquals('ALL', ds['visibility'])
+        self.assertIn('authorizedGroups', ds)
+        self.assertEquals(['anonymous'], ds['authorizedGroups'])
 
     def test_dataset_ssc(self):
         ds = self.dataset_config.get_dataset_desc('SSC')
@@ -42,8 +41,8 @@ class DatasetsConfigTest(unittest.TestCase):
 
         self.assertEquals('Phenotype', pedigree['name'])
 
-        self.assertIn('visibility', ds)
-        self.assertEquals('AUTHENTICATED', ds['visibility'])
+        self.assertIn('authorizedGroups', ds)
+        self.assertEquals(['SSC'], ds['authorizedGroups'])
 
     def test_dataset_not_found(self):
         ds = self.dataset_config.get_dataset_desc('ala bala')
@@ -55,12 +54,11 @@ class DatasetsConfigTest(unittest.TestCase):
 
         self.assertEquals('vip', ds['phenoDB'])
         self.assertEquals(2, len(ds['pedigreeSelectors']))
-        pprint(ds['pedigreeSelectors'])
         pedigrees = ds['pedigreeSelectors']
 
         p16p = pedigrees[0]
         self.assertIn('16pstatus', p16p['id'])
         self.assertIn('name', p16p)
 
-        self.assertIn('visibility', ds)
-        self.assertEquals('AUTHENTICATED', ds['visibility'])
+        self.assertIn('authorizedGroups', ds)
+        self.assertEquals(['VIP'], ds['authorizedGroups'])

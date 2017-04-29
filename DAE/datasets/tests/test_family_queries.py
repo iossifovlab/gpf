@@ -62,9 +62,6 @@ def test_experiment_with_categorical_measure_filter(ssc, ssc_pheno):
     fd = ssc
     assert fd is not None
 
-    domain = fd.get_measure_domain_categorical('pheno_common.race')
-    print(domain)
-
     family_ids = fd.get_families_by_measure_categorical(
         'pheno_common.race', ['native-hawaiian'])
     assert 11 == len(family_ids)

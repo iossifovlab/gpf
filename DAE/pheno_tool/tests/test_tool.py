@@ -3,7 +3,6 @@ Created on Nov 9, 2016
 
 @author: lubo
 '''
-from pprint import pprint
 
 import pytest
 
@@ -29,7 +28,6 @@ def test_tool_calc(phdb, all_ssc_studies, default_request, genotype_helper):
         gender_split=True,
     )
     assert r is not None
-    print(r)
 
     male, female = male_female_result(r)
 
@@ -69,7 +67,6 @@ def test_tool_present_in_parent_ultra_rare(
         gender_split=True,
     )
     assert r is not None
-    pprint(r)
 
     male, female = male_female_result(r)
 
@@ -115,13 +112,9 @@ def test_phenotypes(phdb, all_ssc_studies, default_request, genotype_helper):
 
     phenotypes = r['M'].phenotypes
     assert 2357 == len(phenotypes)
-    # assert 3 == max(genotypes.values())
 
     phenotypes = r['F'].phenotypes
     assert 372 == len(phenotypes)
-    # assert 3 == max(genotypes.values())
-
-    # pprint(phenotypes)
 
 
 def test_gender_split_false(phdb, all_ssc_studies, default_request):

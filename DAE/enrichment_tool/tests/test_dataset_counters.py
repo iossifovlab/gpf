@@ -89,7 +89,6 @@ def test_variants_unaffected_with_effect_type_missense(sd):
         assert 'sib' in v.inChS
         assert 'missense' == v.requestedGeneEffects[0]['eff']
         count += 1
-    print(count)
     assert 1482 == count
 
 
@@ -105,7 +104,6 @@ def test_variants_unaffected_with_effect_type_synonimous(sd):
         assert 'sib' in v.inChS
         assert 'synonymous' == v.requestedGeneEffects[0]['eff']
         count += 1
-    print(count)
     assert 627 == count
 
 
@@ -120,7 +118,6 @@ def test_variants_autism_with_effect_type_lgd(sd):
     for v in variants:
         assert 'prb' in v.inChS
         count += 1
-    print(count)
     assert 607 == count
 
 

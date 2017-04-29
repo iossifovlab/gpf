@@ -37,11 +37,6 @@ def test_simple_example():
         gh.get_variants('LGDs'),
         gh.get_children_stats())
 
-    print(enrichment_results['all'])
-    print(enrichment_results['rec'])
-    print(enrichment_results['male'])
-    print(enrichment_results['female'])
-
     gh = GH.from_studies(autism_studies, 'sib')
     enrichment_results = tool.calc(
         'LGDs',
@@ -49,7 +44,3 @@ def test_simple_example():
         gh.get_variants('LGDs'),
         gh.get_children_stats())
 
-    print(enrichment_results['all'])
-    print(enrichment_results['rec'])
-    print(enrichment_results['male'])
-    print(enrichment_results['female'])

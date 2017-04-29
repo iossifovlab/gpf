@@ -47,7 +47,6 @@ def test_transmitted_filters_ssc(ssc):
     query = build_ssc_query()
 
     filters = ssc.get_transmitted_filters(**query)
-    print(filters)
 
     assert filters['presentInParent'] == ['mother only']
     assert filters['ultraRareOnly']
@@ -106,21 +105,8 @@ Q1 = {
 }
 
 
-# def test_transmitted_filters_vip(vip):
-#     query = build_vip_query()
-#     filters = vip.get_transmitted_filters(safe=True, **query)
-#     print(filters)
-#     for k, v in QUERY.items():
-#         if k == 'effectTypes':
-#             assert set(filters[k]) == set(v)
-#         else:
-#             assert filters[k] == v
-
-
 def test_transmitted_query_vip(vip):
     query = build_vip_query()
-    print(query)
-    print(vip.transmitted_studies)
 
     vs = vip.get_transmitted_variants(**query)
     assert vs
@@ -137,6 +123,7 @@ def test_transmitted_check_vip(vip):
     vs = st.get_transmitted_variants(**Q1)
     res = [v for v in vs]
     assert 606 == count(res)
+
 
 Q_DATASET = {
     'minParentsCalled': 0,

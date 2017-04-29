@@ -39,6 +39,7 @@ class PreparePhenoBrowserBase(object):
         else:
             augment_id = '{}.{}'.format(
                 measure.instrument_name, augment_measure)
+
         if augment_id == measure.measure_id:
             return None
         if not self.pheno_db.has_measure(augment_id):
