@@ -202,6 +202,7 @@ const appRoutes: Routes = [
     ResetPasswordComponent,
     PhenoBrowserModalContentComponent,
     PhenoBrowserTableComponent,
+    PValueIntensityPipe
   ],
   imports: [
     BrowserModule,
