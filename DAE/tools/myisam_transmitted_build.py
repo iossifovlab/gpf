@@ -141,7 +141,7 @@ CREATE TABLE `transmitted_summaryvariant` (
   `ln` int(11) NOT NULL,
   `chrome` varchar(3) NOT NULL,
   `position` int(11) NOT NULL,
-  `variant` varchar(45) NOT NULL,
+  `variant` varchar(90) NOT NULL,
   `variant_type` varchar(4) NOT NULL,
   `effect_type` varchar(32) DEFAULT NULL,
   `effect_gene` varchar(32) DEFAULT NULL,
@@ -365,8 +365,8 @@ DROP TABLE IF EXISTS `transmitted_familyvariant`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `transmitted_familyvariant` (
-  `family_id` varchar(16) NOT NULL,
-  `best` varchar(16) NOT NULL,
+  `family_id` varchar(32) NOT NULL,
+  `best` varchar(32) NOT NULL,
   `counts` varchar(64) NOT NULL,
   `in_mom` tinyint(1) NOT NULL,
   `in_dad` tinyint(1) NOT NULL,

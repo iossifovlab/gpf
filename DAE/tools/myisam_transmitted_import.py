@@ -70,19 +70,19 @@ class Tools(object):
             'transmittedVariants.sql.summary')
         return summary_filename
 
-    def get_sql_files(self):
-        study = self.study
-        summary_filename = study.vdb._config.get(
-            study._configSection,
-            'transmittedVariants.sql.summary')
-        gene_effect_filename = study.vdb._config.get(
-            study._configSection,
-            'transmittedVariants.sql.gene_effect')
-        family_filename = study.vdb._config.get(
-            study._configSection,
-            'transmittedVariants.sql.family')
-
-        return family_filename, gene_effect_filename, summary_filename
+#     def get_sql_files(self):
+#         study = self.study
+#         summary_filename = study.vdb._config.get(
+#             study._configSection,
+#             'transmittedVariants.sql.summary')
+#         gene_effect_filename = study.vdb._config.get(
+#             study._configSection,
+#             'transmittedVariants.sql.gene_effect')
+#         family_filename = study.vdb._config.get(
+#             study._configSection,
+#             'transmittedVariants.sql.family')
+#
+#         return family_filename, gene_effect_filename, summary_filename
 
     def get_db_conf(self):
         study = self.study
@@ -126,10 +126,11 @@ class Tools(object):
             cursor.execute(statement % table)
             cursor.close()
 
-    def _import_sql_file(self, family_filename):
+    def _import_sql_file(self, filename):
+        assert os.path.exists(filename)
         host, port, user, password, db = self.get_db_conf()
         params = {
-            'filename': family_filename,
+            'filename': filename,
             'host': host,
             'port': port,
             'user': user,
@@ -141,16 +142,13 @@ class Tools(object):
         print "executing command: %s" % command
         os.system(command)
 
-    def import_family_variants(self):
-        family_filename = self.get_sql_family_filename()
+    def import_family_variants(self, family_filename):
         self._import_sql_file(family_filename)
 
-    def import_gene_effect_variants(self):
-        gene_effect_filename = self.get_sql_gene_effect_filename()
+    def import_gene_effect_variants(self, gene_effect_filename):
         self._import_sql_file(gene_effect_filename)
 
-    def import_summary_variants(self):
-        summary_filename = self.get_sql_summary_filename()
+    def import_summary_variants(self, summary_filename):
         self._import_sql_file(summary_filename)
 
 
@@ -184,6 +182,21 @@ USAGE
             action='version', version=program_version_message)
 
         parser.add_argument(
+            '-s', '--summary',
+            dest='summary',
+            default='sql_summary_variants_myisam.sql.gz')
+
+        parser.add_argument(
+            '-f', '--family',
+            dest='family',
+            default='sql_family_variants_myisam.sql.gz')
+
+        parser.add_argument(
+            '-e', '--gene_effect',
+            dest='gene_effect',
+            default='sql_gene_effect_variants_myisam.sql.gz')
+
+        parser.add_argument(
             dest="study",
             help="study name to process "
             "[default: %(default)s]")
@@ -194,8 +207,9 @@ USAGE
         study_name = args.study
         tools = Tools(study_name)
 
-        family_filename, gene_effect_filename, summary_filename = \
-            tools.get_sql_files()
+        family_filename = args.family
+        gene_effect_filename = args.gene_effect
+        summary_filename = args.summary
 
         print("Working with sql files:")
         print(" - summary: %s" % summary_filename)
@@ -203,9 +217,9 @@ USAGE
         print(" - family:  %s" % family_filename)
 
         tools.drop_all_tables()
-        tools.import_family_variants()
-        tools.import_gene_effect_variants()
-        tools.import_summary_variants()
+        tools.import_family_variants(family_filename)
+        tools.import_gene_effect_variants(gene_effect_filename)
+        tools.import_summary_variants(summary_filename)
 
         return 0
     except KeyboardInterrupt:
