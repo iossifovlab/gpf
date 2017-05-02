@@ -56,3 +56,9 @@
   background: #eee;
   font-weight: 500;
 }
+
+.expanded-span {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+}

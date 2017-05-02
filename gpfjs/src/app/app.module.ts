@@ -99,6 +99,7 @@ import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { PhenoBrowserModalContent } from './pheno-browser/pheno-browser-modal-content.component';
 
+import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 const appRoutes: Routes = [
   {
@@ -198,7 +199,7 @@ const appRoutes: Routes = [
     ForgotPasswordComponent,
     PhenoBrowserComponent,
     ResetPasswordComponent,
-    PhenoBrowserModalContent
+    PhenoBrowserModalContent,
   ],
   imports: [
     BrowserModule,
@@ -229,7 +230,8 @@ const appRoutes: Routes = [
     MeasuresService,
     PhenoToolService,
     FamilyCountersService,
-    PhenoBrowserService
+    PhenoBrowserService,
+    PValueIntensityPipe
   ],
 
   entryComponents: [

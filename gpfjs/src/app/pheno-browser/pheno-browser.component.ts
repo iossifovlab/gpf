@@ -9,6 +9,8 @@ import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
 import { PhenoBrowserModalContent } from './pheno-browser-modal-content.component';
 
+import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
+
 @Component({
   selector: 'gpf-pheno-browser',
   templateUrl: './pheno-browser.component.html',
@@ -26,7 +28,8 @@ export class PhenoBrowserComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private phenoBrowserService: PhenoBrowserService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private pValueIntensityPipe: PValueIntensityPipe
   ) { }
 
   ngOnInit() {
@@ -86,5 +89,11 @@ export class PhenoBrowserComponent implements OnInit {
     }
 
     return leftVal.localeCompare(rightVal);
+  }
+
+  getBackgroundColor(pValue: string): string {
+    let intensity = this.pValueIntensityPipe.transform(pValue);
+
+    return `rgba(255, ${intensity}, ${intensity}, 0.8)`;
   }
 }

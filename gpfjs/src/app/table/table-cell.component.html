@@ -1,6 +1,6 @@
 <template [ngTemplateOutlet]="columnInfo.contentTemplateRef" [ngOutletContext]="{$implicit: data}">
 </template>
-<span *ngIf="!columnInfo.contentTemplateRef">{{ data[field] }}</span>
+<span *ngIf="!columnInfo.contentTemplateRef && !columnInfo.subcolumnsChildren">{{ data[field] }}</span>
 
 <div *ngFor="let child of columnInfo.subcolumnsChildren" style="text-align: center;">
     <template [ngTemplateOutlet]="child.contentTemplateRef" [ngOutletContext]="{$implicit: data}">

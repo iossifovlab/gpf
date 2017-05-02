@@ -55,12 +55,16 @@
           </gpf-table-column>
           <gpf-table-column header="P Value">
             <gpf-table-subcolumn header="male" field="pvalueCorrelationNviqMale">
-                <span *gpf-table-cell-content="let data">
+                <span class="expanded-span"
+                   *gpf-table-cell-content="let data"
+                   [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqMale)">
                   {{ data.pvalueCorrelationNviqMale | numberWithExp: "1.2-4" }}
                 </span>
             </gpf-table-subcolumn>
             <gpf-table-subcolumn header="female" field="pvalueCorrelationNviqFemale">
-                <span *gpf-table-cell-content="let data">
+                <span class="expanded-span"
+                   *gpf-table-cell-content="let data"
+                   [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqFemale)">
                   {{ data.pvalueCorrelationNviqFemale | numberWithExp: "1.2-4" }}
                 </span></gpf-table-subcolumn>
           </gpf-table-column>
@@ -78,12 +82,16 @@
           </gpf-table-column>
           <gpf-table-column header="P Value">
             <gpf-table-subcolumn header="male" field="pvalueCorrelationAgeMale">
-                <span *gpf-table-cell-content="let data">
+                <span class="expanded-span"
+                  *gpf-table-cell-content="let data"
+                  [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeMale)">
                   {{ data.pvalueCorrelationAgeMale | numberWithExp: "1.2-4" }}
                 </span>
             </gpf-table-subcolumn>
             <gpf-table-subcolumn header="female" field="pvalueCorrelationAgeFemale">
-                <span *gpf-table-cell-content="let data">
+                <span class="expanded-span"
+                  *gpf-table-cell-content="let data"
+                  [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeFemale)">
                   {{ data.pvalueCorrelationAgeFemale | numberWithExp: "1.2-4" }}
                 </span>
             </gpf-table-subcolumn>
