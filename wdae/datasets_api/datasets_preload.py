@@ -3,10 +3,10 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
+from django.conf import settings
 from preloaded.register import Preload
 from datasets.datasets_factory import DatasetsFactory
 from datasets.config import DatasetsConfig
-from django.conf import settings
 
 
 class DatasetsPreload(Preload):
@@ -23,8 +23,8 @@ class DatasetsPreload(Preload):
             False)
 
         if preload_active:
-            for ds in self.dataset_config.get_datasets():
-                dataset_id = ds['id']
+            for dset in self.dataset_config.get_datasets():
+                dataset_id = dset['id']
                 self.factory.get_dataset(dataset_id)
 
     def get(self):
