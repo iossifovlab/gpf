@@ -21,6 +21,8 @@ class DatasetsFactory(dict):
         if dataset_id in self:
             return self[dataset_id]
         dataset_descriptor = self.datasets_config.get_dataset_desc(dataset_id)
+        if dataset_descriptor is None:
+            return None
         dataset = Dataset(dataset_descriptor)
         dataset.load()
 
@@ -32,6 +34,8 @@ class DatasetsFactory(dict):
         result = []
         for desc in datasets_description:
             dataset_id = desc['id']
+            if dataset_id not in self:
+                self.get_dataset(dataset_id)
             dataset_description = self[dataset_id].descriptor
             result.append(copy.deepcopy(dataset_description))
         return result
@@ -39,6 +43,10 @@ class DatasetsFactory(dict):
     def get_description_dataset(self, dataset_id):
         dataset = self.get(dataset_id, None)
         if dataset is None:
-            return None
+            dataset_descriptor = \
+                self.datasets_config.get_dataset_desc(dataset_id)
+            if dataset_descriptor is None:
+                return None
+            self.get_dataset(dataset_id)
         dataset_description = self[dataset_id].descriptor
         return copy.deepcopy(dataset_description)
