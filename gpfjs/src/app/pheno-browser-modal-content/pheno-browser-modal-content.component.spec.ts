@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PhenoBrowserModalComponent } from './pheno-browser-modal.component';
+import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content.component';
 
-describe('PhenoBrowserModalComponent', () => {
-  let component: PhenoBrowserModalComponent;
-  let fixture: ComponentFixture<PhenoBrowserModalComponent>;
+describe('PhenoBrowserModalContentComponent', () => {
+  let component: PhenoBrowserModalContentComponent;
+  let fixture: ComponentFixture<PhenoBrowserModalContentComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PhenoBrowserModalComponent ]
+      declarations: [ PhenoBrowserModalContentComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PhenoBrowserModalComponent);
+    fixture = TestBed.createComponent(PhenoBrowserModalContentComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
