@@ -6,22 +6,16 @@ Created on Aug 10, 2016
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import django.contrib.auth
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
-from authentication import SessionAuthenticationWithUnauthenticatedCSRF, \
-    SessionAuthenticationWithoutCSRF
 from rest_framework.decorators import authentication_classes
-from rest_framework.authentication import SessionAuthentication, \
-    BasicAuthentication
-
 from users.models import VerificationPath
-from serializers import UserSerializer
+from rest_framework.authentication import SessionAuthentication
+from users_api.authentication import \
+    SessionAuthenticationWithUnauthenticatedCSRF
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 
 @api_view(['POST'])
@@ -43,37 +37,37 @@ def change_password(request):
     password = request.data['password']
     verif_path = request.data['verifPath']
 
-    user = get_user_model().change_password(verif_path, password)
+    get_user_model().change_password(verif_path, password)
 
     return Response({}, status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
 def register(request):
-    serialized = UserSerializer(data=request.data)
-    if serialized.is_valid():
-        user_model = get_user_model()
-        researcher_id = serialized.validated_data['researcherId']
-        email = BaseUserManager.normalize_email(
-            serialized.validated_data['email'])
+    user_model = get_user_model()
 
-        try:
-            preexisting_user = user_model.objects.get(email=email,
-                                                      is_active=False)
-            preexisting_user.register_preexisting_user(
-                serialized.validated_data['firstName'],
-                serialized.validated_data['lastName']
-            )
-            return Response(serialized.data, status=status.HTTP_201_CREATED)
-        except IntegrityError:
-            return Response(serialized._errors,
-                            status=status.HTTP_400_BAD_REQUEST)
-        except user_model.DoesNotExist:
-            return Response(serialized._errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+    try:
+        email = BaseUserManager.normalize_email(request.data['email'])
+        researcher_id = request.data['researcherId']
 
-    else:
-        return Response(serialized._errors, status=status.HTTP_400_BAD_REQUEST)
+        preexisting_user = \
+            user_model.objects.get(email=email,
+                                   is_active=False,
+                                   researcherid__researcher_id=researcher_id)
+        preexisting_user.register_preexisting_user(
+            request.data['firstName'],
+            request.data['lastName']
+        )
+        return Response({}, status=status.HTTP_201_CREATED)
+    except IntegrityError:
+        return Response({},
+                        status=status.HTTP_400_BAD_REQUEST)
+    except user_model.DoesNotExist:
+        return Response({},
+                        status=status.HTTP_400_BAD_REQUEST)
+    except KeyError:
+        return Response({},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])

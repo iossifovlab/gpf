@@ -1,8 +1,6 @@
-from users.models import WdaeUser, VerificationPath, ResearcherId
-from django.contrib.auth import authenticate, get_user_model
+from users.models import WdaeUser, ResearcherId
 from rest_framework.test import APITestCase
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from pprint import pprint
 
 
@@ -64,9 +62,6 @@ class ResearcherRegistrationTest(APITestCase):
         response = self.client.post('/api/v3/users/register', data,
                                     format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            response.data['researcherId'], id1.researcher_id)
-        self.assertEqual(response.data['email'], self.res.email)
 
     def test_register_twice(self):
             [id1] = self.res.researcherid_set.all()
@@ -81,9 +76,6 @@ class ResearcherRegistrationTest(APITestCase):
             response = self.client.post('/api/v3/users/register', data,
                                         format='json')
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            self.assertEqual(
-                response.data['researcherId'], id1.researcher_id)
-            self.assertEqual(response.data['email'], self.res.email)
 
             response = self.client.post('/api/v3/users/register', data,
                                         format='json')
@@ -102,9 +94,6 @@ class ResearcherRegistrationTest(APITestCase):
         response = self.client.post('/api/v3/users/register', data,
                                     format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            response.data['researcherId'], id1.researcher_id)
-        self.assertEqual(response.data['email'], self.res.email)
 
         verifPath = self.res.verificationpath.path
 
