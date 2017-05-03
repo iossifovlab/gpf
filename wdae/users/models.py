@@ -187,11 +187,9 @@ def _build_email_template(settings):
 
 
 def _create_verif_path(user):
-    verif_path = VerificationPath()
-    verif_path.user = user
-    verif_path.path = uuid.uuid4()
-    verif_path.save()
-
+    verif_path, _ = \
+        VerificationPath.objects.get_or_create(user=user,
+                                               defaults={'path': uuid.uuid4()})
     return verif_path
 
 
