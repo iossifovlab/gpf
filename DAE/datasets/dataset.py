@@ -96,9 +96,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
         selected_phenotypes.remove('unaffected')
         if selected_phenotypes == set():
-            def f(v):
+            def fsp(v):
                 return 'sib' in v.inChS
-            return f
+            return fsp
 
         def fm(v):
             return 'sib' in v.inChS or \
@@ -106,7 +106,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return fm
 
     def get_in_child(self, safe=True, **kwargs):
-        _res = super(Dataset, self).get_in_child(**kwargs)
+        super(Dataset, self).get_in_child(**kwargs)
 
         person_grouping = self.get_pedigree_selector(
             safe=safe, default=False, ** kwargs)

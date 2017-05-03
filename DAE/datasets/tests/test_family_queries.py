@@ -11,13 +11,6 @@ import copy
 from datasets.tests.requests import EXAMPLE_QUERY_SSC
 
 
-@pytest.fixture(scope='session')
-def ssc_pheno(request):
-    pf = DAE.pheno
-    db = pf.get_pheno_db('ssc')
-    return db
-
-
 def test_verbal_iq_interval_ssc(ssc, ssc_pheno):
     fd = ssc
     assert fd is not None

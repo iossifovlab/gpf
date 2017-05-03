@@ -85,7 +85,7 @@ class FamilyPhenoQueryMixin(object):
             elif measure_type == 'categorical':
                 family_ids = self._filter_categorical_filter(**pheno_filter)
             else:
-                raise NotImplemented(
+                raise NotImplementedError(
                     "unsupported filter type: {}".format(measure_type))
             result.append(family_ids)
         assert all([
