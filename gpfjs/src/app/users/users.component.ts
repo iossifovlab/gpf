@@ -8,7 +8,8 @@ import { ForgotPasswordComponent } from '../forgot-password/forgot-password.comp
 
 @Component({
   selector: 'gpf-users',
-  templateUrl: './users.component.html'
+  templateUrl: './users.component.html',
+  styleUrls: ['./users.component.css']
 })
 export class UsersComponent implements OnInit {
   private username;

@@ -1,3 +1,28 @@
 .dataset-selector {
-	width: 320px;
+	width: 310px;
+}
+
+md-sidenav-container, .content {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sidenav {
+  padding: 20px;
+  width: 350px;
+}
+
+.sidenav .dropdown-menu {
+  	width: 310px;
+}
+
+.sidenav .nav-item {
+  text-align: left;
+  padding: 10px 0;
+  /*padding-bottom:*/
+}
+
+.nav-item .nav-link {
+  padding: 0;
 }

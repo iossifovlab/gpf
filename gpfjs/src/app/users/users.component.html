@@ -1,6 +1,6 @@
-<div *ngIf="displayedUsername">
-  <span class="username-field">{{ displayedUsername }}</span>
-  <input type="button" class="btn btn-sm" type="button" (click)="logout()" value="Logout" />
+<div class="clearfix" *ngIf="displayedUsername">
+  <span class="float-left username-field">{{ displayedUsername }}</span>
+  <button class="float-right btn btn-sm" (click)="logout()">Logout</button>
 </div>
 <div *ngIf="!displayedUsername" class="dropdown">
 

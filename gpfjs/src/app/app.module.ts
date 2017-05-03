@@ -6,6 +6,9 @@ import { RequestOptions } from '@angular/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MdSidenavModule } from '@angular/material';
+
 import { AppComponent } from './app.component';
 
 import { DatasetsService } from './datasets/datasets.service';
@@ -215,7 +218,9 @@ const appRoutes: Routes = [
     StoreModule.provideStore(gpfReducer),
     StoreDevtoolsModule.instrumentOnlyWithExtension(),
     RouterModule.forRoot(appRoutes),
-    CookieModule.forRoot()
+    CookieModule.forRoot(),
+    BrowserAnimationsModule,
+    MdSidenavModule
 
   ],
   providers: [
