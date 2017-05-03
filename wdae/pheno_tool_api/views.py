@@ -2,14 +2,14 @@ from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from users.authentication import SessionAuthenticationWithoutCSRF
+from users_api.authentication import SessionAuthenticationWithoutCSRF
 from rest_framework.exceptions import NotAuthenticated
 import preloaded
 import traceback
 from pheno_tool.tool import PhenoTool
 from pheno_tool_api.genotype_helper import GenotypeHelper
 
-# Create your views here.
+
 class PhenoToolView(APIView):
 
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
@@ -21,7 +21,6 @@ class PhenoToolView(APIView):
 
         self.datasets_config = self.datasets.get_config()
         self.datasets_factory = self.datasets.get_factory()
-
 
     @classmethod
     def get_result_by_gender(cls, result, gender):
@@ -43,7 +42,7 @@ class PhenoToolView(APIView):
     def calc_by_effect(cls, effect, tool, data, dataset):
         data['effectTypes'] = [effect]
 
-        variants = dataset.get_variants(safe=True,**data)
+        variants = dataset.get_variants(safe=True, **data)
         variants_df = GenotypeHelper.to_persons_variants_df(variants)
 
         result = tool.calc(variants_df, gender_split=True)
@@ -64,7 +63,7 @@ class PhenoToolView(APIView):
             )
 
             results = [self.calc_by_effect(effect, tool, data, dataset)
-                        for effect in data['effectTypes']];
+                       for effect in data['effectTypes']]
 
             response = {
                 "description": "Desc",
@@ -72,7 +71,6 @@ class PhenoToolView(APIView):
             }
 
             return Response(response)
-
 
         except NotAuthenticated:
             print("error while processing genotype query")

@@ -8,12 +8,14 @@ import uuid
 from django.db import models
 from django.core.mail import send_mail
 # from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
+    PermissionsMixin
 from django.utils import timezone
 from django.conf import settings
 from guardian.conf import settings as guardian_settings
 
 from helpers.logger import LOGGER
+
 
 class WdaeUserManager(BaseUserManager):
 
@@ -41,11 +43,12 @@ class WdaeUserManager(BaseUserManager):
 
         user.is_superuser = True
         user.is_active = True
-        user.is_staff  =True
+        user.is_staff = True
 
         user.save()
 
         return user
+
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
     app_label = 'api'
@@ -191,12 +194,14 @@ def _create_verif_path(user):
 
     return verif_path
 
+
 def get_anonymous_user_instance(CurrentUserModel):
     user, created = CurrentUserModel.objects.get_or_create(
         email=guardian_settings.ANONYMOUS_USER_NAME,
-        defaults = {'is_active': True})
+        defaults={'is_active': True})
     user.set_unusable_password()
     return user
+
 
 class ResearcherId(models.Model):
     researcher = models.ManyToManyField(WdaeUser)
@@ -204,6 +209,7 @@ class ResearcherId(models.Model):
 
     class Meta:
         db_table = 'researcherid'
+
 
 class VerificationPath(models.Model):
     path = models.CharField(max_length='255', unique=True)

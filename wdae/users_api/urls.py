@@ -7,7 +7,7 @@ Created on Aug 10, 2016
 from django.conf.urls import patterns, url
 
 urlpatterns = patterns(
-    'users.views_session',
+    'users_api.views',
     url(r'^register$', 'register'),
     url(r'^login$', 'login'),
     url(r'^logout$', 'logout'),

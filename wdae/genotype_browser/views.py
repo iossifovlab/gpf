@@ -7,7 +7,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
-from users.authentication import SessionAuthenticationWithoutCSRF
+from users_api.authentication import SessionAuthenticationWithoutCSRF
 from rest_framework import permissions
 
 from helpers.logger import log_filter, LOGGER

@@ -7,7 +7,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from preloaded.register import get_register
 import numpy as np
-from users.authentication import SessionAuthenticationWithoutCSRF
+from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 
 class GeneWeightsListView(views.APIView):

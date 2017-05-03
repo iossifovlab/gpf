@@ -37,7 +37,7 @@ class ResearcherRegistrationTest(APITestCase):
         }
 
         response = self.client.post('/api/v3/users/register', data,
-            format='json')
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_reset_pass_without_registration(self):
@@ -48,7 +48,7 @@ class ResearcherRegistrationTest(APITestCase):
         pprint(data)
 
         response = self.client.post('/api/v3/users/reset_password', data,
-            format='json')
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_successful_register(self):
@@ -62,7 +62,7 @@ class ResearcherRegistrationTest(APITestCase):
         pprint(data)
 
         response = self.client.post('/api/v3/users/register', data,
-            format='json')
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             response.data['researcherId'], id1.researcher_id)
@@ -79,17 +79,15 @@ class ResearcherRegistrationTest(APITestCase):
             pprint(data)
 
             response = self.client.post('/api/v3/users/register', data,
-                format='json')
+                                        format='json')
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             self.assertEqual(
                 response.data['researcherId'], id1.researcher_id)
             self.assertEqual(response.data['email'], self.res.email)
 
-
             response = self.client.post('/api/v3/users/register', data,
-                format='json')
+                                        format='json')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
 
     def test_registration_all_steps(self):
         [id1] = self.res.researcherid_set.all()
@@ -102,7 +100,7 @@ class ResearcherRegistrationTest(APITestCase):
         pprint(data)
 
         response = self.client.post('/api/v3/users/register', data,
-            format='json')
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             response.data['researcherId'], id1.researcher_id)
@@ -114,7 +112,7 @@ class ResearcherRegistrationTest(APITestCase):
             'verifPath': verifPath,
         }
         response = self.client.post('/api/v3/users/check_verif_path', data,
-            format='json')
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = {
@@ -122,7 +120,7 @@ class ResearcherRegistrationTest(APITestCase):
             'password': 'testpas'
         }
         response = self.client.post('/api/v3/users/change_password', data,
-            format='json')
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = {
@@ -158,7 +156,7 @@ class UsersAPITest(APITestCase):
             'verifPath': 'dasdasdasdasdsa',
         }
         response = self.client.post('/api/v3/users/check_verif_path', data,
-            format='json')
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_reset_pass(self):
@@ -169,7 +167,7 @@ class UsersAPITest(APITestCase):
         pprint(data)
 
         response = self.client.post('/api/v3/users/reset_password', data,
-            format='json')
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_register_existing_user(self):
@@ -183,8 +181,9 @@ class UsersAPITest(APITestCase):
         pprint(data)
 
         response = self.client.post('/api/v3/users/register', data,
-            format='json')
+                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class UserAuthenticationTest(APITestCase):
 

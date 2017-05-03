@@ -13,7 +13,7 @@ import precompute
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 from common.query_base import GeneSymsMixin
 from enrichment_api.enrichment_builder import EnrichmentBuilder
-from users.authentication import SessionAuthenticationWithoutCSRF
+from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 
 class EnrichmentModelsMixin(object):
