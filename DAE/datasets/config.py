@@ -166,6 +166,8 @@ class DatasetsConfig(object):
         return result
 
     def _get_genotype_browser_family_study_filter(self, f):
+        name = "Study Type" if f == "studyTypeFilter" else "Study"
+
         measure_filter = {
             'filterType': 'single',
             'role': 'study',
@@ -173,7 +175,7 @@ class DatasetsConfig(object):
         }
 
         return {
-            'name': f,
+            'name': name,
             'measureType': 'studies',
             'measureFilter': measure_filter
         }

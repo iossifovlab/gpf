@@ -260,11 +260,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if not family_study_filters:
             return None
         for f in family_study_filters:
-            if f['name'] == 'studyFilter':
-                mf = f['measureFilter']
+            mf = f['measureFilter']
+            if mf['measure'] == 'studyFilter':
                 mf['domain'] = [st.name for st in self.studies]
-            elif f['name'] == 'studyTypeFilter':
-                mf = f['measureFilter']
+            elif mf['measure'] == 'studyTypeFilter':
                 mf['domain'] = set([st.get_attr('study.type')
                                     for st in self.studies])
 
