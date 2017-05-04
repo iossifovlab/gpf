@@ -37,6 +37,17 @@ class DatasetApiTest(APITestCase):
         gbdata = data['genotypeBrowser']
         self.assertFalse(gbdata['hasStudyTypes'])
 
+        phenoFiltersName = [phenoFilter['name']
+                            for phenoFilter in gbdata['phenoFilters']]
+        self.assertIn("Mother Race", phenoFiltersName)
+        self.assertIn("Father Race", phenoFiltersName)
+        self.assertIn("Proband Pheno Measure", phenoFiltersName)
+
+        familyStudyFilters = [phenoFilter['name']
+                              for phenoFilter in gbdata['familyStudyFilters']]
+        self.assertIn("Study", familyStudyFilters)
+        self.assertIn("Study Type", familyStudyFilters)
+
     def test_get_dataset_sd(self):
         url = '/api/v3/datasets/SD'
         response = self.client.get(url)
