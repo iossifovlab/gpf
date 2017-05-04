@@ -7,19 +7,19 @@
       <ngb-tab *ngIf="showAllTab" id="all-genes" title="All">
       </ngb-tab>
       <ngb-tab id="gene-symbols" title="Gene Symbols">
-          <template ngbTabContent>
+          <ng-template ngbTabContent>
               <gpf-gene-symbols></gpf-gene-symbols>
-          </template>
+          </ng-template>
       </ngb-tab>
       <ngb-tab id="gene-sets" title="Gene Sets">
-          <template ngbTabContent>
+          <ng-template ngbTabContent>
               <gpf-gene-sets></gpf-gene-sets>
-          </template>
+          </ng-template>
       </ngb-tab>
       <ngb-tab id="gene-weights" title="Gene Weights">
-          <template ngbTabContent>
+          <ng-template ngbTabContent>
               <gpf-gene-weights width="650" height="200"></gpf-gene-weights>
-          </template>
+          </ng-template>
       </ngb-tab>
     </gpf-tabset>
   </div>

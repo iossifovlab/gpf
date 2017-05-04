@@ -1,9 +1,9 @@
-<template [ngTemplateOutlet]="columnInfo.contentTemplateRef" [ngOutletContext]="{$implicit: data}">
-</template>
+<ng-template [ngTemplateOutlet]="columnInfo.contentTemplateRef" [ngOutletContext]="{$implicit: data}">
+</ng-template>
 <span *ngIf="!columnInfo.contentTemplateRef && !columnInfo.subcolumnsChildren">{{ data[field] }}</span>
 
 <div *ngFor="let child of columnInfo.subcolumnsChildren" style="text-align: center;">
-    <template [ngTemplateOutlet]="child.contentTemplateRef" [ngOutletContext]="{$implicit: data}">
-    </template>
+    <ng-template [ngTemplateOutlet]="child.contentTemplateRef" [ngOutletContext]="{$implicit: data}">
+    </ng-template>
     <span *ngIf="!child.contentTemplateRef">{{ data[child.field] }}</span>
 </div>

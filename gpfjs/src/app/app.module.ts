@@ -215,8 +215,7 @@ const appRoutes: Routes = [
     StoreModule.provideStore(gpfReducer),
     StoreDevtoolsModule.instrumentOnlyWithExtension(),
     RouterModule.forRoot(appRoutes),
-    CookieModule.forRoot()
-
+    CookieModule.forRoot(),
   ],
   providers: [
     ConfigService,
