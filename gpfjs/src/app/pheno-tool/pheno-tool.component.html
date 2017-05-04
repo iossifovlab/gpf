@@ -5,8 +5,7 @@
 
   <gpf-family-filters-block
     *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
-    [phenoFilters]="selectedDataset?.genotypeBrowser?.phenoFilters"
-    [datasetId]=selectedDataset?.id>
+    [datasetConfig]="selectedDataset">
   </gpf-family-filters-block>
 
 

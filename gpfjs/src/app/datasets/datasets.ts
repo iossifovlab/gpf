@@ -158,7 +158,8 @@ export class GenotypeBrowser {
       json['hasStudyTypes'],
       json['mainForm'],
       PhenoColumn.fromJsonArray(json['phenoColumns']),
-      PhenoFilter.fromJsonArray(json['phenoFilters'])
+      PhenoFilter.fromJsonArray(json['phenoFilters']),
+      PhenoFilter.fromJsonArray(json['familyStudyFilters']),
     );
   }
 
@@ -171,7 +172,8 @@ export class GenotypeBrowser {
     readonly hasStudyTypes: boolean,
     readonly mainForm: string,
     readonly phenoColumns: Array<PhenoColumn>,
-    readonly phenoFilters: Array<PhenoFilter>
+    readonly phenoFilters: Array<PhenoFilter>,
+    readonly familyStudyFilters: Array<PhenoFilter>
   ) {
 
   }

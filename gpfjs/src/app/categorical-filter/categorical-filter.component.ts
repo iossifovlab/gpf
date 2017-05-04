@@ -29,6 +29,7 @@ export class CategoricalFilterComponent implements OnInit {
     this.store.dispatch({
       'type': PHENO_FILTERS_ADD_CATEGORICAL,
       'payload': {
+        'type': this.categoricalFilterConfig.measureType,
         'name': this.categoricalFilterConfig.name,
         'role': this.categoricalFilterConfig.measureFilter.role,
         'measure': this.categoricalFilterConfig.measureFilter.measure

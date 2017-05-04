@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, forwardRef, ViewChild,
          ChangeDetectorRef} from '@angular/core';
-import { PhenoFilter } from '../datasets/datasets';
+import { Dataset } from '../datasets/datasets';
 import { QueryStateCollector } from '../query/query-state-provider'
 import { StateRestoreService } from '../store/state-restore.service'
 import { Subject } from 'rxjs/Subject';
@@ -12,8 +12,7 @@ import { Subject } from 'rxjs/Subject';
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => FamilyFiltersBlockComponent) }]
 })
 export class FamilyFiltersBlockComponent extends QueryStateCollector implements OnInit {
-  @Input() phenoFilters: Array<PhenoFilter>;
-  @Input() datasetId: string;
+  @Input() datasetConfig: Dataset;
   @Input() genotypeBrowserState: Object;
   @ViewChild('tabset') ngbTabset;
 

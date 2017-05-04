@@ -30,10 +30,11 @@ export class CategoricalFilterState extends PhenoFilterState {
 
   constructor(
     id: string,
+    type: string,
     role: string,
     measure: string
   ) {
-    super(id, 'categorical', role, measure);
+    super(id, type, role, measure);
   }
 
   isEmpty() {
@@ -155,6 +156,7 @@ export function phenoFiltersReducer(
       var newPhenoFilters = [...state.phenoFilters,
         new CategoricalFilterState(
           action.payload.name,
+          action.payload.type,
           action.payload.role,
           action.payload.measure
         )]

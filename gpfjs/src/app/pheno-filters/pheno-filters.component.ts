@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, forwardRef } from '@angular/core';
-import { PhenoFilter } from '../datasets/datasets';
+import { Dataset, PhenoFilter } from '../datasets/datasets';
 import { QueryStateProvider } from '../query/query-state-provider'
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { Store } from '@ngrx/store';
@@ -19,8 +19,7 @@ import { plainToClass } from "class-transformer";
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PhenoFiltersComponent) }]
 })
 export class PhenoFiltersComponent extends QueryStateProvider implements OnInit {
-  @Input() phenoFilters: Array<PhenoFilter>;
-  @Input() datasetId: string;
+  @Input() datasetConfig: Dataset;
 
   private phenoFiltersState: Observable<[Array<PhenoFilterState>, boolean, ValidationError[]]>;
   errors: string[];
@@ -35,11 +34,11 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
       (phenoFiltersState: PhenoFiltersState) => {
         let filtersWithClass = phenoFiltersState.phenoFilters.map(
           (value) => {
-            if (value.measureType == "categorical") {
-              return plainToClass(CategoricalFilterState, value);
+            if (value.measureType == "continuous") {
+              return plainToClass(ContinuousFilterState, value);
             }
             else {
-              return plainToClass(ContinuousFilterState, value);
+              return plainToClass(CategoricalFilterState, value);
             }
         })
 
@@ -84,21 +83,21 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnInit 
   }
 
   get categoricalPhenoFilters() {
-    if (!this.phenoFilters) {
+    if (!this.datasetConfig.genotypeBrowser.phenoFilters) {
       return null;
     }
 
-    return this.phenoFilters.filter(
+    return this.datasetConfig.genotypeBrowser.phenoFilters.filter(
       (phenoFilter: PhenoFilter) => phenoFilter.measureType == 'categorical'
     );
   }
 
   get continuousPhenoFilters() {
-    if (!this.phenoFilters) {
+    if (!this.datasetConfig.genotypeBrowser.phenoFilters) {
       return null;
     }
 
-    return this.phenoFilters.filter(
+    return this.datasetConfig.genotypeBrowser.phenoFilters.filter(
       (phenoFilter: PhenoFilter) => phenoFilter.measureType == 'continuous'
     );
   }
