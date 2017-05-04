@@ -160,7 +160,7 @@ class VariantTypesMixin(object):
 
 class StudyTypesMixin(object):
     STUDY_TYPES = [
-        'we', 'wg', 'tg',
+        'we', 'wg', 'tg', 'cnv'
     ]
 
     def get_study_types(self, safe=True, **kwargs):

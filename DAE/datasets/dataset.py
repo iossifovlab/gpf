@@ -195,6 +195,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         self.load_pedigree_selectors()
         self.load_pheno_columns()
         self.load_pheno_filters()
+        self.load_family_filters_by_study()
 
     def load_pheno_db(self):
         pheno_db = None
@@ -248,6 +249,24 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                     measure_id = mf['measure']
                     measure = self.pheno_db.get_measure(measure_id)
                     mf['domain'] = measure.value_domain.split(',')
+
+    def load_family_filters_by_study(self):
+        if self.pheno_db is None:
+            return
+        genotype_browser = self.descriptor['genotypeBrowser']
+        if 'familyStudyFilters' not in genotype_browser:
+            return
+        family_study_filters = genotype_browser.get('familyStudyFilters', None)
+        if not family_study_filters:
+            return None
+        for f in family_study_filters:
+            if f['name'] == 'studyFilter':
+                mf = f['measureFilter']
+                mf['domain'] = [st.name for st in self.studies]
+            elif f['name'] == 'studyTypeFilter':
+                mf = f['measureFilter']
+                mf['domain'] = set([st.get_attr('study.type')
+                                    for st in self.studies])
 
     def load_pedigree_selectors(self):
         pedigree_selectors = self.descriptor['pedigreeSelectors']

@@ -135,6 +135,8 @@ class DatasetsConfig(object):
             self._get_genotype_browser_pheno_columns(section)
         pheno_filters = \
             self._get_genotype_browser_pheno_filters(section)
+        family_study_filters = \
+            self._get_genotype_browser_family_study_filters(section)
 
         return {
             'mainForm': main_form,
@@ -148,6 +150,32 @@ class DatasetsConfig(object):
             'hasPedigreeSelector': pedigree_selector,
             'phenoColumns': pheno_columns,
             'phenoFilters': pheno_filters,
+            'familyStudyFilters': family_study_filters
+        }
+
+    def _get_genotype_browser_family_study_filters(self, section):
+        result = []
+        filters = self._get_string_list(
+            section, 'genotypeBrowser.familyFilters')
+        if not filters:
+            return None
+
+        for f in filters:
+            pheno_filter = self._get_genotype_browser_family_study_filter(f)
+            result.append(pheno_filter)
+        return result
+
+    def _get_genotype_browser_family_study_filter(self, f):
+        measure_filter = {
+            'filterType': 'single',
+            'role': 'study',
+            'measure': f
+        }
+
+        return {
+            'name': f,
+            'measureType': 'studies',
+            'measureFilter': measure_filter
         }
 
     def _get_genotype_browser_pheno_filters(self, section):

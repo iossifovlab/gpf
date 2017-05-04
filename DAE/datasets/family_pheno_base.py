@@ -79,11 +79,18 @@ class FamilyPhenoQueryMixin(object):
         result = []
         for pheno_filter in pheno_filters:
             measure_type = pheno_filter['measureType']
+            measure_id = pheno_filter['measure']
+
+            print("pheno_filter", pheno_filter)
 
             if measure_type == 'continuous':
                 family_ids = self._filter_continuous_filter(**pheno_filter)
             elif measure_type == 'categorical':
                 family_ids = self._filter_categorical_filter(**pheno_filter)
+            elif measure_type == 'studies' and measure_id == 'studyFilter':
+                family_ids = self._filter_studies_filter(**pheno_filter)
+            elif measure_type == 'studies' and measure_id == 'studyTypeFilter':
+                family_ids = self._filter_study_types_filter(**pheno_filter)
             else:
                 raise NotImplementedError(
                     "unsupported filter type: {}".format(measure_type))
@@ -135,3 +142,34 @@ class FamilyPhenoQueryMixin(object):
         family_ids = self.get_families_by_measure_categorical(
             measure_id, selection=selection, roles=roles)
         return family_ids
+
+    def _filter_studies_filter(self, safe=True, **kwargs):
+        if safe:
+            measure_id = kwargs.get('measure', None)
+            assert measure_id == 'studyFilter'
+            measure_type = kwargs.get('measureType', None)
+            assert measure_type == 'studies'
+
+        selection = kwargs.get('selection', None)
+
+        for study in self.studies:
+            if study.name == selection[0]:
+                return set([family for family in study.families])
+        assert False
+
+    def _filter_study_types_filter(self, safe=True, **kwargs):
+        if safe:
+            measure_id = kwargs.get('measure', None)
+            assert measure_id == 'studyTypeFilter'
+            measure_type = kwargs.get('measureType', None)
+            assert measure_type == 'studies'
+
+        selection = kwargs.get('selection', None)
+
+        denovo_studies = self.get_denovo_studies(studyTypes=selection)
+        transmitted_studies = \
+            self.get_transmitted_studies(studyTypes=selection)
+        family_ids = [familyId
+                      for study in denovo_studies + transmitted_studies
+                      for familyId in study.families]
+        return set(family_ids)
