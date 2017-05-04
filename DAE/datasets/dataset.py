@@ -38,6 +38,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return self.descriptor['id']
 
     @property
+    def dataset_id(self):
+        return self.descriptor['id']
+
+    @property
     def studies(self):
         if self._studies is None:
             study_names = [

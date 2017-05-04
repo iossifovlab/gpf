@@ -46,6 +46,7 @@ class EnrichmentBuilder(object):
         results['geneSymbols'] = list(self.gene_syms)
         results['personGroupingId'] = person_grouping
         results['personGroupingValue'] = person_grouping_selector
+        results['datasetId'] = self.dataset.dataset_id
         return results
 
     def build(self):

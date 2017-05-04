@@ -148,13 +148,18 @@ class EventsCounter(CounterBase):
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']
 
-        all_events = filter_denovo_one_event_per_family(variants)
-        rec_events = filter_denovo_one_gene_per_recurrent_events(variants)
-        male_events = filter_denovo_one_event_per_family(male_variants)
-        female_events = filter_denovo_one_event_per_family(female_variants)
+        all_events = filter_denovo_one_event_per_family(
+            variants)
+        rec_events = filter_denovo_one_gene_per_recurrent_events(
+            variants)
+        male_events = filter_denovo_one_event_per_family(
+            male_variants)
+        female_events = filter_denovo_one_event_per_family(
+            female_variants)
 
         result = self._set_result_events(
-            all_events, rec_events, male_events, female_events)
+            all_events, rec_events,
+            male_events, female_events)
         return result
 
 

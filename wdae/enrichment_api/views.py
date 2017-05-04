@@ -15,7 +15,6 @@ from common.query_base import GeneSymsMixin
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
-from pprint import pprint
 
 
 class EnrichmentModelsMixin(object):
@@ -170,7 +169,6 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
             results = builder.build()
             serializer = EnrichmentSerializer(results)
             results = serializer.serialize()
-            pprint(results)
 
             enrichment = {
                 'desc': desc,

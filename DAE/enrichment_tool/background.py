@@ -83,24 +83,24 @@ class BackgroundCommon(BackgroundBase):
             events_count,
             p=background_prob)
 
-    def calc_stats(self, effect_type, enrichment_results,
+    def calc_stats(self, effect_type, enrichment_events,
                    gene_set, children_stats):
 
         gene_syms = [gs.upper() for gs in gene_set]
-        overlap_enrichment_result_dict(enrichment_results, gene_syms)
+        overlap_enrichment_result_dict(enrichment_events, gene_syms)
 
         background_prob = self._prob(gene_syms)
 
         self._calc_enrichment_results_stats(
-            background_prob, enrichment_results['all'])
+            background_prob, enrichment_events['all'])
         self._calc_enrichment_results_stats(
-            background_prob, enrichment_results['rec'])
+            background_prob, enrichment_events['rec'])
         self._calc_enrichment_results_stats(
-            background_prob, enrichment_results['male'])
+            background_prob, enrichment_events['male'])
         self._calc_enrichment_results_stats(
-            background_prob, enrichment_results['female'])
+            background_prob, enrichment_events['female'])
 
-        return enrichment_results
+        return enrichment_events
 
 
 class SynonymousBackground(BackgroundCommon):

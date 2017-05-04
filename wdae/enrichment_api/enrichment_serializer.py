@@ -40,9 +40,11 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
         return output
 
     def serialize_common_filter(
-            self, grouping_results, effect_type, gender=['male', 'female']):
+            self, grouping_results, effect_type, result,
+            gender=['male', 'female']):
 
         common_filter = {
+            'datasetId': grouping_results['datasetId'],
             'effectTypes': [self.build_effect_types(effect_type)],
             'gender': gender,
             'pedigreeSelector': {
@@ -53,12 +55,28 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
         }
         return common_filter
 
+    def serialize_events_gene_symbols(self, events):
+        return reduce(lambda x, y: set(x) | set(y), events, set([]))
+
+    def serialize_rec_filter(
+            self, grouping_results, effect_type, result,
+            gender=['male', 'female']):
+        rec_filter = self.serialize_common_filter(
+            grouping_results, effect_type, result, gender)
+        rec_filter['geneSymbols'] = \
+            self.serialize_events_gene_symbols(result.events)
+        return rec_filter
+
     def serialize_overlap_filter(
-            self, grouping_results, effect_type, gender=['male', 'female']):
-        common_filter = self.serialize_common_filter(
-            grouping_results, effect_type, gender=gender)
-        common_filter['geneSymbols'] = grouping_results['geneSymbols']
-        return common_filter
+            self, grouping_results, effect_type, result,
+            gender=['male', 'female']):
+
+        overlap_filter = self.serialize_common_filter(
+            grouping_results, effect_type, result, gender=gender)
+        overlap_filter['geneSymbols'] = \
+            self.serialize_events_gene_symbols(result.overlapped)
+
+        return overlap_filter
 
     def serialize_all(self, grouping_results, effect_type, result):
         assert result.name == 'all'
@@ -80,13 +98,19 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
         gender = self.build_child_gender(result.name)
         output = self.serialize_enrichment_result(result)
         output['countFilter'] = self.serialize_common_filter(
-            grouping_results, effect_type, gender=gender)
+            grouping_results, effect_type, result, gender=gender)
         output['overlapFilter'] = self.serialize_overlap_filter(
-            grouping_results, effect_type, gender=gender)
+            grouping_results, effect_type, result, gender=gender)
         return output
 
     def serialize_rec(self, grouping_results, effect_type, result):
+        assert result.name == 'rec'
+
         output = self.serialize_enrichment_result(result)
+        output['countFilter'] = self.serialize_rec_filter(
+            grouping_results, effect_type, result)
+        output['overlapFilter'] = self.serialize_overlap_filter(
+            grouping_results, effect_type, result)
         return output
 
     def serialize_enrichment_result(self, result):
