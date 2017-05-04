@@ -38,6 +38,6 @@
 
 <div style="position: fixed; bottom: 100px; right: 100px; background-color: white;"
   [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
-    <template *ngIf="legend?.templateRef" [ngTemplateOutlet]="legend.templateRef">
-    </template>
+    <ng-template *ngIf="legend?.templateRef" [ngTemplateOutlet]="legend.templateRef">
+    </ng-template>
 </div>

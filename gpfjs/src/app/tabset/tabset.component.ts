@@ -21,21 +21,24 @@ export class GpfTabsetComponent extends NgbTabset {
     if (selectedTab && !selectedTab.disabled && this.activeId !== selectedTab.id) {
       let defaultPrevented = false;
 
-      if(this.ngTemplateOutletContainer) {
+      if (this.ngTemplateOutletContainer) {
         this.ngTemplateOutletContainer.clear();
       }
 
-      this.tabChange.emit(
-          {activeId: this.activeId, nextId: selectedTab.id, preventDefault: () => { defaultPrevented = true; }});
+      this.tabChange.emit({
+        activeId: this.activeId,
+        nextId: selectedTab.id,
+        preventDefault: () => { defaultPrevented = true; }
+      });
 
       if (!defaultPrevented) {
         this.activeId = selectedTab.id;
       }
     }
   }
-  
+
   get activeTab() {
-    return this.getTabById(this.activeId)
+    return this.getTabById(this.activeId);
   }
 
 }

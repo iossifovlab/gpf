@@ -7,17 +7,17 @@
       <ngb-tab id="all-families" title="All">
       </ngb-tab>
       <ngb-tab id="family-ids" title="Family Ids">
-          <template ngbTabContent>
+          <ng-template ngbTabContent>
               <gpf-family-ids></gpf-family-ids>
-          </template>
+          </ng-template>
       </ngb-tab>
       <ngb-tab *ngIf="phenoFilters" id="pheno-filters" title="Advanced">
-          <template ngbTabContent>
+          <ng-template ngbTabContent>
               <gpf-pheno-filters
                 [phenoFilters]="phenoFilters"
                 [datasetId]=datasetId>
               </gpf-pheno-filters>
-          </template>
+          </ng-template>
       </ngb-tab>
     </gpf-tabset>
     <gpf-family-counters
