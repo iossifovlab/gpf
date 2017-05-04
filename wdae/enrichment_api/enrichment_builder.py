@@ -4,7 +4,6 @@ Created on Feb 17, 2017
 @author: lubo
 '''
 from enrichment_tool.tool import EnrichmentTool
-from enrichment_tool.event_counters import EnrichmentResult
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
 
@@ -25,12 +24,6 @@ class EnrichmentBuilder(object):
         )
         self.results = None
 
-    def in_child(self, phenotype):
-        if phenotype == 'unaffected':
-            return 'sib'
-        else:
-            return 'prb'
-
     def build_person_grouping_selector(
             self, person_grouping, person_grouping_selector):
 
@@ -50,6 +43,9 @@ class EnrichmentBuilder(object):
             results[effect_type] = enrichment_results
         results['childrenStats'] = gh.get_children_stats()
         results['selector'] = person_grouping_selector
+        results['geneSymbols'] = list(self.gene_syms)
+        results['personGroupingId'] = person_grouping
+        results['personGroupingValue'] = person_grouping_selector
         return results
 
     def build(self):
@@ -66,34 +62,34 @@ class EnrichmentBuilder(object):
                 person_grouping_id,
                 person_grouping_selector['id'])
             results.append(res)
-        self.result = results
-        return self.result
+        self.results = results
+        return self.results
 
-    def serialize_enrichment_result(self, result):
-        assert isinstance(result, EnrichmentResult)
-        res = {}
-        res['name'] = result.name
-        res['count'] = len(result.events)
-        res['overlapped'] = len(result.overlapped)
-        res['expected'] = result.expected
-        res['pvalue'] = result.pvalue
-        return res
-
-    def serialize_helper(self, result):
-        if isinstance(result, EnrichmentResult):
-            return self.serialize_enrichment_result(result)
-        elif isinstance(result, list):
-            return [
-                self.serialize_helper(v) for v in result
-            ]
-        elif isinstance(result, str) or isinstance(result, int) or \
-                isinstance(result, float):
-            return result
-        else:
-            return dict([
-                (k, self.serialize_helper(v)) for k, v in result.items()
-            ])
-
-    def serialize(self):
-        assert self.result is not None
-        return self.serialize_helper(self.result)
+#     def serialize_enrichment_result(self, result):
+#         assert isinstance(result, EnrichmentResult)
+#         res = {}
+#         res['name'] = result.name
+#         res['count'] = len(result.events)
+#         res['overlapped'] = len(result.overlapped)
+#         res['expected'] = result.expected
+#         res['pvalue'] = result.pvalue
+#         return res
+#
+#     def serialize_helper(self, result):
+#         if isinstance(result, EnrichmentResult):
+#             return self.serialize_enrichment_result(result)
+#         elif isinstance(result, list):
+#             return [
+#                 self.serialize_helper(v) for v in result
+#             ]
+#         elif isinstance(result, str) or isinstance(result, int) or \
+#                 isinstance(result, float):
+#             return result
+#         else:
+#             return dict([
+#                 (k, self.serialize_helper(v)) for k, v in result.items()
+#             ])
+#
+#     def serialize(self):
+#         assert self.results is not None
+#         return self.serialize_helper(self.results)

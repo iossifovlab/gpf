@@ -10,6 +10,7 @@ from datasets.config import DatasetsConfig
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from datasets.datasets_factory import DatasetsFactory
 from gene.gene_set_collections import GeneSetsCollections
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 
 class Test(APITestCase):
@@ -27,8 +28,9 @@ class Test(APITestCase):
         gene_set = gsc.get_gene_set('chromatin modifiers')
 
         builder = EnrichmentBuilder(dataset, model, gene_set['syms'])
-        builder.build()
-        cls.res = builder.serialize()
+        results = builder.build()
+        serializer = EnrichmentSerializer(results)
+        cls.res = serializer.serialize()
 
     def test_enrichment_builder(self):
         self.assertIsNotNone(self.res)

@@ -184,6 +184,13 @@ class ChildGenderMixin(object):
     GENDER = ['male', 'female']
     GENDER_MAP = {'male': 'M', 'female': 'F'}
 
+    def build_child_gender(self, gender):
+        assert gender in ['all', 'male', 'female']
+        if gender == 'all':
+            return ['male', 'female']
+        else:
+            return gender
+
     def get_child_gender(self, safe=True, **kwargs):
         gender = kwargs.get('gender', None)
         if gender is None:
