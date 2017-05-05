@@ -42,11 +42,10 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
     let datasetsState: Observable<DatasetsState> = this.store.select('datasets');
     datasetsState.subscribe(state => {
       if (!state || !state.selectedDataset) {
-        this.hasCNV = false;
+        return
       }
-      else {
-        this.hasCNV = state.selectedDataset.genotypeBrowser.hasCNV;
-      }
+
+      this.hasCNV = state.selectedDataset.genotypeBrowser.hasCNV;
       this.selectAll();
 
       this.stateRestoreService.getState(this.constructor.name).subscribe(
@@ -64,6 +63,10 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
   }
 
   ngOnInit() {
+    this.store.dispatch({
+      'type': VARIANT_TYPES_INIT,
+    });
+
     this.variantTypesState.subscribe(
       ([variantTypesState, isValid, validationErrors]) => {
         this.errors = validationErrorsToStringArray(validationErrors);
