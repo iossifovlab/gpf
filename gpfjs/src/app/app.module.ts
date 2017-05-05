@@ -53,19 +53,19 @@ import { StudyTypesComponent } from './study-types/study-types.component';
 
 import { CookieModule } from 'ngx-cookie';
 
-import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component'
-import { GpfTabsetComponent } from './tabset/tabset.component'
+import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component';
+import { GpfTabsetComponent } from './tabset/tabset.component';
 
-import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component'
-import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component'
-import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component'
-import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service'
+import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component';
+import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component';
+import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component';
+import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service';
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
-import { EnrichmentTableComponent } from './enrichment-table/enrichment-table.component'
-import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table-row.component'
+import { EnrichmentTableComponent } from './enrichment-table/enrichment-table.component';
+import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table-row.component';
 
-import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component'
-import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service'
+import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component';
+import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
@@ -75,9 +75,9 @@ import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
 import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';
-import { CategoricalFilterComponent } from './categorical-filter/categorical-filter.component'
+import { CategoricalFilterComponent } from './categorical-filter/categorical-filter.component';
 import { MeasuresService } from './measures/measures.service';
-import { FamilyIdsComponent } from './family-ids/family-ids.component'
+import { FamilyIdsComponent } from './family-ids/family-ids.component';
 
 import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
 import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
@@ -101,6 +101,8 @@ import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content
 import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-table.component';
 
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
+
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 const appRoutes: Routes = [
   {
@@ -202,7 +204,7 @@ const appRoutes: Routes = [
     ResetPasswordComponent,
     PhenoBrowserModalContentComponent,
     PhenoBrowserTableComponent,
-    PValueIntensityPipe
+    PValueIntensityPipe,
   ],
   imports: [
     BrowserModule,
@@ -216,6 +218,7 @@ const appRoutes: Routes = [
     StoreDevtoolsModule.instrumentOnlyWithExtension(),
     RouterModule.forRoot(appRoutes),
     CookieModule.forRoot(),
+    BrowserAnimationsModule
   ],
   providers: [
     ConfigService,
