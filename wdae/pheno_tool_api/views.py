@@ -1,4 +1,3 @@
-from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -52,14 +51,26 @@ class PhenoToolView(APIView):
             "femaleResults": cls.get_result_by_gender(result, 'F'),
         }
 
+    def get_normalize_measure_id(self, measure_id, normalize_by, pheno_db):
+        if normalize_by == "non-verbal iq":
+            return pheno_db.get_nonverbal_iq_measure_id(measure_id)
+        elif normalize_by == "age":
+            return pheno_db.get_age_measure_id(measure_id)
+
     def post(self, request):
         data = request.data
         try:
             dataset_id = data['datasetId']
+            measure_id = data['measureId']
             dataset = self.datasets_factory.get_dataset(dataset_id)
+            normalize_by = [self.get_normalize_measure_id(measure_id,
+                                                          normalize_by_elem,
+                                                          dataset.pheno_db)
+                            for normalize_by_elem in data['normalizeBy']]
+            print("normalize_by", normalize_by)
             tool = PhenoTool(
                 dataset.pheno_db, dataset.studies, roles=['prb'],
-                measure_id=data['measureId'],
+                measure_id=measure_id, normalize_by=normalize_by
             )
 
             results = [self.calc_by_effect(effect, tool, data, dataset)
