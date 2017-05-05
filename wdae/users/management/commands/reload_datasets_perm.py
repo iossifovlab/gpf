@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm, remove_perm
 from guardian.utils import get_anonymous_user
 
+
 class Command(BaseCommand):
     args = '<file> <file> ...'
 
@@ -25,6 +26,6 @@ class Command(BaseCommand):
                 group, created = Group.objects.get_or_create(name=group_name)
                 assign_perm('view', group, datasetObject)
 
-            anonymous_group = Group.objects.get(name='anonymous')
+            anonymous_group = Group.objects.get_or_create(name='anonymous')
             anonymous_group.user_set.add(get_anonymous_user())
             anonymous_group.save()
