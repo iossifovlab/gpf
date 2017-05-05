@@ -7,8 +7,8 @@ import preloaded
 import traceback
 from pheno_tool.tool import PhenoTool
 from pheno_tool_api.genotype_helper import GenotypeHelper
-import pandas as pd
 from functools import partial
+from django.http.response import StreamingHttpResponse
 
 
 class PhenoToolView(APIView):
@@ -73,12 +73,12 @@ class PhenoToolView(APIView):
             measure_id=measure_id, normalize_by=normalize_by
         )
 
-        return dataset, tool
+        return dataset, tool, normalize_by
 
     def post(self, request):
         data = request.data
         try:
-            dataset, tool = self.prepare_pheno_tool(data)
+            dataset, tool, _ = self.prepare_pheno_tool(data)
 
             results = [self.calc_by_effect(effect, tool, data, dataset)
                        for effect in data['effectTypes']]
@@ -116,18 +116,35 @@ class PhenoToolDownload(PhenoToolView):
 
     def post(self, request):
         data = request.data
+        effectTypes = data['effectTypes']
         try:
-            dataset, tool = self.prepare_pheno_tool(data)
+            dataset, tool, normalize_by = self.prepare_pheno_tool(data)
             join_func = partial(self.join_effect_type_df, tool, data, dataset)
-            results = reduce(join_func, data['effectTypes'],
-                             tool.list_of_subjects_df())
-            print(results)
-            response = {
-                "description": "Desc",
-                "results": results
-            }
+            result_df = reduce(join_func, effectTypes,
+                               tool.list_of_subjects_df())
 
-            return Response(response)
+            if normalize_by != []:
+                column_name = "{} ~ {}".format(data['measureId'],
+                                               " + ".join(normalize_by))
+                result_df.rename(columns={'normalized': column_name},
+                                 inplace=True)
+
+            # Select & sort columns for output
+            effectTypesCount = len(effectTypes)
+            columns = [col
+                       for col in result_df.columns.tolist()
+                       if col != "normalized" and col != "role"]
+            columns[0], columns[1] = columns[1], columns[0]
+            columns = columns[:3] + columns[-effectTypesCount:] + \
+                columns[3:-effectTypesCount]
+
+            response = StreamingHttpResponse(result_df.to_csv(index=False,
+                                                              columns=columns),
+                                             content_type='text/csv')
+            response['Content-Disposition'] = \
+                'attachment; filename=pheno_report.csv'
+            response['Expires'] = '0'
+            return response
 
         except NotAuthenticated:
             print("error while processing genotype query")
