@@ -8,7 +8,7 @@ from pheno_tool_api import views
 
 
 urlpatterns = [
-    url(r'^$',
-        views.PhenoToolView.as_view(),
-        name="pheno_tool"),
+    url(r'^$', views.PhenoToolView.as_view(), name="pheno_tool"),
+    url(r'^/download$', views.PhenoToolDownload.as_view(),
+        name="pheno_tool_download"),
 ]
