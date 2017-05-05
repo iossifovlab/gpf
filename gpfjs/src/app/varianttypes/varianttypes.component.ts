@@ -37,10 +37,16 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
     private stateRestoreService: StateRestoreService
   ) {
     super();
+
+    this.store.dispatch({
+      'type': VARIANT_TYPES_INIT,
+    });
+
     this.variantTypesState = toObservableWithValidation(VariantTypesState, this.store.select('variantTypes'));
 
     let datasetsState: Observable<DatasetsState> = this.store.select('datasets');
     datasetsState.subscribe(state => {
+      console.log("variantTypes DS", state)
       if (!state || !state.selectedDataset) {
         return
       }
@@ -63,10 +69,6 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
   }
 
   ngOnInit() {
-    this.store.dispatch({
-      'type': VARIANT_TYPES_INIT,
-    });
-
     this.variantTypesState.subscribe(
       ([variantTypesState, isValid, validationErrors]) => {
         this.errors = validationErrorsToStringArray(validationErrors);
