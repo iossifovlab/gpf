@@ -2,7 +2,7 @@
 <div>
   <div class="row" id="logo">
     <div class="navbar-button navbar-light align-self-center">
-      <button class="btn navbar-toggler" (click)="showSidenav = !showSidenav"><span class="navbar-toggler-icon"></span></button>
+      <button class="btn navbar-toggler" (click)="toggleSidenav()"><span class="navbar-toggler-icon"></span></button>
     </div>
     <div class="col-9 align-self-center">
         <img src="{{imgPathPrefix}}logo-64x64.png">
@@ -14,22 +14,27 @@
   </div>
 
   <div class="sidenav-container">
-    <div *ngIf="showSidenav" class="sidenav flex-column navbar-light" [@showHide]="showSidenav">
+    <div *ngIf="showSidenav" class="sidenav flex-column navbar-light" [@fromLeft]="showSidenav">
       <ul class="nav navbar-nav">
         <li class="nav-item">
           <a class="nav-link"
             routerLink="/datasets"
             routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: false }">Datasets</a>
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="hideSidenav()">Datasets</a>
         </li>
         <li class="nav-item">
           <a class="nav-link"
             routerLink="/common"
             routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: false }">Common Reports</a>
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="hideSidenav()">Common Reports</a>
         </li>
       </ul>
     </div>
+
+    <div *ngIf="showSidenav" (click)="hideSidenav()" [@fadeInOut]="showSidenav" class="blackscreen"></div>
+
     <router-outlet></router-outlet>
   </div>
   <router-outlet name="popup"></router-outlet>
