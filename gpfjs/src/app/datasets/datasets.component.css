@@ -14,14 +14,3 @@
   min-height: 100%;
   position: relative;
 }
-
-.sidenav {
-  padding: 20px;
-  width: 250px;
-}
-
-.sidenav .nav-item {
-  text-align: left;
-  padding: 10px 0;
-  /*padding-bottom:*/
-}

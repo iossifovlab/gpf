@@ -1,7 +1,5 @@
-import {
-  UsersState
-} from '../users/users-store';
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { UsersState } from '../users/users-store';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, DatasetsState } from './datasets';
 
@@ -15,7 +13,8 @@ import { Location } from '@angular/common';
 @Component({
   selector: 'gpf-datasets',
   templateUrl: './datasets.component.html',
-  styleUrls: ['./datasets.component.css']
+  styleUrls: ['./datasets.component.css'],
+
 })
 export class DatasetsComponent implements OnInit {
   registerAlertVisible = false;
