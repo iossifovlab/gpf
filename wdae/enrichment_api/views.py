@@ -14,6 +14,7 @@ from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 from common.query_base import GeneSymsMixin
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from users_api.authentication import SessionAuthenticationWithoutCSRF
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 
 class EnrichmentModelsMixin(object):
@@ -165,11 +166,13 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
                 dataset,
                 enrichment_model,
                 gene_syms)
-            result = builder.build()
-            result = builder.serialize()
+            results = builder.build()
+            serializer = EnrichmentSerializer(results)
+            results = serializer.serialize()
+
             enrichment = {
                 'desc': desc,
-                'result': result
+                'result': results
             }
             return Response(enrichment)
         except Exception:
