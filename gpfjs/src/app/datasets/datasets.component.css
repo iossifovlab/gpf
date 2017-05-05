@@ -13,7 +13,6 @@
   width: 100%;
   min-height: 100%;
   position: relative;
-  background-color: #fafafa;
 }
 
 .sidenav {
@@ -21,16 +20,8 @@
   width: 350px;
 }
 
-.sidenav .dropdown-menu {
-  	width: 310px;
-}
-
 .sidenav .nav-item {
   text-align: left;
   padding: 10px 0;
   /*padding-bottom:*/
-}
-
-.nav-item .nav-link {
-  padding: 0;
 }

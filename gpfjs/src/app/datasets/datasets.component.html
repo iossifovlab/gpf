@@ -1,46 +1,64 @@
 <div class="sidenav-container">
-  <div class="sidenav nav flex-column navbar-light" mode="side" opened="true">
-    <span class="nav-item">
-      <div *ngIf="selectedDataset" class="btn-group">
-        <div class="dropdown">
-          <button
-            class="dataset-selector btn btn-secondary dropdown-toggle navbar-brand"
-            type="button"
-            id="dropdownMenuButton"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false">{{selectedDataset.name}}</button>
-          <div
-            class="dropdown-menu"
-            aria-labelledby="dropdownMenuButton">
-            <a
-              *ngFor="let dataset of datasets; let i=index"
-              class="dropdown-item"
-              routerLink="../{{ dataset.id }}"
-              routerLinkActive="active"
-              [style.opacity]="dataset.accessRights ? 1.0 : 0.3">{{ dataset.name }}</a>
-          </div>
-        </div>
-      </div>
-    </span>
-    <ul class="navbar-nav mr-auto">
-      <li *ngIf="selectedDataset?.genotypeBrowser" class="nav-item">
-        <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
+  <div class="sidenav flex-column navbar-light" mode="side" opened="true">
+
+    <ul class="nav navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link"
+          routerLink="/datasets"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }">Datasets</a>
       </li>
-      <li *ngIf="selectedDataset?.enrichmentTool" class="nav-item">
-        <a class="nav-link" routerLink="enrichment" routerLinkActive="active">Enrichment Tool</a>
-      </li>
-      <li *ngIf="selectedDataset?.phenotypeGenotypeTool" class="nav-item">
-        <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
-      </li>
-      <li *ngIf="selectedDataset?.phenotypeBrowser" class="nav-item">
-        <a class="nav-link" routerLink="phenotypeBrowser" routerLinkActive="active">Phenotype Browser</a>
+      <li class="nav-item">
+        <a class="nav-link"
+          routerLink="/common"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }">Common Reports</a>
       </li>
     </ul>
   </div>
 
   <div class="content">
-    <router-outlet [hidden]="registerAlertVisible" class="content"></router-outlet>
+    <nav class="navbar navbar-light navbar-toggleable-md bg-faded">
+      <span class="nav-item">
+        <div *ngIf="selectedDataset" class="btn-group">
+          <div class="dropdown">
+            <button
+              class="dataset-selector btn btn-secondary dropdown-toggle navbar-brand"
+              type="button"
+              id="dropdownMenuButton"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false">{{selectedDataset.name}}
+            </button>
+            <div
+              class="dropdown-menu"
+              aria-labelledby="dropdownMenuButton">
+              <a
+                *ngFor="let dataset of datasets; let i=index"
+                class="dropdown-item"
+                routerLink="../{{ dataset.id }}"
+                routerLinkActive="active"
+                [style.opacity]="dataset.accessRights ? 1.0 : 0.3">{{ dataset.name }}</a>
+            </div>
+          </div>
+        </div>
+      </span>
+      <ul class="navbar-nav mr-auto">
+        <li *ngIf="selectedDataset?.genotypeBrowser" class="nav-item">
+          <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
+        </li>
+        <li *ngIf="selectedDataset?.enrichmentTool" class="nav-item">
+          <a class="nav-link" routerLink="enrichment" routerLinkActive="active">Enrichment Tool</a>
+        </li>
+        <li *ngIf="selectedDataset?.phenotypeGenotypeTool" class="nav-item">
+          <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
+        </li>
+        <li *ngIf="selectedDataset?.phenotypeBrowser" class="nav-item">
+          <a class="nav-link" routerLink="phenotypeBrowser" routerLinkActive="active">Phenotype Browser</a>
+        </li>
+      </ul>
+    </nav>
+    <router-outlet class="content"></router-outlet>
 
     <div *ngIf="registerAlertVisible"
          class="alert alert-danger"
