@@ -24,6 +24,7 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
         output = {}
         output['selector'] = grouping_results['selector']
         output['personGroupingId'] = grouping_results['personGroupingId']
+        output['childrenStats'] = grouping_results['childrenStats']
 
         for effect_type in EnrichmentBuilder.EFFECT_TYPES:
             result = grouping_results[effect_type]
