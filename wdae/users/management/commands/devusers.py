@@ -28,3 +28,17 @@ class Command(BaseCommand):
         u.is_superuser = False
         u.set_password('secret')
         u.save()
+
+        u, _ = User.objects.get_or_create(email='vip@iossifovlab.com')
+        u.is_staff = False
+        u.is_active = True
+        u.is_superuser = False
+        u.set_password('secret')
+        u.save()
+
+        u, _ = User.objects.get_or_create(email='ssc@iossifovlab.com')
+        u.is_staff = False
+        u.is_active = True
+        u.is_superuser = False
+        u.set_password('secret')
+        u.save()
