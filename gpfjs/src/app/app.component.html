@@ -1,9 +1,15 @@
 <gpf-fullscreen-loading></gpf-fullscreen-loading>
-<div class="content">
-  <div id="logo">
-    <img src="{{imgPathPrefix}}logo-64x64.png">
-    <h3>{{ title }}</h3>
+<div class="container-fluid">
+  <div class="row" id="logo">
+    <div class="col-10 align-self-center">
+        <img src="{{imgPathPrefix}}logo-64x64.png">
+        <h3>{{ title }}</h3>
+    </div>
+    <div class="col-2 align-self-center">
+      <gpf-users></gpf-users>
+    </div>
   </div>
+
   <router-outlet></router-outlet>
   <router-outlet name="popup"></router-outlet>
 </div>

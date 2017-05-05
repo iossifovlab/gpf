@@ -62,3 +62,7 @@
 .app-progress {
   margin: 20px;
 }
+
+#logo {
+  min-height: 58px;
+}

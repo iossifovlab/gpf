@@ -1,33 +1,37 @@
-<div class="clearfix" *ngIf="displayedUsername">
-  <span class="float-left username-field">{{ displayedUsername }}</span>
-  <button class="float-right btn btn-sm" (click)="logout()">Logout</button>
+<div *ngIf="displayedUsername" class="row justify-content-end dropdown">
+  <div class="align-self-center">
+    <span class="username-field">{{ displayedUsername }}</span>
+    <button class="btn btn-sm" (click)="logout()">Logout</button>
+  </div>
 </div>
-<div *ngIf="!displayedUsername" class="dropdown">
 
-  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown">
-    Login
-  </button>
-  <div class="dropdown-menu dropdown-menu-right">
-    <label>
-      Username:<input [(ngModel)]="username" type="text">
-    </label>
-    <label>
-      Password:<input [(ngModel)]="password" type="password">
-    </label>
-    <button class="btn btn-sm btn-outline-primary" (click)="login()">
+<div *ngIf="!displayedUsername" class="row justify-content-end dropdown">
+  <div>
+    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown">
       Login
     </button>
-    <div *ngIf="loginError" class="alert alert-danger">
-      Wrong username or password
-    </div>
+    <div class="dropdown-menu dropdown-menu-right">
+      <label>
+        Username:<input [(ngModel)]="username" type="text">
+      </label>
+      <label>
+        Password:<input [(ngModel)]="password" type="password">
+      </label>
+      <button class="btn btn-sm btn-outline-primary" (click)="login()">
+        Login
+      </button>
+      <div *ngIf="loginError" class="alert alert-danger">
+        Wrong username or password
+      </div>
 
-    <div>
-      <button class="btn btn-sm btn-outline-primary" (click)="showRegister()">
-        Register
-      </button>
-      <button class="btn btn-sm btn-outline-primary" (click)="showForgotPassword()">
-        Forgot password?
-      </button>
+      <div class="pull-right">
+        <button class="btn btn-sm btn-outline-primary" (click)="showRegister()">
+          Register
+        </button>
+        <button class="btn btn-sm btn-outline-primary" (click)="showForgotPassword()">
+          Forgot password?
+        </button>
+      </div>
     </div>
   </div>
 </div>

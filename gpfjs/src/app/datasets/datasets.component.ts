@@ -81,8 +81,7 @@ export class DatasetsComponent implements OnInit {
         this.datasetsService.setSelectedDataset(this.selectedDataset);
         this.registerAlertVisible = false;
         this.selectedDatasetChange.emit(this.selectedDataset);
-      }
-      else {
+      } else {
         this.registerAlertVisible = true;
       }
     }
