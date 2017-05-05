@@ -111,7 +111,7 @@ class Tools(object):
     def drop_all_tables(self):
         statement = "DROP TABLE IF EXISTS %s"
         data = [
-            # ('transmitted_familyvariant',),
+            ('transmitted_familyvariant',),
             ('transmitted_geneeffectvariant',),
             ('transmitted_summaryvariant',)]
         for table in data:
@@ -260,7 +260,7 @@ USAGE
         assert tools.get_db_conf()['port'] == 3309
 
         tools.drop_all_tables()
-        # tools.import_family_variants(family_filename)
+        tools.import_family_variants(family_filename)
         tools.import_gene_effect_variants(gene_effect_filename)
         tools.import_summary_variants(summary_filename)
 

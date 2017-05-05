@@ -628,10 +628,11 @@ USAGE
             action='version', version=program_version_message)
 
         parser.add_argument(
+            '-S', '--study',
             dest="study",
             help="study name to process "
             "[default: %(default)s]", metavar="study")
-        # Process arguments
+
         args = parser.parse_args()
 
         study_name = args.study
