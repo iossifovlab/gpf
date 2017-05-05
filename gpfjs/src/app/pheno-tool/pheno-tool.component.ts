@@ -7,6 +7,7 @@ import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loadi
 import { Observable } from 'rxjs';
 import { PhenoToolService } from './pheno-tool.service'
 import { PhenoToolResults } from './pheno-tool-results';
+import { ConfigService } from '../config/config.service';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -23,7 +24,8 @@ export class PhenoToolComponent extends QueryStateCollector implements OnInit {
     private route: ActivatedRoute,
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
-    private phenoToolService: PhenoToolService
+    private phenoToolService: PhenoToolService,
+    readonly configService: ConfigService,
   ) {
     super();
   }
@@ -61,6 +63,22 @@ export class PhenoToolComponent extends QueryStateCollector implements OnInit {
         console.log(error);
         this.loadingService.setLoadingStop();
       }
+    )
+  }
+
+  onDownload(event) {
+    let state = this.collectState();
+    Observable.zip(...state)
+    .subscribe(
+      state => {
+        let queryData = Object.assign({},
+                                      {datasetId: this.selectedDatasetId},
+                                      ...state);
+        event.target.queryData.value = JSON.stringify(queryData);
+        console.log(event.target)
+        event.target.submit();
+      },
+      error => null
     )
   }
 
