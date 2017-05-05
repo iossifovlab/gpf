@@ -9,6 +9,7 @@ from pheno_tool.tool import PhenoTool
 from pheno_tool_api.genotype_helper import GenotypeHelper
 from functools import partial
 from django.http.response import StreamingHttpResponse
+import json
 
 
 class PhenoToolView(APIView):
@@ -103,6 +104,12 @@ class PhenoToolView(APIView):
 
 
 class PhenoToolDownload(PhenoToolView):
+    def _parse_query_params(self, data):
+        res = {str(k): str(v) for k, v in data.items()}
+        assert 'queryData' in res
+        query = json.loads(res['queryData'])
+        return query
+
     def join_effect_type_df(self, tool, data, dataset, acc, effect):
         data['effectTypes'] = [effect]
 
@@ -115,7 +122,7 @@ class PhenoToolDownload(PhenoToolView):
         return result
 
     def post(self, request):
-        data = request.data
+        data = self._parse_query_params(request.data)
         effectTypes = data['effectTypes']
         try:
             dataset, tool, normalize_by = self.prepare_pheno_tool(data)
