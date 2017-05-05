@@ -67,7 +67,7 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnI
     this.datasetsState.subscribe(
       (datasetsState) => {
         let dataset = datasetsState.selectedDataset;
-        if (dataset && (!this.selectedDataset || dataset.id != this.selectedDataset.id)) {
+        if (dataset) {
           console.log("DS", dataset,this.selectedDataset)
           this.selectedDataset = dataset;
           if (dataset.pedigreeSelectors && dataset.pedigreeSelectors.length > 0) {

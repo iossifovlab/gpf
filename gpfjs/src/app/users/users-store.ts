@@ -5,12 +5,8 @@ export interface UsersState {
   loggedIn: boolean;
 };
 
-const initialState: UsersState = {
-  loggedIn: false
-};
-
 export function usersReducer(
-  state: UsersState = initialState,
+  state: UsersState = null,
   action
 ): UsersState {
 

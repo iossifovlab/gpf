@@ -243,7 +243,7 @@ export function datasetsReducer(state: DatasetsState = initialDatasetState, acti
     case DATASETS_INIT:
       return {
         datasets: action.payload,
-        selectedDataset: action.payload[0]
+        selectedDataset: null
       };
     case DATASETS_SELECT:
       return {

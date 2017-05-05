@@ -46,12 +46,14 @@ export class DatasetsComponent implements OnInit {
 
     this.usersState.subscribe(
       state => {
-        this.datasetsService.getDatasets().subscribe(
-          (datasets) => {
-            console.log(datasets);
-            this.datasets = datasets;
-            this.selectDatasetById();
-          });
+        if (state) {
+          this.datasetsService.getDatasets().subscribe(
+            (datasets) => {
+              console.log(datasets);
+              this.datasets = datasets;
+              this.selectDatasetById();
+            });
+        }
       }
     );
   }
