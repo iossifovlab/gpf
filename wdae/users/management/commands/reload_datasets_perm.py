@@ -7,6 +7,9 @@ from guardian.utils import get_anonymous_user
 
 
 class Command(BaseCommand):
+    DEFAULT_GROUPS_FOR_DATASET = ["all_studies"]
+    ANONYMOUS_GROUP_NAME = "anonymous"
+
     args = '<file> <file> ...'
 
     def handle(self, *args, **options):
@@ -22,10 +25,12 @@ class Command(BaseCommand):
             for group in Group.objects.all():
                 remove_perm('view', group, datasetObject)
 
-            for group_name in ds['authorizedGroups']:
+            groups = self.DEFAULT_GROUPS_FOR_DATASET + ds['authorizedGroups']
+            for group_name in groups:
                 group, created = Group.objects.get_or_create(name=group_name)
                 assign_perm('view', group, datasetObject)
 
-            anonymous_group = Group.objects.get_or_create(name='anonymous')
+            anonymous_group, _ = Group.objects.get_or_create(
+                name=self.ANONYMOUS_GROUP_NAME)
             anonymous_group.user_set.add(get_anonymous_user())
             anonymous_group.save()
