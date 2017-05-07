@@ -6,7 +6,7 @@
 Loads and creates users' groups defined into `variantsDB.conf` datasets
 configuration.
 
-When you change users' groups you need to run
+When you change datasets' groups you need to run
 ```
 ./manage.py reload_dataset_perm
 ```
@@ -106,7 +106,7 @@ ssc@iossifovlab.com,,,,False,False,True,,<pass>
 ```
 All development users has password `secret`.
 
-Using `export_users` command this users could exported and edited to assign them
+Using `export_users` command this users could be exported and edited to assign them
 into different groups. For example, if the system datasets configuration defines
 `SSC` and `VIP` groups, the users file could be changed into:
 
