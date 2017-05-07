@@ -11,14 +11,14 @@ class BaseMetaVariables(object):
 
     def create_tables(self):
         with MetaVariableManager(
-                pheno_db=self.pheno_db,
-                config=self.config) as vm:
+                dbfile=self.get_dbfile()) as vm:
             vm.create_tables()
 
     def drop_tables(self):
+        print(self.config)
+
         with MetaVariableManager(
-                pheno_db=self.pheno_db,
-                config=self.config) as vm:
+                dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
 
     def _prepare_meta_variables(self):
@@ -45,8 +45,7 @@ class BaseMetaVariables(object):
 
     def _save_meta_variables(self, meta_variables):
         with MetaVariableManager(
-                pheno_db=self.pheno_db,
-                config=self.config) as vm:
+                dbfile=self.get_dbfile()) as vm:
             for v in meta_variables:
                 vm.save(v)
 
