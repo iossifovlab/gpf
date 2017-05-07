@@ -23,15 +23,15 @@ class PhenoFactory(PhenoConfig):
         assert self.config.has_option('cache_dir', 'dir')
 
         if not self.config.has_section(dbname):
-            print("section: {} not found".format(dbname))
+            # print("section: {} not found".format(dbname))
             return False
         if not self.config.has_option(dbname, 'cache_file'):
-            print("section: {} option {} not found".format(
-                dbname, 'cache_file'))
+            # print("section: {} option {} not found".format(
+            #    dbname, 'cache_file'))
             return False
         dbfile = self.get_dbfile(dbname=dbname)
         if not os.path.isfile(dbfile):
-            print("cache file for {} not found: {}".format(dbname, dbfile))
+            # print("cache file for {} not found: {}".format(dbname, dbfile))
             return False
 
         return True
