@@ -1,0 +1,6 @@
+*.pyc
+.cache
+*.log
+*.cache
+*.db
+wdae.sql
