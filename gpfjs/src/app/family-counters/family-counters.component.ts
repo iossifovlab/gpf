@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, AfterViewInit, OnDestroy, SimpleChanges } from '@angular/core';
 
-import { Observable, Subject } from 'rxjs';
+import { Observable, ReplaySubject } from 'rxjs';
 
 import { FamilyObjectArray, FamilyObject } from './family-counters';
 import { FamilyCountersService } from './family-counters.service';
@@ -11,7 +11,7 @@ import { FamilyCountersService } from './family-counters.service';
   styleUrls: ['./family-counters.component.css']
 })
 export class FamilyCountersComponent implements AfterViewInit {
-  private genotypeBrowserStateChange = new Subject<Object>();
+  private genotypeBrowserStateChange = new ReplaySubject<Object>();
   familyObjectArray: Observable<FamilyObjectArray>;
 
   constructor(
@@ -30,6 +30,7 @@ export class FamilyCountersComponent implements AfterViewInit {
 
   @Input()
   set genotypeBrowserState(genotypeBrowserState) {
+    console.log("AAABC", genotypeBrowserState);
     if (genotypeBrowserState) {
       this.genotypeBrowserStateChange.next(genotypeBrowserState);
     }
