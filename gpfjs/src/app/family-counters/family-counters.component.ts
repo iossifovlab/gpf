@@ -1,7 +1,6 @@
-import { Component, OnInit, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, AfterViewInit, OnDestroy, SimpleChanges } from '@angular/core';
 
-import { Observable } from 'rxjs';
-import { Store } from '@ngrx/store';
+import { Observable, Subject } from 'rxjs';
 
 import { FamilyObjectArray, FamilyObject } from './family-counters';
 import { FamilyCountersService } from './family-counters.service';
@@ -12,20 +11,26 @@ import { FamilyCountersService } from './family-counters.service';
   styleUrls: ['./family-counters.component.css']
 })
 export class FamilyCountersComponent implements AfterViewInit {
-  @Input() genotypeBrowserState: Object;
-
+  private genotypeBrowserStateChange = new Subject<Object>();
   familyObjectArray: Observable<FamilyObjectArray>;
 
   constructor(
-    private store: Store<any>,
     private familyCountersService: FamilyCountersService
   ) {
   }
 
   ngAfterViewInit() {
-    this.familyObjectArray = this.store
+    this.familyObjectArray = this.genotypeBrowserStateChange
+      .distinctUntilChanged()
       .debounceTime(300)
-      .switchMap(() => this.familyCountersService.getCounters(this.genotypeBrowserState));
+      .switchMap((genotypeBrowserState) => {
+        return this.familyCountersService.getCounters(genotypeBrowserState)
+      });
+  }
+
+  @Input()
+  set genotypeBrowserState(genotypeBrowserState) {
+    this.genotypeBrowserStateChange.next(genotypeBrowserState);
   }
 
   shouldInvert(familyObject: FamilyObject): boolean {
