@@ -1,12 +1,15 @@
+import { Action } from '@ngrx/store';
+
 export const FAMILY_IDS_CHANGE = 'FAMILY_IDS_CHANGE';
 export const FAMILY_IDS_INIT = 'FAMILY_IDS_INIT';
+export const FAMILY_IDS_RESET = 'FAMILY_IDS_RESET';
 
 export class FamilyIdsState {
   familyIds: string;
 };
 
 const initialState: FamilyIdsState = {
-  familyIds: ""
+  familyIds: ''
 };
 
 export function familyIdsReducer(
@@ -19,6 +22,7 @@ export function familyIdsReducer(
       return Object.assign({}, state,
         { familyIds: action.payload });
     case FAMILY_IDS_INIT:
+    case FAMILY_IDS_RESET:
       return initialState;
     default:
       return state;

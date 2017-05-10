@@ -23,20 +23,18 @@ export class StateRestoreService {
         let newUrl = this.router.url.split(';')[0];
         if (this.firstUrl == null) {
           this.firstUrl = newUrl;
-        }
-        else if (!this.emptyObjectSend && this.firstUrl != newUrl) {
+        } else if (!this.emptyObjectSend && this.firstUrl !== newUrl) {
           this.state.next({});
           this.emptyObjectSend = true;
         }
       }
-    )
+    );
   }
 
   getState(key: string): Observable<any> {
     if (this.subscribedKeys.has(key)) {
       return Observable.of({});
-    }
-    else {
+    } else {
       this.subscribedKeys.add(key);
       return this.state;
     }

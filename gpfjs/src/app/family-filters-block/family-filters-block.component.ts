@@ -1,9 +1,14 @@
-import { Component, OnInit, Input, forwardRef, ViewChild,
-         ChangeDetectorRef} from '@angular/core';
+import { Component, AfterViewInit, Input, forwardRef, ViewChild,
+         ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
-import { QueryStateCollector } from '../query/query-state-provider'
-import { StateRestoreService } from '../store/state-restore.service'
+import { QueryStateCollector } from '../query/query-state-provider';
+import { StateRestoreService } from '../store/state-restore.service';
+import { PHENO_FILTERS_RESET } from '../pheno-filters/pheno-filters';
+import { FAMILY_IDS_RESET } from '../family-ids/family-ids';
+
+import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs/Subject';
+import { NgbTabChangeEvent } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -11,7 +16,7 @@ import { Subject } from 'rxjs/Subject';
   styleUrls: ['./family-filters-block.component.css'],
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => FamilyFiltersBlockComponent) }]
 })
-export class FamilyFiltersBlockComponent extends QueryStateCollector implements OnInit {
+export class FamilyFiltersBlockComponent extends QueryStateCollector implements AfterViewInit, OnDestroy {
   @Input() datasetConfig: Dataset;
   @Input() genotypeBrowserState: Object;
   @ViewChild('tabset') ngbTabset;
@@ -19,35 +24,44 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   private ngUnsubscribe: Subject<void> = new Subject<void>();
 
   constructor(
+    private store: Store<any>,
     private stateRestoreService: StateRestoreService,
     private changeDetectorRef: ChangeDetectorRef
   ) {
     super();
   }
 
-  ngOnInit() {
-  }
 
   ngAfterViewInit() {
     this.stateRestoreService.getState(this.constructor.name)
       .takeUntil(this.ngUnsubscribe)
       .subscribe(
         (state) => {
-          if ("familyIds" in state) {
-            this.ngbTabset.select("family-ids")
-          }
-          else if ("phenoFilters" in state) {
-            this.ngbTabset.select("pheno-filters")
+          if ('familyIds' in state) {
+            this.ngbTabset.select('family-ids');
+          } else if ('phenoFilters' in state) {
+            this.ngbTabset.select('pheno-filters');
           }
 
-          this.changeDetectorRef.detectChanges()
+          this.changeDetectorRef.detectChanges();
         }
-      )
+      );
   }
 
   ngOnDestroy() {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
+  }
+
+  resetFiltersIfAllFamilies(event: NgbTabChangeEvent) {
+    if (event.activeId && event.nextId === 'all-families') {
+        this.store.dispatch({
+          'type': FAMILY_IDS_RESET
+        });
+        this.store.dispatch({
+          'type': PHENO_FILTERS_RESET
+        });
+    }
   }
 
 }

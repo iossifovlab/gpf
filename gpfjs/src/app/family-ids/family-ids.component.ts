@@ -1,13 +1,13 @@
 import { Component, OnInit, forwardRef } from '@angular/core';
-import { QueryStateProvider } from '../query/query-state-provider'
+import { QueryStateProvider } from '../query/query-state-provider';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import {
   FamilyIdsState, FAMILY_IDS_CHANGE, FAMILY_IDS_INIT
 } from './family-ids';
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
-import { ValidationError } from "class-validator";
-import { StateRestoreService } from '../store/state-restore.service'
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { ValidationError } from 'class-validator';
+import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-family-ids',
@@ -26,7 +26,7 @@ export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
     private stateRestoreService: StateRestoreService
   ) {
     super();
-    this.familyIdsState = toObservableWithValidation(FamilyIdsState ,this.store.select('familyIds'));
+    this.familyIdsState = toObservableWithValidation(FamilyIdsState, this.store.select('familyIds'));
   }
 
   ngOnInit() {
@@ -46,11 +46,11 @@ export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
         if (state['familyIds']) {
           this.store.dispatch({
             'type': FAMILY_IDS_CHANGE,
-            'payload': state['familyIds'].join("\n")
+            'payload': state['familyIds'].join('\n')
           });
         }
       }
-    )
+    );
   }
 
   set familyIds(regionsFilter: string) {

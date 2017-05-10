@@ -1,6 +1,6 @@
 <div class="family-filters-block form-block">
   <div class="card">
-    <gpf-tabset #tabset>
+    <gpf-tabset #tabset (tabChange)="resetFiltersIfAllFamilies($event)">
       <div class="gpf-tabset-left">
         Families
       </div>
