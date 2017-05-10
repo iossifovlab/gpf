@@ -23,14 +23,16 @@ export class FamilyCountersComponent implements AfterViewInit {
     this.familyObjectArray = this.genotypeBrowserStateChange
       .distinctUntilChanged()
       .debounceTime(300)
-      .switchMap((genotypeBrowserState) => {
-        return this.familyCountersService.getCounters(genotypeBrowserState)
-      });
+      .switchMap((genotypeBrowserState) =>
+        this.familyCountersService.getCounters(genotypeBrowserState)
+      );
   }
 
   @Input()
   set genotypeBrowserState(genotypeBrowserState) {
-    this.genotypeBrowserStateChange.next(genotypeBrowserState);
+    if (genotypeBrowserState) {
+      this.genotypeBrowserStateChange.next(genotypeBrowserState);
+    }
   }
 
   shouldInvert(familyObject: FamilyObject): boolean {
