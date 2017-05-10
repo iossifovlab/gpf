@@ -20,6 +20,7 @@
       </ngb-tab>
     </gpf-tabset>
     <gpf-family-counters
+        *ngIf="genotypeBrowserState"
         [genotypeBrowserState]="genotypeBrowserState"
         class="family-counters"
     ></gpf-family-counters>

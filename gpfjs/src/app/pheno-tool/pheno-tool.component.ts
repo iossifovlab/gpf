@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 import { PhenoToolService } from './pheno-tool.service'
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
+import { Store } from '@ngrx/store';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -19,6 +20,7 @@ export class PhenoToolComponent extends QueryStateCollector implements OnInit {
   selectedDataset: Dataset;
 
   phenoToolResults: PhenoToolResults;
+  private phenoToolState: Object;
 
   constructor(
     private route: ActivatedRoute,
@@ -26,8 +28,29 @@ export class PhenoToolComponent extends QueryStateCollector implements OnInit {
     private loadingService: FullscreenLoadingService,
     private phenoToolService: PhenoToolService,
     readonly configService: ConfigService,
+    private store: Store<any>
   ) {
     super();
+  }
+
+  ngAfterViewInit() {
+    this.store.subscribe(
+      (param) => {
+        let state = this.collectState();
+        Observable.zip(...state)
+        .subscribe(
+          state => {
+            let stateObject = Object.assign({}, ...state);
+            this.phenoToolState = Object.assign({},
+                                          { datasetId: this.selectedDatasetId },
+                                          stateObject);
+          },
+          error => {
+            console.log(error);
+          }
+        )
+      }
+    )
   }
 
   ngOnInit() {
