@@ -4,11 +4,9 @@
   height: 100%;
 }
 
-
 .app-content {
   padding: 20px;
 }
-
 
 .app-toolbar-filler {
   flex: 1 1 auto;
@@ -100,7 +98,7 @@ a.nav-link.active {
 }
 
 .navbar-button {
-  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .navbar-button .navbar-toggler {

@@ -1,15 +1,17 @@
 <gpf-fullscreen-loading></gpf-fullscreen-loading>
 <div>
-  <div class="row" id="logo">
-    <div class="navbar-button navbar-light align-self-center">
-      <button class="btn navbar-toggler" (click)="toggleSidenav()"><span class="navbar-toggler-icon"></span></button>
-    </div>
-    <div class="col-9 align-self-center">
-        <img src="{{imgPathPrefix}}logo-64x64.png">
-        <h3>{{ title }}</h3>
-    </div>
-    <div class="col-2 align-self-center">
-      <gpf-users></gpf-users>
+  <div class="container-fluid" id="logo">
+    <div class="row">
+      <div class="col-10 align-self-center">
+          <span class="navbar-button navbar-light">
+            <button class="btn navbar-toggler" (click)="toggleSidenav()"><span class="navbar-toggler-icon"></span></button>
+          </span>
+          <img src="{{imgPathPrefix}}logo-64x64.png">
+          <h3>{{ title }}</h3>
+      </div>
+      <div class="col-2 align-self-center">
+        <gpf-users></gpf-users>
+      </div>
     </div>
   </div>
 

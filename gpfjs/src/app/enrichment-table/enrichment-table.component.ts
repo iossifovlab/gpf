@@ -10,8 +10,4 @@ import { EnrichmentResults, EnrichmentEffectResult } from '../enrichment-query/e
 })
 export class EnrichmentTableComponent {
   @Input() enrichmentResults: EnrichmentResults;
-
-  ngOnChanges(changes: any) {
-    console.log(this.enrichmentResults)
-  }
 }
