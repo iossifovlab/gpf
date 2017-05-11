@@ -35,11 +35,16 @@ export class RegistrationComponent implements OnInit {
 
           this.activeModal.close('Close click');
         }
+      },
+      (error: any) => {
+        if (error) {
+          this.registerError = error;
+        }
         else {
           this.registerError = "Registration Failed";
         }
-
-    });
+      }
+    );
   }
 
 }

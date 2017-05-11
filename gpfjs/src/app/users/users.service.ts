@@ -74,7 +74,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return Observable.of(false);
+        throw new Error(error.json().error_msg);
       });
   }
 
@@ -88,7 +88,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return Observable.of(false);
+        throw new Error(error.json().error_msg);
       });
   }
 

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { UsersService } from '../users/users.service';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
+
 @Component({
   selector: 'gpf-forgot-password',
   templateUrl: './forgot-password.component.html',
@@ -20,9 +21,8 @@ export class ForgotPasswordComponent implements OnInit {
   }
 
   resetPassword() {
-    this.usersService.resetPassword(
-      this.email
-    ).subscribe(
+    this.usersService.resetPassword(this.email)
+    .subscribe(
       (res) => {
         if (res) {
           this.email = null;
@@ -30,10 +30,15 @@ export class ForgotPasswordComponent implements OnInit {
 
           this.activeModal.close('Close click');
         }
+      },
+      (error: any) => {
+        if (error) {
+          this.resetPasswordError = error;
+        }
         else {
           this.resetPasswordError = "Reset Password Failed";
         }
-
-    });
+      }
+    )
   }
 }
