@@ -57,8 +57,7 @@ class WdaeUserManager(BaseUserManager):
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
     app_label = 'api'
-    first_name = models.CharField(max_length='100')
-    last_name = models.CharField(max_length='100')
+    name = models.CharField(max_length='100')
     email = models.EmailField(unique=True)
 
     is_staff = models.BooleanField(default=False)
@@ -66,7 +65,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['name']
 
     DEFAULT_GROUPS_FOR_USER = ["any_user"]
 
@@ -86,14 +85,6 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
         return mail
 
-    def get_full_name(self):
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        return full_name.strip()
-
-    def get_short_name(self):
-        "Returns the short name for the user."
-        return self.first_name
-
     def reset_password(self):
         self.set_password(uuid.uuid4())
         self.save()
@@ -101,12 +92,11 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         verif_path = _create_verif_path(self)
         send_reset_email(self, verif_path)
 
-    def register_preexisting_user(self, first_name, last_name):
+    def register_preexisting_user(self, name):
         now = timezone.now()
 
         self.date_joined = now
-        self.first_name = first_name
-        self.last_name = last_name
+        self.name = name
 
         if(not self.is_staff):
             verif_path = _create_verif_path(self)

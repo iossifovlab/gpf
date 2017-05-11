@@ -26,8 +26,7 @@ class Command(BaseCommand):
 
         writer.writerow({
             "Email": user.email,
-            "FirstName": user.first_name,
-            "LastName": user.last_name,
+            "Name": user.name,
             "Groups": groups_str,
             "Password": password
         })
@@ -40,8 +39,7 @@ class Command(BaseCommand):
         users = User.objects.all()
 
         with open(args[0], "w") as csvfile:
-            fieldnames = ["Email", "FirstName", "LastName", "Groups",
-                          "Password"]
+            fieldnames = ["Email", "Name", "Groups", "Password"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
