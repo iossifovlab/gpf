@@ -93,3 +93,61 @@ class Test(APITestCase):
         assert set(overlap_filter['effectTypes']) == \
             set(['Frame-shift', 'Nonsense', 'Splice-site',
                  'No-frame-shift-newStop'])
+
+    def test_filter_hints_lgds_all_gender(self):
+        res = self.res[0]
+        self.assertEquals('autism', res['selector'])
+
+        self.assertIn('countFilter', res['LGDs']['all'])
+        count_filter = res['LGDs']['all']['countFilter']
+        print(count_filter)
+        assert set(count_filter['gender']) == \
+            set(['male', 'female'])
+
+        self.assertIn('overlapFilter', res['LGDs']['all'])
+        overlap_filter = res['LGDs']['all']['overlapFilter']
+        print(overlap_filter)
+        assert set(overlap_filter['gender']) == \
+            set(['male', 'female'])
+
+    def test_filter_hints_lgds_rec_gender(self):
+        res = self.res[0]
+        self.assertEquals('autism', res['selector'])
+
+        self.assertIn('countFilter', res['LGDs']['rec'])
+        count_filter = res['LGDs']['rec']['countFilter']
+        print(count_filter)
+        assert set(count_filter['gender']) == \
+            set(['male', 'female'])
+
+        self.assertIn('overlapFilter', res['LGDs']['rec'])
+        overlap_filter = res['LGDs']['rec']['overlapFilter']
+        print(overlap_filter)
+        assert set(overlap_filter['gender']) == \
+            set(['male', 'female'])
+
+    def test_filter_hints_lgds_male_gender(self):
+        res = self.res[0]
+        self.assertEquals('autism', res['selector'])
+
+        self.assertIn('countFilter', res['LGDs']['male'])
+        count_filter = res['LGDs']['male']['countFilter']
+        print(count_filter)
+        assert set(count_filter['gender']) == \
+            set(['male'])
+
+        self.assertIn('overlapFilter', res['LGDs']['male'])
+        overlap_filter = res['LGDs']['male']['overlapFilter']
+        print(overlap_filter)
+        assert set(overlap_filter['gender']) == \
+            set(['male'])
+
+    def test_filter_hints_lgds_female_gender(self):
+        res = self.res[0]
+        self.assertEquals('autism', res['selector'])
+
+        self.assertIn('countFilter', res['LGDs']['female'])
+        count_filter = res['LGDs']['female']['countFilter']
+        print(count_filter)
+        assert set(count_filter['gender']) == \
+            set(['female'])

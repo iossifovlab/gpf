@@ -211,7 +211,7 @@ class ChildGenderMixin(object):
         if gender == 'all':
             return ['male', 'female']
         else:
-            return gender
+            return [gender]
 
     def get_child_gender(self, safe=True, **kwargs):
         gender = kwargs.get('gender', None)
