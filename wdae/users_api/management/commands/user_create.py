@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from import_base import ImportUsersBase
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 
 
 class Command(BaseCommand, ImportUsersBase):
@@ -22,3 +23,5 @@ class Command(BaseCommand, ImportUsersBase):
         if len(args) >= 3:
             res['Groups'] = args[2]
         self.handle_user(res)
+
+        call_command('changepassword', username=args[0], stdout=self.stdout)
