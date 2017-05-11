@@ -60,15 +60,14 @@ export class UsersService {
       });
   }
 
-  register(email: string, firstName: string, lastName: string, researcherId: string): Observable<boolean> {
+  register(email: string, name: string, researcherId: string): Observable<boolean> {
     let csrfToken = this.cookieService.get("csrftoken");
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return this.http.post(this.registerUrl, {
       email: email,
-      firstName: firstName,
-      lastName: lastName,
+      name: name,
       researcherId: researcherId
     }, options)
       .map(res => {

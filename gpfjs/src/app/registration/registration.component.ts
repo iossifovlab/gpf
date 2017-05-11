@@ -9,8 +9,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 })
 export class RegistrationComponent implements OnInit {
   email: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   researcherId: string;
 
   registerError = "";
@@ -25,13 +24,12 @@ export class RegistrationComponent implements OnInit {
 
   register() {
     this.usersService.register(
-      this.email, this.firstName, this.lastName, this.researcherId
+      this.email, this.name, this.researcherId
     ).subscribe(
       (res) => {
         if (res) {
           this.email = null;
-          this.firstName = null;
-          this.lastName = null;
+          this.name = null;
           this.researcherId = null;
           this.registerError = "";
 
