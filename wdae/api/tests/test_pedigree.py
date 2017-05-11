@@ -8,7 +8,7 @@ import json
 from query_variants import prepare_denovo_filters, get_denovo_variants
 from DAE import vDB
 from Variant import normalRefCopyNumber
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 class Test(BaseAuthenticatedUserTest):

@@ -5,7 +5,7 @@ Created on Apr 28, 2016
 '''
 import unittest
 from pheno_report import pheno_request, pheno_tool
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 class Test(unittest.TestCase):

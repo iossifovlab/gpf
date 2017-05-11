@@ -3,7 +3,7 @@ Created on May 27, 2016
 
 @author: lubo
 '''
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 class Test(BaseAuthenticatedUserTest):

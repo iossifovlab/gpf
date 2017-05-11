@@ -6,7 +6,7 @@ Created on Jan 4, 2016
 import unittest
 from rest_framework import status
 import json
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 class Test(BaseAuthenticatedUserTest):

@@ -13,7 +13,7 @@ from query_prepare import prepare_ssc_filter
 
 from rest_framework import status
 from rest_framework.test import APITestCase
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 LOGGER = logging.getLogger(__name__)
 

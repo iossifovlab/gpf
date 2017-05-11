@@ -4,7 +4,7 @@ Created on Feb 29, 2016
 @author: lubo
 '''
 import preloaded.register
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 class Test(BaseAuthenticatedUserTest):

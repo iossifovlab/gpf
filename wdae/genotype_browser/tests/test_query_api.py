@@ -5,7 +5,7 @@ Created on Feb 6, 2017
 '''
 from rest_framework import status
 import copy
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 EXAMPLE_REQUEST_SSC = {
