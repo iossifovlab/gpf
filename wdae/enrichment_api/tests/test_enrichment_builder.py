@@ -76,3 +76,20 @@ class Test(APITestCase):
 
         self.assertEquals(76, res['synonymous']['rec']['count'])
         self.assertEquals(4, res['synonymous']['rec']['overlapped'])
+
+    def test_filter_hints_lgds_all(self):
+        res = self.res[0]
+        self.assertEquals('autism', res['selector'])
+
+        self.assertIn('countFilter', res['LGDs']['all'])
+        count_filter = res['LGDs']['all']['countFilter']
+        print(count_filter)
+        assert set(count_filter['effectTypes']) == \
+            set(['Frame-shift', 'Nonsense', 'Splice-site',
+                 'No-frame-shift-newStop'])
+        self.assertIn('overlapFilter', res['LGDs']['all'])
+        overlap_filter = res['LGDs']['all']['overlapFilter']
+        print(overlap_filter)
+        assert set(overlap_filter['effectTypes']) == \
+            set(['Frame-shift', 'Nonsense', 'Splice-site',
+                 'No-frame-shift-newStop'])
