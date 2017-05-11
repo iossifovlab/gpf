@@ -12,12 +12,15 @@ class Command(BaseCommand):
     args = '<file>'
 
     def handle_user(self, user, writer):
-        groups = list(user.groups.values_list('name', flat=True).all())
+        groups = set(user.groups.values_list('name', flat=True).all())
+        skip_groups = user.DEFAULT_GROUPS_FOR_USER
+        skip_groups.append(user.email)
+
+        groups.difference_update(skip_groups)
+
         if user.is_superuser:
-            groups.append("superuser")
-        groups_str = ":".join(
-            groups
-        )
+            groups.add("superuser")
+        groups_str = ":".join(groups)
 
         if user.is_active:
             password = user.password
