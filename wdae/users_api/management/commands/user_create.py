@@ -5,13 +5,12 @@ from django.core.management import call_command
 
 
 class Command(BaseCommand, ImportUsersBase):
-    args = '<file> <file> ...'
-    help = 'Creates researchers from csv. ' \
-        'Required column names for the csv file - LastName, Email and Id.'
+    args = '<email> [<name>] [<groups>]'
+    help = 'Creates new user'
 
     def handle(self, *args, **options):
-        if(len(args) < 1 or len(args) > 4):
-            raise CommandError('1-4 arguments required')
+        if(len(args) < 1 or len(args) > 3):
+            raise CommandError('1-3 arguments required')
 
         UserModel = get_user_model()
         if UserModel.objects.filter(email=args[0]).exists():

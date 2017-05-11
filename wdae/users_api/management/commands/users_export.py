@@ -11,7 +11,8 @@ from export_base import ExportUsersBase
 
 
 class Command(BaseCommand, ExportUsersBase):
-    args = '<file>'
+    args = '[file]'
+    help = 'Export all users to stdout/csv file.'
 
     def handle_user(self, user, writer):
         groups_str = ":".join(self.get_visible_groups(user))

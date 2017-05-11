@@ -5,9 +5,10 @@ from import_base import ImportUsersBase
 
 
 class Command(ImportUsersBase, BaseCommand):
-    args = '<file> <file> ...'
-    help = 'Creates researchers from csv. ' \
-        'Required column names for the csv file - LastName, Email and Id.'
+    args = '<file>'
+    help = 'Deletes all users and adds new ones from csv. ' \
+        'Required column names for the csv file - Email.' \
+        'Optional column names - Groups, Name, Password'
 
     def handle(self, *args, **options):
         if(len(args) != 1):

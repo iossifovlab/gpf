@@ -4,9 +4,8 @@ from django.core.management import call_command
 
 
 class Command(BaseCommand):
-    args = '<file> <file> ...'
-    help = 'Creates researchers from csv. ' \
-        'Required column names for the csv file - LastName, Email and Id.'
+    args = '<email>'
+    help = 'Changes the password of user'
 
     def handle(self, *args, **options):
         if(len(args) != 1):

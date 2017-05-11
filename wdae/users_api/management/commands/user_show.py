@@ -4,9 +4,8 @@ from export_base import ExportUsersBase
 
 
 class Command(BaseCommand, ExportUsersBase):
-    args = '<file> <file> ...'
-    help = 'Creates researchers from csv. ' \
-        'Required column names for the csv file - LastName, Email and Id.'
+    args = '<email>'
+    help = 'Shows all information about user'
 
     def handle(self, *args, **options):
         if(len(args) != 1):

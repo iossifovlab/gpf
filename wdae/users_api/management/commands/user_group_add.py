@@ -4,9 +4,8 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    args = '<file> <file> ...'
-    help = 'Creates researchers from csv. ' \
-        'Required column names for the csv file - LastName, Email and Id.'
+    args = '<email> <group>:<group>:'
+    help = 'Adds user into group(s)'
 
     def handle(self, *args, **options):
         if(len(args) != 2):
