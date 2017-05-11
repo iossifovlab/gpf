@@ -7,21 +7,14 @@ from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 import csv
 import sys
+from export_base import ExportUsersBase
 
 
-class Command(BaseCommand):
+class Command(BaseCommand, ExportUsersBase):
     args = '<file>'
 
     def handle_user(self, user, writer):
-        groups = set(user.groups.values_list('name', flat=True).all())
-        skip_groups = list(user.DEFAULT_GROUPS_FOR_USER)
-        skip_groups.append(user.email)
-
-        groups.difference_update(skip_groups)
-
-        if user.is_superuser:
-            groups.add("superuser")
-        groups_str = ":".join(groups)
+        groups_str = ":".join(self.get_visible_groups(user))
 
         if user.is_active:
             password = user.password
