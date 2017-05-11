@@ -1,4 +1,4 @@
-from users.models import WdaeUser, VerificationPath
+from models import WdaeUser, VerificationPath
 from django.contrib import admin
 
 admin.site.register(WdaeUser)

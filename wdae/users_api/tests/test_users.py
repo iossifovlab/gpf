@@ -1,4 +1,4 @@
-from users.models import WdaeUser
+from users_api.models import WdaeUser
 from rest_framework.test import APITestCase
 from rest_framework import status
 from pprint import pprint

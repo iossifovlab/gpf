@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import django.contrib.auth
 from rest_framework.decorators import authentication_classes
-from users.models import VerificationPath
+from models import VerificationPath
 from rest_framework.authentication import SessionAuthentication
 from users_api.authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF

@@ -1,5 +1,5 @@
 import csv
-from users.models import WdaeUser
+from users_api.models import WdaeUser
 from django.core.management.base import BaseCommand, CommandError
 from import_base import ImportUsersBase
 

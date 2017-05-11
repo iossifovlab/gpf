@@ -32,17 +32,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='ResearcherId',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('researcher_id', models.CharField(unique=True, max_length=b'100')),
-                ('researcher', models.ManyToManyField(to=settings.AUTH_USER_MODEL)),
-            ],
-            options={
-                'db_table': 'researcherid',
-            },
-        ),
-        migrations.CreateModel(
             name='VerificationPath',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
