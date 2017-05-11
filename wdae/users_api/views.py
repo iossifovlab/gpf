@@ -51,19 +51,21 @@ def register(request):
         researcher_id = request.data['researcherId']
         group_name = user_model.get_group_name_for_researcher_id(researcher_id)
 
-        preexisting_user = user_model.objects.get(email=email, is_active=False,
+        preexisting_user = user_model.objects.get(email=email,
                                                   groups__name=group_name)
+        if preexisting_user.is_active:
+            return Response({'error_msg': 'User already exists'},
+                            status=status.HTTP_409_CONFLICT)
+
         preexisting_user.register_preexisting_user(request.data['name'])
         return Response({}, status=status.HTTP_201_CREATED)
     except IntegrityError:
-        return Response({},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response({}, status=status.HTTP_400_BAD_REQUEST)
     except user_model.DoesNotExist:
-        return Response({},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error_msg': 'Email or Researcher Id not found'},
+                        status=status.HTTP_404_NOT_FOUND)
     except KeyError:
-        return Response({},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])

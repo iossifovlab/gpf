@@ -37,6 +37,32 @@ class ResearcherRegistrationTest(APITestCase):
                                     format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_fail_register_wrong_id(self):
+        data = {
+            'email': self.res.email,
+            'name': 'ok name',
+            'researcherId': 'bad id',
+        }
+
+        response = self.client.post('/api/v3/users/register', data,
+                                    format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error_msg'],
+                         'Email or Researcher Id not found')
+
+    def test_fail_register_wrong_email(self):
+        data = {
+            'email': 'bad@email.com',
+            'name': 'ok name',
+            'researcherId': self.researcher_id,
+        }
+
+        response = self.client.post('/api/v3/users/register', data,
+                                    format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error_msg'],
+                         'Email or Researcher Id not found')
+
     def test_reset_pass_without_registration(self):
         data = {
             'email': self.res.email
@@ -160,7 +186,8 @@ class UsersAPITest(APITestCase):
 
         response = self.client.post('/api/v3/users/register', data,
                                     format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.data['error_msg'], 'User already exists')
 
 
 class UserAuthenticationTest(APITestCase):
