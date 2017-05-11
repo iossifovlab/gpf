@@ -32,8 +32,10 @@ class WdaeUserManager(BaseUserManager):
 
         user.save(using=self._db)
 
-        for default_group_name in user.DEFAULT_GROUPS_FOR_USER:
-            group, _ = Group.objects.get_or_create(name=default_group_name)
+        groups = list(user.DEFAULT_GROUPS_FOR_USER)
+        groups.append(email)
+        for group_name in groups:
+            group, _ = Group.objects.get_or_create(name=group_name)
             group.user_set.add(user)
             group.save()
 
@@ -67,7 +69,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
 
-    DEFAULT_GROUPS_FOR_USER = ["any_user"]
+    DEFAULT_GROUPS_FOR_USER = ("any_user", )
 
     objects = WdaeUserManager()
 
@@ -84,6 +86,13 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             mail = send_mail(subject, message, from_email, [self.email])
 
         return mail
+
+    def get_full_name(self):
+        return self.name
+
+    def get_short_name(self):
+        "Returns the short name for the user."
+        return self.name
 
     def reset_password(self):
         self.set_password(uuid.uuid4())
@@ -202,14 +211,6 @@ def get_anonymous_user_instance(CurrentUserModel):
         user.is_active = True
         user.save()
         return user
-
-
-class ResearcherId(models.Model):
-    researcher = models.ManyToManyField(WdaeUser)
-    researcher_id = models.CharField(max_length='100', unique=True)
-
-    class Meta:
-        db_table = 'researcherid'
 
 
 class VerificationPath(models.Model):
