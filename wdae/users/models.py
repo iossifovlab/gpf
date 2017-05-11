@@ -70,6 +70,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['name']
 
     DEFAULT_GROUPS_FOR_USER = ("any_user", )
+    RESEARCHER_GROUP_PREFIX = "SFID#"
 
     objects = WdaeUserManager()
 
@@ -124,6 +125,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         verif_path.delete()
 
         return user
+
+    @classmethod
+    def get_group_name_for_researcher_id(cls, researcher_id):
+        return cls.RESEARCHER_GROUP_PREFIX + researcher_id
 
     def __str__(self):
         return self.email

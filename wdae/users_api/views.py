@@ -49,15 +49,11 @@ def register(request):
     try:
         email = BaseUserManager.normalize_email(request.data['email'])
         researcher_id = request.data['researcherId']
+        group_name = user_model.get_group_name_for_researcher_id(researcher_id)
 
-        preexisting_user = \
-            user_model.objects.get(email=email,
-                                   is_active=False,
-                                   researcherid__researcher_id=researcher_id)
-        preexisting_user.register_preexisting_user(
-            request.data['firstName'],
-            request.data['lastName']
-        )
+        preexisting_user = user_model.objects.get(email=email, is_active=False,
+                                                  groups__name=group_name)
+        preexisting_user.register_preexisting_user(request.data['name'])
         return Response({}, status=status.HTTP_201_CREATED)
     except IntegrityError:
         return Response({},

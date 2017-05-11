@@ -1,7 +1,8 @@
-from users.models import WdaeUser, ResearcherId
+from users.models import WdaeUser
 from rest_framework.test import APITestCase
 from rest_framework import status
 from pprint import pprint
+from django.contrib.auth.models import Group
 
 
 class ResearcherRegistrationTest(APITestCase):
@@ -10,17 +11,16 @@ class ResearcherRegistrationTest(APITestCase):
     def setUpClass(cls):
         super(ResearcherRegistrationTest, cls).setUpClass()
 
-        cls.res = WdaeUser()
-        cls.res.first_name = 'fname'
-        cls.res.last_name = 'lname'
-        cls.res.email = 'fake@fake.com'
+        cls.res = WdaeUser.objects.create_user(email='fake@fake.com')
+        cls.res.name = 'fname'
         cls.res.save()
 
-        cls.research_id = ResearcherId()
-        cls.research_id.researcher_id = '11aa--bb'
-        cls.research_id.save()
+        cls.researcher_id = '11aa--bb'
 
-        cls.research_id.researcher.add(cls.res)
+        group_name = WdaeUser.get_group_name_for_researcher_id(
+            cls.researcher_id)
+        group, _ = Group.objects.get_or_create(name=group_name)
+        group.user_set.add(cls.res)
 
     @classmethod
     def tearDownClass(cls):
@@ -30,8 +30,7 @@ class ResearcherRegistrationTest(APITestCase):
     def test_fail_register(self):
         data = {
             'email': 'faulthymail@faulthy.com',
-            'firstName': 'bad_first_name',
-            'lastName': 'bad_last_name'
+            'name': 'bad_name',
         }
 
         response = self.client.post('/api/v3/users/register', data,
@@ -39,7 +38,6 @@ class ResearcherRegistrationTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_reset_pass_without_registration(self):
-        [id1] = self.res.researcherid_set.all()
         data = {
             'email': self.res.email
         }
@@ -50,11 +48,9 @@ class ResearcherRegistrationTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_successful_register(self):
-        [id1] = self.res.researcherid_set.all()
         data = {
-            'firstName': self.res.first_name,
-            'lastName': self.res.last_name,
-            'researcherId': id1.researcher_id,
+            'name': self.res.name,
+            'researcherId': self.researcher_id,
             'email': self.res.email
         }
         pprint(data)
@@ -64,11 +60,9 @@ class ResearcherRegistrationTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_register_twice(self):
-            [id1] = self.res.researcherid_set.all()
             data = {
-                'firstName': self.res.first_name,
-                'lastName': self.res.last_name,
-                'researcherId': id1.researcher_id,
+                'name': self.res.name,
+                'researcherId': self.researcher_id,
                 'email': self.res.email
             }
             pprint(data)
@@ -82,11 +76,9 @@ class ResearcherRegistrationTest(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_registration_all_steps(self):
-        [id1] = self.res.researcherid_set.all()
         data = {
-            'firstName': self.res.first_name,
-            'lastName': self.res.last_name,
-            'researcherId': id1.researcher_id,
+            'name': self.res.name,
+            'researcherId': self.researcher_id,
             'email': self.res.email
         }
         pprint(data)
@@ -127,18 +119,18 @@ class UsersAPITest(APITestCase):
     def setUpClass(cls):
         super(UsersAPITest, cls).setUpClass()
 
-        cls.res = WdaeUser()
-        cls.res.first_name = 'fname'
-        cls.res.last_name = 'lname'
+        cls.res = WdaeUser.objects.create_user(email='fake@fake.com')
+        cls.res.name = 'fname'
         cls.res.email = 'fake@fake.com'
         cls.res.is_active = True
         cls.res.save()
 
-        cls.research_id = ResearcherId()
-        cls.research_id.researcher_id = '11aa--bb'
-        cls.research_id.save()
+        cls.researcher_id = '11aa--bb'
 
-        cls.research_id.researcher.add(cls.res)
+        group_name = WdaeUser.get_group_name_for_researcher_id(
+            cls.researcher_id)
+        group, _ = Group.objects.get_or_create(name=group_name)
+        group.user_set.add(cls.res)
 
     def test_invalid_verif_path(self):
         data = {
@@ -149,7 +141,6 @@ class UsersAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_reset_pass(self):
-        [id1] = self.res.researcherid_set.all()
         data = {
             'email': self.res.email
         }
@@ -160,11 +151,9 @@ class UsersAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_register_existing_user(self):
-        [id1] = self.res.researcherid_set.all()
         data = {
-            'firstName': self.res.first_name,
-            'lastName': self.res.last_name,
-            'researcherId': id1.researcher_id,
+            'name': self.res.name,
+            'researcherId': self.researcher_id,
             'email': self.res.email
         }
         pprint(data)
@@ -177,9 +166,7 @@ class UsersAPITest(APITestCase):
 class UserAuthenticationTest(APITestCase):
 
     def setUp(self):
-        self.user = WdaeUser.objects.create(email="test@example.com",
-                                            first_name="Ivan",
-                                            last_name="Testov")
+        self.user = WdaeUser.objects.create_user(email='test@example.com')
         self.user.set_password("pass")
         self.user.is_active = True
         self.user.save()
