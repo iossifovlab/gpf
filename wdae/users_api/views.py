@@ -23,13 +23,17 @@ def reset_password(request):
     email = request.data['email']
     user_model = get_user_model()
     try:
-        user = user_model.objects.get(email=email, is_active=True)
+        user = user_model.objects.get(email=email)
+        if not user.is_active:
+            return Response({'error_msg': 'User with this email is approved'
+                             ' for registration. Please, register first'},
+                            status=status.HTTP_409_CONFLICT)
         user.reset_password()
 
         return Response({}, status.HTTP_200_OK)
     except user_model.DoesNotExist:
-        return Response({'errors': 'User with this email not found'},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error_msg': 'User with this email not found'},
+                        status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])

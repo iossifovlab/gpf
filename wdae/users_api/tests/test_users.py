@@ -71,7 +71,22 @@ class ResearcherRegistrationTest(APITestCase):
 
         response = self.client.post('/api/v3/users/reset_password', data,
                                     format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.data['error_msg'],
+                         'User with this email is approved for registration. '
+                         'Please, register first')
+
+    def test_reset_pass_without_registration_wrong_email(self):
+        data = {
+            'email': 'wrong@email.com'
+        }
+        pprint(data)
+
+        response = self.client.post('/api/v3/users/reset_password', data,
+                                    format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['error_msg'],
+                         'User with this email not found')
 
     def test_successful_register(self):
         data = {
