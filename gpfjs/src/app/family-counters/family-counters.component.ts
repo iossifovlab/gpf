@@ -30,7 +30,6 @@ export class FamilyCountersComponent implements AfterViewInit {
 
   @Input()
   set genotypeBrowserState(genotypeBrowserState) {
-    console.log("AAABC", genotypeBrowserState);
     if (genotypeBrowserState) {
       this.genotypeBrowserStateChange.next(genotypeBrowserState);
     }
