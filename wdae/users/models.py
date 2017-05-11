@@ -13,7 +13,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
 from django.utils import timezone
 from django.conf import settings
 from guardian.conf import settings as guardian_settings
-
+from django.contrib.auth.models import Group
 from helpers.logger import LOGGER
 
 
@@ -31,6 +31,11 @@ class WdaeUserManager(BaseUserManager):
         user.set_password(password)
 
         user.save(using=self._db)
+
+        for default_group_name in user.DEFAULT_GROUPS_FOR_USER:
+            group, _ = Group.objects.get_or_create(name=default_group_name)
+            group.user_set.add(user)
+            group.save()
 
         return user
 
@@ -62,6 +67,8 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
+
+    DEFAULT_GROUPS_FOR_USER = ["any_user"]
 
     objects = WdaeUserManager()
 
@@ -194,11 +201,17 @@ def _create_verif_path(user):
 
 
 def get_anonymous_user_instance(CurrentUserModel):
-    user, created = CurrentUserModel.objects.get_or_create(
-        email=guardian_settings.ANONYMOUS_USER_NAME,
-        defaults={'is_active': True})
-    user.set_unusable_password()
-    return user
+    try:
+        user = CurrentUserModel.objects.get(
+            email=guardian_settings.ANONYMOUS_USER_NAME)
+        return user
+    except CurrentUserModel.DoesNotExist:
+        user = CurrentUserModel.objects.create_user(
+            email=guardian_settings.ANONYMOUS_USER_NAME)
+        user.set_unusable_password()
+        user.is_active = True
+        user.save()
+        return user
 
 
 class ResearcherId(models.Model):
