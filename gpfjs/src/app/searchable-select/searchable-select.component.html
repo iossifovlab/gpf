@@ -1,11 +1,14 @@
 <div class="input-group" style="width: 100%; max-width: 100%;">
-  <input #searchBox id="search-box"
+  <input [hidden]="caption" #searchBox id="search-box"
     (keyup)="searchBoxChange(searchBox.value)"
     style="width: 100%"
-    value="{{ caption }}"
     placeholder="Select or start typing to search"
     (click)="searchBox.value=''; onFocus($event)" />
 
+  <span [hidden]="!caption" id="selected-value"
+    style="width: 100%"
+    class="clickable"
+    (click)="searchBox.value = ''; onFocus($event)">{{ caption }}</span>
 
   <span #inputGroup class="input-group-btn" style="position: static">
     <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown">

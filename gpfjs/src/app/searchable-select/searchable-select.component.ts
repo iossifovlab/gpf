@@ -10,7 +10,8 @@ export class SearchableSelectComponent {
   @Input() caption: string;
   @Output() search  = new EventEmitter();
   @Output() selectItem  = new EventEmitter();
-  @ViewChild("inputGroup") inputGroupSpan: any;
+  @ViewChild('inputGroup') inputGroupSpan: any;
+  @ViewChild('searchBox') searchBox: any;
   @ContentChild(SearchableSelectTemplateDirective) template: SearchableSelectTemplateDirective;
 
   searchBoxChange(searchFieldValue) {
@@ -19,11 +20,17 @@ export class SearchableSelectComponent {
 
   onFocus(event) {
     event.stopPropagation();
-    this.inputGroupSpan.nativeElement.classList.add("show");
+    setTimeout(() => {
+      this.searchBox.nativeElement.focus();
+      this.inputGroupSpan.nativeElement.classList.add('show');
+    });
     this.onSelect(null);
   }
 
   onSelect(value) {
     this.selectItem.emit(value);
+  }
+
+  log(value) {
   }
 }
