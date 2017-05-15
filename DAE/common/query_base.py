@@ -39,7 +39,7 @@ class EffectTypesMixin(object):
         "Splice-site": ["splice-site"],
         "Missense": ["missense"],
         "Non-frame-shift": ["no-frame-shift"],
-        "Non-frame-shift-newStop": ["no-frame-shift-newStop"],
+        "No-frame-shift-newStop": ["no-frame-shift-newStop"],
         "noStart": ["noStart"],
         "noEnd": ["noEnd"],
         "Synonymous": ["synonymous"],
@@ -53,6 +53,17 @@ class EffectTypesMixin(object):
         "CNV-": ["CNV-"],
     }
 
+    EFFECT_TYPES_UI_NAMING = {
+        "nonsense": "Nonsense",
+        "frame-shift": "Frame-shift",
+        "splice-site": "Splice-site",
+        "missense": "Missense",
+        "non-frame-shift": "No-frame-shift",
+        "no-frame-shift-newStop": "No-frame-shift-newStop",
+        "synonymous": "Synonymous",
+        "non-coding": "Non coding",
+        "intron": "Intron",
+    }
     EFFECT_GROUPS = {
         "coding": [
             "Nonsense",
@@ -79,7 +90,7 @@ class EffectTypesMixin(object):
             "Frame-shift",
             "Nonsense",
             "Splice-site",
-            "Non-frame-shift-newStop",
+            "No-frame-shift-newStop",
         ],
         "nonsynonymous": [
             "Nonsense",
@@ -111,9 +122,6 @@ class EffectTypesMixin(object):
             for et in effect_types]
         return list(itertools.chain.from_iterable(etl))
 
-    def _build_(self):
-        pass
-
     def build_effect_types(self, effect_types, safe=True):
         if isinstance(effect_types, str) or \
                 isinstance(effect_types, unicode):
@@ -127,6 +135,20 @@ class EffectTypesMixin(object):
         else:
             etl = [et for et in etl if et in self.EFFECT_TYPES]
         return etl
+
+    def build_effect_types_naming(self, effect_types, safe=True):
+        if isinstance(effect_types, str) or \
+                isinstance(effect_types, unicode):
+            effect_types = effect_types.replace(',', ' ')
+            effect_types = effect_types.split()
+        assert isinstance(effect_types, list)
+        if safe:
+            assert all([
+                et in self.EFFECT_TYPES or
+                et in self.EFFECT_TYPES_MAPPING.keys() for et in effect_types])
+        return [
+            self.EFFECT_TYPES_UI_NAMING.get(et, et) for et in effect_types
+        ]
 
     def get_effect_types(self, safe=True, **kwargs):
         effect_types = kwargs.get('effectTypes', None)
@@ -189,7 +211,7 @@ class ChildGenderMixin(object):
         if gender == 'all':
             return ['male', 'female']
         else:
-            return gender
+            return [gender]
 
     def get_child_gender(self, safe=True, **kwargs):
         gender = kwargs.get('gender', None)

@@ -11,6 +11,7 @@ from common.query_base import EffectTypesMixin, ChildGenderMixin
 class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
 
     def __init__(self, results):
+        super(EnrichmentSerializer, self).__init__()
         self.enrichment_results = results
 
     def serialize(self):
@@ -44,9 +45,11 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
             self, grouping_results, effect_type, result,
             gender=['male', 'female']):
 
+        effect_types_fixed = self.build_effect_types(effect_type)
+        effect_types_fixed = self.build_effect_types_naming(effect_types_fixed)
         common_filter = {
             'datasetId': grouping_results['datasetId'],
-            'effectTypes': [self.build_effect_types(effect_type)],
+            'effectTypes': effect_types_fixed,
             'gender': gender,
             'pedigreeSelector': {
                 'id': grouping_results['personGroupingId'],

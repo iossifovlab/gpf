@@ -4,3 +4,6 @@
 *.cache
 *.db
 wdae.sql
+.project
+.pydevproject
+.settings
