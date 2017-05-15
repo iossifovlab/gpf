@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import django.contrib.auth
 from rest_framework.decorators import authentication_classes
-from users.models import VerificationPath
+from models import VerificationPath
 from rest_framework.authentication import SessionAuthentication
 from users_api.authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF
@@ -23,13 +23,17 @@ def reset_password(request):
     email = request.data['email']
     user_model = get_user_model()
     try:
-        user = user_model.objects.get(email=email, is_active=True)
+        user = user_model.objects.get(email=email)
+        if not user.is_active:
+            return Response({'error_msg': 'User with this email is approved'
+                             ' for registration. Please, register first'},
+                            status=status.HTTP_409_CONFLICT)
         user.reset_password()
 
         return Response({}, status.HTTP_200_OK)
     except user_model.DoesNotExist:
-        return Response({'errors': 'User with this email not found'},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error_msg': 'User with this email not found'},
+                        status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
@@ -49,25 +53,23 @@ def register(request):
     try:
         email = BaseUserManager.normalize_email(request.data['email'])
         researcher_id = request.data['researcherId']
+        group_name = user_model.get_group_name_for_researcher_id(researcher_id)
 
-        preexisting_user = \
-            user_model.objects.get(email=email,
-                                   is_active=False,
-                                   researcherid__researcher_id=researcher_id)
-        preexisting_user.register_preexisting_user(
-            request.data['firstName'],
-            request.data['lastName']
-        )
+        preexisting_user = user_model.objects.get(email=email,
+                                                  groups__name=group_name)
+        if preexisting_user.is_active:
+            return Response({'error_msg': 'User already exists'},
+                            status=status.HTTP_409_CONFLICT)
+
+        preexisting_user.register_preexisting_user(request.data['name'])
         return Response({}, status=status.HTTP_201_CREATED)
     except IntegrityError:
-        return Response({},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response({}, status=status.HTTP_400_BAD_REQUEST)
     except user_model.DoesNotExist:
-        return Response({},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error_msg': 'Email or Researcher Id not found'},
+                        status=status.HTTP_404_NOT_FOUND)
     except KeyError:
-        return Response({},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])

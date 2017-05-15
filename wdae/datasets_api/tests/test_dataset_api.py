@@ -5,7 +5,7 @@ Created on Jan 20, 2017
 '''
 from rest_framework.test import APITestCase
 from rest_framework import status
-from users.management.commands import reload_datasets_perm
+from users_api.management.commands import reload_datasets_perm
 
 
 class DatasetApiTest(APITestCase):

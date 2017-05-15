@@ -4,7 +4,7 @@ Created on Nov 16, 2015
 @author: lubo
 '''
 from rest_framework.test import APITestCase
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 def count_iterable(iterable):

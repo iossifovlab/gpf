@@ -5,7 +5,7 @@ Created on Dec 11, 2015
 '''
 import unittest
 from rest_framework import status
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 class Test(BaseAuthenticatedUserTest):
@@ -114,6 +114,7 @@ class Test(BaseAuthenticatedUserTest):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('19', response.data['count'])
+
 
 if __name__ == "__main__":
     unittest.main()

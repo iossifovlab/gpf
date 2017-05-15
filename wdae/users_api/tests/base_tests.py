@@ -19,15 +19,14 @@ class BaseAuthenticatedUserTest(APITestCase):
         User = get_user_model()
         u = User.objects.create(
             email="admin@example.com",
-            first_name="First",
-            last_name="Last",
+            name="First",
             is_staff=True,
             is_active=True,
             is_superuser=True)
         u.set_password("secret")
         u.save()
 
-        _token = Token.objects.get_or_create(user=u)
+        Token.objects.get_or_create(user=u)
         cls.user = u
         cls.user.save()
 

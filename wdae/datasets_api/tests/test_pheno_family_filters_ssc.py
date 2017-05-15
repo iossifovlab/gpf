@@ -4,7 +4,7 @@ Created on Mar 25, 2017
 @author: lubo
 '''
 from rest_framework import status
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 class Test(BaseAuthenticatedUserTest):

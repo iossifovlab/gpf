@@ -5,7 +5,7 @@ Created on Nov 16, 2015
 '''
 
 from pheno_report.views import PhenoEffectTypeGroups
-from users.tests.base_tests import BaseAuthenticatedUserTest
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
 def count_iterable(iterable):

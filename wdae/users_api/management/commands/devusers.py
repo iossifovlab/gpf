@@ -15,30 +15,30 @@ class Command(BaseCommand):
         from django.contrib.auth import get_user_model
 
         User = get_user_model()
-        u, _ = User.objects.get_or_create(email='admin@iossifovlab.com')
+        u = User.objects.create_user(email='admin@iossifovlab.com',
+                                     password='secret')
         u.is_staff = True
         u.is_active = True
         u.is_superuser = True
-        u.set_password('secret')
         u.save()
 
-        u, _ = User.objects.get_or_create(email='research@iossifovlab.com')
+        u = User.objects.create_user(email='research@iossifovlab.com',
+                                     password='secret')
         u.is_staff = False
         u.is_active = True
         u.is_superuser = False
-        u.set_password('secret')
         u.save()
 
-        u, _ = User.objects.get_or_create(email='vip@iossifovlab.com')
+        u = User.objects.create_user(email='vip@iossifovlab.com',
+                                     password='secret')
         u.is_staff = False
         u.is_active = True
         u.is_superuser = False
-        u.set_password('secret')
         u.save()
 
-        u, _ = User.objects.get_or_create(email='ssc@iossifovlab.com')
+        u = User.objects.create_user(email='ssc@iossifovlab.com',
+                                     password='secret')
         u.is_staff = False
         u.is_active = True
         u.is_superuser = False
-        u.set_password('secret')
         u.save()

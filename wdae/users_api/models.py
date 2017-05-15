@@ -13,7 +13,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
 from django.utils import timezone
 from django.conf import settings
 from guardian.conf import settings as guardian_settings
-
+from django.contrib.auth.models import Group
 from helpers.logger import LOGGER
 
 
@@ -31,6 +31,13 @@ class WdaeUserManager(BaseUserManager):
         user.set_password(password)
 
         user.save(using=self._db)
+
+        groups = list(user.DEFAULT_GROUPS_FOR_USER)
+        groups.append(email)
+        for group_name in groups:
+            group, _ = Group.objects.get_or_create(name=group_name)
+            group.user_set.add(user)
+            group.save()
 
         return user
 
@@ -52,8 +59,7 @@ class WdaeUserManager(BaseUserManager):
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
     app_label = 'api'
-    first_name = models.CharField(max_length='100')
-    last_name = models.CharField(max_length='100')
+    name = models.CharField(max_length='100')
     email = models.EmailField(unique=True)
 
     is_staff = models.BooleanField(default=False)
@@ -61,7 +67,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(null=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['name']
+
+    DEFAULT_GROUPS_FOR_USER = ("any_user", )
+    RESEARCHER_GROUP_PREFIX = "SFID#"
 
     objects = WdaeUserManager()
 
@@ -80,12 +89,11 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         return mail
 
     def get_full_name(self):
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        return full_name.strip()
+        return self.name
 
     def get_short_name(self):
         "Returns the short name for the user."
-        return self.first_name
+        return self.name
 
     def reset_password(self):
         self.set_password(uuid.uuid4())
@@ -94,16 +102,15 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         verif_path = _create_verif_path(self)
         send_reset_email(self, verif_path)
 
-    def register_preexisting_user(self, first_name, last_name):
+    def register_preexisting_user(self, name):
         now = timezone.now()
 
         self.date_joined = now
-        self.first_name = first_name
-        self.last_name = last_name
+        self.name = name
 
-        if(not self.is_staff):
-            verif_path = _create_verif_path(self)
-            send_verif_email(self, verif_path)
+        verif_path = _create_verif_path(self)
+        send_verif_email(self, verif_path)
+
         self.save()
 
     @staticmethod
@@ -118,6 +125,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         verif_path.delete()
 
         return user
+
+    @classmethod
+    def get_group_name_for_researcher_id(cls, researcher_id):
+        return cls.RESEARCHER_GROUP_PREFIX + researcher_id
 
     def __str__(self):
         return self.email
@@ -194,19 +205,17 @@ def _create_verif_path(user):
 
 
 def get_anonymous_user_instance(CurrentUserModel):
-    user, created = CurrentUserModel.objects.get_or_create(
-        email=guardian_settings.ANONYMOUS_USER_NAME,
-        defaults={'is_active': True})
-    user.set_unusable_password()
-    return user
-
-
-class ResearcherId(models.Model):
-    researcher = models.ManyToManyField(WdaeUser)
-    researcher_id = models.CharField(max_length='100', unique=True)
-
-    class Meta:
-        db_table = 'researcherid'
+    try:
+        user = CurrentUserModel.objects.get(
+            email=guardian_settings.ANONYMOUS_USER_NAME)
+        return user
+    except CurrentUserModel.DoesNotExist:
+        user = CurrentUserModel.objects.create_user(
+            email=guardian_settings.ANONYMOUS_USER_NAME)
+        user.set_unusable_password()
+        user.is_active = True
+        user.save()
+        return user
 
 
 class VerificationPath(models.Model):
