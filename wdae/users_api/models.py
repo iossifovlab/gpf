@@ -108,6 +108,9 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         self.date_joined = now
         self.name = name
 
+        verif_path = _create_verif_path(self)
+        send_verif_email(self, verif_path)
+
         self.save()
 
     @staticmethod
