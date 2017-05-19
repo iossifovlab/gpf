@@ -14,4 +14,4 @@ class Command(BaseCommand):
 
         dataset_config = DatasetsConfig()
         for ds in dataset_config.get_datasets():
-            Dataset.add_dataset_perm(ds['id'], ds['authorizedGroups'])
+            Dataset.recreate_dataset_perm(ds['id'], ds['authorizedGroups'])

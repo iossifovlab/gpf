@@ -14,7 +14,7 @@ class Dataset(models.Model):
         )
 
     @classmethod
-    def add_dataset_perm(cls, dataset_id, authorized_groups):
+    def recreate_dataset_perm(cls, dataset_id, authorized_groups):
         datasetObject, _ = cls.objects.get_or_create(dataset_id=dataset_id)
 
         for group in Group.objects.all():
