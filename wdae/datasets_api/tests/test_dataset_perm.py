@@ -2,6 +2,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from datasets_api.models import Dataset
 from guardian.utils import get_anonymous_user
+from users_api.models import WdaeUser
 
 
 class DatasetPermTest(APITestCase):
@@ -24,6 +25,12 @@ class DatasetPermTest(APITestCase):
     def test_anonymous_user_group(self):
         groups = [get_anonymous_user().email]
         Dataset.recreate_dataset_perm("SD", groups)
+
+        user = WdaeUser.objects.create_user(email='admin@example.com',
+                                            password='secret')
+        user.is_active = True
+        user.save()
+        self.client.login(email='admin@example.com', password='secret')
 
         url = '/api/v3/datasets/SD'
         response = self.client.get(url)
