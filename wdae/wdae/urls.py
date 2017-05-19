@@ -4,8 +4,7 @@ from django.contrib import admin
 admin.autodiscover()
 urlpatterns = patterns(
     '',
-    url(r'^$', 'variants_angular.views.index'),
-    # url(r'^$', 'gpfjs.views.index'),
+    url(r'^$', 'gpfjs.views.index'),
     url(r'^gpfjs/.*$', 'gpfjs.views.index'),
     url(r'^api/', include('api.urls')),
     url(r'^api/v2/pheno_reports', include('pheno_report.urls')),
