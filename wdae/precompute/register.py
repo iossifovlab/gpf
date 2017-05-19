@@ -4,18 +4,22 @@ Created on Jun 15, 2015
 @author: lubo
 '''
 from cache import PrecomputeStore
+from django.conf import settings
 
 
 class Precompute(object):
 
     def serialize(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def deserialize(self, data):
-        raise NotImplemented()
+        raise NotImplementedError()
+
+    def is_precomputed(self):
+        raise NotImplementedError()
 
     def precompute(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class PrecomputeRegister(object):
@@ -23,13 +27,27 @@ class PrecomputeRegister(object):
     def __init__(self, register={}):
         self.store = PrecomputeStore()
         self.reg = {}
+        self.preload_active = getattr(
+            settings,
+            "PRELOAD_ACTIVE",
+            False)
+
         for key, precompute in register.items():
             self.register(key, precompute)
 
     def register(self, key, precompute):
+        assert isinstance(precompute, Precompute)
+
         if key in self.reg:
             raise KeyError("precompute object <%s> already registered" % key)
 
+        self.reg[key] = precompute
+        if not self.preload_active:
+            return
+
+        self._load_or_compute(key, precompute)
+
+    def _load_or_compute(self, key, precompute):
         data = self.store.retrieve(key)
         print("trying to find precomputed {}".format(key))
         if data:
@@ -41,8 +59,6 @@ class PrecomputeRegister(object):
             data = precompute.serialize()
             self.store.store(key, data)
 
-        self.reg[key] = precompute
-
     def recompute(self):
         for key, precompute in self.reg.items():
             precompute.precompute()
@@ -50,7 +66,11 @@ class PrecomputeRegister(object):
             self.store.store(key, data)
 
     def get(self, key):
-        return self.reg[key]
+        precompute = self.reg[key]
+        if not precompute.is_precomputed():
+            self._load_or_compute(key, precompute)
+
+        return precompute
 
     def has_key(self, key):
         return key in self.reg

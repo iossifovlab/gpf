@@ -14,14 +14,23 @@ class SynonymousBackgroundPrecompute(SynonymousBackground, Precompute):
     def __init__(self):
         super(SynonymousBackgroundPrecompute, self).__init__(use_cache=True)
 
+    def is_precomputed(self):
+        return self.background is not None
+
 
 class CodingLenBackgroundPrecompute(CodingLenBackground, Precompute):
 
     def __init__(self):
         super(CodingLenBackgroundPrecompute, self).__init__(use_cache=True)
 
+    def is_precomputed(self):
+        return self.background is not None
+
 
 class SamochaBackgroundPrecompute(SamochaBackground, Precompute):
 
     def __init__(self):
         super(SamochaBackgroundPrecompute, self).__init__(use_cache=True)
+
+    def is_precomputed(self):
+        return self.background is not None

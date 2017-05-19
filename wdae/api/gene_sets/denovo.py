@@ -16,6 +16,9 @@ class PrecomputeDenovoGeneSets(precompute.register.Precompute):
     def precompute(self):
         self.denovo_gene_sets = build_denovo_gene_sets()
 
+    def is_precomputed(self):
+        return self.denovo_gene_sets
+
     def serialize(self):
         result = {}
         for key, gs in self.denovo_gene_sets.items():

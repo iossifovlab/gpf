@@ -179,6 +179,9 @@ class FamiliesReport(ReportBase, precompute.register.Precompute):
         self.children_counters = []
         self.families_total = 0
 
+    def is_precomputed(self):
+        return self.families_counters
+
     def build(self):
         self.families_total = 0
         for phenotype in self.phenotypes[:-1]:
@@ -298,6 +301,9 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
         self._effect_groups = super(DenovoEventsReport, self).effect_groups()
         self._effect_types = super(DenovoEventsReport, self).effect_types()
 
+    def is_precomputed(self):
+        return self.rows
+
     def effect_groups(self):
         return self._effect_groups
 
@@ -381,6 +387,9 @@ class StudyVariantReports(ReportBase, precompute.register.Precompute):
         self.families_report = None
         self.denovo_report = None
 
+    def is_precomputed(self):
+        return self.families_report is not None
+
     def has_denovo(self):
         return any([st.has_denovo for st in self.studies])
 
@@ -426,6 +435,9 @@ class VariantReports(precompute.register.Precompute):
     @property
     def studies(self):
         return get_denovo_studies_names() + get_transmitted_studies_names()
+
+    def is_precomputed(self):
+        return self.data is not None
 
     def precompute(self):
         data = {}
