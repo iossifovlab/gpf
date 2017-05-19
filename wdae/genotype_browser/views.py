@@ -128,7 +128,7 @@ class QueryDownloadView(QueryBaseView):
         try:
             dataset_id = data['datasetId']
             dataset = self.datasets_factory.get_dataset(dataset_id)
-            self.check_object_permissions(request, dataset)
+            self.check_object_permissions(request, dataset_id)
 
             generator = dataset.get_variants_csv(safe=True, **data)
 
