@@ -6,7 +6,7 @@ Created on Oct 21, 2015
 
 from DAE import get_gene_sets_symNS
 from helpers.dae_query import combine_denovo_gene_sets
-from preloaded.register import get_register
+from preloaded import register
 from query_prepare import prepare_gene_syms, prepare_string_value
 from query_variants import do_query_variants
 
@@ -15,7 +15,6 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
 
     gene_term = None
     if gene_set_label != 'denovo':
-        register = get_register()
         if register.has_key(gene_set_label):  # @IgnorePep8
             return register.get(gene_set_label)
 
@@ -69,7 +68,6 @@ def prepare_gene_weights(data):
 
     if not wname:
         return None
-    register = get_register()
     weights = register.get('gene_weights')
     if not weights.has_weight(wname):
         return None

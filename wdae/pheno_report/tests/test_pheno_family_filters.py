@@ -41,7 +41,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(2047, self.neg_count('LGDs', data))
 
     def test_family_pheno_filter_families_count(self):
-        measures = preloaded.register.get_register().get('pheno_measures')
+        measures = preloaded.register.get('pheno_measures')
         families = measures.get_measure_families(
             'pheno_common.non_verbal_iq', 0, 40)
         self.assertEquals(224, len(families))

@@ -66,7 +66,7 @@ class Request(PhenoFamilyBase):
             raise ValueError("phenoMeasure parameter not found in request")
 
         self.measure_name = self.data['phenoMeasure']
-        measures = preloaded.register.get_register().get('pheno_measures')
+        measures = preloaded.register.get('pheno_measures')
         if not measures.has_measure(self.measure_name):
             return ValueError("pheno_report measure {} not found"
                               .format(self.measure_name))

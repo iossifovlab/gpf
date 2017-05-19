@@ -151,7 +151,10 @@ class Measures(Preload):
         return d
 
     def __init__(self):
-        pass
+        self.phdb = None
+
+    def is_loaded(self):
+        return self.phdb is not None
 
     def load(self):
         self.phdb = PhenoDB()
@@ -225,9 +228,8 @@ class NormalizedMeasure(object):
 
     def __init__(self, measure_id):
 
-        from preloaded.register import get_register
+        from preloaded import register
         self.measure_id = measure_id
-        register = get_register()
         measures = register.get('pheno_measures')
 
         if not measures.has_measure(measure_id):

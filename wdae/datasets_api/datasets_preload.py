@@ -16,6 +16,9 @@ class DatasetsPreload(Preload):
         self.dataset_config = DatasetsConfig()
         self.factory = DatasetsFactory(self.dataset_config)
 
+    def is_loaded(self):
+        return True
+
     def load(self):
         preload_active = getattr(
             settings,

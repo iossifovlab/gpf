@@ -12,7 +12,7 @@ import precompute
 class PhenoMeasureFilters(object):
 
     def __init__(self):
-        register = preloaded.register.get_register()
+        register = preloaded.register
         assert register.has_key('pheno_measures')  # @IgnorePep8
 
         self.measures = register.get('pheno_measures')

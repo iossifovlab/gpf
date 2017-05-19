@@ -4,7 +4,7 @@ Created on Dec 10, 2015
 @author: lubo
 '''
 import unittest
-from preloaded.register import get_register
+from preloaded import register
 from DAE import vDB
 from transmitted.mysql_query import MysqlTransmittedQuery
 
@@ -19,7 +19,6 @@ def count(vs):
 class Test(unittest.TestCase):
 
     def setUp(self):
-        register = get_register()
         self.weights = register.get('gene_weights')
 
         transmitted_study = vDB.get_study("w1202s766e611")

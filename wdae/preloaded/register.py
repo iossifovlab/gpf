@@ -3,15 +3,19 @@ Created on Nov 5, 2015
 
 @author: lubo
 '''
+from django.conf import settings
 
 
 class Preload(object):
 
     def load(self):
-        raise NotImplemented
+        raise NotImplementedError()
+
+    def is_loaded(self):
+        raise NotImplementedError()
 
     def get(self):
-        raise NotImplemented
+        raise NotImplementedError()
 
 
 _REGISTER = {}
@@ -23,21 +27,32 @@ def get_register():
 
 
 def register(key, preload):
+    assert isinstance(preload, Preload)
+
+    preload_active = getattr(
+        settings,
+        "PRELOAD_ACTIVE",
+        False)
+
+    if preload_active:
+        preload.load()
+
     global _REGISTER
     _REGISTER[key] = preload
 
 
 def get(key):
     global _REGISTER
-    print("trying to find preloaded {}".format(key))
 
     try:
-        print("preloading {} found... loading...".format(key))
-        value = _REGISTER.get(key)
+        preload = _REGISTER.get(key)
+        if not preload.is_loaded():
+            preload.load()
+        return preload.get()
     finally:
         pass
 
-    return value
+    return None
 
 
 def has_key(key):

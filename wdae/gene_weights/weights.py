@@ -13,6 +13,10 @@ class Weights(Preload):
     def __init__(self):
         super(Weights, self).__init__()
         self.loader = WeightsLoader()
+        self.desc = None
+
+    def is_loaded(self):
+        return self.desc is not None
 
     def _load_desc(self):
         result = []

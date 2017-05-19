@@ -17,7 +17,7 @@ from django.conf import settings
 class PhenoInstrumentsView(APIView):
 
     def __init__(self):
-        register = preloaded.register.get_register()
+        register = preloaded.register
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
@@ -46,7 +46,7 @@ def isnan(val):
 
 class PhenoMeasuresView(APIView):
     def __init__(self):
-        register = preloaded.register.get_register()
+        register = preloaded.register
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
