@@ -11,79 +11,131 @@ When you change datasets' groups you need to run
 ./manage.py reload_dataset_perm
 ```
 
-## Management command `import_researchers`
+## Management command `users_add`
 
-Imports reasearchers from CSV file. The file sould contain following columns:
-* Email - researcher email
-* Id - researchers identification used in process of registration
-* FirstName - first name
-* LastName - last name
-* Groups - list of users' groups this researcher belongs to. The goups are 
+Imports new users from CSV file. The file sould contain following columns:
+* Email - Email address of the user
+
+The following optional columns are also supported:
+* Name - Name of the user
+* Groups - List of users' groups this researcher belongs to. The groups are
 separated by `:` symbol.
+* Password - Hashed password.
+If the password is empty, the user will be inactive
+
+
+The following special groups are supported:
+* SFARI#<ID> - Researcher Ids are specified as groups with the SFARI#
+prefix.
+* superuser - Gives the user superuser permissions
+* any_dataset - Gives the user access to all datasets
 
 Example CSV file:
 ```
-Email,Id,FirstName,LastName,Groups
-u1@example.org,ID1,User,One,SSC
-u2@example.org,ID1,User,Two,VIP
-u3@example.org,ID1,User,Three,SSC:VIP
+Email,Name,Groups,Password
+u1@example.org,User One,superuser:SFARI#123,password_hash
+u2@example.org,User Two,SSC,password_hash
+u3@example.org,User Three,,
 ```
 
-## Management command `export_users`
+## Management command `users_restore`
+
+Same as `users_add`, but will remove all existing users before importing new ones
+
+## Management command `users_export`
 
 Export users into CSV file. Example usage of the command is:
 ```
-./manage.py export_users output_file.csv
+./manage.py users_export output_file.csv
 ```
-where tha last argument of the command gives a file name, where the exported
+where the last argument of the command gives a file name, where the exported
 users should be stored.
 
 Example exported users file is:
 
 ```
-Email,FirstName,LastName,Groups,Superuser,Staff,Active,Id,Password
-anonymous@seqpipe.org,,,anonymous,False,False,True,,<pass>
-admin@iossifovlab.com,,,,True,True,True,,<pass>
-research@iossifovlab.com,,,SSC:VIP,False,False,True,,<pass>
-vip@iossifovlab.com,,,VIP,False,False,True,,<pass>
-ssc@iossifovlab.com,,,SSC,False,False,True,,<pass>
-u1@example.org,User,One,SSC,False,False,False,ID1,
-u2@example.org,ID1,User,Two,False,False,False,VIP
-u3@example.org,ID1,User,Three,False,False,False,SSC:VIP
+Email,Name,Groups,Password
+anonymous@seqpipe.org,,,pass_hash
+admin@iossifovlab.com,,superuser,pass_hash
+research@iossifovlab.com,,,pass_hash
+vip@iossifovlab.com,,,pass_hash
+ssc@iossifovlab.com,,,pass_hash
 ```
 
-There are additional columns in this exported file:
-* Superuser - whether the user is a system adminstrator. Users with this flag `True`
-has all permissions
-* Staff - whether the user is a staff member. Users with this flag `True` could
-have access to administrative fuctions of the system.
-* Active - whether the user is active. When importing researcher they has values
-of this flag set to `False`. Researchers registration process verifies the user
-and turns this flag to `True` to mark the user as active. Only active users can
-login into the system.
-* Passwords - contains salted hash of the users' passwords.
+## Management command `user_group_add`
 
-## Management command `import_users`
+Adds the specified user to the colon-separated list of groups
 
-To change the users settings we can import users using `import_users` command. You
-can edit users CSV file from previous invocation of `export_users` command to
-edit users access rights and configuration.
-
-Example invocations of `import_users` command are:
+Example invocations of `user_group_add` command are:
 ```
-./manage.py import_users users_file.csv
+./manage.py user_group_add research@iossifovlab.com GROUP1:GROUP2
 ```
 
-There some options that could be specified when invoking `import_users` command.
+## Management command `user_group_remove`
 
-* `-r` - replaces all groups and researcher ids for users in the file. Default 
-behavior when the imported user exists in the system is to append groups and 
-researcher IDs found in the users file to the existings groups and IDs. If you
-want to replace gropus and IDs of the existing users you need to use `-r` option.
+Removes the specified user from the colon-separated list of groups
 
-* `--additional-groups GROUPS`, `-g GROUPS` - for all imported users appends
-groups specified with this options to groups defined into the file.
+Example invocations of `user_group_remove` command are:
+```
+./manage.py user_group_remove research@iossifovlab.com GROUP1:GROUP2
+```
 
+## Management command `user_set_name`
+
+Changes the name of the specified user
+
+Example invocations of `user_set_name` command are:
+```
+./manage.py user_set_name research@iossifovlab.com "New Name"
+```
+
+## Management command `user_create`
+
+Creates a new user. Requires one argument - email.
+
+Additional parameters are supported:
+* `-g` - Adds the user to the colon-separated list of groups
+* `-n` - Sets the name of the user
+
+Example invocations of `user_create` command are:
+```
+./manage.py user_create r123@iossifovlab.com -n "Name LastName" -g SSC:SFARI#123
+Password:
+Password (again):
+Password changed successfully for user 'r123@iossifovlab.com'
+```
+
+## Management command `user_remove`
+
+Deletes the specified user
+
+Example invocations of `user_remove` command are:
+```
+./manage.py user_remove research@iossifovlab.com
+```
+
+## Management command `user_show`
+
+Deletes the specified user
+
+Example invocations of `user_show` command are:
+```
+./manage.py user_show research@iossifovlab.com
+User email: research@iossifovlab.com name: Name groups: SFID#123:SSC password: <pass_hash>
+```
+
+## Management command `user_setpasswd`
+
+Changes the password of the specified user
+
+Example invocations of `user_setpasswd` command are:
+```
+./manage.py user_setpasswd research@iossifovlab.com
+Changing password for user 'research@iossifovlab.com'
+Password:
+Password (again):
+Password changed successfully for user 'research@iossifovlab.com'
+```
 
 ## Management command `devusers`
 
@@ -98,27 +150,8 @@ Example invocation of the command is:
 When run command creates following users:
 
 ```
-Email,FirstName,LastName,Groups,Superuser,Staff,Active,Id,Password
-admin@iossifovlab.com,,,,True,True,True,,<pass>
-research@iossifovlab.com,,,,False,False,True,,<pass>
-vip@iossifovlab.com,,,,False,False,True,,<pass>
-ssc@iossifovlab.com,,,,False,False,True,,<pass>
+Email,Name,Groups,Password
+admin@iossifovlab.com,,superuser,pass_hash
+research@iossifovlab.com,,,pass_hash
 ```
-All development users has password `secret`.
-
-Using `export_users` command this users could be exported and edited to assign them
-into different groups. For example, if the system datasets configuration defines
-`SSC` and `VIP` groups, the users file could be changed into:
-
-```
-Email,FirstName,LastName,Groups,Superuser,Staff,Active,Id,Password
-admin@iossifovlab.com,,,,True,True,True,,<pass>
-research@iossifovlab.com,,,VIP:SSC,False,False,True,,<pass>
-vip@iossifovlab.com,,,VIP,False,False,True,,<pass>
-ssc@iossifovlab.com,,,SSC,False,False,True,,<pass>
-```
-
-When this users file is imported using `import_users` command,
-the user `ssc@iossifovlab.com` will have access to datasets in the `SSC` group,
-the user `vip@iossifovlab.com` will have access to datasets in the `VIP` group,
-and the user `research@iossifovlab.com` will have access to both. 
+All development users have password `secret`.
