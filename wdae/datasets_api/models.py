@@ -1,15 +1,30 @@
-'''
-Created on Aug 10, 2016
-
-@author: lubo
-'''
 from django.db import models
+from django.contrib.auth.models import Group
+from guardian.shortcuts import assign_perm, remove_perm
 
 
 class Dataset(models.Model):
     dataset_id = models.TextField()
 
+    DEFAULT_GROUPS_FOR_DATASET = ["any_dataset"]
+
     class Meta:
         permissions = (
             ('view', 'View dataset'),
         )
+
+    @classmethod
+    def add_dataset_perm(cls, dataset_id, authorized_groups):
+        datasetObject, _ = cls.objects.get_or_create(dataset_id=dataset_id)
+
+        for group in Group.objects.all():
+            remove_perm('view', group, datasetObject)
+
+        groups = [dataset_id]
+        if authorized_groups is not None:
+            groups += authorized_groups
+        if cls.DEFAULT_GROUPS_FOR_DATASET is not None:
+            groups += cls.DEFAULT_GROUPS_FOR_DATASET
+        for group_name in groups:
+            group, created = Group.objects.get_or_create(name=group_name)
+            assign_perm('view', group, datasetObject)
