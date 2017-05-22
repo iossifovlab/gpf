@@ -36,6 +36,14 @@ def test_get_variants_father_ultra_rare(
         )
     )
     variants = [v for v in vs]
+    dcount = 0
+    tcount = 0
+    for v in variants:
+        if v.popType == 'denovo':
+            dcount += 1
+        else:
+            tcount += 1
+    print(dcount, tcount)
     assert 176 == len(variants)
 
 
@@ -65,10 +73,16 @@ def test_get_variants_father_rarity(
     vs = genotype_helper.get_variants(vt)
     variants = [v for v in vs]
 
+    dcount = 0
+    tcount = 0
     for v in variants:
-        if v.popType != 'denovo':
+        if v.popType == 'denovo':
+            dcount += 1
+        else:
+            tcount += 1
             assert 'dad' in v.fromParentS or v.fromParentS == ''
             assert v.altFreqPrcnt <= 1.0
+    print(dcount, tcount)
 
     assert 250 == len(variants)
 
@@ -97,11 +111,16 @@ def test_get_variants_father_interval(
 
     vs = genotype_helper.get_variants(vt)
     variants = [v for v in vs]
+    dcount = 0
+    tcount = 0
     for v in variants:
         if v.popType != 'denovo':
+            tcount += 1
             assert 'dad' in v.fromParentS or v.fromParentS == ''
             assert v.altFreqPrcnt >= 1.0 and v.altFreqPrcnt <= 50.0
-
+        else:
+            dcount += 1
+    print(dcount, tcount)
     assert 593 == len(variants)
 
 
