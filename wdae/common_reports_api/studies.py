@@ -89,11 +89,6 @@ def __build_studies_summaries(studies):
     phenotype = set()
     study_type = set()
     study_year = set()
-    # pmids = list()
-
-    # fams = set()
-    # prbs = set()
-    # sibs = set()
 
     has_denovo = False
     has_transmitted = False
