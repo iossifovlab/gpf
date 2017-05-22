@@ -1,14 +1,14 @@
 # User Management Tools
 
 
-## Management command `reload_dataset_perm`
+## Management command `reload_datasets_perm`
 
 Loads and creates users' groups defined into `variantsDB.conf` datasets
 configuration.
 
 When you change datasets' groups you need to run
 ```
-./manage.py reload_dataset_perm
+./manage.py reload_datasets_perm
 ```
 
 ## Management command `users_add`
@@ -116,7 +116,7 @@ Example invocations of `user_remove` command are:
 
 ## Management command `user_show`
 
-Deletes the specified user
+Shows the specified user
 
 Example invocations of `user_show` command are:
 ```

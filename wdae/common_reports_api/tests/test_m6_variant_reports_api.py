@@ -3,11 +3,10 @@ Created on Aug 3, 2015
 
 @author: lubo
 '''
-import unittest
 from rest_framework import status
 from rest_framework.test import APITestCase
 from precompute import register
-from reports.serializers import StudyVariantReportsSerializer
+from common_reports_api.serializers import StudyVariantReportsSerializer
 
 
 class Test(APITestCase):
@@ -19,12 +18,12 @@ class Test(APITestCase):
         pass
 
     def test_get_ok(self):
-        url = '/api/reports/variant_reports/IossifovWE2014'
+        url = '/api/v3/common_reports/variant_reports/IossifovWE2014'
         response = self.client.get(url, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
 
     def test_get_not_found(self):
-        url = '/api/reports/variant_reports/AlaBalaPortokala'
+        url = '/api/v3/common_reports/variant_reports/AlaBalaPortokala'
         response = self.client.get(url, format='json')
         self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
 
@@ -39,7 +38,7 @@ class Test(APITestCase):
         self.assertTrue(serializer.data)
 
     def test_study_variant_report_iossifov2014(self):
-        url = '/api/reports/variant_reports/IossifovWE2014'
+        url = '/api/v3/common_reports/variant_reports/IossifovWE2014'
         response = self.client.get(url, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertTrue(response.data)
@@ -50,7 +49,7 @@ class Test(APITestCase):
         self.assertIn('denovo_report', data)
 
     def test_study_variant_report_iossifov2014_families_report(self):
-        url = '/api/reports/variant_reports/IossifovWE2014'
+        url = '/api/v3/common_reports/variant_reports/IossifovWE2014'
         response = self.client.get(url, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertTrue(response.data)
@@ -62,7 +61,7 @@ class Test(APITestCase):
         self.assertIn('families_total', data)
 
     def test_study_variant_report_iossifov2014_denovo_report(self):
-        url = '/api/reports/variant_reports/IossifovWE2014'
+        url = '/api/v3/common_reports/variant_reports/IossifovWE2014'
         response = self.client.get(url, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertTrue(response.data)
@@ -74,7 +73,7 @@ class Test(APITestCase):
         self.assertIn('rows', data)
 
     def test_study_variant_report_iossifov2014_denovo_report_rows(self):
-        url = '/api/reports/variant_reports/IossifovWE2014'
+        url = '/api/v3/common_reports/variant_reports/IossifovWE2014'
         response = self.client.get(url, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertTrue(response.data)
@@ -89,8 +88,3 @@ class Test(APITestCase):
         self.assertAlmostEqual(0.153, value, 3)
         value = data['LGDs']['autism']['events_children_percent']
         self.assertAlmostEqual(0.142, value, 3)
-
-
-if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()

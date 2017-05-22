@@ -4,7 +4,6 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from api.sd.views import SequencingDenovoPreview, SequencingDenovoDownload
 from api.ssc.views import SSCPreview, SSCDownload
 from enrichment.views import EnrichmentView
-from reports.views import VariantReportsView, FamiliesDataDownloadView
 from api.vip.views import VIPPreview, VIPDownload
 
 
@@ -36,11 +35,6 @@ urlpatterns = patterns(
 
     url(r'^vip_query_variants_preview$', VIPPreview.as_view()),
     url(r'^vip_query_variants$', VIPDownload.as_view()),
-
-    url(r'^reports/variant_reports/(?P<study_name>.+)$',
-        VariantReportsView.as_view()),
-    url(r'^reports/families_data/(?P<study_name>.+)$',
-        FamiliesDataDownloadView.as_view()),
 
     url(r'^gene_sets$', 'gene_sets_list'),
     url(r'^gene_set_list2$', 'gene_set_list2'),

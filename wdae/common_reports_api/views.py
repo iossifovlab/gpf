@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from precompute import register
-from reports.families import FamiliesDataCSV
-from reports.serializers import StudyVariantReportsSerializer
+from common_reports_api.families import FamiliesDataCSV
+from common_reports_api.serializers import StudyVariantReportsSerializer
 
 
 class VariantReportsView(APIView):
