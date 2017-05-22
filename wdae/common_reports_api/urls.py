@@ -7,7 +7,9 @@ Created on May 22, 2017
 from django.conf.urls import url
 
 from common_reports_api.views import VariantReportsView, \
-    FamiliesDataDownloadView
+    FamiliesDataDownloadView, ReportStudies, \
+    StudySummaries, DenovoStudiesList,\
+    TransmittedStudiesList
 
 
 urlpatterns = [
@@ -16,5 +18,12 @@ urlpatterns = [
 
     url(r'^/families_data/(?P<study_name>.+)$',
         FamiliesDataDownloadView.as_view()),
+
+    url(r'^/report_studies$', ReportStudies.as_view()),
+
+    url(r'^/studies_summaries$', StudySummaries.as_view()),
+
+    url(r'^/denovo_studies$', DenovoStudiesList.as_view()),
+    url(r'^/transmitted_studies$', TransmittedStudiesList.as_view()),
 
 ]

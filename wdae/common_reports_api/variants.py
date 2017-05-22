@@ -10,7 +10,7 @@ from DAE import vDB
 import precompute
 import cPickle
 import zlib
-from studies.studies import get_denovo_studies_names, \
+from common_reports_api.studies import get_denovo_studies_names, \
     get_transmitted_studies_names
 
 

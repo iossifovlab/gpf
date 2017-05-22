@@ -9,8 +9,6 @@ from api.vip.views import VIPPreview, VIPDownload
 
 urlpatterns = patterns(
     'api.views',
-    url(r'^denovo_studies$', 'denovo_studies_list'),
-    url(r'^transmitted_studies$', 'transmitted_studies_list'),
     url(r'^effect_types$', 'effect_types_list'),
     url(r'^effect_types_filters$', 'effect_types_filters'),
     url(r'^chromes_effect_types$', 'chromes_effect_types'),
@@ -43,10 +41,10 @@ urlpatterns = patterns(
     url(r'^study_tab_phenotypes/(?P<study_tab>.+)$', 'study_tab_phenotypes'),
     url(r'^gene_set_phenotypes$', 'gene_set_phenotypes'),
 
-    url(r'^report_studies$', 'report_studies'),
+    # url(r'^report_studies$', 'report_studies'),
     url(r'^enrichment_test_by_phenotype$', EnrichmentView.as_view()),
     url(r'^child_types$', 'child_type_list'),
-    url(r'^studies_summaries$', 'studies_summaries'),
+    # url(r'^studies_summaries$', 'studies_summaries'),
 
 )
 
