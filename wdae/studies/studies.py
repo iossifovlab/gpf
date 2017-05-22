@@ -1,6 +1,5 @@
 from DAE import vDB
-from collections import Counter
-from _collections import defaultdict
+from collections import Counter, defaultdict
 from helpers.logger import LOGGER
 
 
