@@ -55,8 +55,15 @@ class Command(BaseCommand):
             with open(hashfilename, 'w') as f:
                 f.write(hashsum)
         else:
-            with open(hashfilename, 'r') as f:
-                hashsum = f.read().strip()
+            dbtime = os.path.getmtime(dbfilename)
+            hashtime = os.path.getmtime(hashfilename)
+            if hashtime >= dbtime:
+                with open(hashfilename, 'r') as f:
+                    hashsum = f.read().strip()
+            else:
+                hashsum = sha256sum(dbfilename)
+                with open(hashfilename, 'w') as f:
+                    f.write(hashsum)
         return hashsum
 
     def should_recompute(self, dbname):

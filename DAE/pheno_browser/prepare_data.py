@@ -201,6 +201,7 @@ class PreparePhenoBrowserBase(object):
                         v.instrument_name = measure.instrument_name
                         v.measure_name = measure.measure_name
                         v.measure_type = measure.measure_type
+                        v.values_domain = measure.value_domain
 
                         self.build_values_distribution(measure, v)
                         self.build_regression_by_nviq(measure, v)
@@ -214,6 +215,7 @@ class PreparePhenoBrowserBase(object):
                         v.instrument_name = measure.instrument_name
                         v.measure_name = measure.measure_name
                         v.measure_type = measure.measure_type
+                        v.values_domain = measure.value_domain
 
                         self.build_values_distribution(measure, v)
                         vm.save(v)

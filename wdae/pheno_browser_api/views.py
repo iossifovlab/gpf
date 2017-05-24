@@ -90,8 +90,6 @@ class PhenoMeasuresView(APIView):
         res = []
         for row in df.itertuples():
             m = dict(vars(row))
-            print(m)
-
             if isnan(m['pvalue_correlation_nviq_male']):
                 m['pvalue_correlation_nviq_male'] = "NaN"
             if isnan(m['pvalue_correlation_age_male']):

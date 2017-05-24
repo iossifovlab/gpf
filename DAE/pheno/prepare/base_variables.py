@@ -254,13 +254,17 @@ class BaseVariables(object):
                 var.stats = self.ORDINAL
                 var.min_value = min(unique_values)
                 var.max_value = max(unique_values)
-                sorted(unique_values)
-                var.value_domain = "{}".format(unique_values)
+                unique_values = sorted(unique_values)
+                var.value_domain = "{}".format(
+                    ', '.join([str(v) for v in unique_values]))
                 return self.ORDINAL
             elif self.check_categorical_rank(rank, individuals):
                 var.stats = self.CATEGORICAL
-                sorted(unique_values)
-                var.value_domain = "{}".format(unique_values)
+                unique_values = sorted(unique_values)
+                unique_values = [str(v) for v in unique_values
+                                 if not isinstance(v, str)]
+                var.value_domain = "{}".format(
+                    ', '.join([v for v in unique_values]))
                 return self.CATEGORICAL
             else:
                 var.stats = self.UNKNOWN
@@ -270,8 +274,9 @@ class BaseVariables(object):
         elif values_type == str:
             if self.check_categorical_rank(rank, individuals):
                 var.stats = self.CATEGORICAL
-                sorted(unique_values)
-                var.value_domain = "{}".format(unique_values)
+                unique_values = sorted(unique_values)
+                var.value_domain = "{}".format(
+                    ', '.join([v for v in unique_values]))
                 return self.CATEGORICAL
 
         var.stats = self.UNKNOWN
