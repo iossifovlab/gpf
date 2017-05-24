@@ -152,7 +152,7 @@ class PreparePhenoBrowserBase(object):
                 if res_female is not None else None
 
             (res.figure_correlation_nviq_small,
-             res.figure_correlation_nviq_small) = self.save_fig(
+             res.figure_correlation_nviq) = self.save_fig(
                  measure, "prb_regression_by_nviq")
             return (res.pvalue_correlation_nviq_male,
                     res.pvalue_correlation_nviq_female)
