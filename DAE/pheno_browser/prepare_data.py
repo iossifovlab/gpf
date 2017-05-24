@@ -219,4 +219,4 @@ class PreparePhenoBrowserBase(object):
                         vm.save(v)
 
                         print("\tDONE categorical")
-                # break
+                break
