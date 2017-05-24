@@ -188,38 +188,6 @@ def draw_distribution(df, measure_id, ax=None):
     ax.set_ylabel('count')
 
 
-# def _measure_df_gender_split(df, col):
-#     data = [
-#         df[col],
-#         df[df.gender == 'M'][col],
-#         df[df.gender == 'F'][col]
-#     ]
-#     return data
-#
-#
-# def _measure_df_split(df, col):
-#     data = _measure_df_gender_split(df, col)
-#     data.extend(_measure_df_gender_split(df[df.role == 'prb'], col))
-#     data.extend(_measure_df_gender_split(df[df.role == 'sib'], col))
-#     data.extend(_measure_df_gender_split(
-#         df[np.logical_or(df.role == 'mom', df.role == 'dad')], col))
-#
-#     labels = [
-#         'All ({})'.format(len(data[0])),
-#         'M ({})'.format(len(data[1])),
-#         'F ({})'.format(len(data[2])),
-#         'prb All ({})'.format(len(data[3])),
-#         'prb M ({})'.format(len(data[4])),
-#         'prb F ({})'.format(len(data[5])),
-#         'sib All ({})'.format(len(data[6])),
-#         'sib M ({})'.format(len(data[7])),
-#         'sib F ({})'.format(len(data[8])),
-#         'Parents All ({})'.format(len(data[9])),
-#         'dad ({})'.format(len(data[10])),
-#         'mom ({})'.format(len(data[11]))]
-#     return data, labels
-
-
 def role_counts(df):
     counts = {
         'prb': len(df[df.role == 'prb']),
@@ -282,3 +250,80 @@ def draw_measure_violinplot(df, measure_id, ax=None):
 
     labels = role_labels(df)
     plt.xticks([0, 1, 2], labels)
+
+
+def draw_violin_distribution1(df, measure_id, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
+    labels = [1, 2]
+    values_domain = df[measure_id].unique()
+    number_of_bins = len(values_domain)
+
+    data_sets = [
+        df[df.gender == 'M'][measure_id].values,
+        df[df.gender == 'F'][measure_id].values
+    ]
+
+    hist_range = (np.min(data_sets), np.max(data_sets))
+
+    binned_data_sets = [
+        np.histogram(d, range=hist_range, bins=number_of_bins)[0]
+        for d in data_sets
+    ]
+    print(binned_data_sets)
+
+    binned_maximums = np.max(binned_data_sets, axis=1)
+    x_locations = np.arange(0, sum(binned_maximums), np.max(binned_maximums))
+
+    # The bin_edges are the same for all of the histograms
+    bin_edges = np.linspace(hist_range[0], hist_range[1], number_of_bins + 1)
+    centers = 0.5 * (bin_edges + np.roll(bin_edges, 1))[:-1]
+    heights = np.diff(bin_edges)
+
+    # Cycle through and plot each histogram
+    _fig, ax = plt.subplots()
+    for x_loc, binned_data in zip(x_locations, binned_data_sets):
+        lefts = x_loc - 0.5 * binned_data
+        ax.barh(centers, binned_data, height=heights, left=lefts)
+
+    ax.set_xticks(x_locations)
+    ax.set_xticklabels(labels)
+
+    ax.set_ylabel("Data values")
+    ax.set_xlabel("Data sets")
+
+
+def draw_violin_distribution(df, measure_id, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
+    df = df.copy()
+
+    values_domain = sorted(df[measure_id].unique())
+    y_locations = np.arange(len(values_domain))
+    df[measure_id].replace(dict(zip(values_domain, y_locations)), inplace=True)
+
+    df_male = df[df.gender == 'M']
+    df_female = df[df.gender == 'F']
+
+    bin_edges = y_locations - 0.5
+    centers = bin_edges
+    heights = 1
+
+    datasets = [df_male[measure_id].values, df_female[measure_id].values]
+
+    hist_range = (np.min(y_locations), np.max(y_locations))
+    male, female = [
+        np.histogram(d, range=hist_range, bins=len(y_locations))[0]
+        for d in datasets
+    ]
+
+    x_loc = 0
+    _fig, ax = plt.subplots()
+    lefts = x_loc - male
+    ax.barh(centers, male, height=heights, left=lefts)
+    ax.barh(centers, female, height=heights, left=x_loc)
+
+    ax.set_yticks(y_locations)
+    ax.set_yticklabels(values_domain)

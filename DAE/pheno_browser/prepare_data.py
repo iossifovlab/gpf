@@ -7,7 +7,7 @@ import os
 import matplotlib.pyplot as plt
 from DAE import pheno
 from pheno_browser.graphs import draw_linregres, draw_measure_violinplot,\
-    draw_distribution
+    draw_distribution, draw_violin_distribution
 from pheno_browser.models import VariableBrowserModelManager,\
     VariableBrowserModel
 
@@ -164,10 +164,11 @@ class PreparePhenoBrowserBase(object):
         (res.figure_distribution_small,
          res.figure_distribution) = self.save_fig(measure, "violinplot")
 
-    def build_values_distribution(self, measure):
+    def build_values_distribution(self, measure, res):
         df = self.load_measure(measure)
-        draw_distribution(df, measure.measure_id)
-        return self.save_fig(measure, "distribution")
+        draw_violin_distribution(df, measure.measure_id)
+        (res.figure_distribution_small,
+         res.figure_distribution) = self.save_fig(measure, "distribution")
 
     def run(self):
         with VariableBrowserModelManager(dbfile=self.browser_db) as vm:
@@ -181,6 +182,7 @@ class PreparePhenoBrowserBase(object):
                     print("{}.\tprocessing measure: {}".format(
                         count, measure.name))
                     if measure.measure_type == 'continuous':
+                        continue
                         v = VariableBrowserModel()
                         v.measure_id = measure.measure_id
                         v.instrument_name = measure.instrument_name
@@ -193,7 +195,19 @@ class PreparePhenoBrowserBase(object):
                         self.build_regression_by_age(measure, v)
 
                         vm.save(v)
-                        print("\tDONE")
+                        print("\tDONE continuous")
+                    elif measure.measure_type == 'ordinal':
+                        v = VariableBrowserModel()
+                        v.measure_id = measure.measure_id
+                        v.instrument_name = measure.instrument_name
+                        v.measure_name = measure.measure_name
+                        v.measure_type = measure.measure_type
+
+                        self.build_values_distribution(measure, v)
+                        vm.save(v)
+
+                        print("\tDONE ordinal")
+                        break
                     else:
-                        print("\tSKIPPED")
+                        print("\tSKIP {}".format(measure.measure_type))
                 break

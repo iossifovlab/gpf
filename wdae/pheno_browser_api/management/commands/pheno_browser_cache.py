@@ -17,6 +17,16 @@ class Command(BaseCommand):
     args = ''
     help = 'Rebuild pheno browser static figures cache'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '-f', '--force',
+            action='store_const',
+            dest='force',
+            default=False,
+            help='Force recalculation of static resources',
+            const=True
+        )
+
     def get_cache_hashsum(self, dbname):
         hashfile = os.path.join(
             get_cache_dir(dbname),
@@ -58,6 +68,8 @@ class Command(BaseCommand):
         if(len(args) != 0):
             raise CommandError('Unexpected arguments passed')
 
+        force = options.get('force', False)
+
         try:
             pheno_db_names = pheno.get_pheno_db_names()
             for dbname in pheno_db_names:
@@ -65,7 +77,7 @@ class Command(BaseCommand):
                     continue
 
                 print("checking pheno browser cache for {}".format(dbname))
-                if not self.should_recompute(dbname):
+                if not force and not self.should_recompute(dbname):
                     print("\tcache OK")
                     continue
                 print("\tcache RECOMPUTE")
