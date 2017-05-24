@@ -8,25 +8,18 @@ import traceback
 from DAE import pheno
 
 from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
 from precompute.filehash import sha256sum
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
+from pheno_browser_api.common import get_cache_dir
 
 
 class Command(BaseCommand):
     args = ''
     help = 'Rebuild pheno browser static figures cache'
 
-    def get_cache_output(self, dbname):
-        cache_dir = getattr(
-            settings,
-            "PHENO_BROWSER_CACHE",
-            None)
-        return os.path.join(cache_dir, dbname)
-
     def get_cache_hashsum(self, dbname):
         hashfile = os.path.join(
-            self.get_cache_output(dbname),
+            get_cache_dir(dbname),
             '{}.hash'.format(dbname))
         if not os.path.exists(hashfile):
             return ''
@@ -35,7 +28,7 @@ class Command(BaseCommand):
 
     def save_cache_hashsum(self, dbname):
         hashfile = os.path.join(
-            self.get_cache_output(dbname),
+            get_cache_dir(dbname),
             '{}.hash'.format(dbname))
         with open(hashfile, 'w') as f:
             hashsum = self.get_db_hashsum(dbname)
@@ -68,12 +61,15 @@ class Command(BaseCommand):
         try:
             pheno_db_names = pheno.get_pheno_db_names()
             for dbname in pheno_db_names:
+                if dbname != 'vip':
+                    continue
+
                 print("checking pheno browser cache for {}".format(dbname))
                 if not self.should_recompute(dbname):
                     print("\tcache OK")
                     continue
                 print("\tcache RECOMPUTE")
-                output_dir = self.get_cache_output(dbname)
+                output_dir = get_cache_dir(dbname)
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
 

@@ -20,6 +20,8 @@ class PreparePhenoBrowserBase(object):
     def __init__(self, pheno_db, output_dir):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
+        self.output_base = os.path.basename(output_dir)
+        print(self.output_base)
         self.pheno_db = pheno.get_pheno_db(pheno_db)
         self.browser_db = os.path.join(
             output_dir,
@@ -75,6 +77,13 @@ class PreparePhenoBrowserBase(object):
         filepath = os.path.join(outdir, filename)
         return filepath
 
+    def figure_path(self, measure, suffix):
+        filename = "{}.{}.png".format(measure.measure_id, suffix)
+        outdir = os.path.join(self.output_base, measure.instrument_name)
+
+        filepath = os.path.join(outdir, filename)
+        return filepath
+
     def save_fig(self, measure, suffix):
         small_filepath = self.figure_filepath(
             measure, "{}_small".format(suffix))
@@ -83,7 +92,12 @@ class PreparePhenoBrowserBase(object):
         filepath = self.figure_filepath(measure, suffix)
         plt.savefig(filepath, dpi=self.LARGE_DPI)
         plt.close()
-        return small_filepath, filepath
+        return (
+            self.figure_path(
+                measure, "{}_small".format(suffix)),
+            self.figure_path(
+                measure, suffix)
+        )
 
     def build_regression_by_age(self, measure, res):
         age_id = self.pheno_db.get_age_measure_id(measure.measure_id)
@@ -182,4 +196,4 @@ class PreparePhenoBrowserBase(object):
                         print("\tDONE")
                     else:
                         print("\tSKIPPED")
-                # break
+                break
