@@ -679,11 +679,12 @@ class Study:
 
 class VariantsDB:
 
-    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None, phDB=None, genomesDB=None):
+    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None, 
+                 phDB=None, genomesDB=None):
         self.sfariDB = sfariDB
         self.giDB = giDB
 
-        self.phDB = phDB
+        # self.phDB = phDB
         self.genomesDB = genomesDB
 
         if not confFile:

@@ -21,7 +21,10 @@ class PreparePhenoBrowserBase(object):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         self.pheno_db = pheno.get_pheno_db(pheno_db)
-        self.browser_db = "{}_browser.db".format(pheno_db)
+        self.browser_db = os.path.join(
+            output_dir,
+            "{}_browser.db".format(pheno_db)
+        )
 
     def load_measure(self, measure):
         df = self.pheno_db.get_persons_values_df([measure.measure_id])
@@ -175,6 +178,8 @@ class PreparePhenoBrowserBase(object):
                         self.build_regression_by_nviq(measure, v)
                         self.build_regression_by_age(measure, v)
 
-                        print(v.to_tuple(v))
-
                         vm.save(v)
+                        print("\tDONE")
+                    else:
+                        print("\tSKIPPED")
+                # break
