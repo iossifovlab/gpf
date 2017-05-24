@@ -31,18 +31,18 @@ export class PhenoBrowserTableComponent {
     }
   }
 
-  minDomainComparator(a: any, b: any): number {
-    let leftVal = a.valuesDomain[0];
-    let rightVal = b.valuesDomain[0];
-
-    return PhenoBrowserTableComponent.compare(leftVal, rightVal);
-  }
-  maxDomainComparator(a: any, b: any): number {
-    let leftVal = a.valuesDomain[1];
-    let rightVal = b.valuesDomain[1];
-
-    return PhenoBrowserTableComponent.compare(leftVal, rightVal);
-  }
+//  minDomainComparator(a: any, b: any): number {
+//    let leftVal = a.valuesDomain[0];
+//    let rightVal = b.valuesDomain[0];
+//
+//    return PhenoBrowserTableComponent.compare(leftVal, rightVal);
+//  }
+//  maxDomainComparator(a: any, b: any): number {
+//    let leftVal = a.valuesDomain[1];
+//    let rightVal = b.valuesDomain[1];
+//
+//    return PhenoBrowserTableComponent.compare(leftVal, rightVal);
+//  }
 
   static compare(leftVal: any, rightVal:any): number {
     if (leftVal == null && rightVal == null) return 0;

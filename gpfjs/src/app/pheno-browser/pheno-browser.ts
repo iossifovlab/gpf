@@ -12,13 +12,12 @@ export class PhenoInstruments {
   }
 }
 
-export type ValuesDomain = [number, number];
 
 export class PhenoMeasure {
   constructor(
     readonly index: number,
     readonly instrumentName: string,
-    readonly valuesDomain: ValuesDomain,
+    readonly valuesDomain: string,
 
     readonly figureDistribution: string,
     readonly figureDistributionSmall: string,
@@ -42,7 +41,7 @@ export class PhenoMeasure {
     return new PhenoMeasure(
       json['Index'] as number,
       json['instrument_name'],
-      JSON.parse(json['values_domain']) as ValuesDomain,
+      json['values_domain'],
 
       json['figure_distribution'],
       json['figure_distribution_small'],

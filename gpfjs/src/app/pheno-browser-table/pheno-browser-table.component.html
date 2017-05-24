@@ -12,14 +12,9 @@
     </gpf-table-subcolumn>
   </gpf-table-column>
   <gpf-table-column>
-    <gpf-table-subcolumn header="Minimum" field="valuesDomain" [comparator]="minDomainComparator">
+    <gpf-table-subcolumn header="Values Domain" field="valuesDomain" [sortable]="false">
       <span *gpf-table-cell-content="let data">
-        {{ data.valuesDomain[0] }}
-      </span>
-    </gpf-table-subcolumn>
-    <gpf-table-subcolumn header="Maximum" field="valuesDomain" [comparator]="maxDomainComparator">
-      <span *gpf-table-cell-content="let data">
-        {{ data.valuesDomain[1] }}
+        {{ data.valuesDomain }}
       </span>
     </gpf-table-subcolumn>
   </gpf-table-column>
