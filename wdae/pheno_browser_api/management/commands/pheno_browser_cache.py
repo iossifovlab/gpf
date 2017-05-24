@@ -80,9 +80,6 @@ class Command(BaseCommand):
         try:
             pheno_db_names = pheno.get_pheno_db_names()
             for dbname in pheno_db_names:
-                if dbname != 'vip':
-                    continue
-
                 print("checking pheno browser cache for {}".format(dbname))
                 if not force and not self.should_recompute(dbname):
                     print("\tcache OK")

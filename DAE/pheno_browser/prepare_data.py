@@ -7,7 +7,8 @@ import os
 import matplotlib.pyplot as plt
 from DAE import pheno
 from pheno_browser.graphs import draw_linregres, draw_measure_violinplot,\
-    draw_violin_distribution
+    draw_categorical_violin_distribution,\
+    draw_ordinal_violin_distribution
 from pheno_browser.models import VariableBrowserModelManager,\
     VariableBrowserModel
 
@@ -113,7 +114,7 @@ class PreparePhenoBrowserBase(object):
         dd = df[df.role == 'prb']
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
-                dd, 'age', measure.measure_id, jitter=0.3)
+                dd, 'age', measure.measure_id, jitter=0.1)
             res.pvalue_correlation_age_male = res_male.pvalues['age'] \
                 if res_male is not None else None
             res.pvalue_correlation_age_female = res_female.pvalues['age'] \
@@ -143,7 +144,7 @@ class PreparePhenoBrowserBase(object):
         dd = df[df.role == 'prb']
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
-                dd, 'nonverbal_iq', measure.measure_id, jitter=0.3)
+                dd, 'nonverbal_iq', measure.measure_id, jitter=0.1)
             res.pvalue_correlation_nviq_male = \
                 res_male.pvalues['nonverbal_iq'] \
                 if res_male is not None else None
@@ -164,9 +165,15 @@ class PreparePhenoBrowserBase(object):
         (res.figure_distribution_small,
          res.figure_distribution) = self.save_fig(measure, "violinplot")
 
-    def build_values_distribution(self, measure, res):
+    def build_values_categorical_distribution(self, measure, res):
         df = self.load_measure(measure)
-        draw_violin_distribution(df, measure.measure_id)
+        draw_categorical_violin_distribution(df, measure.measure_id)
+        (res.figure_distribution_small,
+         res.figure_distribution) = self.save_fig(measure, "distribution")
+
+    def build_values_ordinal_distribution(self, measure, res):
+        df = self.load_measure(measure)
+        draw_ordinal_violin_distribution(df, measure.measure_id)
         (res.figure_distribution_small,
          res.figure_distribution) = self.save_fig(measure, "distribution")
 
@@ -203,7 +210,7 @@ class PreparePhenoBrowserBase(object):
                         v.measure_type = measure.measure_type
                         v.values_domain = measure.value_domain
 
-                        self.build_values_distribution(measure, v)
+                        self.build_values_ordinal_distribution(measure, v)
                         self.build_regression_by_nviq(measure, v)
                         self.build_regression_by_age(measure, v)
                         vm.save(v)
@@ -217,8 +224,7 @@ class PreparePhenoBrowserBase(object):
                         v.measure_type = measure.measure_type
                         v.values_domain = measure.value_domain
 
-                        self.build_values_distribution(measure, v)
+                        self.build_values_categorical_distribution(measure, v)
                         vm.save(v)
 
                         print("\tDONE categorical")
-                break

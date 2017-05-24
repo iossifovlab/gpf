@@ -760,17 +760,17 @@ class CategoricalValueManager(ValueManager):
 
 class OrdinalValueModel(ValueModel):
     TABLE = 'value_ordinal'
-    TYPE = int
-    TYPE_NAME = 'int'
-    TYPE_SQL = 'integer'
+    TYPE = float
+    TYPE_NAME = 'float'
+    TYPE_SQL = 'real'
 
     @classmethod
     def value_encode(cls, val):
-        return int(float(val))
+        return float(val)
 
     @classmethod
     def value_decode(cls, val):
-        return int(float(val))
+        return float(val)
 
 
 class OrdinalValueManager(ValueManager):

@@ -253,7 +253,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     plt.xticks([0, 1, 2], labels)
 
 
-def draw_violin_distribution(df, measure_id, ax=None):
+def draw_categorical_violin_distribution(df, measure_id, ax=None):
     if ax is None:
         ax = plt.gca()
 
@@ -308,6 +308,69 @@ def draw_violin_distribution(df, measure_id, ax=None):
     ax.set_yticklabels(values_domain)
     ax.set_xlim(2 * -binned_maximum, 6 * binned_maximum)
     ax.set_ylim(-1, np.max(y_locations) + 1)
+
+    ax.set_ylabel(measure_id)
+    labels = role_labels(df)
+    plt.xticks(x_locations, labels)
+
+    male_female_legend(color_male, color_female, ax)
+
+
+def draw_ordinal_violin_distribution(df, measure_id, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
+    df = df.copy()
+
+    color_male, color_female = male_female_colors()
+    df[measure_id] = df[measure_id].apply(lambda v: round(v))
+
+    values_domain = sorted(df[measure_id].unique())
+    y_locations = np.arange(np.min(values_domain), np.max(values_domain) + 1)
+
+    bin_edges = y_locations - 0.5
+    centers = bin_edges
+    heights = 0.8
+
+    hist_range = (np.min(y_locations), np.max(y_locations))
+
+    datasets = []
+    binned_datasets = []
+
+    for role in ['prb', 'sib', 'parent']:
+        df_role = df[df.role == role]
+
+        df_male = df_role[df_role.gender == 'M']
+        df_female = df_role[df_role.gender == 'F']
+
+        mdata = df_male[measure_id].values
+        fdata = df_female[measure_id].values
+        datasets.append((mdata, fdata))
+
+        binned_datasets.append([
+            np.histogram(d, range=hist_range, bins=len(y_locations))[0]
+            for d in [mdata, fdata]
+        ])
+
+    binned_maximum = np.max(
+        [np.max([np.max(m), np.max(f)]) for (m, f) in binned_datasets]
+    )
+
+    x_locations = np.arange(0, 3 * 2 * binned_maximum, 2 * binned_maximum)
+
+    _fig, ax = plt.subplots()
+    for count, (male, female) in enumerate(binned_datasets):
+        x_loc = x_locations[count]
+
+        lefts = x_loc - male
+        ax.barh(centers, male, height=heights, left=lefts, color=color_male)
+        ax.barh(centers, female, height=heights,
+                left=x_loc, color=color_female)
+
+    ax.set_yticks(y_locations)
+    ax.set_yticklabels(values_domain)
+    ax.set_xlim(2 * -binned_maximum, 6 * binned_maximum)
+    ax.set_ylim(np.min(y_locations) - 1, np.max(y_locations) + 1)
 
     ax.set_ylabel(measure_id)
     labels = role_labels(df)
