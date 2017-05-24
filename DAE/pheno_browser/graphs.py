@@ -101,7 +101,7 @@ def male_female_legend(color_male, color_female, ax=None):
     import matplotlib.patches as mpatches
     male_patch = mpatches.Patch(color=color_male, label='M')
     female_patch = mpatches.Patch(color=color_female, label='F')
-    ax.legend(handles=[male_patch, female_patch])
+    ax.legend(handles=[male_patch, female_patch], title='gender')
 
 
 def draw_linregres(df, col1, col2, jitter=None, ax=None):
@@ -238,7 +238,8 @@ def draw_measure_violinplot(df, measure_id, ax=None):
         linewidth=1, split=True,
         scale='count',
         scale_hue=False,
-        palette=palette)
+        palette=palette,
+        saturation=1)
 
     palette = gender_palette_light()
     sns.stripplot(
@@ -252,78 +253,64 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     plt.xticks([0, 1, 2], labels)
 
 
-def draw_violin_distribution1(df, measure_id, ax=None):
-    if ax is None:
-        ax = plt.gca()
-
-    labels = [1, 2]
-    values_domain = df[measure_id].unique()
-    number_of_bins = len(values_domain)
-
-    data_sets = [
-        df[df.gender == 'M'][measure_id].values,
-        df[df.gender == 'F'][measure_id].values
-    ]
-
-    hist_range = (np.min(data_sets), np.max(data_sets))
-
-    binned_data_sets = [
-        np.histogram(d, range=hist_range, bins=number_of_bins)[0]
-        for d in data_sets
-    ]
-    print(binned_data_sets)
-
-    binned_maximums = np.max(binned_data_sets, axis=1)
-    x_locations = np.arange(0, sum(binned_maximums), np.max(binned_maximums))
-
-    # The bin_edges are the same for all of the histograms
-    bin_edges = np.linspace(hist_range[0], hist_range[1], number_of_bins + 1)
-    centers = 0.5 * (bin_edges + np.roll(bin_edges, 1))[:-1]
-    heights = np.diff(bin_edges)
-
-    # Cycle through and plot each histogram
-    _fig, ax = plt.subplots()
-    for x_loc, binned_data in zip(x_locations, binned_data_sets):
-        lefts = x_loc - 0.5 * binned_data
-        ax.barh(centers, binned_data, height=heights, left=lefts)
-
-    ax.set_xticks(x_locations)
-    ax.set_xticklabels(labels)
-
-    ax.set_ylabel("Data values")
-    ax.set_xlabel("Data sets")
-
-
 def draw_violin_distribution(df, measure_id, ax=None):
     if ax is None:
         ax = plt.gca()
 
     df = df.copy()
 
+    color_male, color_female = male_female_colors()
+
     values_domain = sorted(df[measure_id].unique())
     y_locations = np.arange(len(values_domain))
     df[measure_id].replace(dict(zip(values_domain, y_locations)), inplace=True)
 
-    df_male = df[df.gender == 'M']
-    df_female = df[df.gender == 'F']
-
     bin_edges = y_locations - 0.5
     centers = bin_edges
-    heights = 1
-
-    datasets = [df_male[measure_id].values, df_female[measure_id].values]
+    heights = 0.8
 
     hist_range = (np.min(y_locations), np.max(y_locations))
-    male, female = [
-        np.histogram(d, range=hist_range, bins=len(y_locations))[0]
-        for d in datasets
-    ]
 
-    x_loc = 0
+    datasets = []
+    binned_datasets = []
+
+    for role in ['prb', 'sib', 'parent']:
+        df_role = df[df.role == role]
+
+        df_male = df_role[df_role.gender == 'M']
+        df_female = df_role[df_role.gender == 'F']
+
+        mdata = df_male[measure_id].values
+        fdata = df_female[measure_id].values
+        datasets.append((mdata, fdata))
+
+        binned_datasets.append([
+            np.histogram(d, range=hist_range, bins=len(y_locations))[0]
+            for d in [mdata, fdata]
+        ])
+
+    binned_maximum = np.max(
+        [np.max([np.max(m), np.max(f)]) for (m, f) in binned_datasets]
+    )
+
+    x_locations = np.arange(0, 3 * 2 * binned_maximum, 2 * binned_maximum)
+
     _fig, ax = plt.subplots()
-    lefts = x_loc - male
-    ax.barh(centers, male, height=heights, left=lefts)
-    ax.barh(centers, female, height=heights, left=x_loc)
+    for count, (male, female) in enumerate(binned_datasets):
+        x_loc = x_locations[count]
+
+        lefts = x_loc - male
+        ax.barh(centers, male, height=heights, left=lefts, color=color_male)
+        ax.barh(centers, female, height=heights,
+                left=x_loc, color=color_female)
 
     ax.set_yticks(y_locations)
     ax.set_yticklabels(values_domain)
+    ax.set_xlim(2 * -binned_maximum, 6 * binned_maximum)
+    ax.set_ylim(-1, np.max(y_locations) + 1)
+
+    ax.set_ylabel(measure_id)
+    labels = role_labels(df)
+    plt.xticks(x_locations, labels)
+
+    male_female_legend(color_male, color_female, ax)

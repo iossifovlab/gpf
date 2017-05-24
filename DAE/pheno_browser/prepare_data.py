@@ -7,7 +7,7 @@ import os
 import matplotlib.pyplot as plt
 from DAE import pheno
 from pheno_browser.graphs import draw_linregres, draw_measure_violinplot,\
-    draw_distribution, draw_violin_distribution
+    draw_violin_distribution
 from pheno_browser.models import VariableBrowserModelManager,\
     VariableBrowserModel
 
@@ -182,7 +182,6 @@ class PreparePhenoBrowserBase(object):
                     print("{}.\tprocessing measure: {}".format(
                         count, measure.name))
                     if measure.measure_type == 'continuous':
-                        continue
                         v = VariableBrowserModel()
                         v.measure_id = measure.measure_id
                         v.instrument_name = measure.instrument_name
@@ -204,10 +203,20 @@ class PreparePhenoBrowserBase(object):
                         v.measure_type = measure.measure_type
 
                         self.build_values_distribution(measure, v)
+                        self.build_regression_by_nviq(measure, v)
+                        self.build_regression_by_age(measure, v)
                         vm.save(v)
 
                         print("\tDONE ordinal")
-                        break
                     else:
-                        print("\tSKIP {}".format(measure.measure_type))
-                break
+                        v = VariableBrowserModel()
+                        v.measure_id = measure.measure_id
+                        v.instrument_name = measure.instrument_name
+                        v.measure_name = measure.measure_name
+                        v.measure_type = measure.measure_type
+
+                        self.build_values_distribution(measure, v)
+                        vm.save(v)
+
+                        print("\tDONE categorical")
+                # break
