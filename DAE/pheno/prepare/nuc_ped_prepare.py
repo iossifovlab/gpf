@@ -195,9 +195,12 @@ class NucPedPrepareIndividuals(PhenoConfig):
 
     def load_pedfile(self, pedfilename):
         df = pd.read_csv(pedfilename, sep='\t')
-        assert list(df.columns) == [
-            'familyId', 'personId', 'dadId', 'momId',
-            'gender', 'status', 'sampleId']
+        print(set(df.columns))
+        assert set(
+            [
+                'familyId', 'personId', 'dadId', 'momId',
+                'gender', 'status', 'sampleId'
+            ]) <= set(df.columns)
         return df
 
     def _build_individuals(self, pedfilename):

@@ -109,11 +109,11 @@ class BaseVariables(object):
         var.variable_id = measure_id
         var.table_name = instrument_name
         var.variable_name = measure_name
- 
+
         self._classify_values(var, mdf)
         self.report_variable(var)
         self._save_variable(var, mdf)
- 
+
         return var
 
     def _save_variable(self, var, mdf):
