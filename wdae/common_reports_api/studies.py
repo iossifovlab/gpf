@@ -85,7 +85,7 @@ def get_denovo_studies_names():
     return r
 
 
-def __build_studies_summaries(studies):
+def __build_studies_summaries(summary, studies):
     phenotype = set()
     study_type = set()
     study_year = set()
@@ -120,15 +120,19 @@ def __build_studies_summaries(studies):
 
     fams_stat = build_header_summary(studies)
 
-    return [', '.join(phenotype),
-            ', '.join(study_type),
-            ', '.join(study_year),
-            pub_med,
-            fams_stat[0],
-            fams_stat[2]['prb'],
-            fams_stat[2]['sib'],
-            has_denovo,
-            has_transmitted]
+    summary.update({
+        "phenotype": ', '.join(phenotype),
+        "study type": ', '.join(study_type),
+        "study year": ', '.join(study_year),
+        "PubMed": pub_med,
+        "families": fams_stat[0],
+        "number of probands": fams_stat[2]['prb'],
+        "number of siblings": fams_stat[2]['sib'],
+        "denovo": has_denovo,
+        "transmitted": has_transmitted,
+    })
+
+    return summary
 
 
 def __build_denovo_studies_summaries():
@@ -141,10 +145,13 @@ def __build_denovo_studies_summaries():
             continue
         studies_names = ','.join(group.studyNames)
         studies = vDB.get_studies(studies_names)
-        summary = [study_group_name,
-                   "%s (%s)" % (group.description,
-                                studies_names.replace(',', ', '))]
-        summary.extend(__build_studies_summaries(studies))
+
+        summary = {
+            'study_name': study_group_name,
+            'description': "%s (%s)" % (group.description,
+                                        studies_names.replace(',', ', '))
+        }
+        __build_studies_summaries(summary, studies)
 
         r.append((int(order), summary))
 
@@ -155,8 +162,11 @@ def __build_denovo_studies_summaries():
         order = study.get_attr('wdae.production.order')
         if not order:
             continue
-        summary = [study_name, study.description]
-        summary.extend(__build_studies_summaries([study]))
+        summary = {
+            'study_name': study_name,
+            'description': study.description
+        }
+        __build_studies_summaries(summary, [study])
 
         r.append((int(order), summary))
 
@@ -175,9 +185,11 @@ def __build_transmitted_studies_summaries():
         order = study.get_attr('wdae.production.order')
         if not order:
             continue
-        summary = [study_name, study.description]
-        summary.extend(__build_studies_summaries([study]))
-
+        summary = {
+            'study_name': study_name,
+            'description': study.description
+        }
+        __build_studies_summaries(summary, [study])
         r.append((int(order), summary))
 
     r = [s for _o, s in sorted(r)]
@@ -188,15 +200,18 @@ def get_studies_summaries():
     summaries = __build_denovo_studies_summaries()
     summaries.extend(__build_transmitted_studies_summaries())
 
-    return {"columns": ["study name",
-                        "description",
-                        "phenotype",
-                        "study type",
-                        "study year",
-                        "PubMed",
-                        "families",
-                        "number of probands",
-                        "number of siblings",
-                        "denovo",
-                        "transmitted"],
-            "summaries": summaries}
+    return {
+        "columns": [
+            "study name",
+            "description",
+            "phenotype",
+            "study type",
+            "study year",
+            "PubMed",
+            "families",
+            "number of probands",
+            "number of siblings",
+            "denovo",
+            "transmitted"
+        ],
+        "summaries": summaries}
