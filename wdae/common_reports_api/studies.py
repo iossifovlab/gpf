@@ -1,6 +1,9 @@
 from DAE import vDB
 from collections import Counter, defaultdict
 from helpers.logger import LOGGER
+from precompute.register import Precompute
+import cPickle
+import zlib
 
 
 def family_buffer(studies):
@@ -85,133 +88,154 @@ def get_denovo_studies_names():
     return r
 
 
-def __build_studies_summaries(summary, studies):
-    phenotype = set()
-    study_type = set()
-    study_year = set()
+class StudiesSummaries(Precompute):
+    def __init__(self):
+        self.summaries = None
 
-    has_denovo = False
-    has_transmitted = False
-
-    for study in studies:
-        if study.get_attr('study.phenotype'):
-            phenotype.add(study.get_attr('study.phenotype'))
-        if study.get_attr('study.type'):
-            study_type.add(study.get_attr('study.type'))
-        if study.get_attr('study.year'):
-            study_year.add(study.get_attr('study.year'))
-
-        # fams = fams.union(study.families.keys())
-        has_denovo = has_denovo or study.has_denovo
-        has_transmitted = has_transmitted or study.has_transmitted
-
-    phenotype = list(phenotype)
-    phenotype.sort()
-    study_type = list(study_type)
-    study_type.sort()
-    study_year = list(study_year)
-    study_year.sort()
-
-    pub_med = ""
-    if len(studies) == 1:
-        study = studies[0]
-        if study.get_attr('study.pmid'):
-            pub_med = study.get_attr('study.pmid')
-
-    fams_stat = build_header_summary(studies)
-
-    summary.update({
-        "phenotype": ', '.join(phenotype),
-        "study type": ', '.join(study_type),
-        "study year": ', '.join(study_year),
-        "PubMed": pub_med,
-        "families": fams_stat[0],
-        "number of probands": fams_stat[2]['prb'],
-        "number of siblings": fams_stat[2]['sib'],
-        "denovo": has_denovo,
-        "transmitted": has_transmitted,
-    })
-
-    return summary
-
-
-def __build_denovo_studies_summaries():
-    r = []
-
-    for study_group_name in vDB.get_study_group_names():
-        group = vDB.get_study_group(study_group_name)
-        order = group.get_attr('wdae.production.order')
-        if not order:
-            continue
-        studies_names = ','.join(group.studyNames)
-        studies = vDB.get_studies(studies_names)
-
-        summary = {
-            'study_name': study_group_name,
-            'description': "%s (%s)" % (group.description,
-                                        studies_names.replace(',', ', '))
+    def serialize(self):
+        data = zlib.compress(cPickle.dumps(self.summaries))
+        return {
+            'data': data,
         }
-        __build_studies_summaries(summary, studies)
 
-        r.append((int(order), summary))
+    def deserialize(self, data):
+        self.summaries = cPickle.loads(zlib.decompress(data['data']))
 
-    for study_name in vDB.get_study_names():
-        study = vDB.get_study(study_name)
-        if not study.has_denovo:
-            continue
-        order = study.get_attr('wdae.production.order')
-        if not order:
-            continue
-        summary = {
-            'study_name': study_name,
-            'description': study.description
+    def is_precomputed(self):
+        return self.summaries is not None
+
+    def precompute(self):
+        self.summaries = self.build_studies_summaries()
+
+    @classmethod
+    def build_studies_summaries(cls):
+        summaries = cls.__build_denovo_studies_summaries()
+        summaries.extend(cls.__build_transmitted_studies_summaries())
+
+        return {
+            "columns": [
+                "study name",
+                "description",
+                "phenotype",
+                "study type",
+                "study year",
+                "PubMed",
+                "families",
+                "number of probands",
+                "number of siblings",
+                "denovo",
+                "transmitted"
+            ],
+            "summaries": summaries
         }
-        __build_studies_summaries(summary, [study])
 
-        r.append((int(order), summary))
+    @classmethod
+    def __build_studies_summaries(cls, summary, studies):
+        phenotype = set()
+        study_type = set()
+        study_year = set()
 
-    r = [s for _o, s in sorted(r)]
-    return r
+        has_denovo = False
+        has_transmitted = False
 
+        for study in studies:
+            if study.get_attr('study.phenotype'):
+                phenotype.add(study.get_attr('study.phenotype'))
+            if study.get_attr('study.type'):
+                study_type.add(study.get_attr('study.type'))
+            if study.get_attr('study.year'):
+                study_year.add(study.get_attr('study.year'))
 
-def __build_transmitted_studies_summaries():
-    r = []
+            # fams = fams.union(study.families.keys())
+            has_denovo = has_denovo or study.has_denovo
+            has_transmitted = has_transmitted or study.has_transmitted
 
-    for study_name in vDB.get_study_names():
-        study = vDB.get_study(study_name)
-        if not study.has_transmitted:
-            continue
+        phenotype = list(phenotype)
+        phenotype.sort()
+        study_type = list(study_type)
+        study_type.sort()
+        study_year = list(study_year)
+        study_year.sort()
 
-        order = study.get_attr('wdae.production.order')
-        if not order:
-            continue
-        summary = {
-            'study_name': study_name,
-            'description': study.description
-        }
-        __build_studies_summaries(summary, [study])
-        r.append((int(order), summary))
+        pub_med = ""
+        if len(studies) == 1:
+            study = studies[0]
+            if study.get_attr('study.pmid'):
+                pub_med = study.get_attr('study.pmid')
 
-    r = [s for _o, s in sorted(r)]
-    return r
+        fams_stat = build_header_summary(studies)
 
+        summary.update({
+            "phenotype": ', '.join(phenotype),
+            "study type": ', '.join(study_type),
+            "study year": ', '.join(study_year),
+            "PubMed": pub_med,
+            "families": fams_stat[0],
+            "number of probands": fams_stat[2]['prb'],
+            "number of siblings": fams_stat[2]['sib'],
+            "denovo": has_denovo,
+            "transmitted": has_transmitted,
+        })
 
-def get_studies_summaries():
-    summaries = __build_denovo_studies_summaries()
-    summaries.extend(__build_transmitted_studies_summaries())
+        return summary
 
-    return {
-        "columns": [
-            "study name",
-            "description",
-            "phenotype",
-            "study type",
-            "study year",
-            "PubMed",
-            "families",
-            "number of probands",
-            "number of siblings",
-            "denovo",
-            "transmitted"
-        ],
-        "summaries": summaries}
+    @classmethod
+    def __build_denovo_studies_summaries(cls):
+        r = []
+
+        for study_group_name in vDB.get_study_group_names():
+            group = vDB.get_study_group(study_group_name)
+            order = group.get_attr('wdae.production.order')
+            if not order:
+                continue
+            studies_names = ','.join(group.studyNames)
+            studies = vDB.get_studies(studies_names)
+
+            summary = {
+                'study_name': study_group_name,
+                'description': "%s (%s)" % (group.description,
+                                            studies_names.replace(',', ', '))
+            }
+            cls.__build_studies_summaries(summary, studies)
+
+            r.append((int(order), summary))
+
+        for study_name in vDB.get_study_names():
+            study = vDB.get_study(study_name)
+            if not study.has_denovo:
+                continue
+            order = study.get_attr('wdae.production.order')
+            if not order:
+                continue
+            summary = {
+                'study_name': study_name,
+                'description': study.description
+            }
+            cls.__build_studies_summaries(summary, [study])
+
+            r.append((int(order), summary))
+
+        r = [s for _o, s in sorted(r)]
+        return r
+
+    @classmethod
+    def __build_transmitted_studies_summaries(cls):
+        r = []
+
+        for study_name in vDB.get_study_names():
+            study = vDB.get_study(study_name)
+            if not study.has_transmitted:
+                continue
+
+            order = study.get_attr('wdae.production.order')
+            if not order:
+                continue
+            summary = {
+                'study_name': study_name,
+                'description': study.description
+            }
+            cls.__build_studies_summaries(summary, [study])
+            r.append((int(order), summary))
+
+        r = [s for _o, s in sorted(r)]
+        return r

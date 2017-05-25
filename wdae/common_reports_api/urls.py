@@ -8,7 +8,7 @@ from django.conf.urls import url
 
 from common_reports_api.views import VariantReportsView, \
     FamiliesDataDownloadView, ReportStudies, \
-    StudySummaries, DenovoStudiesList,\
+    StudiesSummaries, DenovoStudiesList,\
     TransmittedStudiesList
 
 
@@ -21,7 +21,7 @@ urlpatterns = [
 
     url(r'^/report_studies$', ReportStudies.as_view()),
 
-    url(r'^/studies_summaries$', StudySummaries.as_view()),
+    url(r'^/studies_summaries$', StudiesSummaries.as_view()),
 
     url(r'^/denovo_studies$', DenovoStudiesList.as_view()),
     url(r'^/transmitted_studies$', TransmittedStudiesList.as_view()),

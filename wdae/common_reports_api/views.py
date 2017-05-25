@@ -12,7 +12,7 @@ from precompute import register
 from common_reports_api.families import FamiliesDataCSV
 from common_reports_api.serializers import StudyVariantReportsSerializer
 from common_reports_api.studies import get_denovo_studies_names,\
-    get_transmitted_studies_names, get_studies_summaries
+    get_transmitted_studies_names
 
 
 class VariantReportsView(APIView):
@@ -53,10 +53,12 @@ class ReportStudies(APIView):
                          get_transmitted_studies_names()})
 
 
-class StudySummaries(APIView):
+class StudiesSummaries(APIView):
+    def __init__(self):
+        self.studies_summaries = register.get('studies_summaries')
 
     def get(self, request):
-        return Response(get_studies_summaries())
+        return Response(self.studies_summaries.summaries)
 
 
 class DenovoStudiesList(APIView):
