@@ -101,6 +101,7 @@ import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content
 import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-table.component';
 
 import { StudiesSummariesComponent } from './studies-summaries/studies-summaries.component';
+import { StudiesSummariesService } from './studies-summaries/studies-summaries.service';
 
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
@@ -253,7 +254,8 @@ const appRoutes: Routes = [
     PhenoToolService,
     FamilyCountersService,
     PhenoBrowserService,
-    PValueIntensityPipe
+    PValueIntensityPipe,
+    StudiesSummariesService
   ],
 
   entryComponents: [

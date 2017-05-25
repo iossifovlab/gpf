@@ -29,6 +29,7 @@
     "@types/d3": "^4.7.0",
     "@types/node": "^6.0.65",
     "angular-ide": "^0.9.17",
+    "font-awesome": "^4.7.0",
     "bootstrap": "^4.0.0-alpha.6",
     "class-transformer": "^0.1.6",
     "class-transformer-validator": "^0.2.0",
