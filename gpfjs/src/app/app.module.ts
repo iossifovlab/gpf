@@ -100,6 +100,8 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
 import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content/pheno-browser-modal-content.component';
 import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-table.component';
 
+import { StudiesSummariesComponent } from './studies-summaries/studies-summaries.component';
+
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -132,6 +134,20 @@ const appRoutes: Routes = [
       {
         path: '**',
         redirectTo: 'browser'
+      }
+    ]
+  },
+  {
+    path: 'reports',
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'summary',
+      },
+      {
+        path: 'summary',
+        component: StudiesSummariesComponent
       }
     ]
   },
@@ -205,6 +221,7 @@ const appRoutes: Routes = [
     PhenoBrowserModalContentComponent,
     PhenoBrowserTableComponent,
     PValueIntensityPipe,
+    StudiesSummariesComponent,
   ],
   imports: [
     BrowserModule,
