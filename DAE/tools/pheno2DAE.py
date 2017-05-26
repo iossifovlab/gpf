@@ -11,7 +11,6 @@ import os
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import traceback
-from pprint import pprint
 from pheno.prepare.nuc_ped_prepare import NucPedPrepareIndividuals,\
     NucPedPrepareVariables, NucPedPrepareMetaVariables
 from pheno.common import config_pheno_db
@@ -105,7 +104,6 @@ USAGE
                 "output filename should be specified")
 
         config = config_pheno_db(output)
-        pprint(config)
 
         prep_individuals = NucPedPrepareIndividuals(config)
         prep_individuals.prepare(families_filename)

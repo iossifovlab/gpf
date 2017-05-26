@@ -201,7 +201,6 @@ class NucPedPrepareIndividuals(PhenoConfig):
     @staticmethod
     def load_pedfile(pedfilename):
         df = pd.read_csv(pedfilename, sep='\t')
-        print(set(df.columns))
         assert set(NucPedPrepareIndividuals.COLUMNS) <= set(df.columns)
         return df
 
@@ -265,8 +264,6 @@ class NucPedPrepareIndividuals(PhenoConfig):
             if p.person_id in individuals:
                 # conflicting person:
                 other_person = individuals[p.person_id]
-                # print("CONFLICTING PERSON: {} <-> {}".format(
-                # p, other_person))
                 return other_person
             p.role_order = order
             individuals[p.person_id] = p
@@ -294,11 +291,9 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
         to_fix = [k for k, v in counter.items() if v > 1]
         to_delete = []
         for person_id in to_fix:
-            print("fixing measurements for {}".format(person_id))
             pdf = df[df.person_id == person_id]
             keep = pdf.index.max()
             d = pdf[pdf.index != keep]
-            print("to keep: {}; to delete: {}".format(keep, d.index.values))
             to_delete.extend(d.index.values)
 
         df.drop(to_delete, inplace=True)
@@ -320,8 +315,6 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
 
     def load_instrument(
             self, individuals, instrument_name, filename, dtype=None):
-
-        print("processing table: {}".format(filename))
         assert os.path.isfile(filename)
 
         df = pd.read_csv(filename, low_memory=False, sep=',',
@@ -346,7 +339,6 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
 
     def prepare_pedigree_instrument(self, pedindividuals, pedfilename):
         persons = self.load_persons_df()
-        print(persons.head())
 
         ped_df = NucPedPrepareIndividuals.load_pedfile(pedfilename)
         measure_columns = set(ped_df.columns).difference(

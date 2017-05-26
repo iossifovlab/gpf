@@ -15,17 +15,13 @@ class BaseMetaVariables(object):
             vm.create_tables()
 
     def drop_tables(self):
-        print(self.config)
-
         with MetaVariableManager(
                 dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
 
     def _prepare_meta_variables(self):
         meta_variables = []
-        for measure_id, measure in self.phdb.measures.items():
-            print('processing variable {}'.format(measure_id))
-
+        for _, measure in self.phdb.measures.items():
             df = self.phdb._raw_get_measure_values_df(measure)
             v = MetaVariableModel()
             v.variable_id = measure.measure_id

@@ -104,14 +104,13 @@ class BaseVariables(object):
 
     def _build_variable(self, instrument_name, measure_name, mdf):
         measure_id = '{}.{}'.format(instrument_name, measure_name)
-        print("building measure {}".format(measure_id))
         var = VariableModel()
         var.variable_id = measure_id
         var.table_name = instrument_name
         var.variable_name = measure_name
 
         self._classify_values(var, mdf)
-        self.report_variable(var)
+        # self.report_variable(var)
         self._save_variable(var, mdf)
 
         return var
