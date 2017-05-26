@@ -3,7 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
-import { Studies, Study, VariantReport, ChildrenCounter } from './variant-reports';
+import { Studies, Study, VariantReport, ChildrenCounter,
+         FamilyCounter, PedigreeCounter } from './variant-reports';
 
 @Component({
   selector: 'gpf-variant-reports',
@@ -53,6 +54,36 @@ export class VariantReportsComponent implements OnInit {
         return index1 - index2;
       }
     );
+  }
+
+  chunkPedigrees(familyCounters: FamilyCounter[], chunkSize = 4) {
+    let allPedigrees = familyCounters
+      .reduce(
+        (acc, familyCounter) =>
+          acc.concat(familyCounter.pedigreeCounters),
+        [] as PedigreeCounter[]);
+
+    return allPedigrees
+      .reduce(
+        (acc: PedigreeCounter[][], pedigree, index) => {
+          if (acc.length === 0 || acc[acc.length - 1].length === chunkSize) {
+            acc.push([pedigree]);
+          } else {
+            acc[acc.length - 1].push(pedigree);
+          }
+
+          if (index === allPedigrees.length - 1) {
+            let lastChunk = acc[acc.length - 1];
+            let toFill = chunkSize - lastChunk.length;
+            for (let i = 0; i <  toFill; i++) {
+              lastChunk.push(null);
+            }
+          }
+
+          return acc;
+        },
+        []);
+
   }
 
 }

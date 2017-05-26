@@ -44,6 +44,36 @@ export class ChildrenCounter {
   ) {}
 }
 
+export class PedigreeCounter {
+
+  static fromArray(data: any) {
+    return new PedigreeCounter(
+      data[0].map(pedigreeData => PedigreeData.fromArray(pedigreeData)),
+      data[1]);
+  }
+
+  constructor(
+    readonly data: PedigreeData,
+    readonly count: number
+  ) {}
+}
+
+export class FamilyCounter {
+
+  static fromJson(json: any) {
+    return new FamilyCounter(
+      json['counters'].map(
+        pedigree => PedigreeCounter.fromArray(pedigree)),
+      json['phenotype']
+    );
+  }
+
+  constructor(
+    readonly pedigreeCounters: PedigreeCounter[],
+    readonly phenotype: string
+  ) {}
+}
+
 export class FamilyReport {
 
   static fromJson(json: any) {
@@ -51,7 +81,8 @@ export class FamilyReport {
       json['phenotypes'],
       json['children_counters'].map(
         childCounter => ChildrenCounter.fromJson(childCounter)),
-      json['families_counters'],
+      json['families_counters'].map(
+        familyCounter => FamilyCounter.fromJson(familyCounter)),
       json['families_total'],
     );
   }
@@ -59,7 +90,7 @@ export class FamilyReport {
   constructor(
     readonly phenotypes: string[],
     readonly childrenCounters: ChildrenCounter[],
-    readonly familiesCounters: PedigreeData[],
+    readonly familiesCounters: FamilyCounter[],
     readonly familiesTotal: number,
   ) {}
 

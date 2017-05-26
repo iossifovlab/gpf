@@ -62,7 +62,43 @@
         </table>
       </div>
     </div>
-    <!-- {{ variantReport.familyReport | json }} -->
+
+    <div class="row mb-3">
+      <div class="col-12"><h5>Families by pedigree</h5></div>
+
+      <div class="col-12">
+
+        <table class="table table-bordered table-hover table-sm table-centered">
+          <colgroup>
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+
+          <tbody>
+            <ng-template ngFor let-pedigreeGroup [ngForOf]="chunkPedigrees(variantReport.familyReport.familiesCounters)">
+              <tr>
+                <ng-template ngFor let-pedigree [ngForOf]="pedigreeGroup">
+                  <td class="centered">
+                    <div *ngIf="pedigree">
+                      <div>
+                        <gpf-pedigree-chart [pedigreeData]="pedigree.data"></gpf-pedigree-chart>
+                      </div>
+                      <div>
+                        {{ pedigree.count }}
+                      </div>
+                    </div>
+                  </td>
+                </ng-template>
+              </tr>
+            </ng-template>
+          </tbody>
+
+        </table>
+
+      </div>
+    </div>
   </div>
 
 
