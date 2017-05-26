@@ -1,3 +1,19 @@
-<p>
-  variant-reports works!
-</p>
+<div class="container">
+  <div class="variant-report-block form-block">
+    <div class="row">
+      <div class="col-lg-2">
+        <label class="form-block-title" for="studies">Study</label>
+      </div>
+
+      <div class="col-lg-10">
+        <select [ngModel]="selectedReport$ | async" (ngModelChange)="selectReport($event)">
+          <option *ngFor="let study of (reports$ | async)?.studies"
+            [ngValue]="study">{{ study.name }}</option>
+        </select>
+      </div>
+    </div>
+    <!-- {{ selectedReport$ | async | json }} -->
+  </div>
+
+
+</div>
