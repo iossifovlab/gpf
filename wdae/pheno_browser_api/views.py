@@ -34,7 +34,7 @@ class PhenoInstrumentsView(APIView):
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        instruments = dataset.pheno_db.instruments.keys()
+        instruments = sorted(dataset.pheno_db.instruments.keys())
         res = {
             'instruments': instruments,
             'default': instruments[0],
