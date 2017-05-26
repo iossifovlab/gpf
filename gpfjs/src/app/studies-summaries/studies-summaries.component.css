@@ -2,6 +2,7 @@
 	display: inline-block;
 	width: 100%;
 	margin-bottom: 50px;
+	margin-top: 20px;
 }
 
 :host /deep/ gpf-table-cell {

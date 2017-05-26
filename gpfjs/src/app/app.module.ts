@@ -106,6 +106,9 @@ import { StudiesSummariesService } from './studies-summaries/studies-summaries.s
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { CommonReportsComponent } from './common-reports/common-reports.component';
+import { VariantReportsComponent } from './variant-reports/variant-reports.component';
+import { VariantReportsService } from './variant-reports/variant-reports.service';
 
 const appRoutes: Routes = [
   {
@@ -140,6 +143,7 @@ const appRoutes: Routes = [
   },
   {
     path: 'reports',
+    component: CommonReportsComponent,
     children: [
       {
         path: '',
@@ -149,6 +153,10 @@ const appRoutes: Routes = [
       {
         path: 'summary',
         component: StudiesSummariesComponent
+      },
+      {
+        path: 'reports',
+        component: VariantReportsComponent
       }
     ]
   },
@@ -223,6 +231,8 @@ const appRoutes: Routes = [
     PhenoBrowserTableComponent,
     PValueIntensityPipe,
     StudiesSummariesComponent,
+    CommonReportsComponent,
+    VariantReportsComponent,
   ],
   imports: [
     BrowserModule,
@@ -255,7 +265,8 @@ const appRoutes: Routes = [
     FamilyCountersService,
     PhenoBrowserService,
     PValueIntensityPipe,
-    StudiesSummariesService
+    StudiesSummariesService,
+    VariantReportsService
   ],
 
   entryComponents: [
