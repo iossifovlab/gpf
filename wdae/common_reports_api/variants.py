@@ -38,6 +38,22 @@ class CommonBase(object):
                 'schizophrenia',
                 'unaffected']
 
+    COLORS = {
+        'autism': '#e35252',
+        'congenital heart disease': '#b8008a',
+        'epilepsy': '#e3d252',
+        'intellectual disability': '#99d8e8',
+        'schizophrenia': '#98e352',
+        'unaffected': '#ffffff',
+    }
+
+    @classmethod
+    def get_color(cls, role, phenotype):
+        if role == 'prb':
+            return cls.COLORS.get(phenotype, '#aaaaaa')
+        else:
+            return cls.COLORS.get('unaffected', '#aaaaaa')
+
     @staticmethod
     def family_configuration(family):
         return "".join([family[pid].role + family[pid].gender
@@ -49,9 +65,40 @@ class CommonBase(object):
         pedigree = [[family_configuration[i: i + 3],
                      family_configuration[i + 3: i + 4],
                      0] for i in range(0, len(family_configuration), 4)]
+        print(family_configuration, pedigree)
         result = [['mom', 'F', 0], ['dad', 'M', 0]]
         result.extend(pedigree)
         return result
+
+    @classmethod
+    def family_configuration_to_pedigree_v3(
+            cls, family_configuration, phenotype):
+
+        res = [
+            [
+                'f1', 'p1', '', '',
+                'F', cls.get_color('mom', 'unaffected'), 0, 0],
+            [
+                'f1', 'p2', '', '',
+                'M', cls.get_color('dad', 'unaffected'), 0, 0],
+        ]
+
+        pedigree = [
+            [
+                family_configuration[i: i + 3],
+                family_configuration[i + 3: i + 4],
+            ]
+            for i in range(0, len(family_configuration), 4)
+        ]
+        pedigree = [
+            [
+                'f1', 'p{}'.format(counter + 3), 'p1', 'p2',
+                gender, cls.get_color(role, phenotype), 0, 0
+            ]
+            for counter, [role, gender] in enumerate(pedigree)
+        ]
+        res.extend(pedigree)
+        return res
 
 
 class CounterBase(CommonBase):
@@ -135,8 +182,8 @@ class FamiliesCounters(CounterBase):
 
         self.data = {}
         for (fconf, count) in family_type_counter.items():
-            pedigree = [self.phenotype,
-                        self.family_configuration_to_pedigree(fconf)]
+            pedigree = self.family_configuration_to_pedigree_v3(
+                fconf, self.phenotype)
             self.data[fconf] = (pedigree, count)
             self.total += count
 

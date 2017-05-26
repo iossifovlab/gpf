@@ -101,7 +101,7 @@ class Test(unittest.TestCase):
                     ["prb", "M", 0],
                     ["sib", "F", 0]]
         pedigree = CommonBase.family_configuration_to_pedigree('prbMsibF')
-        self.assertTrue(prbMsibF, pedigree)
+        self.assertEqual(prbMsibF, pedigree)
 
     def test_family_configuration_to_pedigree_prbMsibMsibF(self):
         prbMsibMsibF = [["mom", "F", 0],
@@ -110,7 +110,30 @@ class Test(unittest.TestCase):
                         ["sib", "M", 0],
                         ["sib", "F", 0]]
         pedigree = CommonBase.family_configuration_to_pedigree('prbMsibMsibF')
-        self.assertTrue(prbMsibMsibF, pedigree)
+        self.assertEqual(prbMsibMsibF, pedigree)
+
+    def test_family_configuration_to_pedigree_v3_prbMsibF(self):
+        prbMsibF = [
+            ['f1', 'p1', '', '', 'F', '#ffffff', 0, 0],
+            ['f1', 'p2', '', '', 'M', '#ffffff', 0, 0],
+            ['f1', 'p3', 'p1', 'p2', 'M', '#e35252', 0, 0],
+            ['f1', 'p4', 'p1', 'p2', 'F', '#ffffff', 0, 0],
+        ]
+        pedigree = CommonBase.family_configuration_to_pedigree_v3(
+            'prbMsibF', 'autism')
+        self.assertEqual(prbMsibF, pedigree)
+
+    def test_family_configuration_to_pedigree_v3_prbMsibMsibF(self):
+        prbMsibMsibF = [
+            ['f1', 'p1', '', '', 'F', '#ffffff', 0, 0],
+            ['f1', 'p2', '', '', 'M', '#ffffff', 0, 0],
+            ['f1', 'p3', 'p1', 'p2', 'M', '#e35252', 0, 0],
+            ['f1', 'p4', 'p1', 'p2', 'M', '#ffffff', 0, 0],
+            ['f1', 'p5', 'p1', 'p2', 'F', '#ffffff', 0, 0]
+        ]
+        pedigree = CommonBase.family_configuration_to_pedigree_v3(
+            'prbMsibMsibF', 'autism')
+        self.assertEqual(prbMsibMsibF, pedigree)
 
     def test_family_reports_build(self):
         fr = FamiliesReport('ALL SSC')
