@@ -111,6 +111,7 @@ USAGE
         prep_individuals.prepare(families_filename)
 
         prep_variables = NucPedPrepareVariables(config)
+        prep_variables.setup()
         prep_variables.prepare(prep_individuals, instruments_directory)
 
         prep_meta = NucPedPrepareMetaVariables(config)

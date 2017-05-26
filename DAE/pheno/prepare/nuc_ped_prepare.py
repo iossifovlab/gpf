@@ -193,14 +193,16 @@ class NucPedPrepareIndividuals(PhenoConfig):
 
         return individuals
 
-    def load_pedfile(self, pedfilename):
+    COLUMNS = [
+        'familyId', 'personId', 'dadId', 'momId',
+        'gender', 'status', 'sampleId'
+    ]
+
+    @staticmethod
+    def load_pedfile(pedfilename):
         df = pd.read_csv(pedfilename, sep='\t')
         print(set(df.columns))
-        assert set(
-            [
-                'familyId', 'personId', 'dadId', 'momId',
-                'gender', 'status', 'sampleId'
-            ]) <= set(df.columns)
+        assert set(NucPedPrepareIndividuals.COLUMNS) <= set(df.columns)
         return df
 
     def _build_individuals(self, pedfilename):
@@ -338,22 +340,48 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
         df = self._adjust_measurments_with_sample_id(df, individuals)
         return df
 
-    def prepare(self, pedindividuals, instruments_directory):
+    def setup(self):
         self._create_variable_table()
         self._create_value_tables()
 
+    def prepare_pedigree_instrument(self, pedindividuals, pedfilename):
+        persons = self.load_persons_df()
+        print(persons.head())
+
+        ped_df = NucPedPrepareIndividuals.load_pedfile(pedfilename)
+        measure_columns = set(ped_df.columns).difference(
+            set(NucPedPrepareIndividuals.COLUMNS)
+        )
+
+        if not measure_columns:
+            return
+
+        ped_df.rename(columns={'personId': 'person_id'}, inplace=True)
+
+        df = ped_df.join(
+            persons, how='right', on='person_id', rsuffix="_person")
+
+        for measure_name in measure_columns:
+            mdf = df[['person_id', measure_name,
+                      'family_id', 'person_role']]
+            vdf = mdf.dropna()
+            if len(vdf) == 0:
+                continue
+            assert len(vdf) > 0
+            self._build_variable(
+                'pedigree', measure_name,
+                vdf)
+
+    def prepare_instruments(self, pedindividuals, instruments_directory):
         persons = self.load_persons_df()
 
         all_filenames = [
             os.path.join(instruments_directory, f)
             for f in os.listdir(instruments_directory)
             if os.path.isfile(os.path.join(instruments_directory, f))]
-        print(all_filenames)
         for filename in all_filenames:
             basename = os.path.basename(filename)
             instrument_name, ext = os.path.splitext(basename)
-            print(basename)
-            print(instrument_name, ext)
             if ext != '.csv':
                 continue
             instrument_df = self.load_instrument(
