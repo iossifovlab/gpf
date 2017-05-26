@@ -94,7 +94,7 @@ USAGE
         output = args.output
 
         if verbose > 0:
-            print("Verbose mode on")
+            print("verbose mode on: {}".format(verbose))
 
         if not families_filename:
             raise CLIError(
@@ -106,18 +106,18 @@ USAGE
         config = config_pheno_db(output)
 
         prep_individuals = NucPedPrepareIndividuals(config)
-        prep_individuals.prepare(families_filename)
+        prep_individuals.prepare(families_filename, verbose)
 
         prep_variables = NucPedPrepareVariables(config)
-        prep_variables.setup()
+        prep_variables.setup(verbose)
         prep_variables.prepare_pedigree_instrument(
-            prep_individuals, families_filename)
+            prep_individuals, families_filename, verbose)
         if instruments_directory:
             prep_variables.prepare_instruments(
-                prep_individuals, instruments_directory)
+                prep_individuals, instruments_directory, verbose)
 
         prep_meta = NucPedPrepareMetaVariables(config)
-        prep_meta.prepare()
+        prep_meta.prepare(verbose)
 
         return 0
     except KeyboardInterrupt:

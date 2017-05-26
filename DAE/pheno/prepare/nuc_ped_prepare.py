@@ -14,6 +14,7 @@ from pheno.prepare.base_variables import BaseVariables
 import os
 from pheno.prepare.base_meta_variables import BaseMetaVariables
 from pheno.pheno_db import PhenoDB
+from common.progress import progress_nl, progress
 
 
 class NucPedPrepareIndividuals(PhenoConfig):
@@ -177,9 +178,10 @@ class NucPedPrepareIndividuals(PhenoConfig):
         super(NucPedPrepareIndividuals, self).__init__(
             pheno_db='output', config=config, *args, **kwargs)
 
-    def _build_individuals_dict(self, df):
+    def _build_individuals_dict(self, df, verbose=0):
         individuals = {}
         for _index, row in df.iterrows():
+            progress(verbose)
             individual = NucPedPrepareIndividuals.Individual(row)
 
             if individual.key not in individuals:
@@ -204,26 +206,27 @@ class NucPedPrepareIndividuals(PhenoConfig):
         assert set(NucPedPrepareIndividuals.COLUMNS) <= set(df.columns)
         return df
 
-    def _build_individuals(self, pedfilename):
+    def _build_individuals(self, pedfilename, verbose=0):
         df = self.load_pedfile(pedfilename)
-        individuals = self._build_individuals_dict(df)
+        individuals = self._build_individuals_dict(df, verbose)
         assert individuals is not None
 
-        families = self._build_families_dict(individuals)
+        families = self._build_families_dict(individuals, verbose)
         assert families is not None
 
         return individuals
 
-    def build(self, pedfilename):
-        self.individuals = self._build_individuals(pedfilename)
+    def build(self, pedfilename, verbose=0):
+        self.individuals = self._build_individuals(pedfilename, verbose)
         self.individuals_with_sample_id = {
             k: v for k, v in self.individuals.items()
             if v.sample_id is not None
         }
 
-    def _build_families_dict(self, individuals):
+    def _build_families_dict(self, individuals, verbose=0):
         families = {}
         for p in individuals.values():
+            progress(verbose)
             if p.father != '0' and p.mother != '0':
                 try:
                     father = individuals[(p.family, p.father)]
@@ -275,9 +278,10 @@ class NucPedPrepareIndividuals(PhenoConfig):
             for p in self.individuals.values():
                 pm.save(p)
 
-    def prepare(self, pedfilename):
-        self.build(pedfilename)
+    def prepare(self, pedfilename, verbose=0):
+        self.build(pedfilename, verbose)
         self.save()
+        progress_nl(verbose)
 
 
 class NucPedPrepareVariables(PhenoConfig, BaseVariables):
@@ -286,11 +290,12 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
         super(NucPedPrepareVariables, self).__init__(
             pheno_db='output', config=config, *args, **kwargs)
 
-    def _clear_duplicate_measurements(self, df):
+    def _clear_duplicate_measurements(self, df, verbose=0):
         counter = Counter(df.person_id)
         to_fix = [k for k, v in counter.items() if v > 1]
         to_delete = []
         for person_id in to_fix:
+            progress(verbose)
             pdf = df[df.person_id == person_id]
             keep = pdf.index.max()
             d = pdf[pdf.index != keep]
@@ -298,9 +303,10 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
 
         df.drop(to_delete, inplace=True)
 
-    def _adjust_measurments_with_sample_id(self, df, individuals):
+    def _adjust_measurments_with_sample_id(self, df, individuals, verbose=0):
         to_append = []
         for individual in individuals.individuals_with_sample_id.values():
+            progress(verbose)
             pdf = df[df.person_id == individual.sample_id]
             if len(pdf) == 0:
                 continue
@@ -314,7 +320,8 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
         return df.append(to_append)
 
     def load_instrument(
-            self, individuals, instrument_name, filename, dtype=None):
+            self, individuals, instrument_name, filename,
+            dtype=None, verbose=0):
         assert os.path.isfile(filename)
 
         df = pd.read_csv(filename, low_memory=False, sep=',',
@@ -329,15 +336,17 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
             columns[index] = name
 
         df.columns = columns
-        self._clear_duplicate_measurements(df)
-        df = self._adjust_measurments_with_sample_id(df, individuals)
+        self._clear_duplicate_measurements(df, verbose)
+        df = self._adjust_measurments_with_sample_id(df, individuals, verbose)
         return df
 
-    def setup(self):
+    def setup(self, verbose=0):
         self._create_variable_table()
         self._create_value_tables()
 
-    def prepare_pedigree_instrument(self, pedindividuals, pedfilename):
+    def prepare_pedigree_instrument(
+            self, pedindividuals, pedfilename, verbose=0):
+
         persons = self.load_persons_df()
 
         ped_df = NucPedPrepareIndividuals.load_pedfile(pedfilename)
@@ -354,6 +363,8 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
             persons, how='right', on='person_id', rsuffix="_person")
 
         for measure_name in measure_columns:
+            progress(verbose)
+
             mdf = df[['person_id', measure_name,
                       'family_id', 'person_role']]
             vdf = mdf.dropna()
@@ -364,7 +375,8 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
                 'pedigree', measure_name,
                 vdf)
 
-    def prepare_instruments(self, pedindividuals, instruments_directory):
+    def prepare_instruments(
+            self, pedindividuals, instruments_directory, verbose=0):
         persons = self.load_persons_df()
 
         all_filenames = [
@@ -383,6 +395,7 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
                 persons, on='person_id', how='right', rsuffix="_person")
 
             for measure_name in df.columns[1:len(instrument_df.columns)]:
+                progress(verbose)
                 mdf = df[['person_id', measure_name,
                           'family_id', 'person_role']]
                 vdf = mdf.dropna()
@@ -392,6 +405,7 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
                 self._build_variable(
                     instrument_name, measure_name,
                     vdf)
+        progress_nl(verbose)
 
 
 class NucPedPrepareMetaVariables(PhenoConfig, BaseMetaVariables):
