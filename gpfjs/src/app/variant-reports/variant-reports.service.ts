@@ -3,12 +3,13 @@ import { Http } from '@angular/http';
 
 import { Observable } from 'rxjs';
 
-import { Studies } from './variant-reports';
+import { Studies, Study, VariantReport } from './variant-reports';
 
 @Injectable()
 export class VariantReportsService {
 
   private studiesUrl = 'common_reports/report_studies';
+  private variantsUrl = 'common_reports/variant_reports/';
 
   constructor(
     private http: Http
@@ -21,6 +22,17 @@ export class VariantReportsService {
       .catch(error => {
         console.log(error);
         return Observable.of(null as Studies);
+      });
+  }
+
+  getVariantReport(study: Study) {
+    let url = `${this.variantsUrl}${study.name}`;
+    return this.http
+      .get(url)
+      .map(response => VariantReport.fromJson(response.json()))
+      .catch(error => {
+        console.log(error);
+        return Observable.of(null as VariantReport);
       });
   }
 

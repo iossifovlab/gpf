@@ -3,3 +3,13 @@
 	border: 1px solid rgba(0,0,0,.125);
 	background-color: #fafafa;
 }
+
+.table-centered,
+.table-centered th,
+.table-centered td {
+	text-align: center;
+}
+
+.container {
+  font-size: 0.9em;
+}

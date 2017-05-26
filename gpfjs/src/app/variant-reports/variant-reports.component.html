@@ -1,18 +1,72 @@
 <div class="container">
-  <div class="variant-report-block form-block">
-    <div class="row">
-      <div class="col-lg-2">
+  <div class="row variant-report-block form-block">
+    <!-- <div class=""> -->
+      <div class="col-2">
         <label class="form-block-title" for="studies">Study</label>
       </div>
 
-      <div class="col-lg-10">
+      <div class="col-10">
         <select [ngModel]="selectedReport$ | async" (ngModelChange)="selectReport($event)">
           <option *ngFor="let study of (reports$ | async)?.studies"
             [ngValue]="study">{{ study.name }}</option>
         </select>
       </div>
+    <!-- </div> -->
+  </div>
+
+  <div *ngIf="(variantReport$ | async) as variantReport">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-auto">
+        <h4>Study: {{ variantReport.studyName }} <small class="text-muted">{{ variantReport.studyDescription }}</small></h4>
+      </div>
+    
+      <div class="col-12">
+        <h5>Total number of families: {{ variantReport.familyReport.familiesTotal }} (Download)</h5>
+      </div>
     </div>
-    <!-- {{ selectedReport$ | async | json }} -->
+
+    <div class="row">
+      <div class="col-12">
+        <h5>Families by number of probands/siblings</h5>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <table class="table table-bordered table-hover table-sm table-centered">
+          <thead>
+            <th>Phenotype</th>
+            <th *ngFor="let column of variantReport.familyReport.phenotypes">
+              {{ column }}
+            </th>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Male</th>
+              <td *ngFor="let childrenCounter of orderByColumnOrder(variantReport.familyReport.childrenCounters, variantReport.familyReport.phenotypes)">
+                {{ childrenCounter.childrenMale }}
+              </td>
+            </tr>
+
+            <tr>
+              <th>Female</th>
+              <td *ngFor="let childrenCounter of orderByColumnOrder(variantReport.familyReport.childrenCounters, variantReport.familyReport.phenotypes)">
+                {{ childrenCounter.childrenFemale }}
+              </td>
+            </tr>
+
+            <tr>
+              <th>Total</th>
+              <td *ngFor="let childrenCounter of orderByColumnOrder(variantReport.familyReport.childrenCounters, variantReport.familyReport.phenotypes)">
+                {{ childrenCounter.childrenTotal }}
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- {{ variantReport.familyReport | json }} -->
   </div>
 
 
