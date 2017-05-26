@@ -38,12 +38,12 @@ class BaseMetaVariables(object):
                     df.person_role == 'mom',
                     df.person_role == 'dad'
                 )]) > 7
-            print(v)
             meta_variables.append(v)
-
         return meta_variables
 
     def _save_meta_variables(self, meta_variables):
+        if not meta_variables:
+            return
         with MetaVariableManager(
                 dbfile=self.get_dbfile()) as vm:
             for v in meta_variables:

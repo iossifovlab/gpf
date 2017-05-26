@@ -97,9 +97,9 @@ USAGE
         if verbose > 0:
             print("Verbose mode on")
 
-        if not families_filename or not instruments_directory:
+        if not families_filename:
             raise CLIError(
-                "families file and instruments directory must be specified")
+                "families file must be specified")
         if not output:
             raise CLIError(
                 "output filename should be specified")
@@ -112,7 +112,11 @@ USAGE
 
         prep_variables = NucPedPrepareVariables(config)
         prep_variables.setup()
-        prep_variables.prepare(prep_individuals, instruments_directory)
+        prep_variables.prepare_pedigree_instrument(
+            prep_individuals, families_filename)
+        if instruments_directory:
+            prep_variables.prepare_instruments(
+                prep_individuals, instruments_directory)
 
         prep_meta = NucPedPrepareMetaVariables(config)
         prep_meta.prepare()
