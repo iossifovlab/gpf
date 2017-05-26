@@ -192,7 +192,7 @@ class StudiesSummaries(Precompute):
             studies = vDB.get_studies(studies_names)
 
             summary = {
-                'study_name': study_group_name,
+                'study name': study_group_name,
                 'description': "%s (%s)" % (group.description,
                                             studies_names.replace(',', ', '))
             }
@@ -208,7 +208,7 @@ class StudiesSummaries(Precompute):
             if not order:
                 continue
             summary = {
-                'study_name': study_name,
+                'study name': study_name,
                 'description': study.description
             }
             cls.__build_studies_summaries(summary, [study])
@@ -231,7 +231,7 @@ class StudiesSummaries(Precompute):
             if not order:
                 continue
             summary = {
-                'study_name': study_name,
+                'study name': study_name,
                 'description': study.description
             }
             cls.__build_studies_summaries(summary, [study])
