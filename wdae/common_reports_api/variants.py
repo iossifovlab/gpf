@@ -456,11 +456,12 @@ class StudyVariantReports(ReportBase, precompute.register.Precompute):
         self.build()
 
     def serialize(self):
-        return {'study_name': self.study_name,
-                'families_report': self.families_report.serialize(),
-                'denovo_report': self.denovo_report.serialize()
-                if self.denovo_report else None,
-                }
+        return {
+            'study_name': self.study_name,
+            'families_report': self.families_report.serialize(),
+            'denovo_report': self.denovo_report.serialize()
+            if self.denovo_report else None,
+        }
 
     def deserialize(self, data):
         assert self.study_name == data['study_name']
