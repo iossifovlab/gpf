@@ -370,12 +370,15 @@ class Study:
             families[f.familyId] = f
         return families, {}
 
-    def _load_family_data_from_pickle(self, fn):
+    @staticmethod
+    def _load_family_data_from_pickle(fn):
         return pickle.load(open(fn, "rb"))
 
-    def _load_family_data_from_simple(self, reportF):
+    @staticmethod
+    def _load_family_data_from_simple(reportF):
         dt = genfromtxt(reportF, delimiter='\t', dtype=None,
-                        names=True, case_sensitive=True, comments="asdgasdgasdga")
+                        names=True, case_sensitive=True,
+                        comments="asdgasdgasdga")
         families = defaultdict(Family)
         for dtR in dt:
             fmId = str(dtR['familyId'])
@@ -391,11 +394,13 @@ class Study:
                 families[fmId].memberInOrder = [p]
         return families, {}
 
-    def _load_family_data_from_DalyWE2012_SD_Trios(self, reportF):
+    @staticmethod
+    def _load_family_data_from_DalyWE2012_SD_Trios(reportF):
         families = {}
 
         dt = genfromtxt(reportF, delimiter='\t', dtype=None,
-                        names=True, case_sensitive=True, comments="asdgasdgasdga")
+                        names=True, case_sensitive=True,
+                        comments="asdgasdgasdga")
 
         genderDecoding = {"female": "F", "male": "M"}
 
