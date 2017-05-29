@@ -13,7 +13,8 @@ from argparse import RawDescriptionHelpFormatter
 import traceback
 from pheno.prepare.nuc_ped_prepare import NucPedPrepareIndividuals,\
     NucPedPrepareVariables, NucPedPrepareMetaVariables
-from pheno.common import config_pheno_db
+from pheno.common import config_pheno_db, adjust_config_pheno_db, dump_config,\
+    check_config_pheno_db
 
 __all__ = []
 __version__ = 0.1
@@ -85,6 +86,35 @@ USAGE
             dest='output',
             help='ouput file',
             metavar='filename')
+
+        parser.add_argument(
+            '-C', '--continuous',
+            type=int,
+            dest='continuous',
+            help='minimal count of unique values for a measure to be '
+            'classified as continuous (default: 15)')
+
+        parser.add_argument(
+            '-O', '--ordinal',
+            type=int,
+            dest='ordinal',
+            help='minimal count of unique values for a measure to be '
+            'classified as ordinal (default: 5)')
+
+        parser.add_argument(
+            '-A', '--categorical',
+            type=int,
+            dest='categorical',
+            help='minimal count of unique values for a measure to be '
+            'classified as categorical (default: 2)')
+
+        parser.add_argument(
+            '-I', '--individuals',
+            type=int,
+            dest='individuals',
+            help='minimal number of individuals for a measure to be '
+            'considered for classification (default: 20)')
+
         # Process arguments
         args = parser.parse_args()
 
@@ -92,9 +122,6 @@ USAGE
         instruments_directory = args.instruments
         families_filename = args.families
         output = args.output
-
-        if verbose > 0:
-            print("verbose mode on: {}".format(verbose))
 
         if not families_filename:
             raise CLIError(
@@ -104,6 +131,11 @@ USAGE
                 "output filename should be specified")
 
         config = config_pheno_db(output)
+        config = adjust_config_pheno_db(config, args)
+
+        dump_config(config)
+        if not check_config_pheno_db(config):
+            raise Exception("bad classification boundaries")
 
         prep_individuals = NucPedPrepareIndividuals(config)
         prep_individuals.prepare(families_filename, verbose)

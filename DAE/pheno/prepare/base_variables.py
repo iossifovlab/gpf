@@ -12,63 +12,46 @@ from pheno.models import ContinuousValueManager, CategoricalValueManager,\
 
 
 class BaseVariables(object):
+    INDIVIDUALS = 'individuals'
     CONTINUOUS = 'continuous'
     ORDINAL = 'ordinal'
     CATEGORICAL = 'categorical'
     UNKNOWN = 'unknown'
 
     @property
-    def continuous_min_rank(self):
-        return int(self.config.get(self.CONTINUOUS, 'min_rank'))
+    def min_individuals(self):
+        return int(self.config.get(self.INDIVIDUALS, 'min_individuals'))
 
     @property
-    def continuous_min_individuals(self):
-        return int(self.config.get(self.CONTINUOUS, 'min_individuals'))
+    def continuous_min_rank(self):
+        return int(self.config.get(self.CONTINUOUS, 'min_rank'))
 
     @property
     def ordinal_min_rank(self):
         return int(self.config.get(self.ORDINAL, 'min_rank'))
 
     @property
-    def ordinal_max_rank(self):
-        return int(self.config.get(self.ORDINAL, 'max_rank'))
-
-    @property
-    def ordinal_min_individuals(self):
-        return int(self.config.get(self.ORDINAL, 'min_individuals'))
-
-    @property
     def categorical_min_rank(self):
         return int(self.config.get(self.CATEGORICAL, 'min_rank'))
-
-    @property
-    def categorical_max_rank(self):
-        return int(self.config.get(self.CATEGORICAL, 'max_rank'))
-
-    @property
-    def categorical_min_individuals(self):
-        return int(self.config.get(self.CATEGORICAL, 'min_individuals'))
 
     def check_continuous_rank(self, rank, individuals):
         if rank < self.continuous_min_rank:
             return False
-        if individuals < self.continuous_min_individuals:
+        if individuals < self.min_individuals:
             return False
         return True
 
     def check_ordinal_rank(self, rank, individuals):
-        if rank < self.ordinal_min_rank or \
-                rank > self.ordinal_max_rank:
+        if rank < self.ordinal_min_rank:
             return False
-        if individuals < self.ordinal_min_individuals:
+        if individuals < self.min_individuals:
             return False
         return True
 
     def check_categorical_rank(self, rank, individuals):
-        if rank < self.categorical_min_rank or \
-                rank > self.categorical_max_rank:
+        if rank < self.categorical_min_rank:
             return False
-        if individuals < self.categorical_min_individuals:
+        if individuals < self.min_individuals:
             return False
         return True
 

@@ -13,18 +13,69 @@ def config_pheno_db(output):
     config.add_section('output')
     config.set('output', 'cache_file', output)
 
+    config.add_section('individuals')
+    config.set('individuals', 'min_individuals', '20')
+
     config.add_section('continuous')
-    config.set('continuous', 'min_individuals', '20')
     config.set('continuous', 'min_rank', '15')
 
     config.add_section('ordinal')
-    config.set('ordinal', 'min_individuals', '20')
     config.set('ordinal', 'min_rank', '5')
-    config.set('ordinal', 'max_rank', '17')
 
     config.add_section('categorical')
-    config.set('categorical', 'min_individuals', '20')
     config.set('categorical', 'min_rank', '2')
-    config.set('categorical', 'max_rank', '17')
 
     return config
+
+
+def adjust_config_pheno_db(config, args):
+    if args.individuals is not None and args.individuals >= 0:
+        config.set('individuals', 'min_individuals', str(args.individuals))
+
+    if args.categorical is not None and args.categorical >= 0:
+        config.set('categorical', 'min_rank', str(args.categorical))
+
+    if args.ordinal is not None and args.ordinal >= 0:
+        config.set('ordinal', 'min_rank', str(args.ordinal))
+
+    if args.continuous is not None and args.continuous >= 0:
+        config.set('continuous', 'min_rank', str(args.continuous))
+
+    return config
+
+
+def check_config_pheno_db(config):
+    categorical = int(config.get('categorical', 'min_rank'))
+    if categorical < 1:
+        print('categorical min rank expected to be > 0')
+        return False
+    ordinal = int(config.get('ordinal', 'min_rank'))
+    if ordinal < categorical:
+        print('ordianl min rank expected to be >= categorical min rank')
+        return False
+    continuous = int(config.get('continuous', 'min_rank'))
+    if continuous < ordinal:
+        print('continuous min rank expected to be >= ordinal min rank')
+        return False
+
+    individuals = int(config.get('individuals', 'min_individuals'))
+    if individuals < 5:
+        print('minimal number of individuals expected to be >= 5')
+        return False
+
+    return True
+
+
+def dump_config(config):
+    print("--------------------------------------------------------")
+    print("CLASSIFICATION BOUNDARIES:")
+    print("--------------------------------------------------------")
+    print("min individuals:      {}".format(
+        config.get('individuals', 'min_individuals')))
+    print("continuous min rank:  {}".format(
+        config.get('continuous', 'min_rank')))
+    print("ordinal min rank:     {}".format(
+        config.get('ordinal', 'min_rank')))
+    print("categorical min rank: {}".format(
+        config.get('categorical', 'min_rank')))
+    print("--------------------------------------------------------")
