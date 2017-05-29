@@ -205,7 +205,13 @@ class ReportBase(CommonBase):
     def __init__(self, study_name):
         super(ReportBase, self).__init__()
         self.study_name = study_name
-        self.study_description = None
+        if study_name in vDB.get_study_group_names():
+            study = vDB.get_study_group(study_name)
+        else:
+            study = vDB.get_study(study_name)
+
+        self.study_description = study.description
+
         self.studies = vDB.get_studies(self.study_name)
         self._calc_phenotypes()
 
@@ -444,9 +450,8 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
 class StudyVariantReports(ReportBase, precompute.register.Precompute):
 
-    def __init__(self, study_name, study_description=None):
+    def __init__(self, study_name):
         super(StudyVariantReports, self).__init__(study_name)
-        self.study_description = study_description
         self.families_report = None
         self.denovo_report = None
 
@@ -521,11 +526,11 @@ class VariantReports(precompute.register.Precompute):
 
     def deserialize(self, data):
         res = {}
-        for (study_name, study_description) in self.studies:
+        for (study_name, _) in self.studies:
             if study_name not in data:
                 continue
             assert study_name in data
-            sr = StudyVariantReports(study_name, study_description)
+            sr = StudyVariantReports(study_name)
             sdict = cPickle.loads(zlib.decompress(data[study_name]))
             sr.deserialize(sdict)
             res[study_name] = sr
