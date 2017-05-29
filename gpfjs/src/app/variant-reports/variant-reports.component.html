@@ -19,7 +19,7 @@
       </div>
 
       <div class="col-12 mb-1">
-        <h5>Total number of families: {{ variantReport.familyReport.familiesTotal }} (Download)</h5>
+        <h5>Total number of families: {{ variantReport.familyReport.familiesTotal }} (<a [href]="getDownloadLink(variantReport)">Download</a>)</h5>
       </div>
     </div>
 

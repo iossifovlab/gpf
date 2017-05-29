@@ -106,6 +106,8 @@ export class VariantReportsComponent implements OnInit {
     return this.orderByColumnOrder(effectType.data, denovoReport.phenotypes);
   }
 
-
+  getDownloadLink(variantReport: VariantReport) {
+    return this.variantReportsService.getDownloadLink(variantReport);
+  }
 
 }
