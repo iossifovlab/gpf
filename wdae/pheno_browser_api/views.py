@@ -100,7 +100,7 @@ class PhenoMeasuresView(APIView):
                 m['pvalue_correlation_age_female'] = "NaN"
 
             if m['values_domain'] is None:
-                m['values_domain'] = "[0, 0]"
+                m['values_domain'] = ""
 
             res.append(m)
         return Response({

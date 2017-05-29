@@ -11,6 +11,7 @@ from pheno_browser.graphs import draw_linregres, draw_measure_violinplot,\
     draw_ordinal_violin_distribution
 from pheno_browser.models import VariableBrowserModelManager,\
     VariableBrowserModel
+from common.progress import progress, progress_nl
 
 
 class PreparePhenoBrowserBase(object):
@@ -177,54 +178,44 @@ class PreparePhenoBrowserBase(object):
         (res.figure_distribution_small,
          res.figure_distribution) = self.save_fig(measure, "distribution")
 
+    def dump_browser_variable(self, var):
+        print('-------------------------------------------')
+        print(var.measure_id)
+        print('-------------------------------------------')
+        print('instrument: {}'.format(var.instrument_name))
+        print('measure:    {}'.format(var.measure_name))
+        print('type:       {}'.format(var.measure_type))
+        print('domain:     {}'.format(var.values_domain))
+        print('-------------------------------------------')
+
+    def handle_measure(self, measure):
+        v = VariableBrowserModel()
+        v.measure_id = measure.measure_id
+        v.instrument_name = measure.instrument_name
+        v.measure_name = measure.measure_name
+        v.measure_type = measure.measure_type
+        v.values_domain = measure.value_domain
+
+        if measure.measure_type == 'continuous':
+            self.build_values_violinplot(measure, v)
+            self.build_regression_by_nviq(measure, v)
+            self.build_regression_by_age(measure, v)
+        elif measure.measure_type == 'ordinal':
+            self.build_values_ordinal_distribution(measure, v)
+            self.build_regression_by_nviq(measure, v)
+            self.build_regression_by_age(measure, v)
+        else:
+            self.build_values_categorical_distribution(measure, v)
+        return v
+
     def run(self):
         with VariableBrowserModelManager(dbfile=self.browser_db) as vm:
             vm.drop_tables()
             vm.create_tables()
 
             for instrument in self.pheno_db.instruments.values():
-                print("processing instrument: {}".format(instrument.name))
-
-                for count, measure in enumerate(instrument.measures.values()):
-                    print("{}.\tprocessing measure: {}".format(
-                        count, measure.name))
-                    if measure.measure_type == 'continuous':
-                        v = VariableBrowserModel()
-                        v.measure_id = measure.measure_id
-                        v.instrument_name = measure.instrument_name
-                        v.measure_name = measure.measure_name
-                        v.measure_type = measure.measure_type
-                        v.values_domain = measure.value_domain
-
-                        self.build_values_violinplot(measure, v)
-                        self.build_regression_by_nviq(measure, v)
-                        self.build_regression_by_age(measure, v)
-
-                        vm.save(v)
-                        print("\tDONE continuous")
-                    elif measure.measure_type == 'ordinal':
-                        v = VariableBrowserModel()
-                        v.measure_id = measure.measure_id
-                        v.instrument_name = measure.instrument_name
-                        v.measure_name = measure.measure_name
-                        v.measure_type = measure.measure_type
-                        v.values_domain = measure.value_domain
-
-                        self.build_values_ordinal_distribution(measure, v)
-                        self.build_regression_by_nviq(measure, v)
-                        self.build_regression_by_age(measure, v)
-                        vm.save(v)
-
-                        print("\tDONE ordinal")
-                    else:
-                        v = VariableBrowserModel()
-                        v.measure_id = measure.measure_id
-                        v.instrument_name = measure.instrument_name
-                        v.measure_name = measure.measure_name
-                        v.measure_type = measure.measure_type
-                        v.values_domain = measure.value_domain
-
-                        self.build_values_categorical_distribution(measure, v)
-                        vm.save(v)
-
-                        print("\tDONE categorical")
+                progress_nl()
+                for measure in instrument.measures.values():
+                    progress()
+                    var = self.handle_measure(measure)
+                    vm.save(var)

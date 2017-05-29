@@ -368,7 +368,7 @@ def draw_ordinal_violin_distribution(df, measure_id, ax=None):
                 left=x_loc, color=color_female)
 
     ax.set_yticks(y_locations)
-    ax.set_yticklabels(values_domain)
+    ax.set_yticklabels(y_locations)
     ax.set_xlim(2 * -binned_maximum, 6 * binned_maximum)
     ax.set_ylim(np.min(y_locations) - 1, np.max(y_locations) + 1)
 

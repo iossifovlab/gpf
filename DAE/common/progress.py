@@ -6,11 +6,11 @@ Created on May 26, 2017
 import sys
 
 
-def progress(verbose):
+def progress(verbose=1):
     if verbose:
         sys.stderr.write('.')
 
 
-def progress_nl(verbose):
+def progress_nl(verbose=1):
     if verbose:
         sys.stderr.write('\n')
