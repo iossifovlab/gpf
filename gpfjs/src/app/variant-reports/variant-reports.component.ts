@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { Observable, Subject } from 'rxjs';
 
@@ -7,6 +8,8 @@ import { Studies, Study, VariantReport, ChildrenCounter,
          FamilyCounter, PedigreeCounter, DenovoReport, DeNovoData
         } from './variant-reports';
 
+const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
+
 @Component({
   selector: 'gpf-variant-reports',
   templateUrl: './variant-reports.component.html',
@@ -14,21 +17,59 @@ import { Studies, Study, VariantReport, ChildrenCounter,
 })
 export class VariantReportsComponent implements OnInit {
 
+
   reports$: Observable<Studies>;
   selectedReport$ = new Subject<Study>();
 
   variantReport$: Observable<VariantReport>;
 
   constructor(
-    private variantReportsService: VariantReportsService
+    private variantReportsService: VariantReportsService,
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit() {
-    this.reports$ = this.variantReportsService.getStudies();
+    this.reports$ = this.variantReportsService.getStudies().share();
 
     this.variantReport$ = this.selectedReport$
       .switchMap(study => this.variantReportsService.getVariantReport(study))
+      .do(study => this.setSelectedReportParam(study.studyName))
       .share();
+
+    this.loadReportFromParams();
+  }
+
+  private setSelectedReportParam(studyName) {
+    this.route.params
+      .take(1)
+      .subscribe(params => {
+        if (!params[SELECTED_REPORT_QUERY_PARAM] ||
+          params[SELECTED_REPORT_QUERY_PARAM] !== studyName) {
+            let param = {};
+            param[SELECTED_REPORT_QUERY_PARAM] = studyName;
+
+            this.router.navigate(['/reports/reports', param]);
+          }
+      });
+  }
+
+  private loadReportFromParams() {
+    Observable.combineLatest([
+        this.reports$,
+        this.route.params
+      ])
+      .take(1)
+      .subscribe(([reports, params]) => {
+        if (params[SELECTED_REPORT_QUERY_PARAM]) {
+          let report = reports.studies
+            .find(study => study.name === params[SELECTED_REPORT_QUERY_PARAM]);
+          if (report) {
+            this.selectReport(report);
+          }
+        }
+      });
+
   }
 
   selectReport(study: Study) {

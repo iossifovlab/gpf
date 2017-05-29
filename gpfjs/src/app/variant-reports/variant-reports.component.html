@@ -4,8 +4,10 @@
         <label class="form-block-title" for="studies">Study</label>
       </div>
 
-      <div class="col-10">
-        <select [ngModel]="selectedReport$ | async" (ngModelChange)="selectReport($event)">
+      <div class="col-4">
+        <select class="form-control"
+          [ngModel]="selectedReport$ | async"
+          (ngModelChange)="selectReport($event)">
           <option *ngFor="let study of (reports$ | async)?.studies"
             [ngValue]="study">{{ study.name }}</option>
         </select>
@@ -19,7 +21,7 @@
       </div>
 
       <div class="col-12 mb-1">
-        <h5>Total number of families: {{ variantReport.familyReport.familiesTotal }} (<a [href]="getDownloadLink(variantReport)">Download</a>)</h5>
+        <h5>Total number of families: {{ variantReport.familyReport.familiesTotal }} (<a [href]="getDownloadLink(variantReport)" download>Download</a>)</h5>
       </div>
     </div>
 
