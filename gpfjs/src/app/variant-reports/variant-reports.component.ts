@@ -4,7 +4,8 @@ import { Observable, Subject } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
 import { Studies, Study, VariantReport, ChildrenCounter,
-         FamilyCounter, PedigreeCounter } from './variant-reports';
+         FamilyCounter, PedigreeCounter, DenovoReport, DeNovoData
+        } from './variant-reports';
 
 @Component({
   selector: 'gpf-variant-reports',
@@ -34,7 +35,7 @@ export class VariantReportsComponent implements OnInit {
     this.selectedReport$.next(study);
   }
 
-  orderByColumnOrder(childrenCounters: ChildrenCounter[], columns: string[], strict = false) {
+  orderByColumnOrder(childrenCounters: (ChildrenCounter | DeNovoData)[], columns: string[], strict = false) {
     let columnsLookup = new Map<string, number>(
       columns.map((value, index): [string, number] => [value, index])
     );
@@ -85,5 +86,26 @@ export class VariantReportsComponent implements OnInit {
         []);
 
   }
+
+  getRows(effectGroups: string[], effectTypes: string[]) {
+    if (effectGroups) {
+      return effectGroups.concat(effectTypes);
+    } else if (effectTypes) {
+      return effectTypes;
+    }
+    return [];
+  }
+
+  getEffectTypeOrderByColumOrder(effectTypeName: string, denovoReport: DenovoReport) {
+    let effectType = denovoReport.row
+      .find(et => et.effectType === effectTypeName);
+
+    if (!effectType) {
+      return [];
+    }
+    return this.orderByColumnOrder(effectType.data, denovoReport.phenotypes);
+  }
+
+
 
 }

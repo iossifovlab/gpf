@@ -96,13 +96,60 @@ export class FamilyReport {
 
 }
 
+export class DeNovoData {
+
+  static fromJson(json: any) {
+    return new DeNovoData(
+      json['phenotype'],
+      json['events_count'],
+      json['events_children_count'],
+      json['events_rate_per_child'],
+      json['events_children_percent'],
+    );
+  }
+
+  constructor(
+    readonly phenotype: string,
+    readonly eventsCount: number,
+    readonly eventsChildrenCount: number,
+    readonly eventsRatePerChild: number,
+    readonly eventsChildrenPercent: number,
+  ) {}
+}
+
+export class EffectTypeRow {
+
+  static fromJson(json: any) {
+    return new EffectTypeRow(
+      json['effect_type'],
+      json['row'].map(data => DeNovoData.fromJson(data))
+    );
+  }
+
+  constructor(
+    readonly effectType: string,
+    readonly data: DeNovoData[]
+
+  ) {}
+}
+
 export class DenovoReport {
+
+  static fromJson(json: any) {
+    return new DenovoReport(
+      json['phenotypes'],
+      json['effect_groups'],
+      json['effect_types'],
+      json['rows'].map(row => EffectTypeRow.fromJson(row))
+    );
+  }
 
 
   constructor (
     readonly phenotypes: string[],
     readonly effectGroups: string[],
     readonly effectTypes: string[],
+    readonly row: EffectTypeRow[]
   ) {}
 }
 
@@ -113,7 +160,7 @@ export class VariantReport {
       json['study_name'],
       json['study_description'],
       FamilyReport.fromJson(json['families_report']),
-      json['denovo_report']
+      DenovoReport.fromJson(json['denovo_report'])
     );
   }
 
