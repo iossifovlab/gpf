@@ -339,6 +339,12 @@ class DenovoEventsCounter(CounterBase):
                       self.children_counter.children_total, 3)
 
 
+class DenovoEventsReportRow(object):
+    def __init__(self):
+        self.row = None
+        self.effect_type = None
+
+
 class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
     def __init__(self, study_name, families_report):
@@ -358,20 +364,22 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
         return self._effect_types
 
     def build_row(self, effect_type):
-        row = {}
+        row = []
         for pheno in self.phenotypes:
             cc = self.families_report.get_children_counters(pheno)
             ec = DenovoEventsCounter(pheno, cc, effect_type)
             ec.build(self.studies)
-            row[pheno] = ec
+            assert ec.phenotype == pheno
+            row.append(ec)
         return row
 
     def clear_empty_rows(self):
         effect_groups = self.effect_groups()
         effect_types = self.effect_types()
-        for et, row in self.rows.items():
+        for row in self.rows:
+            et = row.effect_type
             all_zeroes = True
-            for ec in row.values():
+            for ec in row.row:
                 if not ec.is_zeroes():
                     all_zeroes = False
                     break
@@ -385,8 +393,11 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
     def is_empty_column(self, phenotype):
         all_zeroes = True
-        for row in self.rows.values():
-            ec = row[phenotype]
+
+        for row in self.rows:
+            for col in row.row:
+                if col.phenotype == phenotype:
+                    ec = col
             if not ec.is_zeroes():
                 all_zeroes = False
                 break
@@ -401,15 +412,20 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
             self.phenotypes.remove(to_remove)
 
     def build(self):
-        rows = {}
+        rows = []
         for effect_type in self.effect_groups():
-            rows[effect_type] = self.build_row(effect_type)
-        self.rows = rows
+            row = DenovoEventsReportRow()
+            row.row = self.build_row(effect_type)
+            row.effect_type = effect_type
+            rows.append(row)
 
-        rows = {}
         for effect_type in self.effect_types():
-            rows[effect_type] = self.build_row(effect_type)
-        self.rows.update(rows)
+            row = DenovoEventsReportRow()
+            row.row = self.build_row(effect_type)
+            row.effect_type = effect_type
+            rows.append(row)
+
+        self.rows = rows
         self.clear_empty_rows()
 
     def precompute(self):

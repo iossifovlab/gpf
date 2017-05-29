@@ -209,8 +209,8 @@ class Test(unittest.TestCase):
         dr = DenovoEventsReport('IossifovWE2014', fr)
         dr.build()
         self.assertTrue(dr.rows)
-        self.assertIn('LGDs', dr.rows)
-        self.assertIn('Nonsense', dr.rows)
+        self.assertEqual('LGDs', dr.rows[0].effect_type)
+        # self.assertIn('Nonsense', dr.rows)
 
     def test_study_variant_reports(self):
         vr = StudyVariantReports('IossifovWE2014')
@@ -234,8 +234,3 @@ class Test(unittest.TestCase):
         cc = fr.get_children_counters('unaffected')
         self.assertEquals(133, cc.children_male)
         self.assertEquals(131, cc.children_female)
-
-
-if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()

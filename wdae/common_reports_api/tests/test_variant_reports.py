@@ -24,6 +24,9 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         data = response.data
         self.assertIn('study_description', data)
+        self.assertEqual(
+            data['study_description'],
+            "All whole-exomes studies")
 
     def test_denovo_children_counters(self):
         response = self.client.get(self.URL)
@@ -38,6 +41,7 @@ class Test(BaseAuthenticatedUserTest):
 
         data = response.data['denovo_report']
         pprint(data.keys())
+
         self.assertEquals(
             data['phenotypes'],
             [
