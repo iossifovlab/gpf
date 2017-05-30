@@ -146,3 +146,77 @@ are stored.
 
 ## Phenotype Browser Data Preparation
 
+Phenotype browser displays various statistics of phenotype DB measures. Most
+of the data displayed by the phenotype browser is prepared by 
+`pheno_browser_cache` tool.
+
+### Phenotype browser activation
+When a dataset has specified `phenoDB` and `phenotypeBrowser` variables,
+then the phenotype browser tool becomes active in the user interface of
+GPF system:
+
+```
+...
+[dataset.VIP]
+...
+phenoDB=vip
+phenotypeBrowser=yes
+...
+```
+
+### Phenotype browser configuration
+
+Configuration of phenotype browser is specified into Django settings 
+`wdae/settings.py`. One should specify two variables:
+
+* `PHENO_BROWSER_CACHE` - a directory where the phenotype browser cache is
+located
+
+* `PHENO_BROWSER_BASE_URL` - a base URL for serving phenotype browser
+figures
+
+### Generation of phenotype browser figures and resources
+
+To prepare phenotype browser figures and other data one should use
+`pheno_browser_cache` Django management command. The available help
+page could be invoked using `-h` option:
+```
+./manage.py pheno_browser_cache -h
+usage: manage.py pheno_browser_cache [-h] [--version] [-v {0,1,2,3}]
+                                     [--settings SETTINGS]
+                                     [--pythonpath PYTHONPATH] [--traceback]
+                                     [--no-color] [-f] [-p PHENO]
+
+Rebuild pheno browser static figures cache
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output,
+                        2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g.
+                        "myproject.settings.main". If this isn't provided, the
+                        DJANGO_SETTINGS_MODULE environment variable will be
+                        used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g.
+                        "/home/djangoprojects/myproject".
+  --traceback           Raise on CommandError exceptions
+  --no-color            Don't colorize the command output.
+  -f, --force           Force recalculation of static resources
+  -p PHENO, --pheno PHENO
+                        Specify with pheno db to use. By default works on all
+                        configured pheno DBs
+```
+
+The important parameters are:
+
+* `-f`, `--force` - force generation of static resources. By default the tool
+checks if there are any changes in phenotype databases and if there are no
+changes it does nothing. The tool will generate static resources only if
+there is a change in some of phenotype database.
+
+* `-p PHENO_DB`, `--pheno PHENO_DB` - specifies phenotype DB for which the
+static resources should be generated. By default the tool generates static 
+resources for all phenotype databases specified in `phenoDB.conf` file.
