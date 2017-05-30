@@ -7,11 +7,11 @@ The tool used to import phenotype data into GPF system is `pheno2DAE.py`.
 ### Phenotype measurements data format
 
 The phenotype data imported into the GPF system should be stored into
-`CSV` files. 
+collection of `CSV` files. 
 
 Each `CSV` file contains collection of measurements, organized in
 following format: the first column into the `CSV` file should contain the individuals IDs
-followed by columns for each different phenotype measurement. One such `CSV` file
+followed by columns for different phenotype measurements. One such `CSV` file
 is called *instrument* and columns into this file are called *measures*.
 
 
