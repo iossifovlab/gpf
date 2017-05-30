@@ -26,6 +26,16 @@ class Command(BaseCommand, ImportUsersBase):
             help='Sets the name of the user',
         )
 
+        parser.add_argument(
+            '-p',
+            action='store',
+            dest='password',
+            default='',
+            const=None,
+            nargs='?',
+            help='Sets the password of the user',
+        )
+
     def handle(self, *args, **options):
         if(len(args) != 1):
             raise CommandError('Exactly one argument required')
@@ -37,8 +47,14 @@ class Command(BaseCommand, ImportUsersBase):
         res = {
             'Email': args[0],
             'Name': options['name'],
-            'Groups': options['groups']
+            'Groups': options['groups'],
         }
-        self.handle_user(res)
 
-        call_command('changepassword', username=args[0], stdout=self.stdout)
+        user = self.handle_user(res)
+
+        if options['password'] is None:
+            call_command('changepassword', username=args[0],
+                         stdout=self.stdout)
+        else:
+            user.set_password(options['password'])
+            user.save()
