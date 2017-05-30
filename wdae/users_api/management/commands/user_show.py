@@ -17,7 +17,10 @@ class Command(BaseCommand, ExportUsersBase):
 
             groups = ",".join(self.get_visible_groups(user))
 
-            print("User email: {} name: {} groups: {} password:{}".format(
-                  user.email, user.name, groups, user.password))
+            print("User email: {}\n"
+                  "name: {}\n"
+                  "groups: {}\n"
+                  "password: {}".format(user.email, user.name, groups,
+                                        user.password))
         except UserModel.DoesNotExist:
             raise CommandError("User not found")
