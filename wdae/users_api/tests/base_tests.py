@@ -6,7 +6,6 @@ Created on Apr 29, 2017
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
-from django.core import management
 
 
 class BaseAuthenticatedUserTest(APITestCase):
@@ -14,7 +13,6 @@ class BaseAuthenticatedUserTest(APITestCase):
     @classmethod
     def setUpClass(cls):
         super(BaseAuthenticatedUserTest, cls).setUpClass()
-        management.call_command('reload_datasets_perm')
 
         User = get_user_model()
         u = User.objects.create(
