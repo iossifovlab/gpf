@@ -4,6 +4,4 @@ rm -rf wdae.sql
 rm -rf wdae_django_pre.cache
 
 python manage.py migrate
-python manage.py devusers
-python manage.py reload_datasets_perm
-
+./create_dev_users.sh
