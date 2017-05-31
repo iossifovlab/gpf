@@ -12,7 +12,8 @@ class Command(BaseCommand):
 
         try:
             UserModel = get_user_model()
-            user = UserModel.objects.get(email=args[0])
-            user.delete()
+            users = UserModel.objects.filter(groups__name=args[0])
+            for user in users:
+                user.delete()
         except UserModel.DoesNotExist:
             raise CommandError("User not found")
