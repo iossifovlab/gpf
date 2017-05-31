@@ -1,16 +1,6 @@
 # User Management Tools
 
 
-## Management command `reload_dataset_perm`
-
-Loads and creates users' groups defined into `variantsDB.conf` datasets
-configuration.
-
-When you change datasets' groups you need to run
-```
-./manage.py reload_dataset_perm
-```
-
 ## Management command `users_add`
 
 Imports new users from CSV file. The file sould contain following columns:
@@ -135,6 +125,18 @@ Changing password for user 'research@iossifovlab.com'
 Password:
 Password (again):
 Password changed successfully for user 'research@iossifovlab.com'
+```
+
+## Management command `datasets_show`
+
+Shows the configured datasets and the authorized groups
+
+Example invocations of `datasets_show` command are:
+```
+./manage.py datasets_show
+SD Authorized groups: any_user,SD,any_dataset
+SSC Authorized groups: any_user,any_dataset,SSC
+VIP Authorized groups: any_dataset,VIP
 ```
 
 ## Management command `devusers`
