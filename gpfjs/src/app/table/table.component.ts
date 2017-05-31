@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
   selector: 'gpf-table-cell',
   templateUrl: './table-cell.component.html'
 })
-export class GpfTableCell {
+export class GpfTableCellComponent {
   @Input() columnInfo: GpfTableColumnComponent;
   @Input() data: any;
 
@@ -20,7 +20,7 @@ export class GpfTableCell {
   templateUrl: './table-header.component.html',
   styleUrls: ['./table-header.component.css']
 })
-export class GpfTableHeader {
+export class GpfTableHeaderComponent {
   @Input() columnInfo: GpfTableColumnComponent;
   @Output() sortingInfoChange = new EventEmitter();
   @Input() sortingInfo: SortInfo;
@@ -145,7 +145,7 @@ export class GpfTableSubcolumnComponent {
   selector: 'gpf-table-column',
   template: '',
   entryComponents: [
-    GpfTableHeader
+    GpfTableHeaderComponent
   ]
 })
 export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {

@@ -3,11 +3,11 @@ import { CommonModule }        from '@angular/common';
 
 import { GpfTableComponent,
          GpfTableColumnComponent,
-         GpfTableCell,
+         GpfTableCellComponent,
          GpfTableSubcolumnComponent,
          GpfTableCellHeaderDirective,
          GpfTableCellContentDirective,
-         GpfTableHeader,
+         GpfTableHeaderComponent,
          GpfTableLegendDirective } from './table.component';
 
 @NgModule({
@@ -17,8 +17,8 @@ import { GpfTableComponent,
     GpfTableSubcolumnComponent,
     GpfTableCellContentDirective,
     GpfTableCellHeaderDirective,
-    GpfTableHeader,
-    GpfTableCell,
+    GpfTableHeaderComponent,
+    GpfTableCellComponent,
     GpfTableLegendDirective
   ],
   exports: [
