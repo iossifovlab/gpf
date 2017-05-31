@@ -42,7 +42,10 @@ class VariantAnnotationTest(unittest.TestCase):
                                                       alt="A")
         self.assert_chr1_897349_sub(effect)
 
-    def assert_chr1_3519050_del(self, effect):
+    def test_chr1_3519050_del_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="1:3519050",
+                                                      var="del(1)")
         self.assertEqual(effect.gene, "MEGF6")
         self.assertEqual(effect.transcript_id, "NM_001409_1")
         self.assertEqual(effect.strand, "-")
@@ -51,11 +54,63 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 1541)
         self.assertEqual(effect.aa_change, None)
 
-    def test_chr1_3519050_del_var(self):
+    def test_chr1_53287094_ins_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                      loc="1:3519050",
-                                                      var="del(1)")
-        self.assert_chr1_3519050_del(effect)
+                                                      loc="1:53287094",
+                                                      var="ins(G)")
+        self.assertEqual(effect.gene, "ZYG11B")
+        self.assertEqual(effect.transcript_id, "NM_024646_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "intron")
+        self.assertEqual(effect.prot_pos, 682)
+        self.assertEqual(effect.prot_length, 745)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_chr2_238617257_ins_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="2:238617257",
+                                                     var="ins(A)")
+        self.assertEqual(len(effects), 5)
+
+        self.assertEqual(effects[0].gene, "LRRFIP1")
+        self.assertEqual(effects[0].transcript_id, "NM_001137553_1")
+        self.assertEqual(effects[0].strand, "+")
+        self.assertEqual(effects[0].effect, "frame-shift")
+        self.assertEqual(effects[0].prot_pos, 46)
+        self.assertEqual(effects[0].prot_length, 752)
+        self.assertEqual(effects[0].aa_change, None)
+
+        self.assertEqual(effects[1].gene, "LRRFIP1")
+        self.assertEqual(effects[1].transcript_id, "NM_001137552_1")
+        self.assertEqual(effects[1].strand, "+")
+        self.assertEqual(effects[1].effect, "frame-shift")
+        self.assertEqual(effects[1].prot_pos, 46)
+        self.assertEqual(effects[1].prot_length, 808)
+        self.assertEqual(effects[1].aa_change, None)
+
+        self.assertEqual(effects[2].gene, "LRRFIP1")
+        self.assertEqual(effects[2].transcript_id, "NM_004735_1")
+        self.assertEqual(effects[2].strand, "+")
+        self.assertEqual(effects[2].effect, "frame-shift")
+        self.assertEqual(effects[2].prot_pos, 46)
+        self.assertEqual(effects[2].prot_length, 784)
+        self.assertEqual(effects[2].aa_change, None)
+
+        self.assertEqual(effects[3].gene, "LRRFIP1")
+        self.assertEqual(effects[3].transcript_id, "NM_001137550_1")
+        self.assertEqual(effects[3].strand, "+")
+        self.assertEqual(effects[3].effect, "frame-shift")
+        self.assertEqual(effects[3].prot_pos, 56)
+        self.assertEqual(effects[3].prot_length, 640)
+        self.assertEqual(effects[3].aa_change, None)
+
+        self.assertEqual(effects[4].gene, "LRRFIP1")
+        self.assertEqual(effects[4].transcript_id, "NM_001137551_1")
+        self.assertEqual(effects[4].strand, "+")
+        self.assertEqual(effects[4].effect, "frame-shift")
+        self.assertEqual(effects[4].prot_pos, 46)
+        self.assertEqual(effects[4].prot_length, 394)
+        self.assertEqual(effects[4].aa_change, None)
 
 
 if __name__ == "__main__":
