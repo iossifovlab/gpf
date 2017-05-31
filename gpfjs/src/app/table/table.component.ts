@@ -1,7 +1,10 @@
 import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
   Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren,
-  QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver
+  QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver,
+  AfterViewInit, Query, ElementRef
 } from '@angular/core';
+
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -178,9 +181,11 @@ export class GpfTableLegendDirective {
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.css']
 })
-export class GpfTableComponent {
+export class GpfTableComponent implements AfterViewInit {
   @ViewChild('table') tableViewChild: any;
-  @ViewChild('row') rowViewChild: any;
+  @ViewChildren('rows') rowViewChildren: QueryList<any>;
+  @ViewChildren('header') tableHeaderViewChildren: QueryList<ElementRef>;
+  @ViewChildren('floatingHeader') tableFloatingHeaderViewChildren: QueryList<ElementRef>;
 
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
   @ContentChild(GpfTableLegendDirective) legend: GpfTableLegendDirective;
@@ -191,19 +196,57 @@ export class GpfTableComponent {
   private drawOutsideVisibleCount = 5;
   private tableTopPosition = 0;
 
-  tableWidth = 0;
-
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event) {
     this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
-    this.tableWidth = this.tableViewChild.nativeElement.getBoundingClientRect().width;
 
-    if (this.rowViewChild && this.rowViewChild.nativeElement.getBoundingClientRect().height > 0) {
-      this.lastRowHeight = this.rowViewChild.nativeElement.getBoundingClientRect().height;
+    if (this.rowViewChildren &&
+        this.rowViewChildren.last &&
+        this.rowViewChildren.last.nativeElement.getBoundingClientRect().height > 0) {
+      this.lastRowHeight = this.rowViewChildren.last.nativeElement
+        .getBoundingClientRect().height;
     }
   }
 
-  constructor(private viewContainer: ViewContainerRef, private ref: ChangeDetectorRef) {
+  constructor(
+    private viewContainer: ViewContainerRef,
+    private ref: ChangeDetectorRef
+  ) { }
+
+  ngAfterViewInit() {
+    Observable.combineLatest([
+        this.rowViewChildren.changes.filter(elements => !!elements.first),
+        this.tableHeaderViewChildren.changes.filter(elements => !!elements.first),
+        this.tableFloatingHeaderViewChildren.changes.filter(elements => !!elements.first),
+      ])
+      .subscribe(
+        ([rows, headers, floatingHeaders])  => {
+          this.setStaticTableHeaders(rows, headers, floatingHeaders);
+      });
+  }
+
+  private setStaticTableHeaders(rows, headers, floatingHeaders) {
+    let headersArray = [].slice
+      .call(headers.first.nativeElement
+        .getElementsByTagName('gpf-table-header'));
+    let floatingHeadersArray = [].slice
+      .call(floatingHeaders.first.nativeElement
+        .getElementsByTagName('gpf-table-header'));
+
+    let lastRow = rows.last.nativeElement;
+
+    let columnsWithWidths: [any, any, number][] = [].slice
+      .call(lastRow.getElementsByTagName('gpf-table-cell'))
+      .map((tableCell, index) => [
+        headersArray[index],
+        floatingHeadersArray[index],
+        tableCell.getBoundingClientRect().width
+      ]);
+
+    columnsWithWidths.map(([header, floatingHeader, width]) => {
+      header.style.width = width + 'px';
+      floatingHeader.style.width = width + 'px';
+    });
   }
 
   set sortingInfo(sortingInfo: SortInfo) {
@@ -220,19 +263,19 @@ export class GpfTableComponent {
   }
 
   getScrollIndices(): Array<number> {
-    if(!this.dataSource) {
-      return [0, 0]
+    if (!this.dataSource) {
+      return [0, 0];
     }
-    let visibleRowCount = window.innerHeight/this.lastRowHeight;
-    let maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount
+    let visibleRowCount = Math.ceil(window.innerHeight / this.lastRowHeight);
+    let maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount;
 
-    let startIndex = Math.ceil(-this.tableTopPosition/this.lastRowHeight) - this.drawOutsideVisibleCount;
+    let startIndex = Math.ceil(-this.tableTopPosition / this.lastRowHeight) - this.drawOutsideVisibleCount;
 
-    //We should display at least maxRowCountToDraw rows, even at the bottom of the page
+    // We should display at least maxRowCountToDraw rows, even at the bottom of the page
     let maxStartIndex = this.dataSource.length - maxRowCountToDraw;
     startIndex = Math.min(startIndex , maxStartIndex);
 
-    //Make sure we always start from index 0 or above
+    // Make sure we always start from index 0 or above
     startIndex = Math.max(0, startIndex);
 
     let endIndex = startIndex + maxRowCountToDraw;
@@ -240,7 +283,7 @@ export class GpfTableComponent {
   }
 
   get totalTableHeight(): number {
-    if(!this.dataSource) {
+    if (!this.dataSource) {
       return 0;
     }
     return this.lastRowHeight * this.dataSource.length;
@@ -251,7 +294,7 @@ export class GpfTableComponent {
   }
 
   get visibleData(): Array<any> {
-    if(!this.dataSource) {
+    if (!this.dataSource) {
       return [];
     }
     let scrollIndices  = this.getScrollIndices();

@@ -1,5 +1,5 @@
 <div #table style="width: 100%; display: table; border-collapse: collapse;" [style.height]="totalTableHeight + 'px'">
-    <div style="display: table-row;" [style.visibility] = "showFloatingHeader() ? 'hidden' : 'visible'">
+    <div #header style="display: table-row;" [style.visibility] = "showFloatingHeader() ? 'hidden' : 'visible'">
         <gpf-table-header *ngFor="let column of columnsChildren"
             [columnInfo]="column"
             [(sortingInfo)]="sortingInfo"
@@ -10,7 +10,7 @@
         <td *ngFor="let column of columnsChildren">
         </td>
     </div>
-    <div #row style="display: table-row;" *ngFor="let data of visibleData">
+    <div #rows style="display: table-row;" *ngFor="let data of visibleData">
         <gpf-table-cell *ngFor="let column of columnsChildren"
             [columnInfo]="column"
             [data]=data
@@ -24,9 +24,8 @@
 </div>
 
 <div style="display: table; border-collapse: collapse; position: fixed; top: 0px;  background-color: white;"
-  [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'"
-  style.width="{{ tableWidth }}px">
-    <div style="display: table-row;">
+  [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
+    <div #floatingHeader style="display: table-row;">
         <gpf-table-header *ngFor="let column of columnsChildren"
             [columnInfo]="column"
             [(sortingInfo)]="sortingInfo"
