@@ -6,7 +6,6 @@ export class GenotypePreviewWithDatasetId extends GenotypePreview {
   static withoutDatasetId(genotypePreview: GenotypePreviewWithDatasetId): GenotypePreview {
    let result = Object.assign({}, genotypePreview);
    delete result.datasetId;
-   console.log(result);
    return result;
   }
 
