@@ -8,7 +8,7 @@ import { Studies, Study, VariantReport, ChildrenCounter,
          FamilyCounter, PedigreeCounter, DenovoReport, DeNovoData
         } from './variant-reports';
 
-const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
+export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
 
 @Component({
   selector: 'gpf-variant-reports',
