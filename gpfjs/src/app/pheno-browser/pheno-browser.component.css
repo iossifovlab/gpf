@@ -1,7 +1,11 @@
 .pheno-instrument-block {
 	padding: 20px;
-	border: 1px solid rgba(0,0,0,.125);
-	background-color: #fafafa;
+	background-color: #f7f7f7;
+}
+
+.form-block-title {
+  display: inline-block;
+  margin: auto 0;
 }
 
 :host /deep/ .card-block {
@@ -20,8 +24,12 @@
   font-weight: 500;
 }
 
-:host /deep/ .card {
+.centered-label {
+  line-height: 38px;
+}
+
+/*:host /deep/ .card {
 	border: none;
 	background-color: transparent;
 	font-size: 0.9em;
-}
+}*/

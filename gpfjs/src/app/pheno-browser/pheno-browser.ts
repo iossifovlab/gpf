@@ -12,30 +12,7 @@ export class PhenoInstruments {
   }
 }
 
-
 export class PhenoMeasure {
-  constructor(
-    readonly index: number,
-    readonly instrumentName: string,
-    readonly valuesDomain: string,
-
-    readonly figureDistribution: string,
-    readonly figureDistributionSmall: string,
-
-    readonly figureCorrelationNviq: string,
-    readonly figureCorrelationNviqSmall: string,
-    readonly pvalueCorrelationNviqMale: number,
-    readonly pvalueCorrelationNviqFemale: number,
-
-    readonly figureCorrelationAge: string,
-    readonly figureCorrelationAgeSmall: string,
-    readonly pvalueCorrelationAgeMale: number,
-    readonly pvalueCorrelationAgeFemale: number,
-
-    readonly measureId: string,
-    readonly measureName: string,
-    readonly measureType: string,
-  ) { }
 
   static fromJson(json: Object): PhenoMeasure {
     return new PhenoMeasure(
@@ -61,13 +38,32 @@ export class PhenoMeasure {
       json['measure_type'],
     );
   }
+
+  constructor(
+    readonly index: number,
+    readonly instrumentName: string,
+    readonly valuesDomain: string,
+
+    readonly figureDistribution: string,
+    readonly figureDistributionSmall: string,
+
+    readonly figureCorrelationNviq: string,
+    readonly figureCorrelationNviqSmall: string,
+    readonly pvalueCorrelationNviqMale: number,
+    readonly pvalueCorrelationNviqFemale: number,
+
+    readonly figureCorrelationAge: string,
+    readonly figureCorrelationAgeSmall: string,
+    readonly pvalueCorrelationAgeMale: number,
+    readonly pvalueCorrelationAgeFemale: number,
+
+    readonly measureId: string,
+    readonly measureName: string,
+    readonly measureType: string,
+  ) { }
 }
 
 export class PhenoMeasures {
-  constructor(
-    readonly baseImageUrl: string,
-    readonly measures: Array<PhenoMeasure>
-  ) {}
 
   static fromJson(json: Object): PhenoMeasures {
     return new PhenoMeasures(
@@ -75,15 +71,14 @@ export class PhenoMeasures {
       json['measures'].map((phenoMeasure) => PhenoMeasure.fromJson(phenoMeasure)));
   }
 
-
   static addBasePath(phenoMeasures: PhenoMeasures): PhenoMeasures {
     let basePath = environment.basePath + phenoMeasures.baseImageUrl;
-    let addBaseUrlIfNotNull = (currentPath: string, basePath: string) => {
-      if(currentPath) {
-        return basePath + currentPath;
+    let addBaseUrlIfNotNull = (currentPath: string, bp: string) => {
+      if (currentPath) {
+        return bp + currentPath;
       }
       return null;
-    }
+    };
 
     return new PhenoMeasures(
       phenoMeasures.baseImageUrl,
@@ -109,6 +104,12 @@ export class PhenoMeasures {
         phenoMeasure.measureName,
         phenoMeasure.measureType,
       ))
-    )
+    );
   }
+
+  constructor(
+    readonly baseImageUrl: string,
+    readonly measures: Array<PhenoMeasure>
+  ) {}
+
 }

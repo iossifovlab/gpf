@@ -2,16 +2,19 @@
   <gpf-table-column>
     <gpf-table-subcolumn header="Proband Pheno Measure" field="measureName"></gpf-table-subcolumn>
   </gpf-table-column>
-  <gpf-table-column>
-    <gpf-table-subcolumn [sortable]="false" header="Pheno Measure Values" field="figureDistributionSmall">
-      <span *gpfTableCellContent="let data">
-        <a [class.clickable]="!!data.figureDistribution" (click)="openModal(content, data.figureDistribution)">
-          <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
-        </a>
-      </span>
-    </gpf-table-subcolumn>
+  <gpf-table-column header="Pheno Measure Values" field="figureDistributionSmall">
+    <span *gpfTableCellContent="let data">
+      <a [class.clickable]="!!data.figureDistribution" (click)="openModal(content, data.figureDistribution)">
+        <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
+      </a>
+    </span>
   </gpf-table-column>
   <gpf-table-column>
+    <gpf-table-subcolumn header="Measure Type" field="measureType" [sortable]="true">
+      <span *gpfTableCellContent="let data">
+        {{ data.measureType }}
+      </span>
+    </gpf-table-subcolumn>
     <gpf-table-subcolumn header="Values Domain" field="valuesDomain" [sortable]="false">
       <span *gpfTableCellContent="let data">
         {{ data.valuesDomain }}

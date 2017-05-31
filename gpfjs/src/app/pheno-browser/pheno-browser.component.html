@@ -1,18 +1,25 @@
 <div class="container">
-  <div class="pheno-instrument-block form-block">
-    <div class="row">
-      <div class="col-lg-2">
-        <label class="form-block-title" for="reports">Instrument</label>
-      </div>
+  <div class="row mt-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="pheno-instrument-block">
+          <div class="row">
+            <div class="centered-label col-2 text-center">
+              <label class="form-block-title" for="reports">Instrument</label>
+            </div>
 
-      <div class="col-lg-10">
-        <select [ngModel]="selectedChanges$ | async" (ngModelChange)="emitInstrument($event)">
-          <option *ngFor="let instrument of (instruments | async)?.instruments"
-            [ngValue]="instrument">{{ instrument }}</option>
-        </select>
+            <div class="col-4">
+              <select class="form-control" [ngModel]="selectedChanges$ | async" (ngModelChange)="emitInstrument($event)">
+                <option *ngFor="let instrument of (instruments | async)?.instruments"
+                  [ngValue]="instrument">{{ instrument }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
   <div class="form-block">
     <div class="row">
       <div [hidden]="!(measuresToShow$ | async)" class="col-lg-12">
