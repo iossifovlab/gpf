@@ -173,6 +173,9 @@ class vcfFiles:
 
         cls.__data = {}
 
+   def __contains__(cls, sample ):
+	return (sample in cls.__sI)
+
    def setRegion( cls, *args, **kargs ):
         cls.__data.clear()
         cls.__rFlag = [True for n in cls.__vfiles] # reading flag
