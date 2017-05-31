@@ -103,10 +103,9 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         send_reset_email(self, verif_path)
 
     def register_preexisting_user(self, name):
-        now = timezone.now()
-
-        self.date_joined = now
-        self.name = name
+        self.date_joined = timezone.now()
+        if name is not None and name != '':
+            self.name = name
 
         verif_path = _create_verif_path(self)
         send_verif_email(self, verif_path)

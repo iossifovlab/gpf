@@ -13,13 +13,13 @@ class Command(BaseCommand):
 
         try:
             UserModel = get_user_model()
-            user = UserModel.objects.get(email=args[0])
-
-            groups = args[1].split(':')
-            for group_name in set(groups):
-                if group_name == "":
-                    continue
-                group, _ = Group.objects.get_or_create(name=group_name)
-                group.user_set.remove(user)
+            users = UserModel.objects.filter(groups__name=args[0])
+            for user in users:
+                groups = args[1].split(':')
+                for group_name in set(groups):
+                    if group_name == "":
+                        continue
+                    group, _ = Group.objects.get_or_create(name=group_name)
+                    group.user_set.remove(user)
         except UserModel.DoesNotExist:
             raise CommandError("User not found")

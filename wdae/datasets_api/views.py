@@ -7,8 +7,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from datasets_api.models import Dataset
-from guardian.utils import get_anonymous_user
-
 import preloaded
 
 
@@ -24,10 +22,8 @@ class DatasetView(APIView):
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])
-        perm = user.has_perm('datasets_api.view', dataset_object)
-        perm = perm or get_anonymous_user().has_perm('datasets_api.view',
-                                                     dataset_object)
-        dataset['accessRights'] = perm
+        dataset['accessRights'] = user.has_perm('datasets_api.view',
+                                                dataset_object)
         return dataset
 
     def get(self, request, dataset_id=None):

@@ -89,8 +89,9 @@ class ResearcherRegistrationTest(APITestCase):
                          'User with this email not found')
 
     def test_successful_register(self):
+        name = "NEW_NAME"
         data = {
-            'name': self.res.name,
+            'name': name,
             'researcherId': self.researcher_id,
             'email': self.res.email
         }
@@ -99,6 +100,37 @@ class ResearcherRegistrationTest(APITestCase):
         response = self.client.post('/api/v3/users/register', data,
                                     format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        u = WdaeUser.objects.get(email=self.res.email)
+        self.assertEqual(u.name, name)
+
+    def test_successful_register_empty_name(self):
+        old_name = self.res.name
+        data = {
+            'name': '',
+            'researcherId': self.researcher_id,
+            'email': self.res.email
+        }
+        pprint(data)
+
+        response = self.client.post('/api/v3/users/register', data,
+                                    format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        u = WdaeUser.objects.get(email=self.res.email)
+        self.assertEqual(u.name, old_name)
+
+    def test_successful_register_missing_name(self):
+        old_name = self.res.name
+        data = {
+            'researcherId': self.researcher_id,
+            'email': self.res.email
+        }
+        pprint(data)
+
+        response = self.client.post('/api/v3/users/register', data,
+                                    format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        u = WdaeUser.objects.get(email=self.res.email)
+        self.assertEqual(u.name, old_name)
 
     def test_register_twice(self):
             data = {

@@ -61,7 +61,7 @@ def register(request):
             return Response({'error_msg': 'User already exists'},
                             status=status.HTTP_409_CONFLICT)
 
-        preexisting_user.register_preexisting_user(request.data['name'])
+        preexisting_user.register_preexisting_user(request.data.get('name'))
         return Response({}, status=status.HTTP_201_CREATED)
     except IntegrityError:
         return Response({}, status=status.HTTP_400_BAD_REQUEST)

@@ -5,13 +5,15 @@ Created on Jan 20, 2017
 '''
 from rest_framework.test import APITestCase
 from rest_framework import status
-from users_api.management.commands import reload_datasets_perm
+from datasets_api.models import Dataset
 
 
 class DatasetApiTest(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        reload_datasets_perm.Command().handle()
+        Dataset.recreate_dataset_perm('SD', [])
+        Dataset.recreate_dataset_perm('SSC', [])
+        Dataset.recreate_dataset_perm('VIP', [])
 
     def test_get_datasets(self):
         url = '/api/v3/datasets/'
