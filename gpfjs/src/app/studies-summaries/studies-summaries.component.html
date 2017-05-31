@@ -1,5 +1,5 @@
 <div class="container">
-  <gpf-table [dataSource]="(studiesSummaries$ | async)?.studiesSummaries">
+  <gpf-table noScrollOptimization="true" [dataSource]="(studiesSummaries$ | async)?.studiesSummaries">
 
     <ng-container *ngFor="let column of (studiesSummaries$ | async)?.columnsOrder">
 

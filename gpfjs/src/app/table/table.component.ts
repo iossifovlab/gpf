@@ -190,6 +190,7 @@ export class GpfTableComponent implements AfterViewInit {
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
   @ContentChild(GpfTableLegendDirective) legend: GpfTableLegendDirective;
   @Input() dataSource: Array<any>;
+  @Input() noScrollOptimization = false;
 
   private previousSortingInfo: SortInfo;
   private lastRowHeight = 80;
@@ -290,12 +291,18 @@ export class GpfTableComponent implements AfterViewInit {
   }
 
   get beforeDataCellHeight(): number {
+    if (this.noScrollOptimization) {
+      return 0;
+    }
     return this.getScrollIndices()[0] * this.lastRowHeight;
   }
 
   get visibleData(): Array<any> {
     if (!this.dataSource) {
       return [];
+    }
+    if (this.noScrollOptimization) {
+      return this.dataSource;
     }
     let scrollIndices  = this.getScrollIndices();
     return this.dataSource.slice(scrollIndices[0], scrollIndices[1]);
