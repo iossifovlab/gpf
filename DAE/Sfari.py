@@ -100,9 +100,9 @@ class SfariCollection:
                 if personId in self.individual:
                     p = self.individual[personId]
                 else:
-                    print >>sys.stderr, \
-                        "the twin", personId, \
-                        "is not quite in the collection"
+                    # print >>sys.stderr, \
+                    #     "the twin", personId, \
+                    #     "is not quite in the collection"
                     p = Person()
                     p.familyId = familyId
                     p.personId = familyId + "." + cd
@@ -118,9 +118,10 @@ class SfariCollection:
             # births = { p.birth for p in tg.twins if p.hasattr('birth') }
             births = set((p.birth for p in tg.twins if hasattr(p, 'birth')))
             if len(births) != 1:
-                print >>sys.stderr, births
-                print >>sys.stderr, \
-                    'birth month mismatch for twins from family', familyId
+                pass
+                # print >>sys.stderr, births
+                # print >>sys.stderr, \
+                #     'birth month mismatch for twins from family', familyId
 
             for p in tg.twins:
                 if not hasattr(p, 'birth'):

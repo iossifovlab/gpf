@@ -11,10 +11,10 @@ import os
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import traceback
-import ConfigParser
-from pprint import pprint
 from pheno.prepare.nuc_ped_prepare import NucPedPrepareIndividuals,\
     NucPedPrepareVariables, NucPedPrepareMetaVariables
+from pheno.common import config_pheno_db, adjust_config_pheno_db, dump_config,\
+    check_config_pheno_db
 
 __all__ = []
 __version__ = 0.1
@@ -24,30 +24,6 @@ __updated__ = '2017-03-20'
 DEBUG = 0
 TESTRUN = 0
 PROFILE = 0
-
-
-def config_pheno_db(output):
-    config = ConfigParser.SafeConfigParser()
-    config.add_section('cache_dir')
-    config.set('cache_dir', 'dir', '.')
-    config.add_section('output')
-    config.set('output', 'cache_file', output)
-
-    config.add_section('continuous')
-    config.set('continuous', 'min_individuals', '20')
-    config.set('continuous', 'min_rank', '15')
-
-    config.add_section('ordinal')
-    config.set('ordinal', 'min_individuals', '20')
-    config.set('ordinal', 'min_rank', '5')
-    config.set('ordinal', 'max_rank', '17')
-
-    config.add_section('categorical')
-    config.set('categorical', 'min_individuals', '20')
-    config.set('categorical', 'min_rank', '2')
-    config.set('categorical', 'max_rank', '17')
-
-    return config
 
 
 class CLIError(Exception):
@@ -110,6 +86,35 @@ USAGE
             dest='output',
             help='ouput file',
             metavar='filename')
+
+        parser.add_argument(
+            '-C', '--continuous',
+            type=int,
+            dest='continuous',
+            help='minimal count of unique values for a measure to be '
+            'classified as continuous (default: 15)')
+
+        parser.add_argument(
+            '-O', '--ordinal',
+            type=int,
+            dest='ordinal',
+            help='minimal count of unique values for a measure to be '
+            'classified as ordinal (default: 5)')
+
+        parser.add_argument(
+            '-A', '--categorical',
+            type=int,
+            dest='categorical',
+            help='minimal count of unique values for a measure to be '
+            'classified as categorical (default: 2)')
+
+        parser.add_argument(
+            '-I', '--individuals',
+            type=int,
+            dest='individuals',
+            help='minimal number of individuals for a measure to be '
+            'considered for classification (default: 20)')
+
         # Process arguments
         args = parser.parse_args()
 
@@ -118,27 +123,33 @@ USAGE
         families_filename = args.families
         output = args.output
 
-        if verbose > 0:
-            print("Verbose mode on")
-
-        if not families_filename or not instruments_directory:
+        if not families_filename:
             raise CLIError(
-                "families file and instruments directory must be specified")
+                "families file must be specified")
         if not output:
             raise CLIError(
                 "output filename should be specified")
 
         config = config_pheno_db(output)
-        pprint(config)
+        config = adjust_config_pheno_db(config, args)
+
+        dump_config(config)
+        if not check_config_pheno_db(config):
+            raise Exception("bad classification boundaries")
 
         prep_individuals = NucPedPrepareIndividuals(config)
-        prep_individuals.prepare(families_filename)
+        prep_individuals.prepare(families_filename, verbose)
 
         prep_variables = NucPedPrepareVariables(config)
-        prep_variables.prepare(prep_individuals, instruments_directory)
+        prep_variables.setup(verbose)
+        prep_variables.prepare_pedigree_instrument(
+            prep_individuals, families_filename, verbose)
+        if instruments_directory:
+            prep_variables.prepare_instruments(
+                prep_individuals, instruments_directory, verbose)
 
         prep_meta = NucPedPrepareMetaVariables(config)
-        prep_meta.prepare()
+        prep_meta.prepare(verbose)
 
         return 0
     except KeyboardInterrupt:

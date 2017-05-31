@@ -27,6 +27,11 @@ class TransmissionLegacy(TransmissionConfig):
                                     effectTypes=None,
                                     ultraRareOnly=False,
                                     geneSyms=None):
+        if maxAltFreqPrcnt is None:
+            maxAltFreqPrcnt = -1
+        if minAltFreqPrcnt is None:
+            minAltFreqPrcnt = -1
+
         geneSymsUpper = None
         if geneSyms:
             geneSymsUpper = [sym.upper() for sym in geneSyms]
@@ -52,9 +57,9 @@ class TransmissionLegacy(TransmissionConfig):
 
             if maxAltFreqPrcnt != -1 or minAltFreqPrcnt != -1:
                 altPrcnt = float(mainAtts['all.altFreq'])
-                if maxAltFreqPrcnt != -1 and altPrcnt > maxAltFreqPrcnt:
+                if maxAltFreqPrcnt != -1 and altPrcnt >= maxAltFreqPrcnt:
                     continue
-                if minAltFreqPrcnt != -1 and altPrcnt < minAltFreqPrcnt:
+                if minAltFreqPrcnt != -1 and altPrcnt <= minAltFreqPrcnt:
                     continue
 
             ultraRare = int(mainAtts['all.nAltAlls']) == 1

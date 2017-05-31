@@ -19,6 +19,7 @@ class FamiliesCountersSerializer(serializers.Serializer):
 
 
 class DenovoEventsCounterSerializer(serializers.Serializer):
+    phenotype = serializers.CharField()
     events_count = serializers.IntegerField()
     events_children_count = serializers.IntegerField()
     events_rate_per_child = serializers.FloatField()
@@ -32,14 +33,18 @@ class FamilyReportSerializer(serializers.Serializer):
     families_total = serializers.IntegerField()
 
 
+class DenovoEventsReportRowSerializer(serializers.Serializer):
+    effect_type = serializers.CharField()
+    row = serializers.ListField(child=DenovoEventsCounterSerializer())
+
+
 class DenovoReportSerializer(serializers.Serializer):
     phenotypes = serializers.ListField()
     effect_groups = serializers.ListField()
     effect_types = serializers.ListField()
 
-    rows = serializers.DictField(
-        child=serializers.DictField(
-            child=DenovoEventsCounterSerializer()))
+    rows = serializers.ListField(
+        child=DenovoEventsReportRowSerializer())
 
 
 class StudyVariantReportsSerializer(serializers.Serializer):

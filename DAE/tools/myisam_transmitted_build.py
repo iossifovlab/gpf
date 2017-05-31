@@ -21,6 +21,7 @@ from DAE import vDB
 from Variant import Variant, parseGeneEffect
 import gzip
 import copy
+from VariantsDB import Study
 
 __all__ = []
 __version__ = 0.1
@@ -92,6 +93,33 @@ class VariantsBase(object):
             study._configSection,
             'transmittedVariants.indexFile') + "-TOOMANY.txt.bgz"
         return (study, summary_filename, tm_filename)
+
+    @staticmethod
+    def build_study_filenames(study_name, args):
+        assert os.path.exists(args.familiesfile)
+        assert os.path.exists(args.transmittedfile)
+        assert os.path.exists(args.toomanyfile)
+
+        families, _ = Study._load_family_data_from_simple(
+            args.familiesfile)
+
+        class StudyMock(object):
+            def __init__(self, study_name, families):
+                self.name = study_name
+                self.families = families
+
+        study = StudyMock(study_name, families)
+        return (study, args.transmittedfile, args.toomanyfile)
+
+#         else:
+#             study = vDB.get_study(study_name)
+#             summary_filename = study.vdb._config.get(
+#                 study._configSection,
+#                 'transmittedVariants.indexFile') + ".txt.bgz"
+#             tm_filename = study.vdb._config.get(
+#                 study._configSection,
+#                 'transmittedVariants.indexFile') + "-TOOMANY.txt.bgz"
+#             return (study, summary_filename, tm_filename)
 
     def create_effect_variant_dict(self, vals, vrow, erow):
         gene_effects = parseGeneEffect(vals['effectGene'])
@@ -195,9 +223,10 @@ UNLOCK TABLES;
 
         print("Working with transmitted study: {}".format(study_name))
         print("Working with summary filename: {}".format(summary_filename))
-        outfilename = os.path.join(outdir,
-                                   'sql_summary_variants_myisam.sql.gz')
-        print("Storing result into: {}".format(outfilename))
+        outfilename = os.path.join(
+            outdir,
+            '{}_sql_summary_variants_myisam.sql.gz'.format(study_name)
+        )
 
         with gzip.open(summary_filename, 'r') as fh, \
                 gzip.open(outfilename, 'w') as outfile:
@@ -231,7 +260,7 @@ UNLOCK TABLES;
                                       ', '.join(ins_line))
                         outfile.write('\n')
                         ins_line = []
-                        print("line: {}".format(nrow))
+                        sys.stderr.write('.')
                 except Exception as ex:
                     import traceback
                     print(
@@ -247,6 +276,7 @@ UNLOCK TABLES;
 
             outfile.write(self.END_DUMPING_DATA)
             outfile.write('\n')
+            sys.stderr.write('\n')
 
 
 class GeneEffectVariants(VariantsBase):
@@ -306,8 +336,10 @@ UNLOCK TABLES;
 
         print("Working with transmitted study: {}".format(study_name))
         print("Working with summary filename: {}".format(summary_filename))
-        outfilename = os.path.join(outdir,
-                                   'sql_gene_effect_variants_myisam.sql.gz')
+        outfilename = os.path.join(
+            outdir,
+            '{}_sql_gene_effect_variants_myisam.sql.gz'.format(study_name)
+        )
         print("Storing result into: {}".format(outfilename))
 
         with gzip.open(summary_filename, 'r') as fh, \
@@ -341,8 +373,7 @@ UNLOCK TABLES;
                                       ', '.join(ins_line))
                         outfile.write('\n')
                         ins_line = []
-                        print("summary variants gene effects: {}".format(vrow))
-
+                        sys.stderr.write('.')
                 except Exception as ex:
                     import traceback
                     print("exception thrown during processing line: |{}|"
@@ -357,6 +388,7 @@ UNLOCK TABLES;
 
             outfile.write(self.END_DUMPING_DATA)
             outfile.write('\n')
+            sys.stderr.write('\n')
 
 
 class FamilyVariants(VariantsBase):
@@ -519,8 +551,10 @@ UNLOCK TABLES;
 
         print("Working with transmitted study: {}".format(study_name))
         print("Working with summary filename: {}".format(summary_filename))
-        outfilename = os.path.join(outdir,
-                                   'sql_family_variants_myisam.sql.gz')
+        outfilename = os.path.join(
+            outdir,
+            '{}_sql_family_variants_myisam.sql.gz'.format(study_name)
+        )
         print("Storing result into: {}".format(outfilename))
         print("Working with transmitted study: {}".format(study_name))
 
@@ -547,10 +581,11 @@ UNLOCK TABLES;
 
                     variant = self.create_summary_variant(vals)
 
-                    fv_values = self.create_family_variants_values(tmfh,
-                                                                   vals,
-                                                                   vrow,
-                                                                   variant)
+                    fv_values = self.create_family_variants_values(
+                        tmfh,
+                        vals,
+                        vrow,
+                        variant)
 
                     fv_insert = '%s %s;' % (self.INSERT_BEGIN,
                                             ','.join(fv_values))
@@ -558,8 +593,8 @@ UNLOCK TABLES;
                     outfile.write(fv_insert)
                     outfile.write('\n')
 
-                    if vrow % 1000 == 0:
-                        print("line: {}".format(vrow))
+                    if vrow % 100 == 0:
+                        sys.stderr.write('.')
                     vrow += 1
                 except Exception as ex:
                     import traceback
@@ -568,6 +603,7 @@ UNLOCK TABLES;
                     traceback.print_exc()
                     raise ex
 
+            sys.stderr.write('\n')
             outfile.write(self.END_DUMPING_DATA)
             outfile.write('\n')
 
@@ -628,14 +664,30 @@ USAGE
             action='version', version=program_version_message)
 
         parser.add_argument(
-            '-S', '--study',
-            dest="study",
+            '-S', '--study_name',
+            dest="study_name",
             help="study name to process "
-            "[default: %(default)s]", metavar="study")
+            "[default: %(default)s]", metavar="study_name")
+
+        parser.add_argument(
+            '-F', '--familiesfile',
+            dest="familiesfile",
+            help="study families filename",
+            metavar='familes')
+
+        parser.add_argument(
+            '-T', '--transmittedfile',
+            dest='transmittedfile',
+            help='transmitted variants base file name')
+
+        parser.add_argument(
+            '-M', '--toomanyfile',
+            dest='toomanyfile',
+            help='transmitted variants family variants file name')
 
         args = parser.parse_args()
 
-        study_name = args.study
+        study_name = args.study_name
         outdir = args.outdir
 
         summary = args.summary
@@ -648,8 +700,9 @@ USAGE
             family = True
 
         study, summary_filename, tm_filename = \
-            VariantsBase.get_study_filenames(study_name)
+            VariantsBase.build_study_filenames(study_name, args)
 
+        print(study.name, summary_filename, tm_filename)
         if summary:
             summary_variants = SummaryVariants()
             summary_variants.handle(study_name, summary_filename, outdir)

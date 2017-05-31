@@ -9,8 +9,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from precompute import register
-from reports.families import FamiliesDataCSV
-from reports.serializers import StudyVariantReportsSerializer
+from common_reports_api.families import FamiliesDataCSV
+from common_reports_api.serializers import StudyVariantReportsSerializer
+from common_reports_api.studies import get_denovo_studies_names,\
+    get_transmitted_studies_names
 
 
 class VariantReportsView(APIView):
@@ -42,3 +44,32 @@ class FamiliesDataDownloadView(APIView):
         response['Expires'] = '0'
 
         return response
+
+
+class ReportStudies(APIView):
+
+    def get(self, request):
+        return Response({"report_studies": get_denovo_studies_names() +
+                         get_transmitted_studies_names()})
+
+
+class StudiesSummaries(APIView):
+    def __init__(self):
+        self.studies_summaries = register.get('studies_summaries')
+
+    def get(self, request):
+        return Response(self.studies_summaries.summaries)
+
+
+class DenovoStudiesList(APIView):
+
+    def get(self, request):
+        r = get_denovo_studies_names()
+        return Response({"denovo_studies": r})
+
+
+class TransmittedStudiesList(APIView):
+
+    def get(self, request):
+        r = get_transmitted_studies_names()
+        return Response({"transmitted_studies": r})

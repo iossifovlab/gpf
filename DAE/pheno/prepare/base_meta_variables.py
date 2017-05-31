@@ -5,6 +5,7 @@ Created on Dec 13, 2016
 '''
 import numpy as np
 from pheno.models import MetaVariableManager, MetaVariableModel
+from common.progress import progress_nl, progress
 
 
 class BaseMetaVariables(object):
@@ -15,17 +16,14 @@ class BaseMetaVariables(object):
             vm.create_tables()
 
     def drop_tables(self):
-        print(self.config)
-
         with MetaVariableManager(
                 dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
 
-    def _prepare_meta_variables(self):
+    def _prepare_meta_variables(self, verbose=0):
         meta_variables = []
-        for measure_id, measure in self.phdb.measures.items():
-            print('processing variable {}'.format(measure_id))
-
+        for _, measure in self.phdb.measures.items():
+            progress(verbose)
             df = self.phdb._raw_get_measure_values_df(measure)
             v = MetaVariableModel()
             v.variable_id = measure.measure_id
@@ -38,19 +36,20 @@ class BaseMetaVariables(object):
                     df.person_role == 'mom',
                     df.person_role == 'dad'
                 )]) > 7
-            print(v)
             meta_variables.append(v)
-
         return meta_variables
 
     def _save_meta_variables(self, meta_variables):
+        if not meta_variables:
+            return
         with MetaVariableManager(
                 dbfile=self.get_dbfile()) as vm:
             for v in meta_variables:
                 vm.save(v)
 
-    def prepare(self):
+    def prepare(self, verbose=0):
         self.drop_tables()
         self.create_tables()
-        meta_variables = self._prepare_meta_variables()
+        meta_variables = self._prepare_meta_variables(verbose)
         self._save_meta_variables(meta_variables)
+        progress_nl(verbose)

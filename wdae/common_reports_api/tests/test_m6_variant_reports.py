@@ -4,7 +4,7 @@ Created on Jul 28, 2015
 @author: lubo
 '''
 import unittest
-from reports.variants import CommonBase, ChildrenCounter, \
+from common_reports_api.variants import CommonBase, ChildrenCounter, \
     FamiliesReport, FamiliesCounters, DenovoEventsCounter, \
     DenovoEventsReport, StudyVariantReports
 
@@ -101,7 +101,7 @@ class Test(unittest.TestCase):
                     ["prb", "M", 0],
                     ["sib", "F", 0]]
         pedigree = CommonBase.family_configuration_to_pedigree('prbMsibF')
-        self.assertTrue(prbMsibF, pedigree)
+        self.assertEqual(prbMsibF, pedigree)
 
     def test_family_configuration_to_pedigree_prbMsibMsibF(self):
         prbMsibMsibF = [["mom", "F", 0],
@@ -110,7 +110,30 @@ class Test(unittest.TestCase):
                         ["sib", "M", 0],
                         ["sib", "F", 0]]
         pedigree = CommonBase.family_configuration_to_pedigree('prbMsibMsibF')
-        self.assertTrue(prbMsibMsibF, pedigree)
+        self.assertEqual(prbMsibMsibF, pedigree)
+
+    def test_family_configuration_to_pedigree_v3_prbMsibF(self):
+        prbMsibF = [
+            ['f1', 'p1', '', '', 'F', '#ffffff', 0, 0],
+            ['f1', 'p2', '', '', 'M', '#ffffff', 0, 0],
+            ['f1', 'p3', 'p1', 'p2', 'M', '#e35252', 0, 0],
+            ['f1', 'p4', 'p1', 'p2', 'F', '#ffffff', 0, 0],
+        ]
+        pedigree = CommonBase.family_configuration_to_pedigree_v3(
+            'prbMsibF', 'autism')
+        self.assertEqual(prbMsibF, pedigree)
+
+    def test_family_configuration_to_pedigree_v3_prbMsibMsibF(self):
+        prbMsibMsibF = [
+            ['f1', 'p1', '', '', 'F', '#ffffff', 0, 0],
+            ['f1', 'p2', '', '', 'M', '#ffffff', 0, 0],
+            ['f1', 'p3', 'p1', 'p2', 'M', '#e35252', 0, 0],
+            ['f1', 'p4', 'p1', 'p2', 'M', '#ffffff', 0, 0],
+            ['f1', 'p5', 'p1', 'p2', 'F', '#ffffff', 0, 0]
+        ]
+        pedigree = CommonBase.family_configuration_to_pedigree_v3(
+            'prbMsibMsibF', 'autism')
+        self.assertEqual(prbMsibMsibF, pedigree)
 
     def test_family_reports_build(self):
         fr = FamiliesReport('ALL SSC')
@@ -186,8 +209,8 @@ class Test(unittest.TestCase):
         dr = DenovoEventsReport('IossifovWE2014', fr)
         dr.build()
         self.assertTrue(dr.rows)
-        self.assertIn('LGDs', dr.rows)
-        self.assertIn('Nonsense', dr.rows)
+        self.assertEqual('LGDs', dr.rows[0].effect_type)
+        # self.assertIn('Nonsense', dr.rows)
 
     def test_study_variant_reports(self):
         vr = StudyVariantReports('IossifovWE2014')
@@ -211,8 +234,3 @@ class Test(unittest.TestCase):
         cc = fr.get_children_counters('unaffected')
         self.assertEquals(133, cc.children_male)
         self.assertEquals(131, cc.children_female)
-
-
-if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()

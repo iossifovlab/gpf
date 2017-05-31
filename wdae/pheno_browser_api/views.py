@@ -12,6 +12,8 @@ from rest_framework import status
 import preloaded
 from pheno_browser.models import VariableBrowserModelManager
 from django.conf import settings
+import os
+from pheno_browser_api.common import get_cache_dir
 
 
 class PhenoInstrumentsView(APIView):
@@ -32,7 +34,7 @@ class PhenoInstrumentsView(APIView):
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        instruments = dataset.pheno_db.instruments.keys()
+        instruments = sorted(dataset.pheno_db.instruments.keys())
         res = {
             'instruments': instruments,
             'default': instruments[0],
@@ -56,6 +58,15 @@ class PhenoMeasuresView(APIView):
             "PHENO_BROWSER_BASE_URL",
             "/static/pheno_browser/")
 
+    def get_browser_dbfile(self, dbname):
+        cache_dir = get_cache_dir(dbname)
+
+        browser_db = "{}_browser.db".format(dbname)
+        return os.path.join(
+            cache_dir,
+            browser_db
+        )
+
     def get(self, request):
         if 'dataset_id' not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -70,7 +81,10 @@ class PhenoMeasuresView(APIView):
             instruments = dataset.pheno_db.instruments.keys()
             instrument = instruments[0]
 
-        browser_dbfile = dataset.pheno_db.get_browser_dbfile()
+        browser_dbfile = self.get_browser_dbfile(
+            dataset.pheno_db.pheno_db)
+        print(browser_dbfile)
+
         with VariableBrowserModelManager(dbfile=browser_dbfile) as vm:
             df = vm.load_df(where="instrument_name='{}'".format(instrument))
         res = []
@@ -84,6 +98,9 @@ class PhenoMeasuresView(APIView):
                 m['pvalue_correlation_nviq_female'] = "NaN"
             if isnan(m['pvalue_correlation_age_female']):
                 m['pvalue_correlation_age_female'] = "NaN"
+
+            if m['values_domain'] is None:
+                m['values_domain'] = ""
 
             res.append(m)
         return Response({

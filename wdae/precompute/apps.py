@@ -40,6 +40,5 @@ class WdaePrecomputeConfig(AppConfig):
 
     def ready(self):
         AppConfig.ready(self)
-        print(settings.STATICFILES_DIRS)
         self._load_precomputed()
         self._load_preloaded()

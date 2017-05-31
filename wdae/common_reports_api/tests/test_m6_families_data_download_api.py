@@ -17,17 +17,17 @@ class Test(APITestCase):
         pass
 
     def test_get_ok(self):
-        url = '/api/reports/families_data/IossifovWE2014'
+        url = '/api/v3/common_reports/families_data/IossifovWE2014'
         response = self.client.get(url)
         self.assertEquals(status.HTTP_200_OK, response.status_code)
 
     def test_get_not_found(self):
-        url = '/api/reports/families_data/AlaBalaPortokala'
+        url = '/api/v3/common_reports/families_data/AlaBalaPortokala'
         response = self.client.get(url)
         self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
 
     def test_get_content(self):
-        url = '/api/reports/families_data/IossifovWE2014'
+        url = '/api/v3/common_reports/families_data/IossifovWE2014'
         response = self.client.get(url)
         self.assertEquals(status.HTTP_200_OK, response.status_code)
 

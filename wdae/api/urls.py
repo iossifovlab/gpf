@@ -4,14 +4,11 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from api.sd.views import SequencingDenovoPreview, SequencingDenovoDownload
 from api.ssc.views import SSCPreview, SSCDownload
 from enrichment.views import EnrichmentView
-from reports.views import VariantReportsView, FamiliesDataDownloadView
 from api.vip.views import VIPPreview, VIPDownload
 
 
 urlpatterns = patterns(
     'api.views',
-    url(r'^denovo_studies$', 'denovo_studies_list'),
-    url(r'^transmitted_studies$', 'transmitted_studies_list'),
     url(r'^effect_types$', 'effect_types_list'),
     url(r'^effect_types_filters$', 'effect_types_filters'),
     url(r'^chromes_effect_types$', 'chromes_effect_types'),
@@ -37,11 +34,6 @@ urlpatterns = patterns(
     url(r'^vip_query_variants_preview$', VIPPreview.as_view()),
     url(r'^vip_query_variants$', VIPDownload.as_view()),
 
-    url(r'^reports/variant_reports/(?P<study_name>.+)$',
-        VariantReportsView.as_view()),
-    url(r'^reports/families_data/(?P<study_name>.+)$',
-        FamiliesDataDownloadView.as_view()),
-
     url(r'^gene_sets$', 'gene_sets_list'),
     url(r'^gene_set_list2$', 'gene_set_list2'),
     url(r'^gene_set_download$', 'gene_set_download'),
@@ -49,10 +41,10 @@ urlpatterns = patterns(
     url(r'^study_tab_phenotypes/(?P<study_tab>.+)$', 'study_tab_phenotypes'),
     url(r'^gene_set_phenotypes$', 'gene_set_phenotypes'),
 
-    url(r'^report_studies$', 'report_studies'),
+    # url(r'^report_studies$', 'report_studies'),
     url(r'^enrichment_test_by_phenotype$', EnrichmentView.as_view()),
     url(r'^child_types$', 'child_type_list'),
-    url(r'^studies_summaries$', 'studies_summaries'),
+    # url(r'^studies_summaries$', 'studies_summaries'),
 
 )
 

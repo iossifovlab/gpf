@@ -3,15 +3,12 @@ Created on Oct 15, 2015
 
 @author: lubo
 '''
-import unittest
-from mysql_transmitted_std_queries import dae_query_q101, mysql_query_q101,\
-    dae_query_q701, mysql_query_q701, dae_query_q801, mysql_query_q801
-from mysql_transmitted_std_queries import dae_query_q201, mysql_query_q201
-from mysql_transmitted_std_queries import dae_query_q301, mysql_query_q301
-from mysql_transmitted_std_queries import dae_query_q401, mysql_query_q401
-from mysql_transmitted_std_queries import dae_query_q501, mysql_query_q501
-from mysql_transmitted_std_queries import dae_query_q601, mysql_query_q601
-from variants_compare_base import VariantsCompareBase
+from transmitted.tests.variants_compare_base import VariantsCompareBase
+from transmitted.tests.mysql_transmitted_std_queries import dae_query_q101,\
+    mysql_query_q101, dae_query_q201, mysql_query_q201, dae_query_q301,\
+    mysql_query_q301, dae_query_q401, mysql_query_q401, dae_query_q501,\
+    mysql_query_q501, dae_query_q601, mysql_query_q601, dae_query_q701,\
+    mysql_query_q701, dae_query_q801, mysql_query_q801
 
 
 class Test(VariantsCompareBase):
@@ -63,7 +60,3 @@ class Test(VariantsCompareBase):
         mysql_res = mysql_query_q801()
 
         self.assertVariantsEquals(dae_res, mysql_res, 'q801')
-
-if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()

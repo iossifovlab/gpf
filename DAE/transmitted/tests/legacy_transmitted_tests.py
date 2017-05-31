@@ -42,7 +42,7 @@ class PresentInParentFilterTest(unittest.TestCase):
         self.assertTrue(f('momdad'))
         self.assertFalse(f(''))
 
-    def test_mother_only_and_mother_and_father(self):
+    def test_mother_only_or_mother_and_father(self):
         f = present_in_parent_filter(
             ['mother only', 'mother and father'])
         self.assertTrue(f('mom'))
@@ -50,13 +50,29 @@ class PresentInParentFilterTest(unittest.TestCase):
         self.assertTrue(f('momdad'))
         self.assertFalse(f(''))
 
-    def test_father_only_and_mother_and_father(self):
+    def test_mother_only_or_mother_and_father_or_neither(self):
+        f = present_in_parent_filter(
+            ['mother only', 'mother and father', 'neither'])
+        self.assertTrue(f('mom'))
+        self.assertFalse(f('dad'))
+        self.assertTrue(f('momdad'))
+        self.assertTrue(f(''))
+
+    def test_father_only_or_mother_and_father(self):
         f = present_in_parent_filter(
             ['father only', 'mother and father'])
         self.assertFalse(f('mom'))
         self.assertTrue(f('dad'))
         self.assertTrue(f('momdad'))
         self.assertFalse(f(''))
+
+    def test_father_only_or_mother_and_father_or_neither(self):
+        f = present_in_parent_filter(
+            ['father only', 'mother and father', 'neither'])
+        self.assertFalse(f('mom'))
+        self.assertTrue(f('dad'))
+        self.assertTrue(f('momdad'))
+        self.assertTrue(f(''))
 
     def test_father_only_and_mother_only_and_mother_and_father(self):
         f = present_in_parent_filter(

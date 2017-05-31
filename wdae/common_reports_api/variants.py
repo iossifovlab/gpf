@@ -10,7 +10,7 @@ from DAE import vDB
 import precompute
 import cPickle
 import zlib
-from studies.studies import get_denovo_studies_names, \
+from common_reports_api.studies import get_denovo_studies_names, \
     get_transmitted_studies_names
 
 
@@ -38,6 +38,22 @@ class CommonBase(object):
                 'schizophrenia',
                 'unaffected']
 
+    COLORS = {
+        'autism': '#e35252',
+        'congenital heart disease': '#b8008a',
+        'epilepsy': '#e3d252',
+        'intellectual disability': '#99d8e8',
+        'schizophrenia': '#98e352',
+        'unaffected': '#ffffff',
+    }
+
+    @classmethod
+    def get_color(cls, role, phenotype):
+        if role == 'prb':
+            return cls.COLORS.get(phenotype, '#aaaaaa')
+        else:
+            return cls.COLORS.get('unaffected', '#aaaaaa')
+
     @staticmethod
     def family_configuration(family):
         return "".join([family[pid].role + family[pid].gender
@@ -49,9 +65,40 @@ class CommonBase(object):
         pedigree = [[family_configuration[i: i + 3],
                      family_configuration[i + 3: i + 4],
                      0] for i in range(0, len(family_configuration), 4)]
+        print(family_configuration, pedigree)
         result = [['mom', 'F', 0], ['dad', 'M', 0]]
         result.extend(pedigree)
         return result
+
+    @classmethod
+    def family_configuration_to_pedigree_v3(
+            cls, family_configuration, phenotype):
+
+        res = [
+            [
+                'f1', 'p1', '', '',
+                'F', cls.get_color('mom', 'unaffected'), 0, 0],
+            [
+                'f1', 'p2', '', '',
+                'M', cls.get_color('dad', 'unaffected'), 0, 0],
+        ]
+
+        pedigree = [
+            [
+                family_configuration[i: i + 3],
+                family_configuration[i + 3: i + 4],
+            ]
+            for i in range(0, len(family_configuration), 4)
+        ]
+        pedigree = [
+            [
+                'f1', 'p{}'.format(counter + 3), 'p1', 'p2',
+                gender, cls.get_color(role, phenotype), 0, 0
+            ]
+            for counter, [role, gender] in enumerate(pedigree)
+        ]
+        res.extend(pedigree)
+        return res
 
 
 class CounterBase(CommonBase):
@@ -135,8 +182,8 @@ class FamiliesCounters(CounterBase):
 
         self.data = {}
         for (fconf, count) in family_type_counter.items():
-            pedigree = [self.phenotype,
-                        self.family_configuration_to_pedigree(fconf)]
+            pedigree = self.family_configuration_to_pedigree_v3(
+                fconf, self.phenotype)
             self.data[fconf] = (pedigree, count)
             self.total += count
 
@@ -158,7 +205,13 @@ class ReportBase(CommonBase):
     def __init__(self, study_name):
         super(ReportBase, self).__init__()
         self.study_name = study_name
-        self.study_description = None
+        if study_name in vDB.get_study_group_names():
+            study = vDB.get_study_group(study_name)
+        else:
+            study = vDB.get_study(study_name)
+
+        self.study_description = study.description
+
         self.studies = vDB.get_studies(self.study_name)
         self._calc_phenotypes()
 
@@ -292,6 +345,12 @@ class DenovoEventsCounter(CounterBase):
                       self.children_counter.children_total, 3)
 
 
+class DenovoEventsReportRow(object):
+    def __init__(self):
+        self.row = None
+        self.effect_type = None
+
+
 class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
     def __init__(self, study_name, families_report):
@@ -311,20 +370,22 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
         return self._effect_types
 
     def build_row(self, effect_type):
-        row = {}
+        row = []
         for pheno in self.phenotypes:
             cc = self.families_report.get_children_counters(pheno)
             ec = DenovoEventsCounter(pheno, cc, effect_type)
             ec.build(self.studies)
-            row[pheno] = ec
+            assert ec.phenotype == pheno
+            row.append(ec)
         return row
 
     def clear_empty_rows(self):
         effect_groups = self.effect_groups()
         effect_types = self.effect_types()
-        for et, row in self.rows.items():
+        for row in self.rows:
+            et = row.effect_type
             all_zeroes = True
-            for ec in row.values():
+            for ec in row.row:
                 if not ec.is_zeroes():
                     all_zeroes = False
                     break
@@ -338,8 +399,11 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
     def is_empty_column(self, phenotype):
         all_zeroes = True
-        for row in self.rows.values():
-            ec = row[phenotype]
+
+        for row in self.rows:
+            for col in row.row:
+                if col.phenotype == phenotype:
+                    ec = col
             if not ec.is_zeroes():
                 all_zeroes = False
                 break
@@ -354,15 +418,20 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
             self.phenotypes.remove(to_remove)
 
     def build(self):
-        rows = {}
+        rows = []
         for effect_type in self.effect_groups():
-            rows[effect_type] = self.build_row(effect_type)
-        self.rows = rows
+            row = DenovoEventsReportRow()
+            row.row = self.build_row(effect_type)
+            row.effect_type = effect_type
+            rows.append(row)
 
-        rows = {}
         for effect_type in self.effect_types():
-            rows[effect_type] = self.build_row(effect_type)
-        self.rows.update(rows)
+            row = DenovoEventsReportRow()
+            row.row = self.build_row(effect_type)
+            row.effect_type = effect_type
+            rows.append(row)
+
+        self.rows = rows
         self.clear_empty_rows()
 
     def precompute(self):
@@ -381,9 +450,8 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
 class StudyVariantReports(ReportBase, precompute.register.Precompute):
 
-    def __init__(self, study_name, study_description=None):
+    def __init__(self, study_name):
         super(StudyVariantReports, self).__init__(study_name)
-        self.study_description = study_description
         self.families_report = None
         self.denovo_report = None
 
@@ -409,11 +477,12 @@ class StudyVariantReports(ReportBase, precompute.register.Precompute):
         self.build()
 
     def serialize(self):
-        return {'study_name': self.study_name,
-                'families_report': self.families_report.serialize(),
-                'denovo_report': self.denovo_report.serialize()
-                if self.denovo_report else None,
-                }
+        return {
+            'study_name': self.study_name,
+            'families_report': self.families_report.serialize(),
+            'denovo_report': self.denovo_report.serialize()
+            if self.denovo_report else None,
+        }
 
     def deserialize(self, data):
         assert self.study_name == data['study_name']
@@ -457,11 +526,11 @@ class VariantReports(precompute.register.Precompute):
 
     def deserialize(self, data):
         res = {}
-        for (study_name, study_description) in self.studies:
+        for (study_name, _) in self.studies:
             if study_name not in data:
                 continue
             assert study_name in data
-            sr = StudyVariantReports(study_name, study_description)
+            sr = StudyVariantReports(study_name)
             sdict = cPickle.loads(zlib.decompress(data[study_name]))
             sr.deserialize(sdict)
             res[study_name] = sr

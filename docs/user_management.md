@@ -106,7 +106,7 @@ Example invocations of `user_remove` command are:
 
 ## Management command `user_show`
 
-Deletes the specified user
+Shows the specified user
 
 Example invocations of `user_show` command are:
 ```

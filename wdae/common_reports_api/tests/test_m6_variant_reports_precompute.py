@@ -4,7 +4,7 @@ Created on Jul 31, 2015
 @author: lubo
 '''
 import unittest
-from reports.variants import StudyVariantReports
+from common_reports_api.variants import StudyVariantReports
 
 
 class Test(unittest.TestCase):
@@ -85,8 +85,8 @@ class Test(unittest.TestCase):
         vr.deserialize(self.data)
         dr = vr.denovo_report
         self.assertTrue(dr)
-        self.assertIn('LGDs', dr.rows)
-        self.assertIn('Synonymous', dr.rows)
+        self.assertIn('LGDs', dr.rows[0].effect_type)
+        self.assertIn('Synonymous', dr.rows[11].effect_type)
 
     def test_deserialize_denovo_reports_phenotypes(self):
         vr = StudyVariantReports('IossifovWE2014')
@@ -99,11 +99,13 @@ class Test(unittest.TestCase):
         dr = vr.denovo_report
 
         effect_groups = dr.rows
-        de = effect_groups['LGDs']['autism']
+        de = effect_groups[0].row[0]
+        self.assertEqual('autism', de.phenotype)
         self.assertEquals(383, de.events_count)
         self.assertEquals(357, de.events_children_count)
 
-        de = effect_groups['LGDs']['unaffected']
+        de = effect_groups[0].row[1]
+        self.assertEqual('unaffected', de.phenotype)
         self.assertEquals(178, de.events_count)
         self.assertEquals(169, de.events_children_count)
 

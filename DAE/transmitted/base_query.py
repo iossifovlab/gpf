@@ -26,7 +26,6 @@ class TransmissionConfig(object):
 
     def _get_params(self, name):
         path = self._get_config_path(name)
-        # print(path)
         try:
             result = self._config.get(self._config_section, path)
         except NoOptionError:
