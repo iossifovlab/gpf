@@ -180,6 +180,44 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[3].prot_length, 498)
         self.assertEqual(effects[3].aa_change, "Arg->End")
 
+    def test_chr1_67878948_sub_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:67878948",
+                                                     var="sub(T->G)")
+        self.assertEqual(len(effects), 4)
+
+        self.assertEqual(effects[0].gene, "SERBP1")
+        self.assertEqual(effects[0].transcript_id, "NM_015640_1")
+        self.assertEqual(effects[0].strand, "-")
+        self.assertEqual(effects[0].effect, "splice-site")
+        self.assertEqual(effects[0].prot_pos, 370)
+        self.assertEqual(effects[0].prot_length, 388)
+        self.assertEqual(effects[0].aa_change, None)
+
+        self.assertEqual(effects[1].gene, "SERBP1")
+        self.assertEqual(effects[1].transcript_id, "NM_001018067_1")
+        self.assertEqual(effects[1].strand, "-")
+        self.assertEqual(effects[1].effect, "splice-site")
+        self.assertEqual(effects[1].prot_pos, 391)
+        self.assertEqual(effects[1].prot_length, 409)
+        self.assertEqual(effects[1].aa_change, None)
+
+        self.assertEqual(effects[2].gene, "SERBP1")
+        self.assertEqual(effects[2].transcript_id, "NM_001018068_1")
+        self.assertEqual(effects[2].strand, "-")
+        self.assertEqual(effects[2].effect, "splice-site")
+        self.assertEqual(effects[2].prot_pos, 385)
+        self.assertEqual(effects[2].prot_length, 403)
+        self.assertEqual(effects[2].aa_change, None)
+
+        self.assertEqual(effects[3].gene, "SERBP1")
+        self.assertEqual(effects[3].transcript_id, "NM_001018069_1")
+        self.assertEqual(effects[3].strand, "-")
+        self.assertEqual(effects[3].effect, "splice-site")
+        self.assertEqual(effects[3].prot_pos, 376)
+        self.assertEqual(effects[3].prot_length, 394)
+        self.assertEqual(effects[3].aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
