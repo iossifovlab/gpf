@@ -4,7 +4,7 @@
   </gpf-table-column>
   <gpf-table-column>
     <gpf-table-subcolumn [sortable]="false" header="Pheno Measure Values" field="figureDistributionSmall">
-      <span *gpf-table-cell-content="let data">
+      <span *gpfTableCellContent="let data">
         <a [class.clickable]="!!data.figureDistribution" (click)="openModal(content, data.figureDistribution)">
           <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
         </a>
@@ -13,7 +13,7 @@
   </gpf-table-column>
   <gpf-table-column>
     <gpf-table-subcolumn header="Values Domain" field="valuesDomain" [sortable]="false">
-      <span *gpf-table-cell-content="let data">
+      <span *gpfTableCellContent="let data">
         {{ data.valuesDomain }}
       </span>
     </gpf-table-subcolumn>
@@ -23,7 +23,7 @@
       [sortable]="false"
       header="Correlation by Non-Verbal IQ"
       field="figureCorrelationNviqSmall">
-      <span *gpf-table-cell-content="let data">
+      <span *gpfTableCellContent="let data">
         <a [class.clickable]="!!data.figureCorrelationNviq" (click)="openModal(content, data.figureCorrelationNviq)">
           <img *ngIf="data.figureCorrelationNviqSmall" class="table-chart" [src]="data.figureCorrelationNviqSmall" />
         </a>
@@ -33,14 +33,14 @@
   <gpf-table-column header="P Value">
     <gpf-table-subcolumn header="male" field="pvalueCorrelationNviqMale">
         <span class="expanded-span"
-           *gpf-table-cell-content="let data"
+           *gpfTableCellContent="let data"
            [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqMale)">
           {{ data.pvalueCorrelationNviqMale | numberWithExp: "1.2-4" }}
         </span>
     </gpf-table-subcolumn>
     <gpf-table-subcolumn header="female" field="pvalueCorrelationNviqFemale">
         <span class="expanded-span"
-           *gpf-table-cell-content="let data"
+           *gpfTableCellContent="let data"
            [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqFemale)">
           {{ data.pvalueCorrelationNviqFemale | numberWithExp: "1.2-4" }}
         </span></gpf-table-subcolumn>
@@ -50,7 +50,7 @@
       [sortable]="false"
       header="Correlation by Age"
       field="figureCorrelationAgeSmall">
-      <span *gpf-table-cell-content="let data">
+      <span *gpfTableCellContent="let data">
         <a [class.clickable]="!!data.figureCorrelationAge" (click)="openModal(content, data.figureCorrelationAge)">
           <img *ngIf="data.figureCorrelationAgeSmall" class="table-chart" [src]="data.figureCorrelationAgeSmall" />
         </a>
@@ -60,14 +60,14 @@
   <gpf-table-column header="P Value">
     <gpf-table-subcolumn header="male" field="pvalueCorrelationAgeMale">
         <span class="expanded-span"
-          *gpf-table-cell-content="let data"
+          *gpfTableCellContent="let data"
           [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeMale)">
           {{ data.pvalueCorrelationAgeMale | numberWithExp: "1.2-4" }}
         </span>
     </gpf-table-subcolumn>
     <gpf-table-subcolumn header="female" field="pvalueCorrelationAgeFemale">
         <span class="expanded-span"
-          *gpf-table-cell-content="let data"
+          *gpfTableCellContent="let data"
           [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeFemale)">
           {{ data.pvalueCorrelationAgeFemale | numberWithExp: "1.2-4" }}
         </span>

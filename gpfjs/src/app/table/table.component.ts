@@ -1,4 +1,7 @@
-import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef, Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren, QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
+import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
+  Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren,
+  QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver
+} from '@angular/core';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -12,8 +15,6 @@ export class GpfTableCellComponent {
   constructor(private viewContainer: ViewContainerRef) {
   }
 }
-
-
 
 @Component({
   selector: 'gpf-table-header',
@@ -30,25 +31,21 @@ export class GpfTableHeaderComponent {
 
   onSortClick(sortBySubcolumn: GpfTableSubcolumnComponent) {
     let sortInfo: SortInfo;
-    if (this.sortingInfo && this.sortingInfo.sortBySubcolumn == sortBySubcolumn) {
+    if (this.sortingInfo && this.sortingInfo.sortBySubcolumn === sortBySubcolumn) {
       sortInfo = new SortInfo(sortBySubcolumn, !this.sortingInfo.sortOrderAsc);
-    }
-    else {
+    } else {
       sortInfo = new SortInfo(sortBySubcolumn, true);
     }
     this.sortingInfoChange.emit(sortInfo);
   }
 
   get imgPathPrefix() {
-    return environment.imgPathPrefix
+    return environment.imgPathPrefix;
   }
 }
 
-
-
-
 @Directive({
-  selector: '[gpf-table-cell-content]'
+  selector: '[gpfTableCellContent]'
 })
 export class GpfTableCellContentDirective {
   constructor(
@@ -58,7 +55,7 @@ export class GpfTableCellContentDirective {
 }
 
 @Directive({
-  selector: '[gpf-table-cell-header]'
+  selector: '[gpfTableCellHeader]'
 })
 export class GpfTableCellHeaderDirective {
   constructor(
@@ -76,9 +73,9 @@ class DefaultComparator {
     let leftVal = a[this.subcolumn.field];
     let rightVal = b[this.subcolumn.field];
 
-    if (leftVal == null && rightVal == null) return 0;
-    if (leftVal == null) return -1;
-    if (rightVal == null) return 1;
+    if (leftVal == null && rightVal == null) { return 0; }
+    if (leftVal == null) { return -1; }
+    if (rightVal == null) { return 1; }
 
     if (!isNaN(leftVal) && !isNaN(rightVal)) {
       return +leftVal - +rightVal;
@@ -99,7 +96,7 @@ export class GpfTableSubcolumnComponent {
   @Input() field: string;
   @Input() header: string;
   @Input() comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
-  @Input() sortable: boolean = true;
+  @Input() sortable = true;
 
   contentTemplateRef: TemplateRef<any>;
   headerTemplateRef: TemplateRef<any>;
@@ -108,17 +105,21 @@ export class GpfTableSubcolumnComponent {
   }
 
   ngAfterContentInit() {
-    if (this.contentChildren.first) this.contentTemplateRef = this.contentChildren.first.templateRef;
-    if (this.headerChildren.first) this.headerTemplateRef = this.headerChildren.first.templateRef;
+    if (this.contentChildren.first) {
+      this.contentTemplateRef = this.contentChildren.first.templateRef;
+    }
+    if (this.headerChildren.first) {
+      this.headerTemplateRef = this.headerChildren.first.templateRef;
+    }
   }
 
   defaultComparator(a: any, b: any): number {
     let leftVal = a[this.field];
     let rightVal = b[this.field];
 
-    if (leftVal == null && rightVal == null) return 0;
-    if (leftVal == null) return -1;
-    if (rightVal == null) return 1;
+    if (leftVal == null && rightVal == null) { return 0; }
+    if (leftVal == null) { return -1; }
+    if (rightVal == null) { return 1; }
 
     if (!isNaN(leftVal) && !isNaN(rightVal)) {
       return +leftVal - +rightVal;
@@ -131,8 +132,7 @@ export class GpfTableSubcolumnComponent {
     data.sort((a, b) => {
       if (ascending) {
         return this.comparator(a, b);
-      }
-      else {
+      } else {
         return this.comparator(b, a);
       }
     });
@@ -164,7 +164,7 @@ class SortInfo {
 
 
 @Directive({
-  selector: '[gpf-table-legend]'
+  selector: '[gpfTableLegend]'
 })
 export class GpfTableLegendDirective {
   constructor(

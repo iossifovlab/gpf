@@ -8,7 +8,7 @@
         <ng-container *ngSwitchCase="'denovo'">
           <gpf-table-subcolumn header="{{ column }}"
             field="{{ columnNameToFieldName(column) }}">
-            <span *gpf-table-cell-content="let data">
+            <span *gpfTableCellContent="let data">
               <span *ngIf="data[column] === true" class="fa fa-check"></span>
             </span>
           </gpf-table-subcolumn>
@@ -17,7 +17,7 @@
         <ng-container *ngSwitchCase="'transmitted'">
           <gpf-table-subcolumn header="{{ column }}"
             field="{{ columnNameToFieldName(column) }}">
-            <span *gpf-table-cell-content="let data; let data2 = column">
+            <span *gpfTableCellContent="let data; let data2 = column">
               <i *ngIf="data[column] === true" class="fa fa-check"></i>
             </span>
           </gpf-table-subcolumn>
