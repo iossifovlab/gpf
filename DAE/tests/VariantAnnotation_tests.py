@@ -300,6 +300,41 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
+    def test_3_UTR_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:47013144",
+                                                     var="sub(G->A)")
+
+        self.assertEqual(len(effects), 2)
+
+        self.assertEqual(effects[0].gene, "KNCN")
+        self.assertEqual(effects[0].transcript_id, "NM_001097611_1")
+        self.assertEqual(effects[0].strand, "-")
+        self.assertEqual(effects[0].effect, "3'UTR")
+        self.assertEqual(effects[0].prot_pos, None)
+        self.assertEqual(effects[0].prot_length, None)
+        self.assertEqual(effects[0].aa_change, None)
+
+        self.assertEqual(effects[1].gene, "MKNK1-AS1")
+        self.assertEqual(effects[1].transcript_id, "NR_038403_1")
+        self.assertEqual(effects[1].strand, "+")
+        self.assertEqual(effects[1].effect, "non-coding-intron")
+        self.assertEqual(effects[1].prot_pos, None)
+        self.assertEqual(effects[1].prot_length, None)
+        self.assertEqual(effects[1].aa_change, None)
+
+    def test_5_UTR_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="1:57284965",
+                                                      var="sub(G->A)")
+        self.assertEqual(effect.gene, "C1orf168")
+        self.assertEqual(effect.transcript_id, "NM_001004303_1")
+        self.assertEqual(effect.strand, "-")
+        self.assertEqual(effect.effect, "5'UTR")
+        self.assertEqual(effect.prot_pos, None)
+        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
