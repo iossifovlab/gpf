@@ -288,6 +288,18 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 1104)
         self.assertEqual(effect.aa_change, None)
 
+    def test_intergenic_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="1:20421037",
+                                                      var="sub(G->A)")
+        self.assertEqual(effect.gene, None)
+        self.assertEqual(effect.transcript_id, None)
+        self.assertEqual(effect.strand, None)
+        self.assertEqual(effect.effect, "intergenic")
+        self.assertEqual(effect.prot_pos, None)
+        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
