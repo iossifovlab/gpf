@@ -21,20 +21,20 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 642)
         self.assertEqual(effect.aa_change, "Lys->Lys")
 
-    def test_chr1_897349_sub_var(self):
+    def test_synonymous_sub_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       loc="1:897349",
                                                       var="sub(G->A)")
         self.assert_chr1_897349_sub(effect)
 
-    def test_chr1_897349_sub_ref_alt(self):
+    def test_synonymous_sub_ref_alt(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       loc="1:897349",
                                                       ref="G",
                                                       alt="A")
         self.assert_chr1_897349_sub(effect)
 
-    def test_chr1_897349_sub_ref_alt_pos(self):
+    def test_synonymous_sub_ref_alt_pos(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       chr="1",
                                                       position="897349",
@@ -42,7 +42,7 @@ class VariantAnnotationTest(unittest.TestCase):
                                                       alt="A")
         self.assert_chr1_897349_sub(effect)
 
-    def test_chr1_3519050_del_var(self):
+    def test_reverse_strand_frame_shift_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       loc="1:3519050",
                                                       var="del(1)")
@@ -54,7 +54,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 1541)
         self.assertEqual(effect.aa_change, None)
 
-    def test_chr1_53287094_ins_var(self):
+    def test_intron_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       loc="1:53287094",
                                                       var="ins(G)")
@@ -66,7 +66,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 745)
         self.assertEqual(effect.aa_change, None)
 
-    def test_chr2_238617257_ins_var(self):
+    def test_frame_shift_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                      loc="2:238617257",
                                                      var="ins(A)")
@@ -112,7 +112,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[4].prot_length, 394)
         self.assertEqual(effects[4].aa_change, None)
 
-    def test_chr1_24507340_del_3_var(self):
+    def test_no_frame_shift_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                      loc="1:24507340",
                                                      var="del(3)")
@@ -142,7 +142,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[2].prot_length, 520)
         self.assertEqual(effects[2].aa_change, None)
 
-    def test_chr1_61553905_sub_var(self):
+    def test_nonsense_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                      loc="1:61553905",
                                                      var="sub(C->T)")
@@ -180,7 +180,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[3].prot_length, 498)
         self.assertEqual(effects[3].aa_change, "Arg->End")
 
-    def test_chr1_67878948_sub_var(self):
+    def test_splice_site_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                      loc="1:67878948",
                                                      var="sub(T->G)")
@@ -218,7 +218,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[3].prot_length, 394)
         self.assertEqual(effects[3].aa_change, None)
 
-    def test_chr17_17697260_ins_var(self):
+    def test_no_frame_shift_newStop_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       loc="17:17697260",
                                                       var="ins(AGT)")
@@ -230,7 +230,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 1906)
         self.assertEqual(effect.aa_change, None)
 
-    def test_chr17_74729179_del_var(self):
+    def test_no_start_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                      loc="17:74729179",
                                                      var="del(3)")
@@ -276,7 +276,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[6].prot_pos, 68)
         self.assertEqual(effects[6].prot_length, 190)
 
-    def test_chr19_8645778_ins_var(self):
+    def test_no_end_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       loc="19:8645778",
                                                       var="del(9)")
