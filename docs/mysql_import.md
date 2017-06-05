@@ -158,5 +158,25 @@ be imported;
 
 Example invocation for `myisam_transmitted_import.py`:
 ```
-
+myisam_transmitted_import.py -f JHC/VIP_sql_family_variants_myisam.sql.gz \
+    -s JHC/VIP_sql_summary_variants_myisam.sql.gz \
+    -e JHC/VIP_sql_gene_effect_variants_myisam.sql.gz \
+    -H 127.0.0.1 -P 3308 -u seqpipe -p <secret> -D seqpipe_vip
 ```
+
+This command will import transmitted variants SQL files into MySQL database.
+The files are:
+* `-f JHC/VIP_sql_family_variants_myisam.sql.gz` is the file containing family
+variants data;
+* `-s JHC/VIP_sql_summary_variants_myisam.sql.gz` contains the summary transmitted
+variants data;
+* `-e JHC/VIP_sql_gene_effect_variants_myisam.sql.gz` contains variants effect
+types data;
+
+The database where transmitted variants data is imported is:
+* `-H 127.0.0.1` - MySQL server is running on the localhost;
+* `-P 3308` - MySQL listens for connections on port 3308;
+* `-D seqpipe_vip` - the name of the database where data is imported is
+`seqpipe_vip`;
+* `-u seqpipe` specified the MySQL username for connecting to the MySQL server;
+* `-p <secret>` is the password for MySQL user `seqpipe`.

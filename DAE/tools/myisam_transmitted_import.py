@@ -257,8 +257,6 @@ USAGE
         print("db conf: %s" % get_db_args(args))
         print("tool db conf: %s" % tools.get_db_conf())
 
-        assert tools.get_db_conf()['port'] == 3309
-
         tools.drop_all_tables()
         tools.import_family_variants(family_filename)
         tools.import_gene_effect_variants(gene_effect_filename)
