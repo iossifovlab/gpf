@@ -200,7 +200,7 @@ USAGE
             default='sql_family_variants_myisam.sql.gz')
 
         parser.add_argument(
-            '-e', '--gene_effect',
+            '-e', '--geneeffect',
             dest='gene_effect_filename',
             default='sql_gene_effect_variants_myisam.sql.gz')
 

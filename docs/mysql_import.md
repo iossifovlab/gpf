@@ -84,10 +84,35 @@ variants
 * `-a` or `--all` creates all the files.
 
 
-Example invocation for `
+Example invocation for `myisam_transmitted_build.py` - the invocation:
+
+```
+myisam_transmitted_build.py -a -S VIP -F PL-families.txt  -T PL.txt.bgz -M PL-TOOMANY.txt.bgz -o PL/
+```
+will produce `MySQL` files ready to be imported into the database. Arguments used
+has following meaning:
+* `-S VIP` specifies the name of the study;
+* `-F PL-families.txt` specifies the file containing descriptions of
+all families from the study;
+* `-T PL.txt.bgz` specifies the file containing transmitted summary variants;
+* `-M PL-TOOMANY.txt.bgz` specifies the family variants data matching summary variants;
+* `-o PL/` specified the output directory where output of the tool is stored;
+* `-a` option specifies that the tool should produce all import files.
+
+The result of the work of the tool is stored into the directory `PL/`:
+```
+PL
+├── VIP_sql_family_variants_myisam.sql.gz
+├── VIP_sql_gene_effect_variants_myisam.sql.gz
+└── VIP_sql_summary_variants_myisam.sql.gz
+```
+
 
 ## Usage of `myisam_transmitted_import.py`
 
+To import files produced by `myisam_transmitted_build.py` into the MySQL
+database one can use `myisam_transmitted_import.py`. The help page of the
+tool can be shown using `-h` option:
 
 ```
 myisam_transmitted_import.py -h
@@ -106,7 +131,7 @@ optional arguments:
   -V, --version         show program's version number and exit
   -s SUMMARY_FILENAME, --summary SUMMARY_FILENAME
   -f FAMILY_FILENAME, --family FAMILY_FILENAME
-  -e GENE_EFFECT_FILENAME, --gene_effect GENE_EFFECT_FILENAME
+  -e GENE_EFFECT_FILENAME, --geneeffect GENE_EFFECT_FILENAME
   -H HOST, --host HOST  MySQL host
   -P PORT, --port PORT  MySQL port
   -p PASSWORD, --password PASSWORD
@@ -118,3 +143,20 @@ optional arguments:
                         study name to process [default: None]
 ```
 
+To start `myisam_transmitted_import.py` one should proved some arguments
+that are required:
+
+* `-f` or `--family` option is used to specify the family variants file name;
+* `-s` or `--summary` option is used to specify the summary variants file name;
+* `-e` or `--geneeffect` option is used to specify the gene effects file name;
+* `-H` or `--host` specifies the host where MySQL server is running;
+* `-P` or `--port` specifies the port on which MySQL server expects connections;
+* `-D` or `--database` specified the name of the database where the data should
+be imported;
+* `-u` or `--user` specifies the MySQL user name;
+* `-p` or `--password` specifies the MySQL user password.
+
+Example invocation for `myisam_transmitted_import.py`:
+```
+
+```
