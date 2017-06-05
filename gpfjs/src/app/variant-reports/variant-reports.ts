@@ -136,6 +136,9 @@ export class EffectTypeRow {
 export class DenovoReport {
 
   static fromJson(json: any) {
+    if (!json) {
+      return null;
+    }
     return new DenovoReport(
       json['phenotypes'],
       json['effect_groups'],
