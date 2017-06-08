@@ -109,6 +109,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CommonReportsComponent } from './common-reports/common-reports.component';
 import { VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
+import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
+import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
 
 const appRoutes: Routes = [
   {
@@ -233,6 +235,7 @@ const appRoutes: Routes = [
     StudiesSummariesComponent,
     CommonReportsComponent,
     VariantReportsComponent,
+    PerfectlyDrawablePedigreeComponent,
   ],
   imports: [
     BrowserModule,
@@ -266,7 +269,8 @@ const appRoutes: Routes = [
     PhenoBrowserService,
     PValueIntensityPipe,
     StudiesSummariesService,
-    VariantReportsService
+    VariantReportsService,
+    PedigreeMockService
   ],
 
   entryComponents: [

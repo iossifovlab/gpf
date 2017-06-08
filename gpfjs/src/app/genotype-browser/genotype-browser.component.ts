@@ -87,6 +87,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
                                       ...state);
         this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
           (genotypePreviewsArray) => {
+            console.log(genotypePreviewsArray);
             this.genotypePreviewsArray = genotypePreviewsArray;
             this.loadingService.setLoadingStop();
           });
