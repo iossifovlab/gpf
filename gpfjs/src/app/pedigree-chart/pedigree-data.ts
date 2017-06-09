@@ -12,6 +12,8 @@ export abstract class IndividualSet {
 
       return ranks;
     }
+
+    abstract childrenSet(): Set<Individual>;
 }
 
 export class ParentalUnit {
@@ -54,6 +56,16 @@ export class Individual extends IndividualSet {
       if (this.parents.mother) { this.parents.mother.addRank(rank + 1); }
     }
   }
+
+  childrenSet() {
+    let childrenSet = new Set<Individual>();
+
+    for (let matingUnit of this.matingUnits) {
+      matingUnit.childrenSet().forEach(child => childrenSet.add(child));
+    }
+
+    return childrenSet;
+  }
 }
 
 export class MatingUnit extends IndividualSet {
@@ -72,6 +84,10 @@ export class MatingUnit extends IndividualSet {
   individualSet() {
     return new Set([this.mother, this.father]);
   }
+
+  childrenSet() {
+    return new Set(this.children.individuals);
+  }
 }
 
 export class SibshipUnit extends IndividualSet {
@@ -79,5 +95,9 @@ export class SibshipUnit extends IndividualSet {
 
   individualSet() {
     return new Set(this.individuals);
+  }
+
+  childrenSet() {
+    return new Set();
   }
 }
