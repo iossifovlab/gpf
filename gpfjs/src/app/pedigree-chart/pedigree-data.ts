@@ -6,11 +6,11 @@ export abstract class IndividualSet {
 
     generationRanks(): Set<number> {
       let individuals = this.individualSet();
-      let ranks = [];
+      let ranks = new Set();
 
-      individuals.forEach(individual => ranks.push(individual.rank));
+      individuals.forEach(individual => ranks.add(individual.rank));
 
-      return new Set(ranks);
+      return ranks;
     }
 }
 

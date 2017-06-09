@@ -4,6 +4,9 @@ import { PedigreeData } from '../genotype-preview-table/genotype-preview';
 import { PedigreeMockService } from './pedigree-mock.service';
 import { Individual, MatingUnit, IndividualSet, ParentalUnit } from '../pedigree-chart/pedigree-data';
 
+type Vertex = IndividualSet;
+type Edge = [Vertex, Vertex];
+
 @Component({
   selector: 'gpf-perfectly-drawable-pedigree',
   templateUrl: './perfectly-drawable-pedigree.component.html',
@@ -71,16 +74,36 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
       }
     });
 
-    let allVertices: IndividualSet[] = individualVertices.concat(matingVertices).concat(sibshipVertices);
+    let allVertices: Vertex[] = individualVertices.concat(matingVertices).concat(sibshipVertices);
 
     if (individualVertices.length) {
       individualVertices[0].addRank(0);
     }
 
-    console.log(individualVertices.map(individual => individual.rank));
 
+    // Ea-
+    let sameRankEdges: Edge[] = [];
+    for (let i = 0; i < allVertices.length - 1; i++) {
+      for (let j = i + 1; j < allVertices.length; j++) {
+        if (this.equal(allVertices[i].generationRanks(), allVertices[j].generationRanks())) {
+          sameRankEdges.push([allVertices[i], allVertices[j]]);
+        }
+      }
+    }
+    console.log(sameRankEdges);
 
+  }
 
+  equal(setA: Set<number>, setB: Set<number>) {
+    if (setA.size !== setB.size) {
+      return false;
+    }
+    for (let a of Array.from(setA)) {
+      if (!setB.has(a)) {
+        return false;
+      }
+    }
+    return true;
   }
 
 }
