@@ -20,5 +20,5 @@ class Test(BaseAuthenticatedUserTest):
         self.assertIn('summaries', data)
         self.assertIn('columns', data)
 
-        self.assertEquals(35, len(data['summaries']))
+        self.assertEquals(37, len(data['summaries']))
         self.assertEquals(11, len(data['columns']))
