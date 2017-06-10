@@ -37,15 +37,12 @@ class RegenerateTestDataset(object):
             self.OUTDIR,
             "nuc-fam.ped"
         )
+        self.NUC_PED = outfile
+
         tool = os.path.join(
             self.TOOLS_DIR,
             "ped2NucFam.py"
         )
-
-        print(infile)
-        print(outfile)
-        print(tool)
-
         assert os.path.exists(tool)
         assert os.path.exists(infile)
 
@@ -58,10 +55,69 @@ class RegenerateTestDataset(object):
         print("Executing {}".format(command))
         os.system(command)
 
+    def generate_denovo_variants(self):
+        infile = os.path.join(
+            self.DATA_IMPORT_TEST,
+            "denovo.csv"
+        )
+        outfile = os.path.join(
+            self.OUTDIR,
+            "dnvNuc"
+        )
+        tool = os.path.join(
+            self.TOOLS_DIR,
+            "dnv2DAE.py"
+        )
+        assert os.path.exists(tool)
+        assert os.path.exists(infile)
+
+        command = \
+            "{} {} {} -m , -i SP_id -c CHROM -p POS -r REF -a ALT -o {}"\
+            .format(
+                tool,
+                self.NUC_PED,
+                infile,
+                outfile
+            )
+
+        print("Executing {}".format(command))
+        os.system(command)
+
+    def generate_pheno_db(self):
+        instruments = os.path.join(
+            self.DATA_IMPORT_TEST,
+            'instruments',
+        )
+
+        outfile = os.path.join(
+            self.OUTDIR,
+            "test.db"
+        )
+
+        tool = os.path.join(
+            self.TOOLS_DIR,
+            "pheno2DAE.py"
+        )
+
+        assert os.path.exists(tool)
+        assert os.path.exists(instruments)
+
+        command = "{} -v -f {} -i {} -o {}".format(
+            tool,
+            self.NUC_PED,
+            instruments,
+            outfile
+        )
+
+        print("Executing {}".format(command))
+        os.system(command)
+
 
 def main():
     generator = RegenerateTestDataset()
     generator.generate_pedigree_nuc()
+    generator.generate_denovo_variants()
+    generator.generate_pheno_db()
 
 
 if __name__ == "__main__":
