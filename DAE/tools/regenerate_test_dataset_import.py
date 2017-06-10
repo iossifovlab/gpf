@@ -28,17 +28,17 @@ class RegenerateTestDataset(object):
             "data_import_test"
         )
 
-        self.NUC_PED = os.path.join(
-            self.OUTDIR,
-            "nuc-fam.ped"
-        )
-
         self.OUTDIR = os.path.join(
             self.DAE_DB_DIR,
             "testSt",
         )
         if not os.path.exists(self.OUTDIR):
             os.makedirs(self.OUTDIR)
+
+        self.NUC_PED = os.path.join(
+            self.OUTDIR,
+            "nuc-fam.ped"
+        )
 
         assert os.path.exists(self.OUTDIR)
 
@@ -153,7 +153,7 @@ class RegenerateTestDataset(object):
 
     def generate_pheno_browser_cache(self):
         os.chdir(self.WDAE_SOURCE_DIR)
-        command = "./manage.py pheno_browser_cache "
+        command = "./manage.py pheno_browser_cache -p testSt"
 
         print("Executing {}".format(command))
         os.system(command)
@@ -168,6 +168,7 @@ def main():
         ["calls.vcf.gz"], "tmNuc")
     generator.generate_vcf_variants(
         ["fam1.vcf", "fam2.vcf", "fam3.vcf"], "tmSmallNucFam")
+    generator.generate_pheno_browser_cache()
 
 
 if __name__ == "__main__":
