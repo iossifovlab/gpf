@@ -51,7 +51,6 @@ class Command(BaseCommand, ImportUsersBase):
         }
 
         user = self.handle_user(res)
-        print(options['password'])
 
         if options['password'] is None:
             call_command('changepassword', username=args[0],
