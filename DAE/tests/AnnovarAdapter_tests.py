@@ -256,18 +256,19 @@ class VariantAnnotationTest(unittest.TestCase):
                                                      var="sub(G->A)")
 
         self.assertEqual(len(effects), 2)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
 
-        self.assertEqual(effects[0].gene, "KNCN")
-        self.assertEqual(effects[0].transcript_id, "NM_001097611_1")
-        self.assertEqual(effects[0].effect, "3'UTR")
-        self.assertEqual(effects[0].prot_pos, None)
-        self.assertEqual(effects[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].gene, "MKNK1-AS1")
+        #self.assertEqual(effects_sorted[0].transcript_id, "NR_038403_1")
+        self.assertEqual(effects_sorted[0].effect, "non-coding-intron")
+        self.assertEqual(effects_sorted[0].prot_pos, None)
+        self.assertEqual(effects_sorted[0].aa_change, None)
 
-        self.assertEqual(effects[1].gene, "MKNK1-AS1")
-        self.assertEqual(effects[1].transcript_id, "NR_038403_1")
-        self.assertEqual(effects[1].effect, "non-coding-intron")
-        self.assertEqual(effects[1].prot_pos, None)
-        self.assertEqual(effects[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].gene, "KNCN")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_001097611_1")
+        self.assertEqual(effects_sorted[1].effect, "3'UTR")
+        self.assertEqual(effects_sorted[1].prot_pos, None)
+        self.assertEqual(effects_sorted[1].aa_change, None)
 
     def test_5_UTR_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,

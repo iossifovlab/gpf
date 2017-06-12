@@ -57,7 +57,7 @@ class VariantAnnotation:
     def effect_type_convert(code):
         effect_types_dict = {
             'synonymous SNV': 'synonymous',
-            'nonsynonymous SNV': 'nonsynonymous',
+            'nonsynonymous SNV': 'missense',
             'frameshift deletion': 'frame-shift',
             'frameshift substitution': 'frame-shift',
             'frameshift insertion': 'frame-shift',
@@ -70,11 +70,39 @@ class VariantAnnotation:
         return code
 
     @classmethod
-    def parse_intron(cls, intron_row):
-        effect = Effect()
-        effect.effect = "intron"
-        effect.gene = intron_row[1]
-        return effect
+    def parse_introns(cls, row):
+        if row[0] == "intronic":
+            effect = Effect()
+            effect.effect = "intron"
+            effect.gene = row[1]
+            return [effect]
+        elif row[0] == "ncRNA_intronic":
+            effect = Effect()
+            effect.effect = "non-coding-intron"
+            effect.gene = row[1]
+            return [effect]
+        elif row[0] == "intergenic":
+            effect = Effect()
+            effect.effect = "intergenic"
+            return [effect]
+        elif row[0] == "UTR5":
+            m = re.match('([a-zA-Z0-9]+)\((.+)\)', row[1])
+
+            effect = Effect()
+            effect.effect = "5'UTR"
+            effect.gene = m.group(1)
+            effect.transcript_id = m.group(2).split(":")[0] + "_1"
+            return [effect]
+        elif row[0] == "UTR3":
+            m = re.match('([a-zA-Z0-9]+)\((.+)\)', row[1])
+
+            effect = Effect()
+            effect.effect = "3'UTR"
+            effect.gene = m.group(1)
+            effect.transcript_id = m.group(2).split(":")[0] + "_1"
+            return [effect]
+        else:
+            return []
 
     @classmethod
     def parse_extron(cls, effect_type, effect_desc):
@@ -111,22 +139,29 @@ class VariantAnnotation:
             chr = loc_arr[0]
             position = loc_arr[1]
 
-        m = re.match('([a-zA-Z]+)\(([a-zA-Z0-9->]+)\)', var)
-        if m.group(1) == "sub":
-            sub_m = re.match('([a-zA-Z]+)->([a-zA-Z]+)', m.group(2))
+        if var is not None:
+            m = re.match('([a-zA-Z]+)\(([a-zA-Z0-9->]+)\)', var)
+            if m.group(1) == "sub":
+                sub_m = re.match('([a-zA-Z]+)->([a-zA-Z]+)', m.group(2))
+                input_str = "{0}\t{1}\t{1}\t{2}\t{3}".format(chr, position,
+                                                             sub_m.group(1),
+                                                             sub_m.group(2))
+            elif m.group(1) == "del":
+                pos_end = int(position) + int(m.group(2)) - 1
+                input_str = "{0}\t{1}\t{2}\t0\t-".format(chr, position,
+                                                         pos_end)
+            elif m.group(1) == "ins":
+                input_str = "{0}\t{1}\t{1}\t-\tC".format(chr, position)
+            print(input_str)
+        elif ref is not None and alt is not None:
             input_str = "{0}\t{1}\t{1}\t{2}\t{3}".format(chr, position,
-                                                         sub_m.group(1),
-                                                         sub_m.group(2))
-        elif m.group(1) == "del":
-            pos_end = int(position) + int(m.group(2)) - 1
-            input_str = "{0}\t{1}\t{2}\t0\t-".format(chr, position, pos_end)
-        elif m.group(1) == "ins":
-            input_str = "{0}\t{1}\t{1}\t-\tC".format(chr, position)
-        print(input_str)
+                                                         ref, alt)
+        else:
+            assert(False)
 
         p = subprocess.Popen(
             ["/home/nikidimi/seqpipe/annovar/annotate_variation.pl", "-out",
-             "ex1", "-build", "sep2013", "-", "-hgvs",
+             "ex1", "-build", "sep2013", "-", "-hgvs", "-separate",
              "/home/nikidimi/seqpipe/annovar/humandb_Ivan/"],
             stdin=subprocess.PIPE
         )
@@ -134,8 +169,9 @@ class VariantAnnotation:
 
         with open('ex1.variant_function') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
-            introns = [cls.parse_intron(row) for row in reader
-                       if row[0] == "intronic" or row[0] == "ncRNA_intronic"]
+            introns = [effect
+                       for row in reader
+                       for effect in cls.parse_introns(row)]
 
         with open('ex1.exonic_variant_function') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
