@@ -1,7 +1,36 @@
-export class UndirectedGraph<T> {
+export interface Graph<T> {
+    addVertex(vertex: T, edges: Array<[T, T]>): void;
+    addEdge(vertex1: T, vertex2: T): void;
+    getEdgesForVertex(vertex: T): [T, T][];
+    hasVertex(vertex: T): boolean;
+    hasEdge(vertex1: T, vertex2: T): boolean;
+    getVertices(): Array<T>;
+    getEdges(): Array<[T, T]>;
+}
 
-  private vertices: Array<T> = new Array<T>();
-  private edges: Array<Array<[T, T]>>;
+export function getOtherVertex<T>(vertex: T, edge: [T, T]) {
+  let otherVertex: T = null;
+
+  if (edge[0] === vertex) {
+    otherVertex = edge[1];
+  } else if (edge[1] === vertex) {
+    otherVertex = edge[0];
+  }
+
+  return otherVertex;
+}
+
+export function equalEdges<T>(edge1: [T, T], edge2: [T, T]) {
+  return (edge1[0] === edge2[0] && edge1[1] === edge2[1]) ||
+         (edge1[0] === edge2[1] && edge1[1] === edge2[0]);
+}
+
+export class UndirectedGraph<T> implements Graph<T> {
+
+  private vertices = new Array<T>();
+  private edges = new Array<Array<[T, T]>>();
+
+
 
   addVertex(vertex: T, edges: Array<[T, T]> = []) {
     this.checkCorrectEdges(vertex, edges);
@@ -10,7 +39,7 @@ export class UndirectedGraph<T> {
     this.edges.push(edges);
 
     for (let edge of edges) {
-      let otherVertex = this.getOtherVertex(vertex, edge);
+      let otherVertex = getOtherVertex(vertex, edge);
       this.getEdgesForVertex(otherVertex).push(edge);
     }
   }
@@ -83,7 +112,7 @@ export class UndirectedGraph<T> {
 
   private checkCorrectEdges(vertex: T, edges: Array<[T, T]>) {
     for (let edge of edges) {
-      let otherVertex: T = this.getOtherVertex(vertex, edge);
+      let otherVertex: T = getOtherVertex(vertex, edge);
 
       if (otherVertex == null) {
         throw `Edge (${edge[0]}, ${edge[1]}) does not have vertex ${vertex}`;
@@ -97,17 +126,5 @@ export class UndirectedGraph<T> {
     if (!this.hasVertex(vertex)) {
       throw `Graph does not have vertex ${vertex}`;
     }
-  }
-
-  private getOtherVertex(vertex: T, edge: [T, T]) {
-    let otherVertex: T = null;
-
-    if (edge[0] === vertex) {
-      otherVertex = edge[1];
-    } else if (edge[1] === vertex) {
-      otherVertex = edge[0];
-    }
-
-    return otherVertex;
   }
 }
