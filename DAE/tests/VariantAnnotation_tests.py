@@ -359,6 +359,18 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 642)
         self.assertEqual(effect.aa_change, "Lys->Arg")
 
+    def test_splice_site_del_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="4:48523230",
+                                                      var="del(4)")
+        self.assertEqual(effect.gene, "FRYL")
+        self.assertEqual(effect.transcript_id, "NM_015030_1")
+        self.assertEqual(effect.strand, "-")
+        self.assertEqual(effect.effect, "splice-site")
+        self.assertEqual(effect.prot_pos, 2508)
+        self.assertEqual(effect.prot_length, 3014)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
