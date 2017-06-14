@@ -51,7 +51,7 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     for (let individual of this.family){
       let mother = getOrCreateIndividual(individual.mother);
       let father = getOrCreateIndividual(individual.father);
-      if (!idsToMatingUnit.has(individual.mother + ',' + individual.father)) {
+      if (mother !== father && !idsToMatingUnit.has(individual.mother + ',' + individual.father)) {
         idsToMatingUnit.set(individual.mother + ',' + individual.father, new MatingUnit(mother, father));
       }
       let parentNode = idsToMatingUnit.get(individual.mother + ',' + individual.father);
@@ -59,20 +59,30 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
       let node = getOrCreateIndividual(individual.id);
 
       node.pedigreeData = individual;
-      node.parents = new ParentalUnit(mother, father);
+      if (mother && father) {
+        node.parents = new ParentalUnit(mother, father);
+      }
 
-      parentNode.children.individuals.push(node);
+      if (parentNode) {
+        parentNode.children.individuals.push(node);
+      }
     }
 
     let individualVertices: Vertex[] = [];
+    console.log(idToNodeMap.delete('0'));
+    console.log(Array.from(idToNodeMap.keys()));
     idToNodeMap.forEach(individual => {
+      console.log(individual);
       individualVertices.push(individual);
     });
+
+    console.log(individualVertices);
 
 
     let matingVertices: Vertex[] = [];
     let sibshipVertices: Vertex[] = [];
     idsToMatingUnit.forEach(matingUnit => {
+
       matingVertices.push(matingUnit);
       if (matingUnit.children.individuals.length > 0) {
         sibshipVertices.push(matingUnit.children);
