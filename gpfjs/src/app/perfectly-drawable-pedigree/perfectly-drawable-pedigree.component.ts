@@ -3,9 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { PedigreeData } from '../genotype-preview-table/genotype-preview';
 import { PedigreeMockService } from './pedigree-mock.service';
 import { Individual, MatingUnit, IndividualSet, ParentalUnit } from '../pedigree-chart/pedigree-data';
+import { hasIntersection, intersection, equal, isSubset } from '../utils/sets-helper';
 
-type Vertex = IndividualSet;
-type Edge = [Vertex, Vertex];
+import { SandwichInstance, solveSandwich } from './interval-sandwich';
+
+export type Vertex = IndividualSet;
+export type Edge = [Vertex, Vertex];
 
 @Component({
   selector: 'gpf-perfectly-drawable-pedigree',
@@ -85,7 +88,7 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     let sameRankEdges: Edge[] = [];
     for (let i = 0; i < allVertices.length - 1; i++) {
       for (let j = i + 1; j < allVertices.length; j++) {
-        if (this.equal(allVertices[i].generationRanks(), allVertices[j].generationRanks())) {
+        if (equal(allVertices[i].generationRanks(), allVertices[j].generationRanks())) {
           sameRankEdges.push([allVertices[i], allVertices[j]]);
         }
       }
@@ -96,9 +99,9 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     let sameGenerationNotMateEdges: Edge[] = [];
     for (let individual of individualVertices) {
       for (let matingUnit of matingVertices) {
-        if (this.isSubset(individual.individualSet(), matingUnit.individualSet())) {
+        if (isSubset(individual.individualSet(), matingUnit.individualSet())) {
           matingEdges.push([individual, matingUnit]);
-        } else if (this.equal(individual.generationRanks(), matingUnit.generationRanks())) {
+        } else if (equal(individual.generationRanks(), matingUnit.generationRanks())) {
           sameGenerationNotMateEdges.push([individual, matingUnit]);
         }
       }
@@ -109,9 +112,9 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     let sameGenerationNotSiblingEdges: Edge[] = [];
     for (let individual of individualVertices) {
       for (let sibshipUnit of sibshipVertices) {
-        if (this.isSubset(individual.individualSet(), sibshipUnit.individualSet())) {
+        if (isSubset(individual.individualSet(), sibshipUnit.individualSet())) {
           sibshipEdges.push([individual, sibshipUnit]);
-        } else if (this.equal(individual.generationRanks(), sibshipUnit.generationRanks())) {
+        } else if (equal(individual.generationRanks(), sibshipUnit.generationRanks())) {
           sameGenerationNotSiblingEdges.push([individual, sibshipUnit]);
         }
       }
@@ -121,7 +124,7 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     let matingUnitSibshipUnitEdges: Edge[] = [];
     for (let sibshipUnit of sibshipVertices) {
       for (let matingUnit of matingVertices) {
-        if (this.equal(matingUnit.childrenSet(), sibshipUnit.individualSet())) {
+        if (equal(matingUnit.childrenSet(), sibshipUnit.individualSet())) {
           matingUnitSibshipUnitEdges.push([matingUnit, sibshipUnit]);
         }
       }
@@ -132,8 +135,8 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     let intergenerationalEdges: Edge[] = [];
     for (let sibshipUnit of sibshipVertices) {
       for (let matingUnit of matingVertices) {
-        if (this.hasIntersection(matingUnit.generationRanks(), sibshipUnit.generationRanks())) {
-          if (!this.hasIntersection(matingUnit.individualSet(), sibshipUnit.individualSet())) {
+        if (hasIntersection(matingUnit.generationRanks(), sibshipUnit.generationRanks())) {
+          if (!hasIntersection(matingUnit.individualSet(), sibshipUnit.individualSet())) {
             intergenerationalEdges.push([matingUnit, sibshipUnit]);
           }
         }
@@ -141,45 +144,14 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     }
 
     let requiredEdges = new Set(matingEdges.concat(sibshipEdges).concat(matingUnitSibshipUnitEdges));
-    let fobiddenEdges = new Set(sameRankEdges.concat(sameGenerationNotMateEdges)
+    let forbiddenEdges = new Set(sameRankEdges.concat(sameGenerationNotMateEdges)
       .concat(sameGenerationNotSiblingEdges).concat(intergenerationalEdges));
+
+    let sandwichInstance =
+      new SandwichInstance(allVertices, requiredEdges, forbiddenEdges);
+
+    console.log(solveSandwich(sandwichInstance));
   }
 
-  hasIntersection<T>(setA: Set<T>, setB: Set<T>) {
-    return this.intersection(setA, setB).size !== 0;
-  }
-
-  intersection<T>(setA: Set<T>, setB: Set<T>) {
-    let result = new Set<T>();
-
-    setA.forEach(element => {
-      if (setB.has(element)) {
-        result.add(element);
-      }
-    });
-
-    return result;
-  }
-
-  equal<T>(setA: Set<T>, setB: Set<T>) {
-    if (setA.size !== setB.size) {
-      return false;
-    }
-    for (let a of Array.from(setA)) {
-      if (!setB.has(a)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  isSubset<T>(setA: Set<T>, setB: Set<T>) {
-    for (let a of Array.from(setA)) {
-      if (!setB.has(a)) {
-        return false;
-      }
-    }
-    return true;
-  }
 
 }
