@@ -383,6 +383,18 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 3014)
         self.assertEqual(effect.aa_change, None)
 
+    def test_splice_site_ins_neg_strand_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="12:116418554",
+                                                      var="ins(C)")
+        self.assertEqual(effect.gene, "MED13L")
+        self.assertEqual(effect.transcript_id, "NM_015335_1")
+        self.assertEqual(effect.strand, "-")
+        self.assertEqual(effect.effect, "splice-site")
+        self.assertEqual(effect.prot_pos, 1789)
+        self.assertEqual(effect.prot_length, 2211)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
