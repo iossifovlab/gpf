@@ -431,6 +431,30 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 1542)
         self.assertEqual(effect.aa_change, None)
 
+    def test_last_codon_ins_intergenic_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="7:24727232",
+                                                      var="ins(A)")
+        self.assertEqual(effect.gene, None)
+        self.assertEqual(effect.transcript_id, None)
+        self.assertEqual(effect.strand, None)
+        self.assertEqual(effect.effect, "intergenic")
+        self.assertEqual(effect.prot_pos, None)
+        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_last_codon_ins_frameshift_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="7:24727231",
+                                                      var="ins(A)")
+        self.assertEqual(effect.gene, "MPP6")
+        self.assertEqual(effect.transcript_id, "NM_016447_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "frame-shift")
+        self.assertEqual(effect.prot_pos, 541)
+        self.assertEqual(effect.prot_length, 540)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
