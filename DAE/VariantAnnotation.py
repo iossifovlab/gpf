@@ -19,10 +19,10 @@ nonsyn = ['splice-site','frame-shift','nonsense','no-frame-shift-newStop','misse
 
 
 class NuclearCode:
-    
+
     stopCodons = ['TAG', 'TAA', 'TGA']
     startCodons = ['ATG']
-    
+
     CodonsAa = {'Gly' : ['GGG', 'GGA', 'GGT', 'GGC'],
         'Glu' : ['GAG', 'GAA'],
         'Asp' : ['GAT', 'GAC'],
@@ -54,7 +54,7 @@ class MitochondrialCode:
 
     stopCodons = ['TAA', 'TAG']
     startCodons = ['ATG', 'ATA']
-    
+
     CodonsAa = {'Gly' : ['GGG', 'GGA', 'GGT', 'GGC'],
         'Glu' : ['GAG', 'GAA'],
         'Asp' : ['GAT', 'GAC'],
@@ -79,11 +79,11 @@ class MitochondrialCode:
         'Pro' : ['CCG', 'CCA', 'CCT', 'CCC']}
 
     CodonsAaKeys = CodonsAa.keys()
-                        
+
 
 
 class Effect:
-    
+
     gene = None
     transcript_id = None
     strand = None
@@ -102,7 +102,7 @@ class Effect:
     cnv_type = None
     dist_from_5utr = None
 
-    
+
 def add_effects(l):
 
     effect_list = []
@@ -114,7 +114,7 @@ def add_effects(l):
         effect_list.append(ef)
         return(effect_list)
 
-   
+
     for i in l:
 
         ef = Effect()
@@ -146,7 +146,7 @@ def add_effects(l):
             ef.dist_from_coding = int(i[1][2])
             ef.which_intron = int(i[1][3][:ind])
             ef.how_many_introns = int(i[1][3][ind+1:])
-            ef.length = int(i[1][5])          
+            ef.length = int(i[1][5])
         elif ef.effect == "5'UTR" or ef.effect == "3'UTR":
             ef.side = ef.effect[:2]
             ef.dist_from_coding = int(i[1][2])
@@ -161,14 +161,14 @@ def add_effects(l):
             ef.prot_pos = 1
             ef.prot_length = int(i[1][1])
         elif ef.effect == "noEnd":
-            ef.prot_length = int(i[1][1])            
+            ef.prot_length = int(i[1][1])
             ef.prot_pos = int(i[1][1])
         elif ef.effect == "all":
             ef.cnv_type = i[2]
             ef.prot_length = i[1][1]
         elif ef.effect == "promoter":
             ef.dist_from_5utr = i[1][1]
-        elif ef.effect == "CDS": 
+        elif ef.effect == "CDS":
             ef.cnv_type = i[1][1]
             ef.prot_length = i[1][2]
         elif ef.effect == "no-mutation":
@@ -197,14 +197,14 @@ class Variant:
 
 
     effects = []
-   
+
 
     def annotate(self, gm, refG, display=False, promoter_len = 0):
 
 
         #global stopCodons, CodonsAa, CodonsAaKeys
 
-        
+
         if self.chr not in gm._utrModels.keys():
 
             ef =  Effect()
@@ -213,43 +213,43 @@ class Variant:
                 effect_gene = "intergenic"
                 effect_details = "intergenic"
                 ef.effect = "intergenic"
-                                
-                
+
+
             else:
                 effect_type = "unk_chr"
                 effect_gene = "unk_chr"
                 effect_details = "unk_chr"
                 ef.effect = "unk_chr"
-               
+
             if display == True:
                 print("EffectType: " + effect_type),
                 print("\tEffectGene: " + effect_gene),
                 print("\tEffectDetails: " + effect_details)
 
             return([ef])
-        
+
 
         if self.chr in ['MT', 'chrM', 'M']:
             code = MitochondrialCode()
             promoter_len = 0
         else:
             code = NuclearCode()
-            
+
 
         worstForEachTranscript = []
 
-        
+
         for key in gm._utrModels[self.chr]:
             if self.pos <= key[1] + promoter_len and self.pos_last >= key[0] - promoter_len:
 
                 for i in gm._utrModels[self.chr][key]:
-                    
+
                     if self.seq == None and self.type != "deletion":
-                        worstForEachTranscript.append(["unknown", [i.gene, i.CDS_len()/3], i.strand, i.trID]) 
+                        worstForEachTranscript.append(["unknown", [i.gene, i.CDS_len()/3], i.strand, i.trID])
                         continue
-                    
+
                     what_hit = i.what_region(self.chr, self.pos, self.pos_last, prom = promoter_len)
-                    
+                    print("what hit", what_hit)
                     if what_hit == "no_hit":
                         # intergenic
                         continue
@@ -269,10 +269,10 @@ class Variant:
                             worstForEachTranscript.append([what_hit, [i.gene, protLength], i.strand, i.trID])
                         else:
                             worstForEachTranscript.append(["non-coding", [i.gene, i.total_len()], i.strand, i.trID])
-                        continue 
-   
+                        continue
+
                     worstEffect = None
-                    
+
                     if what_hit == "non-coding":
                         in_exon = False
                         all_regs = i.all_regions()
@@ -289,7 +289,7 @@ class Variant:
                                             worstForEachTranscript.append(["tRNA:ANTICODON", [i.gene, i.total_len()], i.strand, i.trID])
                                             in_exon = True
                                             break
-                                    
+
                                 worstForEachTranscript.append(["non-coding", [i.gene, i.total_len()], i.strand, i.trID])
                                 in_exon = True
                                 break
@@ -298,7 +298,7 @@ class Variant:
                             worstForEachTranscript.append(["non-coding-intron", hit, i.strand, i.trID])
                         continue
 
-       
+
                     if what_hit == "5'UTR" or what_hit == "3'UTR" :
                         if self.pos_last != self.pos:
                             if self.pos_last < i.cds[0]:
@@ -335,13 +335,13 @@ class Variant:
                             hit = prepareIntronHit(i, self.pos, self.length, regions)
                         worstForEachTranscript.append([what_hit, hit, i.strand, i.trID])
                         continue
-                    
 
-                
+
+
 
                     exons = i.exons
                     if self.type == "deletion":
-                        
+
                         codingRegions = i.CDS_regions()
                         if self.pos < i.cds[0] + 3:
 
@@ -349,7 +349,7 @@ class Variant:
                             h.append(i.strand)
                             h.append(i.trID)
                             worstForEachTranscript.append(h)
-                            
+
                             continue
 
                         if self.pos > i.cds[1] - 3 and self.pos <= i.cds[1]:
@@ -364,7 +364,7 @@ class Variant:
                             h.append(i.strand)
                             h.append(i.trID)
                             worstForEachTranscript.append(h)
-                           
+
 
                         prev = codingRegions[0].stop
                         for j in codingRegions:
@@ -378,14 +378,14 @@ class Variant:
                                             splice = (j.start-2, j.start-1)
                                             side = "3'"
                                         worstEffect = checkIfSplice(self.chr, self.pos, None, self.length, splice, side, "D", refG)
-                                
+
                                         if worstEffect == "splice-site":
                                             hit = prepareIntronHit(i, self.pos, self.length, codingRegions)
-                                           
+
                                             c = findSpliceContext(i, self.pos, self.length, self.seq, codingRegions, "D", refG)
                                             hit.append(c)
-                                          
-                                                
+
+
                                         elif worstEffect == "intron":
                                             hit = prepareIntronHit(i,self.pos, self.length, codingRegions)
                                         elif worstEffect == "frame-shift" or worstEffect == "no-frame-shift":
@@ -419,22 +419,25 @@ class Variant:
 
                             prev = j.stop
 
-                            
+
                     elif self.type == "insertion":
-       
-            
+
+
                         worstEffect = "intergenic"
 
 
                         codingRegions = i.CDS_regions()
+
+                        print("INS", codingRegions, i.cds[0])
                         if self.pos >= i.cds[0] and self.pos <= i.cds[0]+2 :
                             h = dealWithFirstCodon_Ins(i, self.pos, self.seq, self.length, codingRegions, refG, code)
+                            print("GREAT SUCCESS")
                             if h == "intergenic":
                                 continue
                             h.append(i.strand)
                             h.append(i.trID)
                             worstForEachTranscript.append(h)
-                           
+
                             continue
 
                         if self.pos > i.cds[1]-2 and self.pos <= i.cds[1]:
@@ -446,11 +449,11 @@ class Variant:
                             worstForEachTranscript.append(h)
                             continue
 
-                        
+
                         prev = codingRegions[0].stop
                         for j in xrange(0, len(codingRegions)):
                             if self.pos < codingRegions[j].start and self.pos > prev:
-                                if self.pos - prev < 3: 
+                                if self.pos - prev < 3:
                                     # splice
                                     worstEffect = checkIfSplice(self.chr, self.pos, self.seq, self.length, (prev+1, prev+2), "5'", "I", refG)
                                 elif codingRegions[j].start - self.pos < 2:
@@ -459,7 +462,7 @@ class Variant:
                                     # intron not splice
                                     if worstEffect == "intergenic":
                                         worstEffect = "intron"
-                                       
+
                                 if worstEffect == "splice-site" or worstEffect == "intron":
                                     hit = prepareIntronHit(i, self.pos, 1, codingRegions)
                                 elif worstEffect == "frame-shift" or worstEffect == "no-frame-shift":
@@ -468,12 +471,12 @@ class Variant:
                                 else:
                                     print("No such worst effect type: " + worstEffect)
                                     sys.exit(-64)
-                                  
-                            
+
+
                                 if worstEffect == "splice-site":
                                     c = findSpliceContext(i, self.pos, self.length, self.seq, codingRegions, "I", refG)
                                     hit.append(c)
-                                
+
                                 worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
                                 break
                             if self.pos == codingRegions[j].start:
@@ -485,12 +488,12 @@ class Variant:
                                 else:
                                     hit = prepareIntronHit(i, self.pos-1, 1, codingRegions)
                                     worstForEachTranscript.append(["splice-site", hit, i.strand, i.trID])
-                                    
+
                                     c = findSpliceContext(i, self.pos, self.length, self.seq, codingRegions, "I", refG)
                                     hit.append(c)
-                             
+
                                 break
-                             
+
                             if self.pos <= codingRegions[j].stop and self.pos > codingRegions[j].start:
                                 # coding
                                 protPos = checkProteinPosition(i, self.pos, 1, "I", codingRegions)
@@ -505,10 +508,10 @@ class Variant:
                                 break
 
                             prev = codingRegions[j].stop
-                            
-       
+
+
                     elif self.type == "substitution":
-              
+
                         if self.ref == None:
                             self.ref = getSeq(refG, self.chr, self.pos)
 
@@ -520,12 +523,13 @@ class Variant:
                                 print("EffectType: no-mutation"),
                                 print("\tEffectGene: no-mutation"),
                                 print("\tEffectDetails: no-mutation")
-                
-                
+
+
                             return([ef])
 
 
                         if self.pos >= i.cds[0] and self.pos <= i.cds[0]+2 :
+                            print("FIRSTCODON SNPS")
                             h = dealWithFirstCodon_Snps(i, self.pos, self.seq, refG, code)
                             h.append(i.strand)
                             h.append(i.trID)
@@ -534,6 +538,7 @@ class Variant:
 
 
                         if self.pos > i.cds[1]-3 and self.pos <= i.cds[1]:
+                            print("LASTCODON SNPS")
                             h = dealWithLastCodon_Snps(i, self.pos, self.seq, refG, code)
                             h.append(i.strand)
                             h.append(i.trID)
@@ -542,10 +547,10 @@ class Variant:
 
 
                         codingRegions = i.CDS_regions()
-                    
+
 
                         prev = codingRegions[0].stop
-                        
+
                         for j in codingRegions:
                             if self.pos < j.start and self.pos > prev:
                                 if self.pos - prev < 3 or j.start - self.pos < 3:
@@ -554,7 +559,7 @@ class Variant:
                                 else:
                                     # intron not splice
                                     worstEffect = "intron"
-                                   
+
                                 hit = prepareIntronHit(i, self.pos, 1, codingRegions)
                                 if worstEffect == "splice-site":
                                     c = findSpliceContext(i, self.pos, self.length, self.seq, codingRegions, "S", refG)
@@ -568,14 +573,14 @@ class Variant:
                                 # coding
 
                                 refCodon, altCodon = whatCodonChange_Snp(i, self.pos, self.seq, refG)
-                        
+
 
                                 refAA = cod2aa(refCodon, code)
                                 altAA = cod2aa(altCodon, code)
 
 
                                 worstEffect = mutationType(refAA, altAA)
-                                
+
 
                                 protPos = checkProteinPosition(i, self.pos, 1, "S", codingRegions)
 
@@ -608,16 +613,16 @@ class Variant:
                         print("Unrecognizable mutation type: " + self.type)
                         sys.exit(-998)
 
-       
+
         ef_list = add_effects(worstForEachTranscript)
-        
+
 
         if display == True:
             effect_type, effect_gene, effect_details = effect_description(ef_list)
             print("EffectType: " + effect_type),
             print("\tEffectGene: " + effect_gene),
             print("\tEffectDetails: " + effect_details)
-    
+
         return(ef_list)
 
 
@@ -648,7 +653,7 @@ def get_effect_types(types=True, groups=False):
          'unknown',
          'intergenic',
          'no-mutation',
-         'CNV-', 
+         'CNV-',
          'CNV+']
 
     G = ['LGDs',
@@ -670,20 +675,20 @@ def get_effect_types(types=True, groups=False):
         return(G)
     return([])
 
-def get_effect_types_set(s):  
+def get_effect_types_set(s):
     s = s.split(',')
     global LOF
     global nonsyn
-    
+
     Groups = {
         'LGDs'          : LOF,
         'LoF'           : LOF,
         'nonsynonymous' : nonsyn,
         'introns'       : ['intron', "non-coding-intron", "5'UTR-intron", "3'UTR-intron"],
         'UTRs'          : ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"],
-        'coding'        : ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop', 
+        'coding'        : ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop',
                             'noStart', 'noEnd', 'missense', 'no-frame-shift', 'CDS', 'synonymous' ],
-        'nonsynonymous' : ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop', 
+        'nonsynonymous' : ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop',
                             'noStart', 'noEnd', 'missense', 'no-frame-shift', 'CDS' ],
         'CNVs'          : ['CNV+', 'CNV-']
         }
@@ -709,7 +714,7 @@ def _in_start_codons(s, code):
     else:
         return False
 
-    
+
 
 
 
@@ -725,14 +730,14 @@ def major_effect(E):
     global Severity
 
     max_effect = ""
-    
+
     max = -1
-    
+
     for i in E:
         if Severity[i.effect] > max:
             max = Severity[i.effect]
             max_effect = i.effect
-        
+
     return(max_effect)
 
 def with_lof(E):
@@ -756,8 +761,8 @@ def longest_protein(Effects, protein_pos=False, return_ef=False):
         return(e.prot_length)
     else:
         return(e)
-    
-    
+
+
 
 def protein_position(e): ###
     if e.prot_pos == None:
@@ -771,7 +776,7 @@ def create_effect_details(e):
     if e.effect in ["intron", "5'UTR-intron", "3'UTR-intron", "non-coding-intron"]:
         eff_d = str(e.which_intron) + "/" + str(e.how_many_introns) + "[" + str(e.dist_from_coding) + "]"
     elif e.effect == "frame-shift" or e.effect == "no-frame-shift" or e.effect == "no-frame-shift-newStop":
-        eff_d = str(e.prot_pos) + "/" + str(e.prot_length) 
+        eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
     elif e.effect == "splice-site" or e.effect == "synonymous":
         eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
     elif e.effect == "5'UTR" or e.effect == "3'UTR":
@@ -789,7 +794,7 @@ def create_effect_details(e):
     elif e.effect == "no-mutation":
         eff_d = "no-mutation"
     return(eff_d)
-    
+
 
 
 def effect_description(E):
@@ -800,8 +805,8 @@ def effect_description(E):
 
     if E[0].effect == 'unk_chr':
         return('unk_chr', 'unk_chr', 'unk_chr')
-    
-        
+
+
     effect_type = ""
     effect_gene = ""
     effect_details = ""
@@ -836,29 +841,29 @@ def effect_description(E):
                 G[i.gene].append(i)
             except:
                 G[i.gene] = [i]
-                             
+
         for gene in G:
             for v in G[gene]:
                 effect_details += create_effect_details(v) + ";"
             effect_gene += gene + ":" + G[gene][0].effect + "|"
-                
+
         effect_details = effect_details[:-1] + "|"
-   
+
     return(effect_type, effect_gene[:-1], effect_details[:-1])
-    
-    
+
+
 
 
 def major_effect_per_gene(E):
 
     global Severity
 
-    
+
     max_effect = ""
-    
+
     D = {}
     for i in E:
-        
+
         if i.gene in D:
             if Severity[i.effect] > D[i.gene]['max']:
                 D[i.gene] = {'max':Severity[i.effect], 'ef':i.effect}
@@ -867,15 +872,15 @@ def major_effect_per_gene(E):
 
     for key in D.keys():
         max_effect += key + ":" + D[key]['ef'] + "|"
-    
+
 
     return(max_effect[:-1])
-    
+
 
 "5'UTR-intron", "3'UTR-intron"
-def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None, length=None, seq=None, typ=None):   
+def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None, length=None, seq=None, typ=None):
     v = Variant()
-   
+
     if chr == None:
         if loc != None:
             loc = loc.split(":")
@@ -885,7 +890,7 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
             except:
                 print("You must specify variant location!")
                 raise
-    
+
         else:
             raise Exception("You must specify variant location!")
 
@@ -893,7 +898,7 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
         v.chr = str(chr)
         if position == None:
             raise Exception("You must specify variant position!")
-            
+
 
     position = str(position)
     position = position.split("-")
@@ -942,8 +947,8 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
             else:
                 v.length = len(v.seq)
             v.pos_last = v.pos + v.length - 1
-            
-            
+
+
         elif typ == None:
             raise Exception("Unknown variant type!")
 
@@ -989,7 +994,7 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
 
 
     #print(v.chr,v.pos,v.pos_last,v.ref,v.seq, v.type,v.length)
-  
+
     return v
 
 
@@ -1063,7 +1068,7 @@ def whatCodonChange_Snp(tm, pos, alt_nt, refGenome):
 
     for i in xrange(0, len(tm.exons)):
         if pos >= tm.exons[i].start and pos <= tm.exons[i].stop:
-            orig_codon[frame] = getSeq(refGenome, tm.chr, pos)  
+            orig_codon[frame] = getSeq(refGenome, tm.chr, pos)
 
             if tm.strand == "+":
 
@@ -1105,7 +1110,7 @@ def whatCodonChange_Snp(tm, pos, alt_nt, refGenome):
 
                 else:
                     print("Incorrect value of frame: " , frame)
-                    sys.exit(-23)     
+                    sys.exit(-23)
 
             else:
             ## strand == "-"
@@ -1181,7 +1186,7 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
     protLength = transcript_length/3 - 1
     if (transcript_length%3) != 0:
         protLength += 1
-   
+
 
     # minAA
     minAA = 0
@@ -1219,7 +1224,7 @@ def mutationType(aaref, aaalt):
 
 
 def cod2aa(codon, code):
-  
+
     codon=codon.upper()
     if len(codon) != 3:
         return("?")
@@ -1318,12 +1323,12 @@ def distanceFromCoding(pos, tm):
 
 def prepareIntronHit(tm, pos, length, cds_reg):
 
-   
+
     protLength = 0
     for i in cds_reg:
         protLength += i.stop - i.start + 1
     protLength = protLength/3
-        
+
     whichAA = -1
 
     howManyIntrons = len(cds_reg) - 1
@@ -1343,7 +1348,7 @@ def prepareIntronHit(tm, pos, length, cds_reg):
                     indelside = "5'"
                     distance = pos - cds_reg[i].stop
             else:
-                whichAA = protLength - whichAA/3 
+                whichAA = protLength - whichAA/3
                 whichIntron = howManyIntrons - i
                 if cds_reg[i+1].start - pos - length + 1 < pos - cds_reg[i].stop:
                     indelside = "5'"
@@ -1389,7 +1394,7 @@ def findSpliceBegin(pos, length, cds_reg):
 
 
     for i in xrange(0, len(cds_reg)-1):
-        
+
         if (pos > cds_reg[i].stop and pos <= cds_reg[i+1].start) or (pos + length -1 > cds_reg[i].stop and pos + length - 1 <= cds_reg[i+1].start):
 
             if pos - cds_reg[i].stop < 3:
@@ -1398,7 +1403,7 @@ def findSpliceBegin(pos, length, cds_reg):
                 spliceStart = cds_reg[i+1].start - 2
 
             return(spliceStart)
-    
+
     print("something wrong with splice report!!")
     sys.exit(-46)
 
@@ -1463,7 +1468,7 @@ def completeReport(type, pos, seq, length, word, strand, startRep, stopRep, spli
         else:
             x = 0
 
-        word = word[:pos-startRep+1+x] + "(" + seq + ")" + word[pos-startRep+1+x:] 
+        word = word[:pos-startRep+1+x] + "(" + seq + ")" + word[pos-startRep+1+x:]
         if strand == "-":
             word = reverseReport(word[::-1])
 
@@ -1479,7 +1484,7 @@ def findSpliceContext(tm, pos, length, seq, cds_reg, type, refGenome):
 
     spliceStart = findSpliceBegin(pos, length, cds_reg)
     refContext = getSeq(refGenome, tm.chr, pos - 6, pos + length + 5)
-    
+
     if type == "D":
         seq = ""
     toSpliceReport = completeReport(type, pos, seq, length, refContext, tm.strand, pos - 6, pos + length + 5, spliceStart)
@@ -1514,10 +1519,10 @@ def firstOrLastCodonOutput_Snps(tm, pos, worstEffect):
         hit =[tm.gene, str(protLength)]
     elif worstEffect == "synonymous":
         p = tm.CDS_len()/3
-        hit = [tm.gene, 'End', 'End', str(p)+"/"+str(p)] 
+        hit = [tm.gene, 'End', 'End', str(p)+"/"+str(p)]
     elif worstEffect == "missense":
         p = tm.CDS_len()/3
-        hit = [tm.gene, '?', '?', str(p)+"/"+str(p)] 
+        hit = [tm.gene, '?', '?', str(p)+"/"+str(p)]
     else:
         print("incorrect mut type: " + worstEffect)
         sys.exit(-222)
@@ -1561,13 +1566,13 @@ def dealWithLastCodon_Snps(tm, pos, altNt, refGenome, code):
             hit = [tm.gene, '?', '?', "1/"+str(p)]
             return([worstEffect, hit])
         else:
-            worstEffect = "noStart"                          
+            worstEffect = "noStart"
 
     out = firstOrLastCodonOutput_Snps(tm, pos, worstEffect)
 
     return(out)
 
-def firstOrLastCodonOutput_Indel(tm, pos, worstEffect, type, cds_reg, length): 
+def firstOrLastCodonOutput_Indel(tm, pos, worstEffect, type, cds_reg, length):
     if worstEffect == "no-frame-shift" or worstEffect == "frame-shift":
         protPos = checkProteinPosition(tm, pos, length, type, cds_reg)
         hit = [tm.gene, protPos]
@@ -1592,7 +1597,7 @@ def dealWithFirstCodon_Del(tm, pos, length, cds_reg, refGenome, code):
         codingDelLength = length-tm.cds[0]+pos
     else:
         codingDelLength = length
-        
+
 
     if tm.strand == "+":
         if pos >= tm.cds[0]:
@@ -1600,7 +1605,7 @@ def dealWithFirstCodon_Del(tm, pos, length, cds_reg, refGenome, code):
                 worstEffect = "noStart"
             elif  not _in_start_codons(getSeq(refGenome, tm.chr, tm.cds[0], tm.cds[0]+2), code):
 
-                worstEffect = "no-frame-shift" 
+                worstEffect = "no-frame-shift"
             else:
                 if pos == tm.cds[0]:
                     if not _in_start_codons(getSeq(refGenome, tm.chr, pos+length, pos+length+2), code):
@@ -1612,7 +1617,7 @@ def dealWithFirstCodon_Del(tm, pos, length, cds_reg, refGenome, code):
                         worstEffect = "noStart"
                     else:
                         worstEffect = "no-frame-shift"
-                '''       
+                '''
                 if getSeq(refGenome, tm.chr, pos+length, pos+length+2) != "ATG"[pos-tm.cds[0]:]:
                     worstEffect = "noStart"
                 else:
@@ -1636,12 +1641,12 @@ def dealWithFirstCodon_Del(tm, pos, length, cds_reg, refGenome, code):
                             worstEffect = "noStart"
                 else:
                     if _in_start_codons(getSeq(refGenome, tm.chr, pos - codingDelLength, pos-1) + getSeq(refGenome, tm.chr, tm.cds[0] + codingDelLength, tm.cds[0] + 2), code):
-                        
+
                     # if getSeq(refGenome, tm.chr, pos - codingDelLength, pos-1) == "ATG"[:codingDelLength]:
                         worstEffect = "no-frame-shift"
                     else:
                         worstEffect = "noStart"
-    # strand == "-"                    
+    # strand == "-"
     else:
         lastCodon = complement(getSeq(refGenome, tm.chr, tm.cds[0], tm.cds[0] +2))[::-1]
 
@@ -1714,8 +1719,8 @@ def dealWithFirstCodon_Del(tm, pos, length, cds_reg, refGenome, code):
 
 
 
-   
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D", cds_reg, length)               
+
+    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D", cds_reg, length)
     return(out)
 
 
@@ -1727,10 +1732,10 @@ def dealWithLastCodon_Del(tm, pos, length, cds_reg, refGenome, code):
 
     if tm.strand == "+":
         if not _in_stop_codons(getSeq(refGenome, tm.chr, tm.cds[1] -2, tm.cds[1]), code):
-            worstEffect = "no-frame-shift" 
+            worstEffect = "no-frame-shift"
         else:
            if  getSeq(refGenome, tm.chr, tm.cds[1] -2, pos-1): ##
-               worstEffect = "no-frame-shift" 
+               worstEffect = "no-frame-shift"
            else:
                worstEffect = "noEnd"
 
@@ -1748,8 +1753,8 @@ def dealWithLastCodon_Del(tm, pos, length, cds_reg, refGenome, code):
 
 
 
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D", cds_reg, length)               
-    return(out) 
+    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D", cds_reg, length)
+    return(out)
 
 
 def dealWithCodingAndLastCodon_Del(tm, pos, length, cds_reg, refGenome, code):
@@ -1777,7 +1782,7 @@ def dealWithCodingAndLastCodon_Del(tm, pos, length, cds_reg, refGenome, code):
         else:
             worstEffect = "noStart"
 
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D", cds_reg, length)               
+    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D", cds_reg, length)
     return(out)
 
 
@@ -1811,7 +1816,7 @@ def dealWithFirstCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                 if tm.cds[0] == tm.tx[0]:
                     return(["5'UTR", [tm.gene,"5'UTR", "1"]])
                 else:
-                    return("intergenic") 
+                    return("intergenic")
             elif seq[:3-d] == "TG"[:3-d]:
                 if length%3 == 0:
                     worstEffect = "no-frame-shift"
@@ -1825,7 +1830,7 @@ def dealWithFirstCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
             if tm.cds[0] == tm.tx[0]:
                 return(["3'UTR", [tm.gene,"3'UTR", "1"]])
             else:
-                return("intergenic") 
+                return("intergenic")
         elif not _in_stop_codons(complement(getSeq(refGenome, tm.chr, tm.cds[0],  tm.cds[0]+2))[::-1], code):
 
             if length%3 != 0:
@@ -1839,14 +1844,14 @@ def dealWithFirstCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                         if tm.cds[0] == tm.tx[0]:
                             return(["3'UTR", [tm.gene,"3'UTR", "1"]])
                         else:
-                            return("intergenic") 
+                            return("intergenic")
                     else:
-                        worstEffect = "noEnd"     
+                        worstEffect = "noEnd"
                 elif complement(seq[-2:])[::-1] in ['GA', 'AA', 'AG']:
                     if tm.cds[0] == tm.tx[0]:
                         return(["3'UTR", [tm.gene,"3'UTR", "1"]])
                     else:
-                        return("intergenic") 
+                        return("intergenic")
 
                 elif seq[0] == "A":
                     if length%3 == 0:
@@ -1860,10 +1865,10 @@ def dealWithFirstCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                     if tm.cds[0] == tm.tx[0]:
                         return(["3'UTR", [tm.gene,"3'UTR", "1"]])
                     else:
-                        return("intergenic") 
+                        return("intergenic")
                 elif length == 1:
                     worstEffect = "noEnd"
-                elif _in_stop_codons(complement(getSeq(refGenome, tm.chr, tm.cds[0]) + seq[:2])[::-1], code):   
+                elif _in_stop_codons(complement(getSeq(refGenome, tm.chr, tm.cds[0]) + seq[:2])[::-1], code):
 
                     if length%3 == 0:
                         worstEffect = "no-frame-shift"
@@ -1876,12 +1881,12 @@ def dealWithFirstCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
 
 
 
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "I", cds_reg, length)               
-    return(out)                     
+    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "I", cds_reg, length)
+    return(out)
 
 
 def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
-
+    print("GREAT SUCCESS123")
     if tm.strand == "-":
         if getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]) != "CAT":
 
@@ -1895,7 +1900,7 @@ def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                     if tm.cds[1] == tm.tx[1]:
                         return(["5'UTR", [tm.gene,"5'UTR", "1"]])
                     else:
-                        return("intergenic") 
+                        return("intergenic")
                 else:
                     worstEffect = "frame-shift"
             else:
@@ -1910,8 +1915,8 @@ def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                             if tm.cds[1] == tm.tx[1]:
                                 return(["5'UTR", [tm.gene,"5'UTR", "1"]])
                             else:
-                                return("intergenic") 
-                            
+                                return("intergenic")
+
                         elif seq[-2:] == "CA":
                             if length%3 == 0:
                                 worstEffect = "no-frame-shift"
@@ -1924,7 +1929,7 @@ def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                             if tm.cds[1] == tm.tx[1]:
                                 return(["5'UTR", [tm.gene,"5'UTR", "1"]])
                             else:
-                                return("intergenic") 
+                                return("intergenic")
                         elif seq[-1] == "C":
                             if length%3 == 0:
                                 worstEffect = "no-frame-shift"
@@ -1956,7 +1961,7 @@ def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                         if tm.cds[1] == tm.tx[1]:
                             return(["3'UTR", [tm.gene,"3'UTR", "1"]])
                         else:
-                            return("intergenic") 
+                            return("intergenic")
                     else:
                         worstEffect = "noEnd"
                 else:
@@ -1964,7 +1969,7 @@ def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                         if tm.cds[1] == tm.tx[1]:
                             return(["3'UTR", [tm.gene,"3'UTR", "1"]])
                         else:
-                            return("intergenic") 
+                            return("intergenic")
                     else:
                         worstEffect = "noEnd"
             else:
@@ -1973,7 +1978,7 @@ def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                          if tm.cds[1] == tm.tx[1]:
                              return(["3'UTR", [tm.gene,"3'UTR", "1"]])
                          else:
-                             return("intergenic") 
+                             return("intergenic")
                      elif seq[-1] == "T":
                          if length%3 == 0:
                              worstEffect = "no-frame-shift"
@@ -1986,7 +1991,7 @@ def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                          if tm.cds[1] == tm.tx[1]:
                              return(["3'UTR", [tm.gene,"3'UTR", "1"]])
                          else:
-                             return("intergenic") 
+                             return("intergenic")
                      elif _in_stop_codons('T' + seq[-2:], code):
                          if length%3 == 0:
                              worstEffect = "no-frame-shift"
@@ -1995,8 +2000,8 @@ def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
                      else:
                          worstEffect = "noEnd"
 
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect,"I", cds_reg, length)               
-    return(out) 
+    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect,"I", cds_reg, length)
+    return(out)
 
 def findCodingBase(tm, pos, dist, refGenome):
 
@@ -2045,7 +2050,7 @@ def checkForNewStop_Del(pos, length, tm, refGenome, code):
 
     if _in_stop_codons(codon, code):
         return(True)
-    return(False)   
+    return(False)
 
 def checkForNewStop_Ins(pos, seq, tm, length, refGenome, code):
 
@@ -2184,12 +2189,12 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
         if side == "5'":
             if pos == splicePos[0]:
                 if length == 1:
-                   worstEffect = "splice-site" 
+                   worstEffect = "splice-site"
                 else:
                     if seq[:2] == splice_seq:
                         worstEffect = "intron"
                     else:
-                        worstEffect = "splice-site" 
+                        worstEffect = "splice-site"
             elif pos == splicePos[1]:
                 if seq[0] == splice_seq[1]:
                     worstEffect = "intron"
@@ -2221,6 +2226,3 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
 
 
     return(worstEffect)
-
-
-

@@ -455,6 +455,31 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 540)
         self.assertEqual(effect.aa_change, None)
 
+    def test_first_codon_sub_noStart_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="7:24663287",
+                                                      var="sub(T->C)")
+        self.assertEqual(effect.gene, "MPP6")
+        self.assertEqual(effect.transcript_id, "NM_016447_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "noStart")
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 541)
+        self.assertEqual(effect.aa_change, None)
+
+
+    def test_last_codon_sub_noStop_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="7:24727231",
+                                                      var="sub(T->C)")
+        self.assertEqual(effect.gene, "MPP6")
+        self.assertEqual(effect.transcript_id, "NM_016447_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "noEnd")
+        self.assertEqual(effect.prot_pos, 541)
+        self.assertEqual(effect.prot_length, 541)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
