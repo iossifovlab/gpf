@@ -27,7 +27,7 @@ export class Realization<T> {
     return new Realization(
       this.graph,
       this.forbiddenGraph,
-      this.intervals.slice(0),
+      this.intervals.map(i => new Interval(i.left, i.right)),
       this.domain.slice(0)
     );
   }
@@ -63,7 +63,6 @@ export class Realization<T> {
       this.intervals.concat([new Interval()]), // dummy interval
       this.domain.concat([newVertex]));
 
-
     // console.log("Checking expected dangling");
     for (let activeVertex of Array.from(this.getActiveVertices())) {
       let thisDangling = this.dangling(activeVertex);
@@ -78,19 +77,17 @@ export class Realization<T> {
       }
     }
 
-
-    // console.log("Checking dangling");
+    // console.log("Checking new vertex dangling");
     let newDangling = tempRealization.dangling(newVertex);
     let newVertexEdges = this.graph.getEdgesForVertex(newVertex);
     for (let danglingEdge of Array.from(newDangling)) {
-      if (newVertexEdges.some(
+      if (!newVertexEdges.some(
           edge => equalEdges(edge, danglingEdge) ||
                   (this.domain.indexOf(getOtherVertex(newVertex, edge)) === -1))
           ) {
         return false;
       }
     }
-
 
     // console.log("Checking active");
     let newActiveVertices = tempRealization.getActiveVertices();
@@ -104,7 +101,6 @@ export class Realization<T> {
       }
     }
 
-
     // console.log("Checking forbidden");
     let forbiddenEdges = this.forbiddenGraph.getEdgesForVertex(newVertex);
     for (let activeVertex of thisActiveVertices) {
@@ -112,6 +108,9 @@ export class Realization<T> {
         return false;
       }
     }
+
+    // console.log("Can extend :)");
+    return true;
   }
 
   isEquivalent(other: Realization<T>) {
@@ -264,6 +263,10 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
     forbiddenGraph.addEdge(edge[0], edge[1]);
   }
 
+  console.log("Vertices:", sandwichInstance.vertices.length);
+  console.log("Forbidden:", sandwichInstance.forbidden);
+  console.log("All count:", sandwichInstance.vertices.length * sandwichInstance.vertices.length / 2)
+
   let realizationsQueue = new Array<Realization<T>>();
 
   for (let vertex of sandwichInstance.vertices) {
@@ -272,8 +275,12 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
     );
   }
 
+  let maxRealizations = [realizationsQueue[0]];
+
   while (realizationsQueue.length !== 0) {
     let currentRealization = realizationsQueue.shift();
+    realizationsQueue = realizationsQueue.filter(realization => !realization.isEquivalent(currentRealization));
+
 
     let leftVertices = sandwichInstance.vertices
       .filter(vertex => currentRealization.domain.indexOf(vertex) === -1);
@@ -287,6 +294,11 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
         continue;
       }
 
+      if (currentRealizationCopy.domain.length > maxRealizations[0].domain.length) {
+        maxRealizations = [currentRealizationCopy];
+      } else if (currentRealizationCopy.domain.length === maxRealizations[0].domain.length) {
+        maxRealizations.push(currentRealizationCopy);
+      }
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
         return currentRealizationCopy.intervals;
       } else {
@@ -295,6 +307,8 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
       }
     }
   }
+
+  console.log(maxRealizations);
 
   return null;
 }
