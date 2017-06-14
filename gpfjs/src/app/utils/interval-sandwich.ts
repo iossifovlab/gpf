@@ -1,4 +1,3 @@
-import { Vertex, Edge } from './perfectly-drawable-pedigree.component';
 import { UndirectedGraph, Graph, getOtherVertex,
   equalEdges } from '../utils/undirected-graph';
 
@@ -12,15 +11,15 @@ export class Interval {
   ) {}
 }
 
-export class Realization {
+export class Realization<T> {
   constructor(
-    public graph: Graph<Vertex>,
-    public forbiddenGraph: Graph<Vertex>,
+    public graph: Graph<T>,
+    public forbiddenGraph: Graph<T>,
     public intervals: Array<Interval> = new Array<Interval>(),
-    public domain: Array<Vertex> = new Array<Vertex>(),
+    public domain: Array<T> = new Array<T>(),
   ) {}
 
-  extend(vertex: Vertex) {
+  extend(vertex: T) {
     if (!this.canExtend(vertex)) {
       return false;
     }
@@ -44,7 +43,7 @@ export class Realization {
     return true;
   }
 
-  canExtend(newVertex: Vertex) {
+  canExtend(newVertex: T) {
     let tempRealization = new Realization(
       this.graph,
       this.forbiddenGraph,
@@ -55,7 +54,7 @@ export class Realization {
     for (let activeVertex of Array.from(this.getActiveVertices())) {
       let thisDangling = this.dangling(activeVertex);
       let otherDangling = tempRealization.dangling(activeVertex);
-      let newEdge: [Vertex, Vertex] = [activeVertex, newVertex];
+      let newEdge: [T, T] = [activeVertex, newVertex];
 
       for (let thisEdge of Array.from(thisDangling)) {
         let expectedNewDangling = Array.from(otherDangling).concat([newEdge]);
@@ -98,7 +97,7 @@ export class Realization {
     }
   }
 
-  isEquivalent(other: Realization) {
+  isEquivalent(other: Realization<T>) {
     if (!equal(new Set(this.domain), new Set(other.domain))) {
       return false;
     }
@@ -115,19 +114,19 @@ export class Realization {
     return true;
   }
 
-  getActiveVertexEdge(vertex: Vertex) {
+  getActiveVertexEdge(vertex: T) {
     return this.graph.getEdgesForVertex(vertex).find(edge => {
       let otherVertex = getOtherVertex(vertex, edge);
       return otherVertex && this.domain.indexOf(otherVertex) === -1;
     });
   }
 
-  isActiveVertex(vertex: Vertex) {
+  isActiveVertex(vertex: T) {
     return !!this.getActiveVertexEdge(vertex);
   }
 
   getActiveVertices() {
-    let result = new Set<Vertex>();
+    let result = new Set<T>();
     for (let vertex of this.domain) {
 
       if (this.isActiveVertex(vertex)) {
@@ -138,9 +137,9 @@ export class Realization {
     return result;
   }
 
-  dangling(vertex: Vertex) {
+  dangling(vertex: T) {
     if (!this.isActiveVertex(vertex)) {
-      return new Set<Edge>();
+      return new Set<[T, T]>();
     }
 
     let edgesArray = this.graph.getEdgesForVertex(vertex).filter(edge => {
@@ -148,11 +147,11 @@ export class Realization {
       return this.domain.indexOf(otherVertex) === -1;
     });
 
-    return new Set<Edge>(edgesArray);
+    return new Set<[T, T]>(edgesArray);
   }
 
   maximalSet() {
-    let result = new Set<Vertex>();
+    let result = new Set<T>();
 
     for (let vertex of this.domain) {
       if (this.isMaximal(vertex)) {
@@ -163,7 +162,7 @@ export class Realization {
     return result;
   }
 
-  isMaximal(vertex: Vertex) {
+  isMaximal(vertex: T) {
     for (let domainVertex of this.domain) {
       if (domainVertex !== vertex && this.isInIntervalOrder(vertex, domainVertex)) {
         return false;
@@ -187,7 +186,7 @@ export class Realization {
     return true;
   }
 
-  isMaximum(vertex: Vertex) {
+  isMaximum(vertex: T) {
     let interval = this.getInterval(vertex);
     if (!interval) {
       return false;
@@ -203,7 +202,7 @@ export class Realization {
     return true;
   }
 
-  isInIntervalOrder(a: Vertex, b: Vertex) {
+  isInIntervalOrder(a: T, b: T) {
     let intervalA = this.getInterval(a);
     let intervalB = this.getInterval(b);
 
@@ -214,7 +213,7 @@ export class Realization {
     return intervalA.right < intervalB.left;
   }
 
-  private getInterval(vertex: Vertex) {
+  private getInterval(vertex: T) {
     let index = this.domain.indexOf(vertex);
     if (index === -1) {
       return null;
@@ -223,17 +222,17 @@ export class Realization {
   }
 }
 
-export class SandwichInstance {
+export class SandwichInstance<T> {
   constructor(
-    public vertices: Array<Vertex>,
-    public required: Set<Edge>,
-    public forbidden: Set<Edge>
+    public vertices: Array<T>,
+    public required: Set<[T, T]>,
+    public forbidden: Set<[T, T]>
   ) {}
 }
 
-export function solveSandwich(sandwichInstance: SandwichInstance) {
-  let requiredGraph = new UndirectedGraph<Vertex>();
-  let forbiddenGraph = new UndirectedGraph<Vertex>();
+export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
+  let requiredGraph = new UndirectedGraph<T>();
+  let forbiddenGraph = new UndirectedGraph<T>();
 
   for (let vertex of sandwichInstance.vertices) {
     requiredGraph.addVertex(vertex);
