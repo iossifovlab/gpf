@@ -19,6 +19,19 @@ export class Realization<T> {
     public domain: Array<Vertex<T>> = new Array<Vertex<T>>(),
   ) {}
 
+  toString() {
+    return this.domain.toString();
+  }
+
+  clone() {
+    return new Realization(
+      this.graph,
+      this.forbiddenGraph,
+      this.intervals.slice(0),
+      this.domain.slice(0)
+    );
+  }
+
   extend(vertex: Vertex<T>) {
     if (!this.canExtend(vertex)) {
       return false;
@@ -51,6 +64,7 @@ export class Realization<T> {
       this.domain.concat([newVertex]));
 
 
+    // console.log("Checking expected dangling");
     for (let activeVertex of Array.from(this.getActiveVertices())) {
       let thisDangling = this.dangling(activeVertex);
       let otherDangling = tempRealization.dangling(activeVertex);
@@ -65,6 +79,7 @@ export class Realization<T> {
     }
 
 
+    // console.log("Checking dangling");
     let newDangling = tempRealization.dangling(newVertex);
     let newVertexEdges = this.graph.getEdgesForVertex(newVertex);
     for (let danglingEdge of Array.from(newDangling)) {
@@ -77,6 +92,7 @@ export class Realization<T> {
     }
 
 
+    // console.log("Checking active");
     let newActiveVertices = tempRealization.getActiveVertices();
     let thisActiveVertices = Array.from(this.getActiveVertices());
     let activeVerticesNonEmptyDanglingAndNew =
@@ -89,6 +105,7 @@ export class Realization<T> {
     }
 
 
+    // console.log("Checking forbidden");
     let forbiddenEdges = this.forbiddenGraph.getEdgesForVertex(newVertex);
     for (let activeVertex of thisActiveVertices) {
       if (forbiddenEdges.some(edge => getOtherVertex(newVertex, edge) === activeVertex)) {
@@ -247,4 +264,37 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
     forbiddenGraph.addEdge(edge[0], edge[1]);
   }
 
+  let realizationsQueue = new Array<Realization<T>>();
+
+  for (let vertex of sandwichInstance.vertices) {
+    realizationsQueue.push(
+      new Realization(requiredGraph, forbiddenGraph, [new Interval()], [vertex])
+    );
+  }
+
+  while (realizationsQueue.length !== 0) {
+    let currentRealization = realizationsQueue.shift();
+
+    let leftVertices = sandwichInstance.vertices
+      .filter(vertex => currentRealization.domain.indexOf(vertex) === -1);
+
+    for (let vertex of leftVertices) {
+      let currentRealizationCopy = currentRealization.clone();
+      let successfulExtension = currentRealizationCopy.extend(vertex);
+      // console.log("Success?", successfulExtension);
+
+      if (!successfulExtension) {
+        continue;
+      }
+
+      if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
+        return currentRealizationCopy.intervals;
+      } else {
+        // console.log("Checking realization", currentRealizationCopy);
+        realizationsQueue.push(currentRealizationCopy);
+      }
+    }
+  }
+
+  return null;
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { PedigreeData } from '../genotype-preview-table/genotype-preview';
 import { PedigreeMockService } from './pedigree-mock.service';
@@ -14,7 +14,8 @@ type Edge = GraphEdge<Vertex>;
 @Component({
   selector: 'gpf-perfectly-drawable-pedigree',
   templateUrl: './perfectly-drawable-pedigree.component.html',
-  styleUrls: ['./perfectly-drawable-pedigree.component.css']
+  styleUrls: ['./perfectly-drawable-pedigree.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PerfectlyDrawablePedigreeComponent implements OnInit {
 
