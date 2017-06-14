@@ -4,11 +4,12 @@ import { PedigreeData } from '../genotype-preview-table/genotype-preview';
 import { PedigreeMockService } from './pedigree-mock.service';
 import { Individual, MatingUnit, IndividualSet, ParentalUnit } from '../pedigree-chart/pedigree-data';
 import { hasIntersection, intersection, equal, isSubset } from '../utils/sets-helper';
+import { Edge as GraphEdge, Vertex as GraphVertex } from '../utils/undirected-graph';
 
-import { SandwichInstance, solveSandwich } from './interval-sandwich';
+import { SandwichInstance, solveSandwich } from '../utils/interval-sandwich';
 
-export type Vertex = IndividualSet;
-export type Edge = [Vertex, Vertex];
+type Vertex = GraphVertex<IndividualSet>;
+type Edge = GraphEdge<Vertex>;
 
 @Component({
   selector: 'gpf-perfectly-drawable-pedigree',

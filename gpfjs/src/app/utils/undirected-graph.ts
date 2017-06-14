@@ -1,15 +1,18 @@
 export interface Graph<T> {
-    addVertex(vertex: T, edges: Array<[T, T]>): void;
-    addEdge(vertex1: T, vertex2: T): void;
-    getEdgesForVertex(vertex: T): [T, T][];
-    hasVertex(vertex: T): boolean;
-    hasEdge(vertex1: T, vertex2: T): boolean;
+    addVertex(vertex: Vertex<T>, edges: Array<Edge<T>>): void;
+    addEdge(vertex1: Vertex<T>, vertex2: Vertex<T>): void;
+    getEdgesForVertex(vertex: Vertex<T>): Edge<T>[];
+    hasVertex(vertex: Vertex<T>): boolean;
+    hasEdge(vertex1: Vertex<T>, vertex2: Vertex<T>): boolean;
     getVertices(): Array<T>;
-    getEdges(): Array<[T, T]>;
+    getEdges(): Array<Edge<T>>;
 }
 
-export function getOtherVertex<T>(vertex: T, edge: [T, T]) {
-  let otherVertex: T = null;
+export type Vertex<T> = T;
+export type Edge<T> = [Vertex<T>, Vertex<T>];
+
+export function getOtherVertex<T>(vertex: Vertex<T>, edge: Edge<T>) {
+  let otherVertex: Vertex<T> = null;
 
   if (edge[0] === vertex) {
     otherVertex = edge[1];
@@ -20,7 +23,7 @@ export function getOtherVertex<T>(vertex: T, edge: [T, T]) {
   return otherVertex;
 }
 
-export function equalEdges<T>(edge1: [T, T], edge2: [T, T]) {
+export function equalEdges<T>(edge1: Edge<T>, edge2: Edge<T>) {
   return (edge1[0] === edge2[0] && edge1[1] === edge2[1]) ||
          (edge1[0] === edge2[1] && edge1[1] === edge2[0]);
 }
@@ -28,11 +31,10 @@ export function equalEdges<T>(edge1: [T, T], edge2: [T, T]) {
 export class UndirectedGraph<T> implements Graph<T> {
 
   private vertices = new Array<T>();
-  private edges = new Array<Array<[T, T]>>();
+  private edges = new Array<Array<Edge<T>>>();
 
 
-
-  addVertex(vertex: T, edges: Array<[T, T]> = []) {
+  addVertex(vertex: Vertex<T>, edges: Array<Edge<T>> = []) {
     this.checkCorrectEdges(vertex, edges);
 
     this.vertices.push(vertex);
@@ -44,18 +46,18 @@ export class UndirectedGraph<T> implements Graph<T> {
     }
   }
 
-  addEdge(vertex1: T, vertex2: T) {
+  addEdge(vertex1: Vertex<T>, vertex2: Vertex<T>) {
     this.checkVertex(vertex1);
     this.checkVertex(vertex2);
 
-    let edge: [T, T] = [vertex1, vertex2];
+    let edge: Edge<T> = [vertex1, vertex2];
 
     this.getEdgesForVertex(vertex1).push(edge);
     this.getEdgesForVertex(vertex2).push(edge);
 
   }
 
-  getEdgesForVertex(vertex: T) {
+  getEdgesForVertex(vertex: Vertex<T>) {
     let index = this.vertices.indexOf(vertex);
 
     if (index === -1) {
@@ -65,11 +67,11 @@ export class UndirectedGraph<T> implements Graph<T> {
     return this.edges[index];
   }
 
-  hasVertex(vertex: T) {
+  hasVertex(vertex: Vertex<T>) {
     return this.vertices.indexOf(vertex) !== -1;
   }
 
-  hasEdge(vertex1: T, vertex2: T) {
+  hasEdge(vertex1: Vertex<T>, vertex2: Vertex<T>) {
     if (!this.hasVertex(vertex1) || !this.hasVertex(vertex2)) {
       return false;
     }
@@ -88,8 +90,8 @@ export class UndirectedGraph<T> implements Graph<T> {
   }
 
   getEdges() {
-    let allEdges: [T, T][] = [];
-    let alreadyAddedVertices: T[] = [];
+    let allEdges: Edge<T>[] = [];
+    let alreadyAddedVertices: Vertex<T>[] = [];
 
     for (let i = 0; i < this.edges.length; i++) {
       let it = this.edges[i].entries();
@@ -110,9 +112,9 @@ export class UndirectedGraph<T> implements Graph<T> {
     return allEdges;
   }
 
-  private checkCorrectEdges(vertex: T, edges: Array<[T, T]>) {
+  private checkCorrectEdges(vertex: Vertex<T>, edges: Array<Edge<T>>) {
     for (let edge of edges) {
-      let otherVertex: T = getOtherVertex(vertex, edge);
+      let otherVertex: Vertex<T> = getOtherVertex(vertex, edge);
 
       if (otherVertex == null) {
         throw `Edge (${edge[0]}, ${edge[1]}) does not have vertex ${vertex}`;
@@ -122,7 +124,7 @@ export class UndirectedGraph<T> implements Graph<T> {
     }
   }
 
-  private checkVertex(vertex: T) {
+  private checkVertex(vertex: Vertex<T>) {
     if (!this.hasVertex(vertex)) {
       throw `Graph does not have vertex ${vertex}`;
     }

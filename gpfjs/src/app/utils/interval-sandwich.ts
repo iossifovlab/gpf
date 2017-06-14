@@ -1,5 +1,5 @@
 import { UndirectedGraph, Graph, getOtherVertex,
-  equalEdges } from '../utils/undirected-graph';
+  equalEdges, Edge, Vertex } from '../utils/undirected-graph';
 
 import { hasIntersection, intersection, equal,
   isSubset } from '../utils/sets-helper';
@@ -16,10 +16,10 @@ export class Realization<T> {
     public graph: Graph<T>,
     public forbiddenGraph: Graph<T>,
     public intervals: Array<Interval> = new Array<Interval>(),
-    public domain: Array<T> = new Array<T>(),
+    public domain: Array<Vertex<T>> = new Array<Vertex<T>>(),
   ) {}
 
-  extend(vertex: T) {
+  extend(vertex: Vertex<T>) {
     if (!this.canExtend(vertex)) {
       return false;
     }
@@ -43,7 +43,7 @@ export class Realization<T> {
     return true;
   }
 
-  canExtend(newVertex: T) {
+  canExtend(newVertex: Vertex<T>) {
     let tempRealization = new Realization(
       this.graph,
       this.forbiddenGraph,
@@ -54,7 +54,7 @@ export class Realization<T> {
     for (let activeVertex of Array.from(this.getActiveVertices())) {
       let thisDangling = this.dangling(activeVertex);
       let otherDangling = tempRealization.dangling(activeVertex);
-      let newEdge: [T, T] = [activeVertex, newVertex];
+      let newEdge: Edge<T> = [activeVertex, newVertex];
 
       for (let thisEdge of Array.from(thisDangling)) {
         let expectedNewDangling = Array.from(otherDangling).concat([newEdge]);
@@ -114,19 +114,19 @@ export class Realization<T> {
     return true;
   }
 
-  getActiveVertexEdge(vertex: T) {
+  getActiveVertexEdge(vertex: Vertex<T>) {
     return this.graph.getEdgesForVertex(vertex).find(edge => {
       let otherVertex = getOtherVertex(vertex, edge);
       return otherVertex && this.domain.indexOf(otherVertex) === -1;
     });
   }
 
-  isActiveVertex(vertex: T) {
+  isActiveVertex(vertex: Vertex<T>) {
     return !!this.getActiveVertexEdge(vertex);
   }
 
   getActiveVertices() {
-    let result = new Set<T>();
+    let result = new Set<Vertex<T>>();
     for (let vertex of this.domain) {
 
       if (this.isActiveVertex(vertex)) {
@@ -137,9 +137,9 @@ export class Realization<T> {
     return result;
   }
 
-  dangling(vertex: T) {
+  dangling(vertex: Vertex<T>) {
     if (!this.isActiveVertex(vertex)) {
-      return new Set<[T, T]>();
+      return new Set<Edge<T>>();
     }
 
     let edgesArray = this.graph.getEdgesForVertex(vertex).filter(edge => {
@@ -147,11 +147,11 @@ export class Realization<T> {
       return this.domain.indexOf(otherVertex) === -1;
     });
 
-    return new Set<[T, T]>(edgesArray);
+    return new Set<Edge<T>>(edgesArray);
   }
 
   maximalSet() {
-    let result = new Set<T>();
+    let result = new Set<Vertex<T>>();
 
     for (let vertex of this.domain) {
       if (this.isMaximal(vertex)) {
@@ -162,7 +162,7 @@ export class Realization<T> {
     return result;
   }
 
-  isMaximal(vertex: T) {
+  isMaximal(vertex: Vertex<T>) {
     for (let domainVertex of this.domain) {
       if (domainVertex !== vertex && this.isInIntervalOrder(vertex, domainVertex)) {
         return false;
@@ -186,7 +186,7 @@ export class Realization<T> {
     return true;
   }
 
-  isMaximum(vertex: T) {
+  isMaximum(vertex: Vertex<T>) {
     let interval = this.getInterval(vertex);
     if (!interval) {
       return false;
@@ -202,7 +202,7 @@ export class Realization<T> {
     return true;
   }
 
-  isInIntervalOrder(a: T, b: T) {
+  isInIntervalOrder(a: Vertex<T>, b: Vertex<T>) {
     let intervalA = this.getInterval(a);
     let intervalB = this.getInterval(b);
 
@@ -224,9 +224,9 @@ export class Realization<T> {
 
 export class SandwichInstance<T> {
   constructor(
-    public vertices: Array<T>,
-    public required: Set<[T, T]>,
-    public forbidden: Set<[T, T]>
+    public vertices: Array<Vertex<T>>,
+    public required: Set<Edge<T>>,
+    public forbidden: Set<Edge<T>>
   ) {}
 }
 
@@ -247,9 +247,4 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
     forbiddenGraph.addEdge(edge[0], edge[1]);
   }
 
-  return true;
-
-  // for(let vertex in sandwichInstance.vertices) {
-  //
-  // }
 }
