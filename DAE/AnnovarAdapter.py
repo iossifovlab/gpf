@@ -101,6 +101,18 @@ class VariantAnnotation:
             effect.gene = m.group(1)
             effect.transcript_id = m.group(2).split(":")[0] + "_1"
             return [effect]
+        elif row[0] == "splicing":
+            effects = []
+
+            m = re.match('([a-zA-Z0-9]+)\((.+)\)', row[1])
+            for details in m.group(2).split(","):
+                effect = Effect()
+                effect.effect = "splice-site"
+                effect.gene = m.group(1)
+                effect.transcript_id = details.split(":")[0] + "_1"
+                effects.append(effect)
+            return effects
+
         else:
             return []
 
@@ -151,7 +163,8 @@ class VariantAnnotation:
                 input_str = "{0}\t{1}\t{2}\t0\t-".format(chr, position,
                                                          pos_end)
             elif m.group(1) == "ins":
-                input_str = "{0}\t{1}\t{1}\t-\tC".format(chr, position)
+                input_str = "{0}\t{1}\t{1}\t-\t{2}".format(chr, position,
+                                                           m.group(2))
             print(input_str)
         elif ref is not None and alt is not None:
             input_str = "{0}\t{1}\t{1}\t{2}\t{3}".format(chr, position,
