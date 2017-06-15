@@ -2,7 +2,7 @@
 
 export T=$DAE_SOURCE_DIR/tests/data_import_test
 export D=$DAE_DB_DIR/testSt-tmp/
-
+rm -rf $D
 mkdir -p $D
 
 ped2NucFam.py $T/fam.ped $D/nuc-fam.ped

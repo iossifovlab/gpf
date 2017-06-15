@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 # Oct 9th 2013
 # written by Ewa
