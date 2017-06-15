@@ -80,8 +80,11 @@ If you need to force rebuild of pheno browser cache you can user `-f` (`--force`
 optioin:
 
 ``
-./manage.py pheno_browser_cache -f -p testSt
+./manage.py pheno_browser_cache -p testSt -f
 going to recaclulate ['testSt']
 checking pheno browser cache for testSt
-        cache OK
+        cache RECOMPUTING
+testSt
+...
+...
 ```
