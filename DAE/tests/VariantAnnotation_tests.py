@@ -1970,6 +1970,180 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[3].prot_length, None)
         self.assertEqual(effects_sorted[3].aa_change, None)
 
+    def test_chr17_76528711_sub_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="17:76528711",
+                                                      var="sub(C->T)")
+
+        self.assertEqual(effect.gene, "DNAH17")
+        self.assertEqual(effect.transcript_id, "NM_173628_1")
+        self.assertEqual(effect.strand, "-")
+        self.assertEqual(effect.effect, "synonymous")
+        self.assertEqual(effect.prot_pos, 989)
+        self.assertEqual(effect.prot_length, 4462)
+        self.assertEqual(effect.aa_change, "Arg->Arg")
+
+    def test_chr1_244816618_ins_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="1:244816618",
+                                                      var="ins(G)")
+
+        self.assertEqual(effect.gene, "DESI2")
+        self.assertEqual(effect.transcript_id, "NM_016076_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "frame-shift")
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 194)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_chr16_3070391_del_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="16:3070391",
+                                                      var="del(13)")
+
+        self.assertEqual(effect.gene, "TNFRSF12A")
+        self.assertEqual(effect.transcript_id, "NM_016639_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "frame-shift")
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 129)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_chr10_46248650_del_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="10:46248650",
+                                                     var="del(3)")
+        self.assertEqual(len(effects), 3)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "FAM21C")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_001169106_1")
+        self.assertEqual(effects_sorted[0].strand, "+")
+        self.assertEqual(effects_sorted[0].effect, "no-frame-shift-newStop")
+        self.assertEqual(effects_sorted[0].prot_pos, 382)
+        self.assertEqual(effects_sorted[0].prot_length, 1279)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "FAM21C")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_001169107_1")
+        self.assertEqual(effects_sorted[1].strand, "+")
+        self.assertEqual(effects_sorted[1].effect, "no-frame-shift-newStop")
+        self.assertEqual(effects_sorted[1].prot_pos, 358)
+        self.assertEqual(effects_sorted[1].prot_length, 1245)
+        self.assertEqual(effects_sorted[1].aa_change, None)
+
+        self.assertEqual(effects_sorted[2].gene, "FAM21C")
+        self.assertEqual(effects_sorted[2].transcript_id, "NM_015262_1")
+        self.assertEqual(effects_sorted[2].strand, "+")
+        self.assertEqual(effects_sorted[2].effect, "no-frame-shift-newStop")
+        self.assertEqual(effects_sorted[2].prot_pos, 382)
+        self.assertEqual(effects_sorted[2].prot_length, 1320)
+        self.assertEqual(effects_sorted[2].aa_change, None)
+
+    def test_chr2_111753543_del_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="2:111753543",
+                                                      var="del(54)")
+
+        self.assertEqual(effect.gene, "ACOXL")
+        self.assertEqual(effect.transcript_id, "NM_001142807_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "no-frame-shift")
+        self.assertEqual(effect.prot_pos, 415)
+        self.assertEqual(effect.prot_length, 580)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_chr15_41864763_del_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="15:41864763",
+                                                      var="del(3)")
+
+        self.assertEqual(effect.gene, "TYRO3")
+        self.assertEqual(effect.transcript_id, "NM_006293_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "splice-site")
+        self.assertEqual(effect.prot_pos, 625)
+        self.assertEqual(effect.prot_length, 891)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_chr21_11049623_sub_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="21:11049623",
+                                                     var="sub(T->C)")
+        self.assertEqual(len(effects), 4)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "BAGE4")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_181704_1")
+        self.assertEqual(effects_sorted[0].strand, "-")
+        self.assertEqual(effects_sorted[0].effect, "3'UTR-intron")
+        self.assertEqual(effects_sorted[0].prot_pos, None)
+        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "BAGE3")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_182481_1")
+        self.assertEqual(effects_sorted[1].strand, "-")
+        self.assertEqual(effects_sorted[1].effect, "splice-site")
+        self.assertEqual(effects_sorted[1].prot_pos, 94)
+        self.assertEqual(effects_sorted[1].prot_length, 110)
+        self.assertEqual(effects_sorted[1].aa_change, None)
+
+        self.assertEqual(effects_sorted[2].gene, "BAGE2")
+        self.assertEqual(effects_sorted[2].transcript_id, "NM_182482_1")
+        self.assertEqual(effects_sorted[2].strand, "-")
+        self.assertEqual(effects_sorted[2].effect, "splice-site")
+        self.assertEqual(effects_sorted[2].prot_pos, 94)
+        self.assertEqual(effects_sorted[2].prot_length, 110)
+        self.assertEqual(effects_sorted[2].aa_change, None)
+
+        self.assertEqual(effects_sorted[3].gene, "BAGE5")
+        self.assertEqual(effects_sorted[3].transcript_id, "NM_182484_1")
+        self.assertEqual(effects_sorted[3].strand, "-")
+        self.assertEqual(effects_sorted[3].effect, "3'UTR-intron")
+        self.assertEqual(effects_sorted[3].prot_pos, None)
+        self.assertEqual(effects_sorted[3].prot_length, None)
+        self.assertEqual(effects_sorted[3].aa_change, None)
+
+    def test_chr3_131100722_sub_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="3:131100722",
+                                                     var="sub(C->G)")
+        self.assertEqual(len(effects), 4)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "NUDT16")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_001171905_1")
+        self.assertEqual(effects_sorted[0].strand, "+")
+        self.assertEqual(effects_sorted[0].effect, "5'UTR-intron")
+        self.assertEqual(effects_sorted[0].prot_pos, None)
+        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "NUDT16")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_001171906_1")
+        self.assertEqual(effects_sorted[1].strand, "+")
+        self.assertEqual(effects_sorted[1].effect, "missense")
+        self.assertEqual(effects_sorted[1].prot_pos, 25)
+        self.assertEqual(effects_sorted[1].prot_length, 227)
+        self.assertEqual(effects_sorted[1].aa_change, "Ala->Gly")
+
+        self.assertEqual(effects_sorted[2].gene, "NUDT16")
+        self.assertEqual(effects_sorted[2].transcript_id, "NM_152395_1")
+        self.assertEqual(effects_sorted[2].strand, "+")
+        self.assertEqual(effects_sorted[2].effect, "missense")
+        self.assertEqual(effects_sorted[2].prot_pos, 25)
+        self.assertEqual(effects_sorted[2].prot_length, 195)
+        self.assertEqual(effects_sorted[2].aa_change, "Ala->Gly")
+
+        self.assertEqual(effects_sorted[3].gene, "NUDT16")
+        self.assertEqual(effects_sorted[3].transcript_id, "NR_033268_1")
+        self.assertEqual(effects_sorted[3].strand, "+")
+        self.assertEqual(effects_sorted[3].effect, "non-coding")
+        self.assertEqual(effects_sorted[3].prot_pos, None)
+        self.assertEqual(effects_sorted[3].prot_length, None)
+        self.assertEqual(effects_sorted[3].aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
