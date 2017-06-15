@@ -249,7 +249,6 @@ class Variant:
                         continue
 
                     what_hit = i.what_region(self.chr, self.pos, self.pos_last, prom = promoter_len)
-                    print("what hit", what_hit)
                     if what_hit == "no_hit":
                         # intergenic
                         continue
@@ -428,10 +427,8 @@ class Variant:
 
                         codingRegions = i.CDS_regions()
 
-                        print("INS", codingRegions, i.cds[0])
                         if self.pos >= i.cds[0] and self.pos <= i.cds[0]+2 :
                             h = dealWithFirstCodon_Ins(i, self.pos, self.seq, self.length, codingRegions, refG, code)
-                            print("GREAT SUCCESS")
                             if h == "intergenic":
                                 continue
                             h.append(i.strand)
@@ -529,7 +526,6 @@ class Variant:
 
 
                         if self.pos >= i.cds[0] and self.pos <= i.cds[0]+2 :
-                            print("FIRSTCODON SNPS")
                             h = dealWithFirstCodon_Snps(i, self.pos, self.seq, refG, code)
                             h.append(i.strand)
                             h.append(i.trID)
@@ -538,7 +534,6 @@ class Variant:
 
 
                         if self.pos > i.cds[1]-3 and self.pos <= i.cds[1]:
-                            print("LASTCODON SNPS")
                             h = dealWithLastCodon_Snps(i, self.pos, self.seq, refG, code)
                             h.append(i.strand)
                             h.append(i.trID)

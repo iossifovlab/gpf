@@ -314,6 +314,77 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_pos, 211)
         self.assertEqual(effect.aa_change, "Lys->Arg")
 
+    def test_chr1_71418630_sub_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:71418630",
+                                                     var="sub(A->G)")
+        self.assertEqual(len(effects), 8)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "PTGER3")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_001126044_1")
+        self.assertEqual(effects_sorted[0].strand, "-")
+        self.assertEqual(effects_sorted[0].effect, "3'UTR")
+        self.assertEqual(effects_sorted[0].prot_pos, None)
+        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "PTGER3")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_198714_1")
+        self.assertEqual(effects_sorted[1].strand, "-")
+        self.assertEqual(effects_sorted[1].effect, "3'UTR-intron")
+        self.assertEqual(effects_sorted[1].prot_pos, None)
+        self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].aa_change, None)
+
+        self.assertEqual(effects_sorted[2].gene, "PTGER3")
+        self.assertEqual(effects_sorted[2].transcript_id, "NM_198716_1")
+        self.assertEqual(effects_sorted[2].strand, "-")
+        self.assertEqual(effects_sorted[2].effect, "intron")
+        self.assertEqual(effects_sorted[2].prot_pos, 369)
+        self.assertEqual(effects_sorted[2].prot_length, 375)
+        self.assertEqual(effects_sorted[2].aa_change, None)
+
+        self.assertEqual(effects_sorted[3].gene, "PTGER3")
+        self.assertEqual(effects_sorted[3].transcript_id, "NM_198717_1")
+        self.assertEqual(effects_sorted[3].strand, "-")
+        self.assertEqual(effects_sorted[3].effect, "intron")
+        self.assertEqual(effects_sorted[3].prot_pos, 360)
+        self.assertEqual(effects_sorted[3].prot_length, 366)
+        self.assertEqual(effects_sorted[3].aa_change, None)
+
+        self.assertEqual(effects_sorted[4].gene, "PTGER3")
+        self.assertEqual(effects_sorted[4].transcript_id, "NM_198718_1")
+        self.assertEqual(effects_sorted[4].strand, "-")
+        self.assertEqual(effects_sorted[4].effect, "missense")
+        self.assertEqual(effects_sorted[4].prot_pos, 406)
+        self.assertEqual(effects_sorted[4].prot_length, 418)
+        self.assertEqual(effects_sorted[4].aa_change, "Ile->Thr")
+
+        self.assertEqual(effects_sorted[5].gene, "PTGER3")
+        self.assertEqual(effects_sorted[5].transcript_id, "NR_028292_1")
+        self.assertEqual(effects_sorted[5].strand, "-")
+        self.assertEqual(effects_sorted[5].effect, "non-coding-intron")
+        self.assertEqual(effects_sorted[5].prot_pos, None)
+        self.assertEqual(effects_sorted[5].prot_length, None)
+        self.assertEqual(effects_sorted[5].aa_change, None)
+
+        self.assertEqual(effects_sorted[6].gene, "PTGER3")
+        self.assertEqual(effects_sorted[6].transcript_id, "NR_028293_1")
+        self.assertEqual(effects_sorted[6].strand, "-")
+        self.assertEqual(effects_sorted[6].effect, "non-coding-intron")
+        self.assertEqual(effects_sorted[6].prot_pos, None)
+        self.assertEqual(effects_sorted[6].prot_length, None)
+        self.assertEqual(effects_sorted[6].aa_change, None)
+
+        self.assertEqual(effects_sorted[7].gene, "PTGER3")
+        self.assertEqual(effects_sorted[7].transcript_id, "NR_028294_1")
+        self.assertEqual(effects_sorted[7].strand, "-")
+        self.assertEqual(effects_sorted[7].effect, "non-coding-intron")
+        self.assertEqual(effects_sorted[7].prot_pos, None)
+        self.assertEqual(effects_sorted[7].prot_length, None)
+        self.assertEqual(effects_sorted[7].aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
