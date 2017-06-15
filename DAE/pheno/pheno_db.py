@@ -230,7 +230,7 @@ class PhenoDB(PhenoConfig):
                 meta_df = vm.load_df(where=self._where_variables(variable_ids))
 
         except Exception:
-            print("can't load variables meta data...")
+            # print("can't load variables meta data...")
 
             size = len(df.index)
             meta_df = pd.DataFrame(
