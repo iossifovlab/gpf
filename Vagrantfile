@@ -9,20 +9,20 @@ Vagrant.configure(2) do |config|
 
 
   config.vm.define "vagrant" do |vagrant|
-	vagrant.vm.box = "ubuntu/trusty64"
+	vagrant.vm.box = "ubuntu/xenial64 "
 	vagrant.vm.hostname = "vagrant"
-	vagrant.vm.network "private_network", ip: "192.168.200.17"
+# 	vagrant.vm.network "private_network", ip: "192.168.200.17"
 
-	config.vm.provision "ansible" do |ansible|
-		ansible.playbook = "deploy_tools/iossifovlab-provision.yml"
-		ansible.host_key_checking = false
-#		ansible.verbose = "v"
-	end
+# 	config.vm.provision "ansible" do |ansible|
+# 		ansible.playbook = "deploy_tools/iossifovlab-provision.yml"
+# 		ansible.host_key_checking = false
+# #		ansible.verbose = "v"
+# 	end
   end
 
 
   config.vm.provider "virtualbox" do |v|
-    v.memory = 2048
+    v.memory = 4096
     v.cpus = 2
   end
 
