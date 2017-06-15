@@ -14,6 +14,7 @@ chown ubuntu:ubuntu -R /home/ubuntu/anaconda2
 
 export PATH=/home/ubuntu/anaconda2/bin:$PATH
 
+conda config --add channels bioconda
 conda env update -f /vagrant/root-anaconda-environment.yml
 
 pip install mysqlclient==1.3.7
