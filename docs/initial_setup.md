@@ -73,3 +73,9 @@ can use:
 ```
 conda search -c bioconda pysam
 ```
+
+If you want to add `bioconda` channel to default channels for your *Anaconda* 
+setup you can use:
+```
+conda config --add channels bioconda
+```
