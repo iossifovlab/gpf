@@ -50,14 +50,25 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     for (let edge of Array.from(sandwichInstance.required)) {
       edgesData.push({
         from: idOfInidividualSet(edge[0]) + edge[0].constructor.name,
-        to: idOfInidividualSet(edge[1]) + edge[1].constructor.name
+        to: idOfInidividualSet(edge[1]) + edge[1].constructor.name,
+        scaling: {
+          min: 10,
+          max: 30
+        },
+        color: {
+          color: "#e23f4d"
+        }
       });
     }
     for (let edge of Array.from(sandwichInstance.forbidden)) {
       edgesData.push({
         from: idOfInidividualSet(edge[0]) + edge[0].constructor.name,
         to: idOfInidividualSet(edge[1]) + edge[1].constructor.name,
-        dashes: true
+        dashes: true,
+        physics: false,
+        color: {
+          opacity: 0.4
+        }
       });
     }
     let edges = new vis.DataSet(edgesData);
@@ -110,14 +121,10 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     }
 
     let individualVertices: Vertex[] = [];
-    console.log(idToNodeMap.delete('0'));
-    console.log(Array.from(idToNodeMap.keys()));
+    idToNodeMap.delete('0');
     idToNodeMap.forEach(individual => {
-      console.log(individual);
       individualVertices.push(individual);
     });
-
-    console.log(individualVertices);
 
 
     let matingVertices: Vertex[] = [];
@@ -139,10 +146,10 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
 
     // Ea-
     let sameRankEdges: Edge[] = [];
-    for (let i = 0; i < allVertices.length - 1; i++) {
-      for (let j = i + 1; j < allVertices.length; j++) {
-        if (equal(allVertices[i].generationRanks(), allVertices[j].generationRanks())) {
-          sameRankEdges.push([allVertices[i], allVertices[j]]);
+    for (let i = 0; i < individualVertices.length - 1; i++) {
+      for (let j = i + 1; j < individualVertices.length; j++) {
+        if (equal(individualVertices[i].generationRanks(), individualVertices[j].generationRanks())) {
+          sameRankEdges.push([individualVertices[i], individualVertices[j]]);
         }
       }
     }
