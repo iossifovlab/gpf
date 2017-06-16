@@ -13,11 +13,22 @@ export class Interval {
   ) {}
 }
 
+export class IntervalForVertex<T> extends Interval {
+
+  constructor(
+    public vertex: Vertex<T>,
+    left = 1,
+    right = 1
+  ) {
+    super(left, right);
+  }
+}
+
 export class Realization<T> {
   constructor(
     public graph: Graph<T>,
     public forbiddenGraph: Graph<T>,
-    public intervals: Array<Interval> = new Array<Interval>(),
+    public intervals: Array<IntervalForVertex<T>> = new Array<IntervalForVertex<T>>(),
     public domain: Array<Vertex<T>> = new Array<Vertex<T>>(),
   ) {}
 
@@ -29,7 +40,7 @@ export class Realization<T> {
     return new Realization(
       this.graph,
       this.forbiddenGraph,
-      this.intervals.map(i => new Interval(i.left, i.right)),
+      this.intervals.map(i => new IntervalForVertex(i.vertex, i.left, i.right)),
       this.domain.slice(0)
     );
   }
@@ -49,7 +60,7 @@ export class Realization<T> {
       activeInterval.right = p + 1;
     }
 
-    let newInterval = new Interval(p, p + 1);
+    let newInterval = new IntervalForVertex(vertex, p, p + 1);
     this.domain.push(vertex);
     this.intervals.push(newInterval);
 
@@ -62,7 +73,7 @@ export class Realization<T> {
     let tempRealization = new Realization(
       this.graph,
       this.forbiddenGraph,
-      this.intervals.concat([new Interval()]), // dummy interval
+      this.intervals.concat([new IntervalForVertex(newVertex)]), // dummy interval
       this.domain.concat([newVertex]));
 
     // console.log("Checking expected dangling");
@@ -274,11 +285,14 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
 
   for (let vertex of sandwichInstance.vertices) {
     realizationsQueue.push(
-      new Realization(requiredGraph, forbiddenGraph, [new Interval()], [vertex])
+      new Realization(requiredGraph, forbiddenGraph,
+                      [new IntervalForVertex(vertex)], [vertex])
     );
   }
 
   let maxRealizations = [realizationsQueue[0]];
+
+  let currentIteration = 0;
 
   while (realizationsQueue.length !== 0) {
     let currentRealization = realizationsQueue.shift();
@@ -287,6 +301,11 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
 
     let leftVertices = sandwichInstance.vertices
       .filter(vertex => currentRealization.domain.indexOf(vertex) === -1);
+
+    if ((currentIteration++) % 100 === 0) {
+      console.log("Current iteration", currentIteration);
+    }
+
 
     for (let vertex of leftVertices) {
       let currentRealizationCopy = currentRealization.clone();
@@ -304,6 +323,7 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
       }
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
         console.log("result:", currentRealizationCopy.intervals);
+        console.log("Current iteration", currentIteration);
         return currentRealizationCopy.intervals;
       } else {
         // console.log("Checking realization", currentRealizationCopy);
