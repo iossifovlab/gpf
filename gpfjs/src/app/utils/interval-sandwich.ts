@@ -1,8 +1,10 @@
-import { UndirectedGraph, Graph, getOtherVertex,
-  equalEdges, Edge, Vertex } from '../utils/undirected-graph';
+import {
+  UndirectedGraph, Graph, getOtherVertex, equalEdges, Edge, Vertex
+} from '../utils/undirected-graph';
 
-import { hasIntersection, intersection, equal,
-  isSubset } from '../utils/sets-helper';
+import {
+  hasIntersection, intersection, equal, isSubset
+} from '../utils/sets-helper';
 
 export class Interval {
   constructor(
@@ -264,6 +266,7 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
   }
 
   console.log("Vertices:", sandwichInstance.vertices.length);
+  console.log("Required:", sandwichInstance.required);
   console.log("Forbidden:", sandwichInstance.forbidden);
   console.log("All count:", sandwichInstance.vertices.length * sandwichInstance.vertices.length / 2)
 
@@ -300,6 +303,7 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
         maxRealizations.push(currentRealizationCopy);
       }
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
+        console.log("result:", currentRealizationCopy.intervals);
         return currentRealizationCopy.intervals;
       } else {
         // console.log("Checking realization", currentRealizationCopy);
@@ -307,8 +311,8 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
       }
     }
   }
+  // console.log(maxRealizations);
 
-  console.log(maxRealizations);
-
+  console.log("result:", null);
   return null;
 }

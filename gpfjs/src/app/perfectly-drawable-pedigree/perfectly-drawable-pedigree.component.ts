@@ -6,10 +6,12 @@ import { Individual, MatingUnit, IndividualSet, ParentalUnit } from '../pedigree
 import { hasIntersection, intersection, equal, isSubset } from '../utils/sets-helper';
 import { Edge as GraphEdge, Vertex as GraphVertex } from '../utils/undirected-graph';
 
-import { SandwichInstance, solveSandwich } from '../utils/interval-sandwich';
+import { SandwichInstance, solveSandwich, Interval } from '../utils/interval-sandwich';
 
 type Vertex = GraphVertex<IndividualSet>;
 type Edge = GraphEdge<Vertex>;
+
+declare var vis: any;
 
 @Component({
   selector: 'gpf-perfectly-drawable-pedigree',
@@ -27,13 +29,52 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
 
   ngOnInit() {
     this.family = this.pedigreeMockService.getMockFamily();
+
+    let [sandwichInstance, isPDP] = this.isPDP();
+
+    let container = document.getElementById('visualization');
+
+    let idOfInidividualSet = (vertex: Vertex) =>
+      Array.from(vertex.individualSet()).map(i => i.pedigreeData.id).join(',');
+
+    let itemsData = [];
+    for (let vertex of sandwichInstance.vertices) {
+      itemsData.push({
+        id: idOfInidividualSet(vertex) + vertex.constructor.name,
+        label: vertex.constructor.name + " (" + idOfInidividualSet(vertex) + ")/" + Array.from(vertex.generationRanks()).join(",")
+      });
+    }
+    let items = new vis.DataSet(itemsData);
+
+    let edgesData = [];
+    for (let edge of Array.from(sandwichInstance.required)) {
+      edgesData.push({
+        from: idOfInidividualSet(edge[0]) + edge[0].constructor.name,
+        to: idOfInidividualSet(edge[1]) + edge[1].constructor.name
+      });
+    }
+    for (let edge of Array.from(sandwichInstance.forbidden)) {
+      edgesData.push({
+        from: idOfInidividualSet(edge[0]) + edge[0].constructor.name,
+        to: idOfInidividualSet(edge[1]) + edge[1].constructor.name,
+        dashes: true
+      });
+    }
+    let edges = new vis.DataSet(edgesData);
+
+    let data = {
+      nodes: items,
+      edges: edges
+    };
+
+    // Configuration for the Timeline
+    let options = {};
+
+    // Create a Timeline
+    let timeline = new vis.Network(container, data, options);
   }
 
-  isPDP() {
-    if (!this.family) {
-      return false;
-    }
-
+  isPDP(): [SandwichInstance<Vertex>, Interval[]] {
 
     let idToNodeMap = new Map<string, Individual>();
     let idsToMatingUnit = new Map<string, MatingUnit>();
@@ -106,6 +147,7 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
       }
     }
 
+
     // Eb+ and Eb-
     let matingEdges: Edge[] = [];
     let sameGenerationNotMateEdges: Edge[] = [];
@@ -132,6 +174,8 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
       }
     }
 
+
+
     // Ed+
     let matingUnitSibshipUnitEdges: Edge[] = [];
     for (let sibshipUnit of sibshipVertices) {
@@ -155,6 +199,11 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
       }
     }
 
+    console.log("sameRankEdges", sameRankEdges);
+    console.log("sameGenerationNotMateEdges", sameGenerationNotMateEdges);
+    console.log("sameGenerationNotSiblingEdges", sameGenerationNotSiblingEdges);
+    console.log("intergenerationalEdges", intergenerationalEdges);
+
     let requiredEdges = new Set(matingEdges.concat(sibshipEdges).concat(matingUnitSibshipUnitEdges));
     let forbiddenEdges = new Set(sameRankEdges.concat(sameGenerationNotMateEdges)
       .concat(sameGenerationNotSiblingEdges).concat(intergenerationalEdges));
@@ -162,7 +211,7 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     let sandwichInstance =
       new SandwichInstance(allVertices, requiredEdges, forbiddenEdges);
 
-    console.log(solveSandwich(sandwichInstance));
+    return [sandwichInstance, solveSandwich(sandwichInstance)];
   }
 
 
