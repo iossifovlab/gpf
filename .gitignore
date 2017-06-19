@@ -8,3 +8,4 @@ wdae.sql
 .pydevproject
 .settings
 .vagrant
+.ipynb_checkpoints
