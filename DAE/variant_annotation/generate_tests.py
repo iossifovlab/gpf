@@ -74,6 +74,10 @@ def read_queue(q):
 
 if __name__ == "__main__":
     path = sys.argv[1]
+    limit = 0
+    if len(sys.argv) > 2:
+        limit = int(sys.argv[2])
+
     all_tests_missing_lines = get_all_tests_missing_lines()
     output_queue = mp.Queue()
     input_queue = mp.Queue()
@@ -87,12 +91,15 @@ if __name__ == "__main__":
     try:
         with gzip.open(path) as f:
             reader = csv.DictReader(f, delimiter='\t')
-            for line in reader:
+            for i, line in enumerate(reader):
+                if limit > 0 and i >= limit:
+                    break
                 message = {
                     "loc": line["chr"] + ":" + line["position"],
                     "var": line["variant"]
                 }
                 input_queue.put(message)
+
     finally:
         for i in range(0, mp.cpu_count()):
             input_queue.put(QUEUE_END_MESSAGE)
