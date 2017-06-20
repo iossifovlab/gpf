@@ -1881,7 +1881,6 @@ def dealWithFirstCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
 
 
 def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
-    print("GREAT SUCCESS123")
     if tm.strand == "-":
         if getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]) != "CAT":
 
