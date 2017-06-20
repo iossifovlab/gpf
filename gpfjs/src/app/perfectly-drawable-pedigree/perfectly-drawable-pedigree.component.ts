@@ -34,14 +34,12 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
 
     let container = document.getElementById('visualization');
 
-    let idOfInidividualSet = (vertex: Vertex) =>
-      Array.from(vertex.individualSet()).map(i => i.pedigreeData.id).join(',');
 
     let itemsData = [];
     for (let vertex of sandwichInstance.vertices) {
       itemsData.push({
-        id: idOfInidividualSet(vertex) + vertex.constructor.name,
-        label: vertex.constructor.name + " (" + idOfInidividualSet(vertex) + ")/" + Array.from(vertex.generationRanks()).join(",")
+        id: vertex.toString() + vertex.constructor.name,
+        label: vertex.constructor.name + " (" + vertex.toString() + ")/" + Array.from(vertex.generationRanks()).join(",")
       });
     }
     let items = new vis.DataSet(itemsData);
@@ -49,8 +47,8 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     let edgesData = [];
     for (let edge of Array.from(sandwichInstance.required)) {
       edgesData.push({
-        from: idOfInidividualSet(edge[0]) + edge[0].constructor.name,
-        to: idOfInidividualSet(edge[1]) + edge[1].constructor.name,
+        from: edge[0].toString() + edge[0].constructor.name,
+        to: edge[1].toString() + edge[1].constructor.name,
         scaling: {
           min: 10,
           max: 30
@@ -62,8 +60,8 @@ export class PerfectlyDrawablePedigreeComponent implements OnInit {
     }
     for (let edge of Array.from(sandwichInstance.forbidden)) {
       edgesData.push({
-        from: idOfInidividualSet(edge[0]) + edge[0].constructor.name,
-        to: idOfInidividualSet(edge[1]) + edge[1].constructor.name,
+        from: edge[0].toString() + edge[0].constructor.name,
+        to: edge[1].toString() + edge[1].constructor.name,
         dashes: true,
         physics: false,
         color: {

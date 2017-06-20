@@ -38,11 +38,10 @@ export class UndirectedGraph<T> implements Graph<T> {
     this.checkCorrectEdges(vertex, edges);
 
     this.vertices.push(vertex);
-    this.edges.push(edges);
-
+    this.edges.push([]);
     for (let edge of edges) {
-      let otherVertex = getOtherVertex(vertex, edge);
-      this.getEdgesForVertex(otherVertex).push(edge);
+      this.addEdge(edge[0], edge[1]);
+      this.addEdge(edge[1], edge[0]);
     }
   }
 
@@ -50,10 +49,11 @@ export class UndirectedGraph<T> implements Graph<T> {
     this.checkVertex(vertex1);
     this.checkVertex(vertex2);
 
-    let edge: Edge<T> = [vertex1, vertex2];
+    let edge1: Edge<T> = [vertex1, vertex2];
+    let edge2: Edge<T> = [vertex2, vertex1];
 
-    this.getEdgesForVertex(vertex1).push(edge);
-    this.getEdgesForVertex(vertex2).push(edge);
+    this.getEdgesForVertex(vertex1).push(edge1);
+    this.getEdgesForVertex(vertex2).push(edge2);
 
   }
 
@@ -77,7 +77,7 @@ export class UndirectedGraph<T> implements Graph<T> {
     }
 
     for (let edge of this.getEdgesForVertex(vertex1)) {
-      if (edge[0] === vertex2 || edge[1] === vertex2) {
+      if (edge[1] === vertex2) {
         return true;
       }
     }
@@ -99,8 +99,7 @@ export class UndirectedGraph<T> implements Graph<T> {
 
       while (!res.done) {
         let [, edge] = res.value;
-        if (alreadyAddedVertices.indexOf(edge[0]) === -1 &&
-            alreadyAddedVertices.indexOf(edge[1]) === -1) {
+        if (alreadyAddedVertices.indexOf(edge[1]) === -1) {
           allEdges.push(edge);
         }
 

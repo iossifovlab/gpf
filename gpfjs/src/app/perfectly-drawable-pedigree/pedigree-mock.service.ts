@@ -37,6 +37,6 @@ export class PedigreeMockService {
   ].map(person => PedigreeData.fromArray(person));
 
   getMockFamily(): PedigreeData[] {
-    return this.simplestFamily;
+    return this.complexFamily;
   }
 }

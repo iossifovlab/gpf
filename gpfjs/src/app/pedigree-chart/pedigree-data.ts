@@ -14,6 +14,15 @@ export abstract class IndividualSet {
     }
 
     abstract childrenSet(): Set<Individual>;
+
+    toString(): string {
+      let ids = this.individualSet();
+      let sortedIds = Array.from(ids)
+        .map(individual => individual.pedigreeData.id)
+        .sort((a, b) => a.localeCompare(b));
+
+      return sortedIds.join(',');
+    }
 }
 
 export class ParentalUnit {

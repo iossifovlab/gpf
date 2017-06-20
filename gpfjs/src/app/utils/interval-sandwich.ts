@@ -33,7 +33,8 @@ export class Realization<T> {
   ) {}
 
   toString() {
-    return this.domain.toString();
+    let orderedDomain = this.domain.map(v => v.toString()).sort((a, b) => a.localeCompare(b));
+    return orderedDomain.join(';');
   }
 
   clone() {
@@ -55,7 +56,7 @@ export class Realization<T> {
 
     let p = 0.5 + maxRight;
 
-    for (let activeVertex of Array.from(this.getActiveVertices())) {
+    for (let activeVertex of this.getActiveVertices()) {
       let activeInterval = this.getInterval(activeVertex);
       activeInterval.right = p + 1;
     }
@@ -77,13 +78,13 @@ export class Realization<T> {
       this.domain.concat([newVertex]));
 
     // console.log("Checking expected dangling");
-    for (let activeVertex of Array.from(this.getActiveVertices())) {
+    for (let activeVertex of this.getActiveVertices()) {
       let thisDangling = this.dangling(activeVertex);
       let otherDangling = tempRealization.dangling(activeVertex);
       let newEdge: Edge<T> = [activeVertex, newVertex];
 
-      for (let thisEdge of Array.from(thisDangling)) {
-        let expectedNewDangling = Array.from(otherDangling).concat([newEdge]);
+      for (let thisEdge of thisDangling) {
+        let expectedNewDangling = otherDangling.concat([newEdge]);
         if (!expectedNewDangling.some(edge => equalEdges(edge, thisEdge))) {
           return false;
         }
@@ -93,7 +94,7 @@ export class Realization<T> {
     // console.log("Checking new vertex dangling");
     let newDangling = tempRealization.dangling(newVertex);
     let newVertexEdges = this.graph.getEdgesForVertex(newVertex);
-    for (let danglingEdge of Array.from(newDangling)) {
+    for (let danglingEdge of newDangling) {
       if (!newVertexEdges.some(
           edge => equalEdges(edge, danglingEdge) ||
                   (this.domain.indexOf(getOtherVertex(newVertex, edge)) === -1))
@@ -104,11 +105,11 @@ export class Realization<T> {
 
     // console.log("Checking active");
     let newActiveVertices = tempRealization.getActiveVertices();
-    let thisActiveVertices = Array.from(this.getActiveVertices());
+    let thisActiveVertices = this.getActiveVertices();
     let activeVerticesNonEmptyDanglingAndNew =
-      thisActiveVertices.filter(v => tempRealization.dangling(v).size !== 0)
+      thisActiveVertices.filter(v => tempRealization.dangling(v).length !== 0)
       .concat([newVertex]);
-    for (let newActiveVertex of Array.from(newActiveVertices)) {
+    for (let newActiveVertex of newActiveVertices) {
       if (activeVerticesNonEmptyDanglingAndNew.indexOf(newActiveVertex) === -1) {
         return false;
       }
@@ -130,12 +131,14 @@ export class Realization<T> {
     if (!equal(new Set(this.domain), new Set(other.domain))) {
       return false;
     }
-    if (!equal(this.getActiveVertices(), other.getActiveVertices())) {
+    if (!equal(new Set(this.getActiveVertices()),
+               new Set(other.getActiveVertices()))) {
       return false;
     }
 
     for (let activeVertex of Array.from(this.getActiveVertices())) {
-      if (!equal(this.dangling(activeVertex), other.dangling(activeVertex))) {
+      if (!equal(new Set(this.dangling(activeVertex)),
+                 new Set(other.dangling(activeVertex)))) {
         return false;
       }
     }
@@ -143,9 +146,16 @@ export class Realization<T> {
     return true;
   }
 
+  getActiveVertexEdges(vertex: Vertex<T>) {
+    return this.graph.getEdgesForVertex(vertex).filter(edge => {
+      let otherVertex = edge[1];
+      return this.domain.indexOf(otherVertex) === -1;
+    });
+  }
+
   getActiveVertexEdge(vertex: Vertex<T>) {
     return this.graph.getEdgesForVertex(vertex).find(edge => {
-      let otherVertex = getOtherVertex(vertex, edge);
+      let otherVertex = edge[1];
       return otherVertex && this.domain.indexOf(otherVertex) === -1;
     });
   }
@@ -155,11 +165,11 @@ export class Realization<T> {
   }
 
   getActiveVertices() {
-    let result = new Set<Vertex<T>>();
+    let result = new Array<Vertex<T>>();
     for (let vertex of this.domain) {
 
-      if (this.isActiveVertex(vertex)) {
-        result.add(vertex);
+      if (this.isActiveVertex(vertex) && result.indexOf(vertex) === -1) {
+        result.push(vertex);
       }
     }
 
@@ -167,16 +177,17 @@ export class Realization<T> {
   }
 
   dangling(vertex: Vertex<T>) {
-    if (!this.isActiveVertex(vertex)) {
-      return new Set<Edge<T>>();
-    }
-
-    let edgesArray = this.graph.getEdgesForVertex(vertex).filter(edge => {
-      let otherVertex = getOtherVertex(vertex, edge);
-      return this.domain.indexOf(otherVertex) === -1;
-    });
-
-    return new Set<Edge<T>>(edgesArray);
+    return this.getActiveVertexEdges(vertex);
+    // if (!this.isActiveVertex(vertex)) {
+    //   return [];
+    // }
+    //
+    // let edgesArray = this.graph.getEdgesForVertex(vertex).filter(edge => {
+    //   let otherVertex = edge[1];
+    //   return this.domain.indexOf(otherVertex) === -1;
+    // });
+    //
+    // return edgesArray;
   }
 
   maximalSet() {
@@ -206,7 +217,7 @@ export class Realization<T> {
     }
 
     let activeVertices = this.getActiveVertices();
-    for (let vertex of Array.from(activeVertices)) {
+    for (let vertex of activeVertices) {
       if (!this.isMaximal(vertex)) {
         return false;
       }
@@ -276,6 +287,8 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
     forbiddenGraph.addEdge(edge[0], edge[1]);
   }
 
+  let start = Date.now();
+
   console.log("Vertices:", sandwichInstance.vertices.length);
   console.log("Required:", sandwichInstance.required);
   console.log("Forbidden:", sandwichInstance.forbidden);
@@ -290,20 +303,24 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
     );
   }
 
+  let visitedRealizationMap = {};
+
   let maxRealizations = [realizationsQueue[0]];
 
   let currentIteration = 0;
 
   while (realizationsQueue.length !== 0) {
-    let currentRealization = realizationsQueue.shift();
-    realizationsQueue = realizationsQueue.filter(realization => !realization.isEquivalent(currentRealization));
+    let currentRealization = realizationsQueue.pop();
+    // realizationsQueue = realizationsQueue.filter(realization => !realization.isEquivalent(currentRealization));
 
 
     let leftVertices = sandwichInstance.vertices
       .filter(vertex => currentRealization.domain.indexOf(vertex) === -1);
 
     if ((currentIteration++) % 100 === 0) {
-      console.log("Current iteration", currentIteration);
+      console.log("Current iteration", currentIteration, "Queue length", realizationsQueue.length);
+      // console.log("looked through realizations", visitedRealizationMap);
+      // console.log("Current realization:", currentRealization.toString());
     }
 
 
@@ -316,18 +333,24 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
         continue;
       }
 
-      if (currentRealizationCopy.domain.length > maxRealizations[0].domain.length) {
-        maxRealizations = [currentRealizationCopy];
-      } else if (currentRealizationCopy.domain.length === maxRealizations[0].domain.length) {
-        maxRealizations.push(currentRealizationCopy);
-      }
+      // if (currentRealizationCopy.domain.length > maxRealizations[0].domain.length) {
+      //   maxRealizations = [currentRealizationCopy];
+      // } else if (currentRealizationCopy.domain.length === maxRealizations[0].domain.length) {
+      //   maxRealizations.push(currentRealizationCopy);
+      // }
+
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
         console.log("result:", currentRealizationCopy.intervals);
-        console.log("Current iteration", currentIteration);
+        console.log("finished on iteration iteration", currentIteration);
+        console.log("Took", Date.now() - start, "ms");
         return currentRealizationCopy.intervals;
       } else {
         // console.log("Checking realization", currentRealizationCopy);
-        realizationsQueue.push(currentRealizationCopy);
+        let realizationString = currentRealizationCopy.toString();
+        if (!visitedRealizationMap[realizationString]) {
+          realizationsQueue.push(currentRealizationCopy);
+          visitedRealizationMap[realizationString] = true;
+        }
       }
     }
   }
