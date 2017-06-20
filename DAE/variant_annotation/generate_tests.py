@@ -41,6 +41,8 @@ def search_for_effects(input_queue, output_queue,
                 'loc': loc
             }
             output_queue.put(effect)
+        if message["num"] % 10000 == 0:
+            print("Line {} ok".format(message["num"]))
 
 
 def get_all_tests_missing_lines():
@@ -95,6 +97,7 @@ if __name__ == "__main__":
                 if limit > 0 and i >= limit:
                     break
                 message = {
+                    "num": i,
                     "loc": line["chr"] + ":" + line["position"],
                     "var": line["variant"]
                 }
