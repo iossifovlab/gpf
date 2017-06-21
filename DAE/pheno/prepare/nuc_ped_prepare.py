@@ -399,8 +399,7 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
 
             measures = list(df.columns[1:len(instrument_df.columns)])
             for measure_name in measures:
-                measure_index = measures.index(measure_name)
-                if skip_columns and measure_index in skip_columns:
+                if skip_columns and measure_name in skip_columns:
                     continue
                 progress(verbose)
                 mdf = df[['person_id', measure_name,

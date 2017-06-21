@@ -130,9 +130,9 @@ USAGE
         output = args.output
         skip_columns = args.skip_columns
         if skip_columns:
-            skip_columns = [
-                int(col) for col in skip_columns.split(',')
-            ]
+            skip_columns = set([
+                col for col in skip_columns.split(',')
+            ])
 
         if not families_filename:
             raise CLIError(
