@@ -4,7 +4,7 @@ import sys, commands, optparse
 
 def main():
    #copy of options for vcf2DAEc.py
-   usage = "usage: %prog [options] <families pedigree file> <list of de novos file>"
+   usage = "usage: %prog [options] <families pedigree file> <list of vcf files>"
    parser = optparse.OptionParser(usage=usage)
    #parser.add_option("-p", "--pedFile", dest="pedFile", default="data/svip.ped",
    #     metavar="pedFile", help="pedigree file and family-name should be mother and father combination, not PED format")
