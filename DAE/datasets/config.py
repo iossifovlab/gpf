@@ -297,7 +297,7 @@ class DatasetsConfig(object):
 
         name = self.config.get(section, 'name')
 
-        studies = self.config.get(section, 'studies')
+        studies = self._get_string(section, 'studies')
 
         study_types = self._get_string(section, 'studyTypes')
         if study_types:

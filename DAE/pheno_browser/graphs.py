@@ -3,10 +3,14 @@ Created on Apr 10, 2017
 
 @author: lubo
 '''
+import matplotlib as mpl
+mpl.use('PS')
+
+import matplotlib.pyplot as plt
+plt.ioff()
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
 

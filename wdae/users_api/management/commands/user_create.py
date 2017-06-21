@@ -57,4 +57,5 @@ class Command(BaseCommand, ImportUsersBase):
                          stdout=self.stdout)
         else:
             user.set_password(options['password'])
+            user.is_active = True
             user.save()

@@ -358,7 +358,7 @@ class Variant:
 
         for c, p in enumerate(members[2:], 2):
             res.append(
-                [[self.familyId, p.personId, mom.personId, dad.personId,
+                [[self.familyId, p.personId, dad.personId, mom.personId,
                   p.gender, get_color(p)],
                  variant_count_v3(bs, c, self.location,
                                   dad.gender, denovo_parent)]

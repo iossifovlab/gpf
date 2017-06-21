@@ -228,8 +228,9 @@ class PhenoDB(PhenoConfig):
             with MetaVariableManager(
                     dbfile=self.get_dbfile()) as vm:
                 meta_df = vm.load_df(where=self._where_variables(variable_ids))
+
         except Exception:
-            print("can't load variables meta data...")
+            # print("can't load variables meta data...")
 
             size = len(df.index)
             meta_df = pd.DataFrame(
@@ -240,6 +241,7 @@ class PhenoDB(PhenoConfig):
                     'has_parents': np.zeros(size),
                     'default_filter': [None] * size,
                 })
+
         df = df.join(
             meta_df.set_index('variable_id'), on='variable_id',
             rsuffix='_val_meta')

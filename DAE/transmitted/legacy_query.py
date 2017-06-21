@@ -176,6 +176,9 @@ class TransmissionLegacy(TransmissionConfig):
                                  regionS=None,
                                  TMM_ALL=False,
                                  limit=None):
+        if limit is None:
+            limit = 0
+
         query = {
             'study': self.study.name,
             'inChild': inChild,
@@ -267,8 +270,12 @@ class TransmissionLegacy(TransmissionConfig):
                 if pipFilter:
                     if not pipFilter(v.fromParentS):
                         continue
-
                 yield v
+
+                limit -= 1
+                if limit == 0:
+                    raise StopIteration
+
         tbf.close()
 
     def get_families_with_transmitted_variants(self, **kwargs):

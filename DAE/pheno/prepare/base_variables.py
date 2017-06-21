@@ -3,8 +3,9 @@ Created on Dec 13, 2016
 
 @author: lubo
 '''
-import math
+from __future__ import print_function
 
+import math
 import numpy as np
 from pheno.models import ContinuousValueManager, CategoricalValueManager,\
     OrdinalValueManager, VariableManager, PersonManager, VariableModel,\
@@ -211,6 +212,7 @@ class BaseVariables(object):
         values = df[var.variable_name]
         if len(values) == 0:
             return self.UNKNOWN
+
         unique_values = values.unique()
         rank = len(unique_values)
         individuals = len(df)

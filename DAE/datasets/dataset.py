@@ -44,13 +44,16 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     @property
     def studies(self):
         if self._studies is None:
-            study_names = [
-                st.strip() for st in self.descriptor['studies'].split(',')
-            ]
-            studies = [vDB.get_studies(st) for st in study_names]
-            self._studies = [
-                st for st in itertools.chain.from_iterable(studies)
-            ]
+            if self.descriptor['studies'] is None:
+                self._studies = []
+            else:
+                study_names = [
+                    st.strip() for st in self.descriptor['studies'].split(',')
+                ]
+                studies = [vDB.get_studies(st) for st in study_names]
+                self._studies = [
+                    st for st in itertools.chain.from_iterable(studies)
+                ]
         return self._studies
 
     @property
@@ -223,6 +226,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def load_pheno_columns(self):
         pheno_columns = self.get_pheno_columns()
+        if pheno_columns is None:
+            return
+
         for (role, source, label) in pheno_columns:
             assert self.pheno_db.has_measure(source), \
                 'missing measure {}'.format(source)
@@ -241,6 +247,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if self.pheno_db is None:
             return
         genotype_browser = self.descriptor['genotypeBrowser']
+        if genotype_browser is None:
+            return
+
         if 'phenoFilters' not in genotype_browser:
             return
         pheno_filters = genotype_browser.get('phenoFilters', None)
@@ -258,6 +267,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if self.pheno_db is None:
             return
         genotype_browser = self.descriptor['genotypeBrowser']
+        if genotype_browser is None:
+            return
+
         if 'familyStudyFilters' not in genotype_browser:
             return
         family_study_filters = genotype_browser.get('familyStudyFilters', None)
@@ -471,6 +483,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def get_pheno_columns(self):
         gb = self.descriptor['genotypeBrowser']
+        if gb is None:
+            return None
+
         pheno_columns = gb.get('phenoColumns', [])
         if not pheno_columns:
             return []

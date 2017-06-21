@@ -4,7 +4,12 @@ Created on Apr 10, 2017
 @author: lubo
 '''
 import os
+import matplotlib as mpl
+mpl.use('PS')
+
 import matplotlib.pyplot as plt
+plt.ioff()
+
 from DAE import pheno
 from pheno_browser.graphs import draw_linregres, draw_measure_violinplot,\
     draw_categorical_violin_distribution,\

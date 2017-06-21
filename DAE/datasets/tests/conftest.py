@@ -40,3 +40,8 @@ def ssc_pheno(request):
     pf = DAE.pheno
     db = pf.get_pheno_db('ssc')
     return db
+
+
+@pytest.fixture(scope='session')
+def spark(request,  datasets_factory):
+    return datasets_factory.get_dataset('SPARK')

@@ -3,6 +3,8 @@ Created on Mar 28, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import traceback
 import itertools
 import pandas as pd
@@ -376,7 +378,8 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
                 vdf)
 
     def prepare_instruments(
-            self, pedindividuals, instruments_directory, verbose=0):
+            self, pedindividuals, instruments_directory, verbose=0,
+            skip_columns=None):
         persons = self.load_persons_df()
 
         all_filenames = [
@@ -394,7 +397,10 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
             df = instrument_df.join(
                 persons, on='person_id', how='right', rsuffix="_person")
 
-            for measure_name in df.columns[1:len(instrument_df.columns)]:
+            measures = list(df.columns[1:len(instrument_df.columns)])
+            for measure_name in measures:
+                if skip_columns and measure_name in skip_columns:
+                    continue
                 progress(verbose)
                 mdf = df[['person_id', measure_name,
                           'family_id', 'person_role']]

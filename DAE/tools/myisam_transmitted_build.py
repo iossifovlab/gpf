@@ -1,9 +1,9 @@
 #!/bin/env python
 # encoding: utf-8
 '''
-transmitted_to_myisam -- creates MySQL tables for given transmitted study.
+myisam_transmitted_build.py -- prepares MySQL statements for a study.
 
-transmitted_to_myisam is a tool for building SQL files for representing
+myisam_transmitted_build.py is a tool for building SQL files for representing
 transmitted studies into MySQL MYISAM tables.
 
 @author:     lubo
@@ -637,7 +637,7 @@ USAGE
             action="store_true",
             help="builds summary vartiants table [default: %(default)s]")
         parser.add_argument(
-            "-e", "--gene_effect",
+            "-e", "--geneeffect",
             dest="gene_effect",
             action="store_true",
             help="builds gene effect variants table [default: %(default)s]")
@@ -664,7 +664,7 @@ USAGE
             action='version', version=program_version_message)
 
         parser.add_argument(
-            '-S', '--study_name',
+            '-S', '--studyname',
             dest="study_name",
             help="study name to process "
             "[default: %(default)s]", metavar="study_name")

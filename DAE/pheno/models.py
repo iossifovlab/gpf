@@ -80,11 +80,11 @@ class ManagerBase(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         res = True
-        #         if exc_type is not None:
-        #             print("Exception in ManagerBase: {}: {}\n{}".format(
-        #                 exc_type, exc_value, tb))
-        #             traceback.print_tb(tb)
-        #             res = None
+        if exc_type is not None:
+            # print("Exception in ManagerBase: {}: {}\n{}".format(
+            #     exc_type, exc_value, tb))
+            # traceback.print_tb(tb)
+            res = None
 
         self.db.commit()
         self.db.close()

@@ -6,14 +6,14 @@ Created on Dec 10, 2015
 import unittest
 from preloaded import register
 from DAE import vDB
-from transmitted.mysql_query import MysqlTransmittedQuery
+# from transmitted.mysql_query import MysqlTransmittedQuery
 
 
 def count(vs):
-    l = 0
+    cc = 0
     for _ in vs:
-        l += 1
-    return l
+        cc += 1
+    return cc
 
 
 class Test(unittest.TestCase):
@@ -21,8 +21,8 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.weights = register.get('gene_weights')
 
-        transmitted_study = vDB.get_study("w1202s766e611")
-        self.impl = MysqlTransmittedQuery(transmitted_study)
+        self.transmitted_study = vDB.get_study("w1202s766e611")
+        # self.impl = MysqlTransmittedQuery(transmitted_study)
 
     def tearDown(self):
         pass
@@ -35,7 +35,7 @@ class Test(unittest.TestCase):
             'RVIS_rank', wmin=None, wmax=None)
         self.assertEqual(16642, len(genes))
 
-        res = self.impl.get_transmitted_variants(
+        res = self.transmitted_study.get_transmitted_variants(
             ultraRareOnly=True,
             geneSyms=genes,
             limit=1000)

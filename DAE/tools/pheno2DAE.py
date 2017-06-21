@@ -115,6 +115,12 @@ USAGE
             help='minimal number of individuals for a measure to be '
             'considered for classification (default: 20)')
 
+        parser.add_argument(
+            '-S', '--skip-columns',
+            type=str,
+            dest="skip_columns",
+            help="comma separated list of instruments columns to skip")
+
         # Process arguments
         args = parser.parse_args()
 
@@ -122,6 +128,11 @@ USAGE
         instruments_directory = args.instruments
         families_filename = args.families
         output = args.output
+        skip_columns = args.skip_columns
+        if skip_columns:
+            skip_columns = set([
+                col for col in skip_columns.split(',')
+            ])
 
         if not families_filename:
             raise CLIError(
@@ -146,7 +157,8 @@ USAGE
             prep_individuals, families_filename, verbose)
         if instruments_directory:
             prep_variables.prepare_instruments(
-                prep_individuals, instruments_directory, verbose)
+                prep_individuals, instruments_directory, verbose,
+                skip_columns)
 
         prep_meta = NucPedPrepareMetaVariables(config)
         prep_meta.prepare(verbose)
