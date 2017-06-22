@@ -31,9 +31,9 @@ def getGT( sample, data ):
    #GQ  = getGQ( dx )
 
    GT  = numpy.zeros( (len(data.alts)+1,), dtype=numpy.int)
-   cnt = numpy.zeros( (len(data.alts)+1,), dtype=numpy.int)
+   cnt = numpy.zeros( (len(data.alts)+1,), dtype=numpy.int) - 1 # default -1 for No Info
 
-   if dx['GT'][0] is None:
+   if None in dx['GT']: #[0] is None:
 	return False, GT, cnt#, GQ
 
    gt = list(dx['GT'])

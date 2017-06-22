@@ -343,7 +343,8 @@ class Variant:
                     if self.type == "deletion":
                         
                         codingRegions = i.CDS_regions()
-                        if self.pos < i.cds[0] + 3:
+			## yoonha add one more condition with codingRegions where dealWithFirst and Last Codon
+                        if self.pos < i.cds[0] + 3 and self.pos <= codingRegions[0].stop: #yoonha
 
                             h = dealWithFirstCodon_Del(i, self.pos, self.length, codingRegions, refG, code)
                             h.append(i.strand)
@@ -352,14 +353,14 @@ class Variant:
                             
                             continue
 
-                        if self.pos > i.cds[1] - 3 and self.pos <= i.cds[1]:
+                        if self.pos > i.cds[1] - 3 and self.pos <= i.cds[1] and self.pos >= codingRegions[-1].start: #yoonha
                             h = dealWithLastCodon_Del(i, self.pos, self.length, codingRegions, refG, code)
                             h.append(i.strand)
                             h.append(i.trID)
                             worstForEachTranscript.append(h)
                             continue
 
-                        if self.pos <= i.cds[1] - 3 and self.pos_last > i.cds[1] - 3:
+                        if self.pos <= i.cds[1] - 3 and self.pos_last > i.cds[1] - 3 and self.pos_last >= codingRegions[-1].start: #yoonha
                             h = dealWithCodingAndLastCodon_Del(i, self.pos, self.length, codingRegions, refG, code)
                             h.append(i.strand)
                             h.append(i.trID)
@@ -524,8 +525,8 @@ class Variant:
                 
                             return([ef])
 
-
-                        if self.pos >= i.cds[0] and self.pos <= i.cds[0]+2 :
+			codingRegions = i.CDS_regions() #yoonha moved
+                        if self.pos >= i.cds[0] and self.pos <= i.cds[0]+2 and self.pos <= codingRegions[0].stop: #yoonha added the last condition
                             h = dealWithFirstCodon_Snps(i, self.pos, self.seq, refG, code)
                             h.append(i.strand)
                             h.append(i.trID)
@@ -533,7 +534,7 @@ class Variant:
                             continue
 
 
-                        if self.pos > i.cds[1]-3 and self.pos <= i.cds[1]:
+                        if self.pos > i.cds[1]-3 and self.pos <= i.cds[1] and self.pos >= codingRegions[-1].start: #yoonha added the last condition
                             h = dealWithLastCodon_Snps(i, self.pos, self.seq, refG, code)
                             h.append(i.strand)
                             h.append(i.trID)
@@ -541,7 +542,7 @@ class Variant:
                             continue
 
 
-                        codingRegions = i.CDS_regions()
+                        #codingRegions = i.CDS_regions() ## yoonha: move above
                     
 
                         prev = codingRegions[0].stop
@@ -1329,8 +1330,8 @@ def prepareIntronHit(tm, pos, length, cds_reg):
     howManyIntrons = len(cds_reg) - 1
 
     for i in xrange(0, howManyIntrons):
-
-        if (pos < cds_reg[i+1].start and cds_reg[i].stop < pos) or  (pos + length - 1 < cds_reg[i+1].start and cds_reg[i].stop < pos + length - 1):
+	## yoonha: all the inequaliies below do not have "=" in original version (ewa's)
+        if (pos <= cds_reg[i+1].start and cds_reg[i].stop <= pos) or  (pos + length - 1 <= cds_reg[i+1].start and cds_reg[i].stop <= pos + length - 1):
             whichAA += cds_reg[i].stop - cds_reg[i].start + 1
             intronLength = cds_reg[i+1].start - cds_reg[i].stop - 1
             if tm.strand == "+":

@@ -62,9 +62,14 @@ class TransmissionLegacy(TransmissionConfig):
                 if minAltFreqPrcnt != -1 and altPrcnt <= minAltFreqPrcnt:
                     continue
 
-            ultraRare = int(mainAtts['all.nAltAlls']) == 1
-            if ultraRareOnly and not ultraRare:
-                continue
+            try:
+                ultraRare = int(mainAtts['all.nAltAlls']) == 1
+            except ValueError:
+                if ultraRareOnly: raise Exception('ValueError with option "ultraRareOnly"')
+                ultraRare = False
+
+            if ultraRareOnly:
+                if not ultraRare: continue
 
             geneEffect = None
             if effectTypes or geneSymsUpper:

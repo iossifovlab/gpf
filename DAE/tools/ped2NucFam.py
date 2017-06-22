@@ -6,8 +6,8 @@ from collections import namedtuple, defaultdict
 from itertools import izip
 import itertools
 
-pedInfo = namedtuple( 'PED', 'fid,pid,fa,ma,sex,phenotype'.split(',') )
-pidInfo = namedtuple( 'PID', 'fid,fa,ma,sex,phenotype'.split(',') )
+pedInfo = namedtuple( 'PED', 'fid,pid,fa,ma,sex,phenotype,aux'.split(',') )
+pidInfo = namedtuple( 'PID', 'fid,fa,ma,sex,phenotype,aux'.split(',') )
 
 #Family ID
 #Individual ID
@@ -30,13 +30,14 @@ def procPED2Nuc( fname ):
   with open( fname ) as fin:
     line = fin.readline()
     hd = line.strip('\n').split('\t')
+    aux = hd[6:]
 
     for line in fin:
 	terms = line.strip('\n').split('\t')
 	tx = { h:v for h,v in izip(hd,terms) }
 
-	ped = pedInfo( *[tx['familyId'],tx['personId'],tx['dadId'],tx['momId'],tx['gender'],tx['status']] )  #*terms )
-	pid = pidInfo( *[tx['familyId'],tx['dadId'],tx['momId'],tx['gender'],tx['status']] )  #*([terms[0]] + terms[2:]) )
+	ped = pedInfo( *[tx['familyId'],tx['personId'],tx['dadId'],tx['momId'],tx['gender'],tx['status'], terms[6:] ] )  #*terms )
+	pid = pidInfo( *[tx['familyId'],tx['dadId'],tx['momId'],tx['gender'],tx['status'], terms[6:] ] )  #*([terms[0]] + terms[2:]) )
 	#print ped, pid
 	pInfo[ped.pid] = pid
 
@@ -68,7 +69,7 @@ def procPED2Nuc( fname ):
         mInfo[k] = { 'fid': k, 'newFid': newFid, 'ids': v, 'newIds': newIds }
   #for k, v in mInfo.items(): print k, v
   #print fInfo, pInfo, mInfo
-  return mInfo, pInfo
+  return mInfo, pInfo, aux
 
 def pedState( ped ):
    role = ''
@@ -94,7 +95,7 @@ def pedState( ped ):
    return sex, role
 
 # familyId,personId,momId,dadId,gender,status,[sampleId]
-def printNucFamInfo( fInfo, pInfo, out=sys.stdout ):
+def printNucFamInfo( fInfo, pInfo, aux_head=[], out=sys.stdout ):
    flag = False
    for k, v in fInfo.items():
         if len([n for n,o in izip(v['ids'],v['newIds']) if n != o]) > 0:
@@ -102,9 +103,9 @@ def printNucFamInfo( fInfo, pInfo, out=sys.stdout ):
                 break
 
    if flag:
-        print >> out, '\t'.join( 'familyId,personId,dadId,momId,gender,status,sampleId'.split(',') )
+        print >> out, '\t'.join( 'familyId,personId,dadId,momId,gender,status,sampleId'.split(',') + aux_head )
    else:
-        print >> out, '\t'.join( 'familyId,personId,dadId,momId,gender,status'.split(',') )
+        print >> out, '\t'.join( 'familyId,personId,dadId,momId,gender,status'.split(',') + aux_head )
 
    for k, v in sorted(fInfo.items()):
         nf = v['newFid']        #new family id
@@ -118,10 +119,10 @@ def printNucFamInfo( fInfo, pInfo, out=sys.stdout ):
                 if nm[0] != om[0]: s = om[0]
 
                 #print >> out, '\t'.join( [nf, nm[0], xp.fa, xp.ma, sex, xp.phenotype, s] )
-                print >> out, '\t'.join( [nf, nm[0], '0', '0', sex, xp.phenotype, s] )
+                print >> out, '\t'.join( [nf, nm[0], '0', '0', sex, xp.phenotype, s] + xp.aux )
 	else:
                 #print >> out, '\t'.join( [nf, nm[0], xp.fa, xp.ma, sex, xp.phenotype] )
-                print >> out, '\t'.join( [nf, nm[0], '0', '0', sex, xp.phenotype] )
+                print >> out, '\t'.join( [nf, nm[0], '0', '0', sex, xp.phenotype] + xp.aux )
 
 	xp = pInfo[om[1]]
 	sex, role = pedState( xp )
@@ -130,10 +131,10 @@ def printNucFamInfo( fInfo, pInfo, out=sys.stdout ):
                 if nm[1] != om[1]: s = om[1]
 
                 #print >> out, '\t'.join( [nf, nm[1], xp.fa, xp.ma, sex, xp.phenotype, s] )
-                print >> out, '\t'.join( [nf, nm[1], '0', '0', sex, xp.phenotype, s] )
+                print >> out, '\t'.join( [nf, nm[1], '0', '0', sex, xp.phenotype, s] + xp.aux )
 	else:
                 #print >> out, '\t'.join( [nf, nm[1], xp.fa, xp.ma, sex, xp.phenotype] )
-                print >> out, '\t'.join( [nf, nm[1], '0', '0', sex, xp.phenotype] )
+                print >> out, '\t'.join( [nf, nm[1], '0', '0', sex, xp.phenotype] + xp.aux )
 
 	for o, n in izip(om[2:],nm[2:]):
 	   xp = pInfo[o]
@@ -144,10 +145,10 @@ def printNucFamInfo( fInfo, pInfo, out=sys.stdout ):
 
 	   if flag:
 	        #print >> out, '\t'.join( [nf, n, xp.fa, xp.ma, sex, xp.phenotype, s] )
-                print >> out, '\t'.join( [nf, n, nm[1], nm[0], sex, xp.phenotype, s] )
+                print >> out, '\t'.join( [nf, n, nm[1], nm[0], sex, xp.phenotype, s] + xp.aux )
 	   else:
                 #print >> out, '\t'.join( [nf, n, xp.fa, xp.ma, sex, xp.phenotype] )
-                print >> out, '\t'.join( [nf, n, nm[1], nm[0], sex, xp.phenotype] )
+                print >> out, '\t'.join( [nf, n, nm[1], nm[0], sex, xp.phenotype] + xp.aux )
 
 # familyId,personId,momId,dadId,gender,status,[sampleId]
 def checkHeader( hd ):
@@ -157,7 +158,7 @@ def checkHeader( hd ):
                 exit(1)
 
 def famInfo2PID( ped ):
-  return pidInfo(*[ped.fid, ped.fa, ped.ma, ped.sex, ped.phenotype])
+  return pidInfo(*[ped.fid, ped.fa, ped.ma, ped.sex, ped.phenotype, ped.aux])
 
 def famInfo2PED( info ):
   #keep all the info as it is, except pid - sampleId is real id if not empty
@@ -172,7 +173,7 @@ def famInfo2PED( info ):
   elif sx == '2' or sx == 'F':
 	sex = '2'
   #print nPid, pedInfo(*[fid, pid, fa, ma, sex, pheno])
-  return nPid, pedInfo(*[fid, pid, fa, ma, sex, pheno])
+  return nPid, pedInfo(*[fid, pid, fa, ma, sex, pheno, ''])
 
 # accept Ped as it is
 def procFamInfo( fname ):
@@ -325,9 +326,9 @@ if __name__ == "__main__":
 
    ox, args = parser.parse_args()
    #fInfo,pInfo = procPED2Nuc( ox.pedFile )
-   fInfo,pInfo = procPED2Nuc( args[0] ) #ox.pedFile )
+   fInfo,pInfo,hdaux = procPED2Nuc( args[0] ) #ox.pedFile ) #hdaux: auxiliary info
 
    #fout = open( ox.famOut, 'w' )
    fout = open( args[1], 'w' ) #ox.famOut, 'w' )
-   printNucFamInfo( fInfo, pInfo, out=fout )
+   printNucFamInfo( fInfo, pInfo, aux_head=hdaux, out=fout )
    fout.close()
