@@ -30,6 +30,7 @@ export class Realization<T> {
     public forbiddenGraph: Graph<T>,
     public intervals: Array<IntervalForVertex<T>> = new Array<IntervalForVertex<T>>(),
     public domain: Array<Vertex<T>> = new Array<Vertex<T>>(),
+    public maxWidth = 3,
   ) {}
 
   toString() {
@@ -105,6 +106,9 @@ export class Realization<T> {
 
     // console.log("Checking active");
     let newActiveVertices = tempRealization.getActiveVertices();
+    if (newActiveVertices.length >= tempRealization.maxWidth) {
+      return false;
+    }
     let thisActiveVertices = this.getActiveVertices();
     let activeVerticesNonEmptyDanglingAndNew =
       thisActiveVertices.filter(v => tempRealization.dangling(v).length !== 0)
@@ -289,10 +293,10 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
 
   let start = Date.now();
 
-  console.log("Vertices:", sandwichInstance.vertices.length);
-  console.log("Required:", sandwichInstance.required);
-  console.log("Forbidden:", sandwichInstance.forbidden);
-  console.log("All count:", sandwichInstance.vertices.length * sandwichInstance.vertices.length / 2)
+  // console.log("Vertices:", sandwichInstance.vertices.length);
+  // console.log("Required:", sandwichInstance.required);
+  // console.log("Forbidden:", sandwichInstance.forbidden);
+  // console.log("All count:", sandwichInstance.vertices.length * sandwichInstance.vertices.length / 2)
 
   let realizationsQueue = new Array<Realization<T>>();
 
@@ -317,10 +321,22 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
     let leftVertices = sandwichInstance.vertices
       .filter(vertex => currentRealization.domain.indexOf(vertex) === -1);
 
-    if ((currentIteration++) % 100 === 0) {
+    if (leftVertices.length === 0) {
+      // console.log("result:", currentRealization.intervals);
+      console.log("finished on iteration", currentIteration);
+      console.log("Took", Date.now() - start, "ms");
+      return currentRealization.intervals;
+    }
+
+    if ((currentIteration++) % 2000 === 0) {
       console.log("Current iteration", currentIteration, "Queue length", realizationsQueue.length);
       // console.log("looked through realizations", visitedRealizationMap);
       // console.log("Current realization:", currentRealization.toString());
+    }
+
+    if (currentIteration === 10000) {
+      console.log("Premature termination on", currentIteration, "iterations");
+      return null;
     }
 
 
@@ -340,8 +356,8 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
       // }
 
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
-        console.log("result:", currentRealizationCopy.intervals);
-        console.log("finished on iteration iteration", currentIteration);
+        // console.log("result:", currentRealizationCopy.intervals);
+        // console.log("finished on iteration iteration", currentIteration);
         console.log("Took", Date.now() - start, "ms");
         return currentRealizationCopy.intervals;
       } else {

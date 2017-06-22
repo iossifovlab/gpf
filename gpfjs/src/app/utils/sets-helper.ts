@@ -1,3 +1,15 @@
+export function difference<T>(setA: Set<T>, setB: Set<T>) {
+  let result = new Set<T>();
+
+  setA.forEach(element => {
+    if (!setB.has(element)) {
+      result.add(element);
+    }
+  });
+
+  return result;
+}
+
 export function hasIntersection<T>(setA: Set<T>, setB: Set<T>) {
   return intersection(setA, setB).size !== 0;
 }
