@@ -21,7 +21,6 @@ class DatasetView(APIView):
         self.datasets_factory = self.datasets.get_factory()
 
     def augment_accessibility(self, dataset, user):
-        print(dataset['id'])
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])
         dataset['accessRights'] = user.has_perm('datasets_api.view',
                                                 dataset_object)
