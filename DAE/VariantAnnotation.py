@@ -9,7 +9,7 @@ import re
 from GeneModelFiles import *
 import GenomeAccess
 import numpy as np
-
+from variant_annotation.annotator import VariantAnnotator
 
 
 Severity = {'tRNA:ANTICODON':30, 'all':24, 'splice-site':23, 'frame-shift':22, 'nonsense':21, 'no-frame-shift-newStop':20, 'noStart':19, 'noEnd':18, 'missense':17, 'no-frame-shift':16, 'CDS':15, 'synonymous':14, 'coding_unknown':13, 'regulatory':12, "3'UTR":11, "5'UTR": 10, 'intron':9, 'non-coding':8, "5'UTR-intron": 7,"3'UTR-intron":6,  "promoter":5, "non-coding-intron":4, 'unknown':3, 'intergenic':2, 'no-mutation':1}
@@ -589,6 +589,11 @@ class Variant:
 
                             prev = j.stop
 
+                    elif self.type == "complex":
+                        va = VariantAnnotator(refG)
+                        res = va.annotate(what_hit, i, self.chr, self.pos,
+                                          self.length, self.ref, self.seq)
+                        worstForEachTranscript.extend(res)
 
                     elif self.type == "+" or self.type == "-":
 
@@ -926,9 +931,16 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
             v.pos_last = v.pos
 
         elif t == "C":
-            v.type = var[-1] # + or -
-            v.length = v.pos_last - v.pos + 1
-
+            if var.startswith("complex"):
+                v.type = "complex"
+                a = re.match('.*\((.*)->(.*)\)', var)
+                v.ref = a.group(1).upper()
+                v.seq = a.group(2).upper()
+                v.length = len(v.seq)-len(v.ref)+1
+                v.pos_last = v.pos + v.length - 1
+            else:
+                v.type = var[-1] # + or -
+                v.length = v.pos_last - v.pos + 1
         else:
             raise Exception("Unknown variant!: " + var)
 
