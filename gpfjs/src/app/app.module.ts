@@ -111,8 +111,14 @@ import { VariantReportsComponent } from './variant-reports/variant-reports.compo
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
+import { VisPedigreeInputComponent } from './vis-pedigree-input/vis-pedigree-input.component';
+import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 
 const appRoutes: Routes = [
+  {
+    path: 'pedigrees',
+    component: NonPdpPedigreesComponent
+  },
   {
     path: 'datasets',
     component: DatasetsComponent
@@ -236,6 +242,8 @@ const appRoutes: Routes = [
     CommonReportsComponent,
     VariantReportsComponent,
     PerfectlyDrawablePedigreeComponent,
+    VisPedigreeInputComponent,
+    NonPdpPedigreesComponent,
   ],
   imports: [
     BrowserModule,
