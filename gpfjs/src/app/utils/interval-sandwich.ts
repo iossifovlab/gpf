@@ -22,6 +22,14 @@ export class IntervalForVertex<T> extends Interval {
   ) {
     super(left, right);
   }
+
+  copy() {
+    return new IntervalForVertex<T>(
+      this.vertex,
+      this.left,
+      this.right
+    );
+  }
 }
 
 export class Realization<T> {
@@ -42,7 +50,7 @@ export class Realization<T> {
     return new Realization(
       this.graph,
       this.forbiddenGraph,
-      this.intervals.map(i => new IntervalForVertex(i.vertex, i.left, i.right)),
+      this.intervals.map(i => i.copy()),
       this.domain.slice(0)
     );
   }
