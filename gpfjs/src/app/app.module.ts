@@ -113,6 +113,7 @@ import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigre
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
 import { VisPedigreeInputComponent } from './vis-pedigree-input/vis-pedigree-input.component';
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
+import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 
 const appRoutes: Routes = [
   {
@@ -278,7 +279,8 @@ const appRoutes: Routes = [
     PValueIntensityPipe,
     StudiesSummariesService,
     VariantReportsService,
-    PedigreeMockService
+    PedigreeMockService,
+    PerfectlyDrawablePedigreeService
   ],
 
   entryComponents: [

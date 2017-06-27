@@ -5,7 +5,7 @@ import { Edge as GraphEdge, Vertex as GraphVertex } from '../utils/undirected-gr
 import {
   hasIntersection, intersection, equal, isSubset, difference
 } from '../utils/sets-helper';
-import { SandwichInstance, solveSandwich, Interval } from '../utils/interval-sandwich';
+import { SandwichInstance, solveSandwich, IntervalForVertex } from '../utils/interval-sandwich';
 
 
 type Vertex = GraphVertex<IndividualSet>;
@@ -51,6 +51,7 @@ export class PerfectlyDrawablePedigreeService {
 
         let individualVertices: Vertex[] = [];
         idToNodeMap.delete('0');
+        idToNodeMap.delete('');
         idToNodeMap.forEach(individual => {
           individualVertices.push(individual);
         });
@@ -152,7 +153,7 @@ export class PerfectlyDrawablePedigreeService {
         return new SandwichInstance(allVertices, requiredEdges, forbiddenEdges);
   }
 
-  isPDP(family: PedigreeData[]): [SandwichInstance<Vertex>, Interval[]] {
+  isPDP(family: PedigreeData[]): [SandwichInstance<Vertex>, IntervalForVertex<Vertex>[]] {
     let sandwichInstance = this.createSandwichInstance(family);
 
     return [sandwichInstance, solveSandwich(sandwichInstance)];

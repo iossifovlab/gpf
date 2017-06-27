@@ -110,3 +110,31 @@ export class SibshipUnit extends IndividualSet {
     return new Set();
   }
 }
+
+
+export class PedigreeDataWithPosition  {
+  constructor(
+    public pedigreeData: PedigreeData,
+    public xCenter: number,
+    public yCenter: number,
+    public size: number,
+    public scaleFactor: number
+  ) { }
+
+  get xUpperLeftCorner() {
+    return this.xCenter - this.size / 2;
+  }
+
+  get yUpperLeftCorner() {
+    return this.yCenter - this.size / 2;
+  }
+}
+
+export class Line {
+  constructor(
+    public startX: number,
+    public startY: number,
+    public endX: number,
+    public endY: number
+  ) { }
+}
