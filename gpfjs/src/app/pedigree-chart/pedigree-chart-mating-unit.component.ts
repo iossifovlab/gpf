@@ -23,15 +23,18 @@ export class PedigreeChartMatingUnitComponent implements OnInit {
   }
 
   generateMembersLayout(matingUnit: MatingUnitWithIntervals) {
+    console.log(matingUnit);
     let pedigreeDataWithLayout = new Array<PedigreeDataWithPosition>();
 
     let intervals = new Array<IntervalForVertex<Individual>>();
 
     intervals.push(matingUnit.mother);
-    intervals.push(matingUnit.mother);
+    intervals.push(matingUnit.father);
     matingUnit.children.forEach(child => {
       intervals.push(child);
     });
+
+    console.log(intervals);
 
     this.fixRank(this.translateIntervalsToZero(intervals))
       .forEach(interval => {
@@ -44,19 +47,27 @@ export class PedigreeChartMatingUnitComponent implements OnInit {
 
   getPedigreeWithPosition(interval: IntervalForVertex<Individual>) {
     return new PedigreeDataWithPosition(
-      interval.vertex.pedigreeData, interval.left * 15, interval.vertex.rank * 40,
+      interval.vertex.pedigreeData, interval.right * 20 + 15, interval.vertex.rank * 40 + 15,
       this.SIZE, this.SCALE
     );
   }
 
-  generateLines(matingUnit) {
-    return [];
+  generateLines(matingUnit: MatingUnitWithIntervals) {
+    let lines = new Array<Line>();
+    let motherPosition = this.getPedigreeWithPosition(matingUnit.mother);
+    let fatherPosition = this.getPedigreeWithPosition(matingUnit.father);
+
+    lines.push(new Line(
+      motherPosition.xCenter, motherPosition.yCenter,
+      fatherPosition.xCenter, fatherPosition.yCenter
+    ));
+
+    return lines;
   }
 
   translateIntervalsToZero(intervals: Array<IntervalForVertex<Individual>>) {
     let min = intervals.map(interval => interval.left)
       .reduce((acc, current) => {
-        console.log("current:", current);
         return Math.min(acc, current)
       });
 

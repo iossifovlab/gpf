@@ -74,6 +74,7 @@ export class PedigreeChartComponent implements OnInit {
         matingUnit.children.individuals
           .map(i => individualIntervalMap.get(i.toString())),
       );
+      console.log(matingUnitIntervals);
 
       result.push(matingUnitIntervals);
     }
