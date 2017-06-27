@@ -1,4 +1,5 @@
 import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { IntervalForVertex } from '../utils/interval-sandwich';
 
 export abstract class IndividualSet {
 
@@ -97,6 +98,14 @@ export class MatingUnit extends IndividualSet {
   childrenSet() {
     return new Set(this.children.individuals);
   }
+}
+
+export class MatingUnitWithIntervals {
+  constructor(
+    public mother: IntervalForVertex<Individual>,
+    public father: IntervalForVertex<Individual>,
+    public children: Array<IntervalForVertex<Individual>>,
+  ) {}
 }
 
 export class SibshipUnit extends IndividualSet {

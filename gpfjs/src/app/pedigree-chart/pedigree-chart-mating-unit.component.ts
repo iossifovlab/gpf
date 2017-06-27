@@ -19,7 +19,10 @@ export class PedigreeChartMatingUnitComponent implements OnInit {
     this.lines = this.generateLines(this.matingUnit);
   }
 
-  generateMembersLayout(matingUnit) {
+  generateMembersLayout(matingUnit: MatingUnit) {
+    let pedigreeDataWithLayout = new Array<PedigreeDataWithPosition>();
+
+    // matingUnit.father.
     console.log(matingUnit);
     return [];
   }
