@@ -918,8 +918,10 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
             v.pos_last = v.pos + v.length - 1
 
         elif t == "D":
-            v.type = "deletion"
+            v.type = "complex"
             a = re.match('.*\((.*)\)', var)
+            v.ref = "A" * int(a.group(1))
+            v.seq = ""
             v.length = int(a.group(1))
             v.pos_last = v.pos + v.length - 1
         elif t == "I":
