@@ -71,6 +71,7 @@ export class PerfectlyDrawablePedigreeService {
 
         if (individualVertices.length) {
           (individualVertices[0] as Individual).addRank(0);
+          this.fixRank(individualVertices as Individual[]);
         }
 
 
@@ -157,6 +158,22 @@ export class PerfectlyDrawablePedigreeService {
     let sandwichInstance = this.createSandwichInstance(family);
 
     return [sandwichInstance, solveSandwich(sandwichInstance)];
+  }
+
+
+  fixRank(intervals: Array<Individual>) {
+    if (!intervals) {
+      return intervals;
+    }
+
+    let maxRank = intervals.map(interval => interval.rank)
+      .reduce((acc, current) => Math.max(acc, current), 0);
+
+    return intervals.map(interval => {
+      interval.rank -= maxRank;
+      interval.rank = -interval.rank;
+      return interval;
+    });
   }
 
 }

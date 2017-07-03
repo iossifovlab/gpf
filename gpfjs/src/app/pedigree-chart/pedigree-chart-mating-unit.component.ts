@@ -23,7 +23,6 @@ export class PedigreeChartMatingUnitComponent implements OnInit {
   }
 
   generateMembersLayout(matingUnit: MatingUnitWithIntervals) {
-    console.log(matingUnit);
     let pedigreeDataWithLayout = new Array<PedigreeDataWithPosition>();
 
     let intervals = new Array<IntervalForVertex<Individual>>();
@@ -34,9 +33,8 @@ export class PedigreeChartMatingUnitComponent implements OnInit {
       intervals.push(child);
     });
 
-    console.log(intervals);
 
-    this.fixRank(this.translateIntervalsToZero(intervals))
+    this.translateIntervalsToZero(intervals)
       .forEach(interval => {
       pedigreeDataWithLayout.push(this.getPedigreeWithPosition(interval));
     });
@@ -68,7 +66,7 @@ export class PedigreeChartMatingUnitComponent implements OnInit {
   translateIntervalsToZero(intervals: Array<IntervalForVertex<Individual>>) {
     let min = intervals.map(interval => interval.left)
       .reduce((acc, current) => {
-        return Math.min(acc, current)
+        return Math.min(acc, current);
       });
 
     return intervals.map(interval => {
@@ -78,17 +76,6 @@ export class PedigreeChartMatingUnitComponent implements OnInit {
       copy.right -= min;
 
       return copy;
-    });
-  }
-
-  fixRank(intervals: Array<IntervalForVertex<Individual>>) {
-    let maxRank = intervals.map(interval => interval.vertex.rank)
-      .reduce((acc, current) => Math.max(acc, current), 0);
-
-    return intervals.map(interval => {
-      interval.vertex.rank -= maxRank;
-      interval.vertex.rank = -interval.vertex.rank;
-      return interval;
     });
   }
 
