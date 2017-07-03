@@ -43,6 +43,13 @@ export class PedigreeMockService {
         result.pop();
         return result;
       })
+      .map(person => {
+        person[5] = '#ffffff';
+
+        person[6] = '';
+        person[4] = (person[4] === '1') ? 'F' : 'M';
+        return person;
+      })
       .map(person => PedigreeData.fromArray(person))
       .reduce((acc, person) => {
         if (acc[person.pedigreeIdentifier]) {

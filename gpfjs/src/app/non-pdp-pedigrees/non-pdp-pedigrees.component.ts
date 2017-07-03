@@ -14,6 +14,7 @@ import { PerfectlyDrawablePedigreeService
 export class NonPdpPedigreesComponent implements OnInit {
 
   families: {};
+  familyKeys: string[];
 
   nonPDP = [
     'AU0931', 'AU0932', 'AU0985',
@@ -35,6 +36,14 @@ export class NonPdpPedigreesComponent implements OnInit {
 
   ngOnInit() {
     this.families = this.pedigreeMockService.getMockFamily();
+    this.familyKeys = [];
+    for (let familyName in this.families) {
+      if (this.families.hasOwnProperty(familyName)) {
+        this.familyKeys.push(familyName);
+      }
+    }
+
+    this.familyKeys = this.familyKeys.slice(0, 100);
   }
 
 }

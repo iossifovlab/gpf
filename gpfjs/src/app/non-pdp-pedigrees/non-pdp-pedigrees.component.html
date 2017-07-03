@@ -1,5 +1,13 @@
 <div>
-  <div *ngIf="families">
+  <div class="row">
+    <div class="col-2" *ngFor="let familyName of familyKeys">
+      <div class="row mt-3 justify-content-center">
+        <h4 style="">{{ familyName }}</h4>
+      </div>
+      <gpf-pedigree-chart  [family]="families[familyName]" ></gpf-pedigree-chart>
+    </div>
+  </div>
+  <!-- <div *ngIf="families">
     <div class="row justify-content-center">
       <h3>Not PDP ({{ nonPDP.length }})</h3>
     </div>
@@ -23,5 +31,5 @@
         <gpf-vis-pedigree-input [family]="families[family]"></gpf-vis-pedigree-input>
       </div>
     </div>
-  </div>
+  </div> -->
 </div>
