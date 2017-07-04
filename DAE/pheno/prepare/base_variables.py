@@ -106,6 +106,8 @@ class BaseVariables(object):
             self._save_ordinal_variable(var, mdf)
         elif var.stats == self.CATEGORICAL:
             self._save_categorical_variable(var, mdf)
+        else:
+            print("OOOPS!!!! unknown variable: {}".format(var))
 
     def _save_continuous_variable(self, var, mdf):
         assert var.min_value <= var.max_value
@@ -152,6 +154,23 @@ class BaseVariables(object):
                 dbfile=self.get_dbfile()) as vm:
             for _index, row in mdf.iterrows():
                 v = CategoricalValueModel()
+                v.family_id = row['family_id']
+                v.person_id = row['person_id']
+                v.person_role = row['person_role']
+                v.variable_id = var.variable_id
+                v.value = CategoricalValueModel.value_decode(
+                    row[var.variable_name])
+                vm.save(v)
+
+    def _save_variable_base(self, value_manager, var, mdf):
+        with VariableManager(
+                dbfile=self.get_dbfile()) as vm:
+            vm.save(var)
+
+        with value_manager(
+                dbfile=self.get_dbfile()) as vm:
+            for _index, row in mdf.iterrows():
+                v = value_manager.MODEL()
                 v.family_id = row['family_id']
                 v.person_id = row['person_id']
                 v.person_role = row['person_role']

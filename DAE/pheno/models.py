@@ -758,6 +758,20 @@ class CategoricalValueManager(ValueManager):
         super(CategoricalValueManager, self).__init__(*args, **kwargs)
 
 
+class OtherValueModel(ValueModel):
+    TABLE = 'value_other'
+    TYPE = str
+    TYPE_NAME = 'text'
+    TYPE_SQL = 'varchar(127)'
+
+
+class OtherValueManager(ValueManager):
+    MODEL = OtherValueModel
+
+    def __init__(self, *args, **kwargs):
+        super(CategoricalValueManager, self).__init__(*args, **kwargs)
+
+
 class OrdinalValueModel(ValueModel):
     TABLE = 'value_ordinal'
     TYPE = float
