@@ -121,6 +121,13 @@ USAGE
             dest="skip_columns",
             help="comma separated list of instruments columns to skip")
 
+        parser.add_argument(
+            '--composite-fids',
+            action="store_true",
+            dest='composite_fids',
+            help="builds composite family IDs from parents' IDs"
+        )
+
         # Process arguments
         args = parser.parse_args()
 
@@ -133,6 +140,7 @@ USAGE
             skip_columns = set([
                 col for col in skip_columns.split(',')
             ])
+        composite_fids = args.composite_fids
 
         if not families_filename:
             raise CLIError(
@@ -149,7 +157,8 @@ USAGE
             raise Exception("bad classification boundaries")
 
         prep_individuals = NucPedPrepareIndividuals(config)
-        prep_individuals.prepare(families_filename, verbose)
+        prep_individuals.prepare(
+            families_filename, composite_fids=composite_fids, verbose=verbose)
 
         prep_variables = NucPedPrepareVariables(config)
         prep_variables.setup(verbose)

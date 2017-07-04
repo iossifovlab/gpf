@@ -208,24 +208,28 @@ class NucPedPrepareIndividuals(PhenoConfig):
         assert set(NucPedPrepareIndividuals.COLUMNS) <= set(df.columns)
         return df
 
-    def _build_individuals(self, pedfilename, verbose=0):
+    def _build_individuals(self, pedfilename, composite_fids=True, verbose=0):
         df = self.load_pedfile(pedfilename)
-        individuals = self._build_individuals_dict(df, verbose)
+        individuals = self._build_individuals_dict(
+            df, verbose=verbose)
         assert individuals is not None
 
-        families = self._build_families_dict(individuals, verbose)
+        families = self._build_families_dict(
+            individuals, composite_fids=composite_fids, verbose=verbose)
         assert families is not None
 
         return individuals
 
-    def build(self, pedfilename, verbose=0):
-        self.individuals = self._build_individuals(pedfilename, verbose)
+    def build(self, pedfilename, composite_fids=True, verbose=0):
+        self.individuals = self._build_individuals(
+            pedfilename, composite_fids=composite_fids, verbose=verbose)
         self.individuals_with_sample_id = {
             k: v for k, v in self.individuals.items()
             if v.sample_id is not None
         }
 
-    def _build_families_dict(self, individuals, verbose=0):
+    def _build_families_dict(
+            self, individuals, composite_fids=True, verbose=0):
         families = {}
         for p in individuals.values():
             progress(verbose)
@@ -233,12 +237,15 @@ class NucPedPrepareIndividuals(PhenoConfig):
                 try:
                     father = individuals[(p.family, p.father)]
                     mother = individuals[(p.family, p.mother)]
-
+                    # print(p, p.family)
                     assert father is not None
                     assert mother is not None
 
-                    family_id = "{mom}-{dad}".format(
-                        mom=mother.person_id, dad=father.person_id)
+                    if composite_fids:
+                        family_id = "{mom}-{dad}".format(
+                            mom=mother.person_id, dad=father.person_id)
+                    else:
+                        family_id = p.family
                     if family_id in families:
                         family = families[family_id]
                     else:
@@ -280,8 +287,9 @@ class NucPedPrepareIndividuals(PhenoConfig):
             for p in self.individuals.values():
                 pm.save(p)
 
-    def prepare(self, pedfilename, verbose=0):
-        self.build(pedfilename, verbose)
+    def prepare(self, pedfilename, composite_fids=True, verbose=0):
+        self.build(
+            pedfilename, composite_fids=composite_fids, verbose=verbose)
         self.save()
         progress_nl(verbose)
 

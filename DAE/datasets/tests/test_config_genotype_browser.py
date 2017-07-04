@@ -35,10 +35,3 @@ def test_vip_pheno_filters(datasets_config):
     assert 'name' in pheno_filters[0]
     assert 'measureType' in pheno_filters[0]
     assert 'measureFilter' in pheno_filters[0]
-
-
-def test_spark_has_no_genotype_browser(spark):
-    print(spark)
-    print(dir(spark))
-
-    assert spark.descriptor['genotypeBrowser'] is None
