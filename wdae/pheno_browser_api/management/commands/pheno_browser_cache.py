@@ -9,10 +9,10 @@ from DAE import pheno
 
 from django.core.management.base import BaseCommand, CommandError
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
-from pheno_browser_api.common import BrowserCommon
+from pheno_browser_api.common import PhenoBrowserCommon
 
 
-class Command(BaseCommand, BrowserCommon):
+class Command(BaseCommand, PhenoBrowserCommon):
     args = ''
     help = 'Rebuild pheno browser static figures cache'
 
@@ -53,7 +53,7 @@ class Command(BaseCommand, BrowserCommon):
                     print("\tcache OK")
                     continue
                 print("\tcache RECOMPUTING")
-                output_dir = BrowserCommon.get_cache_dir(dbname)
+                output_dir = PhenoBrowserCommon.get_cache_dir(dbname)
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
 

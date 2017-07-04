@@ -11,7 +11,7 @@ from DAE import pheno
 from precompute.filehash import sha256sum
 
 
-class BrowserCommon(object):
+class PhenoBrowserCommon(object):
 
     @staticmethod
     def get_cache_dir(dbname):
@@ -24,7 +24,7 @@ class BrowserCommon(object):
     @staticmethod
     def get_cache_hashsum(dbname):
         hashfile = os.path.join(
-            BrowserCommon.get_cache_dir(dbname),
+            PhenoBrowserCommon.get_cache_dir(dbname),
             '{}.hash'.format(dbname))
         if not os.path.exists(hashfile):
             return ''
@@ -57,14 +57,14 @@ class BrowserCommon(object):
     @staticmethod
     def save_cache_hashsum(dbname):
         hashfile = os.path.join(
-            BrowserCommon.get_cache_dir(dbname),
+            PhenoBrowserCommon.get_cache_dir(dbname),
             '{}.hash'.format(dbname))
         with open(hashfile, 'w') as f:
-            hashsum = BrowserCommon.get_db_hashsum(dbname)
+            hashsum = PhenoBrowserCommon.get_db_hashsum(dbname)
             f.write(hashsum)
 
     @staticmethod
     def should_recompute(dbname):
-        existing_hashsum = BrowserCommon.get_cache_hashsum(dbname)
-        actual_hashsum = BrowserCommon.get_db_hashsum(dbname)
+        existing_hashsum = PhenoBrowserCommon.get_cache_hashsum(dbname)
+        actual_hashsum = PhenoBrowserCommon.get_db_hashsum(dbname)
         return existing_hashsum != actual_hashsum

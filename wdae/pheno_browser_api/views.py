@@ -13,7 +13,7 @@ import preloaded
 from pheno_browser.models import VariableBrowserModelManager
 from django.conf import settings
 import os
-from pheno_browser_api.common import get_cache_dir
+from pheno_browser_api.common import PhenoBrowserCommon
 
 
 class PhenoInstrumentsView(APIView):
@@ -59,7 +59,7 @@ class PhenoMeasuresView(APIView):
             "/static/pheno_browser/")
 
     def get_browser_dbfile(self, dbname):
-        cache_dir = get_cache_dir(dbname)
+        cache_dir = PhenoBrowserCommon.get_cache_dir(dbname)
 
         browser_db = "{}_browser.db".format(dbname)
         return os.path.join(
