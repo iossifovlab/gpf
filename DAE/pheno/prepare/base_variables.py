@@ -9,7 +9,7 @@ import math
 import numpy as np
 from pheno.models import ContinuousValueManager, CategoricalValueManager,\
     OrdinalValueManager, VariableManager, PersonManager, VariableModel,\
-    ContinuousValueModel, OrdinalValueModel, CategoricalValueModel
+    OtherValueManager
 
 
 class BaseVariables(object):
@@ -69,6 +69,10 @@ class BaseVariables(object):
                 dbfile=self.get_dbfile()) as vm:
             vm.drop_tables()
             vm.create_tables()
+        with OtherValueManager(
+                dbfile=self.get_dbfile()) as vm:
+            vm.drop_tables()
+            vm.create_tables()
 
     def _create_variable_table(self):
         with VariableManager(
@@ -100,67 +104,18 @@ class BaseVariables(object):
         return var
 
     def _save_variable(self, var, mdf):
+        value_manager = self._get_value_manager(var)
+        self._save_variable_base(value_manager, var, mdf)
+
+    def _get_value_manager(self, var):
         if var.stats == self.CONTINUOUS:
-            self._save_continuous_variable(var, mdf)
+            return ContinuousValueManager
         elif var.stats == self.ORDINAL:
-            self._save_ordinal_variable(var, mdf)
+            return OrdinalValueManager
         elif var.stats == self.CATEGORICAL:
-            self._save_categorical_variable(var, mdf)
+            return CategoricalValueManager
         else:
-            print("OOOPS!!!! unknown variable: {}".format(var))
-
-    def _save_continuous_variable(self, var, mdf):
-        assert var.min_value <= var.max_value
-        with VariableManager(
-                dbfile=self.get_dbfile()) as vm:
-            vm.save(var)
-
-        with ContinuousValueManager(
-                dbfile=self.get_dbfile()) as vm:
-            for _index, row in mdf.iterrows():
-                v = ContinuousValueModel()
-                v.family_id = row['family_id']
-                v.person_id = row['person_id']
-                v.person_role = row['person_role']
-                v.variable_id = var.variable_id
-                v.value = ContinuousValueModel.value_decode(
-                    row[var.variable_name])
-                vm.save(v)
-
-    def _save_ordinal_variable(self, var, mdf):
-        assert var.min_value <= var.max_value
-        with VariableManager(
-                dbfile=self.get_dbfile()) as vm:
-            vm.save(var)
-
-        with OrdinalValueManager(
-                dbfile=self.get_dbfile()) as vm:
-            for _index, row in mdf.iterrows():
-                v = OrdinalValueModel()
-                v.family_id = row['family_id']
-                v.person_id = row['person_id']
-                v.person_role = row['person_role']
-                v.variable_id = var.variable_id
-                v.value = OrdinalValueModel.value_decode(
-                    row[var.variable_name])
-                vm.save(v)
-
-    def _save_categorical_variable(self, var, mdf):
-        with VariableManager(
-                dbfile=self.get_dbfile()) as vm:
-            vm.save(var)
-
-        with CategoricalValueManager(
-                dbfile=self.get_dbfile()) as vm:
-            for _index, row in mdf.iterrows():
-                v = CategoricalValueModel()
-                v.family_id = row['family_id']
-                v.person_id = row['person_id']
-                v.person_role = row['person_role']
-                v.variable_id = var.variable_id
-                v.value = CategoricalValueModel.value_decode(
-                    row[var.variable_name])
-                vm.save(v)
+            return OtherValueManager
 
     def _save_variable_base(self, value_manager, var, mdf):
         with VariableManager(
@@ -175,7 +130,7 @@ class BaseVariables(object):
                 v.person_id = row['person_id']
                 v.person_role = row['person_role']
                 v.variable_id = var.variable_id
-                v.value = CategoricalValueModel.value_decode(
+                v.value = value_manager.MODEL.value_decode(
                     row[var.variable_name])
                 vm.save(v)
 
@@ -272,10 +227,6 @@ class BaseVariables(object):
                 var.value_domain = "{}".format(
                     ', '.join([v for v in unique_values]))
                 return self.CATEGORICAL
-            else:
-                var.stats = self.UNKNOWN
-                var.value_domain = str(unique_values)
-                return self.UNKNOWN
 
         elif values_type == str:
             if self.check_categorical_rank(rank, individuals):
@@ -285,6 +236,9 @@ class BaseVariables(object):
                     ', '.join([v for v in unique_values]))
                 return self.CATEGORICAL
 
-        var.stats = self.UNKNOWN
-        var.value_domain = str(unique_values)
+        unique_values = sorted(unique_values)
+        unique_values = [str(v) for v in unique_values
+                         if not isinstance(v, str)]
+        var.value_domain = "{}".format(
+            ', '.join([v for v in unique_values]))
         return self.UNKNOWN

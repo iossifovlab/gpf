@@ -769,7 +769,7 @@ class OtherValueManager(ValueManager):
     MODEL = OtherValueModel
 
     def __init__(self, *args, **kwargs):
-        super(CategoricalValueManager, self).__init__(*args, **kwargs)
+        super(OtherValueManager, self).__init__(*args, **kwargs)
 
 
 class OrdinalValueModel(ValueModel):
