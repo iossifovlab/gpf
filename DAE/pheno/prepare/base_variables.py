@@ -164,7 +164,7 @@ class BaseVariables(object):
     def check_value_type(cls, values):
         boolean = all([isinstance(v, bool) for v in values])
         if boolean:
-            return int
+            return bool
 
         try:
             vals = [v.strip() for v in values]
@@ -186,7 +186,9 @@ class BaseVariables(object):
     @classmethod
     def check_values_domain(cls, values):
         vtype = cls.check_value_type(values)
-        if vtype == int:
+        if vtype == bool:
+            sdomain = [bool(v) for v in values]
+        elif vtype == int:
             sdomain = [int(float(v)) for v in values]
         elif vtype == float:
             sdomain = [float(v) for v in values]
@@ -226,7 +228,8 @@ class BaseVariables(object):
                 self.check_values_domain(unique_values)
 
         if values_type == np.int or values_type == np.float or \
-                values_type == int or values_type == float:
+                values_type == int or values_type == float or \
+                values_type == bool:
             if self.check_continuous_rank(rank, individuals):
                 var.stats = self.CONTINUOUS
                 var.min_value = min(unique_values)
