@@ -232,5 +232,4 @@ class BaseVariables(object):
         var.value_domain = "{}".format(
             ', '.join([v for v in unique_values]))
         var.stats = ValueModel.UNKNOWN
-        print("Other!!! Unknown!!! {}".format(var))
         return ValueModel.UNKNOWN

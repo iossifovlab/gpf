@@ -8,6 +8,9 @@ from django.apps import AppConfig
 from django.conf import settings
 
 from importlib import import_module
+from DAE import pheno
+from pheno_browser_api.common import BrowserCommon
+from common.progress import red_print
 
 
 class WdaePrecomputeConfig(AppConfig):
@@ -38,7 +41,19 @@ class WdaePrecomputeConfig(AppConfig):
             preload = cls()
             register(key, preload)
 
+    def _check_pheno_browser_api_cache(self):
+        pheno_db_names = pheno.get_pheno_db_names()
+        for dbname in pheno_db_names:
+            if BrowserCommon.should_recompute(dbname):
+                red_print(
+                    ">>> WARNING: "
+                    "phenotype DB <{}> browser cache needs recomputing"
+                    " Please call: ./manage.py pheno_browser_cache".format(
+                        dbname)
+                )
+
     def ready(self):
         AppConfig.ready(self)
+        self._check_pheno_browser_api_cache()
         self._load_precomputed()
         self._load_preloaded()

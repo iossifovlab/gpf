@@ -28,7 +28,6 @@ class PreparePhenoBrowserBase(object):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         self.output_base = os.path.basename(output_dir)
-        print(self.output_base)
         self.pheno_db = pheno.get_pheno_db(pheno_db)
         self.browser_db = os.path.join(
             output_dir,
@@ -218,7 +217,6 @@ class PreparePhenoBrowserBase(object):
         elif measure.measure_type == 'categorical':
             self.build_values_categorical_distribution(measure, v)
         else:
-            print("OOOOTHERRRRR!!!!")
             self.build_values_other_distribution(measure, v)
         return v
 
