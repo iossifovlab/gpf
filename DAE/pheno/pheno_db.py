@@ -10,9 +10,9 @@ from collections import defaultdict, OrderedDict
 
 from pheno.utils.configuration import PhenoConfig
 from pheno.models import PersonManager, VariableManager, \
-    ContinuousValueManager,\
-    OrdinalValueManager, CategoricalValueManager, RawValueManager,\
-    MetaVariableManager, MetaVariableCorrelationManager
+    RawValueManager,\
+    MetaVariableManager, MetaVariableCorrelationManager,\
+    ValueModel
 from VariantsDB import Person, Family
 import copy
 
@@ -315,7 +315,8 @@ class PhenoDB(PhenoConfig):
         """
         assert instrument is None or instrument in self.instruments
         assert measure_type is None or \
-            measure_type in set(['continuous', 'ordinal', 'categorical'])
+            measure_type in set([
+                'continuous', 'ordinal', 'categorical', 'unknown'])
 
         clauses = ["not stats isnull"]
         if instrument is not None:
@@ -504,16 +505,6 @@ class PhenoDB(PhenoConfig):
 
         return None
 
-    def _get_value_manager(self, value_type):
-        if value_type == 'continuous':
-            return ContinuousValueManager
-        elif value_type == 'ordinal':
-            return OrdinalValueManager
-        elif value_type == 'categorical':
-            return CategoricalValueManager
-        else:
-            raise ValueError("unsupported value type: {}".format(value_type))
-
     @staticmethod
     def _rename_value_column(measure_id, df):
         names = df.columns.tolist()
@@ -545,7 +536,7 @@ class PhenoDB(PhenoConfig):
             raise ValueError(
                 "bad measure: {}; unknown value type".format(
                     measure.measure_id))
-        value_manager = self._get_value_manager(value_type)
+        value_manager = ValueModel.get_value_manager(value_type)
         clauses = ["variable_id = '{}'".format(measure.measure_id)]
         if roles:
             roles_clause = self._roles_clause(roles, 'person_role')

@@ -9,15 +9,15 @@ import math
 import numpy as np
 from pheno.models import ContinuousValueManager, CategoricalValueManager,\
     OrdinalValueManager, VariableManager, PersonManager, VariableModel,\
-    OtherValueManager
+    OtherValueManager, ValueModel
 
 
 class BaseVariables(object):
     INDIVIDUALS = 'individuals'
-    CONTINUOUS = 'continuous'
-    ORDINAL = 'ordinal'
-    CATEGORICAL = 'categorical'
-    UNKNOWN = 'unknown'
+#     CONTINUOUS = 'continuous'
+#     ORDINAL = 'ordinal'
+#     CATEGORICAL = 'categorical'
+#     UNKNOWN = 'unknown'
 
     @property
     def min_individuals(self):
@@ -25,15 +25,15 @@ class BaseVariables(object):
 
     @property
     def continuous_min_rank(self):
-        return int(self.config.get(self.CONTINUOUS, 'min_rank'))
+        return int(self.config.get(ValueModel.CONTINUOUS, 'min_rank'))
 
     @property
     def ordinal_min_rank(self):
-        return int(self.config.get(self.ORDINAL, 'min_rank'))
+        return int(self.config.get(ValueModel.ORDINAL, 'min_rank'))
 
     @property
     def categorical_min_rank(self):
-        return int(self.config.get(self.CATEGORICAL, 'min_rank'))
+        return int(self.config.get(ValueModel.CATEGORICAL, 'min_rank'))
 
     def check_continuous_rank(self, rank, individuals):
         if rank < self.continuous_min_rank:
@@ -104,18 +104,8 @@ class BaseVariables(object):
         return var
 
     def _save_variable(self, var, mdf):
-        value_manager = self._get_value_manager(var)
+        value_manager = ValueModel.get_value_manager(var.stats)
         self._save_variable_base(value_manager, var, mdf)
-
-    def _get_value_manager(self, var):
-        if var.stats == self.CONTINUOUS:
-            return ContinuousValueManager
-        elif var.stats == self.ORDINAL:
-            return OrdinalValueManager
-        elif var.stats == self.CATEGORICAL:
-            return CategoricalValueManager
-        else:
-            return OtherValueManager
 
     def _save_variable_base(self, value_manager, var, mdf):
         with VariableManager(
@@ -205,40 +195,42 @@ class BaseVariables(object):
                 values_type == int or values_type == float or \
                 values_type == bool:
             if self.check_continuous_rank(rank, individuals):
-                var.stats = self.CONTINUOUS
+                var.stats = ValueModel.CONTINUOUS
                 var.min_value = min(unique_values)
                 var.max_value = max(unique_values)
                 var.value_domain = "[{}, {}]".format(
                     var.min_value, var.max_value)
-                return self.CONTINUOUS
+                return ValueModel.CONTINUOUS
             elif self.check_ordinal_rank(rank, individuals):
-                var.stats = self.ORDINAL
+                var.stats = ValueModel.ORDINAL
                 var.min_value = min(unique_values)
                 var.max_value = max(unique_values)
                 unique_values = sorted(unique_values)
                 var.value_domain = "{}".format(
                     ', '.join([str(v) for v in unique_values]))
-                return self.ORDINAL
+                return ValueModel.ORDINAL
             elif self.check_categorical_rank(rank, individuals):
-                var.stats = self.CATEGORICAL
+                var.stats = ValueModel.CATEGORICAL
                 unique_values = sorted(unique_values)
                 unique_values = [str(v) for v in unique_values
                                  if not isinstance(v, str)]
                 var.value_domain = "{}".format(
                     ', '.join([v for v in unique_values]))
-                return self.CATEGORICAL
+                return ValueModel.CATEGORICAL
 
         elif values_type == str:
             if self.check_categorical_rank(rank, individuals):
-                var.stats = self.CATEGORICAL
+                var.stats = ValueModel.CATEGORICAL
                 unique_values = sorted(unique_values)
                 var.value_domain = "{}".format(
                     ', '.join([v for v in unique_values]))
-                return self.CATEGORICAL
+                return ValueModel.CATEGORICAL
 
         unique_values = sorted(unique_values)
         unique_values = [str(v) for v in unique_values
                          if not isinstance(v, str)]
         var.value_domain = "{}".format(
             ', '.join([v for v in unique_values]))
-        return self.UNKNOWN
+        var.stats = ValueModel.UNKNOWN
+        print("Other!!! Unknown!!! {}".format(var))
+        return ValueModel.UNKNOWN
