@@ -1,7 +1,7 @@
 import { Input, Component, OnInit } from '@angular/core';
 
 import { PedigreeData } from '../genotype-preview-table/genotype-preview';
-import { Individual, MatingUnitWithIntervals, PedigreeDataWithPosition, Line } from './pedigree-data';
+import { Individual, MatingUnitWithIntervals, IndividualWithPosition, Line } from './pedigree-data';
 import { IntervalForVertex } from '../utils/interval-sandwich';
 
 @Component({
@@ -9,7 +9,7 @@ import { IntervalForVertex } from '../utils/interval-sandwich';
   templateUrl: './pedigree-chart-mating-unit.component.html'
 })
 export class PedigreeChartMatingUnitComponent implements OnInit {
-  pedigreeDataWithLayout: PedigreeDataWithPosition[];
+  pedigreeDataWithLayout: IndividualWithPosition[];
   lines: Line[];
 
   SIZE = 21;
@@ -23,7 +23,7 @@ export class PedigreeChartMatingUnitComponent implements OnInit {
   }
 
   generateMembersLayout(matingUnit: MatingUnitWithIntervals) {
-    let pedigreeDataWithLayout = new Array<PedigreeDataWithPosition>();
+    let pedigreeDataWithLayout = new Array<IndividualWithPosition>();
 
     let intervals = new Array<IntervalForVertex<Individual>>();
 
@@ -44,8 +44,8 @@ export class PedigreeChartMatingUnitComponent implements OnInit {
   }
 
   getPedigreeWithPosition(interval: IntervalForVertex<Individual>) {
-    return new PedigreeDataWithPosition(
-      interval.vertex.pedigreeData, interval.right * 20 + 15, interval.vertex.rank * 40 + 15,
+    return new IndividualWithPosition(
+      interval.vertex, interval.right * 20 + 15, interval.vertex.rank * 40 + 15,
       this.SIZE, this.SCALE
     );
   }

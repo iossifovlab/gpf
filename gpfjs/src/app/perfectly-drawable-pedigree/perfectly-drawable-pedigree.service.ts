@@ -40,7 +40,7 @@ export class PerfectlyDrawablePedigreeService {
           let node = getOrCreateIndividual(individual.id);
 
           node.pedigreeData = individual;
-          if (mother && father) {
+          if (mother !== father) {
             node.parents = new ParentalUnit(mother, father);
           }
 

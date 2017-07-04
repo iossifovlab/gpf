@@ -76,6 +76,32 @@ export class Individual extends IndividualSet {
 
     return childrenSet;
   }
+
+
+  areInMatingUnit(second: Individual) {
+    let areInMatingUnit = false;
+
+    for (let matingUnit of this.matingUnits) {
+      if (matingUnit.father === second || matingUnit.mother === second) {
+        areInMatingUnit = true;
+      }
+    }
+
+    return areInMatingUnit;
+  }
+
+  areSiblings(second: Individual) {
+    if (!this.parents || !second.parents) {
+      return false;
+    }
+
+    if (this.parents.father === second.parents.father &&
+        this.parents.mother === second.parents.mother) {
+        return true;
+      }
+
+    return false;
+  }
 }
 
 export class MatingUnit extends IndividualSet {
@@ -121,9 +147,9 @@ export class SibshipUnit extends IndividualSet {
 }
 
 
-export class PedigreeDataWithPosition  {
+export class IndividualWithPosition  {
   constructor(
-    public pedigreeData: PedigreeData,
+    public individual: Individual,
     public xCenter: number,
     public yCenter: number,
     public size: number,
@@ -146,4 +172,46 @@ export class Line {
     public endX: number,
     public endY: number
   ) { }
+}
+
+export class SameLevelGroup {
+  constructor(
+    public yCenter: number,
+    public members: Individual[] = [],
+    public startX = 0,
+    public memberSize = 21,
+    public gapSize = 8
+  ) {}
+
+  get width() {
+    return Math.max(0, this.members.length * this.memberSize +
+      (this.members.length - 1) * this.gapSize);
+  }
+
+  get lastMember() {
+    if (this.members.length === 0) {
+      return null;
+    }
+    return this.members[this.members.length - 1];
+  }
+
+  get individualsWithPositions() {
+    let result: Array<IndividualWithPosition> = [];
+
+    for (let i = 0; i < this.members.length; i++) {
+      result.push(new IndividualWithPosition(
+        this.members[i], this.getXFromIndex(i), this.yCenter,
+        this.memberSize, 1.0)
+      );
+    }
+
+    return result;
+  }
+
+  private getXFromIndex(i: number) {
+    return this.startX + i * this.memberSize +
+      (i) * this.gapSize;
+  }
+
+
 }

@@ -9,6 +9,8 @@ import {
 } from '../perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { MatingUnitWithIntervals, IndividualSet, Individual, MatingUnit } from './pedigree-data';
 
+type OrderedIndividuals = Array<Individual>;
+
 @Component({
   selector: 'gpf-pedigree-chart',
   templateUrl: './pedigree-chart.component.html'
@@ -22,7 +24,7 @@ export class PedigreeChartComponent implements OnInit {
 
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
   private isPdp$: Observable<boolean>;
-  matingUnits$: Observable<MatingUnitWithIntervals[]>;
+  levels$: Observable<Array<OrderedIndividuals>>;
 
   constructor(
     private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService
@@ -34,51 +36,50 @@ export class PedigreeChartComponent implements OnInit {
       .map(family => this.perfectlyDrawablePedigreeService.isPDP(family))
       .share();
 
-    this.matingUnits$ = sandwichResults$
+    this.levels$ = sandwichResults$
       .map(([, intervals]) => intervals)
       .filter(i => !!i)
-      .map(intervals => {
-        return this.getMatingUnitsFromIntervals(intervals);
-      })
+      .map(i => this.onlyInidividuals(i))
+      .map(i => this.getIndividualsByRank(i))
       .share();
 
     this.isPdp$ = sandwichResults$
       .map(([, intervals]) => !!intervals);
   }
 
-  getMatingUnitsFromIntervals(intervals: IntervalForVertex<IndividualSet>[]) {
-    let individuals: IntervalForVertex<Individual>[] = intervals
-      .filter(interval => interval.vertex instanceof Individual)
-      .map(i => i as IntervalForVertex<Individual>);
+  getIndividualsByRank(individuals: IntervalForVertex<Individual>[]) {
+    let individualsByRank = individuals.reduce((acc, individual) => {
+      if (acc.has(individual.vertex.rank)) {
+        acc.get(individual.vertex.rank).push(individual);
+      } else {
+        acc.set(individual.vertex.rank, [individual]);
+      }
+      return acc;
+    }, new Map<number, IntervalForVertex<Individual>[]>());
 
-    let individualIntervalMap = new Map<string, IntervalForVertex<Individual>>(
-      individuals.map((interval): [string, IntervalForVertex<Individual>] =>
-        [interval.vertex.toString(), interval])
-    );
+    let keys: Array<number> = [];
+    let rankIterator = individualsByRank.keys();
+    let itResult = rankIterator.next();
+    while (!itResult.done) {
+      keys.push(itResult.value);
+      itResult = rankIterator.next();
+    }
 
+    let result: OrderedIndividuals[] = [];
+    for (let key of keys.sort()) {
+        let sorted = individualsByRank.get(key)
+          .sort((a, b) => a.left - b.left);
 
-    let matingUnits = individuals
-      .reduce((acc, interval) => {
-        interval.vertex.matingUnits.forEach(m => acc.push(m));
-        return acc;
-      }, [] as MatingUnit[]);
-
-    let uniqueMatingUnits = Array.from(new Set(matingUnits));
-
-    let result = new Array<MatingUnitWithIntervals>();
-
-    for (let matingUnit of uniqueMatingUnits) {
-      let matingUnitIntervals = new MatingUnitWithIntervals(
-        individualIntervalMap.get(matingUnit.mother.toString()),
-        individualIntervalMap.get(matingUnit.father.toString()),
-        matingUnit.children.individuals
-          .map(i => individualIntervalMap.get(i.toString())),
-      );
-
-      result.push(matingUnitIntervals);
+        result.push(sorted.map(interval => interval.vertex));
     }
 
     return result;
+  }
+
+  onlyInidividuals(intervals: IntervalForVertex<IndividualSet>[]) {
+    return intervals
+        .filter(interval => interval.vertex instanceof Individual)
+        .map(i => i as IntervalForVertex<Individual>);
   }
 
 

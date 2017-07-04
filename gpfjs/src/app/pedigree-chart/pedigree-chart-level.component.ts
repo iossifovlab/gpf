@@ -1,67 +1,137 @@
 import { Input, Component, OnInit } from '@angular/core';
 import { PedigreeData } from '../genotype-preview-table/genotype-preview';
-import { Individual, PedigreeDataWithPosition, Line } from './pedigree-data';
+import { Individual, IndividualWithPosition, Line, SameLevelGroup } from './pedigree-data';
 
 @Component({
   selector: '[gpf-pedigree-chart-level]',
   templateUrl: './pedigree-chart-level.component.html'
 })
 export class PedigreeChartLevelComponent implements OnInit {
-  pedigreeDataWithLayout: PedigreeDataWithPosition[];
+  pedigreeDataWithLayout: IndividualWithPosition[];
   lines: Line[];
 
   @Input() connectingLineYPosition: number;
-  @Input() pedigreeData: Individual[];
+  @Input() individuals: Individual[][];
+  groups: SameLevelGroup[][] = new Array<SameLevelGroup[]>();
 
 
   ngOnInit() {
-    this.pedigreeDataWithLayout = this.generateLayout(this.pedigreeData);
-    this.lines = this.generateLines(this.pedigreeDataWithLayout, this.connectingLineYPosition);
-  }
+    this.pedigreeDataWithLayout = [];
+    this.lines = [];
 
-  private generateLayout(pedigreeData: Individual[], member_size = 21, width = 100,  max_gap = 8, total_height = 30) {
-    let pedigreeDataWithPositions = new Array<PedigreeDataWithPosition>();
-    let num_elements = pedigreeData.length;
-    let totalWidth = member_size * num_elements + max_gap * (num_elements - 1);
-    let scaleFactor: number;
-    let x_offset = 0;
-
-    if (totalWidth > width) {
-      scaleFactor = width / totalWidth;
-    } else {
-      scaleFactor = 1.0;
-      x_offset = (width - totalWidth) / 2;
-    }
-
-    let size = scaleFactor * member_size;
-    let gap = scaleFactor * max_gap;
-    let y_center = total_height / 2;
-
-    let x_center = x_offset + size / 2;
-
-    for (let element of pedigreeData) {
-      pedigreeDataWithPositions.push(new PedigreeDataWithPosition(element.pedigreeData, x_center, y_center, size, scaleFactor));
-      x_center += size + gap;
-    }
-    return pedigreeDataWithPositions;
-
-  }
-
-  private generateLines(pedigreeData: PedigreeDataWithPosition[], line_y = 50) {
-    let lines = new Array<Line>();
-
-    let start_x = pedigreeData[0].xCenter;
-    let end_x = pedigreeData[pedigreeData.length - 1].xCenter;
-
-    if (start_x !== end_x) {
-      lines.push(new Line(start_x, line_y, end_x, line_y));
-    }
-
-    for (let element of pedigreeData) {
-      if (element.yCenter !== line_y) {
-        lines.push(new Line(element.xCenter, element.yCenter, element.xCenter, line_y));
+    if (this.individuals) {
+      for (let i = 0; i < this.individuals.length; i++) {
+        this.groups.push(
+          this.generateLayout(this.individuals[i], i));
+        this.lines = this.lines.concat(
+          this.generateLines(this.groups[this.groups.length - 1]));
       }
     }
+
+    this.pedigreeDataWithLayout = this.groups
+      .map(g => g.map(g1 => g1.individualsWithPositions)
+        .reduce((acc, individuals) => acc.concat(individuals), []))
+        .reduce((acc, individuals) => acc.concat(individuals), []);
+
+  }
+
+  private getGroupsForLevel(individuals: Individual[], level, totalHeight = 30) {
+    let groups: SameLevelGroup[] = new Array<SameLevelGroup>();
+    let currentGroup: SameLevelGroup;
+
+    for (let individual of individuals) {
+      if (!currentGroup) {
+        currentGroup = new SameLevelGroup(totalHeight * level + 20);
+        currentGroup.members.push(individual);
+        groups.push(currentGroup);
+      } else if (!individual.areInMatingUnit(currentGroup.lastMember) &&
+        (!individual.areSiblings(currentGroup.lastMember))) {
+        currentGroup = new SameLevelGroup(totalHeight * level + 20);
+        currentGroup.members.push(individual);
+        groups.push(currentGroup);
+      } else {
+        currentGroup.members.push(individual);
+      }
+    }
+
+    return groups;
+  }
+
+  private generateLayout(individuals: Individual[], level: number,
+    memberSize = 21, maxGap = 8, totalHeight = 30, xOffset = 20) {
+    let groups = this.getGroupsForLevel(individuals, level);
+    if (groups.length !== 1) {
+      console.log(groups.length, groups);
+    }
+
+    for (let group of groups) {
+      group.startX = xOffset;
+      group.gapSize = maxGap;
+      group.memberSize = memberSize;
+      xOffset += group.width + maxGap * 2;
+    }
+
+    return groups;
+  }
+
+  private overlapOnLayer(groups: SameLevelGroup[]) {
+    let individuals: IndividualWithPosition[] = [];
+
+    for (let group of groups) {
+      individuals = individuals.concat(group.individualsWithPositions);
+    }
+    for (let i = 0; i < individuals.length - 1; i++) {
+      let difference = Math.abs(
+        individuals[i].xCenter - individuals[i + 1].xCenter);
+      if (difference < individuals[i].size / 2 ||
+          difference < individuals[i + 1].size / 2) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private generateLines(pedigreeData: SameLevelGroup[], horizontalYOffset = 15) {
+    let lines = new Array<Line>();
+
+
+    for (let group of pedigreeData) {
+      let lineY = group.yCenter - horizontalYOffset;
+      let individuals = group.individualsWithPositions;
+
+      for (let i = 0; i < individuals.length; i++) {
+        let current = individuals[i];
+        if (current.individual.parents) {
+          lines.push(new Line(current.xCenter, current.yCenter, current.xCenter, lineY));
+        }
+        if (i + 1 < individuals.length) {
+          let other = individuals[i + 1];
+
+          if (current.individual.areInMatingUnit(other.individual)) {
+            let middleX = (current.xCenter + other.xCenter) / 2;
+            lines.push(new Line(current.xCenter, current.yCenter,
+              other.xCenter, other.yCenter));
+            lines.push(new Line(middleX, current.yCenter, middleX, group.yCenter + horizontalYOffset));
+          }
+        }
+      }
+
+      for (let i = 0; i < individuals.length; i++) {
+        let current = individuals[i];
+        for (let j = individuals.length - 1; j > i; j--) {
+          let other = individuals[j];
+          if (current.individual.areSiblings(other.individual)) {
+            lines.push(new Line(current.xCenter, lineY, other.xCenter, lineY));
+            i = j;
+            break;
+          }
+        }
+      }
+
+
+    }
+
 
     return lines;
   }

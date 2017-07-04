@@ -331,19 +331,19 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
 
     if (leftVertices.length === 0) {
       // console.log("result:", currentRealization.intervals);
-      console.log("finished on iteration", currentIteration);
-      console.log("Took", Date.now() - start, "ms");
+      // console.log("finished on iteration", currentIteration);
+      // console.log("Took", Date.now() - start, "ms");
       return currentRealization.intervals;
     }
 
     if ((currentIteration++) % 2000 === 0) {
-      console.log("Current iteration", currentIteration, "Queue length", realizationsQueue.length);
+      // console.log("Current iteration", currentIteration, "Queue length", realizationsQueue.length);
       // console.log("looked through realizations", visitedRealizationMap);
       // console.log("Current realization:", currentRealization.toString());
     }
 
     if (currentIteration === 10000) {
-      console.log("Premature termination on", currentIteration, "iterations");
+      // console.log("Premature termination on", currentIteration, "iterations");
       return null;
     }
 
@@ -366,7 +366,7 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
         // console.log("result:", currentRealizationCopy.intervals);
         // console.log("finished on iteration iteration", currentIteration);
-        console.log("Took", Date.now() - start, "ms");
+        // console.log("Took", Date.now() - start, "ms");
         return currentRealizationCopy.intervals;
       } else {
         // console.log("Checking realization", currentRealizationCopy);
@@ -380,6 +380,6 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
   }
   // console.log(maxRealizations);
 
-  console.log("result:", null);
+  // console.log("result:", null);
   return null;
 }
