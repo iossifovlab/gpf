@@ -213,6 +213,14 @@ export class SameLevelGroup {
       i * this.gapSize;
   }
 
+  getXForMember(member: Individual) {
+    let index = this.members.indexOf(member);
+    if (index === -1) {
+      return -1;
+    }
+    return this.getXFromIndex(index);
+  }
+
   // allSiblings() {
   //   return this.members.every(member => member.areSiblings(this.members[0]));
   // }

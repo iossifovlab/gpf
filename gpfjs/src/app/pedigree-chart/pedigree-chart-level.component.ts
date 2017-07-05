@@ -39,17 +39,57 @@ export class PedigreeChartLevelComponent implements OnInit {
 
   }
 
-  private optimizeDrawing(groups: SameLevelGroup[][]) {
+  private optimizeDrawing(groups: SameLevelGroup[][], xOffset = 20) {
     for (let i = groups.length - 1; i > 0; i--) {
       let onlySiblingsGroup = this.groups[i]
         .filter(group => group.members.some(member => !!member.parents));
       for (let group of onlySiblingsGroup) {
-        this.centerParentOfGroup(groups, group);
+        this.centerParentOfGroup(group);
       }
+    }
+
+    for (let i = 0; i < groups.length - 1; i++) {
+      let onlyMatingGroups = this.groups[i]
+        .filter(group => group.members.some(member => member.matingUnits.length > 0));
+      for (let group of onlyMatingGroups) {
+        this.centerChildrenOfParents(group);
+      }
+    }
+    this.moveGroupsToLeft(groups, xOffset);
+
+  }
+
+  private moveGroupsToLeft(groups: SameLevelGroup[][], xOffset) {
+    let minStartXReducer = (g1, g2) => g1.startX < g2.startX ? g1 : g2;
+
+    let leftmostGroupX = groups
+      .map(group => group.reduce(minStartXReducer).startX)
+      .reduce((a, b) => Math.min(a, b));
+
+    let toMove = Math.max(0, leftmostGroupX - xOffset);
+    groups.forEach(g => g.forEach(group => group.startX -= toMove));
+  }
+
+  private centerChildrenOfParents(group: SameLevelGroup) {
+    let groupMatingUnits = group.members
+      .filter(member => member.matingUnits.length > 0)
+      .map(member => member.matingUnits)
+      .reduce((acc, matingUnits) => acc.concat(matingUnits), []);
+    for (let matingUnit of groupMatingUnits) {
+      let fatherX = group.getXForMember(matingUnit.father);
+      let motherX = group.getXForMember(matingUnit.mother);
+
+      let middle = (fatherX + motherX) / 2;
+
+      let childrenGroup = this.individualToGroup
+        .get(matingUnit.children.individuals[0].pedigreeData.id);
+
+      childrenGroup.startX = middle - childrenGroup.width / 2 +
+        childrenGroup.memberSize / 2;
     }
   }
 
-  private centerParentOfGroup(groups: SameLevelGroup[][], group: SameLevelGroup) {
+  private centerParentOfGroup(group: SameLevelGroup) {
       let firstMember = group.members.find(individual => !!individual.parents);
       if (!this.individualToGroup.has(firstMember.pedigreeData.id)) {
         return;
@@ -86,9 +126,6 @@ export class PedigreeChartLevelComponent implements OnInit {
   private generateLayout(individuals: Individual[], level: number,
     memberSize = 21, maxGap = 8, totalHeight = 30, xOffset = 20) {
     let groups = this.getGroupsForLevel(individuals, level);
-    if (groups.length !== 1) {
-      console.log(groups.length, groups);
-    }
 
     for (let group of groups) {
       group.startX = xOffset;
