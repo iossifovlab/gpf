@@ -109,9 +109,9 @@ USAGE
             'classified as categorical (default: 2)')
 
         parser.add_argument(
-            '-I', '--individuals',
+            '-I', '--min-individuals',
             type=int,
-            dest='individuals',
+            dest='min_individuals',
             help='minimal number of individuals for a measure to be '
             'considered for classification (default: 20)')
 

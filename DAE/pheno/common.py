@@ -29,8 +29,8 @@ def config_pheno_db(output):
 
 
 def adjust_config_pheno_db(config, args):
-    if args.individuals is not None and args.individuals >= 0:
-        config.set('individuals', 'min_individuals', str(args.individuals))
+    if args.min_individuals is not None and args.min_individuals >= 0:
+        config.set('individuals', 'min_individuals', str(args.min_individuals))
 
     if args.categorical is not None and args.categorical >= 0:
         config.set('categorical', 'min_rank', str(args.categorical))
@@ -59,8 +59,8 @@ def check_config_pheno_db(config):
         return False
 
     individuals = int(config.get('individuals', 'min_individuals'))
-    if individuals < 5:
-        print('minimal number of individuals expected to be >= 5')
+    if individuals < 1:
+        print('minimal number of individuals expected to be >= 1')
         return False
 
     return True
