@@ -13,6 +13,7 @@ export class PedigreeChartLevelComponent implements OnInit {
   @Input() connectingLineYPosition: number;
   @Input() individuals: Individual[][];
   groups: SameLevelGroup[][] = new Array<SameLevelGroup[]>();
+  private individualToGroup: Map<string, SameLevelGroup> = new Map();
 
 
   ngOnInit() {
@@ -23,8 +24,11 @@ export class PedigreeChartLevelComponent implements OnInit {
       for (let i = 0; i < this.individuals.length; i++) {
         this.groups.push(
           this.generateLayout(this.individuals[i], i));
+      }
+      this.optimizeDrawing(this.groups);
+      for (let group of this.groups) {
         this.lines = this.lines.concat(
-          this.generateLines(this.groups[this.groups.length - 1]));
+          this.generateLines(group));
       }
     }
 
@@ -33,6 +37,27 @@ export class PedigreeChartLevelComponent implements OnInit {
         .reduce((acc, individuals) => acc.concat(individuals), []))
         .reduce((acc, individuals) => acc.concat(individuals), []);
 
+  }
+
+  private optimizeDrawing(groups: SameLevelGroup[][]) {
+    for (let i = groups.length - 1; i > 0; i--) {
+      let onlySiblingsGroup = this.groups[i]
+        .filter(group => group.members.some(member => !!member.parents));
+      for (let group of onlySiblingsGroup) {
+        this.centerParentOfGroup(groups, group);
+      }
+    }
+  }
+
+  private centerParentOfGroup(groups: SameLevelGroup[][], group: SameLevelGroup) {
+      let firstMember = group.members.find(individual => !!individual.parents);
+      if (!this.individualToGroup.has(firstMember.pedigreeData.id)) {
+        return;
+      }
+      let parentGroup = this.individualToGroup
+        .get(firstMember.parents.father.pedigreeData.id);
+
+      parentGroup.startX = group.startX + group.width / 2 - parentGroup.width / 2;
   }
 
   private getGroupsForLevel(individuals: Individual[], level, totalHeight = 30) {
@@ -52,6 +77,7 @@ export class PedigreeChartLevelComponent implements OnInit {
       } else {
         currentGroup.members.push(individual);
       }
+      this.individualToGroup.set(individual.pedigreeData.id, currentGroup);
     }
 
     return groups;

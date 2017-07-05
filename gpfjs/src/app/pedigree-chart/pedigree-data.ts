@@ -210,8 +210,23 @@ export class SameLevelGroup {
 
   private getXFromIndex(i: number) {
     return this.startX + i * this.memberSize +
-      (i) * this.gapSize;
+      i * this.gapSize;
   }
 
+  // allSiblings() {
+  //   return this.members.every(member => member.areSiblings(this.members[0]));
+  // }
+  //
+  // haveSiblings() {
+  //   for (let i = 0; i < this.members.length - 1; i++) {
+  //     for (let j = i + 1; j < this.members.length; j++) {
+  //       if (this.members[i].areSiblings(this.members[j])) {
+  //         return true;
+  //       }
+  //     }
+  //   }
+  //
+  //   return false;
+  // }
 
 }
