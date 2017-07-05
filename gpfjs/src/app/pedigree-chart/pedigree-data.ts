@@ -102,6 +102,16 @@ export class Individual extends IndividualSet {
 
     return false;
   }
+
+  isChildOf(father: Individual, mother?: Individual) {
+    if (!this.parents) {
+      return false;
+    }
+    if (mother) {
+      return this.parents.father === father && this.parents.mother === mother;
+    }
+    return this.parents.father === father;
+  }
 }
 
 export class MatingUnit extends IndividualSet {

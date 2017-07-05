@@ -1,6 +1,6 @@
 import { Input, Component, OnInit } from '@angular/core';
 import { PedigreeData } from '../genotype-preview-table/genotype-preview';
-import { Individual, IndividualWithPosition, Line, SameLevelGroup } from './pedigree-data';
+import { Individual, IndividualWithPosition, Line, SameLevelGroup, MatingUnit } from './pedigree-data';
 
 @Component({
   selector: '[gpf-pedigree-chart-level]',
@@ -25,6 +25,7 @@ export class PedigreeChartLevelComponent implements OnInit {
         this.groups.push(
           this.generateLayout(this.individuals[i], i));
       }
+      // console.log(this.groups);
       this.optimizeDrawing(this.groups);
       for (let group of this.groups) {
         this.lines = this.lines.concat(
@@ -74,7 +75,13 @@ export class PedigreeChartLevelComponent implements OnInit {
     let groupMatingUnits = group.members
       .filter(member => member.matingUnits.length > 0)
       .map(member => member.matingUnits)
-      .reduce((acc, matingUnits) => acc.concat(matingUnits), []);
+      .reduce((acc, matingUnits) => acc.concat(matingUnits), [])
+      .reduce((acc, matingUnits) => {
+        if (acc.indexOf(matingUnits) === -1) {
+          acc.push(matingUnits);
+        }
+        return acc;
+      }, []);
     for (let matingUnit of groupMatingUnits) {
       let fatherX = group.getXForMember(matingUnit.father);
       let motherX = group.getXForMember(matingUnit.mother);
@@ -84,9 +91,29 @@ export class PedigreeChartLevelComponent implements OnInit {
       let childrenGroup = this.individualToGroup
         .get(matingUnit.children.individuals[0].pedigreeData.id);
 
-      childrenGroup.startX = middle - childrenGroup.width / 2 +
-        childrenGroup.memberSize / 2;
+      let childrenStartAndEnd =
+        this.getFirstAndLastChildWithPositions(childrenGroup, matingUnit);
+
+      let width = childrenStartAndEnd[1].xUpperLeftCorner -
+        childrenStartAndEnd[0].xUpperLeftCorner;
+      let startOffset = childrenGroup.startX - childrenStartAndEnd[0].xCenter;
+
+      childrenGroup.startX = middle - width / 2 + startOffset;
     }
+  }
+
+  private getFirstAndLastChildWithPositions(children: SameLevelGroup,
+    matingUnit: MatingUnit) {
+    return children.individualsWithPositions
+      .reduce((acc, m) => {
+        if (m.individual.isChildOf(matingUnit.father, matingUnit.mother)) {
+          if (!acc[0]) {
+            acc[0] = m;
+          }
+          acc[1] = m;
+        }
+        return acc;
+      }, [null, null] as [IndividualWithPosition, IndividualWithPosition] );
   }
 
   private centerParentOfGroup(group: SameLevelGroup) {
