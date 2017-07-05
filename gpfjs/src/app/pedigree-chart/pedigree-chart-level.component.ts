@@ -67,7 +67,7 @@ export class PedigreeChartLevelComponent implements OnInit {
       .map(group => group.reduce(minStartXReducer).startX)
       .reduce((a, b) => Math.min(a, b));
 
-    let toMove = Math.max(0, leftmostGroupX - xOffset);
+    let toMove = leftmostGroupX - xOffset;
     groups.forEach(g => g.forEach(group => group.startX -= toMove));
   }
 
