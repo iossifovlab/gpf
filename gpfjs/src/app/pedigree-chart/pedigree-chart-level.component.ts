@@ -41,29 +41,55 @@ export class PedigreeChartLevelComponent implements OnInit {
 
   }
 
+  private alignParentsOfChildren(individuals: IndividualWithPosition[][]) {
+    let result = 0;
+    for (let i = individuals.length - 1; i > 0; i--) {
+      let sibships = this.getSibsipsOnLevel(individuals[i]);
+      for (let group of sibships) {
+        result += this.centerParentsOfChildren(group);
+      }
+    }
+
+    return result;
+  }
+
+
+  private alignChildrenOfParents(individuals: IndividualWithPosition[][]) {
+    let result = 0;
+    for (let i = 0; i < individuals.length - 1; i++) {
+      let matingUnits = this.getMatingUnitsOnLevel(individuals[i]);
+
+      for (let mates of matingUnits) {
+        result += this.centerChildrenOfParents(mates);
+      }
+    }
+
+    return result;
+  }
+
   private optimizeDrawing(individuals: IndividualWithPosition[][], xOffset = 20) {
     let movedIndividuals = 0;
     let counter = 0;
     do {
       counter++;
       movedIndividuals = 0;
-      for (let i = individuals.length - 1; i > 0; i--) {
-        let sibships = this.getSibsipsOnLevel(individuals[i]);
-        for (let group of sibships) {
-          movedIndividuals += this.centerParentsOfChildren(group);
-        }
+      if (counter % 6 < 3) {
+        movedIndividuals += this.alignParentsOfChildren(individuals);
+        movedIndividuals += this.alignChildrenOfParents(individuals);
+      } else {
+        movedIndividuals += this.alignChildrenOfParents(individuals);
+        movedIndividuals += this.alignParentsOfChildren(individuals);
       }
 
-      for (let i = 0; i < individuals.length - 1; i++) {
-        let matingUnits = this.getMatingUnitsOnLevel(individuals[i]);
+      // console.log("After aligning parents:", movedIndividuals);
 
-        for (let mates of matingUnits) {
-          movedIndividuals += this.centerChildrenOfParents(mates);
-        }
-      }
+
+      // console.log("After aligning children:", movedIndividuals);
       movedIndividuals += this.setMatesEquallyApart(individuals);
+      // console.log("After setting equal mate lengths:", movedIndividuals);
       movedIndividuals += this.moveOverlaps(individuals);
-    } while (movedIndividuals != 0 && counter < 100);
+      // console.log("After removing overlaps:", movedIndividuals);
+    } while (movedIndividuals !== 0 && counter < 100);
     console.log("Done", movedIndividuals, counter);
 
     this.alignLeft(individuals, xOffset);
@@ -90,22 +116,28 @@ export class PedigreeChartLevelComponent implements OnInit {
           orderedMates.push(m1.mother);
           orderedMates.push(m2.father);
         }
-
         let mateCoordinates = orderedMates.map(i => this.idToPosition.get(i.pedigreeData.id));
+        if (mateCoordinates[0].xCenter > mateCoordinates[2].xCenter) {
+          let temp = mateCoordinates[0];
+          mateCoordinates[0] = mateCoordinates[2];
+          mateCoordinates[2] = temp;
+        }
+
+        // console.log(m1, m2);
         let dist1 = mateCoordinates[1].xCenter - mateCoordinates[0].xCenter;
         let dist2 = mateCoordinates[2].xCenter - mateCoordinates[1].xCenter;
 
-        if (dist1 < 0 || dist2 < 0 || dist1 === dist2) {
+        if (dist1 < 0 || dist2 < 0 || Math.abs(dist1 - dist2) < 1e-7) {
           return 0;
         }
 
         if (dist1 > dist2) {
-          return this.move(mateCoordinates.slice(2, 3), dist1 - dist2);
+          movedIndividuals += this.move(mateCoordinates.slice(2, 3), dist1 - dist2);
         }
-        return this.move(mateCoordinates.slice(1, 3), dist2 - dist1);
+        movedIndividuals += this.move(mateCoordinates.slice(1, 3), dist2 - dist1);
       }
     }
-    return 0;
+    return movedIndividuals;
   }
 
   private moveOverlaps(levels: IndividualWithPosition[][]) {
@@ -190,7 +222,7 @@ export class PedigreeChartLevelComponent implements OnInit {
     let children = level.slice(
       level.indexOf(firstChild), level.indexOf(lastChild) + 1);
 
-    if (offset !== 0) {
+    if (Math.abs(offset) > 1e-7) {
       return this.move(children, offset) + children.length;
     }
     return 0;
@@ -231,7 +263,7 @@ export class PedigreeChartLevelComponent implements OnInit {
 
 
     if (offset !== 0) {
-      return this.move([father, mother], offset) + 2;
+      return this.move([father, mother], offset);
     }
     return 0;
   }
@@ -254,7 +286,7 @@ export class PedigreeChartLevelComponent implements OnInit {
     let level = this.getIndividualsOnLevel(individuals[0]);
     // console.log("moving", individuals, offset);
 
-    if(count > 100) {
+    if (count > 100) {
       console.log("Too much moving...");
       return 0;
     }
@@ -282,7 +314,7 @@ export class PedigreeChartLevelComponent implements OnInit {
 
     if (offset > 0) {
       let start = minIndividual.xCenter;
-      let end = maxIndividual.xCenter
+      let end = maxIndividual.xCenter;
       let newEnd = end + offset;
 
       toCheckCollision = this.getIndividualsInRange(level, start, newEnd);
@@ -294,12 +326,12 @@ export class PedigreeChartLevelComponent implements OnInit {
       // console.log("found", toCheckCollision);
       if (toCheckCollision.length) {
         // collisionMove = offset;
-        collisionMove = toCheckCollision.map(i => newEnd - i.xCenter + 8*2 + i.size)
+        collisionMove = toCheckCollision.map(i => newEnd - i.xCenter + 8 * 2 + i.size)
           .reduce((a, b) => Math.max(a, b));
       }
     } else {
       let start = minIndividual.xCenter;
-      let end = maxIndividual.xCenter
+      let end = maxIndividual.xCenter;
       let newStart = start + offset;
 
       toCheckCollision = this.getIndividualsInRange(level, newStart, end);
@@ -311,7 +343,7 @@ export class PedigreeChartLevelComponent implements OnInit {
       // console.log("found", toCheckCollision);
       if (toCheckCollision.length) {
         // collisionMove = offset;
-        collisionMove = toCheckCollision.map(i => newStart - i.xCenter - 8*2 - i.size)
+        collisionMove = toCheckCollision.map(i => newStart - i.xCenter - 8 * 2 - i.size)
           .reduce((a, b) => Math.min(a, b));
       }
     }
@@ -329,7 +361,7 @@ export class PedigreeChartLevelComponent implements OnInit {
       othersMoved = this.move(toCheckCollision, collisionMove, count + 1, alreadyMoved.concat(individuals));
     }
 
-    return toCheckCollision.length + othersMoved;
+    return individuals.length + othersMoved;
   }
 
   private getIndividualsInRange(individuals: IndividualWithPosition[], start, end) {
