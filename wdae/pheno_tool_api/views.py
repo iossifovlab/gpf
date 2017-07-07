@@ -64,10 +64,13 @@ class PhenoToolView(APIView):
         dataset_id = data['datasetId']
         measure_id = data['measureId']
         dataset = self.datasets_factory.get_dataset(dataset_id)
-        normalize_by = [self.get_normalize_measure_id(measure_id,
-                                                      normalize_by_elem,
-                                                      dataset.pheno_db)
-                        for normalize_by_elem in data['normalizeBy']]
+        normalize_by = [
+            self.get_normalize_measure_id(measure_id,
+                                          normalize_by_elem,
+                                          dataset.pheno_db)
+            for normalize_by_elem in data['normalizeBy']
+        ]
+        normalize_by = filter(lambda n: n is not None, normalize_by)
 
         tool = PhenoTool(
             dataset.pheno_db, dataset.studies, roles=['prb'],
