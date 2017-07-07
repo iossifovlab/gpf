@@ -76,6 +76,17 @@ class PhenoToolView(APIView):
 
         return dataset, tool, normalize_by
 
+    @staticmethod
+    def _align_NA_results(results):
+        for result in results:
+            for gender in ['femaleResults', 'maleResults']:
+                res = result[gender]
+                if res['positive']['count'] == 0:
+                    assert res['positive']['mean'] == 0
+                    assert res['positive']['deviation'] == 0
+                    assert res['pValue'] == 'NA'
+                    res['positive']['mean'] = res['negative']['mean']
+
     def post(self, request):
         data = request.data
         try:
@@ -83,6 +94,8 @@ class PhenoToolView(APIView):
 
             results = [self.calc_by_effect(effect, tool, data, dataset)
                        for effect in data['effectTypes']]
+
+            self._align_NA_results(results)
 
             response = {
                 "description": "Desc",
