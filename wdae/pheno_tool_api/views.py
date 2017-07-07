@@ -90,18 +90,30 @@ class PhenoToolView(APIView):
                     assert res['pValue'] == 'NA'
                     res['positive']['mean'] = res['negative']['mean']
 
+    @staticmethod
+    def _build_report_description(measure_id, normalize_by):
+        if not normalize_by:
+            return measure_id
+        else:
+            return "{} ~ {}".format(
+                measure_id,
+                " + ".join(normalize_by)
+            )
+
     def post(self, request):
         data = request.data
         try:
-            dataset, tool, _ = self.prepare_pheno_tool(data)
+            dataset, tool, normalize_by = self.prepare_pheno_tool(data)
 
             results = [self.calc_by_effect(effect, tool, data, dataset)
                        for effect in data['effectTypes']]
 
             self._align_NA_results(results)
+            description = self._build_report_description(
+                tool.measure_id, normalize_by)
 
             response = {
-                "description": "Desc",
+                "description": description,
                 "results": results
             }
 
