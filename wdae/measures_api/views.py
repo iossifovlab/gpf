@@ -85,8 +85,8 @@ class PhenoMeasureHistogramView(QueryBaseView):
             result = {
                 "measure": pheno_measure,
                 "desc": "",
-                "min": measure.min_value,
-                "max": measure.max_value,
+                "min": min(bins),
+                "max": max(bins),
                 "bars": bars,
                 "bins": bins,
                 "step": (measure.max_value - measure.min_value) / 1000.0,
