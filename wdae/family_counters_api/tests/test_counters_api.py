@@ -187,7 +187,7 @@ class Test(BaseAuthenticatedUserTest):
                     "role": "prb",
                     "measure": "bapq.average",
                     "domainMin": 1,
-                    "domainMax": 4,
+                    "domainMax": 4.97,
                     "mmin": 1,
                     "mmax": 3.0816666666666666
                 }
