@@ -78,7 +78,7 @@ export class Individual extends IndividualSet {
   }
 
 
-  areInMatingUnit(second: Individual) {
+  areMates(second: Individual) {
     let areInMatingUnit = false;
 
     for (let matingUnit of this.matingUnits) {

@@ -1,6 +1,8 @@
 import { Input, Component, OnInit } from '@angular/core';
+
 import { PedigreeData } from '../genotype-preview-table/genotype-preview';
-import { Individual, IndividualWithPosition, Line, SameLevelGroup, MatingUnit } from './pedigree-data';
+import { Individual, IndividualWithPosition, Line, SameLevelGroup, MatingUnit, ParentalUnit } from './pedigree-data';
+import { hasIntersection } from '../utils/sets-helper';
 
 @Component({
   selector: '[gpf-pedigree-chart-level]',
@@ -9,12 +11,12 @@ import { Individual, IndividualWithPosition, Line, SameLevelGroup, MatingUnit } 
 export class PedigreeChartLevelComponent implements OnInit {
   pedigreeDataWithLayout: IndividualWithPosition[];
   lines: Line[];
+  blownFuse = false;
 
   @Input() connectingLineYPosition: number;
   @Input() individuals: Individual[][];
   groups: SameLevelGroup[][] = new Array<SameLevelGroup[]>();
   private individualToGroup: Map<string, SameLevelGroup> = new Map();
-
 
   ngOnInit() {
     this.pedigreeDataWithLayout = [];
@@ -25,7 +27,6 @@ export class PedigreeChartLevelComponent implements OnInit {
         this.groups.push(
           this.generateLayout(this.individuals[i], i));
       }
-      // console.log(this.groups);
       this.optimizeDrawing(this.groups);
       for (let group of this.groups) {
         this.lines = this.lines.concat(
@@ -45,7 +46,7 @@ export class PedigreeChartLevelComponent implements OnInit {
       let onlySiblingsGroup = this.groups[i]
         .filter(group => group.members.some(member => !!member.parents));
       for (let group of onlySiblingsGroup) {
-        this.centerParentOfGroup(group);
+        this.centerParentsOfGroup(group);
       }
     }
 
@@ -56,8 +57,140 @@ export class PedigreeChartLevelComponent implements OnInit {
         this.centerChildrenOfParents(group);
       }
     }
+
+    this.fixOverlaps(groups);
     this.moveGroupsToLeft(groups, xOffset);
 
+  }
+
+  private fixOverlaps(groups: SameLevelGroup[][]) {
+    let currentIter = 0;
+
+    let movedGroups: SameLevelGroup[] = [];
+    for (let i = 0; i < groups.length; i++) {
+      currentIter++;
+      if (currentIter > 1000) {
+        console.log("Exit due to max iter!");
+        this.blownFuse = true;
+        // debugger
+        return;
+      }
+      // movedGroups = [];
+      let overlaps = this.overlappingGroupsOnLevel(groups[i]);
+      if (overlaps.length) {
+        let [group1, group2] = overlaps[0];
+        let g1OldX = group1.startX;
+        let g2OldX = group2.startX;
+
+
+        let childrenStartAndEnd1 =
+          this.getFirstAndLastChildWithPositions(group1);
+        let childrenStartAndEnd2 =
+          this.getFirstAndLastChildWithPositions(group2);
+
+        let g1Width = group1.width * 2;
+        if (childrenStartAndEnd1[0]) {
+          g1Width = childrenStartAndEnd1[1].xUpperLeftCorner -
+          childrenStartAndEnd1[0].xUpperLeftCorner + group1.memberSize;
+        }
+        let g2Width = group2.width * 2;
+        if (childrenStartAndEnd2[0]) {
+          g2Width = childrenStartAndEnd2[1].xUpperLeftCorner -
+          childrenStartAndEnd2[0].xUpperLeftCorner + group2.memberSize;
+        }
+
+        // g1Width = Math.abs(g1Width);
+        // g2Width = Math.abs(g2Width);
+
+        // console.log(g1Width, g2Width);
+
+
+        let group1Center = group1.startX + g1Width / 2;
+        let group2Center = group2.startX + g2Width / 2;
+
+        let g1NewX = group1Center - g1Width + group1.memberSize / 2;
+        let g2NewX = group2Center - group2.memberSize / 2;
+
+        group1.startX = g1NewX;
+        // console.log(g1NewX, g2NewX);
+        // console.log("First")
+
+        if (this.groupsOverlap(group1, group2)) {
+          group1.startX = g1OldX;
+          group2.startX = g2NewX;
+          // console.log("Second")
+        } else {
+          // this.centerChildrenOfParents(group1);
+          i--;
+          continue;
+        }
+
+        if (this.groupsOverlap(group1, group2)) {
+          group1.startX = g1NewX;
+          group2.startX = g2NewX;
+          // console.log("Third")
+        } else {
+          // this.centerChildrenOfParents(group2);
+          i--;
+          continue;
+        }
+
+        if (this.groupsOverlap(group1, group2)) {
+            group1.startX = g1OldX;
+            group2.startX = g2OldX;
+            // console.log("Reset")
+        } else {
+          // this.centerChildrenOfParents(group1);
+          // this.centerChildrenOfParents(group2);
+        }
+      }
+      // for (let [group1, group2] of overlaps) {
+      //   if (movedGroups.indexOf(group1) === -1) {
+      //     let group1Parents = this.getParentsGroups(group1);
+      //     let group2Parents = this.getParentsGroups(group2);
+      //
+      //     if (group1Parents.length === 1 && group2Parents.length === 1 &&
+      //         group1Parents[0] === group2Parents[0]) {
+      //       group2.startX = group1.startX + group1.width + 8;
+      //
+      //
+      //     }
+      //   }
+      //   movedGroups.push(group2);
+      //   i--;
+      // }
+    }
+  }
+
+  // private findMatingChain(group: SameLevelGroup) {
+  //   let matingChains: [IndividualWithPosition, IndividualWithPosition][] = [];
+  //   let individuals = group.individualsWithPositions;
+  //
+  //   for (let i = 0; i < individuals.length - 1; i++) {
+  //     if (individuals[i].individual.matingUnits.length > 0) {
+  //       let start = i;
+  //       for (let j = i + 1; j < individuals.length; j++) {
+  //         let prevMatingUnits = new Set(individuals[j - 1].individual.matingUnits);
+  //         let currentMatingUnits = new Set(individuals[j].individual.matingUnits);
+  //         if (!hasIntersection(prevMatingUnits, currentMatingUnits)) {
+  //           matingChains.push([individuals[start], individuals[j]]);
+  //           break;
+  //         }
+  //       }
+  //     }
+  //   }
+  //
+  //   return matingChains;
+  // }
+
+  private getParentsGroups(childrenGroup: SameLevelGroup) {
+    let parents: ParentalUnit[] = childrenGroup.members
+      .filter(i => !!i.parents)
+      .map(i => i.parents);
+    parents = Array.from(new Set(parents));
+
+    return parents
+      .map(parentalUnit => this.individualToGroup.get(parentalUnit.mother.pedigreeData.id));
   }
 
   private moveGroupsToLeft(groups: SameLevelGroup[][], xOffset) {
@@ -75,13 +208,10 @@ export class PedigreeChartLevelComponent implements OnInit {
     let groupMatingUnits = group.members
       .filter(member => member.matingUnits.length > 0)
       .map(member => member.matingUnits)
-      .reduce((acc, matingUnits) => acc.concat(matingUnits), [])
-      .reduce((acc, matingUnits) => {
-        if (acc.indexOf(matingUnits) === -1) {
-          acc.push(matingUnits);
-        }
-        return acc;
-      }, []);
+      .reduce((acc, matingUnits) => acc.concat(matingUnits), []);
+
+    groupMatingUnits = Array.from(new Set(groupMatingUnits));
+
     for (let matingUnit of groupMatingUnits) {
       let fatherX = group.getXForMember(matingUnit.father);
       let motherX = group.getXForMember(matingUnit.mother);
@@ -103,10 +233,19 @@ export class PedigreeChartLevelComponent implements OnInit {
   }
 
   private getFirstAndLastChildWithPositions(children: SameLevelGroup,
-    matingUnit: MatingUnit) {
+    matingUnit?: MatingUnit) {
     return children.individualsWithPositions
       .reduce((acc, m) => {
-        if (m.individual.isChildOf(matingUnit.father, matingUnit.mother)) {
+        if (matingUnit) {
+          if (m.individual.isChildOf(matingUnit.father, matingUnit.mother)) {
+            if (!acc[0]) {
+              acc[0] = m;
+            }
+            acc[1] = m;
+          }
+          return acc;
+        }
+        if (m.individual.parents) {
           if (!acc[0]) {
             acc[0] = m;
           }
@@ -116,7 +255,7 @@ export class PedigreeChartLevelComponent implements OnInit {
       }, [null, null] as [IndividualWithPosition, IndividualWithPosition] );
   }
 
-  private centerParentOfGroup(group: SameLevelGroup) {
+  private centerParentsOfGroup(group: SameLevelGroup) {
       let firstMember = group.members.find(individual => !!individual.parents);
       if (!this.individualToGroup.has(firstMember.pedigreeData.id)) {
         return;
@@ -136,7 +275,7 @@ export class PedigreeChartLevelComponent implements OnInit {
         currentGroup = new SameLevelGroup(totalHeight * level + 20);
         currentGroup.members.push(individual);
         groups.push(currentGroup);
-      } else if (!individual.areInMatingUnit(currentGroup.lastMember) &&
+      } else if (!individual.areMates(currentGroup.lastMember) &&
         (!individual.areSiblings(currentGroup.lastMember))) {
         currentGroup = new SameLevelGroup(totalHeight * level + 20);
         currentGroup.members.push(individual);
@@ -164,22 +303,50 @@ export class PedigreeChartLevelComponent implements OnInit {
     return groups;
   }
 
-  private overlapOnLayer(groups: SameLevelGroup[]) {
+  private groupsOverlap(group1: SameLevelGroup, group2: SameLevelGroup) {
+    let inside = (g1, g2) => g1.startX <= g2.startX &&
+      g1.startX + g1.width >= g2.startX;
+    return inside(group1, group2) || inside(group2, group1);
+  }
+
+  private overlappingGroupsOnLevel(groups: SameLevelGroup[]) {
     let individuals: IndividualWithPosition[] = [];
+    let overlappingGroups: [SameLevelGroup, SameLevelGroup][] = [];
 
-    for (let group of groups) {
-      individuals = individuals.concat(group.individualsWithPositions);
-    }
-    for (let i = 0; i < individuals.length - 1; i++) {
-      let difference = Math.abs(
-        individuals[i].xCenter - individuals[i + 1].xCenter);
-      if (difference < individuals[i].size / 2 ||
-          difference < individuals[i + 1].size / 2) {
-        return true;
+    for (let i = 0; i < groups.length - 1; i++) {
+      if (this.groupsOverlap(groups[i], groups[i + 1])) {
+        overlappingGroups.push([groups[i], groups[i + 1]]);
       }
+      // individuals = individuals.concat(group.individualsWithPositions);
     }
+    // for (let i = 0; i < individuals.length - 1; i++) {
+    //   let firstIndividual = individuals[i];
+    //   let secondIndividual = individuals[i + 1];
+    //
+    //   if (firstIndividual.xCenter > secondIndividual.xCenter) {
+    //     let temp = firstIndividual;
+    //     firstIndividual = secondIndividual;
+    //     secondIndividual = firstIndividual;
+    //   }
+    //
+    //   let difference = secondIndividual.xCenter - firstIndividual.xCenter;
+    //   console.log(difference);
+    //   if (difference < firstIndividual.size / 2 ||
+    //       difference < secondIndividual.size / 2) {
+    //
+    //     if (this.individualToGroup.get(firstIndividual.individual.pedigreeData.id) ===
+    //       this.individualToGroup.get(secondIndividual.individual.pedigreeData.id)) {
+    //         console.log("BAD!");
+    //       }
+    //
+    //     overlappingGroups.push([
+    //       this.individualToGroup.get(firstIndividual.individual.pedigreeData.id),
+    //       this.individualToGroup.get(secondIndividual.individual.pedigreeData.id),
+    //     ]);
+    //   }
+    // }
 
-    return false;
+    return overlappingGroups;
   }
 
   private generateLines(pedigreeData: SameLevelGroup[], horizontalYOffset = 15) {
@@ -198,7 +365,7 @@ export class PedigreeChartLevelComponent implements OnInit {
         if (i + 1 < individuals.length) {
           let other = individuals[i + 1];
 
-          if (current.individual.areInMatingUnit(other.individual)) {
+          if (current.individual.areMates(other.individual)) {
             let middleX = (current.xCenter + other.xCenter) / 2;
             lines.push(new Line(current.xCenter, current.yCenter,
               other.xCenter, other.yCenter));

@@ -11,3 +11,5 @@
     *ngFor="let pedigree of pedigreeDataWithLayout"
     [attr.transform]="'translate(' +  pedigree.xUpperLeftCorner + ' ' + pedigree.yUpperLeftCorner + ') scale(' + pedigree.scaleFactor + ')'"
     [pedigreeData]=pedigree.individual.pedigreeData />
+
+<!-- <svg:text *ngIf="blownFuse" x="0" y="35" font-family="Verdana" font-size="35">Blown fuse!</svg:text> -->
