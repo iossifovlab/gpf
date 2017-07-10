@@ -468,22 +468,6 @@ def get_effect_types_set(s):
 
     return set(R)
 
-def _in_stop_codons(s, code):
-    if s in code.stopCodons:
-        return True
-    else:
-        return False
-
-def _in_start_codons(s, code):
-    if s in code.startCodons:
-        return True
-    else:
-        return False
-
-
-
-
-
 def annotate_variant(gm, refG, chr=None, position=None, loc=None, var=None, ref=None, alt=None, length=None, seq=None, typ=None, promoter_len=0):
     #print chr, position, loc, var, ref, alt, length, seq, typ
     v = load_variant(chr, position, loc, var, ref, alt, length, seq, typ)
@@ -494,9 +478,6 @@ def annotate_variant(gm, refG, chr=None, position=None, loc=None, var=None, ref=
               effect.aa_change)
     return (e)
 
-
-
-"5'UTR-intron", "3'UTR-intron"
 def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None, length=None, seq=None, typ=None):
     v = Variant()
 
