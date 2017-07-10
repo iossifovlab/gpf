@@ -5,8 +5,9 @@ from .mutation import GenomicSequence
 
 
 class VariantAnnotator:
-    def __init__(self, reference_genome):
+    def __init__(self, reference_genome, code):
         self.reference_genome = reference_genome
+        self.code = code
 
     def firstOrLastCodonOutput_Indel(self, tm, pos, worstEffect,
                                      type, cds_reg, length):
@@ -28,7 +29,7 @@ class VariantAnnotator:
 
         return([worstEffect, hit])
 
-    def dealWithLastCodon_Del(self, tm, pos, length, cds_reg, code,
+    def dealWithLastCodon_Del(self, tm, pos, length, cds_reg,
                               genomic_sequence, mutated_sequence):
         tmw = TranscriptModelWrapper(tm, genomic_sequence)
         codon = tmw.get_last_codon()
@@ -36,9 +37,8 @@ class VariantAnnotator:
         mutated_codon = tmw.get_last_codon()
 
         print("LAST_DEL", codon, mutated_codon, pos)
-        if (VariantAnnotation._in_stop_codons(codon, code) and
-                not VariantAnnotation._in_stop_codons(mutated_codon,
-                                                      code)):
+        if (self._in_stop_codons(codon) and
+                not self._in_stop_codons(mutated_codon)):
             worstEffect = "noEnd"
         else:
             return None
@@ -47,7 +47,7 @@ class VariantAnnotator:
                                                 cds_reg, length)
         return out
 
-    def dealWithFirstCodon_Del(self, tm, pos, length, cds_reg, code,
+    def dealWithFirstCodon_Del(self, tm, pos, length, cds_reg,
                                genomic_sequence, mutated_sequence):
         tmw = TranscriptModelWrapper(tm, genomic_sequence)
         codon = tmw.get_first_codon()
@@ -56,9 +56,8 @@ class VariantAnnotator:
 
         print("FIRST_DEL", codon, mutated_codon, pos)
 
-        if (VariantAnnotation._in_start_codons(codon, code) and
-                not VariantAnnotation._in_start_codons(mutated_codon,
-                                                       code)):
+        if (self._in_start_codons(codon) and
+                not self._in_start_codons(mutated_codon)):
             worstEffect = "noStart"
         else:
             return None
@@ -128,7 +127,6 @@ class VariantAnnotator:
 
     def annotate(self, what_hit, transcript_model, chromosome, pos, length,
                  ref, seq):
-        code = VariantAnnotation.NuclearCode()
         codingRegions = transcript_model.CDS_regions()
 
         ref_length = len(ref)
@@ -176,7 +174,7 @@ class VariantAnnotator:
             if pos < transcript_model.cds[0] + 3:
 
                 h = self.dealWithFirstCodon_Del(
-                    transcript_model, pos, length, codingRegions, code,
+                    transcript_model, pos, length, codingRegions,
                     genomic_sequence, mutated_sequence
                 )
                 if h is not None:
@@ -188,7 +186,7 @@ class VariantAnnotator:
             if pos > transcript_model.cds[1] - 3 \
                     and pos <= transcript_model.cds[1]:
                 h = self.dealWithLastCodon_Del(
-                    transcript_model, pos, length, codingRegions, code,
+                    transcript_model, pos, length, codingRegions,
                     genomic_sequence, mutated_sequence
                 )
                 if h is not None:
@@ -212,7 +210,7 @@ class VariantAnnotator:
                     and pos <= transcript_model.cds[1]:
 
                 h = self.dealWithFirstCodon_Del(
-                    transcript_model, pos, length, codingRegions, code,
+                    transcript_model, pos, length, codingRegions,
                     genomic_sequence, mutated_sequence
                 )
                 if h is not None:
@@ -223,7 +221,7 @@ class VariantAnnotator:
 
             if pos < transcript_model.cds[0] + 3:
                 h = self.dealWithLastCodon_Del(
-                    transcript_model, pos, length, codingRegions, code,
+                    transcript_model, pos, length, codingRegions,
                     genomic_sequence, mutated_sequence
                 )
                 if h is not None:
@@ -236,7 +234,7 @@ class VariantAnnotator:
                 and pos_last > transcript_model.cds[1] - 3:
             h = VariantAnnotation.dealWithCodingAndLastCodon_Del(
                 transcript_model, pos, length, codingRegions,
-                self.reference_genome, code
+                self.reference_genome, self.code
             )
             h.append(transcript_model.strand)
             h.append(transcript_model.trID)
@@ -252,11 +250,10 @@ class VariantAnnotator:
                     )
                     hit = [transcript_model.gene, protPos]
                     if length % 3 == 0:
-                        if self.checkForNewStop(pos, length,
-                                                transcript_model,
-                                                genomic_sequence,
-                                                mutated_sequence,
-                                                code) is False:
+                        if self.checkForNewStop(
+                            pos, length, transcript_model,
+                            genomic_sequence, mutated_sequence,
+                        ) is False:
                             worstEffect = "no-frame-shift"
                         else:
                             worstEffect = "no-frame-shift-newStop"
@@ -270,12 +267,10 @@ class VariantAnnotator:
                                transcript_model.trID]
                         worstForEachTranscript.append(res)
                         return worstForEachTranscript
-
-        print("??")
         return worstForEachTranscript
 
     def checkForNewStop(self, pos_start, length, tm, genomic_sequence,
-                        mutated_sequence, code):
+                        mutated_sequence):
         for pos in range(pos_start, pos_start + length):
             tmw = TranscriptModelWrapper(tm, genomic_sequence)
             codon = tmw.get_codon_for_pos(tm.chr, pos)
@@ -284,13 +279,19 @@ class VariantAnnotator:
 
             print("checkForNewStop", pos, codon, mutated_codon)
 
-            if self._in_stop_codons(mutated_codon, code) and \
-                    not self._in_stop_codons(codon, code):
+            if self._in_stop_codons(mutated_codon) and \
+                    not self._in_stop_codons(codon):
                 return True
         return False
 
-    def _in_stop_codons(self, s, code):
-        if s in code.stopCodons:
+    def _in_stop_codons(self, s):
+        if s in self.code.stopCodons:
+            return True
+        else:
+            return False
+
+    def _in_start_codons(self, s):
+        if s in self.code.startCodons:
             return True
         else:
             return False
