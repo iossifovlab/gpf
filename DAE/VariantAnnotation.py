@@ -339,87 +339,7 @@ class Variant:
 
 
                     exons = i.exons
-                    if self.type == "deletion":
-
-                        codingRegions = i.CDS_regions()
-                        if self.pos < i.cds[0] + 3:
-
-                            h = dealWithFirstCodon_Del(i, self.pos, self.length, codingRegions, refG, code)
-                            h.append(i.strand)
-                            h.append(i.trID)
-                            worstForEachTranscript.append(h)
-
-                            continue
-
-                        if self.pos > i.cds[1] - 3 and self.pos <= i.cds[1]:
-                            h = dealWithLastCodon_Del(i, self.pos, self.length, codingRegions, refG, code)
-                            h.append(i.strand)
-                            h.append(i.trID)
-                            worstForEachTranscript.append(h)
-                            continue
-
-                        if self.pos <= i.cds[1] - 3 and self.pos_last > i.cds[1] - 3:
-                            h = dealWithCodingAndLastCodon_Del(i, self.pos, self.length, codingRegions, refG, code)
-                            h.append(i.strand)
-                            h.append(i.trID)
-                            worstForEachTranscript.append(h)
-
-
-                        prev = codingRegions[0].stop
-                        for j in codingRegions:
-                            if (self.pos < j.start and self.pos > prev) or (self.pos_last < j.start and self.pos_last > prev):
-                                for s in [prev + 1, prev+2, j.start-1, j.start-2]:
-                                    if self.pos <= s <= self.pos_last:
-                                        if s == prev + 1 or s == prev+2:
-                                            splice = (prev + 1, prev + 2)
-                                            side = "5'"
-                                        else:
-                                            splice = (j.start-2, j.start-1)
-                                            side = "3'"
-                                        worstEffect = checkIfSplice(self.chr, self.pos, None, self.length, splice, side, "D", refG)
-
-                                        if worstEffect == "splice-site":
-                                            hit = prepareIntronHit(i, self.pos, self.length, codingRegions)
-
-                                            c = findSpliceContext(i, self.pos, self.length, self.seq, codingRegions, "D", refG)
-                                            hit.append(c)
-
-
-                                        elif worstEffect == "intron":
-                                            hit = prepareIntronHit(i,self.pos, self.length, codingRegions)
-                                        elif worstEffect == "frame-shift" or worstEffect == "no-frame-shift":
-                                            protPos = checkProteinPosition(i, self.pos, self.length, "D", codingRegions)
-                                            hit = [i.gene, protPos]
-                                        else:
-                                            print("No such worst effect type: " + worstEffect)
-                                            sys.exit(-65)
-                                        break
-
-                                if worstEffect == None:
-                                    hit = prepareIntronHit(i, self.pos, self.length, codingRegions)
-                                    worstEffect = "intron"
-
-                                worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
-                                break
-
-                            if self.pos_last <= j.stop and self.pos >= j.start:
-                                #coding
-                                if self.length % 3 != 0:
-                                    worstEffect = "frame-shift"
-                                else:
-                                    if checkForNewStop(i, self.pos, None, self.length, "D", refG, code) == False:
-                                        worstEffect = "no-frame-shift"
-                                    else:
-                                        worstEffect = "no-frame-shift-newStop"
-                                protPos = checkProteinPosition(i, self.pos, self.length, "D", codingRegions)
-                                hit = [i.gene, protPos]
-                                worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
-                                break
-
-                            prev = j.stop
-
-
-                    elif self.type == "insertion":
+                    if self.type == "insertion":
 
 
                         worstEffect = "intergenic"
@@ -437,7 +357,7 @@ class Variant:
 
                             continue
 
-                        if self.pos > i.cds[1]-2 and self.pos <= i.cds[1]:
+                        if self.pos >= i.cds[1]-2 and self.pos <= i.cds[1]:
                             h = dealWithLastCodon_Ins(i, self.pos, self.seq, self.length, codingRegions, refG, code)
                             if h == "intergenic":
                                 continue
@@ -446,7 +366,7 @@ class Variant:
                             worstForEachTranscript.append(h)
                             continue
 
-
+                        print("BB", self.pos, i.cds[1])
                         prev = codingRegions[0].stop
                         for j in xrange(0, len(codingRegions)):
                             if self.pos < codingRegions[j].start and self.pos > prev:
@@ -492,9 +412,11 @@ class Variant:
                                 break
 
                             if self.pos <= codingRegions[j].stop and self.pos > codingRegions[j].start:
+                                print("CODING")
                                 # coding
                                 protPos = checkProteinPosition(i, self.pos, 1, "I", codingRegions)
                                 hit = [i.gene, protPos]
+                                checkForNewStop(i, self.pos, self.seq, self.length, "I", refG, code)
                                 if self.length % 3 != 0:
                                     worstForEachTranscript.append(["frame-shift", hit, i.strand, i.trID])
                                 else:
@@ -722,6 +644,10 @@ def annotate_variant(gm, refG, chr=None, position=None, loc=None, var=None, ref=
     #print chr, position, loc, var, ref, alt, length, seq, typ
     v = load_variant(chr, position, loc, var, ref, alt, length, seq, typ)
     e = v.annotate(gm, refG, promoter_len)
+    for effect in e:
+        print("Effect", effect.gene, effect.transcript_id, effect.strand,
+              effect.effect, effect.prot_pos, effect.prot_length,
+              effect.aa_change)
     return (e)
 
 
@@ -925,12 +851,14 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
             v.length = int(a.group(1))
             v.pos_last = v.pos + v.length - 1
         elif t == "I":
-            v.type = "insertion"
+            v.type = "complex"
             a = re.match('.*\((.*)\)', var)
+            v.ref = ""
             v.seq = a.group(1).upper()
             v.seq = re.sub('[0-9]+', '', v.seq)
             v.length = len(v.seq)
             v.pos_last = v.pos
+            v.pos = v.pos
 
         elif t == "C":
             if var.startswith("complex"):
@@ -1598,174 +1526,6 @@ def firstOrLastCodonOutput_Indel(tm, pos, worstEffect, type, cds_reg, length):
 
     return([worstEffect, hit])
 
-
-def dealWithFirstCodon_Del(tm, pos, length, cds_reg, refGenome, code):
-
-
-    if pos < tm.cds[0]:
-        codingDelLength = length-tm.cds[0]+pos
-    else:
-        codingDelLength = length
-
-
-    if tm.strand == "+":
-        if pos >= tm.cds[0]:
-            if length%3 != 0:
-                worstEffect = "noStart"
-            elif  not _in_start_codons(getSeq(refGenome, tm.chr, tm.cds[0], tm.cds[0]+2), code):
-
-                worstEffect = "no-frame-shift"
-            else:
-                if pos == tm.cds[0]:
-                    if not _in_start_codons(getSeq(refGenome, tm.chr, pos+length, pos+length+2), code):
-                        worstEffect = "noStart"
-                    else:
-                        worstEffect = "no-frame-shift"
-                else:
-                    if not _in_start_codons(getSeq(refGenome, tm.chr, tm.cds[0], pos-1) + getSeq(refGenome, tm.chr, pos+length, pos+length+2)[:3], code):
-                        worstEffect = "noStart"
-                    else:
-                        worstEffect = "no-frame-shift"
-                '''
-                if getSeq(refGenome, tm.chr, pos+length, pos+length+2) != "ATG"[pos-tm.cds[0]:]:
-                    worstEffect = "noStart"
-                else:
-                    worstEffect = "no-frame-shift"
-                '''
-        else:
-            if not _in_start_codons(getSeq(refGenome, tm.chr, tm.cds[0], tm.cds[0] +2), code):
-
-                if (codingDelLength)%3 != 0:
-                    worstEffect = "frame-shift"
-                else:
-                    worstEffect = "no-frame-shift"
-            else:
-                if codingDelLength > 3:
-                    if (codingDelLength)%3 != 0:
-                        worstEffect = "frame-shift"
-                    else:
-                        if  _in_start_codons(getSeq(refGenome, tm.chr, pos - 3, pos - 1), code):
-                            worstEffect = "no-frame-shift"
-                        else:
-                            worstEffect = "noStart"
-                else:
-                    if _in_start_codons(getSeq(refGenome, tm.chr, pos - codingDelLength, pos-1) + getSeq(refGenome, tm.chr, tm.cds[0] + codingDelLength, tm.cds[0] + 2), code):
-
-                    # if getSeq(refGenome, tm.chr, pos - codingDelLength, pos-1) == "ATG"[:codingDelLength]:
-                        worstEffect = "no-frame-shift"
-                    else:
-                        worstEffect = "noStart"
-    # strand == "-"
-    else:
-        lastCodon = complement(getSeq(refGenome, tm.chr, tm.cds[0], tm.cds[0] +2))[::-1]
-
-        if not _in_stop_codons(lastCodon, code):
-            if codingDelLength%3 != 0:
-                worstEffect = "frame-shift"
-            else:
-                worstEffect = "no-frame-shift"
-        else:
-            if pos <= tm.cds[0]:
-                if codingDelLength <= 3:
-
-                    if _in_stop_codons(complement(getSeq(refGenome, tm.chr, tm.cds[0] + codingDelLength, tm.cds[0]+2)[::-1] + getSeq(refGenome, tm.chr,pos-codingDelLength, pos-1)[::-1]), code):
-
-                       worstEffect = "no-frame-shift"
-                    else:
-                        worstEffect = "noEnd"
-                else:
-                    if codingDelLength%3 != 0:
-                       worstEffect = "frame-shift"
-                    else:
-                        if _in_stop_codons(complement(getSeq(refGenome, tm.chr,pos-3, pos-1)[::-1]), code):
-                            worstEffect = "no-frame-shift"
-                        else:
-                            worstEffect = "noEnd"
-
-            else:
-                if codingDelLength > 1:
-
-                    x = pos - tm.cds[0] + length - 1
-
-                    if x > 2:
-
-                        if codingDelLength%3 == 0:
-                            if _in_stop_codons(complement(getSeq(refGenome, tm.chr, pos-2, pos-1) +  getSeq(refGenome, tm.chr, tm.cds[0]+x+1))[::-1], code):
-                                worstEffect = "no-frame-shift"
-                            else:
-                                worstEffect = "noEnd"
-                        else:
-                            worstEffect = "frame-shift"
-                    else:
-                        if x == 2:
-                            if _in_stop_codons(complement(getSeq(refGenome, tm.chr, pos-3, pos-1))[::-1], code):
-                                worstEffect = "no-frame-shift"
-                            else:
-                                worstEffect = "noEnd"
-                        elif x == 1:
-                            if _in_stop_codons(complement(getSeq(refGenome, tm.chr, tm.cds[0]+2) + getSeq(refGenome, tm.chr, pos-2, pos-1))[::-1], code):
-
-                                worstEffect = "no-frame-shift"
-                            else:
-                                worstEffect = "noEnd"
-                        else:
-                            if _in_stop_codons(complement(getSeq(refGenome, tm.chr, tm.cds[0] +1, tm.cds[0] +2) + getSeq(refGenome, tm.chr, pos, pos-1))[::-1], code):
-
-                                worstEffect = "no-frame-shift"
-                            else:
-                                worstEffect = "noEnd"
-
-                else:
-
-                    if pos == tm.cds[0] + 2:
-                        worstEffect = "noEnd"
-                    else:
-                        if _in_stop_codons("T" + complement(getSeq(refGenome, tm.chr, tm.cds[0])) + complement(getSeq(refGenome, tm.chr, pos-2)), code):
-
-                            worstEffect = "no-frame-shift"
-                        else:
-                            worstEffect = "noEnd"
-
-
-
-
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D", cds_reg, length)
-    return(out)
-
-
-
-def dealWithLastCodon_Del(tm, pos, length, cds_reg, refGenome, code):
-
-
-    dist = pos - tm.cds[1]
-
-    if tm.strand == "+":
-        if not _in_stop_codons(getSeq(refGenome, tm.chr, tm.cds[1] -2, tm.cds[1]), code):
-            worstEffect = "no-frame-shift"
-        else:
-           if  getSeq(refGenome, tm.chr, tm.cds[1] -2, pos-1): ##
-               worstEffect = "no-frame-shift"
-           else:
-               worstEffect = "noEnd"
-
-    else:
-        if not _in_start_codons(complement(getSeq(refGenome, tm.chr, tm.cds[1] -2, tm.cds[1]))[::-1], code):
-            if pos == tm.cds[1]-2 and length >= 3:
-                worstEffect = "no-frame-shift"
-            else:
-                worstEffect = "frame-shift"
-        else:
-            if _in_start_codons(complement(getSeq(refGenome, tm.chr, tm.cds[1] -2, pos-1) + getSeq(refGenome, tm.chr, pos + length, pos + length - dist))[::-1], code):
-                worstEffect = "no-frame-shift"
-            else:
-                worstEffect = "noStart"
-
-
-
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D", cds_reg, length)
-    return(out)
-
-
 def dealWithCodingAndLastCodon_Del(tm, pos, length, cds_reg, refGenome, code):
 
     d = tm.cds[1] - (pos + length - 1)
@@ -1951,6 +1711,7 @@ def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
 
     # strand == "+"
     else:
+        print("AAAAAAAAA")
         if not _in_stop_codons(getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]), code):
 
             if length%3 == 0:
@@ -2035,37 +1796,13 @@ def findCodingBase(tm, pos, dist, refGenome):
     return(None)
 
 
-
-
-def checkForNewStop_Del(pos, length, tm, refGenome, code):
-
-    if tm.strand == "+":
-        frame = findFrame(tm, pos)
-        if frame == 0:
-            return(False)
-        if frame == 1:
-            codon = findCodingBase(tm, pos,-1, refGenome ) +  findCodingBase(tm, pos, length, refGenome ) +  findCodingBase(tm, pos, length+1, refGenome )
-        else:
-            codon = findCodingBase(tm, pos, -2 , refGenome) +  findCodingBase(tm, pos, -1 , refGenome) + findCodingBase(tm, pos, length , refGenome)
-    else:
-        frame = findFrame(tm, pos + length - 1)
-        if frame == 0:
-            return(False)
-        if frame == 1:
-            codon = complement(findCodingBase(tm, pos, length , refGenome) + findCodingBase(tm, pos, -1, refGenome ) + findCodingBase(tm, pos, -2, refGenome ))
-        else:
-            codon = complement(findCodingBase(tm, pos, length+1 , refGenome) + findCodingBase(tm, pos, length , refGenome) + findCodingBase(tm, pos, -1, refGenome ))
-
-    if _in_stop_codons(codon, code):
-        return(True)
-    return(False)
-
 def checkForNewStop_Ins(pos, seq, tm, length, refGenome, code):
 
 
 
     if tm.strand == "+":
         frame = findFrame(tm, pos)
+        print("checkForNewStop_Ins", frame)
         if frame == 0:
             return(False)
         if frame == 1:
@@ -2078,6 +1815,7 @@ def checkForNewStop_Ins(pos, seq, tm, length, refGenome, code):
         else:
             preCodon = findCodingBase(tm, pos, -2 , refGenome ) + findCodingBase(tm, pos, -1 , refGenome ) + seq[0]
             postCodon = seq[-2:] + findCodingBase(tm, pos, 0 , refGenome )
+            print("checkForNewStop_Ins", preCodon, postCodon)
             if length > 3:
                 for i in xrange(0, length/3-1):
                     if _in_stop_codons(seq[i*3 + 1: i*3 + 4], code):
@@ -2121,6 +1859,8 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
 
 
     splice_seq = getSeq(refGenome, chrom, splicePos[0], splicePos[1])
+    print("checkIfSplice_old", chrom, pos, seq, length, splicePos, side,
+          splice_seq)
 
     if type == "D":
         if side == "5'":

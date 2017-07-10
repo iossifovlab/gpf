@@ -1,11 +1,130 @@
 import sys
 import VariantAnnotation
-from .mutation import Mutation, MutatedGenomicSequence
+from .mutation import Mutation, MutatedGenomicSequence, TranscriptModelWrapper
+from .mutation import GenomicSequence
 
 
 class VariantAnnotator:
     def __init__(self, reference_genome):
         self.reference_genome = reference_genome
+
+    def firstOrLastCodonOutput_Indel(self, tm, pos, worstEffect,
+                                     type, cds_reg, length):
+        if worstEffect == "no-frame-shift" or worstEffect == "frame-shift":
+            protPos = VariantAnnotation.checkProteinPosition(
+                tm, pos, length, type, cds_reg
+            )
+            hit = [tm.gene, protPos]
+        elif worstEffect == "noEnd" or worstEffect == "noStart":
+            protLength = tm.CDS_len()/3
+            hit = [tm.gene, str(protLength)]
+        elif worstEffect == "3'UTR" or worstEffect == "5'UTR":
+            d = VariantAnnotation.distanceFromCoding(pos, tm)
+            hit = [worstEffect, [tm.gene, worstEffect, str(d)]]
+
+        else:
+            print("incorrect mut type: " + worstEffect)
+            sys.exit(-233)
+
+        return([worstEffect, hit])
+
+    def dealWithLastCodon_Del(self, tm, pos, length, cds_reg, code,
+                              genomic_sequence, mutated_sequence):
+        tmw = TranscriptModelWrapper(tm, genomic_sequence)
+        codon = tmw.get_last_codon()
+        tmw = TranscriptModelWrapper(tm, mutated_sequence)
+        mutated_codon = tmw.get_last_codon()
+
+        print("LAST_DEL", codon, mutated_codon, pos)
+        if (VariantAnnotation._in_stop_codons(codon, code) and
+                not VariantAnnotation._in_stop_codons(mutated_codon,
+                                                      code)):
+            worstEffect = "noEnd"
+        else:
+            return None
+
+        out = self.firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D",
+                                                cds_reg, length)
+        return out
+
+    def dealWithFirstCodon_Del(self, tm, pos, length, cds_reg, code,
+                               genomic_sequence, mutated_sequence):
+        tmw = TranscriptModelWrapper(tm, genomic_sequence)
+        codon = tmw.get_first_codon()
+        tmw = TranscriptModelWrapper(tm, mutated_sequence)
+        mutated_codon = tmw.get_first_codon()
+
+        print("FIRST_DEL", codon, mutated_codon, pos)
+
+        if (VariantAnnotation._in_start_codons(codon, code) and
+                not VariantAnnotation._in_start_codons(mutated_codon,
+                                                       code)):
+            worstEffect = "noStart"
+        else:
+            return None
+
+        out = self.firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D",
+                                                cds_reg, length)
+        return(out)
+
+    def splice_check(self, transcript_model, seq,
+                     chromosome, pos, pos_last, length, codingRegions):
+        worstEffect = None
+
+        prev = codingRegions[0].stop
+        for j in codingRegions:
+            print("A", pos, pos_last, j.start, prev)
+            if (pos < j.start and pos > prev) or \
+                    (pos_last < j.start and pos_last > prev):
+                for s in [prev + 1, prev+2, j.start-1, j.start-2]:
+                    if pos <= s <= pos_last:
+                        if s == prev + 1 or s == prev+2:
+                            splice = (prev + 1, prev + 2)
+                            side = "5'"
+                        else:
+                            splice = (j.start-2, j.start-1)
+                            side = "3'"
+                        worstEffect = VariantAnnotation.checkIfSplice(
+                            chromosome, pos, None, length, splice, side,
+                            "D", self.reference_genome
+                        )
+
+                        if worstEffect == "splice-site":
+                            hit = VariantAnnotation.prepareIntronHit(
+                                transcript_model, pos, length, codingRegions
+                            )
+
+                            c = VariantAnnotation.findSpliceContext(
+                                transcript_model, pos, length, seq,
+                                codingRegions, "D", self.reference_genome
+                            )
+                            hit.append(c)
+
+                        elif worstEffect == "intron":
+                            hit = VariantAnnotation.prepareIntronHit(
+                                transcript_model, pos, length, codingRegions
+                            )
+                        elif worstEffect == "frame-shift" \
+                                or worstEffect == "no-frame-shift":
+                            protPos = VariantAnnotation.checkProteinPosition(
+                                transcript_model, pos, length, "D",
+                                codingRegions
+                            )
+                            hit = [transcript_model.gene, protPos]
+                        else:
+                            print("No such worst effect type: " + worstEffect)
+                            sys.exit(-65)
+                        break
+                if worstEffect is None:
+                    hit = VariantAnnotation.prepareIntronHit(
+                        transcript_model, pos, length, codingRegions
+                    )
+                    worstEffect = "intron"
+
+                return [[worstEffect, hit,
+                         transcript_model.strand, transcript_model.trID]]
+            prev = j.stop
+        return None
 
     def annotate(self, what_hit, transcript_model, chromosome, pos, length,
                  ref, seq):
@@ -15,21 +134,127 @@ class VariantAnnotator:
         ref_length = len(ref)
         seq_length = len(seq)
         length = abs(seq_length - ref_length)
-        mutation = Mutation(pos, ref, seq)
-        mutated_sequence = MutatedGenomicSequence(self.reference_genome,
-                                                  mutation)
+        try:
+            mutation = Mutation(pos, ref, seq)
+            mutated_sequence = MutatedGenomicSequence(self.reference_genome,
+                                                      mutation)
+            genomic_sequence = GenomicSequence(self.reference_genome)
 
-        for j in xrange(0, len(codingRegions)):
-            if (pos <= codingRegions[j].stop and
-                    pos > codingRegions[j].start):
+            tmw = TranscriptModelWrapper(transcript_model, genomic_sequence)
+            codon = tmw.get_codon_for_pos(transcript_model.chr, pos)
+            tmw = TranscriptModelWrapper(transcript_model, mutated_sequence)
+            mutated_codon = tmw.get_codon_for_pos(transcript_model.chr, pos)
+
+            print("codon change: {}->{}".format(codon, mutated_codon))
+            print(tmw.get_codon_for_pos(transcript_model.chr, 47515673))
+        except TypeError:
+            print("codon change N/A")
+
+        pos_last = pos + length - 1
+
+        worstEffect = None
+        worstForEachTranscript = []
+        print("START", codingRegions, pos, pos_last)
+
+        splice_check = self.splice_check(transcript_model, seq, chromosome,
+                                         pos, pos_last, length, codingRegions)
+        if splice_check is not None:
+            return splice_check
+
+        if transcript_model.strand == "+":
+            tm = transcript_model
+            print("TX", pos, tm.cds[1], tm.tx[1])
+            if pos >= tm.cds[0] and pos <= tm.cds[0] + 2:
+                if tm.cds[0] == tm.tx[0]:
+                    return [["5'UTR", [tm.gene, "5'UTR", "1"],
+                             tm.strand, tm.trID]]
+            if pos >= tm.cds[1] - 2 and pos <= tm.cds[1]:
+                if tm.cds[1] == tm.tx[1]:
+                    return [["3'UTR", [tm.gene, "3'UTR", "1"],
+                             tm.strand, tm.trID]]
+
+            if pos < transcript_model.cds[0] + 3:
+
+                h = self.dealWithFirstCodon_Del(
+                    transcript_model, pos, length, codingRegions, code,
+                    genomic_sequence, mutated_sequence
+                )
+                if h is not None:
+                    h.append(transcript_model.strand)
+                    h.append(transcript_model.trID)
+                    worstForEachTranscript.append(h)
+                    return worstForEachTranscript
+
+            if pos > transcript_model.cds[1] - 3 \
+                    and pos <= transcript_model.cds[1]:
+                h = self.dealWithLastCodon_Del(
+                    transcript_model, pos, length, codingRegions, code,
+                    genomic_sequence, mutated_sequence
+                )
+                if h is not None:
+                    h.append(transcript_model.strand)
+                    h.append(transcript_model.trID)
+                    worstForEachTranscript.append(h)
+                    return worstForEachTranscript
+        else:
+            tm = transcript_model
+            print("TX REV", pos, tm.cds[1], tm.tx[1])
+            if pos >= tm.cds[0] and pos <= tm.cds[0] + 2:
+                if tm.cds[0] == tm.tx[0]:
+                    return [["3'UTR", [tm.gene, "3'UTR", "1"],
+                             tm.strand, tm.trID]]
+            if pos >= tm.cds[1] - 2 and pos <= tm.cds[1]:
+                if tm.cds[1] == tm.tx[1]:
+                    return [["5'UTR", [tm.gene, "5'UTR", "1"],
+                             tm.strand, tm.trID]]
+
+            if pos > transcript_model.cds[1] - 3 \
+                    and pos <= transcript_model.cds[1]:
+
+                h = self.dealWithFirstCodon_Del(
+                    transcript_model, pos, length, codingRegions, code,
+                    genomic_sequence, mutated_sequence
+                )
+                if h is not None:
+                    h.append(transcript_model.strand)
+                    h.append(transcript_model.trID)
+                    worstForEachTranscript.append(h)
+                    return worstForEachTranscript
+
+            if pos < transcript_model.cds[0] + 3:
+                h = self.dealWithLastCodon_Del(
+                    transcript_model, pos, length, codingRegions, code,
+                    genomic_sequence, mutated_sequence
+                )
+                if h is not None:
+                    h.append(transcript_model.strand)
+                    h.append(transcript_model.trID)
+                    worstForEachTranscript.append(h)
+                    return worstForEachTranscript
+
+        if pos <= transcript_model.cds[1] - 3 \
+                and pos_last > transcript_model.cds[1] - 3:
+            h = VariantAnnotation.dealWithCodingAndLastCodon_Del(
+                transcript_model, pos, length, codingRegions,
+                self.reference_genome, code
+            )
+            h.append(transcript_model.strand)
+            h.append(transcript_model.trID)
+            worstForEachTranscript.append(h)
+            return worstForEachTranscript
+
+        for j in codingRegions:
+            if (pos <= j.stop or
+                    pos >= j.start):
                 if length > 0:
-                    protPos = self.checkProteinPosition(transcript_model,
-                                                        pos, length, "D",
-                                                        codingRegions)
+                    protPos = VariantAnnotation.checkProteinPosition(
+                        transcript_model, pos, length, "D", codingRegions
+                    )
                     hit = [transcript_model.gene, protPos]
                     if length % 3 == 0:
                         if self.checkForNewStop(pos, length,
                                                 transcript_model,
+                                                genomic_sequence,
                                                 mutated_sequence,
                                                 code) is False:
                             worstEffect = "no-frame-shift"
@@ -37,178 +262,32 @@ class VariantAnnotator:
                             worstEffect = "no-frame-shift-newStop"
                         res = [worstEffect, hit, transcript_model.strand,
                                transcript_model.trID]
-                        return [res]
+                        worstForEachTranscript.append(res)
+                        return worstForEachTranscript
 
                     else:
                         res = ["frame-shift", hit, transcript_model.strand,
                                transcript_model.trID]
-                        return [res]
+                        worstForEachTranscript.append(res)
+                        return worstForEachTranscript
 
-        if what_hit == "intronic":
-            hit = [transcript_model.gene, "A", "1", "2/5", "2/5", "10"]
-            res = ["non-coding-intron", hit, transcript_model.strand,
-                   transcript_model.trID]
-            return [res]
-        # print(what_hit, transcript_model, pos, length, seq, ref, length)
-        # print("COMPLEX")
+        print("??")
+        return worstForEachTranscript
 
-        s = self.reference_genome.getSequence(chromosome, pos, pos + length)
-        # print(s)
+    def checkForNewStop(self, pos_start, length, tm, genomic_sequence,
+                        mutated_sequence, code):
+        for pos in range(pos_start, pos_start + length):
+            tmw = TranscriptModelWrapper(tm, genomic_sequence)
+            codon = tmw.get_codon_for_pos(tm.chr, pos)
+            tmw = TranscriptModelWrapper(tm, mutated_sequence)
+            mutated_codon = tmw.get_codon_for_pos(tm.chr, pos)
 
-        hit = [transcript_model.gene, "Lys", "Lys", "1/100"]
-        res = ["synonymous", hit, transcript_model.strand,
-               transcript_model.trID]
+            print("checkForNewStop", pos, codon, mutated_codon)
 
-        return [res]
-
-    def checkProteinPosition(self, tm, pos, length, type, cds_reg):
-
-        codingPos = []
-        if type == "D":
-            for i in xrange(0, length):
-                for j in tm.exons:
-                    if (pos + i >= j.start and pos + i <= j.stop
-                            and pos + i >= tm.cds[0] and pos + i <= tm.cds[1]):
-                        codingPos.append(pos + i)
-        else:
-            codingPos = [pos]
-
-        minPosCod = codingPos[0]
-        maxPosCod = codingPos[-1]
-
-        # protein length
-        transcript_length = tm.CDS_len()
-        protLength = transcript_length/3 - 1
-        if (transcript_length % 3) != 0:
-            protLength += 1
-
-        # minAA
-        minAA = 0
-        # cds_reg = tm.CDS_regions()
-
-        if tm.strand == "+":
-            for j in cds_reg:
-                if minPosCod >= j.start and minPosCod <= j.stop:
-                    minAA += minPosCod - j.start
-                    break
-
-                minAA += j.stop-j.start+1
-        else:
-            for j in cds_reg[::-1]:
-                if maxPosCod >= j.start and maxPosCod <= j.stop:
-                    minAA += j.stop - maxPosCod
-                    break
-
-                minAA += j.stop - j.start + 1
-        minAA = minAA/3 + 1
-
-        return(str(minAA) + "/" + str(protLength))
-
-    def checkForNewStop(self, pos, length, tm, mutated_sequence, code):
-        if tm.strand == "+":
-            frame = self.findFrame(tm, pos)
-            if frame == 0:
-                return(False)
-            if frame == 1:
-                codon = self.findCodingBase(tm, pos, -1) + \
-                        self.findCodingBase(tm, pos, length) + \
-                        self.findCodingBase(tm, pos, length+1)
-            else:
-                codon = self.findCodingBase(tm, pos, -2) + \
-                        self.findCodingBase(tm, pos, -1) + \
-                        self.findCodingBase(tm, pos, length)
-        else:
-            frame = self.findFrame(tm, pos + length - 1)
-            if frame == 0:
-                return(False)
-            if frame == 1:
-                codon = self.findCodingBase(tm, pos, length) + \
-                        self.findCodingBase(tm, pos, -1) + \
-                        self.findCodingBase(tm, pos, -2)
-                codon = self.complement(codon)
-            else:
-                codon = self.findCodingBase(tm, pos, length+1) + \
-                        self.findCodingBase(tm, pos, length) + \
-                        self.findCodingBase(tm, pos, -1)
-                codon = self.complement(codon)
-        print(frame, codon)
-
-        start_pos = pos - 2
-        seq = mutated_sequence.get_mutated_sequence("1", start_pos,
-                                                    start_pos + 2)
-        print(self.complement(seq[::-1]))
-        if self._in_stop_codons(codon, code):
-            return(True)
-        return(False)
-
-    def findFrame(self, tm, pos):
-
-        if pos < tm.cds[0] or pos > tm.cds[1]:
-            return(-1)
-
-        for e in tm.exons:
-            if pos >= e.start and pos <= e.stop:
-                if tm.cds[0] >= e.start:
-                    if tm.strand == "+":
-                        return((pos - tm.cds[0] + e.frame) % 3)
-                    if tm.cds[1] <= e.stop:
-                        return((tm.cds[1] - pos + e.frame) % 3)
-                    return((e.stop - pos + e.frame) % 3)
-                if tm.cds[1] <= e.stop:
-                    if tm.strand == "+":
-                        return((pos - e.start + e.frame) % 3)
-                    return((tm.cds[1] - pos + e.frame) % 3)
-
-                if tm.strand == "+":
-                    return((pos - e.start + e.frame) % 3)
-                return((e.stop - pos + e.frame) % 3)
-
-        return(None)
-
-    def findCodingBase(self, tm, pos, dist):
-
-        if dist == 0:
-            return self.reference_genome.getSequence(tm.chr, pos, pos)
-
-        for e in xrange(0, len(tm.exons)):
-            if pos >= tm.exons[e].start and pos <= tm.exons[e].stop:
-                if (pos+dist >= tm.exons[e].start
-                        and pos+dist <= tm.exons[e].stop):
-                    return self.reference_genome.getSequence(tm.chr,
-                                                             pos + dist,
-                                                             pos + dist)
-                if dist < 0:
-                    d = pos - tm.exons[e].start + dist + 1
-                    try:
-                        return(self.findCodingBase(tm, tm.exons[e-1].stop, d))
-                    except:
-                        return("NA")
-                else:
-                    d = tm.exons[e].stop - pos + dist - 1
-                    try:
-                        return(self.findCodingBase(tm, tm.exons[e+1].start, d))
-                    except:
-                        return("NA")
-        return(None)
-
-    def complement(self, nts):
-        nts = nts.upper()
-        reversed = ''
-        for nt in nts:
-            if nt == "A":
-                reversed += "T"
-            elif nt == "T":
-                reversed += "A"
-            elif nt == "G":
-                reversed += "C"
-            elif nt == "C":
-                reversed += "G"
-            elif nt == "N":
-                reversed += "N"
-            else:
-                print("Invalid nucleotide: " + str(nt) + " in " + str(nts))
-                sys.exit(-23)
-        return(reversed)
+            if self._in_stop_codons(mutated_codon, code) and \
+                    not self._in_stop_codons(codon, code):
+                return True
+        return False
 
     def _in_stop_codons(self, s, code):
         if s in code.stopCodons:
