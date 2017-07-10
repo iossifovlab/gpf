@@ -1105,19 +1105,6 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, 4655)
         self.assertEqual(effect.aa_change, "Gly->Ser")
 
-    def test_chr17_72954572_sub_var(self):
-        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                      loc="17:72954572",
-                                                      var="sub(A->T)")
-
-        self.assertEqual(effect.gene, "HID1")
-        self.assertEqual(effect.transcript_id, "NM_030630_1")
-        self.assertEqual(effect.strand, "-")
-        self.assertEqual(effect.effect, "synonymous")
-        self.assertEqual(effect.prot_pos, 414)
-        self.assertEqual(effect.prot_length, 788)
-        self.assertEqual(effect.aa_change, "Ser->Ser")
-
     def test_chr4_140640596_sub_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                      loc="4:140640596",
