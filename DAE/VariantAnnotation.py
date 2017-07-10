@@ -356,8 +356,8 @@ class Variant:
                         continue
 
                     if self.type == "complex":
-                        va = VariantAnnotator(refG, NuclearCode())
-                        res = va.annotate(what_hit, i, self.chr, self.pos,
+                        va = VariantAnnotator(i, refG, NuclearCode())
+                        res = va.annotate(what_hit, self.chr, self.pos,
                                           self.length, self.ref, self.seq)
                         worstForEachTranscript.extend(res)
 

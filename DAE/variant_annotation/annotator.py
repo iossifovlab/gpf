@@ -5,7 +5,8 @@ from .mutation import GenomicSequence
 
 
 class VariantAnnotator:
-    def __init__(self, reference_genome, code):
+    def __init__(self, transcript_model, reference_genome, code):
+        self.transcript_model = transcript_model
         self.reference_genome = reference_genome
         self.code = code
 
@@ -88,8 +89,8 @@ class VariantAnnotator:
                                                 cds_reg, length)
         return(out)
 
-    def splice_check(self, transcript_model, seq,
-                     chromosome, pos, pos_last, length, codingRegions):
+    def splice_check(self, seq, chromosome, pos, pos_last, length,
+                     codingRegions):
         worstEffect = None
 
         prev = codingRegions[0].stop
@@ -104,15 +105,15 @@ class VariantAnnotator:
                         worstEffect = "intron"
 
                     hit = VariantAnnotation.prepareIntronHit(
-                        transcript_model, pos, 1, codingRegions)
+                        self.transcript_model, pos, 1, codingRegions)
                     if worstEffect == "splice-site":
                         c = VariantAnnotation.findSpliceContext(
-                            transcript_model, pos, length, seq,
+                            self.transcript_model, pos, length, seq,
                             codingRegions, "S", self.reference_genome
                         )
                         hit.append(c)
-                    return [[worstEffect, hit, transcript_model.strand,
-                             transcript_model.trID]]
+                    return [[worstEffect, hit, self.transcript_model.strand,
+                             self.transcript_model.trID]]
 
                     break
             print("A", pos, pos_last, j.start, prev)
@@ -134,11 +135,12 @@ class VariantAnnotator:
 
                         if worstEffect == "splice-site":
                             hit = VariantAnnotation.prepareIntronHit(
-                                transcript_model, pos, length, codingRegions
+                                self.transcript_model, pos, length,
+                                codingRegions
                             )
 
                             c = VariantAnnotation.findSpliceContext(
-                                transcript_model, pos, length, seq,
+                                self.transcript_model, pos, length, seq,
                                 codingRegions, "D", self.reference_genome
                             )
                             hit.append(c)
@@ -146,34 +148,34 @@ class VariantAnnotator:
                         elif worstEffect == "intron":
                             print("INTRON HIT??")
                             hit = VariantAnnotation.prepareIntronHit(
-                                transcript_model, pos, length, codingRegions
+                                self.transcript_model, pos, length,
+                                codingRegions
                             )
                         elif worstEffect == "frame-shift" \
                                 or worstEffect == "no-frame-shift":
                             protPos = VariantAnnotation.checkProteinPosition(
-                                transcript_model, pos, length, "D",
+                                self.transcript_model, pos, length, "D",
                                 codingRegions
                             )
-                            hit = [transcript_model.gene, protPos]
+                            hit = [self.transcript_model.gene, protPos]
                         else:
                             print("No such worst effect type: " + worstEffect)
                             sys.exit(-65)
                         break
                 if worstEffect is None:
                     hit = VariantAnnotation.prepareIntronHit(
-                        transcript_model, pos, length, codingRegions
+                        self.transcript_model, pos, length, codingRegions
                     )
                     print("INTRON HIT 2??")
                     worstEffect = "intron"
 
-                return [[worstEffect, hit,
-                         transcript_model.strand, transcript_model.trID]]
+                return [[worstEffect, hit, self.transcript_model.strand,
+                         self.transcript_model.trID]]
             prev = j.stop
         return None
 
-    def annotate(self, what_hit, transcript_model, chromosome, pos, length,
-                 ref, seq):
-        codingRegions = transcript_model.CDS_regions()
+    def annotate(self, what_hit, chromosome, pos, length, ref, seq):
+        codingRegions = self.transcript_model.CDS_regions()
 
         ref_length = len(ref)
         seq_length = len(seq)
@@ -184,10 +186,13 @@ class VariantAnnotator:
                                                       mutation)
             genomic_sequence = GenomicSequence(self.reference_genome)
 
-            tmw = TranscriptModelWrapper(transcript_model, genomic_sequence)
-            codon = tmw.get_codon_for_pos(transcript_model.chr, pos)
-            tmw = TranscriptModelWrapper(transcript_model, mutated_sequence)
-            mutated_codon = tmw.get_codon_for_pos(transcript_model.chr, pos)
+            tmw = TranscriptModelWrapper(self.transcript_model,
+                                         genomic_sequence)
+            codon = tmw.get_codon_for_pos(self.transcript_model.chr, pos)
+            tmw = TranscriptModelWrapper(self.transcript_model,
+                                         mutated_sequence)
+            mutated_codon = tmw.get_codon_for_pos(self.transcript_model.chr,
+                                                  pos)
 
             print("codon change: {}->{}".format(codon, mutated_codon))
         except TypeError:
@@ -202,13 +207,13 @@ class VariantAnnotator:
         worstForEachTranscript = []
         print("START", codingRegions, pos, pos_last)
 
-        splice_check = self.splice_check(transcript_model, seq, chromosome,
-                                         pos, pos_last, length, codingRegions)
+        splice_check = self.splice_check(seq, chromosome, pos, pos_last,
+                                         length, codingRegions)
         if splice_check is not None:
             return splice_check
 
-        if transcript_model.strand == "+":
-            tm = transcript_model
+        if self.transcript_model.strand == "+":
+            tm = self.transcript_model
             print("TX", pos, tm.cds[1], tm.tx[1])
             if pos >= tm.cds[0] and pos <= tm.cds[0] + 2:
                 if tm.cds[0] == tm.tx[0]:
@@ -219,31 +224,31 @@ class VariantAnnotator:
                     return [["3'UTR", [tm.gene, "3'UTR", "1"],
                              tm.strand, tm.trID]]
 
-            if pos < transcript_model.cds[0] + 3:
+            if pos < self.transcript_model.cds[0] + 3:
 
                 h = self.dealWithFirstCodon_Del(
-                    transcript_model, pos, length, codingRegions,
+                    self.transcript_model, pos, length, codingRegions,
                     genomic_sequence, mutated_sequence
                 )
                 if h is not None:
-                    h.append(transcript_model.strand)
-                    h.append(transcript_model.trID)
+                    h.append(self.transcript_model.strand)
+                    h.append(self.transcript_model.trID)
                     worstForEachTranscript.append(h)
                     return worstForEachTranscript
 
-            if pos > transcript_model.cds[1] - 3 \
-                    and pos <= transcript_model.cds[1]:
+            if pos > self.transcript_model.cds[1] - 3 \
+                    and pos <= self.transcript_model.cds[1]:
                 h = self.dealWithLastCodon_Del(
-                    transcript_model, pos, length, codingRegions,
+                    self.transcript_model, pos, length, codingRegions,
                     genomic_sequence, mutated_sequence
                 )
                 if h is not None:
-                    h.append(transcript_model.strand)
-                    h.append(transcript_model.trID)
+                    h.append(self.transcript_model.strand)
+                    h.append(self.transcript_model.trID)
                     worstForEachTranscript.append(h)
                     return worstForEachTranscript
         else:
-            tm = transcript_model
+            tm = self.transcript_model
             print("TX REV", pos, tm.cds[1], tm.tx[1])
             if pos >= tm.cds[0] and pos <= tm.cds[0] + 2:
                 if tm.cds[0] == tm.tx[0]:
@@ -254,37 +259,37 @@ class VariantAnnotator:
                     return [["5'UTR", [tm.gene, "5'UTR", "1"],
                              tm.strand, tm.trID]]
 
-            if pos > transcript_model.cds[1] - 3 \
-                    and pos <= transcript_model.cds[1]:
+            if pos > self.transcript_model.cds[1] - 3 \
+                    and pos <= self.transcript_model.cds[1]:
 
                 h = self.dealWithFirstCodon_Del(
-                    transcript_model, pos, length, codingRegions,
+                    self.transcript_model, pos, length, codingRegions,
                     genomic_sequence, mutated_sequence
                 )
                 if h is not None:
-                    h.append(transcript_model.strand)
-                    h.append(transcript_model.trID)
+                    h.append(self.transcript_model.strand)
+                    h.append(self.transcript_model.trID)
                     worstForEachTranscript.append(h)
                     return worstForEachTranscript
 
-            if pos < transcript_model.cds[0] + 3:
+            if pos < self.transcript_model.cds[0] + 3:
                 h = self.dealWithLastCodon_Del(
-                    transcript_model, pos, length, codingRegions,
+                    self.transcript_model, pos, length, codingRegions,
                     genomic_sequence, mutated_sequence
                 )
                 if h is not None:
-                    h.append(transcript_model.strand)
-                    h.append(transcript_model.trID)
+                    h.append(self.transcript_model.strand)
+                    h.append(self.transcript_model.trID)
                     worstForEachTranscript.append(h)
                     return worstForEachTranscript
 
-        if pos <= transcript_model.cds[1] - 3 \
-                and pos_last > transcript_model.cds[1] - 3:
+        if pos <= self.transcript_model.cds[1] - 3 \
+                and pos_last > self.transcript_model.cds[1] - 3:
             h = self.dealWithCodingAndLastCodon_Del(
-                transcript_model, pos, length, codingRegions
+                self.transcript_model, pos, length, codingRegions
             )
-            h.append(transcript_model.strand)
-            h.append(transcript_model.trID)
+            h.append(self.transcript_model.strand)
+            h.append(self.transcript_model.trID)
             worstForEachTranscript.append(h)
             return worstForEachTranscript
 
@@ -293,25 +298,25 @@ class VariantAnnotator:
                     pos >= j.start):
                 if length > 0:
                     protPos = VariantAnnotation.checkProteinPosition(
-                        transcript_model, pos, length, "D", codingRegions
+                        self.transcript_model, pos, length, "D", codingRegions
                     )
-                    hit = [transcript_model.gene, protPos]
+                    hit = [self.transcript_model.gene, protPos]
                     if length % 3 == 0:
                         if self.checkForNewStop(
-                            pos, length, transcript_model,
-                            genomic_sequence, mutated_sequence,
+                            pos, length, genomic_sequence, mutated_sequence
                         ) is False:
                             worstEffect = "no-frame-shift"
                         else:
                             worstEffect = "no-frame-shift-newStop"
-                        res = [worstEffect, hit, transcript_model.strand,
-                               transcript_model.trID]
+                        res = [worstEffect, hit, self.transcript_model.strand,
+                               self.transcript_model.trID]
                         worstForEachTranscript.append(res)
                         return worstForEachTranscript
 
                     else:
-                        res = ["frame-shift", hit, transcript_model.strand,
-                               transcript_model.trID]
+                        res = ["frame-shift", hit,
+                               self.transcript_model.strand,
+                               self.transcript_model.trID]
                         worstForEachTranscript.append(res)
                         return worstForEachTranscript
                 elif length == 0:
@@ -322,21 +327,25 @@ class VariantAnnotator:
                         protPos = VariantAnnotation.checkProteinPosition(
                             tm, pos, length, "S", codingRegions
                         )
-                        hit = [transcript_model.gene, refAA, altAA, protPos]
+                        hit = [self.transcript_model.gene, refAA, altAA,
+                               protPos]
                         worstForEachTranscript.append(
-                            [worstEffect, hit, transcript_model.strand,
-                             transcript_model.trID]
+                            [worstEffect, hit, self.transcript_model.strand,
+                             self.transcript_model.trID]
                         )
                         return worstForEachTranscript
         return worstForEachTranscript
 
-    def checkForNewStop(self, pos_start, length, tm, genomic_sequence,
+    def checkForNewStop(self, pos_start, length, genomic_sequence,
                         mutated_sequence):
         for pos in range(pos_start, pos_start + length):
-            tmw = TranscriptModelWrapper(tm, genomic_sequence)
-            codon = tmw.get_codon_for_pos(tm.chr, pos)
-            tmw = TranscriptModelWrapper(tm, mutated_sequence)
-            mutated_codon = tmw.get_codon_for_pos(tm.chr, pos)
+            tmw = TranscriptModelWrapper(self.transcript_model,
+                                         genomic_sequence)
+            codon = tmw.get_codon_for_pos(self.transcript_model.chr, pos)
+            tmw = TranscriptModelWrapper(self.transcript_model,
+                                         mutated_sequence)
+            mutated_codon = tmw.get_codon_for_pos(self.transcript_model.chr,
+                                                  pos)
 
             print("checkForNewStop", pos, codon, mutated_codon)
 
