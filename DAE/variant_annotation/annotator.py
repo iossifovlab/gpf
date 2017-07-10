@@ -47,6 +47,28 @@ class VariantAnnotator:
                                                 cds_reg, length)
         return out
 
+    def dealWithCodingAndLastCodon_Del(self, tm, pos, length, cds_reg):
+        if tm.strand == "+":
+            if pos + length - 1 <= tm.cds[1]:
+                if length % 3 != 0:
+                    worstEffect = "frame-shift"
+                else:
+                    worstEffect = "no-frame-shift"
+            else:
+                worstEffect = "noEnd"
+
+        else:
+            if pos + length - 1 > tm.cds[1]:
+                length = tm.cds[1] - pos + 1
+            if length % 3 != 0:
+                worstEffect = "frame-shift"
+            else:
+                worstEffect = "noStart"
+
+        out = self.firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D",
+                                                cds_reg, length)
+        return(out)
+
     def dealWithFirstCodon_Del(self, tm, pos, length, cds_reg,
                                genomic_sequence, mutated_sequence):
         tmw = TranscriptModelWrapper(tm, genomic_sequence)
@@ -72,9 +94,31 @@ class VariantAnnotator:
 
         prev = codingRegions[0].stop
         for j in codingRegions:
+            if length == 0:
+                if pos < j.start and pos > prev:
+                    if pos - prev < 3 or j.start - pos < 3:
+                        # splice
+                        worstEffect = "splice-site"
+                    else:
+                        # intron not splice
+                        worstEffect = "intron"
+
+                    hit = VariantAnnotation.prepareIntronHit(
+                        transcript_model, pos, 1, codingRegions)
+                    if worstEffect == "splice-site":
+                        c = VariantAnnotation.findSpliceContext(
+                            transcript_model, pos, length, seq,
+                            codingRegions, "S", self.reference_genome
+                        )
+                        hit.append(c)
+                    return [[worstEffect, hit, transcript_model.strand,
+                             transcript_model.trID]]
+
+                    break
             print("A", pos, pos_last, j.start, prev)
             if (pos < j.start and pos > prev) or \
                     (pos_last < j.start and pos_last > prev):
+                print("SPLICE SITE CHECK")
                 for s in [prev + 1, prev+2, j.start-1, j.start-2]:
                     if pos <= s <= pos_last:
                         if s == prev + 1 or s == prev+2:
@@ -100,6 +144,7 @@ class VariantAnnotator:
                             hit.append(c)
 
                         elif worstEffect == "intron":
+                            print("INTRON HIT??")
                             hit = VariantAnnotation.prepareIntronHit(
                                 transcript_model, pos, length, codingRegions
                             )
@@ -118,6 +163,7 @@ class VariantAnnotator:
                     hit = VariantAnnotation.prepareIntronHit(
                         transcript_model, pos, length, codingRegions
                     )
+                    print("INTRON HIT 2??")
                     worstEffect = "intron"
 
                 return [[worstEffect, hit,
@@ -147,7 +193,10 @@ class VariantAnnotator:
         except TypeError:
             print("codon change N/A")
 
-        pos_last = pos + length - 1
+        if length == 0:
+            pos_last = pos
+        else:
+            pos_last = pos + length - 1
 
         worstEffect = None
         worstForEachTranscript = []
@@ -231,9 +280,8 @@ class VariantAnnotator:
 
         if pos <= transcript_model.cds[1] - 3 \
                 and pos_last > transcript_model.cds[1] - 3:
-            h = VariantAnnotation.dealWithCodingAndLastCodon_Del(
-                transcript_model, pos, length, codingRegions,
-                self.reference_genome, self.code
+            h = self.dealWithCodingAndLastCodon_Del(
+                transcript_model, pos, length, codingRegions
             )
             h.append(transcript_model.strand)
             h.append(transcript_model.trID)

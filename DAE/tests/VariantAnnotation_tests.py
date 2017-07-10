@@ -820,7 +820,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "-")
         self.assertEqual(effects_sorted[0].effect, "synonymous")
         self.assertEqual(effects_sorted[0].prot_pos, 4433)
-        self.assertEqual(effects_sorted[0].prot_length, 4433)
+        self.assertEqual(effects_sorted[0].prot_length, 4432)
         self.assertEqual(effects_sorted[0].aa_change, "End->End")
 
         self.assertEqual(effects_sorted[1].gene, "SACS")
@@ -828,7 +828,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].strand, "-")
         self.assertEqual(effects_sorted[1].effect, "synonymous")
         self.assertEqual(effects_sorted[1].prot_pos, 4580)
-        self.assertEqual(effects_sorted[1].prot_length, 4580)
+        self.assertEqual(effects_sorted[1].prot_length, 4579)
         self.assertEqual(effects_sorted[1].aa_change, "End->End")
 
     def test_chr20_61476990_del_var(self):

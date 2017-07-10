@@ -3,19 +3,43 @@
 # October 25th 2013
 # written by Ewa
 
-import os, sys, optparse
-from subprocess import call
+import sys
 import re
 from GeneModelFiles import *
-import GenomeAccess
-import numpy as np
 from variant_annotation.annotator import VariantAnnotator
 
 
-Severity = {'tRNA:ANTICODON':30, 'all':24, 'splice-site':23, 'frame-shift':22, 'nonsense':21, 'no-frame-shift-newStop':20, 'noStart':19, 'noEnd':18, 'missense':17, 'no-frame-shift':16, 'CDS':15, 'synonymous':14, 'coding_unknown':13, 'regulatory':12, "3'UTR":11, "5'UTR": 10, 'intron':9, 'non-coding':8, "5'UTR-intron": 7,"3'UTR-intron":6,  "promoter":5, "non-coding-intron":4, 'unknown':3, 'intergenic':2, 'no-mutation':1}
+Severity = {
+    'tRNA:ANTICODON': 30,
+    'all': 24,
+    'splice-site': 23,
+    'frame-shift': 22,
+    'nonsense': 21,
+    'no-frame-shift-newStop': 20,
+    'noStart': 19,
+    'noEnd': 18,
+    'missense': 17,
+    'no-frame-shift': 16,
+    'CDS': 15,
+    'synonymous': 14,
+    'coding_unknown': 13,
+    'regulatory': 12,
+    "3'UTR": 11,
+    "5'UTR": 10,
+    'intron': 9,
+    'non-coding': 8,
+    "5'UTR-intron": 7,
+    "3'UTR-intron": 6,
+    "promoter": 5,
+    "non-coding-intron": 4,
+    'unknown': 3,
+    'intergenic': 2,
+    'no-mutation': 1
+}
 
-LOF = ['splice-site','frame-shift','nonsense','no-frame-shift-newStop']
-nonsyn = ['splice-site','frame-shift','nonsense','no-frame-shift-newStop','missense','noStart', 'noEnd', 'no-frame-shift']
+LOF = ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop']
+nonsyn = ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop',
+          'missense', 'noStart', 'noEnd', 'no-frame-shift']
 
 
 class NuclearCode:
@@ -23,29 +47,29 @@ class NuclearCode:
     stopCodons = ['TAG', 'TAA', 'TGA']
     startCodons = ['ATG']
 
-    CodonsAa = {'Gly' : ['GGG', 'GGA', 'GGT', 'GGC'],
-        'Glu' : ['GAG', 'GAA'],
-        'Asp' : ['GAT', 'GAC'],
-        'Val' : ['GTG', 'GTA', 'GTT', 'GTC'],
-        'Ala' : ['GCG', 'GCA', 'GCT', 'GCC'],
-        'Arg' : ['AGG', 'AGA', 'CGG', 'CGA', 'CGT', 'CGC'],
-        'Ser' : ['AGT', 'AGC', 'TCG', 'TCA', 'TCT', 'TCC'],
-        'Lys' : ['AAG', 'AAA'],
-        'Asn' : ['AAT', 'AAC'],
-        'Met' : startCodons,
-        'Ile' : ['ATA', 'ATT', 'ATC'],
-        'Thr' : ['ACG', 'ACA', 'ACT', 'ACC'],
-        'Trp' : ['TGG'],
-        'End' : stopCodons,
-        'Cys' : ['TGT', 'TGC'],
-        'Tyr' : ['TAT', 'TAC'],
-        'Leu' : ['TTG', 'TTA', 'CTG', 'CTA', 'CTT', 'CTC'],
-        'Phe' : ['TTT', 'TTC'],
-        'Gln' : ['CAG', 'CAA'],
-        'His' : ['CAT', 'CAC'],
-        'Pro' : ['CCG', 'CCA', 'CCT', 'CCC']}
-
-
+    CodonsAa = {
+        'Gly': ['GGG', 'GGA', 'GGT', 'GGC'],
+        'Glu': ['GAG', 'GAA'],
+        'Asp': ['GAT', 'GAC'],
+        'Val': ['GTG', 'GTA', 'GTT', 'GTC'],
+        'Ala': ['GCG', 'GCA', 'GCT', 'GCC'],
+        'Arg': ['AGG', 'AGA', 'CGG', 'CGA', 'CGT', 'CGC'],
+        'Ser': ['AGT', 'AGC', 'TCG', 'TCA', 'TCT', 'TCC'],
+        'Lys': ['AAG', 'AAA'],
+        'Asn': ['AAT', 'AAC'],
+        'Met': startCodons,
+        'Ile': ['ATA', 'ATT', 'ATC'],
+        'Thr': ['ACG', 'ACA', 'ACT', 'ACC'],
+        'Trp': ['TGG'],
+        'End': stopCodons,
+        'Cys': ['TGT', 'TGC'],
+        'Tyr': ['TAT', 'TAC'],
+        'Leu': ['TTG', 'TTA', 'CTG', 'CTA', 'CTT', 'CTC'],
+        'Phe': ['TTT', 'TTC'],
+        'Gln': ['CAG', 'CAA'],
+        'His': ['CAT', 'CAC'],
+        'Pro': ['CCG', 'CCA', 'CCT', 'CCC']
+    }
 
     CodonsAaKeys = CodonsAa.keys()
 
@@ -55,31 +79,31 @@ class MitochondrialCode:
     stopCodons = ['TAA', 'TAG']
     startCodons = ['ATG', 'ATA']
 
-    CodonsAa = {'Gly' : ['GGG', 'GGA', 'GGT', 'GGC'],
-        'Glu' : ['GAG', 'GAA'],
-        'Asp' : ['GAT', 'GAC'],
-        'Val' : ['GTG', 'GTA', 'GTT', 'GTC'],
-        'Ala' : ['GCG', 'GCA', 'GCT', 'GCC'],
-        'Arg' : ['CGG', 'CGA', 'CGT', 'CGC', 'AGA', 'AGG'],
-        'Ser' : ['AGT', 'AGC', 'TCG', 'TCA', 'TCT', 'TCC'],
-        'Lys' : ['AAG', 'AAA'],
-        'Asn' : ['AAT', 'AAC'],
-        'Met' : startCodons,
-        'Ile' : ['ATT', 'ATC'],
-        'Thr' : ['ACG', 'ACA', 'ACT', 'ACC'],
-        'End' : stopCodons,
-        'Trp' : ['TGA', 'TGG'],
-        'End' : ['TAA', 'TAG'],
-        'Cys' : ['TGT', 'TGC'],
-        'Tyr' : ['TAT', 'TAC'],
-        'Leu' : ['TTG', 'TTA', 'CTG', 'CTA', 'CTT', 'CTC'],
-        'Phe' : ['TTT', 'TTC'],
-        'Gln' : ['CAG', 'CAA'],
-        'His' : ['CAT', 'CAC'],
-        'Pro' : ['CCG', 'CCA', 'CCT', 'CCC']}
+    CodonsAa = {
+        'Gly': ['GGG', 'GGA', 'GGT', 'GGC'],
+        'Glu': ['GAG', 'GAA'],
+        'Asp': ['GAT', 'GAC'],
+        'Val': ['GTG', 'GTA', 'GTT', 'GTC'],
+        'Ala': ['GCG', 'GCA', 'GCT', 'GCC'],
+        'Arg': ['CGG', 'CGA', 'CGT', 'CGC', 'AGA', 'AGG'],
+        'Ser': ['AGT', 'AGC', 'TCG', 'TCA', 'TCT', 'TCC'],
+        'Lys': ['AAG', 'AAA'],
+        'Asn': ['AAT', 'AAC'],
+        'Met': startCodons,
+        'Ile': ['ATT', 'ATC'],
+        'Thr': ['ACG', 'ACA', 'ACT', 'ACC'],
+        'End': stopCodons,
+        'Trp': ['TGA', 'TGG'],
+        'Cys': ['TGT', 'TGC'],
+        'Tyr': ['TAT', 'TAC'],
+        'Leu': ['TTG', 'TTA', 'CTG', 'CTA', 'CTT', 'CTC'],
+        'Phe': ['TTT', 'TTC'],
+        'Gln': ['CAG', 'CAA'],
+        'His': ['CAT', 'CAC'],
+        'Pro': ['CCG', 'CCA', 'CCT', 'CCC']
+    }
 
     CodonsAaKeys = CodonsAa.keys()
-
 
 
 class Effect:
@@ -104,9 +128,7 @@ class Effect:
 
 
 def add_effects(l):
-
     effect_list = []
-
 
     if len(l) == 0:
         ef = Effect()
@@ -114,9 +136,7 @@ def add_effects(l):
         effect_list.append(ef)
         return(effect_list)
 
-
     for i in l:
-
         ef = Effect()
         ef.effect = i[0]
         ef.gene = i[1][0]
@@ -335,183 +355,7 @@ class Variant:
                         worstForEachTranscript.append([what_hit, hit, i.strand, i.trID])
                         continue
 
-
-
-
-                    exons = i.exons
-                    if self.type == "insertion":
-
-
-                        worstEffect = "intergenic"
-
-
-                        codingRegions = i.CDS_regions()
-
-                        if self.pos >= i.cds[0] and self.pos <= i.cds[0]+2 :
-                            h = dealWithFirstCodon_Ins(i, self.pos, self.seq, self.length, codingRegions, refG, code)
-                            if h == "intergenic":
-                                continue
-                            h.append(i.strand)
-                            h.append(i.trID)
-                            worstForEachTranscript.append(h)
-
-                            continue
-
-                        if self.pos >= i.cds[1]-2 and self.pos <= i.cds[1]:
-                            h = dealWithLastCodon_Ins(i, self.pos, self.seq, self.length, codingRegions, refG, code)
-                            if h == "intergenic":
-                                continue
-                            h.append(i.strand)
-                            h.append(i.trID)
-                            worstForEachTranscript.append(h)
-                            continue
-
-                        print("BB", self.pos, i.cds[1])
-                        prev = codingRegions[0].stop
-                        for j in xrange(0, len(codingRegions)):
-                            if self.pos < codingRegions[j].start and self.pos > prev:
-                                if self.pos - prev < 3:
-                                    # splice
-                                    worstEffect = checkIfSplice(self.chr, self.pos, self.seq, self.length, (prev+1, prev+2), "5'", "I", refG)
-                                elif codingRegions[j].start - self.pos < 2:
-                                    worstEffect = checkIfSplice(self.chr, self.pos, self.seq, self.length, (codingRegions[j].start-2, codingRegions[j].start-1),"3'", "I", refG)
-                                else:
-                                    # intron not splice
-                                    if worstEffect == "intergenic":
-                                        worstEffect = "intron"
-
-                                if worstEffect == "splice-site" or worstEffect == "intron":
-                                    hit = prepareIntronHit(i, self.pos, 1, codingRegions)
-                                elif worstEffect == "frame-shift" or worstEffect == "no-frame-shift":
-                                    protPos = checkProteinPosition(i, self.pos, self.length, "I", codingRegions)
-                                    hit = [i.gene, protPos]
-                                else:
-                                    print("No such worst effect type: " + worstEffect)
-                                    sys.exit(-64)
-
-
-                                if worstEffect == "splice-site":
-                                    c = findSpliceContext(i, self.pos, self.length, self.seq, codingRegions, "I", refG)
-                                    hit.append(c)
-
-                                worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
-                                break
-                            if self.pos == codingRegions[j].start:
-                                if j == 0:
-                                    if i.strand == "+":
-                                        worstForEachTranscript.append(["5'UTR", [i.gene, "5'UTR", "1"], i.strand, i.trID])
-                                    else:
-                                        worstForEachTranscript.append(["3'UTR", [i.gene, "5'UTR", "1"], i.strand, i.trID])
-                                else:
-                                    hit = prepareIntronHit(i, self.pos-1, 1, codingRegions)
-                                    worstForEachTranscript.append(["splice-site", hit, i.strand, i.trID])
-
-                                    c = findSpliceContext(i, self.pos, self.length, self.seq, codingRegions, "I", refG)
-                                    hit.append(c)
-
-                                break
-
-                            if self.pos <= codingRegions[j].stop and self.pos > codingRegions[j].start:
-                                print("CODING")
-                                # coding
-                                protPos = checkProteinPosition(i, self.pos, 1, "I", codingRegions)
-                                hit = [i.gene, protPos]
-                                checkForNewStop(i, self.pos, self.seq, self.length, "I", refG, code)
-                                if self.length % 3 != 0:
-                                    worstForEachTranscript.append(["frame-shift", hit, i.strand, i.trID])
-                                else:
-                                    if checkForNewStop(i, self.pos, self.seq, self.length, "I", refG, code) == False:
-                                        worstForEachTranscript.append(["no-frame-shift", hit, i.strand, i.trID])
-                                    else:
-                                        worstForEachTranscript.append(["no-frame-shift-newStop", hit, i.strand, i.trID])
-                                break
-
-                            prev = codingRegions[j].stop
-
-
-                    elif self.type == "substitution":
-
-                        if self.ref == None:
-                            self.ref = getSeq(refG, self.chr, self.pos)
-
-                        if self.ref == self.seq:
-                            ef = Effect()
-                            ef.effect = "no-mutation"
-
-                            if display == True:
-                                print("EffectType: no-mutation"),
-                                print("\tEffectGene: no-mutation"),
-                                print("\tEffectDetails: no-mutation")
-
-
-                            return([ef])
-
-
-                        if self.pos >= i.cds[0] and self.pos <= i.cds[0]+2 :
-                            h = dealWithFirstCodon_Snps(i, self.pos, self.seq, refG, code)
-                            h.append(i.strand)
-                            h.append(i.trID)
-                            worstForEachTranscript.append(h)
-                            continue
-
-
-                        if self.pos > i.cds[1]-3 and self.pos <= i.cds[1]:
-                            h = dealWithLastCodon_Snps(i, self.pos, self.seq, refG, code)
-                            h.append(i.strand)
-                            h.append(i.trID)
-                            worstForEachTranscript.append(h)
-                            continue
-
-
-                        codingRegions = i.CDS_regions()
-
-
-                        prev = codingRegions[0].stop
-
-                        for j in codingRegions:
-                            if self.pos < j.start and self.pos > prev:
-                                if self.pos - prev < 3 or j.start - self.pos < 3:
-                                    # splice
-                                    worstEffect = "splice-site"
-                                else:
-                                    # intron not splice
-                                    worstEffect = "intron"
-
-                                hit = prepareIntronHit(i, self.pos, 1, codingRegions)
-                                if worstEffect == "splice-site":
-                                    c = findSpliceContext(i, self.pos, self.length, self.seq, codingRegions, "S", refG)
-                                    hit.append(c)
-                                worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
-
-                                break
-
-                            if self.pos <= j.stop and self.pos >= j.start:
-
-                                # coding
-
-                                refCodon, altCodon = whatCodonChange_Snp(i, self.pos, self.seq, refG)
-
-
-                                refAA = cod2aa(refCodon, code)
-                                altAA = cod2aa(altCodon, code)
-
-
-                                worstEffect = mutationType(refAA, altAA)
-
-
-                                protPos = checkProteinPosition(i, self.pos, 1, "S", codingRegions)
-
-                                hit = [i.gene, refAA, altAA, protPos]
-
-                                worstForEachTranscript.append([worstEffect, hit, i.strand, i.trID])
-
-                                break
-
-
-
-                            prev = j.stop
-
-                    elif self.type == "complex":
+                    if self.type == "complex":
                         va = VariantAnnotator(refG, NuclearCode())
                         res = va.annotate(what_hit, i, self.chr, self.pos,
                                           self.length, self.ref, self.seq)
@@ -520,7 +364,7 @@ class Variant:
                     elif self.type == "+" or self.type == "-":
 
                         if what_hit == "CDS":
-                            transcript_length =  i.CDS_len()
+                            transcript_length = i.CDS_len()
                             protLength = transcript_length/3
                             worstForEachTranscript.append(["CDS",[i.gene, self.type, protLength],i.strand, i.trID])
                             continue
@@ -842,6 +686,7 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
             v.seq = a.group(2).upper()
             v.length = len(v.seq)-len(v.ref)+1
             v.pos_last = v.pos + v.length - 1
+            print("V, ", v.pos, v.pos_last)
 
         elif t == "D":
             v.type = "complex"
@@ -876,7 +721,7 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
 
     else:
         if alt != None:
-            v.type = "substitution"
+            v.type = "complex"
             v.seq = alt
             if ref != None:
                 v.ref = ref.upper()
@@ -967,142 +812,6 @@ def complement(nts):
 #def check_if_stop_codon
 
 
-def findFrame(tm, pos):
-
-    if pos < tm.cds[0] or pos > tm.cds[1]:
-        return(-1)
-
-
-    for e in tm.exons:
-
-        if pos >= e.start and pos <= e.stop:
-
-
-            if tm.cds[0] >= e.start:
-                if tm.strand == "+":
-                    return((pos - tm.cds[0] + e.frame)%3)
-                if tm.cds[1] <= e.stop:
-                    return((tm.cds[1] - pos + e.frame)%3)
-                return((e.stop - pos + e.frame)%3)
-            if tm.cds[1] <= e.stop:
-                if tm.strand == "+":
-                    return((pos - e.start + e.frame)%3)
-                return((tm.cds[1] - pos + e.frame)%3)
-
-
-            if tm.strand == "+":
-                return((pos - e.start + e.frame)%3)
-            return((e.stop - pos + e.frame)%3)
-
-    return(None)
-
-
-def whatCodonChange_Snp(tm, pos, alt_nt, refGenome):
-
-
-    frame = findFrame(tm, pos)
-    orig_codon = [-1, -1, -1]
-
-    for i in xrange(0, len(tm.exons)):
-        if pos >= tm.exons[i].start and pos <= tm.exons[i].stop:
-            orig_codon[frame] = getSeq(refGenome, tm.chr, pos)
-
-            if tm.strand == "+":
-
-                if frame == 0:
-
-
-                    if pos+2 <= tm.exons[i].stop:
-                        orig_codon[2] = getSeq(refGenome, tm.chr, pos+2)
-                        orig_codon[1] = getSeq(refGenome, tm.chr, pos+1)
-                    elif pos + 1 <= tm.exons[i].stop:
-                        orig_codon[1] = getSeq(refGenome, tm.chr, pos+1)
-                        orig_codon[2] = getSeq(refGenome, tm.chr, tm.exons[i+1].start)
-                    else:
-                        orig_codon[1] = getSeq(refGenome, tm.chr, tm.exons[i+1].start)
-                        orig_codon[2] = getSeq(refGenome, tm.chr, tm.exons[i+1].start+1)
-
-                elif frame == 1:
-
-                    if pos - 1 >= tm.exons[i].start:
-                        orig_codon[0] = getSeq(refGenome, tm.chr, pos-1)
-                    else:
-                        orig_codon[0] = getSeq(refGenome, tm.chr, tm.exons[i-1].stop)
-
-                    if pos + 1 <= tm.exons[i].stop:
-                        orig_codon[2] = getSeq(refGenome, tm.chr, pos+1)
-                    else:
-                        orig_codon[2] = getSeq(refGenome, tm.chr, tm.exons[i+1].start)
-
-                elif frame == 2:
-                    if pos-2 >= tm.exons[i].start:
-                        orig_codon[0] = getSeq(refGenome, tm.chr, pos-2)
-                        orig_codon[1] = getSeq(refGenome, tm.chr, pos-1)
-                    elif pos-1 >= tm.exons[i].start:
-                        orig_codon[0] = getSeq(refGenome, tm.chr, tm.exons[i-1].stop)
-                        orig_codon[1] = getSeq(refGenome, tm.chr, pos-1)
-                    else:
-                        orig_codon[0] = getSeq(refGenome, tm.chr, tm.exons[i-1].stop-1)
-                        orig_codon[1] = getSeq(refGenome, tm.chr, tm.exons[i-1].stop)
-
-                else:
-                    print("Incorrect value of frame: " , frame)
-                    sys.exit(-23)
-
-            else:
-            ## strand == "-"
-
-                if frame == 0:
-                    if pos-2 >= tm.exons[i].start:
-                        orig_codon[2] = getSeq(refGenome, tm.chr, pos-2)
-                        orig_codon[1] = getSeq(refGenome, tm.chr, pos-1)
-                    elif pos-1 >= tm.exons[i].start:
-                        orig_codon[2] = getSeq(refGenome, tm.chr, tm.exons[i-1].stop)
-                        orig_codon[1] = getSeq(refGenome, tm.chr, pos-1)
-                    else:
-                        orig_codon[2] = getSeq(refGenome, tm.chr, tm.exons[i-1].stop-1)
-                        orig_codon[1] = getSeq(refGenome, tm.chr, tm.exons[i-1].stop)
-
-
-                elif frame == 1:
-
-                    if pos - 1 >= tm.exons[i].start:
-                        orig_codon[2] = getSeq(refGenome, tm.chr, pos-1)
-                    else:
-                        orig_codon[2] = getSeq(refGenome, tm.chr, tm.exons[i-1].stop)
-
-                    if pos + 1 <= tm.exons[i].stop:
-                        orig_codon[0] = getSeq(refGenome, tm.chr, pos+1)
-                    else:
-                        orig_codon[0] = getSeq(refGenome, tm.chr, tm.exons[i+1].start)
-
-                elif frame == 2:
-
-                    if pos+2 <= tm.exons[i].stop:
-                        orig_codon[0] = getSeq(refGenome, tm.chr, pos+2)
-                        orig_codon[1] = getSeq(refGenome, tm.chr, pos+1)
-                    elif pos + 1 <= tm.exons[i].stop:
-                        orig_codon[1] = getSeq(refGenome, tm.chr, pos+1)
-                        orig_codon[0] = getSeq(refGenome, tm.chr, tm.exons[i+1].start)
-                    else:
-                        orig_codon[1] = getSeq(refGenome, tm.chr, tm.exons[i+1].start)
-                        orig_codon[0] = getSeq(refGenome, tm.chr, tm.exons[i+1].start+1)
-
-                else:
-                    print("Incorrect value of frame: " , frame)
-                    sys.exit(-24)
-
-    if tm.strand == "-":
-        codon = complement("".join(orig_codon))
-        orig_codon[frame] = alt_nt
-        newCodon = complement("".join(orig_codon))
-    else:
-        codon = "".join(orig_codon)
-        orig_codon[frame] = alt_nt
-        newCodon = "".join(orig_codon)
-
-    return(codon, newCodon)
-
 
 def checkProteinPosition(tm, pos, length, type, cds_reg):
 
@@ -1146,39 +855,6 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
     minAA = minAA/3 + 1
 
     return(str(minAA) + "/" + str(protLength))
-
-
-def mutationType(aaref, aaalt):
-
-    if aaref == aaalt and aaref != "?":
-        return("synonymous")
-    if aaalt == 'End':
-        return("nonsense")
-    if aaref == "?" or aaalt == "?":
-        return("coding_unknown")
-
-    return("missense")
-
-
-def cod2aa(codon, code):
-
-    codon=codon.upper()
-    if len(codon) != 3:
-        return("?")
-
-    for i in codon:
-        if i not in ['A', 'C', 'T', 'G', 'N']:
-            print("Codon can only contain: A, G, C, T, N letters, this codon is: " + codon)
-            sys.exit(-21)
-        if i == "N":
-            return("?")
-
-    for key in code.CodonsAaKeys:
-        if codon in code.CodonsAa[key]:
-            return(key)
-
-    return(None)
-
 
 def maxInExons(pos1, pos2, exons):
 
@@ -1428,350 +1104,6 @@ def findSpliceContext(tm, pos, length, seq, cds_reg, type, refGenome):
     return(toSpliceReport)
 
 
-
-
-
-def checkEndChange_Snp(codon, pos, seq, strand, code):
-
-    if strand == "+":
-        newCodon = codon[:pos] + seq + codon[pos+1:]
-    else:
-        newCodon = codon[:pos] + complement(seq) + codon[pos+1:]
-
-    if not _in_stop_codons(codon, code):
-    #if codon not in stopCodons:
-        return('missense')
-    else:
-        if not _in_stop_codons(newCodon, code):
-        #if newCodon not in stopCodons:
-            return('noEnd')
-        else:
-            return('synonymous')
-
-
-def firstOrLastCodonOutput_Snps(tm, pos, worstEffect):
-
-    if worstEffect == "noEnd" or  worstEffect == "noStart":
-        protLength = tm.CDS_len()/3
-        hit =[tm.gene, str(protLength)]
-    elif worstEffect == "synonymous":
-        p = tm.CDS_len()/3
-        hit = [tm.gene, 'End', 'End', str(p)+"/"+str(p)]
-    elif worstEffect == "missense":
-        p = tm.CDS_len()/3
-        hit = [tm.gene, '?', '?', str(p)+"/"+str(p)]
-    else:
-        print("incorrect mut type: " + worstEffect)
-        sys.exit(-222)
-
-    return([worstEffect, hit])
-
-
-
-
-def dealWithFirstCodon_Snps(tm, pos, altNt, refGenome, code):
-
-    if tm.strand == "+":
-        #worstEffect = "noStart"
-        if not _in_start_codons(getSeq(refGenome, tm.chr, tm.cds[0], tm.cds[0]+2), code):
-            refCodon, altCodon = whatCodonChange_Snp(tm, pos, altNt, refGenome)
-            refAA = cod2aa(refCodon, code)
-            altAA = cod2aa(altCodon, code)
-            worstEffect = mutationType(refAA, altAA)
-            #worstEffect = "missense"
-            p = tm.CDS_len()/3
-            hit = [tm.gene, refAA, altAA, "1/"+str(p)]
-            #hit = [gene, '?', '?', pos, pos, "1/"+str(p)]
-            return([worstEffect, hit])
-        else:
-            worstEffect = "noStart"
-
-    else:
-        worstEffect = checkEndChange_Snp(complement(getSeq(refGenome, tm.chr, tm.cds[0], tm.cds[0]+2))[::-1], abs(pos-tm.cds[0]-2), altNt, '-', code)
-    out = firstOrLastCodonOutput_Snps(tm, pos, worstEffect)
-
-    return(out)
-
-def dealWithLastCodon_Snps(tm, pos, altNt, refGenome, code):
-
-    if tm.strand == "+":
-        worstEffect = checkEndChange_Snp(getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]), tm.cds[1]-pos, altNt, '+', code)
-    else:
-        if not _in_start_codons(complement(getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]))[::-1], code):
-            worstEffect = "missense"
-            p = tm.CDS_len()/3
-            hit = [tm.gene, '?', '?', "1/"+str(p)]
-            return([worstEffect, hit])
-        else:
-            worstEffect = "noStart"
-
-    out = firstOrLastCodonOutput_Snps(tm, pos, worstEffect)
-
-    return(out)
-
-def firstOrLastCodonOutput_Indel(tm, pos, worstEffect, type, cds_reg, length):
-    if worstEffect == "no-frame-shift" or worstEffect == "frame-shift":
-        protPos = checkProteinPosition(tm, pos, length, type, cds_reg)
-        hit = [tm.gene, protPos]
-    elif worstEffect == "noEnd" or worstEffect == "noStart":
-        protLength = tm.CDS_len()/3
-        hit =[tm.gene, str(protLength)]
-    elif worstEffect == "3'UTR" or worstEffect == "5'UTR":
-        d = distanceFromCoding(pos, tm)
-        hit = [worstEffect, [tm.gene, worstEffect, str(d)]]
-
-    else:
-        print("incorrect mut type: " + worstEffect)
-        sys.exit(-233)
-
-    return([worstEffect, hit])
-
-def dealWithCodingAndLastCodon_Del(tm, pos, length, cds_reg, refGenome, code):
-
-    d = tm.cds[1] - (pos + length - 1)
-
-    if tm.strand == "+":
-        if pos + length - 1 <= tm.cds[1]:
-            if length%3 != 0:
-                worstEffect = "frame-shift"
-            else:
-                if not _in_stop_codons(getSeq(refGenome, tm.chr, tm.cds[1] -2, tm.cds[1]), code):
-
-                    worstEffect = "no-frame-shift"
-                else:
-                    worstEffect = "no-frame-shift"
-        else:
-            worstEffect = "noEnd"
-
-    else:
-        if pos + length - 1 > tm.cds[1]:
-            length = tm.cds[1] - pos +  1
-        if length % 3 != 0:
-            worstEffect = "frame-shift"
-        else:
-            worstEffect = "noStart"
-
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "D", cds_reg, length)
-    return(out)
-
-
-def dealWithFirstCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
-
-
-    if tm.strand == "+":
-        if pos == tm.cds[0]:
-            if tm.cds[0] == tm.tx[0]:
-                return(["5'UTR", [tm.gene,"5'UTR", "1"]])
-            else:
-                return("intergenic")
-        elif length == 1:
-            if pos == tm.cds[0] + 1 and seq == "A":
-                if tm.cds[0] == tm.tx[0]:
-                    return(["5'UTR", [tm.gene,"5'UTR", "1"]])
-                else:
-                    return("intergenic")
-            else:
-                worstEffect = "frame-shift"
-
-        elif not _in_start_codons(getSeq(refGenome, tm.chr, tm.cds[0], tm.cds[0]+2), code):
-
-            if length%3 != 0:
-                worstEffect = "frame-shift"
-            else:
-                worstEffect = "no-frame-shift"
-        else:
-            d = pos - tm.cds[0]
-            if seq[-d:] == "AT"[:d]:
-                if tm.cds[0] == tm.tx[0]:
-                    return(["5'UTR", [tm.gene,"5'UTR", "1"]])
-                else:
-                    return("intergenic")
-            elif seq[:3-d] == "TG"[:3-d]:
-                if length%3 == 0:
-                    worstEffect = "no-frame-shift"
-                else:
-                    worstEffect = "frame-shift"
-            else:
-                worstEffect = "noStart"
-    # strand == "-"
-    else:
-        if pos == tm.cds[0]:
-            if tm.cds[0] == tm.tx[0]:
-                return(["3'UTR", [tm.gene,"3'UTR", "1"]])
-            else:
-                return("intergenic")
-        elif not _in_stop_codons(complement(getSeq(refGenome, tm.chr, tm.cds[0],  tm.cds[0]+2))[::-1], code):
-
-            if length%3 != 0:
-                worstEffect = "frame-shift"
-            else:
-                worstEffect = "no-frame-shift"
-        else:
-            if pos - tm.cds[0] == 2:
-                if length == 1:
-                    if _in_stop_codons(complement(getSeq(refGenome, tm.chr, tm.cds[0]+1) + seq +getSeq(refGenome, tm.chr, tm.cds[0]+2) )[::-1], code):
-                        if tm.cds[0] == tm.tx[0]:
-                            return(["3'UTR", [tm.gene,"3'UTR", "1"]])
-                        else:
-                            return("intergenic")
-                    else:
-                        worstEffect = "noEnd"
-                elif complement(seq[-2:])[::-1] in ['GA', 'AA', 'AG']:
-                    if tm.cds[0] == tm.tx[0]:
-                        return(["3'UTR", [tm.gene,"3'UTR", "1"]])
-                    else:
-                        return("intergenic")
-
-                elif seq[0] == "A":
-                    if length%3 == 0:
-                        worstEffect = "no-frame-shift"
-                    else:
-                        worstEffect = "frame-shift"
-                else:
-                    worstEffect = "noEnd"
-            elif pos - tm.cds[0] == 1:
-                if _in_stop_codons(complement(seq[-1] + getSeq(refGenome, tm.chr, tm.cds[0]+1, tm.cds[0]+2))[::-1], code):
-                    if tm.cds[0] == tm.tx[0]:
-                        return(["3'UTR", [tm.gene,"3'UTR", "1"]])
-                    else:
-                        return("intergenic")
-                elif length == 1:
-                    worstEffect = "noEnd"
-                elif _in_stop_codons(complement(getSeq(refGenome, tm.chr, tm.cds[0]) + seq[:2])[::-1], code):
-
-                    if length%3 == 0:
-                        worstEffect = "no-frame-shift"
-                    else:
-                        worstEffect = "frame-shift"
-                else:
-                    worstEffect = "noEnd"
-            else:
-                print("error in dealWithFirstCodon_Ins, posCod: " + str(tm.cds[0]) + " Inspos: " + str(pos))
-
-
-
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect, "I", cds_reg, length)
-    return(out)
-
-
-def dealWithLastCodon_Ins(tm, pos, seq, length, cds_reg, refGenome, code):
-    if tm.strand == "-":
-        if getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]) != "CAT":
-
-            if length%3 == 0:
-                worstEffect = "no-frame-shift"
-            else:
-                worstEffect = "frame-shift"
-        else:
-            if length == 1:
-                if pos == tm.cds[1] and seq == "T":
-                    if tm.cds[1] == tm.tx[1]:
-                        return(["5'UTR", [tm.gene,"5'UTR", "1"]])
-                    else:
-                        return("intergenic")
-                else:
-                    worstEffect = "frame-shift"
-            else:
-                if pos == tm.cds[1] - 2:
-                    if length%3 == 0:
-                        worstEffect = "no-frame-shift"
-                    else:
-                        worstEffect = "frame-shift"
-                else:
-                    if tm.cds[1] - pos == 0:
-                        if seq[0] == "T":
-                            if tm.cds[1] == tm.tx[1]:
-                                return(["5'UTR", [tm.gene,"5'UTR", "1"]])
-                            else:
-                                return("intergenic")
-
-                        elif seq[-2:] == "CA":
-                            if length%3 == 0:
-                                worstEffect = "no-frame-shift"
-                            else:
-                                worstEffect = "frame-shift"
-                        else:
-                            worstEffect = "noStart"
-                    elif tm.cds[1] - pos == 1:
-                        if seq[:2] == "AT":
-                            if tm.cds[1] == tm.tx[1]:
-                                return(["5'UTR", [tm.gene,"5'UTR", "1"]])
-                            else:
-                                return("intergenic")
-                        elif seq[-1] == "C":
-                            if length%3 == 0:
-                                worstEffect = "no-frame-shift"
-                            else:
-                                worstEffect = "frame-shift"
-                        else:
-                            worstEffect = "noStart"
-
-                    else:
-                        print("Error in dealWithLastCodon_Ins, pos: " + str(pos))
-
-    # strand == "+"
-    else:
-        print("AAAAAAAAA")
-        if not _in_stop_codons(getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]), code):
-
-            if length%3 == 0:
-                worstEffect = "no-frame-shift"
-            else:
-                worstEffect = "frame-shift"
-        else:
-            if pos == tm.cds[1] - 2:
-                if length%3 == 0:
-                    worstEffect = "no-frame-shift"
-                else:
-                    worstEffect = "frame-shift"
-            elif length == 1:
-                if pos == tm.cds[1] - 1:
-                    if _in_stop_codons("T" + seq + getSeq(refGenome, tm.chr, tm.cds[1] -1), code):
-                        if tm.cds[1] == tm.tx[1]:
-                            return(["3'UTR", [tm.gene,"3'UTR", "1"]])
-                        else:
-                            return("intergenic")
-                    else:
-                        worstEffect = "noEnd"
-                else:
-                    if _in_stop_codons(getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]-1) + seq, code):
-                        if tm.cds[1] == tm.tx[1]:
-                            return(["3'UTR", [tm.gene,"3'UTR", "1"]])
-                        else:
-                            return("intergenic")
-                    else:
-                        worstEffect = "noEnd"
-            else:
-                 if pos == tm.cds[1] - 1:
-                     if _in_stop_codons("T" + seq[:2], code):
-                         if tm.cds[1] == tm.tx[1]:
-                             return(["3'UTR", [tm.gene,"3'UTR", "1"]])
-                         else:
-                             return("intergenic")
-                     elif seq[-1] == "T":
-                         if length%3 == 0:
-                             worstEffect = "no-frame-shift"
-                         else:
-                             worstEffect = "frame-shift"
-                     else:
-                         worstEffect = "noEnd"
-                 else:
-                     if _in_stop_codons(getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]-1) + seq[0], code):
-                         if tm.cds[1] == tm.tx[1]:
-                             return(["3'UTR", [tm.gene,"3'UTR", "1"]])
-                         else:
-                             return("intergenic")
-                     elif _in_stop_codons('T' + seq[-2:], code):
-                         if length%3 == 0:
-                             worstEffect = "no-frame-shift"
-                         else:
-                             worstEffect = "frame-shift"
-                     else:
-                         worstEffect = "noEnd"
-
-    out =  firstOrLastCodonOutput_Indel(tm, pos, worstEffect,"I", cds_reg, length)
-    return(out)
-
 def findCodingBase(tm, pos, dist, refGenome):
 
     if dist == 0:
@@ -1796,64 +1128,6 @@ def findCodingBase(tm, pos, dist, refGenome):
     return(None)
 
 
-def checkForNewStop_Ins(pos, seq, tm, length, refGenome, code):
-
-
-
-    if tm.strand == "+":
-        frame = findFrame(tm, pos)
-        print("checkForNewStop_Ins", frame)
-        if frame == 0:
-            return(False)
-        if frame == 1:
-            preCodon = findCodingBase(tm, pos, -1, refGenome  ) +  seq[:2]
-            postCodon = seq[-1] + findCodingBase(tm, pos, 0 , refGenome ) + findCodingBase(tm, pos, 1, refGenome  )
-            if length > 3:
-                for i in xrange(0, length/3-1):
-                    if _in_stop_codons(seq[i*3 + 2: i*3 + 5], code):
-                        return(True)
-        else:
-            preCodon = findCodingBase(tm, pos, -2 , refGenome ) + findCodingBase(tm, pos, -1 , refGenome ) + seq[0]
-            postCodon = seq[-2:] + findCodingBase(tm, pos, 0 , refGenome )
-            print("checkForNewStop_Ins", preCodon, postCodon)
-            if length > 3:
-                for i in xrange(0, length/3-1):
-                    if _in_stop_codons(seq[i*3 + 1: i*3 + 4], code):
-                        return(True)
-
-    else:
-        frame = findFrame(tm, pos)
-        if frame == 2:
-            return(False)
-        if frame == 0:
-            preCodon = complement(findCodingBase(tm, pos, 0, refGenome  ) + seq[:-3:-1])
-            postCodon = complement(seq[0] + findCodingBase(tm, pos, -1 , refGenome ) + findCodingBase(tm, pos, -2 , refGenome ))
-
-            if length > 3:
-                for i in xrange(0, length/3-1):
-                    if _in_stop_codons(complement(seq[i*3+1:i*3+4])[::-1], code):
-                        return(True)
-        else:
-            preCodon = complement(findCodingBase(tm, pos, 1 , refGenome ) + findCodingBase(tm, pos, 0 , refGenome ) + seq[-1])
-            postCodon = complement(seq[1::-1] + findCodingBase(tm, pos, -1 , refGenome ))
-            if length > 3:
-                for i in xrange(0, length/3-1):
-                    if _in_stop_codons(complement(seq[i*3+2:i*3+5])[::-1], code):
-                        return(True)
-
-    if _in_stop_codons(preCodon, code) or _in_stop_codons(postCodon, code):
-        return(True)
-    return(False)
-
-def checkForNewStop(tm, pos, seq, length, type , refGenome, code):
-
-    if type == "D":
-        return(checkForNewStop_Del(pos, length, tm, refGenome, code ))
-    if type == "I":
-        return(checkForNewStop_Ins(pos, seq, tm, length , refGenome, code))
-    print("Incorrect type for checking new stops: " + type)
-    sys.exit(-54)
-
 
 def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
 
@@ -1861,7 +1135,6 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
     splice_seq = getSeq(refGenome, chrom, splicePos[0], splicePos[1])
     print("checkIfSplice_old", chrom, pos, seq, length, splicePos, side,
           splice_seq)
-
     if type == "D":
         if side == "5'":
             # prev
