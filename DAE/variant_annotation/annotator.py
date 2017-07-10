@@ -144,7 +144,6 @@ class VariantAnnotator:
             mutated_codon = tmw.get_codon_for_pos(transcript_model.chr, pos)
 
             print("codon change: {}->{}".format(codon, mutated_codon))
-            print(tmw.get_codon_for_pos(transcript_model.chr, 47515673))
         except TypeError:
             print("codon change N/A")
 
@@ -267,6 +266,20 @@ class VariantAnnotator:
                                transcript_model.trID]
                         worstForEachTranscript.append(res)
                         return worstForEachTranscript
+                elif length == 0:
+                        refAA = self.cod2aa(codon)
+                        altAA = self.cod2aa(mutated_codon)
+
+                        worstEffect = self.mutationType(refAA, altAA)
+                        protPos = VariantAnnotation.checkProteinPosition(
+                            tm, pos, length, "S", codingRegions
+                        )
+                        hit = [transcript_model.gene, refAA, altAA, protPos]
+                        worstForEachTranscript.append(
+                            [worstEffect, hit, transcript_model.strand,
+                             transcript_model.trID]
+                        )
+                        return worstForEachTranscript
         return worstForEachTranscript
 
     def checkForNewStop(self, pos_start, length, tm, genomic_sequence,
@@ -295,3 +308,33 @@ class VariantAnnotator:
             return True
         else:
             return False
+
+    def cod2aa(self, codon):
+        codon = codon.upper()
+        if len(codon) != 3:
+            return("?")
+
+        for i in codon:
+            if i not in ['A', 'C', 'T', 'G', 'N']:
+                print("Codon can only contain: A, G, C, T, N letters, \
+                      this codon is: " + codon)
+                sys.exit(-21)
+            if i == "N":
+                return("?")
+
+        for key in self.code.CodonsAaKeys:
+            if codon in self.code.CodonsAa[key]:
+                return(key)
+
+        return(None)
+
+    def mutationType(self, aaref, aaalt):
+
+        if aaref == aaalt and aaref != "?":
+            return("synonymous")
+        if aaalt == 'End':
+            return("nonsense")
+        if aaref == "?" or aaalt == "?":
+            return("coding_unknown")
+
+        return("missense")

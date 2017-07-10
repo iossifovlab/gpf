@@ -836,7 +836,7 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
     if var != None:
         t = var[0].upper()
         if t == "S":
-            v.type = "substitution"
+            v.type = "complex"
             a = re.match('.*\((.*)->(.*)\)', var)
             v.ref = a.group(1).upper()
             v.seq = a.group(2).upper()
