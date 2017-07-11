@@ -83,7 +83,7 @@ class Measure(object):
     def __repr__(self):
         return "Measure({}, {}, {})".format(
             self.measure_id, self.measure_type,
-            self.value_domain.encode('utf-8'))
+            self.value_domain)
 
     @classmethod
     def _from_df(cls, row):
@@ -103,7 +103,8 @@ class Measure(object):
         if m.measure_type == 'continuous' or m.measure_type == 'ordinal':
             m.min_value = row['min_value']
             m.max_value = row['max_value']
-            assert m.max_value >= m.min_value
+#             assert m.max_value >= m.min_value, \
+#                 "%s, %s, %s" % (m.measure_id, m.min_value, m.max_value)
         m.value_domain = row['value_domain']
         m.has_probands = row['has_probands']
         m.has_siblings = row['has_siblings']
@@ -241,10 +242,18 @@ class PhenoDB(PhenoConfig):
                     'has_parents': np.zeros(size),
                     'default_filter': [None] * size,
                 })
-
         df = df.join(
             meta_df.set_index('variable_id'), on='variable_id',
-            rsuffix='_val_meta')
+            rsuffix='_meta')
+
+        # df.min_value = df.min_value_meta
+        # df.max_value = df.max_value_meta
+
+#         cindex = df.stats == 'continuous'
+#         assert np.all(np.abs(df[cindex].min_value -
+#                              meta_df[cindex].min_value) < 1.E-6)
+#         assert np.all(np.abs(df[cindex].max_value -
+#                              meta_df[cindex].max_value) < 1.E-6)
 
         return df
 
