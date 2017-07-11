@@ -103,6 +103,8 @@ class QueryDownloadView(QueryBaseView):
         super(QueryDownloadView, self).__init__()
 
     def _parse_query_params(self, data):
+        print(data)
+
         res = {str(k): str(v) for k, v in data.items()}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
