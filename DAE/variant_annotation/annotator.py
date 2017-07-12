@@ -1,6 +1,7 @@
 from .gene_codes import NuclearCode
 from .effect_checkers.example import ExampleEffectChecker
 from .effect_checkers.promoter import PromoterEffectChecker
+from .effect_checkers.frame_shift import FrameShiftEffectChecker
 
 
 class VariantAnnotator:
@@ -10,7 +11,7 @@ class VariantAnnotator:
         self.code = code
         self.promoter_len = 10
         self.effects_checkers = [PromoterEffectChecker(),
-                                 ExampleEffectChecker()]
+                                 FrameShiftEffectChecker()]
 
     def get_effect_for_transcript(self, variant, transcript_model):
         for effect_checker in self.effects_checkers:
