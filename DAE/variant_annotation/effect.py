@@ -16,3 +16,10 @@ class Effect:
     splice_site_context = None
     cnv_type = None
     dist_from_5utr = None
+
+    def __init__(self, effect_name, transcript_model=None):
+        self.effect = effect_name
+        if transcript_model is not None:
+            self.gene = transcript_model.gene
+            self.strand = transcript_model.strand
+            self.transcript_id = transcript_model.trID

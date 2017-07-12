@@ -1,6 +1,6 @@
 from .gene_codes import NuclearCode
-from .effect_checkers.example_effect_checker import ExampleEffectChecker
-from .effect_checkers.promoter_effect_checker import PromoterEffectChecker
+from .effect_checkers.example import ExampleEffectChecker
+from .effect_checkers.promoter import PromoterEffectChecker
 
 
 class VariantAnnotator:

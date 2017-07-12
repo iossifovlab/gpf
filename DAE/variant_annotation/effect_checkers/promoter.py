@@ -1,11 +1,9 @@
-from .base_effect_checker import BaseEffectChecker
+from ..effect import Effect
 
 
-class PromoterEffectChecker(BaseEffectChecker):
+class PromoterEffectChecker:
     def create_effect(self, transcript_model):
-        ef = BaseEffectChecker.create_effect(self, transcript_model)
-        ef.effect = "promoter"
-        return ef
+        return Effect("promoter", transcript_model)
 
     def create_positive_strand_effect(self, transcript_model, variant):
         ef = self.create_effect(transcript_model)
