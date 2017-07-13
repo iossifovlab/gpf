@@ -14,7 +14,7 @@
   <g #innerGroup transform="translate(20, 80)">
     <g *ngFor="let result of phenoToolResults.results; let i = index"
         gpf-pheno-tool-results-chart-per-effect
-        [attr.transform]="'translate(' + (i * 150 + 100) +',0)'"
+        [attr.transform]="'translate(' + (i * 250 + 100) +',0)'"
         [effectResults]="result"
         [yScale]="yScale">
     </g>
