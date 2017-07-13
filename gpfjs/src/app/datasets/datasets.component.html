@@ -28,14 +28,14 @@
       <li *ngIf="selectedDataset?.genotypeBrowser" class="nav-item">
         <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
       </li>
+      <li *ngIf="selectedDataset?.phenotypeBrowser" class="nav-item">
+        <a class="nav-link" routerLink="phenotypeBrowser" routerLinkActive="active">Phenotype Browser</a>
+      </li>
       <li *ngIf="selectedDataset?.enrichmentTool" class="nav-item">
         <a class="nav-link" routerLink="enrichment" routerLinkActive="active">Enrichment Tool</a>
       </li>
       <li *ngIf="selectedDataset?.phenotypeGenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
-      </li>
-      <li *ngIf="selectedDataset?.phenotypeBrowser" class="nav-item">
-        <a class="nav-link" routerLink="phenotypeBrowser" routerLinkActive="active">Phenotype Browser</a>
       </li>
     </ul>
   </nav>
