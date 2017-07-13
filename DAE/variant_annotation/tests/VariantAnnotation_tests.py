@@ -113,6 +113,18 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, 514)
         self.assertEqual(effect.aa_change, None)
 
+    def test_5_UTR_var(self):
+        [effect] = VariantAnnotator.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:57284965",
+                                                     var="sub(G->A)")
+        self.assertEqual(effect.gene, "C1orf168")
+        self.assertEqual(effect.transcript_id, "NM_001004303_1")
+        self.assertEqual(effect.strand, "-")
+        self.assertEqual(effect.effect, "5'UTR")
+        self.assertEqual(effect.prot_pos, None)
+        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
