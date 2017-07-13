@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { UsersService } from './users.service';
 import { Store } from '@ngrx/store';
 import { USER_LOGIN, USER_LOGOUT } from './users-store'
@@ -9,13 +9,17 @@ import { ForgotPasswordComponent } from '../forgot-password/forgot-password.comp
 @Component({
   selector: 'gpf-users',
   templateUrl: './users.component.html',
-  styleUrls: ['./users.component.css']
+  styleUrls: ['./users.component.css'],
 })
 export class UsersComponent implements OnInit {
   private username;
   private password;
   displayedUsername: string;
   private loginError = false;
+  hideDropdown = true;
+
+  @ViewChild('dropdownButton') dropdownButton: ElementRef;
+  @ViewChild('dialog') dialog: ElementRef;
 
   constructor(
     private modalService: NgbModal,
@@ -67,6 +71,14 @@ export class UsersComponent implements OnInit {
 
   showForgotPassword() {
     this.modalService.open(ForgotPasswordComponent);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClick(event) {
+    if (!this.dialog.nativeElement.contains(event.target) &&
+        !this.dropdownButton.nativeElement.contains(event.target)) {
+      this.hideDropdown = true;
+    }
   }
 
 }

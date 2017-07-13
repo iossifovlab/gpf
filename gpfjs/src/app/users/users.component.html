@@ -7,10 +7,11 @@
 
 <div *ngIf="!displayedUsername" class="row justify-content-end dropdown">
   <div>
-    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown">
+    <button #dropdownButton (click)="hideDropdown = !hideDropdown"
+      class="btn btn-secondary dropdown-toggle" type="button">
       Login
     </button>
-    <div class="dropdown-menu dropdown-menu-right">
+    <div #dialog class="open" [hidden]="hideDropdown">
       <label>
         Username:<input [(ngModel)]="username" type="text">
       </label>
