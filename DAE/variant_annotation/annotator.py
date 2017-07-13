@@ -3,6 +3,7 @@ from .effect_checkers.example import ExampleEffectChecker
 from .effect_checkers.promoter import PromoterEffectChecker
 from .effect_checkers.frame_shift import FrameShiftEffectChecker
 from .effect_checkers.utr import UTREffectChecker
+from .effect_checkers.protein_change import ProteinChangeEffectChecker
 import re
 
 
@@ -19,7 +20,7 @@ class Variant:
             assert(chromosome is not None)
             assert(loc is None)
             self.chromosome = chromosome
-            self.position = position
+            self.position = int(position)
 
         if loc is not None:
             assert(chromosome is None)
@@ -89,7 +90,8 @@ class VariantAnnotator:
         self.promoter_len = promoter_len
         self.effects_checkers = [PromoterEffectChecker(),
                                  FrameShiftEffectChecker(),
-                                 UTREffectChecker()]
+                                 UTREffectChecker(),
+                                 ProteinChangeEffectChecker()]
 
     def get_effect_for_transcript(self, variant, transcript_model):
         for effect_checker in self.effects_checkers:

@@ -12,6 +12,36 @@ def genomes_DB(request):
 
 @pytest.mark.usefixtures("genomes_DB")
 class VariantAnnotationTest(unittest.TestCase):
+    def assert_chr1_897349_sub(self, effect):
+        self.assertEqual(effect.gene, "KLHL17")
+        self.assertEqual(effect.transcript_id, "NM_198317_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "synonymous")
+        # self.assertEqual(effect.prot_pos, 211)
+        # self.assertEqual(effect.prot_length, 642)
+        self.assertEqual(effect.aa_change, "Lys->Lys")
+
+    def test_synonymous_sub_var(self):
+        [effect] = VariantAnnotator.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:897349",
+                                                     var="sub(G->A)")
+        self.assert_chr1_897349_sub(effect)
+
+    def test_synonymous_sub_ref_alt(self):
+        [effect] = VariantAnnotator.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:897349",
+                                                     ref="G",
+                                                     alt="A")
+        self.assert_chr1_897349_sub(effect)
+
+    def test_synonymous_sub_ref_alt_pos(self):
+        [effect] = VariantAnnotator.annotate_variant(self.gmDB, self.GA,
+                                                     chr="1",
+                                                     position="897349",
+                                                     ref="G",
+                                                     alt="A")
+        self.assert_chr1_897349_sub(effect)
+
     def test_reverse_strand_frame_shift_var(self):
         [effect] = VariantAnnotator.annotate_variant(self.gmDB, self.GA,
                                                      loc="1:3519050",
