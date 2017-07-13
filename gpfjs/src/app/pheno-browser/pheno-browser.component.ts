@@ -14,11 +14,11 @@ import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browse
 })
 export class PhenoBrowserComponent implements OnInit {
 
-  selectedChanges$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
+  selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
   measuresToShow$: Observable<PhenoMeasures>;
 
-  private datasetId: string;
   instruments: Observable<PhenoInstruments>;
+  downloadLink$: Observable<string>;
 
   constructor(
     private route: ActivatedRoute,
@@ -27,20 +27,26 @@ export class PhenoBrowserComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.route.parent.params.take(1).subscribe(
-      (params: Params) => {
-        this.datasetId = params['dataset'];
-        this.initInstruments(this.datasetId);
-      }
-    );
-    this.measuresToShow$ = this.selectedChanges$
-      .switchMap((newSelection) => this.phenoBrowserService.getMeasures(this.datasetId, newSelection))
-      .share();
+    let dataset$ = this.route.parent.params
+      .take(1)
+      .map(params => params['dataset']);
+
+    this.initInstruments(dataset$);
+    this.initMeasuresToShow(dataset$);
+    this.initDownloadLink(dataset$);
   }
 
-  initInstruments(datasetId: string): void {
-    this.instruments = this.phenoBrowserService
-      .getInstruments(datasetId).share();
+  initMeasuresToShow(dataset$) {
+    this.measuresToShow$ = Observable
+      .combineLatest([this.selectedInstrument$, dataset$])
+      .switchMap(([newSelection, datasetId]) => {
+        return this.phenoBrowserService.getMeasures(datasetId, newSelection)
+      }).share();
+  }
+
+  initInstruments(datasetId$: Observable<string>): void {
+    this.instruments = datasetId$.switchMap(datasetId =>
+      this.phenoBrowserService.getInstruments(datasetId)).share();
 
     this.instruments.take(1).subscribe((phenoInstruments) => {
       this.emitInstrument(phenoInstruments.default);
@@ -48,6 +54,14 @@ export class PhenoBrowserComponent implements OnInit {
   }
 
   emitInstrument(instrument: PhenoInstrument) {
-    this.selectedChanges$.next(instrument);
+    this.selectedInstrument$.next(instrument);
+  }
+
+  initDownloadLink(dataset$) {
+    this.downloadLink$ = Observable
+      .combineLatest([this.selectedInstrument$, dataset$])
+      .map(([instrument, datasetId]) =>
+        this.phenoBrowserService.getDownloadLink(instrument, datasetId)
+      );
   }
 }

@@ -6,15 +6,19 @@ import { CookieService } from 'ngx-cookie';
 
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
 
+import { ConfigService } from '../config/config.service';
+
 @Injectable()
 export class PhenoBrowserService {
 
   private instrumentsUrl = 'pheno_browser/instruments';
   private measuresUrl = 'pheno_browser/measures';
+  private downloadUrl = 'pheno_browser/download';
 
   constructor(
     private http: Http,
-    private cookieService: CookieService
+    private cookieService: CookieService,
+    private config: ConfigService
   ) {}
 
   private getOptions(): RequestOptions {
@@ -49,5 +53,10 @@ export class PhenoBrowserService {
       .get(this.measuresUrl, options)
       .map((response) => PhenoMeasures.fromJson(response.json()))
       .map(PhenoMeasures.addBasePath);
+  }
+
+  getDownloadLink(instrument: PhenoInstrument, datasetId: string) {
+    return `${this.config.baseUrl}${this.downloadUrl}`
+           + `?dataset_id=${datasetId}&instrument=${instrument}`
   }
 }
