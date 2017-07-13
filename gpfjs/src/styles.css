@@ -156,3 +156,13 @@ label {
 .clickable {
   cursor: pointer;
 }
+.navbar.navbar-custom .nav-link,
+.navbar-nav.navbar-custom .nav-link {
+  color: rgba(0,0,0,.5);
+}
+.navbar.navbar-custom .nav-link.active,
+.navbar-nav.navbar-custom .nav-link.active {
+	background-color: #2a6395;
+  color: #fff;
+  border-radius: .25rem;
+}
