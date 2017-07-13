@@ -4,7 +4,7 @@
   z-index: 1000;
   display: block;
   float: left;
-  min-width: 10rem;
+  min-width: 300px;
   padding: .5rem 0;
   margin: .125rem 0 0;
   font-size: 1rem;
@@ -17,4 +17,5 @@
   border-radius: .25rem;
   right: 0;
   left: auto;
+  padding: 20px;
 }

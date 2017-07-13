@@ -75,9 +75,11 @@ export class UsersComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onClick(event) {
-    if (!this.dialog.nativeElement.contains(event.target) &&
-        !this.dropdownButton.nativeElement.contains(event.target)) {
-      this.hideDropdown = true;
+    if (this.dialog && this.dropdownButton){
+      if (!this.dialog.nativeElement.contains(event.target) &&
+      !this.dropdownButton.nativeElement.contains(event.target)) {
+        this.hideDropdown = true;
+      }
     }
   }
 
