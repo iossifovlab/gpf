@@ -1,0 +1,8 @@
+<div *ngIf="(dataset$ | async) as dataset" class="container">
+  <div class="row mt-4">
+    <h2>{{ dataset.name }}</h2>
+  </div>
+  <div class="row">
+    <markdown [data]="dataset.description"></markdown>
+  </div>
+</div>

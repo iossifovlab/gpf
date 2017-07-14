@@ -109,6 +109,9 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CommonReportsComponent } from './common-reports/common-reports.component';
 import { VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
+import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
+
+import { MarkdownModule } from 'angular2-markdown';
 
 const appRoutes: Routes = [
   {
@@ -134,6 +137,10 @@ const appRoutes: Routes = [
       {
         path: 'phenotypeBrowser',
         component: PhenoBrowserComponent
+      },
+      {
+        path: 'description',
+        component: DatasetDescriptionComponent
       },
       {
         path: '**',
@@ -233,6 +240,7 @@ const appRoutes: Routes = [
     StudiesSummariesComponent,
     CommonReportsComponent,
     VariantReportsComponent,
+    DatasetDescriptionComponent,
   ],
   imports: [
     BrowserModule,
@@ -246,7 +254,8 @@ const appRoutes: Routes = [
     StoreDevtoolsModule.instrumentOnlyWithExtension(),
     RouterModule.forRoot(appRoutes),
     CookieModule.forRoot(),
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    MarkdownModule.forRoot(),
   ],
   providers: [
     ConfigService,
