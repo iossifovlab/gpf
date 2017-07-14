@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 # encoding: utf-8
 '''
 myisam_transmitted_build.py -- prepares MySQL statements for a study.
