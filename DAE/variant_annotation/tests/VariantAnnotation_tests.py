@@ -155,6 +155,18 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
+    def test_synonymous_complex_var(self):
+        [effect] = VariantAnnotator.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:897349",
+                                                     var="complex(GG->AA)")
+        self.assertEqual(effect.gene, "KLHL17")
+        self.assertEqual(effect.transcript_id, "NM_198317_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "missense")
+        # self.assertEqual(effect.prot_pos, 211)
+        # self.assertEqual(effect.prot_length, 642)
+        self.assertEqual(effect.aa_change, "Lys,Ala->Lys,Thr")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,6 @@
 import unittest
 from variant_annotation.mutation import GenomicSequence
+from variant_annotation.annotator import Variant
 
 
 class ExonMock:
@@ -100,10 +101,13 @@ class GenomicSequenceTest(unittest.TestCase):
         self.assertEqual(gen_seq.get_frame(401, 2), 0)
 
     def test_get_codons(self):
+        variant = Variant(loc="1:80", ref="-" * 15, alt="A")
         annotator = AnnotatorMock(ReferenceGenomeMock())
         exons = [ExonMock(65, 70, 0),
                  ExonMock(80, 90, 1),
                  ExonMock(100, 110, 2)]
         tm = TranscriptModelMock("+", 1, 2000, exons)
-        gen_seq = GenomicSequence(annotator, None, tm)
-        self.assertEqual(gen_seq.get_codons(80, 15), "FPQRSTUVWXYZdef")
+        gen_seq = GenomicSequence(annotator, variant, tm)
+        ref_codons, alt_codons = gen_seq.get_codons()
+        self.assertEqual(ref_codons, "FPQRSTUVWXYZdefghi")
+        self.assertEqual(alt_codons, "FAd")

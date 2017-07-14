@@ -48,11 +48,16 @@ class GenomicSequence(object):
         length -= len(seq)
         return self.get_coding_left(-1, length, index - 1) + seq
 
+    def get_nucleotides_count_to_full_codon(self, length):
+        return (3 - (length % 3)) % 3
+
     def get_codons(self):
         index = self.get_coding_region_for_pos(self.variant.position)
         frame = self.get_frame(self.variant.position, index)
-        length = len(self.variant.reference) - frame
-        length += length % 3  # Pad to codon
+        length = len(self.variant.reference)
+        length += self.get_nucleotides_count_to_full_codon(
+            len(self.variant.reference) + frame
+        )
 
         coding_before_pos = self.get_coding_left(self.variant.position - 1,
                                                  frame, index)
@@ -61,15 +66,14 @@ class GenomicSequence(object):
 
         ref_codons = coding_before_pos + coding_after_pos
 
-        length_alt = (len(self.variant.alternate) + frame) % 3
+        length_alt = self.get_nucleotides_count_to_full_codon(
+            len(self.variant.alternate) + frame
+        )
         alt_codons = coding_before_pos + self.variant.alternate
         alt_codons += self.get_coding_right(
             self.variant.position + len(self.variant.reference),
             length_alt, index
         )
-
-        print(ref_codons, alt_codons)
-
         return ref_codons, alt_codons
 
     def cod2aa(self, codon):
