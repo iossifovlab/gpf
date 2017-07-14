@@ -100,8 +100,13 @@ class VariantsBase(object):
         assert os.path.exists(args.transmittedfile)
         assert os.path.exists(args.toomanyfile)
 
-        families, _ = Study._load_family_data_from_simple(
-            args.familiesfile)
+        _base, ext = os.path.splitext(args.familiesfile)
+        if ext == '.pckl':
+            families, _ = Study._load_family_data_from_pickle(
+                args.familiesfile)
+        else:
+            families, _ = Study._load_family_data_from_simple(
+                args.familiesfile)
 
         class StudyMock(object):
             def __init__(self, study_name, families):
