@@ -135,3 +135,10 @@ class Realization:
 
     def dangling(self, vertex):
         return self.get_active_vertex_edges(vertex)
+
+
+class SandwichInstance:
+    def __init__(self, vertices, required_graph, forbidden_graph):
+        self.vertices = vertices
+        self.required_graph = required_graph
+        self.forbidden_graph = forbidden_graph
