@@ -1,147 +1,103 @@
 import sys
 
 
-class Mutation:
-    def __init__(self, pos, ref, alt):
-        self.start_position = pos
-        self.end_ref_position = pos + len(ref) - 1
-        self.end_alt_position = pos + len(alt) - 1
-        self.length_diff = len(alt) - len(ref)
-        self.ref = ref
-        self.alt = alt
-
-    def get_mutated_sequence(self, pos, pos_end):
-        print("GET", pos, pos_end, self.start_position, self.end_alt_position)
-        start_position = max(0, pos - self.start_position)
-        end_position = pos_end - self.end_alt_position
-        print("MUT", start_position, end_position)
-        if end_position < 0:
-            return self.alt[start_position:end_position]
-        else:
-            return self.alt[start_position:]
-
-
 class GenomicSequence(object):
-    def __init__(self, genome_seq):
-        self.genome_seq = genome_seq
-
-    def get_sequence(self, chromosome, pos_start, pos_end):
-        print("GETS", pos_start, pos_end)
-        if pos_start > pos_end:
-            return ""
-        return self.genome_seq.getSequence(chromosome, pos_start,
-                                           pos_end)
-
-
-class MutatedGenomicSequence(GenomicSequence):
-    def __init__(self, genome_seq, mutation):
-        super(MutatedGenomicSequence, self).__init__(genome_seq)
-        self.mutation = mutation
-
-    def clamp(self, val, min_val, max_val):
-        return min(max_val, max(min_val, val))
-
-    def get_sequence(self, chromosome, pos, pos_end):
-        mutation_start = self.clamp(self.mutation.start_position,
-                                    pos, pos_end + 1)
-
-        result = super(MutatedGenomicSequence, self).get_sequence(
-            chromosome, pos, mutation_start - 1
-        )
-        result += self.mutation.get_mutated_sequence(pos, pos_end)
-
-        mutation_end = self.clamp(self.mutation.end_alt_position + 1,
-                                  pos, pos_end + 1)
-        result += super(MutatedGenomicSequence, self).get_sequence(
-            chromosome, mutation_end - self.mutation.length_diff,
-            pos_end - self.mutation.length_diff
-        )
-
-        return result
-
-
-class TranscriptModelWrapper:
-    def __init__(self, transcript_model, genome_seq):
+    def __init__(self, annotator, variant, transcript_model):
+        self.annotator = annotator
+        self.variant = variant
         self.transcript_model = transcript_model
-        self.genome_seq = genome_seq
 
-    def _find_frame(self, pos):
-        tm = self.transcript_model
-        if pos < tm.cds[0] or pos > tm.cds[1]:
-            return(-1)
+    def get_coding_region_for_pos(self, pos):
+        for i, reg in enumerate(self.transcript_model.exons):
+            if reg.start <= pos <= reg.stop:
+                return i
 
-        for e in tm.exons:
-            if pos >= e.start and pos <= e.stop:
-                if tm.cds[0] >= e.start:
-                    if tm.strand == "+":
-                        return((pos - tm.cds[0] + e.frame) % 3)
-                    if tm.cds[1] <= e.stop:
-                        return((tm.cds[1] - pos + e.frame) % 3)
-                    return((e.stop - pos + e.frame) % 3)
-                if tm.cds[1] <= e.stop:
-                    if tm.strand == "+":
-                        return((pos - e.start + e.frame) % 3)
-                    return((tm.cds[1] - pos + e.frame) % 3)
+    def get_frame(self, pos, index):
+        reg = self.transcript_model.exons[index]
+        return((pos - reg.start + reg.frame) % 3)
 
-                if tm.strand == "+":
-                    return((pos - e.start + e.frame) % 3)
-                return((e.stop - pos + e.frame) % 3)
+    def get_coding_right(self, pos, length, index):
+        if length <= 0:
+            return ""
+
+        reg = self.transcript_model.exons[index]
+
+        if pos == -1:
+            pos = reg.start
+        last_index = min(pos + length - 1, reg.stop)
+        seq = self.annotator.reference_genome.getSequence(
+            self.transcript_model.chr, pos, last_index
+        )
+
+        length -= len(seq)
+        return seq + self.get_coding_right(-1, length, index + 1)
+
+    def get_coding_left(self, pos, length, index):
+        if length <= 0:
+            return ""
+
+        reg = self.transcript_model.exons[index]
+
+        if pos == -1:
+            pos = reg.stop
+        start_index = max(pos - length + 1, reg.start)
+        seq = self.annotator.reference_genome.getSequence(
+            self.transcript_model.chr, start_index, pos
+        )
+
+        length -= len(seq)
+        return self.get_coding_left(-1, length, index - 1) + seq
+
+    def get_codons(self):
+        index = self.get_coding_region_for_pos(self.variant.position)
+        frame = self.get_frame(self.variant.position, index)
+        length = len(self.variant.reference) - frame
+        length += length % 3  # Pad to codon
+
+        coding_before_pos = self.get_coding_left(self.variant.position - 1,
+                                                 frame, index)
+        coding_after_pos = self.get_coding_right(self.variant.position,
+                                                 length, index)
+
+        ref_codons = coding_before_pos + coding_after_pos
+
+        length_alt = (len(self.variant.alternate) + frame) % 3
+        alt_codons = coding_before_pos + self.variant.alternate
+        alt_codons += self.get_coding_right(
+            self.variant.position + len(self.variant.reference),
+            length_alt, index
+        )
+
+        print(ref_codons, alt_codons)
+
+        return ref_codons, alt_codons
+
+    def cod2aa(self, codon):
+        codon = codon.upper()
+        if len(codon) != 3:
+            return("?")
+
+        for i in codon:
+            if i not in ['A', 'C', 'T', 'G', 'N']:
+                print("Codon can only contain: A, G, C, T, N letters, \
+                      this codon is: " + codon)
+                sys.exit(-21)
+            if i == "N":
+                return("?")
+
+        for key in self.annotator.code.CodonsAaKeys:
+            if codon in self.annotator.code.CodonsAa[key]:
+                return(key)
 
         return(None)
 
-    def get_codon_start_pos(self, pos):
-        frame = self._find_frame(pos)
-        if self.transcript_model.strand == "+":
-            start_pos = pos - frame
-        else:
-            start_pos = pos + frame
-        return start_pos
+    def get_amino_acids(self):
+        ref_codons, alt_codons = self.get_codons()
 
-    def get_codon_for_pos(self, chromosome, pos):
-        start_pos = self.get_codon_start_pos(pos)
-        print("start_pos", start_pos)
-        if self.transcript_model.strand == "+":
-            end_pos = start_pos + 2
-            return self.genome_seq.get_sequence(chromosome,
-                                                start_pos, end_pos)
-        else:
-            end_pos = start_pos
-            start_pos = end_pos - 2
-            codon = self.genome_seq.get_sequence(chromosome,
-                                                 start_pos, end_pos)
-            print("reverse", start_pos, end_pos, codon)
-            return self.complement(codon[::-1])
+        ref_amino_acids = [self.cod2aa(ref_codons[i:i+3])
+                           for i in range(0, len(ref_codons), 3)]
 
-    def get_first_codon(self):
-        if self.transcript_model.strand == "+":
-            pos = self.transcript_model.cds[0]
-        else:
-            pos = self.transcript_model.cds[1]
-        return self.get_codon_for_pos(self.transcript_model.chr, pos)
+        alt_amino_acids = [self.cod2aa(alt_codons[i:i+3])
+                           for i in range(0, len(alt_codons), 3)]
 
-    def get_last_codon(self):
-        if self.transcript_model.strand == "+":
-            pos = self.transcript_model.cds[1]
-        else:
-            pos = self.transcript_model.cds[0]
-        print("LAST CODON", pos)
-        return self.get_codon_for_pos(self.transcript_model.chr, pos)
-
-    def complement(self, nts):
-        nts = nts.upper()
-        reversed = ''
-        for nt in nts:
-            if nt == "A":
-                reversed += "T"
-            elif nt == "T":
-                reversed += "A"
-            elif nt == "G":
-                reversed += "C"
-            elif nt == "C":
-                reversed += "G"
-            elif nt == "N":
-                reversed += "N"
-            else:
-                print("Invalid nucleotide: " + str(nt) + " in " + str(nts))
-                sys.exit(-23)
-        return(reversed)
+        return ref_amino_acids, alt_amino_acids
