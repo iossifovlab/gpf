@@ -179,8 +179,6 @@ export class GenotypeBrowser {
   }
 }
 
-let dummyDescription = `A **dummy** header`;
-
 export class Dataset extends IdName {
   static fromJson(json: any): Dataset {
     if (!json) {
@@ -188,7 +186,7 @@ export class Dataset extends IdName {
     }
     return new Dataset(
       json['id'],
-      dummyDescription,
+      json['description'] || 'No description',
       json['name'],
       json['accessRights'],
       json['studies'],
