@@ -6,6 +6,7 @@ from .effect_checkers.utr import UTREffectChecker
 from .effect_checkers.protein_change import ProteinChangeEffectChecker
 from .effect_checkers.start_loss import StartLossEffectChecker
 from .effect_checkers.stop_loss import StopLossEffectChecker
+from .effect_checkers.splice_site import SpliceSiteEffectChecker
 import re
 
 
@@ -91,6 +92,7 @@ class VariantAnnotator:
         self.code = code
         self.promoter_len = promoter_len
         self.effects_checkers = [PromoterEffectChecker(),
+                                 SpliceSiteEffectChecker(),
                                  StartLossEffectChecker(),
                                  StopLossEffectChecker(),
                                  FrameShiftEffectChecker(),
