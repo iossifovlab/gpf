@@ -24,51 +24,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
-    def test_no_start_var(self):
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="17:74729179",
-                                                     var="del(3)")
-
-        self.assertEqual(len(effects), 7)
-        for effect in effects:
-            self.assertEqual(effect.gene, "METTL23")
-            self.assertEqual(effect.strand, "+")
-            self.assertEqual(effect.aa_change, None)
-
-        self.assertEqual(effects[0].transcript_id, "NM_001206984_1")
-        self.assertEqual(effects[0].effect, "no-frame-shift")
-        # self.assertEqual(effects[0].prot_pos, 68)
-        # self.assertEqual(effects[0].prot_length, 190)
-
-        self.assertEqual(effects[1].transcript_id, "NM_001206983_1")
-        self.assertEqual(effects[1].effect, "no-frame-shift")
-        # self.assertEqual(effects[1].prot_pos, 68)
-        # self.assertEqual(effects[1].prot_length, 190)
-
-        self.assertEqual(effects[2].transcript_id, "NM_001206985_1")
-        self.assertEqual(effects[2].effect, "noStart")
-        # self.assertEqual(effects[2].prot_pos, 1)
-        # self.assertEqual(effects[2].prot_length, 124)
-
-        self.assertEqual(effects[3].transcript_id, "NM_001206987_1")
-        self.assertEqual(effects[3].effect, "noStart")
-        # self.assertEqual(effects[3].prot_pos, 1)
-        # self.assertEqual(effects[3].prot_length, 124)
-
-        self.assertEqual(effects[4].transcript_id, "NM_001206986_1")
-        self.assertEqual(effects[4].effect, "noStart")
-        # self.assertEqual(effects[4].prot_pos, 1)
-        # self.assertEqual(effects[4].prot_length, 124)
-
-        self.assertEqual(effects[5].transcript_id, "NR_038193_1")
-        self.assertEqual(effects[5].effect, "non-coding-intron")
-        # self.assertEqual(effects[5].prot_pos, None)
-        # self.assertEqual(effects[5].prot_length, None)
-
-        self.assertEqual(effects[6].transcript_id, "NM_001080510_1")
-        self.assertEqual(effects[6].effect, "no-frame-shift")
-        # self.assertEqual(effects[6].prot_pos, 68)
-        # self.assertEqual(effects[6].prot_length, 190)
 
 if __name__ == "__main__":
     unittest.main()
