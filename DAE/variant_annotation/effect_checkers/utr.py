@@ -1,8 +1,14 @@
 from ..effect import Effect
+import logging
 
 
 class UTREffectChecker:
     def get_effect(self, annotator, variant, transcript_model):
+        logger = logging.getLogger(__name__)
+        logger.debug("is coding=%s", transcript_model.is_coding())
+        if not transcript_model.is_coding():
+            return Effect("non-coding", transcript_model)
+
         if variant.position < transcript_model.cds[0]:
             if transcript_model._TranscriptModel__check_if_exon(
                 variant.position, variant.position_last
