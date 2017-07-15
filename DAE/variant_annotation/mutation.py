@@ -1,3 +1,4 @@
+import logging
 import sys
 
 
@@ -6,6 +7,7 @@ class GenomicSequence(object):
         self.annotator = annotator
         self.variant = variant
         self.transcript_model = transcript_model
+        self.logger = logging.getLogger(__name__)
 
     def get_coding_region_for_pos(self, pos):
         for i, reg in enumerate(self.transcript_model.exons):
@@ -14,7 +16,9 @@ class GenomicSequence(object):
 
     def get_frame(self, pos, index):
         reg = self.transcript_model.exons[index]
-        return((pos - reg.start + reg.frame) % 3)
+        frame = (pos - reg.start + reg.frame) % 3
+        self.logger.debug("frame %d for pos=%s", frame, pos)
+        return frame
 
     def get_coding_right(self, pos, length, index):
         if length <= 0:
@@ -76,6 +80,8 @@ class GenomicSequence(object):
             self.variant.position + len(self.variant.reference),
             length_alt, index
         )
+        self.logger.debug("ref codons=%s, alt codons=%s",
+                          ref_codons, alt_codons)
         return ref_codons, alt_codons
 
     def cod2aa(self, codon):
