@@ -54,10 +54,8 @@ class GenomicSequence(object):
     def get_codons(self):
         index = self.get_coding_region_for_pos(self.variant.position)
         frame = self.get_frame(self.variant.position, index)
-        length = len(self.variant.reference)
-        length += self.get_nucleotides_count_to_full_codon(
-            len(self.variant.reference) + frame
-        )
+        length = max(1, len(self.variant.reference))
+        length += self.get_nucleotides_count_to_full_codon(length + frame)
 
         coding_before_pos = self.get_coding_left(self.variant.position - 1,
                                                  frame, index)
@@ -70,6 +68,10 @@ class GenomicSequence(object):
             len(self.variant.alternate) + frame
         )
         alt_codons = coding_before_pos + self.variant.alternate
+
+        if (len(alt_codons) + length_alt == 0):
+            length_alt = 3
+
         alt_codons += self.get_coding_right(
             self.variant.position + len(self.variant.reference),
             length_alt, index
