@@ -1,5 +1,6 @@
 from ..effect import Effect
 from ..mutation import GenomicSequence
+import logging
 
 
 class ProteinChangeEffectChecker:
@@ -20,6 +21,8 @@ class ProteinChangeEffectChecker:
         return "synonymous"
 
     def get_effect(self, annotator, variant, transcript_model):
+        logger = logging.getLogger(__name__)
+
         coding_regions = transcript_model.CDS_regions()
         ref_length = len(variant.reference)
         alt_length = len(variant.alternate)
@@ -34,7 +37,9 @@ class ProteinChangeEffectChecker:
                     ref = GenomicSequence(
                         annotator, variant, transcript_model
                     )
+
                     ref_aa, alt_aa = ref.get_amino_acids()
+                    logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
 
                     ef = Effect(self.mutation_type(ref_aa, alt_aa),
                                 transcript_model)

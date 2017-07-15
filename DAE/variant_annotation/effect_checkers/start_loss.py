@@ -1,5 +1,6 @@
 from ..effect import Effect
 from ..mutation import GenomicSequence
+import logging
 
 
 class StartLossEffectChecker:
@@ -38,12 +39,19 @@ class StartLossEffectChecker:
             return False
 
     def get_effect(self, annotator, variant, transcript_model):
+        logger = logging.getLogger(__name__)
+        logger.debug("position check %d <= %d <= %d", transcript_model.cds[0],
+                     variant.position, transcript_model.cds[0] + 2)
+
         if (transcript_model.cds[0] <= variant.position
                 <= transcript_model.cds[0] + 2):
             ref = GenomicSequence(
                 annotator, variant, transcript_model
             )
             ref_codons, alt_codons = ref.get_codons()
+
+            logger.debug("effected codons: %s->%s",
+                         ref_codons[:3], alt_codons[:3])
 
             if transcript_model.strand == "+":
                 if (self._in_start_codons(ref_codons[:3], annotator) and
