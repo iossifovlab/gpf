@@ -143,14 +143,15 @@ class NegativeStrandGenomicSequence(BaseGenomicSequence):
         return frame
 
     def get_codons(self):
+        last_position = self.variant.position + len(self.variant.reference) - 1
         index = self.get_coding_region_for_pos(self.variant.position)
-        frame = self.get_frame(self.variant.position, index)
+        frame = self.get_frame(last_position, index)
         length = max(1, len(self.variant.reference))
         length += self.get_nucleotides_count_to_full_codon(length + frame)
 
-        coding_before_pos = self.get_coding_left(self.variant.position,
+        coding_before_pos = self.get_coding_left(last_position,
                                                  length, index)
-        coding_after_pos = self.get_coding_right(self.variant.position + 1,
+        coding_after_pos = self.get_coding_right(last_position + 1,
                                                  frame, index)
 
         ref_codons = coding_before_pos + coding_after_pos
@@ -164,9 +165,18 @@ class NegativeStrandGenomicSequence(BaseGenomicSequence):
             length_alt = 3
 
         alt_codons = self.get_coding_left(
-            self.variant.position - len(self.variant.reference),
+            self.variant.position - 1,
             length_alt, index
         ) + alt_codons
+
+        self.logger.debug("coding_before_pos=%s, coding_after_pos=%s frame=%s",
+                          coding_before_pos, coding_after_pos, frame)
+        self.logger.debug("%d-%d %d-%d->%d-%d %d-%d",
+                          last_position, last_position - length,
+                          last_position + 1, last_position + 1 + frame,
+                          self.variant.position,
+                          self.variant.position - length_alt,
+                          last_position + 1, last_position + 1 + frame)
 
         self.logger.debug("ref codons=%s, alt codons=%s",
                           ref_codons, alt_codons)
