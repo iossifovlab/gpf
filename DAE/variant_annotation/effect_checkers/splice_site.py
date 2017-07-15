@@ -1,27 +1,10 @@
 from ..effect import Effect
-from ..mutation import GenomicSequence
 import logging
 
 
 class SpliceSiteEffectChecker:
     def __init__(self, splice_site_length=2):
         self.splice_site_length = splice_site_length
-
-    def mutation_type(self, aaref, aaalt):
-        if len(aaref) != len(aaalt):
-            if "End" in aaalt:
-                return "nonsense"
-            else:
-                return "missense"
-
-        for ref, alt in zip(aaref, aaalt):
-            if ref == "?" or alt == "?":
-                return "coding_unknown"
-            if ref != alt and alt == "End":
-                return "nonsense"
-            if ref != alt:
-                return "missense"
-        return "synonymous"
 
     def get_effect(self, annotator, variant, transcript_model):
         logger = logging.getLogger(__name__)
