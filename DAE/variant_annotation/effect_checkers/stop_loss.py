@@ -1,5 +1,5 @@
 from ..effect import Effect
-from ..mutation import GenomicSequence
+from ..mutation import GenomicSequenceFactory
 import logging
 
 
@@ -46,7 +46,7 @@ class StopLossEffectChecker:
 
         if (transcript_model.cds[1] - 2 <= variant.position
                 <= transcript_model.cds[1]):
-            ref = GenomicSequence(
+            ref = GenomicSequenceFactory.create_genomic_sequence(
                 annotator, variant, transcript_model
             )
             ref_codons, alt_codons = ref.get_codons()

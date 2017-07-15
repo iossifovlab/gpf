@@ -1,5 +1,5 @@
 from ..effect import Effect
-from ..mutation import GenomicSequence
+from ..mutation import GenomicSequenceFactory
 import logging
 
 
@@ -34,7 +34,7 @@ class ProteinChangeEffectChecker:
         for j in coding_regions:
             if (j.start <= variant.position <= j.stop):
                 if length == 0:
-                    ref = GenomicSequence(
+                    ref = GenomicSequenceFactory.create_genomic_sequence(
                         annotator, variant, transcript_model
                     )
 
