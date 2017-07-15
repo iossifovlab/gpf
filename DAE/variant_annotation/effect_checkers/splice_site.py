@@ -10,14 +10,18 @@ class SpliceSiteEffectChecker:
         logger = logging.getLogger(__name__)
 
         coding_regions = transcript_model.CDS_regions()
-        prev = coding_regions[0].stop
-
         length = abs(len(variant.reference) - len(variant.alternate))
         last_position = variant.position + length
+        prev = None
 
         for j in coding_regions:
-            logger.debug("pos: %d-%d checking intronic region %d-%d",
-                         variant.position, last_position, prev, j.start)
+            if prev is None:
+                prev = j.stop
+                continue
+
+            logger.debug("pos: %d-%d checking intronic region %d-%d %d",
+                         variant.position, last_position, prev, j.start,
+                         j.stop)
 
             if (variant.position <= prev + self.splice_site_length
                     and prev < last_position):
