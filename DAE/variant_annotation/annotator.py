@@ -8,6 +8,7 @@ from .effect_checkers.start_loss import StartLossEffectChecker
 from .effect_checkers.stop_loss import StopLossEffectChecker
 from .effect_checkers.splice_site import SpliceSiteEffectChecker
 from .effect_checkers.intron import IntronicEffectChecker
+from effect import Effect
 import re
 
 
@@ -93,11 +94,12 @@ class VariantAnnotator:
         self.code = code
         self.promoter_len = promoter_len
         self.effects_checkers = [PromoterEffectChecker(),
+                                 UTREffectChecker(),
                                  SpliceSiteEffectChecker(),
                                  StartLossEffectChecker(),
                                  StopLossEffectChecker(),
                                  FrameShiftEffectChecker(),
-                                 UTREffectChecker(),
+
                                  ProteinChangeEffectChecker(),
                                  IntronicEffectChecker()]
 
@@ -117,6 +119,8 @@ class VariantAnnotator:
                     effect = self.get_effect_for_transcript(variant, tm)
                     if effect is not None:
                         effects.append(effect)
+        if len(effects) == 0:
+            effects.append(Effect("intergenic"))
         return effects
 
     @classmethod
