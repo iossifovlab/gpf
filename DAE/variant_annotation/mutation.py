@@ -16,7 +16,12 @@ class GenomicSequence(object):
 
     def get_frame(self, pos, index):
         reg = self.transcript_model.exons[index]
-        frame = (pos - reg.start + reg.frame) % 3
+        if reg.stop < self.transcript_model.cds[0]:
+            self.logger.error("Cannot detect frame. \
+                              Start of coding regions is after current region")
+            return 0
+        start_pos = max(self.transcript_model.cds[0], reg.start)
+        frame = (pos - start_pos + reg.frame) % 3
         self.logger.debug("frame %d for pos=%s", frame, pos)
         return frame
 
