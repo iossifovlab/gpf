@@ -7,6 +7,7 @@ from .effect_checkers.protein_change import ProteinChangeEffectChecker
 from .effect_checkers.start_loss import StartLossEffectChecker
 from .effect_checkers.stop_loss import StopLossEffectChecker
 from .effect_checkers.splice_site import SpliceSiteEffectChecker
+from .effect_checkers.intron import IntronicEffectChecker
 import re
 
 
@@ -97,7 +98,8 @@ class VariantAnnotator:
                                  StopLossEffectChecker(),
                                  FrameShiftEffectChecker(),
                                  UTREffectChecker(),
-                                 ProteinChangeEffectChecker()]
+                                 ProteinChangeEffectChecker(),
+                                 IntronicEffectChecker()]
 
     def get_effect_for_transcript(self, variant, transcript_model):
         for effect_checker in self.effects_checkers:

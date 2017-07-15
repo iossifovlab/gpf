@@ -9,7 +9,7 @@ class FrameShiftEffectChecker:
         length = abs(alt_length - ref_length)
 
         for j in coding_regions:
-            if (variant.position <= j.stop or variant.position >= j.start):
+            if (j.start <= variant.position <= j.stop):
                 if length > 0:
                     if length % 3 == 0:
                         ef = Effect("no-frame-shift", transcript_model)
