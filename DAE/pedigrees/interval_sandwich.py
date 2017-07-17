@@ -1,17 +1,20 @@
 import networkx as nx
+import time
+from collections import deque
+import copy
 
 
-class Interval:
+class Interval(object):
 
-    def __init__(self, left=1, right=1):
+    def __init__(self, left=0, right=1):
         self.left = left
         self.right = right
 
 
 class IntervalForVertex(Interval):
 
-    def __init__(self, vertex, left=1, right=1):
-        super().__init__(left, right)
+    def __init__(self, vertex, left=0, right=1):
+        super(IntervalForVertex, self).__init__(left, right)
         self.vertex = vertex
 
 
@@ -24,6 +27,14 @@ class Realization:
         self.domain = domain
         self.max_width = max_width
 
+    def copy(self):
+        return Realization(
+            self.graph, self.forbidden_graph,
+            map(copy.copy, self.intervals),
+            copy.copy(self.domain),
+            self.max_width
+        )
+
     def __repr__(self):
         ordered_domain = sorted([repr(v) for v in self.domain])
         return ";".join(ordered_domain)
@@ -32,8 +43,9 @@ class Realization:
         if not self.can_extend(vertex):
             return False
 
-        max_right = [self.get_interval(v).right
-                     for v in self.get_maximal_set()]
+        print(self.get_maximal_set())
+        max_right = next(self.get_interval(v).right
+                         for v in self.get_maximal_set())
 
         p = 0.5 + max_right
 
@@ -41,8 +53,8 @@ class Realization:
             interval = self.get_interval(active_vertex)
             interval.right = p + 1
 
-        self.domain.push(vertex)
-        self.intervals.push(IntervalForVertex(vertex, p, p + 1))
+        self.domain.append(vertex)
+        self.intervals.append(IntervalForVertex(vertex, p, p + 1))
 
         return True
 
@@ -72,13 +84,13 @@ class Realization:
         return True
 
     def _exceeds_max_width(self):
-        return len(self.get_active_vertices) >= self.max_width
+        return len(self.get_active_vertices()) >= self.max_width
 
     def _has_forbidden_edge(self, new_vertex):
-        forbidden = self.forbidden_graph.neighbours(new_vertex)
+        forbidden = set(self.forbidden_graph.neighbors(new_vertex))
         active_vertices = self.get_active_vertices()
 
-        return len(forbidden - active_vertices) != 0
+        return len(forbidden & active_vertices) != 0
 
     def _new_active_valid(self, new_vertex, new_realization):
         new_active = new_realization.get_active_vertices()
@@ -90,7 +102,7 @@ class Realization:
 
     def _new_dangling_valid(self, new_vertex, new_realization):
         new_dangling = new_realization.dangling(new_vertex)
-        new_edges = set(self.graph.neighbours(new_vertex)) - \
+        new_edges = set(self.graph.neighbors(new_vertex)) - \
             self.get_active_vertices()
         return new_dangling == new_edges
 
@@ -100,7 +112,7 @@ class Realization:
             new_dangling = new_realization.dangling(active_vertex)
             new_dangling.add(new_vertex)
 
-            if len(dangling - new_dangling) != 0:
+            if len(dangling & new_dangling) != 0:
                 return False
 
         return True
@@ -120,20 +132,20 @@ class Realization:
         return intervalV1.right < intervalV2.left
 
     def is_maximal(self, vertex):
-        return all([v is not vertex and self.is_in_interval_order(vertex, v)
+        return all([v is vertex or self.is_in_interval_order(v, vertex)
                     for v in self.domain])
 
     def get_maximal_set(self):
         return {v for v in self.domain if self.is_maximal(v)}
 
     def get_active_vertex_edges(self, vertex):
-        return set(self.graph.neighbours(vertex)).difference(self.domain)
+        return set(self.graph.neighbors(vertex)).difference(self.domain)
 
     def is_active_vertex(self, vertex):
-        neighbours = set(self.graph.neighbours(vertex))
-        return len(neighbours.difference(self.domain)) != 0
+        neighbors = set(self.graph.neighbors(vertex))
+        return len(neighbors.difference(self.domain)) != 0
 
-    def get_active_vertices(self, vertex):
+    def get_active_vertices(self):
         return {v for v in self.domain if self.is_active_vertex(v)}
 
     def dangling(self, vertex):
@@ -157,3 +169,51 @@ class SandwichInstance:
         forbidden_graph.add_edges_from(forbidden_set)
 
         return SandwichInstance(all_vertices, required_graph, forbidden_graph)
+
+
+class SandwichSolver:
+
+    @staticmethod
+    def solve(sandwich_instance):
+        start = time.time()
+
+        realizations_queue = deque()
+
+        for vertex in sandwich_instance.vertices:
+            realizations_queue.append(
+                Realization(
+                    sandwich_instance.required_graph,
+                    sandwich_instance.forbidden_graph,
+                    [IntervalForVertex(vertex)],
+                    [vertex]
+                )
+            )
+
+        visited_realizations = {}
+
+        vertices_length = len(sandwich_instance.vertices)
+
+        while len(realizations_queue) > 0:
+            realization = realizations_queue.pop()
+
+            other_vertices = sandwich_instance.vertices \
+                .difference(realization.domain)
+
+            for vertex in other_vertices:
+                cloned_realization = realization.copy()
+
+                extended = cloned_realization.extend(vertex)
+
+                if not extended:
+                    continue
+
+                if len(cloned_realization.domain) == vertices_length:
+                    print("Found in " + str(time.time() - start) + "ms")
+                    return cloned_realization.intervals
+                else:
+                    domain_string = repr(cloned_realization)
+                    if domain_string not in visited_realizations:
+                        visited_realizations[domain_string] = True
+                        realizations_queue.append(cloned_realization)
+
+        return None

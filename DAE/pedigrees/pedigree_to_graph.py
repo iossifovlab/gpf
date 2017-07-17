@@ -5,7 +5,7 @@ from collections import defaultdict
 import argparse
 import csv
 
-from interval_sandwich import SandwichInstance
+from interval_sandwich import SandwichInstance, SandwichSolver
 
 
 class CsvPedigreeReader:
@@ -48,7 +48,7 @@ class Pedigree:
         self.members = members
         self.family_id = members[0].family_id if len(members) > 0 else ""
 
-    def createSandwichInstance(self):
+    def create_sandwich_instance(self):
         id_to_individual = defaultdict(Individual)
         id_to_mating_unit = {}
 
@@ -224,10 +224,11 @@ def main():
 
     args = parser.parse_args()
     pedigrees = CsvPedigreeReader().read_file(args.file)
+    print(type(pedigrees))
 
-    one_family = pedigrees[0]
-
-    print(one_family.createSandwichInstance())
+    for family in pedigrees:
+        sandwich_instance = family.create_sandwich_instance()
+        print(family.family_id, SandwichSolver.solve(sandwich_instance))
 
 
 if __name__ == "__main__":
