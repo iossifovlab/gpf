@@ -1,3 +1,6 @@
+import networkx as nx
+
+
 class Interval:
 
     def __init__(self, left=1, right=1):
@@ -142,3 +145,15 @@ class SandwichInstance:
         self.vertices = vertices
         self.required_graph = required_graph
         self.forbidden_graph = forbidden_graph
+
+    @staticmethod
+    def from_sets(all_vertices, required_set, forbidden_set):
+        required_graph = nx.Graph()
+        required_graph.add_nodes_from(all_vertices)
+        required_graph.add_edges_from(required_set)
+
+        forbidden_graph = nx.Graph()
+        forbidden_graph.add_nodes_from(all_vertices)
+        forbidden_graph.add_edges_from(forbidden_set)
+
+        return SandwichInstance(all_vertices, required_graph, forbidden_graph)
