@@ -8,7 +8,7 @@ from subprocess import call
 import re, os.path
 import GenomeAccess
 from GeneModelFiles import *
-import VariantAnnotation
+from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
 import time
 import datetime
 from DAE import *
@@ -33,7 +33,7 @@ parser.add_option('-H',help='no header in the input file', default=False,  actio
 
 parser.add_option('-T', help='gene models ID <RefSeq, CCDS, knownGene>', type='string', action='store')
 parser.add_option('--Traw', help='outside gene models file path', type='string', action='store')
-parser.add_option('--TrawFormat', help='outside gene models format (refseq, ccds, knowngene)', type='string', action='store') 
+parser.add_option('--TrawFormat', help='outside gene models format (refseq, ccds, knowngene)', type='string', action='store')
 
 parser.add_option('-G', help='genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ', type='string', action='store')
 parser.add_option('--Graw', help='outside genome file', type='string', action='store')
@@ -68,7 +68,7 @@ if opts.help:
     print("\n----------------------------------------------------------------\n\n")
     sys.exit(0)
 
-    
+
 infile = '-'
 outfile = None
 
@@ -85,16 +85,16 @@ if outfile=='-':
     outfile = None
 
 if infile=='-':
-    variantFile = sys.stdin 
+    variantFile = sys.stdin
 else:
     variantFile = open(infile)
 
 if opts.no_header == False:
     first_line_str = variantFile.readline()
-    first_line = first_line_str.split() 
+    first_line = first_line_str.split()
 else:
     first_line = None
-    
+
 
 def give_column_number(s, header):
     try:
@@ -123,8 +123,8 @@ if opts.x == None and opts.c == None:
     opts.x = "location"
 if (opts.v == None and opts.a == None) and (opts.v == None and opts.t == None):
     opts.v = "variant"
-    
-    
+
+
 chrCol = assign_values(opts.c)
 posCol = assign_values(opts.p)
 locCol = assign_values(opts.x)
@@ -146,7 +146,7 @@ if opts.G == None and opts.Graw == None:
         gmDB = genomesDB.get_gene_models(opts.T)
     else:
         gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
-    
+
 
 elif opts.Graw == None:
     GA = genomesDB.get_genome(opts.G)
@@ -163,7 +163,7 @@ else:
         sys.stderr.write("This genome requires gene models (--Traw option)\n")
         sys.exit(-783)
     gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
-    
+
 
 if "1" in GA.allChromosomes and "1" not in gmDB._utrModels.keys():
     gmDB.relabel_chromosomes()
@@ -193,15 +193,15 @@ for l in variantFile:
         if outfile == None:
             print l,
         else:
-            out.write(l) 
+            out.write(l)
         continue
     k += 1
     if k%1000 == 0:
         sys.stderr.write(str(k) + " lines processed\n")
-   
+
     line = l[:-1].split("\t")
     params = [line[i-1] if i!=None else None for i in argColumnNs]
-     
+
     effects = VariantAnnotation.annotate_variant(gmDB, GA, *params, promoter_len=opts.prom_len)
     desc = VariantAnnotation.effect_description(effects)
 
@@ -220,13 +220,10 @@ if outfile != None:
     sys.stderr.write("Output file saved as: " + outfile + "\n")
 else:
     print("# PROCESSING DETAILS:\n# " + time.asctime() + "\n# " + " ".join(sys.argv))
-    
+
 
 if outfile != None:
     out.close()
 
 
 sys.stderr.write("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start,0))) + "\n")
-
-
-

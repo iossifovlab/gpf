@@ -88,6 +88,34 @@ class Variant:
 
 
 class VariantAnnotator:
+    Severity = {
+        'tRNA:ANTICODON': 30,
+        'all': 24,
+        'splice-site': 23,
+        'frame-shift': 22,
+        'nonsense': 21,
+        'no-frame-shift-newStop': 20,
+        'noStart': 19,
+        'noEnd': 18,
+        'missense': 17,
+        'no-frame-shift': 16,
+        'CDS': 15,
+        'synonymous': 14,
+        'coding_unknown': 13,
+        'regulatory': 12,
+        "3'UTR": 11,
+        "5'UTR": 10,
+        'intron': 9,
+        'non-coding': 8,
+        "5'UTR-intron": 7,
+        "3'UTR-intron": 6,
+        "promoter": 5,
+        "non-coding-intron": 4,
+        'unknown': 3,
+        'intergenic': 2,
+        'no-mutation': 1
+    }
+
     def __init__(self, reference_genome, gene_models, code, promoter_len):
         self.reference_genome = reference_genome
         self.gene_models = gene_models
@@ -130,3 +158,81 @@ class VariantAnnotator:
         annotator = VariantAnnotator(refG, gm, NuclearCode(), promoter_len)
         variant = Variant(chr, position, loc, var, ref, alt, length, seq, typ)
         return annotator.annotate(variant)
+
+    @classmethod
+    def effect_description(cls, E):
+        #cnvs ???
+
+        if E[0].effect == 'unk_chr':
+            return('unk_chr', 'unk_chr', 'unk_chr')
+
+        effect_type = ""
+        effect_gene = ""
+        effect_details = ""
+
+        D = {}
+
+        for i in E:
+            severity_score = cls.Severity[i.effect]
+            try:
+                D[severity_score].append(i)
+            except:
+                D[severity_score] = [i]
+
+        set_worst_effect = False
+
+        for key in sorted(D, key=int, reverse=True):
+            if set_worst_effect is False:
+                effect_type = D[key][0].effect
+                set_worst_effect = True
+
+            if effect_type == "intergenic":
+                return("intergenic", "intergenic", "intergenic")
+
+            if effect_type == "no-mutation":
+                return("no-mutation", "no-mutation", "no-mutation")
+
+            G = {}
+            for i in D[key]:
+                try:
+                    G[i.gene].append(i)
+                except:
+                    G[i.gene] = [i]
+
+            for gene in G:
+                for v in G[gene]:
+                    effect_details += cls.create_effect_details(v) + ";"
+                effect_gene += gene + ":" + G[gene][0].effect + "|"
+
+            effect_details = effect_details[:-1] + "|"
+
+        return(effect_type, effect_gene[:-1], effect_details[:-1])
+
+    @staticmethod
+    def create_effect_details(e):
+        if e.effect in ["intron", "5'UTR-intron", "3'UTR-intron",
+                        "non-coding-intron"]:
+            eff_d = str(e.which_intron) + "/" + str(e.how_many_introns)
+            eff_d += "[" + str(e.dist_from_coding) + "]"
+        elif (e.effect == "frame-shift" or e.effect == "no-frame-shift"
+              or e.effect == "no-frame-shift-newStop"):
+            eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
+        elif e.effect == "splice-site" or e.effect == "synonymous":
+            eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
+        elif e.effect == "5'UTR" or e.effect == "3'UTR":
+            eff_d = str(e.dist_from_coding)
+        elif e.effect in ["non-coding", "unknown", "tRNA:ANTICODON"]:
+            eff_d = str(e.length)
+        elif e.effect == "noStart" or e.effect == "noEnd":
+            eff_d = str(e.prot_length)
+        elif (e.effect == "missense" or e.effect == "nonsense" or
+              e.effect == "coding_unknown"):
+            eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
+            eff_d += "(" + e.aa_change + ")"
+        elif e.effect == "promoter":
+            eff_d = str(e.dist_from_5utr)
+        elif e.effect == "CDS" or e.effect == "all":
+            eff_d = str(e.prot_length)
+        elif e.effect == "no-mutation":
+            eff_d = "no-mutation"
+        return(eff_d)
