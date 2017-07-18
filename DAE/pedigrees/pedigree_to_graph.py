@@ -57,6 +57,7 @@ class Pedigree:
             father = id_to_individual[member.father]
 
             mating_unit_key = member.mother + "," + member.father
+            # print("key", mating_unit_key)
             if mother != father and not (mating_unit_key in id_to_mating_unit):
                 id_to_mating_unit[mating_unit_key] = MatingUnit(mother, father)
 
@@ -117,13 +118,17 @@ class Pedigree:
 
         # Ee-
         intergenerational_edges = \
-            {(m, a) for m in mating_units for a in mating_units | sibship_units
+            {(m, a) for m in mating_units for a in sibship_units
              if (m.generation_ranks() & a.generation_ranks() != set())
              and (m.individual_set() & a.individual_set() == set())}
-
+        # print("same rank edges:", same_rank_edges)
         required_set = mating_edges | sibship_edges | mates_siblings_edges
         forbidden_set = same_rank_edges | same_generation_not_mates \
             | same_generation_not_siblings | intergenerational_edges
+
+        # print(len(all_vertices), all_vertices)
+        # print(len(required_set), required_set)
+        # print(len(forbidden_set), forbidden_set)
 
         return SandwichInstance.from_sets(
             all_vertices, required_set, forbidden_set)
@@ -136,7 +141,6 @@ class IndividualGroup:
     def individual_set(self):
         return {}
 
-    # @abc.abstractmethod
     def generation_ranks(self):
         return {i.rank for i in self.individual_set()}
 
@@ -144,16 +148,18 @@ class IndividualGroup:
     def children_set(self):
         return {}
 
-    # @abc.abstractmethod
     def __repr__(self):
-        return "{" + ",".join(map(repr, sorted(self.individual_set()))) + "}"
+        return "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
 
 
 class Individual(IndividualGroup):
     NO_RANK = -3673473456
 
-    def __init__(self, mating_units=[], member=None, parents=None,
+    def __init__(self, mating_units=None, member=None, parents=None,
                  rank=NO_RANK):
+
+        if mating_units is None:
+            mating_units = []
 
         self.mating_units = mating_units
         self.member = member
@@ -173,8 +179,8 @@ class Individual(IndividualGroup):
         self.rank = rank
 
         for mu in self.mating_units:
-            for c in mu.children.individuals:
-                c.add_rank(rank - 1)
+            for child in mu.children.individuals:
+                child.add_rank(rank - 1)
 
             mu.father.add_rank(rank)
             mu.mother.add_rank(rank)
@@ -190,7 +196,10 @@ class Individual(IndividualGroup):
 
 
 class SibshipUnit(IndividualGroup):
-    def __init__(self, individuals=set()):
+    def __init__(self, individuals=None):
+        if individuals is None:
+            individuals = set()
+
         self.individuals = individuals
 
     def individual_set(self):
@@ -202,7 +211,10 @@ class SibshipUnit(IndividualGroup):
 
 class MatingUnit(IndividualGroup):
 
-    def __init__(self, mother, father, children=SibshipUnit()):
+    def __init__(self, mother, father, children=None):
+        if children is None:
+            children = SibshipUnit()
+
         self.mother = mother
         self.father = father
         self.children = children
@@ -227,8 +239,9 @@ def main():
     print(type(pedigrees))
 
     for family in pedigrees:
-        sandwich_instance = family.create_sandwich_instance()
-        print(family.family_id, SandwichSolver.solve(sandwich_instance))
+        if family.family_id == "AU0001":
+            sandwich_instance = family.create_sandwich_instance()
+            print(family.family_id, SandwichSolver.solve(sandwich_instance))
 
 
 if __name__ == "__main__":
