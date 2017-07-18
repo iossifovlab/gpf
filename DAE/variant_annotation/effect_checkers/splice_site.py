@@ -104,7 +104,7 @@ class SpliceSiteEffectChecker:
                     return ef
 
             if (variant.position < j.start
-                    and j.start - self.splice_site_length <= last_position):
+                    and j.start - self.splice_site_length < last_position):
                 if (self.are_nucleotides_changed(
                         annotator, variant, transcript_model,
                         j.start - self.splice_site_length)):
