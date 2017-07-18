@@ -24,6 +24,29 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, 642)
         self.assertEqual(effect.aa_change, "Lys,Ala->Lys,Thr")
 
+    def test_just_next_to_splice_site_var(self):
+        effects = VariantAnnotator.annotate_variant(self.gmDB, self.GA,
+                                                    loc="5:86705101",
+                                                    var="del(4)")
+        self.assertEqual(len(effects), 2)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "CCNH")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_001199189_1")
+        self.assertEqual(effects_sorted[0].strand, "-")
+        self.assertEqual(effects_sorted[0].effect, "intron")
+        # self.assertEqual(effects_sorted[0].prot_pos, None)
+        # self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "CCNH")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_001239_1")
+        self.assertEqual(effects_sorted[1].strand, "-")
+        self.assertEqual(effects_sorted[1].effect, "intron")
+        # self.assertEqual(effects_sorted[1].prot_pos, None)
+        # self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
