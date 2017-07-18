@@ -43,7 +43,22 @@ export class NonPdpPedigreesComponent implements OnInit {
       }
     }
 
-    this.familyKeys = this.familyKeys.slice(0, 100);
+
+    this.familyKeys = this.filterSimple(this.familyKeys);
+    this.familyKeys = this.familyKeys.slice(0, 400);
   }
+
+    filterSimple(familyKeys: string[]) {
+        return familyKeys.filter(familyKey => {
+            let family = this.families[familyKey];
+            let matingUnitsCount = 0;
+            for (let member of family) {
+                matingUnitsCount += (member.father !== '0') ? 1 : 0;
+            }
+
+            return matingUnitsCount > 3;
+
+          });
+      }
 
 }
