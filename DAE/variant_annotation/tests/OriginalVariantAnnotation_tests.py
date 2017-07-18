@@ -1529,29 +1529,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effects_sorted[3].prot_length, None)
         self.assertEqual(effects_sorted[3].aa_change, None)
 
-    def test_chr20_44518889_ins_var(self):
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="20:44518889",
-                                                     var="ins(A)")
-        self.assertEqual(len(effects), 2)
-        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
-
-        self.assertEqual(effects_sorted[0].gene, "NEURL2")
-        self.assertEqual(effects_sorted[0].transcript_id, "NM_001278535_1")
-        self.assertEqual(effects_sorted[0].strand, "-")
-        self.assertEqual(effects_sorted[0].effect, "splice-site")
-        # self.assertEqual(effects_sorted[0].prot_pos, 248)
-        # self.assertEqual(effects_sorted[0].prot_length, 262)
-        self.assertEqual(effects_sorted[0].aa_change, None)
-
-        self.assertEqual(effects_sorted[1].gene, "NEURL2")
-        self.assertEqual(effects_sorted[1].transcript_id, "NM_080749_1")
-        self.assertEqual(effects_sorted[1].strand, "-")
-        self.assertEqual(effects_sorted[1].effect, "splice-site")
-        # self.assertEqual(effects_sorted[1].prot_pos, 248)
-        # self.assertEqual(effects_sorted[1].prot_length, 286)
-        self.assertEqual(effects_sorted[1].aa_change, None)
-
     def test_chr1_802610_867930_CNV_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                      loc="1:802610-867930",

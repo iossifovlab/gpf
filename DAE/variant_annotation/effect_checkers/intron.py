@@ -12,8 +12,7 @@ class IntronicEffectChecker:
         coding_regions = transcript_model.CDS_regions()
         prev = coding_regions[0].stop
 
-        length = abs(len(variant.reference) - len(variant.alternate))
-        last_position = variant.position + length
+        last_position = variant.position + len(variant.reference)
 
         for j in coding_regions:
             logger.debug("pos: %d-%d checking intronic region %d-%d",
