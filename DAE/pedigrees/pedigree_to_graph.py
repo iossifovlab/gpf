@@ -89,8 +89,10 @@ class Pedigree:
             individuals.__iter__().next().add_rank(0)
 
         # Ea-
-        same_rank_edges = {(i1, i2) for i1 in individuals for i2 in individuals
+        same_rank_edges = {frozenset([i1, i2])
+                           for i1 in individuals for i2 in individuals
                            if i1 is not i2 and i1.rank is i2.rank}
+        same_rank_edges = set(map(tuple, same_rank_edges))
 
         # Eb+
         mating_edges = {(i, m) for i in individuals for m in mating_units
@@ -121,14 +123,13 @@ class Pedigree:
             {(m, a) for m in mating_units for a in sibship_units
              if (m.generation_ranks() & a.generation_ranks() != set())
              and (m.individual_set() & a.individual_set() == set())}
-        # print("same rank edges:", same_rank_edges)
         required_set = mating_edges | sibship_edges | mates_siblings_edges
         forbidden_set = same_rank_edges | same_generation_not_mates \
             | same_generation_not_siblings | intergenerational_edges
 
-        # print(len(all_vertices), all_vertices)
-        # print(len(required_set), required_set)
-        # print(len(forbidden_set), forbidden_set)
+        # print("all vertices", len(all_vertices), all_vertices)
+        # print("required edges", len(required_set), required_set)
+        # print("forbidden edges", len(forbidden_set), forbidden_set)
 
         return SandwichInstance.from_sets(
             all_vertices, required_set, forbidden_set)
@@ -236,12 +237,14 @@ def main():
 
     args = parser.parse_args()
     pedigrees = CsvPedigreeReader().read_file(args.file)
-    print(type(pedigrees))
+    print("not found:")
 
     for family in pedigrees:
-        if family.family_id == "AU0001":
-            sandwich_instance = family.create_sandwich_instance()
-            print(family.family_id, SandwichSolver.solve(sandwich_instance))
+        # if family.family_id == "AU0001_":
+        sandwich_instance = family.create_sandwich_instance()
+        intervals = SandwichSolver.solve(sandwich_instance)
+        if intervals is None:
+            print family.family_id
 
 
 if __name__ == "__main__":

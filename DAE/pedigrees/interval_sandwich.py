@@ -17,6 +17,9 @@ class IntervalForVertex(Interval):
         super(IntervalForVertex, self).__init__(left, right)
         self.vertex = vertex
 
+    def __repr__(self):
+        return "Interval[{}> {}:{}]".format(self.vertex, self.left, self.right)
+
 
 class Realization:
     def __init__(self, graph, forbidden_graph, intervals=[], domain=[],
@@ -40,10 +43,10 @@ class Realization:
         return ";".join(ordered_domain)
 
     def extend(self, vertex):
+
         if not self.can_extend(vertex):
             return False
 
-        print(self.get_maximal_set())
         max_right = next(self.get_interval(v).right
                          for v in self.get_maximal_set())
 
@@ -67,18 +70,23 @@ class Realization:
         )
 
         if temp_realization._exceeds_max_width():
+            # print("max width reached!")
             return False
 
         if not self._old_dangling_same(new_vertex, temp_realization):
+            # print("_old_dangling_same!")
             return False
 
         if not self._new_dangling_valid(new_vertex, temp_realization):
+            # print("_new_dangling_valid!")
             return False
 
         if not self._new_active_valid(new_vertex, temp_realization):
+            # print("_new_active_valid!")
             return False
 
         if self._has_forbidden_edge(new_vertex):
+            # print("_has_forbidden_edge!")
             return False
 
         return True
@@ -94,11 +102,12 @@ class Realization:
 
     def _new_active_valid(self, new_vertex, new_realization):
         new_active = new_realization.get_active_vertices()
-        new_active_without_dangling = \
-            {v for v in new_active
+        old_active_and_new_vertex = self.get_active_vertices() | {new_vertex}
+        expected_new_active = \
+            {v for v in old_active_and_new_vertex
                 if len(new_realization.dangling(v)) != 0}
 
-        return new_active == new_active_without_dangling
+        return new_active == expected_new_active
 
     def _new_dangling_valid(self, new_vertex, new_realization):
         new_dangling = new_realization.dangling(new_vertex)
@@ -110,9 +119,9 @@ class Realization:
         for active_vertex in self.get_active_vertices():
             dangling = self.dangling(active_vertex)
             new_dangling = new_realization.dangling(active_vertex)
-            new_dangling.add(new_vertex)
+            dangling -= {new_vertex}
 
-            if len(dangling & new_dangling) != 0:
+            if new_dangling != dangling:
                 return False
 
         return True
@@ -132,8 +141,9 @@ class Realization:
         return intervalV1.right < intervalV2.left
 
     def is_maximal(self, vertex):
-        return all([v is vertex or self.is_in_interval_order(v, vertex)
-                    for v in self.domain])
+        is_maximal = [v is vertex or not self.is_in_interval_order(vertex, v)
+                      for v in self.domain]
+        return all(is_maximal)
 
     def get_maximal_set(self):
         return {v for v in self.domain if self.is_maximal(v)}
@@ -178,6 +188,7 @@ class SandwichSolver:
         start = time.time()
 
         realizations_queue = deque()
+        current_iteration = 0
 
         for vertex in sandwich_instance.vertices:
             realizations_queue.append(
@@ -195,6 +206,11 @@ class SandwichSolver:
 
         while len(realizations_queue) > 0:
             realization = realizations_queue.pop()
+            current_iteration += 1
+
+            if current_iteration == 10000:
+                print("exit ot 10k it")
+                return None
 
             other_vertices = sandwich_instance.vertices \
                 .difference(realization.domain)
@@ -208,7 +224,7 @@ class SandwichSolver:
                     continue
 
                 if len(cloned_realization.domain) == vertices_length:
-                    print("Found in " + str(time.time() - start) + "ms")
+                    # print("Found in " + str(time.time() - start) + "ms")
                     return cloned_realization.intervals
                 else:
                     domain_string = repr(cloned_realization)
