@@ -404,7 +404,7 @@ DROP TABLE IF EXISTS `transmitted_familyvariant`;
 CREATE TABLE `transmitted_familyvariant` (
   `family_id` varchar(32) NOT NULL,
   `best` varchar(32) NOT NULL,
-  `counts` varchar(64) NOT NULL,
+  `counts` varchar(128) NOT NULL,
   `in_mom` tinyint(1) NOT NULL,
   `in_dad` tinyint(1) NOT NULL,
   `in_prb` tinyint(1) NOT NULL,
