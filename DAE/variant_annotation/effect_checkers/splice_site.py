@@ -95,20 +95,15 @@ class SpliceSiteEffectChecker:
                               variant.position, last_position, prev, j.start,
                               j.stop)
 
-            if (variant.position <= prev + self.splice_site_length
-                    and prev < last_position):
-                if (self.are_nucleotides_changed(annotator, variant,
-                                                 transcript_model, prev + 1)):
-                    worstEffect = "splice-site"
-                    ef = Effect(worstEffect, transcript_model)
-                    return ef
+            if (variant.position < prev + self.splice_site_length + 1
+                    and prev + 1 < last_position):
+                worstEffect = "splice-site"
+                ef = Effect(worstEffect, transcript_model)
+                return ef
 
             if (variant.position < j.start
                     and j.start - self.splice_site_length < last_position):
-                if (self.are_nucleotides_changed(
-                        annotator, variant, transcript_model,
-                        j.start - self.splice_site_length)):
-                    worstEffect = "splice-site"
-                    ef = Effect(worstEffect, transcript_model)
-                    return ef
+                worstEffect = "splice-site"
+                ef = Effect(worstEffect, transcript_model)
+                return ef
             prev = j.stop
