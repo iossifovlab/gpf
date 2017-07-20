@@ -88,8 +88,8 @@ class VariantAnnotator:
                          var=None, ref=None, alt=None, length=None, seq=None,
                          typ=None, promoter_len=0):
         annotator = VariantAnnotator(refG, gm, promoter_len=promoter_len)
-        return annotator.do_annotate_variant(refG, chr, position, loc, var,
-                                             ref, alt, length, seq, typ)
+        return annotator.do_annotate_variant(chr, position, loc, var, ref,
+                                             alt, length, seq, typ)
 
     @classmethod
     def effect_description(cls, E):
