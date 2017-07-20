@@ -73,7 +73,7 @@ class AnnovarVariantAnnotation:
     def parse_introns(cls, row):
         print(row[0])
         if row[0] != "exonic":
-            effect = SimpleEffect(row[0], row)
+            effect = SimpleEffect(row[0], ",".join(row))
             effect.details = row
             return [effect]
         else:
@@ -117,9 +117,13 @@ class AnnovarVariantAnnotation:
             ["/home/nikidimi/seqpipe/annovar/annotate_variation.pl", "-out",
              "ex1", "-build", "sep2013", "-", "-hgvs", "-separate",
              "/home/nikidimi/seqpipe/annovar/humandb_Ivan/"],
-            stdin=subprocess.PIPE
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
-        p.communicate(input_str)
+        outdata, outerror = p.communicate(input_str)
+
+        if p.returncode != 0:
+            raise RuntimeError(outerror)
 
         with open('ex1.variant_function') as csvfile:
             reader = csv.reader(csvfile, delimiter='\t')
