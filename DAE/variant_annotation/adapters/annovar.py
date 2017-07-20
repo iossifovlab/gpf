@@ -72,7 +72,7 @@ class AnnovarVariantAnnotation:
     @classmethod
     def parse_introns(cls, row):
         if row[0] == "intronic":
-            effect = Effect("intronic")
+            effect = Effect("intron")
             effect.gene = row[1]
             return [effect]
         elif row[0] == "ncRNA_intronic":
