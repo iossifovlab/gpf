@@ -1,5 +1,5 @@
 import networkx as nx
-import time
+# import time
 from collections import deque
 import copy
 
@@ -185,7 +185,7 @@ class SandwichSolver:
 
     @staticmethod
     def solve(sandwich_instance):
-        start = time.time()
+        # start = time.time()
 
         realizations_queue = deque()
         current_iteration = 0

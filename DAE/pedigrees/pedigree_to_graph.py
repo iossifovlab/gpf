@@ -4,6 +4,7 @@ import abc
 from collections import defaultdict
 import argparse
 import csv
+from functools import reduce
 
 from interval_sandwich import SandwichInstance, SandwichSolver
 
@@ -87,6 +88,7 @@ class Pedigree:
 
         if len(individuals) != 0:
             individuals.__iter__().next().add_rank(0)
+            self._fix_rank(individuals)
 
         # Ea-
         same_rank_edges = {frozenset([i1, i2])
@@ -121,8 +123,8 @@ class Pedigree:
         # Ee-
         intergenerational_edges = \
             {(m, a) for m in mating_units for a in sibship_units
-             if (m.generation_ranks() & a.generation_ranks() != set())
-             and (m.individual_set() & a.individual_set() == set())}
+             if (m.generation_ranks() & a.generation_ranks() != set()) and
+             (m.individual_set() & a.individual_set() == set())}
         required_set = mating_edges | sibship_edges | mates_siblings_edges
         forbidden_set = same_rank_edges | same_generation_not_mates \
             | same_generation_not_siblings | intergenerational_edges
@@ -133,6 +135,12 @@ class Pedigree:
 
         return SandwichInstance.from_sets(
             all_vertices, required_set, forbidden_set)
+
+    def _fix_rank(self, individuals):
+        max_rank = reduce(lambda acc, i: max(acc, i.rank), individuals, 0)
+        for individual in individuals:
+            individual.rank -= max_rank
+            individual.rank = -individual.rank
 
 
 class IndividualGroup:
@@ -244,7 +252,7 @@ def main():
         sandwich_instance = family.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
         if intervals is None:
-            print family.family_id
+            print(family.family_id)
 
 
 if __name__ == "__main__":
