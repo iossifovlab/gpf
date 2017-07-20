@@ -3,6 +3,6 @@
     <h2>{{ dataset.name }}</h2>
   </div>
   <div class="row">
-    <markdown [data]="dataset.description"></markdown>
+    <markdown [data]="dataset.description || ''"></markdown>
   </div>
 </div>

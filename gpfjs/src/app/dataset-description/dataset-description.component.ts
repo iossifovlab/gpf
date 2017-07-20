@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Params } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
 
@@ -17,6 +17,7 @@ export class DatasetDescriptionComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private datasetsService: DatasetsService,
   ) { }
 
@@ -26,6 +27,14 @@ export class DatasetDescriptionComponent implements OnInit {
       .filter(datasetId => !!datasetId)
       .switchMap(datasetId =>
         this.datasetsService.getDataset(datasetId));
+
+    this.dataset$.take(1).subscribe(dataset => {
+        if (!dataset.description) {
+            this.router.navigate(['..', 'browser'], {
+                relativeTo: this.route
+            });
+        }
+    });
   }
 
 }

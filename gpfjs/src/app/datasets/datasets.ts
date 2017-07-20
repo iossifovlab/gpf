@@ -186,7 +186,7 @@ export class Dataset extends IdName {
     }
     return new Dataset(
       json['id'],
-      json['description'] || 'No description',
+      json['description'],
       json['name'],
       json['accessRights'],
       json['studies'],
