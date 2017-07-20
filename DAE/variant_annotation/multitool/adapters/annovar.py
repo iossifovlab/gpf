@@ -1,4 +1,4 @@
-from ..effect import Effect
+from ..simple_effect import SimpleEffect
 import subprocess
 import csv
 import re
@@ -71,57 +71,17 @@ class AnnovarVariantAnnotation:
 
     @classmethod
     def parse_introns(cls, row):
-        if row[0] == "intronic":
-            effect = Effect("intron")
-            effect.gene = row[1]
+        print(row[0])
+        if row[0] != "exonic":
+            effect = SimpleEffect(row[0], row)
+            effect.details = row
             return [effect]
-        elif row[0] == "ncRNA_intronic":
-            effect = Effect("non-coding-intron")
-            effect.gene = row[1]
-            return [effect]
-        elif row[0] == "intergenic":
-            effect = Effect("intergenic")
-            return [effect]
-        elif row[0] == "UTR5":
-            m = re.match('([a-zA-Z0-9]+)\((.+)\)', row[1])
-
-            effect = Effect("5'UTR")
-            effect.gene = m.group(1)
-            effect.transcript_id = m.group(2).split(":")[0] + "_1"
-            return [effect]
-        elif row[0] == "UTR3":
-            m = re.match('([a-zA-Z0-9]+)\((.+)\)', row[1])
-
-            effect = Effect("3'UTR")
-            effect.gene = m.group(1)
-            effect.transcript_id = m.group(2).split(":")[0] + "_1"
-            return [effect]
-        elif row[0] == "splicing":
-            effects = []
-
-            m = re.match('([a-zA-Z0-9]+)\((.+)\)', row[1])
-            for details in m.group(2).split(","):
-                effect = Effect("splice-site")
-                effect.gene = m.group(1)
-                effect.transcript_id = details.split(":")[0] + "_1"
-                effects.append(effect)
-            return effects
-
         else:
             return []
 
     @classmethod
     def parse_extron(cls, effect_type, effect_desc):
-        print("AA", effect_desc)
-        effect = Effect(effect_type)
-        additional_info = effect_desc.split(":")
-        for info in additional_info:
-            if info.startswith("p."):
-                effect.prot_pos, effect.aa_change = \
-                    cls.decode_sequence_variation(info)
-
-        effect.gene = additional_info[0]
-        effect.transcript_id = additional_info[1] + "_1"
+        effect = SimpleEffect(effect_type, effect_desc)
         return effect
 
     @classmethod
