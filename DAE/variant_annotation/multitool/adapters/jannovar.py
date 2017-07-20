@@ -3,21 +3,31 @@ from ..simple_effect import SimpleEffect
 
 
 class JannovarVariantAnnotation:
+    def __init__(self, reference_genome):
+        self.reference_genome = reference_genome
+
     def annotate(self, variant):
-        if len(variant.reference) > 0:
-            ref = variant.reference
-        else:
-            ref = "-"
+        pos = variant.position
+        ref = variant.reference
+        alt = variant.alternate
 
-        if len(variant.alternate) > 0:
-            alt = variant.alternate
-        else:
-            alt = "-"
+        if len(variant.alternate) == 0:
+            pos -= 1
+            ref_seq = self.reference_genome.getSequence(variant.chromosome,
+                                                        pos, pos)
+            alt = ref_seq
+            ref = ref_seq + ref
 
-        input_str = "chr{0}:{1}{2}>{3}".format(variant.chromosome,
-                                               variant.position,
+        elif len(variant.reference) == 0:
+            pos -= 1
+            ref_seq = self.reference_genome.getSequence(variant.chromosome,
+                                                        pos, pos)
+            ref = ref_seq
+            alt = ref_seq + alt
+
+        input_str = "chr{0}:{1}{2}>{3}".format(variant.chromosome, pos,
                                                ref, alt)
-
+        print("j", input_str)
         p = subprocess.Popen(
             ["java", "-jar",
              "jannovar-cli/target/jannovar-cli-0.23-SNAPSHOT.jar",
@@ -29,6 +39,9 @@ class JannovarVariantAnnotation:
         )
         outdata, outerror = p.communicate()
         effects = []
+
+        if p.returncode != 0:
+            raise RuntimeError(outerror)
 
         for line in outdata.split("\n"):
             if len(line) == 0 or line[0] == "#":
