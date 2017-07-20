@@ -188,6 +188,9 @@ argColumnNs = [chrCol, posCol, locCol, varCol, refCol, altCol, lengthCol, seqCol
 
 sys.stderr.write("...processing....................\n")
 k = 0
+
+annotator = VariantAnnotation(GA, gmDB, promoter_len=opts.prom_len)
+
 for l in variantFile:
     if l[0] == "#":
         if outfile == None:
@@ -202,8 +205,8 @@ for l in variantFile:
     line = l[:-1].split("\t")
     params = [line[i-1] if i!=None else None for i in argColumnNs]
 
-    effects = VariantAnnotation.annotate_variant(gmDB, GA, *params, promoter_len=opts.prom_len)
-    desc = VariantAnnotation.effect_description(effects)
+    effects = annotator.do_annotate_variant(*params)
+    desc = annotator.effect_description(effects)
 
     if outfile == None:
         print(l[:-1] + "\t" + "\t".join(desc))

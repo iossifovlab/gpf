@@ -41,7 +41,8 @@ class VariantAnnotator:
         'no-mutation': 1
     }
 
-    def __init__(self, reference_genome, gene_models, code, promoter_len):
+    def __init__(self, reference_genome, gene_models, code=NuclearCode(),
+                 promoter_len=0):
         self.reference_genome = reference_genome
         self.gene_models = gene_models
         self.code = code
@@ -76,13 +77,19 @@ class VariantAnnotator:
             effects.append(Effect("intergenic"))
         return effects
 
+    def do_annotate_variant(self, chr=None, position=None, loc=None, var=None,
+                            ref=None, alt=None, length=None, seq=None,
+                            typ=None):
+        variant = Variant(chr, position, loc, var, ref, alt, length, seq, typ)
+        return self.annotate(variant)
+
     @classmethod
     def annotate_variant(cls, gm, refG, chr=None, position=None, loc=None,
                          var=None, ref=None, alt=None, length=None, seq=None,
                          typ=None, promoter_len=0):
-        annotator = VariantAnnotator(refG, gm, NuclearCode(), promoter_len)
-        variant = Variant(chr, position, loc, var, ref, alt, length, seq, typ)
-        return annotator.annotate(variant)
+        annotator = VariantAnnotator(refG, gm, promoter_len=promoter_len)
+        return annotator.do_annotate_variant(refG, chr, position, loc, var,
+                                             ref, alt, length, seq, typ)
 
     @classmethod
     def effect_description(cls, E):
