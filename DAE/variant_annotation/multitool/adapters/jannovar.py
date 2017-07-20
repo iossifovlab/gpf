@@ -11,14 +11,15 @@ class JannovarVariantAnnotation:
         ref = variant.reference
         alt = variant.alternate
 
-        if len(variant.alternate) == 0:
+        if len(alt) == 0:
             pos -= 1
+            pos_end = pos + len(ref) + 1
             ref_seq = self.reference_genome.getSequence(variant.chromosome,
-                                                        pos, pos)
-            alt = ref_seq
-            ref = ref_seq + ref
+                                                        pos, pos_end)
+            alt = ref_seq[0]
+            ref = ref_seq
 
-        elif len(variant.reference) == 0:
+        elif len(ref) == 0:
             pos -= 1
             ref_seq = self.reference_genome.getSequence(variant.chromosome,
                                                         pos, pos)
