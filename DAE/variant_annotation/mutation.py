@@ -87,6 +87,8 @@ class PositiveStrandGenomicSequence(BaseGenomicSequence):
 
     def get_codons(self):
         index = self.get_coding_region_for_pos(self.variant.position)
+        if index is None:
+            raise IndexError
         frame = self.get_frame(self.variant.position, index)
         length = max(1, len(self.variant.reference))
         length += self.get_nucleotides_count_to_full_codon(length + frame)
@@ -145,6 +147,8 @@ class NegativeStrandGenomicSequence(BaseGenomicSequence):
     def get_codons(self):
         last_position = self.variant.position + len(self.variant.reference) - 1
         index = self.get_coding_region_for_pos(self.variant.position)
+        if index is None:
+            raise IndexError
         frame = self.get_frame(last_position, index)
         length = max(1, len(self.variant.reference))
         length += self.get_nucleotides_count_to_full_codon(length + frame)

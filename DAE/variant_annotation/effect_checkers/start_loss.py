@@ -48,22 +48,27 @@ class StartLossEffectChecker:
             ref = GenomicSequenceFactory.create_genomic_sequence(
                 annotator, variant, transcript_model
             )
-            ref_codons, alt_codons = ref.get_codons()
+            try:
+                ref_codons, alt_codons = ref.get_codons()
 
-            logger.debug("effected codons: %s->%s",
-                         ref_codons[:3], alt_codons[:3])
+                logger.debug("effected codons: %s->%s",
+                             ref_codons[:3], alt_codons[:3])
 
-            if transcript_model.strand == "+":
-                if (self._in_start_codons(ref_codons[:3], annotator) and
-                        not self._in_start_codons(alt_codons[:3], annotator)):
-                    ef = Effect("noStart", transcript_model)
-                    ef.prot_pos = 1
-                    ef.prot_length = 100
-                    return ef
-            else:
-                if (self._in_stop_codons(ref_codons[:3], annotator) and
-                        not self._in_stop_codons(alt_codons[:3], annotator)):
-                    ef = Effect("noEnd", transcript_model)
-                    ef.prot_pos = 1
-                    ef.prot_length = 100
-                    return ef
+                if transcript_model.strand == "+":
+                    if (self._in_start_codons(ref_codons[:3], annotator) and
+                            not self._in_start_codons(alt_codons[:3],
+                                                      annotator)):
+                        ef = Effect("noStart", transcript_model)
+                        ef.prot_pos = 1
+                        ef.prot_length = 100
+                        return ef
+                else:
+                    if (self._in_stop_codons(ref_codons[:3], annotator) and
+                            not self._in_stop_codons(alt_codons[:3],
+                                                     annotator)):
+                        ef = Effect("noEnd", transcript_model)
+                        ef.prot_pos = 1
+                        ef.prot_length = 100
+                        return ef
+            except IndexError:
+                return
