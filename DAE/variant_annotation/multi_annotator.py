@@ -2,6 +2,7 @@ from .annotator import VariantAnnotator
 from .variant import Variant
 from .gene_codes import NuclearCode
 from .adapters.annovar import AnnovarVariantAnnotation
+from .adapters.old import OldVariantAnnotation
 
 
 class MultiVariantAnnotator:
@@ -12,6 +13,8 @@ class MultiVariantAnnotator:
         self.promoter_len = promoter_len
         self.annotators = [VariantAnnotator(reference_genome, gene_models,
                                             code, promoter_len),
+                           OldVariantAnnotation(reference_genome, gene_models,
+                                                code, promoter_len),
                            AnnovarVariantAnnotation()]
 
     def annotate(self, variant):
