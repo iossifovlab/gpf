@@ -7,7 +7,8 @@ from .adapters.jannovar import JannovarVariantAnnotation
 
 
 class MultiVariantAnnotator:
-    def __init__(self, reference_genome, gene_models, code, promoter_len):
+    def __init__(self, reference_genome, gene_models,
+                 code=NuclearCode(), promoter_len=0):
         self.reference_genome = reference_genome
         self.gene_models = gene_models
         self.code = code
@@ -18,16 +19,14 @@ class MultiVariantAnnotator:
                            OldVariantAnnotation(reference_genome, gene_models,
                                                 code, promoter_len),
                            AnnovarVariantAnnotation(),
-                           JannovarVariantAnnotation()]
+                           JannovarVariantAnnotation(reference_genome)]
 
     def annotate(self, variant):
-        return [annotator.annotate(variant) for annotator in self.annotators]
+        return [(annotator.__class__.__name__, annotator.annotate(variant))
+                for annotator in self.annotators]
 
-    @classmethod
-    def annotate_variant(cls, gm, refG, chr=None, position=None, loc=None,
-                         var=None, ref=None, alt=None, length=None, seq=None,
-                         typ=None, promoter_len=0):
-        annotator = MultiVariantAnnotator(refG, gm, NuclearCode(),
-                                          promoter_len)
+    def annotate_variant(self, chr=None, position=None, loc=None, var=None,
+                         ref=None, alt=None, length=None, seq=None,
+                         typ=None):
         variant = Variant(chr, position, loc, var, ref, alt, length, seq, typ)
-        return annotator.annotate(variant)
+        return self.annotate(variant)
