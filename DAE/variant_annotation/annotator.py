@@ -48,13 +48,12 @@ class VariantAnnotator:
         self.code = code
         self.promoter_len = promoter_len
         self.effects_checkers = [PromoterEffectChecker(),
-                                 UTREffectChecker(),
                                  SpliceSiteEffectChecker(),
                                  StartLossEffectChecker(),
                                  StopLossEffectChecker(),
                                  FrameShiftEffectChecker(),
-
                                  ProteinChangeEffectChecker(),
+                                 UTREffectChecker(),
                                  IntronicEffectChecker()]
 
     def get_effect_for_transcript(self, variant, transcript_model):
