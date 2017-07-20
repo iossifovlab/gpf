@@ -9,12 +9,12 @@ class OldVariantAnnotation:
         self.code = code
         self.promoter_len = promoter_len
 
-    def annotate(self, variant):
+    def annotate_variant(self, chr=None, position=None, loc=None, var=None,
+                         ref=None, alt=None, length=None, seq=None,
+                         typ=None):
         result = annotate_variant(self.gene_models, self.reference_genome,
-                                  chr=variant.chromosome,
-                                  position=variant.position,
-                                  ref=variant.reference, alt=variant.alternate,
-                                  promoter_len=self.promoter_len)
+                                  chr, position, loc, var, ref, alt, length,
+                                  seq, typ, promoter_len=self.promoter_len)
 
         desc = effect_description(result)
         return [SimpleEffect(desc[0], desc[1] + ":" + desc[2])]

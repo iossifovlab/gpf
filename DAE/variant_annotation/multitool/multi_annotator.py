@@ -1,4 +1,3 @@
-from ..variant import Variant
 from ..gene_codes import NuclearCode
 from .adapters.annovar import AnnovarVariantAnnotation
 from .adapters.old import OldVariantAnnotation
@@ -21,12 +20,10 @@ class MultiVariantAnnotator:
                            AnnovarVariantAnnotation(),
                            JannovarVariantAnnotation(reference_genome)]
 
-    def annotate(self, variant):
-        return [(annotator.__class__.__name__, annotator.annotate(variant))
-                for annotator in self.annotators]
-
     def annotate_variant(self, chr=None, position=None, loc=None, var=None,
                          ref=None, alt=None, length=None, seq=None,
                          typ=None):
-        variant = Variant(chr, position, loc, var, ref, alt, length, seq, typ)
-        return self.annotate(variant)
+        return [(annotator.__class__.__name__,
+                 annotator.annotate_variant(chr, position, loc, var, ref, alt,
+                                            length, seq, typ))
+                for annotator in self.annotators]

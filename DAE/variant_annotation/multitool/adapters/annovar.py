@@ -2,9 +2,10 @@ from ..simple_effect import SimpleEffect
 import subprocess
 import csv
 import re
+from base import BaseAdapter
 
 
-class AnnovarVariantAnnotation:
+class AnnovarVariantAnnotation(BaseAdapter):
     @staticmethod
     def amino_acids_decode(code):
         amino_acids_dict = {

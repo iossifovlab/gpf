@@ -1,8 +1,9 @@
 import subprocess
 from ..simple_effect import SimpleEffect
+from base import BaseAdapter
 
 
-class JannovarVariantAnnotation:
+class JannovarVariantAnnotation(BaseAdapter):
     def __init__(self, reference_genome):
         self.reference_genome = reference_genome
 
