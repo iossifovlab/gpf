@@ -7,3 +7,4 @@ wdae.sql
 .project
 .pydevproject
 .settings
+.ipynb_checkpoints
