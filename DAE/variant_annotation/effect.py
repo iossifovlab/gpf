@@ -23,3 +23,9 @@ class Effect:
             self.gene = transcript_model.gene
             self.strand = transcript_model.strand
             self.transcript_id = transcript_model.trID
+
+    def __repr__(self):
+        return "Effect gene:{} trID:{} strand:{} effect:{} " \
+            "protein pos:{}/{} aa: {}".format(
+                self.gene, self.transcript_id, self.strand, self.effect,
+                self.prot_pos, self.prot_length, self.aa_change)
