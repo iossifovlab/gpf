@@ -9,6 +9,12 @@ class BaseGenomicSequence(object):
         self.transcript_model = transcript_model
         self.logger = logging.getLogger(__name__)
 
+    def _in_start_codons(self, codon):
+        if codon in self.annotator.code.startCodons:
+            return True
+        else:
+            return False
+
     def get_coding_region_for_pos(self, pos):
         for i, reg in enumerate(self.transcript_model.exons):
             if reg.start <= pos <= reg.stop:
@@ -85,17 +91,55 @@ class PositiveStrandGenomicSequence(BaseGenomicSequence):
         self.logger.debug("frame %d for pos=%s", frame, pos)
         return frame
 
+    def find_start_codon(self):
+        end_pos = self.variant.position + len(self.variant.reference)
+
+        for offset in range(-2, len(self.variant.alternate) + 1):
+            pos = self.variant.position + offset
+            self.logger.debug("getSequence %d-%d", pos,
+                              self.variant.position - 1)
+            if self.variant.position - 1 >= pos:
+                codon = self.annotator.reference_genome.getSequence(
+                    self.transcript_model.chr, pos, self.variant.position - 1
+                )
+            else:
+                codon = ""
+            start_index = max(0, offset)
+            codon += self.variant.alternate[start_index:start_index + 2]
+            remaining_length = 3 - len(codon) - 1
+            self.logger.debug("getSequence2 %d-%d", end_pos,
+                              end_pos + remaining_length)
+            if remaining_length >= 0:
+                codon += self.annotator.reference_genome.getSequence(
+                    self.transcript_model.chr,
+                    end_pos,
+                    end_pos + remaining_length
+                )
+
+            self.logger.debug("checking %s from %d-%d + (%s)%d-%d + %d-%d",
+                              codon,
+                              self.variant.position, pos,
+                              self.variant.alternate[start_index:pos],
+                              start_index, pos,
+                              end_pos, end_pos + remaining_length)
+
+            if self._in_start_codons(codon):
+                return True
+        return False
+
     def get_codons(self):
-        index = self.get_coding_region_for_pos(self.variant.position)
+        pos = max(self.transcript_model.cds[0], self.variant.position)
+
+        index = self.get_coding_region_for_pos(pos)
         if index is None:
             raise IndexError
-        frame = self.get_frame(self.variant.position, index)
+        frame = self.get_frame(pos, index)
         length = max(1, len(self.variant.reference))
         length += self.get_nucleotides_count_to_full_codon(length + frame)
 
-        coding_before_pos = self.get_coding_left(self.variant.position - 1,
+        coding_before_pos = self.get_coding_left(pos - 1,
                                                  frame, index)
-        coding_after_pos = self.get_coding_right(self.variant.position,
+        coding_after_pos = self.get_coding_right(pos,
                                                  length, index)
 
         ref_codons = coding_before_pos + coding_after_pos

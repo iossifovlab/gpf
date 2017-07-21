@@ -40,29 +40,33 @@ class StartLossEffectChecker:
 
     def get_effect(self, annotator, variant, transcript_model):
         logger = logging.getLogger(__name__)
-        logger.debug("position check %d <= %d <= %d", transcript_model.cds[0],
-                     variant.position, transcript_model.cds[0] + 2)
 
-        if (transcript_model.cds[0] <= variant.position
-                <= transcript_model.cds[0] + 2):
+        last_position = variant.position + len(variant.reference)
+
+        logger.debug("position check %d <= %d-%d <= %d",
+                     transcript_model.cds[0], variant.position,
+                     last_position, transcript_model.cds[0] + 2)
+
+        if (variant.position <= transcript_model.cds[0] + 2
+                and transcript_model.cds[0] <= last_position):
             ref = GenomicSequenceFactory.create_genomic_sequence(
                 annotator, variant, transcript_model
             )
             try:
+                if transcript_model.strand == "+":
+                    if not ref.find_start_codon():
+                        ef = Effect("noStart", transcript_model)
+                        ef.prot_pos = 1
+                        ef.prot_length = 100
+                        return ef
+                    return
+
                 ref_codons, alt_codons = ref.get_codons()
 
                 logger.debug("effected codons: %s->%s",
                              ref_codons[:3], alt_codons[:3])
 
-                if transcript_model.strand == "+":
-                    if (self._in_start_codons(ref_codons[:3], annotator) and
-                            not self._in_start_codons(alt_codons[:3],
-                                                      annotator)):
-                        ef = Effect("noStart", transcript_model)
-                        ef.prot_pos = 1
-                        ef.prot_length = 100
-                        return ef
-                else:
+                if transcript_model.strand == "-":
                     if (self._in_stop_codons(ref_codons[:3], annotator) and
                             not self._in_stop_codons(alt_codons[:3],
                                                      annotator)):
