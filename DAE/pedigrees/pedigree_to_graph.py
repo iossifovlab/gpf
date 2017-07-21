@@ -7,6 +7,7 @@ import csv
 from functools import reduce
 
 from interval_sandwich import SandwichInstance, SandwichSolver
+from layout import Layout
 
 
 class CsvPedigreeReader:
@@ -245,14 +246,15 @@ def main():
 
     args = parser.parse_args()
     pedigrees = CsvPedigreeReader().read_file(args.file)
-    print("not found:")
 
     for family in pedigrees:
-        # if family.family_id == "AU0001_":
+        # if family.family_id == "AU0001":
         sandwich_instance = family.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
-        if intervals is None:
-            print(family.family_id)
+        individuals_intervals = filter(
+            lambda interval: isinstance(interval.vertex, Individual),
+            intervals)
+        Layout.generate_from_intervals(individuals_intervals)
 
 
 if __name__ == "__main__":
