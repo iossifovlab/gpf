@@ -2,7 +2,7 @@ import logging
 import sys
 
 
-class BaseGenomicSequence(object):
+class BaseAnnotationRequest(object):
     def __init__(self, annotator, variant, transcript_model):
         self.annotator = annotator
         self.variant = variant
@@ -75,10 +75,10 @@ class BaseGenomicSequence(object):
         return(None)
 
 
-class PositiveStrandGenomicSequence(BaseGenomicSequence):
+class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
     def __init__(self, annotator, variant, transcript_model):
-        BaseGenomicSequence.__init__(self, annotator, variant,
-                                     transcript_model)
+        BaseAnnotationRequest.__init__(self, annotator, variant,
+                                       transcript_model)
 
     def get_frame(self, pos, index):
         reg = self.transcript_model.exons[index]
@@ -172,10 +172,10 @@ class PositiveStrandGenomicSequence(BaseGenomicSequence):
         return ref_amino_acids, alt_amino_acids
 
 
-class NegativeStrandGenomicSequence(BaseGenomicSequence):
+class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
     def __init__(self, annotator, variant, transcript_model):
-        BaseGenomicSequence.__init__(self, annotator, variant,
-                                     transcript_model)
+        BaseAnnotationRequest.__init__(self, annotator, variant,
+                                       transcript_model)
 
     def get_frame(self, pos, index):
         reg = self.transcript_model.exons[index]
@@ -253,7 +253,7 @@ class NegativeStrandGenomicSequence(BaseGenomicSequence):
         complement_codon = self.complement(codon[::-1])
         self.logger.debug("complement codon %s for codon %s",
                           complement_codon, codon)
-        return BaseGenomicSequence.cod2aa(self, complement_codon)
+        return BaseAnnotationRequest.cod2aa(self, complement_codon)
 
     def get_amino_acids(self):
         ref_codons, alt_codons = self.get_codons()
@@ -267,12 +267,12 @@ class NegativeStrandGenomicSequence(BaseGenomicSequence):
         return ref_amino_acids, alt_amino_acids
 
 
-class GenomicSequenceFactory():
+class AnnotationRequestFactory():
     @staticmethod
-    def create_genomic_sequence(annotator, variant, transcript_model):
+    def create_annotation_request(annotator, variant, transcript_model):
         if transcript_model.strand == "+":
-            return PositiveStrandGenomicSequence(annotator, variant,
-                                                 transcript_model)
+            return PositiveStrandAnnotationRequest(annotator, variant,
+                                                   transcript_model)
         else:
-            return NegativeStrandGenomicSequence(annotator, variant,
-                                                 transcript_model)
+            return NegativeStrandAnnotationRequest(annotator, variant,
+                                                   transcript_model)

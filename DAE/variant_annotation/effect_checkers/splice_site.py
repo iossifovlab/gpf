@@ -81,9 +81,10 @@ class SpliceSiteEffectChecker:
 
         return seq != alt
 
-    def get_effect(self, annotator, variant, transcript_model):
-        coding_regions = transcript_model.CDS_regions()
-        last_position = variant.position + len(variant.reference)
+    def get_effect(self, request):
+        coding_regions = request.transcript_model.CDS_regions()
+        last_position = request.variant.position + \
+            len(request.variant.reference)
         prev = None
 
         for j in coding_regions:
@@ -92,18 +93,18 @@ class SpliceSiteEffectChecker:
                 continue
 
             self.logger.debug("pos: %d-%d checking intronic region %d-%d %d",
-                              variant.position, last_position, prev, j.start,
-                              j.stop)
+                              request.variant.position, last_position,
+                              prev, j.start, j.stop)
 
-            if (variant.position < prev + self.splice_site_length + 1
+            if (request.variant.position < prev + self.splice_site_length + 1
                     and prev + 1 < last_position):
                 worstEffect = "splice-site"
-                ef = Effect(worstEffect, transcript_model)
+                ef = Effect(worstEffect, request.transcript_model)
                 return ef
 
-            if (variant.position < j.start
+            if (request.variant.position < j.start
                     and j.start - self.splice_site_length < last_position):
                 worstEffect = "splice-site"
-                ef = Effect(worstEffect, transcript_model)
+                ef = Effect(worstEffect, request.transcript_model)
                 return ef
             prev = j.stop

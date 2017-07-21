@@ -16,23 +16,25 @@ class PromoterEffectChecker:
         ef.dist_from_5utr = variant.position - transcript_model.exons[-1].stop
         return ef
 
-    def get_effect(self, annotator, variant, transcript_model):
-        if annotator.promoter_len == 0:
+    def get_effect(self, request):
+        if request.annotator.promoter_len == 0:
             return None
 
-        if (variant.position < transcript_model.exons[0].start
-            and transcript_model.strand == "+"
-            and variant.position_last >=
-                transcript_model.exons[0].start - annotator.promoter_len):
+        if (request.variant.position < request.transcript_model.exons[0].start
+            and request.transcript_model.strand == "+"
+            and request.variant.position_last >=
+                request.transcript_model.exons[0].start -
+                request.annotator.promoter_len):
             return self.create_positive_strand_effect(
-                transcript_model, variant
+                request.transcript_model, request.variant
             )
 
-        if (variant.position > transcript_model.exons[-1].stop
-            and transcript_model.strand == "-"
-            and variant.position <=
-                transcript_model.exons[-1].stop + annotator.promoter_len):
+        if (request.variant.position > request.transcript_model.exons[-1].stop
+            and request.transcript_model.strand == "-"
+            and request.variant.position <=
+                request.transcript_model.exons[-1].stop +
+                request.annotator.promoter_len):
             return self.create_negative_strand_effect(
-                transcript_model, variant
+                request.transcript_model, request.variant
             )
         return None

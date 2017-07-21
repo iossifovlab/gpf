@@ -1,5 +1,4 @@
 from ..effect import Effect
-from ..mutation import GenomicSequenceFactory
 import logging
 
 
@@ -38,33 +37,33 @@ class StopLossEffectChecker:
         else:
             return False
 
-    def get_effect(self, annotator, variant, transcript_model):
+    def get_effect(self, request):
         logger = logging.getLogger(__name__)
         logger.debug("position check %d <= %d <= %d",
-                     transcript_model.cds[1] - 2, variant.position,
-                     transcript_model.cds[1])
+                     request.transcript_model.cds[1] - 2,
+                     request.variant.position, request.transcript_model.cds[1])
 
-        if (transcript_model.cds[1] - 2 <= variant.position
-                <= transcript_model.cds[1]):
-            ref = GenomicSequenceFactory.create_genomic_sequence(
-                annotator, variant, transcript_model
-            )
-            ref_codons, alt_codons = ref.get_codons()
+        if (request.transcript_model.cds[1] - 2 <= request.variant.position
+                <= request.transcript_model.cds[1]):
+            ref_codons, alt_codons = request.get_codons()
 
             logger.debug("effected codons: %s->%s",
                          ref_codons[:3], alt_codons[:3])
 
-            if transcript_model.strand == "+":
-                if (self._in_stop_codons(ref_codons[:3], annotator) and
-                        not self._in_stop_codons(alt_codons[:3], annotator)):
-                    ef = Effect("noEnd", transcript_model)
+            if request.transcript_model.strand == "+":
+                if (self._in_stop_codons(ref_codons[:3], request.annotator) and
+                        not self._in_stop_codons(alt_codons[:3],
+                                                 request.annotator)):
+                    ef = Effect("noEnd", request.transcript_model)
                     ef.prot_pos = 1
                     ef.prot_length = 100
                     return ef
             else:
-                if (self._in_start_codons(ref_codons[:3], annotator) and
-                        not self._in_start_codons(alt_codons[:3], annotator)):
-                    ef = Effect("noStart", transcript_model)
+                if (self._in_start_codons(ref_codons[:3],
+                                          request.annotator) and
+                        not self._in_start_codons(alt_codons[:3],
+                                                  request.annotator)):
+                    ef = Effect("noStart", request.transcript_model)
                     ef.prot_pos = 1
                     ef.prot_length = 100
                     return ef

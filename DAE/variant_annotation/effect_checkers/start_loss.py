@@ -1,5 +1,4 @@
 from ..effect import Effect
-from ..mutation import GenomicSequenceFactory
 import logging
 
 
@@ -38,39 +37,39 @@ class StartLossEffectChecker:
         else:
             return False
 
-    def get_effect(self, annotator, variant, transcript_model):
+    def get_effect(self, request):
         logger = logging.getLogger(__name__)
 
-        last_position = variant.position + len(variant.reference)
+        last_position = request.variant.position + \
+            len(request.variant.reference)
 
         logger.debug("position check %d <= %d-%d <= %d",
-                     transcript_model.cds[0], variant.position,
-                     last_position, transcript_model.cds[0] + 2)
+                     request.transcript_model.cds[0], request.variant.position,
+                     last_position,
+                     request.transcript_model.cds[0] + 2)
 
-        if (variant.position <= transcript_model.cds[0] + 2
-                and transcript_model.cds[0] <= last_position):
-            ref = GenomicSequenceFactory.create_genomic_sequence(
-                annotator, variant, transcript_model
-            )
+        if (request.variant.position <= request.transcript_model.cds[0] + 2
+                and request.transcript_model.cds[0] <= last_position):
             try:
-                if transcript_model.strand == "+":
-                    if not ref.find_start_codon():
-                        ef = Effect("noStart", transcript_model)
+                if request.transcript_model.strand == "+":
+                    if not request.find_start_codon():
+                        ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
                         ef.prot_length = 100
                         return ef
                     return
 
-                ref_codons, alt_codons = ref.get_codons()
+                ref_codons, alt_codons = request.get_codons()
 
                 logger.debug("effected codons: %s->%s",
                              ref_codons[:3], alt_codons[:3])
 
-                if transcript_model.strand == "-":
-                    if (self._in_stop_codons(ref_codons[:3], annotator) and
+                if request.transcript_model.strand == "-":
+                    if (self._in_stop_codons(ref_codons[:3],
+                                             request.annotator) and
                             not self._in_stop_codons(alt_codons[:3],
-                                                     annotator)):
-                        ef = Effect("noEnd", transcript_model)
+                                                     request.annotator)):
+                        ef = Effect("noEnd", request.transcript_model)
                         ef.prot_pos = 1
                         ef.prot_length = 100
                         return ef

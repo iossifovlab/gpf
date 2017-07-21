@@ -10,6 +10,7 @@ from .effect_checkers.splice_site import SpliceSiteEffectChecker
 from .effect_checkers.intron import IntronicEffectChecker
 from effect import Effect
 from .variant import Variant
+from .annotation_request import AnnotationRequestFactory
 
 
 class VariantAnnotator:
@@ -57,8 +58,12 @@ class VariantAnnotator:
                                  IntronicEffectChecker()]
 
     def get_effect_for_transcript(self, variant, transcript_model):
+        request = AnnotationRequestFactory.create_annotation_request(
+            self, variant, transcript_model
+        )
+
         for effect_checker in self.effects_checkers:
-            effect = effect_checker.get_effect(self, variant, transcript_model)
+            effect = effect_checker.get_effect(request)
             if effect is not None:
                 return effect
         return None
