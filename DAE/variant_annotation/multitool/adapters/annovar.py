@@ -95,23 +95,23 @@ class AnnovarVariantAnnotation(BaseAdapter):
                 for effect in effects_details]
 
     def annotate(self, variant):
+        pos = variant.position
         if len(variant.reference) > 0:
             ref = variant.reference
         else:
             ref = "-"
+            pos -= 1
 
         if len(variant.alternate) > 0:
             alt = variant.alternate
         else:
             alt = "-"
 
-        last_pos = variant.position + len(ref) - 1
+        last_pos = pos + len(ref) - 1
 
         input_str = "{0}\t{1}\t{2}\t{3}\t{4}".format(variant.chromosome,
-                                                     variant.position,
-                                                     last_pos,
-                                                     ref,
-                                                     alt)
+                                                     pos, last_pos,
+                                                     ref, alt)
         print("input_str {}".format(input_str))
 
         p = subprocess.Popen(
