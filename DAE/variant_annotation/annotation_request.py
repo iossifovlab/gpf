@@ -105,7 +105,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
             else:
                 codon = ""
             start_index = max(0, offset)
-            codon += self.variant.alternate[start_index:start_index + 2]
+            codon += self.variant.alternate[start_index:start_index + 3]
             remaining_length = 3 - len(codon) - 1
             self.logger.debug("getSequence2 %d-%d", end_pos,
                               end_pos + remaining_length)
@@ -119,13 +119,14 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
             self.logger.debug("checking %s from %d-%d + (%s)%d-%d + %d-%d",
                               codon,
                               self.variant.position, pos,
-                              self.variant.alternate[start_index:pos],
-                              start_index, pos,
+                              self.variant.alternate[start_index:
+                                                     start_index + 3],
+                              start_index, start_index + 3,
                               end_pos, end_pos + remaining_length)
 
             if self._in_start_codons(codon):
-                return True
-        return False
+                return offset, len(self.variant.alternate) - offset
+        return None
 
     def get_codons(self):
         pos = max(self.transcript_model.cds[0], self.variant.position)

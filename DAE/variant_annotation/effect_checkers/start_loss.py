@@ -52,7 +52,7 @@ class StartLossEffectChecker:
                 and request.transcript_model.cds[0] <= last_position):
             try:
                 if request.transcript_model.strand == "+":
-                    if not request.find_start_codon():
+                    if request.find_start_codon() is None:
                         ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
                         ef.prot_length = 100
