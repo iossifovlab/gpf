@@ -52,6 +52,14 @@ class StartLossEffectChecker:
                 and request.transcript_model.cds[0] <= last_position):
             try:
                 if request.transcript_model.strand == "+":
+                    seq = request.annotator.reference_genome.getSequence(
+                        request.transcript_model.chr,
+                        request.transcript_model.cds[0],
+                        request.transcript_model.cds[0] + 2
+                    )
+
+                    if (not self._in_start_codons(seq, request.annotator)):
+                        return
                     if request.find_start_codon() is None:
                         ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
