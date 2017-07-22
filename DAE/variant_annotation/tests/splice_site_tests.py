@@ -7,6 +7,7 @@ from mocks import ReferenceGenomeMock
 from mocks import AnnotatorMock
 from variant_annotation.effect_checkers.splice_site \
     import SpliceSiteEffectChecker
+from variant_annotation.annotation_request import AnnotationRequestFactory
 
 
 @pytest.fixture(scope="class")
@@ -23,121 +24,167 @@ def positive_strand(request):
 class SpliceSitePositiveStrandTest(unittest.TestCase):
     def test_insertion_3_prime_side(self):
         variant = Variant(loc="1:80", ref="", alt="A")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
         variant = Variant(loc="1:79", ref="", alt="A")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:78", ref="", alt="A")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
     def test_deletion_3_prime_side(self):
         variant = Variant(loc="1:80", ref="0", alt="")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
         variant = Variant(loc="1:79", ref="0", alt="")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:78", ref="0", alt="")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:77", ref="0", alt="")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
     def test_subs_3_prime_side(self):
         variant = Variant(loc="1:80", ref="A", alt="G")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
         variant = Variant(loc="1:79", ref="A", alt="G")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:78", ref="A", alt="G")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:77", ref="A", alt="G")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
     def test_insertion_5_prime_side(self):
         variant = Variant(loc="1:70", ref="", alt="A")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
         variant = Variant(loc="1:71", ref="", alt="A")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
         variant = Variant(loc="1:72", ref="", alt="A")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:73", ref="", alt="A")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
     def test_deletion_5_prime_side(self):
         variant = Variant(loc="1:70", ref="0", alt="")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
         variant = Variant(loc="1:71", ref="0", alt="")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:72", ref="0", alt="")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:73", ref="0", alt="")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
     def test_subs_5_prime_side(self):
         variant = Variant(loc="1:70", ref="A", alt="G")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
 
         variant = Variant(loc="1:71", ref="A", alt="G")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:72", ref="A", alt="G")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect.effect, "splice-site")
 
         variant = Variant(loc="1:73", ref="A", alt="G")
-        effect = self.effect_checker.get_effect(self.annotator, variant,
-                                                self.tm)
+        request = AnnotationRequestFactory.create_annotation_request(
+            self.annotator, variant, self.tm
+        )
+        effect = self.effect_checker.get_effect(request)
         self.assertEqual(effect, None)
