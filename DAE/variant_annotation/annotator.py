@@ -50,8 +50,8 @@ class VariantAnnotator:
         self.promoter_len = promoter_len
         self.effects_checkers = [PromoterEffectChecker(),
                                  SpliceSiteEffectChecker(),
-                                 #StartLossEffectChecker(),
-                                 #StopLossEffectChecker(),
+                                 StartLossEffectChecker(),
+                                 StopLossEffectChecker(),
                                  FrameShiftEffectChecker(),
                                  ProteinChangeEffectChecker(),
                                  UTREffectChecker(),
