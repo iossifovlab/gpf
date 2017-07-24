@@ -73,7 +73,7 @@ class VariantAnnotator:
         effects = []
         for key in self.gene_models._utrModels[variant.chromosome]:
             if (variant.position <= key[1] + self.promoter_len
-                    and variant.position_last >= key[0] - self.promoter_len):
+                    and variant.ref_position_last >= key[0] - self.promoter_len):
                 for tm in self.gene_models._utrModels[variant.chromosome][key]:
                     effect = self.get_effect_for_transcript(variant, tm)
                     if effect is not None:

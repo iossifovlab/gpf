@@ -366,7 +366,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.gene, "PLA2G2C")
         self.assertEqual(effect.transcript_id, "NM_001105572_1")
         self.assertEqual(effect.strand, "-")
-        self.assertEqual(effect.effect, "noEnd")
+        self.assertEqual(effect.effect, "intron")
         # self.assertEqual(effect.prot_pos, 151)
         # self.assertEqual(effect.prot_length, 151)
         self.assertEqual(effect.aa_change, None)

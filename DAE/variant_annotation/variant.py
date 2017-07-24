@@ -7,7 +7,8 @@ class Variant:
         self.set_position(chr, position, loc)
         self.set_ref_alt(var, ref, alt, length, seq, typ)
 
-        self.position_last = self.position
+        self.ref_position_last = self.position + len(self.reference)
+        self.alt_position_last = self.position + len(self.alternate)
 
     def set_position(self, chromosome, position, loc):
         if position is not None:
