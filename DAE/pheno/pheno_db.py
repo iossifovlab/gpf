@@ -13,8 +13,7 @@ from collections import defaultdict, OrderedDict
 from pheno.utils.configuration import PhenoConfig
 from pheno.models import  \
     RawValueManager,\
-    MetaVariableCorrelationManager,\
-    ValueModel
+    MetaVariableCorrelationManager
 from VariantsDB import Person, Family
 import copy
 from pheno.db import DbManager
@@ -545,12 +544,12 @@ class PhenoDB(PhenoConfig):
                 measure, default_filter)
             if filter_clause is not None:
                 s = s.where(text(filter_clause))
+        if person_ids:
+            s = s.where(value_table.c.person_id.in_(person_ids))
+        if family_ids:
+            s = s.where(value_table.c.family_id.in_(family_ids))
         df = pd.read_sql(s, self.db.engine)
 
-        if person_ids:
-            df = df[df.person_id.isin(person_ids)]
-        if family_ids:
-            df = df[df.family_id.isin(family_ids)]
         self._rename_value_column(measure.measure_id, df)
         return df
 
