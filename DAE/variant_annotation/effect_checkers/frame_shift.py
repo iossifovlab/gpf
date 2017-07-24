@@ -58,7 +58,11 @@ class FrameShiftEffectChecker:
             return start_effect
 
         for j in coding_regions:
-            if (j.start <= request.variant.position <= j.stop):
+            if (j.start <= request.variant.position <= j.stop
+                or
+                (request.variant.position == request.variant.ref_position_last
+                    and j.start - 1 <= request.variant.position <=
+                    j.stop + 1)):
                 if length > 0:
                     if length % 3 == 0:
                         if self.check_if_new_start(request):

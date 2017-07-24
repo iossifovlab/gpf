@@ -850,6 +850,51 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
+    def test_chr1_17313765_ins_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:17313765",
+                                                     var="ins(C)")
+        self.assertEqual(len(effects), 3)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "ATP13A2")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_001141973_1")
+        self.assertEqual(effects_sorted[0].strand, "-")
+        self.assertEqual(effects_sorted[0].effect, "frame-shift")
+        # self.assertEqual(effects_sorted[0].prot_pos, 949)
+        # self.assertEqual(effects_sorted[0].prot_length, 1176)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "ATP13A2")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_001141974_1")
+        self.assertEqual(effects_sorted[1].strand, "-")
+        self.assertEqual(effects_sorted[1].effect, "frame-shift")
+        # self.assertEqual(effects_sorted[1].prot_pos, 910)
+        # self.assertEqual(effects_sorted[1].prot_length, 1159)
+        self.assertEqual(effects_sorted[1].aa_change, None)
+
+        self.assertEqual(effects_sorted[2].gene, "ATP13A2")
+        self.assertEqual(effects_sorted[2].transcript_id, "NM_022089_1")
+        self.assertEqual(effects_sorted[2].strand, "-")
+        self.assertEqual(effects_sorted[2].effect, "frame-shift")
+        # self.assertEqual(effects_sorted[2].prot_pos, 954)
+        # self.assertEqual(effects_sorted[2].prot_length, 1181)
+        self.assertEqual(effects_sorted[2].aa_change, None)
+
+    def test_chr13_45911524_ins_var(self):
+        var = "ins(ACATTTTTCCATTTCTAAACCAT)"
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="13:45911524",
+                                                      var=var)
+
+        self.assertEqual(effect.gene, "TPT1")
+        self.assertEqual(effect.transcript_id, "NM_003295_1")
+        self.assertEqual(effect.strand, "-")
+        self.assertEqual(effect.effect, "frame-shift")
+        # self.assertEqual(effect.prot_pos, 173)
+        # self.assertEqual(effect.prot_length, 173)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
