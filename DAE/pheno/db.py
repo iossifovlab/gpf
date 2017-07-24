@@ -4,11 +4,7 @@ Created on Jul 24, 2017
 @author: lubo
 '''
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy import Table, Column, Integer, Numeric, String, Boolean
-from sqlalchemy.sql.sqltypes import VARCHAR, REAL, BOOLEAN, INTEGER, TEXT
-
-TABLES = {
-}
+from sqlalchemy import Table, Column, Integer, String, Boolean, Float
 
 
 class DbManager(object):
@@ -41,72 +37,72 @@ class DbManager(object):
     def _build_variable_tables(self):
         self.variable = Table(
             'variable', self.metadata,
-            Column('variable_id', VARCHAR(length=128),
+            Column('variable_id', String(128),
                    primary_key=True, nullable=False),
-            Column('table_name', VARCHAR(length=64), nullable=False),
-            Column('variable_name', VARCHAR(length=64), nullable=False),
-            Column('domain', VARCHAR(length=64), ),
-            Column('domain_choice_label', TEXT()),
-            Column('measurement_scale', VARCHAR(length=16), ),
-            Column('description', TEXT()),
-            Column('source', VARCHAR(length=64)),
-            Column('domain_rank', INTEGER()),
-            Column('individuals', INTEGER()),
-            Column('stats', VARCHAR(length=16)),
-            Column('min_value', REAL()),
-            Column('max_value', REAL()),
-            Column('value_domain', TEXT())
+            Column('table_name', String(64), nullable=False),
+            Column('variable_name', String(64), nullable=False),
+            Column('domain', String(64), ),
+            Column('domain_choice_label', String(255)),
+            Column('measurement_scale', String(16), ),
+            Column('description', String(255)),
+            Column('source', String(64)),
+            Column('domain_rank', Integer()),
+            Column('individuals', Integer()),
+            Column('stats', String(16)),
+            Column('min_value', Float()),
+            Column('max_value', Float()),
+            Column('value_domain', String(255))
         )
         self.meta_variable = Table(
             'meta_variable', self.metadata,
-            Column('variable_id', VARCHAR(length=128),
+            Column('variable_id', String(128),
                    primary_key=True, nullable=False),
-            Column('min_value', REAL()),
-            Column('max_value', REAL(), ),
-            Column('has_probands', BOOLEAN(), ),
-            Column('has_siblings', BOOLEAN(),),
-            Column('has_parents', BOOLEAN(), ),
-            Column('default_filter', VARCHAR(length=128))
+            Column('min_value', Float()),
+            Column('max_value', Float(), ),
+            Column('has_probands', Boolean(), ),
+            Column('has_siblings', Boolean(),),
+            Column('has_parents', Boolean(), ),
+            Column('default_filter', String(128))
         )
 
     def _build_value_tables(self):
         self.value_continuous = Table(
             'value_continuous', self.metadata,
-            Column('person_id', VARCHAR(length=16),
+            Column('person_id', String(16),
                    primary_key=True, nullable=False),
-            Column('variable_id', VARCHAR(length=128),
+            Column('variable_id', String(128),
                    primary_key=True, nullable=False),
-            Column('family_id', VARCHAR(length=32),  nullable=False),
-            Column('person_role', VARCHAR(length=8),  nullable=False),
-            Column('value', REAL(),  nullable=False)
+            Column('family_id', String(32),  nullable=False),
+            Column('person_role', String(8),  nullable=False),
+            Column('value', Float(),  nullable=False)
         )
         self.value_ordinal = Table(
             'value_ordinal', self.metadata,
-            Column('person_id', VARCHAR(length=16),
+            Column('person_id', String(16),
                    primary_key=True, nullable=False),
-            Column('variable_id', VARCHAR(length=128),
+            Column('variable_id', String(128),
                    primary_key=True, nullable=False),
-            Column('family_id', VARCHAR(length=32), nullable=False),
-            Column('person_role', VARCHAR(length=8), nullable=False),
-            Column('value', REAL(), nullable=False)
+            Column('family_id', String(32), nullable=False),
+            Column('person_role', String(8), nullable=False),
+            Column('value', Float(), nullable=False)
         )
         self.value_categorical = Table(
             'value_categorical', self.metadata,
-            Column('person_id', VARCHAR(length=16),
+            Column('person_id', String(16),
                    primary_key=True, nullable=False),
-            Column('variable_id', VARCHAR(length=128),
+            Column('variable_id', String(128),
                    primary_key=True, nullable=False),
-            Column('family_id', VARCHAR(length=32),  nullable=False),
-            Column('person_role', VARCHAR(length=8), nullable=False),
-            Column('value', VARCHAR(length=127), nullable=False)
+            Column('family_id', String(32),  nullable=False),
+            Column('person_role', String(8), nullable=False),
+            Column('value', String(127), nullable=False)
         )
         self.value_other = Table(
             'value_other', self.metadata,
-            Column('person_id', VARCHAR(length=16),
+            Column('person_id', String(16),
                    primary_key=True, nullable=False),
-            Column('variable_id', VARCHAR(length=128),
+            Column('variable_id', String(128),
                    primary_key=True, nullable=False),
-            Column('family_id', VARCHAR(length=32), nullable=False),
-            Column('person_role', VARCHAR(length=8),  nullable=False),
-            Column('value', VARCHAR(length=127), nullable=False)
+            Column('family_id', String(32), nullable=False),
+            Column('person_role', String(8),  nullable=False),
+            Column('value', String(127), nullable=False)
         )
