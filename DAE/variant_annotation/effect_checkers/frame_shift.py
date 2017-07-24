@@ -3,6 +3,16 @@ import logging
 
 
 class FrameShiftEffectChecker:
+    def check_if_new_start(self, request):
+        ref_aa, alt_aa = request.get_amino_acids()
+        for aa in ref_aa:
+            if aa == "End":
+                return False
+        for aa in alt_aa:
+            if aa == "End":
+                return True
+        return False
+
     def check_start_codon(self, request):
         logger = logging.getLogger(__name__)
         last_position = request.variant.position + \
@@ -51,8 +61,12 @@ class FrameShiftEffectChecker:
             if (j.start <= request.variant.position <= j.stop):
                 if length > 0:
                     if length % 3 == 0:
-                        ef = Effect("no-frame-shift", request.transcript_model)
-
+                        if self.check_if_new_start(request):
+                            ef = Effect("no-frame-shift-newStop",
+                                        request.transcript_model)
+                        else:
+                            ef = Effect("no-frame-shift",
+                                        request.transcript_model)
                     else:
                         ef = Effect("frame-shift", request.transcript_model)
                     ef.prot_pos = 1
