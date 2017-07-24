@@ -11,9 +11,6 @@ from sqlalchemy import or_, not_
 from collections import defaultdict, OrderedDict
 
 from pheno.utils.configuration import PhenoConfig
-from pheno.models import  \
-    RawValueManager,\
-    MetaVariableCorrelationManager
 from VariantsDB import Person, Family
 import copy
 from pheno.db import DbManager
@@ -227,52 +224,52 @@ class PhenoDB(PhenoConfig):
         return 'variable_id IN ({})'.format(
             ','.join(["'{}'".format(v) for v in variable_ids]))
 
-    def get_measures_corellations_df(
-            self, measures_df, correlations_with, role):
-        """
-        **this method should be moved out of this package**
-        """
-
-        def names(correlation_with, role, gender):
-            suffix = '{}.{}.{}'.format(
-                role,
-                gender,
-                correlation_with)
-            return (
-                'coeff.{}'.format(suffix),
-                'pvalue.{}'.format(suffix)
-            )
-        assert measures_df is not None
-
-        dfs = [measures_df]
-        for correlation_with in correlations_with:
-            for gender in ['M', 'F']:
-                where_variables = self._where_variables(
-                    measures_df.measure_id.unique())
-                where = "correlation_with = '{}' AND " \
-                    "role = '{}' AND " \
-                    "gender = '{}' AND {}".format(
-                        correlation_with,
-                        role, gender,
-                        where_variables)
-                with MetaVariableCorrelationManager(
-                        dbfile=self.get_dbfile()) as vm:
-                    df = vm.load_df(where)
-                    self._rename_forward(df, [('variable_id', 'measure_id')])
-                    df = df[['measure_id', 'coeff', 'pvalue']]
-                    self._rename_forward(
-                        df, zip(
-                            ['coeff', 'pvalue'],
-                            names(correlation_with, role, gender)))
-                    dfs.append(df)
-
-        res_df = dfs[0]
-        for i, df in enumerate(dfs[1:]):
-            res_df = res_df.join(
-                df.set_index('measure_id'), on='measure_id',
-                rsuffix='_val_{}'.format(i))
-
-        return res_df
+#     def get_measures_corellations_df(
+#             self, measures_df, correlations_with, role):
+#         """
+#         **this method should be moved out of this package**
+#         """
+#
+#         def names(correlation_with, role, gender):
+#             suffix = '{}.{}.{}'.format(
+#                 role,
+#                 gender,
+#                 correlation_with)
+#             return (
+#                 'coeff.{}'.format(suffix),
+#                 'pvalue.{}'.format(suffix)
+#             )
+#         assert measures_df is not None
+#
+#         dfs = [measures_df]
+#         for correlation_with in correlations_with:
+#             for gender in ['M', 'F']:
+#                 where_variables = self._where_variables(
+#                     measures_df.measure_id.unique())
+#                 where = "correlation_with = '{}' AND " \
+#                     "role = '{}' AND " \
+#                     "gender = '{}' AND {}".format(
+#                         correlation_with,
+#                         role, gender,
+#                         where_variables)
+#                 with MetaVariableCorrelationManager(
+#                         dbfile=self.get_dbfile()) as vm:
+#                     df = vm.load_df(where)
+#                     self._rename_forward(df, [('variable_id', 'measure_id')])
+#                     df = df[['measure_id', 'coeff', 'pvalue']]
+#                     self._rename_forward(
+#                         df, zip(
+#                             ['coeff', 'pvalue'],
+#                             names(correlation_with, role, gender)))
+#                     dfs.append(df)
+#
+#         res_df = dfs[0]
+#         for i, df in enumerate(dfs[1:]):
+#             res_df = res_df.join(
+#                 df.set_index('measure_id'), on='measure_id',
+#                 rsuffix='_val_{}'.format(i))
+#
+#         return res_df
 
     def _get_measures_df(self, instrument=None, measure_type=None):
         """
@@ -751,20 +748,20 @@ class PhenoDB(PhenoConfig):
         df = self.get_values_df(measure_ids, person_ids, family_ids, role)
         return self._values_df_to_dict(measure_ids, df)
 
-    def get_instruments(self, person_id):
-        """
-        Returns dictionary with all instruments applied to given
-        individual.
-
-        """
-        query = "SELECT DISTINCT table_name FROM variable WHERE " \
-            "variable_id IN " \
-            "(SELECT variable_id FROM value_raw WHERE person_id='{}')" \
-            .format(person_id)
-        with RawValueManager(dbfile=self.get_dbfile()) as vm:
-            instruments = vm._execute(query)
-        return dict([(i[0], self.instruments[i[0]]) for i in instruments
-                     if i[0] in self.instruments])
+#     def get_instruments(self, person_id):
+#         """
+#         Returns dictionary with all instruments applied to given
+#         individual.
+#
+#         """
+#         query = "SELECT DISTINCT table_name FROM variable WHERE " \
+#             "variable_id IN " \
+#             "(SELECT variable_id FROM value_raw WHERE person_id='{}')" \
+#             .format(person_id)
+#         with RawValueManager(dbfile=self.get_dbfile()) as vm:
+#             instruments = vm._execute(query)
+#         return dict([(i[0], self.instruments[i[0]]) for i in instruments
+#                      if i[0] in self.instruments])
 
     @staticmethod
     def _split_measure_id(measure_id):
