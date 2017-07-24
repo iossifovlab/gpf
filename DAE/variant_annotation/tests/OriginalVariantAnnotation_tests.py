@@ -1332,37 +1332,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effects_sorted[1].prot_length, 212)
         self.assertEqual(effects_sorted[1].aa_change, None)
 
-    def test_chr17_4086688_del_var(self):
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="17:4086688",
-                                                     var="del(4)")
-        self.assertEqual(len(effects), 3)
-        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
-
-        self.assertEqual(effects_sorted[0].gene, "ANKFY1")
-        self.assertEqual(effects_sorted[0].transcript_id, "NM_001257999_1")
-        self.assertEqual(effects_sorted[0].strand, "-")
-        self.assertEqual(effects_sorted[0].effect, "splice-site")
-        # self.assertEqual(effects_sorted[0].prot_pos, 693)
-        # self.assertEqual(effects_sorted[0].prot_length, 1212)
-        self.assertEqual(effects_sorted[0].aa_change, None)
-
-        self.assertEqual(effects_sorted[1].gene, "ANKFY1")
-        self.assertEqual(effects_sorted[1].transcript_id, "NM_016376_1")
-        self.assertEqual(effects_sorted[1].strand, "-")
-        self.assertEqual(effects_sorted[1].effect, "splice-site")
-        # self.assertEqual(effects_sorted[1].prot_pos, 651)
-        # self.assertEqual(effects_sorted[1].prot_length, 1171)
-        self.assertEqual(effects_sorted[1].aa_change, None)
-
-        self.assertEqual(effects_sorted[2].gene, "ANKFY1")
-        self.assertEqual(effects_sorted[2].transcript_id, "NR_047571_1")
-        self.assertEqual(effects_sorted[2].strand, "-")
-        self.assertEqual(effects_sorted[2].effect, "non-coding-intron")
-        # self.assertEqual(effects_sorted[2].prot_pos, None)
-        # self.assertEqual(effects_sorted[2].prot_length, None)
-        self.assertEqual(effects_sorted[2].aa_change, None)
-
     def test_chr7_31609423_sub_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                      loc="7:31609423",
@@ -1808,45 +1777,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_pos, 625)
         # self.assertEqual(effect.prot_length, 891)
         self.assertEqual(effect.aa_change, None)
-
-    def test_chr21_11049623_sub_var(self):
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="21:11049623",
-                                                     var="sub(T->C)")
-        self.assertEqual(len(effects), 4)
-        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
-
-        self.assertEqual(effects_sorted[0].gene, "BAGE4")
-        self.assertEqual(effects_sorted[0].transcript_id, "NM_181704_1")
-        self.assertEqual(effects_sorted[0].strand, "-")
-        self.assertEqual(effects_sorted[0].effect, "3'UTR-intron")
-        # self.assertEqual(effects_sorted[0].prot_pos, None)
-        # self.assertEqual(effects_sorted[0].prot_length, None)
-        self.assertEqual(effects_sorted[0].aa_change, None)
-
-        self.assertEqual(effects_sorted[1].gene, "BAGE3")
-        self.assertEqual(effects_sorted[1].transcript_id, "NM_182481_1")
-        self.assertEqual(effects_sorted[1].strand, "-")
-        self.assertEqual(effects_sorted[1].effect, "splice-site")
-        # self.assertEqual(effects_sorted[1].prot_pos, 94)
-        # self.assertEqual(effects_sorted[1].prot_length, 110)
-        self.assertEqual(effects_sorted[1].aa_change, None)
-
-        self.assertEqual(effects_sorted[2].gene, "BAGE2")
-        self.assertEqual(effects_sorted[2].transcript_id, "NM_182482_1")
-        self.assertEqual(effects_sorted[2].strand, "-")
-        self.assertEqual(effects_sorted[2].effect, "splice-site")
-        # self.assertEqual(effects_sorted[2].prot_pos, 94)
-        # self.assertEqual(effects_sorted[2].prot_length, 110)
-        self.assertEqual(effects_sorted[2].aa_change, None)
-
-        self.assertEqual(effects_sorted[3].gene, "BAGE5")
-        self.assertEqual(effects_sorted[3].transcript_id, "NM_182484_1")
-        self.assertEqual(effects_sorted[3].strand, "-")
-        self.assertEqual(effects_sorted[3].effect, "3'UTR-intron")
-        # self.assertEqual(effects_sorted[3].prot_pos, None)
-        # self.assertEqual(effects_sorted[3].prot_length, None)
-        self.assertEqual(effects_sorted[3].aa_change, None)
 
     def test_chr3_131100722_sub_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
