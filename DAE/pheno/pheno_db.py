@@ -11,9 +11,9 @@ from sqlalchemy import or_, not_
 from collections import defaultdict, OrderedDict
 
 from pheno.utils.configuration import PhenoConfig
-from pheno.models import PersonManager, VariableManager, \
+from pheno.models import  \
     RawValueManager,\
-    MetaVariableManager, MetaVariableCorrelationManager,\
+    MetaVariableCorrelationManager,\
     ValueModel
 from VariantsDB import Person, Family
 import copy
@@ -305,12 +305,7 @@ class PhenoDB(PhenoConfig):
             variable.c.variable_id,
             variable.c.table_name,
             variable.c.variable_name,
-            variable.c.domain,
-            variable.c.domain_choice_label,
-            variable.c.measurement_scale,
             variable.c.description,
-            variable.c.source,
-            variable.c.domain_rank,
             variable.c.individuals,
             variable.c.stats,
             variable.c.value_domain,
@@ -333,10 +328,8 @@ class PhenoDB(PhenoConfig):
             s = s.where(variable.c.table_name == instrument)
         if measure_type is not None:
             s = s.where(variable.c.stats == measure_type)
-        print(s)
 
         df = pd.read_sql(s, self.db.engine)
-        # df = self._load_measures_meta_df(df)
 
         res_df = df[[
             'variable_id', 'variable_name', 'table_name',
@@ -354,33 +347,6 @@ class PhenoDB(PhenoConfig):
         self._rename_forward(res_df, mapping)
 
         return res_df
-
-    def _load_measures_meta_df(self, df):
-
-        variable_ids = df.variable_id.unique()
-        s = select([self.db.meta_variable])
-        s = s.where(self.db.meta_variable.c.variable_id.in_(variable_ids))
-
-        try:
-            meta_df = pd.read_sql(s, self.db.engine)
-        except Exception:
-            # print("can't load variables meta data...")
-
-            size = len(df.index)
-            meta_df = pd.DataFrame(
-                data={
-                    'variable_id': df.variable_id.values,
-                    'has_siblings': np.zeros(size),
-                    'has_probands': np.zeros(size),
-                    'has_parents': np.zeros(size),
-                    'default_filter': [None] * size,
-                })
-        meta_df = meta_df.set_index('variable_id')
-        df = df.join(
-            meta_df, on='variable_id',
-            rsuffix='_meta')
-
-        return df
 
     def get_measures(self, instrument=None, measure_type=None):
         """
