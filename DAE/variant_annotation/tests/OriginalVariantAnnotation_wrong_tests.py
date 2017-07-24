@@ -195,19 +195,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, 422)
         self.assertEqual(effect.aa_change, None)
 
-    def test_chr1_152648485_del_var(self):
-        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                      loc="1:152648485",
-                                                      var="del(13)")
-
-        self.assertEqual(effect.gene, "LCE2C")
-        self.assertEqual(effect.transcript_id, "NM_178429_1")
-        self.assertEqual(effect.strand, "+")
-        self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 111)
-        self.assertEqual(effect.aa_change, None)
-
     def test_chr1_16890438_del_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       loc="1:16890438",
@@ -473,7 +460,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].gene, "MSH2")
         self.assertEqual(effects_sorted[0].transcript_id, "NM_000251_1")
         self.assertEqual(effects_sorted[0].strand, "+")
-        self.assertEqual(effects_sorted[0].effect, "noStart")
+        # Modified from original, was noStart
+        self.assertEqual(effects_sorted[0].effect, "no-frame-shift")
         # self.assertEqual(effects_sorted[0].prot_pos, 1)
         # self.assertEqual(effects_sorted[0].prot_length, 935)
         self.assertEqual(effects_sorted[0].aa_change, None)
@@ -520,19 +508,6 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.effect, "5'UTR")
         # self.assertEqual(effect.prot_pos, None)
         # self.assertEqual(effect.prot_length, None)
-        self.assertEqual(effect.aa_change, None)
-
-    def test_chr1_7844919_del_var(self):
-        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                      loc="1:7844919",
-                                                      var="del(21)")
-
-        self.assertEqual(effect.gene, "PER3")
-        self.assertEqual(effect.transcript_id, "NM_016831_1")
-        self.assertEqual(effect.strand, "+")
-        self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 1202)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr1_6694147_del_var(self):

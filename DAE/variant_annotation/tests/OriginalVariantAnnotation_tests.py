@@ -2903,6 +2903,32 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, 259)
         self.assertEqual(effect.aa_change, None)
 
+    def test_chr1_152648485_del_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="1:152648485",
+                                                      var="del(13)")
+
+        self.assertEqual(effect.gene, "LCE2C")
+        self.assertEqual(effect.transcript_id, "NM_178429_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "noStart")
+        # self.assertEqual(effect.prot_pos, 1)
+        # self.assertEqual(effect.prot_length, 111)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_chr1_7844919_del_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="1:7844919",
+                                                      var="del(21)")
+
+        self.assertEqual(effect.gene, "PER3")
+        self.assertEqual(effect.transcript_id, "NM_016831_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "noStart")
+        # self.assertEqual(effect.prot_pos, 1)
+        # self.assertEqual(effect.prot_length, 1202)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
