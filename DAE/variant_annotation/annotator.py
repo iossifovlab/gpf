@@ -1,5 +1,5 @@
 from .gene_codes import NuclearCode
-from .effect_checkers.example import ExampleEffectChecker
+from .effect_checkers.coding import CodingEffectChecker
 from .effect_checkers.promoter import PromoterEffectChecker
 from .effect_checkers.frame_shift import FrameShiftEffectChecker
 from .effect_checkers.utr import UTREffectChecker
@@ -49,6 +49,7 @@ class VariantAnnotator:
         self.code = code
         self.promoter_len = promoter_len
         self.effects_checkers = [PromoterEffectChecker(),
+                                 CodingEffectChecker(),
                                  SpliceSiteEffectChecker(),
                                  StartLossEffectChecker(),
                                  StopLossEffectChecker(),
