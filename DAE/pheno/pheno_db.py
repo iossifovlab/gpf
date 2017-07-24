@@ -5,7 +5,7 @@ Created on Sep 10, 2016
 '''
 import numpy as np
 import pandas as pd
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, text
 from sqlalchemy import or_, not_
 
 from collections import defaultdict, OrderedDict
@@ -522,11 +522,6 @@ class PhenoDB(PhenoConfig):
             raise ValueError(
                 "bad default_filter value: {}".format(default_filter))
 
-    @staticmethod
-    def _roles_clause(roles, column_name):
-        clauses = ["{} = '{}'".format(column_name, role) for role in roles]
-        return " ( {} ) ".format(' or '.join(clauses))
-
     def _raw_get_measure_values_df(
             self, measure, person_ids=None, family_ids=None, roles=None,
             default_filter='skip'):
@@ -536,18 +531,22 @@ class PhenoDB(PhenoConfig):
             raise ValueError(
                 "bad measure: {}; unknown value type".format(
                     measure.measure_id))
-        value_manager = ValueModel.get_value_manager(value_type)
-        clauses = ["variable_id = '{}'".format(measure.measure_id)]
+        value_table = self.db.get_value_table(value_type)
+        s = select([value_table])
+        s = s.where(value_table.c.variable_id == measure.measure_id)
         if roles:
-            roles_clause = self._roles_clause(roles, 'person_role')
-            clauses.append(roles_clause)
+            s = s.where(
+                or_(
+                    *[value_table.c.person_role == r for r in roles]
+                )
+            )
         if measure.default_filter is not None:
             filter_clause = self._build_default_filter_clause(
                 measure, default_filter)
             if filter_clause is not None:
-                clauses.append(filter_clause)
-        where = ' and '.join(clauses)
-        df = self._get_values_df(value_manager, where)
+                s = s.where(text(filter_clause))
+        df = pd.read_sql(s, self.db.engine)
+
         if person_ids:
             df = df[df.person_id.isin(person_ids)]
         if family_ids:

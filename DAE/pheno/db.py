@@ -5,6 +5,7 @@ Created on Jul 24, 2017
 '''
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Boolean, Float
+from pheno.models import ValueModel
 
 
 class DbManager(object):
@@ -106,3 +107,15 @@ class DbManager(object):
             Column('person_role', String(8),  nullable=False),
             Column('value', String(127), nullable=False)
         )
+
+    def get_value_table(self, value_type):
+        if value_type == ValueModel.CONTINUOUS:
+            return self.value_continuous
+        elif value_type == ValueModel.ORDINAL:
+            return self.value_ordinal
+        elif value_type == ValueModel.CATEGORICAL:
+            return self.value_categorical
+        elif value_type == ValueModel.UNKNOWN:
+            return self.value_other
+        else:
+            raise ValueError("unsupported value type: {}".format(value_type))
