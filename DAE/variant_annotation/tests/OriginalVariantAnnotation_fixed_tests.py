@@ -592,6 +592,31 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effects_sorted[1].prot_length, 307)
         self.assertEqual(effects_sorted[1].aa_change, None)
 
+    def test_chr6_99817476_del_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="6:99817476",
+                                                      var="del(22)")
+
+        self.assertEqual(effect.gene, "COQ3")
+        self.assertEqual(effect.transcript_id, "NM_017421_1")
+        self.assertEqual(effect.strand, "-")
+        self.assertEqual(effect.effect, "noEnd")
+        # self.assertEqual(effect.prot_pos, 363)
+        # self.assertEqual(effect.prot_length, 369)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_last_codon_ins_frameshift_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="7:24727231",
+                                                      var="ins(A)")
+        self.assertEqual(effect.gene, "MPP6")
+        self.assertEqual(effect.transcript_id, "NM_016447_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "noEnd")
+        # self.assertEqual(effect.prot_pos, 541)
+        # self.assertEqual(effect.prot_length, 540)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
