@@ -538,6 +538,60 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effects_sorted[2].prot_length, None)
         self.assertEqual(effects_sorted[2].aa_change, None)
 
+    def test_chr3_172538026_del_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="3:172538026",
+                                                     var="del(6)")
+        self.assertEqual(len(effects), 3)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "ECT2")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_001258315_1")
+        self.assertEqual(effects_sorted[0].strand, "+")
+        self.assertEqual(effects_sorted[0].effect, "noEnd")
+        # self.assertEqual(effects_sorted[0].prot_pos, 915)
+        # self.assertEqual(effects_sorted[0].prot_length, 914)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "ECT2")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_001258316_1")
+        self.assertEqual(effects_sorted[1].strand, "+")
+        self.assertEqual(effects_sorted[1].effect, "noEnd")
+        # self.assertEqual(effects_sorted[1].prot_pos, 884)
+        # self.assertEqual(effects_sorted[1].prot_length, 883)
+        self.assertEqual(effects_sorted[1].aa_change, None)
+
+        self.assertEqual(effects_sorted[2].gene, "ECT2")
+        self.assertEqual(effects_sorted[2].transcript_id, "NM_018098_1")
+        self.assertEqual(effects_sorted[2].strand, "+")
+        self.assertEqual(effects_sorted[2].effect, "noEnd")
+        # self.assertEqual(effects_sorted[2].prot_pos, 884)
+        # self.assertEqual(effects_sorted[2].prot_length, 883)
+        self.assertEqual(effects_sorted[2].aa_change, None)
+
+    def test_chr1_29447418_ins_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:29447418",
+                                                     var="ins(CAGACCC)")
+        self.assertEqual(len(effects), 2)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "TMEM200B")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_001003682_1")
+        self.assertEqual(effects_sorted[0].strand, "-")
+        self.assertEqual(effects_sorted[0].effect, "noEnd")
+        # self.assertEqual(effects_sorted[0].prot_pos, 308)
+        # self.assertEqual(effects_sorted[0].prot_length, 307)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "TMEM200B")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_001171868_1")
+        self.assertEqual(effects_sorted[1].strand, "-")
+        self.assertEqual(effects_sorted[1].effect, "noEnd")
+        # self.assertEqual(effects_sorted[1].prot_pos, 308)
+        # self.assertEqual(effects_sorted[1].prot_length, 307)
+        self.assertEqual(effects_sorted[1].aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
