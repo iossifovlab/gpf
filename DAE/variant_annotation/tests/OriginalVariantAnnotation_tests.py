@@ -2349,29 +2349,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, 389)
         self.assertEqual(effect.aa_change, None)
 
-    def test_chr1_906785_ins_var(self):
-        var = "ins(GTGGGCCCCTCCCCACT)"
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="1:906785", var=var)
-        self.assertEqual(len(effects), 2)
-        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
-
-        self.assertEqual(effects_sorted[0].gene, "PLEKHN1")
-        self.assertEqual(effects_sorted[0].transcript_id, "NM_001160184_1")
-        self.assertEqual(effects_sorted[0].strand, "+")
-        self.assertEqual(effects_sorted[0].effect, "intron")
-        # self.assertEqual(effects_sorted[0].prot_pos, 275)
-        # self.assertEqual(effects_sorted[0].prot_length, 577)
-        self.assertEqual(effects_sorted[0].aa_change, None)
-
-        self.assertEqual(effects_sorted[1].gene, "PLEKHN1")
-        self.assertEqual(effects_sorted[1].transcript_id, "NM_032129_1")
-        self.assertEqual(effects_sorted[1].strand, "+")
-        self.assertEqual(effects_sorted[1].effect, "intron")
-        # self.assertEqual(effects_sorted[1].prot_pos, 263)
-        # self.assertEqual(effects_sorted[1].prot_length, 612)
-        self.assertEqual(effects_sorted[1].aa_change, None)
-
     def test_chr1_1425787_ins_var(self):
         var = "ins(ACGTGACATTTAGCTGTCACTTCTGGTGGGCTCCTGCCA)"
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
