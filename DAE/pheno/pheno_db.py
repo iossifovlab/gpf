@@ -228,33 +228,6 @@ class PhenoDB(PhenoConfig):
         return 'variable_id IN ({})'.format(
             ','.join(["'{}'".format(v) for v in variable_ids]))
 
-    def _load_measures_meta_df(self, df):
-
-        variable_ids = df.variable_id.unique()
-        s = select([self.db.meta_variable])
-        s = s.where(self.db.meta_variable.c.variable_id.in_(variable_ids))
-
-        try:
-            meta_df = pd.read_sql(s, self.db.engine)
-        except Exception:
-            # print("can't load variables meta data...")
-
-            size = len(df.index)
-            meta_df = pd.DataFrame(
-                data={
-                    'variable_id': df.variable_id.values,
-                    'has_siblings': np.zeros(size),
-                    'has_probands': np.zeros(size),
-                    'has_parents': np.zeros(size),
-                    'default_filter': [None] * size,
-                })
-        meta_df = meta_df.set_index('variable_id')
-        df = df.join(
-            meta_df, on='variable_id',
-            rsuffix='_meta')
-
-        return df
-
     def get_measures_corellations_df(
             self, measures_df, correlations_with, role):
         """
@@ -325,15 +298,45 @@ class PhenoDB(PhenoConfig):
             measure_type in set([
                 'continuous', 'ordinal', 'categorical', 'unknown'])
 
-        s = select([self.db.variable])
-        s = s.where(not_(self.db.variable.c.stats.is_(None)))
+        variable = self.db.variable
+        meta_variable = self.db.meta_variable
+
+        columns = [
+            variable.c.variable_id,
+            variable.c.table_name,
+            variable.c.variable_name,
+            variable.c.domain,
+            variable.c.domain_choice_label,
+            variable.c.measurement_scale,
+            variable.c.description,
+            variable.c.source,
+            variable.c.domain_rank,
+            variable.c.individuals,
+            variable.c.stats,
+            variable.c.value_domain,
+            meta_variable.c.min_value,
+            meta_variable.c.max_value,
+            meta_variable.c.has_probands,
+            meta_variable.c.has_siblings,
+            meta_variable.c.has_parents,
+            meta_variable.c.default_filter,
+        ]
+        s = select(columns)
+        s = s.select_from(
+            variable.join(
+                meta_variable,
+                variable.c.variable_id == meta_variable.c.variable_id
+            )
+        )
+        s = s.where(not_(variable.c.stats.is_(None)))
         if instrument is not None:
-            s = s.where(self.db.variable.c.table_name == instrument)
+            s = s.where(variable.c.table_name == instrument)
         if measure_type is not None:
-            s = s.where(self.db.variable.c.stats == measure_type)
+            s = s.where(variable.c.stats == measure_type)
+        print(s)
 
         df = pd.read_sql(s, self.db.engine)
-        df = self._load_measures_meta_df(df)
+        # df = self._load_measures_meta_df(df)
 
         res_df = df[[
             'variable_id', 'variable_name', 'table_name',
@@ -351,6 +354,33 @@ class PhenoDB(PhenoConfig):
         self._rename_forward(res_df, mapping)
 
         return res_df
+
+    def _load_measures_meta_df(self, df):
+
+        variable_ids = df.variable_id.unique()
+        s = select([self.db.meta_variable])
+        s = s.where(self.db.meta_variable.c.variable_id.in_(variable_ids))
+
+        try:
+            meta_df = pd.read_sql(s, self.db.engine)
+        except Exception:
+            # print("can't load variables meta data...")
+
+            size = len(df.index)
+            meta_df = pd.DataFrame(
+                data={
+                    'variable_id': df.variable_id.values,
+                    'has_siblings': np.zeros(size),
+                    'has_probands': np.zeros(size),
+                    'has_parents': np.zeros(size),
+                    'default_filter': [None] * size,
+                })
+        meta_df = meta_df.set_index('variable_id')
+        df = df.join(
+            meta_df, on='variable_id',
+            rsuffix='_meta')
+
+        return df
 
     def get_measures(self, instrument=None, measure_type=None):
         """
