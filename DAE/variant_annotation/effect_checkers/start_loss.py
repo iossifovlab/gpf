@@ -30,9 +30,9 @@ class StartLossEffectChecker:
             return False
 
     @classmethod
-    def _in_stop_codons(cls, codon, annotator):
+    def _in_start_codons_complement(cls, codon, annotator):
         codon = cls.complement(codon[::-1])
-        if codon in annotator.code.stopCodons:
+        if codon in annotator.code.startCodons:
             return True
         else:
             return False
@@ -47,11 +47,11 @@ class StartLossEffectChecker:
                      request.transcript_model.cds[0], request.variant.position,
                      last_position,
                      request.transcript_model.cds[0] + 2)
-
-        if (request.variant.position <= request.transcript_model.cds[0] + 2
-                and request.transcript_model.cds[0] <= last_position):
-            try:
-                if request.transcript_model.strand == "+":
+        try:
+            if request.transcript_model.strand == "+":
+                if (request.variant.position <=
+                    request.transcript_model.cds[0] + 2
+                        and request.transcript_model.cds[0] <= last_position):
                     seq = request.annotator.reference_genome.getSequence(
                         request.transcript_model.chr,
                         request.transcript_model.cds[0],
@@ -65,21 +65,23 @@ class StartLossEffectChecker:
                         ef.prot_pos = 1
                         ef.prot_length = 100
                         return ef
-                    return
+            else:
+                if (request.variant.position <= request.transcript_model.cds[1]
+                        and request.transcript_model.cds[1] - 2 <=
+                        last_position):
 
-                ref_codons, alt_codons = request.get_codons()
+                    ref_codons, alt_codons = request.get_codons()
 
-                logger.debug("effected codons: %s->%s",
-                             ref_codons[:3], alt_codons[:3])
+                    logger.debug("effected codons: %s->%s",
+                                 ref_codons[:3], alt_codons[:3])
 
-                if request.transcript_model.strand == "-":
-                    if (self._in_stop_codons(ref_codons[:3],
-                                             request.annotator) and
-                            not self._in_stop_codons(alt_codons[:3],
-                                                     request.annotator)):
-                        ef = Effect("noEnd", request.transcript_model)
+                    if (self._in_start_codons_complement(
+                        ref_codons[:3], request.annotator) and
+                        not self._in_start_codons_complement(
+                                alt_codons[:3], request.annotator)):
+                        ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
                         ef.prot_length = 100
                         return ef
-            except IndexError:
-                return
+        except IndexError:
+            return

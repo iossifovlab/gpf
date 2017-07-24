@@ -3,67 +3,28 @@ import logging
 
 
 class StopLossEffectChecker:
-    @staticmethod
-    def complement(nts):
-        nts = nts.upper()
-        reversed = ''
-        for nt in nts:
-            if nt == "A":
-                reversed += "T"
-            elif nt == "T":
-                reversed += "A"
-            elif nt == "G":
-                reversed += "C"
-            elif nt == "C":
-                reversed += "G"
-            elif nt == "N":
-                reversed += "N"
-            else:
-                print("Invalid nucleotide: " + str(nt) + " in " + str(nts))
-        return(reversed)
-
-    @classmethod
-    def _in_start_codons(cls, codon, annotator):
-        codon = cls.complement(codon[::-1])
-        if codon in annotator.code.startCodons:
-            return True
-        else:
-            return False
-
-    @classmethod
-    def _in_stop_codons(cls, codon, annotator):
-        if codon in annotator.code.stopCodons:
-            return True
-        else:
-            return False
-
     def get_effect(self, request):
         logger = logging.getLogger(__name__)
-        logger.debug("position check %d <= %d <= %d",
+        last_position = request.variant.position + \
+            len(request.variant.reference)
+
+        logger.debug("position check %d <= %d-%d <= %d",
                      request.transcript_model.cds[1] - 2,
-                     request.variant.position, request.transcript_model.cds[1])
+                     request.variant.position,
+                     last_position,
+                     request.transcript_model.cds[0])
 
-        if (request.transcript_model.cds[1] - 2 <= request.variant.position
-                <= request.transcript_model.cds[1]):
-            ref_codons, alt_codons = request.get_codons()
+        try:
+            ref_aa, alt_aa = request.get_amino_acids()
+            ref_contains_stop = any(aa == "End" for aa in ref_aa)
+            alt_contains_stop = any(aa == "End" for aa in alt_aa)
 
-            logger.debug("effected codons: %s->%s",
-                         ref_codons[:3], alt_codons[:3])
+            logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
 
-            if request.transcript_model.strand == "+":
-                if (self._in_stop_codons(ref_codons[:3], request.annotator) and
-                        not self._in_stop_codons(alt_codons[:3],
-                                                 request.annotator)):
-                    ef = Effect("noEnd", request.transcript_model)
-                    ef.prot_pos = 1
-                    ef.prot_length = 100
-                    return ef
-            else:
-                if (self._in_start_codons(ref_codons[:3],
-                                          request.annotator) and
-                        not self._in_start_codons(alt_codons[:3],
-                                                  request.annotator)):
-                    ef = Effect("noStart", request.transcript_model)
-                    ef.prot_pos = 1
-                    ef.prot_length = 100
-                    return ef
+            if ref_contains_stop and not alt_contains_stop:
+                ef = Effect("noEnd", request.transcript_model)
+                ef.prot_pos = 1
+                ef.prot_length = 100
+                return ef
+        except IndexError:
+            return
