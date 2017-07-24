@@ -73,6 +73,7 @@ class Family(object):
         assert p.person_id not in self.probands
         assert p.role is None
         assert p.family_id is None or p.family_id == self.family_id
+        assert p.person_id not in self.probands
 
         p.role = Role.prb
         p.family_id = self.family_id
@@ -83,6 +84,7 @@ class Family(object):
         assert p.person_id not in self.siblings
         assert p.role is None
         assert p.family_id is None or p.family_id == self.family_id
+        assert p.person_id not in self.siblings
 
         p.role = Role.sib
         p.family_id = self.family_id
