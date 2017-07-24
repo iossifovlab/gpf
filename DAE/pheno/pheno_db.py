@@ -6,7 +6,7 @@ Created on Sep 10, 2016
 import numpy as np
 import pandas as pd
 from sqlalchemy.sql import select
-from sqlalchemy import or_
+from sqlalchemy import or_, not_
 
 from collections import defaultdict, OrderedDict
 
@@ -332,17 +332,14 @@ class PhenoDB(PhenoConfig):
             measure_type in set([
                 'continuous', 'ordinal', 'categorical', 'unknown'])
 
-        clauses = ["not stats isnull"]
+        s = select([self.db.variable])
+        s = s.where(not_(self.db.variable.c.stats.is_(None)))
         if instrument is not None:
-            clauses.append("table_name = '{}'".format(instrument))
+            s = s.where(self.db.variable.c.table_name == instrument)
         if measure_type is not None:
-            clauses.append("stats='{}'".format(measure_type))
+            s = s.where(self.db.variable.c.stats == measure_type)
 
-        with VariableManager(
-                dbfile=self.get_dbfile()) as vm:
-            df = vm.load_df(
-                where=' and '.join(['( {} )'.format(c) for c in clauses]))
-
+        df = pd.read_sql(s, self.db.engine)
         df = self._load_measures_meta_df(df)
 
         res_df = df[[
