@@ -666,6 +666,54 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, 437)
         self.assertEqual(effect.aa_change, None)
 
+    def test_first_codon_ins_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="1:3527831",
+                                                      var="ins(A)")
+        self.assertEqual(effect.gene, "MEGF6")
+        self.assertEqual(effect.transcript_id, "NM_001409_1")
+        self.assertEqual(effect.strand, "-")
+        self.assertEqual(effect.effect, "noStart")
+        # self.assertEqual(effect.prot_pos, 1)
+        # self.assertEqual(effect.prot_length, 1541)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_chr4_100544005_ins_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="4:100544005",
+                                                      var="ins(GAAA)")
+
+        self.assertEqual(effect.gene, "MTTP")
+        self.assertEqual(effect.transcript_id, "NM_000253_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "noEnd")
+        # self.assertEqual(effect.prot_pos, 895)
+        # self.assertEqual(effect.prot_length, 894)
+        self.assertEqual(effect.aa_change, None)
+
+    def test_chr6_109954111_del_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="6:109954111",
+                                                     var="del(4)")
+        self.assertEqual(len(effects), 2)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "AK9")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_001145128_1")
+        self.assertEqual(effects_sorted[0].strand, "-")
+        self.assertEqual(effects_sorted[0].effect, "intron")
+        # self.assertEqual(effects_sorted[0].prot_pos, 419)
+        # self.assertEqual(effects_sorted[0].prot_length, 1912)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "AK9")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_145025_1")
+        self.assertEqual(effects_sorted[1].strand, "-")
+        self.assertEqual(effects_sorted[1].effect, "noEnd")
+        # self.assertEqual(effects_sorted[1].prot_pos, 422)
+        # self.assertEqual(effects_sorted[1].prot_length, 422)
+        self.assertEqual(effects_sorted[1].aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()
