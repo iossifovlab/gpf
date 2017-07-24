@@ -5,6 +5,8 @@ Created on Sep 10, 2016
 '''
 import numpy as np
 import pandas as pd
+from sqlalchemy.sql import select
+from sqlalchemy import or_
 
 from collections import defaultdict, OrderedDict
 
@@ -15,6 +17,7 @@ from pheno.models import PersonManager, VariableManager, \
     ValueModel
 from VariantsDB import Person, Family
 import copy
+from pheno.db import DbManager
 
 
 class Instrument(object):
@@ -161,6 +164,8 @@ class PhenoDB(PhenoConfig):
         self.measures = {}
         self.age = self._load_common_config('age')
         self.nonverbal_iq = self._load_common_config('nonverbal_iq')
+        self.db = DbManager(dbfile=self.get_dbfile())
+        self.db.build()
 
     def _load_common_config(self, name):
         if self.config.has_option(self.pheno_db, name):
@@ -445,15 +450,15 @@ class PhenoDB(PhenoConfig):
 
         Columns returned are: `person_id`, `family_id`, `role`, `gender`.
         """
-        where = ["ssc_present={}".format(present)]
+
+        s = select([self.db.person])
+        s = s.where(self.db.person.c.ssc_present == present)
         if roles:
-            where.append(self._roles_clause(roles, 'role'))
-        with PersonManager(dbfile=self.get_dbfile()) as pm:
-            df = pm.load_df(where=' and '.join(where))
-            try:
-                df.sort_values(['family_id', 'role_order'], inplace=True)
-            except AttributeError:
-                df = df.sort(['family_id', 'role_order'])
+            s = s.where(or_(
+                *[self.db.person.c.role == r for r in roles]
+            ))
+        df = pd.read_sql(s, self.db.engine)
+        df.sort_values(['family_id', 'role_order'], inplace=True)
 
         if person_ids:
             df = df[df.person_id.isin(person_ids)]
