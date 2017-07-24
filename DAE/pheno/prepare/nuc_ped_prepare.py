@@ -11,188 +11,170 @@ import pandas as pd
 import numpy as np
 from pheno.utils.configuration import PhenoConfig
 from collections import OrderedDict, Counter
-from pheno.models import PersonManager
 from pheno.prepare.base_variables import BaseVariables
 import os
 from pheno.prepare.base_meta_variables import BaseMetaVariables
 from pheno.pheno_db import PhenoDB
 from common.progress import progress_nl, progress
+from pheno.common import Gender, Status, Role
+from pheno.db import DbManager
 
 
-class NucPedPrepareIndividuals(PhenoConfig):
+class Family(object):
 
-    class Family(object):
+    def __init__(self, family_id):
+        self.id = None
+        self.family_id = family_id
+        self.mother = None
+        self.father = None
+        self.probands = OrderedDict()
+        self.siblings = OrderedDict()
 
-        def __init__(self, family_id):
-            self.family_id = family_id
-            self.mother = None
-            self.father = None
-            self.probands = OrderedDict()
-            self.siblings = OrderedDict()
+    def __repr__(self):
+        return "Family({family_id}, {mother}, {father}, " \
+            "{probands}, {siblings})".format(
+                family_id=self.family_id,
+                mother=self.mother,
+                father=self.father,
+                probands=self.probands,
+                siblings=self.siblings)
 
-        @property
-        def size(self):
-            return 2 + len(self.probands) + len(self.siblings)
+    def add_mother(self, mother):
+        assert self.mother is None
+        assert mother.role is None or mother.role == Role.mom
+        assert mother.family_id is None or mother.family_id == self.family_id
+        assert mother is not None
 
-        def __repr__(self):
-            return "Family({family_id}, {mother}, {father}, " \
-                "{probands}, {siblings})".format(
-                    family_id=self.family_id,
-                    mother=self.mother,
-                    father=self.father,
-                    probands=self.probands,
-                    siblings=self.siblings)
+        mother.role = Role.mom
+        mother.family_id = self.family_id
+        self.mother = mother
 
-        def add_mother(self, mother):
-            assert self.mother is None
-            assert mother.role is None
-            assert mother.family_id is None
-            assert mother is not None
+    def add_father(self, father):
+        assert self.father is None
+        assert father.role is None or father.role == Role.dad
+        assert father.family_id is None or father.family_id == self.family_id
+        assert father is not None
 
-            mother.role = 'mom'
-            mother.role_id = mother.role
-            mother.role_order = 0
-            mother.family_id = self.family_id
-            self.mother = mother
+        father.role = Role.dad
+        father.family_id = self.family_id
+        self.father = father
 
-        def add_father(self, father):
-            assert self.father is None
-            assert father.role is None
-            assert father.family_id is None
-            assert father is not None
+    def add_child(self, p):
+        if p.proband_sibling == Role.prb:
+            self.add_proband(p)
+        elif p.proband_sibling == Role.sib:
+            self.add_sibling(p)
+        else:
+            assert False, "strange proband_sibling status: {}".format(
+                p.proband_sibling)
 
-            father.role = 'dad'
-            father.role_id = father.role
-            father.role_order = 1
-            father.family_id = self.family_id
-            self.father = father
+    def add_proband(self, p):
+        assert p.proband_sibling == Role.prb
+        assert p.person_id not in self.probands
+        assert p.role is None
+        assert p.family_id is None or p.family_id == self.family_id
 
-        def add_child(self, p):
-            if p.proband_sibling == 'prb':
-                self.add_proband(p)
-            elif p.proband_sibling == 'sib':
-                self.add_sibling(p)
+        p.role = Role.prb
+        p.family_id = self.family_id
+        self.probands[p.person_id] = p
 
-        def add_proband(self, p):
-            assert p.proband_sibling == 'prb'
-            assert p.person_id not in self.probands
-            assert p.role is None
-            assert p.family_id is None
+    def add_sibling(self, p):
+        assert p.proband_sibling == Role.sib
+        assert p.person_id not in self.siblings
+        assert p.role is None
+        assert p.family_id is None or p.family_id == self.family_id
 
-            p.role = 'prb'
-            p.role_id = p.role
-            p.role_order = len(self.probands) + 11
-            p.family_id = self.family_id
-            self.probands[p.person_id] = p
+        p.role = Role.sib
+        p.family_id = self.family_id
+        self.siblings[p.person_id] = p
 
-        def add_sibling(self, p):
-            assert p.proband_sibling == 'sib'
-            assert p.person_id not in self.siblings
-            assert p.role is None
-            assert p.family_id is None
 
-            p.role = 'sib'
-            p.role_id = p.role
-            p.role_order = len(self.siblings) + 21
-            p.family_id = self.family_id
-            self.siblings[p.person_id] = p
+class Person(object):
 
-    class Individual(object):
+    def __repr__(self):
+        return "Peson({person_id}, {gender}, {role}, {family_id}, " \
+            "{father}, {mother})" \
+            .format(
+                person_id=self.person_id,
+                gender=self.gender,
+                role=self.role,
+                family_id=self.family_id,
+                father=self.father,
+                mother=self.mother,
+            )
 
-        def __repr__(self):
-            return "Individual({person_id}, {gender}, {role}, {family_id}, " \
-                "{father}, {mother})" \
-                .format(
-                    person_id=self.person_id,
-                    gender=self.gender,
-                    role=self.role,
-                    family_id=self.family_id,
-                    father=self.father,
-                    mother=self.mother,
-                )
+    def __init__(self, row):
+        self.id = None
+        self.fid = None
+        self.father = row['dadId']
+        self.mother = row['momId']
+        self.person_id = row['personId']
+        self.family = row['familyId']
+        self.gender = Gender(row['gender'])
+        self.proband_sibling = self._build_proband_sibling(row['status'])
+        self.status = Status(row['status'])
+        self.sample_id = self._build_sample_id(row['sampleId'])
+        self.role = None
+        self.family_id = None
 
-        def __init__(self, row):
-            self.father = row['dadId']
-            self.mother = row['momId']
-            self.person_id = row['personId']
-            self.family = row['familyId']
-            self.gender = self._build_gender(row['gender'])
-            self.proband_sibling = self._build_proband_sibling(row['status'])
-            self.sample_id = self._build_sample_id(row['sampleId'])
-            self.role = None
-            self.family_id = None
-            self.collection = None
-            self.ssc_present = True
+        self.key = (self.family, self.person_id)
+        assert self.person_id is not None
 
-            self.key = (self.family, self.person_id)
-            assert self.person_id is not None
+    def __eq__(self, other):
+        return self.father == other.father and \
+            self.mother == other.mother and \
+            self.person_id == other.person_id and \
+            self.gender == other.gender and \
+            self.proband_sibling == other.proband_sibling and \
+            self.family_id == other.family_id and \
+            self.key == other.key and \
+            self.sample_id == other.sample_id
+        # self.role == other.role and \
 
-        def __eq__(self, other):
-            return self.father == other.father and \
-                self.mother == other.mother and \
-                self.person_id == other.person_id and \
-                self.gender == other.gender and \
-                self.proband_sibling == other.proband_sibling and \
-                self.family_id == other.family_id and \
-                self.key == other.key and \
-                self.sample_id == other.sample_id
-            # self.role == other.role and \
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
-        def __ne__(self, other):
-            return not self.__eq__(other)
+    def _build_sample_id(self, sample_id):
+        if isinstance(sample_id, float) and np.isnan(sample_id):
+            return None
+        elif sample_id is None:
+            return None
 
-        def _build_sample_id(self, sample_id):
-            if isinstance(sample_id, float) and np.isnan(sample_id):
-                return None
-            elif sample_id is None:
-                return None
+        return str(sample_id)
 
-            return str(sample_id)
+    @staticmethod
+    def _build_proband_sibling(status):
+        if status == 1:
+            return Role.sib
+        elif status == 2:
+            return Role.prb
+        else:
+            print("unexpected status: {}".format(status))
+            raise ValueError("unexpected value for status: {}"
+                             .format(status))
 
-        @staticmethod
-        def _build_family_id(person_id):
-            parts = person_id.split('.')
-            assert len(parts) == 2
-            return parts[0]
 
-        @staticmethod
-        def _build_gender(sex):
-            if sex == 1:
-                return 'M'
-            elif sex == 2:
-                return 'F'
-            else:
-                raise ValueError("unexpected value for gender: {}"
-                                 .format(sex))
-
-        @staticmethod
-        def _build_proband_sibling(status):
-            if status == 1:
-                return 'sib'
-            elif status == 2:
-                return 'prb'
-            else:
-                print("unexpected status: {}".format(status))
-                raise ValueError("unexpected value for status: {}"
-                                 .format(status))
+class NucPedPreparePersons(PhenoConfig):
 
     def __init__(self, config, *args, **kwargs):
-        super(NucPedPrepareIndividuals, self).__init__(
+        super(NucPedPreparePersons, self).__init__(
             pheno_db='output', config=config, *args, **kwargs)
+        self.db = DbManager(dbfile=self.get_dbfile())
+        self.db.build()
 
-    def _build_individuals_dict(self, df, verbose=0):
+    def _build_person_dict(self, df, verbose=0):
         individuals = {}
         for _index, row in df.iterrows():
             progress(verbose)
-            individual = NucPedPrepareIndividuals.Individual(row)
+            person = Person(row)
 
-            if individual.key not in individuals:
-                individuals[individual.key] = individual
-            elif individuals[individual.key] != individual:
+            if person.key not in individuals:
+                individuals[person.key] = person
+            elif individuals[person.key] != person:
                 print("---------------------------------------------")
                 print("Mismatched individuals:")
-                print(">\t{}".format(individual))
-                print(">\t{}".format(individuals[individual.key]))
+                print(">\t{}".format(person))
+                print(">\t{}".format(individuals[person.key]))
                 print("---------------------------------------------")
 
         return individuals
@@ -205,38 +187,38 @@ class NucPedPrepareIndividuals(PhenoConfig):
     @staticmethod
     def load_pedfile(pedfilename):
         df = pd.read_csv(pedfilename, sep='\t')
-        assert set(NucPedPrepareIndividuals.COLUMNS) <= set(df.columns)
+        assert set(NucPedPreparePersons.COLUMNS) <= set(df.columns)
         return df
 
-    def _build_individuals(self, pedfilename, composite_fids=True, verbose=0):
+    def _build_persons(self, pedfilename, composite_fids=True, verbose=0):
         df = self.load_pedfile(pedfilename)
-        individuals = self._build_individuals_dict(
+        persons = self._build_person_dict(
             df, verbose=verbose)
-        assert individuals is not None
+        assert persons is not None
 
         families = self._build_families_dict(
-            individuals, composite_fids=composite_fids, verbose=verbose)
+            persons, composite_fids=composite_fids, verbose=verbose)
         assert families is not None
 
-        return individuals
+        return families, persons
 
     def build(self, pedfilename, composite_fids=True, verbose=0):
-        self.individuals = self._build_individuals(
+        self.families, self.persons = self._build_persons(
             pedfilename, composite_fids=composite_fids, verbose=verbose)
         self.individuals_with_sample_id = {
-            k: v for k, v in self.individuals.items()
+            k: v for k, v in self.persons.items()
             if v.sample_id is not None
         }
 
     def _build_families_dict(
-            self, individuals, composite_fids=True, verbose=0):
+            self, persons, composite_fids=True, verbose=0):
         families = {}
-        for p in individuals.values():
+        for p in persons.values():
             progress(verbose)
             if p.father != '0' and p.mother != '0':
                 try:
-                    father = individuals[(p.family, p.father)]
-                    mother = individuals[(p.family, p.mother)]
+                    father = persons[(p.family, p.father)]
+                    mother = persons[(p.family, p.mother)]
                     # print(p, p.family)
                     assert father is not None
                     assert mother is not None
@@ -249,9 +231,10 @@ class NucPedPrepareIndividuals(PhenoConfig):
                     if family_id in families:
                         family = families[family_id]
                     else:
-                        family = NucPedPrepareIndividuals.Family(family_id)
+                        family = Family(family_id)
                         family.add_mother(mother)
                         family.add_father(father)
+                    p.family_id = family_id
 
                     family.add_child(p)
                     families[family_id] = family
@@ -281,11 +264,36 @@ class NucPedPrepareIndividuals(PhenoConfig):
             individuals[p.person_id] = p
 
     def save(self):
-        with PersonManager(dbfile=self.get_dbfile()) as pm:
-            pm.drop_tables()
-            pm.create_tables()
-            for p in self.individuals.values():
-                pm.save(p)
+        families = [
+            {'family_id': fid} for fid in self.families.keys()
+        ]
+        ins = self.db.family.insert()
+        with self.db.engine.connect() as connection:
+            connection.execute(ins, families)
+
+        for f in self.db.get_families():
+            fam = self.families[f.family_id]
+            fam.id = f.id
+
+        for p in self.persons.values():
+            fam = self.families[p.family_id]
+            p.fid = fam.id
+        persons = [
+            {
+                'person_id': p.person_id,
+                'family_id': p.fid,
+                'role': p.role,
+                'status': p.status,
+                'gender': p.gender
+            }
+            for p in self.persons.values()
+        ]
+        ins = self.db.person.insert()
+        with self.db.engine.connect() as connection:
+            connection.execute(ins, persons)
+        for p in self.db.get_persons():
+            person = self.persons[(p.family_id, p.person_id)]
+            person.pid = p.id
 
     def prepare(self, pedfilename, composite_fids=True, verbose=0):
         self.build(
@@ -359,9 +367,9 @@ class NucPedPrepareVariables(PhenoConfig, BaseVariables):
 
         persons = self.load_persons_df()
 
-        ped_df = NucPedPrepareIndividuals.load_pedfile(pedfilename)
+        ped_df = NucPedPreparePersons.load_pedfile(pedfilename)
         measure_columns = set(ped_df.columns).difference(
-            set(NucPedPrepareIndividuals.COLUMNS)
+            set(NucPedPreparePersons.COLUMNS)
         )
 
         if not measure_columns:

@@ -3,7 +3,25 @@ Created on May 24, 2017
 
 @author: lubo
 '''
+import enum
 import ConfigParser
+
+
+class Gender(enum.Enum):
+    M = 1
+    F = 2
+
+
+class Status(enum.Enum):
+    affected = 2
+    unaffected = 1
+
+
+class Role(enum.Enum):
+    mom = 1
+    dad = 2
+    prb = 3
+    sib = 4
 
 
 def config_pheno_db(output):
