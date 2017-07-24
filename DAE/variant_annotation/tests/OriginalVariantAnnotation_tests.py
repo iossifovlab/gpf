@@ -1464,45 +1464,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, 3564)
         self.assertEqual(effect.aa_change, "Val->Glu")
 
-    def test_chr12_93792633_ins_var(self):
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="12:93792633",
-                                                     var="ins(T)")
-        self.assertEqual(len(effects), 4)
-        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
-
-        self.assertEqual(effects_sorted[0].gene, "NUDT4")
-        self.assertEqual(effects_sorted[0].transcript_id, "NM_019094_1")
-        self.assertEqual(effects_sorted[0].strand, "+")
-        self.assertEqual(effects_sorted[0].effect, "intron")
-        # self.assertEqual(effects_sorted[0].prot_pos, 114)
-        # self.assertEqual(effects_sorted[0].prot_length, 181)
-        self.assertEqual(effects_sorted[0].aa_change, None)
-
-        self.assertEqual(effects_sorted[1].gene, "NUDT4")
-        self.assertEqual(effects_sorted[1].transcript_id, "NM_199040_1")
-        self.assertEqual(effects_sorted[1].strand, "+")
-        self.assertEqual(effects_sorted[1].effect, "intron")
-        # self.assertEqual(effects_sorted[1].prot_pos, 115)
-        # self.assertEqual(effects_sorted[1].prot_length, 182)
-        self.assertEqual(effects_sorted[1].aa_change, None)
-
-        self.assertEqual(effects_sorted[2].gene, "NUDT4P1")
-        self.assertEqual(effects_sorted[2].transcript_id, "NR_002212_1")
-        self.assertEqual(effects_sorted[2].strand, "+")
-        self.assertEqual(effects_sorted[2].effect, "non-coding-intron")
-        # self.assertEqual(effects_sorted[2].prot_pos, None)
-        # self.assertEqual(effects_sorted[2].prot_length, None)
-        self.assertEqual(effects_sorted[2].aa_change, None)
-
-        self.assertEqual(effects_sorted[3].gene, "NUDT4P2")
-        self.assertEqual(effects_sorted[3].transcript_id, "NR_104005_1")
-        self.assertEqual(effects_sorted[3].strand, "+")
-        self.assertEqual(effects_sorted[3].effect, "non-coding-intron")
-        # self.assertEqual(effects_sorted[3].prot_pos, None)
-        # self.assertEqual(effects_sorted[3].prot_length, None)
-        self.assertEqual(effects_sorted[3].aa_change, None)
-
     def test_chr1_802610_867930_CNV_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                      loc="1:802610-867930",

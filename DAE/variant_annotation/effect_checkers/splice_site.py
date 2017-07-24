@@ -82,7 +82,7 @@ class SpliceSiteEffectChecker:
         return seq != alt
 
     def get_effect(self, request):
-        coding_regions = request.transcript_model.CDS_regions()
+        coding_regions = request.transcript_model.exons
         last_position = request.variant.position + \
             len(request.variant.reference)
         prev = None
