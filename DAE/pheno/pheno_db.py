@@ -229,12 +229,13 @@ class PhenoDB(PhenoConfig):
             ','.join(["'{}'".format(v) for v in variable_ids]))
 
     def _load_measures_meta_df(self, df):
-        variable_ids = df.variable_id.unique()
-        try:
-            with MetaVariableManager(
-                    dbfile=self.get_dbfile()) as vm:
-                meta_df = vm.load_df(where=self._where_variables(variable_ids))
 
+        variable_ids = df.variable_id.unique()
+        s = select([self.db.meta_variable])
+        s = s.where(self.db.meta_variable.c.variable_id.in_(variable_ids))
+
+        try:
+            meta_df = pd.read_sql(s, self.db.engine)
         except Exception:
             # print("can't load variables meta data...")
 
@@ -247,18 +248,10 @@ class PhenoDB(PhenoConfig):
                     'has_parents': np.zeros(size),
                     'default_filter': [None] * size,
                 })
+        meta_df = meta_df.set_index('variable_id')
         df = df.join(
-            meta_df.set_index('variable_id'), on='variable_id',
+            meta_df, on='variable_id',
             rsuffix='_meta')
-
-        # df.min_value = df.min_value_meta
-        # df.max_value = df.max_value_meta
-
-#         cindex = df.stats == 'continuous'
-#         assert np.all(np.abs(df[cindex].min_value -
-#                              meta_df[cindex].min_value) < 1.E-6)
-#         assert np.all(np.abs(df[cindex].max_value -
-#                              meta_df[cindex].max_value) < 1.E-6)
 
         return df
 
