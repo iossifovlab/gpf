@@ -9,12 +9,6 @@ class BaseAnnotationRequest(object):
         self.transcript_model = transcript_model
         self.logger = logging.getLogger(__name__)
 
-    def _in_start_codons(self, codon):
-        if codon in self.annotator.code.startCodons:
-            return True
-        else:
-            return False
-
     def get_coding_region_for_pos(self, pos):
         for i, reg in enumerate(self.transcript_model.exons):
             if reg.start <= pos <= reg.stop:
@@ -74,23 +68,6 @@ class BaseAnnotationRequest(object):
 
         return(None)
 
-
-class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
-    def __init__(self, annotator, variant, transcript_model):
-        BaseAnnotationRequest.__init__(self, annotator, variant,
-                                       transcript_model)
-
-    def get_frame(self, pos, index):
-        reg = self.transcript_model.exons[index]
-        if reg.stop < self.transcript_model.cds[0]:
-            self.logger.error("Cannot detect frame. \
-                              Start of coding regions is after current region")
-            return 0
-        start_pos = max(self.transcript_model.cds[0], reg.start)
-        frame = (pos - start_pos + reg.frame) % 3
-        self.logger.debug("frame %d for pos=%s", frame, pos)
-        return frame
-
     def find_start_codon(self):
         end_pos = self.variant.position + len(self.variant.reference)
 
@@ -125,9 +102,32 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
                               start_index, last_index,
                               end_pos, end_pos + remaining_length)
 
-            if self._in_start_codons(codon):
+            if self.in_start_codons(codon):
                 return offset, len(self.variant.alternate) - offset
         return None
+
+
+class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
+    def __init__(self, annotator, variant, transcript_model):
+        BaseAnnotationRequest.__init__(self, annotator, variant,
+                                       transcript_model)
+
+    def in_start_codons(self, codon):
+        if codon in self.annotator.code.startCodons:
+            return True
+        else:
+            return False
+
+    def get_frame(self, pos, index):
+        reg = self.transcript_model.exons[index]
+        if reg.stop < self.transcript_model.cds[0]:
+            self.logger.error("Cannot detect frame. \
+                              Start of coding regions is after current region")
+            return 0
+        start_pos = max(self.transcript_model.cds[0], reg.start)
+        frame = (pos - start_pos + reg.frame) % 3
+        self.logger.debug("frame %d for pos=%s", frame, pos)
+        return frame
 
     def get_codons(self):
         pos = max(self.transcript_model.cds[0], self.variant.position)
@@ -178,6 +178,13 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
     def __init__(self, annotator, variant, transcript_model):
         BaseAnnotationRequest.__init__(self, annotator, variant,
                                        transcript_model)
+
+    def in_start_codons(self, codon):
+        codon = self.complement(codon[::-1])
+        if codon in self.annotator.code.startCodons:
+            return True
+        else:
+            return False
 
     def get_frame(self, pos, index):
         reg = self.transcript_model.exons[index]
