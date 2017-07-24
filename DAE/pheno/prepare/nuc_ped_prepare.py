@@ -113,7 +113,7 @@ class Person(object):
         self.person_id = row['personId']
         self.family = row['familyId']
         self.gender = Gender(row['gender'])
-        self.proband_sibling = self._build_proband_sibling(row['status'])
+        self.proband_sibling = self._guess_proband_sibling(row['status'])
         self.status = Status(row['status'])
         self.sample_id = self._build_sample_id(row['sampleId'])
         self.role = None
@@ -145,7 +145,7 @@ class Person(object):
         return str(sample_id)
 
     @staticmethod
-    def _build_proband_sibling(status):
+    def _guess_proband_sibling(status):
         if status == 1:
             return Role.sib
         elif status == 2:
