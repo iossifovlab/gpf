@@ -41,22 +41,24 @@ class Family(object):
 
     def add_mother(self, mother):
         assert self.mother is None
+        if mother is None:
+            return
         assert mother.role is None or mother.role == Role.mom
         assert mother.family_id is None or mother.family_id == self.family_id
-        assert mother is not None
 
-        mother.role = Role.mom
         mother.family_id = self.family_id
+        mother.role = Role.mom
         self.mother = mother
 
     def add_father(self, father):
         assert self.father is None
+        if father is None:
+            return
         assert father.role is None or father.role == Role.dad
         assert father.family_id is None or father.family_id == self.family_id
-        assert father is not None
 
-        father.role = Role.dad
         father.family_id = self.family_id
+        father.role = Role.dad
         self.father = father
 
     def add_child(self, p):
@@ -219,17 +221,15 @@ class NucPedPreparePersons(PhenoConfig):
             progress(verbose)
             if p.father != '0' and p.mother != '0':
                 try:
-                    father = persons[(p.family, p.father)]
-                    mother = persons[(p.family, p.mother)]
-                    # print(p, p.family)
-                    assert father is not None
-                    assert mother is not None
+                    father = persons.get((p.family, p.father))
+                    mother = persons.get((p.family, p.mother))
 
-                    if composite_fids:
+                    if composite_fids and father and mother:
                         family_id = "{mom}-{dad}".format(
                             mom=mother.person_id, dad=father.person_id)
                     else:
                         family_id = p.family
+
                     if family_id in families:
                         family = families[family_id]
                     else:
@@ -253,17 +253,6 @@ class NucPedPreparePersons(PhenoConfig):
                     print("----------------------------------------------")
 
         return families
-
-    def _add_family(self, fam, individuals):
-        for order, p in enumerate(itertools.chain([fam.mother], [fam.father],
-                                                  fam.probands.values(),
-                                                  fam.siblings.values())):
-            if p.person_id in individuals:
-                # conflicting person:
-                other_person = individuals[p.person_id]
-                return other_person
-            p.role_order = order
-            individuals[p.person_id] = p
 
     def save(self):
         families = [
