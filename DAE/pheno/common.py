@@ -32,6 +32,13 @@ class Role(enum.Enum):
     paternal_grandfather = -22
 
 
+class MeasureType(enum.Enum):
+    continuous = 1
+    ordinal = 2
+    categorical = 3
+    other = 4
+
+
 class RoleMapping(object):
     SPARK = {
         'Mother': Role.mom,

@@ -8,9 +8,8 @@ from sqlalchemy import Table, Column, Integer, String, Boolean, Float, Enum, \
     ForeignKey
 from sqlalchemy.sql import select
 
-from pheno.models import ValueModel
-from pheno.common import Gender, Status, Role
-from sqlalchemy.sql.schema import UniqueConstraint
+from pheno.common import Gender, Status, Role, MeasureType
+from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
 
 
 class DbManager(object):
@@ -22,7 +21,7 @@ class DbManager(object):
 
     def build(self):
         self._build_person_tables()
-        self._build_variable_tables()
+        self._build_measure_tables()
         self._build_value_tables()
 
         self.metadata.create_all(self.engine)
@@ -47,57 +46,37 @@ class DbManager(object):
             UniqueConstraint('family_id', 'person_id', name='person_key'),
         )
 
-    def _build_variable_tables(self):
-        self.variable = Table(
-            'variable', self.metadata,
-            Column('variable_id', String(128),
-                   primary_key=True, nullable=False),
-            Column('table_name', String(64), nullable=False),
-            Column('variable_name', String(64), nullable=False),
-            Column('domain', String(64), ),
-            Column('domain_choice_label', String(255)),
-            Column('measurement_scale', String(16), ),
+    def _build_measure_tables(self):
+        self.measure = Table(
+            'measure', self.metadata,
+            Column('id', Integer(), primary_key=True),
+            Column('measure_id', String(128),
+                   nullable=False, index=True),
+            Column('instrument_name', String(64), nullable=False, index=True),
+            Column('measure_name', String(64), nullable=False, index=True),
             Column('description', String(255)),
-            Column('source', String(64)),
-            Column('domain_rank', Integer()),
-            Column('individuals', Integer()),
-            Column('stats', String(16)),
+            Column('measure_type', Enum(MeasureType), index=True),
             Column('min_value', Float()),
             Column('max_value', Float()),
-            Column('value_domain', String(255))
-        )
-        self.meta_variable = Table(
-            'meta_variable', self.metadata,
-            Column('variable_id', String(128),
-                   primary_key=True, nullable=False),
-            Column('min_value', Float()),
-            Column('max_value', Float(), ),
-            Column('has_probands', Boolean(), ),
-            Column('has_siblings', Boolean(),),
-            Column('has_parents', Boolean(), ),
+            Column('value_domain', String(255)),
+            Column('individuals', Integer()),
             Column('default_filter', String(128))
         )
 
     def _build_value_tables(self):
         self.value_continuous = Table(
             'value_continuous', self.metadata,
-            Column('person_id', String(16),
-                   primary_key=True, nullable=False),
-            Column('variable_id', String(128),
-                   primary_key=True, nullable=False),
-            Column('family_id', String(32),  nullable=False),
-            Column('person_role', String(8),  nullable=False),
-            Column('value', Float(),  nullable=False)
+            Column('person_id', ForeignKey('person.id')),
+            Column('measure_id', ForeignKey('measure.id')),
+            Column('value', Float(),  nullable=False),
+            PrimaryKeyConstraint('person_id', 'measure_id')
         )
         self.value_ordinal = Table(
             'value_ordinal', self.metadata,
-            Column('person_id', String(16),
-                   primary_key=True, nullable=False),
-            Column('variable_id', String(128),
-                   primary_key=True, nullable=False),
-            Column('family_id', String(32), nullable=False),
-            Column('person_role', String(8), nullable=False),
-            Column('value', Float(), nullable=False)
+            Column('person_id', ForeignKey('person.id')),
+            Column('measure_id', ForeignKey('measure.id')),
+            Column('value', Float(),  nullable=False),
+            PrimaryKeyConstraint('person_id', 'measure_id')
         )
         self.value_categorical = Table(
             'value_categorical', self.metadata,
@@ -121,13 +100,13 @@ class DbManager(object):
         )
 
     def get_value_table(self, value_type):
-        if value_type == ValueModel.CONTINUOUS:
+        if value_type == MeasureType.continuous:
             return self.value_continuous
-        elif value_type == ValueModel.ORDINAL:
+        elif value_type == MeasureType.ordinal:
             return self.value_ordinal
-        elif value_type == ValueModel.CATEGORICAL:
+        elif value_type == MeasureType.categorical:
             return self.value_categorical
-        elif value_type == ValueModel.UNKNOWN:
+        elif value_type == MeasureType.other:
             return self.value_other
         else:
             raise ValueError("unsupported value type: {}".format(value_type))
