@@ -1112,6 +1112,45 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
+    def test_chr1_26158517_ins_var(self):
+        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                     loc="1:26158517",
+                                                     var="ins(ACA)")
+        self.assertEqual(len(effects), 4)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "MTFR1L")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_001099625_1")
+        self.assertEqual(effects_sorted[0].strand, "+")
+        self.assertEqual(effects_sorted[0].effect, "3'UTR")
+        # self.assertEqual(effect.prot_pos, None)
+        # self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effects_sorted[0].aa_change, None)
+
+        self.assertEqual(effects_sorted[1].gene, "MTFR1L")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_001099626_1")
+        self.assertEqual(effects_sorted[1].strand, "+")
+        self.assertEqual(effects_sorted[1].effect, "3'UTR")
+        # self.assertEqual(effect.prot_pos, None)
+        # self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effects_sorted[1].aa_change, None)
+
+        self.assertEqual(effects_sorted[2].gene, "MTFR1L")
+        self.assertEqual(effects_sorted[2].transcript_id, "NM_001099627_1")
+        self.assertEqual(effects_sorted[2].strand, "+")
+        self.assertEqual(effects_sorted[2].effect, "3'UTR")
+        # self.assertEqual(effect.prot_pos, None)
+        # self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effects_sorted[2].aa_change, None)
+
+        self.assertEqual(effects_sorted[3].gene, "MTFR1L")
+        self.assertEqual(effects_sorted[3].transcript_id, "NM_019557_1")
+        self.assertEqual(effects_sorted[3].strand, "+")
+        self.assertEqual(effects_sorted[3].effect, "3'UTR")
+        # self.assertEqual(effect.prot_pos, None)
+        # self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effects_sorted[3].aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()

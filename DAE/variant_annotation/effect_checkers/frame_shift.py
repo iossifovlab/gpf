@@ -18,14 +18,35 @@ class FrameShiftEffectChecker:
         last_position = request.variant.position + \
             len(request.variant.reference)
 
-        if request.transcript_model.strand == "+":
-            logger.debug("start codon utr check %d<=%d-%d<=%d",
+        if request.transcript_model.strand != "+":
+            logger.debug("stop codon utr check %d<=%d-%d<=%d",
                          request.transcript_model.cds[0],
                          request.variant.position, last_position,
                          request.transcript_model.cds[0] + 2)
 
             if (request.variant.position <= request.transcript_model.cds[0] + 2
                     and request.transcript_model.cds[0] <= last_position):
+
+                try:
+                    ref_aa, alt_aa = request.get_amino_acids()
+                    ref_index = len(ref_aa) - ref_aa.index("End")
+                    alt_index = len(alt_aa) - alt_aa.index("End")
+
+                    if ref_index != alt_index:
+                        return Effect("frame-shift", request.transcript_model)
+                except ValueError:
+                    return
+                except IndexError:
+                    return
+
+        else:
+            logger.debug("stop codon utr check %d<=%d-%d<=%d",
+                         request.transcript_model.cds[1] - 2,
+                         request.variant.position, last_position,
+                         request.transcript_model.cds[1])
+
+            if (request.variant.position <= request.transcript_model.cds[1]
+                    and request.transcript_model.cds[1] - 2 <= last_position):
 
                 try:
                     ref_aa, alt_aa = request.get_amino_acids()
@@ -36,24 +57,7 @@ class FrameShiftEffectChecker:
                         return Effect("frame-shift", request.transcript_model)
                 except ValueError:
                     return
-
-        else:
-            logger.debug("start codon utr check %d<=%d-%d<=%d",
-                         request.transcript_model.cds[1] - 2,
-                         request.variant.position, last_position,
-                         request.transcript_model.cds[1])
-
-            if (request.variant.position <= request.transcript_model.cds[1]
-                    and request.transcript_model.cds[1] - 2 <= last_position):
-
-                try:
-                    ref_aa, alt_aa = request.get_amino_acids()
-                    ref_index = len(ref_aa) - ref_aa.index("End")
-                    alt_index = len(alt_aa) - alt_aa.index("End")
-
-                    if ref_index != alt_index:
-                        return Effect("frame-shift", request.transcript_model)
-                except ValueError:
+                except IndexError:
                     return
 
     def check_start_codon(self, request):
