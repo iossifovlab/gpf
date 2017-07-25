@@ -80,23 +80,17 @@ class DbManager(object):
         )
         self.value_categorical = Table(
             'value_categorical', self.metadata,
-            Column('person_id', String(16),
-                   primary_key=True, nullable=False),
-            Column('variable_id', String(128),
-                   primary_key=True, nullable=False),
-            Column('family_id', String(32),  nullable=False),
-            Column('person_role', String(8), nullable=False),
-            Column('value', String(127), nullable=False)
+            Column('person_id', ForeignKey('person.id')),
+            Column('measure_id', ForeignKey('measure.id')),
+            Column('value', String(127),  nullable=False),
+            PrimaryKeyConstraint('person_id', 'measure_id')
         )
         self.value_other = Table(
             'value_other', self.metadata,
-            Column('person_id', String(16),
-                   primary_key=True, nullable=False),
-            Column('variable_id', String(128),
-                   primary_key=True, nullable=False),
-            Column('family_id', String(32), nullable=False),
-            Column('person_role', String(8),  nullable=False),
-            Column('value', String(127), nullable=False)
+            Column('person_id', ForeignKey('person.id')),
+            Column('measure_id', ForeignKey('measure.id')),
+            Column('value', String(127),  nullable=False),
+            PrimaryKeyConstraint('person_id', 'measure_id')
         )
 
     def get_value_table(self, value_type):

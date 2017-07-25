@@ -13,6 +13,8 @@ from box import Box
 
 
 class PrepareBase(object):
+    PID_COLUMN = "$PID"
+    PERSON_ID = 'person_id'
 
     def __init__(self, config):
         assert config is not None
@@ -91,7 +93,7 @@ class PreparePersons(PrepareBase):
         for _index, row in ped_df.iterrows():
             p = {
                 'family_id': families[row['familyId']].id,
-                'person_id': row['personId'],
+                self.PERSON_ID: row['personId'],
                 'role': Role(row['role']),
                 'status': Status(row['status']),
                 'gender': Gender(row['gender']),
@@ -126,7 +128,7 @@ class PrepareVariables(PrepareBase):
         for filename in filenames:
             df = pd.read_csv(filename, sep=',')
             person_id = df.columns[0]
-            df.rename(columns={person_id: 'person_id'}, inplace=True)
+            df.rename(columns={person_id: self.PERSON_ID}, inplace=True)
             dataframes.append(df)
         assert len(dataframes) >= 1
 
@@ -135,6 +137,17 @@ class PrepareVariables(PrepareBase):
         else:
             df = None
         assert df is not None
+
+        persons = self.get_persons()
+        assert set(df.person_id.unique()) <= set(persons.keys())
+
+        pid = pd.Series(df.index)
+        for index, row in df.iterrows():
+            p = persons[row[self.PERSON_ID]]
+            assert p is not None
+            assert p.person_id == row[self.PERSON_ID]
+            pid[index] = p.id
+        df[self.PID_COLUMN] = pid
 
         instrument_name = instrument_names[0]
         df = self._adjust_instrument_measure_names(instrument_name, df)
@@ -152,28 +165,37 @@ class PrepareVariables(PrepareBase):
 
     def _save_measure(self, measure, mdf):
         to_save = measure.to_dict()
-        print(to_save)
-
         ins = self.db.measure.insert().values(**to_save)
         with self.db.engine.connect() as connection:
             result = connection.execute(ins)
-            print(result.inserted_primary_key)
-            print(result)
+            measure_id = result.inserted_primary_key[0]
+        values = []
+        for _index, row in mdf.iterrows():
+            v = {
+                self.PERSON_ID: row[self.PID_COLUMN],
+                'measure_id': measure_id,
+                'value': row['value']
+            }
+            values.append(v)
+        value_table = self.db.get_value_table(measure.measure_type)
+        ins = value_table.insert()
+        with self.db.engine.connect() as connection:
+            connection.execute(ins, values)
 
     def prepare_instrument(self, filenames):
         instrument_name, df = self.load_instrument(filenames)
         assert instrument_name is not None
         assert df is not None
-        assert 'person_id' in df.columns
-        persons = self.get_persons()
-
-        assert set(df.person_id.unique()) <= set(persons.keys())
+        assert self.PERSON_ID in df.columns
 
         for measure_name in df.columns[1:]:
-            if measure_name in self.config.skip.measures:
+            if measure_name in self.config.skip.measures or \
+                    measure_name == self.PID_COLUMN:
                 continue
-            mdf = df[['person_id', measure_name]].dropna()
-            measure = self._build_measure(instrument_name, mdf)
+            mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].dropna()
+            mdf.rename(columns={measure_name: 'value'}, inplace=True)
+
+            measure = self._build_measure(instrument_name, measure_name, mdf)
             self._save_measure(measure, mdf)
         return df
 
@@ -242,12 +264,10 @@ class PrepareVariables(PrepareBase):
         measure = Box(measure)
         return measure
 
-    def _build_measure(self, instrument_name, df):
-        df = df.dropna()
-        measure_name = df.columns[1]
+    def _build_measure(self, instrument_name, measure_name, df):
         measure = self._default_measure(instrument_name, measure_name)
 
-        values = df.iloc[:, 1]
+        values = df['value']
         unique_values = values.unique()
         rank = len(unique_values)
         individuals = len(df)
