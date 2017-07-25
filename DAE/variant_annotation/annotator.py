@@ -11,6 +11,7 @@ from .effect_checkers.intron import IntronicEffectChecker
 from effect import Effect
 from .variant import Variant
 from .annotation_request import AnnotationRequestFactory
+import logging
 
 
 class VariantAnnotator:
@@ -71,11 +72,19 @@ class VariantAnnotator:
 
     def annotate(self, variant):
         effects = []
+        logger = logging.getLogger(__name__)
+
         for key in self.gene_models._utrModels[variant.chromosome]:
             if (variant.position <= key[1] + self.promoter_len
                     and variant.ref_position_last >= key[0] - self.promoter_len):
                 for tm in self.gene_models._utrModels[variant.chromosome][key]:
+                    logger.debug("========: %s-%s :====================",
+                                 tm.gene, tm.trID)
                     effect = self.get_effect_for_transcript(variant, tm)
+
+                    logger.debug("")
+                    logger.debug("Result: %s", effect)
+                    logger.debug("")
                     if effect is not None:
                         effects.append(effect)
         if len(effects) == 0:
@@ -93,8 +102,14 @@ class VariantAnnotator:
                          var=None, ref=None, alt=None, length=None, seq=None,
                          typ=None, promoter_len=0):
         annotator = VariantAnnotator(refG, gm, promoter_len=promoter_len)
-        return annotator.do_annotate_variant(chr, position, loc, var, ref,
-                                             alt, length, seq, typ)
+        effects = annotator.do_annotate_variant(chr, position, loc, var, ref,
+                                                alt, length, seq, typ)
+        desc = annotator.effect_description(effects)
+
+        logger = logging.getLogger(__name__)
+        logger.debug("effect: %s", desc)
+
+        return effects
 
     @classmethod
     def effect_description(cls, E):
