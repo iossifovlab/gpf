@@ -8,7 +8,14 @@ class UTREffectChecker:
         last_position = request.variant.position + \
             len(request.variant.reference)
 
+        if len(request.variant.reference) == len(request.variant.alternate):
+            return
+
         if request.transcript_model.strand != "+":
+            if (request.transcript_model.exons[0].start ==
+                    request.transcript_model.cds[0]):
+                return
+
             logger.debug("stop codon utr check %d<=%d-%d<=%d",
                          request.transcript_model.cds[0],
                          request.variant.position, last_position,
@@ -19,10 +26,10 @@ class UTREffectChecker:
 
                 try:
                     ref_aa, alt_aa = request.get_amino_acids()
-                    ref_index = ref_aa.index("End")
-                    alt_index = alt_aa.index("End")
+                    ref_index = len(ref_aa) - ref_aa.index("End")
+                    alt_index = len(alt_aa) - alt_aa.index("End")
 
-                    if ref_index != alt_index:
+                    if ref_index == alt_index:
                         return Effect("3'UTR", request.transcript_model)
                 except ValueError:
                     return
@@ -30,6 +37,10 @@ class UTREffectChecker:
                     return
 
         else:
+            if (request.transcript_model.exons[1].stop ==
+                    request.transcript_model.cds[1]):
+                return
+
             logger.debug("stop codon utr check %d<=%d-%d<=%d",
                          request.transcript_model.cds[1] - 2,
                          request.variant.position, last_position,
@@ -40,10 +51,10 @@ class UTREffectChecker:
 
                 try:
                     ref_aa, alt_aa = request.get_amino_acids()
-                    ref_index = len(ref_aa) - ref_aa.index("End")
-                    alt_index = len(alt_aa) - alt_aa.index("End")
+                    ref_index = ref_aa.index("End")
+                    alt_index = alt_aa.index("End")
 
-                    if ref_index != alt_index:
+                    if ref_index == alt_index:
                         return Effect("3'UTR", request.transcript_model)
                 except ValueError:
                     return

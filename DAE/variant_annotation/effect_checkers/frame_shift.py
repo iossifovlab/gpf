@@ -33,7 +33,8 @@ class FrameShiftEffectChecker:
                     alt_index = len(alt_aa) - alt_aa.index("End")
 
                     if ref_index != alt_index:
-                        return Effect("frame-shift", request.transcript_model)
+                        return Effect("no-frame-shift",
+                                      request.transcript_model)
                 except ValueError:
                     return
                 except IndexError:
@@ -54,7 +55,8 @@ class FrameShiftEffectChecker:
                     alt_index = alt_aa.index("End")
 
                     if ref_index != alt_index:
-                        return Effect("frame-shift", request.transcript_model)
+                        return Effect("no-frame-shift",
+                                      request.transcript_model)
                 except ValueError:
                     return
                 except IndexError:
@@ -141,18 +143,23 @@ class FrameShiftEffectChecker:
 
             if (request.transcript_model.cds[0] == j.start):
                 start = j.start + 3
+                modified_start_or_stop = True
             else:
                 start = j.start
+                modified_start_or_stop = False
 
             if (request.transcript_model.cds[1] == j.stop):
                 stop = j.stop - 3
+                modified_start_or_stop = True
             else:
                 stop = j.stop
+                modified_start_or_stop = False
 
             if (start <= request.variant.position <= stop
                 or
                 (request.variant.position == request.variant.ref_position_last
-                    and start - 1 <= request.variant.position <= stop + 1)):
+                 and start - 1 <= request.variant.position <= stop + 1
+                    and not modified_start_or_stop)):
 
                 logger.debug("inside frameshift %d<=%d-%d<=%d cds:%d-%d",
                              start,
