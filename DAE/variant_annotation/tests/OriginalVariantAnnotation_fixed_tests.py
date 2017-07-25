@@ -1086,6 +1086,19 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, None)
         self.assertEqual(effects_sorted[1].aa_change, None)
 
+    def test_chr6_161557574_ins_var(self):
+        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+                                                      loc="6:161557574",
+                                                      var="ins(AGTC)")
+
+        self.assertEqual(effect.gene, "AGPAT4")
+        self.assertEqual(effect.transcript_id, "NM_020133_1")
+        self.assertEqual(effect.strand, "-")
+        self.assertEqual(effect.effect, "frame-shift")
+        # self.assertEqual(effect.prot_pos, None)
+        # self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.aa_change, None)
+
 
 if __name__ == "__main__":
     unittest.main()

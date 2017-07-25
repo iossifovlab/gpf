@@ -13,6 +13,49 @@ class FrameShiftEffectChecker:
                 return True
         return False
 
+    def check_stop_codon(self, request):
+        logger = logging.getLogger(__name__)
+        last_position = request.variant.position + \
+            len(request.variant.reference)
+
+        if request.transcript_model.strand == "+":
+            logger.debug("start codon utr check %d<=%d-%d<=%d",
+                         request.transcript_model.cds[0],
+                         request.variant.position, last_position,
+                         request.transcript_model.cds[0] + 2)
+
+            if (request.variant.position <= request.transcript_model.cds[0] + 2
+                    and request.transcript_model.cds[0] <= last_position):
+
+                try:
+                    ref_aa, alt_aa = request.get_amino_acids()
+                    ref_index = ref_aa.index("End")
+                    alt_index = alt_aa.index("End")
+
+                    if ref_index != alt_index:
+                        return Effect("frame-shift", request.transcript_model)
+                except ValueError:
+                    return
+
+        else:
+            logger.debug("start codon utr check %d<=%d-%d<=%d",
+                         request.transcript_model.cds[1] - 2,
+                         request.variant.position, last_position,
+                         request.transcript_model.cds[1])
+
+            if (request.variant.position <= request.transcript_model.cds[1]
+                    and request.transcript_model.cds[1] - 2 <= last_position):
+
+                try:
+                    ref_aa, alt_aa = request.get_amino_acids()
+                    ref_index = len(ref_aa) - ref_aa.index("End")
+                    alt_index = len(alt_aa) - alt_aa.index("End")
+
+                    if ref_index != alt_index:
+                        return Effect("frame-shift", request.transcript_model)
+                except ValueError:
+                    return
+
     def check_start_codon(self, request):
         logger = logging.getLogger(__name__)
         last_position = request.variant.position + \
@@ -79,6 +122,10 @@ class FrameShiftEffectChecker:
         if start_effect is not None:
             return start_effect
 
+        stop_effect = self.check_stop_codon(request)
+        if stop_effect is not None:
+            return stop_effect
+
         for j in coding_regions:
             logger.debug("frameshift check %d<=%d-%d<=%d cds:%d-%d",
                          j.start,
@@ -88,14 +135,12 @@ class FrameShiftEffectChecker:
                          request.transcript_model.cds[0],
                          request.transcript_model.cds[1])
 
-            if (request.transcript_model.strand == "+" and
-                    request.transcript_model.cds[0] == j.start):
+            if (request.transcript_model.cds[0] == j.start):
                 start = j.start + 3
             else:
                 start = j.start
 
-            if (request.transcript_model.strand == "-" and
-                    request.transcript_model.cds[1] == j.stop):
+            if (request.transcript_model.cds[1] == j.stop):
                 stop = j.stop - 3
             else:
                 stop = j.stop
