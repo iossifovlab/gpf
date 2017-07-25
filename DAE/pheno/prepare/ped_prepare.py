@@ -241,26 +241,31 @@ class PrepareVariables(PrepareBase):
             return False
         return True
 
-    DOMAIN_MAX_DISPLAY = 5
-
-    def _value_domain_list(self, unique_values):
+    @staticmethod
+    def _value_domain_list(unique_values):
+        DOMAIN_MAX_DISPLAY = 5
         unique_values = sorted(unique_values)
         unique_values = [str(v) for v in unique_values]
-        if len(unique_values) >= self.DOMAIN_MAX_DISPLAY:
-            unique_values = unique_values[:self.DOMAIN_MAX_DISPLAY + 1]
-            unique_values[self.DOMAIN_MAX_DISPLAY] = '...'
+        if len(unique_values) >= DOMAIN_MAX_DISPLAY:
+            unique_values = unique_values[:DOMAIN_MAX_DISPLAY + 1]
+            unique_values[DOMAIN_MAX_DISPLAY] = '...'
         return "{}".format(','.join([v for v in unique_values]))
 
+    @staticmethod
+    def _value_domain_range(unique_values):
+        min_value = min(unique_values)
+        max_value = max(unique_values)
+        return "[{},{}]".format(min_value, max_value)
+
     def _default_measure(self, instrument_name, measure_name):
-        measure = {'measure_type': MeasureType.other,
-                   'measure_name': measure_name,
-                   'instrument_name': instrument_name,
-                   'measure_id': '{}.{}'.format(instrument_name, measure_name),
-                   'min_value': None,
-                   'max_value': None,
-                   'value_domain': None,
-                   'individuals': None,
-                   'default_filter': None}
+        measure = {
+            'measure_type': MeasureType.other,
+            'measure_name': measure_name,
+            'instrument_name': instrument_name,
+            'measure_id': '{}.{}'.format(instrument_name, measure_name),
+            'individuals': None,
+            'default_filter': None
+        }
         measure = Box(measure)
         return measure
 
@@ -283,30 +288,18 @@ class PrepareVariables(PrepareBase):
         if values_type in set([str, bool, np.bool, np.dtype('bool')]):
             if self.check_categorical_rank(rank, individuals):
                 measure.measure_type = MeasureType.categorical
-                measure.value_domain = self._value_domain_list(unique_values)
                 return measure
         elif values_type in set([int, float, np.float, np.int,
                                  np.dtype('int64'), np.dtype('float64')]):
-            measure.min_value = values.min()
-            measure.max_value = values.max()
             if self.check_continuous_rank(rank, individuals):
                 measure.measure_type = MeasureType.continuous
-                measure.value_domain = '[{},{}]'.format(
-                    measure.min_value,
-                    measure.max_value
-                )
                 return measure
             if self.check_ordinal_rank(rank, individuals):
                 measure.measure_type = MeasureType.continuous
-                unique_values = sorted(unique_values)
-                measure.value_domain = "{}".format(
-                    ', '.join([str(v) for v in unique_values]))
                 return measure
             if self.check_categorical_rank(rank, individuals):
                 measure.measure_type = MeasureType.categorical
-                measure.value_domain = self._value_domain_list(unique_values)
                 return measure
         else:
             measure.measure_type = MeasureType.other
-            measure.value_domain = self._value_domain_list(unique_values)
             return measure

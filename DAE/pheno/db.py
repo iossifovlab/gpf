@@ -4,7 +4,7 @@ Created on Jul 24, 2017
 @author: lubo
 '''
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy import Table, Column, Integer, String, Boolean, Float, Enum, \
+from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
     ForeignKey
 from sqlalchemy.sql import select
 
@@ -56,11 +56,8 @@ class DbManager(object):
             Column('measure_name', String(64), nullable=False, index=True),
             Column('description', String(255)),
             Column('measure_type', Enum(MeasureType), index=True),
-            Column('min_value', Float()),
-            Column('max_value', Float()),
-            Column('value_domain', String(255)),
             Column('individuals', Integer()),
-            Column('default_filter', String(128))
+            Column('default_filter', String(255))
         )
 
     def _build_value_tables(self):
