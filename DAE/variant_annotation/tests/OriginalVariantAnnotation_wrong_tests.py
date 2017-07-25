@@ -154,18 +154,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
-    def test_first_codon_ins_integenic_var(self):
-        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                      loc="1:3407092",
-                                                      var="ins(A)")
-        self.assertEqual(effect.gene, None)
-        self.assertEqual(effect.transcript_id, None)
-        self.assertEqual(effect.strand, None)
-        self.assertEqual(effect.effect, "intergenic")
-        # self.assertEqual(effect.prot_pos, None)
-        # self.assertEqual(effect.prot_length, None)
-        self.assertEqual(effect.aa_change, None)
-
     # Why only one effect???
     def test_chr7_149461804_del_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,

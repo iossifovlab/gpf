@@ -56,7 +56,7 @@ class UTREffectChecker:
                              old_start_codon_offset, diff)
 
                 if diff > 0:
-                    return Effect("3'UTR", request.transcript_model)
+                    return Effect("5'UTR", request.transcript_model)
 
     def get_effect(self, request):
         start_effect = self.check_start_codon(request)
