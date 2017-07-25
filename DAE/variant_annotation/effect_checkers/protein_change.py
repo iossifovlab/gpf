@@ -4,7 +4,7 @@ import logging
 
 class ProteinChangeEffectChecker:
     def mutation_type(self, aaref, aaalt):
-        if "End" in aaalt:
+        if "End" in aaalt and "End" not in aaref:
             return "nonsense"
 
         if len(aaref) != len(aaalt):
