@@ -40,8 +40,10 @@ class DbManager(object):
             Column('family_id', ForeignKey('family.id')),
             Column('person_id', String(16), nullable=False, index=True),
             Column('role', Enum(Role), nullable=False),
-            Column('status', Enum(Status)),
-            Column('gender', Enum(Gender)),
+            Column('status', Enum(Status),
+                   nullable=False, default=Status.unaffected),
+            Column('gender', Enum(Gender), nullable=False),
+            Column('sample_id', String(16), nullable=True),
             UniqueConstraint('family_id', 'person_id', name='person_key'),
         )
 
@@ -134,6 +136,7 @@ class DbManager(object):
         s = select([self.family])
         with self.engine.connect() as connection:
             families = connection.execute(s).fetchall()
+        families = {f.family_id: f for f in families}
         return families
 
     def get_persons(self):
@@ -148,4 +151,5 @@ class DbManager(object):
         s = s.select_from(self.person.join(self.family))
         with self.engine.connect() as connection:
             persons = connection.execute(s).fetchall()
+        persons = {p.person_id: p for p in persons}
         return persons

@@ -18,10 +18,35 @@ class Status(enum.Enum):
 
 
 class Role(enum.Enum):
-    mom = 1
-    dad = 2
-    prb = 3
-    sib = 4
+    mom = 10
+    dad = 22
+    prb = 30
+    sib = 40
+    maternal_uncle = 11
+    maternal_aunt = 12
+    maternal_half_sibling = 41
+    paternal_half_sibling = 42
+    maternal_grandmother = -11
+    maternal_grandfather = -12
+    paternal_grandmother = -21
+    paternal_grandfather = -22
+
+
+class RoleMapping(object):
+    SPARK = {
+        'Mother': Role.mom,
+        'Father': Role.dad,
+        'Proband': Role.prb,
+        'Sibling': Role.sib,
+        'Maternal_Uncle': Role.maternal_uncle,
+        'Paternal_Grandfather': Role.paternal_grandfather,
+        'Paternal_Grandmother': Role.paternal_grandmother,
+        'Maternal_Aunt': Role.maternal_aunt,
+        'Maternal_Grandfather': Role.maternal_grandfather,
+        'Maternal_Grandmother': Role.maternal_grandmother,
+        'Paternal_Half_Sibling': Role.paternal_half_sibling,
+        'Maternal_Half_Sibling': Role.maternal_half_sibling,
+    }
 
 
 def config_pheno_db(output):
