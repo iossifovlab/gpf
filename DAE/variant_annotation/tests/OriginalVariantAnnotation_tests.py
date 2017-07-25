@@ -2102,29 +2102,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, 226)
         self.assertEqual(effect.aa_change, None)
 
-    def test_chr1_47775990_del_var(self):
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="1:47775990",
-                                                     var="del(3)")
-        self.assertEqual(len(effects), 2)
-        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
-
-        self.assertEqual(effects_sorted[0].gene, "STIL")
-        self.assertEqual(effects_sorted[0].transcript_id, "NM_001048166_1")
-        self.assertEqual(effects_sorted[0].strand, "-")
-        self.assertEqual(effects_sorted[0].effect, "no-frame-shift")
-        # self.assertEqual(effects_sorted[0].prot_pos, 1)
-        # self.assertEqual(effects_sorted[0].prot_length, 1288)
-        self.assertEqual(effects_sorted[0].aa_change, None)
-
-        self.assertEqual(effects_sorted[1].gene, "STIL")
-        self.assertEqual(effects_sorted[1].transcript_id, "NM_003035_1")
-        self.assertEqual(effects_sorted[1].strand, "-")
-        self.assertEqual(effects_sorted[1].effect, "no-frame-shift")
-        # self.assertEqual(effects_sorted[1].prot_pos, 1)
-        # self.assertEqual(effects_sorted[1].prot_length, 1287)
-        self.assertEqual(effects_sorted[1].aa_change, None)
-
     def test_chr2_218747134_ins_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       loc="2:218747134",
