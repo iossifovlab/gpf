@@ -4,17 +4,15 @@ import logging
 
 class ProteinChangeEffectChecker:
     def mutation_type(self, aaref, aaalt):
+        if "End" in aaalt:
+            return "nonsense"
+
         if len(aaref) != len(aaalt):
-            if "End" in aaalt:
-                return "nonsense"
-            else:
-                return "missense"
+            return "missense"
 
         for ref, alt in zip(aaref, aaalt):
             if ref == "?" or alt == "?":
                 return "coding_unknown"
-            if ref != alt and alt == "End":
-                return "nonsense"
             if ref != alt:
                 return "missense"
         return "synonymous"

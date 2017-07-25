@@ -47,6 +47,29 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effects_sorted[1].prot_length, None)
         self.assertEqual(effects_sorted[1].aa_change, None)
 
+    def test_chr2_32853362_ins_var(self):
+        effects = VariantAnnotator.annotate_variant(self.gmDB, self.GA,
+                                                    loc="6:157527729",
+                                                    var="complex(CTGG->ATAG)")
+        self.assertEqual(len(effects), 2)
+        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+
+        self.assertEqual(effects_sorted[0].gene, "ARID1B")
+        self.assertEqual(effects_sorted[0].transcript_id, "NM_017519_1")
+        self.assertEqual(effects_sorted[0].strand, "+")
+        self.assertEqual(effects_sorted[0].effect, "nonsense")
+        # self.assertEqual(effects_sorted[0].prot_pos, None)
+        # self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].aa_change, "His,Trp->Gln,End")
+
+        self.assertEqual(effects_sorted[1].gene, "ARID1B")
+        self.assertEqual(effects_sorted[1].transcript_id, "NM_020732_1")
+        self.assertEqual(effects_sorted[1].strand, "+")
+        self.assertEqual(effects_sorted[1].effect, "nonsense")
+        # self.assertEqual(effects_sorted[1].prot_pos, 1)
+        # self.assertEqual(effects_sorted[1].prot_length, 843)
+        self.assertEqual(effects_sorted[1].aa_change, "His,Trp->Gln,End")
+
 
 if __name__ == "__main__":
     unittest.main()
