@@ -12,19 +12,6 @@ def genomes_DB(request):
 
 @pytest.mark.usefixtures("genomes_DB")
 class VariantAnnotationTest(unittest.TestCase):
-    def test_chr11_62931298_ins_var(self):
-        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                      loc="11:62931298",
-                                                      var="ins(C)")
-
-        self.assertEqual(effect.gene, "SLC22A25")
-        self.assertEqual(effect.transcript_id, "NM_199352_1")
-        self.assertEqual(effect.strand, "-")
-        self.assertEqual(effect.effect, "3'UTR")
-        # self.assertEqual(effect.prot_pos, None)
-        # self.assertEqual(effect.prot_length, None)
-        self.assertEqual(effect.aa_change, None)
-
     def test_chr1_120387132_del_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
                                                       loc="1:120387132",
@@ -36,19 +23,6 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.effect, "noStart")
         # self.assertEqual(effect.prot_pos, 1)
         # self.assertEqual(effect.prot_length, 422)
-        self.assertEqual(effect.aa_change, None)
-
-    def test_chr1_20440608_ins_var(self):
-        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                      loc="1:20440608",
-                                                      var="ins(T)")
-
-        self.assertEqual(effect.gene, "PLA2G2D")
-        self.assertEqual(effect.transcript_id, "NM_001271814_1")
-        self.assertEqual(effect.strand, "-")
-        self.assertEqual(effect.effect, "3'UTR")
-        # self.assertEqual(effect.prot_pos, None)
-        # self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr2_237172988_ins_var(self):
@@ -101,36 +75,36 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effects_sorted[1].prot_length, 412)
         self.assertEqual(effects_sorted[1].aa_change, None)
 
-    def test_chr1_802610_867930_CNV_var(self):
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="1:802610-867930",
-                                                     var="CNV+")
-        self.assertEqual(len(effects), 3)
-        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
-
-        self.assertEqual(effects_sorted[0].gene, "SAMD11")
-        self.assertEqual(effects_sorted[0].transcript_id, "NM_152486_1")
-        self.assertEqual(effects_sorted[0].strand, "+")
-        self.assertEqual(effects_sorted[0].effect, "unknown")
-        # self.assertEqual(effects_sorted[0].prot_pos, None)
-        # self.assertEqual(effects_sorted[0].prot_length, None)
-        self.assertEqual(effects_sorted[0].aa_change, None)
-
-        self.assertEqual(effects_sorted[1].gene, "LOC100130417")
-        self.assertEqual(effects_sorted[1].transcript_id, "NR_026874_1")
-        self.assertEqual(effects_sorted[1].strand, "-")
-        self.assertEqual(effects_sorted[1].effect, "unknown")
-        # self.assertEqual(effects_sorted[1].prot_pos, None)
-        # self.assertEqual(effects_sorted[1].prot_length, None)
-        self.assertEqual(effects_sorted[1].aa_change, None)
-
-        self.assertEqual(effects_sorted[2].gene, "FAM41C")
-        self.assertEqual(effects_sorted[2].transcript_id, "NR_027055_1")
-        self.assertEqual(effects_sorted[2].strand, "-")
-        self.assertEqual(effects_sorted[2].effect, "unknown")
-        # self.assertEqual(effects_sorted[2].prot_pos, None)
-        # self.assertEqual(effects_sorted[2].prot_length, None)
-        self.assertEqual(effects_sorted[2].aa_change, None)
+    # def test_chr1_802610_867930_CNV_var(self):
+    #     effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+    #                                                  loc="1:802610-867930",
+    #                                                  var="CNV+")
+    #     self.assertEqual(len(effects), 3)
+    #     effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    #
+    #     self.assertEqual(effects_sorted[0].gene, "SAMD11")
+    #     self.assertEqual(effects_sorted[0].transcript_id, "NM_152486_1")
+    #     self.assertEqual(effects_sorted[0].strand, "+")
+    #     self.assertEqual(effects_sorted[0].effect, "unknown")
+    #     # self.assertEqual(effects_sorted[0].prot_pos, None)
+    #     # self.assertEqual(effects_sorted[0].prot_length, None)
+    #     self.assertEqual(effects_sorted[0].aa_change, None)
+    #
+    #     self.assertEqual(effects_sorted[1].gene, "LOC100130417")
+    #     self.assertEqual(effects_sorted[1].transcript_id, "NR_026874_1")
+    #     self.assertEqual(effects_sorted[1].strand, "-")
+    #     self.assertEqual(effects_sorted[1].effect, "unknown")
+    #     # self.assertEqual(effects_sorted[1].prot_pos, None)
+    #     # self.assertEqual(effects_sorted[1].prot_length, None)
+    #     self.assertEqual(effects_sorted[1].aa_change, None)
+    #
+    #     self.assertEqual(effects_sorted[2].gene, "FAM41C")
+    #     self.assertEqual(effects_sorted[2].transcript_id, "NR_027055_1")
+    #     self.assertEqual(effects_sorted[2].strand, "-")
+    #     self.assertEqual(effects_sorted[2].effect, "unknown")
+    #     # self.assertEqual(effects_sorted[2].prot_pos, None)
+    #     # self.assertEqual(effects_sorted[2].prot_length, None)
+    #     self.assertEqual(effects_sorted[2].aa_change, None)
 
 
 if __name__ == "__main__":

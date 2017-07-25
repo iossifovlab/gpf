@@ -26,8 +26,8 @@ class UTREffectChecker:
 
                 try:
                     ref_aa, alt_aa = request.get_amino_acids()
-                    ref_index = len(ref_aa) - ref_aa.index("End")
-                    alt_index = len(alt_aa) - alt_aa.index("End")
+                    ref_index = ref_aa.index("End")
+                    alt_index = alt_aa.index("End")
 
                     if ref_index == alt_index:
                         return Effect("3'UTR", request.transcript_model)
@@ -37,7 +37,7 @@ class UTREffectChecker:
                     return
 
         else:
-            if (request.transcript_model.exons[1].stop ==
+            if (request.transcript_model.exons[-1].stop ==
                     request.transcript_model.cds[1]):
                 return
 
@@ -126,11 +126,13 @@ class UTREffectChecker:
             return stop_effect
 
         logger = logging.getLogger(__name__)
-        logger.debug("utr check: %d<%d or %d>%d",
+        logger.debug("utr check: %d<%d or %d>%d exons:%d-%d",
                      request.variant.position,
                      request.transcript_model.cds[0],
                      request.variant.position,
-                     request.transcript_model.cds[1])
+                     request.transcript_model.cds[1],
+                     request.transcript_model.exons[0].start,
+                     request.transcript_model.exons[-1].stop)
 
         if request.variant.position < request.transcript_model.cds[0]:
             if request.transcript_model._TranscriptModel__check_if_exon(
