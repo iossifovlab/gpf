@@ -411,8 +411,7 @@ class PhenoDB(PhenoConfig):
         if self.instruments is None:
             self._load_instruments()
 
-    def get_persons_df(self, roles=None, person_ids=None, family_ids=None,
-                       present=1):
+    def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
         """
         Returns a individuals information form phenotype database as a data
         frame.
@@ -433,21 +432,32 @@ class PhenoDB(PhenoConfig):
         Columns returned are: `person_id`, `family_id`, `role`, `gender`.
         """
 
-        s = select([self.db.person])
-        s = s.where(self.db.person.c.ssc_present == present)
+        columns = [
+            self.db.family.c.family_id,
+            self.db.person.c.person_id,
+            self.db.person.c.role,
+            self.db.person.c.status,
+            self.db.person.c.gender,
+        ]
+        s = select(columns)
+        s = s.select_from(
+            self.db.family.join(self.db.person)
+        )
         if roles:
             s = s.where(or_(
                 *[self.db.person.c.role == r for r in roles]
             ))
-        df = pd.read_sql(s, self.db.engine)
-        df.sort_values(['family_id', 'role_order'], inplace=True)
-
         if person_ids:
-            df = df[df.person_id.isin(person_ids)]
+            s = s.where(
+                self.db.person.c.person_id.in_(person_ids)
+            )
         if family_ids:
-            df = df[df.family_id.isin(family_ids)]
+            s = s.where(
+                self.db.family.c.family_id.in_(family_ids)
+            )
+        df = pd.read_sql(s, self.db.engine)
 
-        return df[['person_id', 'family_id', 'role', 'gender']]
+        return df[['person_id', 'family_id', 'role', 'gender', 'status']]
 
     def get_persons(self, roles=None, person_ids=None, family_ids=None):
         """Returns individuals data from phenotype database.
@@ -469,20 +479,16 @@ class PhenoDB(PhenoConfig):
         df = self.get_persons_df(roles=roles, person_ids=person_ids,
                                  family_ids=family_ids)
 
-        for _index, row in df.iterrows():
+        for row in df.to_dict('records'):
             person_id = row['person_id']
             family_id = row['family_id']
 
-            atts = {
-                'family_id': family_id,
-                'person_id': person_id,
-                'role': row['role'],
-                'gender': row['gender'],
-            }
-            p = Person(atts)
+            p = Person(row)
             p.personId = person_id
-            p.role = atts['role']
-            p.gender = atts['gender']
+            p.familyId = family_id
+            p.role = row['role']
+            p.gender = row['gender']
+            p.status = row['status']
 
             persons[person_id] = p
         return persons
