@@ -123,6 +123,24 @@ class BaseAnnotationRequest(object):
                     return offset, len(self.variant.alternate) - offset
         return None
 
+    def is_start_codon_affected(self):
+        return (self.variant.position <= self.transcript_model.cds[0] + 2
+                and self.transcript_model.cds[0] <=
+                self.variant.ref_position_last)
+
+    def is_stop_codon_affected(self):
+        return (self.variant.position <= self.transcript_model.cds[1]
+                and self.transcript_model.cds[1] - 2 <=
+                self.variant.ref_position_last)
+
+    def has_3_UTR_region(self):
+        return (self.transcript_model.exons[-1].stop !=
+                self.transcript_model.cds[1])
+
+    def has_5_UTR_region(self):
+        return (self.transcript_model.exons[0].start !=
+                self.transcript_model.cds[0])
+
 
 class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
     def __init__(self, annotator, variant, transcript_model):
@@ -301,6 +319,18 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
                            for i in range(len(alt_codons), 0, -3)]
 
         return ref_amino_acids, alt_amino_acids
+
+    def is_start_codon_affected(self):
+        return BaseAnnotationRequest.is_stop_codon_affected(self)
+
+    def is_stop_codon_affected(self):
+        return BaseAnnotationRequest.is_start_codon_affected(self)
+
+    def has_3_UTR_region(self):
+        return BaseAnnotationRequest.has_5_UTR_region(self)
+
+    def has_5_UTR_region(self):
+        return BaseAnnotationRequest.has_3_UTR_region(self)
 
 
 class AnnotationRequestFactory():

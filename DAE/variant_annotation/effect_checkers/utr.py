@@ -4,62 +4,24 @@ import logging
 
 class UTREffectChecker:
     def check_stop_codon(self, request):
-        logger = logging.getLogger(__name__)
-        last_position = request.variant.position + \
-            len(request.variant.reference)
-
-        if len(request.variant.reference) == len(request.variant.alternate):
+        if not request.has_3_UTR_region():
             return
 
-        if request.transcript_model.strand != "+":
-            if (request.transcript_model.exons[0].start ==
-                    request.transcript_model.cds[0]):
-                return
+        try:
+            ref_aa, alt_aa = request.get_amino_acids()
+            if "End" not in ref_aa:
+                return None
 
-            logger.debug("stop codon utr check %d<=%d-%d<=%d",
-                         request.transcript_model.cds[0],
-                         request.variant.position, last_position,
-                         request.transcript_model.cds[0] + 2)
+            ref_index = ref_aa.index("End")
+            alt_index = alt_aa.index("End")
 
-            if (request.variant.position <= request.transcript_model.cds[0] + 2
-                    and request.transcript_model.cds[0] <= last_position):
-
-                try:
-                    ref_aa, alt_aa = request.get_amino_acids()
-                    ref_index = ref_aa.index("End")
-                    alt_index = alt_aa.index("End")
-
-                    if ref_index == alt_index:
-                        return Effect("3'UTR", request.transcript_model)
-                except ValueError:
-                    return
-                except IndexError:
-                    return
-
-        else:
-            if (request.transcript_model.exons[-1].stop ==
-                    request.transcript_model.cds[1]):
-                return
-
-            logger.debug("stop codon utr check %d<=%d-%d<=%d",
-                         request.transcript_model.cds[1] - 2,
-                         request.variant.position, last_position,
-                         request.transcript_model.cds[1])
-
-            if (request.variant.position <= request.transcript_model.cds[1]
-                    and request.transcript_model.cds[1] - 2 <= last_position):
-
-                try:
-                    ref_aa, alt_aa = request.get_amino_acids()
-                    ref_index = ref_aa.index("End")
-                    alt_index = alt_aa.index("End")
-
-                    if ref_index == alt_index:
-                        return Effect("3'UTR", request.transcript_model)
-                except ValueError:
-                    return
-                except IndexError:
-                    return
+            if ref_index == alt_index:
+                return Effect("3'UTR", request.transcript_model)
+        except ValueError:
+            pass
+        except IndexError:
+            pass
+        return None
 
     def check_start_codon(self, request):
         logger = logging.getLogger(__name__)
@@ -135,9 +97,8 @@ class UTREffectChecker:
         if start_effect is not None:
             return start_effect
 
-        stop_effect = self.check_stop_codon(request)
-        if stop_effect is not None:
-            return stop_effect
+        if request.is_stop_codon_affected():
+            return self.check_stop_codon(request)
 
         logger = logging.getLogger(__name__)
         logger.debug("utr check: %d<%d or %d>%d exons:%d-%d",
