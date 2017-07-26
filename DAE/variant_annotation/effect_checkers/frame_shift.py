@@ -19,6 +19,14 @@ class FrameShiftEffectChecker:
                 ef = Effect("frame-shift", request.transcript_model)
             ef.prot_pos = 1
             ef.prot_length = 100
+
+            ref_aa, alt_aa = request.get_amino_acids()
+            self.logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
+
+            ef.aa_change = "{}->{}".format(
+                ",".join(ref_aa),
+                ",".join(alt_aa)
+            )
             return ef
         return None
 
@@ -101,7 +109,7 @@ class FrameShiftEffectChecker:
                               j.start, j.stop)
 
             if (start <= request.variant.position <= stop):
-                self.logger.debug("fs detected %d<=%d-%d<=%d cds:%d-%d m:%s",
+                self.logger.debug("fs detected %d<=%d-%d<=%d cds:%d-%d",
                                   start, request.variant.position,
                                   request.variant.ref_position_last, stop,
                                   request.transcript_model.cds[0],
