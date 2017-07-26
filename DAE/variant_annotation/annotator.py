@@ -153,39 +153,9 @@ class VariantAnnotator:
 
             for gene in G:
                 for v in G[gene]:
-                    effect_details += cls.create_effect_details(v) + ";"
+                    effect_details += v.create_effect_details() + ";"
                 effect_gene += gene + ":" + G[gene][0].effect + "|"
 
             effect_details = effect_details[:-1] + "|"
 
         return(effect_type, effect_gene[:-1], effect_details[:-1])
-
-    @staticmethod
-    def create_effect_details(e):
-        if e.effect in ["intron", "5'UTR-intron", "3'UTR-intron",
-                        "non-coding-intron"]:
-            eff_d = str(e.which_intron) + "/" + str(e.how_many_introns)
-            eff_d += "[" + str(e.dist_from_coding) + "]"
-        elif (e.effect == "frame-shift" or e.effect == "no-frame-shift"
-              or e.effect == "no-frame-shift-newStop"):
-            eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
-            eff_d += "(" + e.aa_change + ")"
-        elif e.effect == "splice-site" or e.effect == "synonymous":
-            eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
-        elif e.effect == "5'UTR" or e.effect == "3'UTR":
-            eff_d = str(e.dist_from_coding)
-        elif e.effect in ["non-coding", "unknown", "tRNA:ANTICODON"]:
-            eff_d = str(e.length)
-        elif e.effect == "noStart" or e.effect == "noEnd":
-            eff_d = str(e.prot_length)
-        elif (e.effect == "missense" or e.effect == "nonsense" or
-              e.effect == "coding_unknown"):
-            eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
-            eff_d += "(" + e.aa_change + ")"
-        elif e.effect == "promoter":
-            eff_d = str(e.dist_from_5utr)
-        elif e.effect == "CDS" or e.effect == "all":
-            eff_d = str(e.prot_length)
-        elif e.effect == "no-mutation":
-            eff_d = "no-mutation"
-        return(eff_d)

@@ -29,3 +29,32 @@ class Effect:
             "protein pos:{}/{} aa: {}".format(
                 self.gene, self.transcript_id, self.strand, self.effect,
                 self.prot_pos, self.prot_length, self.aa_change)
+
+    def create_effect_details(self):
+        if self.effect in ["intron", "5'UTR-intron", "3'UTR-intron",
+                           "non-coding-intron"]:
+            eff_d = str(self.which_intron) + "/" + str(self.how_many_introns)
+            eff_d += "[" + str(self.dist_from_coding) + "]"
+        elif (self.effect == "frame-shift" or self.effect == "no-frame-shift"
+              or self.effect == "no-frame-shift-newStop"):
+            eff_d = str(self.prot_pos) + "/" + str(self.prot_length)
+            eff_d += "(" + self.aa_change + ")"
+        elif self.effect == "splice-site" or self.effect == "synonymous":
+            eff_d = str(self.prot_pos) + "/" + str(self.prot_length)
+        elif self.effect == "5'UTR" or self.effect == "3'UTR":
+            eff_d = str(self.dist_from_coding)
+        elif self.effect in ["non-coding", "unknown", "tRNA:ANTICODON"]:
+            eff_d = str(self.length)
+        elif self.effect == "noStart" or self.effect == "noEnd":
+            eff_d = str(self.prot_length)
+        elif (self.effect == "missense" or self.effect == "nonsense" or
+              self.effect == "coding_unknown"):
+            eff_d = str(self.prot_pos) + "/" + str(self.prot_length)
+            eff_d += "(" + self.aa_change + ")"
+        elif self.effect == "promoter":
+            eff_d = str(self.dist_from_5utr)
+        elif self.effect == "CDS" or self.effect == "all":
+            eff_d = str(self.prot_length)
+        elif self.effect == "no-mutation":
+            eff_d = "no-mutation"
+        return(eff_d)
