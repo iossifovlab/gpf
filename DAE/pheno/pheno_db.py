@@ -6,7 +6,7 @@ Created on Sep 10, 2016
 import numpy as np
 import pandas as pd
 from sqlalchemy.sql import select, text
-from sqlalchemy import or_, not_
+from sqlalchemy import not_
 
 from collections import defaultdict, OrderedDict
 
@@ -65,8 +65,7 @@ class Measure(object):
 
     def __repr__(self):
         return "Measure({}, {}, {})".format(
-            self.measure_id, self.measure_type,
-            self.value_domain)
+            self.measure_id, self.measure_type)
 
     @classmethod
     def _from_dict(cls, row):
@@ -175,57 +174,6 @@ class PhenoDB(PhenoConfig):
             if n in names:
                 names[names.index(n)] = f
         df.columns = names
-
-    def _where_variables(self, variable_ids):
-        return 'variable_id IN ({})'.format(
-            ','.join(["'{}'".format(v) for v in variable_ids]))
-
-#     def get_measures_corellations_df(
-#             self, measures_df, correlations_with, role):
-#         """
-#         **this method should be moved out of this package**
-#         """
-#
-#         def names(correlation_with, role, gender):
-#             suffix = '{}.{}.{}'.format(
-#                 role,
-#                 gender,
-#                 correlation_with)
-#             return (
-#                 'coeff.{}'.format(suffix),
-#                 'pvalue.{}'.format(suffix)
-#             )
-#         assert measures_df is not None
-#
-#         dfs = [measures_df]
-#         for correlation_with in correlations_with:
-#             for gender in ['M', 'F']:
-#                 where_variables = self._where_variables(
-#                     measures_df.measure_id.unique())
-#                 where = "correlation_with = '{}' AND " \
-#                     "role = '{}' AND " \
-#                     "gender = '{}' AND {}".format(
-#                         correlation_with,
-#                         role, gender,
-#                         where_variables)
-#                 with MetaVariableCorrelationManager(
-#                         dbfile=self.get_dbfile()) as vm:
-#                     df = vm.load_df(where)
-#                     self._rename_forward(df, [('variable_id', 'measure_id')])
-#                     df = df[['measure_id', 'coeff', 'pvalue']]
-#                     self._rename_forward(
-#                         df, zip(
-#                             ['coeff', 'pvalue'],
-#                             names(correlation_with, role, gender)))
-#                     dfs.append(df)
-#
-#         res_df = dfs[0]
-#         for i, df in enumerate(dfs[1:]):
-#             res_df = res_df.join(
-#                 df.set_index('measure_id'), on='measure_id',
-#                 rsuffix='_val_{}'.format(i))
-#
-#         return res_df
 
     def _get_measures_df(self, instrument=None, measure_type=None):
         """
@@ -375,9 +323,7 @@ class PhenoDB(PhenoConfig):
             self.db.family.join(self.db.person)
         )
         if roles:
-            s = s.where(or_(
-                *[self.db.person.c.role == r for r in roles]
-            ))
+            s = s.where(self.db.person.c.role.in_(roles))
         if person_ids:
             s = s.where(
                 self.db.person.c.person_id.in_(person_ids)
@@ -431,13 +377,6 @@ class PhenoDB(PhenoConfig):
         assert measure_id in self.measures
         return self.measures[measure_id]
 
-    def _get_values_df(self, value_manager, where):
-        with value_manager(dbfile=self.get_dbfile()) as vm:
-            df = vm.load_df(where=where)
-            return df
-
-        return None
-
     @staticmethod
     def _rename_value_column(measure_id, df):
         names = df.columns.tolist()
@@ -459,29 +398,46 @@ class PhenoDB(PhenoConfig):
             self, measure, person_ids=None, family_ids=None, roles=None,
             default_filter='skip'):
 
-        value_type = measure.measure_type
-        if value_type is None:
+        measure_type = measure.measure_type
+        if measure_type is None:
             raise ValueError(
                 "bad measure: {}; unknown value type".format(
                     measure.measure_id))
-        value_table = self.db.get_value_table(value_type)
-        s = select([value_table])
-        s = s.where(value_table.c.variable_id == measure.measure_id)
+        value_table = self.db.get_value_table(measure_type)
+        columns = [
+            self.db.family.c.family_id,
+            self.db.person.c.person_id,
+            self.db.person.c.gender,
+            self.db.person.c.status,
+            value_table.c.value,
+        ]
+
+        s = select(columns)
+        s = s.select_from(
+            value_table.
+            join(self.db.measure).
+            join(self.db.person).
+            join(self.db.family)
+        )
+        s = s.where(self.db.measure.c.measure_id == measure.measure_id)
+
         if roles:
+            s = s.where(self.db.person.c.role.in_(roles))
+        if person_ids:
             s = s.where(
-                or_(
-                    *[value_table.c.person_role == r for r in roles]
-                )
+                self.db.person.c.person_id.in_(person_ids)
             )
+        if family_ids:
+            s = s.where(
+                self.db.family.c.family_id.in_(family_ids)
+            )
+
         if measure.default_filter is not None:
             filter_clause = self._build_default_filter_clause(
                 measure, default_filter)
             if filter_clause is not None:
                 s = s.where(text(filter_clause))
-        if person_ids:
-            s = s.where(value_table.c.person_id.in_(person_ids))
-        if family_ids:
-            s = s.where(value_table.c.family_id.in_(family_ids))
+
         df = pd.read_sql(s, self.db.engine)
 
         self._rename_value_column(measure.measure_id, df)
@@ -556,7 +512,7 @@ class PhenoDB(PhenoConfig):
                                         roles,
                                         default_filter)
         res = {}
-        for _index, row in df.iterrows():
+        for row in df.to_dict('records'):
             res[row['person_id']] = row[measure_id]
         return res
 
@@ -598,15 +554,11 @@ class PhenoDB(PhenoConfig):
 
         return res_df
 
-    def _values_df_to_dict(self, measure_ids, df):
+    def _values_df_to_dict(self, df):
         res = {}
-        for _index, row in df.iterrows():
-            person_id = row.person_id
-            vals = {}
-            for mid in measure_ids:
-                vals[mid] = row[mid]
-
-            res[person_id] = vals
+        for row in df.to_dict('records'):
+            person_id = row['person_id']
+            res[person_id] = row
 
         return res
 
@@ -633,7 +585,7 @@ class PhenoDB(PhenoConfig):
 
         """
         df = self.get_values_df(measure_ids, person_ids, family_ids, roles)
-        return self._values_df_to_dict(measure_ids, df)
+        return self._values_df_to_dict(df)
 
     def get_persons_values_df(self, measure_ids, person_ids=None,
                               family_ids=None, roles=None):
@@ -683,7 +635,7 @@ class PhenoDB(PhenoConfig):
         """
         measure_ids = self.get_instrument_measures(instrument_id)
         df = self.get_values_df(measure_ids, person_ids, family_ids, role)
-        return self._values_df_to_dict(measure_ids, df)
+        return self._values_df_to_dict(df)
 
 #     def get_instruments(self, person_id):
 #         """
