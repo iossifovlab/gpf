@@ -11,10 +11,9 @@ import os
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import traceback
-from pheno.prepare.nuc_ped_prepare import NucPedPrepareIndividuals,\
-    NucPedPrepareVariables, NucPedPrepareMetaVariables
-from pheno.common import config_pheno_db, adjust_config_pheno_db, dump_config,\
-    check_config_pheno_db
+from pheno.common import dump_config,\
+    check_config_pheno_db, default_config
+from pheno.prepare.ped_prepare import PreparePersons
 
 __all__ = []
 __version__ = 0.1
@@ -38,6 +37,35 @@ class CLIError(Exception):
 
     def __unicode__(self):
         return self.msg
+
+
+def parse_config(args):
+    config = default_config()
+    config.verbose = args.verbose
+    config.instruments = args.instruments
+    config.pedigree = args.pedigree
+    config.db.filename = args.output
+    if args.skip_columns:
+        skip_columns = set([
+            col for col in args.skip_columns.split(',')
+        ])
+        config.skip.measures = skip_columns
+    if args.composite_fids:
+        config.family.composite_key = args.composite_fids
+
+    if args.min_individuals is not None and args.min_individuals >= 0:
+        config.classification.min_individuals = args.min_individuals
+
+    if args.categorical is not None and args.categorical >= 0:
+        config.classification.categorical.min_rank = args.categorical
+
+    if args.ordinal is not None and args.ordinal >= 0:
+        config.classification.ordinal.min_rank = args.ordinal
+
+    if args.continuous is not None and args.continuous >= 0:
+        config.classification.continuous.min_rank = args.continuous
+
+    return config
 
 
 def main(argv=None):  # IGNORE:C0111
@@ -76,9 +104,9 @@ USAGE
             help="directory where all instruments are located",
             metavar="path")
         parser.add_argument(
-            "-f", "--families",
-            dest="families",
-            help="file where families description are located",
+            "-p", "--pedigree",
+            dest="pedigree",
+            help="pedigree file where families descriptions are located",
             metavar="path")
 
         parser.add_argument(
@@ -131,46 +159,28 @@ USAGE
         # Process arguments
         args = parser.parse_args()
 
-        verbose = args.verbose
         instruments_directory = args.instruments
-        families_filename = args.families
+        pedigree_filename = args.pedigree
         output = args.output
-        skip_columns = args.skip_columns
-        if skip_columns:
-            skip_columns = set([
-                col for col in skip_columns.split(',')
-            ])
-        composite_fids = args.composite_fids
 
-        if not families_filename:
+        if not pedigree_filename:
             raise CLIError(
-                "families file must be specified")
+                "pedigree file must be specified")
         if not output:
             raise CLIError(
                 "output filename should be specified")
+        if not instruments_directory:
+            raise CLIError(
+                "instruments directory should be specified")
 
-        config = config_pheno_db(output)
-        config = adjust_config_pheno_db(config, args)
-
+        config = parse_config(args)
         dump_config(config)
+
         if not check_config_pheno_db(config):
             raise Exception("bad classification boundaries")
 
-        prep_individuals = NucPedPrepareIndividuals(config)
-        prep_individuals.prepare(
-            families_filename, composite_fids=composite_fids, verbose=verbose)
-
-        prep_variables = NucPedPrepareVariables(config)
-        prep_variables.setup(verbose)
-        prep_variables.prepare_pedigree_instrument(
-            prep_individuals, families_filename, verbose)
-        if instruments_directory:
-            prep_variables.prepare_instruments(
-                prep_individuals, instruments_directory, verbose,
-                skip_columns)
-
-        prep_meta = NucPedPrepareMetaVariables(config)
-        prep_meta.prepare(verbose)
+        prep = PreparePersons(config)
+        prep.build(pedigree_filename)
 
         return 0
     except KeyboardInterrupt:

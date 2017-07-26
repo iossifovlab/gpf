@@ -32,7 +32,9 @@ class PrepareBase(object):
 class PreparePersons(PrepareBase):
     COLUMNS = [
         'familyId', 'personId', 'dadId', 'momId',
-        'gender', 'status', 'sampleId'
+        'gender', 'status',
+        # 'sampleId',
+        # 'role',
     ]
 
     def __init__(self, config):
@@ -44,8 +46,15 @@ class PreparePersons(PrepareBase):
         return ped_df
 
     def _map_role_column(self, ped_df):
+        assert self.config.person.role.type == 'column'
+        role_column = self.config.person.role.column
+        assert role_column in ped_df.columns, \
+            "can't find column '{}' into pedigree file".format(role_column)
         mapping_name = self.config.person.role.mapping
         mapping = getattr(RoleMapping(), mapping_name)
+        assert mapping is not None, \
+            "bad role mapping '{}'".format(mapping_name)
+
         roles = pd.Series(ped_df.index)
         for index, row in ped_df.iterrows():
             role = mapping.get(row['role'])
@@ -107,6 +116,11 @@ class PreparePersons(PrepareBase):
     def save(self, ped_df):
         self._save_families(ped_df)
         self._save_persons(ped_df)
+
+    def build(self, pedfile):
+        ped_df = self.load_pedfile(pedfile)
+        ped_df = self.prepare(ped_df)
+        self.save(ped_df)
 
 
 class PrepareVariables(PrepareBase):
