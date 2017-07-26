@@ -24,9 +24,7 @@ class StartLossEffectChecker:
                         request.transcript_model.cds[0] + 2
                     )
 
-                    if (not request.in_start_codons(seq)):
-                        return
-                    if request.find_start_codon() is None:
+                    if request.find_start_codon([seq]) is None:
                         ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
                         ef.prot_length = 100
@@ -44,9 +42,7 @@ class StartLossEffectChecker:
                         request.transcript_model.cds[1]
                     )
 
-                    if (not request.in_start_codons(seq)):
-                        return
-                    if request.find_start_codon() is None:
+                    if request.find_start_codon([seq]) is None:
                         ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
                         ef.prot_length = 100

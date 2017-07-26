@@ -74,7 +74,14 @@ class UTREffectChecker:
 
             if (request.variant.position <= request.transcript_model.cds[0] + 2
                     and request.transcript_model.cds[0] <= last_position):
-                res = request.find_start_codon()
+
+                seq = request.annotator.reference_genome.getSequence(
+                    request.transcript_model.chr,
+                    request.transcript_model.cds[0],
+                    request.transcript_model.cds[0] + 2
+                )
+
+                res = request.find_start_codon([seq])
                 if res is None:
                     return
 
@@ -99,7 +106,14 @@ class UTREffectChecker:
 
             if (request.variant.position <= request.transcript_model.cds[1]
                     and request.transcript_model.cds[1] - 2 <= last_position):
-                res = request.find_start_codon()
+
+                seq = request.annotator.reference_genome.getSequence(
+                    request.transcript_model.chr,
+                    request.transcript_model.cds[1] - 2,
+                    request.transcript_model.cds[1]
+                )
+
+                res = request.find_start_codon([seq])
                 if res is None:
                     return
 

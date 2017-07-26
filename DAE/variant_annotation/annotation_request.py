@@ -68,7 +68,7 @@ class BaseAnnotationRequest(object):
 
         return(None)
 
-    def find_start_codon(self):
+    def find_start_codon(self, start_codons=None):
         end_pos = self.variant.position + len(self.variant.reference)
 
         for offset in range(-2, len(self.variant.alternate) + 1):
@@ -102,8 +102,12 @@ class BaseAnnotationRequest(object):
                               start_index, last_index,
                               end_pos, end_pos + remaining_length)
 
-            if self.in_start_codons(codon):
-                return offset, len(self.variant.alternate) - offset
+            if start_codons is not None:
+                if codon in start_codons:
+                    return offset, len(self.variant.alternate) - offset
+            else:
+                if self.in_start_codons(codon):
+                    return offset, len(self.variant.alternate) - offset
         return None
 
 
