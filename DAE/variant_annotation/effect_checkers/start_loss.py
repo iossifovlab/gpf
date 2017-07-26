@@ -18,13 +18,7 @@ class StartLossEffectChecker:
                 if (request.variant.position <=
                     request.transcript_model.cds[0] + 2
                         and request.transcript_model.cds[0] <= last_position):
-                    seq = request.annotator.reference_genome.getSequence(
-                        request.transcript_model.chr,
-                        request.transcript_model.cds[0],
-                        request.transcript_model.cds[0] + 2
-                    )
-
-                    if request.find_start_codon([seq]) is None:
+                    if request.find_start_codon() is None:
                         ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
                         ef.prot_length = 100
@@ -34,15 +28,7 @@ class StartLossEffectChecker:
                         and request.transcript_model.cds[1] - 2 <=
                         last_position):
 
-                    ref_codons, alt_codons = request.get_codons()
-
-                    seq = request.annotator.reference_genome.getSequence(
-                        request.transcript_model.chr,
-                        request.transcript_model.cds[1] - 2,
-                        request.transcript_model.cds[1]
-                    )
-
-                    if request.find_start_codon([seq]) is None:
+                    if request.find_start_codon() is None:
                         ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
                         ef.prot_length = 100

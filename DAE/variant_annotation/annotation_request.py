@@ -81,7 +81,7 @@ class BaseAnnotationRequest(object):
 
         return(None)
 
-    def find_start_codon(self, start_codons=None):
+    def find_start_codon(self):
         end_pos = self.variant.position + len(self.variant.reference)
 
         for offset in range(-2, len(self.variant.alternate) + 1):
@@ -115,12 +115,8 @@ class BaseAnnotationRequest(object):
                               start_index, last_index,
                               end_pos, end_pos + remaining_length)
 
-            if start_codons is not None:
-                if codon in start_codons:
-                    return offset, len(self.variant.alternate) - offset
-            else:
-                if self.in_start_codons(codon):
-                    return offset, len(self.variant.alternate) - offset
+            if self.in_start_codons(codon):
+                return offset, len(self.variant.alternate) - offset
         return None
 
     def is_start_codon_affected(self):
@@ -148,7 +144,13 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
                                        transcript_model)
 
     def in_start_codons(self, codon):
-        if codon in self.annotator.code.startCodons:
+        seq = self.annotator.reference_genome.getSequence(
+            self.transcript_model.chr,
+            self.transcript_model.cds[0],
+            self.transcript_model.cds[0] + 2
+        )
+
+        if codon == seq or codon in self.annotator.code.startCodons:
             return True
         else:
             return False
@@ -215,8 +217,14 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
                                        transcript_model)
 
     def in_start_codons(self, codon):
-        codon = self.complement(codon[::-1])
-        if codon in self.annotator.code.startCodons:
+        seq = self.annotator.reference_genome.getSequence(
+            self.transcript_model.chr,
+            self.transcript_model.cds[1] - 2,
+            self.transcript_model.cds[1]
+        )
+
+        complement_codon = self.complement(codon[::-1])
+        if codon == seq or complement_codon in self.annotator.code.startCodons:
             return True
         else:
             return False

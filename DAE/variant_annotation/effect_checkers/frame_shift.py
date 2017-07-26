@@ -3,7 +3,23 @@ import logging
 
 
 class FrameShiftEffectChecker:
-    def check_if_new_start(self, request):
+    def create_effect(self, request, change_length):
+        if change_length > 0:
+            if change_length % 3 == 0:
+                if self.check_if_new_stop(request):
+                    ef = Effect("no-frame-shift-newStop",
+                                request.transcript_model)
+                else:
+                    ef = Effect("no-frame-shift",
+                                request.transcript_model)
+            else:
+                ef = Effect("frame-shift", request.transcript_model)
+            ef.prot_pos = 1
+            ef.prot_length = 100
+            return ef
+        return None
+
+    def check_if_new_stop(self, request):
         ref_aa, alt_aa = request.get_amino_acids()
         for aa in ref_aa:
             if aa == "End":
@@ -32,72 +48,27 @@ class FrameShiftEffectChecker:
 
     def check_start_codon(self, request):
         logger = logging.getLogger(__name__)
-        last_position = request.variant.position + \
-            len(request.variant.reference)
+
+        res = request.find_start_codon()
+        if res is None:
+            return None
 
         if request.transcript_model.strand == "+":
-            logger.debug("start codon frameshift check %d<=%d-%d<=%d",
-                         request.transcript_model.cds[0],
-                         request.variant.position, last_position,
-                         request.transcript_model.cds[0] + 2)
+            new_start_codon_offset = res[1]
 
-            if (request.variant.position <= request.transcript_model.cds[0] + 2
-                    and request.transcript_model.cds[0] <= last_position):
-
-                seq = request.annotator.reference_genome.getSequence(
-                    request.transcript_model.chr,
-                    request.transcript_model.cds[0],
-                    request.transcript_model.cds[0] + 2
-                )
-
-                res = request.find_start_codon([seq])
-                if res is None:
-                    return True, None
-
-                new_start_codon_offset = res[1]
-
-                old_start_codon_offset = last_position - \
-                    request.transcript_model.cds[0]
-            else:
-                return False, None
+            old_start_codon_offset = request.variant.ref_position_last - \
+                request.transcript_model.cds[0]
         else:
-            logger.debug("start codon frameshift check %d<=%d-%d<=%d",
-                         request.transcript_model.cds[1] - 2,
-                         request.variant.position, last_position,
-                         request.transcript_model.cds[1])
+            new_start_codon_offset = res[0]
 
-            if (request.variant.position <= request.transcript_model.cds[1]
-                    and request.transcript_model.cds[1] - 2 <= last_position):
-
-                seq = request.annotator.reference_genome.getSequence(
-                    request.transcript_model.chr,
-                    request.transcript_model.cds[1] - 2,
-                    request.transcript_model.cds[1]
-                )
-
-                res = request.find_start_codon([seq])
-                if res is None:
-                    return True, None
-
-                new_start_codon_offset = res[0]
-
-                old_start_codon_offset = request.transcript_model.cds[1] - 2 \
-                    - request.variant.position
-
-            else:
-                return False, None
+            old_start_codon_offset = request.transcript_model.cds[1] - 2 \
+                - request.variant.position
 
         diff = abs(new_start_codon_offset - old_start_codon_offset)
         logger.debug("new offset=%d old=%d diff=%d", new_start_codon_offset,
                      old_start_codon_offset, diff)
 
-        if diff > 0:
-            if diff % 3 == 0:
-                ef = Effect("no-frame-shift", request.transcript_model)
-            else:
-                ef = Effect("frame-shift", request.transcript_model)
-            return True, ef
-        return True, None
+        return self.create_effect(request, diff)
 
     def get_effect(self, request):
         logger = logging.getLogger(__name__)
@@ -107,9 +78,8 @@ class FrameShiftEffectChecker:
         alt_length = len(request.variant.alternate)
         length = abs(alt_length - ref_length)
 
-        should_return, start_effect = self.check_start_codon(request)
-        if should_return:
-            return start_effect
+        if request.is_start_codon_affected():
+            return self.check_start_codon(request)
 
         if request.is_stop_codon_affected():
             return self.check_stop_codon(request)
@@ -142,16 +112,4 @@ class FrameShiftEffectChecker:
                              request.transcript_model.cds[0],
                              request.transcript_model.cds[1])
 
-                if length > 0:
-                    if length % 3 == 0:
-                        if self.check_if_new_start(request):
-                            ef = Effect("no-frame-shift-newStop",
-                                        request.transcript_model)
-                        else:
-                            ef = Effect("no-frame-shift",
-                                        request.transcript_model)
-                    else:
-                        ef = Effect("frame-shift", request.transcript_model)
-                    ef.prot_pos = 1
-                    ef.prot_length = 100
-                    return ef
+                return self.create_effect(request, length)
