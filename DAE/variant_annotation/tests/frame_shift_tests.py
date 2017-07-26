@@ -55,4 +55,4 @@ class FrameShiftPositiveStrandTest(unittest.TestCase):
             self.annotator, variant, self.tm
         )
         effect = self.effect_checker.get_effect(request)
-        self.assertEqual(effect.effect, "no-frame-shift")
+        self.assertEqual(effect, None)
