@@ -1019,7 +1019,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].gene, "ARHGAP32")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_014715_1")
         self.assertEqual(effects_sorted[1].strand, "-")
-        self.assertEqual(effects_sorted[1].effect, "no-frame-shift")
+        self.assertEqual(effects_sorted[1].effect, "no-frame-shift-newStop")
         # self.assertEqual(effects_sorted[1].prot_pos, 1)
         # self.assertEqual(effects_sorted[1].prot_length, 1739)
         # self.assertEqual(effects_sorted[1].aa_change, None)
