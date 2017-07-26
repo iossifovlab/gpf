@@ -15,15 +15,6 @@ from pheno.common import dump_config,\
     check_config_pheno_db, default_config
 from pheno.prepare.ped_prepare import PreparePersons
 
-__all__ = []
-__version__ = 0.1
-__date__ = '2017-03-20'
-__updated__ = '2017-03-20'
-
-DEBUG = 0
-TESTRUN = 0
-PROFILE = 0
-
 
 class CLIError(Exception):
     '''Generic exception to raise and log different fatal errors.'''
@@ -77,10 +68,6 @@ def main(argv=None):  # IGNORE:C0111
         sys.argv.extend(argv)
 
     program_name = os.path.basename(sys.argv[0])
-    program_version = "v%s" % __version__
-    program_build_date = str(__updated__)
-    program_version_message = '%%(prog)s %s (%s)' % (
-        program_version, program_build_date)
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
     program_license = '''%s
 
@@ -95,9 +82,6 @@ USAGE
         parser.add_argument(
             "-v", "--verbose", dest="verbose",
             action="count", help="set verbosity level [default: %(default)s]")
-        parser.add_argument(
-            '-V', '--version', action='version',
-            version=program_version_message)
         parser.add_argument(
             "-i", "--instruments",
             dest="instruments",
@@ -188,8 +172,6 @@ USAGE
     except Exception, e:
         traceback.print_exc()
 
-        if DEBUG or TESTRUN:
-            raise(e)
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
@@ -197,18 +179,4 @@ USAGE
 
 
 if __name__ == "__main__":
-    if TESTRUN:
-        import doctest
-        doctest.testmod()
-    if PROFILE:
-        import cProfile
-        import pstats
-        profile_filename = 'pheno_prepare_profile.txt'
-        cProfile.run('main()', profile_filename)
-        statsfile = open("profile_stats.txt", "wb")
-        p = pstats.Stats(profile_filename, stream=statsfile)
-        stats = p.strip_dirs().sort_stats('cumulative')
-        stats.print_stats()
-        statsfile.close()
-        sys.exit(0)
     sys.exit(main())
