@@ -3,7 +3,6 @@ Created on Sep 10, 2016
 
 @author: lubo
 '''
-import numpy as np
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_
@@ -153,27 +152,6 @@ class PhenoDB(PhenoConfig):
             return age_id
         else:
             return None
-
-    @staticmethod
-    def _check_nan(val):
-        if val is None:
-            return None
-
-        if not isinstance(val, float):
-            raise ValueError("unexpected value: {}".format(val))
-
-        if np.isnan(val):
-            return None
-        else:
-            return val
-
-    @staticmethod
-    def _rename_forward(df, mapping):
-        names = df.columns.tolist()
-        for n, f in mapping:
-            if n in names:
-                names[names.index(n)] = f
-        df.columns = names
 
     def _get_measures_df(self, instrument=None, measure_type=None):
         """
@@ -549,7 +527,7 @@ class PhenoDB(PhenoConfig):
         res_df = dfs[0]
         for i, df in enumerate(dfs[1:]):
             res_df = res_df.join(
-                df.set_index('person_id'), on='person_id',
+                df.set_index('person_id'), on='person_id', how='outer',
                 rsuffix='_val_{}'.format(i))
 
         return res_df
@@ -603,18 +581,20 @@ class PhenoDB(PhenoConfig):
             roles=roles)
 
         df = persons_df.join(
-            value_df.set_index('person_id'), on='person_id', rsuffix='_val')
-        df.dropna(inplace=True)
+            value_df.set_index('person_id'),
+            on='person_id', how='right', rsuffix='_val')
 
         return df
 
-    def get_instrument_measures(self, instrument_id):
+    def get_instrument_measures(self, instrument_name):
         """
         Returns measures for given instrument.
         """
-        assert instrument_id in self.instruments
-        measure_ids = [m.measure_id for
-                       m in self.instruments[instrument_id].measures.values()]
+        assert instrument_name in self.instruments
+        instrument = self.instruments[instrument_name]
+        measure_ids = [
+            m.measure_id for m in instrument.measures.values()
+        ]
         return measure_ids
 
     def get_instrument_values_df(
@@ -636,29 +616,6 @@ class PhenoDB(PhenoConfig):
         measure_ids = self.get_instrument_measures(instrument_id)
         df = self.get_values_df(measure_ids, person_ids, family_ids, role)
         return self._values_df_to_dict(df)
-
-#     def get_instruments(self, person_id):
-#         """
-#         Returns dictionary with all instruments applied to given
-#         individual.
-#
-#         """
-#         query = "SELECT DISTINCT table_name FROM variable WHERE " \
-#             "variable_id IN " \
-#             "(SELECT variable_id FROM value_raw WHERE person_id='{}')" \
-#             .format(person_id)
-#         with RawValueManager(dbfile=self.get_dbfile()) as vm:
-#             instruments = vm._execute(query)
-#         return dict([(i[0], self.instruments[i[0]]) for i in instruments
-#                      if i[0] in self.instruments])
-
-    @staticmethod
-    def _split_measure_id(measure_id):
-        if '.' not in measure_id:
-            return (None, measure_id)
-        else:
-            [instrument_name, measure_name] = measure_id.split('.')
-            return (instrument_name, measure_name)
 
     def has_measure(self, measure_id):
         """
