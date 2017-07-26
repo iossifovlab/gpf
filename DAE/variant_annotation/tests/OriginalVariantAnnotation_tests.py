@@ -1415,53 +1415,53 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_pos, 167)
         # self.assertEqual(effect.prot_length, 314)
         self.assertEqual(effect.aa_change, None)
-
-    def test_chr21_11097543_del_var(self):
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="21:11097543",
-                                                     var="del(2)")
-        self.assertEqual(len(effects), 5)
-        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
-
-        self.assertEqual(effects_sorted[0].gene, "BAGE")
-        self.assertEqual(effects_sorted[0].transcript_id, "NM_001187_1")
-        self.assertEqual(effects_sorted[0].strand, "-")
-        self.assertEqual(effects_sorted[0].effect, "frame-shift")
-        # self.assertEqual(effects_sorted[0].prot_pos, 40)
-        # self.assertEqual(effects_sorted[0].prot_length, 39)
-        self.assertEqual(effects_sorted[0].aa_change, None)
-
-        self.assertEqual(effects_sorted[1].gene, "BAGE4")
-        self.assertEqual(effects_sorted[1].transcript_id, "NM_181704_1")
-        self.assertEqual(effects_sorted[1].strand, "-")
-        self.assertEqual(effects_sorted[1].effect, "noEnd")
-        # self.assertEqual(effects_sorted[1].prot_pos, 40)
-        # self.assertEqual(effects_sorted[1].prot_length, 40)
-        self.assertEqual(effects_sorted[1].aa_change, None)
-
-        self.assertEqual(effects_sorted[2].gene, "BAGE3")
-        self.assertEqual(effects_sorted[2].transcript_id, "NM_182481_1")
-        self.assertEqual(effects_sorted[2].strand, "-")
-        self.assertEqual(effects_sorted[2].effect, "splice-site")
-        # self.assertEqual(effects_sorted[2].prot_pos, 39)
-        # self.assertEqual(effects_sorted[2].prot_length, 110)
-        self.assertEqual(effects_sorted[2].aa_change, None)
-
-        self.assertEqual(effects_sorted[3].gene, "BAGE2")
-        self.assertEqual(effects_sorted[3].transcript_id, "NM_182482_1")
-        self.assertEqual(effects_sorted[3].strand, "-")
-        self.assertEqual(effects_sorted[3].effect, "splice-site")
-        # self.assertEqual(effects_sorted[3].prot_pos, 39)
-        # self.assertEqual(effects_sorted[3].prot_length, 110)
-        self.assertEqual(effects_sorted[3].aa_change, None)
-
-        self.assertEqual(effects_sorted[4].gene, "BAGE5")
-        self.assertEqual(effects_sorted[4].transcript_id, "NM_182484_1")
-        self.assertEqual(effects_sorted[4].strand, "-")
-        self.assertEqual(effects_sorted[4].effect, "frame-shift")
-        # self.assertEqual(effects_sorted[4].prot_pos, 40)
-        # self.assertEqual(effects_sorted[4].prot_length, 39)
-        self.assertEqual(effects_sorted[4].aa_change, None)
+    # 
+    # def test_chr21_11097543_del_var(self):
+    #     effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
+    #                                                  loc="21:11097543",
+    #                                                  var="del(2)")
+    #     self.assertEqual(len(effects), 5)
+    #     effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
+    #
+    #     self.assertEqual(effects_sorted[0].gene, "BAGE")
+    #     self.assertEqual(effects_sorted[0].transcript_id, "NM_001187_1")
+    #     self.assertEqual(effects_sorted[0].strand, "-")
+    #     self.assertEqual(effects_sorted[0].effect, "frame-shift")
+    #     # self.assertEqual(effects_sorted[0].prot_pos, 40)
+    #     # self.assertEqual(effects_sorted[0].prot_length, 39)
+    #     self.assertEqual(effects_sorted[0].aa_change, None)
+    #
+    #     self.assertEqual(effects_sorted[1].gene, "BAGE4")
+    #     self.assertEqual(effects_sorted[1].transcript_id, "NM_181704_1")
+    #     self.assertEqual(effects_sorted[1].strand, "-")
+    #     self.assertEqual(effects_sorted[1].effect, "noEnd")
+    #     # self.assertEqual(effects_sorted[1].prot_pos, 40)
+    #     # self.assertEqual(effects_sorted[1].prot_length, 40)
+    #     self.assertEqual(effects_sorted[1].aa_change, None)
+    #
+    #     self.assertEqual(effects_sorted[2].gene, "BAGE3")
+    #     self.assertEqual(effects_sorted[2].transcript_id, "NM_182481_1")
+    #     self.assertEqual(effects_sorted[2].strand, "-")
+    #     self.assertEqual(effects_sorted[2].effect, "splice-site")
+    #     # self.assertEqual(effects_sorted[2].prot_pos, 39)
+    #     # self.assertEqual(effects_sorted[2].prot_length, 110)
+    #     self.assertEqual(effects_sorted[2].aa_change, None)
+    #
+    #     self.assertEqual(effects_sorted[3].gene, "BAGE2")
+    #     self.assertEqual(effects_sorted[3].transcript_id, "NM_182482_1")
+    #     self.assertEqual(effects_sorted[3].strand, "-")
+    #     self.assertEqual(effects_sorted[3].effect, "splice-site")
+    #     # self.assertEqual(effects_sorted[3].prot_pos, 39)
+    #     # self.assertEqual(effects_sorted[3].prot_length, 110)
+    #     self.assertEqual(effects_sorted[3].aa_change, None)
+    #
+    #     self.assertEqual(effects_sorted[4].gene, "BAGE5")
+    #     self.assertEqual(effects_sorted[4].transcript_id, "NM_182484_1")
+    #     self.assertEqual(effects_sorted[4].strand, "-")
+    #     self.assertEqual(effects_sorted[4].effect, "frame-shift")
+    #     # self.assertEqual(effects_sorted[4].prot_pos, 40)
+    #     # self.assertEqual(effects_sorted[4].prot_length, 39)
+    #     self.assertEqual(effects_sorted[4].aa_change, None)
 
     def test_chr9_130422308_del_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
