@@ -44,6 +44,10 @@ def parse_config(args):
     if args.composite_fids:
         config.family.composite_key = args.composite_fids
 
+    if args.role:
+        config.person.role.type = args.role
+    assert config.person.role.type in set(['column', 'guess'])
+
     if args.min_individuals is not None and args.min_individuals >= 0:
         config.classification.min_individuals = args.min_individuals
 
@@ -139,6 +143,12 @@ USAGE
             dest='composite_fids',
             help="builds composite family IDs from parents' IDs"
         )
+
+        parser.add_argument(
+            '-r', '--role',
+            dest='role',
+            help='sets role handling; available choices "column", "guess"; '
+            'default value is "column"')
 
         # Process arguments
         args = parser.parse_args()
