@@ -51,13 +51,15 @@ class DbManager(object):
             'measure', self.metadata,
             Column('id', Integer(), primary_key=True),
             Column('measure_id', String(128),
-                   nullable=False, index=True),
+                   nullable=False, index=True, unique=True),
             Column('instrument_name', String(64), nullable=False, index=True),
             Column('measure_name', String(64), nullable=False, index=True),
             Column('description', String(255)),
             Column('measure_type', Enum(MeasureType), index=True),
             Column('individuals', Integer()),
-            Column('default_filter', String(255))
+            Column('default_filter', String(255)),
+            UniqueConstraint('instrument_name', 'measure_name',
+                             name='measure_key'),
         )
 
     def _build_value_tables(self):
