@@ -219,7 +219,9 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
 
         index = self.get_coding_region_for_pos(pos)
         if index is None:
-            raise IndexError
+            index = self.get_coding_region_for_pos(pos - 1)
+            if index is None:
+                raise IndexError
         frame = self.get_frame(last_position, index)
         length = max(1, last_position - pos + 1)
         length += self.get_nucleotides_count_to_full_codon(length + frame)

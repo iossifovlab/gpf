@@ -38,30 +38,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
-    def test_chr13_21729290_ins_var(self):
-        var = "ins(CAGTTTTCTTTGTTGCTGACATCTCGGATGTTCTGTCCATGTTTAAGGAACCTTTTA)"
-        effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                     loc="13:21729290",
-                                                     var=var)
-        self.assertEqual(len(effects), 2)
-        effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
-
-        self.assertEqual(effects_sorted[0].gene, "SKA3")
-        self.assertEqual(effects_sorted[0].transcript_id, "NM_001166017_1")
-        self.assertEqual(effects_sorted[0].strand, "-")
-        self.assertEqual(effects_sorted[0].effect, "splice-site")
-        # self.assertEqual(effects_sorted[0].prot_pos, 374)
-        # self.assertEqual(effects_sorted[0].prot_length, 389)
-        self.assertEqual(effects_sorted[0].aa_change, None)
-
-        self.assertEqual(effects_sorted[1].gene, "SKA3")
-        self.assertEqual(effects_sorted[1].transcript_id, "NM_145061_1")
-        self.assertEqual(effects_sorted[1].strand, "-")
-        self.assertEqual(effects_sorted[1].effect, "no-frame-shift")
-        # self.assertEqual(effects_sorted[1].prot_pos, 414)
-        # self.assertEqual(effects_sorted[1].prot_length, 412)
-        self.assertEqual(effects_sorted[1].aa_change, None)
-
     # def test_chr1_802610_867930_CNV_var(self):
     #     effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
     #                                                  loc="1:802610-867930",
