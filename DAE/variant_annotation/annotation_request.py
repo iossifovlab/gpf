@@ -46,6 +46,15 @@ class BaseAnnotationRequest(object):
         length -= len(seq)
         return self.get_coding_left(-1, length, index - 1) + seq
 
+    def get_codons_left(self, pos, length):
+        if length <= 0:
+            return ""
+        start_index = pos - length + 1
+        seq = self.annotator.reference_genome.getSequence(
+            self.transcript_model.chr, start_index, pos
+        )
+        return seq
+
     def get_nucleotides_count_to_full_codon(self, length):
         return (3 - (length % 3)) % 3
 
@@ -202,18 +211,30 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         return frame
 
     def get_codons(self):
+        pos = max(self.variant.position, self.transcript_model.cds[0])
         last_position = self.variant.position + len(self.variant.reference) - 1
-        index = self.get_coding_region_for_pos(self.variant.position)
+
+        if pos > last_position + 1:
+            return "", ""
+
+        index = self.get_coding_region_for_pos(pos)
         if index is None:
             raise IndexError
         frame = self.get_frame(last_position, index)
-        length = max(1, len(self.variant.reference))
+        length = max(1, last_position - pos + 1)
         length += self.get_nucleotides_count_to_full_codon(length + frame)
+
+        self.logger.debug("last_position=%d, length=%d index=%d pos=%d cds=%d",
+                          last_position, length, index, self.variant.position,
+                          self.transcript_model.cds[0])
 
         coding_before_pos = self.get_coding_left(last_position,
                                                  length, index)
         coding_after_pos = self.get_coding_right(last_position + 1,
                                                  frame, index)
+
+        self.logger.debug("coding_before_pos=%s, coding_after_pos=%s frame=%s",
+                          coding_before_pos, coding_after_pos, frame)
 
         ref_codons = coding_before_pos + coding_after_pos
 
@@ -225,18 +246,16 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         if (len(alt_codons) + length_alt == 0):
             length_alt = 3
 
-        alt_codons = self.get_coding_left(
+        alt_codons = self.get_codons_left(
             self.variant.position - 1,
-            length_alt, index
+            length_alt
         ) + alt_codons
 
-        self.logger.debug("coding_before_pos=%s, coding_after_pos=%s frame=%s",
-                          coding_before_pos, coding_after_pos, frame)
         self.logger.debug("%d-%d %d-%d->%d-%d %d-%d",
                           last_position, last_position - length,
                           last_position + 1, last_position + 1 + frame,
-                          self.variant.position,
-                          self.variant.position - length_alt,
+                          pos,
+                          pos - length_alt,
                           last_position + 1, last_position + 1 + frame)
 
         self.logger.debug("ref codons=%s, alt codons=%s",

@@ -38,19 +38,6 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
-    def test_chr1_20490475_del_var(self):
-        [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                      loc="1:20490475",
-                                                      var="del(18)")
-
-        self.assertEqual(effect.gene, "PLA2G2C")
-        self.assertEqual(effect.transcript_id, "NM_001105572_1")
-        self.assertEqual(effect.strand, "-")
-        self.assertEqual(effect.effect, "intron")
-        # self.assertEqual(effect.prot_pos, 151)
-        # self.assertEqual(effect.prot_length, 151)
-        self.assertEqual(effect.aa_change, None)
-
     def test_chr13_21729290_ins_var(self):
         var = "ins(CAGTTTTCTTTGTTGCTGACATCTCGGATGTTCTGTCCATGTTTAAGGAACCTTTTA)"
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
