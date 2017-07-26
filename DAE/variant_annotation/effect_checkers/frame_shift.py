@@ -3,6 +3,9 @@ import logging
 
 
 class FrameShiftEffectChecker:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
     def create_effect(self, request, change_length):
         if change_length > 0:
             if change_length % 3 == 0:
@@ -47,8 +50,6 @@ class FrameShiftEffectChecker:
         return None
 
     def check_start_codon(self, request):
-        logger = logging.getLogger(__name__)
-
         res = request.find_start_codon()
         if res is None:
             return None
@@ -65,14 +66,13 @@ class FrameShiftEffectChecker:
                 - request.variant.position
 
         diff = abs(new_start_codon_offset - old_start_codon_offset)
-        logger.debug("new offset=%d old=%d diff=%d", new_start_codon_offset,
-                     old_start_codon_offset, diff)
+        self.logger.debug("new offset=%d old=%d diff=%d",
+                          new_start_codon_offset,
+                          old_start_codon_offset, diff)
 
         return self.create_effect(request, diff)
 
     def get_effect(self, request):
-        logger = logging.getLogger(__name__)
-
         coding_regions = request.transcript_model.CDS_regions()
         ref_length = len(request.variant.reference)
         alt_length = len(request.variant.alternate)
@@ -94,22 +94,17 @@ class FrameShiftEffectChecker:
                     request.variant.ref_position_last):
                 stop += 1
 
-            logger.debug("frameshift check %d<=%d<=%d cds:%d-%d exon:%d-%d",
-                         start,
-                         request.variant.position,
-                         stop,
-                         request.transcript_model.cds[0],
-                         request.transcript_model.cds[1],
-                         j.start,
-                         j.stop)
+            self.logger.debug("frameshift %d<=%d<=%d cds:%d-%d exon:%d-%d",
+                              start, request.variant.position, stop,
+                              request.transcript_model.cds[0],
+                              request.transcript_model.cds[1],
+                              j.start, j.stop)
 
             if (start <= request.variant.position <= stop):
-                logger.debug("inside frameshift %d<=%d-%d<=%d cds:%d-%d m:%s",
-                             start,
-                             request.variant.position,
-                             request.variant.ref_position_last,
-                             stop,
-                             request.transcript_model.cds[0],
-                             request.transcript_model.cds[1])
+                self.logger.debug("fs detected %d<=%d-%d<=%d cds:%d-%d m:%s",
+                                  start, request.variant.position,
+                                  request.variant.ref_position_last, stop,
+                                  request.transcript_model.cds[0],
+                                  request.transcript_model.cds[1])
 
                 return self.create_effect(request, length)
