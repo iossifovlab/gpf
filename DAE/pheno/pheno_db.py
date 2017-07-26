@@ -25,21 +25,11 @@ class Instrument(object):
     * `instrument_name`
 
     * `masures` -- dictionary of all measures in the instrument
-
-    * `has_probands` -- if any of measures is applied to probands
-
-    * `has_siblings` -- if any of measures is applied to siblings
-
-    * `has_parents` -- if any of measures is applied to parents
     """
 
     def __init__(self, name):
-        self.name = name
-
+        self.instrument_name = name
         self.measures = OrderedDict()
-        self.has_probands = None
-        self.has_siblings = None
-        self.has_parents = None
 
     def __repr__(self):
         return "Instrument({}, {})".format(self.name, len(self.measures))
@@ -67,12 +57,6 @@ class Measure(object):
 
     * `value_domain` - string that represents the values
 
-    * `has_probands` - returns True if this measure is applied to probands
-
-    * `has_siblings` - returns True if this measrue is applied to siblings
-
-    * `has_parents` - returns True if this measure is applied to parents
-
     """
 
     def __init__(self, name):
@@ -85,7 +69,7 @@ class Measure(object):
             self.value_domain)
 
     @classmethod
-    def _from_df(cls, row):
+    def _from_dict(cls, row):
         """
         Creates `Measure` object from pandas data frame row.
         """
@@ -97,36 +81,8 @@ class Measure(object):
         m.measure_type = row['measure_type']
 
         m.description = row['description']
-        m.min_value = None
-        m.max_value = None
-        if m.measure_type == 'continuous' or m.measure_type == 'ordinal':
-            m.min_value = row['min_value']
-            m.max_value = row['max_value']
-#             assert m.max_value >= m.min_value, \
-#                 "%s, %s, %s" % (m.measure_id, m.min_value, m.max_value)
-        m.value_domain = row['value_domain']
-        m.has_probands = row['has_probands']
-        m.has_siblings = row['has_siblings']
-        m.has_parents = row['has_parents']
-
-        if isinstance(row['default_filter'], float) and \
-                np.isnan(row['default_filter']):
-            m.default_filter = None
-        else:
-            m.default_filter = row['default_filter']
-
+        m.default_filter = row['default_filter']
         return m
-
-
-class MeasureMeta(Measure):
-    """
-    **this class should be moved out of this package.**
-
-    Represents additional meta information about given `Measure`.
-    """
-
-    def __init__(self, name):
-        super(MeasureMeta, self).__init__(name)
 
 
 class PhenoDB(PhenoConfig):
@@ -294,53 +250,32 @@ class PhenoDB(PhenoConfig):
             measure_type in set([
                 'continuous', 'ordinal', 'categorical', 'unknown'])
 
-        variable = self.db.variable
-        meta_variable = self.db.meta_variable
+        measure = self.db.measure
 
         columns = [
-            variable.c.variable_id,
-            variable.c.table_name,
-            variable.c.variable_name,
-            variable.c.description,
-            variable.c.individuals,
-            variable.c.stats,
-            variable.c.value_domain,
-            meta_variable.c.min_value,
-            meta_variable.c.max_value,
-            meta_variable.c.has_probands,
-            meta_variable.c.has_siblings,
-            meta_variable.c.has_parents,
-            meta_variable.c.default_filter,
+            measure.c.measure_id,
+            measure.c.instrument_name,
+            measure.c.measure_name,
+            measure.c.description,
+            measure.c.measure_type,
+            measure.c.individuals,
+            measure.c.default_filter,
         ]
         s = select(columns)
-        s = s.select_from(
-            variable.join(
-                meta_variable,
-                variable.c.variable_id == meta_variable.c.variable_id
-            )
-        )
-        s = s.where(not_(variable.c.stats.is_(None)))
+        s = s.select_from(measure)
+        s = s.where(not_(measure.c.measure_type.is_(None)))
         if instrument is not None:
-            s = s.where(variable.c.table_name == instrument)
+            s = s.where(measure.c.instrument_name == instrument)
         if measure_type is not None:
-            s = s.where(variable.c.stats == measure_type)
+            s = s.where(measure.c.measure_type == measure_type)
 
         df = pd.read_sql(s, self.db.engine)
 
         res_df = df[[
-            'variable_id', 'variable_name', 'table_name',
-            'description', 'individuals', 'stats',
-            'min_value', 'max_value', 'value_domain',
-            'has_probands', 'has_siblings', 'has_parents',
+            'measure_id', 'measure_name', 'instrument_name',
+            'description', 'individuals', 'measure_type',
             'default_filter'
         ]]
-        mapping = [
-            ('variable_id', 'measure_id'),
-            ('variable_name', 'measure_name'),
-            ('stats', 'measure_type'),
-            ('table_name', 'instrument_name'),
-        ]
-        self._rename_forward(res_df, mapping)
 
         return res_df
 
@@ -358,8 +293,8 @@ class PhenoDB(PhenoConfig):
         """
         df = self._get_measures_df(instrument, measure_type)
         res = OrderedDict()
-        for _index, row in df.iterrows():
-            m = Measure._from_df(row)
+        for row in df.to_dict('records'):
+            m = Measure._from_dict(row)
             res[m.measure_id] = m
         return res
 
@@ -373,17 +308,13 @@ class PhenoDB(PhenoConfig):
             instrument = Instrument(instrument_name)
             measures = OrderedDict()
             measures_df = df[df.instrument_name == instrument_name]
-            instrument.has_probands = np.any(measures_df.has_probands)
-            instrument.has_siblings = np.any(measures_df.has_siblings)
-            instrument.has_parents = np.any(measures_df.has_parents)
 
-            for _index, row in measures_df.iterrows():
-                m = Measure._from_df(row)
-                m.instrument = instrument
-                measures[m.name] = m
+            for row in measures_df.to_dict('records'):
+                m = Measure._from_dict(row)
+                measures[m.measure_name] = m
                 self.measures[m.measure_id] = m
             instrument.measures = measures
-            instruments[instrument.name] = instrument
+            instruments[instrument.instrument_name] = instrument
 
         self.instruments = instruments
 
