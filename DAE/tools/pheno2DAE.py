@@ -13,7 +13,7 @@ from argparse import RawDescriptionHelpFormatter
 import traceback
 from pheno.common import dump_config,\
     check_config_pheno_db, default_config
-from pheno.prepare.ped_prepare import PreparePersons
+from pheno.prepare.ped_prepare import PreparePersons, PrepareVariables
 
 
 class CLIError(Exception):
@@ -164,7 +164,10 @@ USAGE
             raise Exception("bad classification boundaries")
 
         prep = PreparePersons(config)
-        prep.build(pedigree_filename)
+        # prep.build(pedigree_filename)
+
+        prep = PrepareVariables(config)
+        prep.build(instruments_directory)
 
         return 0
     except KeyboardInterrupt:

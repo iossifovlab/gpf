@@ -10,6 +10,7 @@ from pheno.common import RoleMapping, Role, Status, Gender, MeasureType
 import os
 import math
 from box import Box
+from collections import defaultdict, OrderedDict
 
 
 class PrepareBase(object):
@@ -128,7 +129,7 @@ class PrepareVariables(PrepareBase):
     def __init__(self, config):
         super(PrepareVariables, self).__init__(config)
 
-    def load_instrument(self, filenames):
+    def load_instrument(self, instrument_name, filenames):
         assert filenames
         assert all([os.path.exists(f) for f in filenames])
 
@@ -137,6 +138,7 @@ class PrepareVariables(PrepareBase):
             for f in filenames
         ]
         assert len(set(instrument_names)) == 1
+        assert instrument_name == instrument_names[0]
 
         dataframes = []
         for filename in filenames:
@@ -153,19 +155,25 @@ class PrepareVariables(PrepareBase):
         assert df is not None
 
         persons = self.get_persons()
-        assert set(df.person_id.unique()) <= set(persons.keys())
+        # assert set(df.person_id.unique()) <= set(persons.keys())
 
         pid = pd.Series(df.index)
         for index, row in df.iterrows():
-            p = persons[row[self.PERSON_ID]]
-            assert p is not None
-            assert p.person_id == row[self.PERSON_ID]
-            pid[index] = p.id
-        df[self.PID_COLUMN] = pid
 
-        instrument_name = instrument_names[0]
+            p = persons.get(row[self.PERSON_ID])
+            if p is None:
+                pid[index] = np.nan
+                print('measure for missing person: {}'.format(
+                    row[self.PERSON_ID]))
+            else:
+                assert p is not None
+                assert p.person_id == row[self.PERSON_ID]
+                pid[index] = p.id
+        df[self.PID_COLUMN] = pid
+        df = df[np.logical_not(np.isnan(df[self.PID_COLUMN]))].copy()
+
         df = self._adjust_instrument_measure_names(instrument_name, df)
-        return instrument_name, df
+        return df
 
     def _adjust_instrument_measure_names(self, instrument_name, df):
         columns = {}
@@ -183,22 +191,50 @@ class PrepareVariables(PrepareBase):
         with self.db.engine.connect() as connection:
             result = connection.execute(ins)
             measure_id = result.inserted_primary_key[0]
-        values = []
+        if len(mdf) == 0:
+            print('empty measure: {}'.format(measure.measure_id))
+            return
+
+        values = OrderedDict()
         for _index, row in mdf.iterrows():
+            pid = int(row[self.PID_COLUMN])
+            k = (pid, measure_id)
             v = {
-                self.PERSON_ID: row[self.PID_COLUMN],
+                self.PERSON_ID: pid,
                 'measure_id': measure_id,
                 'value': row['value']
             }
-            values.append(v)
+            if k in values:
+                print("updating measure {} with {}".format(
+                    values[k], row))
+            values[k] = v
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
         with self.db.engine.connect() as connection:
-            connection.execute(ins, values)
+            connection.execute(ins, values.values())
 
-    def prepare_instrument(self, filenames):
-        instrument_name, df = self.load_instrument(filenames)
+    def _collect_instruments(self, dirname, instruments):
+        for root, _dirnames, filenames in os.walk(dirname):
+            for filename in filenames:
+                basename = os.path.basename(filename)
+                name, ext = os.path.splitext(basename)
+                if ext.lower() != '.csv':
+                    continue
+                print(root, filename)
+                instruments[name].append(
+                    os.path.abspath(os.path.join(root, filename))
+                )
+
+    def build(self, instruments_dirname):
+        instruments = defaultdict(list)
+        self._collect_instruments(instruments_dirname, instruments)
+        for instrument_name, instrument_filenames in instruments.items():
+            self.build_instrument(instrument_name, instrument_filenames)
+
+    def build_instrument(self, instrument_name, filenames):
         assert instrument_name is not None
+        df = self.load_instrument(instrument_name, filenames)
+
         assert df is not None
         assert self.PERSON_ID in df.columns
 
@@ -210,6 +246,7 @@ class PrepareVariables(PrepareBase):
             mdf.rename(columns={measure_name: 'value'}, inplace=True)
 
             measure = self._build_measure(instrument_name, measure_name, mdf)
+            print(instrument_name, measure_name, measure)
             self._save_measure(measure, mdf)
         return df
 
@@ -314,6 +351,6 @@ class PrepareVariables(PrepareBase):
             if self.check_categorical_rank(rank, individuals):
                 measure.measure_type = MeasureType.categorical
                 return measure
-        else:
-            measure.measure_type = MeasureType.other
-            return measure
+
+        measure.measure_type = MeasureType.other
+        return measure
