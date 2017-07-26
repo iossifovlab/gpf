@@ -169,6 +169,7 @@ class VariantAnnotator:
         elif (e.effect == "frame-shift" or e.effect == "no-frame-shift"
               or e.effect == "no-frame-shift-newStop"):
             eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
+            eff_d += "(" + e.aa_change + ")"
         elif e.effect == "splice-site" or e.effect == "synonymous":
             eff_d = str(e.prot_pos) + "/" + str(e.prot_length)
         elif e.effect == "5'UTR" or e.effect == "3'UTR":
