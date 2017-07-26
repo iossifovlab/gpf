@@ -10,9 +10,13 @@ class BaseAnnotationRequest(object):
         self.logger = logging.getLogger(__name__)
 
     def get_coding_region_for_pos(self, pos):
+        close_match = None
         for i, reg in enumerate(self.transcript_model.exons):
             if reg.start <= pos <= reg.stop:
                 return i
+            elif reg.start - 1 <= pos <= reg.stop + 1:
+                close_match = i
+        return close_match
 
     def get_coding_right(self, pos, length, index):
         if length <= 0:
@@ -219,9 +223,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
 
         index = self.get_coding_region_for_pos(pos)
         if index is None:
-            index = self.get_coding_region_for_pos(pos - 1)
-            if index is None:
-                raise IndexError
+            raise IndexError
         frame = self.get_frame(last_position, index)
         length = max(1, last_position - pos + 1)
         length += self.get_nucleotides_count_to_full_codon(length + frame)
