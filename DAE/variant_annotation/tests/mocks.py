@@ -30,6 +30,7 @@ class ReferenceGenomeMock:
 
 class CodeMock:
     startCodons = ["ABC", "DEF"]
+    CodonsAaKeys = {}
 
 
 class AnnotatorMock:
