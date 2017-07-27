@@ -213,15 +213,17 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         return ref_codons, alt_codons
 
     def get_amino_acids(self):
-        ref_codons, alt_codons = self.get_codons()
+        if not hasattr(self, "__amino_acids"):
+            ref_codons, alt_codons = self.get_codons()
 
-        ref_amino_acids = [self.cod2aa(ref_codons[i:i+3])
-                           for i in range(0, len(ref_codons), 3)]
+            ref_amino_acids = [self.cod2aa(ref_codons[i:i+3])
+                               for i in range(0, len(ref_codons), 3)]
 
-        alt_amino_acids = [self.cod2aa(alt_codons[i:i+3])
-                           for i in range(0, len(alt_codons), 3)]
+            alt_amino_acids = [self.cod2aa(alt_codons[i:i+3])
+                               for i in range(0, len(alt_codons), 3)]
 
-        return ref_amino_acids, alt_amino_acids
+            self.__amino_acids = ref_amino_acids, alt_amino_acids
+        return self.__amino_acids
 
 
 class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
@@ -331,15 +333,17 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         return BaseAnnotationRequest.cod2aa(self, complement_codon)
 
     def get_amino_acids(self):
-        ref_codons, alt_codons = self.get_codons()
+        if not hasattr(self, "__amino_acids"):
+            ref_codons, alt_codons = self.get_codons()
 
-        ref_amino_acids = [self.cod2aa(ref_codons[i-3:i])
-                           for i in range(len(ref_codons), 0, -3)]
+            ref_amino_acids = [self.cod2aa(ref_codons[i-3:i])
+                               for i in range(len(ref_codons), 0, -3)]
 
-        alt_amino_acids = [self.cod2aa(alt_codons[i-3:i])
-                           for i in range(len(alt_codons), 0, -3)]
+            alt_amino_acids = [self.cod2aa(alt_codons[i-3:i])
+                               for i in range(len(alt_codons), 0, -3)]
 
-        return ref_amino_acids, alt_amino_acids
+            self.__amino_acids = ref_amino_acids, alt_amino_acids
+        return self.__amino_acids
 
     def is_start_codon_affected(self):
         return BaseAnnotationRequest.is_stop_codon_affected(self)
