@@ -82,7 +82,7 @@ class FrameShiftEffectChecker:
         return self.create_effect(request, diff)
 
     def get_effect(self, request):
-        coding_regions = request.transcript_model.CDS_regions()
+        coding_regions = request.CDS_regions()
         ref_length = len(request.variant.reference)
         alt_length = len(request.variant.alternate)
         length = abs(alt_length - ref_length)

@@ -8,6 +8,11 @@ class BaseAnnotationRequest(object):
         self.transcript_model = transcript_model
         self.logger = logging.getLogger(__name__)
 
+    def CDS_regions(self):
+        if not hasattr(self, "__CDS_regions"):
+            self.__CDS_regions = self.transcript_model.CDS_regions()
+        return self.__CDS_regions
+
     def get_coding_region_for_pos(self, pos):
         close_match = None
         for i, reg in enumerate(self.transcript_model.exons):

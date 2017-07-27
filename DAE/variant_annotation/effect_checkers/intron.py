@@ -9,7 +9,7 @@ class IntronicEffectChecker:
     def get_effect(self, request):
         logger = logging.getLogger(__name__)
 
-        coding_regions = request.transcript_model.CDS_regions()
+        coding_regions = request.CDS_regions()
         prev = coding_regions[0].stop
 
         last_position = request.variant.position + \
