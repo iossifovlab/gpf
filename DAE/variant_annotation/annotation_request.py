@@ -1,5 +1,4 @@
 import logging
-import sys
 
 
 class BaseAnnotationRequest(object):
@@ -33,6 +32,17 @@ class BaseAnnotationRequest(object):
 
         length -= len(seq)
         return seq + self.get_coding_right(-1, length, index + 1)
+
+    def get_codons_right(self, pos, length):
+        if length <= 0:
+            return ""
+
+        last_index = pos + length - 1
+        seq = self.annotator.reference_genome.getSequence(
+            self.transcript_model.chr, pos, last_index
+        )
+
+        return seq
 
     def get_coding_left(self, pos, length, index):
         if length <= 0:
@@ -189,9 +199,9 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         if (len(alt_codons) + length_alt == 0):
             length_alt = 3
 
-        alt_codons += self.get_coding_right(
+        alt_codons += self.get_codons_right(
             self.variant.position + len(self.variant.reference),
-            length_alt, index
+            length_alt
         )
         self.logger.debug("ref codons=%s, alt codons=%s",
                           ref_codons, alt_codons)
