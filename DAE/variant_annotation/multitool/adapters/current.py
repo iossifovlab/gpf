@@ -11,4 +11,4 @@ class CurrentVariantAnnotation(BaseAdapter):
     def annotate(self, variant):
         result = self.annotator.annotate(variant)
         desc = self.annotator.effect_description(result)
-        return [SimpleEffect(desc[0], desc[1] + ":" + desc[2])]
+        return result, [SimpleEffect(desc[0], desc[1] + ":" + desc[2])]

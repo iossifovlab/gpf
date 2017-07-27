@@ -50,4 +50,4 @@ class JannovarVariantAnnotation(BaseAdapter):
                 continue
             effect = SimpleEffect(line.split("\t")[1], line.replace("\t", ","))
             effects.append(effect)
-        return effects
+        return None, effects

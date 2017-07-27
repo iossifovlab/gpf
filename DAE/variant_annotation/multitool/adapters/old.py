@@ -1,4 +1,4 @@
-from .old_VariantAnnotation import annotate_variant, effect_description
+from ..old_VariantAnnotation import annotate_variant, effect_description
 from ..simple_effect import SimpleEffect
 
 
@@ -17,4 +17,4 @@ class OldVariantAnnotation:
                                   seq, typ, promoter_len=self.promoter_len)
 
         desc = effect_description(result)
-        return [SimpleEffect(desc[0], desc[1] + ":" + desc[2])]
+        return result, [SimpleEffect(desc[0], desc[1] + ":" + desc[2])]

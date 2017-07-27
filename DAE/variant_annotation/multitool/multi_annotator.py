@@ -25,5 +25,5 @@ class MultiVariantAnnotator:
                          typ=None):
         return [(annotator.__class__.__name__,
                  annotator.annotate_variant(chr, position, loc, var, ref, alt,
-                                            length, seq, typ))
+                                            length, seq, typ)[1])
                 for annotator in self.annotators]

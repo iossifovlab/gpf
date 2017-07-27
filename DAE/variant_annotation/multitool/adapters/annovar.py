@@ -140,4 +140,4 @@ class AnnovarVariantAnnotation(BaseAdapter):
 
         effects = introns + extrons
         print(effects)
-        return effects
+        return None, effects
