@@ -70,6 +70,18 @@ class VariantAnnotationTest(unittest.TestCase):
         # self.assertEqual(effects_sorted[1].prot_length, 843)
         self.assertEqual(effects_sorted[1].aa_change, "His,Trp->Gln,End")
 
+    def test_chr5_75902128_sub_var(self):
+        [effect] = VariantAnnotator.annotate_variant(self.gmDB, self.GA,
+                                                     loc="5:75902128",
+                                                     var="sub(C->T)")
+        self.assertEqual(effect.gene, "IQGAP2")
+        self.assertEqual(effect.transcript_id, "NM_006633_1")
+        self.assertEqual(effect.strand, "+")
+        self.assertEqual(effect.effect, "nonsense")
+        # self.assertEqual(effects_sorted[0].prot_pos, None)
+        # self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effect.aa_change, "Arg->End")
+
 
 if __name__ == "__main__":
     unittest.main()
