@@ -50,7 +50,8 @@ class FrameShiftEffectChecker:
             alt_index = alt_aa.index("End")
 
             if ref_index != alt_index:
-                return Effect("no-frame-shift", request.transcript_model)
+                diff = abs(ref_index - alt_index) * 3
+                return self.create_effect(request, diff)
         except ValueError:
             pass
         except IndexError:
