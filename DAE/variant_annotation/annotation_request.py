@@ -71,15 +71,13 @@ class BaseAnnotationRequest(object):
             if i not in ['A', 'C', 'T', 'G', 'N']:
                 print("Codon can only contain: A, G, C, T, N letters, \
                       this codon is: " + codon)
-                sys.exit(-21)
-            if i == "N":
-                return("?")
+                return "?"
 
         for key in self.annotator.code.CodonsAaKeys:
             if codon in self.annotator.code.CodonsAa[key]:
-                return(key)
+                return key
 
-        return(None)
+        return None
 
     def find_start_codon(self):
         end_pos = self.variant.position + len(self.variant.reference)
