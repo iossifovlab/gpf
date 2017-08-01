@@ -59,24 +59,77 @@ class Layout:
             moved_individuals += self._move_overlaps()
 
             counter += 1
-
+        print("done", counter)
         self._align_left()
 
-    def _align_left(self):
-        pass
+    def _align_left(self, x_offset=10):
+        min_x = min([i.x for i in self._id_to_position.values()])
+
+        for individual in self._id_to_position.values():
+            individual.x = individual.x - min_x + x_offset
 
     def _set_mates_equally_apart(self):
-        return 0
+        moved = 0
 
-    def _move_overlaps(self):
-        return 0
+        for level in self._individuals_by_rank:
+            mating_units = self._get_mates_on_level(level)
+
+            dual_mating_units = {(mu1, mu2) for mu1 in mating_units
+                                 for mu2 in mating_units
+                                 if (mu1.father is mu2.father) ^
+                                    (mu1.mother is mu2.mother)}
+
+            for mu1, mu2 in dual_mating_units:
+                ordered_parents = []
+
+                if mu1.father is mu2.father:
+                    ordered_parents = [mu1.mother, mu1.father, mu2.mother]
+                else:
+                    ordered_parents = [mu1.father, mu1.mother, mu2.father]
+
+                ordered_parents = map(lambda i: self._id_to_position[i],
+                                      ordered_parents)
+                if ordered_parents[0].x > ordered_parents[2].x:
+                    ordered_parents[0], ordered_parents[2] = \
+                        ordered_parents[2], ordered_parents[0]
+
+                dist1 = ordered_parents[1].x - ordered_parents[0].x
+                dist2 = ordered_parents[1].x - ordered_parents[0].x
+
+                if dist1 < 0 or dist2 < 0 or abs(dist1 - dist2) < 1e-7:
+                    return 0
+
+                if dist1 > dist2:
+                    moved += self._move(ordered_parents[2:], dist1 - dist2)
+                else:
+                    moved += self._move(ordered_parents[1:], dist2 - dist1)
+
+        return moved
+
+    def _move_overlaps(self, gap_size=8):
+        moved = 0
+        first_individual_position = self._id_to_position[
+            self._individuals_by_rank[0][0]]
+        min_gap = first_individual_position.size + gap_size
+
+        for level in self._individuals_by_rank:
+            level_with_positions = map(lambda i: self._id_to_position[i],
+                                       level)
+            for index, individual1 in enumerate(level_with_positions):
+                for individual2 in level_with_positions[index+1:index+2]:
+                    diff = abs(individual1.x - individual2.x)
+                    assert diff >= 0
+                    if diff < min_gap:
+                        moved += self._move([individual1, individual2],
+                                            min_gap - diff)
+
+        return moved
 
     def _align_children_of_parents(self):
         moved = 0
 
-        for individuals_on_level in self._individuals_by_rank:
-            mating_units = {mu for i in individuals_on_level
-                            for mu in i.mating_units}
+        for level in self._individuals_by_rank:
+            mating_units = self._get_mates_on_level(level)
 
             for mates in mating_units:
                 moved += self._center_children_of_parents(mates)
@@ -103,8 +156,8 @@ class Layout:
     def _align_parens_of_children(self):
         moved = 0
 
-        for individuals_on_level in self._individuals_by_rank:
-            sibship_groups = self._get_sibships_on_level(individuals_on_level)
+        for level in self._individuals_by_rank:
+            sibship_groups = self._get_sibships_on_level(level)
             for sibship in sibship_groups:
                 moved += self._center_parents_of_children(sibship)
 
@@ -189,6 +242,9 @@ class Layout:
                 to_move, to_move_offset, already_moved | set(individuals))
 
         return len(individuals) + other_moved
+
+    def _get_mates_on_level(self, level):
+        return {mu for i in level for mu in i.mating_units}
 
     def _get_first_and_last_children_positions(self, mating_unit):
         children = mating_unit.children.individuals
