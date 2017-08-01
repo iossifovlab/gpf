@@ -222,7 +222,8 @@ class PrepareVariables(PrepareBase):
         if len(dataframes) == 1:
             df = dataframes[0]
         else:
-            df = pd.concat(dataframes)
+            assert len(set([len(f.columns) for f in dataframes])) == 1
+            df = pd.concat(dataframes, ignore_index=True)
 
         assert df is not None
 
@@ -330,9 +331,11 @@ class PrepareVariables(PrepareBase):
             mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].dropna()
             mdf.rename(columns={measure_name: 'value'}, inplace=True)
 
-            measure = self._build_measure(instrument_name, measure_name, mdf)
+            measure = self._build_measure(
+                instrument_name, measure_name, mdf)
             print(instrument_name, measure_name, measure)
             self._save_measure(measure, mdf)
+
         return df
 
     @classmethod

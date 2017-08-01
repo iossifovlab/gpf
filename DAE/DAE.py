@@ -10,7 +10,7 @@ from Variant import normalRefCopyNumber
 from GeneInfoDB import GeneInfoDB
 from GeneTerms import loadGeneTerm 
 import phenoDB
-from Sfari import SfariCollection
+# from Sfari import SfariCollection
 from GenomesDB import GenomesDB
 
 from Config import *
@@ -18,12 +18,12 @@ from pheno.pheno_factory import PhenoFactory
 config = Config()
 
 giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
-sfariDB = SfariCollection(config.sfariDBdir)
-phDB = phenoDB.rawTableFactory(config.phenoDBFile)
+# sfariDB = SfariCollection(config.sfariDBdir)
+# phDB = phenoDB.rawTableFactory(config.phenoDBFile)
 genomesDB = GenomesDB(config.daeDir, config.genomesDBconfFile)
 
 vDB = VariantsDB(config.daeDir, config.variantsDBconfFile,
-                 sfariDB=sfariDB, giDB=giDB, phDB=phDB, genomesDB=genomesDB)
+                 sfariDB=None, giDB=giDB, phDB=None, genomesDB=genomesDB)
 
 
 def get_gene_sets_symNS(geneSetsDef, denovoStudies=None):

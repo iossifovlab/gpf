@@ -24,5 +24,30 @@ directory structure is as follows:
 pheno2DAE.py -p ssc.ped -i instruments/ -r guess -o ssc_15.db
 ```
 
+```
+date && pheno2DAE.py -p ssc.ped -i instruments/ -r guess -o ssc_5.db && date                                                                    
+Tue Aug  1 14:22:19 EEST 2017
+--------------------------------------------------------
+CLASSIFICATION BOUNDARIES:
+--------------------------------------------------------
+{'classification': {'categorical': {'min_rank': 2},
+                    'continuous': {'min_rank': 15},
+                    'min_individuals': 20,
+                    'ordinal': {'min_rank': 5}},
+ 'db': {'filename': 'ssc_5.db'},
+ 'family': {'composite_key': False},
+ 'instruments': 'instruments/',
+ 'pedigree': 'ssc.ped',
+ 'person': {'role': {'column': 'role', 'mapping': 'SPARK', 'type': 'guess'}},
+ 'skip': {'measures': []},
+ 'verbose': None}
+--------------------------------------------------------
+...
+...
+
+```
+
+
+
 ## Import of SPARK phenotype database
 
