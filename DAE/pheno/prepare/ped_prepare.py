@@ -223,6 +223,7 @@ class PrepareVariables(PrepareBase):
             df = dataframes[0]
         else:
             df = pd.concat(dataframes)
+
         assert df is not None
 
         persons = self.get_persons()

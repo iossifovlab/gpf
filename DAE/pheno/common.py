@@ -39,6 +39,19 @@ class MeasureType(enum.Enum):
     categorical = 3
     other = 4
 
+    @staticmethod
+    def from_str(measure_type):
+        if measure_type == MeasureType.continuous.name:
+            return MeasureType.continuous
+        elif measure_type == MeasureType.ordinal.name:
+            return MeasureType.ordinal
+        elif measure_type == MeasureType.categorical.name:
+            return MeasureType.categorical
+        elif measure_type == MeasureType.other.name:
+            return MeasureType.other
+        else:
+            assert ValueError("unexpected measure type"), measure_type
+
 
 class RoleMapping(object):
     SPARK = {

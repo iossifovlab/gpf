@@ -93,6 +93,9 @@ class DbManager(object):
         )
 
     def get_value_table(self, value_type):
+        if isinstance(value_type, unicode) or isinstance(value_type, str):
+            value_type = MeasureType.from_str(value_type)
+
         if value_type == MeasureType.continuous:
             return self.value_continuous
         elif value_type == MeasureType.ordinal:
