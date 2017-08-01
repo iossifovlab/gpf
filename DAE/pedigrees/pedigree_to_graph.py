@@ -202,7 +202,10 @@ class Individual(IndividualGroup):
                 self.parents.mother.add_rank(rank + 1)
 
     def __repr__(self):
-        return self.member.id
+        return str(self.member.id)
+
+    def are_siblings(self, other_individual):
+        return self.parents == other_individual.parents
 
 
 class SibshipUnit(IndividualGroup):
@@ -251,10 +254,12 @@ def main():
         # if family.family_id == "AU0001":
         sandwich_instance = family.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
-        individuals_intervals = filter(
-            lambda interval: isinstance(interval.vertex, Individual),
-            intervals)
-        Layout.generate_from_intervals(individuals_intervals)
+        if intervals:
+            individuals_intervals = filter(
+                lambda interval: isinstance(interval.vertex, Individual),
+                intervals)
+            layout = Layout(individuals_intervals)
+            print layout._id_to_position
 
 
 if __name__ == "__main__":
