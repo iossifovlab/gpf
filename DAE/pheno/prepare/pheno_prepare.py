@@ -109,29 +109,6 @@ def check_pheno_db_cache():
     check_pheno_families_cache()
 
 
-def prepare_agre_families():
-    import agre_families
-    p = agre_families.PrepareIndividuals()
-    p.prepare()
-
-
-def prepare_agre_variables():
-    import agre_variables
-    p = agre_variables.PrepareVariables()
-    p.prepare()
-
-
-def prepare_agre_pheno_db():
-    prepare_agre_families()
-    prepare_agre_variables()
-
-
-def prepare_agre_pheno_db_meta():
-    import agre_meta
-    p = agre_meta.PrepareMetaVariables()
-    p.prepare()
-
-
 def prepare_vip_pheno_db():
     import vip_families
     p = vip_families.PrepareIndividuals()
