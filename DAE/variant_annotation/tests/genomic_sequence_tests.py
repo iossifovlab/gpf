@@ -98,4 +98,4 @@ class GenomicSequenceTest(unittest.TestCase):
             annotator, variant, tm)
         ref_codons, alt_codons = gen_seq.get_codons()
         self.assertEqual(ref_codons, "FPQRSTUVWXYZdefghi")
-        self.assertEqual(alt_codons, "FA_")
+        self.assertEqual(alt_codons, "FAd")
