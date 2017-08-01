@@ -49,5 +49,31 @@ Tue Aug  1 15:34:13 EEST 2017
 
 
 
-## Import of SPARK phenotype database
+## Import of VIP phenotype database
 
+```
+date && pheno2DAE.py -p nuc_svip.ped -i SVIP_16p11.2/ -r guess -o vip_3.db && date                                                             
+Tue Aug  1 15:51:35 EEST 2017
+--------------------------------------------------------
+CLASSIFICATION BOUNDARIES:
+--------------------------------------------------------
+{'classification': {'categorical': {'min_rank': 2},
+                    'continuous': {'min_rank': 15},
+                    'min_individuals': 20,
+                    'ordinal': {'min_rank': 5}},
+ 'db': {'filename': 'vip_3.db'},
+ 'family': {'composite_key': False},
+ 'instruments': 'SVIP_16p11.2/',
+ 'pedigree': 'nuc_svip.ped',
+ 'person': {'role': {'column': 'role', 'mapping': 'SPARK', 'type': 'guess'}},
+ 'skip': {'measures': []},
+ 'verbose': None}
+--------------------------------------------------------
+('SVIP_16p11.2/', 'wasi.csv')
+('SVIP_16p11.2/', 'mhi_adult.csv')
+('SVIP_16p11.2/', 'previous_diagnosis.csv')
+...
+...
+('vineland_ii', 'written_v_score', <Box: {'measure_id': 'vineland_ii.written_v_score', 'individuals': 110, 'instrument_name': 'vineland_ii', 'measure_name': 'written_v_score', 'measure_type': <MeasureType.continuous: 1>, 'default_filter': None}>)
+Tue Aug  1 16:01:41 EEST 2017
+```
