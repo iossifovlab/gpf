@@ -261,7 +261,7 @@ class PrepareVariables(PrepareBase):
     def _save_measure(self, measure, mdf):
         to_save = measure.to_dict()
         ins = self.db.measure.insert().values(**to_save)
-        with self.db.engine.connect() as connection:
+        with self.db.engine.begin() as connection:
             result = connection.execute(ins)
             measure_id = result.inserted_primary_key[0]
         if len(mdf) == 0:
@@ -296,7 +296,7 @@ class PrepareVariables(PrepareBase):
 
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
-        with self.db.engine.connect() as connection:
+        with self.db.engine.begin() as connection:
             connection.execute(ins, values.values())
 
     def _collect_instruments(self, dirname, instruments):
