@@ -11,6 +11,7 @@ import os
 import math
 from box import Box
 from collections import defaultdict, OrderedDict
+from pheno.utils.commons import remove_annoying_characters
 
 
 class PrepareBase(object):
@@ -130,7 +131,17 @@ class PreparePersons(PrepareBase):
 
     @classmethod
     def load_pedfile(cls, pedfile):
-        df = pd.read_csv(pedfile, sep='\t')
+        df = pd.read_csv(
+            pedfile, sep='\t',
+            dtype={
+                'familyId': object,
+                'personId': object,
+                'dadId': object,
+                'momId': object,
+                'gender': np.int32,
+                'status': np.int32,
+            }
+        )
         assert set(cls.COLUMNS) <= set(df.columns)
         return df
 
@@ -211,7 +222,7 @@ class PrepareVariables(PrepareBase):
         if len(dataframes) == 1:
             df = dataframes[0]
         else:
-            df = None
+            df = pd.concat(dataframes)
         assert df is not None
 
         persons = self.get_persons()
@@ -255,6 +266,15 @@ class PrepareVariables(PrepareBase):
             print('empty measure: {}'.format(measure.measure_id))
             return
 
+        def convert(v): return v
+        if measure.measure_type == MeasureType.categorical or \
+                measure.measure_type == MeasureType.other:
+            def convert(v):
+                if type(v) in set([str, unicode]):
+                    return unicode(remove_annoying_characters(v))
+                else:
+                    return unicode(v)
+
         values = OrderedDict()
         for _index, row in mdf.iterrows():
             pid = int(row[self.PID_COLUMN])
@@ -262,12 +282,13 @@ class PrepareVariables(PrepareBase):
             v = {
                 self.PERSON_ID: pid,
                 'measure_id': measure_id,
-                'value': row['value']
+                'value': convert(row['value'])
             }
             if k in values:
                 print("updating measure {} with {}".format(
                     values[k], row))
             values[k] = v
+
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
         with self.db.engine.connect() as connection:
@@ -317,7 +338,8 @@ class PrepareVariables(PrepareBase):
             return bool
 
         try:
-            vals = [v.strip() for v in values]
+            vals = [v.strip() for v in values
+                    if not (isinstance(v, float) or isinstance(v, int))]
             fvals = [float(v) for v in vals if v != '']
         except ValueError:
             return str
@@ -394,6 +416,8 @@ class PrepareVariables(PrepareBase):
 
         values_type = values.dtype
         if values_type == np.object:
+            print("checking values type ({}) for {}:{}".format(
+                values.dtype, instrument_name, measure_name))
             values_type = self.check_values_type(unique_values)
 
         if values_type in set([str, bool, np.bool, np.dtype('bool')]):
