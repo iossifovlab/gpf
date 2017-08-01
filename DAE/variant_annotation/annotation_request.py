@@ -8,6 +8,14 @@ class BaseAnnotationRequest(object):
         self.transcript_model = transcript_model
         self.logger = logging.getLogger(__name__)
 
+    def _get_sequence(self, start_position, end_position):
+        if end_position < start_position:
+            return ""
+
+        return self.annotator.reference_genome.getSequence(
+            self.transcript_model.chr, start_position, end_position
+        )
+
     def CDS_regions(self):
         if not hasattr(self, "__CDS_regions"):
             self.__CDS_regions = self.transcript_model.CDS_regions()
@@ -31,9 +39,7 @@ class BaseAnnotationRequest(object):
         if pos == -1:
             pos = reg.start
         last_index = min(pos + length - 1, reg.stop)
-        seq = self.annotator.reference_genome.getSequence(
-            self.transcript_model.chr, pos, last_index
-        )
+        seq = self._get_sequence(pos, last_index)
 
         length -= len(seq)
         return seq + self.get_coding_right(-1, length, index + 1)
@@ -43,9 +49,7 @@ class BaseAnnotationRequest(object):
             return ""
 
         last_index = pos + length - 1
-        seq = self.annotator.reference_genome.getSequence(
-            self.transcript_model.chr, pos, last_index
-        )
+        seq = self._get_sequence(pos, last_index)
 
         return seq
 
@@ -58,9 +62,7 @@ class BaseAnnotationRequest(object):
         if pos == -1:
             pos = reg.stop
         start_index = max(pos - length + 1, reg.start)
-        seq = self.annotator.reference_genome.getSequence(
-            self.transcript_model.chr, start_index, pos
-        )
+        seq = self._get_sequence(start_index, pos)
 
         length -= len(seq)
         return self.get_coding_left(-1, length, index - 1) + seq
@@ -69,9 +71,7 @@ class BaseAnnotationRequest(object):
         if length <= 0:
             return ""
         start_index = pos - length + 1
-        seq = self.annotator.reference_genome.getSequence(
-            self.transcript_model.chr, start_index, pos
-        )
+        seq = self._get_sequence(start_index, pos)
         return seq
 
     def get_nucleotides_count_to_full_codon(self, length):
@@ -102,9 +102,7 @@ class BaseAnnotationRequest(object):
             self.logger.debug("getSequence %d-%d", pos,
                               self.variant.position - 1)
             if self.variant.position - 1 >= pos:
-                codon = self.annotator.reference_genome.getSequence(
-                    self.transcript_model.chr, pos, self.variant.position - 1
-                )
+                codon = self._get_sequence(pos, self.variant.position - 1)
             else:
                 codon = ""
             start_index = max(0, offset)
@@ -114,11 +112,8 @@ class BaseAnnotationRequest(object):
             self.logger.debug("getSequence2 %d-%d", end_pos,
                               end_pos + remaining_length)
             if remaining_length >= 0:
-                codon += self.annotator.reference_genome.getSequence(
-                    self.transcript_model.chr,
-                    end_pos,
-                    end_pos + remaining_length
-                )
+                codon += self._get_sequence(end_pos,
+                                            end_pos + remaining_length)
 
             self.logger.debug("checking %s from %d-%d + (%s)%d-%d + %d-%d",
                               codon,
@@ -157,11 +152,8 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
                                        transcript_model)
 
     def in_start_codons(self, codon):
-        seq = self.annotator.reference_genome.getSequence(
-            self.transcript_model.chr,
-            self.transcript_model.cds[0],
-            self.transcript_model.cds[0] + 2
-        )
+        seq = self._get_sequence(self.transcript_model.cds[0],
+                                 self.transcript_model.cds[0] + 2)
 
         if codon == seq or codon in self.annotator.code.startCodons:
             return True
@@ -204,9 +196,9 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         if (len(alt_codons) + length_alt == 0):
             length_alt = 3
 
-        alt_codons += self.get_codons_right(
+        alt_codons += self.get_coding_right(
             self.variant.position + len(self.variant.reference),
-            length_alt
+            length_alt, index
         )
         self.logger.debug("ref codons=%s, alt codons=%s",
                           ref_codons, alt_codons)
@@ -232,11 +224,8 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
                                        transcript_model)
 
     def in_start_codons(self, codon):
-        seq = self.annotator.reference_genome.getSequence(
-            self.transcript_model.chr,
-            self.transcript_model.cds[1] - 2,
-            self.transcript_model.cds[1]
-        )
+        seq = self._get_sequence(self.transcript_model.cds[1] - 2,
+                                 self.transcript_model.cds[1])
 
         complement_codon = self.complement(codon[::-1])
         if codon == seq or complement_codon in self.annotator.code.startCodons:
@@ -291,9 +280,9 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         if (len(alt_codons) + length_alt == 0):
             length_alt = 3
 
-        alt_codons = self.get_codons_left(
+        alt_codons = self.get_coding_left(
             self.variant.position - 1,
-            length_alt
+            length_alt, index
         ) + alt_codons
 
         self.logger.debug("%d-%d %d-%d->%d-%d %d-%d",
