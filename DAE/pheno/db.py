@@ -63,11 +63,11 @@ class DbManager(object):
         )
         self.meta_measure = Table(
             'meta_measure', self.metadata,
-            Column('id', Integer(), primary_key=True,),
-            Column('measure_id', ForeignKey('measure.id'), unique=True),
+            Column('measure_id', ForeignKey('measure.id'),
+                   unique=True, index=True, primary_key=True),
             Column('min_value', Float(), nullable=True),
             Column('max_value', Float(), nullable=True),
-            Column('value_domain', String(255), nullable=True),
+            Column('values_domain', String(255), nullable=True),
         )
 
     def _build_value_tables(self):

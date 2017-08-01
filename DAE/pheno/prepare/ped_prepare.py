@@ -452,6 +452,8 @@ class PrepareMetaMeasures(PrepareBase):
 
     def __init__(self, config):
         super(PrepareMetaMeasures, self).__init__(config)
+        self.pheno = PhenoDB(dbfile=self.db.dbfile)
+        self.pheno.load()
 
     def build(self):
         measures = self.db.get_measures()
@@ -460,4 +462,35 @@ class PrepareMetaMeasures(PrepareBase):
 
     def build_meta_measure(self, measure):
         print("processing meta measures for {}".format(measure.measure_id))
-        
+        df = self.pheno.get_measure_values_df(measure.measure_id)
+        measure_type = measure.measure_type
+        values = df[measure.measure_id]
+        if measure_type in \
+                set([MeasureType.continuous, MeasureType.ordinal]):
+            min_value = values.values.min()
+            max_value = values.values.max()
+        else:
+            min_value = None
+            max_value = None
+        if measure_type == MeasureType.continuous:
+            values_domain = "[{}, {}]".format(min_value, max_value)
+        else:
+            values_domain = ",".join(sorted(values.unique()))
+
+        meta = {
+            'measure_id': measure.id,
+            'min_value': min_value,
+            'max_value': max_value,
+            'values_domain': values_domain,
+        }
+        try:
+            insert = self.db.meta_measure.insert().values(**meta)
+            with self.db.engine.begin() as connection:
+                connection.execute(insert)
+        except Exception:
+            del meta['measure_id']
+            update = self.db.meta_measure.update().values(**meta).where(
+                self.db.meta_measure.c.measure_id == measure.id
+            )
+            with self.db.engine.begin() as connection:
+                connection.execute(update)
