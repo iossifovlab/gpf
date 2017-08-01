@@ -12,6 +12,7 @@ import math
 from box import Box
 from collections import defaultdict, OrderedDict
 from pheno.utils.commons import remove_annoying_characters
+from pheno.pheno_db import PhenoDB
 
 
 class PrepareBase(object):
@@ -445,3 +446,18 @@ class PrepareVariables(PrepareBase):
 
         measure.measure_type = MeasureType.other
         return measure
+
+
+class PrepareMetaMeasures(PrepareBase):
+
+    def __init__(self, config):
+        super(PrepareMetaMeasures, self).__init__(config)
+
+    def build(self):
+        measures = self.db.get_measures()
+        for m in measures.values():
+            self.build_meta_measure(m)
+
+    def build_meta_measure(self, measure):
+        print("processing meta measures for {}".format(measure.measure_id))
+        

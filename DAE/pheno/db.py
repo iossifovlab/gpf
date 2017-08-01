@@ -61,6 +61,14 @@ class DbManager(object):
             UniqueConstraint('instrument_name', 'measure_name',
                              name='measure_key'),
         )
+        self.meta_measure = Table(
+            'meta_measure', self.metadata,
+            Column('id', Integer(), primary_key=True,),
+            Column('measure_id', ForeignKey('measure.id'), unique=True),
+            Column('min_value', Float(), nullable=True),
+            Column('max_value', Float(), nullable=True),
+            Column('value_domain', String(255), nullable=True),
+        )
 
     def _build_value_tables(self):
         self.value_continuous = Table(
@@ -128,3 +136,19 @@ class DbManager(object):
             persons = connection.execute(s).fetchall()
         persons = {p.person_id: p for p in persons}
         return persons
+
+    def get_measures(self):
+        s = select([
+            self.measure.c.id,
+            self.measure.c.measure_id,
+            self.measure.c.instrument_name,
+            self.measure.c.measure_name,
+            self.measure.c.measure_type,
+        ])
+        s = s.select_from(self.measure)
+        with self.engine.begin() as connection:
+            measures = connection.execute(s).fetchall()
+        measures = {
+            m.measure_id: m for m in measures
+        }
+        return measures

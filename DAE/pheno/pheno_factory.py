@@ -47,6 +47,6 @@ class PhenoFactory(PhenoConfig):
             raise ValueError("can't find pheno DB {}; available pheno DBs: {}"
                              .format(dbname, self._available))
         import pheno_db
-        phdb = pheno_db.PhenoDB(pheno_db=dbname)
+        phdb = pheno_db.PhenoDB(dbfile=self.get_dbfile(dbname))
         phdb.load()
         return phdb
