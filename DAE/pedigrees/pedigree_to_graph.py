@@ -207,6 +207,10 @@ class Individual(IndividualGroup):
     def are_siblings(self, other_individual):
         return self.parents == other_individual.parents
 
+    def are_mates(self, other_individual):
+        return len(set(self.mating_units) &
+                   set(other_individual.mating_units)) == 1
+
 
 class SibshipUnit(IndividualGroup):
     def __init__(self, individuals=None):
@@ -257,10 +261,11 @@ def main():
         if intervals:
             individuals_intervals = filter(
                 lambda interval: isinstance(interval.vertex, Individual),
-                intervals)
+                intervals
+            )
             layout = Layout(individuals_intervals)
-            print layout._id_to_position
-
+            print("lines", layout.lines)
+            print("position", layout.positions)
 
 if __name__ == "__main__":
     main()

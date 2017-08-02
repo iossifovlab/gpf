@@ -12,8 +12,12 @@ class PedigreeMemberWithCoordinates:
         self.scale = scale
 
     @property
-    def center(self):
+    def x_center(self):
         return self.x + self.size / 2
+
+    @property
+    def y_center(self):
+        return self.y + self.size / 2
 
     def __repr__(self):
         return "({}, {})".format(self.x, self.y)
@@ -27,12 +31,16 @@ class Line:
         self.x2 = x2
         self.y2 = y2
 
+    def __repr__(self):
+        return "[({},{}) - ({},{})]".format(self.x1, self.y1, self.x2, self.y2)
+
 
 class Layout:
 
     def __init__(self, intervals):
         self._intervals = intervals
         self.lines = []
+        self.positions = []
         self._individuals_by_rank = self._intervals_by_ranks()
         self._id_to_position = self._generate_simple_layout(
             self._individuals_by_rank)
@@ -41,6 +49,8 @@ class Layout:
     def _generate_from_intervals(self):
 
         self._optimize_drawing()
+        self._create_positioned_individuals()
+        self._create_lines()
 
     def _optimize_drawing(self):
         moved_individuals = -1
@@ -61,6 +71,46 @@ class Layout:
             counter += 1
         print("done", counter)
         self._align_left()
+
+    def _create_positioned_individuals(self):
+        for level in self._individuals_by_rank:
+            self.positions.append(
+                map(lambda x: self._id_to_position[x], level))
+
+    def _create_lines(self, y_offset=15):
+        for level in self.positions:
+            num_individuals = len(level)
+
+            for index, individual in enumerate(level):
+                if individual.member.parents:
+                    self.lines.append(Line(
+                        individual.x_center, individual.y_center,
+                        individual.x_center, individual.y_center - y_offset
+                    ))
+
+                if index + 1 >= num_individuals:
+                    continue
+
+                other_individual = level[index+1]
+
+                if individual.member.are_mates(other_individual.member):
+                    self.lines.append(Line(
+                        individual.x_center, individual.y_center,
+                        other_individual.x_center, other_individual.y_center
+                    ))
+                    middle_x = (individual.x_center +
+                                other_individual.x_center) / 2
+                    self.lines.append(Line(
+                        middle_x, individual.y_center,
+                        middle_x, individual.y_center + y_offset
+                    ))
+
+                if individual.member.are_siblings(other_individual.member):
+                    self.lines.append(Line(
+                        individual.x_center, individual.y_center - y_offset,
+                        other_individual.x_center,
+                        other_individual.y_center - y_offset
+                    ))
 
     def _align_left(self, x_offset=10):
         min_x = min([i.x for i in self._id_to_position.values()])
@@ -217,7 +267,7 @@ class Layout:
 
             if len(to_move) != 0:
                 to_move_offset = max(map(
-                    lambda x: new_end - x.center + 8*2 + x.size,
+                    lambda x: new_end - x.x_center + 8*2 + x.size,
                     to_move))
         else:
             start = min_individual.x
@@ -229,7 +279,7 @@ class Layout:
 
             if len(to_move) != 0:
                 to_move_offset = min(map(
-                    lambda x: new_start - x.center + 8*2 + x.size,
+                    lambda x: new_start - x.x_center + 8*2 + x.size,
                     to_move))
 
         for individual in individuals:
