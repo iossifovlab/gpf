@@ -53,7 +53,7 @@
     "@types/hammerjs": "^2.0.34",
     "@types/jasmine": "2.5.46",
     "@types/node": "^7.0.12",
-    "@angular/cli": "1.0.0",
+    "@angular/cli": "^1.0.0",
     "angular-ide": "^0.9.12",
     "codelyzer": "~3.0.0-beta.4",
     "jasmine-core": "2.5.2",
