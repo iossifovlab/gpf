@@ -13,7 +13,8 @@ from argparse import RawDescriptionHelpFormatter
 import traceback
 from pheno.common import dump_config,\
     check_config_pheno_db, default_config
-from pheno.prepare.ped_prepare import PreparePersons, PrepareVariables
+from pheno.prepare.ped_prepare import PreparePersons, PrepareVariables,\
+    PrepareMetaMeasures
 
 
 class CLIError(Exception):
@@ -148,8 +149,15 @@ USAGE
             '-r', '--role',
             dest='role',
             help='sets role handling; available choices "column", "guess"; '
-            'default value is "column"')
+            'default value is "column"'
+        )
 
+        parser.add_argument(
+            '-M', '--meta',
+            dest='meta',
+            help="updates measure meta data only",
+            action="store_true"
+        )
         # Process arguments
         args = parser.parse_args()
 
@@ -169,15 +177,20 @@ USAGE
 
         config = parse_config(args)
         dump_config(config)
+        meta = args.meta
 
         if not check_config_pheno_db(config):
             raise Exception("bad classification boundaries")
 
-        prep = PreparePersons(config)
-        prep.build(pedigree_filename)
+        if not meta:
+            prep = PreparePersons(config)
+            prep.build(pedigree_filename)
 
-        prep = PrepareVariables(config)
-        prep.build(instruments_directory)
+            prep = PrepareVariables(config)
+            prep.build(instruments_directory)
+
+        prep = PrepareMetaMeasures(config)
+        prep.build()
 
         return 0
     except KeyboardInterrupt:
