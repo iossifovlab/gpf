@@ -6,7 +6,9 @@
             style="vertical-align: middle">
         </gpf-table-header>
     </div>
-    <div style="display: table-row;" [style.height]="beforeDataCellHeight + 'px'">
+    <div
+        [style.display]="beforeDataCellHeight ? 'table-row': 'none'"
+        [style.height]="beforeDataCellHeight + 'px'">
         <td *ngFor="let column of columnsChildren">
         </td>
     </div>
