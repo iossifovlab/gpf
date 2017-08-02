@@ -9,6 +9,8 @@ class BaseAnnotationRequest(object):
         self.logger = logging.getLogger(__name__)
 
     def _get_sequence(self, start_position, end_position):
+        self.logger.debug("_get_sequence %d-%d", start_position, end_position)
+
         if end_position < start_position:
             return ""
 
@@ -31,8 +33,13 @@ class BaseAnnotationRequest(object):
         return close_match
 
     def get_coding_right(self, pos, length, index):
+        self.logger.debug("get_coding_right pos:%d len:%d index:%d",
+                          pos, length, index)
         if length <= 0:
             return ""
+
+        if index < 0 or pos > self.transcript_model.exons[-1].stop:
+            return self.get_codons_right(pos, length)
 
         reg = self.transcript_model.exons[index]
 
@@ -54,8 +61,14 @@ class BaseAnnotationRequest(object):
         return seq
 
     def get_coding_left(self, pos, length, index):
+        self.logger.debug("get_coding_left pos:%d len:%d index:%d",
+                          pos, length, index)
         if length <= 0:
             return ""
+
+        if index < 0 or (pos < self.transcript_model.exons[0].start
+                         and pos != -1):
+            return self.get_codons_left(pos, length)
 
         reg = self.transcript_model.exons[index]
 
@@ -65,7 +78,11 @@ class BaseAnnotationRequest(object):
         seq = self._get_sequence(start_index, pos)
 
         length -= len(seq)
-        return self.get_coding_left(-1, length, index - 1) + seq
+
+        if index == 0:
+            return self.get_codons_left(reg.start - 1, length) + seq
+        else:
+            return self.get_coding_left(-1, length, index - 1) + seq
 
     def get_codons_left(self, pos, length):
         if length <= 0:
@@ -99,8 +116,6 @@ class BaseAnnotationRequest(object):
 
         for offset in range(-2, len(self.variant.alternate) + 1):
             pos = self.variant.position + offset
-            self.logger.debug("getSequence %d-%d", pos,
-                              self.variant.position - 1)
             if self.variant.position - 1 >= pos:
                 codon = self._get_sequence(pos, self.variant.position - 1)
             else:
@@ -109,8 +124,6 @@ class BaseAnnotationRequest(object):
             last_index = max(0, offset + 3)
             codon += self.variant.alternate[start_index:last_index]
             remaining_length = 3 - len(codon) - 1
-            self.logger.debug("getSequence2 %d-%d", end_pos,
-                              end_pos + remaining_length)
             if remaining_length >= 0:
                 codon += self._get_sequence(end_pos,
                                             end_pos + remaining_length)
