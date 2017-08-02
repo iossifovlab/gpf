@@ -177,7 +177,6 @@ export class GenotypePreviewsArray {
         genotypePreviewsArray.genotypePreviews.push(genotypePreview);
       }
     }
-    console.log(genotypePreviewsArray);
     return genotypePreviewsArray;
   }
 

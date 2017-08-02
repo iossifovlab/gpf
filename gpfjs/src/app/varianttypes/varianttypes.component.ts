@@ -46,7 +46,6 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
 
     let datasetsState: Observable<DatasetsState> = this.store.select('datasets');
     datasetsState.subscribe(state => {
-      console.log("variantTypes DS", state)
       if (!state || !state.selectedDataset) {
         return
       }
@@ -84,7 +83,6 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
   selectAll(): void {
     let payload = ['sub', 'ins', 'del'];
     if (this.hasCNV) {
-      console.log(this.hasCNV);
       payload.push('CNV');
     }
     this.store.dispatch({

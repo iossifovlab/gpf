@@ -40,7 +40,6 @@ export class EnrichmentToolComponent extends QueryStateCollector {
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
                                       ...state);
-        console.log("ST", queryData);
         this.enrichmentQueryService.getEnrichmentTest(queryData).subscribe(
           (enrichmentResults) => {
             this.enrichmentResults = enrichmentResults;
@@ -48,7 +47,7 @@ export class EnrichmentToolComponent extends QueryStateCollector {
           });
       },
       error => {
-        console.log(error);
+        console.warn(error);
         this.loadingService.setLoadingStop();
       }
     )

@@ -46,7 +46,7 @@ export class PhenoToolComponent extends QueryStateCollector implements OnInit {
                                           stateObject);
           },
           error => {
-            console.log(error);
+            console.warn(error);
           }
         )
       }
@@ -77,7 +77,6 @@ export class PhenoToolComponent extends QueryStateCollector implements OnInit {
         this.phenoToolService.getPhenoToolResults(queryData).subscribe(
           (phenoToolResults) => {
             this.phenoToolResults = phenoToolResults;
-            console.log(this.phenoToolResults);
             this.loadingService.setLoadingStop();
           });
 

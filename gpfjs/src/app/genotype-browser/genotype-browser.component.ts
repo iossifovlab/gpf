@@ -51,7 +51,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
           },
           error => {
             this.genotypePreviewsArray = null
-            console.log(error);
+            console.warn(error);
           }
         )
       }
@@ -92,7 +92,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
           });
       },
       error => {
-        console.log(error);
+        console.warn(error);
         this.loadingService.setLoadingStop();
       }
     )

@@ -33,7 +33,6 @@ export class DatasetsService {
 
   getDatasets(): Observable<Dataset[]> {
     let options = new RequestOptions({ withCredentials: true });
-    console.log('getting datsets from: ', this.datasetUrl);
     return this.http
       .get(this.datasetUrl, options)
       .map(res => {
@@ -48,12 +47,10 @@ export class DatasetsService {
 
   getDataset(datasetId: string): Observable<Dataset> {
     let url = `${this.datasetUrl}${datasetId}`;
-    console.log('getting a dataset from: ', url);
 
     return this.http
       .get(url)
       .map(res => {
-        console.log('datasets response: ', res);
         return Dataset.fromJson(res.json().data);
       });
   }
