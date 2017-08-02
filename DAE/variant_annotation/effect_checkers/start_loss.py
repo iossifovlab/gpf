@@ -21,7 +21,7 @@ class StartLossEffectChecker:
                     if request.find_start_codon() is None:
                         ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
-                        ef.prot_length = 100
+                        ef.prot_length = request.get_protein_length()
                         return ef
             else:
                 if (request.variant.position <= request.transcript_model.cds[1]
@@ -31,7 +31,7 @@ class StartLossEffectChecker:
                     if request.find_start_codon() is None:
                         ef = Effect("noStart", request.transcript_model)
                         ef.prot_pos = 1
-                        ef.prot_length = 100
+                        ef.prot_length = request.get_protein_length()
                         return ef
         except IndexError:
             return

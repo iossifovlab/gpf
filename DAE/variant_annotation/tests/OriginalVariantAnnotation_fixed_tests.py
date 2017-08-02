@@ -674,8 +674,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_001409_1")
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 1541)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 1541)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr4_100544005_ins_var(self):
@@ -723,8 +723,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_016639_1")
         self.assertEqual(effect.strand, "+")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 129)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 129)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr1_115316880_del_var(self):
@@ -809,8 +809,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].transcript_id, "NM_017735_1")
         self.assertEqual(effects_sorted[1].strand, "+")
         self.assertEqual(effects_sorted[1].effect, "noStart")
-        # self.assertEqual(effects_sorted[1].prot_pos, 1)
-        # self.assertEqual(effects_sorted[1].prot_length, 843)
+        self.assertEqual(effects_sorted[1].prot_pos, 1)
+        self.assertEqual(effects_sorted[1].prot_length, 843)
         self.assertEqual(effects_sorted[1].aa_change, None)
 
     def test_chr20_44518889_ins_var(self):
@@ -1033,8 +1033,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_013285_1")
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 731)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 731)
         self.assertEqual(effect.aa_change, None)
 
     def test_first_codon_ins_integenic_var(self):

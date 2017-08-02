@@ -21,8 +21,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_001047980_1")
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 422)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 421)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr2_237172988_ins_var(self):
@@ -34,8 +34,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_212556_1")
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "5'UTR")
-        # self.assertEqual(effect.prot_pos, None)
-        # self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.prot_pos, None)
+        self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
 
     # def test_chr1_802610_867930_CNV_var(self):

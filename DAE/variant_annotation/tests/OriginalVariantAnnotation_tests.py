@@ -89,23 +89,23 @@ class VariantAnnotationTest(unittest.TestCase):
 
         self.assertEqual(effects[2].transcript_id, "NM_001206985_1")
         self.assertEqual(effects[2].effect, "noStart")
-        # self.assertEqual(effects[2].prot_pos, 1)
-        # self.assertEqual(effects[2].prot_length, 124)
+        self.assertEqual(effects[2].prot_pos, 1)
+        self.assertEqual(effects[2].prot_length, 123)
 
         self.assertEqual(effects[3].transcript_id, "NM_001206987_1")
         self.assertEqual(effects[3].effect, "noStart")
-        # self.assertEqual(effects[3].prot_pos, 1)
-        # self.assertEqual(effects[3].prot_length, 124)
+        self.assertEqual(effects[3].prot_pos, 1)
+        self.assertEqual(effects[3].prot_length, 123)
 
         self.assertEqual(effects[4].transcript_id, "NM_001206986_1")
         self.assertEqual(effects[4].effect, "noStart")
-        # self.assertEqual(effects[4].prot_pos, 1)
-        # self.assertEqual(effects[4].prot_length, 124)
+        self.assertEqual(effects[4].prot_pos, 1)
+        self.assertEqual(effects[4].prot_length, 123)
 
         self.assertEqual(effects[5].transcript_id, "NR_038193_1")
         self.assertEqual(effects[5].effect, "non-coding-intron")
-        # self.assertEqual(effects[5].prot_pos, None)
-        # self.assertEqual(effects[5].prot_length, None)
+        self.assertEqual(effects[5].prot_pos, None)
+        self.assertEqual(effects[5].prot_length, None)
 
         self.assertEqual(effects[6].transcript_id, "NM_001080510_1")
         self.assertEqual(effects[6].effect, "no-frame-shift")
@@ -415,8 +415,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_016447_1")
         self.assertEqual(effect.strand, "+")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 541)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 540)
         self.assertEqual(effect.aa_change, None)
 
     def test_last_codon_sub_noStop_var(self):
@@ -1138,8 +1138,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].transcript_id, "NM_001083603_1")
         self.assertEqual(effects_sorted[1].strand, "-")
         self.assertEqual(effects_sorted[1].effect, "noStart")
-        # self.assertEqual(effects_sorted[1].prot_pos, 1)
-        # self.assertEqual(effects_sorted[1].prot_length, 1447)
+        self.assertEqual(effects_sorted[1].prot_pos, 1)
+        self.assertEqual(effects_sorted[1].prot_length, 1446)
         self.assertEqual(effects_sorted[1].aa_change, None)
 
     def test_chr2_166535661_del_var(self):
@@ -1750,8 +1750,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_007102_1")
         self.assertEqual(effect.strand, "+")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 113)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 112)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr1_16558543_sub_var(self):
@@ -1828,8 +1828,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_178422_1")
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 347)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 346)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr1_42628578_del_var(self):
@@ -1856,16 +1856,16 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].transcript_id, "NM_001001396_1")
         self.assertEqual(effects_sorted[0].strand, "+")
         self.assertEqual(effects_sorted[0].effect, "noStart")
-        # self.assertEqual(effects_sorted[0].prot_pos, 1)
-        # self.assertEqual(effects_sorted[0].prot_length, 1171)
+        self.assertEqual(effects_sorted[0].prot_pos, 1)
+        self.assertEqual(effects_sorted[0].prot_length, 1170)
         self.assertEqual(effects_sorted[0].aa_change, None)
 
         self.assertEqual(effects_sorted[1].gene, "ATP2B4")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_001684_1")
         self.assertEqual(effects_sorted[1].strand, "+")
         self.assertEqual(effects_sorted[1].effect, "noStart")
-        # self.assertEqual(effects_sorted[1].prot_pos, 1)
-        # self.assertEqual(effects_sorted[1].prot_length, 1206)
+        self.assertEqual(effects_sorted[1].prot_pos, 1)
+        self.assertEqual(effects_sorted[1].prot_length, 1205)
         self.assertEqual(effects_sorted[1].aa_change, None)
 
     def test_chr2_133426005_del_var(self):
@@ -1879,8 +1879,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].transcript_id, "NM_001077427_1")
         self.assertEqual(effects_sorted[0].strand, "-")
         self.assertEqual(effects_sorted[0].effect, "noStart")
-        # self.assertEqual(effects_sorted[0].prot_pos, 1)
-        # self.assertEqual(effects_sorted[0].prot_length, 90)
+        self.assertEqual(effects_sorted[0].prot_pos, 1)
+        self.assertEqual(effects_sorted[0].prot_length, 89)
         self.assertEqual(effects_sorted[0].aa_change, None)
 
         self.assertEqual(effects_sorted[1].gene, "LYPD1")
@@ -1913,8 +1913,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_017625_1")
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 314)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 313)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr1_248903150_ins_var(self):
@@ -1963,8 +1963,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_144773_1")
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 385)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 384)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr5_126859172_del_var(self):
@@ -2409,8 +2409,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_178429_1")
         self.assertEqual(effect.strand, "+")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 111)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 110)
         self.assertEqual(effect.aa_change, None)
 
     def test_chr1_7844919_del_var(self):
@@ -2422,8 +2422,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_016831_1")
         self.assertEqual(effect.strand, "+")
         self.assertEqual(effect.effect, "noStart")
-        # self.assertEqual(effect.prot_pos, 1)
-        # self.assertEqual(effect.prot_length, 1202)
+        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_length, 1201)
         self.assertEqual(effect.aa_change, None)
 
 
