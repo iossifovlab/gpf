@@ -40,6 +40,7 @@ class ProteinChangeEffectChecker:
                         ",".join(ref_aa),
                         ",".join(alt_aa)
                     )
-                    ef.prot_pos = 1
-                    ef.prot_length = 100
+                    ef.prot_pos = request.get_protein_position(
+                        request.variant.position)
+                    ef.prot_length = request.get_protein_length()
                     return ef

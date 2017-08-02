@@ -8,6 +8,24 @@ class BaseAnnotationRequest(object):
         self.transcript_model = transcript_model
         self.logger = logging.getLogger(__name__)
 
+    def get_coding_nucleotide_position(self, position):
+        length = 0
+        for region in self.CDS_regions():
+            if region.start <= position <= region.stop:
+                length += position - region.start
+                break
+            length += region.stop - region.start + 1
+
+        self.logger.debug("get_coding_nucleotide_position pos=%d len=%d",
+                          position, length)
+        return length
+
+    def get_protein_position(self, position):
+        return self.get_coding_nucleotide_position(position) / 3 + 1
+
+    def get_protein_length(self):
+        return self.get_protein_position(self.transcript_model.cds[1]) - 1
+
     def _get_sequence(self, start_position, end_position):
         self.logger.debug("_get_sequence %d-%d", start_position, end_position)
 
