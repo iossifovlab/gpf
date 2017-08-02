@@ -23,8 +23,16 @@ class StopLossEffectChecker:
 
             if ref_contains_stop and not alt_contains_stop:
                 ef = Effect("noEnd", request.transcript_model)
-                ef.prot_pos = 1
-                ef.prot_length = 100
+                start_prot, end_prot = request.get_protein_position()
+                logger.debug("start_prot=%s, end_prot=%s",
+                             start_prot, end_prot)
+                if start_prot == end_prot:
+                    ef.prot_pos = start_prot
+                else:
+                    ef.prot_pos = [prot
+                                   for prot in range(start_prot,
+                                                     end_prot + 1)]
+                ef.prot_length = request.get_protein_length()
                 return ef
         except IndexError:
             return

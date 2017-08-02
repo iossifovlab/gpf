@@ -17,8 +17,16 @@ class FrameShiftEffectChecker:
                                 request.transcript_model)
             else:
                 ef = Effect("frame-shift", request.transcript_model)
-            ef.prot_pos = 1
-            ef.prot_length = 100
+            start_prot, end_prot = request.get_protein_position()
+            self.logger.debug("start_prot=%s, end_prot=%s",
+                              start_prot, end_prot)
+            if start_prot == end_prot:
+                ef.prot_pos = start_prot
+            else:
+                ef.prot_pos = [prot
+                               for prot in range(start_prot,
+                                                 end_prot + 1)]
+            ef.prot_length = request.get_protein_length()
 
             ref_aa, alt_aa = request.get_amino_acids()
             self.logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)

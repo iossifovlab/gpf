@@ -8,6 +8,13 @@ class BaseAnnotationRequest(object):
         self.transcript_model = transcript_model
         self.logger = logging.getLogger(__name__)
 
+    def _clamp_in_cds(self, position):
+        if position < self.transcript_model.cds[0]:
+            return self.transcript_model.cds[0]
+        if position > self.transcript_model.cds[1]:
+            return self.transcript_model.cds[1]
+        return position
+
     def get_coding_nucleotide_position(self, position):
         length = 0
         for region in self.CDS_regions():
@@ -19,9 +26,6 @@ class BaseAnnotationRequest(object):
         self.logger.debug("get_coding_nucleotide_position pos=%d len=%d",
                           position, length)
         return length
-
-    def get_protein_position(self, position):
-        return self.get_coding_nucleotide_position(position) / 3 + 1
 
     def _get_sequence(self, start_position, end_position):
         self.logger.debug("_get_sequence %d-%d", start_position, end_position)
@@ -179,7 +183,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         BaseAnnotationRequest.__init__(self, annotator, variant,
                                        transcript_model)
 
-    def get_coding_nucleotide_position(self, position):
+    def _get_coding_nucleotide_position(self, position):
         length = 0
         for region in self.CDS_regions():
             if region.start <= position <= region.stop:
@@ -191,8 +195,19 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
                           position, length)
         return length
 
+    def get_protein_position(self):
+        start_pos = self._clamp_in_cds(self.variant.position)
+        end_pos = self._clamp_in_cds(self.variant.ref_position_last - 1)
+        end_pos = max(start_pos, end_pos)
+
+        start = self._get_coding_nucleotide_position(start_pos)
+        end = self._get_coding_nucleotide_position(end_pos)
+
+        return start/3 + 1, end/3 + 1
+
     def get_protein_length(self):
-        return self.get_protein_position(self.transcript_model.cds[1]) - 1
+        return self._get_coding_nucleotide_position(
+            self.transcript_model.cds[1])/3
 
     def in_start_codons(self, codon):
         seq = self._get_sequence(self.transcript_model.cds[0],
@@ -266,7 +281,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         BaseAnnotationRequest.__init__(self, annotator, variant,
                                        transcript_model)
 
-    def get_coding_nucleotide_position(self, position):
+    def _get_coding_nucleotide_position(self, position):
         length = 0
         for region in reversed(self.CDS_regions()):
             if region.start <= position <= region.stop:
@@ -278,8 +293,19 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
                           position, length)
         return length
 
+    def get_protein_position(self):
+        start_pos = self._clamp_in_cds(self.variant.position)
+        end_pos = self._clamp_in_cds(self.variant.ref_position_last - 1)
+        end_pos = max(start_pos, end_pos)
+
+        end = self._get_coding_nucleotide_position(start_pos)
+        start = self._get_coding_nucleotide_position(end_pos)
+
+        return start/3 + 1, end/3 + 1
+
     def get_protein_length(self):
-        return self.get_protein_position(self.transcript_model.cds[0]) - 1
+        return self._get_coding_nucleotide_position(
+            self.transcript_model.cds[0])/3
 
     def in_start_codons(self, codon):
         seq = self._get_sequence(self.transcript_model.cds[1] - 2,
