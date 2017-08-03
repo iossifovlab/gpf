@@ -15,7 +15,15 @@ class IntronicEffectChecker:
         last_position = request.variant.position + \
             len(request.variant.reference)
 
-        for j in coding_regions:
+        intron_regions_before_coding = 0
+        for j in request.transcript_model.exons:
+            logger.debug("reg %d-%d cds:%d", j.start, j.stop,
+                         request.transcript_model.cds[0])
+            if (request.transcript_model.cds[0] <= j.stop):
+                break
+            intron_regions_before_coding += 1
+
+        for i, j in enumerate(coding_regions):
             logger.debug("pos: %d-%d checking intronic region %d-%d",
                          request.variant.position, last_position, prev,
                          j.start)
@@ -23,5 +31,15 @@ class IntronicEffectChecker:
                     and last_position < j.start):
                 worstEffect = "intron"
                 ef = Effect(worstEffect, request.transcript_model)
+                dist_left = request.variant.position - prev
+                dist_right = j.start - request.variant.position
+                ef.dist_from_coding = min(dist_left, dist_right)
+
+                ef.how_many_introns = len(request.transcript_model.exons) - 1
+                if request.transcript_model.strand == "+":
+                    ef.which_intron = intron_regions_before_coding + i
+                else:
+                    ef.which_intron = ef.how_many_introns - \
+                        intron_regions_before_coding - i + 1
                 return ef
             prev = j.stop
