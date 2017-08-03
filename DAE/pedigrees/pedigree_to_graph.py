@@ -8,6 +8,7 @@ from functools import reduce
 
 from interval_sandwich import SandwichInstance, SandwichSolver
 from layout import Layout
+from drawing import LayoutDrawer
 
 
 class CsvPedigreeReader:
@@ -205,7 +206,8 @@ class Individual(IndividualGroup):
         return str(self.member.id)
 
     def are_siblings(self, other_individual):
-        return self.parents == other_individual.parents
+        return (self.parents is not None and
+                self.parents == other_individual.parents)
 
     def are_mates(self, other_individual):
         return len(set(self.mating_units) &
@@ -255,17 +257,17 @@ def main():
     pedigrees = CsvPedigreeReader().read_file(args.file)
 
     for family in pedigrees:
-        # if family.family_id == "AU0001":
-        sandwich_instance = family.create_sandwich_instance()
-        intervals = SandwichSolver.solve(sandwich_instance)
-        if intervals:
-            individuals_intervals = filter(
-                lambda interval: isinstance(interval.vertex, Individual),
-                intervals
-            )
-            layout = Layout(individuals_intervals)
-            print("lines", layout.lines)
-            print("position", layout.positions)
+        if family.family_id == "AU0008":
+            sandwich_instance = family.create_sandwich_instance()
+            intervals = SandwichSolver.solve(sandwich_instance)
+            if intervals:
+                individuals_intervals = filter(
+                    lambda interval: isinstance(interval.vertex, Individual),
+                    intervals
+                )
+                layout = Layout(individuals_intervals)
+                layout_drawer = LayoutDrawer(layout)
+                layout_drawer.save_as("first.ps")
 
 if __name__ == "__main__":
     main()

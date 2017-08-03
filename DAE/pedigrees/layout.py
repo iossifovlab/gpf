@@ -2,10 +2,10 @@ from collections import defaultdict
 from functools import reduce
 
 
-class PedigreeMemberWithCoordinates:
+class IndividualWithCoordinates:
 
-    def __init__(self, member, x=0, y=0, size=21, scale=1.0):
-        self.member = member
+    def __init__(self, individual, x=0, y=0, size=21, scale=1.0):
+        self.individual = individual
         self.x = x
         self.y = y
         self.size = size
@@ -82,7 +82,7 @@ class Layout:
             num_individuals = len(level)
 
             for index, individual in enumerate(level):
-                if individual.member.parents:
+                if individual.individual.parents:
                     self.lines.append(Line(
                         individual.x_center, individual.y_center,
                         individual.x_center, individual.y_center - y_offset
@@ -93,7 +93,8 @@ class Layout:
 
                 other_individual = level[index+1]
 
-                if individual.member.are_mates(other_individual.member):
+                if (individual.individual.are_mates(
+                        other_individual.individual)):
                     self.lines.append(Line(
                         individual.x_center, individual.y_center,
                         other_individual.x_center, other_individual.y_center
@@ -105,7 +106,8 @@ class Layout:
                         middle_x, individual.y_center + y_offset
                     ))
 
-                if individual.member.are_siblings(other_individual.member):
+                if (individual.individual.are_siblings(
+                        other_individual.individual)):
                     self.lines.append(Line(
                         individual.x_center, individual.y_center - y_offset,
                         other_individual.x_center,
@@ -244,10 +246,10 @@ class Layout:
         max_individual = reduce(lambda a, b: a if a.x > b.x else b,
                                 individuals)
 
-        level = self._get_level_of_individual(min_individual.member)
+        level = self._get_level_of_individual(min_individual.individual)
 
-        individuals = level[level.index(min_individual.member):
-                            level.index(max_individual.member) + 1]
+        individuals = level[level.index(min_individual.individual):
+                            level.index(max_individual.individual) + 1]
 
         individuals = list(set(individuals) - already_moved)
 
@@ -337,7 +339,7 @@ class Layout:
         for rank, individuals in enumerate(levels):
             x_offset = original_x_offset
             for individual in individuals:
-                position = PedigreeMemberWithCoordinates(
+                position = IndividualWithCoordinates(
                     individual, x_offset, (rank + 1) * level_heigh + y_offset)
                 result[individual] = position
 
