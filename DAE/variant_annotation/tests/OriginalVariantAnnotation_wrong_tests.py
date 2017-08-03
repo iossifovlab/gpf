@@ -21,7 +21,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.transcript_id, "NM_001047980_1")
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "noStart")
-        self.assertEqual(effect.prot_pos, 1)
+        self.assertEqual(effect.prot_pos, [1, 2, 3, 4, 5, 6, 7, 8, 9])
         self.assertEqual(effect.prot_length, 421)
         self.assertEqual(effect.aa_change, None)
 
