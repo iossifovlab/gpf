@@ -338,8 +338,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].transcript_id, "NM_181704_1")
         self.assertEqual(effects_sorted[0].strand, "-")
         self.assertEqual(effects_sorted[0].effect, "splice-site")
-        # self.assertEqual(effects_sorted[0].prot_pos, None)
-        # self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_pos, None)
+        self.assertEqual(effects_sorted[0].prot_length, 39)
         self.assertEqual(effects_sorted[0].aa_change, None)
 
         self.assertEqual(effects_sorted[1].gene, "BAGE3")
@@ -362,8 +362,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[3].transcript_id, "NM_182484_1")
         self.assertEqual(effects_sorted[3].strand, "-")
         self.assertEqual(effects_sorted[3].effect, "splice-site")
-        # self.assertEqual(effects_sorted[3].prot_pos, None)
-        # self.assertEqual(effects_sorted[3].prot_length, None)
+        self.assertEqual(effects_sorted[3].prot_pos, None)
+        self.assertEqual(effects_sorted[3].prot_length, 39)
         self.assertEqual(effects_sorted[3].aa_change, None)
 
     def test_chr1_71530819_del_var(self):
@@ -377,8 +377,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].transcript_id, "NM_005455_1")
         self.assertEqual(effects_sorted[0].strand, "-")
         self.assertEqual(effects_sorted[0].effect, "splice-site")
-        # self.assertEqual(effects_sorted[0].prot_pos, None)
-        # self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_pos, None)
+        self.assertEqual(effects_sorted[0].prot_length, 320)
         self.assertEqual(effects_sorted[0].aa_change, None)
 
         self.assertEqual(effects_sorted[1].gene, "ZRANB2")
@@ -463,8 +463,8 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].transcript_id, "NM_033487_1")
         self.assertEqual(effects_sorted[2].strand, "-")
         self.assertEqual(effects_sorted[2].effect, "splice-site")
-        # self.assertEqual(effects_sorted[2].prot_pos, None)
-        # self.assertEqual(effects_sorted[2].prot_length, None)
+        self.assertEqual(effects_sorted[2].prot_pos, None)
+        self.assertEqual(effects_sorted[2].prot_length, 526)
         self.assertEqual(effects_sorted[2].aa_change, None)
 
         self.assertEqual(effects_sorted[3].gene, "CDK11B")

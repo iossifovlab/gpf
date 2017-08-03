@@ -16,6 +16,10 @@ class BaseAnnotationRequest(object):
         return position
 
     def get_protein_position_for_pos(self, position):
+        if position < self.transcript_model.cds[0]:
+            return None
+        if position > self.transcript_model.cds[1]:
+            return None
         prot_pos = self._get_coding_nucleotide_position(position)
         return prot_pos/3 + 1
 
