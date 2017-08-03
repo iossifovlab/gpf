@@ -186,7 +186,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
     def _get_coding_nucleotide_position(self, position):
         length = 0
         for region in self.CDS_regions():
-            if region.start <= position <= region.stop:
+            if region.start - 1 <= position <= region.stop + 1:
                 length += position - region.start
                 break
             length += region.stop - region.start + 1
@@ -284,7 +284,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
     def _get_coding_nucleotide_position(self, position):
         length = 0
         for region in reversed(self.CDS_regions()):
-            if region.start <= position <= region.stop:
+            if region.start - 1 <= position <= region.stop + 1:
                 length += region.stop - position
                 break
             length += region.stop - region.start + 1
