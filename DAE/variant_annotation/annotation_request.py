@@ -15,6 +15,10 @@ class BaseAnnotationRequest(object):
             return self.transcript_model.cds[1]
         return position
 
+    def get_protein_position_for_pos(self, position):
+        prot_pos = self._get_coding_nucleotide_position(position)
+        return prot_pos/3 + 1
+
     def get_coding_nucleotide_position(self, position):
         length = 0
         for region in self.CDS_regions():

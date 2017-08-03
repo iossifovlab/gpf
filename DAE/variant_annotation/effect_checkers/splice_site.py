@@ -26,11 +26,15 @@ class SpliceSiteEffectChecker:
                     and prev + 1 < last_position):
                 worstEffect = "splice-site"
                 ef = Effect(worstEffect, request.transcript_model)
+                ef.prot_pos = request.get_protein_position_for_pos(prev)
+                ef.prot_length = request.get_protein_length()
                 return ef
 
             if (request.variant.position < j.start
                     and j.start - self.splice_site_length < last_position):
                 worstEffect = "splice-site"
                 ef = Effect(worstEffect, request.transcript_model)
+                ef.prot_pos = request.get_protein_position_for_pos(j.start)
+                ef.prot_length = request.get_protein_length()
                 return ef
             prev = j.stop
