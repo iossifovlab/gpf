@@ -3,6 +3,7 @@ Created on Jul 25, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
 import numpy as np
 import pandas as pd
 from pheno.db import DbManager
@@ -19,6 +20,13 @@ class PrepareBase(object):
     PID_COLUMN = "$PID"
     PERSON_ID = 'person_id'
 
+    PED_COLUMNS = [
+        'familyId', 'personId', 'dadId', 'momId',
+        'gender', 'status',
+        # 'sampleId',
+        # 'role',
+    ]
+
     def __init__(self, config):
         assert config is not None
         self.config = config
@@ -33,12 +41,6 @@ class PrepareBase(object):
 
 
 class PreparePersons(PrepareBase):
-    COLUMNS = [
-        'familyId', 'personId', 'dadId', 'momId',
-        'gender', 'status',
-        # 'sampleId',
-        # 'role',
-    ]
 
     def __init__(self, config):
         super(PreparePersons, self).__init__(config)
@@ -143,11 +145,11 @@ class PreparePersons(PrepareBase):
                 'status': np.int32,
             }
         )
-        assert set(cls.COLUMNS) <= set(df.columns)
+        assert set(cls.PED_COLUMNS) <= set(df.columns)
         return df
 
     def prepare(self, ped_df):
-        assert set(self.COLUMNS) <= set(ped_df.columns)
+        assert set(self.PED_COLUMNS) <= set(ped_df.columns)
         ped_df = self._prepare_families(ped_df)
         ped_df = self._prepare_persons(ped_df)
         return ped_df
@@ -194,12 +196,15 @@ class PreparePersons(PrepareBase):
         ped_df = self.load_pedfile(pedfile)
         ped_df = self.prepare(ped_df)
         self.save(ped_df)
+        return ped_df
 
 
 class PrepareVariables(PrepareBase):
 
-    def __init__(self, config):
+    def __init__(self, config, pedigree_df):
         super(PrepareVariables, self).__init__(config)
+        self.pedigree_df = pedigree_df
+        self.sample_ids = None
 
     def load_instrument(self, instrument_name, filenames):
         assert filenames
@@ -228,24 +233,7 @@ class PrepareVariables(PrepareBase):
 
         assert df is not None
 
-        persons = self.get_persons()
-        # assert set(df.person_id.unique()) <= set(persons.keys())
-
-        pid = pd.Series(df.index)
-        for index, row in df.iterrows():
-
-            p = persons.get(row[self.PERSON_ID])
-            if p is None:
-                pid[index] = np.nan
-                print('measure for missing person: {}'.format(
-                    row[self.PERSON_ID]))
-            else:
-                assert p is not None
-                assert p.person_id == row[self.PERSON_ID]
-                pid[index] = p.id
-        df[self.PID_COLUMN] = pid
-        df = df[np.logical_not(np.isnan(df[self.PID_COLUMN]))].copy()
-
+        df = self._augment_person_ids(df)
         df = self._adjust_instrument_measure_names(instrument_name, df)
         return df
 
@@ -313,10 +301,56 @@ class PrepareVariables(PrepareBase):
                 )
 
     def build(self, instruments_dirname):
+        self.build_pheno_common()
+
         instruments = defaultdict(list)
         self._collect_instruments(instruments_dirname, instruments)
         for instrument_name, instrument_filenames in instruments.items():
             self.build_instrument(instrument_name, instrument_filenames)
+
+    def _augment_person_ids(self, df):
+        persons = self.get_persons()
+        pid = pd.Series(df.index)
+        for index, row in df.iterrows():
+            p = persons.get(row[self.PERSON_ID])
+            if p is None:
+                pid[index] = np.nan
+                print('measure for missing person: {}'.format(
+                    row[self.PERSON_ID]))
+            else:
+                assert p is not None
+                assert p.person_id == row[self.PERSON_ID]
+                pid[index] = p.id
+
+        df[self.PID_COLUMN] = pid
+        df = df[np.logical_not(np.isnan(df[self.PID_COLUMN]))].copy()
+        return df
+
+    def build_pheno_common(self):
+        pheno_common_measures = set(self.pedigree_df.columns) - \
+            (set(self.PED_COLUMNS) | set(['sampleId', 'role']))
+
+        df = self.pedigree_df.copy(deep=True)
+
+        df.rename(columns={'personId': self.PERSON_ID}, inplace=True)
+
+        assert self.PERSON_ID in df.columns
+        df = self._augment_person_ids(df)
+
+        for measure_name in pheno_common_measures:
+            self.build_measure('pheno_common', measure_name, df)
+
+    def build_measure(self, instrument_name, measure_name, df):
+        if measure_name in self.config.skip.measures or \
+                measure_name == self.PID_COLUMN:
+            return
+        mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].dropna()
+        mdf.rename(columns={measure_name: 'value'}, inplace=True)
+
+        measure = self._build_measure(
+            instrument_name, measure_name, mdf)
+        print(instrument_name, measure_name, measure)
+        self._save_measure(measure, mdf)
 
     def build_instrument(self, instrument_name, filenames):
         assert instrument_name is not None
@@ -326,17 +360,7 @@ class PrepareVariables(PrepareBase):
         assert self.PERSON_ID in df.columns
 
         for measure_name in df.columns[1:]:
-            if measure_name in self.config.skip.measures or \
-                    measure_name == self.PID_COLUMN:
-                continue
-            mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].dropna()
-            mdf.rename(columns={measure_name: 'value'}, inplace=True)
-
-            measure = self._build_measure(
-                instrument_name, measure_name, mdf)
-            print(instrument_name, measure_name, measure)
-            self._save_measure(measure, mdf)
-
+            self.build_measure(instrument_name, measure_name, df)
         return df
 
     @classmethod

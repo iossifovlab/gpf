@@ -181,9 +181,9 @@ USAGE
 
         if not args.meta:
             prep = PreparePersons(config)
-            prep.build(args.pedigree)
+            ped_df = prep.build(args.pedigree)
 
-            prep = PrepareVariables(config)
+            prep = PrepareVariables(config, ped_df)
             prep.build(args.instruments)
 
         prep = PrepareMetaMeasures(config)
