@@ -80,10 +80,11 @@ class UTREffectChecker:
                     ef = Effect("3'UTR", request.transcript_model)
 
                 self.logger.debug("pos=%d cds end=%d",
-                                  request.variant.ref_position_last + 1,
+                                  request.variant.ref_position_last - 1,
                                   request.transcript_model.cds[0])
                 ef.dist_from_coding = request.get_exonic_distance(
-                    request.variant.ref_position_last - 1,
+                    max(request.variant.position,
+                        request.variant.ref_position_last - 1),
                     request.transcript_model.cds[0]
                 )
                 return ef
