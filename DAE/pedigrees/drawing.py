@@ -20,7 +20,7 @@ class LayoutDrawer(object):
 
         for line in self.layout.lines:
             figure.lines.append(mlines.Line2D(
-                [line.x1, line.x2], [line.y1, line.y2]
+                [line.x1, line.x2], [line.y1, line.y2], color="black"
             ))
 
         for level in self.layout.positions:
@@ -34,9 +34,11 @@ class LayoutDrawer(object):
     def _figure_from_member(self, individual):
         if individual.individual.member.sex == '1':
             return mpatches.Circle([individual.x_center, individual.y_center],
-                                   individual.size / 2)
+                                   individual.size / 2,
+                                   facecolor="white", edgecolor="black")
         return mpatches.Rectangle([individual.x, individual.y],
-                                  individual.size, individual.size)
+                                  individual.size, individual.size,
+                                  facecolor="white", edgecolor="black")
 
     def _horizontal_mirror_layout(self):
         highest_y = max([i.y for level in self.layout.positions
