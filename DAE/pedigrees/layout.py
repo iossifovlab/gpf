@@ -84,7 +84,7 @@ class Layout:
             for index, individual in enumerate(level):
                 if individual.individual.parents:
                     self.lines.append(Line(
-                        individual.x_center, individual.y_center,
+                        individual.x_center, individual.y,
                         individual.x_center, individual.y_center - y_offset
                     ))
 
@@ -96,8 +96,8 @@ class Layout:
                 if (individual.individual.are_mates(
                         other_individual.individual)):
                     self.lines.append(Line(
-                        individual.x_center, individual.y_center,
-                        other_individual.x_center, other_individual.y_center
+                        individual.x + individual.size, individual.y_center,
+                        other_individual.x, other_individual.y_center
                     ))
                     middle_x = (individual.x_center +
                                 other_individual.x_center) / 2

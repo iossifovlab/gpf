@@ -61,9 +61,9 @@ class PDFLayoutDrawer(object):
 
         for line in layout.lines:
             line.y1 = highest_y_line - line.y1 + \
-                layout.positions[0][0].size/2
+                layout.positions[0][0].size
             line.y2 = highest_y_line - line.y2 + \
-                layout.positions[0][0].size/2
+                layout.positions[0][0].size
 
     def _scale(self):
         pass
