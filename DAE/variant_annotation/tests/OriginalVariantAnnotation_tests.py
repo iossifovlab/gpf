@@ -338,6 +338,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_pos, None)
         self.assertEqual(effect.prot_length, None)
         self.assertEqual(effect.aa_change, None)
+        self.assertEqual(effect.dist_from_coding, 2)
 
     def test_middle_codon_sub_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -650,6 +651,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].prot_pos, None)
         self.assertEqual(effects_sorted[1].prot_length, None)
         self.assertEqual(effects_sorted[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].dist_from_coding, 1)
 
         self.assertEqual(effects_sorted[2].gene, "C14orf178")
         self.assertEqual(effects_sorted[2].transcript_id, "NM_174943_1")
@@ -827,6 +829,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].prot_pos, None)
         self.assertEqual(effects_sorted[1].prot_length, None)
         self.assertEqual(effects_sorted[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].dist_from_coding, 24)
 
     def test_chr17_43227526_ins_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -871,6 +874,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].prot_pos, None)
         self.assertEqual(effects_sorted[2].prot_length, None)
         self.assertEqual(effects_sorted[2].aa_change, None)
+        self.assertEqual(effects_sorted[2].dist_from_coding, 128)
 
         self.assertEqual(effects_sorted[3].gene, "GPBP1")
         self.assertEqual(effects_sorted[3].transcript_id, "NM_022913_1")
@@ -1158,6 +1162,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].prot_pos, None)
         self.assertEqual(effects_sorted[0].prot_length, None)
         self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].dist_from_coding, 349)
 
         self.assertEqual(effects_sorted[1].gene, "PTCH1")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_001083603_1")
