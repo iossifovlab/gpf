@@ -161,33 +161,30 @@ USAGE
         # Process arguments
         args = parser.parse_args()
 
-        instruments_directory = args.instruments
-        pedigree_filename = args.pedigree
-        output = args.output
-
-        if not pedigree_filename:
-            raise CLIError(
-                "pedigree file must be specified")
-        if not output:
+        if not args.output:
             raise CLIError(
                 "output filename should be specified")
-        if not instruments_directory:
-            raise CLIError(
-                "instruments directory should be specified")
+
+        if not args.meta:
+            if not args.pedigree:
+                raise CLIError(
+                    "pedigree file must be specified")
+            if not args.instruments:
+                raise CLIError(
+                    "instruments directory should be specified")
 
         config = parse_config(args)
         dump_config(config)
-        meta = args.meta
 
         if not check_config_pheno_db(config):
             raise Exception("bad classification boundaries")
 
-        if not meta:
+        if not args.meta:
             prep = PreparePersons(config)
-            prep.build(pedigree_filename)
+            prep.build(args.pedigree)
 
             prep = PrepareVariables(config)
-            prep.build(instruments_directory)
+            prep.build(args.instruments)
 
         prep = PrepareMetaMeasures(config)
         prep.build()
