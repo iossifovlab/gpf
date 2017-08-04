@@ -424,7 +424,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].aa_change, None)
         self.assertEqual(effects_sorted[1].which_intron, 8)
         self.assertEqual(effects_sorted[1].how_many_introns, 8)
-        self.assertEqual(effects_sorted[1].dist_from_coding, 25)
+        self.assertEqual(effects_sorted[1].dist_from_coding, 10)
 
         self.assertEqual(effects_sorted[2].gene, "SZT2")
         self.assertEqual(effects_sorted[2].transcript_id, "NM_015284_1")
@@ -443,7 +443,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[3].aa_change, None)
         self.assertEqual(effects_sorted[3].which_intron, 7)
         self.assertEqual(effects_sorted[3].how_many_introns, 7)
-        self.assertEqual(effects_sorted[3].dist_from_coding, 25)
+        self.assertEqual(effects_sorted[3].dist_from_coding, 10)
 
     def test_chr1_1653031_del_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -717,7 +717,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].aa_change, None)
         self.assertEqual(effects_sorted[0].which_intron, 12)
         self.assertEqual(effects_sorted[0].how_many_introns, 40)
-        self.assertEqual(effects_sorted[0].dist_from_coding, 15)
+        self.assertEqual(effects_sorted[0].dist_from_coding, 12)
 
         self.assertEqual(effects_sorted[1].gene, "AK9")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_145025_1")

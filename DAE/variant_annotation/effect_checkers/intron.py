@@ -32,7 +32,10 @@ class IntronicEffectChecker:
                 worstEffect = "intron"
                 ef = Effect(worstEffect, request.transcript_model)
                 dist_left = request.variant.position - prev
-                dist_right = j.start - request.variant.position
+                dist_right = j.start - max(
+                    request.variant.position,
+                    request.variant.ref_position_last - 1
+                )
                 ef.dist_from_coding = min(dist_left, dist_right)
 
                 ef.how_many_introns = len(request.transcript_model.exons) - 1
