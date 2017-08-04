@@ -317,6 +317,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[0].prot_pos, None)
         self.assertEqual(effects[0].prot_length, None)
         self.assertEqual(effects[0].aa_change, None)
+        self.assertEqual(effects[0].dist_from_coding, 258)
 
         self.assertEqual(effects[1].gene, "MKNK1-AS1")
         self.assertEqual(effects[1].transcript_id, "NR_038403_1")
@@ -448,6 +449,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].prot_pos, None)
         self.assertEqual(effects_sorted[0].prot_length, None)
         self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].dist_from_coding, 135)
 
         self.assertEqual(effects_sorted[1].gene, "PTGER3")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_198714_1")
@@ -591,6 +593,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[3].prot_pos, None)
         self.assertEqual(effects_sorted[3].prot_length, None)
         self.assertEqual(effects_sorted[3].aa_change, None)
+        self.assertEqual(effects_sorted[3].dist_from_coding, 185)
 
         self.assertEqual(effects_sorted[4].gene, "GNAS")
         self.assertEqual(effects_sorted[4].transcript_id, "NM_016592_1")
@@ -599,6 +602,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[4].prot_pos, None)
         self.assertEqual(effects_sorted[4].prot_length, None)
         self.assertEqual(effects_sorted[4].aa_change, None)
+        self.assertEqual(effects_sorted[4].dist_from_coding, 230)
 
         self.assertEqual(effects_sorted[5].gene, "GNAS")
         self.assertEqual(effects_sorted[5].transcript_id, "NM_080425_1")

@@ -19,7 +19,9 @@ class UTREffectChecker:
             alt_index = alt_aa.index("End")
 
             if ref_index == alt_index:
-                return Effect("3'UTR", request.transcript_model)
+                ef = Effect("3'UTR", request.transcript_model)
+                ef.dist_from_coding = 0
+                return ef
         except ValueError:
             pass
         except IndexError:
@@ -48,7 +50,9 @@ class UTREffectChecker:
                           old_start_codon_offset, diff)
 
         if diff > 0:
-            return Effect("5'UTR", request.transcript_model)
+            ef = Effect("5'UTR", request.transcript_model)
+            ef.dist_from_coding = 0
+            return ef
         return None
 
     def get_effect(self, request):
@@ -71,8 +75,18 @@ class UTREffectChecker:
                 request.variant.position, request.variant.ref_position_last
             ):
                 if request.transcript_model.strand == "+":
-                    return Effect("5'UTR", request.transcript_model)
-                return Effect("3'UTR", request.transcript_model)
+                    ef = Effect("5'UTR", request.transcript_model)
+                else:
+                    ef = Effect("3'UTR", request.transcript_model)
+
+                self.logger.debug("pos=%d cds end=%d",
+                                  request.variant.ref_position_last + 1,
+                                  request.transcript_model.cds[0])
+                ef.dist_from_coding = request.get_exonic_distance(
+                    request.variant.ref_position_last - 1,
+                    request.transcript_model.cds[0]
+                )
+                return ef
 
             if request.transcript_model.strand == "+":
                 return Effect("5'UTR-intron", request.transcript_model)
@@ -83,8 +97,18 @@ class UTREffectChecker:
                 request.variant.position, request.variant.ref_position_last
             ):
                 if request.transcript_model.strand == "+":
-                    return Effect("3'UTR", request.transcript_model)
-                return Effect("5'UTR", request.transcript_model)
+                    ef = Effect("3'UTR", request.transcript_model)
+                else:
+                    ef = Effect("5'UTR", request.transcript_model)
+
+                self.logger.debug("pos=%d cds end=%d",
+                                  request.variant.position,
+                                  request.transcript_model.cds[1])
+                ef.dist_from_coding = request.get_exonic_distance(
+                    request.transcript_model.cds[1],
+                    request.variant.position
+                )
+                return ef
 
             if request.transcript_model.strand == "+":
                 return Effect("3'UTR-intron", request.transcript_model)

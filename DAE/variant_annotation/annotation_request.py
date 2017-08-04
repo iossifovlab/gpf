@@ -15,6 +15,21 @@ class BaseAnnotationRequest(object):
             return self.transcript_model.cds[1]
         return position
 
+    def get_exonic_distance(self, start, end):
+        length = 0
+        for region in self.transcript_model.exons:
+            if region.start <= start <= region.stop:
+                if region.start <= end <= region.stop:
+                    return end - start
+                length = region.stop - start
+            else:
+                length += region.stop - region.start + 1
+
+            if region.start <= end <= region.stop:
+                length -= region.stop - end + 1
+                break
+        return length
+
     def get_protein_position_for_pos(self, position):
         if position < self.transcript_model.cds[0]:
             return None
