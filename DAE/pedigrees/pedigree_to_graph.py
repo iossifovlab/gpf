@@ -8,7 +8,7 @@ from functools import reduce
 
 from interval_sandwich import SandwichInstance, SandwichSolver
 from layout import Layout
-from drawing import LayoutDrawer
+from drawing import PDFLayoutDrawer
 
 
 class CsvPedigreeReader:
@@ -256,8 +256,10 @@ def main():
     args = parser.parse_args()
     pedigrees = CsvPedigreeReader().read_file(args.file)
 
+    pdf_drawer = PDFLayoutDrawer("first.pdf")
+
     for family in pedigrees:
-        if family.family_id == "AU0008":
+        if family.family_id < "AU0030":
             sandwich_instance = family.create_sandwich_instance()
             intervals = SandwichSolver.solve(sandwich_instance)
             if intervals:
@@ -266,8 +268,9 @@ def main():
                     intervals
                 )
                 layout = Layout(individuals_intervals)
-                layout_drawer = LayoutDrawer(layout)
-                layout_drawer.save_as("first.ps")
+                pdf_drawer.add_page(layout)
+
+    pdf_drawer.save_file()
 
 if __name__ == "__main__":
     main()

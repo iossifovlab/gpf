@@ -1,29 +1,38 @@
+from copy import deepcopy
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
-from copy import deepcopy
+from matplotlib.backends.backend_pdf import PdfPages
 
 
-class LayoutDrawer(object):
+class PDFLayoutDrawer(object):
 
-    def __init__(self, layout):
-        self.layout = deepcopy(layout)
-        self._horizontal_mirror_layout()
-        self._scale()
+    def __init__(self, filename):
+        self._filename = filename
+        self._pages = []
 
-    def save_as(self, filename):
-        figure = self._draw()
-        figure.savefig(filename)
+    def add_page(self, layout):
+        layout = deepcopy(layout)
+        self._horizontal_mirror_layout(layout)
+        figure = self._draw(layout)
+        self._pages.append(figure)
 
-    def _draw(self):
+    def save_file(self):
+        with PdfPages(self._filename) as pdf:
+            for page in self._pages:
+                pdf.savefig(page)
+                # page.close()
+
+    def _draw(self, layout):
         figure = plt.figure()
 
-        for line in self.layout.lines:
+        for line in layout.lines:
             figure.lines.append(mlines.Line2D(
                 [line.x1, line.x2], [line.y1, line.y2], color="black"
             ))
 
-        for level in self.layout.positions:
+        for level in layout.positions:
             for individual in level:
                 figure.patches.append(
                     self._figure_from_member(individual)
@@ -40,21 +49,21 @@ class LayoutDrawer(object):
                                   individual.size, individual.size,
                                   facecolor="white", edgecolor="black")
 
-    def _horizontal_mirror_layout(self):
-        highest_y = max([i.y for level in self.layout.positions
+    def _horizontal_mirror_layout(self, layout):
+        highest_y = max([i.y for level in layout.positions
                          for i in level]) + 10
-        highest_y_line = max([line.y1 for line in self.layout.lines] +
-                             [line.y2 for line in self.layout.lines]) + 10
+        highest_y_line = max([line.y1 for line in layout.lines] +
+                             [line.y2 for line in layout.lines]) + 10
 
-        for level in self.layout.positions:
+        for level in layout.positions:
             for individual in level:
                 individual.y = highest_y - individual.y
 
-        for line in self.layout.lines:
+        for line in layout.lines:
             line.y1 = highest_y_line - line.y1 + \
-                self.layout.positions[0][0].size/2
+                layout.positions[0][0].size/2
             line.y2 = highest_y_line - line.y2 + \
-                self.layout.positions[0][0].size/2
+                layout.positions[0][0].size/2
 
     def _scale(self):
         pass
