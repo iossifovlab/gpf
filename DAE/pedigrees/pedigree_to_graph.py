@@ -8,7 +8,7 @@ from functools import reduce
 
 from interval_sandwich import SandwichInstance, SandwichSolver
 from layout import Layout
-from drawing import PDFLayoutDrawer
+from drawing import PDFLayoutDrawer, OffsetLayoutDrawer
 
 
 class CsvPedigreeReader:
@@ -268,7 +268,8 @@ def main():
                     intervals
                 )
                 layout = Layout(individuals_intervals)
-                pdf_drawer.add_page(layout)
+                layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
+                pdf_drawer.add_page(layout_drawer.draw())
 
     pdf_drawer.save_file()
 
