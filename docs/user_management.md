@@ -15,7 +15,7 @@ If the password is empty, the user will be inactive
 
 
 The following special groups are supported:
-* SFARI#<ID> - Researcher Ids are specified as groups with the SFARI#
+* SFID#<ID> - Researcher Ids are specified as groups with the SFARI#
 prefix.
 * superuser - Gives the user superuser permissions
 * any_dataset - Gives the user access to all datasets
