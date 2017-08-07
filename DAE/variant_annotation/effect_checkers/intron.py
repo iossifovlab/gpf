@@ -1,8 +1,8 @@
-from ..effect import Effect
+from intronic_base import IntronicBase
 import logging
 
 
-class IntronicEffectChecker:
+class IntronicEffectChecker(IntronicBase):
     def __init__(self, splice_site_length=2):
         self.splice_site_length = splice_site_length
 
@@ -29,22 +29,6 @@ class IntronicEffectChecker:
                          j.start)
             if (prev <= request.variant.position
                     and last_position < j.start):
-                worstEffect = "intron"
-                ef = Effect(worstEffect, request.transcript_model)
-                dist_left = request.variant.position - prev - 1
-                dist_right = j.start - request.variant.ref_position_last
-                ef.dist_from_coding = min(dist_left, dist_right)
-
-                ef.how_many_introns = len(request.transcript_model.exons) - 1
-                ef.intron_length = j.start - prev - 1
-                if request.transcript_model.strand == "+":
-                    ef.dist_from_acceptor = dist_right
-                    ef.dist_from_donor = dist_left
-                    ef.which_intron = intron_regions_before_coding + i
-                else:
-                    ef.dist_from_acceptor = dist_left
-                    ef.dist_from_donor = dist_right
-                    ef.which_intron = ef.how_many_introns - \
-                        intron_regions_before_coding - i + 1
-                return ef
+                return self.create_effect("intron", request, prev, j.start,
+                                          intron_regions_before_coding + i)
             prev = j.stop
