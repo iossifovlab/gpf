@@ -6,6 +6,36 @@ class UTREffectChecker:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
+    def create_effect(self, request, side):
+        if request.transcript_model._TranscriptModel__check_if_exon(
+            request.variant.position, request.variant.ref_position_last
+        ):
+            if request.transcript_model.strand == side:
+                ef = Effect("5'UTR", request.transcript_model)
+            else:
+                ef = Effect("3'UTR", request.transcript_model)
+
+            self.logger.debug("pos=%d cds end=%d",
+                              request.variant.ref_position_last - 1,
+                              request.transcript_model.cds[0])
+
+            if side == "+":
+                ef.dist_from_coding = request.get_exonic_distance(
+                    max(request.variant.position,
+                        request.variant.ref_position_last - 1),
+                    request.transcript_model.cds[0]
+                )
+            else:
+                ef.dist_from_coding = request.get_exonic_distance(
+                    request.transcript_model.cds[1],
+                    request.variant.position
+                )
+            return ef
+
+        if request.transcript_model.strand == side:
+            return Effect("5'UTR-intron", request.transcript_model)
+        return Effect("3'UTR-intron", request.transcript_model)
+
     def check_stop_codon(self, request):
         if not request.has_3_UTR_region():
             return
@@ -71,46 +101,7 @@ class UTREffectChecker:
                           request.transcript_model.exons[-1].stop)
 
         if request.variant.position < request.transcript_model.cds[0]:
-            if request.transcript_model._TranscriptModel__check_if_exon(
-                request.variant.position, request.variant.ref_position_last
-            ):
-                if request.transcript_model.strand == "+":
-                    ef = Effect("5'UTR", request.transcript_model)
-                else:
-                    ef = Effect("3'UTR", request.transcript_model)
-
-                self.logger.debug("pos=%d cds end=%d",
-                                  request.variant.ref_position_last - 1,
-                                  request.transcript_model.cds[0])
-                ef.dist_from_coding = request.get_exonic_distance(
-                    max(request.variant.position,
-                        request.variant.ref_position_last - 1),
-                    request.transcript_model.cds[0]
-                )
-                return ef
-
-            if request.transcript_model.strand == "+":
-                return Effect("5'UTR-intron", request.transcript_model)
-            return Effect("3'UTR-intron", request.transcript_model)
+            return self.create_effect(request, "+")
 
         if request.variant.position > request.transcript_model.cds[1]:
-            if request.transcript_model._TranscriptModel__check_if_exon(
-                request.variant.position, request.variant.ref_position_last
-            ):
-                if request.transcript_model.strand == "+":
-                    ef = Effect("3'UTR", request.transcript_model)
-                else:
-                    ef = Effect("5'UTR", request.transcript_model)
-
-                self.logger.debug("pos=%d cds end=%d",
-                                  request.variant.position,
-                                  request.transcript_model.cds[1])
-                ef.dist_from_coding = request.get_exonic_distance(
-                    request.transcript_model.cds[1],
-                    request.variant.position
-                )
-                return ef
-
-            if request.transcript_model.strand == "+":
-                return Effect("3'UTR-intron", request.transcript_model)
-            return Effect("5'UTR-intron", request.transcript_model)
+            return self.create_effect(request, "-")
