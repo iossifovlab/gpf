@@ -7,30 +7,34 @@ class UTREffectChecker:
         self.logger = logging.getLogger(__name__)
 
     def create_effect(self, request, side):
-        if request.transcript_model._TranscriptModel__check_if_exon(
-            request.variant.position, request.variant.ref_position_last
-        ):
-            if request.transcript_model.strand == side:
-                ef = Effect("5'UTR", request.transcript_model)
-            else:
-                ef = Effect("3'UTR", request.transcript_model)
+        coding_regions = request.transcript_model.exons
+        last_position = request.variant.position + \
+            len(request.variant.reference)
 
-            self.logger.debug("pos=%d cds end=%d",
-                              request.variant.ref_position_last - 1,
-                              request.transcript_model.cds[0])
+        for i, j in enumerate(coding_regions):
+            if (request.variant.position < j.stop
+                    and j.start < last_position):
+                if request.transcript_model.strand == side:
+                    ef = Effect("5'UTR", request.transcript_model)
+                else:
+                    ef = Effect("3'UTR", request.transcript_model)
 
-            if side == "+":
-                ef.dist_from_coding = request.get_exonic_distance(
-                    max(request.variant.position,
-                        request.variant.ref_position_last - 1),
-                    request.transcript_model.cds[0]
-                )
-            else:
-                ef.dist_from_coding = request.get_exonic_distance(
-                    request.transcript_model.cds[1],
-                    request.variant.position
-                )
-            return ef
+                self.logger.debug("pos=%d cds end=%d",
+                                  request.variant.ref_position_last - 1,
+                                  request.transcript_model.cds[0])
+
+                if side == "+":
+                    ef.dist_from_coding = request.get_exonic_distance(
+                        max(request.variant.position,
+                            request.variant.ref_position_last - 1),
+                        request.transcript_model.cds[0]
+                    )
+                else:
+                    ef.dist_from_coding = request.get_exonic_distance(
+                        request.transcript_model.cds[1],
+                        request.variant.position
+                    )
+                return ef
 
         if request.transcript_model.strand == side:
             return Effect("5'UTR-intron", request.transcript_model)
