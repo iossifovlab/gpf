@@ -245,6 +245,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[0].prot_pos, 370)
         self.assertEqual(effects[0].prot_length, 387)
         self.assertEqual(effects[0].aa_change, None)
+        self.assertEqual(effects[0].which_intron, 7)
+        self.assertEqual(effects[0].how_many_introns, 7)
+        self.assertEqual(effects[0].dist_from_coding, 1)
+        self.assertEqual(effects[0].dist_from_acceptor, 1)
+        self.assertEqual(effects[0].dist_from_donor, 1900)
+        self.assertEqual(effects[0].intron_length, 1902)
 
         self.assertEqual(effects[1].gene, "SERBP1")
         self.assertEqual(effects[1].transcript_id, "NM_001018067_1")
@@ -253,6 +259,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[1].prot_pos, 391)
         self.assertEqual(effects[1].prot_length, 408)
         self.assertEqual(effects[1].aa_change, None)
+        self.assertEqual(effects[0].which_intron, 7)
+        self.assertEqual(effects[1].how_many_introns, 7)
+        self.assertEqual(effects[1].dist_from_coding, 1)
+        self.assertEqual(effects[1].dist_from_acceptor, 1)
+        self.assertEqual(effects[1].dist_from_donor, 1900)
+        self.assertEqual(effects[1].intron_length, 1902)
 
         self.assertEqual(effects[2].gene, "SERBP1")
         self.assertEqual(effects[2].transcript_id, "NM_001018068_1")
@@ -261,6 +273,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[2].prot_pos, 385)
         self.assertEqual(effects[2].prot_length, 402)
         self.assertEqual(effects[2].aa_change, None)
+        self.assertEqual(effects[2].which_intron, 7)
+        self.assertEqual(effects[2].how_many_introns, 7)
+        self.assertEqual(effects[2].dist_from_coding, 1)
+        self.assertEqual(effects[2].dist_from_acceptor, 1)
+        self.assertEqual(effects[2].dist_from_donor, 1900)
+        self.assertEqual(effects[2].intron_length, 1902)
 
         self.assertEqual(effects[3].gene, "SERBP1")
         self.assertEqual(effects[3].transcript_id, "NM_001018069_1")
@@ -269,6 +287,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[3].prot_pos, 376)
         self.assertEqual(effects[3].prot_length, 393)
         self.assertEqual(effects[3].aa_change, None)
+        self.assertEqual(effects[3].which_intron, 7)
+        self.assertEqual(effects[3].how_many_introns, 7)
+        self.assertEqual(effects[3].dist_from_coding, 1)
+        self.assertEqual(effects[3].dist_from_acceptor, 1)
+        self.assertEqual(effects[3].dist_from_donor, 1900)
+        self.assertEqual(effects[3].intron_length, 1902)
 
     def test_no_frame_shift_newStop_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -366,6 +390,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_pos, 482)
         self.assertEqual(effect.prot_length, 540)
         self.assertEqual(effect.aa_change, None)
+        self.assertEqual(effect.which_intron, 12)
+        self.assertEqual(effect.how_many_introns, 12)
+        self.assertEqual(effect.dist_from_coding, 1)
+        self.assertEqual(effect.dist_from_acceptor, 6915)
+        self.assertEqual(effect.dist_from_donor, 1)
+        self.assertEqual(effect.intron_length, 6917)
 
     def test_splice_site_del_neg_strand_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -378,6 +408,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_pos, 2508)
         self.assertEqual(effect.prot_length, 3013)
         self.assertEqual(effect.aa_change, None)
+        self.assertEqual(effect.which_intron, 54)
+        self.assertEqual(effect.how_many_introns, 63)
+        self.assertEqual(effect.dist_from_coding, -3)
+        self.assertEqual(effect.dist_from_acceptor, -3)
+        self.assertEqual(effect.dist_from_donor, 1684)
+        self.assertEqual(effect.intron_length, 1685)
 
     def test_splice_site_ins_pos_strand_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -390,6 +426,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_pos, 482)
         self.assertEqual(effect.prot_length, 540)
         self.assertEqual(effect.aa_change, None)
+        self.assertEqual(effect.which_intron, 12)
+        self.assertEqual(effect.how_many_introns, 12)
+        self.assertEqual(effect.dist_from_coding, 1)
+        self.assertEqual(effect.dist_from_acceptor, 6916)
+        self.assertEqual(effect.dist_from_donor, 1)
+        self.assertEqual(effect.intron_length, 6917)
 
     def test_splice_site_ins_neg_strand_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -402,6 +444,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_pos, 1788)
         self.assertEqual(effect.prot_length, 2210)
         self.assertEqual(effect.aa_change, None)
+        self.assertEqual(effect.which_intron, 23)
+        self.assertEqual(effect.how_many_introns, 30)
+        self.assertEqual(effect.dist_from_coding, 1)
+        self.assertEqual(effect.dist_from_acceptor, 5010)
+        self.assertEqual(effect.dist_from_donor, 1)
+        self.assertEqual(effect.intron_length, 5011)
 
     def test_first_codon_ins_noEnd_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -764,6 +812,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].prot_pos, 534)
         self.assertEqual(effects_sorted[0].prot_length, 2581)
         self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].which_intron, 3)
+        self.assertEqual(effects_sorted[0].how_many_introns, 36)
+        self.assertEqual(effects_sorted[0].dist_from_coding, -9)
+        self.assertEqual(effects_sorted[0].dist_from_acceptor, 1588)
+        self.assertEqual(effects_sorted[0].dist_from_donor, -9)
+        self.assertEqual(effects_sorted[0].intron_length, 1626)
 
         self.assertEqual(effects_sorted[1].gene, "CHD8")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_020920_1")
@@ -772,6 +826,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].prot_pos, 255)
         self.assertEqual(effects_sorted[1].prot_length, 2302)
         self.assertEqual(effects_sorted[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].which_intron, 4)
+        self.assertEqual(effects_sorted[1].how_many_introns, 37)
+        self.assertEqual(effects_sorted[1].dist_from_coding, -9)
+        self.assertEqual(effects_sorted[1].dist_from_acceptor, 1588)
+        self.assertEqual(effects_sorted[1].dist_from_donor, -9)
+        self.assertEqual(effects_sorted[1].intron_length, 1626)
 
     def test_chr1_12175787_sub_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -787,6 +847,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].prot_pos, 316)
         self.assertEqual(effects_sorted[0].prot_length, 595)
         self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].which_intron, 8)
+        self.assertEqual(effects_sorted[0].how_many_introns, 14)
+        self.assertEqual(effects_sorted[0].dist_from_coding, 0)
+        self.assertEqual(effects_sorted[0].dist_from_acceptor, 7553)
+        self.assertEqual(effects_sorted[0].dist_from_donor, 0)
+        self.assertEqual(effects_sorted[0].intron_length, 7554)
 
         self.assertEqual(effects_sorted[1].gene, "TNFRSF8")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_001281430_1")
@@ -795,6 +861,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].prot_pos, 205)
         self.assertEqual(effects_sorted[1].prot_length, 483)
         self.assertEqual(effects_sorted[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].which_intron, 7)
+        self.assertEqual(effects_sorted[1].how_many_introns, 13)
+        self.assertEqual(effects_sorted[1].dist_from_coding, 0)
+        self.assertEqual(effects_sorted[1].dist_from_acceptor, 7553)
+        self.assertEqual(effects_sorted[1].dist_from_donor, 0)
+        self.assertEqual(effects_sorted[1].intron_length, 7554)
 
     def test_chr13_23904276_sub_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -1534,6 +1606,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].prot_pos, 83)
         self.assertEqual(effects_sorted[0].prot_length, 594)
         self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].which_intron, 4)
+        self.assertEqual(effects_sorted[0].how_many_introns, 18)
+        self.assertEqual(effects_sorted[0].dist_from_coding, 0)
+        self.assertEqual(effects_sorted[0].dist_from_acceptor, 0)
+        self.assertEqual(effects_sorted[0].dist_from_donor, 1577)
+        self.assertEqual(effects_sorted[0].intron_length, 1578)
 
         self.assertEqual(effects_sorted[1].gene, "STXBP1")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_003165_1")
@@ -1542,6 +1620,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].prot_pos, 83)
         self.assertEqual(effects_sorted[1].prot_length, 603)
         self.assertEqual(effects_sorted[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].which_intron, 4)
+        self.assertEqual(effects_sorted[1].how_many_introns, 19)
+        self.assertEqual(effects_sorted[1].dist_from_coding, 0)
+        self.assertEqual(effects_sorted[1].dist_from_acceptor, 0)
+        self.assertEqual(effects_sorted[1].dist_from_donor, 1577)
+        self.assertEqual(effects_sorted[1].intron_length, 1578)
 
     def test_chr1_245019922_del_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -1557,6 +1641,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].prot_pos, 563)
         self.assertEqual(effects_sorted[0].prot_length, 806)
         self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[1].which_intron, 9)
+        self.assertEqual(effects_sorted[1].how_many_introns, 13)
+        self.assertEqual(effects_sorted[1].dist_from_coding, -6)
+        self.assertEqual(effects_sorted[1].dist_from_acceptor, -6)
+        self.assertEqual(effects_sorted[1].dist_from_donor, 98)
+        self.assertEqual(effects_sorted[1].intron_length, 102)
 
         self.assertEqual(effects_sorted[1].gene, "HNRNPU")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_031844_1")
@@ -1565,6 +1655,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].prot_pos, 582)
         self.assertEqual(effects_sorted[1].prot_length, 825)
         self.assertEqual(effects_sorted[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].which_intron, 9)
+        self.assertEqual(effects_sorted[1].how_many_introns, 13)
+        self.assertEqual(effects_sorted[1].dist_from_coding, -6)
+        self.assertEqual(effects_sorted[1].dist_from_acceptor, -6)
+        self.assertEqual(effects_sorted[1].dist_from_donor, 98)
+        self.assertEqual(effects_sorted[1].intron_length, 102)
 
     def test_chr9_140509156_ins_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -1670,6 +1766,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].prot_pos, 353)
         self.assertEqual(effects_sorted[0].prot_length, 389)
         self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].which_intron, 10)
+        self.assertEqual(effects_sorted[0].how_many_introns, 11)
+        self.assertEqual(effects_sorted[0].dist_from_coding, 0)
+        self.assertEqual(effects_sorted[0].dist_from_acceptor, 0)
+        self.assertEqual(effects_sorted[0].dist_from_donor, 0)
+        self.assertEqual(effects_sorted[0].intron_length, 1)
 
         self.assertEqual(effects_sorted[1].gene, "RHBG")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_001256396_1")
@@ -1678,6 +1780,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].prot_pos, 392)
         self.assertEqual(effects_sorted[1].prot_length, 428)
         self.assertEqual(effects_sorted[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].which_intron, 10)
+        self.assertEqual(effects_sorted[1].how_many_introns, 11)
+        self.assertEqual(effects_sorted[1].dist_from_coding, 0)
+        self.assertEqual(effects_sorted[1].dist_from_acceptor, 0)
+        self.assertEqual(effects_sorted[1].dist_from_donor, 0)
+        self.assertEqual(effects_sorted[1].intron_length, 1)
 
         self.assertEqual(effects_sorted[2].gene, "RHBG")
         self.assertEqual(effects_sorted[2].transcript_id, "NM_020407_1")
@@ -1686,6 +1794,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].prot_pos, 422)
         self.assertEqual(effects_sorted[2].prot_length, 458)
         self.assertEqual(effects_sorted[2].aa_change, None)
+        self.assertEqual(effects_sorted[2].which_intron, 9)
+        self.assertEqual(effects_sorted[2].how_many_introns, 10)
+        self.assertEqual(effects_sorted[2].dist_from_coding, 0)
+        self.assertEqual(effects_sorted[2].dist_from_acceptor, 0)
+        self.assertEqual(effects_sorted[2].dist_from_donor, 0)
+        self.assertEqual(effects_sorted[2].intron_length, 1)
 
         self.assertEqual(effects_sorted[3].gene, "RHBG")
         self.assertEqual(effects_sorted[3].transcript_id, "NR_046115_1")
@@ -1764,6 +1878,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.prot_pos, 625)
         self.assertEqual(effect.prot_length, 890)
         self.assertEqual(effect.aa_change, None)
+        self.assertEqual(effect.which_intron, 15)
+        self.assertEqual(effect.how_many_introns, 18)
+        self.assertEqual(effect.dist_from_coding, 0)
+        self.assertEqual(effect.dist_from_acceptor, 434)
+        self.assertEqual(effect.dist_from_donor, 0)
+        self.assertEqual(effect.intron_length, 437)
 
     def test_chr3_131100722_sub_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -2014,6 +2134,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].prot_pos, 306)
         self.assertEqual(effects_sorted[0].prot_length, 380)
         self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].which_intron, 11)
+        self.assertEqual(effects_sorted[0].how_many_introns, 13)
+        self.assertEqual(effects_sorted[0].dist_from_coding, 0)
+        self.assertEqual(effects_sorted[0].dist_from_acceptor, 1226)
+        self.assertEqual(effects_sorted[0].dist_from_donor, 0)
+        self.assertEqual(effects_sorted[0].intron_length, 1227)
 
         self.assertEqual(effects_sorted[1].gene, "FANCL")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_018062_1")
@@ -2022,6 +2148,12 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].prot_pos, 301)
         self.assertEqual(effects_sorted[1].prot_length, 375)
         self.assertEqual(effects_sorted[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].which_intron, 11)
+        self.assertEqual(effects_sorted[1].how_many_introns, 13)
+        self.assertEqual(effects_sorted[1].dist_from_coding, 0)
+        self.assertEqual(effects_sorted[1].dist_from_acceptor, 1226)
+        self.assertEqual(effects_sorted[1].dist_from_donor, 0)
+        self.assertEqual(effects_sorted[1].intron_length, 1227)
 
     def test_chr20_5295014_ins_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
