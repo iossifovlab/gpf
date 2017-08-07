@@ -16,6 +16,9 @@ class Effect:
     splice_site_context = None
     cnv_type = None
     dist_from_5utr = None
+    dist_from_acceptor = None
+    dist_from_donor = None
+    intron_length = None
 
     def __init__(self, effect_name, transcript_model=None):
         self.effect = effect_name
