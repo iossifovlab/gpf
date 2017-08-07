@@ -23,7 +23,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].transcript_id, "NM_001190971_1")
         self.assertEqual(effects_sorted[0].strand, "+")
         self.assertEqual(effects_sorted[0].effect, "frame-shift")
-        self.assertEqual(effects_sorted[0].prot_pos, [1, 2])
+        self.assertEqual(effects_sorted[0].prot_pos, 1)
         self.assertEqual(effects_sorted[0].prot_length, 829)
         # self.assertEqual(effects_sorted[0].aa_change, None)
 
@@ -31,7 +31,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].transcript_id, "NM_004764_1")
         self.assertEqual(effects_sorted[1].strand, "+")
         self.assertEqual(effects_sorted[1].effect, "frame-shift")
-        self.assertEqual(effects_sorted[1].prot_pos, [1, 2])
+        self.assertEqual(effects_sorted[1].prot_pos, 1)
         self.assertEqual(effects_sorted[1].prot_length, 861)
         # self.assertEqual(effects_sorted[1].aa_change, None)
 
@@ -752,7 +752,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].transcript_id, "NM_001102396_1")
         self.assertEqual(effects_sorted[0].strand, "-")
         self.assertEqual(effects_sorted[0].effect, "no-frame-shift")
-        self.assertEqual(effects_sorted[0].prot_pos, [211, 212])
+        self.assertEqual(effects_sorted[0].prot_pos, 211)
         self.assertEqual(effects_sorted[0].prot_length, 211)
         # self.assertEqual(effects_sorted[0].aa_change, None)
 
@@ -760,7 +760,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].transcript_id, "NM_025073_1")
         self.assertEqual(effects_sorted[1].strand, "-")
         self.assertEqual(effects_sorted[1].effect, "no-frame-shift")
-        self.assertEqual(effects_sorted[1].prot_pos, [207, 208])
+        self.assertEqual(effects_sorted[1].prot_pos, 207)
         self.assertEqual(effects_sorted[1].prot_length, 207)
         # self.assertEqual(effects_sorted[1].aa_change, None)
 
