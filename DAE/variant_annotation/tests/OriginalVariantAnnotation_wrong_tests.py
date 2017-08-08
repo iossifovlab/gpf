@@ -33,11 +33,10 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.gene, "ASB18")
         self.assertEqual(effect.transcript_id, "NM_212556_1")
         self.assertEqual(effect.strand, "-")
-        self.assertEqual(effect.effect, "5'UTR")
-        self.assertEqual(effect.prot_pos, None)
+        self.assertEqual(effect.effect, "noStart")
+        self.assertEqual(effect.prot_pos, 1)
         self.assertEqual(effect.prot_length, 466)
         self.assertEqual(effect.aa_change, None)
-        self.assertEqual(effect.dist_from_coding, 0)
 
     # def test_chr1_802610_867930_CNV_var(self):
     #     effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,

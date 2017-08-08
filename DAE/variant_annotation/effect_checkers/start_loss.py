@@ -18,18 +18,15 @@ class StartLossEffectChecker:
                 if (request.variant.position <=
                     request.transcript_model.cds[0] + 2
                         and request.transcript_model.cds[0] <= last_position):
-                    if request.find_start_codon() is None:
-                        return EffectFactory.create_effect_with_prot_pos(
-                            "noStart", request
-                        )
+                    return EffectFactory.create_effect_with_prot_pos(
+                        "noStart", request
+                    )
             else:
                 if (request.variant.position <= request.transcript_model.cds[1]
                         and request.transcript_model.cds[1] - 2 <=
                         last_position):
-
-                    if request.find_start_codon() is None:
-                        return EffectFactory.create_effect_with_prot_pos(
-                            "noStart", request
-                        )
+                    return EffectFactory.create_effect_with_prot_pos(
+                        "noStart", request
+                    )
         except IndexError:
             return
