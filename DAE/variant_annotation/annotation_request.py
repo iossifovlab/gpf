@@ -153,35 +153,6 @@ class BaseAnnotationRequest(object):
 
         return None
 
-    def find_start_codon(self):
-        end_pos = self.variant.position + len(self.variant.reference)
-
-        for offset in range(-2, len(self.variant.alternate) + 1):
-            pos = self.variant.position + offset
-            if self.variant.position - 1 >= pos:
-                codon = self._get_sequence(pos, self.variant.position - 1)
-            else:
-                codon = ""
-            start_index = max(0, offset)
-            last_index = max(0, offset + 3)
-            codon += self.variant.alternate[start_index:last_index]
-            remaining_length = 3 - len(codon) - 1
-            if remaining_length >= 0:
-                codon += self._get_sequence(end_pos,
-                                            end_pos + remaining_length)
-
-            self.logger.debug("checking %s from %d-%d + (%s)%d-%d + %d-%d",
-                              codon,
-                              self.variant.position, pos,
-                              self.variant.alternate[start_index:
-                                                     start_index + 3],
-                              start_index, last_index,
-                              end_pos, end_pos + remaining_length)
-
-            if self.in_start_codons(codon):
-                return offset, len(self.variant.alternate) - offset
-        return None
-
     def is_start_codon_affected(self):
         return (self.variant.position <= self.transcript_model.cds[0] + 2
                 and self.transcript_model.cds[0] <=

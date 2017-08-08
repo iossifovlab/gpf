@@ -74,37 +74,7 @@ class UTREffectChecker:
             pass
         return None
 
-    def check_start_codon(self, request):
-        res = request.find_start_codon()
-        if res is None:
-            return None
-
-        if request.transcript_model.strand == "+":
-            new_start_codon_offset = res[0]
-
-            old_start_codon_offset = request.variant.ref_position_last - \
-                request.transcript_model.cds[0]
-        else:
-            new_start_codon_offset = res[1]
-
-            old_start_codon_offset = request.transcript_model.cds[1] - 2 \
-                - request.variant.position
-
-        diff = abs(new_start_codon_offset - old_start_codon_offset)
-        self.logger.debug("new offset=%d old=%d diff=%d",
-                          new_start_codon_offset,
-                          old_start_codon_offset, diff)
-
-        if diff > 0:
-            ef = EffectFactory.create_effect_with_prot_length("5'UTR", request)
-            ef.dist_from_coding = 0
-            return ef
-        return None
-
     def get_effect(self, request):
-        if request.is_start_codon_affected():
-            return self.check_start_codon(request)
-
         if request.is_stop_codon_affected():
             return self.check_stop_codon(request)
 

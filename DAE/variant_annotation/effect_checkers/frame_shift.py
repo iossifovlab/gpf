@@ -48,37 +48,11 @@ class FrameShiftEffectChecker:
             pass
         return None
 
-    def check_start_codon(self, request):
-        res = request.find_start_codon()
-        if res is None:
-            return None
-
-        if request.transcript_model.strand == "+":
-            new_start_codon_offset = res[1]
-
-            old_start_codon_offset = request.variant.ref_position_last - \
-                request.transcript_model.cds[0]
-        else:
-            new_start_codon_offset = res[0]
-
-            old_start_codon_offset = request.transcript_model.cds[1] - 2 \
-                - request.variant.position
-
-        diff = abs(new_start_codon_offset - old_start_codon_offset)
-        self.logger.debug("new offset=%d old=%d diff=%d",
-                          new_start_codon_offset,
-                          old_start_codon_offset, diff)
-
-        return self.create_effect(request, diff)
-
     def get_effect(self, request):
         coding_regions = request.CDS_regions()
         ref_length = len(request.variant.reference)
         alt_length = len(request.variant.alternate)
         length = abs(alt_length - ref_length)
-
-        if request.is_start_codon_affected():
-            return self.check_start_codon(request)
 
         if request.is_stop_codon_affected():
             return self.check_stop_codon(request)
