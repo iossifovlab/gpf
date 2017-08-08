@@ -38,18 +38,6 @@ class BaseAnnotationRequest(object):
         prot_pos = self._get_coding_nucleotide_position(position)
         return prot_pos/3 + 1
 
-    def get_coding_nucleotide_position(self, position):
-        length = 0
-        for region in self.CDS_regions():
-            if region.start <= position <= region.stop:
-                length += position - region.start
-                break
-            length += region.stop - region.start + 1
-
-        self.logger.debug("get_coding_nucleotide_position pos=%d len=%d",
-                          position, length)
-        return length
-
     def _get_sequence(self, start_position, end_position):
         self.logger.debug("_get_sequence %d-%d", start_position, end_position)
 
