@@ -104,8 +104,7 @@ class EffectFactory:
     @classmethod
     def create_intronic_non_coding_effect(cls, effect_type, request, start,
                                           end, index):
-        ef = EffectFactory.create_effect_with_prot_length(effect_type,
-                                                          request)
+        ef = cls.create_effect_with_prot_length(effect_type, request)
         dist_left = request.variant.position - start - 1
         dist_right = end - request.variant.ref_position_last
         ef.dist_from_coding = min(dist_left, dist_right)
@@ -125,7 +124,7 @@ class EffectFactory:
 
     @classmethod
     def create_intronic_effect(cls, effect_type, request, start, end, index):
-        ef = EffectFactory.create_intronic_non_coding_effect(
+        ef = cls.create_intronic_non_coding_effect(
             effect_type, request, start, end, index
         )
         if request.transcript_model.strand == "+":
