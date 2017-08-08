@@ -43,10 +43,10 @@ class UTREffectChecker:
                     and prev <= request.variant.position
                     and last_position < j.start):
                 if request.transcript_model.strand == side:
-                    return EffectFactory.create_intronic_effect(
+                    return EffectFactory.create_intronic_non_coding_effect(
                         "5'UTR-intron", request, prev, j.start, i
                     )
-                return EffectFactory.create_intronic_effect(
+                return EffectFactory.create_intronic_non_coding_effect(
                         "3'UTR-intron", request, prev, j.start, i
                     )
             prev = j.stop

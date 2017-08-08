@@ -1342,7 +1342,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].strand, "-")
         self.assertEqual(effects_sorted[2].effect, "5'UTR-intron")
         self.assertEqual(effects_sorted[2].prot_pos, None)
-        self.assertEqual(effects_sorted[2].prot_length, None)
+        self.assertEqual(effects_sorted[2].prot_length, 536)
         self.assertEqual(effects_sorted[2].aa_change, None)
 
         self.assertEqual(effects_sorted[3].gene, "RBM12")
@@ -1366,7 +1366,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[5].strand, "-")
         self.assertEqual(effects_sorted[5].effect, "5'UTR-intron")
         self.assertEqual(effects_sorted[5].prot_pos, None)
-        self.assertEqual(effects_sorted[5].prot_length, None)
+        self.assertEqual(effects_sorted[5].prot_length, 537)
         self.assertEqual(effects_sorted[5].aa_change, None)
 
         self.assertEqual(effects_sorted[6].gene, "CPNE1")
@@ -1374,7 +1374,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[6].strand, "-")
         self.assertEqual(effects_sorted[6].effect, "5'UTR-intron")
         self.assertEqual(effects_sorted[6].prot_pos, None)
-        self.assertEqual(effects_sorted[6].prot_length, None)
+        self.assertEqual(effects_sorted[6].prot_length, 537)
         self.assertEqual(effects_sorted[6].aa_change, None)
 
         self.assertEqual(effects_sorted[7].gene, "CPNE1")
@@ -1382,7 +1382,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[7].strand, "-")
         self.assertEqual(effects_sorted[7].effect, "5'UTR-intron")
         self.assertEqual(effects_sorted[7].prot_pos, None)
-        self.assertEqual(effects_sorted[7].prot_length, None)
+        self.assertEqual(effects_sorted[7].prot_length, 537)
         self.assertEqual(effects_sorted[7].aa_change, None)
 
         self.assertEqual(effects_sorted[8].gene, "CPNE1")
@@ -1390,7 +1390,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[8].strand, "-")
         self.assertEqual(effects_sorted[8].effect, "5'UTR-intron")
         self.assertEqual(effects_sorted[8].prot_pos, None)
-        self.assertEqual(effects_sorted[8].prot_length, None)
+        self.assertEqual(effects_sorted[8].prot_length, 537)
         self.assertEqual(effects_sorted[8].aa_change, None)
 
         self.assertEqual(effects_sorted[9].gene, "CPNE1")
@@ -1897,7 +1897,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "+")
         self.assertEqual(effects_sorted[0].effect, "5'UTR-intron")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 159)
         self.assertEqual(effects_sorted[0].aa_change, None)
 
         self.assertEqual(effects_sorted[1].gene, "NUDT16")
