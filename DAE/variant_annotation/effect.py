@@ -20,12 +20,8 @@ class Effect:
     dist_from_donor = None
     intron_length = None
 
-    def __init__(self, effect_name, transcript_model=None):
+    def __init__(self, effect_name):
         self.effect = effect_name
-        if transcript_model is not None:
-            self.gene = transcript_model.gene
-            self.strand = transcript_model.strand
-            self.transcript_id = transcript_model.trID
 
     def __repr__(self):
         return "Effect gene:{} trID:{} strand:{} effect:{} " \
@@ -61,3 +57,46 @@ class Effect:
         elif self.effect == "no-mutation":
             eff_d = "no-mutation"
         return(eff_d)
+
+
+class EffectFactory:
+    @classmethod
+    def create_effect(cls, effect_name):
+        return Effect(effect_name)
+
+    @classmethod
+    def create_effect_with_tm(cls, effect_name, transcript_model):
+        ef = cls.create_effect(effect_name)
+        ef.gene = transcript_model.gene
+        ef.strand = transcript_model.strand
+        ef.transcript_id = transcript_model.trID
+        return ef
+
+    @classmethod
+    def create_effect_with_request(cls, effect_name, request):
+        ef = cls.create_effect_with_tm(effect_name, request.transcript_model)
+        return ef
+
+    @classmethod
+    def create_effect_with_prot_length(cls, effect_name, request):
+        ef = cls.create_effect_with_request(effect_name, request)
+        ef.prot_length = request.get_protein_length()
+        return ef
+
+    @classmethod
+    def create_effect_with_prot_pos(cls, effect_name, request):
+        ef = cls.create_effect_with_prot_length(effect_name, request)
+        start_prot, _ = request.get_protein_position()
+        ef.prot_pos = start_prot
+        return ef
+
+    @classmethod
+    def create_effect_with_aa_change(cls, effect_name, request):
+        ef = cls.create_effect_with_prot_pos(effect_name, request)
+
+        ref_aa, alt_aa = request.get_amino_acids()
+        ef.aa_change = "{}->{}".format(
+            ",".join(ref_aa),
+            ",".join(alt_aa)
+        )
+        return ef

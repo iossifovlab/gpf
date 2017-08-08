@@ -1,11 +1,10 @@
-from ..effect import Effect
+from ..effect import EffectFactory
 
 
 class IntronicBase:
     def create_effect(self, effect_type, request, start, end, index):
-        ef = Effect(effect_type, request.transcript_model)
-        ef.prot_length = request.get_protein_length()
-
+        ef = EffectFactory.create_effect_with_prot_length(effect_type,
+                                                          request)
         dist_left = request.variant.position - start - 1
         dist_right = end - request.variant.ref_position_last
         ef.dist_from_coding = min(dist_left, dist_right)

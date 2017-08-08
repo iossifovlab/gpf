@@ -1,4 +1,4 @@
-from ..effect import Effect
+from ..effect import EffectFactory
 import logging
 
 
@@ -10,26 +10,13 @@ class FrameShiftEffectChecker:
         if change_length > 0:
             if change_length % 3 == 0:
                 if self.check_if_new_stop(request):
-                    ef = Effect("no-frame-shift-newStop",
-                                request.transcript_model)
+                    effect_name = "no-frame-shift-newStop"
                 else:
-                    ef = Effect("no-frame-shift",
-                                request.transcript_model)
+                    effect_name = "no-frame-shift"
             else:
-                ef = Effect("frame-shift", request.transcript_model)
-            start_prot, end_prot = request.get_protein_position()
-            self.logger.debug("start_prot=%s, end_prot=%s",
-                              start_prot, end_prot)
-            ef.prot_pos = start_prot
-            ef.prot_length = request.get_protein_length()
-
-            ref_aa, alt_aa = request.get_amino_acids()
-            self.logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
-
-            ef.aa_change = "{}->{}".format(
-                ",".join(ref_aa),
-                ",".join(alt_aa)
-            )
+                effect_name = "frame-shift"
+            ef = EffectFactory.create_effect_with_aa_change(effect_name,
+                                                            request)
             return ef
         return None
 

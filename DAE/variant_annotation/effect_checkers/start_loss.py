@@ -1,4 +1,4 @@
-from ..effect import Effect
+from ..effect import EffectFactory
 import logging
 
 
@@ -19,25 +19,17 @@ class StartLossEffectChecker:
                     request.transcript_model.cds[0] + 2
                         and request.transcript_model.cds[0] <= last_position):
                     if request.find_start_codon() is None:
-                        ef = Effect("noStart", request.transcript_model)
-                        start_prot, end_prot = request.get_protein_position()
-                        logger.debug("start_prot=%s, end_prot=%s",
-                                     start_prot, end_prot)
-                        ef.prot_pos = start_prot
-                        ef.prot_length = request.get_protein_length()
-                        return ef
+                        return EffectFactory.create_effect_with_prot_pos(
+                            "noStart", request
+                        )
             else:
                 if (request.variant.position <= request.transcript_model.cds[1]
                         and request.transcript_model.cds[1] - 2 <=
                         last_position):
 
                     if request.find_start_codon() is None:
-                        ef = Effect("noStart", request.transcript_model)
-                        start_prot, end_prot = request.get_protein_position()
-                        logger.debug("start_prot=%s, end_prot=%s",
-                                     start_prot, end_prot)
-                        ef.prot_pos = start_prot
-                        ef.prot_length = request.get_protein_length()
-                        return ef
+                        return EffectFactory.create_effect_with_prot_pos(
+                            "noStart", request
+                        )
         except IndexError:
             return

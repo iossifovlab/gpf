@@ -1,4 +1,4 @@
-from ..effect import Effect
+from ..effect import EffectFactory
 import logging
 
 
@@ -32,17 +32,6 @@ class ProteinChangeEffectChecker:
             if (j.start <= request.variant.position <= j.stop):
                 if length == 0:
                     ref_aa, alt_aa = request.get_amino_acids()
-                    logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
-
-                    ef = Effect(self.mutation_type(ref_aa, alt_aa),
-                                request.transcript_model)
-                    ef.aa_change = "{}->{}".format(
-                        ",".join(ref_aa),
-                        ",".join(alt_aa)
+                    return EffectFactory.create_effect_with_aa_change(
+                        self.mutation_type(ref_aa, alt_aa), request
                     )
-                    start_prot, end_prot = request.get_protein_position()
-                    logger.debug("start_prot=%s, end_prot=%s",
-                                 start_prot, end_prot)
-                    ef.prot_pos = start_prot
-                    ef.prot_length = request.get_protein_length()
-                    return ef

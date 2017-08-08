@@ -1,23 +1,29 @@
-from ..effect import Effect
+from ..effect import EffectFactory
+from intronic_base import IntronicBase
 import logging
 
 
-class UTREffectChecker:
+class UTREffectChecker(IntronicBase):
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
-    def create_effect(self, request, side):
+    def create_utr_effect(self, request, side):
         coding_regions = request.transcript_model.exons
         last_position = request.variant.position + \
             len(request.variant.reference)
+        prev = None
 
         for i, j in enumerate(coding_regions):
             if (request.variant.position < j.stop
                     and j.start < last_position):
                 if request.transcript_model.strand == side:
-                    ef = Effect("5'UTR", request.transcript_model)
+                    ef = EffectFactory.create_effect_with_prot_length(
+                        "5'UTR", request
+                    )
                 else:
-                    ef = Effect("3'UTR", request.transcript_model)
+                    ef = EffectFactory.create_effect_with_prot_length(
+                        "3'UTR", request
+                    )
 
                 self.logger.debug("pos=%d cds end=%d",
                                   request.variant.ref_position_last - 1,
@@ -35,10 +41,15 @@ class UTREffectChecker:
                         request.variant.position
                     )
                 return ef
-
-        if request.transcript_model.strand == side:
-            return Effect("5'UTR-intron", request.transcript_model)
-        return Effect("3'UTR-intron", request.transcript_model)
+            elif (prev is not None
+                    and prev <= request.variant.position
+                    and last_position < j.start):
+                if request.transcript_model.strand == side:
+                    return self.create_effect("5'UTR-intron", request, prev,
+                                              j.start, i)
+                return self.create_effect("3'UTR-intron", request, prev,
+                                          j.start, i)
+            prev = j.stop
 
     def check_stop_codon(self, request):
         if not request.has_3_UTR_region():
@@ -53,7 +64,8 @@ class UTREffectChecker:
             alt_index = alt_aa.index("End")
 
             if ref_index == alt_index:
-                ef = Effect("3'UTR", request.transcript_model)
+                ef = EffectFactory.create_effect_with_prot_length("3'UTR",
+                                                                  request)
                 ef.dist_from_coding = 0
                 return ef
         except ValueError:
@@ -84,7 +96,7 @@ class UTREffectChecker:
                           old_start_codon_offset, diff)
 
         if diff > 0:
-            ef = Effect("5'UTR", request.transcript_model)
+            ef = EffectFactory.create_effect_with_prot_length("5'UTR", request)
             ef.dist_from_coding = 0
             return ef
         return None
@@ -105,7 +117,7 @@ class UTREffectChecker:
                           request.transcript_model.exons[-1].stop)
 
         if request.variant.position < request.transcript_model.cds[0]:
-            return self.create_effect(request, "+")
+            return self.create_utr_effect(request, "+")
 
         if request.variant.position > request.transcript_model.cds[1]:
-            return self.create_effect(request, "-")
+            return self.create_utr_effect(request, "-")

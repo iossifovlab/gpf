@@ -1,4 +1,4 @@
-from ..effect import Effect
+from ..effect import EffectFactory
 import logging
 
 
@@ -22,12 +22,7 @@ class StopLossEffectChecker:
             logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
 
             if ref_contains_stop and not alt_contains_stop:
-                ef = Effect("noEnd", request.transcript_model)
-                start_prot, end_prot = request.get_protein_position()
-                logger.debug("start_prot=%s, end_prot=%s",
-                             start_prot, end_prot)
-                ef.prot_pos = start_prot
-                ef.prot_length = request.get_protein_length()
-                return ef
+                return EffectFactory.create_effect_with_prot_pos("noEnd",
+                                                                 request)
         except IndexError:
             return

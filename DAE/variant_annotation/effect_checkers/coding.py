@@ -1,4 +1,4 @@
-from ..effect import Effect
+from ..effect import EffectFactory
 import logging
 
 
@@ -13,6 +13,10 @@ class CodingEffectChecker:
             for r in all_regs:
                 if (request.variant.position <= r.stop
                         and r.start < last_pos):
-                    return Effect("non-coding", request.transcript_model)
+                    return EffectFactory.create_effect_with_request(
+                        "non-coding", request
+                    )
 
-            return Effect("non-coding-intron", request.transcript_model)
+            return EffectFactory.create_effect_with_request(
+                "non-coding-intron", request
+            )

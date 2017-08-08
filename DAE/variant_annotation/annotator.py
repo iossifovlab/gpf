@@ -8,7 +8,7 @@ from .effect_checkers.start_loss import StartLossEffectChecker
 from .effect_checkers.stop_loss import StopLossEffectChecker
 from .effect_checkers.splice_site import SpliceSiteEffectChecker
 from .effect_checkers.intron import IntronicEffectChecker
-from effect import Effect
+from effect import EffectFactory
 from .variant import Variant
 from .annotation_request import AnnotationRequestFactory
 import logging
@@ -88,7 +88,7 @@ class VariantAnnotator:
                     if effect is not None:
                         effects.append(effect)
         if len(effects) == 0:
-            effects.append(Effect("intergenic"))
+            effects.append(EffectFactory.create_effect("intergenic"))
         return effects
 
     def do_annotate_variant(self, chr=None, position=None, loc=None, var=None,

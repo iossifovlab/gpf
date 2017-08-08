@@ -35,7 +35,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "5'UTR")
         self.assertEqual(effect.prot_pos, None)
-        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.prot_length, 466)
         self.assertEqual(effect.aa_change, None)
         self.assertEqual(effect.dist_from_coding, 0)
 

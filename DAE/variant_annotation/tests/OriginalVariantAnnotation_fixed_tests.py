@@ -59,7 +59,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "+")
         self.assertEqual(effects_sorted[0].effect, "3'UTR-intron")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 195)
         self.assertEqual(effects_sorted[0].aa_change, None)
 
         self.assertEqual(effects_sorted[1].gene, "RWDD3")
@@ -569,7 +569,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].strand, "+")
         self.assertEqual(effects_sorted[2].effect, "3'UTR")
         self.assertEqual(effects_sorted[2].prot_pos, None)
-        self.assertEqual(effects_sorted[2].prot_length, None)
+        self.assertEqual(effects_sorted[2].prot_length, 3375)
         self.assertEqual(effects_sorted[2].aa_change, None)
         self.assertEqual(effects_sorted[2].dist_from_coding, 923)
 
@@ -1010,7 +1010,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].strand, "+")
         self.assertEqual(effects_sorted[1].effect, "5'UTR-intron")
         self.assertEqual(effects_sorted[1].prot_pos, None)
-        self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].prot_length, 868)
         self.assertEqual(effects_sorted[1].aa_change, None)
 
     def test_chr2_32853362_ins_var(self):
@@ -1025,7 +1025,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "+")
         self.assertEqual(effects_sorted[0].effect, "5'UTR-intron")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 793)
         self.assertEqual(effects_sorted[0].aa_change, None)
 
         self.assertEqual(effects_sorted[1].gene, "TTC27")
@@ -1154,7 +1154,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "-")
         self.assertEqual(effects_sorted[0].effect, "5'UTR")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 412)
         self.assertEqual(effects_sorted[0].aa_change, None)
         self.assertEqual(effects_sorted[0].dist_from_coding, 0)
 
@@ -1163,7 +1163,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].strand, "-")
         self.assertEqual(effects_sorted[1].effect, "5'UTR")
         self.assertEqual(effects_sorted[1].prot_pos, None)
-        self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].prot_length, 401)
         self.assertEqual(effects_sorted[1].aa_change, None)
         self.assertEqual(effects_sorted[1].dist_from_coding, 0)
 
@@ -1172,7 +1172,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].strand, "-")
         self.assertEqual(effects_sorted[2].effect, "5'UTR")
         self.assertEqual(effects_sorted[2].prot_pos, None)
-        self.assertEqual(effects_sorted[2].prot_length, None)
+        self.assertEqual(effects_sorted[2].prot_length, 452)
         self.assertEqual(effects_sorted[2].aa_change, None)
         self.assertEqual(effects_sorted[2].dist_from_coding, 0)
 
@@ -1186,7 +1186,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "5'UTR")
         self.assertEqual(effect.prot_pos, None)
-        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.prot_length, 133)
         self.assertEqual(effect.aa_change, None)
         self.assertEqual(effect.dist_from_coding, 0)
 
@@ -1202,7 +1202,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "-")
         self.assertEqual(effects_sorted[0].effect, "5'UTR")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 1288)
         self.assertEqual(effects_sorted[0].aa_change, None)
         self.assertEqual(effects_sorted[0].dist_from_coding, 0)
 
@@ -1211,7 +1211,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].strand, "-")
         self.assertEqual(effects_sorted[1].effect, "5'UTR")
         self.assertEqual(effects_sorted[1].prot_pos, None)
-        self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].prot_length, 1287)
         self.assertEqual(effects_sorted[1].aa_change, None)
         self.assertEqual(effects_sorted[1].dist_from_coding, 0)
 
@@ -1288,7 +1288,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.strand, "+")
         self.assertEqual(effect.effect, "5'UTR")
         self.assertEqual(effect.prot_pos, None)
-        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.prot_length, 378)
         self.assertEqual(effect.aa_change, None)
         self.assertEqual(effect.dist_from_coding, 0)
 
@@ -1305,7 +1305,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "-")
         self.assertEqual(effects_sorted[0].effect, "5'UTR")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 211)
         self.assertEqual(effects_sorted[0].aa_change, None)
         self.assertEqual(effects_sorted[0].dist_from_coding, 0)
 
@@ -1314,7 +1314,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].strand, "-")
         self.assertEqual(effects_sorted[1].effect, "5'UTR")
         self.assertEqual(effects_sorted[1].prot_pos, None)
-        self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].prot_length, 211)
         self.assertEqual(effects_sorted[1].aa_change, None)
         self.assertEqual(effects_sorted[1].dist_from_coding, 0)
 
@@ -1328,7 +1328,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "3'UTR")
         self.assertEqual(effect.prot_pos, None)
-        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.prot_length, 378)
         self.assertEqual(effect.aa_change, None)
         self.assertEqual(effect.dist_from_coding, 0)
 
@@ -1357,7 +1357,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "+")
         self.assertEqual(effects_sorted[0].effect, "3'UTR")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 292)
         self.assertEqual(effects_sorted[0].aa_change, None)
         self.assertEqual(effects_sorted[0].dist_from_coding, 0)
 
@@ -1366,7 +1366,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].strand, "+")
         self.assertEqual(effects_sorted[1].effect, "3'UTR")
         self.assertEqual(effects_sorted[1].prot_pos, None)
-        self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].prot_length, 292)
         self.assertEqual(effects_sorted[1].aa_change, None)
         self.assertEqual(effects_sorted[1].dist_from_coding, 0)
 
@@ -1375,7 +1375,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].strand, "+")
         self.assertEqual(effects_sorted[2].effect, "3'UTR")
         self.assertEqual(effects_sorted[2].prot_pos, None)
-        self.assertEqual(effects_sorted[2].prot_length, None)
+        self.assertEqual(effects_sorted[2].prot_length, 205)
         self.assertEqual(effects_sorted[2].aa_change, None)
         self.assertEqual(effects_sorted[2].dist_from_coding, 151)
 
@@ -1384,7 +1384,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[3].strand, "+")
         self.assertEqual(effects_sorted[3].effect, "3'UTR")
         self.assertEqual(effects_sorted[3].prot_pos, None)
-        self.assertEqual(effects_sorted[3].prot_length, None)
+        self.assertEqual(effects_sorted[3].prot_length, 292)
         self.assertEqual(effects_sorted[3].aa_change, None)
         self.assertEqual(effects_sorted[3].dist_from_coding, 0)
 
@@ -1397,7 +1397,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.strand, "+")
         self.assertEqual(effect.effect, "3'UTR")
         self.assertEqual(effect.prot_pos, None)
-        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.prot_length, 540)
         self.assertEqual(effect.aa_change, None)
         self.assertEqual(effect.dist_from_coding, 0)
 
@@ -1411,7 +1411,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "3'UTR")
         self.assertEqual(effect.prot_pos, None)
-        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.prot_length, 595)
         self.assertEqual(effect.aa_change, None)
         self.assertEqual(effect.dist_from_coding, 0)
 
@@ -1428,7 +1428,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "+")
         self.assertEqual(effects_sorted[0].effect, "3'UTR")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 467)
         self.assertEqual(effects_sorted[0].aa_change, None)
         self.assertEqual(effects_sorted[0].dist_from_coding, 0)
 
@@ -1437,7 +1437,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].strand, "+")
         self.assertEqual(effects_sorted[1].effect, "3'UTR")
         self.assertEqual(effects_sorted[1].prot_pos, None)
-        self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].prot_length, 467)
         self.assertEqual(effects_sorted[1].aa_change, None)
         self.assertEqual(effects_sorted[1].dist_from_coding, 0)
 
@@ -1446,7 +1446,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].strand, "+")
         self.assertEqual(effects_sorted[2].effect, "3'UTR")
         self.assertEqual(effects_sorted[2].prot_pos, None)
-        self.assertEqual(effects_sorted[2].prot_length, None)
+        self.assertEqual(effects_sorted[2].prot_length, 467)
         self.assertEqual(effects_sorted[2].aa_change, None)
         self.assertEqual(effects_sorted[2].dist_from_coding, 0)
 
@@ -1463,7 +1463,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "+")
         self.assertEqual(effects_sorted[0].effect, "3'UTR")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 590)
         self.assertEqual(effects_sorted[0].aa_change, None)
         self.assertEqual(effects_sorted[0].dist_from_coding, 0)
 
@@ -1472,7 +1472,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].strand, "+")
         self.assertEqual(effects_sorted[1].effect, "3'UTR")
         self.assertEqual(effects_sorted[1].prot_pos, None)
-        self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].prot_length, 556)
         self.assertEqual(effects_sorted[1].aa_change, None)
         self.assertEqual(effects_sorted[1].dist_from_coding, 0)
 
@@ -1486,7 +1486,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "3'UTR")
         self.assertEqual(effect.prot_pos, None)
-        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.prot_length, 685)
         self.assertEqual(effect.aa_change, None)
         self.assertEqual(effect.dist_from_coding, 0)
 
@@ -1500,7 +1500,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.strand, "-")
         self.assertEqual(effect.effect, "3'UTR")
         self.assertEqual(effect.prot_pos, None)
-        self.assertEqual(effect.prot_length, None)
+        self.assertEqual(effect.prot_length, 1141)
         self.assertEqual(effect.aa_change, None)
         self.assertEqual(effect.dist_from_coding, 0)
 
@@ -1517,7 +1517,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].strand, "-")
         self.assertEqual(effects_sorted[0].effect, "3'UTR")
         self.assertEqual(effects_sorted[0].prot_pos, None)
-        self.assertEqual(effects_sorted[0].prot_length, None)
+        self.assertEqual(effects_sorted[0].prot_length, 62)
         self.assertEqual(effects_sorted[0].aa_change, None)
         self.assertEqual(effects_sorted[0].dist_from_coding, 141)
 
@@ -1526,7 +1526,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].strand, "-")
         self.assertEqual(effects_sorted[1].effect, "3'UTR")
         self.assertEqual(effects_sorted[1].prot_pos, None)
-        self.assertEqual(effects_sorted[1].prot_length, None)
+        self.assertEqual(effects_sorted[1].prot_length, 145)
         self.assertEqual(effects_sorted[1].aa_change, None)
         self.assertEqual(effects_sorted[1].dist_from_coding, 0)
 
