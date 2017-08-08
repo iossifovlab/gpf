@@ -12,7 +12,9 @@ class PDFLayoutDrawer(object):
         self._filename = filename
         self._pages = []
 
-    def add_page(self, figure):
+    def add_page(self, figure, title=None):
+        if title:
+            figure.text(0.5, 0.9, title, horizontalalignment="center")
         self._pages.append(figure)
 
     def save_file(self):

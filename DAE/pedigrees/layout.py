@@ -57,16 +57,24 @@ class Layout:
         counter = 1
 
         while(moved_individuals and counter < 100):
+            # print
+            # print("new iter")
             moved_individuals = 0
             if counter % 6 < 3:
-                moved_individuals += self._align_parens_of_children()
+                moved_individuals += self._align_parents_of_children()
+                # print(moved_individuals, "aligned parents of children")
                 moved_individuals += self._align_children_of_parents()
+                # print(moved_individuals, "aligned children of parents")
             else:
                 moved_individuals += self._align_children_of_parents()
-                moved_individuals += self._align_parens_of_children()
+                # print(moved_individuals, "aligned children of parents")
+                moved_individuals += self._align_parents_of_children()
+                # print(moved_individuals, "aligned parents of children")
 
             moved_individuals += self._set_mates_equally_apart()
+            # print(moved_individuals, "set mates equally apart")
             moved_individuals += self._move_overlaps()
+            # print(moved_individuals, "moved overlapping individuals")
 
             counter += 1
         print("done", counter)
@@ -100,7 +108,7 @@ class Layout:
                         other_individual.x, other_individual.y_center
                     ))
                     middle_x = (individual.x_center +
-                                other_individual.x_center) / 2
+                                other_individual.x_center) / 2.0
                     self.lines.append(Line(
                         middle_x, individual.y_center,
                         middle_x, individual.y_center + y_offset
@@ -141,12 +149,16 @@ class Layout:
 
                 ordered_parents = map(lambda i: self._id_to_position[i],
                                       ordered_parents)
+
                 if ordered_parents[0].x > ordered_parents[2].x:
                     ordered_parents[0], ordered_parents[2] = \
                         ordered_parents[2], ordered_parents[0]
 
+                # assert ordered_parents[0].x < ordered_parents[1].x
+                # assert ordered_parents[1].x < ordered_parents[2].x
+
                 dist1 = ordered_parents[1].x - ordered_parents[0].x
-                dist2 = ordered_parents[1].x - ordered_parents[0].x
+                dist2 = ordered_parents[2].x - ordered_parents[1].x
 
                 if dist1 < 0 or dist2 < 0 or abs(dist1 - dist2) < 1e-7:
                     return 0
@@ -169,11 +181,9 @@ class Layout:
                                        level)
             for index, individual1 in enumerate(level_with_positions):
                 for individual2 in level_with_positions[index+1:index+2]:
-                    diff = abs(individual1.x - individual2.x)
-                    assert diff >= 0
+                    diff = individual2.x - individual1.x
                     if diff < min_gap:
-                        moved += self._move([individual1, individual2],
-                                            min_gap - diff)
+                        moved += self._move([individual2], min_gap - diff)
 
         return moved
 
@@ -191,24 +201,24 @@ class Layout:
     def _center_children_of_parents(self, mating_unit):
         children = self._get_first_and_last_children_positions(mating_unit)
 
-        children_center = (children[0].x + children[1].x) / 2
+        children_center = (children[0].x + children[1].x) / 2.0
 
         mother = self._id_to_position[mating_unit.mother]
         father = self._id_to_position[mating_unit.father]
 
-        parents_center = (father.x + mother.x) / 2
+        parents_center = (father.x + mother.x) / 2.0
 
         offset = parents_center - children_center
 
-        if abs(offset) > 0.0001:
+        if abs(offset) > 1e-5:
             return self._move(children, offset)
 
         return 0
 
-    def _align_parens_of_children(self):
+    def _align_parents_of_children(self):
         moved = 0
 
-        for level in self._individuals_by_rank:
+        for index, level in reversed(list(enumerate(self._individuals_by_rank))):
             sibship_groups = self._get_sibships_on_level(level)
             for sibship in sibship_groups:
                 moved += self._center_parents_of_children(sibship)
@@ -223,7 +233,7 @@ class Layout:
         start_x = self._id_to_position[some_child].x
         end_x = self._id_to_position[sibship[len(sibship) - 1]].x
 
-        children_center = (start_x + end_x) / 2
+        children_center = (start_x + end_x) / 2.0
 
         mother = some_child.parents.mother
         father = some_child.parents.father
@@ -231,16 +241,18 @@ class Layout:
         mother_position = self._id_to_position[mother]
         father_position = self._id_to_position[father]
 
-        parents_center = (mother_position.x + father_position.x) / 2
+        parents_center = (mother_position.x + father_position.x) / 2.0
 
         offset = children_center - parents_center
 
-        if offset != 0:
+        if abs(offset) > 1e-5:
             return self._move([mother_position, father_position], offset)
         return 0
 
     def _move(self, individuals, offset, already_moved=set()):
         assert len(individuals) > 0
+        individuals = list(set(individuals) - already_moved)
+
         min_individual = reduce(lambda a, b: a if a.x < b.x else b,
                                 individuals)
         max_individual = reduce(lambda a, b: a if a.x > b.x else b,
@@ -266,10 +278,11 @@ class Layout:
             to_move = {i for x in level for i in [self._id_to_position[x]]
                        if i.x >= start and i.x <= new_end}
             to_move -= already_moved
+            to_move -= set(individuals)
 
-            if len(to_move) != 0:
+            if to_move != set():
                 to_move_offset = max(map(
-                    lambda x: new_end - x.x_center + 8*2 + x.size,
+                    lambda i: new_end - i.x + 8*2 + i.size,
                     to_move))
         else:
             start = min_individual.x
@@ -278,10 +291,11 @@ class Layout:
             to_move = {i for x in level for i in [self._id_to_position[x]]
                        if i.x >= new_start and i.x <= end}
             to_move -= already_moved
+            to_move -= set(individuals)
 
-            if len(to_move) != 0:
+            if to_move != set():
                 to_move_offset = min(map(
-                    lambda x: new_start - x.x_center + 8*2 + x.size,
+                    lambda i: new_start - i.x - 8*2 - i.size,
                     to_move))
 
         for individual in individuals:
@@ -308,8 +322,7 @@ class Layout:
                 children_positions[len(children_positions) - 1]]
 
     def _get_sibships_on_level(self, level):
-        individuals_with_parents = filter(lambda i: bool(i.parents),
-                                          level)
+        individuals_with_parents = filter(lambda i: bool(i.parents), level)
 
         def reducer(acc, x):
             if len(acc) == 0:

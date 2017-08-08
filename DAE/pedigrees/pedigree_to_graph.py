@@ -267,11 +267,15 @@ def main():
                     lambda interval: isinstance(interval.vertex, Individual),
                     intervals
                 )
+                mating_units = {mu for i in individuals_intervals
+                                for mu in i.vertex.mating_units}
+                # if len(mating_units) > 1:
                 layout = Layout(individuals_intervals)
                 layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
-                pdf_drawer.add_page(layout_drawer.draw())
+                pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
 
     pdf_drawer.save_file()
+
 
 if __name__ == "__main__":
     main()

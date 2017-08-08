@@ -208,7 +208,7 @@ class SandwichSolver:
             realization = realizations_queue.pop()
             current_iteration += 1
 
-            if current_iteration == 10000:
+            if current_iteration == 1000:
                 print("exit ot 10k it")
                 return None
 
