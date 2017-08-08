@@ -13,20 +13,7 @@ class StartLossEffectChecker:
                      request.transcript_model.cds[0], request.variant.position,
                      last_position,
                      request.transcript_model.cds[0] + 2)
-        try:
-            if request.transcript_model.strand == "+":
-                if (request.variant.position <=
-                    request.transcript_model.cds[0] + 2
-                        and request.transcript_model.cds[0] <= last_position):
-                    return EffectFactory.create_effect_with_prot_pos(
-                        "noStart", request
-                    )
-            else:
-                if (request.variant.position <= request.transcript_model.cds[1]
-                        and request.transcript_model.cds[1] - 2 <=
-                        last_position):
-                    return EffectFactory.create_effect_with_prot_pos(
-                        "noStart", request
-                    )
-        except IndexError:
-            return
+        if request.is_start_codon_affected():
+            return EffectFactory.create_effect_with_prot_pos(
+                "noStart", request
+            )
