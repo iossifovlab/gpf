@@ -1,8 +1,8 @@
-from intronic_base import IntronicBase
+from ..effect import EffectFactory
 import logging
 
 
-class IntronicEffectChecker(IntronicBase):
+class IntronicEffectChecker:
     def __init__(self, splice_site_length=2):
         self.splice_site_length = splice_site_length
 
@@ -29,6 +29,8 @@ class IntronicEffectChecker(IntronicBase):
                          j.start)
             if (prev <= request.variant.position
                     and last_position < j.start):
-                return self.create_effect("intron", request, prev, j.start,
-                                          intron_regions_before_coding + i)
+                return EffectFactory.create_intronic_effect(
+                    "intron", request, prev, j.start,
+                    intron_regions_before_coding + i
+                )
             prev = j.stop

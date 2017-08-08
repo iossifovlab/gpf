@@ -1,9 +1,8 @@
 from ..effect import EffectFactory
-from intronic_base import IntronicBase
 import logging
 
 
-class UTREffectChecker(IntronicBase):
+class UTREffectChecker:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 
@@ -17,14 +16,13 @@ class UTREffectChecker(IntronicBase):
             if (request.variant.position < j.stop
                     and j.start < last_position):
                 if request.transcript_model.strand == side:
-                    ef = EffectFactory.create_effect_with_prot_length(
-                        "5'UTR", request
-                    )
+                    effect_name = "5'UTR"
                 else:
-                    ef = EffectFactory.create_effect_with_prot_length(
-                        "3'UTR", request
-                    )
+                    effect_name = "3'UTR"
 
+                ef = EffectFactory.create_effect_with_prot_length(
+                    effect_name, request
+                )
                 self.logger.debug("pos=%d cds end=%d",
                                   request.variant.ref_position_last - 1,
                                   request.transcript_model.cds[0])
@@ -45,10 +43,12 @@ class UTREffectChecker(IntronicBase):
                     and prev <= request.variant.position
                     and last_position < j.start):
                 if request.transcript_model.strand == side:
-                    return self.create_effect("5'UTR-intron", request, prev,
-                                              j.start, i)
-                return self.create_effect("3'UTR-intron", request, prev,
-                                          j.start, i)
+                    return EffectFactory.create_intronic_effect(
+                        "5'UTR-intron", request, prev, j.start, i
+                    )
+                return EffectFactory.create_intronic_effect(
+                        "3'UTR-intron", request, prev, j.start, i
+                    )
             prev = j.stop
 
     def check_stop_codon(self, request):

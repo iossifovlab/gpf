@@ -1,8 +1,8 @@
-from intronic_base import IntronicBase
+from ..effect import EffectFactory
 import logging
 
 
-class SpliceSiteEffectChecker(IntronicBase):
+class SpliceSiteEffectChecker:
     def __init__(self, splice_site_length=2):
         self.splice_site_length = splice_site_length
         self.logger = logging.getLogger(__name__)
@@ -24,11 +24,13 @@ class SpliceSiteEffectChecker(IntronicBase):
 
             if (request.variant.position < prev + self.splice_site_length + 1
                     and prev + 1 < last_position):
-                return self.create_effect("splice-site", request, prev,
-                                          j.start, i)
+                return EffectFactory.create_intronic_effect(
+                    "splice-site", request, prev, j.start, i
+                )
 
             if (request.variant.position < j.start
                     and j.start - self.splice_site_length < last_position):
-                return self.create_effect("splice-site", request, prev,
-                                          j.start, i)
+                return EffectFactory.create_intronic_effect(
+                    "splice-site", request, prev, j.start, i
+                )
             prev = j.stop
