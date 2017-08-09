@@ -23,11 +23,11 @@ Possible effect types when there is an indel are:
 * **no-frame-shift** - inserted/deleted nucleotides count is divisible by 3
 * **no-frame-shift-newStop** - inserted/deleted nucleotides count is not divisible by 3 and there is a premature stop codon
 
-## Protein Change
-Possible effect types when there is a simple or complex substitution(but the nucleotides is the same in the reference and resulting sequence) are:
+## Substitutions
+Possible effect types when there is a simple or complex substitution(but the count of the nucleotides is the same in the reference and resulting sequence) are:
 * **missense** - at least one of the changed codons codes for a different amino acid then before
 * **nonsense** - one of affected codons is a premature stop codon
-* **synynomous** - all affected codons code for the same amino acids as before
+* **synonymous** - all affected codons code for the same amino acids as before
 
 ## UTR
 * **3'UTR**/**5'UTR** - Modified exonic UTR regions
@@ -37,12 +37,37 @@ Possible effect types when there is a simple or complex substitution(but the nuc
 * Modifications in the introns(outside splice sites) are marked as **intron**
 
 # Effect details
-### Protein length
+## Protein length
 * Protein length is always available, except for integenic effect type
 
-### Position inside protein
+## Position inside protein
 Position inside protein is available for:
 * Protein changes - shows the position of the first affected codon
 * Intron/Splice-site - shows the position of the first codon after the variant position
 * noStart - always is 1
-* noEnd - The last codon is marked as one plus the protein length, resulting the somewhat odd result of, for example, 100/99 
+* noEnd - The last codon is marked as one plus the protein length, resulting the somewhat odd result of, for example, 100/99
+
+## Amino acids change
+##### Available for:
+* no-frame-shift
+* missense/nonsense/synonymous
+
+## Intron distances
+##### Available for:
+* splice-site
+* intron
+
+##### Information available:
+* dist_from_acceptor - number of nucleotides from the variant to the acceptor side
+* dist_from_donor - number of nucleotides from the variant to the donor side
+* dist_from_coding - the shortest of dist_from_acceptor and dist_from_donor
+
+## Intron details:
+##### Available for:
+* splice-site
+* intron
+
+##### Information available:
+* which_intron - in which intron region is the variant
+* how_many_introns - total intron regions count
+* intron_length - the length of the affected intron region
