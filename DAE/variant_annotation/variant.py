@@ -45,8 +45,21 @@ class Variant:
             assert(typ is None)
             self.set_ref_alt_from_variant(var)
 
+        self.trim_equal_ref_alt_parts()
         assert(self.reference is not None)
         assert(self.alternate is not None)
+
+    def trim_equal_ref_alt_parts(self):
+        start_index = -1
+        for i in range(min(len(self.reference), len(self.alternate))):
+            if self.reference[i] == self.alternate[i]:
+                start_index = i
+            else:
+                break
+
+        self.reference = self.reference[start_index + 1:]
+        self.alternate = self.alternate[start_index + 1:]
+        self.position += start_index + 1
 
     def set_ref_alt_from_variant(self, var):
         if var.startswith("complex"):
