@@ -42,7 +42,7 @@ Possible effect types when there is a simple or complex substitution(but the cou
 
 ## Position inside protein
 Position inside protein is available for:
-* Protein changes - shows the position of the first affected codon
+* frame-shift/no-frame-shift/substitutions - shows the position of the first affected codon
 * Intron/Splice-site - shows the position of the first codon after the variant position
 * noStart - always is 1
 * noEnd - The last codon is marked as one plus the protein length, resulting the somewhat odd result of, for example, 100/99
@@ -50,7 +50,7 @@ Position inside protein is available for:
 ## Amino acids change
 ##### Available for:
 * no-frame-shift
-* missense/nonsense/synonymous
+* substitutions
 
 ## Intron distances
 ##### Available for:
