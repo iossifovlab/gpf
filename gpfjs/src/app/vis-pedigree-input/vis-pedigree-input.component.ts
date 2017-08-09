@@ -23,10 +23,13 @@ export class VisPedigreeInputComponent implements AfterViewInit {
   ) { }
 
   ngAfterViewInit() {
-    console.log(this.family);
+    // console.log(this.family);
     let sandwichInstance = this.perfectlyDrawablePedigreeService
       .createSandwichInstance(this.family);
     let container = this.element.nativeElement;
+    // console.log("vertices", sandwichInstance.vertices);
+    // console.log("required", Array.from(sandwichInstance.required).map(e => e[0].toString() + ":" + e[1].toString()));
+    // console.log("forbidden", Array.from(sandwichInstance.forbidden).map(e => e[0].toString() + ":" + e[1].toString()));
 
     let itemsData = [];
     for (let vertex of sandwichInstance.vertices) {

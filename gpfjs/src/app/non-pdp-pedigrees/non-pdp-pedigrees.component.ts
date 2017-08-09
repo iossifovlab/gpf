@@ -4,6 +4,7 @@ import { PedigreeMockService
 } from '../perfectly-drawable-pedigree/pedigree-mock.service';
 import { PerfectlyDrawablePedigreeService
 } from '../perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
+import { difference } from '../utils/sets-helper';
 
 @Component({
   selector: 'gpf-non-pdp-pedigrees',
@@ -45,19 +46,20 @@ export class NonPdpPedigreesComponent implements OnInit {
 
 
     this.familyKeys = this.filterSimple(this.familyKeys);
-    this.familyKeys = this.familyKeys.slice(0, 400);
+    // this.familyKeys = this.familyKeys.slice(0, 400);
+    this.familyKeys = Array.from(difference(difference(new Set(this.familyKeys), new Set(this.nonPDP)), new Set(this.maybePDP)));
+    // this.familyKeys = ["AU0008"];
   }
 
     filterSimple(familyKeys: string[]) {
         return familyKeys.filter(familyKey => {
             let family = this.families[familyKey];
-            let matingUnitsCount = 0;
+            let matingUnits = new Set<string>();
             for (let member of family) {
-                matingUnitsCount += (member.father !== '0') ? 1 : 0;
+                matingUnits.add(`${member.father};${member.mother}`);
             }
 
-            return matingUnitsCount > 3;
-
+            return matingUnits.size > 2;
           });
       }
 

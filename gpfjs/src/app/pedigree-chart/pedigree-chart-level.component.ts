@@ -127,14 +127,20 @@ export class PedigreeChartLevelComponent implements OnInit {
         let dist1 = mateCoordinates[1].xCenter - mateCoordinates[0].xCenter;
         let dist2 = mateCoordinates[2].xCenter - mateCoordinates[1].xCenter;
 
-        if (dist1 < 0 || dist2 < 0 || Math.abs(dist1 - dist2) < 1e-7) {
+        if (dist1 < 0 || dist2 < 0) {
+            console.warn("negative dist...", dist1, dist2);
+            return 0;
+        }
+        if (Math.abs(dist1 - dist2) < 1e-7) {
+            // console.log("negative dist...", dist1, dist2);
           return 0;
         }
 
         if (dist1 > dist2) {
           movedIndividuals += this.move(mateCoordinates.slice(2, 3), dist1 - dist2);
+        } else {
+          movedIndividuals += this.move(mateCoordinates.slice(1, 3), dist2 - dist1);
         }
-        movedIndividuals += this.move(mateCoordinates.slice(1, 3), dist2 - dist1);
       }
     }
     return movedIndividuals;
@@ -145,17 +151,17 @@ export class PedigreeChartLevelComponent implements OnInit {
     let minGap = levels[0][0].size + 8;
     for (let level of levels) {
       for (let i = 0; i < level.length - 1; i++) {
-        for (let j = i + 1; j < level.length; j++) {
-          let diff = level[i].xCenter - level[j].xCenter;
-          if (diff < minGap && diff > 0) {
-            let individualsToMove = level.slice(i, level.length);
-            movedIndividuals += this.move(individualsToMove, minGap - diff, 0, [level[j]]);
-            continue;
-          } else if (-diff < minGap && -diff > 0) {
-            let individualsToMove = level.slice(j, level.length);
-            movedIndividuals += this.move(individualsToMove, minGap + diff);
-            continue;
-          }
+        let j = i + 1;
+        if (j >= level.length) {
+          continue;
+        }
+        let diff = level[j].xCenter - level[i].xCenter;
+        if (diff < 0) {
+            console.warn('Some reordering has happened!', diff, level[i], level[j]);
+        }
+        if (diff < minGap && diff > 0) {
+          let individualsToMove = [level[j]];
+          movedIndividuals += this.move(individualsToMove, minGap - diff);
         }
       }
     }
@@ -297,6 +303,7 @@ export class PedigreeChartLevelComponent implements OnInit {
     let maxIndividual = individuals.reduce((a, b) => a.xCenter > b.xCenter ? a : b);
 
     if (maxIndividual < minIndividual) {
+      console.log("switching min and max...");
       [minIndividual, maxIndividual] = [maxIndividual, minIndividual];
     }
 

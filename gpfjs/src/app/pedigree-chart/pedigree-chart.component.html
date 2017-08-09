@@ -2,5 +2,6 @@
 
   <svg width="100%" height="100%">
     <svg:g gpf-pedigree-chart-level [individuals]="levels$ | async" />
+    <svg:text y="20" x="10" *ngIf="isNotPdp$ | async">Not pdp</svg:text>
   </svg>
 </div>

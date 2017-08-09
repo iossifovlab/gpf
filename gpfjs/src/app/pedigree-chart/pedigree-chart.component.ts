@@ -23,7 +23,7 @@ export class PedigreeChartComponent implements OnInit {
   }
 
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
-  private isPdp$: Observable<boolean>;
+  private isNotPdp$: Observable<boolean>;
   levels$: Observable<Array<OrderedIndividuals>>;
 
   constructor(
@@ -43,8 +43,8 @@ export class PedigreeChartComponent implements OnInit {
       .map(i => this.getIndividualsByRank(i))
       .share();
 
-    this.isPdp$ = sandwichResults$
-      .map(([, intervals]) => !!intervals);
+    this.isNotPdp$ = sandwichResults$
+      .map(([, intervals]) => !intervals);
   }
 
   getIndividualsByRank(individuals: IntervalForVertex<Individual>[]) {
@@ -70,6 +70,7 @@ export class PedigreeChartComponent implements OnInit {
         let sorted = individualsByRank.get(key)
           .sort((a, b) => a.left - b.left);
 
+        // console.log(sorted.map(i => i.toString()));
         result.push(sorted.map(interval => interval.vertex));
     }
 

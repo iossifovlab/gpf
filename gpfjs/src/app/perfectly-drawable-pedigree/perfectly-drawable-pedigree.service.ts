@@ -127,11 +127,15 @@ export class PerfectlyDrawablePedigreeService {
 
         // Ee-
         let intergenerationalEdges: Edge[] = [];
-        for (let sibshipUnit of sibshipVertices) {
+        for (let sibshipUnit of sibshipVertices.concat(matingVertices)) {
           for (let matingUnit of matingVertices) {
-            if (hasIntersection(matingUnit.generationRanks(), sibshipUnit.generationRanks())) {
+            if (!hasIntersection(matingUnit.generationRanks(), sibshipUnit.generationRanks())) {
               if (!hasIntersection(matingUnit.individualSet(), sibshipUnit.individualSet())) {
-                intergenerationalEdges.push([matingUnit, sibshipUnit]);
+                if (!matingUnitSibshipUnitEdges.find(
+                  ([mu, sibship]) => mu === matingUnit &&
+                                     sibship === sibshipUnit)) {
+                  intergenerationalEdges.push([matingUnit, sibshipUnit]);
+                }
               }
             }
           }

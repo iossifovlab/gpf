@@ -30,6 +30,10 @@ export class IntervalForVertex<T> extends Interval {
       this.right
     );
   }
+
+  toString() {
+      return `${this.vertex}> (${this.left},${this.right})`;
+  }
 }
 
 export class Realization<T> {
@@ -323,6 +327,15 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
 
   while (realizationsQueue.length !== 0) {
     let currentRealization = realizationsQueue.pop();
+    (a => {
+        let j, x, i;
+        for (i = a.length; i; i--) {
+            j = Math.floor(Math.random() * i);
+            x = a[i - 1];
+            a[i - 1] = a[j];
+            a[j] = x;
+        }
+    })(realizationsQueue);
     // realizationsQueue = realizationsQueue.filter(realization => !realization.isEquivalent(currentRealization));
 
 
