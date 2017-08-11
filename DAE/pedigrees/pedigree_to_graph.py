@@ -101,7 +101,6 @@ class Pedigree:
         # Eb+
         mating_edges = {(i, m) for i in individuals for m in mating_units
                         if i.individual_set().issubset(m.individual_set())}
-
         # Eb-
         same_generation_not_mates = \
             {(i, m) for i in individuals for m in mating_units
@@ -120,13 +119,17 @@ class Pedigree:
 
         # Ed+
         mates_siblings_edges = {(m, s) for m in mating_units
-                                for s in sibship_units if m.children == s}
+                                for s in sibship_units
+                                if(m.children.individual_set() is
+                                    s.individual_set())}
 
         # Ee-
         intergenerational_edges = \
-            {(m, a) for m in mating_units for a in sibship_units
-             if (m.generation_ranks() & a.generation_ranks() != set()) and
+            {(m, a) for m in mating_units for a in sibship_units | mating_units
+             if (m.generation_ranks() & a.generation_ranks() == set()) and
              (m.individual_set() & a.individual_set() == set())}
+        intergenerational_edges -= mates_siblings_edges
+
         required_set = mating_edges | sibship_edges | mates_siblings_edges
         forbidden_set = same_rank_edges | same_generation_not_mates \
             | same_generation_not_siblings | intergenerational_edges
@@ -258,18 +261,24 @@ def main():
 
     pdf_drawer = PDFLayoutDrawer("first.pdf")
 
-    for family in pedigrees:
-        if family.family_id < "AU0030":
-            sandwich_instance = family.create_sandwich_instance()
-            intervals = SandwichSolver.solve(sandwich_instance)
-            if intervals:
-                individuals_intervals = filter(
-                    lambda interval: isinstance(interval.vertex, Individual),
-                    intervals
-                )
-                mating_units = {mu for i in individuals_intervals
-                                for mu in i.vertex.mating_units}
-                # if len(mating_units) > 1:
+    for family in sorted(pedigrees, key=lambda x: x.family_id):
+        # if family.family_id == "AU0052":
+        sandwich_instance = family.create_sandwich_instance()
+        intervals = SandwichSolver.solve(sandwich_instance)
+        # print(intervals)
+        if intervals is None:
+            print(family.family_id)
+            print("No intervals")
+        if intervals:
+            # print("intervals", intervals)
+            individuals_intervals = filter(
+                lambda interval: isinstance(interval.vertex, Individual),
+                intervals
+            )
+            mating_units = {mu for i in individuals_intervals
+                            for mu in i.vertex.mating_units}
+            if len(mating_units) > 1:
+                print(family.family_id)
                 layout = Layout(individuals_intervals)
                 layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
                 pdf_drawer.add_page(layout_drawer.draw(), family.family_id)

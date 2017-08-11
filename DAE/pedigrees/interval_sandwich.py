@@ -203,6 +203,7 @@ class SandwichSolver:
         visited_realizations = {}
 
         vertices_length = len(sandwich_instance.vertices)
+        # print(realizations_queue)
 
         while len(realizations_queue) > 0:
             realization = realizations_queue.pop()

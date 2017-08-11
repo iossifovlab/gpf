@@ -52,11 +52,11 @@ class Layout:
         self._create_positioned_individuals()
         self._create_lines()
 
-    def _optimize_drawing(self):
+    def _optimize_drawing(self, max_iter=100):
         moved_individuals = -1
         counter = 1
 
-        while(moved_individuals and counter < 100):
+        while(moved_individuals and counter < max_iter):
             # print
             # print("new iter")
             moved_individuals = 0
@@ -154,11 +154,11 @@ class Layout:
                     ordered_parents[0], ordered_parents[2] = \
                         ordered_parents[2], ordered_parents[0]
 
-                # assert ordered_parents[0].x < ordered_parents[1].x
-                # assert ordered_parents[1].x < ordered_parents[2].x
-
                 dist1 = ordered_parents[1].x - ordered_parents[0].x
                 dist2 = ordered_parents[2].x - ordered_parents[1].x
+
+                assert dist1 > 0
+                assert dist2 > 0
 
                 if dist1 < 0 or dist2 < 0 or abs(dist1 - dist2) < 1e-7:
                     return 0
@@ -218,7 +218,7 @@ class Layout:
     def _align_parents_of_children(self):
         moved = 0
 
-        for index, level in reversed(list(enumerate(self._individuals_by_rank))):
+        for level in reversed(self._individuals_by_rank):
             sibship_groups = self._get_sibships_on_level(level)
             for sibship in sibship_groups:
                 moved += self._center_parents_of_children(sibship)
@@ -262,6 +262,7 @@ class Layout:
 
         individuals = level[level.index(min_individual.individual):
                             level.index(max_individual.individual) + 1]
+        individuals = map(lambda x: self._id_to_position[x], individuals)
 
         individuals = list(set(individuals) - already_moved)
 
@@ -299,8 +300,7 @@ class Layout:
                     to_move))
 
         for individual in individuals:
-            position = self._id_to_position[individual]
-            position.x += offset
+            individual.x += offset
 
         other_moved = 0
         if to_move != set():
@@ -370,6 +370,7 @@ class Layout:
         for key in sorted(rank_to_individuals.keys()):
             sorted_intervals = sorted(rank_to_individuals[key],
                                       key=lambda x: (x.left, x.right))
+            # print(map(lambda x: x.vertex, sorted_intervals))
             result.append(map(lambda x: x.vertex, sorted_intervals))
 
         return result
