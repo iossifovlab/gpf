@@ -13,11 +13,11 @@ class IndividualWithCoordinates:
 
     @property
     def x_center(self):
-        return self.x + self.size / 2
+        return self.x + self.size / 2.0
 
     @property
     def y_center(self):
-        return self.y + self.size / 2
+        return self.y + self.size / 2.0
 
     def __repr__(self):
         return "({}, {})".format(self.x, self.y)
@@ -249,7 +249,7 @@ class Layout:
             return self._move([mother_position, father_position], offset)
         return 0
 
-    def _move(self, individuals, offset, already_moved=set()):
+    def _move(self, individuals, offset, already_moved=set(), min_gap=8.0):
         assert len(individuals) > 0
         individuals = list(set(individuals) - already_moved)
 
@@ -283,7 +283,7 @@ class Layout:
 
             if to_move != set():
                 to_move_offset = max(map(
-                    lambda i: new_end - i.x + 8*2 + i.size,
+                    lambda i: new_end - i.x + min_gap*2 + i.size,
                     to_move))
         else:
             start = min_individual.x
@@ -296,7 +296,7 @@ class Layout:
 
             if to_move != set():
                 to_move_offset = min(map(
-                    lambda i: new_start - i.x - 8*2 - i.size,
+                    lambda i: new_start - i.x - min_gap*2 - i.size,
                     to_move))
 
         for individual in individuals:
@@ -344,8 +344,8 @@ class Layout:
 
         return None
 
-    def _generate_simple_layout(self, levels, level_heigh=30,
-                                x_offset=20, y_offset=20, gap=8):
+    def _generate_simple_layout(self, levels, level_heigh=30.0,
+                                x_offset=20.0, y_offset=20.0, gap=8.0):
         result = {}
         original_x_offset = x_offset
 

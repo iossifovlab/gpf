@@ -262,7 +262,7 @@ def main():
     pdf_drawer = PDFLayoutDrawer("first.pdf")
 
     for family in sorted(pedigrees, key=lambda x: x.family_id):
-        # if family.family_id == "AU0052":
+        # if family.family_id in ["AU1250", "AU1903"]:
         sandwich_instance = family.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
         # print(intervals)
