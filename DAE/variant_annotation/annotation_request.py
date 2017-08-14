@@ -218,7 +218,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         if index is None:
             raise IndexError
         frame = self.get_frame(pos, index)
-        length = max(1, len(self.variant.reference))
+        length = len(self.variant.reference)
         length += self.get_nucleotides_count_to_full_codon(length + frame)
 
         coding_before_pos = self.get_coding_left(pos - 1,
@@ -233,13 +233,11 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         )
         alt_codons = coding_before_pos + self.variant.alternate
 
-        if (len(alt_codons) + length_alt == 0):
-            length_alt = 3
-
         alt_codons += self.get_coding_right(
             self.variant.position + len(self.variant.reference),
             length_alt, index
         )
+
         self.logger.debug("ref codons=%s, alt codons=%s",
                           ref_codons, alt_codons)
         return ref_codons, alt_codons
@@ -321,7 +319,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         if index is None:
             raise IndexError
         frame = self.get_frame(last_position, index)
-        length = max(1, last_position - pos + 1)
+        length = last_position - pos + 1
         length += self.get_nucleotides_count_to_full_codon(length + frame)
 
         self.logger.debug("last_position=%d, length=%d index=%d pos=%d cds=%d",
@@ -342,9 +340,6 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
             len(self.variant.alternate) + frame
         )
         alt_codons = self.variant.alternate + coding_after_pos
-
-        if (len(alt_codons) + length_alt == 0):
-            length_alt = 3
 
         alt_codons = self.get_coding_left(
             self.variant.position - 1,

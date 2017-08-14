@@ -14,15 +14,17 @@ class StopLossEffectChecker:
                      last_position,
                      request.transcript_model.cds[0])
 
-        try:
-            ref_aa, alt_aa = request.get_amino_acids()
-            ref_contains_stop = any(aa == "End" for aa in ref_aa)
-            alt_contains_stop = any(aa == "End" for aa in alt_aa)
+        if request.is_stop_codon_affected():
+            try:
+                ref_aa, alt_aa = request.get_amino_acids()
 
-            logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
+                if len(ref_aa) == len(alt_aa):
+                    if alt_aa[ref_aa.index("End")] == "End":
+                        return
 
-            if ref_contains_stop and not alt_contains_stop:
-                return EffectFactory.create_effect_with_prot_pos("noEnd",
-                                                                 request)
-        except IndexError:
-            return
+                logger.debug("ref aa=%s, alt aa=%s", ref_aa, alt_aa)
+
+            except IndexError:
+                pass
+
+            return EffectFactory.create_effect_with_prot_pos("noEnd", request)
