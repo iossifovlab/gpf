@@ -34,11 +34,12 @@ class Effect:
                            "non-coding-intron"]:
             eff_d = str(self.which_intron) + "/" + str(self.how_many_introns)
             eff_d += "[" + str(self.dist_from_coding) + "]"
-        elif (self.effect == "frame-shift" or self.effect == "no-frame-shift"
+        elif (self.effect == "no-frame-shift"
               or self.effect == "no-frame-shift-newStop"):
             eff_d = str(self.prot_pos) + "/" + str(self.prot_length)
             eff_d += "(" + self.aa_change + ")"
-        elif self.effect == "splice-site" or self.effect == "synonymous":
+        elif (self.effect == "frame-shift" or self.effect == "splice-site" or
+              self.effect == "synonymous"):
             eff_d = str(self.prot_pos) + "/" + str(self.prot_length)
         elif self.effect == "5'UTR" or self.effect == "3'UTR":
             eff_d = str(self.dist_from_coding)

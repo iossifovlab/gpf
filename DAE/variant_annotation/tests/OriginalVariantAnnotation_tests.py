@@ -52,7 +52,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effect.effect, "frame-shift")
         self.assertEqual(effect.prot_pos, 82)
         self.assertEqual(effect.prot_length, 1541)
-        # self.assertEqual(effect.aa_change, None)
+        self.assertEqual(effect.aa_change, None)
 
     def test_intron_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -136,7 +136,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[0].effect, "frame-shift")
         self.assertEqual(effects[0].prot_pos, 46)
         self.assertEqual(effects[0].prot_length, 752)
-        # self.assertEqual(effects[0].aa_change, None)
+        self.assertEqual(effects[0].aa_change, None)
 
         self.assertEqual(effects[1].gene, "LRRFIP1")
         self.assertEqual(effects[1].transcript_id, "NM_001137552_1")
@@ -144,7 +144,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[1].effect, "frame-shift")
         self.assertEqual(effects[1].prot_pos, 46)
         self.assertEqual(effects[1].prot_length, 808)
-        # self.assertEqual(effects[1].aa_change, None)
+        self.assertEqual(effects[1].aa_change, None)
 
         self.assertEqual(effects[2].gene, "LRRFIP1")
         self.assertEqual(effects[2].transcript_id, "NM_004735_1")
@@ -152,7 +152,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[2].effect, "frame-shift")
         self.assertEqual(effects[2].prot_pos, 46)
         self.assertEqual(effects[2].prot_length, 784)
-        # self.assertEqual(effects[2].aa_change, None)
+        self.assertEqual(effects[2].aa_change, None)
 
         self.assertEqual(effects[3].gene, "LRRFIP1")
         self.assertEqual(effects[3].transcript_id, "NM_001137550_1")
@@ -160,7 +160,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[3].effect, "frame-shift")
         self.assertEqual(effects[3].prot_pos, 56)
         self.assertEqual(effects[3].prot_length, 640)
-        # self.assertEqual(effects[3].aa_change, None)
+        self.assertEqual(effects[3].aa_change, None)
 
         self.assertEqual(effects[4].gene, "LRRFIP1")
         self.assertEqual(effects[4].transcript_id, "NM_001137551_1")
@@ -168,7 +168,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects[4].effect, "frame-shift")
         self.assertEqual(effects[4].prot_pos, 46)
         self.assertEqual(effects[4].prot_length, 394)
-        # self.assertEqual(effects[4].aa_change, None)
+        self.assertEqual(effects[4].aa_change, None)
 
     def test_no_frame_shift_var(self):
         effects = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
@@ -2084,7 +2084,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[1].effect, "frame-shift")
         self.assertEqual(effects_sorted[1].prot_pos, 53)
         self.assertEqual(effects_sorted[1].prot_length, 141)
-        # self.assertEqual(effects_sorted[1].aa_change, None)
+        self.assertEqual(effects_sorted[1].aa_change, None)
 
     def test_chr1_237060943_ins_var(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,

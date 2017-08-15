@@ -13,10 +13,12 @@ class FrameShiftEffectChecker:
                     effect_name = "no-frame-shift-newStop"
                 else:
                     effect_name = "no-frame-shift"
+                ef = EffectFactory.create_effect_with_aa_change(effect_name,
+                                                                request)
             else:
                 effect_name = "frame-shift"
-            ef = EffectFactory.create_effect_with_aa_change(effect_name,
-                                                            request)
+                ef = EffectFactory.create_effect_with_prot_pos(effect_name,
+                                                               request)
             return ef
         return None
 
