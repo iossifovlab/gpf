@@ -62,7 +62,6 @@ class FrameShiftEffectChecker:
             stop = j.stop
 
             if len(request.variant.reference) == 0:
-                start -= 1
                 stop += 1
 
             self.logger.debug("frameshift %d<=%d<=%d cds:%d-%d exon:%d-%d",
