@@ -144,12 +144,12 @@ class BaseAnnotationRequest(object):
     def is_start_codon_affected(self):
         return (self.variant.position <= self.transcript_model.cds[0] + 2
                 and self.transcript_model.cds[0] <=
-                self.variant.ref_position_last)
+                self.variant.corrected_ref_position_last)
 
     def is_stop_codon_affected(self):
         return (self.variant.position <= self.transcript_model.cds[1]
                 and self.transcript_model.cds[1] - 2 <=
-                self.variant.ref_position_last)
+                self.variant.corrected_ref_position_last)
 
     def has_3_UTR_region(self):
         return (self.transcript_model.exons[-1].stop !=

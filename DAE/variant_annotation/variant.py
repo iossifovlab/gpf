@@ -10,6 +10,9 @@ class Variant:
         self.ref_position_last = self.position + len(self.reference)
         self.alt_position_last = self.position + len(self.alternate)
 
+        self.corrected_ref_position_last = max(self.position,
+                                               self.ref_position_last - 1)
+
     def set_position(self, chromosome, position, loc):
         if position is not None:
             assert(chromosome is not None)

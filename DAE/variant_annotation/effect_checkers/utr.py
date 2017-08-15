@@ -21,8 +21,7 @@ class UTREffectChecker:
 
         if side == "+":
             ef.dist_from_coding = request.get_exonic_distance(
-                max(request.variant.position,
-                    request.variant.ref_position_last - 1),
+                request.variant.corrected_ref_position_last,
                 request.transcript_model.cds[0]
             )
         else:
