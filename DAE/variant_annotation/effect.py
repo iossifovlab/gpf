@@ -9,13 +9,8 @@ class Effect:
     length = None
     which_intron = None
     how_many_introns = None
-    side = None
     dist_from_coding = None
-    splice_site = None
     aa_change = None
-    splice_site_context = None
-    cnv_type = None
-    dist_from_5utr = None
     dist_from_acceptor = None
     dist_from_donor = None
     intron_length = None
