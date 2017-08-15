@@ -84,7 +84,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[3].effect, "no-frame-shift")
         self.assertEqual(effects_sorted[3].prot_pos, 201)
         self.assertEqual(effects_sorted[3].prot_length, 252)
-        # self.assertEqual(effects_sorted[3].aa_change, None)
+        self.assertEqual(effects_sorted[3].aa_change, "Ile->")
 
         self.assertEqual(effects_sorted[4].gene, "RWDD3")
         self.assertEqual(effects_sorted[4].transcript_id, "NM_015485_1")
@@ -92,7 +92,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[4].effect, "no-frame-shift")
         self.assertEqual(effects_sorted[4].prot_pos, 216)
         self.assertEqual(effects_sorted[4].prot_length, 267)
-        # self.assertEqual(effects_sorted[4].aa_change, None)
+        self.assertEqual(effects_sorted[4].aa_change, "Ile->")
 
         self.assertEqual(effects_sorted[5].gene, "RWDD3")
         self.assertEqual(effects_sorted[5].transcript_id, "NR_103483_1")
@@ -1236,7 +1236,9 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].effect, "no-frame-shift-newStop")
         self.assertEqual(effects_sorted[0].prot_pos, 350)
         self.assertEqual(effects_sorted[0].prot_length, 2087)
-        # self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].aa_change, "Met->Arg,Asn,Ala,Arg,"
+                         "Arg,End,Arg,Gln,Asp,Leu,Pro,Val,Met,Leu,Leu,Ser,Thr,"
+                         "Arg,Asn,Arg,End,Leu,End,Asn,Leu")
 
         self.assertEqual(effects_sorted[1].gene, "ARHGAP32")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_014715_1")
@@ -1555,7 +1557,9 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].effect, "no-frame-shift-newStop")
         self.assertEqual(effects_sorted[0].prot_pos, 373)
         self.assertEqual(effects_sorted[0].prot_length, 388)
-        # self.assertEqual(effects_sorted[0].aa_change, None)
+        self.assertEqual(effects_sorted[0].aa_change, "->End,Lys,Val,Pro,End,"
+                         "Thr,Trp,Thr,Glu,His,Pro,Arg,Cys,Gln,Gln,Gln,Arg,"
+                         "Lys,Leu")
 
         self.assertEqual(effects_sorted[1].gene, "SKA3")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_145061_1")
