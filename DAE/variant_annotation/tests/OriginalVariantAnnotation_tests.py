@@ -501,7 +501,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[0].prot_pos, None)
         self.assertEqual(effects_sorted[0].prot_length, 390)
         self.assertEqual(effects_sorted[0].aa_change, None)
-        self.assertEqual(effects_sorted[0].dist_from_coding, 135)
+        self.assertEqual(effects_sorted[0].dist_from_coding, 136)
 
         self.assertEqual(effects_sorted[1].gene, "PTGER3")
         self.assertEqual(effects_sorted[1].transcript_id, "NM_198714_1")
@@ -654,7 +654,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[3].prot_pos, None)
         self.assertEqual(effects_sorted[3].prot_length, 626)
         self.assertEqual(effects_sorted[3].aa_change, None)
-        self.assertEqual(effects_sorted[3].dist_from_coding, 185)
+        self.assertEqual(effects_sorted[3].dist_from_coding, 186)
 
         self.assertEqual(effects_sorted[4].gene, "GNAS")
         self.assertEqual(effects_sorted[4].transcript_id, "NM_016592_1")
@@ -663,7 +663,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[4].prot_pos, None)
         self.assertEqual(effects_sorted[4].prot_length, 245)
         self.assertEqual(effects_sorted[4].aa_change, None)
-        self.assertEqual(effects_sorted[4].dist_from_coding, 230)
+        self.assertEqual(effects_sorted[4].dist_from_coding, 231)
 
         self.assertEqual(effects_sorted[5].gene, "GNAS")
         self.assertEqual(effects_sorted[5].transcript_id, "NM_080425_1")
@@ -964,7 +964,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].prot_pos, None)
         self.assertEqual(effects_sorted[2].prot_length, 302)
         self.assertEqual(effects_sorted[2].aa_change, None)
-        self.assertEqual(effects_sorted[2].dist_from_coding, 128)
+        self.assertEqual(effects_sorted[2].dist_from_coding, 129)
 
         self.assertEqual(effects_sorted[3].gene, "GPBP1")
         self.assertEqual(effects_sorted[3].transcript_id, "NM_022913_1")

@@ -15,18 +15,36 @@ class BaseAnnotationRequest(object):
             return self.transcript_model.cds[1]
         return position
 
+    def get_exonic_length(self):
+        start = self.transcript_model.exons[0].start
+        end = self.transcript_model.exons[-1].stop
+        return self.get_exonic_distance(start, end) + 1
+
+    def get_exonic_position(self):
+        start = self.transcript_model.exons[0].start
+        end = self.variant.position
+        return self.get_exonic_distance(start, end) + 1
+
     def get_exonic_distance(self, start, end):
         length = 0
         for region in self.transcript_model.exons:
             if region.start <= start <= region.stop:
                 if region.start <= end <= region.stop:
                     return end - start
-                length = region.stop - start
+                length = region.stop - start + 1
+                self.logger.debug("start len %d %d-%d", length, start,
+                                  region.stop)
             else:
                 length += region.stop - region.start + 1
+                self.logger.debug("total %d + len %d %d-%d",
+                                  length, region.stop - region.start + 1,
+                                  region.stop, region.start - 1)
 
             if region.start <= end <= region.stop:
                 length -= region.stop - end + 1
+                self.logger.debug("total %d - len %d %d-%d",
+                                  length, region.stop - end + 1,
+                                  region.stop, end - 1)
                 break
         return length
 

@@ -1363,7 +1363,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(effects_sorted[2].prot_pos, None)
         self.assertEqual(effects_sorted[2].prot_length, 205)
         self.assertEqual(effects_sorted[2].aa_change, None)
-        self.assertEqual(effects_sorted[2].dist_from_coding, 151)
+        self.assertEqual(effects_sorted[2].dist_from_coding, 152)
 
         self.assertEqual(effects_sorted[3].gene, "MTFR1L")
         self.assertEqual(effects_sorted[3].transcript_id, "NM_019557_1")

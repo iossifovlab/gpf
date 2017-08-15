@@ -33,13 +33,12 @@ class UTREffectChecker:
 
     def create_effect(self, request, side):
         coding_regions = request.transcript_model.exons
-        last_position = request.variant.position + \
-            len(request.variant.reference)
+        last_position = request.variant.corrected_ref_position_last
         prev = None
 
         for i, j in enumerate(coding_regions):
-            if (request.variant.position < j.stop
-                    and j.start < last_position):
+            if (request.variant.position <= j.stop
+                    and j.start <= last_position):
                 return self.create_utr_effect(request, side)
             elif (prev is not None
                     and prev <= request.variant.position
