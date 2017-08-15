@@ -75,6 +75,8 @@ class EffectFactory:
     @classmethod
     def create_effect_with_request(cls, effect_name, request):
         ef = cls.create_effect_with_tm(effect_name, request.transcript_model)
+        ef.mRNA_length = request.get_exonic_length()
+        ef.mRNA_position = request.get_exonic_position()
         return ef
 
     @classmethod
