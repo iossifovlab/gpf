@@ -26,5 +26,7 @@ class StopLossEffectChecker:
 
             except IndexError:
                 pass
+            except ValueError:
+                pass
 
             return EffectFactory.create_effect_with_prot_pos("noEnd", request)

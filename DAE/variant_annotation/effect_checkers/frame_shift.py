@@ -59,12 +59,10 @@ class FrameShiftEffectChecker:
 
         for j in coding_regions:
             start = j.start
-            if (request.variant.position ==
-                    request.variant.ref_position_last):
-                start -= 1
             stop = j.stop
-            if (request.variant.position ==
-                    request.variant.ref_position_last):
+
+            if len(request.variant.reference) == 0:
+                start -= 1
                 stop += 1
 
             self.logger.debug("frameshift %d<=%d<=%d cds:%d-%d exon:%d-%d",
