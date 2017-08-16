@@ -76,7 +76,8 @@ class VariantAnnotator:
 
         for key in self.gene_models._utrModels[variant.chromosome]:
             if (variant.position <= key[1] + self.promoter_len
-                    and variant.ref_position_last >= key[0] - self.promoter_len):
+                    and variant.ref_position_last >= key[0] -
+                    self.promoter_len):
                 for tm in self.gene_models._utrModels[variant.chromosome][key]:
                     logger.debug("========: %s-%s :====================",
                                  tm.gene, tm.trID)
@@ -113,8 +114,6 @@ class VariantAnnotator:
 
     @classmethod
     def effect_description(cls, E):
-        #cnvs ???
-
         if E[0].effect == 'unk_chr':
             return('unk_chr', 'unk_chr', 'unk_chr')
 
@@ -123,13 +122,7 @@ class VariantAnnotator:
         effect_details = ""
 
         D = {}
-
-        for i in E:
-            severity_score = cls.Severity[i.effect]
-            try:
-                D[severity_score].append(i)
-            except:
-                D[severity_score] = [i]
+        [D.setdefault(cls.Severity[i.effect], []).append(i) for i in E]
 
         set_worst_effect = False
 
@@ -145,11 +138,7 @@ class VariantAnnotator:
                 return("no-mutation", "no-mutation", "no-mutation")
 
             G = {}
-            for i in D[key]:
-                try:
-                    G[i.gene].append(i)
-                except:
-                    G[i.gene] = [i]
+            [G.setdefault(i.gene, []).append(i) for i in D[key]]
 
             for gene in G:
                 for v in G[gene]:
