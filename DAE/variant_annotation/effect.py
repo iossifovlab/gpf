@@ -14,6 +14,8 @@ class Effect:
     dist_from_acceptor = None
     dist_from_donor = None
     intron_length = None
+    mRNA_length = None
+    mRNA_position = None
 
     def __init__(self, effect_name):
         self.effect = effect_name
