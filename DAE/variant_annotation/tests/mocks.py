@@ -6,7 +6,8 @@ class ExonMock:
 
 
 class TranscriptModelMock:
-    def __init__(self, strand, cds_start, cds_end, exons, coding=None):
+    def __init__(self, strand, cds_start, cds_end, exons, coding=None,
+                 is_coding=True):
         self.strand = strand
         self.cds = [cds_start, cds_end]
         self.exons = exons
@@ -17,9 +18,16 @@ class TranscriptModelMock:
             self.coding = self.exons
         else:
             self.coding = coding
+        self._is_coding = is_coding
 
     def CDS_regions(self):
         return self.coding
+
+    def is_coding(self):
+        return self._is_coding
+
+    def all_regions(self):
+        return self.exons
 
 
 class ReferenceGenomeMock:

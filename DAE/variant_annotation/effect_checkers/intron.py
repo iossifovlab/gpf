@@ -12,8 +12,7 @@ class IntronicEffectChecker:
         coding_regions = request.CDS_regions()
         prev = coding_regions[0].stop
 
-        last_position = request.variant.position + \
-            len(request.variant.reference)
+        last_position = request.variant.corrected_ref_position_last
 
         intron_regions_before_coding = 0
         for j in request.transcript_model.exons:
@@ -27,7 +26,7 @@ class IntronicEffectChecker:
             logger.debug("pos: %d-%d checking intronic region %d-%d",
                          request.variant.position, last_position, prev,
                          j.start)
-            if (prev <= request.variant.position
+            if (prev < request.variant.position
                     and last_position < j.start):
                 return EffectFactory.create_intronic_effect(
                     "intron", request, prev, j.start,
