@@ -10,12 +10,7 @@
 * All modifications in start codon are marked as noStart, even if it results in a new start codon.
 
 ## noStop
-Modifications in stop codon can result in:
-* **noStop** - if the stop codon has been removed
-* **no-frame-shift** - if the resulting sequence still contains a stop codon and the inserted/deleted nucleotides count before the stop codon is divisible by 3
-* **frame-shift** - if the indel is not divisible by 3, it wil be marked as frame-shift and the resulting sequence won't be checked for stop codons
-* **3'UTR** - if the the resulting sequence still contains a stop codon and the inserted/deleted nucleotides are after the stop codon
-* **integenic** - Same as above if there is no 3'UTR region
+* All modifications(excluding synonymous substitutions) in stop codon are marked as noEnd, even if it results in a new start codon.
 
 ## Frame-shift
 Possible effect types when there is an indel are:
