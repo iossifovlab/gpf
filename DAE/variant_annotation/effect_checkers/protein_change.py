@@ -4,11 +4,10 @@ import logging
 
 class ProteinChangeEffectChecker:
     def mutation_type(self, aaref, aaalt):
+        assert(len(aaref) == len(aaalt))
+
         if "End" in aaalt and "End" not in aaref:
             return "nonsense"
-
-        if len(aaref) != len(aaalt):
-            return "missense"
 
         for ref, alt in zip(aaref, aaalt):
             if ref == "?" or alt == "?":
@@ -18,8 +17,6 @@ class ProteinChangeEffectChecker:
         return "synonymous"
 
     def get_effect(self, request):
-        logger = logging.getLogger(__name__)
-
         coding_regions = request.CDS_regions()
         ref_length = len(request.variant.reference)
         alt_length = len(request.variant.alternate)
