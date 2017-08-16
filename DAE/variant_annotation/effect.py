@@ -16,6 +16,8 @@ class Effect:
     intron_length = None
     mRNA_length = None
     mRNA_position = None
+    ref_aa = None
+    alt_aa = None
 
     def __init__(self, effect_name):
         self.effect = effect_name
@@ -99,6 +101,10 @@ class EffectFactory:
             ",".join(ref_aa),
             ",".join(alt_aa)
         )
+
+        ef.ref_aa = ref_aa
+        ef.alt_aa = alt_aa
+
         return ef
 
     @classmethod
