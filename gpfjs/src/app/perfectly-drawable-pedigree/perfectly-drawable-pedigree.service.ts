@@ -102,12 +102,14 @@ export class PerfectlyDrawablePedigreeService {
         // Ec+ and Ec-
         let sibshipEdges: Edge[] = [];
         let sameGenerationNotSiblingEdges: Edge[] = [];
-        for (let individual of individualVertices) {
+        for (let individual of individualVertices as Individual[]) {
           for (let sibshipUnit of sibshipVertices) {
             if (isSubset(individual.individualSet(), sibshipUnit.individualSet())) {
               sibshipEdges.push([individual, sibshipUnit]);
             } else if (equal(individual.generationRanks(), sibshipUnit.generationRanks())) {
-              sameGenerationNotSiblingEdges.push([individual, sibshipUnit]);
+              if (individual.parents) {
+                  sameGenerationNotSiblingEdges.push([individual, sibshipUnit]);
+              }
             }
           }
         }
@@ -141,10 +143,10 @@ export class PerfectlyDrawablePedigreeService {
           }
         }
 
-        // console.log("sameRankEdges", sameRankEdges);
-        // console.log("sameGenerationNotMateEdges", sameGenerationNotMateEdges);
-        // console.log("sameGenerationNotSiblingEdges", sameGenerationNotSiblingEdges);
-        // console.log("intergenerationalEdges", intergenerationalEdges);
+        // console.log("sameRankEdges", sameRankEdges.map(([v1,v2]) => `${v1.toString()}->${v2.toString()}` ));
+        // console.log("sameGenerationNotMateEdges", sameGenerationNotMateEdges.map(([v1,v2]) => `${v1.toString()}->${v2.toString()}` ));
+        // console.log("sameGenerationNotSiblingEdges", sameGenerationNotSiblingEdges.map(([v1,v2]) => `${v1.toString()}->${v2.toString()}` ));
+        // console.log("intergenerationalEdges", intergenerationalEdges.map(([v1,v2]) => `${v1.toString()}->${v2.toString()}` ));
 
         let requiredEdges = new Set(
           matingEdges.concat(sibshipEdges).concat(matingUnitSibshipUnitEdges));
