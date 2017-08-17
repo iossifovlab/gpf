@@ -114,13 +114,23 @@ class Layout:
                         middle_x, individual.y_center + y_offset
                     ))
 
-                if (individual.individual.are_siblings(
-                        other_individual.individual)):
-                    self.lines.append(Line(
-                        individual.x_center, individual.y_center - y_offset,
-                        other_individual.x_center,
-                        other_individual.y_center - y_offset
-                    ))
+            i = 0
+            while i < len(level) - 1:
+                j = len(level) - 1
+                while i < j:
+                    individual = level[i]
+                    other_individual = level[j]
+                    if (individual.individual.are_siblings(
+                            other_individual.individual)):
+                        self.lines.append(Line(
+                            individual.x_center, individual.y_center - y_offset,
+                            other_individual.x_center,
+                            other_individual.y_center - y_offset
+                        ))
+                        i = j
+                        break
+                    j -= 1
+                i += 1
 
     def _align_left(self, x_offset=10):
         min_x = min([i.x for i in self._id_to_position.values()])
