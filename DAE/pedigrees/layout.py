@@ -71,7 +71,7 @@ class Layout:
                 moved_individuals += self._align_parents_of_children()
                 # print(moved_individuals, "aligned parents of children")
 
-            moved_individuals += self._set_mates_equally_apart()
+            # moved_individuals += self._set_mates_equally_apart()
             # print(moved_individuals, "set mates equally apart")
             moved_individuals += self._move_overlaps()
             # print(moved_individuals, "moved overlapping individuals")
@@ -168,7 +168,7 @@ class Layout:
                 assert dist1 > 0
                 assert dist2 > 0
 
-                if dist1 < 0 or dist2 < 0 or abs(dist1 - dist2) < 1e-7:
+                if dist1 < 0 or dist2 < 0 or abs(dist1 - dist2) < 1e-5:
                     return 0
 
                 if dist1 > dist2:
@@ -178,7 +178,7 @@ class Layout:
 
         return moved
 
-    def _move_overlaps(self, gap_size=8):
+    def _move_overlaps(self, gap_size=8.0):
         moved = 0
         first_individual_position = self._id_to_position[
             self._individuals_by_rank[0][0]]
@@ -190,7 +190,7 @@ class Layout:
             for index, individual1 in enumerate(level_with_positions):
                 for individual2 in level_with_positions[index+1:index+2]:
                     diff = individual2.x - individual1.x
-                    if diff < min_gap:
+                    if min_gap - diff > 1:
                         moved += self._move([individual2], min_gap - diff)
 
         return moved
@@ -290,7 +290,7 @@ class Layout:
 
             if to_move != set():
                 to_move_offset = max(map(
-                    lambda i: new_end - i.x + min_gap*2 + i.size,
+                    lambda i: new_end - i.x + min_gap*2.0 + i.size,
                     to_move))
         else:
             start = min_individual.x
@@ -303,11 +303,13 @@ class Layout:
 
             if to_move != set():
                 to_move_offset = min(map(
-                    lambda i: new_start - i.x - min_gap*2 - i.size,
+                    lambda i: new_start - i.x - min_gap*2.0 - i.size,
                     to_move))
 
         for individual in individuals:
             individual.x += offset
+
+        # print("moving with", offset)
 
         other_moved = 0
         if to_move != set():
