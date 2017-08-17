@@ -85,7 +85,7 @@ export class PedigreeChartLevelComponent implements OnInit {
 
 
       // console.log("After aligning children:", movedIndividuals);
-      movedIndividuals += this.setMatesEquallyApart(individuals);
+    //   movedIndividuals += this.setMatesEquallyApart(individuals);
       // console.log("After setting equal mate lengths:", movedIndividuals);
       movedIndividuals += this.moveOverlaps(individuals);
       // console.log("After removing overlaps:", movedIndividuals);
@@ -159,7 +159,7 @@ export class PedigreeChartLevelComponent implements OnInit {
         if (diff < 0) {
             console.warn('Some reordering has happened!', diff, level[i], level[j]);
         }
-        if (diff < minGap && diff > 0) {
+        if (minGap - diff > 1) {
           let individualsToMove = [level[j]];
           movedIndividuals += this.move(individualsToMove, minGap - diff);
         }
@@ -295,6 +295,9 @@ export class PedigreeChartLevelComponent implements OnInit {
     if (count > 100) {
       console.log("Too much moving...");
       return 0;
+    }
+    if (Math.abs(offset) < 1e-5) {
+        return 0;
     }
 
     individuals = Array.from(difference(new Set(individuals), new Set(alreadyMoved)));
