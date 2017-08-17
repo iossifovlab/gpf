@@ -6,14 +6,14 @@ import copy
 
 class Interval(object):
 
-    def __init__(self, left=0, right=1):
+    def __init__(self, left=0.0, right=1.0):
         self.left = left
         self.right = right
 
 
 class IntervalForVertex(Interval):
 
-    def __init__(self, vertex, left=0, right=1):
+    def __init__(self, vertex, left=0.0, right=1.0):
         super(IntervalForVertex, self).__init__(left, right)
         self.vertex = vertex
 
@@ -22,8 +22,12 @@ class IntervalForVertex(Interval):
 
 
 class Realization:
-    def __init__(self, graph, forbidden_graph, intervals=[], domain=[],
+    def __init__(self, graph, forbidden_graph, intervals=None, domain=None,
                  max_width=3):
+        if domain is None:
+            domain = []
+        if intervals is None:
+            intervals = []
         self.graph = graph
         self.forbidden_graph = forbidden_graph
         self.intervals = intervals
@@ -98,7 +102,7 @@ class Realization:
         forbidden = set(self.forbidden_graph.neighbors(new_vertex))
         active_vertices = self.get_active_vertices()
 
-        return len(forbidden & active_vertices) != 0
+        return forbidden & active_vertices != set()
 
     def _new_active_valid(self, new_vertex, new_realization):
         new_active = new_realization.get_active_vertices()
@@ -181,7 +185,7 @@ class SandwichInstance:
         return SandwichInstance(all_vertices, required_graph, forbidden_graph)
 
 
-class SandwichSolver:
+class SandwichSolver(object):
 
     @staticmethod
     def solve(sandwich_instance):
@@ -233,4 +237,5 @@ class SandwichSolver:
                         visited_realizations[domain_string] = True
                         realizations_queue.append(cloned_realization)
 
+        # print("max domain", max_domain)
         return None

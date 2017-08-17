@@ -113,7 +113,8 @@ class Pedigree:
         # Ec-
         same_generation_not_siblings = \
             {(i, s) for i in individuals for s in sibship_units
-             if i.generation_ranks() == s.generation_ranks()}
+             if i.parents is not None and
+                i.generation_ranks() == s.generation_ranks()}
         same_generation_not_siblings = same_generation_not_siblings \
             - sibship_edges
 
@@ -163,7 +164,8 @@ class IndividualGroup:
         return {}
 
     def __repr__(self):
-        return "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
+        return self.__class__.__name__[0].lower() + \
+               "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
 
 
 class Individual(IndividualGroup):

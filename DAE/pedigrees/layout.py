@@ -4,7 +4,7 @@ from functools import reduce
 
 class IndividualWithCoordinates:
 
-    def __init__(self, individual, x=0, y=0, size=21, scale=1.0):
+    def __init__(self, individual, x=0.0, y=0.0, size=21.0, scale=1.0):
         self.individual = individual
         self.x = x
         self.y = y
@@ -56,7 +56,7 @@ class Layout:
         moved_individuals = -1
         counter = 1
 
-        while(moved_individuals and counter < max_iter):
+        while moved_individuals and counter < max_iter:
             # print
             # print("new iter")
             moved_individuals = 0
@@ -140,8 +140,6 @@ class Layout:
                                     (mu1.mother is mu2.mother)}
 
             for mu1, mu2 in dual_mating_units:
-                ordered_parents = []
-
                 if mu1.father is mu2.father:
                     ordered_parents = [mu1.mother, mu1.father, mu2.mother]
                 else:
@@ -269,7 +267,6 @@ class Layout:
         if len(individuals) == 0:
             return 0
 
-        to_move = set()
         to_move_offset = 0
 
         if offset > 0:
@@ -277,7 +274,7 @@ class Layout:
             end = max_individual.x
             new_end = end + offset
             to_move = {i for x in level for i in [self._id_to_position[x]]
-                       if i.x >= start and i.x <= new_end}
+                       if start <= i.x <= new_end}
             to_move -= already_moved
             to_move -= set(individuals)
 
@@ -290,7 +287,7 @@ class Layout:
             end = max_individual.x
             new_start = start + offset
             to_move = {i for x in level for i in [self._id_to_position[x]]
-                       if i.x >= new_start and i.x <= end}
+                       if new_start <= i.x <= end}
             to_move -= already_moved
             to_move -= set(individuals)
 
@@ -309,7 +306,8 @@ class Layout:
 
         return len(individuals) + other_moved
 
-    def _get_mates_on_level(self, level):
+    @staticmethod
+    def _get_mates_on_level(level):
         return {mu for i in level for mu in i.mating_units}
 
     def _get_first_and_last_children_positions(self, mating_unit):
@@ -321,7 +319,8 @@ class Layout:
         return [children_positions[0],
                 children_positions[len(children_positions) - 1]]
 
-    def _get_sibships_on_level(self, level):
+    @staticmethod
+    def _get_sibships_on_level(level):
         individuals_with_parents = filter(lambda i: bool(i.parents), level)
 
         def reducer(acc, x):
@@ -344,7 +343,8 @@ class Layout:
 
         return None
 
-    def _generate_simple_layout(self, levels, level_heigh=30.0,
+    @staticmethod
+    def _generate_simple_layout(levels, level_heigh=30.0,
                                 x_offset=20.0, y_offset=20.0, gap=8.0):
         result = {}
         original_x_offset = x_offset
