@@ -7,6 +7,53 @@ nonsyn = ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop',
           'missense', 'noStart', 'noEnd', 'no-frame-shift']
 
 
+def get_effect_types(types=True, groups=False):
+    T = ['tRNA:ANTICODON',
+         'splice-site',
+         'frame-shift',
+         'nonsense',
+         'no-frame-shift-newStop',
+         'noStart',
+         'noEnd',
+         'missense',
+         'no-frame-shift',
+         'CDS',
+         'synonymous',
+         'coding_unknown',
+         "3'UTR",
+         "5'UTR",
+         'intron',
+         'non-coding',
+         "5'UTR-intron",
+         "3'UTR-intron",
+         "promoter",
+         "non-coding-intron",
+         'unknown',
+         'intergenic',
+         'no-mutation',
+         'CNV-',
+         'CNV+']
+
+    G = ['LGDs',
+         'LoF',
+         'nonsynonymous',
+         'coding',
+         'introns',
+         'UTRs',
+         'CNVs'
+         ]
+
+    if types is True:
+        if groups is False:
+            return(T)
+        A = list(G)
+        A.extend(T)
+        return(A)
+    if groups is True:
+        return(G)
+    return([])
+
+
 def get_effect_types_set(s):
     s = s.split(',')
     global LOF
