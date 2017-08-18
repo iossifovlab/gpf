@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 # encoding: utf-8
 '''
 myisam_transmitted_build.py -- prepares MySQL statements for a study.
@@ -100,8 +100,13 @@ class VariantsBase(object):
         assert os.path.exists(args.transmittedfile)
         assert os.path.exists(args.toomanyfile)
 
-        families, _ = Study._load_family_data_from_simple(
-            args.familiesfile)
+        _base, ext = os.path.splitext(args.familiesfile)
+        if ext == '.pckl':
+            families, _ = Study._load_family_data_from_pickle(
+                args.familiesfile)
+        else:
+            families, _ = Study._load_family_data_from_simple(
+                args.familiesfile)
 
         class StudyMock(object):
             def __init__(self, study_name, families):
@@ -399,7 +404,7 @@ DROP TABLE IF EXISTS `transmitted_familyvariant`;
 CREATE TABLE `transmitted_familyvariant` (
   `family_id` varchar(32) NOT NULL,
   `best` varchar(32) NOT NULL,
-  `counts` varchar(64) NOT NULL,
+  `counts` varchar(128) NOT NULL,
   `in_mom` tinyint(1) NOT NULL,
   `in_dad` tinyint(1) NOT NULL,
   `in_prb` tinyint(1) NOT NULL,

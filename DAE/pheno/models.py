@@ -531,6 +531,11 @@ class MetaVariableManager(ManagerBase):
 
 
 class ValueModel(object):
+    CONTINUOUS = 'continuous'
+    ORDINAL = 'ordinal'
+    CATEGORICAL = 'categorical'
+    UNKNOWN = 'unknown'
+
     SCHEMA_CREATE = """
     BEGIN;
 
@@ -642,6 +647,19 @@ class ValueModel(object):
             return str(val).decode('utf-8')
         else:
             return str(val)
+
+    @staticmethod
+    def get_value_manager(value_type):
+        if value_type == ValueModel.CONTINUOUS:
+            return ContinuousValueManager
+        elif value_type == ValueModel.ORDINAL:
+            return OrdinalValueManager
+        elif value_type == ValueModel.CATEGORICAL:
+            return CategoricalValueManager
+        elif value_type == ValueModel.UNKNOWN:
+            return OtherValueManager
+        else:
+            raise ValueError("unsupported value type: {}".format(value_type))
 
     def __repr__(self):
         return "Value({},{},{})".format(
@@ -756,6 +774,20 @@ class CategoricalValueManager(ValueManager):
 
     def __init__(self, *args, **kwargs):
         super(CategoricalValueManager, self).__init__(*args, **kwargs)
+
+
+class OtherValueModel(ValueModel):
+    TABLE = 'value_other'
+    TYPE = str
+    TYPE_NAME = 'text'
+    TYPE_SQL = 'varchar(127)'
+
+
+class OtherValueManager(ValueManager):
+    MODEL = OtherValueModel
+
+    def __init__(self, *args, **kwargs):
+        super(OtherValueManager, self).__init__(*args, **kwargs)
 
 
 class OrdinalValueModel(ValueModel):

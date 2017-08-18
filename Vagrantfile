@@ -11,7 +11,7 @@ Vagrant.configure(2) do |config|
   config.vm.define "vagrant" do |vagrant|
 	vagrant.vm.box = "ubuntu/xenial64"
 	vagrant.vm.hostname = "vagrant"
-# 	vagrant.vm.network "private_network", ip: "192.168.200.17"
+	vagrant.vm.network "private_network", ip: "192.168.200.17"
 
   end
 

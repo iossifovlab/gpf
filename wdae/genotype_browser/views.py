@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
-from rest_framework import permissions
 
 from helpers.logger import log_filter, LOGGER
 import traceback
@@ -17,17 +16,7 @@ from rest_framework.exceptions import NotAuthenticated
 import json
 from query_variants import join_line
 import itertools
-from datasets_api.models import Dataset
-from guardian.utils import get_anonymous_user
-
-
-class IsDatasetAllowed(permissions.BasePermission):
-
-    def has_object_permission(self, request, view, dataset_id):
-        user = request.user
-        dataset_object = Dataset.objects.get(dataset_id=dataset_id)
-        return user.has_perm('datasets_api.view', dataset_object) or\
-            get_anonymous_user().has_perm('datasets_api.view', dataset_object)
+from datasets_api.permissions import IsDatasetAllowed
 
 
 class QueryBaseView(views.APIView):
@@ -114,6 +103,8 @@ class QueryDownloadView(QueryBaseView):
         super(QueryDownloadView, self).__init__()
 
     def _parse_query_params(self, data):
+        print(data)
+
         res = {str(k): str(v) for k, v in data.items()}
         assert 'queryData' in res
         query = json.loads(res['queryData'])

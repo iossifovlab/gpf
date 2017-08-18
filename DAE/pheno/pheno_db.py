@@ -10,9 +10,9 @@ from collections import defaultdict, OrderedDict
 
 from pheno.utils.configuration import PhenoConfig
 from pheno.models import PersonManager, VariableManager, \
-    ContinuousValueManager,\
-    OrdinalValueManager, CategoricalValueManager, RawValueManager,\
-    MetaVariableManager, MetaVariableCorrelationManager
+    RawValueManager,\
+    MetaVariableManager, MetaVariableCorrelationManager,\
+    ValueModel
 from VariantsDB import Person, Family
 import copy
 
@@ -83,7 +83,7 @@ class Measure(object):
     def __repr__(self):
         return "Measure({}, {}, {})".format(
             self.measure_id, self.measure_type,
-            self.value_domain.encode('utf-8'))
+            self.value_domain)
 
     @classmethod
     def _from_df(cls, row):
@@ -103,7 +103,8 @@ class Measure(object):
         if m.measure_type == 'continuous' or m.measure_type == 'ordinal':
             m.min_value = row['min_value']
             m.max_value = row['max_value']
-            assert m.max_value >= m.min_value
+#             assert m.max_value >= m.min_value, \
+#                 "%s, %s, %s" % (m.measure_id, m.min_value, m.max_value)
         m.value_domain = row['value_domain']
         m.has_probands = row['has_probands']
         m.has_siblings = row['has_siblings']
@@ -241,10 +242,18 @@ class PhenoDB(PhenoConfig):
                     'has_parents': np.zeros(size),
                     'default_filter': [None] * size,
                 })
-
         df = df.join(
             meta_df.set_index('variable_id'), on='variable_id',
-            rsuffix='_val_meta')
+            rsuffix='_meta')
+
+        # df.min_value = df.min_value_meta
+        # df.max_value = df.max_value_meta
+
+#         cindex = df.stats == 'continuous'
+#         assert np.all(np.abs(df[cindex].min_value -
+#                              meta_df[cindex].min_value) < 1.E-6)
+#         assert np.all(np.abs(df[cindex].max_value -
+#                              meta_df[cindex].max_value) < 1.E-6)
 
         return df
 
@@ -315,7 +324,8 @@ class PhenoDB(PhenoConfig):
         """
         assert instrument is None or instrument in self.instruments
         assert measure_type is None or \
-            measure_type in set(['continuous', 'ordinal', 'categorical'])
+            measure_type in set([
+                'continuous', 'ordinal', 'categorical', 'unknown'])
 
         clauses = ["not stats isnull"]
         if instrument is not None:
@@ -504,16 +514,6 @@ class PhenoDB(PhenoConfig):
 
         return None
 
-    def _get_value_manager(self, value_type):
-        if value_type == 'continuous':
-            return ContinuousValueManager
-        elif value_type == 'ordinal':
-            return OrdinalValueManager
-        elif value_type == 'categorical':
-            return CategoricalValueManager
-        else:
-            raise ValueError("unsupported value type: {}".format(value_type))
-
     @staticmethod
     def _rename_value_column(measure_id, df):
         names = df.columns.tolist()
@@ -545,7 +545,7 @@ class PhenoDB(PhenoConfig):
             raise ValueError(
                 "bad measure: {}; unknown value type".format(
                     measure.measure_id))
-        value_manager = self._get_value_manager(value_type)
+        value_manager = ValueModel.get_value_manager(value_type)
         clauses = ["variable_id = '{}'".format(measure.measure_id)]
         if roles:
             roles_clause = self._roles_clause(roles, 'person_role')

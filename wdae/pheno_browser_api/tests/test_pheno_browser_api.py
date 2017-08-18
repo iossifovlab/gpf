@@ -12,6 +12,7 @@ class Test(BaseAuthenticatedUserTest):
 
     URL = "/api/v3/pheno_browser/instruments"
     MEASURES_URL = "/api/v3/pheno_browser/measures"
+    DOWNLOAD_URL = "/api/v3/pheno_browser/download"
 
     def test_instruments_missing_dataset_id(self):
         response = self.client.get(self.URL)
@@ -61,3 +62,12 @@ class Test(BaseAuthenticatedUserTest):
         for url in urls:
             response = self.client.get(url)
             self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+    def test_download_vip_diagnosis_summary(self):
+        url = "{}?dataset_id=VIP&instrument=diagnosis_summary".format(
+            self.DOWNLOAD_URL)
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        header = response.content.split()[0].split(',')
+        self.assertEquals(header[0], 'person_id')

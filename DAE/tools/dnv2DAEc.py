@@ -106,8 +106,8 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
 	   break 
 
 	if not flag:
-		print >> sys.stderr, k, pid, ': not found'
-		exit(1)
+		print >> sys.stderr, '\t'.join( [pid, 'asChildNotFound'] ), rx
+		#exit(1)
    #
    #handle based on family
    for k, v in fVrt.items():

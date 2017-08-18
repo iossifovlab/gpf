@@ -79,7 +79,7 @@ def getCount( sx ):
 def modifyData( nIx, sx, alts ):
    if None in sx['GT']: return sx
 
-   cnt = numpy.zeros((len(alts)+1,), dtype=int)
+   cnt = numpy.zeros((len(alts)+1,), dtype=int) - 1 # default for no info
    cx = numpy.array(getCount(sx),dtype=int)
    if len(cx) == len(nIx):
         cnt[nIx] = cx

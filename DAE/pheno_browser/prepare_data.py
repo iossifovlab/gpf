@@ -28,7 +28,6 @@ class PreparePhenoBrowserBase(object):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         self.output_base = os.path.basename(output_dir)
-        print(self.output_base)
         self.pheno_db = pheno.get_pheno_db(pheno_db)
         self.browser_db = os.path.join(
             output_dir,
@@ -177,6 +176,12 @@ class PreparePhenoBrowserBase(object):
         (res.figure_distribution_small,
          res.figure_distribution) = self.save_fig(measure, "distribution")
 
+    def build_values_other_distribution(self, measure, res):
+        df = self.load_measure(measure)
+        draw_categorical_violin_distribution(df, measure.measure_id)
+        (res.figure_distribution_small,
+         res.figure_distribution) = self.save_fig(measure, "distribution")
+
     def build_values_ordinal_distribution(self, measure, res):
         df = self.load_measure(measure)
         draw_ordinal_violin_distribution(df, measure.measure_id)
@@ -209,8 +214,10 @@ class PreparePhenoBrowserBase(object):
             self.build_values_ordinal_distribution(measure, v)
             self.build_regression_by_nviq(measure, v)
             self.build_regression_by_age(measure, v)
-        else:
+        elif measure.measure_type == 'categorical':
             self.build_values_categorical_distribution(measure, v)
+        else:
+            self.build_values_other_distribution(measure, v)
         return v
 
     def run(self):

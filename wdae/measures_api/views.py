@@ -76,7 +76,9 @@ class PhenoMeasureHistogramView(QueryBaseView):
             measure = dataset.pheno_db.get_measure(pheno_measure)
             assert measure.measure_type == 'continuous'
 
-            df = dataset.pheno_db.get_measure_values_df(pheno_measure)
+            df = dataset.pheno_db.get_measure_values_df(
+                pheno_measure)
+
             m = df[pheno_measure]
             bars, bins = np.histogram(
                 df[np.logical_not(np.isnan(m.values))][pheno_measure].values,
@@ -85,8 +87,8 @@ class PhenoMeasureHistogramView(QueryBaseView):
             result = {
                 "measure": pheno_measure,
                 "desc": "",
-                "min": measure.min_value,
-                "max": measure.max_value,
+                "min": min(bins),
+                "max": max(bins),
                 "bars": bars,
                 "bins": bins,
                 "step": (measure.max_value - measure.min_value) / 1000.0,

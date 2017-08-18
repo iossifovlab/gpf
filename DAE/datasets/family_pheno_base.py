@@ -81,8 +81,6 @@ class FamilyPhenoQueryMixin(object):
             measure_type = pheno_filter['measureType']
             measure_id = pheno_filter['measure']
 
-            print("pheno_filter", pheno_filter)
-
             if measure_type == 'continuous':
                 family_ids = self._filter_continuous_filter(**pheno_filter)
             elif measure_type == 'categorical':

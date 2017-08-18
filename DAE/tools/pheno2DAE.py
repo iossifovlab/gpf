@@ -109,11 +109,24 @@ USAGE
             'classified as categorical (default: 2)')
 
         parser.add_argument(
-            '-I', '--individuals',
+            '-I', '--min-individuals',
             type=int,
-            dest='individuals',
+            dest='min_individuals',
             help='minimal number of individuals for a measure to be '
             'considered for classification (default: 20)')
+
+        parser.add_argument(
+            '-S', '--skip-columns',
+            type=str,
+            dest="skip_columns",
+            help="comma separated list of instruments columns to skip")
+
+        parser.add_argument(
+            '--composite-fids',
+            action="store_true",
+            dest='composite_fids',
+            help="builds composite family IDs from parents' IDs"
+        )
 
         # Process arguments
         args = parser.parse_args()
@@ -122,6 +135,12 @@ USAGE
         instruments_directory = args.instruments
         families_filename = args.families
         output = args.output
+        skip_columns = args.skip_columns
+        if skip_columns:
+            skip_columns = set([
+                col for col in skip_columns.split(',')
+            ])
+        composite_fids = args.composite_fids
 
         if not families_filename:
             raise CLIError(
@@ -138,7 +157,8 @@ USAGE
             raise Exception("bad classification boundaries")
 
         prep_individuals = NucPedPrepareIndividuals(config)
-        prep_individuals.prepare(families_filename, verbose)
+        prep_individuals.prepare(
+            families_filename, composite_fids=composite_fids, verbose=verbose)
 
         prep_variables = NucPedPrepareVariables(config)
         prep_variables.setup(verbose)
@@ -146,7 +166,8 @@ USAGE
             prep_individuals, families_filename, verbose)
         if instruments_directory:
             prep_variables.prepare_instruments(
-                prep_individuals, instruments_directory, verbose)
+                prep_individuals, instruments_directory, verbose,
+                skip_columns)
 
         prep_meta = NucPedPrepareMetaVariables(config)
         prep_meta.prepare(verbose)

@@ -7,6 +7,7 @@ import ConfigParser
 
 from Config import Config
 import collections
+import os
 
 
 class PedigreeSelector(dict):
@@ -296,8 +297,13 @@ class DatasetsConfig(object):
             return None
 
         name = self.config.get(section, 'name')
+        description = self._get_string(section, 'description')
+        if description:
+            if os.path.exists(description):
+                with open(description, 'r') as infile:
+                    description = infile.read()
 
-        studies = self.config.get(section, 'studies')
+        studies = self._get_string(section, 'studies')
 
         study_types = self._get_string(section, 'studyTypes')
         if study_types:
@@ -316,6 +322,7 @@ class DatasetsConfig(object):
         return {
             'id': dataset_id,
             'name': name,
+            'description': description,
             'studies': studies,
             'studyTypes': study_types,
             'phenoDB': pheno_db,

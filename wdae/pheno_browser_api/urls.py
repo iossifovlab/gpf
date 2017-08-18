@@ -14,4 +14,7 @@ urlpatterns = [
     url(r'^/measures$',
         views.PhenoMeasuresView.as_view(),
         name="pheno_browser_measures"),
+    url(r'^/download$',
+        views.PhenoMeasuresDownload.as_view(),
+        name="pheno_browser_download"),
 ]

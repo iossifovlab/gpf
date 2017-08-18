@@ -20,12 +20,6 @@ class Test(APITestCase):
 
         self.assertEquals(526, len(data))
 
-        last = data[-1]
-
-        self.assertEquals(last['measure'], 'pheno_common.verbal_iq')
-        self.assertEquals(last['max'], 167.0)
-        self.assertEquals(last['min'], 5)
-
     def test_measures_categorical(self):
         url = self.URL.format('categorical')
         response = self.client.get(url)

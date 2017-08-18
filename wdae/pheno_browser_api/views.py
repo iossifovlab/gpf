@@ -13,10 +13,16 @@ import preloaded
 from pheno_browser.models import VariableBrowserModelManager
 from django.conf import settings
 import os
-from pheno_browser_api.common import get_cache_dir
+from pheno_browser_api.common import PhenoBrowserCommon
+from users_api.authentication import SessionAuthenticationWithoutCSRF
+from datasets_api.permissions import IsDatasetAllowed
+import cStringIO
+from django.http.response import HttpResponse
 
 
 class PhenoInstrumentsView(APIView):
+    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         register = preloaded.register
@@ -47,6 +53,9 @@ def isnan(val):
 
 
 class PhenoMeasuresView(APIView):
+    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+    permission_classes = (IsDatasetAllowed,)
+
     def __init__(self):
         register = preloaded.register
         self.datasets = register.get('datasets')
@@ -59,7 +68,7 @@ class PhenoMeasuresView(APIView):
             "/static/pheno_browser/")
 
     def get_browser_dbfile(self, dbname):
-        cache_dir = get_cache_dir(dbname)
+        cache_dir = PhenoBrowserCommon.get_cache_dir(dbname)
 
         browser_db = "{}_browser.db".format(dbname)
         return os.path.join(
@@ -83,7 +92,6 @@ class PhenoMeasuresView(APIView):
 
         browser_dbfile = self.get_browser_dbfile(
             dataset.pheno_db.pheno_db)
-        print(browser_dbfile)
 
         with VariableBrowserModelManager(dbfile=browser_dbfile) as vm:
             df = vm.load_df(where="instrument_name='{}'".format(instrument))
@@ -107,3 +115,41 @@ class PhenoMeasuresView(APIView):
             'base_image_url': self.base_url,
             'measures': res,
         })
+
+
+class PhenoMeasuresDownload(APIView):
+    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+    permission_classes = (IsDatasetAllowed,)
+
+    def __init__(self):
+        register = preloaded.register
+        self.datasets = register.get('datasets')
+        assert self.datasets is not None
+
+        self.datasets_factory = self.datasets.get_factory()
+
+    def get(self, request):
+        if 'dataset_id' not in request.query_params:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset_id = request.query_params['dataset_id']
+
+        dataset = self.datasets_factory.get_dataset(dataset_id)
+        if dataset is None or dataset.pheno_db is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        instrument = request.query_params.get('instrument', None)
+        if instrument is None:
+            instruments = dataset.pheno_db.instruments.keys()
+            instrument = instruments[0]
+
+        df = dataset.pheno_db.get_instrument_values_df(instrument)
+        output = cStringIO.StringIO()
+        df.to_csv(output, index=False)
+
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='text/csv')
+
+        response['Content-Disposition'] = 'attachment; filename=instrument.csv'
+        response['Expires'] = '0'
+        return response
