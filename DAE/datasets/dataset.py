@@ -498,13 +498,31 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 for s in slots])
         return columns
 
+    def get_genotype_columns(self):
+        gb = self.descriptor['genotypeBrowser']
+        if gb is None:
+            return None
+
+        pheno_columns = gb.get('genotypeColumns', [])
+        if not pheno_columns:
+            return []
+        columns = []
+        for pheno_column in pheno_columns:
+            slots = pheno_column['slots']
+            columns.extend([
+                (s['source'], s['name'])
+                for s in slots])
+        return columns
+
     def get_variants_preview(self, safe=True, **kwargs):
         variants = self.get_variants(safe=safe, **kwargs)
         legend = self.get_pedigree_selector(**kwargs)
         pheno_columns = self.get_pheno_columns()
+        genotype_columns = self.get_genotype_columns()
         columns = self.COMMON_COLUMNS[:]
         columns.append('_pedigree_')
         columns.extend([label for (_, _, label) in pheno_columns])
+        columns.extend([label for (label, _) in genotype_columns])
         families = {}
         if pheno_columns and self.pheno_db:
             families = self.pheno_db.families

@@ -138,6 +138,8 @@ class DatasetsConfig(object):
             self._get_genotype_browser_pheno_filters(section)
         family_study_filters = \
             self._get_genotype_browser_family_study_filters(section)
+        genotype_columns = \
+            self._get_genotype_browser_genotype_columns(section)
 
         return {
             'mainForm': main_form,
@@ -151,7 +153,8 @@ class DatasetsConfig(object):
             'hasPedigreeSelector': pedigree_selector,
             'phenoColumns': pheno_columns,
             'phenoFilters': pheno_filters,
-            'familyStudyFilters': family_study_filters
+            'familyStudyFilters': family_study_filters,
+            'genotypeColumns': genotype_columns
         }
 
     def _get_genotype_browser_family_study_filters(self, section):
@@ -221,6 +224,40 @@ class DatasetsConfig(object):
             'measureType': measure_type,
             'measureFilter': measure_filter
         }
+
+    def _get_genotype_browser_genotype_columns(self, section):
+        result = []
+        columns = self._get_string_list(
+            section, 'genotypeBrowser.genotype.columns')
+        if not columns:
+            return None
+
+        for col in columns:
+            column = self._get_genotype_browser_genotype_column(section, col)
+            result.append(column)
+
+        return result
+
+    def _get_genotype_browser_genotype_column(self, section, col_id):
+        prefix = 'genotypeBrowser.genotype.{}'.format(col_id)
+        name = self._get_string(
+            section, '{}.{}'.format(prefix, 'name'))
+        slots = self._get_string_list(
+            section, '{}.{}'.format(prefix, 'slots'))
+        column = {}
+        column['name'] = name
+
+        column_slots = []
+        for slot in slots:
+            source, label = slot.split(':')
+            column_slots.append(
+                {
+                    'source': source,
+                    'name': label,
+                    'id': source,
+                })
+        column['slots'] = column_slots
+        return column
 
     def _get_genotype_browser_pheno_columns(self, section):
         result = []
