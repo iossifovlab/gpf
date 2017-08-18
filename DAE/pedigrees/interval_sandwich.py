@@ -136,13 +136,13 @@ class Realization:
         return self.intervals[index]
 
     def is_in_interval_order(self, v1, v2):
-        intervalV1 = self.get_interval(v1)
-        intervalV2 = self.get_interval(v2)
+        interval1 = self.get_interval(v1)
+        interval2 = self.get_interval(v2)
 
-        if not intervalV1 or not intervalV2:
+        if not interval1 or not interval2:
             return False
 
-        return intervalV1.right < intervalV2.left
+        return interval1.right < interval2.left
 
     def is_maximal(self, vertex):
         is_maximal = [v is vertex or not self.is_in_interval_order(vertex, v)
@@ -191,11 +191,11 @@ class SandwichSolver(object):
     def solve(sandwich_instance):
         # start = time.time()
 
-        realizations_queue = deque()
+        initial_realization = []
         current_iteration = 0
 
         for vertex in sandwich_instance.vertices:
-            realizations_queue.append(
+            initial_realization.append(
                 Realization(
                     sandwich_instance.required_graph,
                     sandwich_instance.forbidden_graph,
@@ -203,6 +203,7 @@ class SandwichSolver(object):
                     [vertex]
                 )
             )
+        realizations_queue = deque(sorted(initial_realization, key=str))
 
         visited_realizations = {}
 
@@ -219,6 +220,8 @@ class SandwichSolver(object):
 
             other_vertices = sandwich_instance.vertices \
                 .difference(realization.domain)
+
+            other_vertices = sorted(other_vertices, key=str)
 
             for vertex in other_vertices:
                 cloned_realization = realization.copy()
