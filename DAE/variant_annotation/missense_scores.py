@@ -35,14 +35,24 @@ class MissenseScoresDB:
         with open(self.PATH.format(chromosome) + '.idx', 'wb') as f:
             pickle.dump(index, f, pickle.HIGHEST_PROTOCOL)
 
+    def get_field_names(self):
+        with open(self.PATH.format(self.chromosomes[0]), 'rb') as f:
+            reader = csv.reader(f, delimiter='\t')
+            return reader.next()[15:]
+
     def get_missense_score(self, variant):
         with open(self.PATH.format(variant.chromosome), 'rb') as f:
+            if variant.position not in self.indexes[variant.chromosome]:
+                return None
             f.seek(self.indexes[variant.chromosome][variant.position])
             reader = csv.reader(f, delimiter='\t')
             for row in reader:
                 try:
                     if int(row[8]) != variant.position:
                         break
-                    print(row[:10])
+
+                    if (row[2] == variant.reference
+                            and row[3] == variant.alternate):
+                        return row[15:]
                 except ValueError:
                     break
