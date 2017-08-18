@@ -41,7 +41,7 @@
                 </gpf-table-subcolumn>
             </gpf-table-column>
 
-            <gpf-table-column *ngFor="let column of phenoColumns" header="{{ column.name }}">
+            <gpf-table-column *ngFor="let column of additionalColumns" header="{{ column.name }}">
               <gpf-table-subcolumn *ngFor="let slot of column.slots" header="{{ slot.name }}"
                 [comparator]=additionalDataComparator(slot.id)>
                 <span *gpfTableCellContent="let data">{{ data.additionalData[slot.id] }}</span>
