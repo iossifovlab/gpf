@@ -45,9 +45,9 @@ export class NonPdpPedigreesComponent implements OnInit {
     }
 
 
-    this.familyKeys = this.filterSimple(this.familyKeys);
+    // this.familyKeys = this.filterSimple(this.familyKeys);
     // this.familyKeys = this.familyKeys.slice(0, 400);
-    this.familyKeys = Array.from(difference(difference(new Set(this.familyKeys), new Set(this.nonPDP)), new Set(this.maybePDP)));
+    // this.familyKeys = Array.from(difference(difference(new Set(this.familyKeys), new Set(this.nonPDP)), new Set(this.maybePDP)));
     // this.familyKeys = ["AU0008"];
   }
 

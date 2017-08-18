@@ -16,14 +16,6 @@ export abstract class IndividualSet {
 
     abstract childrenSet(): Set<Individual>;
 
-    toString(): string {
-      let ids = this.individualSet();
-      let sortedIds = Array.from(ids)
-        .map(individual => individual.pedigreeData.id)
-        .sort((a, b) => a.localeCompare(b));
-
-      return sortedIds.join(',');
-    }
 }
 
 export class ParentalUnit {
@@ -43,6 +35,10 @@ export class Individual extends IndividualSet {
 
   individualSet() {
     return new Set([this]);
+  }
+
+  toString() {
+      return this.pedigreeData.id
   }
 
   addRank(rank: number) {
@@ -127,6 +123,15 @@ export class MatingUnit extends IndividualSet {
     father.matingUnits.push(this);
   }
 
+  toString() {
+    let ids = this.individualSet();
+    let sortedIds = Array.from(ids)
+      .map(individual => individual.pedigreeData.id)
+      .sort((a, b) => a.localeCompare(b))
+      .join(',');
+    return `m{${sortedIds}}`;
+  }
+
   individualSet() {
     return new Set([this.mother, this.father]);
   }
@@ -146,6 +151,15 @@ export class MatingUnitWithIntervals {
 
 export class SibshipUnit extends IndividualSet {
   individuals = new Array<Individual>();
+
+  toString() {
+    let ids = this.individualSet();
+    let sortedIds = Array.from(ids)
+      .map(individual => individual.pedigreeData.id)
+      .sort((a, b) => a.localeCompare(b))
+      .join(',');
+    return `s{${sortedIds}}`;
+  }
 
   individualSet() {
     return new Set(this.individuals);
@@ -230,21 +244,5 @@ export class SameLevelGroup {
     }
     return this.getXFromIndex(index);
   }
-
-  // allSiblings() {
-  //   return this.members.every(member => member.areSiblings(this.members[0]));
-  // }
-  //
-  // haveSiblings() {
-  //   for (let i = 0; i < this.members.length - 1; i++) {
-  //     for (let j = i + 1; j < this.members.length; j++) {
-  //       if (this.members[i].areSiblings(this.members[j])) {
-  //         return true;
-  //       }
-  //     }
-  //   }
-  //
-  //   return false;
-  // }
 
 }

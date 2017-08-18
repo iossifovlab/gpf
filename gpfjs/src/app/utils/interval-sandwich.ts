@@ -8,7 +8,7 @@ import {
 
 export class Interval {
   constructor(
-    public left = 1,
+    public left = 0,
     public right = 1
   ) {}
 }
@@ -17,7 +17,7 @@ export class IntervalForVertex<T> extends Interval {
 
   constructor(
     public vertex: Vertex<T>,
-    left = 1,
+    left = 0,
     right = 1
   ) {
     super(left, right);
@@ -32,7 +32,7 @@ export class IntervalForVertex<T> extends Interval {
   }
 
   toString() {
-      return `${this.vertex}> (${this.left},${this.right})`;
+      return `i[${this.vertex}> ${this.left}:${this.right}]`;
   }
 }
 
@@ -90,6 +90,20 @@ export class Realization<T> {
       this.intervals.concat([new IntervalForVertex(newVertex)]), // dummy interval
       this.domain.concat([newVertex]));
 
+    let newActiveVertices = tempRealization.getActiveVertices();
+    if (newActiveVertices.length >= tempRealization.maxWidth) {
+      return false;
+    }
+
+    // console.log("Checking forbidden");
+    let thisActiveVertices = this.getActiveVertices();
+    let forbiddenEdges = this.forbiddenGraph.getEdgesForVertex(newVertex);
+    for (let activeVertex of thisActiveVertices) {
+      if (forbiddenEdges.some(edge => getOtherVertex(newVertex, edge) === activeVertex)) {
+        return false;
+      }
+    }
+
     // console.log("Checking expected dangling");
     for (let activeVertex of this.getActiveVertices()) {
       let thisDangling = this.dangling(activeVertex);
@@ -117,24 +131,11 @@ export class Realization<T> {
     }
 
     // console.log("Checking active");
-    let newActiveVertices = tempRealization.getActiveVertices();
-    if (newActiveVertices.length >= tempRealization.maxWidth) {
-      return false;
-    }
-    let thisActiveVertices = this.getActiveVertices();
     let activeVerticesNonEmptyDanglingAndNew =
       thisActiveVertices.filter(v => tempRealization.dangling(v).length !== 0)
       .concat([newVertex]);
     for (let newActiveVertex of newActiveVertices) {
       if (activeVerticesNonEmptyDanglingAndNew.indexOf(newActiveVertex) === -1) {
-        return false;
-      }
-    }
-
-    // console.log("Checking forbidden");
-    let forbiddenEdges = this.forbiddenGraph.getEdgesForVertex(newVertex);
-    for (let activeVertex of thisActiveVertices) {
-      if (forbiddenEdges.some(edge => getOtherVertex(newVertex, edge) === activeVertex)) {
         return false;
       }
     }
@@ -194,16 +195,6 @@ export class Realization<T> {
 
   dangling(vertex: Vertex<T>) {
     return this.getActiveVertexEdges(vertex);
-    // if (!this.isActiveVertex(vertex)) {
-    //   return [];
-    // }
-    //
-    // let edgesArray = this.graph.getEdgesForVertex(vertex).filter(edge => {
-    //   let otherVertex = edge[1];
-    //   return this.domain.indexOf(otherVertex) === -1;
-    // });
-    //
-    // return edgesArray;
   }
 
   maximalSet() {
@@ -304,11 +295,7 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
   }
 
   let start = Date.now();
-
-  // console.log("Vertices:", sandwichInstance.vertices.length);
-  // console.log("Required:", sandwichInstance.required);
-  // console.log("Forbidden:", sandwichInstance.forbidden);
-  // console.log("All count:", sandwichInstance.vertices.length * sandwichInstance.vertices.length / 2)
+  let lexicalSort = (a: {}, b: {}) => a.toString().localeCompare(b.toString())
 
   let realizationsQueue = new Array<Realization<T>>();
 
@@ -318,42 +305,20 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
                       [new IntervalForVertex(vertex)], [vertex])
     );
   }
+  realizationsQueue = realizationsQueue.sort(lexicalSort)
 
   let visitedRealizationMap = {};
-
-  let maxRealizations = [realizationsQueue[0]];
-
   let currentIteration = 0;
 
   while (realizationsQueue.length !== 0) {
     let currentRealization = realizationsQueue.pop();
-    (a => {
-        let j, x, i;
-        for (i = a.length; i; i--) {
-            j = Math.floor(Math.random() * i);
-            x = a[i - 1];
-            a[i - 1] = a[j];
-            a[j] = x;
-        }
-    })(realizationsQueue);
-    // realizationsQueue = realizationsQueue.filter(realization => !realization.isEquivalent(currentRealization));
-
 
     let leftVertices = sandwichInstance.vertices
       .filter(vertex => currentRealization.domain.indexOf(vertex) === -1);
-
     if (leftVertices.length === 0) {
-      // console.log("result:", currentRealization.intervals);
-      // console.log("finished on iteration", currentIteration);
-      // console.log("Took", Date.now() - start, "ms");
       return currentRealization.intervals;
     }
-
-    if ((currentIteration++) % 2000 === 0) {
-      // console.log("Current iteration", currentIteration, "Queue length", realizationsQueue.length);
-      // console.log("looked through realizations", visitedRealizationMap);
-      // console.log("Current realization:", currentRealization.toString());
-    }
+    leftVertices = leftVertices.sort(lexicalSort);
 
     if (currentIteration === 10000) {
       // console.log("Premature termination on", currentIteration, "iterations");
@@ -370,16 +335,9 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
         continue;
       }
 
-      // if (currentRealizationCopy.domain.length > maxRealizations[0].domain.length) {
-      //   maxRealizations = [currentRealizationCopy];
-      // } else if (currentRealizationCopy.domain.length === maxRealizations[0].domain.length) {
-      //   maxRealizations.push(currentRealizationCopy);
-      // }
-
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
-        // console.log("result:", currentRealizationCopy.intervals);
-        // console.log("finished on iteration iteration", currentIteration);
         // console.log("Took", Date.now() - start, "ms");
+        console.log(currentRealizationCopy.intervals.map(i => i.toString()))
         return currentRealizationCopy.intervals;
       } else {
         // console.log("Checking realization", currentRealizationCopy);
@@ -391,8 +349,6 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
       }
     }
   }
-  // console.log(maxRealizations);
 
-  // console.log("result:", null);
   return null;
 }

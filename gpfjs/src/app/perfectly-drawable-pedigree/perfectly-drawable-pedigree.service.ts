@@ -15,149 +15,144 @@ type Edge = GraphEdge<Vertex>;
 export class PerfectlyDrawablePedigreeService {
 
   createSandwichInstance(family: PedigreeData[]) {
+    
+    let idToNodeMap = new Map<string, Individual>();
+    let idsToMatingUnit = new Map<string, MatingUnit>();
 
-        let idToNodeMap = new Map<string, Individual>();
-        let idsToMatingUnit = new Map<string, MatingUnit>();
+    let getOrCreateIndividual = (name) => {
+      if (idToNodeMap.has(name)) {
+        return idToNodeMap.get(name);
+      } else {
+        let individual = new Individual();
+        idToNodeMap.set(name, individual);
+        return individual;
+      }
+    };
 
-        let getOrCreateIndividual = (name) => {
-          if (idToNodeMap.has(name)) {
-            return idToNodeMap.get(name);
-          } else {
-            let individual = new Individual();
-            idToNodeMap.set(name, individual);
-            return individual;
-          }
-        };
+    for (let individual of family){
+      let mother = getOrCreateIndividual(individual.mother);
+      let father = getOrCreateIndividual(individual.father);
+      if (mother !== father && !idsToMatingUnit.has(individual.mother + ',' + individual.father)) {
+        idsToMatingUnit.set(individual.mother + ',' + individual.father, new MatingUnit(mother, father));
+      }
+      let parentNode = idsToMatingUnit.get(individual.mother + ',' + individual.father);
 
-        for (let individual of family){
-          let mother = getOrCreateIndividual(individual.mother);
-          let father = getOrCreateIndividual(individual.father);
-          if (mother !== father && !idsToMatingUnit.has(individual.mother + ',' + individual.father)) {
-            idsToMatingUnit.set(individual.mother + ',' + individual.father, new MatingUnit(mother, father));
-          }
-          let parentNode = idsToMatingUnit.get(individual.mother + ',' + individual.father);
+      let node = getOrCreateIndividual(individual.id);
 
-          let node = getOrCreateIndividual(individual.id);
+      node.pedigreeData = individual;
+      if (mother !== father) {
+        node.parents = new ParentalUnit(mother, father);
+      }
 
-          node.pedigreeData = individual;
-          if (mother !== father) {
-            node.parents = new ParentalUnit(mother, father);
-          }
+      if (parentNode) {
+        parentNode.children.individuals.push(node);
+      }
+    }
 
-          if (parentNode) {
-            parentNode.children.individuals.push(node);
+    let individualVertices: Vertex[] = [];
+    idToNodeMap.delete('0');
+    idToNodeMap.delete('');
+    idToNodeMap.forEach(individual => {
+      individualVertices.push(individual);
+    });
+
+
+    let matingVertices: Vertex[] = [];
+    let sibshipVertices: Vertex[] = [];
+    idsToMatingUnit.forEach(matingUnit => {
+
+      matingVertices.push(matingUnit);
+      if (matingUnit.children.individuals.length > 0) {
+        sibshipVertices.push(matingUnit.children);
+      }
+    });
+
+    let allVertices: Vertex[] = individualVertices.concat(matingVertices).concat(sibshipVertices);
+
+    if (individualVertices.length) {
+      (individualVertices[0] as Individual).addRank(0);
+      this.fixRank(individualVertices as Individual[]);
+    }
+
+
+    // Ea-
+    let sameRankEdges: Edge[] = [];
+    for (let i = 0; i < individualVertices.length - 1; i++) {
+      for (let j = i + 1; j < individualVertices.length; j++) {
+        if (equal(individualVertices[i].generationRanks(), individualVertices[j].generationRanks())) {
+          sameRankEdges.push([individualVertices[i], individualVertices[j]]);
+        }
+      }
+    }
+
+
+    // Eb+ and Eb-
+    let matingEdges: Edge[] = [];
+    let sameGenerationNotMateEdges: Edge[] = [];
+    for (let individual of individualVertices) {
+      for (let matingUnit of matingVertices) {
+        if (isSubset(individual.individualSet(), matingUnit.individualSet())) {
+          matingEdges.push([individual, matingUnit]);
+        } else if (equal(individual.generationRanks(), matingUnit.generationRanks())) {
+          sameGenerationNotMateEdges.push([individual, matingUnit]);
+        }
+      }
+    }
+
+    // Ec+ and Ec-
+    let sibshipEdges: Edge[] = [];
+    let sameGenerationNotSiblingEdges: Edge[] = [];
+    for (let individual of individualVertices as Individual[]) {
+      for (let sibshipUnit of sibshipVertices) {
+        if (isSubset(individual.individualSet(), sibshipUnit.individualSet())) {
+          sibshipEdges.push([individual, sibshipUnit]);
+        } else if (equal(individual.generationRanks(), sibshipUnit.generationRanks())) {
+          if (individual.parents) {
+              sameGenerationNotSiblingEdges.push([individual, sibshipUnit]);
           }
         }
-
-        let individualVertices: Vertex[] = [];
-        idToNodeMap.delete('0');
-        idToNodeMap.delete('');
-        idToNodeMap.forEach(individual => {
-          individualVertices.push(individual);
-        });
+      }
+    }
 
 
-        let matingVertices: Vertex[] = [];
-        let sibshipVertices: Vertex[] = [];
-        idsToMatingUnit.forEach(matingUnit => {
 
-          matingVertices.push(matingUnit);
-          if (matingUnit.children.individuals.length > 0) {
-            sibshipVertices.push(matingUnit.children);
-          }
-        });
-
-        let allVertices: Vertex[] = individualVertices.concat(matingVertices).concat(sibshipVertices);
-
-        if (individualVertices.length) {
-          (individualVertices[0] as Individual).addRank(0);
-          this.fixRank(individualVertices as Individual[]);
+    // Ed+
+    let matingUnitSibshipUnitEdges: Edge[] = [];
+    for (let sibshipUnit of sibshipVertices) {
+      for (let matingUnit of matingVertices) {
+        if (equal(matingUnit.childrenSet(), sibshipUnit.individualSet())) {
+          matingUnitSibshipUnitEdges.push([matingUnit, sibshipUnit]);
         }
+      }
+    }
+    // console.log("matingUnitSibshipUnitEdges", matingUnitSibshipUnitEdges);
 
-
-        // Ea-
-        let sameRankEdges: Edge[] = [];
-        for (let i = 0; i < individualVertices.length - 1; i++) {
-          for (let j = i + 1; j < individualVertices.length; j++) {
-            if (equal(individualVertices[i].generationRanks(), individualVertices[j].generationRanks())) {
-              sameRankEdges.push([individualVertices[i], individualVertices[j]]);
+    // Ee-
+    let intergenerationalEdges: Edge[] = [];
+    for (let sibshipUnit of sibshipVertices.concat(matingVertices)) {
+      for (let matingUnit of matingVertices) {
+        if (!hasIntersection(matingUnit.generationRanks(), sibshipUnit.generationRanks())) {
+          if (!hasIntersection(matingUnit.individualSet(), sibshipUnit.individualSet())) {
+            if (!matingUnitSibshipUnitEdges.find(
+              ([mu, sibship]) => mu === matingUnit &&
+                                 sibship === sibshipUnit)) {
+              intergenerationalEdges.push([matingUnit, sibshipUnit]);
             }
           }
         }
+      }
+    }
 
+    let requiredEdges = new Set(
+      matingEdges.concat(sibshipEdges).concat(matingUnitSibshipUnitEdges));
+    let forbiddenEdges = new Set(
+      sameRankEdges
+        .concat(sameGenerationNotMateEdges)
+        .concat(sameGenerationNotSiblingEdges)
+        .concat(intergenerationalEdges)
+    );
 
-        // Eb+ and Eb-
-        let matingEdges: Edge[] = [];
-        let sameGenerationNotMateEdges: Edge[] = [];
-        for (let individual of individualVertices) {
-          for (let matingUnit of matingVertices) {
-            if (isSubset(individual.individualSet(), matingUnit.individualSet())) {
-              matingEdges.push([individual, matingUnit]);
-            } else if (equal(individual.generationRanks(), matingUnit.generationRanks())) {
-              sameGenerationNotMateEdges.push([individual, matingUnit]);
-            }
-          }
-        }
-
-        // Ec+ and Ec-
-        let sibshipEdges: Edge[] = [];
-        let sameGenerationNotSiblingEdges: Edge[] = [];
-        for (let individual of individualVertices as Individual[]) {
-          for (let sibshipUnit of sibshipVertices) {
-            if (isSubset(individual.individualSet(), sibshipUnit.individualSet())) {
-              sibshipEdges.push([individual, sibshipUnit]);
-            } else if (equal(individual.generationRanks(), sibshipUnit.generationRanks())) {
-              if (individual.parents) {
-                  sameGenerationNotSiblingEdges.push([individual, sibshipUnit]);
-              }
-            }
-          }
-        }
-
-
-
-        // Ed+
-        let matingUnitSibshipUnitEdges: Edge[] = [];
-        for (let sibshipUnit of sibshipVertices) {
-          for (let matingUnit of matingVertices) {
-            if (equal(matingUnit.childrenSet(), sibshipUnit.individualSet())) {
-              matingUnitSibshipUnitEdges.push([matingUnit, sibshipUnit]);
-            }
-          }
-        }
-        // console.log("matingUnitSibshipUnitEdges", matingUnitSibshipUnitEdges);
-
-        // Ee-
-        let intergenerationalEdges: Edge[] = [];
-        for (let sibshipUnit of sibshipVertices.concat(matingVertices)) {
-          for (let matingUnit of matingVertices) {
-            if (!hasIntersection(matingUnit.generationRanks(), sibshipUnit.generationRanks())) {
-              if (!hasIntersection(matingUnit.individualSet(), sibshipUnit.individualSet())) {
-                if (!matingUnitSibshipUnitEdges.find(
-                  ([mu, sibship]) => mu === matingUnit &&
-                                     sibship === sibshipUnit)) {
-                  intergenerationalEdges.push([matingUnit, sibshipUnit]);
-                }
-              }
-            }
-          }
-        }
-
-        // console.log("sameRankEdges", sameRankEdges.map(([v1,v2]) => `${v1.toString()}->${v2.toString()}` ));
-        // console.log("sameGenerationNotMateEdges", sameGenerationNotMateEdges.map(([v1,v2]) => `${v1.toString()}->${v2.toString()}` ));
-        // console.log("sameGenerationNotSiblingEdges", sameGenerationNotSiblingEdges.map(([v1,v2]) => `${v1.toString()}->${v2.toString()}` ));
-        // console.log("intergenerationalEdges", intergenerationalEdges.map(([v1,v2]) => `${v1.toString()}->${v2.toString()}` ));
-
-        let requiredEdges = new Set(
-          matingEdges.concat(sibshipEdges).concat(matingUnitSibshipUnitEdges));
-        let forbiddenEdges = new Set(
-          sameRankEdges
-            .concat(sameGenerationNotMateEdges)
-            .concat(sameGenerationNotSiblingEdges)
-            .concat(intergenerationalEdges)
-        );
-
-        return new SandwichInstance(allVertices, requiredEdges, forbiddenEdges);
+    return new SandwichInstance(allVertices, requiredEdges, forbiddenEdges);
   }
 
   isPDP(family: PedigreeData[]): [SandwichInstance<Vertex>, IntervalForVertex<Vertex>[]] {

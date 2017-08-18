@@ -90,7 +90,7 @@ export class PedigreeChartLevelComponent implements OnInit {
       movedIndividuals += this.moveOverlaps(individuals);
       // console.log("After removing overlaps:", movedIndividuals);
     } while (movedIndividuals !== 0 && counter < 100);
-    console.log("Done", movedIndividuals, counter);
+    // console.log("Done", movedIndividuals, counter);
 
     this.alignLeft(individuals, xOffset);
   }
