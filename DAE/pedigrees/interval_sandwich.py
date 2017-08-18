@@ -18,7 +18,7 @@ class IntervalForVertex(Interval):
         self.vertex = vertex
 
     def __repr__(self):
-        return "Interval[{}> {}:{}]".format(self.vertex, self.left, self.right)
+        return "i[{}> {}:{}]".format(self.vertex, self.left, self.right)
 
 
 class Realization:
