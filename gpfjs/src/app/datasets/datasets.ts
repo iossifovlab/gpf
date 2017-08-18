@@ -157,8 +157,8 @@ export class GenotypeBrowser {
       json['hasFamilyFilters'],
       json['hasStudyTypes'],
       json['mainForm'],
-      [...AdditionalColumn.fromJsonArray(json['phenoColumns']),
-       ...AdditionalColumn.fromJsonArray(json['genotypeColumns'])],
+      [...AdditionalColumn.fromJsonArray(json['genotypeColumns']),
+       ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters'])
     );
