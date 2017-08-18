@@ -10,7 +10,7 @@ from django.http.response import StreamingHttpResponse
 from rest_framework import views, status
 from rest_framework.response import Response
 
-from preloaded.register import get_register
+from preloaded import register
 from helpers.logger import log_filter, LOGGER
 from pheno_families.views import PhenoFamilyBase
 from pheno_report import pheno_request, pheno_tool
@@ -104,7 +104,6 @@ class PhenoReportDownloadView(PhenoViewBase):
 class PhenoMeasuresView(views.APIView):
 
     def get(self, request):
-        register = get_register()
         measures = register.get('pheno_measures')
         return Response({'measures': measures.load_list()})
 
@@ -112,7 +111,6 @@ class PhenoMeasuresView(views.APIView):
 class PhenoMeasuresHelpView(views.APIView):
 
     def get(self, request):
-        register = get_register()
         measures = register.get('pheno_measures')
         if 'instrument' not in request.query_params:
             instrument = None
@@ -125,7 +123,6 @@ class PhenoMeasuresHelpView(views.APIView):
 class PhenoInstrumentsHelpView(views.APIView):
 
     def get(self, request):
-        register = get_register()
         measures = register.get('pheno_measures')
         return Response({'instruments': measures.load_instruments()})
 
@@ -133,7 +130,7 @@ class PhenoInstrumentsHelpView(views.APIView):
 class PhenoMeasureHistogramView(views.APIView):
 
     def __init__(self):
-        self.measures = get_register().get('pheno_measures')
+        self.measures = register.get('pheno_measures')
 
     def post(self, request):
         data = request.data
@@ -168,7 +165,7 @@ class PhenoMeasureHistogramView(views.APIView):
 class PhenoMeasurePartitionsView(views.APIView):
 
     def __init__(self):
-        self.measures = get_register().get('pheno_measures')
+        self.measures = register.get('pheno_measures')
 
     def post(self, request):
         data = request.data

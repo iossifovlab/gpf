@@ -7,6 +7,8 @@ from django.conf import settings
 from preloaded.register import Preload
 from datasets.datasets_factory import DatasetsFactory
 from datasets.config import DatasetsConfig
+from models import Dataset
+from django.db.utils import OperationalError
 
 
 class DatasetsPreload(Preload):
@@ -15,6 +17,16 @@ class DatasetsPreload(Preload):
         super(DatasetsPreload, self).__init__()
         self.dataset_config = DatasetsConfig()
         self.factory = DatasetsFactory(self.dataset_config)
+
+        try:
+            for ds in self.dataset_config.get_datasets():
+                Dataset.recreate_dataset_perm(ds['id'], ds['authorizedGroups'])
+        except OperationalError:
+            # Database migrations are probably not run yet, ignore exception
+            pass
+
+    def is_loaded(self):
+        return True
 
     def load(self):
         preload_active = getattr(

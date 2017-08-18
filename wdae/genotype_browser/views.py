@@ -35,7 +35,7 @@ class QueryBaseView(views.APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        register = preloaded.register.get_register()
+        register = preloaded.register
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
@@ -128,7 +128,7 @@ class QueryDownloadView(QueryBaseView):
         try:
             dataset_id = data['datasetId']
             dataset = self.datasets_factory.get_dataset(dataset_id)
-            self.check_object_permissions(request, dataset)
+            self.check_object_permissions(request, dataset_id)
 
             generator = dataset.get_variants_csv(safe=True, **data)
 

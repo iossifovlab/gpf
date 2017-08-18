@@ -9,7 +9,7 @@ import sqlite3
 import pandas as pd
 import numpy as np
 
-import traceback
+# import traceback
 
 
 class ManagerBase(object):
@@ -81,9 +81,9 @@ class ManagerBase(object):
     def __exit__(self, exc_type, exc_value, tb):
         res = True
         if exc_type is not None:
-            print("Exception in ManagerBase: {}: {}\n{}".format(
-                exc_type, exc_value, tb))
-            traceback.print_tb(tb)
+            # print("Exception in ManagerBase: {}: {}\n{}".format(
+            #     exc_type, exc_value, tb))
+            # traceback.print_tb(tb)
             res = None
 
         self.db.commit()
@@ -760,17 +760,17 @@ class CategoricalValueManager(ValueManager):
 
 class OrdinalValueModel(ValueModel):
     TABLE = 'value_ordinal'
-    TYPE = int
-    TYPE_NAME = 'int'
-    TYPE_SQL = 'integer'
+    TYPE = float
+    TYPE_NAME = 'float'
+    TYPE_SQL = 'real'
 
     @classmethod
     def value_encode(cls, val):
-        return int(float(val))
+        return float(val)
 
     @classmethod
     def value_decode(cls, val):
-        return int(float(val))
+        return float(val)
 
 
 class OrdinalValueManager(ValueManager):

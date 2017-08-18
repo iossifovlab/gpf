@@ -23,9 +23,9 @@ from query_prepare import EFFECT_GROUPS, build_effect_type_filter,\
 from query_variants import \
     get_child_types, get_variant_types, \
     join_line
-from studies.studies import get_transmitted_studies_names, \
-    get_denovo_studies_names, \
-    get_studies_summaries
+# from studies.studies import get_transmitted_studies_names, \
+#     get_denovo_studies_names, \
+#     get_studies_summaries
 
 
 # from rest_framework.response import Response as RestResponse
@@ -44,15 +44,15 @@ from studies.studies import get_transmitted_studies_names, \
 #         else:
 #             headers['Access-Control-Allow-Origin']='*'
 #         RestResponse.__init__(self,data,status,template_name,headers,exception,content_type)
-@api_view(['GET'])
-def report_studies(request):
-    return Response({"report_studies": get_denovo_studies_names() +
-                     get_transmitted_studies_names()})
+# @api_view(['GET'])
+# def report_studies(request):
+#     return Response({"report_studies": get_denovo_studies_names() +
+#                      get_transmitted_studies_names()})
 
 
-@api_view(['GET'])
-def studies_summaries(request):
-    return Response(get_studies_summaries())
+# @api_view(['GET'])
+# def studies_summaries(request):
+#     return Response(get_studies_summaries())
 
 
 @api_view(['GET'])
@@ -68,17 +68,17 @@ def gene_sets_list(request):
     return Response({"gene_sets": r})
 
 
-@api_view(['GET'])
-def denovo_studies_list(request):
-    r = get_denovo_studies_names()
-    return Response({"denovo_studies": r})
-
-
-@api_view(['GET'])
-def transmitted_studies_list(request):
-    r = get_transmitted_studies_names()
-
-    return Response({"transmitted_studies": r})
+# @api_view(['GET'])
+# def denovo_studies_list(request):
+#     r = get_denovo_studies_names()
+#     return Response({"denovo_studies": r})
+#
+#
+# @api_view(['GET'])
+# def transmitted_studies_list(request):
+#     r = get_transmitted_studies_names()
+#
+#     return Response({"transmitted_studies": r})
 
 
 @api_view(['GET'])
@@ -258,7 +258,7 @@ def __get_page_count(query_params, page_count=30):
         page_count = prepare_string_value(query_params, 'page_count')
         try:
             page_count = int(page_count)
-        except:
+        except Exception:
             page_count = 30
     if not (page_count > 0 and page_count <= 200):
         page_count = 30
@@ -287,15 +287,15 @@ def __gene_set_filter_response_dict(query_params, gts):
         else:
             filter_by_desc = False
 
-        l = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
-             for (key, value) in gts.tDesc.items() if key in gts.t2G and
-             (filter_string in key.lower() and filter_by_key) or
-             (filter_string in value.lower() and filter_by_desc)]
-        return dict(l[0:page_count])
+        lr = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
+              for (key, value) in gts.tDesc.items() if key in gts.t2G and
+              (filter_string in key.lower() and filter_by_key) or
+              (filter_string in value.lower() and filter_by_desc)]
+        return dict(lr[0:page_count])
     else:
-        l = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
-             for (key, value) in gts.tDesc.items() if key in gts.t2G]
-        return dict(l[0:page_count])
+        lr = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
+              for (key, value) in gts.tDesc.items() if key in gts.t2G]
+        return dict(lr[0:page_count])
 
 
 def __gene_set_response(query_params, gts, gt):

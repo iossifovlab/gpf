@@ -38,14 +38,3 @@ class PhenoConfig(object):
         if dbfile[0] != '/':
             dbfile = os.path.join(self.config.get('cache_dir', 'dir'), dbfile)
         return dbfile
-
-    def get_browser_dbfile(self):
-        assert self.pheno_db is not None
-        if not self.config.has_option('pheno', 'browser_dir'):
-            return None
-        browser_dir = self.config.get('pheno', 'browser_dir')
-        dbfile = os.path.join(
-            browser_dir,
-            "{}_browser.db".format(self.pheno_db))
-        assert os.path.exists(dbfile)
-        return dbfile

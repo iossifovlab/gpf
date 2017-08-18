@@ -5,13 +5,16 @@ Created on Jan 20, 2017
 '''
 from rest_framework.test import APITestCase
 from rest_framework import status
-from users_api.management.commands import reload_datasets_perm
+from datasets_api.models import Dataset
 
 
 class DatasetApiTest(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        reload_datasets_perm.Command().handle()
+        Dataset.recreate_dataset_perm('SD', [])
+        Dataset.recreate_dataset_perm('SSC', [])
+        Dataset.recreate_dataset_perm('VIP', [])
+        Dataset.recreate_dataset_perm('TEST', [])
 
     def test_get_datasets(self):
         url = '/api/v3/datasets/'
@@ -20,7 +23,7 @@ class DatasetApiTest(APITestCase):
         data = response.data
 
         self.assertIn('data', data)
-        self.assertEquals(3, len(data['data']))
+        self.assertEquals(4, len(data['data']))
 
     def test_get_dataset_ssc(self):
         url = '/api/v3/datasets/SSC'

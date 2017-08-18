@@ -18,6 +18,9 @@ class FamiliesPrecompute(precompute.register.Precompute):
         self._probands = None
         self._races = {}
 
+    def is_precomputed(self):
+        return self._probands is not None
+
     def serialize(self):
         result = {}
         result['probands'] = zlib.compress(cPickle.dumps(self._probands))

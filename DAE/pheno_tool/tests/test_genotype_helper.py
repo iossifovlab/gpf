@@ -28,47 +28,99 @@ def test_get_variants_father_ultra_rare(
             effect_types=['LGDs'],
             gene_syms=autism_candidates_genes,
             present_in_child=['autism only', 'autism and unaffected'],
-            present_in_parent=['father only', 'mother and father', 'neither'],
+            present_in_parent=[
+                'father only',
+                'mother and father',
+                'neither'
+            ],
         )
     )
     variants = [v for v in vs]
+    dcount = 0
+    tcount = 0
+    for v in variants:
+        if v.popType == 'denovo':
+            dcount += 1
+        else:
+            tcount += 1
+    print(dcount, tcount)
     assert 176 == len(variants)
 
 
 def test_get_variants_father_rarity(
         autism_candidates_genes, genotype_helper):
 
-    vs = genotype_helper.get_variants(
-        VT(
-            effect_types=['LGDs'],
-            gene_syms=autism_candidates_genes,
-            present_in_child=[
-                'autism only', 'autism and unaffected', 'neither'],
-            present_in_parent=['father only', 'mother and father', 'neither'],
-            rarity='rare',
-            rarity_max=1.0,
-        )
+    vt = VT(
+        effect_types=['LGDs'],
+        gene_syms=autism_candidates_genes,
+        present_in_child=[
+            'autism only',
+            'autism and unaffected',
+            'neither'],
+        present_in_parent=[
+            'father only',
+            'mother and father',
+            'neither'
+        ],
+        rarity='rare',
+        rarity_max=1.0,
     )
+    query = vt._dae_query_request()
+
+    assert query['maxAltFreqPrcnt'] == 1.0
+    assert query['minAltFreqPrcnt'] is None
+
+    vs = genotype_helper.get_variants(vt)
     variants = [v for v in vs]
+
+    dcount = 0
+    tcount = 0
+    for v in variants:
+        if v.popType == 'denovo':
+            dcount += 1
+        else:
+            tcount += 1
+            assert 'dad' in v.fromParentS or v.fromParentS == ''
+            assert v.altFreqPrcnt <= 1.0
+    print(dcount, tcount)
+
     assert 250 == len(variants)
 
 
 def test_get_variants_father_interval(
         autism_candidates_genes, genotype_helper):
 
-    vs = genotype_helper.get_variants(
-        VT(
-            effect_types=['LGDs'],
-            gene_syms=autism_candidates_genes,
-            rarity='interval',
-            rarity_max=50.0,
-            rarity_min=1.0,
-            present_in_child=[
-                'autism only', 'autism and unaffected', 'neither'],
-            present_in_parent=['father only', 'mother and father', 'neither'],
-        )
+    vt = VT(
+        effect_types=['LGDs'],
+        gene_syms=autism_candidates_genes,
+        rarity='interval',
+        rarity_max=50.0,
+        rarity_min=1.0,
+        present_in_child=[
+            'autism only', 'autism and unaffected', 'neither'],
+        present_in_parent=[
+            'father only',
+            'mother and father',
+            'neither'
+        ],
     )
+    query = vt._dae_query_request()
+
+    assert query['maxAltFreqPrcnt'] == 50.0
+    assert query['minAltFreqPrcnt'] == 1.0
+
+    vs = genotype_helper.get_variants(vt)
     variants = [v for v in vs]
+    dcount = 0
+    tcount = 0
+    for v in variants:
+        if v.popType != 'denovo':
+            tcount += 1
+            assert 'dad' in v.fromParentS or v.fromParentS == ''
+            assert v.altFreqPrcnt >= 1.0 and v.altFreqPrcnt <= 50.0
+        else:
+            dcount += 1
+    print(dcount, tcount)
     assert 593 == len(variants)
 
 
@@ -81,7 +133,11 @@ def test_get_single_gene_all(
             rarity='all',
             present_in_child=[
                 'autism only', 'autism and unaffected', 'neither'],
-            present_in_parent=['father only', 'mother and father', 'neither'],
+            present_in_parent=[
+                'father only',
+                'mother and father',
+                'neither'
+            ],
         )
     )
     variants = [v for v in vs]

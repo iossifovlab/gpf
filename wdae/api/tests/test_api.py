@@ -1,8 +1,8 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from studies.studies import get_denovo_studies_names, \
-    get_transmitted_studies_names
+# from studies.studies import get_denovo_studies_names, \
+#     get_transmitted_studies_names
 from VariantAnnotation import get_effect_types
 from query_variants import get_variant_types, get_child_types
 
@@ -100,23 +100,6 @@ class ApiTest(APITestCase):
         eff = ['All'] + get_effect_types(types=False, groups=True) + \
             get_effect_types(types=True, groups=False)
         self.assertEqual(response.data, {"effect_types": eff})
-
-    def test_transmitted_studies_list(self):
-        response = self.client.get('/api/transmitted_studies')
-        self.assertEqual(
-            response.data,
-            {"transmitted_studies": get_transmitted_studies_names()})
-
-    def test_report_studies(self):
-        response = self.client.get('/api/report_studies')
-        data = {"report_studies": get_denovo_studies_names() +
-                get_transmitted_studies_names()}
-        self.assertEqual(response.data, data)
-
-    def test_denovo_studies_list(self):
-        data = get_denovo_studies_names()
-        response = self.client.get('/api/denovo_studies')
-        self.assertEqual(response.data, {'denovo_studies': data})
 
     def test_families_get(self):
         response = self.client.get('/api/families/DalyWE2012')

@@ -30,17 +30,13 @@ class WdaePrecomputeConfig(AppConfig):
             register.register(key, cls())
 
     def _load_preloaded(self):
-        from preloaded.register import get_register
-        register = get_register()
+        from preloaded.register import register
         for key, cls_name in settings.PRELOAD_CONFIG.items():
             m, c = self._split_class_name(cls_name)
             module = import_module(m)
             cls = getattr(module, c)
             preload = cls()
-            print("preloading {} found... loading...".format(key))
-            preload.load()
-            register[key] = preload.get()
-            print("[DONE] preloading {}".format(key))
+            register(key, preload)
 
     def ready(self):
         AppConfig.ready(self)

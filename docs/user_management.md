@@ -1,16 +1,6 @@
 # User Management Tools
 
 
-## Management command `reload_dataset_perm`
-
-Loads and creates users' groups defined into `variantsDB.conf` datasets
-configuration.
-
-When you change datasets' groups you need to run
-```
-./manage.py reload_dataset_perm
-```
-
 ## Management command `users_add`
 
 Imports new users from CSV file. The file sould contain following columns:
@@ -62,22 +52,30 @@ vip@iossifovlab.com,,,pass_hash
 ssc@iossifovlab.com,,,pass_hash
 ```
 
-## Management command `user_group_add`
+## Management command `users_group_add`
 
-Adds the specified user to the colon-separated list of groups
+Adds the users from the specified group to the colon-separated list of groups
 
-Example invocations of `user_group_add` command are:
+Example invocations of `users_group_add` command are:
 ```
-./manage.py user_group_add research@iossifovlab.com GROUP1:GROUP2
+./manage.py users_group_add any_user GROUP1:GROUP2
+```
+By using the default group for each user, the command can be executed for only one user:
+```
+./manage.py users_group_add vip@iossifovlab.com GROUP1:GROUP2
 ```
 
-## Management command `user_group_remove`
+## Management command `users_group_remove`
 
-Removes the specified user from the colon-separated list of groups
+Removes the users from the specified group from the colon-separated list of groups
 
-Example invocations of `user_group_remove` command are:
+Example invocations of `users_group_remove` command are:
 ```
-./manage.py user_group_remove research@iossifovlab.com GROUP1:GROUP2
+./manage.py users_group_remove any_user GROUP1:GROUP2
+```
+By using the default group for each user, the command can be executed for only one user:
+```
+./manage.py users_group_remove vip@iossifovlab.com GROUP1:GROUP2
 ```
 
 ## Management command `user_set_name`
@@ -105,23 +103,42 @@ Password (again):
 Password changed successfully for user 'r123@iossifovlab.com'
 ```
 
-## Management command `user_remove`
+## Management command `users_remove`
 
-Deletes the specified user
+Deletes all users from the specified group
 
-Example invocations of `user_remove` command are:
+Example invocations of `users_remove` command are:
 ```
-./manage.py user_remove research@iossifovlab.com
+./manage.py users_remove any_user
+```
+By using the default group for each user, the command can be executed for only one user:
+```
+./manage.py users_remove vip@iossifovlab.com
 ```
 
-## Management command `user_show`
+## Management command `users_show`
 
-Deletes the specified user
+Shows all users from the specified group
 
-Example invocations of `user_show` command are:
+Example invocations of `users_show` command are:
 ```
-./manage.py user_show research@iossifovlab.com
-User email: research@iossifovlab.com name: Name groups: SFID#123:SSC password: <pass_hash>
+./manage.py users_show any_user
+User email: admin@iossifovlab.com
+name:
+groups: admin@iossifovlab.com,superuser,any_user
+password: <pass_hash>
+User email: vip@iossifovlab.com
+name:
+groups: vip@iossifovlab.com,any_user
+password: <pass_hash>
+```
+By using the default group for each user, the command can be executed for only one user:
+```
+./manage.py users_show admin@iossifovlab.com
+User email: admin@iossifovlab.com
+name:
+groups: admin@iossifovlab.com,superuser,any_user
+password: <pass_hash>
 ```
 
 ## Management command `user_setpasswd`
@@ -137,21 +154,14 @@ Password (again):
 Password changed successfully for user 'research@iossifovlab.com'
 ```
 
-## Management command `devusers`
+## Management command `datasets_show`
 
-The `devusers` command creates users for usage during devlopment process.
-Example invocation of the command is:
-```
-./manage.py devusers
-```
+Shows the configured datasets and the authorized groups
 
-> This command should not be used in production environments.
-
-When run command creates following users:
-
+Example invocations of `datasets_show` command are:
 ```
-Email,Name,Groups,Password
-admin@iossifovlab.com,,superuser,pass_hash
-research@iossifovlab.com,,,pass_hash
+./manage.py datasets_show
+SD Authorized groups: any_user,SD,any_dataset
+SSC Authorized groups: any_user,any_dataset,SSC
+VIP Authorized groups: any_dataset,VIP
 ```
-All development users have password `secret`.

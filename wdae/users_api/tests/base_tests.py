@@ -6,7 +6,7 @@ Created on Apr 29, 2017
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
-from django.core import management
+from datasets_api.models import Dataset
 
 
 class BaseAuthenticatedUserTest(APITestCase):
@@ -14,7 +14,9 @@ class BaseAuthenticatedUserTest(APITestCase):
     @classmethod
     def setUpClass(cls):
         super(BaseAuthenticatedUserTest, cls).setUpClass()
-        management.call_command('reload_datasets_perm')
+        Dataset.recreate_dataset_perm('SD', [])
+        Dataset.recreate_dataset_perm('SSC', [])
+        Dataset.recreate_dataset_perm('VIP', [])
 
         User = get_user_model()
         u = User.objects.create(

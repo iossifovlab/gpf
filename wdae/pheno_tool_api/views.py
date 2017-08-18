@@ -17,7 +17,7 @@ class PhenoToolView(APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
-        register = preloaded.register.get_register()
+        register = preloaded.register
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 

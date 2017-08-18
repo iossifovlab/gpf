@@ -11,6 +11,10 @@ class GeneSetPreload(preloaded.register.Preload):
 
     def __init__(self, name):
         self.name = name
+        self.gene_term = None
+
+    def is_loaded(self):
+        return self.gene_term
 
     def load(self):
         self.gene_term = get_gene_sets_symNS(self.name)

@@ -95,10 +95,10 @@ VrtRcrd2 = namedtuple( 'VariantRecord', 'chrom,pos,ref,alts,samples'.split(',') 
 def universalRefAlt( RX, sI, missingInfoAsRef=True ):
    if len(RX) == 1: return RX[0]
 
-   chrom = tuple(set([rx.chrom  for rx in RX if rx != None]))
-   pos   = tuple(set([rx.pos    for rx in RX if rx != None]))
+   chrom = tuple(set([rx.chrom  for rx in RX if rx is not None]))
+   pos   = tuple(set([rx.pos    for rx in RX if rx is not None]))
 
-   ra = list(set([(rx.ref,rx.alts) for rx in RX if rx != None]))
+   ra = list(set([(rx.ref,rx.alts) for rx in RX if rx is not None]))
 
    samples = {}
 
@@ -173,6 +173,9 @@ class vcfFiles:
 
         cls.__data = {}
 
+   def __contains__(cls, sample ):
+	return (sample in cls.__sI)
+
    def setRegion( cls, *args, **kargs ):
         cls.__data.clear()
         cls.__rFlag = [True for n in cls.__vfiles] # reading flag
@@ -221,7 +224,7 @@ class vcfFiles:
 
      RX = cls.__data[idx]
      #improve efficency of __data
-     cls.__rFlag = [True if rx != None else False for rx in RX] 
+     cls.__rFlag = [True if rx is not None else False for rx in RX] 
 
      del cls.__data[idx]
      #if None not in RX:

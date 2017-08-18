@@ -17,6 +17,9 @@ class SSCFamiliesPrecompute(precompute.register.Precompute):
         self._probands = None
         self._families = None
 
+    def is_precomputed(self):
+        return self._quads is not None
+
     def serialize(self):
         result = {}
         result['quads'] = zlib.compress(cPickle.dumps(self._quads))

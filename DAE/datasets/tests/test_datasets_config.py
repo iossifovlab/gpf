@@ -19,7 +19,7 @@ class DatasetsConfigTest(unittest.TestCase):
         datasets = self.dataset_config.get_datasets()
 
         self.assertIsNotNone(datasets)
-        self.assertEquals(3, len(datasets))
+        self.assertEquals(4, len(datasets))
 
     def test_dataset_sd(self):
         ds = self.dataset_config.get_dataset_desc('SD')
@@ -29,7 +29,7 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertEquals(1, len(ds['pedigreeSelectors']))
 
         self.assertIn('authorizedGroups', ds)
-        self.assertEquals(['anonymous'], ds['authorizedGroups'])
+        self.assertEquals(['any_user'], ds['authorizedGroups'])
 
     def test_dataset_ssc(self):
         ds = self.dataset_config.get_dataset_desc('SSC')

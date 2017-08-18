@@ -200,7 +200,7 @@ USAGE
             default='sql_family_variants_myisam.sql.gz')
 
         parser.add_argument(
-            '-e', '--gene_effect',
+            '-e', '--geneeffect',
             dest='gene_effect_filename',
             default='sql_gene_effect_variants_myisam.sql.gz')
 
@@ -256,8 +256,6 @@ USAGE
 
         print("db conf: %s" % get_db_args(args))
         print("tool db conf: %s" % tools.get_db_conf())
-
-        assert tools.get_db_conf()['port'] == 3309
 
         tools.drop_all_tables()
         tools.import_family_variants(family_filename)

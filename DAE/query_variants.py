@@ -303,6 +303,7 @@ def prepare_present_in_child(data):
 
     return None
 
+
 PRESENT_IN_PARENT_TYPES = [
     "mother only", "father only",
     "mother and father", "neither",
@@ -401,8 +402,14 @@ def prepare_min_alt_freq_prcnt(data):
     if 'popFrequencyMin' in data:
         try:
             minAltFreqPrcnt = float(str(data['popFrequencyMin']))
-        except:
+        except Exception:
             minAltFreqPrcnt = 0
+    elif 'minAltFreqPrcnt' in data:
+        try:
+            minAltFreqPrcnt = float(str(data['minAltFreqPrcnt']))
+        except Exception:
+            minAltFreqPrcnt = 0
+
     return minAltFreqPrcnt
 
 
@@ -411,8 +418,14 @@ def prepare_max_alt_freq_prcnt(data):
     if 'popFrequencyMax' in data:
         try:
             maxAltFreqPrcnt = float(str(data['popFrequencyMax']))
-        except:
+        except Exception:
             maxAltFreqPrcnt = 100.0
+    elif 'maxAltFreqPrcnt' in data:
+        try:
+            maxAltFreqPrcnt = float(str(data['maxAltFreqPrcnt']))
+        except Exception:
+            maxAltFreqPrcnt = 100.0
+
     return maxAltFreqPrcnt
 
 
@@ -421,7 +434,7 @@ def prepare_pop_min_parents_called(data):
     if 'popMinParentsCalled' in data:
         try:
             minParentsCalled = float(str(data['popMinParentsCalled']))
-        except:
+        except Exception:
             minParentsCalled = 0
     return minParentsCalled
 

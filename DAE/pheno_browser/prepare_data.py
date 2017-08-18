@@ -4,12 +4,19 @@ Created on Apr 10, 2017
 @author: lubo
 '''
 import os
+import matplotlib as mpl
+mpl.use('PS')
+
 import matplotlib.pyplot as plt
+plt.ioff()
+
 from DAE import pheno
 from pheno_browser.graphs import draw_linregres, draw_measure_violinplot,\
-    draw_distribution
+    draw_categorical_violin_distribution,\
+    draw_ordinal_violin_distribution
 from pheno_browser.models import VariableBrowserModelManager,\
     VariableBrowserModel
+from common.progress import progress, progress_nl
 
 
 class PreparePhenoBrowserBase(object):
@@ -20,8 +27,13 @@ class PreparePhenoBrowserBase(object):
     def __init__(self, pheno_db, output_dir):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
+        self.output_base = os.path.basename(output_dir)
+        print(self.output_base)
         self.pheno_db = pheno.get_pheno_db(pheno_db)
-        self.browser_db = "{}_browser.db".format(pheno_db)
+        self.browser_db = os.path.join(
+            output_dir,
+            "{}_browser.db".format(pheno_db)
+        )
 
     def load_measure(self, measure):
         df = self.pheno_db.get_persons_values_df([measure.measure_id])
@@ -72,6 +84,13 @@ class PreparePhenoBrowserBase(object):
         filepath = os.path.join(outdir, filename)
         return filepath
 
+    def figure_path(self, measure, suffix):
+        filename = "{}.{}.png".format(measure.measure_id, suffix)
+        outdir = os.path.join(self.output_base, measure.instrument_name)
+
+        filepath = os.path.join(outdir, filename)
+        return filepath
+
     def save_fig(self, measure, suffix):
         small_filepath = self.figure_filepath(
             measure, "{}_small".format(suffix))
@@ -80,7 +99,12 @@ class PreparePhenoBrowserBase(object):
         filepath = self.figure_filepath(measure, suffix)
         plt.savefig(filepath, dpi=self.LARGE_DPI)
         plt.close()
-        return small_filepath, filepath
+        return (
+            self.figure_path(
+                measure, "{}_small".format(suffix)),
+            self.figure_path(
+                measure, suffix)
+        )
 
     def build_regression_by_age(self, measure, res):
         age_id = self.pheno_db.get_age_measure_id(measure.measure_id)
@@ -96,7 +120,7 @@ class PreparePhenoBrowserBase(object):
         dd = df[df.role == 'prb']
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
-                dd, 'age', measure.measure_id, jitter=0.3)
+                dd, 'age', measure.measure_id, jitter=0.1)
             res.pvalue_correlation_age_male = res_male.pvalues['age'] \
                 if res_male is not None else None
             res.pvalue_correlation_age_female = res_female.pvalues['age'] \
@@ -126,7 +150,7 @@ class PreparePhenoBrowserBase(object):
         dd = df[df.role == 'prb']
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
-                dd, 'nonverbal_iq', measure.measure_id, jitter=0.3)
+                dd, 'nonverbal_iq', measure.measure_id, jitter=0.1)
             res.pvalue_correlation_nviq_male = \
                 res_male.pvalues['nonverbal_iq'] \
                 if res_male is not None else None
@@ -135,7 +159,7 @@ class PreparePhenoBrowserBase(object):
                 if res_female is not None else None
 
             (res.figure_correlation_nviq_small,
-             res.figure_correlation_nviq_small) = self.save_fig(
+             res.figure_correlation_nviq) = self.save_fig(
                  measure, "prb_regression_by_nviq")
             return (res.pvalue_correlation_nviq_male,
                     res.pvalue_correlation_nviq_female)
@@ -147,10 +171,47 @@ class PreparePhenoBrowserBase(object):
         (res.figure_distribution_small,
          res.figure_distribution) = self.save_fig(measure, "violinplot")
 
-    def build_values_distribution(self, measure):
+    def build_values_categorical_distribution(self, measure, res):
         df = self.load_measure(measure)
-        draw_distribution(df, measure.measure_id)
-        return self.save_fig(measure, "distribution")
+        draw_categorical_violin_distribution(df, measure.measure_id)
+        (res.figure_distribution_small,
+         res.figure_distribution) = self.save_fig(measure, "distribution")
+
+    def build_values_ordinal_distribution(self, measure, res):
+        df = self.load_measure(measure)
+        draw_ordinal_violin_distribution(df, measure.measure_id)
+        (res.figure_distribution_small,
+         res.figure_distribution) = self.save_fig(measure, "distribution")
+
+    def dump_browser_variable(self, var):
+        print('-------------------------------------------')
+        print(var.measure_id)
+        print('-------------------------------------------')
+        print('instrument: {}'.format(var.instrument_name))
+        print('measure:    {}'.format(var.measure_name))
+        print('type:       {}'.format(var.measure_type))
+        print('domain:     {}'.format(var.values_domain))
+        print('-------------------------------------------')
+
+    def handle_measure(self, measure):
+        v = VariableBrowserModel()
+        v.measure_id = measure.measure_id
+        v.instrument_name = measure.instrument_name
+        v.measure_name = measure.measure_name
+        v.measure_type = measure.measure_type
+        v.values_domain = measure.value_domain
+
+        if measure.measure_type == 'continuous':
+            self.build_values_violinplot(measure, v)
+            self.build_regression_by_nviq(measure, v)
+            self.build_regression_by_age(measure, v)
+        elif measure.measure_type == 'ordinal':
+            self.build_values_ordinal_distribution(measure, v)
+            self.build_regression_by_nviq(measure, v)
+            self.build_regression_by_age(measure, v)
+        else:
+            self.build_values_categorical_distribution(measure, v)
+        return v
 
     def run(self):
         with VariableBrowserModelManager(dbfile=self.browser_db) as vm:
@@ -158,23 +219,8 @@ class PreparePhenoBrowserBase(object):
             vm.create_tables()
 
             for instrument in self.pheno_db.instruments.values():
-                print("processing instrument: {}".format(instrument.name))
-
-                for count, measure in enumerate(instrument.measures.values()):
-                    print("{}.\tprocessing measure: {}".format(
-                        count, measure.name))
-                    if measure.measure_type == 'continuous':
-                        v = VariableBrowserModel()
-                        v.measure_id = measure.measure_id
-                        v.instrument_name = measure.instrument_name
-                        v.measure_name = measure.measure_name
-                        v.measure_type = measure.measure_type
-                        v.values_domain = measure.value_domain
-
-                        self.build_values_violinplot(measure, v)
-                        self.build_regression_by_nviq(measure, v)
-                        self.build_regression_by_age(measure, v)
-
-                        print(v.to_tuple(v))
-
-                        vm.save(v)
+                progress_nl()
+                for measure in instrument.measures.values():
+                    progress()
+                    var = self.handle_measure(measure)
+                    vm.save(var)

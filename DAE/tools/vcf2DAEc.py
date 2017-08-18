@@ -198,6 +198,26 @@ def printSome( output, pos=None, wsize=1000 ):
    for k in dk:
 	del output[k]
 
+def famInVCF( fInfo, vcfs ):
+   fam = []
+   for fid in sorted(fInfo.keys()):
+        flag = False
+
+	mm = []
+        for sm in fInfo[fid]['ids']:
+	   if sm in vcfs: continue
+
+	   flag = True
+	   mm.append( sm )
+
+	if flag:
+	   print >> sys.stderr, '\t'.join( ['family',  fid, 'notComplete', 'missing', ','.join( mm )] )
+	   continue
+
+        fam.append(fid)
+
+   return fam
+
 def main():
    #svip.ped
    #svip-FB-vars.vcf.gz, svip-PL-vars.vcf.gz, svip-JHC-vars.vcf.gz
@@ -240,10 +260,6 @@ def main():
    #    isMale  : sex info in the order of ids and newIds (they have the same order)
    makeFamInfoConv( fInfo, pInfo )
 
-   #print family Info in a format
-   FAMOUT = ox.outputPrefix +'-families.txt'
-   printFamData( fInfo, pInfo, proj=ox.project, lab=ox.lab, out=open(FAMOUT,'w') )
-
    if os.path.isfile( ox.outputPrefix +'.txt' ):
 	print >> sys.stderr, ox.outputPrefix +'.txt: already exist'
 	exit(1)
@@ -257,10 +273,15 @@ def main():
    print >> out, '\t'.join( 'chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq'.split(','))
    print >> outTOOMANY, '\t'.join( 'chr,position,variant,familyData'.split(',') )
 
-   fam = [x for x in sorted(fInfo.keys())]
+   #fam = [x for x in sorted(fInfo.keys())]
    #vf = pysam.VariantFile( dfile )
    vf = vIO.vcfFiles( dfile, missingInfoAsRef=missingInfoAsRef )
-   
+   fam = famInVCF( fInfo, vf )
+
+   #print family Info in a format
+   FAMOUT = ox.outputPrefix +'-families.txt'
+   printFamData( fInfo, pInfo, proj=ox.project, lab=ox.lab, listFam=fam, out=open(FAMOUT,'w') )
+
    digitP = lambda x: '{:.4f}'.format(x)
    cchr = ''
    output = {}

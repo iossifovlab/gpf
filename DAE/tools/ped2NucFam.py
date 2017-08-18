@@ -265,7 +265,7 @@ def pedState2( ped ):
 
    return sex, role
 
-def printFamData( fInfo, pInfo, proj='VIP', lab='SF', out=sys.stdout ):
+def printFamData( fInfo, pInfo, proj='VIP', lab='SF', listFam=[], out=sys.stdout ):
    flag = False
    for k, v in fInfo.items():
 	if len([n for n,o in izip(v['ids'],v['newIds']) if n != o]) > 0:
@@ -277,6 +277,8 @@ def printFamData( fInfo, pInfo, proj='VIP', lab='SF', out=sys.stdout ):
 	print >> out, '\t'.join( 'familyId,personId,Project,Lab,role,gender'.split(',') )
 
    for k, v in sorted(fInfo.items()):
+	if (len(listFam) > 0) and (k not in listFam): continue
+
 	nf = v['newFid']
 	nm = v['newIds']
 	om = v['ids']

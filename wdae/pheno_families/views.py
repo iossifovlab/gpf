@@ -22,7 +22,7 @@ class FamilyBase(object):
         self.pheno_measure_filter = PhenoMeasureFilters()
         self.study_filter = StudyFilter()
         self.race_filter = RaceFilter()
-        register = preloaded.register.get_register()
+        register = preloaded.register
         self.pheno_measures_register = register.get('pheno_measures')
 
     def get_pheno_measure_params(self, data):

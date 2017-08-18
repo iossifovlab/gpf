@@ -5,7 +5,7 @@ Created on Dec 10, 2015
 '''
 from rest_framework import views, status
 from rest_framework.response import Response
-from preloaded.register import get_register
+from preloaded import register
 import numpy as np
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
@@ -13,7 +13,6 @@ from users_api.authentication import SessionAuthenticationWithoutCSRF
 class GeneWeightsListView(views.APIView):
 
     def get(self, request):
-        register = get_register()
         weights = register.get('gene_weights')
         return Response(weights.desc)
 
@@ -22,7 +21,6 @@ class GeneWeightsGetGenesView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def prepare_data(self, data):
-        register = get_register()
         weights = register.get('gene_weights')
         if 'weight' not in data:
             raise ValueError('weight key not found')
@@ -50,7 +48,7 @@ class GeneWeightsPartitionsView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
-        self.weights = get_register().get('gene_weights')
+        self.weights = register.get('gene_weights')
 
     def post(self, request):
         data = request.data

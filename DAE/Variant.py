@@ -358,7 +358,7 @@ class Variant:
 
         for c, p in enumerate(members[2:], 2):
             res.append(
-                [[self.familyId, p.personId, mom.personId, dad.personId,
+                [[self.familyId, p.personId, dad.personId, mom.personId,
                   p.gender, get_color(p)],
                  variant_count_v3(bs, c, self.location,
                                   dad.gender, denovo_parent)]
@@ -480,21 +480,33 @@ def present_in_parent_filter(present_in_parent):
         return lambda fromParent: len(fromParent) == 6
     if set(['mother only', 'father only']) == pip:
         return lambda fromParent: len(fromParent) == 3
-
     if set(['mother only', 'mother and father']) == pip:
-        return lambda fromParent: ((len(fromParent) == 3 and
-                                    'm' == fromParent[0]) or
-                                   len(fromParent) == 6)
+        return lambda fromParent: (
+            (len(fromParent) == 3 and
+             'm' == fromParent[0]) or
+            len(fromParent) == 6)
+    if set(['mother only', 'mother and father', 'neither']) == pip:
+        return lambda fromParent: (
+            (len(fromParent) == 3 and
+             'm' == fromParent[0]) or
+            len(fromParent) == 6 or
+            len(fromParent) == 0)
     if set(['father only', 'mother and father']) == pip:
-        return lambda fromParent: ((len(fromParent) == 3 and
-                                    'd' == fromParent[0]) or
-                                   len(fromParent) == 6)
+        return lambda fromParent: (
+            (len(fromParent) == 3 and
+             'd' == fromParent[0]) or
+            len(fromParent) == 6)
+    if set(['father only', 'mother and father', 'neither']) == pip:
+        return lambda fromParent: (
+            (len(fromParent) == 3 and
+             'd' == fromParent[0]) or
+            len(fromParent) == 6 or
+            len(fromParent) == 0)
     if set(['father only', 'mother only', 'mother and father']) == \
             pip:
         return lambda fromParent: (len(fromParent) > 0)
     if set(['neither']) == pip:
         return lambda fromParent: (len(fromParent) == 0)
-
     return None
 
 
