@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { GenotypeBrowser } from '../datasets/datasets';
+import { Dataset } from '../datasets/datasets';
 
 
 @Component({
@@ -8,5 +8,5 @@ import { GenotypeBrowser } from '../datasets/datasets';
   styleUrls: ['./missense-scores-block.component.css'],
 })
 export class MissenseScoresBlockComponent {
-  @Input() genotypeBrowserConfig: GenotypeBrowser;
+  @Input() datasetConfig: Dataset;
 }

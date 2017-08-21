@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { GenotypeBrowser, MissenseMetric } from '../datasets/datasets';
+import { Dataset, MissenseMetric } from '../datasets/datasets';
 import { MissenseScoresService } from './missense-scores.service'
 import { MissenseScoresHistogramData } from './missense-scores';
 
@@ -8,7 +8,7 @@ import { MissenseScoresHistogramData } from './missense-scores';
   templateUrl: './missense-scores.component.html',
 })
 export class MissenseScoresComponent {
-  @Input() genotypeBrowserConfig: GenotypeBrowser;
+  @Input() datasetConfig: Dataset;
   private internalSelectedMetric: MissenseMetric;
   private histogramData: MissenseScoresHistogramData;
   rangeStart = 0;
@@ -20,7 +20,7 @@ export class MissenseScoresComponent {
 
   set selectedMetric(selectedMetric: MissenseMetric) {
     this.internalSelectedMetric = selectedMetric;
-    this.missenseScoresService.getHistogramData("SSC", selectedMetric.id).subscribe(
+    this.missenseScoresService.getHistogramData(this.datasetConfig.id, selectedMetric.id).subscribe(
       (histogramData) => {
         this.histogramData = histogramData;
         this.rangeStart = histogramData.min;
