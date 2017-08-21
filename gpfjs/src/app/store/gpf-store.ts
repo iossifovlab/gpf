@@ -20,6 +20,7 @@ import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-mo
 import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
 import { FamilyIdsState, familyIdsReducer} from '../family-ids/family-ids';
 import { PhenoToolMeasureState, phenoToolMeasureStateReducer} from '../pheno-tool-measure/pheno-tool-measure';
+import { MissenseScoresState, missenseScoreReducer} from '../missense-scores/missense-scores-store';
 
 export interface GpfState {
   datasets: DatasetsState;
@@ -39,6 +40,7 @@ export interface GpfState {
   phenoFilters: PhenoFiltersState;
   familyIds: FamilyIdsState;
   phenoToolMeasure: PhenoToolMeasureState;
+  missenseScore: MissenseScoresState;
 };
 
 const reducers = {
@@ -58,7 +60,8 @@ const reducers = {
   enrichmentModels: enrichmentModelsReducer,
   phenoFilters: phenoFiltersReducer,
   familyIds: familyIdsReducer,
-  phenoToolMeasure: phenoToolMeasureStateReducer
+  phenoToolMeasure: phenoToolMeasureStateReducer,
+  missenseScore: missenseScoreReducer
 };
 
 const productionReducer: ActionReducer<GpfState> = combineReducers(reducers);
