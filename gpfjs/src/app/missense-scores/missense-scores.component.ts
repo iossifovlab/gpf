@@ -100,7 +100,7 @@ export class MissenseScoresComponent extends QueryStateProvider implements OnIni
           throw "invalid geneWeights state"
         }
         return { missenseScores: {
-          weight: missenseScoresState.histogramData.metric,
+          metric: missenseScoresState.histogramData.metric,
           rangeStart: missenseScoresState.rangeStart,
           rangeEnd: missenseScoresState.rangeEnd
         }}
