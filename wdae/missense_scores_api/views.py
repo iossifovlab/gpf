@@ -31,10 +31,11 @@ class MissenseScoresView(APIView):
             bars, bins = np.histogram(scores, 150)
 
             result = {
-               "min": min(scores),
-               "max": max(scores),
-               "bars": bars,
-               "bins": bins,
+                "id": missense_score,
+                "min": min(scores),
+                "max": max(scores),
+                "bars": bars,
+                "bins": bins,
             }
 
             return Response(result)
