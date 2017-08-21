@@ -11,6 +11,8 @@ export class MissenseScoresComponent {
   @Input() genotypeBrowserConfig: GenotypeBrowser;
   private internalSelectedMetric: MissenseMetric;
   private histogramData: MissenseScoresHistogramData;
+  rangeStart = 0;
+  rangeEnd = 0;
 
   constructor(
     private missenseScoresService: MissenseScoresService
@@ -21,6 +23,8 @@ export class MissenseScoresComponent {
     this.missenseScoresService.getHistogramData("SSC", selectedMetric.id).subscribe(
       (histogramData) => {
         this.histogramData = histogramData;
+        this.rangeStart = histogramData.min;
+        this.rangeEnd = histogramData.max;
     });
   }
 
