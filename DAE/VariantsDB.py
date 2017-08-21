@@ -180,7 +180,7 @@ class Study:
             yield v
 
     def get_denovo_variants(self, inChild=None, presentInChild=None,
-                            presentInParent=None,
+                            presentInParent=None, missenseScore=None,
                             gender=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None,
@@ -205,6 +205,15 @@ class Study:
 
         dnvData = self._load_dnv_data(callSet)
         for v in dnvData:
+            if (missenseScore and v.atts['effectType'] == 'missense' and
+                    missenseScore['metric'] in v.atts):
+                try:
+                    score = float(v.atts[missenseScore['metric']])
+                    if (score < missenseScore['min']
+                            or score > missenseScore['max']):
+                        continue
+                except ValueError:
+                    pass
             if familyIds and v.familyId not in familyIds:
                 continue
             if pipFilter and not pipFilter(v.fromParentS):
@@ -684,7 +693,7 @@ class Study:
 
 class VariantsDB:
 
-    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None, 
+    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None,
                  phDB=None, genomesDB=None):
         self.sfariDB = sfariDB
         self.giDB = giDB

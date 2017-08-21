@@ -454,6 +454,21 @@ class FamiliesMixin(object):
         return set(family_ids)
 
 
+class MissenseScoreMixin(object):
+
+    @staticmethod
+    def get_missense_score(safe=True, **kwargs):
+        missense_scores = kwargs.get('missenseScores', None)
+        if not missense_scores:
+            return None
+        missense_filter = {
+            'metric': missense_scores['metric'],
+            'min': missense_scores['rangeStart'],
+            'max': missense_scores['rangeEnd'],
+        }
+        return missense_filter
+
+
 class QueryBase(
         EffectTypesMixin,
         VariantTypesMixin,
@@ -464,7 +479,8 @@ class QueryBase(
         GeneSymsMixin,
         RegionsMixin,
         RarityMixin,
-        FamiliesMixin):
+        FamiliesMixin,
+        MissenseScoreMixin):
 
     IN_CHILD_TYPES = [
         'prb',
