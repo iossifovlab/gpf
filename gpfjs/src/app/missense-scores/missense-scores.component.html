@@ -1,0 +1,28 @@
+<div class="row">
+    <div class="col-sm-3">
+      <select class="form-control" [(ngModel)]="selectedMetric" required>
+		    <option *ngFor="let metric of genotypeBrowserConfig.missenseMetrics" [ngValue]="metric">
+          {{metric.name}}
+        </option>
+		  </select>
+    </div>
+    <div class="col-sm-9">
+      <gpf-histogram
+		    *ngIf="histogramData"
+		    width="650" height="145"
+		    [bins]="histogramData.bins"
+		    [bars]="histogramData.bars"
+		    [domainMin]="histogramData.min"
+		    [domainMax]="histogramData.max"
+		    [rangesCounts]="rangesCounts"
+		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+		  </gpf-histogram>
+		  <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
+		    <ul>
+		      <li *ngFor="let error of errors">
+		        {{ error }}
+		      </li>
+		    </ul>
+		  </div>
+    </div>
+</div>

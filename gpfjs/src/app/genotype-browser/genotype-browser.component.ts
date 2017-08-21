@@ -21,6 +21,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
   private selectedDatasetId: string;
   private genotypeBrowserState: Object;
   selectedDataset: Dataset;
+  private isMissenseSelected = false
 
   constructor(
     private store: Store<any>,
@@ -44,6 +45,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
           state => {
             this.genotypePreviewsArray = null
             let stateObject = Object.assign({}, ...state);
+            this.isMissenseSelected = stateObject.effectTypes.includes('Missense')
             this.genotypeBrowserState = Object.assign({},
                                           { datasetId: this.selectedDatasetId },
                                           stateObject);;

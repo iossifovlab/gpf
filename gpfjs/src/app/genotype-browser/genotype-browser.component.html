@@ -7,6 +7,10 @@
     [datasetConfig]="selectedDataset"
     [genotypeBrowserState]="genotypeBrowserState">
   </gpf-family-filters-block>
+  <gpf-missense-scores-block
+    *ngIf="isMissenseSelected"
+    [genotypeBrowserConfig]="selectedDataset.genotypeBrowser">
+  </gpf-missense-scores-block>
 
   <div class="form-block">
 	  <form

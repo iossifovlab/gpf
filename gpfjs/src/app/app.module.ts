@@ -111,6 +111,10 @@ import { VariantReportsComponent } from './variant-reports/variant-reports.compo
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
+import { MissenseScoresComponent } from './missense-scores/missense-scores.component'
+import { MissenseScoresService } from './missense-scores/missense-scores.service'
+import { MissenseScoresBlockComponent } from './missense-scores-block/missense-scores-block.component'
+
 import { MarkdownModule } from 'angular2-markdown';
 
 const appRoutes: Routes = [
@@ -241,6 +245,8 @@ const appRoutes: Routes = [
     CommonReportsComponent,
     VariantReportsComponent,
     DatasetDescriptionComponent,
+    MissenseScoresComponent,
+    MissenseScoresBlockComponent
   ],
   imports: [
     BrowserModule,
@@ -275,7 +281,8 @@ const appRoutes: Routes = [
     PhenoBrowserService,
     PValueIntensityPipe,
     StudiesSummariesService,
-    VariantReportsService
+    VariantReportsService,
+    MissenseScoresService
   ],
 
   entryComponents: [
