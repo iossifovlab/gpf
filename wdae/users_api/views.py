@@ -6,16 +6,24 @@ Created on Aug 10, 2016
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager
+from django.views.decorators.csrf import ensure_csrf_cookie
+import django.contrib.auth
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import django.contrib.auth
 from rest_framework.decorators import authentication_classes
-from models import VerificationPath
+from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
 from users_api.authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF
-from django.views.decorators.csrf import ensure_csrf_cookie
+from users_api.models import VerificationPath
+from users_api.serializers import UserSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+
+    serializer_class = UserSerializer
+    queryset = get_user_model().objects.all()
 
 
 @api_view(['POST'])
