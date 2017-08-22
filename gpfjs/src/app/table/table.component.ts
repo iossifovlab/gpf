@@ -231,6 +231,10 @@ export class GpfTableComponent implements AfterViewInit {
   }
 
   private setStaticTableHeaders(rows, headers, floatingHeaders) {
+    console.log(rows, headers, floatingHeaders);
+    if (rows.length === 0 || headers.length === 0  || floatingHeaders.length === 0) {
+      return;
+    }
     let headersArray = [].slice
       .call(headers.first.nativeElement
         .getElementsByTagName('gpf-table-header'));
