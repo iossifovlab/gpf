@@ -37,16 +37,28 @@ class QueryPreviewView(QueryBaseView):
     def __init__(self):
         super(QueryPreviewView, self).__init__()
 
-    def prepare_variants_resonse(self, variants):
+    def prepare_variants_response(self, columns, all_variants):
+        common_cols = list(set.intersection(*[set(l) for l in columns]))
+        cols_map = {name: index for (index, name) in enumerate(common_cols)}
+
         rows = []
-        cols = variants.next()
         count = 0
-        for v in variants:
-            count += 1
-            if count <= 1000:
-                rows.append(v)
+
+        for current_cols, variants in zip(columns, all_variants):
+            for v in variants:
+                count += 1
+                if count <= 1000:
+                    row = [None for x in range(len(common_cols))]
+                    for i, col_name in enumerate(current_cols):
+                        if col_name in cols_map:
+                            index = cols_map[col_name]
+                            row[index] = v[i]
+                    rows.append(row)
+                if count > 2000:
+                    break
             if count > 2000:
                 break
+
         if count <= 2000:
             count = str(count)
         else:
@@ -54,7 +66,7 @@ class QueryPreviewView(QueryBaseView):
 
         return {
             'count': count,
-            'cols': cols,
+            'cols': common_cols,
             'rows': rows
         }
 
@@ -70,17 +82,26 @@ class QueryPreviewView(QueryBaseView):
 
         data = request.data
         try:
+            legend = []
             dataset_id = data['datasetId']
-            dataset = self.datasets_factory.get_dataset(dataset_id)
-            self.check_object_permissions(request, dataset_id)
+            all_variants = []
+            columns = []
+            for dataset_id in data['datasetId']:
+                dataset = self.datasets_factory.get_dataset(dataset_id)
+                self.check_object_permissions(request, dataset_id)
 
-            legend = self.prepare_legend_response(dataset, **data)
+                for leg in self.prepare_legend_response(dataset, **data):
+                    if leg not in legend:
+                        legend.append(leg)
 
-            variants = dataset.get_variants_preview(
-                safe=True,
-                limit=2000,
-                **data)
-            res = self.prepare_variants_resonse(variants)
+                v = dataset.get_variants_preview(
+                    safe=True,
+                    limit=2000,
+                    **data
+                )
+                columns.append(v.next())
+                all_variants.append(v)
+            res = self.prepare_variants_response(columns, all_variants)
 
             res['legend'] = legend
 
