@@ -215,6 +215,10 @@ export class GpfTableComponent implements AfterViewInit {
   ) { }
 
   ngAfterViewInit() {
+    this.setStaticTableHeaders(
+      this.rowViewChildren, this.tableHeaderViewChildren,
+      this.tableFloatingHeaderViewChildren
+    );
     Observable.combineLatest([
         this.rowViewChildren.changes.filter(elements => !!elements.first),
         this.tableHeaderViewChildren.changes.filter(elements => !!elements.first),
