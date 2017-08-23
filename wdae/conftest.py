@@ -7,6 +7,7 @@ from datasets_api.models import Dataset
 def user_model(db):
     return get_user_model()
 
+
 @pytest.fixture()
 def default_datasets(db):
     Dataset.recreate_dataset_perm('SD', [])
@@ -23,7 +24,7 @@ def user(user_model):
 
 
 @pytest.fixture()
-def admin(user_model):
+def admin_user(user_model):
     u = user_model.objects.create_superuser('admin@example.com', 'secret')
     u.save()
 
@@ -31,12 +32,12 @@ def admin(user_model):
 
 
 @pytest.fixture()
-def logged_user_client(user, client):
+def user_client(user, client):
     client.login(email=user.email, password='secret')
     return client
 
 
 @pytest.fixture()
-def logged_admin_client(db, admin, client):
-    client.login(email=admin.email, password='secret')
+def admin_client(db, admin_user, client):
+    client.login(email=admin_user.email, password='secret')
     return client

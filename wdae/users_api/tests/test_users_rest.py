@@ -9,28 +9,28 @@ def users_endpoint():
 
 
 @pytest.fixture()
-def new_user(logged_admin_client, users_endpoint, user_model):
+def new_user(admin_client, users_endpoint, user_model):
     data = {
         'email': 'new@new.com',
     }
-    logged_admin_client.post(users_endpoint, data=data)
+    admin_client.post(users_endpoint, data=data)
 
     return user_model.objects.get(email='new@new.com')
 
 
-def test_admin_can_get_default_users(logged_admin_client, users_endpoint):
-    response = logged_admin_client.get(users_endpoint)
+def test_admin_can_get_default_users(admin_client, users_endpoint):
+    response = admin_client.get(users_endpoint)
     assert response.status_code is status.HTTP_200_OK
 
 
-def test_admin_sees_all_default_users(logged_admin_client, users_endpoint):
-    response = logged_admin_client.get(users_endpoint)
+def test_admin_sees_all_default_users(admin_client, users_endpoint):
+    response = admin_client.get(users_endpoint)
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data['results']) is 2  # dev admin, dev staff
 
 
-def test_all_users_have_groups(logged_admin_client, users_endpoint):
-    response = logged_admin_client.get(users_endpoint)
+def test_all_users_have_groups(admin_client, users_endpoint):
+    response = admin_client.get(users_endpoint)
     assert response.status_code is status.HTTP_200_OK
 
     users = response.data['results']
@@ -39,8 +39,8 @@ def test_all_users_have_groups(logged_admin_client, users_endpoint):
         assert "groups" in user
 
 
-def test_users_cant_get_default_users(logged_user_client, users_endpoint):
-    response = logged_user_client.get(users_endpoint)
+def test_users_cant_get_default_users(user_client, users_endpoint):
+    response = user_client.get(users_endpoint)
     assert response.status_code is status.HTTP_403_FORBIDDEN
 
 
@@ -49,26 +49,26 @@ def test_unauthenticated_cant_get_default_users(client, users_endpoint):
     assert response.status_code is status.HTTP_403_FORBIDDEN
 
 
-def test_admin_can_create_new_users(logged_admin_client, users_endpoint,
+def test_admin_can_create_new_users(admin_client, users_endpoint,
                                     user_model):
     data = {
         'email': 'new@new.com',
     }
-    response = logged_admin_client.post(users_endpoint, data=data)
+    response = admin_client.post(users_endpoint, data=data)
 
     assert response.status_code is status.HTTP_201_CREATED
     assert user_model.objects.get(email='new@new.com') is not None
 
 
-def test_admin_can_see_newly_created_user(logged_admin_client, users_endpoint):
-    default_users = logged_admin_client.get(users_endpoint).data['results']
+def test_admin_can_see_newly_created_user(admin_client, users_endpoint):
+    default_users = admin_client.get(users_endpoint).data['results']
 
     data = {
         'email': 'new@new.com',
     }
-    logged_admin_client.post(users_endpoint, data=data)
+    admin_client.post(users_endpoint, data=data)
 
-    new_users = logged_admin_client.get(users_endpoint).data['results']
+    new_users = admin_client.get(users_endpoint).data['results']
     assert len(new_users) is len(default_users) + 1
 
 
