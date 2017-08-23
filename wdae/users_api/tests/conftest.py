@@ -4,6 +4,10 @@ from datasets_api.models import Dataset
 
 
 @pytest.fixture()
+def user_model(db):
+    return get_user_model()
+
+@pytest.fixture()
 def default_datasets(db):
     Dataset.recreate_dataset_perm('SD', [])
     Dataset.recreate_dataset_perm('SSC', [])
@@ -11,30 +15,16 @@ def default_datasets(db):
 
 
 @pytest.fixture()
-def user(db):
-    User = get_user_model()
-    u = User.objects.create(
-        email="user@example.com",
-        name="First",
-        is_staff=False,
-        is_active=True,
-        is_superuser=False)
-    u.set_password("secret")
+def user(user_model):
+    u = user_model.objects.create_user('user@example.com', 'secret')
     u.save()
 
     return u
 
 
 @pytest.fixture()
-def admin(db):
-    User = get_user_model()
-    u = User.objects.create(
-        email="admin@example.com",
-        name="First",
-        is_staff=True,
-        is_active=True,
-        is_superuser=True)
-    u.set_password("secret")
+def admin(user_model):
+    u = user_model.objects.create_superuser('admin@example.com', 'secret')
     u.save()
 
     return u
