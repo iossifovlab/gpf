@@ -1,6 +1,5 @@
 import pytest
 from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
 from datasets_api.models import Dataset
 
 

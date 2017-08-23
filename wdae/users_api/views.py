@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import authentication_classes
 from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
+from rest_framework import permissions
 from users_api.authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF
 from users_api.models import VerificationPath
@@ -24,6 +25,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
+    permission_classes = (permissions.IsAdminUser,)
 
 
 @api_view(['POST'])
