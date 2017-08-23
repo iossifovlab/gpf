@@ -24,5 +24,6 @@ urlpatterns = patterns(
     url(r'^api/v3/pheno_tool', include('pheno_tool_api.urls')),
     url(r'^api/v3/pheno_browser', include('pheno_browser_api.urls')),
     url(r'^api/v3/common_reports', include('common_reports_api.urls')),
+    url(r'^api/v3/groups', include('groups_api.urls')),
     url(r'^admin/', include(admin.site.urls)),
 )

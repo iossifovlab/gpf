@@ -22,7 +22,6 @@ from users_api.serializers import UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
-
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
     permission_classes = (permissions.IsAdminUser,)
