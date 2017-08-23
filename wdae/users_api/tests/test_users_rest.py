@@ -29,6 +29,16 @@ def test_admin_sees_all_default_users(logged_admin_client, users_endpoint):
     assert len(response.data['results']) is 2  # dev admin, dev staff
 
 
+def test_all_users_have_groups(logged_admin_client, users_endpoint):
+    response = logged_admin_client.get(users_endpoint)
+    assert response.status_code is status.HTTP_200_OK
+
+    users = response.data['results']
+    assert len(users) > 0
+    for user in users:
+        assert "groups" in user
+
+
 def test_users_cant_get_default_users(logged_user_client, users_endpoint):
     response = logged_user_client.get(users_endpoint)
     assert response.status_code is status.HTTP_403_FORBIDDEN
