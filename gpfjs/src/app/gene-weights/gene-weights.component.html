@@ -3,6 +3,7 @@
           <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
 		    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
 		  </select>
+      <a href="{{ getDownloadLink() }}">Download</a>
     </div>
     <div class="col-sm-9">
       <gpf-histogram
