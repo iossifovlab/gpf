@@ -9,7 +9,7 @@ from django.conf.urls import patterns, url, include
 from rest_framework.routers import SimpleRouter
 from users_api import views
 
-router = SimpleRouter()
+router = SimpleRouter(trailing_slash=False)
 router.register(r'', views.UserViewSet, base_name='users')
 
 urlpatterns = patterns(

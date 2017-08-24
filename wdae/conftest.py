@@ -1,11 +1,17 @@
 import pytest
 from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
 from datasets_api.models import Dataset
 
 
 @pytest.fixture()
-def user_model(db):
+def user_model():
     return get_user_model()
+
+
+@pytest.fixture()
+def client():
+    return APIClient()
 
 
 @pytest.fixture()
@@ -16,7 +22,7 @@ def default_datasets(db):
 
 
 @pytest.fixture()
-def user(user_model):
+def user(db, user_model):
     u = user_model.objects.create_user('user@example.com', 'secret')
     u.save()
 
@@ -24,7 +30,7 @@ def user(user_model):
 
 
 @pytest.fixture()
-def admin_user(user_model):
+def admin_user(db, user_model):
     u = user_model.objects.create_superuser('admin@example.com', 'secret')
     u.save()
 
