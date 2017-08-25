@@ -112,6 +112,8 @@ import { VariantReportsService } from './variant-reports/variant-reports.service
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
 import { MarkdownModule } from 'angular2-markdown';
+import { UserManagementComponent } from './user-management/user-management.component';
+import { UserInfoPipe } from './users/user-info.pipe';
 
 const appRoutes: Routes = [
   {
@@ -166,6 +168,10 @@ const appRoutes: Routes = [
         component: VariantReportsComponent
       }
     ]
+  },
+  {
+    path: 'management',
+    component: UserManagementComponent
   },
   {
     path: '**',
@@ -241,6 +247,8 @@ const appRoutes: Routes = [
     CommonReportsComponent,
     VariantReportsComponent,
     DatasetDescriptionComponent,
+    UserInfoPipe,
+    UserManagementComponent,
   ],
   imports: [
     BrowserModule,

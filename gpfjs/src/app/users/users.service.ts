@@ -3,6 +3,7 @@ import { Headers, Http, Response, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs';
 
 import 'rxjs/add/operator/toPromise';
+import { BehaviorSubject } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie';
@@ -16,6 +17,7 @@ export class UsersService {
   private resetPasswordUrl = 'users/reset_password';
   private changePasswordUrl = 'users/change_password';
   private checkVerificationUrl = 'users/check_verif_path';
+  private userInfo$ = new BehaviorSubject<{}>(null);
 
   constructor(
     private http: Http,
@@ -50,6 +52,10 @@ export class UsersService {
       });
   }
 
+  cachedUserInfo() {
+    return this.userInfo$.value;
+  }
+
   getUserInfo(): Observable<any> {
     let options = new RequestOptions({ withCredentials: true });
 
@@ -57,6 +63,9 @@ export class UsersService {
       .get(this.userInfoUrl, options)
       .map(res => {
         return res.json();
+      })
+      .do(userInfo => {
+        this.userInfo$.next(userInfo);
       });
   }
 
