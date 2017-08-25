@@ -11,7 +11,7 @@ def groups_endpoint():
 
 
 @pytest.fixture()
-def groups_instance(groups_endpoint):
+def groups_instance_url(groups_endpoint):
     return partial(group_url, groups_endpoint)
 
 
@@ -46,13 +46,13 @@ def test_groups_have_ids_and_names(admin_client, groups_endpoint):
 
 
 def test_admin_cant_delete_groups(admin_client, groups_endpoint,
-                                  groups_instance, groups_model):
+                                  groups_instance_url, groups_model):
     all_groups = groups_model.objects.all()
     assert len(all_groups) > 0
 
     for group in all_groups:
         del_response = admin_client.delete(
-            groups_instance(group.pk),
+            groups_instance_url(group.pk),
             format='json')
 
         assert del_response.status_code is status.HTTP_405_METHOD_NOT_ALLOWED
@@ -73,7 +73,7 @@ def test_admin_cant_create_groups(admin_client, groups_endpoint):
     assert response.status_code is status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_admin_can_rename_groups(admin_client, groups_instance, groups_model):
+def test_admin_can_rename_groups(admin_client, groups_instance_url, groups_model):
     first_group = groups_model.objects.first()
     assert first_group is not None
 
@@ -84,7 +84,7 @@ def test_admin_can_rename_groups(admin_client, groups_instance, groups_model):
         'name': test_name
     }
 
-    response = admin_client.put(groups_instance(first_group.pk),
+    response = admin_client.put(groups_instance_url(first_group.pk),
                                 data=data)
 
     assert response.status_code is status.HTTP_200_OK

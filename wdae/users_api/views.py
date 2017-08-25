@@ -15,13 +15,14 @@ from rest_framework.decorators import authentication_classes
 from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import permissions
+from rest_framework import mixins
 from users_api.authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF
 from users_api.models import VerificationPath
 from users_api.serializers import UserSerializer
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin):
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
     permission_classes = (permissions.IsAdminUser,)

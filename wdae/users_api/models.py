@@ -19,7 +19,7 @@ from helpers.logger import LOGGER
 
 class WdaeUserManager(BaseUserManager):
 
-    def _create_user(self, email, password):
+    def _create_user(self, email, password, researcher_id=None, **kwargs):
         """
         Creates and saves a User with the given email and password.
         """
@@ -27,13 +27,18 @@ class WdaeUserManager(BaseUserManager):
             raise ValueError('The given email must be set')
 
         email = self.normalize_email(email)
-        user = self.model(email=email)
+        user = self.model(email=email, **kwargs)
         user.set_password(password)
 
         user.save(using=self._db)
 
         groups = list(user.DEFAULT_GROUPS_FOR_USER)
         groups.append(email)
+
+        if researcher_id is not None:
+            groups.append(
+                self.model.get_group_name_for_researcher_id(researcher_id))
+
         for group_name in groups:
             group, _ = Group.objects.get_or_create(name=group_name)
             group.user_set.add(user)
@@ -41,12 +46,19 @@ class WdaeUserManager(BaseUserManager):
 
         return user
 
-    def create_user(self, email, password=None,):
-        user = self._create_user(email, password)
+    def update(self, **kwargs):
+        print("kwargs", kwargs)
+        return super(WdaeUserManager, self).update(**kwargs)
+
+    def create(self, **kwargs):
+        return self.create_user(**kwargs)
+
+    def create_user(self, email, password=None, **kwargs):
+        user = self._create_user(email, password, **kwargs)
         return user
 
-    def create_superuser(self, email, password, **extra_fields):
-        user = self._create_user(email, password)
+    def create_superuser(self, email, password, **kwargs):
+        user = self._create_user(email, password, **kwargs)
 
         user.is_superuser = True
         user.is_active = True
@@ -73,6 +85,21 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     RESEARCHER_GROUP_PREFIX = "SFID#"
 
     objects = WdaeUserManager()
+
+    @property
+    def is_researcher(self):
+        return self.groups.filter(
+            name__startswith=WdaeUser.RESEARCHER_GROUP_PREFIX
+        ).exists()
+
+    @property
+    def researcher_id(self):
+        if not self.is_researcher:
+            return None
+        group = self.groups.get(
+            name__startswith=WdaeUser.RESEARCHER_GROUP_PREFIX)
+
+        return group.name[len(WdaeUser.RESEARCHER_GROUP_PREFIX):]
 
     def email_user(self, subject, message, from_email=None):
         override = None
