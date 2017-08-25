@@ -17,6 +17,8 @@ export class UsersService {
   private resetPasswordUrl = 'users/reset_password';
   private changePasswordUrl = 'users/change_password';
   private checkVerificationUrl = 'users/check_verif_path';
+  private usersUrl = 'users';
+
   private userInfo$ = new BehaviorSubject<{}>(null);
 
   constructor(
@@ -131,5 +133,12 @@ export class UsersService {
       .catch(error => {
         return Observable.of(false);
       });
+  }
+
+  getAllUsers() {
+    let options = new RequestOptions({ withCredentials: true });
+
+    return this.http.get(this.usersUrl, options)
+      .map(response => response.json());
   }
 }

@@ -5,3 +5,30 @@ gpf-table-cell {
 gpf-table-header {
     display: table-cell;
 }
+
+gpf-table {
+	display: inline-block;
+	width: 100%;
+	margin-bottom: 50px;
+}
+
+gpf-table-cell {
+  height: 80px;
+  max-height: 80px;
+  border: 1px solid #dddddd;
+  width: 150px;
+  max-width: 250px;
+  overflow: auto;
+  padding: 8px;
+  text-align: center;
+}
+
+gpf-table-header {
+  width: 150px;
+  height: 100px;
+  border: 1px solid #dddddd;
+  padding: 8px;
+  font-size: 0.9em;
+  background: #eee;
+  font-weight: 500;
+}

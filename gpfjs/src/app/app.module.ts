@@ -114,6 +114,8 @@ import { DatasetDescriptionComponent } from './dataset-description/dataset-descr
 import { MarkdownModule } from 'angular2-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { UserInfoPipe } from './users/user-info.pipe';
+import { UsersTableComponent } from './users-table/users-table.component';
+import { GroupsTableComponent } from './groups-table/groups-table.component';
 
 const appRoutes: Routes = [
   {
@@ -249,6 +251,8 @@ const appRoutes: Routes = [
     DatasetDescriptionComponent,
     UserInfoPipe,
     UserManagementComponent,
+    UsersTableComponent,
+    GroupsTableComponent,
   ],
   imports: [
     BrowserModule,
