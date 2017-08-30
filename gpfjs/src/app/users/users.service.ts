@@ -7,6 +7,7 @@ import { BehaviorSubject } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie';
+import { User } from './users';
 
 @Injectable()
 export class UsersService {
@@ -139,6 +140,30 @@ export class UsersService {
     let options = new RequestOptions({ withCredentials: true });
 
     return this.http.get(this.usersUrl, options)
-      .map(response => response.json());
+      .map(response => response.json() as User[]);
   }
+
+  getUser(id: number) {
+    let options = new RequestOptions({ withCredentials: true });
+    let url = `${this.usersUrl}/${id}`;
+
+    return this.http.get(url, options)
+      .map(response => response.json() as User);
+  }
+
+  updateUser(user: User) {
+    if (!user.id) {
+      return Observable.throw('No user id');
+    }
+    let csrfToken = this.cookieService.get("csrftoken");
+    let headers = new Headers({ 'X-CSRFToken': csrfToken });
+    let options = new RequestOptions({
+      headers: headers,
+      withCredentials: true
+    });
+    let url = `${this.usersUrl}/${user.id}`;
+
+    return this.http.put(url, user, options);
+  }
+
 }

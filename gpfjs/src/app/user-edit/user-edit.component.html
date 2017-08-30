@@ -1,0 +1,57 @@
+<form *ngIf="(user$ | async) as user">
+  <div class="row justify-content-center">
+    <div class="col-4">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input name="email" id="email" class="form-control" [(ngModel)]="user.email" type="text" />
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="groupsToOptions(groups$ | async) as groupOptions" class="row justify-content-center">
+    <div class="col-4">
+      <div class="form-group">
+        <label for="groups">Groups</label>
+        <div class="groupsInput" >
+          <select2 [data]="groupOptions" [value]="initialValue" (valueChanged)="changeSelectedGroups($event)" [options]="configurationOptions"></select2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-4">
+      <div class="form-group">
+        <label for="researcherId">Researcher Id</label>
+        <input name="researcherId" id="researcherId" class="form-control" [(ngModel)]="user.researcherId" type="text" />
+      </div>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-4">
+      <div class="form-group">
+        <label for="active">Active</label>
+        <input name="active" id="active" class="form-control" [(ngModel)]="user.active" type="checkbox" />
+      </div>
+    </div>
+  </div>
+
+
+  <div class="row justify-content-center">
+    <div class="col-4">
+      <div class="form-group">
+        <label for="superuser">Admin</label>
+        <input name="superuser" id="superuser" class="form-control" [(ngModel)]="user.superuser" type="checkbox" />
+      </div>
+    </div>
+  </div>
+
+  <div class="row justify-content-end">
+    <div class="col-4">
+      <button class="btn" routerLink="/management">Back</button>
+      <button class="btn btn-primary" type="submit" (click)="submit(user)">Submit</button>
+    </div>
+  </div>
+
+</form>

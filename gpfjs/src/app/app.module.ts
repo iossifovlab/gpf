@@ -116,6 +116,11 @@ import { UserManagementComponent } from './user-management/user-management.compo
 import { UserInfoPipe } from './users/user-info.pipe';
 import { UsersTableComponent } from './users-table/users-table.component';
 import { GroupsTableComponent } from './groups-table/groups-table.component';
+import { UserEditComponent } from './user-edit/user-edit.component';
+import { ManagementComponent } from './management/management.component';
+import { UsersGroupsService } from './users-groups/users-groups.service';
+
+import { Select2Module } from 'ng2-select2';
 
 const appRoutes: Routes = [
   {
@@ -173,7 +178,18 @@ const appRoutes: Routes = [
   },
   {
     path: 'management',
-    component: UserManagementComponent
+    component: ManagementComponent,
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        component: UserManagementComponent
+      },
+      {
+        path: 'users/:id',
+        component: UserEditComponent
+      }
+    ]
   },
   {
     path: '**',
@@ -253,6 +269,8 @@ const appRoutes: Routes = [
     UserManagementComponent,
     UsersTableComponent,
     GroupsTableComponent,
+    UserEditComponent,
+    ManagementComponent,
   ],
   imports: [
     BrowserModule,
@@ -268,6 +286,7 @@ const appRoutes: Routes = [
     CookieModule.forRoot(),
     BrowserAnimationsModule,
     MarkdownModule.forRoot(),
+    Select2Module,
   ],
   providers: [
     ConfigService,
@@ -287,7 +306,8 @@ const appRoutes: Routes = [
     PhenoBrowserService,
     PValueIntensityPipe,
     StudiesSummariesService,
-    VariantReportsService
+    VariantReportsService,
+    UsersGroupsService,
   ],
 
   entryComponents: [

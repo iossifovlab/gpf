@@ -74,7 +74,7 @@
   position: absolute;
   background-color: #fafafa;
   z-index: 200;
-  height: 100%;
+  height: calc(100% - 58px);
   box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
 }
 

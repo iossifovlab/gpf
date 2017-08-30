@@ -10,17 +10,16 @@ import { UsersService } from '../users/users.service';
   styleUrls: ['./users-table.component.css']
 })
 export class UsersTableComponent implements OnInit {
+  users$: Observable<{}>;
 
   constructor(private usersService: UsersService) { }
-
-  private users$: Observable<{}>;
 
   ngOnInit() {
     this.users$ = this.usersService.getAllUsers();
   }
 
   getGroupNames(groups: Array<any>) {
-    return groups.map(g => g.name).join(", ");
+    return groups.map(g => g.name).join(', ');
   }
 
 }

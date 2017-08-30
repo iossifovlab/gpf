@@ -44,7 +44,7 @@
 
     <div *ngIf="showSidenav" (click)="hideSidenav()" [@fadeInOut]="showSidenav" class="blackscreen"></div>
 
-    <router-outlet></router-outlet>
+    <router-outlet style="display: flex; flex-direction: row;"></router-outlet>
   </div>
   <router-outlet name="popup"></router-outlet>
 </div>

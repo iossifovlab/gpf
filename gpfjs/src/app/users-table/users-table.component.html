@@ -1,6 +1,10 @@
 <gpf-table [dataSource]="(users$ | async)?.results" style="display: inline-block">
   <gpf-table-column>
-    <gpf-table-subcolumn header="Email" field="email"></gpf-table-subcolumn>
+    <gpf-table-subcolumn header="Email" field="email">
+      <div *gpfTableCellContent="let data">
+        <a [routerLink]="['/management/users', data.id]">{{ data.email }}</a>
+      </div>
+    </gpf-table-subcolumn>
   </gpf-table-column>
   <gpf-table-column>
     <gpf-table-subcolumn header="Groups" field="groups">
