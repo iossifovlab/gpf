@@ -166,3 +166,8 @@ label {
   color: #fff;
   border-radius: .25rem;
 }
+
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: #2a6395;
+}

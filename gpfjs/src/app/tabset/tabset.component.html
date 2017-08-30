@@ -1,8 +1,8 @@
-<nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+<nav class="navbar navbar-toggleable-md navbar-light navbar-expand-lg bg-light">
+
   <div class="form-block-title">
     <ng-content select=".gpf-tabset-left"></ng-content>
   </div>
-
   <ul [class]="'nav nav-pills' + ' justify-content-' + justify" style="width: 1140px" role="tablist">
     <li class="nav-item" *ngFor="let tab of tabs">
       <a [id]="tab.id" class="nav-link" [class.active]="tab.id === activeId" [class.disabled]="tab.disabled"
