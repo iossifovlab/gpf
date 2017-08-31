@@ -536,6 +536,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             "on tfv.summary_variant_id = tsv.id " \
             "where {}".format(where)
 
+        connection = None
+        cursor = None
         try:
             connection, cursor = self.execute(select)
             v = cursor.fetchone()
