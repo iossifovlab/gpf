@@ -7,6 +7,8 @@ import os
 import matplotlib as mpl
 mpl.use('PS')
 
+from pheno_browser.db import DbManager
+from pheno.common import Role
 import matplotlib.pyplot as plt
 plt.ioff()
 
@@ -36,8 +38,8 @@ class PreparePhenoBrowserBase(object):
 
     def load_measure(self, measure):
         df = self.pheno_db.get_persons_values_df([measure.measure_id])
-        df.loc[df.role == 'mom', 'role'] = 'parent'
-        df.loc[df.role == 'dad', 'role'] = 'parent'
+        df.loc[df.role == Role.mom, 'role'] = Role.parent
+        df.loc[df.role == Role.dad, 'role'] = Role.parent
         return df
 
     def _augment_measure_values_df(self, augment, measure):
@@ -58,8 +60,8 @@ class PreparePhenoBrowserBase(object):
 
         df = self.pheno_db.get_persons_values_df(
             [augment_id, measure.measure_id])
-        df.loc[df.role == 'mom', 'role'] = 'parent'
-        df.loc[df.role == 'dad', 'role'] = 'parent'
+        df.loc[df.role == Role.mom, 'role'] = Role.parent
+        df.loc[df.role == Role.dad, 'role'] = Role.parent
 
         columns = list(df.columns)
         columns[columns.index(augment_id)] = augment['name']
@@ -116,7 +118,7 @@ class PreparePhenoBrowserBase(object):
         if df is None:
             return None, None
 
-        dd = df[df.role == 'prb']
+        dd = df[df.role == Role.prb]
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
                 dd, 'age', measure.measure_id, jitter=0.1)
@@ -146,7 +148,7 @@ class PreparePhenoBrowserBase(object):
         if df is None:
             return None, None
 
-        dd = df[df.role == 'prb']
+        dd = df[df.role == Role.prb]
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
                 dd, 'nonverbal_iq', measure.measure_id, jitter=0.1)
@@ -167,44 +169,46 @@ class PreparePhenoBrowserBase(object):
     def build_values_violinplot(self, measure, res):
         df = self.load_measure(measure)
         draw_measure_violinplot(df, measure.measure_id)
-        (res.figure_distribution_small,
-         res.figure_distribution) = self.save_fig(measure, "violinplot")
+        (res['figure_distribution_small'],
+         res['figure_distribution']) = self.save_fig(measure, "violinplot")
 
     def build_values_categorical_distribution(self, measure, res):
         df = self.load_measure(measure)
         draw_categorical_violin_distribution(df, measure.measure_id)
-        (res.figure_distribution_small,
-         res.figure_distribution) = self.save_fig(measure, "distribution")
+        (res['figure_distribution_small'],
+         res['figure_distribution']) = self.save_fig(measure, "distribution")
 
     def build_values_other_distribution(self, measure, res):
         df = self.load_measure(measure)
         draw_categorical_violin_distribution(df, measure.measure_id)
-        (res.figure_distribution_small,
-         res.figure_distribution) = self.save_fig(measure, "distribution")
+        (res['figure_distribution_small'],
+         res['figure_distribution']) = self.save_fig(measure, "distribution")
 
     def build_values_ordinal_distribution(self, measure, res):
         df = self.load_measure(measure)
         draw_ordinal_violin_distribution(df, measure.measure_id)
-        (res.figure_distribution_small,
-         res.figure_distribution) = self.save_fig(measure, "distribution")
+        (res['figure_distribution_small'],
+         res['figure_distribution']) = self.save_fig(measure, "distribution")
 
     def dump_browser_variable(self, var):
         print('-------------------------------------------')
-        print(var.measure_id)
+        print(var['measure_id'])
         print('-------------------------------------------')
-        print('instrument: {}'.format(var.instrument_name))
-        print('measure:    {}'.format(var.measure_name))
-        print('type:       {}'.format(var.measure_type))
-        print('domain:     {}'.format(var.values_domain))
+        print('instrument: {}'.format(var['instrument_name']))
+        print('measure:    {}'.format(var['measure_name']))
+        print('type:       {}'.format(var['measure_type']))
+        print('domain:     {}'.format(var['values_domain']))
         print('-------------------------------------------')
 
     def handle_measure(self, measure):
-        v = VariableBrowserModel()
-        v.measure_id = measure.measure_id
-        v.instrument_name = measure.instrument_name
-        v.measure_name = measure.measure_name
-        v.measure_type = measure.measure_type
-        v.values_domain = measure.value_domain
+
+        v = {
+            'measure_id': measure.measure_id,
+            'instrument_name': measure.instrument_name,
+            'measure_name': measure.measure_name,
+            'measure_type': measure.measure_type,
+            'values_domain': measure.values_domain
+        }
 
         if measure.measure_type == 'continuous':
             self.build_values_violinplot(measure, v)
@@ -221,13 +225,12 @@ class PreparePhenoBrowserBase(object):
         return v
 
     def run(self):
-        with VariableBrowserModelManager(dbfile=self.browser_db) as vm:
-            vm.drop_tables()
-            vm.create_tables()
+        db = DbManager(dbfile=self.browser_db)
+        db.build()
 
-            for instrument in self.pheno_db.instruments.values():
-                progress_nl()
-                for measure in instrument.measures.values():
-                    progress()
-                    var = self.handle_measure(measure)
-                    vm.save(var)
+        for instrument in self.pheno_db.instruments.values():
+            progress_nl()
+            for measure in instrument.measures.values():
+                progress()
+                var = self.handle_measure(measure)
+                db.save(var)

@@ -6,7 +6,6 @@ Created on Aug 31, 2017
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, String, Float
 from sqlalchemy.sql import select
-import copy
 # import traceback
 
 

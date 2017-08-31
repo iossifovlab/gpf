@@ -64,7 +64,7 @@ class Measure(object):
 
     def __repr__(self):
         return "Measure({}, {}, {})".format(
-            self.measure_id, self.measure_type)
+            self.measure_id, self.measure_type, self.values_domain)
 
     @classmethod
     def _from_dict(cls, row):
@@ -76,10 +76,15 @@ class Measure(object):
         m = Measure(row['measure_name'])
         m.measure_id = row['measure_id']
         m.instrument_name = row['instrument_name']
+        m.measure_name = row['measure_name']
         m.measure_type = row['measure_type']
 
         m.description = row['description']
         m.default_filter = row['default_filter']
+        m.values_domain = row['values_domain']
+        m.min_value = row['min_value']
+        m.max_value = row['max_value']
+
         return m
 
 
@@ -181,9 +186,14 @@ class PhenoDB(object):
             measure.c.measure_type,
             measure.c.individuals,
             measure.c.default_filter,
+            self.db.meta_measure.c.values_domain,
+            self.db.meta_measure.c.min_value,
+            self.db.meta_measure.c.max_value,
         ]
         s = select(columns)
-        s = s.select_from(measure)
+        s = s.select_from(
+            self.db.measure.join(self.db.meta_measure)
+        )
         s = s.where(not_(measure.c.measure_type.is_(None)))
         if instrument is not None:
             s = s.where(measure.c.instrument_name == instrument)
@@ -195,7 +205,11 @@ class PhenoDB(object):
         res_df = df[[
             'measure_id', 'measure_name', 'instrument_name',
             'description', 'individuals', 'measure_type',
-            'default_filter'
+            'default_filter',
+
+            'values_domain',
+            'min_value',
+            'max_value',
         ]]
 
         return res_df

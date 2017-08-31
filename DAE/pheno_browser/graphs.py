@@ -4,6 +4,7 @@ Created on Apr 10, 2017
 @author: lubo
 '''
 import matplotlib as mpl
+from pheno.common import Role, Gender
 mpl.use('PS')
 
 import matplotlib.pyplot as plt
@@ -277,12 +278,15 @@ def draw_categorical_violin_distribution(df, measure_id, ax=None):
 
     datasets = []
     binned_datasets = []
+    print(df.role.unique())
 
-    for role in ['prb', 'sib', 'parent']:
+    for role in [Role.prb, Role.sib]:
         df_role = df[df.role == role]
+        print(df.head())
+        print(len(df.head()))
 
-        df_male = df_role[df_role.gender == 'M']
-        df_female = df_role[df_role.gender == 'F']
+        df_male = df_role[df_role.gender == Gender.M]
+        df_female = df_role[df_role.gender == Gender.F]
 
         mdata = df_male[measure_id].values
         fdata = df_female[measure_id].values
