@@ -5,6 +5,9 @@ Created on Aug 31, 2017
 '''
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, String, Float
+from sqlalchemy.sql import select
+import copy
+# import traceback
 
 
 class DbManager(object):
@@ -17,6 +20,8 @@ class DbManager(object):
     def build(self):
         self._build_browser_tables()
 
+        self.metadata.create_all(self.engine)
+
     def _build_browser_tables(self):
         self.variable_browser = Table(
             'variable_browser', self.metadata,
@@ -24,10 +29,11 @@ class DbManager(object):
                    nullable=False, index=True, unique=True, primary_key=True),
             Column('instrument_name', String(64), nullable=False, index=True),
             Column('measure_name', String(64), nullable=False, index=True),
+            Column('values_domain', String(256)),
+
             Column('figure_distribution_small', String(256)),
             Column('figure_distribution', String(256)),
 
-            Column('values_domain', String(256)),
 
             Column('figure_correlation_nviq_small', String(256)),
             Column('figure_correlation_nviq', String(256)),
@@ -41,18 +47,30 @@ class DbManager(object):
 
         )
 
-    def save(self, variable_browser):
+    def save(self, v):
         try:
             insert = self.variable_browser. \
-                insert().values(**variable_browser)
+                insert().values(**v)
             with self.engine.begin() as connection:
                 connection.execute(insert)
         except Exception:
-            measure_id = variable_browser['measure_id']
-            del variable_browser['measure_id']
+            # traceback.print_exc()
+            measure_id = v['measure_id']
+
+            del v['measure_id']
             update = self.variable_browser.\
-                update().values(**variable_browser).where(
+                update().values(**v).where(
                     self.variable_browser.c.measure_id == measure_id
                 )
             with self.engine.begin() as connection:
                 connection.execute(update)
+
+    def get(self, measure_id):
+        s = select([self.variable_browser])
+        s = s.where(self.variable_browser.c.measure_id == measure_id)
+        with self.engine.connect() as connection:
+            vs = connection.execute(s).fetchall()
+            if vs:
+                return vs[0]
+            else:
+                return None
