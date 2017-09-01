@@ -11,7 +11,8 @@ from users_api.models import WdaeUser
 class UserSerializer(serializers.ModelSerializer):
 
     groups = GroupSerializer(many=True, partial=True)
-    researcherId = serializers.CharField(source='researcher_id', required=False)
+    researcherId = serializers.CharField(source='researcher_id', required=False,
+                                         allow_null=True)
 
     active = serializers.BooleanField(source='is_active')
     staff = serializers.BooleanField(source='is_staff')
