@@ -1,7 +1,9 @@
 from functools import partial
 import pytest
+from astropy.units import format
 from django.core.urlresolvers import reverse
 from rest_framework import status
+from django.contrib.auth.models import Group
 
 from users_api.models import WdaeUser
 
@@ -109,17 +111,75 @@ def test_can_create_researcher(admin_client, users_endpoint, user_model):
     assert new_user.groups.filter(name=group_name).exists()
 
 
-def test_admin_cant_update_user(admin_client, users_instance_url, user_model):
+def test_admin_can_partial_update_user(admin_client, users_instance_url,
+                                       user_model):
     data = {
         'email': 'newmail@domain.com',
         'researcherId': 'some-new-id'
     }
-    first_user = user_model.objects.first()
-    assert first_user.email != data['email']
-    old_email = first_user.email
+    user = user_model.objects.first()
+    assert user.email != data['email']
 
-    response = admin_client.put(users_instance_url(first_user.pk), data)
-    assert response.status_code is status.HTTP_405_METHOD_NOT_ALLOWED
+    response = admin_client.patch(users_instance_url(user.pk), data,
+                                format='json')
+    print(response)
+    assert response.status_code is status.HTTP_200_OK
 
-    first_user.refresh_from_db()
-    assert first_user.email == old_email
+    user.refresh_from_db()
+    assert user.email == data['email']
+    assert user.groups.filter(
+        name__endswith=data['researcherId']).exists()
+
+
+def test_admin_can_add_user_group(admin_client, users_instance_url, user_model):
+    new_group = Group.objects.create(name='brand_new_group')
+    user = user_model.objects.last()
+
+    data = {
+        'active': user.is_active,
+        'superuser': user.is_superuser,
+        'staff': user.is_staff,
+        'email': user.email,
+        'groups': [
+            {
+                'id': new_group.id,
+                'name': new_group.name,
+            }
+        ]
+    }
+    assert not user.groups.filter(name=new_group.name).exists()
+
+    response = admin_client.put(users_instance_url(user.pk), data,
+                                format='json')
+    print(response)
+    assert response.status_code is status.HTTP_200_OK
+
+    user.refresh_from_db()
+    assert user.groups.filter(name=new_group.name).exists()
+
+
+def test_admin_can_remove_user_group(admin_client, users_instance_url, user_model):
+    user = user_model.objects.last()
+    assert user.groups.count() > 0
+    first_group = user.groups.first()
+
+    data = {
+        'active': user.is_active,
+        'superuser': user.is_superuser,
+        'staff': user.is_staff,
+        'email': user.email,
+        'groups': [
+            {
+                'id': group.id,
+                'name': group.name,
+            } for group in user.groups.exclude(id=first_group.id).all()
+        ]
+    }
+
+    response = admin_client.put(users_instance_url(user.pk), data,
+                                format='json')
+    print(response)
+    assert response.status_code is status.HTTP_200_OK
+
+    user.refresh_from_db()
+    assert not user.groups.filter(id=first_group.id).exists()

@@ -22,7 +22,8 @@ from users_api.models import VerificationPath
 from users_api.serializers import UserSerializer
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin):
+class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin,
+                  mixins.UpdateModelMixin):
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
     permission_classes = (permissions.IsAdminUser,)
