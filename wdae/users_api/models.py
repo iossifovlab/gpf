@@ -5,7 +5,7 @@ Created on Aug 10, 2016
 '''
 import uuid
 
-from django.db import models
+from django.db import models, transaction
 from django.core.mail import send_mail
 # from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
@@ -15,6 +15,7 @@ from django.conf import settings
 from guardian.conf import settings as guardian_settings
 from django.contrib.auth.models import Group
 from helpers.logger import LOGGER
+from django.db.models.signals import m2m_changed, post_delete, pre_delete
 
 
 class WdaeUserManager(BaseUserManager):
@@ -78,11 +79,13 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(null=True)
 
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
 
     DEFAULT_GROUPS_FOR_USER = ("any_user", )
     RESEARCHER_GROUP_PREFIX = "SFID#"
+    SUPERUSER_GROUP = 'admin'
 
     objects = WdaeUserManager()
 
@@ -242,6 +245,59 @@ def get_anonymous_user_instance(CurrentUserModel):
         user.is_active = True
         user.save()
         return user
+
+
+def staff_update(sender, **kwargs):
+    print
+    print("staff update called")
+    print(kwargs)
+    for key in ['action', 'instance', 'reverse']:
+        if key not in kwargs:
+            return
+    if kwargs['action'] not in ['post_add', 'post_remove', 'post_clear']:
+        return
+
+    if kwargs['reverse']:
+        users = WdaeUser.objects.filter(pk__in=kwargs['pk_set'])
+    else:
+        users = [kwargs['instance']]
+
+    with transaction.atomic():
+        for user in users:
+            should_be_staff = user.groups \
+                .filter(name=WdaeUser.SUPERUSER_GROUP).exists()
+            if user.is_staff != should_be_staff:
+                user.is_staff = should_be_staff
+                user.save()
+
+
+def group_post_delete(sender, **kwargs):
+    if 'instance' not in kwargs:
+        return
+    group = kwargs['instance']
+    if group.name != WdaeUser.SUPERUSER_GROUP:
+        return
+    if not hasattr(group, "_user_ids"):
+        return
+
+    with transaction.atomic():
+        for user in WdaeUser.objects.filter(pk__in=group._user_ids).all():
+            user.is_staff = False
+            user.save()
+
+
+# a hack to save the users the group had, used in the post_delete signal
+def group_pre_delete(sender, **kwargs):
+    if 'instance' not in kwargs:
+        return
+    group = kwargs['instance']
+    if group.name == WdaeUser.SUPERUSER_GROUP:
+        group._user_ids = map(lambda u: u.pk, group.user_set.all())
+
+
+m2m_changed.connect(staff_update, WdaeUser.groups.through, weak=False)
+post_delete.connect(group_post_delete, Group, weak=False)
+pre_delete.connect(group_pre_delete, Group, weak=False)
 
 
 class VerificationPath(models.Model):

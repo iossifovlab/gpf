@@ -282,3 +282,64 @@ class UserAuthenticationTest(APITestCase):
         response = self.client.get('/api/v3/users/get_user_info')
         self.assertEqual(response.data['loggedIn'], True)
         self.assertEqual(response.data['email'], 'test@example.com')
+
+
+class UserGroups(APITestCase):
+
+    def setUp(self):
+        self.user = WdaeUser.objects.create_user(email='test@example.com')
+        self.user.set_password("pass")
+        self.user.is_active = True
+        self.user.save()
+
+        self.admin_group = Group.objects.create(name=WdaeUser.SUPERUSER_GROUP)
+
+    def test_without_admin_group_does_not_have_is_staff(self):
+        assert not self.user.is_staff
+
+    def test_adding_admin_group_sets_is_staff(self):
+        self.user.groups.add(self.admin_group)
+
+        assert self.user.is_staff
+
+    def test_removing_admin_group_unsets_is_staff(self):
+        self.user.groups.add(self.admin_group)
+
+        self.user.groups.remove(self.admin_group)
+        assert not self.user.is_staff
+
+    def test_deleting_some_group_does_not_break_is_staff(self):
+        group = Group.objects.create(name="Some Other Group1")
+
+        assert not self.user.is_staff
+        self.user.groups.add(self.admin_group)
+        assert self.user.is_staff
+
+        group.delete()
+        assert self.user.is_staff
+
+    def test_deleting_admin_group_unsets_is_staff(self):
+        self.user.groups.add(self.admin_group)
+        self.admin_group.delete()
+
+        self.user.refresh_from_db()
+        assert not self.user.groups.filter(name=WdaeUser.SUPERUSER_GROUP)\
+            .exists()
+        assert not self.user.is_staff
+
+    def test_adding_through_admin_group_sets_is_staff(self):
+        self.admin_group.user_set.add(self.user)
+
+        self.user.refresh_from_db()
+
+        assert self.user.is_staff
+
+    def test_adding_multiple_users_through_admin_group_sets_is_staff(self):
+        other_user = WdaeUser.objects.create(email="email@test.com")
+        self.admin_group.user_set.add(self.user, other_user)
+
+        self.user.refresh_from_db()
+        other_user.refresh_from_db()
+
+        assert self.user.is_staff
+        assert other_user.is_staff
