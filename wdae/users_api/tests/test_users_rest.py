@@ -114,22 +114,35 @@ def test_can_create_researcher(admin_client, users_endpoint, user_model):
 def test_admin_can_partial_update_user(admin_client, users_instance_url,
                                        user_model):
     data = {
-        'email': 'newmail@domain.com',
         'researcherId': 'some-new-id'
     }
     user = user_model.objects.first()
-    assert user.email != data['email']
 
-    response = admin_client.patch(users_instance_url(user.pk), data,
-                                format='json')
+    response = admin_client.patch(
+        users_instance_url(user.pk), data, format='json')
     print(response)
     assert response.status_code is status.HTTP_200_OK
 
     user.refresh_from_db()
-    assert user.email == data['email']
     assert user.groups.filter(
         name__endswith=data['researcherId']).exists()
 
+
+def test_admin_cant_partial_update_user_email(
+        admin_client, users_instance_url, user_model):
+    data = {
+        'email': 'test@test.com'
+    }
+    user = user_model.objects.first()
+    assert user.email != data['email']
+    old_email = user.email
+
+    response = admin_client.patch(
+        users_instance_url(user.pk), data, format='json')
+    assert response.status_code is status.HTTP_400_BAD_REQUEST
+
+    user.refresh_from_db()
+    assert user.email == old_email
 
 def test_admin_can_add_user_group(admin_client, users_instance_url, user_model):
     new_group = Group.objects.create(name='brand_new_group')
@@ -139,7 +152,6 @@ def test_admin_can_add_user_group(admin_client, users_instance_url, user_model):
         'active': user.is_active,
         'superuser': user.is_superuser,
         'staff': user.is_staff,
-        'email': user.email,
         'groups': [
             {
                 'id': new_group.id,
@@ -167,7 +179,6 @@ def test_admin_can_remove_user_group(admin_client, users_instance_url, user_mode
         'active': user.is_active,
         'superuser': user.is_superuser,
         'staff': user.is_staff,
-        'email': user.email,
         'groups': [
             {
                 'id': group.id,

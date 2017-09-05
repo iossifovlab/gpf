@@ -25,6 +25,14 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'staff', 'superuser', 'active',
                   'groups', 'researcher', 'researcherId')
 
+    def validate(self, data):
+        unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
+        if unknown_keys:
+            raise serializers.ValidationError(
+                "Got unknown fields: {}".format(unknown_keys))
+        
+        return super(UserSerializer, self).validate(data)
+
     @staticmethod
     def _check_groups_exist(groups):
         if groups:
@@ -86,3 +94,10 @@ class UserSerializer(serializers.ModelSerializer):
                     name=WdaeUser.get_group_name_for_researcher_id(researcher))
 
         return instance
+
+
+class UserWithoutEmailSerializer(UserSerializer):
+
+    class Meta:
+        model = get_user_model()
+        fields = tuple(x for x in UserSerializer.Meta.fields if x != 'email')

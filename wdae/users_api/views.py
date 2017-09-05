@@ -19,7 +19,7 @@ from rest_framework import mixins
 from users_api.authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF
 from users_api.models import VerificationPath
-from users_api.serializers import UserSerializer
+from users_api.serializers import UserSerializer, UserWithoutEmailSerializer
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin,
@@ -27,6 +27,15 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin,
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
     permission_classes = (permissions.IsAdminUser,)
+
+    def get_serializer_class(self):
+        serializer_class = self.serializer_class
+
+        if self.action == 'update' or self.action == 'partial_update':
+            serializer_class = UserWithoutEmailSerializer
+        print(serializer_class)
+
+        return serializer_class
 
 
 @api_view(['POST'])
