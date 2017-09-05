@@ -195,7 +195,7 @@ class UsersAPITest(APITestCase):
         cls.res = WdaeUser.objects.create_user(email='fake@fake.com')
         cls.res.name = 'fname'
         cls.res.email = 'fake@fake.com'
-        cls.res.is_active = True
+        cls.res.set_password('alabala')
         cls.res.save()
 
         cls.researcher_id = '11aa--bb'
@@ -242,7 +242,6 @@ class UserAuthenticationTest(APITestCase):
     def setUp(self):
         self.user = WdaeUser.objects.create_user(email='test@example.com')
         self.user.set_password("pass")
-        self.user.is_active = True
         self.user.save()
 
     def test_successful_auth(self):
@@ -289,7 +288,6 @@ class UserGroups(APITestCase):
     def setUp(self):
         self.user = WdaeUser.objects.create_user(email='test@example.com')
         self.user.set_password("pass")
-        self.user.is_active = True
         self.user.save()
 
         self.admin_group = Group.objects.create(name=WdaeUser.SUPERUSER_GROUP)
@@ -343,3 +341,61 @@ class UserGroups(APITestCase):
 
         assert self.user.is_staff
         assert other_user.is_staff
+
+
+class UserWithoutPassword(APITestCase):
+
+    def setUp(self):
+        self.user = WdaeUser.objects.create(email="email@test.com")
+
+    def test_is_inactive_when_newly_created(self):
+        assert not self.user.is_active
+
+    def test_is_inactive_when_password_is_set_to_none(self):
+        self.user.set_password(None)
+        self.user.save()
+
+        self.user.refresh_from_db()
+
+        assert not self.user.is_active
+
+    def test_is_active_when_password_is_set(self):
+        self.user.set_password('alabala')
+        self.user.save()
+
+        self.user.refresh_from_db()
+
+        assert self.user.is_active
+
+    def test_is_inactive_when_password_is_reset(self):
+        self.user.reset_password()
+
+        self.user.refresh_from_db()
+
+        assert not self.user.is_active
+
+
+class UserWithPassword(APITestCase):
+
+    def setUp(self):
+        self.user = WdaeUser.objects.create(email="email@test.com")
+        self.user.set_password('alabala')
+        self.user.save()
+
+        self.user.refresh_from_db()
+
+    def test_user_is_inactive_when_password_is_set_to_none(self):
+        self.user.set_password(None)
+        self.user.save()
+
+        self.user.refresh_from_db()
+
+        assert not self.user.is_active
+
+    def test_user_is_inactive_when_password_is_reset(self):
+        self.user.reset_password()
+
+        self.user.refresh_from_db()
+        assert not self.user.is_active
+
+

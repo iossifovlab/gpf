@@ -125,8 +125,21 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         "Returns the short name for the user."
         return self.name
 
+    def set_password(self, raw_password):
+        super(WdaeUser, self).set_password(raw_password)
+
+        has_password = bool(raw_password)
+        if self.is_active != has_password:
+            self.is_active = has_password
+
+    def set_unusable_password(self):
+        super(WdaeUser, self).set_unusable_password()
+
+        if self.is_active:
+            self.is_active = False
+
     def reset_password(self):
-        self.set_password(uuid.uuid4())
+        self.set_unusable_password()
         self.save()
 
         verif_path = _create_verif_path(self)
@@ -148,7 +161,6 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
         user = verif_path.user
         user.set_password(new_password)
-        user.is_active = True
         user.save()
 
         verif_path.delete()
@@ -248,9 +260,6 @@ def get_anonymous_user_instance(CurrentUserModel):
 
 
 def staff_update(sender, **kwargs):
-    print
-    print("staff update called")
-    print(kwargs)
     for key in ['action', 'instance', 'reverse']:
         if key not in kwargs:
             return
