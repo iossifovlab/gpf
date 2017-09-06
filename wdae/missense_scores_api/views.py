@@ -1,45 +1,38 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-import numpy as np
-import preloaded
+import os
+import os.path
+import csv
 
 
 class MissenseScoresView(APIView):
     def __init__(self):
-        register = preloaded.register
-        self.datasets = register.get('datasets')
-        assert self.datasets is not None
-
-        self.datasets_config = self.datasets.get_config()
-        self.datasets_factory = self.datasets.get_factory()
+        self.histograms_data_dir = os.path.join(os.environ['DAE_DB_DIR'],
+                                                'missense_scores/')
 
     def get(self, request):
-        if ('dataset_id' not in request.query_params
-                or 'score_id' not in request.query_params):
+        if ('score_id' not in request.query_params):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset_id = request.query_params['dataset_id']
         missense_score = request.query_params['score_id']
 
-        dataset = self.datasets_factory.get_dataset(dataset_id)
-        if dataset:
-            scores = [float(var.atts[missense_score])
-                      for var in dataset.get_variants()
-                      if missense_score in var.atts and
-                      var.atts[missense_score] != '.' and
-                      len(var.atts[missense_score]) > 0]
-            bars, bins = np.histogram(scores, 150)
+        filename = os.path.join(self.histograms_data_dir, missense_score)
+        bars = []
+        bins = []
+        with open(filename, 'rb') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for row in reader:
+                if len(row[0]) > 0:
+                    bars.append(float(row[0]))
+                if len(row[0]) > 0:
+                    bins.append(float(row[1]))
 
-            result = {
-                "id": missense_score,
-                "min": min(scores),
-                "max": max(scores),
-                "bars": bars,
-                "bins": bins,
-            }
+        result = {
+            "id": missense_score,
+            "min": min(bins),
+            "max": max(bins),
+            "bars": bars,
+            "bins": bins,
+        }
 
-            return Response(result)
-        else:
-            return Response({
-                'error': 'Dataset {} not found'.format(dataset_id)
-                }, status=status.HTTP_404_NOT_FOUND)
+        return Response(result)
