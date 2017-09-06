@@ -16,6 +16,7 @@ import { QueryStateProvider } from '../query/query-state-provider'
 import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 import { ValidationError } from "class-validator";
 import { StateRestoreService } from '../store/state-restore.service'
+import { ConfigService } from '../config/config.service';
 
 import { GeneWeightsState, GENE_WEIGHTS_CHANGE, GENE_WEIGHTS_INIT,
          GENE_WEIGHTS_RANGE_START_CHANGE, GENE_WEIGHTS_RANGE_END_CHANGE
@@ -49,7 +50,8 @@ export class GeneWeightsComponent extends QueryStateProvider {
     private geneWeightsService: GeneWeightsService,
     private changeDetectorRef: ChangeDetectorRef,
     private store: Store<any>,
-    private stateRestoreService: StateRestoreService
+    private stateRestoreService: StateRestoreService,
+    private config: ConfigService
   )  {
     super();
     this.geneWeightsState = toObservableWithValidation(GeneWeightsState, this.store.select('geneWeights'));
@@ -179,5 +181,9 @@ export class GeneWeightsComponent extends QueryStateProvider {
           rangeEnd: geneWeightsState.rangeEnd
         }}
     });
+  }
+
+  getDownloadLink(): string {
+    return `${this.config.baseUrl}gene_weights/download/${this.selectedGeneWeights.weight}`;
   }
 }
