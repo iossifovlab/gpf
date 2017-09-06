@@ -21,7 +21,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
   private selectedDatasetId: string;
   private genotypeBrowserState: Object;
   selectedDataset: Dataset;
-  private isMissenseSelected = false
+  isMissenseSelected = false
 
   constructor(
     private store: Store<any>,

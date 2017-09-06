@@ -20,12 +20,12 @@ import { MissenseScoresState, MISSENSE_SCORES_INIT, MISSENSE_SCORES_CHANGE,
 export class MissenseScoresComponent extends QueryStateProvider implements OnInit {
   @Input() datasetConfig: Dataset;
   private internalSelectedMetric: MissenseMetric;
-  private histogramData: MissenseScoresHistogramData;
+  histogramData: MissenseScoresHistogramData;
   private missenseScoresState: Observable<[MissenseScoresState, boolean,
                                            ValidationError[]]>;
-
   private internalRangeStart = 0;
   private internalRangeEnd = 0;
+  errors: string[];
 
   constructor(
     private store: Store<any>,
