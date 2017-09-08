@@ -18,8 +18,4 @@ export class UsersTableComponent implements OnInit {
     this.users$ = this.usersService.getAllUsers();
   }
 
-  getGroupNames(groups: Array<any>) {
-    return groups.map(g => g.name).join(', ');
-  }
-
 }

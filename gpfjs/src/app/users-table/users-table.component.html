@@ -7,16 +7,18 @@
     </gpf-table-subcolumn>
   </gpf-table-column>
   <gpf-table-column>
+    <gpf-table-subcolumn header="Name" field="name"></gpf-table-subcolumn>
+  </gpf-table-column>
+  <gpf-table-column>
     <gpf-table-subcolumn header="Groups" field="groups">
       <span *gpfTableCellContent="let data">
-        {{ getGroupNames(data.groups) }}
+        <div *ngFor="let group of data.groups">
+          {{ group.name }}
+        </div>
       </span>
     </gpf-table-subcolumn>
   </gpf-table-column>
   <gpf-table-column>
-    <gpf-table-subcolumn header="Active" field="active"></gpf-table-subcolumn>
-  </gpf-table-column>
-  <gpf-table-column>
-    <gpf-table-subcolumn header="Admin" field="superuser"></gpf-table-subcolumn>
+    <gpf-table-subcolumn header="Has password" field="hasPassword"></gpf-table-subcolumn>
   </gpf-table-column>
 </gpf-table>
