@@ -18,6 +18,7 @@ export class UserEditComponent implements OnInit {
   configurationOptions: Select2Options;
   user$ = new BehaviorSubject<User>(null);
   groups$ = new BehaviorSubject<UserGroup[]>(null);
+  emailValue: string;
   initialValue: string[];
 
 
@@ -33,6 +34,7 @@ export class UserEditComponent implements OnInit {
       .map(params => +params['id'])
       .switchMap(userId => this.usersService.getUser(userId))
       .subscribe(user => {
+        this.emailValue = user.email;
         this.initialValue = this.groupsToValue(user.groups);
         this.user$.next(user);
       });
@@ -80,6 +82,7 @@ export class UserEditComponent implements OnInit {
   }
 
   submit(user) {
+    delete user.email;
     this.usersService.updateUser(user)
       .take(1)
       .subscribe(() => this.router.navigate(['/management']));
