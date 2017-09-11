@@ -10,20 +10,15 @@ from users_api.models import WdaeUser
 
 class UserSerializer(serializers.ModelSerializer):
 
-    groups = GroupSerializer(many=True, partial=True)
-    researcherId = serializers.CharField(source='researcher_id', required=False,
-                                         allow_null=True)
+    name = serializers.CharField(required=False)
 
-    active = serializers.BooleanField(source='is_active')
-    staff = serializers.BooleanField(source='is_staff')
-    superuser = serializers.BooleanField(source='is_superuser')
-    researcher = serializers.BooleanField(source='is_researcher',
-                                          read_only=True)
+    groups = GroupSerializer(many=True, partial=True)
+
+    hasPassword = serializers.BooleanField(source='is_active', read_only=True)
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'email', 'staff', 'superuser', 'active',
-                  'groups', 'researcher', 'researcherId')
+        fields = ('id', 'email', 'name', 'hasPassword', 'groups')
 
     def validate(self, data):
         unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())

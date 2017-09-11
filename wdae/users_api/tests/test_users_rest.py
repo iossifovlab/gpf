@@ -91,30 +91,10 @@ def test_new_user_is_not_active(new_user):
     assert not new_user.is_active
 
 
-def test_can_create_researcher(admin_client, users_endpoint, user_model):
-    research_id = 'aaa-bbb'
-    data = {
-        'email': 'new@new.com',
-        'researcherId': research_id
-    }
-    response = admin_client.post(users_endpoint, data=data)
-
-    # print(response)
-    assert response.status_code is status.HTTP_201_CREATED
-    assert response.data['email'] == data['email']
-    assert response.data['researcher'] is True
-
-    new_user = user_model.objects.get(pk=response.data['id'])
-
-    group_name = WdaeUser.get_group_name_for_researcher_id(research_id)
-
-    assert new_user.groups.filter(name=group_name).exists()
-
-
 def test_admin_can_partial_update_user(admin_client, users_instance_url,
                                        user_model):
     data = {
-        'researcherId': 'some-new-id'
+        'name': 'Ivan'
     }
     user = user_model.objects.first()
 
@@ -124,8 +104,7 @@ def test_admin_can_partial_update_user(admin_client, users_instance_url,
     assert response.status_code is status.HTTP_200_OK
 
     user.refresh_from_db()
-    assert user.groups.filter(
-        name__endswith=data['researcherId']).exists()
+    assert user.name == 'Ivan'
 
 
 def test_admin_cant_partial_update_user_email(
@@ -144,14 +123,12 @@ def test_admin_cant_partial_update_user_email(
     user.refresh_from_db()
     assert user.email == old_email
 
+
 def test_admin_can_add_user_group(admin_client, users_instance_url, user_model):
     new_group = Group.objects.create(name='brand_new_group')
     user = user_model.objects.last()
 
     data = {
-        'active': user.is_active,
-        'superuser': user.is_superuser,
-        'staff': user.is_staff,
         'groups': [
             {
                 'id': new_group.id,
@@ -176,9 +153,6 @@ def test_admin_can_remove_user_group(admin_client, users_instance_url, user_mode
     first_group = user.groups.first()
 
     data = {
-        'active': user.is_active,
-        'superuser': user.is_superuser,
-        'staff': user.is_staff,
         'groups': [
             {
                 'id': group.id,
