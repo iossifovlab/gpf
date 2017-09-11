@@ -6,7 +6,9 @@ Created on Aug 10, 2016
 from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework.decorators import detail_route
 import django.contrib.auth
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -36,6 +38,20 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin,
         print(serializer_class)
 
         return serializer_class
+
+    @detail_route(methods=['post'])
+    def remove_password(self, request, pk=None):
+        self.check_permissions(request)
+        user = get_object_or_404(get_user_model(), pk=pk)
+        self.check_object_permissions(request, user)
+        print("remove password called", request.user)
+        print(user)
+        print("pk:", pk)
+        if user.has_usable_password():
+            user.set_unusable_password()
+            user.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['POST'])

@@ -1,11 +1,7 @@
-from functools import partial
 import pytest
-from astropy.units import format
 from django.core.urlresolvers import reverse
 from rest_framework import status
 from django.contrib.auth.models import Group
-
-from users_api.models import WdaeUser
 
 
 @pytest.fixture()
@@ -14,22 +10,37 @@ def users_endpoint():
 
 
 @pytest.fixture()
-def users_instance_url(users_endpoint):
-    return partial(user_url, users_endpoint)
-
-
-def user_url(users_endpoint, user_id):
-    return '{}/{}'.format(users_endpoint, user_id)
+def users_instance_url():
+    return user_url
 
 
 @pytest.fixture()
-def new_user(admin_client, users_endpoint, user_model):
-    data = {
-        'email': 'new@new.com',
-    }
-    admin_client.post(users_endpoint, data=data)
+def user_remove_password_endpoint():
+    return user_remove_password_url
 
-    return user_model.objects.get(email='new@new.com')
+
+def user_remove_password_url(user_id):
+    return reverse('users-remove-password', kwargs={'pk': user_id})
+
+
+def user_url(user_id):
+    return reverse('users-detail', kwargs={'pk': user_id})
+
+
+@pytest.fixture()
+def active_user(db, user_model):
+    user = user_model.objects.create(email='new@new.com', password='secret')
+
+    assert user.is_active
+    return user
+
+
+@pytest.fixture()
+def inactive_user(db, user_model):
+    user = user_model.objects.create(email='new@new.com')
+
+    assert not user.is_active
+    return user
 
 
 def test_admin_can_get_default_users(admin_client, users_endpoint):
@@ -53,12 +64,12 @@ def test_all_users_have_groups(admin_client, users_endpoint):
         assert "groups" in user
 
 
-def test_users_cant_get_default_users(user_client, users_endpoint):
+def test_users_cant_get_all_users(user_client, users_endpoint):
     response = user_client.get(users_endpoint)
     assert response.status_code is status.HTTP_403_FORBIDDEN
 
 
-def test_unauthenticated_cant_get_default_users(client, users_endpoint):
+def test_unauthenticated_cant_get_all_users(client, users_endpoint):
     response = client.get(users_endpoint)
     assert response.status_code is status.HTTP_403_FORBIDDEN
 
@@ -76,7 +87,7 @@ def test_admin_can_create_new_users(admin_client, users_endpoint,
 
 
 def test_admin_can_see_newly_created_user(admin_client, users_endpoint):
-    default_users = admin_client.get(users_endpoint).data['results']
+    old_users = admin_client.get(users_endpoint).data['results']
 
     data = {
         'email': 'new@new.com',
@@ -84,11 +95,22 @@ def test_admin_can_see_newly_created_user(admin_client, users_endpoint):
     admin_client.post(users_endpoint, data=data)
 
     new_users = admin_client.get(users_endpoint).data['results']
-    assert len(new_users) is len(default_users) + 1
+    assert len(new_users) == len(old_users) + 1
 
 
-def test_new_user_is_not_active(new_user):
-    assert not new_user.is_active
+def test_new_user_is_not_active(admin_client, users_endpoint):
+    old_users = admin_client.get(users_endpoint).data['results']
+
+    data = {
+        'email': 'new@new.com',
+    }
+    admin_client.post(users_endpoint, data=data)
+
+    new_users = admin_client.get(users_endpoint).data['results']
+    assert len(new_users) == len(old_users) + 1
+
+    new_user = filter(lambda u: u['email'] == data['email'], new_users)[0]
+    assert not new_user['hasPassword']
 
 
 def test_admin_can_partial_update_user(admin_client, users_instance_url,
@@ -168,3 +190,59 @@ def test_admin_can_remove_user_group(admin_client, users_instance_url, user_mode
 
     user.refresh_from_db()
     assert not user.groups.filter(id=first_group.id).exists()
+
+
+def test_admin_can_remove_password_of_user(
+        admin_client, active_user, user_remove_password_endpoint):
+    assert active_user.has_usable_password()
+
+    response = admin_client.post(
+        user_remove_password_endpoint(active_user.pk))
+
+    assert response.status_code is status.HTTP_204_NO_CONTENT
+
+    active_user.refresh_from_db()
+    assert not active_user.has_usable_password()
+    assert not active_user.is_active
+
+
+def test_user_cant_remove_other_user_password(
+        user_client, user_remove_password_endpoint, active_user):
+    assert active_user.has_usable_password()
+
+    response = user_client.post(
+        user_remove_password_endpoint(active_user.pk))
+
+    assert response.status_code is status.HTTP_403_FORBIDDEN
+
+    active_user.refresh_from_db()
+    assert active_user.has_usable_password()
+    assert active_user.is_active
+
+
+def test_anonymous_user_cant_remove_other_user_password(
+        client, user_remove_password_endpoint, active_user):
+    assert active_user.has_usable_password()
+
+    response = client.post(
+        user_remove_password_endpoint(active_user.pk))
+
+    assert response.status_code is status.HTTP_403_FORBIDDEN
+
+    active_user.refresh_from_db()
+    assert active_user.has_usable_password()
+    assert active_user.is_active
+
+
+def test_inactive_user_stays_inactive(
+        admin_client, user_remove_password_endpoint, inactive_user):
+    assert not inactive_user.has_usable_password()
+
+    response = admin_client.post(
+        user_remove_password_endpoint(inactive_user.pk))
+
+    assert response.status_code is status.HTTP_204_NO_CONTENT
+
+    inactive_user.refresh_from_db()
+    assert not inactive_user.has_usable_password()
+    assert not inactive_user.is_active
