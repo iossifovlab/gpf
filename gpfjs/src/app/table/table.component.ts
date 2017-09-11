@@ -19,34 +19,6 @@ export class GpfTableCellComponent {
   }
 }
 
-@Component({
-  selector: 'gpf-table-header',
-  templateUrl: './table-header.component.html',
-  styleUrls: ['./table-header.component.css']
-})
-export class GpfTableHeaderComponent {
-  @Input() columnInfo: GpfTableColumnComponent;
-  @Output() sortingInfoChange = new EventEmitter();
-  @Input() sortingInfo: SortInfo;
-
-  constructor(private viewContainer: ViewContainerRef) {
-  }
-
-  onSortClick(sortBySubcolumn: GpfTableSubcolumnComponent) {
-    let sortInfo: SortInfo;
-    if (this.sortingInfo && this.sortingInfo.sortBySubcolumn === sortBySubcolumn) {
-      sortInfo = new SortInfo(sortBySubcolumn, !this.sortingInfo.sortOrderAsc);
-    } else {
-      sortInfo = new SortInfo(sortBySubcolumn, true);
-    }
-    this.sortingInfoChange.emit(sortInfo);
-  }
-
-  get imgPathPrefix() {
-    return environment.imgPathPrefix;
-  }
-}
-
 @Directive({
   selector: '[gpfTableCellContent]'
 })
@@ -147,9 +119,6 @@ export class GpfTableSubcolumnComponent {
 @Component({
   selector: 'gpf-table-column',
   template: '',
-  entryComponents: [
-    GpfTableHeaderComponent
-  ]
 })
 export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
   @ContentChildren(GpfTableSubcolumnComponent) subcolumnsChildren: QueryList<GpfTableSubcolumnComponent>;
@@ -160,7 +129,7 @@ export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
 
 }
 
-class SortInfo {
+export class SortInfo {
   constructor(public sortBySubcolumn: GpfTableSubcolumnComponent, public sortOrderAsc: boolean) {
   }
 }
