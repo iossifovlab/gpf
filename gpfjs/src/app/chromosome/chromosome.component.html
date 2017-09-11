@@ -1,0 +1,29 @@
+<div id="chromosome-{{chromosome.id}}">
+  <div>{{chromosome.id}}:</div>
+  <svg [attr.width]="width" [attr.height]="height">
+    <g>
+      <defs>
+        <clipPath id="colorClipLeft{{chromosome.id}}">
+          <rect [attr.height]="height" [attr.width]="leftWidth" [attr.x]="startingPoint" y="0" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+          </rect>
+        </clipPath>
+        <clipPath id="colorClipRight{{chromosome.id}}">
+          <rect [attr.height]="height" [attr.width]="rightWidth" [attr.x]="centromerePosition" y="0" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+          </rect>
+        </clipPath>
+      </defs>
+
+      <rect [attr.height]="height" [attr.width]="leftWidth" [attr.x]="startingPoint" y="0" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+      </rect>
+
+      <rect [attr.height]="height" [attr.width]="rightWidth" [attr.x]="centromerePosition" y="0" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+      </rect>
+
+      <rect *ngFor="let band of leftBands" [attr.clip-path]="'url(#colorClipLeft' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" y="1" [style.fill]="band.color">
+      </rect>
+
+      <rect *ngFor="let band of rightBands" [attr.clip-path]="'url(#colorClipRight' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" y="1" [style.fill]="band.color">
+      </rect>
+    </g>
+  </svg>
+</div>

@@ -1,0 +1,6 @@
+<div *ngIf="genotypePreviewsArray">
+  <gpf-chromosome
+    *ngFor="let chromosome of chromosomes"
+    [chromosome]="chromosome" [scale]="scale" [centromerePosition]="centromerePosition"
+    [width]="width" height="15"></gpf-chromosome>
+<div>

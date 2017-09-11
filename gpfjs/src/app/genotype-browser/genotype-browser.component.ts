@@ -18,6 +18,7 @@ import 'rxjs/add/operator/zip';
 })
 export class GenotypeBrowserComponent extends QueryStateCollector {
   genotypePreviewsArray: any;
+  tablePreview: boolean;
 
   private selectedDatasetId: string;
   private genotypeBrowserState: Object;
