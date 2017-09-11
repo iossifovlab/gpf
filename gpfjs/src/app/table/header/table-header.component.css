@@ -1,0 +1,10 @@
+gpf-table-header-cell {
+    min-width: 150px;
+    height: 100px;
+    border: 1px solid #dddddd;
+    padding: 8px;
+    font-size: 0.9em;
+    background: #eee;
+    font-weight: 500;
+    display: table-cell;
+}

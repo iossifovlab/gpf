@@ -1,0 +1,30 @@
+<span style="font-weight: bold;">
+    <div style="float: left; clear: left; height: 100%;">
+        <div style="height: 100%; display: table; ">
+            <div style="height: 100%; display: table-cell; vertical-align: middle; ">
+                <ng-template *ngIf="columnInfo.headerTemplateRef" [ngTemplateOutlet]="columnInfo.headerTemplateRef">
+                </ng-template>
+                <span *ngIf="columnInfo.header">{{ columnInfo.header }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="float: right; clear: right; margin-right: 0px; height: 100%">
+        <div style="height: 100%; display: table; ">
+            <div *ngFor="let child of columnInfo.subcolumnsChildren" style="display: table-row;">
+                <div [class.clickable]="child.sortable" style="display: table-cell; vertical-align: middle; text-align: right" (click)="child.sortable && onSortClick(child)">
+                    <ng-template *ngIf="child.headerTemplateRef" [ngTemplateOutlet]="child.headerTemplateRef">
+                    </ng-template>
+                    <span *ngIf="!child.headerTemplateRef">{{ child.header }}</span>
+                    <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn != child"
+                        src="{{imgPathPrefix}}bg.gif" style="height: 12px;">
+                    <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc"
+                        src="{{imgPathPrefix}}asc.gif" style="height: 12px;">
+                    <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn == child && !sortingInfo?.sortOrderAsc"
+                        src="{{imgPathPrefix}}desc.gif" style="height: 12px;">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</span>

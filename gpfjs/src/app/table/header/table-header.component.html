@@ -1,0 +1,8 @@
+<div style="display: table-row;">
+    <gpf-table-header-cell #cell *ngFor="let column of columns"
+        [columnInfo]="column"
+        [(sortingInfo)]="sortingInfo"
+        style="vertical-align: middle"
+        [style.width.px] = "column.width">
+    </gpf-table-header-cell>
+</div>
