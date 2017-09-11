@@ -8,7 +8,7 @@ import { GpfTableComponent,
          GpfTableCellHeaderDirective,
          GpfTableCellContentDirective,
          GpfTableLegendDirective } from './table.component';
-import { GpfTableHeaderComponent, } from './header/table-header.component';
+import { GpfTableHeaderCellComponent } from './header/table-header-cell.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +17,7 @@ import { GpfTableHeaderComponent, } from './header/table-header.component';
     GpfTableSubcolumnComponent,
     GpfTableCellContentDirective,
     GpfTableCellHeaderDirective,
-    GpfTableHeaderComponent,
+    GpfTableHeaderCellComponent,
     GpfTableCellComponent,
     GpfTableLegendDirective
   ],

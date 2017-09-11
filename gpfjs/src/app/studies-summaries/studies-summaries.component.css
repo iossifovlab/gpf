@@ -15,7 +15,7 @@
   text-align: center;
 }
 
-:host /deep/ gpf-table-header {
+:host /deep/ gpf-table-header-cell {
   width: 50px;
   height: 100px;
   border: 1px solid #dddddd;

@@ -205,10 +205,10 @@ export class GpfTableComponent implements AfterViewInit {
     }
     let headersArray = [].slice
       .call(headers.first.nativeElement
-        .getElementsByTagName('gpf-table-header'));
+        .getElementsByTagName('gpf-table-header-cell'));
     let floatingHeadersArray = [].slice
       .call(floatingHeaders.first.nativeElement
-        .getElementsByTagName('gpf-table-header'));
+        .getElementsByTagName('gpf-table-header-cell'));
 
     let lastRow = rows.last.nativeElement;
 
