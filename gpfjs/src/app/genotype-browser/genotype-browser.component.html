@@ -17,13 +17,10 @@
 	  </form>
 	  <input type="button" class="btn btn-md btn-primary" value="Preview" (click)="submitQuery()">
   </div>
-
-
-
-	<div class="">
-	  <gpf-genotype-preview-table
-	    [phenoColumns]="selectedDataset?.genotypeBrowser?.phenoColumns"
-	    [genotypePreviewsArray]=genotypePreviewsArray>
-	  </gpf-genotype-preview-table>
-	</div>
+</div>
+<div class="genotype-browser-results">
+  <gpf-genotype-preview-table
+    [phenoColumns]="selectedDataset?.genotypeBrowser?.phenoColumns"
+    [genotypePreviewsArray]=genotypePreviewsArray>
+  </gpf-genotype-preview-table>
 </div>
