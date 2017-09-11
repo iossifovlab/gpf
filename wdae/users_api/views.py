@@ -29,6 +29,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin,
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
     permission_classes = (permissions.IsAdminUser,)
+    pagination_class = None
 
     def get_serializer_class(self):
         serializer_class = self.serializer_class

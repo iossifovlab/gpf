@@ -60,14 +60,14 @@ def test_admin_can_get_default_users(admin_client, users_endpoint):
 def test_admin_sees_all_default_users(admin_client, users_endpoint):
     response = admin_client.get(users_endpoint)
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data['results']) is 2  # dev admin, dev staff
+    assert len(response.data) is 2  # dev admin, dev staff
 
 
 def test_all_users_have_groups(admin_client, users_endpoint):
     response = admin_client.get(users_endpoint)
     assert response.status_code is status.HTTP_200_OK
 
-    users = response.data['results']
+    users = response.data
     assert len(users) > 0
     for user in users:
         assert "groups" in user
@@ -96,26 +96,26 @@ def test_admin_can_create_new_users(admin_client, users_endpoint,
 
 
 def test_admin_can_see_newly_created_user(admin_client, users_endpoint):
-    old_users = admin_client.get(users_endpoint).data['results']
+    old_users = admin_client.get(users_endpoint).data
 
     data = {
         'email': 'new@new.com',
     }
     admin_client.post(users_endpoint, data=data)
 
-    new_users = admin_client.get(users_endpoint).data['results']
+    new_users = admin_client.get(users_endpoint).data
     assert len(new_users) == len(old_users) + 1
 
 
 def test_new_user_is_not_active(admin_client, users_endpoint):
-    old_users = admin_client.get(users_endpoint).data['results']
+    old_users = admin_client.get(users_endpoint).data
 
     data = {
         'email': 'new@new.com',
     }
     admin_client.post(users_endpoint, data=data)
 
-    new_users = admin_client.get(users_endpoint).data['results']
+    new_users = admin_client.get(users_endpoint).data
     assert len(new_users) == len(old_users) + 1
 
     new_user = filter(lambda u: u['email'] == data['email'], new_users)[0]

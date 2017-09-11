@@ -27,7 +27,7 @@ def group_url(groups_endpoint, group_id):
 def test_admin_can_get_groups(admin_client, groups_endpoint):
     response = admin_client.get(groups_endpoint)
     assert response.status_code is status.HTTP_200_OK
-    assert len(response.data['results']) > 0
+    assert len(response.data) > 0
 
 
 def test_user_cant_see_groups(user_client, groups_endpoint):
@@ -39,8 +39,8 @@ def test_groups_have_ids_and_names(admin_client, groups_endpoint):
     response = admin_client.get(groups_endpoint)
     assert response.status_code is status.HTTP_200_OK
 
-    assert len(response.data['results']) > 0
-    for group in response.data['results']:
+    assert len(response.data) > 0
+    for group in response.data:
         assert 'id' in group
         assert 'name' in group
 
@@ -60,7 +60,7 @@ def test_admin_cant_delete_groups(admin_client, groups_endpoint,
     response = admin_client.get(groups_endpoint)
     assert response.status_code is status.HTTP_200_OK
 
-    assert len(response.data['results']) is len(all_groups)
+    assert len(response.data) is len(all_groups)
 
 
 def test_admin_cant_create_groups(admin_client, groups_endpoint):
@@ -81,12 +81,13 @@ def test_admin_can_rename_groups(admin_client, groups_instance_url, groups_model
     assert first_group.name is not test_name
 
     data = {
+        'id': first_group.id,
         'name': test_name
     }
 
     response = admin_client.put(groups_instance_url(first_group.pk),
                                 data=data)
-
+    print(response)
     assert response.status_code is status.HTTP_200_OK
     assert response.data['name'] == test_name
 

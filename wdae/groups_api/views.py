@@ -9,3 +9,4 @@ class GroupsViewSet(mixins.UpdateModelMixin, viewsets.ReadOnlyModelViewSet):
     serializer_class = GroupSerializer
     queryset = Group.objects.all()
     permission_classes = (permissions.IsAdminUser,)
+    pagination_class = None
