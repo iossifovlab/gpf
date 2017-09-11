@@ -14,17 +14,26 @@ def users_instance_url():
     return user_url
 
 
+def user_url(user_id):
+    return reverse('users-detail', kwargs={'pk': user_id})
+
+
 @pytest.fixture()
 def user_remove_password_endpoint():
     return user_remove_password_url
 
 
 def user_remove_password_url(user_id):
-    return reverse('users-remove-password', kwargs={'pk': user_id})
+    return reverse('users-password-remove', kwargs={'pk': user_id})
 
 
-def user_url(user_id):
-    return reverse('users-detail', kwargs={'pk': user_id})
+@pytest.fixture()
+def user_reset_password_endpoint():
+    return user_reset_password_url
+
+
+def user_reset_password_url(user_id):
+    return reverse('users-password-reset', kwargs={'pk': user_id})
 
 
 @pytest.fixture()
@@ -246,3 +255,29 @@ def test_inactive_user_stays_inactive(
     inactive_user.refresh_from_db()
     assert not inactive_user.has_usable_password()
     assert not inactive_user.is_active
+
+
+def test_admin_can_reset_user_password(
+        admin_client, user_reset_password_endpoint, active_user):
+    url = user_reset_password_endpoint(active_user.pk)
+    response = admin_client.post(url)
+
+    assert response.status_code is status.HTTP_204_NO_CONTENT
+
+    active_user.refresh_from_db()
+    assert not active_user.has_usable_password()
+    assert not active_user.is_active
+
+def test_user_cant_reset_other_user_password(
+        user_client, user_reset_password_endpoint, active_user):
+    assert active_user.has_usable_password()
+
+    response = user_client.post(
+        user_reset_password_endpoint(active_user.pk))
+
+    assert response.status_code is status.HTTP_403_FORBIDDEN
+
+    active_user.refresh_from_db()
+    assert active_user.has_usable_password()
+    assert active_user.is_active
+

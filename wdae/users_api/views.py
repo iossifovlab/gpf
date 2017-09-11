@@ -40,16 +40,22 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin,
         return serializer_class
 
     @detail_route(methods=['post'])
-    def remove_password(self, request, pk=None):
+    def password_remove(self, request, pk=None):
         self.check_permissions(request)
         user = get_object_or_404(get_user_model(), pk=pk)
-        self.check_object_permissions(request, user)
-        print("remove password called", request.user)
-        print(user)
-        print("pk:", pk)
+
         if user.has_usable_password():
             user.set_unusable_password()
             user.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @detail_route(methods=['post'])
+    def password_reset(self, request, pk=None):
+        self.check_permissions(request)
+        user = get_object_or_404(get_user_model(), pk=pk)
+        print(user)
+        user.reset_password()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
