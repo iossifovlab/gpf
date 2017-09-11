@@ -9,6 +9,7 @@ import { GpfTableComponent,
          GpfTableCellContentDirective,
          GpfTableLegendDirective } from './table.component';
 import { GpfTableHeaderCellComponent } from './header/table-header-cell.component';
+import { GpfTableHeaderComponent } from './header/table-header.component';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import { GpfTableHeaderCellComponent } from './header/table-header-cell.componen
     GpfTableCellContentDirective,
     GpfTableCellHeaderDirective,
     GpfTableHeaderCellComponent,
+    GpfTableHeaderComponent,
     GpfTableCellComponent,
     GpfTableLegendDirective
   ],

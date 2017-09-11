@@ -14,8 +14,14 @@ import { environment } from '../../environments/environment';
 export class GpfTableCellComponent {
   @Input() columnInfo: GpfTableColumnComponent;
   @Input() data: any;
+  private nativeElement: any;
 
   constructor(private viewContainer: ViewContainerRef) {
+    this.nativeElement = viewContainer.element.nativeElement
+  }
+
+  ngAfterViewInit() {
+    this.columnInfo.width = this.nativeElement.getBoundingClientRect().width
   }
 }
 
@@ -122,11 +128,11 @@ export class GpfTableSubcolumnComponent {
 })
 export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
   @ContentChildren(GpfTableSubcolumnComponent) subcolumnsChildren: QueryList<GpfTableSubcolumnComponent>;
+  public width = 0;
 
   constructor(viewContainer: ViewContainerRef) {
     super(viewContainer);
   }
-
 }
 
 export class SortInfo {
@@ -150,11 +156,9 @@ export class GpfTableLegendDirective {
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.css']
 })
-export class GpfTableComponent implements AfterViewInit {
+export class GpfTableComponent {
   @ViewChild('table') tableViewChild: any;
   @ViewChildren('rows') rowViewChildren: QueryList<any>;
-  @ViewChildren('header') tableHeaderViewChildren: QueryList<ElementRef>;
-  @ViewChildren('floatingHeader') tableFloatingHeaderViewChildren: QueryList<ElementRef>;
 
   @ContentChildren(GpfTableColumnComponent) columnsChildren: QueryList<GpfTableColumnComponent>;
   @ContentChild(GpfTableLegendDirective) legend: GpfTableLegendDirective;
@@ -182,49 +186,6 @@ export class GpfTableComponent implements AfterViewInit {
     private viewContainer: ViewContainerRef,
     private ref: ChangeDetectorRef
   ) { }
-
-  ngAfterViewInit() {
-    this.setStaticTableHeaders(
-      this.rowViewChildren, this.tableHeaderViewChildren,
-      this.tableFloatingHeaderViewChildren
-    );
-    Observable.combineLatest([
-        this.rowViewChildren.changes.filter(elements => !!elements.first),
-        this.tableHeaderViewChildren.changes.filter(elements => !!elements.first),
-        this.tableFloatingHeaderViewChildren.changes.filter(elements => !!elements.first),
-      ])
-      .subscribe(
-        ([rows, headers, floatingHeaders])  => {
-          this.setStaticTableHeaders(rows, headers, floatingHeaders);
-      });
-  }
-
-  private setStaticTableHeaders(rows, headers, floatingHeaders) {
-    if (rows.length === 0 || headers.length === 0  || floatingHeaders.length === 0) {
-      return;
-    }
-    let headersArray = [].slice
-      .call(headers.first.nativeElement
-        .getElementsByTagName('gpf-table-header-cell'));
-    let floatingHeadersArray = [].slice
-      .call(floatingHeaders.first.nativeElement
-        .getElementsByTagName('gpf-table-header-cell'));
-
-    let lastRow = rows.last.nativeElement;
-
-    let columnsWithWidths: [any, any, number][] = [].slice
-      .call(lastRow.getElementsByTagName('gpf-table-cell'))
-      .map((tableCell, index) => [
-        headersArray[index],
-        floatingHeadersArray[index],
-        tableCell.getBoundingClientRect().width
-      ]);
-
-    columnsWithWidths.map(([header, floatingHeader, width]) => {
-      header.style.width = width + 'px';
-      floatingHeader.style.width = width + 'px';
-    });
-  }
 
   set sortingInfo(sortingInfo: SortInfo) {
     this.previousSortingInfo = sortingInfo;

@@ -1,11 +1,10 @@
 <div #table style="width: 100%; display: table; border-collapse: collapse;" [style.height]="totalTableHeight + 'px'">
-    <div #header style="display: table-row;" [style.visibility] = "showFloatingHeader() ? 'hidden' : 'visible'">
-        <gpf-table-header-cell *ngFor="let column of columnsChildren"
-            [columnInfo]="column"
-            [(sortingInfo)]="sortingInfo"
-            style="vertical-align: middle">
-        </gpf-table-header-cell>
-    </div>
+    <gpf-table-header
+        [style.visibility] = "showFloatingHeader() ? 'hidden' : 'visible'"
+        style="display: table-header-group"
+        [columns]="columnsChildren"
+        [(sortingInfo)]="sortingInfo">
+    </gpf-table-header>
     <div
         [style.display]="beforeDataCellHeight ? 'table-row': 'none'"
         [style.height]="beforeDataCellHeight + 'px'">
@@ -27,13 +26,10 @@
 
 <div style="display: table; border-collapse: collapse; position: fixed; top: 0px;  background-color: white;"
   [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
-    <div #floatingHeader style="display: table-row;">
-        <gpf-table-header-cell *ngFor="let column of columnsChildren"
-            [columnInfo]="column"
-            [(sortingInfo)]="sortingInfo"
-            style="vertical-align: middle">
-        </gpf-table-header-cell>
-    </div>
+    <gpf-table-header
+        [columns]="columnsChildren"
+        [(sortingInfo)]="sortingInfo">
+    </gpf-table-header>
 </div>
 
 
