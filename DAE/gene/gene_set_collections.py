@@ -226,9 +226,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return result
 
     def _get_gene_set_syms(self, gene_set_name, gene_sets_types):
-        print(gene_set_name, gene_sets_types)
-        print(self.gene_sets_collection.keys())
-
         result = [
             self.gene_sets_collection[gst].get_gene_set_syms(gene_set_name)
             for gst in gene_sets_types
