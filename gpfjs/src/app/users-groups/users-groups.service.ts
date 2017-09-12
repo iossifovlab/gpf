@@ -15,7 +15,7 @@ export class UsersGroupsService {
     let options = new RequestOptions({ withCredentials: true });
 
     return this.http.get(this.groupsUrl, options)
-      .map(response => response.json()['results'] as UserGroup[]);
+      .map(response => response.json() as UserGroup[]);
   }
 
 }

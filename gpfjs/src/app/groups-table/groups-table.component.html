@@ -1,3 +1,24 @@
-<p>
-  groups-table works!
-</p>
+<gpf-table [dataSource]="(groups$ | async)" style="display: inline-block">
+  <gpf-table-column>
+    <gpf-table-subcolumn header="Group" field="name">
+    </gpf-table-subcolumn>
+  </gpf-table-column>
+  <gpf-table-column>
+    <gpf-table-subcolumn header="Users" field="users">
+      <span *gpfTableCellContent="let data">
+        <div *ngFor="let user of data.users">
+          {{ user }}
+        </div>
+      </span>
+    </gpf-table-subcolumn>
+  </gpf-table-column>
+  <gpf-table-column>
+    <gpf-table-subcolumn header="Datasets" field="datasets">
+      <span *gpfTableCellContent="let data">
+        <div *ngFor="let dataset of data.datasets">
+          {{ dataset }}
+        </div>
+      </span>
+    </gpf-table-subcolumn>
+  </gpf-table-column>
+</gpf-table>

@@ -1,5 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 
+import { Observable } from 'rxjs';
+
+import { UserGroup } from '../users-groups/users-groups'
+import { UsersGroupsService } from '../users-groups/users-groups.service';
+
 @Component({
   selector: 'gpf-groups-table',
   templateUrl: './groups-table.component.html',
@@ -7,9 +12,14 @@ import { Component, OnInit } from '@angular/core';
 })
 export class GroupsTableComponent implements OnInit {
 
-  constructor() { }
+  constructor(
+    private usersGroupsService: UsersGroupsService
+  ) { }
+
+  groups$: Observable<UserGroup[]>;
 
   ngOnInit() {
+    this.groups$ = this.usersGroupsService.getAllGroups();
   }
 
 }
