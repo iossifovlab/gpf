@@ -1,53 +1,47 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { BehaviorSubject } from 'rxjs';
 import { Select2OptionData } from 'ng2-select2';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
-import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
+import { UserGroup } from '../users-groups/users-groups';
 
 @Component({
-  selector: 'gpf-user-edit',
-  templateUrl: './user-edit.component.html',
-  styleUrls: ['./user-edit.component.css']
+  selector: 'gpf-users-create',
+  templateUrl: '../user-edit/user-edit.component.html',
+  styleUrls: ['../user-edit/user-edit.component.css']
 })
-export class UserEditComponent implements OnInit {
+export class UserCreateComponent implements OnInit {
+  emailValue = '';
   configurationOptions: Select2Options;
-  user$ = new BehaviorSubject<User>(null);
+  user$ = new BehaviorSubject<User>(new User(0, '', '', [], false));
   groups$ = new BehaviorSubject<UserGroup[]>(null);
-  emailValue: string;
-  initialValue: string[];
 
-  emailEditable = false;
+  emailEditable = true;
 
   constructor(
-    private route: ActivatedRoute,
     private router: Router,
     private usersService: UsersService,
-    private usersGroupsService: UsersGroupsService
+    private usersGroupsService:UsersGroupsService
   ) { }
 
   ngOnInit() {
-    this.route.params.take(1)
-      .map(params => +params['id'])
-      .switchMap(userId => this.usersService.getUser(userId))
-      .subscribe(user => {
-        this.emailValue = user.email;
-        this.initialValue = this.groupsToValue(user.groups);
-        this.user$.next(user);
-      });
+      this.usersGroupsService
+        .getAllGroups()
+        .take(1)
+        .subscribe(groups => this.groups$.next(groups));
 
-    this.usersGroupsService
-      .getAllGroups()
-      .take(1)
-      .subscribe(groups => this.groups$.next(groups));
-
-
-
+      this.configurationOptions = {
+        multiple: true,
+        theme: 'bootstrap',
+        width: '100%',
+        allowClear: true,
+      };
   }
+
 
   groupsToOptions(groups: UserGroup[]) {
     if (!groups) {
@@ -61,12 +55,6 @@ export class UserEditComponent implements OnInit {
     });
   }
 
-  groupsToValue(groups: UserGroup[]) {
-    if (!groups) {
-      return [];
-    }
-    return groups.map(group => group.id.toString());
-  }
 
   changeSelectedGroups(change) {
     if (this.user$.value && this.groups$.value) {
@@ -77,10 +65,13 @@ export class UserEditComponent implements OnInit {
     }
   }
 
-  submit(user) {
-    delete user.email;
-    this.usersService.updateUser(user)
+
+  submit(user: User) {
+    delete user.id;
+    user.email = this.emailValue;
+    this.usersService.createUser(user)
       .take(1)
       .subscribe(() => this.router.navigate(['/management']));
   }
+
 }

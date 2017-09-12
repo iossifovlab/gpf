@@ -8,7 +8,8 @@
           class="form-control"
           [(ngModel)]="emailValue"
           type="text"
-          readonly />
+          [readonly]="!emailEditable"
+          required />
       </div>
     </div>
   </div>

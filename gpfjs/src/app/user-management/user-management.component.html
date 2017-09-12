@@ -7,6 +7,11 @@
 
       <ngb-tab id="users" title="Users">
         <ng-template ngbTabContent>
+          <div class="row">
+            <div class="col-12">
+              <a [routerLink]="['users', 'create']" class="btn btn-primary">Create user</a>
+            </div>
+          </div>
           <gpf-users-table></gpf-users-table>
         </ng-template>
       </ngb-tab>

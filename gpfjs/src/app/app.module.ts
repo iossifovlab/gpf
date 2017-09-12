@@ -121,6 +121,7 @@ import { ManagementComponent } from './management/management.component';
 import { UsersGroupsService } from './users-groups/users-groups.service';
 
 import { Select2Module } from 'ng2-select2';
+import { UserCreateComponent } from './user-create/user-create.component';
 
 const appRoutes: Routes = [
   {
@@ -184,6 +185,10 @@ const appRoutes: Routes = [
         path: '',
         pathMatch: 'full',
         component: UserManagementComponent
+      },
+      {
+        path: 'users/create',
+        component: UserCreateComponent
       },
       {
         path: 'users/:id',
@@ -271,6 +276,7 @@ const appRoutes: Routes = [
     GroupsTableComponent,
     UserEditComponent,
     ManagementComponent,
+    UserCreateComponent,
   ],
   imports: [
     BrowserModule,

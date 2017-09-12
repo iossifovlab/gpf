@@ -166,4 +166,21 @@ export class UsersService {
     return this.http.put(url, user, options);
   }
 
+  createUser(user: User) {
+    if (user.id) {
+      return Observable.throw('Create should not have user id');
+    }
+
+    let csrfToken = this.cookieService.get("csrftoken");
+    let headers = new Headers({ 'X-CSRFToken': csrfToken });
+    let options = new RequestOptions({
+      headers: headers,
+      withCredentials: true
+    });
+
+    return this.http.post(this.usersUrl, user, options)
+      .map(response => response.json() as User)
+
+  }
+
 }

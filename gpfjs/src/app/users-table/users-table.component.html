@@ -1,24 +1,28 @@
-<gpf-table [dataSource]="(users$ | async)" style="display: inline-block">
-  <gpf-table-column>
-    <gpf-table-subcolumn header="Email" field="email">
-      <div *gpfTableCellContent="let data">
-        <a [routerLink]="['/management/users', data.id]">{{ data.email }}</a>
-      </div>
-    </gpf-table-subcolumn>
-  </gpf-table-column>
-  <gpf-table-column>
-    <gpf-table-subcolumn header="Name" field="name"></gpf-table-subcolumn>
-  </gpf-table-column>
-  <gpf-table-column>
-    <gpf-table-subcolumn header="Groups" field="groups">
-      <span *gpfTableCellContent="let data">
-        <div *ngFor="let group of data.groups">
-          {{ group.name }}
-        </div>
-      </span>
-    </gpf-table-subcolumn>
-  </gpf-table-column>
-  <gpf-table-column>
-    <gpf-table-subcolumn header="Has password" field="hasPassword"></gpf-table-subcolumn>
-  </gpf-table-column>
-</gpf-table>
+<div class="row">
+  <div class="col-12 mt-3">
+    <gpf-table [dataSource]="(users$ | async)" style="display: inline-block">
+      <gpf-table-column>
+        <gpf-table-subcolumn header="Email" field="email">
+          <div *gpfTableCellContent="let data">
+            <a [routerLink]="['/management/users', data.id]">{{ data.email }}</a>
+          </div>
+        </gpf-table-subcolumn>
+      </gpf-table-column>
+      <gpf-table-column>
+        <gpf-table-subcolumn header="Name" field="name"></gpf-table-subcolumn>
+      </gpf-table-column>
+      <gpf-table-column>
+        <gpf-table-subcolumn header="Groups" field="groups">
+          <span *gpfTableCellContent="let data">
+            <div *ngFor="let group of data.groups">
+              {{ group.name }}
+            </div>
+          </span>
+        </gpf-table-subcolumn>
+      </gpf-table-column>
+      <gpf-table-column>
+        <gpf-table-subcolumn header="Has password" field="hasPassword"></gpf-table-subcolumn>
+      </gpf-table-column>
+    </gpf-table>
+  </div>
+</div>
