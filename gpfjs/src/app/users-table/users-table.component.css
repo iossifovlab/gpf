@@ -1,3 +1,8 @@
 gpf-table {
   width: 100%;
 }
+
+.action-buttons .fa {
+  padding: 2.5px;
+  cursor: pointer;
+}

@@ -21,19 +21,25 @@
         </gpf-table-subcolumn>
       </gpf-table-column>
       <gpf-table-column>
-        <gpf-table-subcolumn header="Has password" field="hasPassword"></gpf-table-subcolumn>
+        <gpf-table-subcolumn header="Has password" field="hasPassword">
+          <span *gpfTableCellContent="let data">
+            <span *ngIf="data.hasPassword">
+              <i class="fa fa-check" aria-hidden="true"></i>
+            </span>
+          </span>
+        </gpf-table-subcolumn>
       </gpf-table-column>
       <gpf-table-column>
-        <gpf-table-subcolumn header="Actions"  [sortable]="false">
-          <span *gpfTableCellContent="let data">
-            <button class="btn btn-sm" ngbTooltip="Remove password" container="body">
-              <i class="fa fa-ban" aria-hidden="true"></i>
+        <gpf-table-subcolumn header="Actions" [sortable]="false">
+          <span *gpfTableCellContent="let data" class="action-buttons">
+            <button class="btn btn-outline-primary btn-sm"  container="body">
+              <i class="fa fa-ban fa-lg" aria-hidden="true" ngbTooltip="Remove password"></i>
             </button>
-            <button class="btn btn-sm" ngbTooltip="Reset password" container="body">
-              <i class="fa fa-refresh" aria-hidden="true"></i>
+            <button class="btn btn-outline-primary btn-sm" container="body">
+              <i class="fa fa-refresh fa-lg" aria-hidden="true" ngbTooltip="Reset password"></i>
             </button>
-            <button class="btn btn-sm btn-danger" ngbTooltip="Delete user" container="body">
-              <i class="fa fa-times" aria-hidden="true"></i>
+            <button class="btn btn-sm btn-outline-danger"  container="body">
+              <i class="fa fa-times fa-lg" aria-hidden="true" ngbTooltip="Delete user"></i>
             </button>
           </span>
         </gpf-table-subcolumn>
