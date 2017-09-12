@@ -1,4 +1,4 @@
-<gpf-table [dataSource]="(users$ | async)?.results" style="display: inline-block">
+<gpf-table [dataSource]="(users$ | async)" style="display: inline-block">
   <gpf-table-column>
     <gpf-table-subcolumn header="Email" field="email">
       <div *gpfTableCellContent="let data">

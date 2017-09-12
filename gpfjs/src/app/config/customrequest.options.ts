@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BaseRequestOptions, RequestOptions, RequestOptionsArgs } from '@angular/http';
-import {Location} from '@angular/common';
+import { Location } from '@angular/common';
 
 import { ConfigService } from './config.service';
 
