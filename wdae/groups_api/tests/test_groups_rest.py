@@ -2,7 +2,10 @@ from functools import partial
 import pytest
 from django.core.urlresolvers import reverse
 from guardian.models import Group
+from guardian import shortcuts
 from rest_framework import status
+
+from datasets_api.models import Dataset
 
 
 @pytest.fixture()
@@ -11,17 +14,17 @@ def groups_endpoint():
 
 
 @pytest.fixture()
-def groups_instance_url(groups_endpoint):
-    return partial(group_url, groups_endpoint)
+def groups_instance_url():
+    return group_url
+
+
+def group_url(group_id):
+    return reverse('groups-detail', kwargs={'pk': group_id})
 
 
 @pytest.fixture()
 def groups_model():
     return Group
-
-
-def group_url(groups_endpoint, group_id):
-    return '{}/{}'.format(groups_endpoint, group_id)
 
 
 def test_admin_can_get_groups(admin_client, groups_endpoint):
@@ -43,6 +46,25 @@ def test_groups_have_ids_and_names(admin_client, groups_endpoint):
     for group in response.data:
         assert 'id' in group
         assert 'name' in group
+
+
+def test_groups_have_users_and_datasets(admin_client, groups_endpoint):
+    response = admin_client.get(groups_endpoint)
+    assert response.status_code is status.HTTP_200_OK
+
+    assert len(response.data) > 0
+    for group in response.data:
+        assert 'users' in group
+        assert 'datasets' in group
+
+
+def test_single_group_has_users_and_datasets(admin_client, groups_instance_url):
+    groups = Group.objects.all()
+    for group in groups:
+        response = admin_client.get(groups_instance_url(group.id))
+        assert response.status_code is status.HTTP_200_OK
+        assert 'users' in response.data
+        assert 'datasets' in response.data
 
 
 def test_admin_cant_delete_groups(admin_client, groups_endpoint,
@@ -93,3 +115,33 @@ def test_admin_can_rename_groups(admin_client, groups_instance_url, groups_model
 
     first_group.refresh_from_db()
     assert first_group.name == test_name
+
+
+def test_group_has_all_users(admin_client, groups_instance_url):
+    group = Group.objects.create(name='New Group')
+
+    test_emails = ['test@email.com', 'other@email.com', 'last@example.com']
+    for email in test_emails:
+        group.user_set.create(email=email)
+
+    response = admin_client.get(groups_instance_url(group.id))
+    assert response.status_code is status.HTTP_200_OK
+    for email in test_emails:
+        assert email in response.data['users']
+
+
+def test_group_has_all_datasets(admin_client, groups_instance_url):
+    dataset = Dataset.objects.create(dataset_id='My Dataset')
+
+    group = Group.objects.create(name='New Group')
+
+    response = admin_client.get(groups_instance_url(group.id))
+    assert response.status_code is status.HTTP_200_OK
+    assert len(response.data['datasets']) == 0
+
+    shortcuts.assign_perm('view', group, dataset)
+
+    response = admin_client.get(groups_instance_url(group.id))
+    assert response.status_code is status.HTTP_200_OK
+    assert len(response.data['datasets']) == 1
+    assert response.data['datasets'][0] == dataset.dataset_id

@@ -36,7 +36,6 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin,
 
         if self.action == 'update' or self.action == 'partial_update':
             serializer_class = UserWithoutEmailSerializer
-        print(serializer_class)
 
         return serializer_class
 
