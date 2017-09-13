@@ -24,8 +24,8 @@ export class UserEditComponent implements OnInit {
   emailEditable = false;
 
   constructor(
-    private route: ActivatedRoute,
     private router: Router,
+    private route: ActivatedRoute,
     private usersService: UsersService,
     private usersGroupsService: UsersGroupsService
   ) { }

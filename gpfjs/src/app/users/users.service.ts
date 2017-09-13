@@ -180,7 +180,16 @@ export class UsersService {
 
     return this.http.post(this.usersUrl, user, options)
       .map(response => response.json() as User)
+  }
 
+  deleteUser(user: User) {
+    if (!user.id) {
+      return Observable.throw('No user id');
+    }
+    let url = `${this.usersUrl}/${user.id}`;
+    let options = new RequestOptions({ withCredentials: true });
+
+    return this.http.delete(url, options);
   }
 
 }

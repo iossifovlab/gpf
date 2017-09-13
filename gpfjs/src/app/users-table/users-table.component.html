@@ -38,7 +38,26 @@
             <button class="btn btn-outline-primary btn-sm" container="body">
               <i class="fa fa-refresh fa-lg" aria-hidden="true" ngbTooltip="Reset password"></i>
             </button>
-            <button class="btn btn-sm btn-outline-danger"  container="body">
+            <ng-template #removeConfirm>
+              <div class="content">
+                <div class="row">
+                  <div class="col-12">
+                    {{ data.name }} ({{ data.email }}) will be deleted.
+                  </div>
+                  <div class="col-12">
+                    This action is irreversible!
+                  </div>
+                  <div class="col-12">
+                    <button (click)="deleteUser(data)" class="btn btn-danger">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+            <button
+              class="btn btn-sm btn-outline-danger"
+              container="body"
+              [ngbPopover]="removeConfirm"
+              popoverTitle="Are you sure?">
               <i class="fa fa-times fa-lg" aria-hidden="true" ngbTooltip="Delete user"></i>
             </button>
           </span>

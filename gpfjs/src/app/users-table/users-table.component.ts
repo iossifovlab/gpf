@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { Observable } from 'rxjs';
 
+import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 
 @Component({
@@ -12,10 +14,24 @@ import { UsersService } from '../users/users.service';
 export class UsersTableComponent implements OnInit {
   users$: Observable<{}>;
 
-  constructor(private usersService: UsersService) { }
+  constructor(
+    private zone: NgZone,
+    private router: Router,
+    private route: ActivatedRoute,
+    private usersService: UsersService
+  ) { }
 
   ngOnInit() {
     this.users$ = this.usersService.getAllUsers();
+  }
+
+  deleteUser(user: User) {
+    this.usersService.deleteUser(user).take(1)
+      .subscribe(() => {
+        this.zone.runOutsideAngular(() => {
+          window.location.reload();
+        });
+      });
   }
 
 }
