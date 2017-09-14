@@ -7,7 +7,8 @@ import { GpfTableColumnComponent } from './component/column.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
 import { GpfTableContentHeaderComponent } from './component/header.component';
 import { GpfTableCellContentDirective } from './component/content.directive';
-import { GpfTableCellContentComponent } from './component/cell.component';
+import { GpfTableContentComponent } from './component/content.component';
+import { GpfTableSubcontentComponent } from './component/subcontent.component';
 import { GpfTableLegendDirective } from './component/legend.directive';
 
 import { GpfTableHeaderCellComponent } from './view/header/header-cell.component';
@@ -25,7 +26,8 @@ import { GpfTableCellComponent } from './view/cell.component';
     GpfTableHeaderComponent,
     GpfTableCellComponent,
     GpfTableLegendDirective,
-    GpfTableCellContentComponent
+    GpfTableContentComponent,
+    GpfTableSubcontentComponent
   ],
   exports: [
     GpfTableComponent,
@@ -34,7 +36,8 @@ import { GpfTableCellComponent } from './view/cell.component';
     GpfTableContentHeaderComponent,
     GpfTableCellContentDirective,
     GpfTableLegendDirective,
-    GpfTableCellContentComponent
+    GpfTableContentComponent,
+    GpfTableSubcontentComponent
   ],
   imports: [CommonModule]
 })

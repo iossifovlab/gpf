@@ -13,12 +13,14 @@
                     <gpf-table-subheader caption="stdy" field="study">
                     </gpf-table-subheader>
                 </gpf-table-header>
-                <gpf-table-cell-content field="familyId"></gpf-table-cell-content>
-                <gpf-table-cell-content>
-                    <span *gpfTableCellContent="let data">
-                        <a target="_blank" href="">{{data.study}}</a>
-                    </span>
-                </gpf-table-cell-content>
+                <gpf-table-content>
+                    <gpf-table-subcontent field="familyId"></gpf-table-subcontent>
+                    <gpf-table-subcontent>
+                        <span *gpfTableCellContent="let data">
+                            <a target="_blank" href="">{{data.study}}</a>
+                        </span>
+                    </gpf-table-subcontent>
+                </gpf-table-content>
             </gpf-table-column>
             <gpf-table-column>
                 <gpf-table-header caption="variant">
@@ -28,12 +30,14 @@
                     </gpf-table-subheader>
                     <gpf-table-subheader caption="var" field="variant"></gpf-table-subheader>
                 </gpf-table-header>
-                <gpf-table-cell-content>
-                    <span *gpfTableCellContent="let data">
-                        <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{data.location}}">{{data.location}}</a>
-                    </span>
-                </gpf-table-cell-content>
-                <gpf-table-cell-content field="variant"></gpf-table-cell-content>
+                <gpf-table-content>
+                    <gpf-table-subcontent>
+                        <span *gpfTableCellContent="let data">
+                            <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{data.location}}">{{data.location}}</a>
+                        </span>
+                    </gpf-table-subcontent>
+                    <gpf-table-subcontent field="variant"></gpf-table-subcontent>
+                </gpf-table-content>
             </gpf-table-column>
             <gpf-table-column>
                 <gpf-table-header caption="genotype">
@@ -42,11 +46,13 @@
                     <gpf-table-subheader caption="ch" field="ch"></gpf-table-subheader>
                     <gpf-table-subheader caption="par" field="par"></gpf-table-subheader>
                 </gpf-table-header>
-                <gpf-table-cell-content>
-                    <span *gpfTableCellContent="let data">
-                        <gpf-pedigree-chart [pedigreeData]=data.pedigree></gpf-pedigree-chart>
-                    </span>
-                </gpf-table-cell-content>
+                <gpf-table-content>
+                    <gpf-table-subcontent>
+                        <span *gpfTableCellContent="let data">
+                            <gpf-pedigree-chart [pedigreeData]=data.pedigree></gpf-pedigree-chart>
+                        </span>
+                    </gpf-table-subcontent>
+                </gpf-table-content>
             </gpf-table-column>
             <gpf-table-column>
                 <gpf-table-header caption="effect">
@@ -55,8 +61,10 @@
                     <gpf-table-subheader caption="type" field="worstEffectType"></gpf-table-subheader>
                     <gpf-table-subheader caption="gene" field="genes"></gpf-table-subheader>
                 </gpf-table-header>
-                <gpf-table-cell-content field="worstEffectType"></gpf-table-cell-content>
-                <gpf-table-cell-content field="genes"></gpf-table-cell-content>
+                <gpf-table-content>
+                    <gpf-table-subcontent field="worstEffectType"></gpf-table-subcontent>
+                    <gpf-table-subcontent field="genes"></gpf-table-subcontent>
+                </gpf-table-content>
             </gpf-table-column>
             <gpf-table-column>
                 <gpf-table-header caption="allele freq">
@@ -66,15 +74,17 @@
                     <gpf-table-subheader caption="EVS" field="EVSfreq"></gpf-table-subheader>
                     <gpf-table-subheader caption="E65" field="E65freq"></gpf-table-subheader>
                 </gpf-table-header>
-                <gpf-table-cell-content>
-                    <span *gpfTableCellContent="let data">{{data.SSCfreq === null ? "&nbsp;" : "SSC " + data.SSCfreq + "%"}}</span>
-                </gpf-table-cell-content>
-                <gpf-table-cell-content>
-                    <span *gpfTableCellContent="let data">{{data.EVSfreq === null ? "&nbsp;" : "EVS " + data.EVSfreq + "%"}}</span>
-                </gpf-table-cell-content>
-                <gpf-table-cell-content>
-                    <span *gpfTableCellContent="let data">{{data.E65freq === null ? "&nbsp;"  : "E65 " +  data.E65freq + "%"}}</span>
-                </gpf-table-cell-content>
+                <gpf-table-content>
+                    <gpf-table-subcontent>
+                        <span *gpfTableCellContent="let data">{{data.SSCfreq === null ? "&nbsp;" : "SSC " + data.SSCfreq + "%"}}</span>
+                    </gpf-table-subcontent>
+                    <gpf-table-subcontent>
+                        <span *gpfTableCellContent="let data">{{data.EVSfreq === null ? "&nbsp;" : "EVS " + data.EVSfreq + "%"}}</span>
+                    </gpf-table-subcontent>
+                    <gpf-table-subcontent>
+                        <span *gpfTableCellContent="let data">{{data.E65freq === null ? "&nbsp;"  : "E65 " +  data.E65freq + "%"}}</span>
+                    </gpf-table-subcontent>
+                </gpf-table-content>
             </gpf-table-column>
 
             <gpf-table-column *ngFor="let column of phenoColumns">
@@ -85,9 +95,11 @@
                       [comparator]=additionalDataComparator(slot.id)>
                     </gpf-table-subheader>
                 </gpf-table-header>
-                <gpf-table-cell-content *ngFor="let slot of column.slots">
-                  <span *gpfTableCellContent="let data">{{ data.additionalData[slot.id] }}</span>
-                </gpf-table-cell-content>
+                <gpf-table-content>
+                    <gpf-table-subcontent *ngFor="let slot of column.slots">
+                      <span *gpfTableCellContent="let data">{{ data.additionalData[slot.id] }}</span>
+                    </gpf-table-subcontent>
+                </gpf-table-content>
             </gpf-table-column>
 
             <div *gpfTableLegend style="text-align: left; border: 1px solid #dddddd; padding: 5px">

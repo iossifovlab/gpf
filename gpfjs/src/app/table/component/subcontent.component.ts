@@ -2,10 +2,10 @@ import { Input, Component, ContentChildren, QueryList, TemplateRef, ViewContaine
 import { GpfTableCellContentDirective } from './content.directive';
 
 @Component({
-  selector: 'gpf-table-cell-content',
+  selector: 'gpf-table-subcontent',
   template: '',
 })
-export class GpfTableCellContentComponent {
+export class GpfTableSubcontentComponent {
   @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
   @Input() field: string;
   contentTemplateRef: TemplateRef<any>;

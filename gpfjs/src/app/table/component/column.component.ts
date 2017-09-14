@@ -1,7 +1,7 @@
 import { ContentChildren, ViewContainerRef, QueryList, ViewChildren, Component } from '@angular/core';
 
 import { GpfTableContentHeaderComponent } from './header.component';
-import { GpfTableCellContentComponent } from './cell.component';
+import { GpfTableContentComponent } from './content.component';
 
 @Component({
   selector: 'gpf-table-column',
@@ -9,7 +9,7 @@ import { GpfTableCellContentComponent } from './cell.component';
 })
 export class GpfTableColumnComponent {
   @ContentChildren(GpfTableContentHeaderComponent) headerChildren: QueryList<GpfTableContentHeaderComponent>;
-  @ContentChildren(GpfTableCellContentComponent) cellContentChildren: QueryList<GpfTableCellContentComponent>;
+  @ContentChildren(GpfTableContentComponent) contentChildren: QueryList<GpfTableContentComponent>;
   public width = 0;
 
   constructor(viewContainer: ViewContainerRef) {

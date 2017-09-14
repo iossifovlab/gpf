@@ -17,4 +17,8 @@ export class GpfTableCellComponent {
   ngAfterViewInit() {
     this.columnInfo.width = this.nativeElement.getBoundingClientRect().width
   }
+
+  get cellContent() {
+      return this.columnInfo.contentChildren.first
+  }
 }
