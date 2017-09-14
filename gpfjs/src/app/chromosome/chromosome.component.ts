@@ -1,6 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
 
 import { Chromosome } from '../chromosome-service/chromosome';
+import { GenotypePreview } from '../genotype-preview-model/genotype-preview';
+
+import * as _ from 'lodash';
 
 interface ColorsMap {
   [id: number]: string;
@@ -19,9 +22,19 @@ const COLORS: ColorsMap = {
 
 class ChromosomeBandComponent {
   x: number;
+  y: number;
   width: number;
   height: number;
   color: string;
+}
+
+class GenotypeVariantComponent {
+  x: number;
+  color: string;
+  proband: boolean;
+  stackIndex: number;
+  genes: string;
+  location: string;
 }
 
 @Component({
@@ -35,35 +48,115 @@ export class ChromosomeComponent implements OnInit {
   chromosome: Chromosome;
 
   @Input()
+  genotypePreviews: GenotypePreview[];
+
+  @Input()
   width: number;
 
   @Input()
-  height: number;
-
-  @Input()
-  scale: number;
+  referenceLargestLength: number;
 
   @Input()
   centromerePosition: number;
 
+  chromosomeHeight: number = 15;
+
+  @Input()
+  starWidth: number = 9.5;
+
+  baseStarWidth: number = 9.5;
+
+  nameWidth: number = 30;
+
+  scale: number;
   startingPoint: number;
   leftWidth: number;
   rightWidth: number;
   leftBands: ChromosomeBandComponent[] = [];
   rightBands: ChromosomeBandComponent[] = [];
+  variants: GenotypeVariantComponent[] = [];
+  svgHeight: number;
+  svgWidth: number;
+  baseStarPathDescription: string;
+  maxTopStackIndex: number = 1;
+  maxBottomStackIndex: number = 1;
 
   constructor() { }
 
   ngOnInit() {
+    let starScale: number = this.starWidth / this.baseStarWidth;;
+
+    this.baseStarPathDescription = `l ${1.64 * starScale} ${3.2 * starScale}
+                                l ${3.2 * starScale} ${0.4 * starScale}
+                                l ${-2.24 * starScale} ${2.24 * starScale}
+                                l ${1.2 * starScale} ${4 * starScale}
+                                l ${-3.6 * starScale} ${-2 * starScale}
+                                l ${-3.6 * starScale} ${2 * starScale}
+                                l ${1.2 * starScale} ${-4 * starScale}
+                                l ${-2.4 * starScale} ${-2.3 * starScale}
+                                l ${3.44 * starScale} ${-0.3 * starScale}`;
+
+
+    this.svgWidth = this.width - this.nameWidth;
+    this.scale = (this.svgWidth - this.starWidth) / this.referenceLargestLength;
     this.leftWidth = this.chromosome.leftWidth() * this.scale;
     this.rightWidth = this.chromosome.rightWidth() * this.scale;
-    this.startingPoint = this.centromerePosition - this.leftWidth;
+    this.startingPoint = this.centromerePosition * this.scale - this.leftWidth + this.starWidth / 2;
+
+    this.genotypePreviews = _.sortBy(this.genotypePreviews, genotypePreview => +genotypePreview.location.split(':')[1]);
+
+    if (this.genotypePreviews) {
+      for (let genotypePreview of this.genotypePreviews) {
+        let x: number = (+genotypePreview.location.split(':')[1]) * this.scale + this.startingPoint;
+        let proband: boolean = genotypePreview.inChild.indexOf('prb') != -1;
+        let male: boolean = genotypePreview.inChild[3] == 'M';
+        let stackIndex;
+
+        let stackIndexMap: Map<number, boolean> = new Map();
+        for (let i = this.variants.length - 1; i >= 0; i--) {
+          let variant = this.variants[i];
+          if (variant.proband == proband) {
+            if ((x - variant.x) < this.starWidth) {
+              stackIndexMap[variant.stackIndex] = true;
+            } else {
+              break;
+            }
+          }
+        }
+        
+        for (let i = 1; ; i++) {
+          if (!stackIndexMap[i]) {
+            stackIndex = i;
+            break;
+          }
+        }
+
+        if (proband) {
+          this.maxTopStackIndex = this.maxTopStackIndex < stackIndex ? stackIndex : this.maxTopStackIndex;
+        } else {
+          this.maxBottomStackIndex = this.maxBottomStackIndex < stackIndex ? stackIndex : this.maxBottomStackIndex;
+        }
+
+
+        this.variants.push({
+          x: x,
+          color: male ? 'blue' : 'red',
+          stackIndex: stackIndex,
+          proband: proband,
+          genes: genotypePreview.genes,
+          location: genotypePreview.location
+        });
+      }
+    }
+
+    this.svgHeight = this.chromosomeHeight + this.starWidth * (this.maxTopStackIndex + this.maxBottomStackIndex);
 
     for (let band of this.chromosome.bands) {
       let bandComponent: ChromosomeBandComponent = {
         x: this.startingPoint + band.start * this.scale,
+        y: this.starWidth * this.maxTopStackIndex + 1,
         width: (band.end - band.start) * this.scale,
-        height: this.height - 2,
+        height: this.chromosomeHeight - 2,
         color: COLORS[band.color]
       };
       if (band.end <= this.chromosome.leftWidth()) {
