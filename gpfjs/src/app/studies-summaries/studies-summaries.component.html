@@ -6,8 +6,8 @@
       <gpf-table-column [ngSwitch]="column">
 
         <ng-container *ngSwitchCase="'denovo'">
-            <gpf-table-content-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
-            </gpf-table-content-header>
+            <gpf-table-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
+            </gpf-table-header>
             <gpf-table-cell-content>
                 <span *gpfTableCellContent="let data">
                   <span *ngIf="data[column] === true" class="fa fa-check"></span>
@@ -16,8 +16,8 @@
         </ng-container>
 
         <ng-container *ngSwitchCase="'transmitted'">
-            <gpf-table-content-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
-            </gpf-table-content-header>
+            <gpf-table-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
+            </gpf-table-header>
             <gpf-table-cell-content>
                 <span *gpfTableCellContent="let data">
                   <i *ngIf="data[columnNameToFieldName(column)] === true" class="fa fa-check"></i>
@@ -26,8 +26,8 @@
         </ng-container>
 
         <ng-container *ngSwitchCase="'study name'">
-            <gpf-table-content-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
-            </gpf-table-content-header>
+            <gpf-table-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
+            </gpf-table-header>
             <gpf-table-cell-content>
                 <span *gpfTableCellContent="let data">
                   <a target="_blank"
@@ -39,8 +39,8 @@
         </ng-container>
 
         <ng-container *ngSwitchDefault>
-            <gpf-table-content-header caption="{{ column }}">
-            </gpf-table-content-header>
+            <gpf-table-header caption="{{ column }}">
+            </gpf-table-header>
             <gpf-table-cell-content field="{{ columnNameToFieldName(column) }}">
             </gpf-table-cell-content>
         </ng-container>

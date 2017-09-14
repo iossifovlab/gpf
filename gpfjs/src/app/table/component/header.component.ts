@@ -2,7 +2,7 @@ import { ContentChildren, Component, QueryList } from '@angular/core';
 import { GpfTableSubheaderComponent } from './subheader.component';
 
 @Component({
-  selector: 'gpf-table-content-header',
+  selector: 'gpf-table-header',
   template: '',
 })
 export class GpfTableContentHeaderComponent extends GpfTableSubheaderComponent {
