@@ -20,6 +20,8 @@ const COLORS: ColorsMap = {
   8 : '#C7C7C7',
 };
 
+const GENOME_BROWSER: string = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr";
+
 class ChromosomeBandComponent {
   x: number;
   y: number;
@@ -35,6 +37,7 @@ class GenotypeVariantComponent {
   stackIndex: number;
   genes: string;
   location: string;
+  genomeBrowserUrl: string;
 }
 
 @Component({
@@ -107,7 +110,8 @@ export class ChromosomeComponent implements OnInit {
 
     if (this.genotypePreviews) {
       for (let genotypePreview of this.genotypePreviews) {
-        let x: number = (+genotypePreview.location.split(':')[1]) * this.scale + this.startingPoint;
+        let locationInChromosome: number = +genotypePreview.location.split(':')[1];
+        let x: number = locationInChromosome * this.scale + this.startingPoint;
         let proband: boolean = genotypePreview.inChild.indexOf('prb') != -1;
         let male: boolean = genotypePreview.inChild[3] == 'M';
         let stackIndex;
@@ -144,7 +148,8 @@ export class ChromosomeComponent implements OnInit {
           stackIndex: stackIndex,
           proband: proband,
           genes: genotypePreview.genes,
-          location: genotypePreview.location
+          location: genotypePreview.location,
+          genomeBrowserUrl: `${GENOME_BROWSER}${this.chromosome.id}:${locationInChromosome}-${locationInChromosome}`
         });
       }
     }

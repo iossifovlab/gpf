@@ -25,15 +25,19 @@
       <rect *ngFor="let band of rightBands" [attr.clip-path]="'url(#colorClipRight' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" [attr.y]="band.y" [style.fill]="band.color">
       </rect>
 
-      <path
-        attr.d="M {{variant.x}} {{variant.proband ? (maxTopStackIndex - variant.stackIndex) * starWidth : chromosomeHeight + (maxTopStackIndex + variant.stackIndex - 1) * starWidth}} {{baseStarPathDescription}}"
-        [style.fill]="variant.color"
-        on-mouseover="hoveredVariant = variant"
-        [ngbPopover]="popoverContent"
-        triggers="mouseenter:mouseleave"
-        container="body"
-        >
-      </path>
+      <a *ngFor="let variant of variants"
+        [attr.xlink:href]="variant.genomeBrowserUrl"
+        target="_blank">
+        <path
+          attr.d="M {{variant.x}} {{variant.proband ? (maxTopStackIndex - variant.stackIndex) * starWidth : chromosomeHeight + (maxTopStackIndex + variant.stackIndex - 1) * starWidth}} {{baseStarPathDescription}}"
+          [style.fill]="variant.color"
+          on-mouseover="hoveredVariant = variant"
+          [ngbPopover]="popoverContent"
+          triggers="mouseenter:mouseleave"
+          container="body"
+          >
+        </path>
+      </a>
     </g>
   </svg>
   <ng-template #popoverContent>
