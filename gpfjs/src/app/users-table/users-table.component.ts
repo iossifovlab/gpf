@@ -1,7 +1,7 @@
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, NgZone, Input } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
-import { Observable } from 'rxjs';
+import { Observable, ReplaySubject } from 'rxjs';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -13,6 +13,12 @@ import { UsersService } from '../users/users.service';
 })
 export class UsersTableComponent implements OnInit {
   users$: Observable<{}>;
+  private input$ = new ReplaySubject<string>(1);
+
+  @Input()
+  set search(value: string) {
+    this.input$.next(value);
+  }
 
   constructor(
     private zone: NgZone,
@@ -22,7 +28,15 @@ export class UsersTableComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.users$ = this.usersService.getAllUsers();
+    this.users$ = this.input$
+      .map(searchTerm => searchTerm.trim())
+      .debounceTime(300)
+      .distinctUntilChanged()
+      .switchMap(searchTerm =>
+        this.usersService.searchUsersByGroup(searchTerm))
+      .share();
+
+    // this.input$.next(' ');
   }
 
   deleteUser(user: User) {

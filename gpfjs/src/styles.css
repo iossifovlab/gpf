@@ -107,6 +107,10 @@ label {
 
 .btn-primary {
     background-color: #2a6395;
+}
+
+.btn-primary,
+.btn-outline-primary {
     border-color: #2a6395;
 }
 
@@ -170,4 +174,8 @@ label {
 .dropdown-item.active,
 .dropdown-item:active {
   background-color: #2a6395;
+}
+
+.popover {
+  max-width: 500px;
 }

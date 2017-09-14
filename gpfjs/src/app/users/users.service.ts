@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
+import { Headers, Http, Response, RequestOptions, URLSearchParams } from '@angular/http';
 import { Observable } from 'rxjs';
 
 import 'rxjs/add/operator/toPromise';
@@ -31,7 +31,7 @@ export class UsersService {
   }
 
   logout(): Observable<boolean> {
-    let csrfToken = this.cookieService.get("csrftoken");
+    let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
 
@@ -42,7 +42,7 @@ export class UsersService {
   }
 
   login(username: string, password: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get("csrftoken");
+    let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
 
@@ -73,7 +73,7 @@ export class UsersService {
   }
 
   register(email: string, name: string, researcherId: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get("csrftoken");
+    let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
 
@@ -91,7 +91,7 @@ export class UsersService {
   }
 
   resetPassword(email: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get("csrftoken");
+    let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
 
@@ -105,7 +105,7 @@ export class UsersService {
   }
 
   changePassword(password: string, verifPath: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get("csrftoken");
+    let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
 
@@ -121,7 +121,7 @@ export class UsersService {
   }
 
   checkVerification(verifPath: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get("csrftoken");
+    let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({ headers: headers, withCredentials: true });
 
@@ -155,7 +155,7 @@ export class UsersService {
     if (!user.id) {
       return Observable.throw('No user id');
     }
-    let csrfToken = this.cookieService.get("csrftoken");
+    let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({
       headers: headers,
@@ -171,7 +171,7 @@ export class UsersService {
       return Observable.throw('Create should not have user id');
     }
 
-    let csrfToken = this.cookieService.get("csrftoken");
+    let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({
       headers: headers,
@@ -179,7 +179,7 @@ export class UsersService {
     });
 
     return this.http.post(this.usersUrl, user, options)
-      .map(response => response.json() as User)
+      .map(response => response.json() as User);
   }
 
   deleteUser(user: User) {
@@ -190,6 +190,19 @@ export class UsersService {
     let options = new RequestOptions({ withCredentials: true });
 
     return this.http.delete(url, options);
+  }
+
+  searchUsersByGroup(searchTerm: string) {
+    let searchParams = new URLSearchParams();
+    searchParams.set('search', searchTerm);
+
+    let options = new RequestOptions({
+      withCredentials: true,
+      search: searchParams
+    });
+
+    return this.http.get(this.usersUrl, options)
+      .map(response => response.json() as User[]);
   }
 
 }

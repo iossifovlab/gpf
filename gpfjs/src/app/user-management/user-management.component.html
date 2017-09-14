@@ -7,12 +7,20 @@
 
       <ngb-tab id="users" title="Users">
         <ng-template ngbTabContent>
-          <div class="row">
-            <div class="col-12">
-              <a [routerLink]="['users', 'create']" class="btn btn-primary">Create user</a>
+          <div class="row justify-content-between">
+            <div class="col-8">
+              <div class="input-group search-field">
+                <span class="input-group-addon">
+                  <i class="fa fa-search" aria-hidden="true"></i>
+                </span>
+                <input #searchTerm (keyup)="0" type="text" class="form-control" placeholder="Search groups" />
+              </div>
+            </div>
+            <div class="col-2">
+              <a [routerLink]="['users', 'create']" class="btn btn-primary pull-right">Create user</a>
             </div>
           </div>
-          <gpf-users-table></gpf-users-table>
+          <gpf-users-table [search]="searchTerm.value"></gpf-users-table>
         </ng-template>
       </ngb-tab>
 
