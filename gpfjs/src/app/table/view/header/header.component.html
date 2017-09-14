@@ -1,9 +1,9 @@
 <div *ngFor="let i of subheadersCount" style="display: table-row;">
-    <gpf-table-header-cell #cell *ngFor="let column of columns"
+    <gpf-table-view-header-cell #cell *ngFor="let column of columns"
         [columnInfo]="column.headerChildren.toArray()[i]"
         [sortingInfo]="sortingInfo"
         (sortingInfoChange)="sortingInfoChange.emit($event)"
         style="vertical-align: middle"
         [style.width.px] = "column.width">
-    </gpf-table-header-cell>
+    </gpf-table-view-header-cell>
 </div>

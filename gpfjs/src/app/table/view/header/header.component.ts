@@ -4,7 +4,7 @@ import { SortInfo } from '../../table.component'
 
 
 @Component({
-  selector: 'gpf-table-header',
+  selector: 'gpf-table-view-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })

@@ -2,7 +2,7 @@ import { Input, Component, ViewContainerRef, ComponentFactoryResolver } from '@a
 import { GpfTableColumnComponent } from '../component/column.component'
 
 @Component({
-  selector: 'gpf-table-cell',
+  selector: 'gpf-table-view-cell',
   templateUrl: './cell.component.html'
 })
 export class GpfTableCellComponent {

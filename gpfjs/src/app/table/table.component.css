@@ -1,7 +1,7 @@
-gpf-table-cell {
+gpf-table-view-cell {
     display: table-cell;
 }
 
-gpf-table-header-cell {
+gpf-table-view-header-cell {
     display: table-cell;
 }

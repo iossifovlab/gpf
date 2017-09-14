@@ -11,7 +11,7 @@ import { environment } from '../../../../environments/environment';
 
 
 @Component({
-  selector: 'gpf-table-header-cell',
+  selector: 'gpf-table-view-header-cell',
   templateUrl: './header-cell.component.html',
   styleUrls: ['./header-cell.component.css']
 })
