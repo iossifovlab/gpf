@@ -1,22 +1,11 @@
 import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
-  Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren,
-  QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver,
-  AfterViewInit, Query, ElementRef
+  EventEmitter, Input, Component, ContentChildren,
+  QueryList, ViewContainerRef
 } from '@angular/core';
-
-import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
 
 import { GpfTableColumnComponent } from './component/column.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';
-import { GpfTableContentHeaderComponent } from './component/header.component';
-import { GpfTableCellContentDirective } from './component/content.directive';
-import { GpfTableCellContentComponent } from './component/cell.component';
 import { GpfTableLegendDirective } from './component/legend.directive';
-
-import { GpfTableHeaderCellComponent } from './view/header/table-header-cell.component';
-import { GpfTableHeaderComponent } from './view/header/table-header.component';
-import { GpfTableCellComponent } from './view/table-cell.component';
 
 export class SortInfo {
   constructor(public sortBySubcolumn: GpfTableSubheaderComponent, public sortOrderAsc: boolean) {
