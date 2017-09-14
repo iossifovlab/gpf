@@ -17,19 +17,20 @@ from rest_framework.decorators import authentication_classes
 from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import permissions
-from rest_framework import mixins
+from rest_framework import filters
 from users_api.authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF
 from users_api.models import VerificationPath
 from users_api.serializers import UserSerializer, UserWithoutEmailSerializer
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet, mixins.CreateModelMixin,
-                  mixins.UpdateModelMixin):
+class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = get_user_model().objects.all()
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = None
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('groups__name',)
 
     def get_serializer_class(self):
         serializer_class = self.serializer_class

@@ -201,6 +201,17 @@ def test_admin_can_remove_user_group(admin_client, users_instance_url, user_mode
     assert not user.groups.filter(id=first_group.id).exists()
 
 
+def test_admin_can_delete_user(admin_client, users_instance_url, user_model):
+    user = user_model.objects.create(email='test@test.com')
+    user_id = user.pk
+    assert user_model.objects.filter(pk=user_id).exists()
+
+    response = admin_client.delete(users_instance_url(user_id))
+
+    assert response.status_code is status.HTTP_204_NO_CONTENT
+    assert not user_model.objects.filter(pk=user_id).exists()
+
+
 def test_admin_can_remove_password_of_user(
         admin_client, active_user, user_remove_password_endpoint):
     assert active_user.has_usable_password()
@@ -268,6 +279,7 @@ def test_admin_can_reset_user_password(
     assert not active_user.has_usable_password()
     assert not active_user.is_active
 
+
 def test_user_cant_reset_other_user_password(
         user_client, user_reset_password_endpoint, active_user):
     assert active_user.has_usable_password()
@@ -281,3 +293,29 @@ def test_user_cant_reset_other_user_password(
     assert active_user.has_usable_password()
     assert active_user.is_active
 
+
+def test_searching_by_email_finds_only_single_user(
+        admin_client, users_endpoint, active_user, user_model):
+    assert user_model.objects.count() > 1
+
+    params = {
+        'search': active_user.email
+    }
+    response = admin_client.get(users_endpoint, params)
+
+    assert response.status_code is status.HTTP_200_OK
+    assert len(response.data) == 1
+
+
+def test_searching_by_any_user_finds_all_users(
+        admin_client, users_endpoint, active_user, user_model):
+    users_count = user_model.objects.count()
+    assert users_count > 1
+
+    params = {
+        'search': 'any_user'
+    }
+    response = admin_client.get(users_endpoint, params)
+
+    assert response.status_code is status.HTTP_200_OK
+    assert len(response.data) == users_count
