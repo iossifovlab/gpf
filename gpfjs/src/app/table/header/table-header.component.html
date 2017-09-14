@@ -1,7 +1,8 @@
 <div style="display: table-row;">
     <gpf-table-header-cell #cell *ngFor="let column of columns"
-        [columnInfo]="column"
-        [(sortingInfo)]="sortingInfo"
+        [columnInfo]="column.headerChildren.first"
+        [sortingInfo]="sortingInfo"
+        (sortingInfoChange)="sortingInfoChange.emit($event)"
         style="vertical-align: middle"
         [style.width.px] = "column.width">
     </gpf-table-header-cell>

@@ -35,19 +35,8 @@ export class GpfTableCellContentDirective {
   ) { }
 }
 
-@Directive({
-  selector: '[gpfTableCellHeader]'
-})
-export class GpfTableCellHeaderDirective {
-  constructor(
-    readonly templateRef: TemplateRef<any>,
-    readonly viewContainer: ViewContainerRef
-  ) { }
-}
-
-
 class DefaultComparator {
-  constructor(private subcolumn: GpfTableSubcolumnComponent) {
+  constructor(private subcolumn: GpfTableSubheaderComponent) {
   }
 
   compare(a: any, b: any): Number {
@@ -66,21 +55,35 @@ class DefaultComparator {
   }
 }
 
-
 @Component({
-  selector: 'gpf-table-subcolumn',
+  selector: 'gpf-table-cell-content',
   template: '',
 })
-export class GpfTableSubcolumnComponent {
+export class GpfTableCellContentComponent {
   @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
-  @ContentChildren(GpfTableCellHeaderDirective) headerChildren: QueryList<GpfTableCellHeaderDirective>;
+  @Input() field: string;
+  contentTemplateRef: TemplateRef<any>;
+
+  ngAfterContentInit() {
+    if (this.contentChildren.first) {
+      this.contentTemplateRef = this.contentChildren.first.templateRef;
+    }
+  }
+}
+
+
+@Component({
+  selector: 'gpf-table-subheader',
+  template: '',
+})
+export class GpfTableSubheaderComponent {
+  @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
   @Input() field: string;
   @Input() header: string;
   @Input() comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
   @Input() sortable = true;
 
   contentTemplateRef: TemplateRef<any>;
-  headerTemplateRef: TemplateRef<any>;
 
   constructor(protected viewContainer: ViewContainerRef) {
   }
@@ -88,9 +91,6 @@ export class GpfTableSubcolumnComponent {
   ngAfterContentInit() {
     if (this.contentChildren.first) {
       this.contentTemplateRef = this.contentChildren.first.templateRef;
-    }
-    if (this.headerChildren.first) {
-      this.headerTemplateRef = this.headerChildren.first.templateRef;
     }
   }
 
@@ -121,22 +121,35 @@ export class GpfTableSubcolumnComponent {
 
 }
 
+@Component({
+  selector: 'gpf-table-content-header',
+  template: '',
+})
+export class GpfTableContentHeaderComponent {
+  @ContentChildren(GpfTableSubheaderComponent) subcolumnsChildren: QueryList<GpfTableSubheaderComponent>;
+
+  constructor(viewContainer: ViewContainerRef) {
+  }
+}
 
 @Component({
   selector: 'gpf-table-column',
   template: '',
 })
-export class GpfTableColumnComponent extends GpfTableSubcolumnComponent {
-  @ContentChildren(GpfTableSubcolumnComponent) subcolumnsChildren: QueryList<GpfTableSubcolumnComponent>;
+export class GpfTableColumnComponent {
+  @ContentChildren(GpfTableContentHeaderComponent) headerChildren: QueryList<GpfTableContentHeaderComponent>;
+  @ContentChildren(GpfTableCellContentComponent) cellContentChildren: QueryList<GpfTableCellContentComponent>;
+  @Input() field: string;
+  @Input() header: string;
+  @Input() sortable = true;
   public width = 0;
 
   constructor(viewContainer: ViewContainerRef) {
-    super(viewContainer);
   }
 }
 
 export class SortInfo {
-  constructor(public sortBySubcolumn: GpfTableSubcolumnComponent, public sortOrderAsc: boolean) {
+  constructor(public sortBySubcolumn: GpfTableSubheaderComponent, public sortOrderAsc: boolean) {
   }
 }
 

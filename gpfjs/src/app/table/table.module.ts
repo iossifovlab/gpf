@@ -4,9 +4,10 @@ import { CommonModule }        from '@angular/common';
 import { GpfTableComponent,
          GpfTableColumnComponent,
          GpfTableCellComponent,
-         GpfTableSubcolumnComponent,
-         GpfTableCellHeaderDirective,
+         GpfTableSubheaderComponent,
+         GpfTableContentHeaderComponent,
          GpfTableCellContentDirective,
+         GpfTableCellContentComponent,
          GpfTableLegendDirective } from './table.component';
 import { GpfTableHeaderCellComponent } from './header/table-header-cell.component';
 import { GpfTableHeaderComponent } from './header/table-header.component';
@@ -15,21 +16,23 @@ import { GpfTableHeaderComponent } from './header/table-header.component';
   declarations: [
     GpfTableComponent,
     GpfTableColumnComponent,
-    GpfTableSubcolumnComponent,
+    GpfTableSubheaderComponent,
+    GpfTableContentHeaderComponent,
     GpfTableCellContentDirective,
-    GpfTableCellHeaderDirective,
     GpfTableHeaderCellComponent,
     GpfTableHeaderComponent,
     GpfTableCellComponent,
-    GpfTableLegendDirective
+    GpfTableLegendDirective,
+    GpfTableCellContentComponent
   ],
   exports: [
     GpfTableComponent,
     GpfTableColumnComponent,
-    GpfTableSubcolumnComponent,
+    GpfTableSubheaderComponent,
+    GpfTableContentHeaderComponent,
     GpfTableCellContentDirective,
-    GpfTableCellHeaderDirective,
-    GpfTableLegendDirective
+    GpfTableLegendDirective,
+    GpfTableCellContentComponent
   ],
   imports: [CommonModule]
 })
