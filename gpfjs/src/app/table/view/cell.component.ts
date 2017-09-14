@@ -3,7 +3,7 @@ import { GpfTableColumnComponent } from '../component/column.component'
 
 @Component({
   selector: 'gpf-table-cell',
-  templateUrl: './table-cell.component.html'
+  templateUrl: './cell.component.html'
 })
 export class GpfTableCellComponent {
   @Input() columnInfo: GpfTableColumnComponent;

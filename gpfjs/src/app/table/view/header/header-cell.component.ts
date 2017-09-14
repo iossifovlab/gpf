@@ -12,8 +12,8 @@ import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'gpf-table-header-cell',
-  templateUrl: './table-header-cell.component.html',
-  styleUrls: ['./table-header-cell.component.css']
+  templateUrl: './header-cell.component.html',
+  styleUrls: ['./header-cell.component.css']
 })
 export class GpfTableHeaderCellComponent {
   @Input() columnInfo: GpfTableColumnComponent;

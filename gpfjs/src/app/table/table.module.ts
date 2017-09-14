@@ -10,9 +10,9 @@ import { GpfTableCellContentDirective } from './component/content.directive';
 import { GpfTableCellContentComponent } from './component/cell.component';
 import { GpfTableLegendDirective } from './component/legend.directive';
 
-import { GpfTableHeaderCellComponent } from './view/header/table-header-cell.component';
-import { GpfTableHeaderComponent } from './view/header/table-header.component';
-import { GpfTableCellComponent } from './view/table-cell.component';
+import { GpfTableHeaderCellComponent } from './view/header/header-cell.component';
+import { GpfTableHeaderComponent } from './view/header/header.component';
+import { GpfTableCellComponent } from './view/cell.component';
 
 @NgModule({
   declarations: [

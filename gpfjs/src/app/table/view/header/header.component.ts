@@ -5,8 +5,8 @@ import { SortInfo } from '../../table.component'
 
 @Component({
   selector: 'gpf-table-header',
-  templateUrl: './table-header.component.html',
-  styleUrls: ['./table-header.component.css']
+  templateUrl: './header.component.html',
+  styleUrls: ['./header.component.css']
 })
 export class GpfTableHeaderComponent {
   @Input() columns: any;
