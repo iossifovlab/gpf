@@ -7,152 +7,20 @@ import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-@Component({
-  selector: 'gpf-table-cell',
-  templateUrl: './table-cell.component.html'
-})
-export class GpfTableCellComponent {
-  @Input() columnInfo: GpfTableColumnComponent;
-  @Input() data: any;
-  private nativeElement: any;
+import { GpfTableColumnComponent } from './component/column.component';
+import { GpfTableSubheaderComponent } from './component/subheader.component';
+import { GpfTableContentHeaderComponent } from './component/header.component';
+import { GpfTableCellContentDirective } from './component/content.directive';
+import { GpfTableCellContentComponent } from './component/cell.component';
+import { GpfTableLegendDirective } from './component/legend.directive';
 
-  constructor(private viewContainer: ViewContainerRef) {
-    this.nativeElement = viewContainer.element.nativeElement
-  }
-
-  ngAfterViewInit() {
-    this.columnInfo.width = this.nativeElement.getBoundingClientRect().width
-  }
-}
-
-@Directive({
-  selector: '[gpfTableCellContent]'
-})
-export class GpfTableCellContentDirective {
-  constructor(
-    readonly templateRef: TemplateRef<any>,
-    readonly viewContainer: ViewContainerRef
-  ) { }
-}
-
-class DefaultComparator {
-  constructor(private subcolumn: GpfTableSubheaderComponent) {
-  }
-
-  compare(a: any, b: any): Number {
-    let leftVal = a[this.subcolumn.field];
-    let rightVal = b[this.subcolumn.field];
-
-    if (leftVal == null && rightVal == null) { return 0; }
-    if (leftVal == null) { return -1; }
-    if (rightVal == null) { return 1; }
-
-    if (!isNaN(leftVal) && !isNaN(rightVal)) {
-      return +leftVal - +rightVal;
-    }
-
-    return leftVal.localeCompare(rightVal);
-  }
-}
-
-@Component({
-  selector: 'gpf-table-cell-content',
-  template: '',
-})
-export class GpfTableCellContentComponent {
-  @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
-  @Input() field: string;
-  contentTemplateRef: TemplateRef<any>;
-
-  ngAfterContentInit() {
-    if (this.contentChildren.first) {
-      this.contentTemplateRef = this.contentChildren.first.templateRef;
-    }
-  }
-}
-
-
-@Component({
-  selector: 'gpf-table-subheader',
-  template: '',
-})
-export class GpfTableSubheaderComponent {
-  @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
-  @Input() field: string;
-  @Input() caption: string;
-  @Input() comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
-  @Input() sortable = true;
-
-  contentTemplateRef: TemplateRef<any>;
-
-  ngAfterContentInit() {
-    if (this.contentChildren.first) {
-      this.contentTemplateRef = this.contentChildren.first.templateRef;
-    }
-  }
-
-  defaultComparator(a: any, b: any): number {
-    let leftVal = a[this.field];
-    let rightVal = b[this.field];
-
-    if (leftVal == null && rightVal == null) { return 0; }
-    if (leftVal == null) { return -1; }
-    if (rightVal == null) { return 1; }
-
-    if (!isNaN(leftVal) && !isNaN(rightVal)) {
-      return +leftVal - +rightVal;
-    }
-
-    return leftVal.localeCompare(rightVal);
-  }
-
-  sort(data: any, ascending: boolean) {
-    data.sort((a, b) => {
-      if (ascending) {
-        return this.comparator(a, b);
-      } else {
-        return this.comparator(b, a);
-      }
-    });
-  }
-
-}
-
-@Component({
-  selector: 'gpf-table-content-header',
-  template: '',
-})
-export class GpfTableContentHeaderComponent extends GpfTableSubheaderComponent {
-  @ContentChildren(GpfTableSubheaderComponent) subcolumnsChildren: QueryList<GpfTableSubheaderComponent>;
-}
-
-@Component({
-  selector: 'gpf-table-column',
-  template: '',
-})
-export class GpfTableColumnComponent {
-  @ContentChildren(GpfTableContentHeaderComponent) headerChildren: QueryList<GpfTableContentHeaderComponent>;
-  @ContentChildren(GpfTableCellContentComponent) cellContentChildren: QueryList<GpfTableCellContentComponent>;
-  public width = 0;
-
-  constructor(viewContainer: ViewContainerRef) {
-  }
-}
+import { GpfTableHeaderCellComponent } from './view/header/table-header-cell.component';
+import { GpfTableHeaderComponent } from './view/header/table-header.component';
+import { GpfTableCellComponent } from './view/table-cell.component';
 
 export class SortInfo {
   constructor(public sortBySubcolumn: GpfTableSubheaderComponent, public sortOrderAsc: boolean) {
   }
-}
-
-
-@Directive({
-  selector: '[gpfTableLegend]'
-})
-export class GpfTableLegendDirective {
-  constructor(
-    readonly templateRef: TemplateRef<any>,
-    readonly viewContainer: ViewContainerRef
-  ) { }
 }
 
 @Component({

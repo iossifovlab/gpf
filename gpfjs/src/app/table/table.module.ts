@@ -1,16 +1,18 @@
 import { NgModule } from '@angular/core';
 import { CommonModule }        from '@angular/common';
 
-import { GpfTableComponent,
-         GpfTableColumnComponent,
-         GpfTableCellComponent,
-         GpfTableSubheaderComponent,
-         GpfTableContentHeaderComponent,
-         GpfTableCellContentDirective,
-         GpfTableCellContentComponent,
-         GpfTableLegendDirective } from './table.component';
-import { GpfTableHeaderCellComponent } from './header/table-header-cell.component';
-import { GpfTableHeaderComponent } from './header/table-header.component';
+import { GpfTableComponent } from './table.component';
+
+import { GpfTableColumnComponent } from './component/column.component';
+import { GpfTableSubheaderComponent } from './component/subheader.component';
+import { GpfTableContentHeaderComponent } from './component/header.component';
+import { GpfTableCellContentDirective } from './component/content.directive';
+import { GpfTableCellContentComponent } from './component/cell.component';
+import { GpfTableLegendDirective } from './component/legend.directive';
+
+import { GpfTableHeaderCellComponent } from './view/header/table-header-cell.component';
+import { GpfTableHeaderComponent } from './view/header/table-header.component';
+import { GpfTableCellComponent } from './view/table-cell.component';
 
 @NgModule({
   declarations: [

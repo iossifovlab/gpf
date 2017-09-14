@@ -3,9 +3,11 @@ import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
   QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver,
   AfterViewInit, Query, ElementRef
 } from '@angular/core';
-import { GpfTableColumnComponent, GpfTableSubheaderComponent, SortInfo } from '../table.component'
+import { GpfTableColumnComponent } from '../../component/column.component'
+import { GpfTableSubheaderComponent } from '../../component/subheader.component'
+import { SortInfo } from '../../table.component'
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 
 @Component({

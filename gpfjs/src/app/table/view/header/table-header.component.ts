@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { GpfTableColumnComponent, SortInfo } from '../table.component'
+import { GpfTableColumnComponent } from '../../component/column.component'
+import { SortInfo } from '../../table.component'
 
 
 @Component({
