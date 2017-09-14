@@ -5,6 +5,8 @@
         </p>
         <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
             <gpf-table-column>
+                <gpf-table-content-header header="family">
+                </gpf-table-content-header>
                 <gpf-table-content-header>
                     <gpf-table-subheader header="familyId" field="familyId">
                     </gpf-table-subheader>
@@ -19,6 +21,8 @@
                 </gpf-table-cell-content>
             </gpf-table-column>
             <gpf-table-column header="variant">
+                <gpf-table-content-header header="variant">
+                </gpf-table-content-header>
                 <gpf-table-content-header>
                     <gpf-table-subheader header="loc" field="location" [comparator]=locationComparator>
                     </gpf-table-subheader>
@@ -32,6 +36,8 @@
                 <gpf-table-cell-content field="variant"></gpf-table-cell-content>
             </gpf-table-column>
             <gpf-table-column header="genotype">
+                <gpf-table-content-header header="genotype">
+                </gpf-table-content-header>
                 <gpf-table-content-header>
                     <gpf-table-subheader header="ch" field="ch"></gpf-table-subheader>
                     <gpf-table-subheader header="par" field="par"></gpf-table-subheader>
@@ -43,6 +49,8 @@
                 </gpf-table-cell-content>
             </gpf-table-column>
             <gpf-table-column header="effect">
+                <gpf-table-content-header header="effect">
+                </gpf-table-content-header>
                 <gpf-table-content-header>
                     <gpf-table-subheader header="type" field="worstEffectType"></gpf-table-subheader>
                     <gpf-table-subheader header="gene" field="genes"></gpf-table-subheader>
@@ -51,6 +59,8 @@
                 <gpf-table-cell-content field="genes"></gpf-table-cell-content>
             </gpf-table-column>
             <gpf-table-column header="allele freq">
+                <gpf-table-content-header header="allele freq">
+                </gpf-table-content-header>
                 <gpf-table-content-header>
                     <gpf-table-subheader header="SSC" field="SSCfreq"></gpf-table-subheader>
                     <gpf-table-subheader header="EVS" field="EVSfreq"></gpf-table-subheader>
@@ -68,6 +78,8 @@
             </gpf-table-column>
 
             <gpf-table-column *ngFor="let column of phenoColumns" header="{{ column.name }}">
+                <gpf-table-content-header header="{{ column.name }}">
+                </gpf-table-content-header>
                 <gpf-table-content-header>
                     <gpf-table-subheader *ngFor="let slot of column.slots" header="{{ slot.name }}"
                       [comparator]=additionalDataComparator(slot.id)>

@@ -1,6 +1,6 @@
-<div style="display: table-row;">
+<div *ngFor="let i of [0, 1]" style="display: table-row;">
     <gpf-table-header-cell #cell *ngFor="let column of columns"
-        [columnInfo]="column.headerChildren.first"
+        [columnInfo]="column.headerChildren.toArray()[i]"
         [sortingInfo]="sortingInfo"
         (sortingInfoChange)="sortingInfoChange.emit($event)"
         style="vertical-align: middle"

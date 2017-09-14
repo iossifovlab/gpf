@@ -127,6 +127,7 @@ export class GpfTableSubheaderComponent {
 })
 export class GpfTableContentHeaderComponent {
   @ContentChildren(GpfTableSubheaderComponent) subcolumnsChildren: QueryList<GpfTableSubheaderComponent>;
+  @Input() header: string;
 
   constructor(viewContainer: ViewContainerRef) {
   }
