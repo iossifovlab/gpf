@@ -79,14 +79,11 @@ export class GpfTableCellContentComponent {
 export class GpfTableSubheaderComponent {
   @ContentChildren(GpfTableCellContentDirective) contentChildren: QueryList<GpfTableCellContentDirective>;
   @Input() field: string;
-  @Input() header: string;
+  @Input() caption: string;
   @Input() comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
   @Input() sortable = true;
 
   contentTemplateRef: TemplateRef<any>;
-
-  constructor(protected viewContainer: ViewContainerRef) {
-  }
 
   ngAfterContentInit() {
     if (this.contentChildren.first) {
@@ -125,12 +122,8 @@ export class GpfTableSubheaderComponent {
   selector: 'gpf-table-content-header',
   template: '',
 })
-export class GpfTableContentHeaderComponent {
+export class GpfTableContentHeaderComponent extends GpfTableSubheaderComponent {
   @ContentChildren(GpfTableSubheaderComponent) subcolumnsChildren: QueryList<GpfTableSubheaderComponent>;
-  @Input() header: string;
-
-  constructor(viewContainer: ViewContainerRef) {
-  }
 }
 
 @Component({
@@ -140,9 +133,6 @@ export class GpfTableContentHeaderComponent {
 export class GpfTableColumnComponent {
   @ContentChildren(GpfTableContentHeaderComponent) headerChildren: QueryList<GpfTableContentHeaderComponent>;
   @ContentChildren(GpfTableCellContentComponent) cellContentChildren: QueryList<GpfTableCellContentComponent>;
-  @Input() field: string;
-  @Input() header: string;
-  @Input() sortable = true;
   public width = 0;
 
   constructor(viewContainer: ViewContainerRef) {

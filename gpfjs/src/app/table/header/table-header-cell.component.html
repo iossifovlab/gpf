@@ -4,7 +4,7 @@
             <div style="height: 100%; display: table-cell; vertical-align: middle; ">
                 <ng-template *ngIf="columnInfo.contentTemplateRef" [ngTemplateOutlet]="columnInfo.contentTemplateRef">
                 </ng-template>
-                <span *ngIf="columnInfo.header">{{ columnInfo.header }}</span>
+                <span *ngIf="columnInfo.caption">{{ columnInfo.caption }}</span>
             </div>
         </div>
     </div>
@@ -15,7 +15,7 @@
                 <div [class.clickable]="child.sortable" style="display: table-cell; vertical-align: middle; text-align: right" (click)="child.sortable && onSortClick(child)">
                     <ng-template *ngIf="child.contentTemplateRef" [ngTemplateOutlet]="child.contentTemplateRef">
                     </ng-template>
-                    <span *ngIf="!child.contentTemplateRef">{{ child.header }}</span>
+                    <span *ngIf="!child.contentTemplateRef">{{ child.caption }}</span>
                     <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn != child"
                         src="{{imgPathPrefix}}bg.gif" style="height: 12px;">
                     <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc"

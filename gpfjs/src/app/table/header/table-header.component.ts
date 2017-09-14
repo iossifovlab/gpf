@@ -8,7 +8,15 @@ import { GpfTableColumnComponent, SortInfo } from '../table.component'
   styleUrls: ['./table-header.component.css']
 })
 export class GpfTableHeaderComponent {
-  @Input() columns: GpfTableColumnComponent[];
+  @Input() columns: any;
   @Output() sortingInfoChange = new EventEmitter();
   @Input() sortingInfo: SortInfo;
+
+  get subheadersCount() {
+      if (this.columns.first) {
+          let length = this.columns.first.headerChildren.length;
+          return Array(length).fill(0).map((x, i) => i)
+      }
+      return [];
+  }
 }
