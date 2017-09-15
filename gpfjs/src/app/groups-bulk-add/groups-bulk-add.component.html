@@ -1,0 +1,26 @@
+<form *ngIf="(users$ | async) as users">
+  <div class="row justify-content-center">
+    <div class="col-4">
+      <p>Adding a group to users</p>
+      <div *ngFor="let user of users">{{ user.name }} ({{ user.email }})</div>
+    </div>
+  </div>
+  <div *ngIf="groupsToOptions(groups$ | async) as groupOptions" class="row justify-content-center mt-3">
+    <div class="col-4">
+      <div class="form-group">
+        <label for="groups">Group</label>
+        <div class="groupsInput" >
+          <select2 class="selector" [data]="groupOptions" [value]="''"(valueChanged)="changeSelectedGroup($event.value)" [options]="configurationOptions">
+
+          </select2>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row justify-content-end">
+    <div class="col-4">
+      <button class="btn" routerLink="/management">Back</button>
+      <button class="btn btn-primary" type="submit" (click)="submit()">Add Group</button>
+    </div>
+  </div>
+</form>

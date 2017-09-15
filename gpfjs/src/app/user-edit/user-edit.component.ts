@@ -45,8 +45,9 @@ export class UserEditComponent implements OnInit {
       .take(1)
       .subscribe(groups => this.groups$.next(groups));
 
-
-
+    this.configurationOptions = {
+      width: 'style'
+    };
   }
 
   groupsToOptions(groups: UserGroup[]) {

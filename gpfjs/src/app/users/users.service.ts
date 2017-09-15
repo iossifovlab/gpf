@@ -19,6 +19,8 @@ export class UsersService {
   private changePasswordUrl = 'users/change_password';
   private checkVerificationUrl = 'users/check_verif_path';
   private usersUrl = 'users';
+  private bulkAddGroupUrl = `${this.usersUrl}/bulk-add-group`;
+  private bulkRemoveGroupUrl = `${this.usersUrl}/bulk-remove-group`;
 
   private userInfo$ = new BehaviorSubject<{}>(null);
 
@@ -203,6 +205,28 @@ export class UsersService {
 
     return this.http.get(this.usersUrl, options)
       .map(response => response.json() as User[]);
+  }
+
+  bulkAddGroup(users: User[], group: string) {
+    let options = new RequestOptions({ withCredentials: true });
+
+    let data = {
+      userIds: users.map(u => u.id),
+      group: group
+    };
+
+    return this.http.post(this.bulkAddGroupUrl, data, options);
+  }
+
+  bulkRemoveGroup(users: User[], group: string) {
+    let options = new RequestOptions({ withCredentials: true });
+
+    let data = {
+      userIds: users.map(u => u.id),
+      group: group
+    };
+
+    return this.http.post(this.bulkRemoveGroupUrl, data, options);
   }
 
 }

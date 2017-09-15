@@ -8,19 +8,47 @@
       <ngb-tab id="users" title="Users">
         <ng-template ngbTabContent>
           <div class="row justify-content-between">
-            <div class="col-8">
-              <div class="input-group search-field">
+            <div class="col-8 btn-toolbar">
+              <div class="input-group search-field mr-3">
                 <span class="input-group-addon">
                   <i class="fa fa-search" aria-hidden="true"></i>
                 </span>
-                <input #searchTerm (keyup)="0" type="text" class="form-control" placeholder="Search groups" />
+                <input #searchTerm (keyup)="search(searchTerm.value)" type="text" class="form-control" placeholder="Search groups" />
+              </div>
+              <div class="btn-group pull-right" role="group">
+                <button
+                  ngbTooltip="Add or remove a group from the selected users"
+                  container="body"
+                  id="btnGroupDrop1"
+                  type="button"
+                  class="btn btn-outline-secondary dropdown-toggle"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false">
+                    Bulk edit
+                </button>
+                <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                  <button
+                    class="dropdown-item"
+                    [disabled]="(users$ | async)?.length === 0"
+                    [routerLink]="['users', 'add-group']"
+                    [queryParams]="{ user_ids: getUserIds(users$ | async) }">Add group</button>
+                  <button
+                    class="dropdown-item"
+                    [disabled]="(users$ | async)?.length === 0"
+                    [routerLink]="['users', 'remove-group']"
+                    [queryParams]="{ user_ids: getUserIds(users$ | async) }">Remove group</button>
+                </div>
               </div>
             </div>
-            <div class="col-2">
+            <div class="col-4">
               <a [routerLink]="['users', 'create']" class="btn btn-primary pull-right">Create user</a>
             </div>
           </div>
-          <gpf-users-table [search]="searchTerm.value"></gpf-users-table>
+
+          <gpf-users-table
+            [users]="users$ | async">
+            </gpf-users-table>
         </ng-template>
       </ngb-tab>
 

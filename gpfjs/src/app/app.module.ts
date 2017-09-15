@@ -122,6 +122,8 @@ import { UsersGroupsService } from './users-groups/users-groups.service';
 
 import { Select2Module } from 'ng2-select2';
 import { UserCreateComponent } from './user-create/user-create.component';
+import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
+import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remove.component';
 
 const appRoutes: Routes = [
   {
@@ -189,6 +191,14 @@ const appRoutes: Routes = [
       {
         path: 'users/create',
         component: UserCreateComponent
+      },
+      {
+        path: 'users/add-group',
+        component: GroupsBulkAddComponent
+      },
+      {
+        path: 'users/remove-group',
+        component: GroupsBulkRemoveComponent
       },
       {
         path: 'users/:id',
@@ -277,6 +287,8 @@ const appRoutes: Routes = [
     UserEditComponent,
     ManagementComponent,
     UserCreateComponent,
+    GroupsBulkAddComponent,
+    GroupsBulkRemoveComponent,
   ],
   imports: [
     BrowserModule,

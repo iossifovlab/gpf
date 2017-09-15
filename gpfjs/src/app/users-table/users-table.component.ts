@@ -12,13 +12,9 @@ import { UsersService } from '../users/users.service';
   styleUrls: ['./users-table.component.css']
 })
 export class UsersTableComponent implements OnInit {
-  users$: Observable<{}>;
-  private input$ = new ReplaySubject<string>(1);
 
   @Input()
-  set search(value: string) {
-    this.input$.next(value);
-  }
+  users: User[];
 
   constructor(
     private zone: NgZone,
@@ -28,15 +24,6 @@ export class UsersTableComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.users$ = this.input$
-      .map(searchTerm => searchTerm.trim())
-      .debounceTime(300)
-      .distinctUntilChanged()
-      .switchMap(searchTerm =>
-        this.usersService.searchUsersByGroup(searchTerm))
-      .share();
-
-    // this.input$.next(' ');
   }
 
   deleteUser(user: User) {

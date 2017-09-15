@@ -1,6 +1,9 @@
 <div class="row">
   <div class="col-12 mt-3">
-    <gpf-table [dataSource]="(users$ | async)" style="display: inline-block">
+    <gpf-table [dataSource]="users" style="display: inline-block">
+      <gpf-table-column>
+        <gpf-table-subcolumn header="Name" field="name"></gpf-table-subcolumn>
+      </gpf-table-column>
       <gpf-table-column>
         <gpf-table-subcolumn header="Email" field="email">
           <div *gpfTableCellContent="let data">
@@ -9,10 +12,7 @@
         </gpf-table-subcolumn>
       </gpf-table-column>
       <gpf-table-column>
-        <gpf-table-subcolumn header="Name" field="name"></gpf-table-subcolumn>
-      </gpf-table-column>
-      <gpf-table-column>
-        <gpf-table-subcolumn header="Groups" field="groups">
+        <gpf-table-subcolumn header="Groups" [sortable]="false">
           <span *gpfTableCellContent="let data">
             <div *ngFor="let group of data.groups">
               {{ group.name }}
