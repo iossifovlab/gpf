@@ -73,7 +73,7 @@
         </gpf-table-subcolumn>
       </gpf-table-column>
     </gpf-table>
-    <div *ngIf="(users$ | async)?.length ==- 0">
+    <div *ngIf="users?.length === 0">
       No results
     </div>
   </div>

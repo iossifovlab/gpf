@@ -16,7 +16,7 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
 })
 export class GroupsBulkAddComponent implements OnInit {
   configurationOptions: Select2Options;
-  private users$ = new BehaviorSubject<User[]>(null);
+  users$ = new BehaviorSubject<User[]>(null);
   groups$: Observable<UserGroup[]>;
   group: string;
 

@@ -17,7 +17,7 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
 })
 export class GroupsBulkRemoveComponent implements OnInit {
   configurationOptions: Select2Options;
-  private users$ = new BehaviorSubject<User[]>(null);
+  users$ = new BehaviorSubject<User[]>(null);
   groups$: Observable<UserGroup[]>;
   group: string;
 
@@ -106,5 +106,3 @@ export class GroupsBulkRemoveComponent implements OnInit {
   }
 
 }
-
-
