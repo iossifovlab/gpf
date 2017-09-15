@@ -1,6 +1,6 @@
 <gpf-table noScrollOptimization="true" [dataSource]="measures" style="display: inline-block">
     <gpf-table-column>
-        <gpf-table-header caption="Proband Pheno Measure"></gpf-table-header>
+        <gpf-table-header caption="Proband Pheno Measure" field="measureName"></gpf-table-header>
         <gpf-table-content field="measureName"></gpf-table-content>
     </gpf-table-column>
     <gpf-table-column>
@@ -15,7 +15,7 @@
     </gpf-table-column>
     <gpf-table-column>
         <gpf-table-header>
-            <gpf-table-subheader caption="Measure Type"></gpf-table-subheader>
+            <gpf-table-subheader caption="Measure Type" field="measureType"></gpf-table-subheader>
             <gpf-table-subheader caption="Values Domain"></gpf-table-subheader>
         </gpf-table-header>
         <gpf-table-content>
@@ -35,8 +35,8 @@
     </gpf-table-column>
     <gpf-table-column header="P Value">
         <gpf-table-header caption="P Value">
-            <gpf-table-subheader caption="male"></gpf-table-subheader>
-            <gpf-table-subheader caption="female"></gpf-table-subheader>
+            <gpf-table-subheader caption="male" field="pvalueCorrelationNviqMale"></gpf-table-subheader>
+            <gpf-table-subheader caption="female" field="pvalueCorrelationNviqFemale"></gpf-table-subheader>
         </gpf-table-header>
         <gpf-table-content>
             <gpf-table-subcontent>
@@ -67,8 +67,8 @@
     </gpf-table-column>
     <gpf-table-column>
         <gpf-table-header caption="P Value">
-            <gpf-table-subheader caption="male"></gpf-table-subheader>
-            <gpf-table-subheader caption="female"></gpf-table-subheader>
+            <gpf-table-subheader caption="male" field="pvalueCorrelationAgeMale"></gpf-table-subheader>
+            <gpf-table-subheader caption="female" field="pvalueCorrelationAgeFemale"></gpf-table-subheader>
         </gpf-table-header>
         <gpf-table-content>
             <gpf-table-subcontent>
