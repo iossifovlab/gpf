@@ -21,8 +21,5 @@ urlpatterns = patterns(
     url(r'reset_password$', 'reset_password'),
     url(r'change_password', 'change_password'),
     url(r'check_verif_path', 'check_verif_path'),
-    url(r'^', include(router.urls)),
+    url(r'', include(router.urls)),
 )
-
-
-

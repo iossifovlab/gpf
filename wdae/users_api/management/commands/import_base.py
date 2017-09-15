@@ -17,7 +17,7 @@ class ImportUsersBase:
                 group, _ = Group.objects.get_or_create(name=group_name)
                 group.user_set.add(user)
 
-            if "superuser" in res['Groups']:
+            if WdaeUser.SUPERUSER_GROUP in res['Groups']:
                 user.is_superuser = True
                 user.is_staff = True
 

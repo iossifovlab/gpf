@@ -96,3 +96,21 @@ class UserWithoutEmailSerializer(UserSerializer):
     class Meta:
         model = get_user_model()
         fields = tuple(x for x in UserSerializer.Meta.fields if x != 'email')
+
+
+class BulkGroupOperationSerializer(serializers.Serializer):
+
+    userIds = serializers.ListSerializer(child=serializers.IntegerField())
+    group = serializers.CharField()
+
+    def create(self, validated_data):
+        raise NotImplementedError()
+
+    def to_representation(self, instance):
+        raise NotImplementedError()
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError()
+
+    def to_internal_value(self, data):
+        return super(BulkGroupOperationSerializer, self).to_internal_value(data)

@@ -37,6 +37,21 @@ def user_reset_password_url(user_id):
 
 
 @pytest.fixture()
+def users_bulk_add_group_url():
+    return reverse('users-bulk-add-group')
+
+
+@pytest.fixture()
+def users_bulk_remove_group_url():
+    return reverse('users-bulk-remove-group')
+
+
+@pytest.fixture()
+def empty_group(db):
+    return Group.objects.create(name='Empty group')
+
+
+@pytest.fixture()
 def active_user(db, user_model):
     user = user_model.objects.create(email='new@new.com', password='secret')
 
@@ -50,6 +65,25 @@ def inactive_user(db, user_model):
 
     assert not user.is_active
     return user
+
+
+@pytest.fixture()
+def three_new_users(db, user_model):
+    users = []
+    for email_id in range(3):
+        user = user_model.objects \
+            .create(email='user{}@example.com'.format(email_id+1))
+        users.append(user)
+
+    return users
+
+@pytest.fixture()
+def three_users_in_a_group(db, three_new_users, empty_group):
+    empty_group.user_set.add(*three_new_users)
+    for user in three_new_users:
+        user.refresh_from_db()
+
+    return three_new_users, empty_group
 
 
 def test_admin_can_get_default_users(admin_client, users_endpoint):
@@ -319,3 +353,135 @@ def test_searching_by_any_user_finds_all_users(
 
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data) == users_count
+
+
+def test_bulk_adding_users_to_existing_group(
+        admin_client, users_bulk_add_group_url, three_new_users, empty_group):
+    for user in three_new_users:
+        assert not user.groups.filter(name=empty_group.name).exists()
+
+    data = {
+        'userIds': map(lambda u: u.id, three_new_users),
+        'group': empty_group.name
+    }
+
+    response = admin_client.post(users_bulk_add_group_url, data, format='json')
+    assert response.status_code is status.HTTP_200_OK
+
+    for user in three_new_users:
+        user.refresh_from_db()
+        assert user.groups.filter(name=empty_group.name).exists()
+
+
+def test_bulk_adding_users_to_new_group(
+        admin_client, users_bulk_add_group_url, three_new_users):
+    group_name = 'some random name'
+    data = {
+        'userIds': map(lambda u: u.id, three_new_users),
+        'group': group_name
+    }
+
+    response = admin_client.post(users_bulk_add_group_url, data, format='json')
+    assert response.status_code is status.HTTP_200_OK
+
+    for user in three_new_users:
+        user.refresh_from_db()
+        assert user.groups.filter(name=data['group']).exists()
+
+    assert Group.objects.filter(name=group_name).exists()
+
+
+def test_bulk_adding_with_duplicate_user_ids_fails(
+        admin_client, users_bulk_add_group_url, three_new_users):
+    data = {
+        'userIds': map(lambda u: u.id, three_new_users),
+        'group': 'some random name'
+    }
+    data['userIds'].append(three_new_users[0].id)
+
+    response = admin_client.post(users_bulk_add_group_url, data, format='json')
+    assert response.status_code is status.HTTP_400_BAD_REQUEST
+
+    for user in three_new_users:
+        user.refresh_from_db()
+        assert not user.groups.filter(name=data['group']).exists()
+
+
+def test_bulk_adding_with_duplicate_user_ids_doesnt_create_new_group(
+        admin_client, users_bulk_add_group_url, three_new_users):
+    group_name = 'some random name'
+    data = {
+        'userIds': map(lambda u: u.id, three_new_users),
+        'group': group_name
+    }
+    data['userIds'].append(three_new_users[0].id)
+
+    response = admin_client.post(users_bulk_add_group_url, data, format='json')
+    assert response.status_code is status.HTTP_400_BAD_REQUEST
+
+    assert not Group.objects.filter(name=group_name).exists()
+
+
+def test_bulk_adding_unknown_user_ids_fails(
+        admin_client, users_bulk_add_group_url, three_new_users):
+    group_name = 'some random name'
+    data = {
+        'userIds': map(lambda u: u.id, three_new_users),
+        'group': group_name
+    }
+    data['userIds'].append(424242)
+
+    response = admin_client.post(users_bulk_add_group_url, data, format='json')
+    assert response.status_code is status.HTTP_400_BAD_REQUEST
+
+    assert not Group.objects.filter(name=group_name).exists()
+
+
+def test_bulk_remove_group_works(
+        admin_client, users_bulk_remove_group_url, three_users_in_a_group):
+    users, group = three_users_in_a_group
+    data = {
+        'userIds': map(lambda u: u.id, users),
+        'group': group.name
+    }
+
+    response = admin_client.post(
+        users_bulk_remove_group_url, data, format='json')
+    assert response.status_code is status.HTTP_200_OK
+
+    for user in users:
+        assert not user.groups.filter(name=group.name).exists()
+
+
+def test_bulk_remove_with_user_without_the_group_works(
+        admin_client, users_bulk_remove_group_url, three_users_in_a_group,
+        active_user):
+    users, group = three_users_in_a_group
+    assert not active_user.groups.filter(name=group.name).exists()
+
+    data = {
+        'userIds': map(lambda u: u.id, users),
+        'group': group.name
+    }
+    data['userIds'].append(active_user.id)
+
+    response = admin_client.post(
+        users_bulk_remove_group_url, data, format='json')
+    assert response.status_code is status.HTTP_200_OK
+
+    for user in users:
+        assert not user.groups.filter(name=group.name).exists()
+    assert not active_user.groups.filter(name=group.name).exists()
+
+
+def test_bulk_remove_unknown_group_fails(
+        admin_client, users_bulk_remove_group_url, three_users_in_a_group):
+    users, _ = three_users_in_a_group
+    data = {
+        'userIds': map(lambda u: u.id, users),
+        'group': 'alabala'
+    }
+
+    response = admin_client.post(
+        users_bulk_remove_group_url, data, format='json')
+    assert response.status_code is status.HTTP_404_NOT_FOUND
