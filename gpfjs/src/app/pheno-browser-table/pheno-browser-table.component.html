@@ -1,79 +1,90 @@
 <gpf-table noScrollOptimization="true" [dataSource]="measures" style="display: inline-block">
-  <gpf-table-column>
-    <gpf-table-subcolumn header="Proband Pheno Measure" field="measureName"></gpf-table-subcolumn>
-  </gpf-table-column>
-  <gpf-table-column header="Pheno Measure Values" field="figureDistributionSmall">
-    <span *gpfTableCellContent="let data">
-      <a [class.clickable]="!!data.figureDistribution" (click)="openModal(content, data.figureDistribution)">
-        <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
-      </a>
-    </span>
-  </gpf-table-column>
-  <gpf-table-column>
-    <gpf-table-subcolumn header="Measure Type" field="measureType" [sortable]="true">
-      <span *gpfTableCellContent="let data">
-        {{ data.measureType }}
-      </span>
-    </gpf-table-subcolumn>
-    <gpf-table-subcolumn header="Values Domain" field="valuesDomain" [sortable]="false">
-      <span *gpfTableCellContent="let data">
-        {{ data.valuesDomain }}
-      </span>
-    </gpf-table-subcolumn>
-  </gpf-table-column>
-  <gpf-table-column>
-    <gpf-table-subcolumn
-      [sortable]="false"
-      header="Correlation by Non-Verbal IQ"
-      field="figureCorrelationNviqSmall">
-      <span *gpfTableCellContent="let data">
-        <a [class.clickable]="!!data.figureCorrelationNviq" (click)="openModal(content, data.figureCorrelationNviq)">
-          <img *ngIf="data.figureCorrelationNviqSmall" class="table-chart" [src]="data.figureCorrelationNviqSmall" />
-        </a>
-      </span>
-    </gpf-table-subcolumn>
-  </gpf-table-column>
-  <gpf-table-column header="P Value">
-    <gpf-table-subcolumn header="male" field="pvalueCorrelationNviqMale">
-        <span class="expanded-span"
-           *gpfTableCellContent="let data"
-           [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqMale)">
-          {{ data.pvalueCorrelationNviqMale | numberWithExp: "1.2-4" }}
-        </span>
-    </gpf-table-subcolumn>
-    <gpf-table-subcolumn header="female" field="pvalueCorrelationNviqFemale">
-        <span class="expanded-span"
-           *gpfTableCellContent="let data"
-           [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqFemale)">
-          {{ data.pvalueCorrelationNviqFemale | numberWithExp: "1.2-4" }}
-        </span></gpf-table-subcolumn>
-  </gpf-table-column>
-  <gpf-table-column>
-    <gpf-table-subcolumn
-      [sortable]="false"
-      header="Correlation by Age"
-      field="figureCorrelationAgeSmall">
-      <span *gpfTableCellContent="let data">
-        <a [class.clickable]="!!data.figureCorrelationAge" (click)="openModal(content, data.figureCorrelationAge)">
-          <img *ngIf="data.figureCorrelationAgeSmall" class="table-chart" [src]="data.figureCorrelationAgeSmall" />
-        </a>
-      </span>
-    </gpf-table-subcolumn>
-  </gpf-table-column>
-  <gpf-table-column header="P Value">
-    <gpf-table-subcolumn header="male" field="pvalueCorrelationAgeMale">
-        <span class="expanded-span"
-          *gpfTableCellContent="let data"
-          [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeMale)">
-          {{ data.pvalueCorrelationAgeMale | numberWithExp: "1.2-4" }}
-        </span>
-    </gpf-table-subcolumn>
-    <gpf-table-subcolumn header="female" field="pvalueCorrelationAgeFemale">
-        <span class="expanded-span"
-          *gpfTableCellContent="let data"
-          [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeFemale)">
-          {{ data.pvalueCorrelationAgeFemale | numberWithExp: "1.2-4" }}
-        </span>
-    </gpf-table-subcolumn>
-  </gpf-table-column>
+    <gpf-table-column>
+        <gpf-table-header caption="Proband Pheno Measure"></gpf-table-header>
+        <gpf-table-content field="measureName"></gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column>
+        <gpf-table-header caption="Pheno Measure Values"></gpf-table-header>
+        <gpf-table-content>
+            <span *gpfTableCellContent="let data">
+                <a [class.clickable]="!!data.figureDistribution" (click)="openModal(content, data.figureDistribution)">
+                    <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
+                </a>
+            </span>
+        </gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column>
+        <gpf-table-header>
+            <gpf-table-subheader caption="Measure Type"></gpf-table-subheader>
+            <gpf-table-subheader caption="Values Domain"></gpf-table-subheader>
+        </gpf-table-header>
+        <gpf-table-content>
+            <gpf-table-subcontent field="measureType"></gpf-table-subcontent>
+            <gpf-table-subcontent field="valuesDomain"></gpf-table-subcontent>
+        </gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column>
+        <gpf-table-header caption="Correlation by Non-Verbal IQ"></gpf-table-header>
+        <gpf-table-content>
+            <span *gpfTableCellContent="let data">
+                <a [class.clickable]="!!data.figureCorrelationNviq" (click)="openModal(content, data.figureCorrelationNviq)">
+                    <img *ngIf="data.figureCorrelationNviqSmall" class="table-chart" [src]="data.figureCorrelationNviqSmall" />
+                </a>
+            </span>
+        </gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column header="P Value">
+        <gpf-table-header caption="P Value">
+            <gpf-table-subheader caption="male"></gpf-table-subheader>
+            <gpf-table-subheader caption="female"></gpf-table-subheader>
+        </gpf-table-header>
+        <gpf-table-content>
+            <gpf-table-subcontent>
+                <span class="expanded-span"
+                   *gpfTableCellContent="let data"
+                   [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqMale)">
+                  {{ data.pvalueCorrelationNviqMale | numberWithExp: "1.2-4" }}
+                </span>
+            </gpf-table-subcontent>
+            <gpf-table-subcontent>
+                <span class="expanded-span"
+                   *gpfTableCellContent="let data"
+                   [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqFemale)">
+                  {{ data.pvalueCorrelationNviqFemale | numberWithExp: "1.2-4" }}
+                </span>
+            </gpf-table-subcontent>
+        </gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column>
+        <gpf-table-header caption="Correlation by Age"></gpf-table-header>
+        <gpf-table-content>
+            <span *gpfTableCellContent="let data">
+                <a [class.clickable]="!!data.figureCorrelationAge" (click)="openModal(content, data.figureCorrelationAge)">
+                    <img *ngIf="data.figureCorrelationAgeSmall" class="table-chart" [src]="data.figureCorrelationAgeSmall" />
+                </a>
+            </span>
+        </gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column>
+        <gpf-table-header caption="P Value">
+            <gpf-table-subheader caption="male"></gpf-table-subheader>
+            <gpf-table-subheader caption="female"></gpf-table-subheader>
+        </gpf-table-header>
+        <gpf-table-content>
+            <gpf-table-subcontent>
+                <span class="expanded-span"
+                  *gpfTableCellContent="let data"
+                  [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeMale)">
+                  {{ data.pvalueCorrelationAgeMale | numberWithExp: "1.2-4" }}
+                </span>
+            </gpf-table-subcontent>
+            <gpf-table-subcontent>
+                <span class="expanded-span"
+                  *gpfTableCellContent="let data"
+                  [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeFemale)">
+                  {{ data.pvalueCorrelationAgeFemale | numberWithExp: "1.2-4" }}
+                </span>
+            </gpf-table-subcontent>
+        </gpf-table-content>
+    </gpf-table-column>
 </gpf-table>
