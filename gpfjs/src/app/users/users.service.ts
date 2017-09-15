@@ -19,8 +19,8 @@ export class UsersService {
   private changePasswordUrl = 'users/change_password';
   private checkVerificationUrl = 'users/check_verif_path';
   private usersUrl = 'users';
-  private bulkAddGroupUrl = `${this.usersUrl}/bulk-add-group`;
-  private bulkRemoveGroupUrl = `${this.usersUrl}/bulk-remove-group`;
+  private bulkAddGroupUrl = `${this.usersUrl}/bulk_add_group`;
+  private bulkRemoveGroupUrl = `${this.usersUrl}/bulk_remove_group`;
 
   private userInfo$ = new BehaviorSubject<{}>(null);
 
