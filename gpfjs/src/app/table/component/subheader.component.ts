@@ -13,6 +13,10 @@ export class GpfTableSubheaderComponent {
 
   contentTemplateRef: TemplateRef<any>;
 
+  get sortable () {
+      return this.field || this.comparator != this.defaultComparator;
+  }
+
   ngAfterContentInit() {
     if (this.contentChildren.first) {
       this.contentTemplateRef = this.contentChildren.first.templateRef;

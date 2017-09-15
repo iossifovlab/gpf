@@ -2,15 +2,15 @@
     <div style="float: left; clear: left; height: 100%;">
         <div style="height: 100%; display: table; ">
             <div style="height: 100%; display: table-cell; vertical-align: middle; ">
-                <div [class.clickable]="columnInfo.field" style="display: table-cell; vertical-align: middle; text-align: right" (click)="columnInfo.field && onSortClick(columnInfo)">
+                <div [class.clickable]="columnInfo.sortable" style="display: table-cell; vertical-align: middle; text-align: right" (click)="columnInfo.sortable && onSortClick(columnInfo)">
                     <ng-template *ngIf="columnInfo.contentTemplateRef" [ngTemplateOutlet]="columnInfo.contentTemplateRef">
                     </ng-template>
                     <span *ngIf="columnInfo.caption">{{ columnInfo.caption }}</span>
-                    <img *ngIf="columnInfo.field && sortingInfo?.sortBySubcolumn != columnInfo"
+                    <img *ngIf="columnInfo.sortable && sortingInfo?.sortBySubcolumn != columnInfo"
                         src="{{imgPathPrefix}}bg.gif" style="height: 12px;">
-                    <img *ngIf="columnInfo.field && sortingInfo?.sortBySubcolumn == columnInfo && sortingInfo?.sortOrderAsc"
+                    <img *ngIf="columnInfo.sortable && sortingInfo?.sortBySubcolumn == columnInfo && sortingInfo?.sortOrderAsc"
                         src="{{imgPathPrefix}}asc.gif" style="height: 12px;">
-                    <img *ngIf="columnInfo.field && sortingInfo?.sortBySubcolumn == columnInfo && !sortingInfo?.sortOrderAsc"
+                    <img *ngIf="columnInfo.sortable && sortingInfo?.sortBySubcolumn == columnInfo && !sortingInfo?.sortOrderAsc"
                         src="{{imgPathPrefix}}desc.gif" style="height: 12px;">
                 </div>
             </div>
@@ -20,15 +20,15 @@
     <div style="float: right; clear: right; margin-right: 0px; height: 100%">
         <div style="height: 100%; display: table; ">
             <div *ngFor="let child of columnInfo.subcolumnsChildren" style="display: table-row;">
-                <div [class.clickable]="child.field" style="display: table-cell; vertical-align: middle; text-align: right" (click)="child.field && onSortClick(child)">
+                <div [class.clickable]="child.sortable" style="display: table-cell; vertical-align: middle; text-align: right" (click)="child.sortable && onSortClick(child)">
                     <ng-template *ngIf="child.contentTemplateRef" [ngTemplateOutlet]="child.contentTemplateRef">
                     </ng-template>
                     <span *ngIf="!child.contentTemplateRef">{{ child.caption }}</span>
-                    <img *ngIf="child.field && sortingInfo?.sortBySubcolumn != child"
+                    <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn != child"
                         src="{{imgPathPrefix}}bg.gif" style="height: 12px;">
-                    <img *ngIf="child.field && sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc"
+                    <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn == child && sortingInfo?.sortOrderAsc"
                         src="{{imgPathPrefix}}asc.gif" style="height: 12px;">
-                    <img *ngIf="child.field && sortingInfo?.sortBySubcolumn == child && !sortingInfo?.sortOrderAsc"
+                    <img *ngIf="child.sortable && sortingInfo?.sortBySubcolumn == child && !sortingInfo?.sortOrderAsc"
                         src="{{imgPathPrefix}}desc.gif" style="height: 12px;">
                 </div>
             </div>
