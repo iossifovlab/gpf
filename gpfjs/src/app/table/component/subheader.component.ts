@@ -10,7 +10,6 @@ export class GpfTableSubheaderComponent {
   @Input() field: string;
   @Input() caption: string;
   @Input() comparator: (leftVal: any, rightVal: any) => number = this.defaultComparator;
-  @Input() sortable = true;
 
   contentTemplateRef: TemplateRef<any>;
 

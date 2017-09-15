@@ -39,7 +39,7 @@
         </ng-container>
 
         <ng-container *ngSwitchDefault>
-            <gpf-table-header caption="{{ column }}">
+            <gpf-table-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
             </gpf-table-header>
             <gpf-table-content field="{{ columnNameToFieldName(column) }}">
             </gpf-table-content>
