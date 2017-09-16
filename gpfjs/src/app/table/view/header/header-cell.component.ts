@@ -3,7 +3,7 @@ import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
   QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver,
   AfterViewInit, Query, ElementRef
 } from '@angular/core';
-import { GpfTableColumnComponent } from '../../component/column.component'
+import { GpfTableContentHeaderComponent } from '../../component/header.component'
 import { GpfTableSubheaderComponent } from '../../component/subheader.component'
 import { SortInfo } from '../../table.component'
 import { Observable } from 'rxjs';
@@ -16,7 +16,7 @@ import { environment } from '../../../../environments/environment';
   styleUrls: ['./header-cell.component.css']
 })
 export class GpfTableHeaderCellComponent {
-  @Input() columnInfo: GpfTableColumnComponent;
+  @Input() columnInfo: GpfTableContentHeaderComponent;
   @Output() sortingInfoChange = new EventEmitter();
   @Input() sortingInfo: SortInfo;
 
