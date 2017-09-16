@@ -2,6 +2,10 @@ gpf-table-view-cell {
     display: table-cell;
 }
 
+gpf-table-view-empty-cell {
+    display: table-cell;
+}
+
 gpf-table-view-header-cell {
     display: table-cell;
 }

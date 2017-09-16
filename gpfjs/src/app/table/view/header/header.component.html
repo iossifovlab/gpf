@@ -4,6 +4,6 @@
         [sortingInfo]="sortingInfo"
         (sortingInfoChange)="sortingInfoChange.emit($event)"
         style="vertical-align: middle"
-        [style.width.px] = "column.width">
+        [style.width.px] = "shouldSetWidth ? column.width : 0">
     </gpf-table-view-header-cell>
 </div>

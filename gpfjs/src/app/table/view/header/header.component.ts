@@ -12,6 +12,7 @@ export class GpfTableHeaderComponent {
   @Input() columns: any;
   @Output() sortingInfoChange = new EventEmitter();
   @Input() sortingInfo: SortInfo;
+  @Input() shouldSetWidth: boolean = false;
 
   get subheadersCount() {
       if (this.columns.first) {

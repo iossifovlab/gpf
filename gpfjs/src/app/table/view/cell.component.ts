@@ -1,24 +1,19 @@
-import { Input, Component, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
+import { Input, Component, ViewContainerRef, ComponentFactoryResolver, HostListener } from '@angular/core';
 import { GpfTableColumnComponent } from '../component/column.component'
+import { ResizeService } from '../resize.service'
 
 @Component({
-  selector: 'gpf-table-view-cell',
-  templateUrl: './cell.component.html'
+    selector: 'gpf-table-view-cell',
+    templateUrl: './cell.component.html'
 })
 export class GpfTableCellComponent {
-  @Input() columnInfo: GpfTableColumnComponent;
-  @Input() data: any;
-  private nativeElement: any;
+    @Input() columnInfo: GpfTableColumnComponent;
+    @Input() data: any;
 
-  constructor(private viewContainer: ViewContainerRef) {
-    this.nativeElement = viewContainer.element.nativeElement
-  }
+    constructor() {
+    }
 
-  ngAfterViewInit() {
-    this.columnInfo.width = this.nativeElement.getBoundingClientRect().width
-  }
-
-  get cellContent() {
-      return this.columnInfo.contentChildren.first
-  }
+    get cellContent() {
+        return this.columnInfo.contentChildren.first
+    }
 }
