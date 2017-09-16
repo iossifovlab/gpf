@@ -82,7 +82,7 @@ export class GpfTableComponent {
   }
 
   get totalTableHeight(): number {
-    if (!this.dataSource) {
+    if (!this.dataSource || this.noScrollOptimization) {
       return 0;
     }
     return this.lastRowHeight * this.dataSource.length;
