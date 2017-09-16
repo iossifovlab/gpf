@@ -1,4 +1,4 @@
-<div #table style="width: 100%; display: table; border-collapse: collapse;" [style.height]="totalTableHeight + 'px'">
+<div #table style="width: 100%; display: table; border-collapse: collapse;">
     <gpf-table-view-header
         [style.visibility] = "showFloatingHeader() ? 'hidden' : 'visible'"
         style="display: table-header-group"
@@ -21,6 +21,12 @@
     <div style="display: table-row;">
         <gpf-table-view-empty-cell *ngFor="let column of columnsChildren" [columnInfo]="column">
         </gpf-table-view-empty-cell>
+    </div>
+    <div
+        [style.display]="afterDataCellHeight ? 'table-row': 'none'"
+        [style.height]="afterDataCellHeight + 'px'">
+        <td *ngFor="let column of columnsChildren">
+        </td>
     </div>
 </div>
 

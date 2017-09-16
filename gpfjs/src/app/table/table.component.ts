@@ -81,18 +81,18 @@ export class GpfTableComponent {
     return [startIndex, endIndex];
   }
 
-  get totalTableHeight(): number {
-    if (!this.dataSource || this.noScrollOptimization) {
-      return 0;
-    }
-    return this.lastRowHeight * this.dataSource.length;
-  }
-
   get beforeDataCellHeight(): number {
     if (this.noScrollOptimization) {
       return 0;
     }
     return this.getScrollIndices()[0] * this.lastRowHeight;
+  }
+
+  get afterDataCellHeight(): number {
+    if (this.noScrollOptimization) {
+      return 0;
+    }
+    return (this.dataSource.length - this.getScrollIndices()[1]) * this.lastRowHeight;
   }
 
   get visibleData(): Array<any> {
