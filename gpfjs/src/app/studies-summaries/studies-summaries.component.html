@@ -6,40 +6,43 @@
       <gpf-table-column [ngSwitch]="column">
 
         <ng-container *ngSwitchCase="'denovo'">
-          <gpf-table-subcolumn header="{{ column }}"
-            field="{{ columnNameToFieldName(column) }}">
-            <span *gpfTableCellContent="let data">
-              <span *ngIf="data[column] === true" class="fa fa-check"></span>
-            </span>
-          </gpf-table-subcolumn>
+            <gpf-table-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
+            </gpf-table-header>
+            <gpf-table-content>
+                <span *gpfTableCellContent="let data">
+                  <span *ngIf="data[column] === true" class="fa fa-check"></span>
+                </span>
+            </gpf-table-content>
         </ng-container>
 
         <ng-container *ngSwitchCase="'transmitted'">
-          <gpf-table-subcolumn header="{{ column }}"
-            field="{{ columnNameToFieldName(column) }}">
-            <span *gpfTableCellContent="let data">
-              <i *ngIf="data[columnNameToFieldName(column)] === true" class="fa fa-check"></i>
-            </span>
-          </gpf-table-subcolumn>
+            <gpf-table-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
+            </gpf-table-header>
+            <gpf-table-content>
+                <span *gpfTableCellContent="let data">
+                  <i *ngIf="data[columnNameToFieldName(column)] === true" class="fa fa-check"></i>
+                </span>
+            </gpf-table-content>
         </ng-container>
 
         <ng-container *ngSwitchCase="'study name'">
-          <gpf-table-subcolumn header="{{ column }}"
-            field="{{ columnNameToFieldName(column) }}">
-            <span *gpfTableCellContent="let data">
-              <a target="_blank"
-                [routerLink]="['/reports/reports', getQueryParamObject(data[columnNameToFieldName(column)])]">
-                {{ data[columnNameToFieldName(column)] }}
-              </a>
-            </span>
-          </gpf-table-subcolumn>
+            <gpf-table-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
+            </gpf-table-header>
+            <gpf-table-content>
+                <span *gpfTableCellContent="let data">
+                  <a target="_blank"
+                    [routerLink]="['/reports/reports', getQueryParamObject(data[columnNameToFieldName(column)])]">
+                    {{ data[columnNameToFieldName(column)] }}
+                  </a>
+                </span>
+            </gpf-table-content>
         </ng-container>
 
         <ng-container *ngSwitchDefault>
-            <gpf-table-subcolumn
-              header="{{ column }}"
-              field="{{ columnNameToFieldName(column) }}">
-            </gpf-table-subcolumn>
+            <gpf-table-header caption="{{ column }}" field="{{ columnNameToFieldName(column) }}">
+            </gpf-table-header>
+            <gpf-table-content field="{{ columnNameToFieldName(column) }}">
+            </gpf-table-content>
         </ng-container>
 
       </gpf-table-column>
