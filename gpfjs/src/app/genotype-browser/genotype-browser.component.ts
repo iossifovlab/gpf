@@ -14,6 +14,7 @@ import 'rxjs/add/operator/zip';
 @Component({
   selector: 'gpf-genotype-browser',
   templateUrl: './genotype-browser.component.html',
+  styleUrls: ['./genotype-browser.component.css']
 })
 export class GenotypeBrowserComponent extends QueryStateCollector {
   genotypePreviewsArray: any;
