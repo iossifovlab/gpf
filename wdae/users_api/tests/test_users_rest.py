@@ -394,6 +394,29 @@ def test_searching_by_any_user_finds_all_users(
     assert len(response.data) == users_count
 
 
+def test_searching_by_username(admin_client, users_endpoint, active_user):
+    active_user.name = 'Testy Mc Testington'
+    active_user.save()
+
+    params = {
+        'search': 'test'
+    }
+    response = admin_client.get(users_endpoint, params)
+    assert response.status_code is status.HTTP_200_OK
+    assert len(response.data) == 1
+    assert response.data[0]['id'] == active_user.id
+
+
+def test_searching_by_email(admin_client, users_endpoint, active_user):
+    params = {
+        'search': active_user.email[:8]
+    }
+    response = admin_client.get(users_endpoint, params)
+    assert response.status_code is status.HTTP_200_OK
+    assert len(response.data) == 1
+    assert response.data[0]['id'] == active_user.id
+
+
 def test_bulk_adding_users_to_existing_group(
         admin_client, users_bulk_add_group_url, three_new_users, empty_group):
     for user in three_new_users:

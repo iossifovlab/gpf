@@ -33,7 +33,7 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = None
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('groups__name',)
+    search_fields = ('groups__name', 'email', 'name')
 
     def get_serializer_class(self):
         serializer_class = self.serializer_class
