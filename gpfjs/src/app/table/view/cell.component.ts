@@ -1,6 +1,5 @@
 import { Input, Component, ViewContainerRef, ComponentFactoryResolver, HostListener } from '@angular/core';
 import { GpfTableColumnComponent } from '../component/column.component'
-import { ResizeService } from '../resize.service'
 
 @Component({
     selector: 'gpf-table-view-cell',
