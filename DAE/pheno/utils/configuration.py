@@ -39,3 +39,13 @@ class PhenoConfig(ConfigBox):
 
         dbfile = self[dbname].dbfile
         return dbfile
+
+    def get_dbconfig(self, dbname):
+        assert dbname in self.pheno.list("dbs")
+        return self[dbname]
+
+    def get_age(self, dbname):
+        return self[dbname].age
+
+    def get_nonverbal_iq(self, dbname):
+        return self[dbname].nonverbal_iq

@@ -9,9 +9,7 @@ from sqlalchemy import not_
 
 from collections import defaultdict, OrderedDict
 
-from pheno.utils.configuration import PhenoConfig
 from VariantsDB import Person, Family
-import copy
 from pheno.db import DbManager
 
 
@@ -112,46 +110,8 @@ class PhenoDB(object):
         self.persons = None
         self.instruments = None
         self.measures = {}
-#         self.age = self._load_common_config('age')
-#         self.nonverbal_iq = self._load_common_config('nonverbal_iq')
         self.db = DbManager(dbfile=dbfile)
         self.db.build()
-
-#     def _load_common_config(self, name):
-#         if self.config.has_option(self.pheno_db, name):
-#             age = self.config.get(self.pheno_db, name)
-#             parts = age.split(':')
-#             if len(parts) == 1:
-#                 instrument_name = None
-#                 measure_name = parts[0]
-#             elif len(parts) == 2:
-#                 instrument_name = parts[0]
-#                 measure_name = parts[1]
-#             return {
-#                 'name': name,
-#                 'instrument_name': instrument_name,
-#                 'measure_name': measure_name,
-#             }
-
-#     def get_age_measure_id(self, measure_id):
-#         age = copy.copy(self.age)
-#         return self._get_configured_measure_id(age, measure_id)
-#
-#     def get_nonverbal_iq_measure_id(self, measure_id):
-#         nonverbal_iq = copy.copy(self.nonverbal_iq)
-#         return self._get_configured_measure_id(nonverbal_iq, measure_id)
-#
-#     def _get_configured_measure_id(self, base_measure_config, measure_id):
-#         assert self.has_measure(measure_id)
-#         if base_measure_config.get('instrument_name', None) is None:
-#             measure = self.get_measure(measure_id)
-#             base_measure_config['instrument_name'] = measure.instrument_name
-#         age_id = "{instrument_name}.{measure_name}".format(
-#             **base_measure_config)
-#         if self.has_measure(age_id):
-#             return age_id
-#         else:
-#             return None
 
     def _get_measures_df(self, instrument=None, measure_type=None):
         """

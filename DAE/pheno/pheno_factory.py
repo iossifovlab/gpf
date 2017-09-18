@@ -16,6 +16,9 @@ class PhenoFactory(object):
     def get_dbfile(self, dbname):
         return self.config.get_dbfile(dbname)
 
+    def get_dbconfig(self, dbname):
+        return self.config.get_dbconfig(dbname)
+
     def has_pheno_db(self, dbname):
         return dbname in self.config.pheno.list("dbs")
 
