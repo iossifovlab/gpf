@@ -4,15 +4,16 @@ from groups_api.serializers import GroupSerializer
 from django.contrib.auth.models import Group
 from django.db import transaction
 
-
-from users_api.models import WdaeUser
+from users_api.validators import ProtectedGroupsValidator
 
 
 class UserSerializer(serializers.ModelSerializer):
 
     name = serializers.CharField(required=False)
 
-    groups = GroupSerializer(many=True, partial=True)
+    groups = serializers.ListSerializer(
+        child=GroupSerializer(partial=True),
+        validators=[ProtectedGroupsValidator()])
 
     hasPassword = serializers.BooleanField(source='is_active', read_only=True)
 
@@ -52,7 +53,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         groups = validated_data.pop('groups', None)
-        researcher = validated_data.pop('researcher_id', None)
 
         self._check_groups_exist(groups)
 
@@ -64,15 +64,10 @@ class UserSerializer(serializers.ModelSerializer):
                 db_groups = Group.objects.filter(id__in=group_ids).all()
                 self._update_groups(instance, db_groups)
 
-            if researcher:
-                instance.groups.create(
-                    name=WdaeUser.get_group_name_for_researcher_id(researcher))
-
         return instance
 
     def create(self, validated_data):
         groups = validated_data.pop('groups', None)
-        researcher = validated_data.pop('researcher_id', None)
 
         self._check_groups_exist(groups)
 
@@ -83,10 +78,6 @@ class UserSerializer(serializers.ModelSerializer):
                 group_ids = map(lambda x: x['id'], groups)
                 db_groups = Group.objects.filter(id__in=group_ids).all()
                 self._update_groups(instance, db_groups)
-
-            if researcher:
-                instance.groups.create(
-                    name=WdaeUser.get_group_name_for_researcher_id(researcher))
 
         return instance
 

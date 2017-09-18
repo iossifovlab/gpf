@@ -39,8 +39,6 @@ def admin_user(db, user_model):
 
 @pytest.fixture()
 def user_client(user, client):
-    print("setup user client:", user, client)
-    print(user.email)
     client.login(email=user.email, password='secret123')
     return client
 

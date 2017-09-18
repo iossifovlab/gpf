@@ -79,7 +79,6 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(null=True)
 
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
 
@@ -103,6 +102,13 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             name__startswith=WdaeUser.RESEARCHER_GROUP_PREFIX)
 
         return group.name[len(WdaeUser.RESEARCHER_GROUP_PREFIX):]
+
+    def get_protected_group_names(self):
+        return self.DEFAULT_GROUPS_FOR_USER + (self.email,)
+
+    @property
+    def protected_groups(self):
+        return self.groups.filter(name__in=self.get_protected_group_names())
 
     def email_user(self, subject, message, from_email=None):
         override = None
