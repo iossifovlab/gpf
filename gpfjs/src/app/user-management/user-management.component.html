@@ -30,12 +30,12 @@
                 <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
                   <button
                     class="dropdown-item"
-                    [disabled]="(users$ | async)?.length === 0"
+                    [disabled]="selectedUsers(users$ | async).length === 0"
                     [routerLink]="['users', 'add-group']"
                     [queryParams]="{ user_ids: getUserIds(users$ | async) }">Add group</button>
                   <button
                     class="dropdown-item"
-                    [disabled]="(users$ | async)?.length === 0"
+                    [disabled]="selectedUsers(users$ | async)?.length === 0"
                     [routerLink]="['users', 'remove-group']"
                     [queryParams]="{ user_ids: getUserIds(users$ | async) }">Remove group</button>
                 </div>

@@ -2,33 +2,45 @@
   <div class="col-12 mt-3">
     <gpf-table [dataSource]="users" style="display: inline-block">
       <gpf-table-column>
-        <gpf-table-subcolumn header="Name" field="name"></gpf-table-subcolumn>
+        <gpf-table-subcolumn header="Selected" [sortable]="false" field="selected">
+          <div *gpfTableCellContent="let data">
+            <input type="checkbox" [(ngModel)]="data.selected" />
+          </div>
+        </gpf-table-subcolumn>
+      </gpf-table-column>
+      <gpf-table-column>
+        <gpf-table-subcolumn header="Name" field="user.name">
+          <div *gpfTableCellContent="let data">
+            {{ data.user.name }}
+          </div>
+        </gpf-table-subcolumn>
       </gpf-table-column>
       <gpf-table-column>
         <gpf-table-subcolumn header="Email" field="email">
           <div *gpfTableCellContent="let data">
-            <a [routerLink]="['/management/users', data.id]">{{ data.email }}</a>
+            <a [routerLink]="['/management/users', data.user.id]">{{ data.user.email }}</a>
           </div>
         </gpf-table-subcolumn>
       </gpf-table-column>
       <gpf-table-column>
         <gpf-table-subcolumn header="Groups" [sortable]="false">
           <span *gpfTableCellContent="let data">
-            <div *ngFor="let group of data.groups">
+            <div *ngFor="let group of data.user.groups">
               {{ group.name }}
             </div>
           </span>
         </gpf-table-subcolumn>
       </gpf-table-column>
       <gpf-table-column>
-        <gpf-table-subcolumn header="Has password" field="hasPassword">
+        <gpf-table-subcolumn header="Has password" field="user.hasPassword">
           <span *gpfTableCellContent="let data">
-            <span *ngIf="data.hasPassword">
+            <span *ngIf="data.user.hasPassword">
               <i class="fa fa-check" aria-hidden="true"></i>
             </span>
           </span>
         </gpf-table-subcolumn>
       </gpf-table-column>
+
       <gpf-table-column>
         <gpf-table-subcolumn header="Actions" [sortable]="false">
           <span *gpfTableCellContent="let data" class="action-buttons">
@@ -43,7 +55,7 @@
                 <div class="content-fluid text-center">
                   <div class="row">
                     <div class="col-12">
-                      {{ data.name }} ({{ data.email }}) will be deleted.
+                      {{ data.user.name }} ({{ data.user.email }}) will be deleted.
                     </div>
                   </div>
                   <div class="row">
@@ -53,7 +65,7 @@
                   </div>
                   <div class="row mt-3">
                     <div class="col-12 text-center">
-                      <button (click)="deleteUser(data)" class="btn btn-danger px-5">Delete</button>
+                      <button (click)="deleteUser(data.user)" class="btn btn-danger px-5">Delete</button>
                     </div>
                   </div>
                 </div>

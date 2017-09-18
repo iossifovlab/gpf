@@ -4,6 +4,7 @@ import { Observable, ReplaySubject } from 'rxjs';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
+import { SelectableUser } from './user-management';
 
 
 @Component({
@@ -14,7 +15,7 @@ import { UsersService } from '../users/users.service';
 export class UserManagementComponent implements OnInit {
 
   private input$ = new ReplaySubject<string>(1);
-  users$: Observable<{}>;
+  users$: Observable<SelectableUser[]>;
 
 
   constructor(
@@ -29,20 +30,31 @@ export class UserManagementComponent implements OnInit {
       .distinctUntilChanged()
       .switchMap(searchTerm =>
         this.usersService.searchUsersByGroup(searchTerm))
+      .map(users => users.map(user => new SelectableUser(user)))
       .share();
 
     this.search('');
+  }
+
+  selectedUsers(users: SelectableUser[]) {
+    if (!users) {
+      return [];
+    }
+
+    return users.filter(user => user.selected)
+      .map(user => user.user);
   }
 
   search(value: string) {
     this.input$.next(value);
   }
 
-  getUserIds(users: User[]) {
+  getUserIds(users: SelectableUser[]) {
     if (!users) {
       return '';
     }
+    const selectedUsers = this.selectedUsers(users);
 
-    return users.map(u => u.id).join(',');
+    return selectedUsers.map(u => u.id).join(',');
   }
 }

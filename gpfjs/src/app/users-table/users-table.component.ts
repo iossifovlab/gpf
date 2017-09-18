@@ -5,6 +5,7 @@ import { Observable, ReplaySubject } from 'rxjs';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
+import { SelectableUser } from '../user-management/user-management';
 
 @Component({
   selector: 'gpf-users-table',
@@ -14,7 +15,7 @@ import { UsersService } from '../users/users.service';
 export class UsersTableComponent implements OnInit {
 
   @Input()
-  users: User[];
+  users: SelectableUser[];
 
   constructor(
     private zone: NgZone,
