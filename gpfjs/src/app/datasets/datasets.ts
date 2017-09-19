@@ -182,7 +182,7 @@ export class GenotypeBrowser {
        ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters']),
-      GenomicMetric.fromJsonArray(json['missenseMetrics'])
+      GenomicMetric.fromJsonArray(json['genomicMetrics'])
     );
   }
 

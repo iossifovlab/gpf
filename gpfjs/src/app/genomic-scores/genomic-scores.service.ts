@@ -9,7 +9,7 @@ import 'rxjs/add/operator/map';
 
 @Injectable()
 export class GenomicScoresService {
-  private genomicScoresUrl = 'missense_scores';
+  private genomicScoresUrl = 'genomic_scores';
 
   constructor(
     private http: Http,
