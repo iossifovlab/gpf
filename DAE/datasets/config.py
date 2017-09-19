@@ -140,8 +140,8 @@ class DatasetsConfig(object):
             self._get_genotype_browser_family_study_filters(section)
         genotype_columns = \
             self._get_genotype_browser_genotype_columns(section)
-        missense_metrics = \
-            self._get_genotype_browser_missense_metrics(section)
+        genomic_metrics = \
+            self._get_genotype_browser_genomic_metrics(section)
 
         return {
             'mainForm': main_form,
@@ -157,7 +157,7 @@ class DatasetsConfig(object):
             'phenoFilters': pheno_filters,
             'familyStudyFilters': family_study_filters,
             'genotypeColumns': genotype_columns,
-            'missenseMetrics': missense_metrics
+            'genomicMetrics': genomic_metrics
         }
 
     def _get_genotype_browser_family_study_filters(self, section):
@@ -228,10 +228,10 @@ class DatasetsConfig(object):
             'measureFilter': measure_filter
         }
 
-    def _get_genotype_browser_missense_metrics(self, section):
+    def _get_genotype_browser_genomic_metrics(self, section):
         result = []
         metrics = self._get_string_list(
-            section, 'genotypeBrowser.missenseMetrics')
+            section, 'genotypeBrowser.genomicMetrics')
         if not metrics:
             return None
 

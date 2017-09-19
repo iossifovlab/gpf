@@ -6,7 +6,7 @@ import os.path
 import csv
 
 
-class MissenseScoresView(APIView):
+class GenomicScoresView(APIView):
     def __init__(self):
         self.histograms_data_dir = os.path.join(os.environ['DAE_DB_DIR'],
                                                 'missense_scores/')

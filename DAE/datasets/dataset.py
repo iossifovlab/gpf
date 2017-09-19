@@ -408,7 +408,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             'familyIds': self.get_family_ids(
                 safe=safe,
                 **kwargs),
-            'missenseScore': self.get_missense_score(
+            'genomicScore': self.get_genomic_score(
                 safe=safe,
                 **kwargs)
         }
