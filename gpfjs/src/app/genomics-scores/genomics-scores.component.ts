@@ -12,7 +12,7 @@ import { MissenseScoresState, MISSENSE_SCORES_INIT, MISSENSE_SCORES_CHANGE,
  import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 
 @Component({
-  selector: 'gpf-missense-scores',
+  selector: 'gpf-genomics-scores',
   templateUrl: './genomics-scores.component.html',
   /*providers: [{provide: QueryStateProvider,
                useExisting: forwardRef(() => MissenseScoresComponent) }]*/

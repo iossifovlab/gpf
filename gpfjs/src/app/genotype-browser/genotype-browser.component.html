@@ -2,10 +2,10 @@
   <gpf-genes-block></gpf-genes-block>
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
-  <gpf-missense-scores-block
+  <gpf-genomics-scores-block
     *ngIf="selectedDataset"
     [datasetConfig]="selectedDataset">
-  </gpf-missense-scores-block>
+  </gpf-genomics-scores-block>
   <gpf-family-filters-block
     *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
     [datasetConfig]="selectedDataset"

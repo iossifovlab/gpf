@@ -14,7 +14,7 @@ import { MissenseScoresState, MISSENSE_SCORES_INIT, MISSENSE_SCORES_CHANGE,
 
 
 @Component({
-  selector: 'gpf-missense-scores-block',
+  selector: 'gpf-genomics-scores-block',
   templateUrl: './genomics-scores-block.component.html',
   styleUrls: ['./genomics-scores-block.component.css'],
   providers: [{provide: QueryStateCollector,
