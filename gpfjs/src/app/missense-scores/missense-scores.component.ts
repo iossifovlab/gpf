@@ -14,11 +14,12 @@ import { MissenseScoresState, MISSENSE_SCORES_INIT, MISSENSE_SCORES_CHANGE,
 @Component({
   selector: 'gpf-missense-scores',
   templateUrl: './missense-scores.component.html',
-  providers: [{provide: QueryStateProvider,
-               useExisting: forwardRef(() => MissenseScoresComponent) }]
+  /*providers: [{provide: QueryStateProvider,
+               useExisting: forwardRef(() => MissenseScoresComponent) }]*/
 })
-export class MissenseScoresComponent extends QueryStateProvider implements OnInit {
+export class MissenseScoresComponent extends QueryStateProvider {
   @Input() datasetConfig: Dataset;
+  @Input() index: number;
   private internalSelectedMetric: MissenseMetric;
   histogramData: MissenseScoresHistogramData;
   private missenseScoresState: Observable<[MissenseScoresState, boolean,
@@ -38,28 +39,24 @@ export class MissenseScoresComponent extends QueryStateProvider implements OnIni
     this.missenseScoresState.subscribe(
       ([missenseScoresState, isValid, validationErrors]) => {
         //this.errors = validationErrorsToStringArray(validationErrors);
-
-        this.histogramData = missenseScoresState.histogramData;
-        this.internalRangeStart = missenseScoresState.rangeStart;
-        this.internalRangeEnd = missenseScoresState.rangeEnd;
+        if (this.index < missenseScoresState.missenseScoresState.length) {
+            console.log(this.index, missenseScoresState, missenseScoresState.missenseScoresState[this.index])
+            this.internalSelectedMetric = missenseScoresState.missenseScoresState[this.index].metric;
+            this.histogramData = missenseScoresState.missenseScoresState[this.index].histogramData;
+            this.internalRangeStart = missenseScoresState.missenseScoresState[this.index].rangeStart;
+            this.internalRangeEnd = missenseScoresState.missenseScoresState[this.index].rangeEnd;
+        }
       }
     );
   }
 
-  ngOnInit() {
-    this.store.dispatch({
-      'type': MISSENSE_SCORES_INIT,
-    });
-  }
-
   set selectedMetric(selectedMetric: MissenseMetric) {
-    this.internalSelectedMetric = selectedMetric;
     this.missenseScoresService.getHistogramData(this.datasetConfig.id,
         selectedMetric.id).subscribe(
       (histogramData) => {
         this.store.dispatch({
           'type': MISSENSE_SCORES_CHANGE,
-          'payload': [histogramData, histogramData.min, histogramData.max]
+          'payload': [this.index, selectedMetric, histogramData, histogramData.min, histogramData.max]
         });
     });
   }
@@ -91,7 +88,7 @@ export class MissenseScoresComponent extends QueryStateProvider implements OnIni
   }
 
   getState() {
-    return this.missenseScoresState.take(1).map(
+    /*return this.missenseScoresState.take(1).map(
       ([missenseScoresState, isValid, validationErrors]) => {
         if (!isValid) {
           //this.flashingAlert = true;
@@ -100,10 +97,10 @@ export class MissenseScoresComponent extends QueryStateProvider implements OnIni
           throw "invalid geneWeights state"
         }
         return { missenseScores: {
-          metric: missenseScoresState.histogramData.metric,
-          rangeStart: missenseScoresState.rangeStart,
-          rangeEnd: missenseScoresState.rangeEnd
+          metric: missenseScoresState[0].histogramData.metric,
+          rangeStart: missenseScoresState[0].rangeStart,
+          rangeEnd: missenseScoresState[0].rangeEnd
         }}
-    });
+    });*/
   }
 }

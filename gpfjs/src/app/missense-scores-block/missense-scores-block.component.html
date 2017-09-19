@@ -2,8 +2,19 @@
   <div class="card">
       <div class="card-header card-title">Missense Scores</div>
       <div class="card-block">
-        <gpf-missense-scores [datasetConfig]="datasetConfig">
-        </gpf-missense-scores>
+        <div style="padding: 5px" *ngFor="let score of scores; let i = index">
+            <img style="height: 30px;" src="{{imgPathPrefix}}remove_filter.svg" (click)="removeFilter(i)">
+            <span style="padding: 5px; display: inline-block">
+                <gpf-missense-scores [datasetConfig]="datasetConfig" [index]="i">
+                </gpf-missense-scores>
+            </span>
+        </div>
+        <div style="padding: 5px" (click)="addFilter()">
+            <img style="height: 30px;" src="{{imgPathPrefix}}add_filter.svg">
+            <span style="line-height:30px; padding: 5px">
+                Add filter
+            </span>
+        </div>
       </div>
   </div>
 </div>
