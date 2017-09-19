@@ -1,28 +1,28 @@
 import { Component, Input, forwardRef, OnInit } from '@angular/core';
 import { Dataset, MissenseMetric } from '../datasets/datasets';
-import { MissenseScoresService } from './genomics-scores.service'
-import { MissenseScoresHistogramData } from './genomics-scores';
+import { GenomicScoresService } from './genomic-scores.service'
+import { GenomicScoresHistogramData } from './genomic-scores';
 import { QueryStateProvider } from '../query/query-state-provider'
 import { Observable }        from 'rxjs/Observable';
 import { ValidationError } from "class-validator";
-import { MissenseScoresState, MISSENSE_SCORES_INIT, MISSENSE_SCORES_CHANGE,
-         MISSENSE_SCORES_RANGE_START_CHANGE, MISSENSE_SCORES_RANGE_END_CHANGE
- } from './genomics-scores-store';
+import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
+         GENOMIC_SCORES_RANGE_START_CHANGE, GENOMIC_SCORES_RANGE_END_CHANGE
+ } from './genomic-scores-store';
  import { Store } from '@ngrx/store';
  import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 
 @Component({
-  selector: 'gpf-genomics-scores',
-  templateUrl: './genomics-scores.component.html',
+  selector: 'gpf-genomic-scores',
+  templateUrl: './genomic-scores.component.html',
   /*providers: [{provide: QueryStateProvider,
                useExisting: forwardRef(() => MissenseScoresComponent) }]*/
 })
-export class MissenseScoresComponent extends QueryStateProvider {
+export class GenomicScoresComponent extends QueryStateProvider {
   @Input() datasetConfig: Dataset;
   @Input() index: number;
   private internalSelectedMetric: MissenseMetric;
-  histogramData: MissenseScoresHistogramData;
-  private missenseScoresState: Observable<[MissenseScoresState, boolean,
+  histogramData: GenomicScoresHistogramData;
+  private genomicScoresState: Observable<[GenomicScoresState, boolean,
                                            ValidationError[]]>;
   private internalRangeStart = 0;
   private internalRangeEnd = 0;
@@ -30,32 +30,32 @@ export class MissenseScoresComponent extends QueryStateProvider {
 
   constructor(
     private store: Store<any>,
-    private missenseScoresService: MissenseScoresService
+    private genomicsScoresService: GenomicScoresService
   )  {
     super();
-    this.missenseScoresState = toObservableWithValidation(
-      MissenseScoresState, this.store.select('missenseScore')
+    this.genomicScoresState = toObservableWithValidation(
+      GenomicScoresState, this.store.select('genomicScores')
     );
-    this.missenseScoresState.subscribe(
-      ([missenseScoresState, isValid, validationErrors]) => {
+    this.genomicScoresState.subscribe(
+      ([genomicScoresState, isValid, validationErrors]) => {
         //this.errors = validationErrorsToStringArray(validationErrors);
-        if (this.index < missenseScoresState.missenseScoresState.length) {
-            console.log(this.index, missenseScoresState, missenseScoresState.missenseScoresState[this.index])
-            this.internalSelectedMetric = missenseScoresState.missenseScoresState[this.index].metric;
-            this.histogramData = missenseScoresState.missenseScoresState[this.index].histogramData;
-            this.internalRangeStart = missenseScoresState.missenseScoresState[this.index].rangeStart;
-            this.internalRangeEnd = missenseScoresState.missenseScoresState[this.index].rangeEnd;
+        if (this.index < genomicScoresState.genomicScoresState.length) {
+            console.log(this.index, genomicScoresState, genomicScoresState.genomicScoresState[this.index])
+            this.internalSelectedMetric = genomicScoresState.genomicScoresState[this.index].metric;
+            this.histogramData = genomicScoresState.genomicScoresState[this.index].histogramData;
+            this.internalRangeStart = genomicScoresState.genomicScoresState[this.index].rangeStart;
+            this.internalRangeEnd = genomicScoresState.genomicScoresState[this.index].rangeEnd;
         }
       }
     );
   }
 
   set selectedMetric(selectedMetric: MissenseMetric) {
-    this.missenseScoresService.getHistogramData(this.datasetConfig.id,
+    this.genomicsScoresService.getHistogramData(this.datasetConfig.id,
         selectedMetric.id).subscribe(
       (histogramData) => {
         this.store.dispatch({
-          'type': MISSENSE_SCORES_CHANGE,
+          'type': GENOMIC_SCORES_CHANGE,
           'payload': [this.index, selectedMetric, histogramData, histogramData.min, histogramData.max]
         });
     });
@@ -67,7 +67,7 @@ export class MissenseScoresComponent extends QueryStateProvider {
 
   set rangeStart(range: number) {
     this.store.dispatch({
-      'type': MISSENSE_SCORES_RANGE_START_CHANGE,
+      'type': GENOMIC_SCORES_RANGE_START_CHANGE,
       'payload': range
     });
   }
@@ -78,7 +78,7 @@ export class MissenseScoresComponent extends QueryStateProvider {
 
   set rangeEnd(range: number) {
     this.store.dispatch({
-      'type': MISSENSE_SCORES_RANGE_END_CHANGE,
+      'type': GENOMIC_SCORES_RANGE_END_CHANGE,
       'payload': range
     });
   }

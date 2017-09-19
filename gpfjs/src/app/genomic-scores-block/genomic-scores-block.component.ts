@@ -5,22 +5,22 @@ import { environment } from '../../environments/environment';
 
 import { Observable }        from 'rxjs/Observable';
 import { ValidationError } from "class-validator";
-import { MissenseScoresState, MISSENSE_SCORES_INIT, MISSENSE_SCORES_CHANGE,
-         MISSENSE_SCORES_RANGE_START_CHANGE, MISSENSE_SCORES_RANGE_END_CHANGE,
-         MISSENSE_SCORE_ADD, MISSENSE_SCORE_REMOVE
- } from '../genomics-scores/genomics-scores-store';
+import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
+         GENOMIC_SCORES_RANGE_START_CHANGE, GENOMIC_SCORES_RANGE_END_CHANGE,
+         GENOMIC_SCORE_ADD, GENOMIC_SCORE_REMOVE
+ } from '../genomic-scores/genomic-scores-store';
  import { Store } from '@ngrx/store';
  import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 
 
 @Component({
-  selector: 'gpf-genomics-scores-block',
-  templateUrl: './genomics-scores-block.component.html',
-  styleUrls: ['./genomics-scores-block.component.css'],
+  selector: 'gpf-genomic-scores-block',
+  templateUrl: './genomic-scores-block.component.html',
+  styleUrls: ['./genomic-scores-block.component.css'],
   providers: [{provide: QueryStateCollector,
-               useExisting: forwardRef(() => MissenseScoresBlockComponent) }]
+               useExisting: forwardRef(() => GenomicScoresBlockComponent) }]
 })
-export class MissenseScoresBlockComponent extends QueryStateCollector {
+export class GenomicScoresBlockComponent extends QueryStateCollector {
     @Input() datasetConfig: Dataset;
     scores = [];
 
@@ -30,34 +30,34 @@ export class MissenseScoresBlockComponent extends QueryStateCollector {
 
     addFilter() {
         this.store.dispatch({
-          'type': MISSENSE_SCORE_ADD,
+          'type': GENOMIC_SCORE_ADD,
         });
     }
 
     removeFilter(index) {
         this.store.dispatch({
-          'type': MISSENSE_SCORE_REMOVE,
+          'type': GENOMIC_SCORE_REMOVE,
           'payload': index
         });
     }
 
-    private missenseScoresState: Observable<[MissenseScoresState, boolean,
+    private genomicScoresState: Observable<[GenomicScoresState, boolean,
                                              ValidationError[]]>;
     constructor(private store: Store<any>)  {
       super();
-      this.missenseScoresState = toObservableWithValidation(
-        MissenseScoresState, this.store.select('missenseScore')
+      this.genomicScoresState = toObservableWithValidation(
+        GenomicScoresState, this.store.select('genomicScores')
       );
-      this.missenseScoresState.subscribe(
-        ([missenseScoresState, isValid, validationErrors]) => {
-          this.scores = missenseScoresState.missenseScoresState;
+      this.genomicScoresState.subscribe(
+        ([genomicScoresState, isValid, validationErrors]) => {
+          this.scores = genomicScoresState.genomicScoresState;
         }
       );
     }
 
     ngOnInit() {
       this.store.dispatch({
-        'type': MISSENSE_SCORES_INIT,
+        'type': GENOMIC_SCORES_INIT,
       });
     }
 }

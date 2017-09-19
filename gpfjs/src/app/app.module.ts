@@ -111,9 +111,9 @@ import { VariantReportsComponent } from './variant-reports/variant-reports.compo
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
-import { MissenseScoresComponent } from './genomics-scores/genomics-scores.component'
-import { MissenseScoresService } from './genomics-scores/genomics-scores.service'
-import { MissenseScoresBlockComponent } from './genomics-scores-block/genomics-scores-block.component'
+import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component'
+import { GenomicScoresService } from './genomic-scores/genomic-scores.service'
+import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component'
 
 import { MarkdownModule } from 'angular2-markdown';
 
@@ -245,8 +245,8 @@ const appRoutes: Routes = [
     CommonReportsComponent,
     VariantReportsComponent,
     DatasetDescriptionComponent,
-    MissenseScoresComponent,
-    MissenseScoresBlockComponent
+    GenomicScoresComponent,
+    GenomicScoresBlockComponent
   ],
   imports: [
     BrowserModule,
@@ -282,7 +282,7 @@ const appRoutes: Routes = [
     PValueIntensityPipe,
     StudiesSummariesService,
     VariantReportsService,
-    MissenseScoresService
+    GenomicScoresService
   ],
 
   entryComponents: [

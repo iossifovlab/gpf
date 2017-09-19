@@ -1,6 +1,6 @@
-export class MissenseScoresHistogramData {
-  static fromJson(json: any): MissenseScoresHistogramData {
-    return new MissenseScoresHistogramData(
+export class GenomicScoresHistogramData {
+  static fromJson(json: any): GenomicScoresHistogramData {
+    return new GenomicScoresHistogramData(
       json['id'],
       json['bars'],
       json['bins'],
