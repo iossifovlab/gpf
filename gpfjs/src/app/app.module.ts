@@ -111,9 +111,9 @@ import { VariantReportsComponent } from './variant-reports/variant-reports.compo
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
-import { MissenseScoresComponent } from './missense-scores/missense-scores.component'
-import { MissenseScoresService } from './missense-scores/missense-scores.service'
-import { MissenseScoresBlockComponent } from './missense-scores-block/missense-scores-block.component'
+import { MissenseScoresComponent } from './genomics-scores/genomics-scores.component'
+import { MissenseScoresService } from './genomics-scores/genomics-scores.service'
+import { MissenseScoresBlockComponent } from './genomics-scores-block/genomics-scores-block.component'
 
 import { MarkdownModule } from 'angular2-markdown';
 

@@ -20,7 +20,7 @@ import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-mo
 import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
 import { FamilyIdsState, familyIdsReducer} from '../family-ids/family-ids';
 import { PhenoToolMeasureState, phenoToolMeasureStateReducer} from '../pheno-tool-measure/pheno-tool-measure';
-import { MissenseScoresState, missenseScoreReducer} from '../missense-scores/missense-scores-store';
+import { MissenseScoresState, missenseScoreReducer} from '../genomics-scores/genomics-scores-store';
 
 export interface GpfState {
   datasets: DatasetsState;

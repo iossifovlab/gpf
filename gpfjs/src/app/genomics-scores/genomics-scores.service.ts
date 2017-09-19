@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Headers, Http, Response, RequestOptions, URLSearchParams } from '@angular/http';
 import { Observable } from 'rxjs';
 
-import { MissenseScoresHistogramData } from './missense-scores';
+import { MissenseScoresHistogramData } from './genomics-scores';
 import { ConfigService } from '../config/config.service';
 
 import 'rxjs/add/operator/map';

@@ -8,15 +8,15 @@ import { ValidationError } from "class-validator";
 import { MissenseScoresState, MISSENSE_SCORES_INIT, MISSENSE_SCORES_CHANGE,
          MISSENSE_SCORES_RANGE_START_CHANGE, MISSENSE_SCORES_RANGE_END_CHANGE,
          MISSENSE_SCORE_ADD, MISSENSE_SCORE_REMOVE
- } from '../missense-scores/missense-scores-store';
+ } from '../genomics-scores/genomics-scores-store';
  import { Store } from '@ngrx/store';
  import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 
 
 @Component({
   selector: 'gpf-missense-scores-block',
-  templateUrl: './missense-scores-block.component.html',
-  styleUrls: ['./missense-scores-block.component.css'],
+  templateUrl: './genomics-scores-block.component.html',
+  styleUrls: ['./genomics-scores-block.component.css'],
   providers: [{provide: QueryStateCollector,
                useExisting: forwardRef(() => MissenseScoresBlockComponent) }]
 })

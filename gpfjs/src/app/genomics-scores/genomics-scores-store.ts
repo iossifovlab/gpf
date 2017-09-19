@@ -5,7 +5,7 @@ export const MISSENSE_SCORES_CHANGE = 'MISSENSE_SCORES_CHANGE';
 export const MISSENSE_SCORE_ADD = 'MISSENSE_SCORE_ADD';
 export const MISSENSE_SCORE_REMOVE = 'MISSENSE_SCORE_REMOVE';
 
-import { MissenseScoresHistogramData } from './missense-scores';
+import { MissenseScoresHistogramData } from './genomics-scores';
 import { IsNotEmpty, IsNumber, Min, Max } from "class-validator";
 import { IsLessThanOrEqual } from "../utils/is-less-than-validator"
 import { IsMoreThanOrEqual } from "../utils/is-more-than-validator"

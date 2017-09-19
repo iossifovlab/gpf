@@ -1,19 +1,19 @@
 import { Component, Input, forwardRef, OnInit } from '@angular/core';
 import { Dataset, MissenseMetric } from '../datasets/datasets';
-import { MissenseScoresService } from './missense-scores.service'
-import { MissenseScoresHistogramData } from './missense-scores';
+import { MissenseScoresService } from './genomics-scores.service'
+import { MissenseScoresHistogramData } from './genomics-scores';
 import { QueryStateProvider } from '../query/query-state-provider'
 import { Observable }        from 'rxjs/Observable';
 import { ValidationError } from "class-validator";
 import { MissenseScoresState, MISSENSE_SCORES_INIT, MISSENSE_SCORES_CHANGE,
          MISSENSE_SCORES_RANGE_START_CHANGE, MISSENSE_SCORES_RANGE_END_CHANGE
- } from './missense-scores-store';
+ } from './genomics-scores-store';
  import { Store } from '@ngrx/store';
  import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
 
 @Component({
   selector: 'gpf-missense-scores',
-  templateUrl: './missense-scores.component.html',
+  templateUrl: './genomics-scores.component.html',
   /*providers: [{provide: QueryStateProvider,
                useExisting: forwardRef(() => MissenseScoresComponent) }]*/
 })
