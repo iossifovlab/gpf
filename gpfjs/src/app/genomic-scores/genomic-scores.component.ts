@@ -1,5 +1,5 @@
 import { Component, Input, forwardRef, OnInit } from '@angular/core';
-import { Dataset, MissenseMetric } from '../datasets/datasets';
+import { Dataset, GenomicMetric } from '../datasets/datasets';
 import { GenomicScoresService } from './genomic-scores.service'
 import { GenomicScoresHistogramData } from './genomic-scores';
 import { QueryStateProvider } from '../query/query-state-provider'
@@ -20,7 +20,7 @@ import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
 export class GenomicScoresComponent extends QueryStateProvider {
   @Input() datasetConfig: Dataset;
   @Input() index: number;
-  private internalSelectedMetric: MissenseMetric;
+  private internalSelectedMetric: GenomicMetric;
   histogramData: GenomicScoresHistogramData;
   private genomicScoresState: Observable<[GenomicScoresState, boolean,
                                            ValidationError[]]>;
@@ -50,7 +50,7 @@ export class GenomicScoresComponent extends QueryStateProvider {
     );
   }
 
-  set selectedMetric(selectedMetric: MissenseMetric) {
+  set selectedMetric(selectedMetric: GenomicMetric) {
     this.genomicsScoresService.getHistogramData(this.datasetConfig.id,
         selectedMetric.id).subscribe(
       (histogramData) => {

@@ -64,19 +64,19 @@ export class PedigreeSelector extends IdName {
   }
 }
 
-export class MissenseMetric {
-  static fromJson(json: any): MissenseMetric {
-    return new MissenseMetric(
+export class GenomicMetric {
+  static fromJson(json: any): GenomicMetric {
+    return new GenomicMetric(
       json['id'],
       json['name']
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<MissenseMetric> {
+  static fromJsonArray(jsonArray: Array<Object>): Array<GenomicMetric> {
     if (!jsonArray) {
       return undefined;
     }
-    return jsonArray.map((json) => MissenseMetric.fromJson(json));
+    return jsonArray.map((json) => GenomicMetric.fromJson(json));
   }
 
   constructor(
@@ -182,7 +182,7 @@ export class GenotypeBrowser {
        ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters']),
-      MissenseMetric.fromJsonArray(json['missenseMetrics'])
+      GenomicMetric.fromJsonArray(json['missenseMetrics'])
     );
   }
 
@@ -197,7 +197,7 @@ export class GenotypeBrowser {
     readonly additionalColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
     readonly familyStudyFilters: Array<PhenoFilter>,
-    readonly missenseMetrics: Array<MissenseMetric>,
+    readonly genomicMetrics: Array<GenomicMetric>,
   ) {
 
   }
