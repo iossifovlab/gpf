@@ -1,10 +1,21 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from groups_api.serializers import GroupSerializer
 from django.contrib.auth.models import Group
 from django.db import transaction
 
 from users_api.validators import ProtectedGroupsValidator
+
+
+class CreatableSlugRelatedField(serializers.SlugRelatedField):
+
+    def to_internal_value(self, data):
+        try:
+            return self.get_queryset() \
+                .get_or_create(**{self.slug_field: data})[0]
+        except serializers.ObjectDoesNotExist:
+            self.fail('does_not_exist', slug_name=self.slug_field, value=data)
+        except (TypeError, ValueError):
+            self.fail('invalid')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -12,7 +23,8 @@ class UserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
 
     groups = serializers.ListSerializer(
-        child=GroupSerializer(partial=True),
+        child=CreatableSlugRelatedField(
+            slug_field='name', queryset=Group.objects.all()),
         validators=[ProtectedGroupsValidator()])
 
     hasPassword = serializers.BooleanField(source='is_active', read_only=True)
@@ -32,9 +44,8 @@ class UserSerializer(serializers.ModelSerializer):
     @staticmethod
     def _check_groups_exist(groups):
         if groups:
-            group_ids = map(lambda x: x['id'], groups)
-            db_groups_count = Group.objects.filter(id__in=group_ids).count()
-            assert db_groups_count == len(group_ids), 'Not all groups exists..'
+            db_groups_count = Group.objects.filter(name__in=groups).count()
+            assert db_groups_count == len(groups), 'Not all groups exists..'
 
     @staticmethod
     def _update_groups(user, new_groups):
@@ -60,8 +71,7 @@ class UserSerializer(serializers.ModelSerializer):
             super(UserSerializer, self).update(instance, validated_data)
 
             if groups:
-                group_ids = map(lambda x: x['id'], groups)
-                db_groups = Group.objects.filter(id__in=group_ids).all()
+                db_groups = Group.objects.filter(name__in=groups)
                 self._update_groups(instance, db_groups)
 
         return instance
@@ -75,8 +85,7 @@ class UserSerializer(serializers.ModelSerializer):
             instance = super(UserSerializer, self).create(validated_data)
 
             if groups:
-                group_ids = map(lambda x: x['id'], groups)
-                db_groups = Group.objects.filter(id__in=group_ids).all()
+                db_groups = Group.objects.filter(name__in=groups)
                 self._update_groups(instance, db_groups)
 
         return instance
@@ -105,3 +114,4 @@ class BulkGroupOperationSerializer(serializers.Serializer):
 
     def to_internal_value(self, data):
         return super(BulkGroupOperationSerializer, self).to_internal_value(data)
+

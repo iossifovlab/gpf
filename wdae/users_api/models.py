@@ -82,8 +82,8 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
 
-    DEFAULT_GROUPS_FOR_USER = ("any_user", )
-    RESEARCHER_GROUP_PREFIX = "SFID#"
+    DEFAULT_GROUPS_FOR_USER = ('any_user', )
+    RESEARCHER_GROUP_PREFIX = 'SFID#'
     SUPERUSER_GROUP = 'admin'
 
     objects = WdaeUserManager()

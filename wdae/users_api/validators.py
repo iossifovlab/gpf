@@ -10,7 +10,7 @@ class ProtectedGroupsValidator(object):
         if not self.is_update:
             return
 
-        group_names = [g['name'] for g in value]
+        group_names = map(str, value)
         missing_groups = []
         for group in self.user_instance.get_protected_group_names():
             if group not in group_names:

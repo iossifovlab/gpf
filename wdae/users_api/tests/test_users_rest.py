@@ -133,10 +133,7 @@ def test_admin_can_create_new_user_with_groups(
         admin_client, users_endpoint, user_model, empty_group):
     data = {
         'email': 'new@new.com',
-        'groups': [{
-            'id': empty_group.id,
-            'name': empty_group.name,
-        }]
+        'groups': [empty_group.name]
     }
     response = admin_client.post(users_endpoint, data=data, format='json')
 
@@ -209,24 +206,17 @@ def test_admin_cant_partial_update_user_email(
 
 
 def test_admin_can_add_user_group(
-        admin_client, users_instance_url, user_model, empty_group):
-    user = user_model.objects.last()
+        admin_client, users_instance_url, active_user, empty_group):
+    user = active_user
 
     data = {
-        'groups': [
-            {
-                'id': empty_group.id,
-                'name': empty_group.name,
-            }
-        ]
+        'groups': [empty_group.name]
     }
     data['groups'] += [
-        {'id': g.id, 'name': g.name}
-        for g in user.protected_groups
+        g.name for g in user.protected_groups
     ]
 
     assert not user.groups.filter(name=empty_group.name).exists()
-
     response = admin_client.put(users_instance_url(user.pk), data,
                                 format='json')
     print(response)
@@ -235,6 +225,28 @@ def test_admin_can_add_user_group(
     user.refresh_from_db()
     assert user.groups.filter(name=empty_group.name).exists()
 
+def test_admin_can_update_with_new_group(
+    admin_client, users_instance_url, active_user):
+    group_name = 'new group'
+    user = active_user
+
+    data = {
+        'groups': [group_name]
+    }
+    data['groups'] += [
+        g.name for g in user.protected_groups
+    ]
+
+    assert not Group.objects.filter(name=group_name).exists()
+    response = admin_client.put(users_instance_url(user.pk), data,
+                                format='json')
+    print(response)
+    assert response.status_code is status.HTTP_200_OK
+
+    user.refresh_from_db()
+    assert Group.objects.filter(name=group_name).exists()
+    assert user.groups.filter(name=group_name).exists()
+
 
 def test_admin_can_remove_user_group(
         admin_client, users_instance_url, empty_group, active_user):
@@ -242,10 +254,8 @@ def test_admin_can_remove_user_group(
 
     data = {
         'groups': [
-            {
-                'id': group.id,
-                'name': group.name,
-            } for group in active_user.groups.exclude(id=empty_group.id).all()
+            group.name
+            for group in active_user.groups.exclude(id=empty_group.id).all()
         ]
     }
     response = admin_client.put(
@@ -260,10 +270,7 @@ def test_admin_can_remove_user_group(
 def test_protected_groups_cant_be_removed(
         admin_client, users_instance_url, empty_group, active_user):
     data = {
-        'groups': [{
-            'id': empty_group.id,
-            'name': empty_group.name,
-        }]
+        'groups': [empty_group.name]
     }
     response = admin_client.put(
         users_instance_url(active_user.pk), data, format='json')
