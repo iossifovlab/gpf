@@ -23,12 +23,23 @@
     </div>
   </div>
 
-  <div *ngIf="groupsToOptions(groups$ | async) as groupOptions" class="row justify-content-center">
+  <div class="row justify-content-center">
     <div class="col-4">
       <div class="form-group">
-        <label for="groups">Groups</label>
-        <div class="groupsInput" >
-          <select2 [data]="groupOptions" [value]="initialValue" (valueChanged)="changeSelectedGroups($event)" [options]="configurationOptions"></select2>
+        <label for="groups">Default groups</label>
+        <div class="groupsInput">
+          <select2 [data]="getDefaultGroups()" [options]="lockedOptions"></select2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="(groups$ | async) as groups" class="row justify-content-center">
+    <div class="col-4">
+      <div class="form-group">
+        <label for="groups">Other Groups</label>
+        <div class="groupsInput">
+          <gpf-user-groups-selector [groups]="groups" [user]="user" (groupsChange)="updateGroups($event)"></gpf-user-groups-selector>
         </div>
       </div>
     </div>

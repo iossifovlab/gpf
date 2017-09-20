@@ -25,7 +25,7 @@ export class UserCreateComponent implements OnInit {
   constructor(
     private router: Router,
     private usersService: UsersService,
-    private usersGroupsService:UsersGroupsService
+    private usersGroupsService: UsersGroupsService
   ) { }
 
   ngOnInit() {
@@ -56,14 +56,14 @@ export class UserCreateComponent implements OnInit {
   }
 
 
-  changeSelectedGroups(change) {
-    if (this.user$.value && this.groups$.value) {
-      if (this.user$.value.groups.length !== change.value.length) {
-        this.user$.value.groups = this.groups$.value
-          .filter(group => change.value.indexOf(group.id.toString()) !== -1);
-      }
-    }
-  }
+  // changeSelectedGroups(change) {
+  //   if (this.user$.value && this.groups$.value) {
+  //     if (this.user$.value.groups.length !== change.value.length) {
+  //       this.user$.value.groups = this.groups$.value
+  //         .filter(group => change.value.indexOf(group.id.toString()) !== -1);
+  //     }
+  //   }
+  // }
 
 
   submit(user: User) {

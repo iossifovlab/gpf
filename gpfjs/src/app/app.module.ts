@@ -124,6 +124,7 @@ import { Select2Module } from 'ng2-select2';
 import { UserCreateComponent } from './user-create/user-create.component';
 import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
 import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remove.component';
+import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
 
 const appRoutes: Routes = [
   {
@@ -289,6 +290,7 @@ const appRoutes: Routes = [
     UserCreateComponent,
     GroupsBulkAddComponent,
     GroupsBulkRemoveComponent,
+    UserGroupsSelectorComponent,
   ],
   imports: [
     BrowserModule,

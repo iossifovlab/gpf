@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
-import { BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { Select2OptionData } from 'ng2-select2';
 
 import { User } from '../users/users';
@@ -15,11 +15,17 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
   styleUrls: ['./user-edit.component.css']
 })
 export class UserEditComponent implements OnInit {
-  configurationOptions: Select2Options;
+  lockedOptions: Select2Options = {
+    width: 'style',
+    theme: 'bootstrap',
+    multiple: true,
+    tags: true,
+    disabled: true,
+  };
+
   user$ = new BehaviorSubject<User>(null);
   groups$ = new BehaviorSubject<UserGroup[]>(null);
   emailValue: string;
-  initialValue: string[];
 
   emailEditable = false;
 
@@ -36,46 +42,28 @@ export class UserEditComponent implements OnInit {
       .switchMap(userId => this.usersService.getUser(userId))
       .subscribe(user => {
         this.emailValue = user.email;
-        this.initialValue = this.groupsToValue(user.groups);
         this.user$.next(user);
       });
 
-    this.usersGroupsService
+    let allGroups = this.usersGroupsService
       .getAllGroups()
-      .take(1)
       .subscribe(groups => this.groups$.next(groups));
+  };
 
-    this.configurationOptions = {
-      width: 'style'
-    };
+  getDefaultGroups() {
+    return [{
+        id: 'any_user',
+        text: 'any_user',
+        selected: true,
+      }, {
+        id: this.emailValue,
+        text: this.emailValue,
+        selected: true,
+      }];
   }
 
-  groupsToOptions(groups: UserGroup[]) {
-    if (!groups) {
-      return null;
-    }
-    return groups.map(group => {
-      return {
-        id: group.id.toString(),
-        text: group.name
-      } as Select2OptionData;
-    });
-  }
-
-  groupsToValue(groups: UserGroup[]) {
-    if (!groups) {
-      return [];
-    }
-    return groups.map(group => group.id.toString());
-  }
-
-  changeSelectedGroups(change) {
-    if (this.user$.value && this.groups$.value) {
-      if (this.user$.value.groups.length !== change.value.length) {
-        this.user$.value.groups = this.groups$.value
-          .filter(group => change.value.indexOf(group.id.toString()) !== -1);
-      }
-    }
+  updateGroups(groups) {
+    this.user$.value.groups = groups;
   }
 
   submit(user) {

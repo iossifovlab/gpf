@@ -1,11 +1,9 @@
-import { UserGroup } from '../users-groups/users-groups';
-
 export class User {
   constructor(
     public id: number,
     public name: string,
     public email: string,
-    public groups: Array<UserGroup>,
+    public groups: Array<string>,
     public hasPassword: boolean
   ) {}
 }
