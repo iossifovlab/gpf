@@ -1,6 +1,6 @@
 import { Component, Input, forwardRef } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
-import { QueryStateCollector } from '../query/query-state-provider';
+import { QueryStateProvider } from '../query/query-state-provider';
 import { environment } from '../../environments/environment';
 
 import { Observable }        from 'rxjs/Observable';
@@ -17,15 +17,20 @@ import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
   selector: 'gpf-genomic-scores-block',
   templateUrl: './genomic-scores-block.component.html',
   styleUrls: ['./genomic-scores-block.component.css'],
-  providers: [{provide: QueryStateCollector,
+  providers: [{provide: QueryStateProvider,
                useExisting: forwardRef(() => GenomicScoresBlockComponent) }]
 })
-export class GenomicScoresBlockComponent extends QueryStateCollector {
+export class GenomicScoresBlockComponent extends QueryStateProvider {
     @Input() datasetConfig: Dataset;
     scores = [];
 
     get imgPathPrefix() {
       return environment.imgPathPrefix;
+    }
+
+    trackByMetric(index: number, data: any) {
+        console.log("trackByMetric", data.metric)
+        return data.metric;
     }
 
     addFilter() {
@@ -59,5 +64,27 @@ export class GenomicScoresBlockComponent extends QueryStateCollector {
       this.store.dispatch({
         'type': GENOMIC_SCORES_INIT,
       });
+    }
+
+    getState() {
+        return this.genomicScoresState.take(1).map(
+            ([genomicScoresState, isValid, validationErrors]) => {
+                if (!isValid) {
+                    //  this.flashingAlert = true;
+                    //  setTimeout(()=>{ this.flashingAlert = false }, 1000)
+                    throw "invalid geneWeights state"
+                }
+
+                return {
+                    genomicScores: genomicScoresState.genomicScoresState.map(el => {
+                        return {
+                            metric: el.histogramData.metric,
+                            rangeStart: el.rangeStart,
+                            rangeEnd: el.rangeEnd
+                        }
+                    })
+                }
+            }
+        )
     }
 }

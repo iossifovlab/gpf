@@ -2,7 +2,7 @@
   <div class="card">
       <div class="card-header card-title">Genomic Scores</div>
       <div class="card-block">
-        <div style="padding: 5px" *ngFor="let score of scores; let i = index">
+        <div style="padding: 5px" *ngFor="let score of scores; trackBy: trackByMetric; let i = index">
             <img class="clickable" style="height: 30px;" src="{{imgPathPrefix}}remove_filter.svg" (click)="removeFilter(i)">
             <span style="padding: 5px; display: inline-block">
                 <gpf-genomic-scores [datasetConfig]="datasetConfig" [index]="i">

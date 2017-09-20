@@ -2,7 +2,6 @@ import { Component, Input, forwardRef, OnInit } from '@angular/core';
 import { Dataset, GenomicMetric } from '../datasets/datasets';
 import { GenomicScoresService } from './genomic-scores.service'
 import { GenomicScoresHistogramData } from './genomic-scores';
-import { QueryStateProvider } from '../query/query-state-provider'
 import { Observable }        from 'rxjs/Observable';
 import { ValidationError } from "class-validator";
 import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
@@ -14,10 +13,8 @@ import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
 @Component({
   selector: 'gpf-genomic-scores',
   templateUrl: './genomic-scores.component.html',
-  /*providers: [{provide: QueryStateProvider,
-               useExisting: forwardRef(() => MissenseScoresComponent) }]*/
 })
-export class GenomicScoresComponent extends QueryStateProvider {
+export class GenomicScoresComponent {
   @Input() datasetConfig: Dataset;
   @Input() index: number;
   private internalSelectedMetric: GenomicMetric;
@@ -32,7 +29,6 @@ export class GenomicScoresComponent extends QueryStateProvider {
     private store: Store<any>,
     private genomicsScoresService: GenomicScoresService
   )  {
-    super();
     this.genomicScoresState = toObservableWithValidation(
       GenomicScoresState, this.store.select('genomicScores')
     );
@@ -68,7 +64,7 @@ export class GenomicScoresComponent extends QueryStateProvider {
   set rangeStart(range: number) {
     this.store.dispatch({
       'type': GENOMIC_SCORES_RANGE_START_CHANGE,
-      'payload': range
+      'payload': [this.index, range]
     });
   }
 
@@ -79,7 +75,7 @@ export class GenomicScoresComponent extends QueryStateProvider {
   set rangeEnd(range: number) {
     this.store.dispatch({
       'type': GENOMIC_SCORES_RANGE_END_CHANGE,
-      'payload': range
+      'payload': [this.index, range]
     });
   }
 
@@ -87,20 +83,4 @@ export class GenomicScoresComponent extends QueryStateProvider {
     return this.internalRangeEnd;
   }
 
-  getState() {
-    /*return this.missenseScoresState.take(1).map(
-      ([missenseScoresState, isValid, validationErrors]) => {
-        if (!isValid) {
-          //this.flashingAlert = true;
-        //  setTimeout(()=>{ this.flashingAlert = false }, 1000)
-
-          throw "invalid geneWeights state"
-        }
-        return { missenseScores: {
-          metric: missenseScoresState[0].histogramData.metric,
-          rangeStart: missenseScoresState[0].rangeStart,
-          rangeEnd: missenseScoresState[0].rangeEnd
-        }}
-    });*/
-  }
 }
