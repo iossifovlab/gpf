@@ -154,8 +154,14 @@ export class UsersService {
   }
 
   updateUser(user: User) {
+    let dto = {
+      id: user.id,
+      name: user.name,
+      groups: user.groups,
+      hasPassword: user.hasPassword,
+    };
     if (!user.id) {
-      return Observable.throw('No user id');
+      return Observable.throw('Unknown id...');
     }
     let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
@@ -165,7 +171,7 @@ export class UsersService {
     });
     let url = `${this.usersUrl}/${user.id}`;
 
-    return this.http.put(url, user, options);
+    return this.http.put(url, dto, options);
   }
 
   createUser(user: User) {

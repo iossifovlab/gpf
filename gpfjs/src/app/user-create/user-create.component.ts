@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, SimpleChanges, OnChanges } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { BehaviorSubject } from 'rxjs';
@@ -15,7 +15,13 @@ import { UserGroup } from '../users-groups/users-groups';
   styleUrls: ['../user-edit/user-edit.component.css']
 })
 export class UserCreateComponent implements OnInit {
-  emailValue = '';
+  lockedOptions: Select2Options = {
+    width: 'style',
+    theme: 'bootstrap',
+    multiple: true,
+    tags: true,
+    disabled: true,
+  };
   configurationOptions: Select2Options;
   user$ = new BehaviorSubject<User>(new User(0, '', '', [], false));
   groups$ = new BehaviorSubject<UserGroup[]>(null);
@@ -29,46 +35,39 @@ export class UserCreateComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-      this.usersGroupsService
-        .getAllGroups()
-        .take(1)
-        .subscribe(groups => this.groups$.next(groups));
+    this.usersGroupsService
+      .getAllGroups()
+      .take(1)
+      .subscribe(groups => this.groups$.next(groups));
 
-      this.configurationOptions = {
-        multiple: true,
-        theme: 'bootstrap',
-        width: '100%',
-        allowClear: true,
-      };
+    this.configurationOptions = {
+      multiple: true,
+      theme: 'bootstrap',
+      width: '100%',
+      allowClear: true,
+    };
   }
 
 
-  groupsToOptions(groups: UserGroup[]) {
-    if (!groups) {
-      return null;
-    }
-    return groups.map(group => {
-      return {
-        id: group.id.toString(),
-        text: group.name
-      } as Select2OptionData;
-    });
+ getDefaultGroups() {
+    return [{
+      id: 'any_user',
+      text: 'any_user',
+      selected: true,
+    }, {
+      id: this.user$.value.email,
+      text: this.user$.value.email,
+      selected: true,
+    }];
   }
 
 
-  // changeSelectedGroups(change) {
-  //   if (this.user$.value && this.groups$.value) {
-  //     if (this.user$.value.groups.length !== change.value.length) {
-  //       this.user$.value.groups = this.groups$.value
-  //         .filter(group => change.value.indexOf(group.id.toString()) !== -1);
-  //     }
-  //   }
-  // }
+  updateGroups(groups) {
+    this.user$.value.groups = groups;
+  }
 
 
   submit(user: User) {
-    delete user.id;
-    user.email = this.emailValue;
     this.usersService.createUser(user)
       .take(1)
       .subscribe(() => this.router.navigate(['/management']));

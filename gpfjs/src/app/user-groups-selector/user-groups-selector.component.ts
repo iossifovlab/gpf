@@ -1,6 +1,9 @@
-import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
+import {
+  Component, OnInit, Input, EventEmitter, Output, OnChanges, SimpleChanges,
+  DoCheck, ViewChild, ElementRef
+} from '@angular/core';
 
-import { Select2OptionData } from 'ng2-select2';
+import { Select2OptionData, Select2Component } from 'ng2-select2';
 
 import { User } from '../users/users';
 import { UserGroup } from '../users-groups/users-groups';
@@ -10,22 +13,31 @@ import { UserGroup } from '../users-groups/users-groups';
   templateUrl: './user-groups-selector.component.html',
   styleUrls: ['./user-groups-selector.component.css']
 })
-export class UserGroupsSelectorComponent implements OnInit {
+export class UserGroupsSelectorComponent implements OnInit, DoCheck {
   configurationOptions: Select2Options;
   data: Select2OptionData[];
+  @ViewChild('selector') selector: Select2Component;
 
-  @Input()
-  groups: UserGroup[];
-
-  @Input()
-  user: User;
-
-  @Output()
-  groupsChange = new EventEmitter();
+  @Input() groups: UserGroup[];
+  @Input() user: User;
+  @Output() groupsChange = new EventEmitter();
+  private lastEmail = '';
+  private element: JQuery;
 
   constructor() { }
 
+
+  ngDoCheck() {
+    if (!this.user && this.lastEmail) {
+      this.lastEmail = '';
+    } else if (this.user && this.user.email !== this.lastEmail) {
+      this.changeSelectedGroups(this.element.val());
+      this.lastEmail = this.user.email;
+    }
+  }
+
   ngOnInit() {
+    this.element = jQuery(this.selector.selector.nativeElement);
 
     this.configurationOptions = {
       width: 'style',
@@ -50,6 +62,9 @@ export class UserGroupsSelectorComponent implements OnInit {
   }
 
   changeSelectedGroups(groups) {
+    if (!groups) {
+      return;
+    }
     let event = groups.slice().concat(this.getProtectedGroups());
     this.groupsChange.next(event);
   }
