@@ -30,6 +30,7 @@ export class UserManagementComponent implements OnInit {
       .distinctUntilChanged()
       .switchMap(searchTerm =>
         this.usersService.searchUsersByGroup(searchTerm))
+      .map(users => users.map(user => this.sortGroups(user)))
       .map(users => users.map(user => new SelectableUser(user)))
       .share();
 
@@ -56,5 +57,27 @@ export class UserManagementComponent implements OnInit {
     const selectedUsers = this.selectedUsers(users);
 
     return selectedUsers.map(u => u.id).join(',');
+  }
+
+  sortGroups(user: User) {
+    if (!user || !user.groups) {
+      return user;
+    }
+    let defaultGroups = user.groups
+      .filter(group => user.getDefaultGroups().indexOf(group) !== -1);
+    let otherGroups = user.groups
+      .filter(group => user.getDefaultGroups().indexOf(group) === -1);
+
+    if (defaultGroups.length === 2 && defaultGroups[0] !== 'any_user') {
+      let group = defaultGroups[0];
+      defaultGroups[0] = defaultGroups[1];
+      defaultGroups[1] = group;
+    }
+
+    otherGroups = otherGroups
+      .sort((group1, group2) => group1.localeCompare(group2));
+
+    user.groups = defaultGroups.concat(otherGroups);
+    return user;
   }
 }
