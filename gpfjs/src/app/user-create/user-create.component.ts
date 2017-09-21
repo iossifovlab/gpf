@@ -26,7 +26,7 @@ export class UserCreateComponent implements OnInit {
   user$ = new BehaviorSubject<User>(new User(0, '', '', [], false));
   groups$ = new BehaviorSubject<UserGroup[]>(null);
 
-  emailEditable = true;
+  edit = false;
 
   constructor(
     private router: Router,

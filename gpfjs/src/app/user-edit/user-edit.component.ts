@@ -27,7 +27,7 @@ export class UserEditComponent implements OnInit {
   groups$ = new BehaviorSubject<UserGroup[]>(null);
   emailValue: string;
 
-  emailEditable = false;
+  edit = true;
 
   constructor(
     private router: Router,

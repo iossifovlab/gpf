@@ -1,55 +1,66 @@
-<form *ngIf="(user$ | async) as user">
-  <div class="row justify-content-center">
-    <div class="col-4">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input name="email"
-          id="email"
-          class="form-control"
-          [(ngModel)]="user.email"
-          type="text"
-          [readonly]="!emailEditable"
-          required />
+<div class="form-block">
+  <div class="card">
+    <div class="navbar navbar-toggleable-md navbar-light navbar-expand-lg bg-light">
+      <div class="form-block-title">
+        {{ edit ? 'Edit user' : 'Create user'}}
       </div>
     </div>
-  </div>
-
-  <div class="row justify-content-center">
-    <div class="col-4">
-      <div class="form-group">
-        <label for="name">Name</label>
-        <input name="name" id="name" class="form-control" [(ngModel)]="user.name" type="text" />
-      </div>
-    </div>
-  </div>
-
-  <div class="row justify-content-center">
-    <div class="col-4">
-      <div class="form-group">
-        <label for="groups">Default groups</label>
-        <div class="groupsInput">
-          <select2 [data]="getDefaultGroups()" [options]="lockedOptions"></select2>
+    <div class="col-12 mt-3"></div>
+    <form *ngIf="(user$ | async) as user">
+      <div class="row justify-content-center">
+        <div class="col-4">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input name="email"
+              id="email"
+              class="form-control"
+              [(ngModel)]="user.email"
+              type="text"
+              [readonly]="edit"
+              required />
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <div *ngIf="(groups$ | async) as groups" class="row justify-content-center">
-    <div class="col-4">
-      <div class="form-group">
-        <label for="groups">Other Groups</label>
-        <div class="groupsInput">
-          <gpf-user-groups-selector [groups]="groups" [user]="user" (groupsChange)="updateGroups($event)"></gpf-user-groups-selector>
+      <div class="row justify-content-center">
+        <div class="col-4">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input name="name" id="name" class="form-control" [(ngModel)]="user.name" type="text" />
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <div class="row justify-content-end">
-    <div class="col-4">
-      <button class="btn" routerLink="/management">Back</button>
-      <button class="btn btn-primary" type="submit" (click)="submit(user)">Submit</button>
-    </div>
-  </div>
+      <div class="row justify-content-center">
+        <div class="col-4">
+          <div class="form-group">
+            <label for="groups">Default groups</label>
+            <div class="groupsInput">
+              <select2 [data]="getDefaultGroups()" [options]="lockedOptions"></select2>
+            </div>
+          </div>
+        </div>
+      </div>
 
-</form>
+      <div *ngIf="(groups$ | async) as groups" class="row justify-content-center">
+        <div class="col-4">
+          <div class="form-group">
+            <label for="groups">Other Groups</label>
+            <div class="groupsInput">
+              <gpf-user-groups-selector [groups]="groups" [user]="user" (groupsChange)="updateGroups($event)"></gpf-user-groups-selector>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row justify-content-end">
+        <div class="col-4">
+          <button class="btn" routerLink="/management">Back</button>
+          <button class="btn btn-primary" type="submit" (click)="submit(user)">Submit</button>
+        </div>
+      </div>
+      <div class="col-12 mt-3"></div>
+
+    </form>
+  </div>
+</div>
