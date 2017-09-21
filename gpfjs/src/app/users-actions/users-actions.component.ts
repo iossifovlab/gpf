@@ -26,10 +26,27 @@ export class UsersActionsComponent implements OnInit {
   deleteUser(user: User) {
     this.usersService.deleteUser(user).take(1)
       .subscribe(() => {
-        this.zone.runOutsideAngular(() => {
-          window.location.reload();
-        });
+        this.reloadPage();
       });
+  }
+
+  removePassword(user: User) {
+    this.usersService.removeUserPassword(user).take(1)
+      .subscribe(() => {
+        this.reloadPage();
+      });
+  }
+  resetPassword(user: User) {
+    this.usersService.resetUserPassword(user).take(1)
+      .subscribe(() => {
+        this.reloadPage();
+      });
+  }
+
+  reloadPage() {
+    this.zone.runOutsideAngular(() => {
+      window.location.reload();
+    });
   }
 
 }

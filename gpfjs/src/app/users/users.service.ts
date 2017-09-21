@@ -200,6 +200,26 @@ export class UsersService {
     return this.http.delete(url, options);
   }
 
+  removeUserPassword(user: User) {
+    if (!user.id) {
+      return Observable.throw('No user id');
+    }
+    let url = `${this.usersUrl}/${user.id}/password_remove`;
+    let options = new RequestOptions({ withCredentials: true });
+
+    return this.http.post(url, null, options);
+  }
+
+  resetUserPassword(user: User) {
+    if (!user.id) {
+      return Observable.throw('No user id');
+    }
+    let url = `${this.usersUrl}/${user.id}/password_reset`;
+    let options = new RequestOptions({ withCredentials: true });
+
+    return this.http.post(url, null, options);
+  }
+
   searchUsersByGroup(searchTerm: string) {
     let searchParams = new URLSearchParams();
     searchParams.set('search', searchTerm);

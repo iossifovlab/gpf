@@ -1,11 +1,61 @@
-<button class="btn btn-outline-primary btn-sm" ngbTooltip="Remove password" placement="bottom" container="body">
-  <i class="fa fa-ban fa-lg" aria-hidden="true"></i>
-</button>
-<button class="btn btn-outline-primary btn-sm" ngbTooltip="Reset password" placement="bottom" container="body">
-  <i class="fa fa-refresh fa-lg" aria-hidden="true"></i>
-</button>
+<span style="display: inline-block" ngbTooltip="Remove password" placement="bottom">
+  <ng-template #removePasswordConfirm>
+    <div class="content-fluid text-center">
+      <div class="row">
+        <div class="col-12">
+          {{ user.name }}'s ({{ user.email }}) password will be removed. They won't be able to login.
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center">
+          This action is irrevertible!
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12 text-center">
+          <button (click)="removePassword(user)" class="btn btn-danger px-5">Remove password</button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+  <a role="button" tabindex="0" class="btn btn-outline-primary btn-sm"
+    container="body"
+    [ngbPopover]="removePasswordConfirm"
+    triggers="focus:blur"
+    popoverTitle="Are you sure?">
+    <i class="fa fa-ban fa-lg" aria-hidden="true"></i>
+  </a>
+</span>
+<span style="display: inline-block" ngbTooltip="Reset password" placement="bottom">
+  <ng-template #resetPasswordConfirm>
+    <div class="content-fluid text-center">
+      <div class="row">
+        <div class="col-12">
+         {{ user.name }}'s ({{ user.email }}) password will be reset. An email with reset instructions will be sent and they won't be able to login until they set a new password.
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12 text-center">
+          This action is irrevertible!
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12 text-center">
+          <button (click)="resetPassword(user)" class="btn btn-danger px-5">Reset password</button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+  <a role="button" tabindex="0" class="btn btn-outline-primary btn-sm"
+    container="body"
+    [ngbPopover]="resetPasswordConfirm"
+    triggers="focus:blur"
+    popoverTitle="Are you sure?">
+    <i class="fa fa-refresh fa-lg" aria-hidden="true"></i>
+  </a>
+</span>
 <span style="display: inline-block" ngbTooltip="Delete user" placement="bottom">
-  <ng-template #removeConfirm>
+  <ng-template #removeUserConfirm>
     <div class="content-fluid text-center">
       <div class="row">
         <div class="col-12">
@@ -29,7 +79,7 @@
     tabindex="0"
     class="btn btn-sm btn-outline-primary"
     container="body"
-    [ngbPopover]="removeConfirm"
+    [ngbPopover]="removeUserConfirm"
     triggers="focus:blur"
     popoverTitle="Are you sure?">
     <i class="fa fa-times fa-lg" aria-hidden="true"></i>
