@@ -1,5 +1,6 @@
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
+import { UserGroup } from '../users-groups/users-groups';
 
 
 export class SelectorValue extends IdName {
@@ -197,6 +198,7 @@ export class Dataset extends IdName {
       json['phenotypeBrowser'],
       GenotypeBrowser.fromJson(json['genotypeBrowser']),
       PedigreeSelector.fromJsonArray(json['pedigreeSelectors']),
+      UserGroup.fromJsonArray(json['groups']),
     );
   }
 
@@ -221,6 +223,7 @@ export class Dataset extends IdName {
     readonly phenotypeBrowser: boolean,
     readonly genotypeBrowser: GenotypeBrowser,
     readonly pedigreeSelectors: PedigreeSelector[],
+    readonly groups: UserGroup[]
   ) {
     super(id, name);
   }

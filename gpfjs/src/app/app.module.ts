@@ -126,6 +126,7 @@ import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.compon
 import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remove.component';
 import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
 import { UsersActionsComponent } from './users-actions/users-actions.component';
+import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
 
 const appRoutes: Routes = [
   {
@@ -293,6 +294,7 @@ const appRoutes: Routes = [
     GroupsBulkRemoveComponent,
     UserGroupsSelectorComponent,
     UsersActionsComponent,
+    DatasetsTableComponent,
   ],
   imports: [
     BrowserModule,
