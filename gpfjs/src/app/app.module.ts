@@ -125,6 +125,7 @@ import { UserCreateComponent } from './user-create/user-create.component';
 import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
 import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remove.component';
 import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
+import { UsersActionsComponent } from './users-actions/users-actions.component';
 
 const appRoutes: Routes = [
   {
@@ -291,6 +292,7 @@ const appRoutes: Routes = [
     GroupsBulkAddComponent,
     GroupsBulkRemoveComponent,
     UserGroupsSelectorComponent,
+    UsersActionsComponent,
   ],
   imports: [
     BrowserModule,
