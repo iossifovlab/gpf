@@ -26,7 +26,28 @@
         <gpf-table-subcolumn header="Groups" [sortable]="false">
           <span *gpfTableCellContent="let data">
             <div *ngFor="let group of data.user.groups">
-              {{ group }}
+              <ng-template #removeGroupConfirm>
+                <div class="content-fluid text-center">
+                  <div class="row">
+                    <div class="col-12">
+                      Removing the group '{{ group }}' could change which datasets {{ data.user.name }} ({{ data.user.email }}) has access to.
+                    </div>
+                  </div>
+                  <div class="row mt-3">
+                    <div class="col-12 text-center">
+                      <button (click)="removeGroup(data.user, group)" class="btn btn-danger px-5">Remove group</button>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+              <span>{{ group }} <button
+                *ngIf="!isDefaultGroup(data.user, group)"
+                class="btn badge badge-pill badge-danger"
+                container="body"
+                triggers="focus:blur"
+                popoverTitle="Are you sure?"
+                [ngbPopover]="removeGroupConfirm">x</button>
+              </span>
             </div>
           </span>
         </gpf-table-subcolumn>

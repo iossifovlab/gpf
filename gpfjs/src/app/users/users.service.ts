@@ -142,7 +142,7 @@ export class UsersService {
     let options = new RequestOptions({ withCredentials: true });
 
     return this.http.get(this.usersUrl, options)
-      .map(response => response.json() as User[]);
+      .map(response => User.fromJsonArray(response.json()));
   }
 
   getUser(id: number) {
@@ -150,7 +150,7 @@ export class UsersService {
     let url = `${this.usersUrl}/${id}`;
 
     return this.http.get(url, options)
-      .map(response => response.json() as User);
+      .map(response => User.fromJson(response.json()));
   }
 
   updateUser(user: User) {
@@ -187,7 +187,7 @@ export class UsersService {
     });
 
     return this.http.post(this.usersUrl, user, options)
-      .map(response => response.json() as User);
+      .map(response => User.fromJson(response.json()));
   }
 
   deleteUser(user: User) {
@@ -220,6 +220,12 @@ export class UsersService {
     return this.http.post(url, null, options);
   }
 
+  removeUserGroup(user: User, group: string) {
+    let clone = user.clone();
+    clone.groups = clone.groups.filter(grp => grp !== group);
+    return this.updateUser(clone);
+  }
+
   searchUsersByGroup(searchTerm: string) {
     let searchParams = new URLSearchParams();
     searchParams.set('search', searchTerm);
@@ -230,7 +236,7 @@ export class UsersService {
     });
 
     return this.http.get(this.usersUrl, options)
-      .map(response => response.json() as User[]);
+      .map(response => User.fromJsonArray(response.json()));
   }
 
   bulkAddGroup(users: User[], group: string) {

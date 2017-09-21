@@ -1,4 +1,19 @@
 export class User {
+
+  static fromJsonArray(json): User[] {
+    return json.map(user => User.fromJson(user));
+  }
+
+  static fromJson(json) {
+    return new User(
+      json['id'],
+      json['name'],
+      json['email'],
+      json['groups'],
+      json['hasPassword'],
+    );
+  }
+
   constructor(
     public id: number,
     public name: string,
@@ -6,4 +21,18 @@ export class User {
     public groups: Array<string>,
     public hasPassword: boolean
   ) {}
+
+  getDefaultGroups() {
+    return ['any_user', this.email];
+  }
+
+  clone() {
+    return new User(
+      this.id,
+      this.name,
+      this.email,
+      this.groups.slice(),
+      this.hasPassword
+    );
+  }
 }
