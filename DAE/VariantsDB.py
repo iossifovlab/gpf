@@ -179,8 +179,19 @@ class Study:
         for v in vs:
             yield v
 
+    def genomic_scores_filter(self, variant, genomicScores):
+        try:
+            return all([score['min'] <= float(variant.atts[score['metric']])
+                        <= score['max']
+                        for score in genomicScores])
+        except ValueError:
+            return False
+        except KeyError:
+            return False
+        return False
+
     def get_denovo_variants(self, inChild=None, presentInChild=None,
-                            presentInParent=None, missenseScore=None,
+                            presentInParent=None, genomicScores=[],
                             gender=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None,
@@ -204,17 +215,11 @@ class Study:
             reg_matcher = regions_matcher(regionS)
 
         dnvData = self._load_dnv_data(callSet)
+
         for v in dnvData:
-            if (missenseScore and v.atts['effectType'] == 'missense' and
-                    missenseScore['metric'] in v.atts):
-                try:
-                    score = float(v.atts[missenseScore['metric']])
-                    if (score < missenseScore['min']
-                            or score > missenseScore['max']):
-                        continue
-                except ValueError:
-                    pass
             if familyIds and v.familyId not in familyIds:
+                continue
+            if not self.genomic_scores_filter(v, genomicScores):
                 continue
             if pipFilter and not pipFilter(v.fromParentS):
                 continue

@@ -454,19 +454,19 @@ class FamiliesMixin(object):
         return set(family_ids)
 
 
-class MissenseScoreMixin(object):
+class GenomicScoresMixin(object):
 
     @staticmethod
-    def get_missense_score(safe=True, **kwargs):
-        missense_scores = kwargs.get('missenseScores', None)
-        if not missense_scores:
-            return None
-        missense_filter = {
-            'metric': missense_scores['metric'],
-            'min': missense_scores['rangeStart'],
-            'max': missense_scores['rangeEnd'],
-        }
-        return missense_filter
+    def get_genomic_scores(safe=True, **kwargs):
+        genomic_scores = kwargs.get('genomicScores', None)
+        if not genomic_scores:
+            return []
+        genomic_scores_filter = [{
+            'metric': score['metric'],
+            'min': score['rangeStart'],
+            'max': score['rangeEnd'],
+        } for score in genomic_scores]
+        return genomic_scores_filter
 
 
 class QueryBase(
@@ -480,7 +480,7 @@ class QueryBase(
         RegionsMixin,
         RarityMixin,
         FamiliesMixin,
-        MissenseScoreMixin):
+        GenomicScoresMixin):
 
     IN_CHILD_TYPES = [
         'prb',
