@@ -40,14 +40,17 @@
                   </div>
                 </div>
               </ng-template>
-              <span>{{ group }} <button
-                *ngIf="!isDefaultGroup(data.user, group)"
-                class="btn badge badge-pill badge-danger"
-                container="body"
-                triggers="focus:blur"
-                popoverTitle="Are you sure?"
-                [ngbPopover]="removeGroupConfirm">x</button>
-              </span>
+              <div>{{ group }}
+                <button
+                  *ngIf="!isDefaultGroup(data.user, group)"
+                  class="close clickable"
+                  container="body"
+                  triggers="focus:blur"
+                  popoverTitle="Are you sure?"
+                  [ngbPopover]="removeGroupConfirm">
+                  <div style="font-size: 1.3rem;">&times;</div>
+                </button>
+              </div>
             </div>
           </span>
         </gpf-table-subcolumn>
