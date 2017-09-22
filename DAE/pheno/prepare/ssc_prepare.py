@@ -6,7 +6,7 @@ Created on Sep 18, 2017
 import os
 
 import pandas as pd
-from pheno.common import Role
+from pheno.common import Role, Gender
 
 
 def load_and_join():
@@ -15,19 +15,36 @@ def load_and_join():
         data_dev_dir,
         'pheno/15',
         'Individuals_by_Distribution_v15.csv')
+
     individuals_v14_filename = os.path.join(
         data_dev_dir,
         'pheno/14',
         'individual.csv')
+
+    persons_filename = os.path.join(
+        data_dev_dir,
+        'pheno/15',
+        'persons.csv'
+    )
+
     individuals_v14_age_of_assessment_filename = os.path.join(
         data_dev_dir,
         'pheno/14',
         'ssc_age_at_assessment.csv')
     persons_df = pd.read_csv(individuals_v15_filename, sep='\t')
     persons_df = persons_df.rename(columns={"SSC ID": "personId"})
+
+    individuals_df = pd.read_csv(persons_filename, sep=',')
+    individuals_df = individuals_df.rename(
+        columns={
+            'person_id': 'personId',
+            'gender': 'genderI',
+            'role': 'roleI'
+        })
+    assert 'personId' in individuals_df.columns
+
     persons_14_df = pd.read_csv(individuals_v14_filename)
     persons_14_df = persons_14_df.rename(columns={"id()": "personId"})
-
     assert 'personId' in persons_14_df.columns
 
     persons_14_age_df = pd.read_csv(
@@ -42,6 +59,8 @@ def load_and_join():
     persons_14_age_df.set_index('personId', inplace=True)
     persons_14_df.set_index('personId', inplace=True)
 
+    persons_df = persons_df.join(
+        individuals_df, on='personId', rsuffix='_individual')
     persons_df = persons_df.join(persons_14_df, on='personId')
     persons_df = persons_df.join(persons_14_age_df, on='personId')
 
@@ -112,9 +131,46 @@ def infer_roles(persons_df):
     return persons_df
 
 
+def build_gender(row):
+    role = row['role']
+    if role == Role.mom:
+        return Gender.F
+    elif role == Role.dad:
+        return Gender.M
+    elif row['sex_core'] == 'female':
+        return Gender.F
+    elif row['sex_core'] == 'male':
+        return Gender.M
+    elif row['sex'] == 'female':
+        return Gender.F
+    elif row['sex'] == 'male':
+        return Gender.M
+    elif row['genderI'] == 'F':
+        return Gender.F
+    elif row['genderI'] == 'M':
+        return Gender.M
+    else:
+        return None
+
+
+def infer_gender(persons_df, without_gender=[]):
+    gender = pd.Series("none", index=persons_df.index)
+    for index, row in persons_df.iterrows():
+        sex = build_gender(row)
+        if sex is None:
+            without_gender.append(row['personId'])
+        gender[index] = sex
+    persons_df['gender'] = gender
+    return persons_df
+
+
 def build_pedigree_file():
     persons_df = load_and_join()
     persons_df = infer_roles(persons_df)
+    without_gender = []
+    persons_df = infer_gender(persons_df, without_gender)
+    print(without_gender)
+    print(len(without_gender))
     print(persons_df.columns)
 
     return persons_df

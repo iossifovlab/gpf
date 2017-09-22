@@ -9,7 +9,7 @@ from query_prepare import \
 
 from VariantAnnotation import get_effect_types_set, get_effect_types
 from VariantsDB import mat2Str
-from DAE import phDB
+# from DAE import phDB
 from query_prepare import prepare_denovo_study_type, prepare_gene_syms
 
 LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def get_races():
 
 
 def __get_float_measure(var_name):
-    str_map = dict(zip(phDB.families, phDB.get_variable(var_name)))
+    str_map = None  # dict(zip(phDB.families, phDB.get_variable(var_name)))
     flt_map = {}
     for key, val in str_map.items():
         try:
@@ -45,7 +45,7 @@ def __get_float_measure(var_name):
 
 
 def __get_string_measure(mName):
-    return dict(zip(phDB.families, phDB.get_variable(mName)))
+    return None  # dict(zip(phDB.families, phDB.get_variable(mName)))
 
 
 def get_verbal_iq():
@@ -81,32 +81,32 @@ MOTHER_RACE = get_mocuv_race()
 PROBAND_VIQ = get_verbal_iq()
 PROBAND_NVIQ = get_non_verbal_iq()
 
-PARENTS_RACE = \
-    dict([(k, ':'.join([m, f]))
-          for (k, m, f) in zip(phDB.families,
-                               phDB.get_variable('mocuv.race_parents'),
-                               phDB.get_variable('focuv.race_parents'))])
-PARENTS_RACE_QUERY = \
-    dict([(k, f if f == m else 'more-than-one-race')
-          for (k, f, m) in zip(phDB.families,
-                               phDB.get_variable('mocuv.race_parents'),
-                               phDB.get_variable('focuv.race_parents'))])
+# PARENTS_RACE = \
+#     dict([(k, ':'.join([m, f]))
+#           for (k, m, f) in zip(phDB.families,
+#                                phDB.get_variable('mocuv.race_parents'),
+#                                phDB.get_variable('focuv.race_parents'))])
+# PARENTS_RACE_QUERY = \
+#     dict([(k, f if f == m else 'more-than-one-race')
+#           for (k, f, m) in zip(phDB.families,
+#                                phDB.get_variable('mocuv.race_parents'),
+#                                phDB.get_variable('focuv.race_parents'))])
 
 
 def get_father_race():
-    return FATHER_RACE
+    return None  # FATHER_RACE
 
 
 def get_mother_race():
-    return MOTHER_RACE
+    return None  # MOTHER_RACE
 
 
 def get_parents_race():
-    return PARENTS_RACE
+    return None  # PARENTS_RACE
 
 
 def __get_parents_race_filter():
-    return PARENTS_RACE_QUERY
+    return None  # PARENTS_RACE_QUERY
 
 
 def family_filter_by_race(families, race):
