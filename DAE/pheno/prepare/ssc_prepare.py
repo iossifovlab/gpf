@@ -6,6 +6,7 @@ Created on Sep 18, 2017
 import os
 
 import pandas as pd
+from pheno.common import Role
 
 
 def load_and_join():
@@ -49,7 +50,6 @@ def load_and_join():
     measure_df.set_index('personId', inplace=True)
 
     persons_df = persons_df.join(measure_df, on='personId', rsuffix="_core")
-    print(persons_df.columns)
 
     return persons_df
 
@@ -87,7 +87,34 @@ def load_core_descriptive():
     return measure_df
 
 
+def build_role(row):
+    person_id = row['personId']
+    [_fid, role] = person_id.split('.')
+    if role == 'mo':
+        return Role.mom
+    elif role == 'fa':
+        return Role.dad
+    elif role[0] == 'p':
+        return Role.prb
+    elif role[0] == 's':
+        return Role.sib
+    else:
+        print("Unknown role: {}".format(role))
+        return None
+
+
+def infer_roles(persons_df):
+    roles = pd.Series("none", index=persons_df.index)
+    for index, row in persons_df.iterrows():
+        roles[index] = build_role(row)
+    persons_df['role'] = roles
+
+    return persons_df
+
+
 def build_pedigree_file():
     persons_df = load_and_join()
+    persons_df = infer_roles(persons_df)
+    print(persons_df.columns)
 
     return persons_df
