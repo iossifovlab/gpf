@@ -70,6 +70,13 @@ class RoleMapping(object):
         'Maternal_Half_Sibling': Role.maternal_half_sibling,
     }
 
+    SSC = {
+        'mom': Role.mom,
+        'dad': Role.dad,
+        'prb': Role.prb,
+        'sib': Role.sib,
+    }
+
 
 def default_config():
     config = {
