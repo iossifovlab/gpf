@@ -79,9 +79,6 @@ def load_and_join():
 
     persons_df = persons_df.join(measure_df, on='personId', rsuffix="_core")
 
-    print(persons_df.columns)
-    print(persons_df[['personId', 'familyId', 'family']].head())
-
     return persons_df
 
 
@@ -235,8 +232,6 @@ def build_pedigree(persons_df):
                 person['dadId'] = dad
             family.append(person)
         result.extend(family)
-        print(result)
-        break
 
     ped_df = pd.DataFrame(
         data=result,
