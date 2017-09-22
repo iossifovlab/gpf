@@ -6,7 +6,8 @@ Created on Sep 18, 2017
 import os
 
 import pandas as pd
-from pheno.common import Role, Gender
+import numpy as np
+from pheno.common import Role, Gender, Status
 
 
 def load_and_join():
@@ -49,7 +50,6 @@ def load_and_join():
             'role': 'roleI'
         })
     assert 'personId' in individuals_df.columns
-    print(individuals_df.head())
 
     persons_14_df = pd.read_csv(individuals_v14_filename)
     persons_14_df = persons_14_df.rename(columns={"id()": "personId"})
@@ -136,10 +136,15 @@ def build_role(row):
 
 def infer_roles(persons_df):
     roles = pd.Series("none", index=persons_df.index)
+    statuses = pd.Series(Status.unaffected.value, index=persons_df.index)
     for index, row in persons_df.iterrows():
-        roles[index] = build_role(row)
-    persons_df['role'] = roles
+        role = build_role(row)
+        roles[index] = role.name
+        if role == Role.prb:
+            statuses[index] = Status.affected.value
 
+    persons_df['role'] = roles
+    persons_df['status'] = statuses
     return persons_df
 
 
@@ -166,32 +171,46 @@ def build_gender(row):
 
 
 def infer_gender(persons_df, without_gender=[]):
-    gender = pd.Series("none", index=persons_df.index)
+    gender = pd.Series(0, index=persons_df.index, dtype=np.int32)
     for index, row in persons_df.iterrows():
         sex = build_gender(row)
         if sex is None:
             without_gender.append(row['personId'])
-        gender[index] = sex
+            gender[index] = 0
+        else:
+            gender[index] = sex.value
     persons_df['gender'] = gender
-    return persons_df
+
+    return persons_df[persons_df.gender != 0]
+
+
+COLUMNS = [
+    'familyId',
+    'personId',
+    'dadId',
+    'momId',
+    'gender',
+    'status',
+    'sampleId',
+    'role',
+    'birth',
+    'age_at_assessment',
+    'ssc_diagnosis_nonverbal_iq',
+    'ssc_diagnosis_verbal_iq',
+    'race',
+]
 
 
 def build_pedigree(persons_df):
     assert 'familyId' in persons_df.columns
     moms = pd.Series("0", index=persons_df.index)
     dads = pd.Series("0", index=persons_df.index)
+    samples = pd.Series("", index=persons_df.index)
     persons_df['momId'] = moms
     persons_df['dadId'] = dads
+    persons_df['sampleId'] = samples
 
-    persons_df = persons_df[[
-        'familyId',
-        'personId',
-        'dadId',
-        'momId',
-        'gender',
-        # 'status',
-        'role',
-    ]]
+    persons_df = persons_df[COLUMNS]
 
     def find_mom_or_dad(family_df, role):
         df = family_df[family_df.role == role]
@@ -204,18 +223,26 @@ def build_pedigree(persons_df):
     result = []
     grouped = persons_df.groupby('familyId')
     for _, family_df in grouped:
-        mom = find_mom_or_dad(family_df, Role.mom)
-        dad = find_mom_or_dad(family_df, Role.dad)
-        for index, row in family_df.iterrows():
-            if row.role not in set([Role.mom, Role.dad]):
-                row.momId = mom
-                row.dadId = dad
-        result.append(family_df)
+        mom = find_mom_or_dad(family_df, Role.mom.name)
+        dad = find_mom_or_dad(family_df, Role.dad.name)
+        family = []
+        for _index, row in family_df.iterrows():
+            person = {
+                k: row[k] for k in row.keys()
+            }
+            if row.role not in set([Role.mom.name, Role.dad.name]):
+                person['momId'] = mom
+                person['dadId'] = dad
+            family.append(person)
+        result.extend(family)
+        print(result)
+        break
 
-    if len(result) == 1:
-        return result[0]
-    else:
-        return pd.concat(result)
+    ped_df = pd.DataFrame(
+        data=result,
+        columns=COLUMNS,
+    )
+    return ped_df
 
 
 def build_pedigree_file():
@@ -224,3 +251,12 @@ def build_pedigree_file():
     without_gender = []
     persons_df = infer_gender(persons_df, without_gender)
     return build_pedigree(persons_df)
+
+
+def main():
+    ped_df = build_pedigree_file()
+    ped_df.to_csv('ssc_v15.ped', index=False, sep='\t')
+
+
+if __name__ == '__main__':
+    main()
