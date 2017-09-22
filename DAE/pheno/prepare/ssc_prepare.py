@@ -34,14 +34,22 @@ def load_and_join():
     persons_df = pd.read_csv(individuals_v15_filename, sep='\t')
     persons_df = persons_df.rename(columns={"SSC ID": "personId"})
 
-    individuals_df = pd.read_csv(persons_filename, sep=',')
+    individuals_df = pd.read_csv(
+        persons_filename, sep=',',
+        dtype={
+            'family_id': object,
+            'person_id': object,
+        }
+    )
     individuals_df = individuals_df.rename(
         columns={
             'person_id': 'personId',
+            'family_id': 'familyId',
             'gender': 'genderI',
             'role': 'roleI'
         })
     assert 'personId' in individuals_df.columns
+    print(individuals_df.head())
 
     persons_14_df = pd.read_csv(individuals_v14_filename)
     persons_14_df = persons_14_df.rename(columns={"id()": "personId"})
@@ -58,6 +66,7 @@ def load_and_join():
 
     persons_14_age_df.set_index('personId', inplace=True)
     persons_14_df.set_index('personId', inplace=True)
+    individuals_df.set_index('personId', inplace=True)
 
     persons_df = persons_df.join(
         individuals_df, on='personId', rsuffix='_individual')
@@ -69,6 +78,9 @@ def load_and_join():
     measure_df.set_index('personId', inplace=True)
 
     persons_df = persons_df.join(measure_df, on='personId', rsuffix="_core")
+
+    print(persons_df.columns)
+    print(persons_df[['personId', 'familyId', 'family']].head())
 
     return persons_df
 
@@ -164,13 +176,51 @@ def infer_gender(persons_df, without_gender=[]):
     return persons_df
 
 
+def build_pedigree(persons_df):
+    assert 'familyId' in persons_df.columns
+    moms = pd.Series("0", index=persons_df.index)
+    dads = pd.Series("0", index=persons_df.index)
+    persons_df['momId'] = moms
+    persons_df['dadId'] = dads
+
+    persons_df = persons_df[[
+        'familyId',
+        'personId',
+        'dadId',
+        'momId',
+        'gender',
+        # 'status',
+        'role',
+    ]]
+
+    def find_mom_or_dad(family_df, role):
+        df = family_df[family_df.role == role]
+        assert len(df) <= 1
+        if len(df) == 0:
+            return "0"
+        row = df.iloc[0]
+        return row.personId
+
+    result = []
+    grouped = persons_df.groupby('familyId')
+    for _, family_df in grouped:
+        mom = find_mom_or_dad(family_df, Role.mom)
+        dad = find_mom_or_dad(family_df, Role.dad)
+        for index, row in family_df.iterrows():
+            if row.role not in set([Role.mom, Role.dad]):
+                row.momId = mom
+                row.dadId = dad
+        result.append(family_df)
+
+    if len(result) == 1:
+        return result[0]
+    else:
+        return pd.concat(result)
+
+
 def build_pedigree_file():
     persons_df = load_and_join()
     persons_df = infer_roles(persons_df)
     without_gender = []
     persons_df = infer_gender(persons_df, without_gender)
-    print(without_gender)
-    print(len(without_gender))
-    print(persons_df.columns)
-
-    return persons_df
+    return build_pedigree(persons_df)
