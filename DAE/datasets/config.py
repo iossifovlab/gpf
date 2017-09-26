@@ -268,12 +268,22 @@ class DatasetsConfig(object):
 
         column_slots = []
         for slot in slots:
-            source, label = slot.split(':')
+            slot_arr = slot.split(":")
+            if len(slot_arr) == 1:
+                source = slot_arr[0]
+                label = slot_arr[0]
+                label_format = "{}"
+            elif len(slot_arr) == 2:
+                source, label = slot_arr
+                label_format = "{}"
+            elif len(slot_arr) == 3:
+                source, label, label_format = slot_arr
             column_slots.append(
                 {
                     'source': source,
                     'name': label,
                     'id': source,
+                    'format': label_format
                 })
         column['slots'] = column_slots
         return column
