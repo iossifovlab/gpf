@@ -73,7 +73,7 @@ def load_and_join():
     persons_df = persons_df.join(persons_14_df, on='personId')
     persons_df = persons_df.join(persons_14_age_df, on='personId')
 
-    measure_df = load_core_descriptive()
+    measure_df = load_instrument('ssc_core_descriptive')
     measure_df = measure_df.rename(columns={'individual': 'personId'})
     measure_df.set_index('personId', inplace=True)
 
@@ -82,7 +82,7 @@ def load_and_join():
     return persons_df
 
 
-def load_core_descriptive():
+def load_instrument(instrument_name):
     data_dev_dir = os.environ['DAE_DB_DIR']
     pheno_ssc_15_dir = os.path.join(data_dev_dir, 'pheno/15/instruments')
     ssc_measures_dirs = [
@@ -98,7 +98,7 @@ def load_core_descriptive():
         os.path.join(
             pheno_ssc_15_dir,
             measure_dir,
-            'ssc_core_descriptive.csv'
+            '{}.csv'.format(instrument_name)
         )
         for measure_dir in ssc_measures_dirs
     ]
@@ -181,6 +181,18 @@ def infer_gender(persons_df, without_gender=[]):
     return persons_df[persons_df.gender != 0]
 
 
+def infer_race(persons_df):
+    commonly_used_df = load_instrument('ssc_commonly_used')
+    commonly_used_df = commonly_used_df.rename(
+        columns={"individual": "personId"})
+    assert 'personId' in commonly_used_df.columns
+    commonly_used_df.set_index('personId', inplace=True)
+    persons_df = persons_df.join(
+        commonly_used_df, on='personId',
+        rsuffix="_commonly_used")
+    return persons_df
+
+
 COLUMNS = [
     'familyId',
     'personId',
@@ -195,7 +207,28 @@ COLUMNS = [
     'ssc_diagnosis_nonverbal_iq',
     'ssc_diagnosis_verbal_iq',
     'race',
+    'race_parents',
 ]
+
+
+def isnan(val):
+    if isinstance(val, float) and np.isnan(val):
+        return True
+    return False
+
+
+def build_race(race, race1, race2):
+    if race1 == race2:
+        return race1
+    if race1 is None or race2 is None or \
+            race1 == 'not-specified' or race2 == 'not-specified' or \
+            race1 == '' or race2 == '' or \
+            isnan(race1) or isnan(race2):
+        if race:
+            return race
+        return 'not-specified'
+
+    return 'more-than-one-race'
 
 
 def build_pedigree(persons_df):
@@ -215,21 +248,31 @@ def build_pedigree(persons_df):
         if len(df) == 0:
             return "0"
         row = df.iloc[0]
-        return row.personId
+        return row
 
     result = []
     grouped = persons_df.groupby('familyId')
     for _, family_df in grouped:
         mom = find_mom_or_dad(family_df, Role.mom.name)
         dad = find_mom_or_dad(family_df, Role.dad.name)
+
         family = []
         for _index, row in family_df.iterrows():
             person = {
                 k: row[k] for k in row.keys()
             }
+
             if row.role not in set([Role.mom.name, Role.dad.name]):
-                person['momId'] = mom
-                person['dadId'] = dad
+                person['momId'] = mom.personId
+                person['dadId'] = dad.personId
+                person['race'] = build_race(
+                    row.race,
+                    mom.race_parents, dad.race_parents)
+            elif row.role == Role.mom.name:
+                person['race'] = mom.race_parents
+            elif row.role == Role.dad.name:
+                person['race'] = dad.race_parents
+
             family.append(person)
         result.extend(family)
 
@@ -245,6 +288,8 @@ def build_pedigree_file():
     persons_df = infer_roles(persons_df)
     without_gender = []
     persons_df = infer_gender(persons_df, without_gender)
+    persons_df = infer_race(persons_df)
+
     return build_pedigree(persons_df)
 
 
