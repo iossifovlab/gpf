@@ -89,7 +89,8 @@ export class AdditionalColumnSlot {
   static fromJson(json: any): AdditionalColumnSlot {
     return new AdditionalColumnSlot(
       json['id'],
-      json['name']
+      json['name'],
+      json['format']
     );
   }
 
@@ -103,6 +104,7 @@ export class AdditionalColumnSlot {
   constructor(
     readonly id: string,
     readonly name: string,
+    readonly format: string,
   ) {}
 }
 

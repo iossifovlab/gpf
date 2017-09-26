@@ -66,27 +66,6 @@
                     <gpf-table-subcontent field="genes"></gpf-table-subcontent>
                 </gpf-table-content>
             </gpf-table-column>
-            <gpf-table-column>
-                <gpf-table-header caption="allele freq">
-                </gpf-table-header>
-                <gpf-table-header>
-                    <gpf-table-subheader caption="SSC" field="SSCfreq"></gpf-table-subheader>
-                    <gpf-table-subheader caption="EVS" field="EVSfreq"></gpf-table-subheader>
-                    <gpf-table-subheader caption="E65" field="E65freq"></gpf-table-subheader>
-                </gpf-table-header>
-                <gpf-table-content>
-                    <gpf-table-subcontent>
-                        <span *gpfTableCellContent="let data">{{data.SSCfreq === null ? "&nbsp;" : "SSC " + data.SSCfreq + "%"}}</span>
-                    </gpf-table-subcontent>
-                    <gpf-table-subcontent>
-                        <span *gpfTableCellContent="let data">{{data.EVSfreq === null ? "&nbsp;" : "EVS " + data.EVSfreq + "%"}}</span>
-                    </gpf-table-subcontent>
-                    <gpf-table-subcontent>
-                        <span *gpfTableCellContent="let data">{{data.E65freq === null ? "&nbsp;"  : "E65 " +  data.E65freq + "%"}}</span>
-                    </gpf-table-subcontent>
-                </gpf-table-content>
-            </gpf-table-column>
-
             <gpf-table-column *ngFor="let column of additionalColumns">
                 <gpf-table-header caption="{{ column.name }}">
                 </gpf-table-header>
@@ -97,7 +76,7 @@
                 </gpf-table-header>
                 <gpf-table-content>
                     <gpf-table-subcontent *ngFor="let slot of column.slots">
-                      <span *gpfTableCellContent="let data">{{ data.additionalData[slot.id] }}</span>
+                      <span *gpfTableCellContent="let data">{{ formattedData(data, slot) }}</span>
                     </gpf-table-subcontent>
                 </gpf-table-content>
             </gpf-table-column>
