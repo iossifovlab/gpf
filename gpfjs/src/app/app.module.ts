@@ -121,6 +121,7 @@ import { ManagementComponent } from './management/management.component';
 import { UsersGroupsService } from './users-groups/users-groups.service';
 
 import { Select2Module } from 'ng2-select2';
+import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
 import { UserCreateComponent } from './user-create/user-create.component';
 import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
 import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remove.component';
@@ -311,6 +312,9 @@ const appRoutes: Routes = [
     BrowserAnimationsModule,
     MarkdownModule.forRoot(),
     Select2Module,
+    ConfirmationPopoverModule.forRoot({
+      confirmButtonType: 'danger'
+    })
   ],
   providers: [
     ConfigService,

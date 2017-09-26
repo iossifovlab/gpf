@@ -28,6 +28,7 @@
     "@ngrx/store": "^2.2.1",
     "@types/d3": "^4.7.0",
     "@types/node": "^6.0.65",
+    "angular-confirmation-popover": "^3.2.0",
     "angular-ide": "^0.9.17",
     "angular2-markdown": "^1.6.0",
     "bootstrap": "^4.0.0-beta",

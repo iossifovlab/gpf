@@ -1,87 +1,78 @@
-<span style="display: inline-block" ngbTooltip="Remove password" placement="bottom">
-  <ng-template #removePasswordConfirm>
-    <div class="content-fluid text-center">
+<ng-template #confirmation let-options="options">
+  <div [ngClass]="[
+    'popover',
+    options.placement,
+    'popover-' + options.placement,
+    'bs-popover-' + options.placement,
+    options.popoverClass
+  ]">
+    <div class="popover-arrow arrow"></div>
+    <h3 class="popover-title popover-header" [innerHTML]="options.title"></h3>
+    <div class="popover-content popover-body">
+      <p [innerHTML]="options.message"></p>
       <div class="row">
-        <div class="col-12">
-          {{ user.name }}'s ({{ user.email }}) password will be removed. They won't be able to login.
+        <div
+          class="col-xs-6 col-6"
+          [ngClass]="{'col-xs-offset-3 col-offset-3': options.hideCancelButton}"
+          *ngIf="!options.hideConfirmButton">
+          <button
+            [mwlFocus]="options.focusButton === 'confirm'"
+            [class]="'btn btn-' + options.confirmButtonType"
+            (click)="options.onConfirm({clickEvent: $event})"
+            [innerHtml]="options.confirmText">
+          </button>
         </div>
-      </div>
-      <div class="row">
-        <div class="col-12 text-center">
-          This action is irrevertible!
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12 text-center">
-          <button (click)="removePassword(user)" class="btn btn-danger px-5">Remove password</button>
+        <div
+          class="col-xs-6 col-6"
+          [ngClass]="{'col-xs-offset-3 col-offset-3': options.hideConfirmButton}"
+          *ngIf="!options.hideCancelButton">
+          <button
+            [mwlFocus]="options.focusButton === 'cancel'"
+            [class]="'btn btn-' + options.cancelButtonType"
+            (click)="options.onCancel({clickEvent: $event})"
+            [innerHtml]="options.cancelText">
+          </button>
         </div>
       </div>
     </div>
-  </ng-template>
+  </div>
+</ng-template>
+
+<span style="display: inline-block" ngbTooltip="Remove password" placement="bottom">
   <a role="button" tabindex="0" class="btn btn-outline-primary btn-sm"
     container="body"
-    [ngbPopover]="removePasswordConfirm"
-    triggers="focus:blur"
-    popoverTitle="Are you sure?">
+    mwlConfirmationPopover
+    confirmText="Remove password"
+    title="Are you sure?"
+    [customTemplate]="confirmation"
+    message="{{ user.name }}'s ({{ user.email }}) password will be removed. They won't be able to login."
+    (confirm)="removePassword(user)">
     <i class="fa fa-ban fa-lg" aria-hidden="true"></i>
   </a>
 </span>
 <span style="display: inline-block" ngbTooltip="Reset password" placement="bottom">
-  <ng-template #resetPasswordConfirm>
-    <div class="content-fluid text-center">
-      <div class="row">
-        <div class="col-12">
-         {{ user.name }}'s ({{ user.email }}) password will be reset. An email with reset instructions will be sent and they won't be able to login until they set a new password.
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12 text-center">
-          This action is irrevertible!
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12 text-center">
-          <button (click)="resetPassword(user)" class="btn btn-danger px-5">Reset password</button>
-        </div>
-      </div>
-    </div>
-  </ng-template>
   <a role="button" tabindex="0" class="btn btn-outline-primary btn-sm"
     container="body"
-    [ngbPopover]="resetPasswordConfirm"
-    triggers="focus:blur"
-    popoverTitle="Are you sure?">
+    mwlConfirmationPopover
+    confirmText="Reset password"
+    title="Are you sure?"
+    [customTemplate]="confirmation"
+    message="{{ user.name }}'s ({{ user.email }}) password will be reset. An email with reset instructions will be sent and they won't be able to login until they set a new password."
+    (confirm)="resetPassword(user)">
     <i class="fa fa-refresh fa-lg" aria-hidden="true"></i>
   </a>
 </span>
 <span style="display: inline-block" ngbTooltip="Delete user" placement="bottom">
-  <ng-template #removeUserConfirm>
-    <div class="content-fluid text-center">
-      <div class="row">
-        <div class="col-12">
-          {{ user.name }} ({{ user.email }}) will be deleted.
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12 text-center">
-          This action is irrevertible!
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12 text-center">
-          <button (click)="deleteUser(user)" class="btn btn-danger px-5">Delete</button>
-        </div>
-      </div>
-    </div>
-  </ng-template>
   <a
     role="button"
     tabindex="0"
     class="btn btn-sm btn-outline-primary"
-    container="body"
-    [ngbPopover]="removeUserConfirm"
-    triggers="focus:blur"
-    popoverTitle="Are you sure?">
+    mwlConfirmationPopover
+    confirmText="Delete"
+    title="Are you sure?"
+    [customTemplate]="confirmation"
+    message="{{ user.name }} ({{ user.email }}) will be deleted. This action is irrevertible!"
+    (confirm)="deleteUser(user)">
     <i class="fa fa-times fa-lg" aria-hidden="true"></i>
   </a>
 </span>
