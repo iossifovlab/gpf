@@ -1,32 +1,26 @@
 <ng-template #confirmation let-options="options">
   <div [ngClass]="[
     'popover',
-    options.placement,
-    'popover-' + options.placement,
+    'show',
     'bs-popover-' + options.placement,
     options.popoverClass
   ]">
-    <div class="popover-arrow arrow"></div>
-    <h3 class="popover-title popover-header" [innerHTML]="options.title"></h3>
-    <div class="popover-content popover-body">
+    <div style="left: calc(50% - 5px)" class="arrow"></div>
+    <h3 class="popover-header" [innerHTML]="options.title"></h3>
+    <div class="popover-body">
       <p [innerHTML]="options.message"></p>
       <div class="row">
         <div
-          class="col-xs-6 col-6"
-          [ngClass]="{'col-xs-offset-3 col-offset-3': options.hideCancelButton}"
-          *ngIf="!options.hideConfirmButton">
+          class="col-xs-12 col-12 text-center">
           <button
+            *ngIf="!options.hideConfirmButton"
             [mwlFocus]="options.focusButton === 'confirm'"
             [class]="'btn btn-' + options.confirmButtonType"
             (click)="options.onConfirm({clickEvent: $event})"
             [innerHtml]="options.confirmText">
           </button>
-        </div>
-        <div
-          class="col-xs-6 col-6"
-          [ngClass]="{'col-xs-offset-3 col-offset-3': options.hideConfirmButton}"
-          *ngIf="!options.hideCancelButton">
           <button
+            *ngIf="!options.hideCancelButton"
             [mwlFocus]="options.focusButton === 'cancel'"
             [class]="'btn btn-' + options.cancelButtonType"
             (click)="options.onCancel({clickEvent: $event})"
@@ -38,41 +32,36 @@
   </div>
 </ng-template>
 
-<span style="display: inline-block" ngbTooltip="Remove password" placement="bottom">
-  <a role="button" tabindex="0" class="btn btn-outline-primary btn-sm"
-    container="body"
-    mwlConfirmationPopover
-    confirmText="Remove password"
-    title="Are you sure?"
-    [customTemplate]="confirmation"
-    message="{{ user.name }}'s ({{ user.email }}) password will be removed. They won't be able to login."
-    (confirm)="removePassword(user)">
-    <i class="fa fa-ban fa-lg" aria-hidden="true"></i>
-  </a>
-</span>
-<span style="display: inline-block" ngbTooltip="Reset password" placement="bottom">
-  <a role="button" tabindex="0" class="btn btn-outline-primary btn-sm"
-    container="body"
-    mwlConfirmationPopover
-    confirmText="Reset password"
-    title="Are you sure?"
-    [customTemplate]="confirmation"
-    message="{{ user.name }}'s ({{ user.email }}) password will be reset. An email with reset instructions will be sent and they won't be able to login until they set a new password."
-    (confirm)="resetPassword(user)">
-    <i class="fa fa-refresh fa-lg" aria-hidden="true"></i>
-  </a>
-</span>
-<span style="display: inline-block" ngbTooltip="Delete user" placement="bottom">
-  <a
-    role="button"
-    tabindex="0"
-    class="btn btn-sm btn-outline-primary"
-    mwlConfirmationPopover
-    confirmText="Delete"
-    title="Are you sure?"
-    [customTemplate]="confirmation"
-    message="{{ user.name }} ({{ user.email }}) will be deleted. This action is irrevertible!"
-    (confirm)="deleteUser(user)">
-    <i class="fa fa-times fa-lg" aria-hidden="true"></i>
-  </a>
-</span>
+<a role="button" tabindex="0" class="btn btn-outline-primary btn-sm"
+  mwlConfirmationPopover
+  confirmText="Remove password"
+  title="Remove password"
+  appendToBody="true"
+  [customTemplate]="confirmation"
+  message="{{ user.name }}'s ({{ user.email }}) password will be removed. They won't be able to login."
+  (confirm)="removePassword(user)">
+  <i class="fa fa-ban fa-lg" aria-hidden="true"></i>
+</a>
+<a role="button" tabindex="0" class="btn btn-outline-primary btn-sm"
+  mwlConfirmationPopover
+  confirmText="Reset password"
+  title="Reset password"
+  appendToBody="true"
+  [customTemplate]="confirmation"
+  message="{{ user.name }}'s ({{ user.email }}) password will be reset. An email with reset instructions will be sent and they won't be able to login until they set a new password."
+  (confirm)="resetPassword(user)">
+  <i class="fa fa-refresh fa-lg" aria-hidden="true"></i>
+</a>
+<a
+  role="button"
+  tabindex="0"
+  class="btn btn-sm btn-outline-primary"
+  mwlConfirmationPopover
+  confirmText="Delete"
+  title="Delete user"
+  appendToBody="true"
+  [customTemplate]="confirmation"
+  message="{{ user.name }} ({{ user.email }}) will be deleted. This action is irrevertible!"
+  (confirm)="deleteUser(user)">
+  <i class="fa fa-times fa-lg" aria-hidden="true"></i>
+</a>
