@@ -48,6 +48,53 @@ export class GpfTableComponent {
     private ref: ChangeDetectorRef
   ) { }
 
+<<<<<<< HEAD
+  ngAfterViewInit() {
+    this.setStaticTableHeaders(
+      this.rowViewChildren, this.tableHeaderViewChildren,
+      this.tableFloatingHeaderViewChildren
+    );
+    Observable.combineLatest([
+        this.rowViewChildren.changes.filter(elements => !!elements.first),
+        this.tableHeaderViewChildren.changes.filter(elements => !!elements.first),
+        this.tableFloatingHeaderViewChildren.changes.filter(elements => !!elements.first),
+      ])
+      .subscribe(
+        ([rows, headers, floatingHeaders])  => {
+          this.setStaticTableHeaders(rows, headers, floatingHeaders);
+      });
+  }
+
+  private setStaticTableHeaders(rows, headers, floatingHeaders) {
+    // console.log(rows, headers, floatingHeaders);
+    if (rows.length === 0 || headers.length === 0  || floatingHeaders.length === 0) {
+      return;
+    }
+    let headersArray = [].slice
+      .call(headers.first.nativeElement
+        .getElementsByTagName('gpf-table-header'));
+    let floatingHeadersArray = [].slice
+      .call(floatingHeaders.first.nativeElement
+        .getElementsByTagName('gpf-table-header'));
+
+    let lastRow = rows.last.nativeElement;
+
+    let columnsWithWidths: [any, any, number][] = [].slice
+      .call(lastRow.getElementsByTagName('gpf-table-cell'))
+      .map((tableCell, index) => [
+        headersArray[index],
+        floatingHeadersArray[index],
+        tableCell.getBoundingClientRect().width
+      ]);
+
+    columnsWithWidths.map(([header, floatingHeader, width]) => {
+      header.style.width = width + 'px';
+      floatingHeader.style.width = width + 'px';
+    });
+  }
+
+=======
+>>>>>>> master
   set sortingInfo(sortingInfo: SortInfo) {
     this.previousSortingInfo = sortingInfo;
     sortingInfo.sortBySubcolumn.sort(this.dataSource, sortingInfo.sortOrderAsc);
@@ -89,7 +136,7 @@ export class GpfTableComponent {
   }
 
   get afterDataCellHeight(): number {
-    if (this.noScrollOptimization || !this.dataSource) {
+    if (this.noScrollOptimization) {
       return 0;
     }
     return (this.dataSource.length - this.getScrollIndices()[1]) * this.lastRowHeight;

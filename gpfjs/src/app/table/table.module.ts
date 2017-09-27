@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule }        from '@angular/common';
 
 import { GpfTableComponent } from './table.component';
-import { ResizeService } from './resize.service'
+import { ResizeService } from './resize.service';
 
 import { GpfTableColumnComponent } from './component/column.component';
 import { GpfTableSubheaderComponent } from './component/subheader.component';

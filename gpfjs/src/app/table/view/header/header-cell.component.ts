@@ -3,9 +3,9 @@ import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
   QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver,
   AfterViewInit, Query, ElementRef
 } from '@angular/core';
-import { GpfTableContentHeaderComponent } from '../../component/header.component'
-import { GpfTableSubheaderComponent } from '../../component/subheader.component'
-import { SortInfo } from '../../table.component'
+import { GpfTableContentHeaderComponent } from '../../component/header.component';
+import { GpfTableSubheaderComponent } from '../../component/subheader.component';
+import { SortInfo } from '../../table.component';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -31,7 +31,6 @@ export class GpfTableHeaderCellComponent {
       sortInfo = new SortInfo(sortBySubcolumn, true);
     }
     this.sortingInfoChange.emit(sortInfo);
-    console.log("sort", sortInfo)
   }
 
   get imgPathPrefix() {

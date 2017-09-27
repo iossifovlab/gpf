@@ -2,26 +2,35 @@
   <div class="col-12 mt-3">
     <gpf-table [dataSource]="tableData$ | async" style="display: inline-block; width: 100%">
       <gpf-table-column>
-        <gpf-table-subcolumn header="Dataset" field="dataset">
-        </gpf-table-subcolumn>
+        <gpf-table-header caption="Dataset" field="dataset"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent field="dataset">
+          </gpf-table-subcontent>
+        </gpf-table-content>
       </gpf-table-column>
       <gpf-table-column>
-        <gpf-table-subcolumn header="Groups with access" [sortable]="false">
-          <span *gpfTableCellContent="let data">
-            <div *ngFor="let group of data.groups">
-              {{ group }}
-            </div>
-          </span>
-        </gpf-table-subcolumn>
+        <gpf-table-header caption="Groups with access"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data">
+              <div *ngFor="let group of data.groups">
+                {{ group }}
+              </div>
+            </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
       </gpf-table-column>
       <gpf-table-column>
-        <gpf-table-subcolumn header="Users with access" [sortable]="false">
-          <span *gpfTableCellContent="let data">
-            <div *ngFor="let user of data.users">
-              {{ user.email }}
-            </div>
-          </span>
-        </gpf-table-subcolumn>
+        <gpf-table-header caption="Users with access"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data">
+              <div *ngFor="let user of data.users">
+                {{ user.email }}
+              </div>
+            </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
       </gpf-table-column>
     </gpf-table>
   </div>

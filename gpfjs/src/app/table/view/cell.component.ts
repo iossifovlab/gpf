@@ -1,5 +1,5 @@
 import { Input, Component, ViewContainerRef, ComponentFactoryResolver, HostListener } from '@angular/core';
-import { GpfTableColumnComponent } from '../component/column.component'
+import { GpfTableColumnComponent } from '../component/column.component';
 
 @Component({
     selector: 'gpf-table-view-cell',
@@ -13,6 +13,6 @@ export class GpfTableCellComponent {
     }
 
     get cellContent() {
-        return this.columnInfo.contentChildren.first
+        return this.columnInfo.contentChildren.first;
     }
 }

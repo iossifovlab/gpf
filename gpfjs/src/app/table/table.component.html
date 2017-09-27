@@ -14,7 +14,8 @@
     <div #rows style="display: table-row;" *ngFor="let data of visibleData">
         <gpf-table-view-cell #cells *ngFor="let column of columnsChildren"
             [columnInfo]="column"
-            [data]=data
+            [data]="data"
+            [style.width]="column.columnWidth ? column.columnWidth : null"
             style="vertical-align: middle">
         </gpf-table-view-cell>
     </div>
@@ -34,8 +35,7 @@
   [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
     <gpf-table-view-header
         [columns]="columnsChildren"
-        [(sortingInfo)]="sortingInfo"
-        shouldSetWidth=true>
+        [(sortingInfo)]="sortingInfo">
     </gpf-table-view-header>
 </div>
 
