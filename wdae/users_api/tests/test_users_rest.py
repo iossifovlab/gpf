@@ -225,6 +225,7 @@ def test_admin_can_add_user_group(
     user.refresh_from_db()
     assert user.groups.filter(name=empty_group.name).exists()
 
+
 def test_admin_can_update_with_new_group(
     admin_client, users_instance_url, active_user):
     group_name = 'new group'
