@@ -1,5 +1,5 @@
 import networkx as nx
-# import time
+import itertools
 from collections import deque
 import copy
 
@@ -185,12 +185,39 @@ class SandwichInstance:
         return SandwichInstance(all_vertices, required_graph, forbidden_graph)
 
 
+def copy_graph(g):
+    result = nx.Graph()
+    result.add_nodes_from(g.nodes())
+    result.add_edges_from(g.edges())
+
+    return result
+
+
 class SandwichSolver(object):
 
     @staticmethod
     def solve(sandwich_instance):
-        # start = time.time()
+        forbidden_graph = sandwich_instance.forbidden_graph
+        for count in range(0, len(forbidden_graph.edges())):
+            for edges_to_remove in itertools.combinations(
+                    forbidden_graph.edges(),
+                    count):
 
+                current_forbidden_graph = copy_graph(forbidden_graph)
+                current_forbidden_graph.remove_edges_from(edges_to_remove)
+
+                current_instance = SandwichInstance(
+                    sandwich_instance.vertices,
+                    sandwich_instance.required_graph,
+                    current_forbidden_graph)
+
+                result = SandwichSolver.try_solve(current_instance)
+                if result:
+                    print("removed forbidden:", count)
+                    return result
+
+    @staticmethod
+    def try_solve(sandwich_instance):
         initial_realization = []
         current_iteration = 0
 
@@ -214,7 +241,7 @@ class SandwichSolver(object):
             realization = realizations_queue.pop()
             current_iteration += 1
 
-            if current_iteration == 1000:
+            if current_iteration == 10000:
                 print("exit ot 10k it")
                 return None
 
@@ -232,7 +259,6 @@ class SandwichSolver(object):
                     continue
 
                 if len(cloned_realization.domain) == vertices_length:
-                    # print("Found in " + str(time.time() - start) + "ms")
                     return cloned_realization.intervals
                 else:
                     domain_string = repr(cloned_realization)
@@ -240,5 +266,4 @@ class SandwichSolver(object):
                         visited_realizations[domain_string] = True
                         realizations_queue.append(cloned_realization)
 
-        # print("max domain", max_domain)
         return None
