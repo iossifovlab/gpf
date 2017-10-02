@@ -20,7 +20,7 @@ class CreatableSlugRelatedField(serializers.SlugRelatedField):
 
 class UserSerializer(serializers.ModelSerializer):
 
-    name = serializers.CharField(required=False)
+    name = serializers.CharField(required=False, allow_blank=True)
 
     groups = serializers.ListSerializer(
         child=CreatableSlugRelatedField(

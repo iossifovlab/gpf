@@ -12,6 +12,7 @@ class ProtectedGroupsValidator(object):
 
         group_names = map(str, value)
         missing_groups = []
+        print(group_names)
         for group in self.user_instance.get_protected_group_names():
             if group not in group_names:
                 message = 'The group {} cannot be removed.'.format(group)

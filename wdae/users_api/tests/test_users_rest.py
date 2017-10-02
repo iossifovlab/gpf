@@ -53,7 +53,7 @@ def empty_group(db):
 
 @pytest.fixture()
 def active_user(db, user_model):
-    user = user_model.objects.create(email='new@new.com', password='secret')
+    user = user_model.objects.create_user(email='new@new.com', password='secret')
 
     assert user.is_active
     return user
@@ -61,7 +61,7 @@ def active_user(db, user_model):
 
 @pytest.fixture()
 def inactive_user(db, user_model):
-    user = user_model.objects.create(email='new@new.com')
+    user = user_model.objects.create_user(email='new@new.com')
 
     assert not user.is_active
     return user
@@ -76,6 +76,7 @@ def three_new_users(db, user_model):
         users.append(user)
 
     return users
+
 
 @pytest.fixture()
 def three_users_in_a_group(db, three_new_users, empty_group):
@@ -121,6 +122,18 @@ def test_admin_can_create_new_users(admin_client, users_endpoint,
                                     user_model):
     data = {
         'email': 'new@new.com',
+    }
+    response = admin_client.post(users_endpoint, data=data)
+
+    print(response)
+    assert response.status_code is status.HTTP_201_CREATED
+    assert user_model.objects.get(email='new@new.com') is not None
+
+
+def test_new_user_name_can_be_blank(admin_client, users_endpoint, user_model):
+    data = {
+        'email': 'new@new.com',
+        'name': ''
     }
     response = admin_client.post(users_endpoint, data=data)
 
@@ -203,6 +216,24 @@ def test_admin_cant_partial_update_user_email(
 
     user.refresh_from_db()
     assert user.email == old_email
+
+
+def test_user_name_can_be_updated_to_blank(
+        admin_client, users_instance_url, active_user):
+    data = {
+        'id': active_user.id,
+        'name': '',
+        'groups': [group.name for group in active_user.groups.all()]
+    }
+    print(data['groups'])
+
+    response = admin_client.put(
+        users_instance_url(active_user.id), data, format='json')
+    print(response)
+    assert response.status_code is status.HTTP_200_OK
+
+    active_user.refresh_from_db()
+    assert active_user.name == ''
 
 
 def test_admin_can_add_user_group(
