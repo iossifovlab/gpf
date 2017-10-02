@@ -13,7 +13,7 @@
                 <span class="input-group-addon">
                   <i class="fa fa-search" aria-hidden="true"></i>
                 </span>
-                <input #searchTerm (keyup)="search(searchTerm.value)" type="text" class="form-control" placeholder="Search groups" />
+                <input #searchTerm (keyup)="search(searchTerm.value)" type="text" class="form-control" placeholder="Search groups" [ngModel]="input$ | async" />
               </div>
               <div class="btn-group pull-right" role="group">
                 <button

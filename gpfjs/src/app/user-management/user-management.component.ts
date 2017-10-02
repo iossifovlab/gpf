@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { Observable, ReplaySubject } from 'rxjs';
 
@@ -19,7 +20,9 @@ export class UserManagementComponent implements OnInit {
 
 
   constructor(
-    private usersService: UsersService
+    private usersService: UsersService,
+    private router: Router,
+    private route: ActivatedRoute
     ) { }
 
   ngOnInit() {
@@ -28,13 +31,29 @@ export class UserManagementComponent implements OnInit {
       .map(searchTerm => searchTerm.trim())
       .debounceTime(300)
       .distinctUntilChanged()
+      .do(searchTerm => {
+        let queryParamsObject: any = {};
+        if (searchTerm) {
+          queryParamsObject.search =  searchTerm;
+        }
+        this.router.navigate(['.'], {
+          relativeTo: this.route,
+          replaceUrl: true,
+          queryParams: queryParamsObject
+        });
+      })
       .switchMap(searchTerm =>
         this.usersService.searchUsersByGroup(searchTerm))
       .map(users => users.map(user => this.sortGroups(user)))
       .map(users => users.map(user => new SelectableUser(user)))
       .share();
 
-    this.search('');
+    this.route.queryParamMap
+      .map(params => params.get('search') || '')
+      .take(1)
+      .subscribe(searchTerm => {
+        this.search(searchTerm);
+      });
   }
 
   selectedUsers(users: SelectableUser[]) {
