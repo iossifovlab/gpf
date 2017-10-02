@@ -33,233 +33,6 @@ def get_races():
             'white'}
 
 
-def __get_float_measure(var_name):
-    str_map = None  # dict(zip(phDB.families, phDB.get_variable(var_name)))
-    flt_map = {}
-    for key, val in str_map.items():
-        try:
-            flt_map[key] = float(val)
-        except:
-            pass
-    return flt_map
-
-
-def __get_string_measure(mName):
-    return None  # dict(zip(phDB.families, phDB.get_variable(mName)))
-
-
-def get_verbal_iq():
-    return __get_float_measure('pcdv.ssc_diagnosis_verbal_iq')
-
-
-def get_non_verbal_iq():
-    return __get_float_measure('pcdv.ssc_diagnosis_nonverbal_iq')
-
-
-def get_pcdv_race():
-    return __get_string_measure('pcdv.race')
-
-
-def get_mocuv_race():
-    return __get_string_measure('mocuv.race_parents')
-
-
-def get_focuv_race():
-    return __get_string_measure('focuv.race_parents')
-
-
-def get_prb_gender():
-    return __get_string_measure('Proband_Sex')
-
-
-def get_sib_gender():
-    return __get_string_measure('Sibling_Sex')
-
-
-FATHER_RACE = get_focuv_race()
-MOTHER_RACE = get_mocuv_race()
-PROBAND_VIQ = get_verbal_iq()
-PROBAND_NVIQ = get_non_verbal_iq()
-
-# PARENTS_RACE = \
-#     dict([(k, ':'.join([m, f]))
-#           for (k, m, f) in zip(phDB.families,
-#                                phDB.get_variable('mocuv.race_parents'),
-#                                phDB.get_variable('focuv.race_parents'))])
-# PARENTS_RACE_QUERY = \
-#     dict([(k, f if f == m else 'more-than-one-race')
-#           for (k, f, m) in zip(phDB.families,
-#                                phDB.get_variable('mocuv.race_parents'),
-#                                phDB.get_variable('focuv.race_parents'))])
-
-
-def get_father_race():
-    return None  # FATHER_RACE
-
-
-def get_mother_race():
-    return None  # MOTHER_RACE
-
-
-def get_parents_race():
-    return None  # PARENTS_RACE
-
-
-def __get_parents_race_filter():
-    return None  # PARENTS_RACE_QUERY
-
-
-def family_filter_by_race(families, race):
-    races = __get_parents_race_filter()
-    res = dict([(key, val) for (key, val) in families.items()
-                if key in races and races[key] == race])
-    # LOGGER.debug("family_filter_by_race: %s", str(res))
-    return res
-
-
-def __bind_family_filter_by_race(data, family_filters):
-    if 'familyRace' in data and data['familyRace']:
-        family_race = data['familyRace']
-        if isinstance(family_race, list):
-            family_race = ",".join(family_race)
-        if not family_race or family_race.lower() == 'all':
-            return
-        family_filters.append(
-            lambda fs: family_filter_by_race(fs, family_race)
-        )
-
-
-def family_filter_by_verbal_iq(families, iq_lo=0.0, iq_hi=float('inf')):
-    return dict([(key, families[key]) for key, val in get_verbal_iq().items()
-                 if key in families and val >= iq_lo and val <= iq_hi])
-
-
-def __bind_family_filter_by_verbal_iq(data, family_filters):
-    iq_hi = None
-    iq_lo = None
-
-    if 'familyVerbalIqHi' in data and data['familyVerbalIqHi']:
-        try:
-            iq_hi = float(data['familyVerbalIqHi'])
-        except:
-            iq_hi = None
-
-    if 'familyVerbalIqLo' in data and data['familyVerbalIqLo']:
-        try:
-            iq_lo = float(data['familyVerbalIqLo'])
-        except:
-            iq_lo = None
-
-    if iq_hi is None and iq_lo is None:
-        return
-
-    if iq_lo is None:
-        iq_lo = 0.0
-    if iq_hi is None:
-        iq_hi = float('inf')
-
-    family_filters.append(
-        lambda fs: family_filter_by_verbal_iq(fs, iq_lo, iq_hi)
-    )
-
-
-def family_filter_by_prb_gender(families, gender):
-    return dict([(key, val) for (key, val) in families.items()
-                 if val.memberInOrder[2].gender == gender])
-
-
-def __bind_family_filter_by_prb_gender(data, family_filters):
-    if 'familyPrbGender' in data and data['familyPrbGender']:
-        family_prb_gender = data['familyPrbGender']
-        if isinstance(family_prb_gender, list):
-            family_prb_gender = ','.join(family_prb_gender)
-        if family_prb_gender.lower() == 'male':
-            family_filters.append(
-                lambda fs: family_filter_by_prb_gender(fs, 'M')
-            )
-        elif family_prb_gender.lower() == 'female':
-            family_filters.append(
-                lambda fs: family_filter_by_prb_gender(fs, 'F')
-            )
-
-
-def family_filter_by_sib_gender(families, gender):
-    return dict([(key, val) for (key, val) in families.items()
-                 if len(val.memberInOrder) > 3 and
-                 val.memberInOrder[3].gender == gender])
-
-
-def __bind_family_filter_by_sib_gender(data, family_filters):
-    if 'familySibGender' in data and data['familySibGender']:
-        family_sib_gender = data['familySibGender']
-        if isinstance(family_sib_gender, list):
-            family_sib_gender = ','.join(family_sib_gender)
-        if family_sib_gender.lower() == 'male':
-            family_filters.append(
-                lambda fs: family_filter_by_sib_gender(fs, 'M')
-            )
-        elif family_sib_gender.lower() == 'female':
-            family_filters.append(
-                lambda fs: family_filter_by_sib_gender(fs, 'F')
-            )
-
-
-def family_filter_by_trio_quad(families, trio_quad):
-    """
-    Filters dictionary of families by number of family members.
-    Returns dictionary of families, for which number of members is equal
-    to 'trio_quad' parameter of the function.
-    """
-    return dict([(key, val) for (key, val) in families.items()
-                 if len(val.memberInOrder) == trio_quad])
-
-
-def __bind_family_filter_by_trio_quad(data, family_filters):
-    if 'familyQuadTrio' in data and data['familyQuadTrio']:
-        family_type = data['familyQuadTrio']
-        if isinstance(family_type, list):
-            family_type = ','.join(family_type)
-
-        if family_type.lower() == 'trio':
-            LOGGER.debug("filtering trio families...")
-            family_filters.append(
-                lambda fs: family_filter_by_trio_quad(fs, 3)
-            )
-        elif family_type.lower() == 'quad':
-            LOGGER.debug("filtering quad families...")
-            family_filters.append(
-                lambda fs: family_filter_by_trio_quad(fs, 4)
-            )
-
-
-def __apply_family_filters(study, family_filters):
-    if family_filters is None or len(family_filters) == 0:
-        return None
-    families = study.families
-    for ff in family_filters:
-        families = ff(families)
-    return families
-
-
-def advanced_family_filter(data, filters):
-    if 'familyIds' in filters and filters['familyIds'] is not None \
-       and len(filters['familyIds']) > 0:
-        return None
-
-    family_filters = []
-    __bind_family_filter_by_race(data, family_filters)
-    __bind_family_filter_by_verbal_iq(data, family_filters)
-    __bind_family_filter_by_trio_quad(data, family_filters)
-    __bind_family_filter_by_prb_gender(data, family_filters)
-    __bind_family_filter_by_sib_gender(data, family_filters)
-    # LOGGER.debug("family filters: %d", len(family_filters))
-
-    if len(family_filters) == 0:
-        return None
-    else:
-        return lambda study: __apply_family_filters(study, family_filters)
-
-
 def prepare_inchild(data):
     if 'inChild' not in data:
         return None
@@ -667,7 +440,7 @@ def dae_query_variants(data):
         return []
 
     denovo_filters = prepare_denovo_filters(data)
-    family_filters = advanced_family_filter(data, denovo_filters)
+    family_filters = None
 
     variants = []
     if dstudies is not None:
@@ -695,21 +468,12 @@ def pedigree_data(v):
 
 
 def augment_vars(v):
-    fmId = v.familyId
-    parRaces = get_parents_race()[fmId] \
-        if fmId in get_parents_race() else "NA:NA"
-
     chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
 
-    viq = str(PROBAND_VIQ[fmId]) \
-        if fmId in PROBAND_VIQ else "NA"
-    nviq = str(PROBAND_NVIQ[fmId]) \
-        if fmId in PROBAND_NVIQ else "NA"
-
-    v.atts["_par_races_"] = parRaces
+    v.atts["_par_races_"] = None
     v.atts["_ch_prof_"] = chProf
-    v.atts["_prb_viq_"] = viq
-    v.atts["_prb_nviq_"] = nviq
+    v.atts["_prb_viq_"] = None
+    v.atts["_prb_nviq_"] = None
     v.atts["_pedigree_"] = str(v.pedigree)
     v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
     v._phenotype_ = v.study.get_attr('study.phenotype')
