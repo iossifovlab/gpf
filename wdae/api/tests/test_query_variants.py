@@ -1,9 +1,11 @@
 import unittest
 from helpers.wdae_query_variants import wdae_query_wrapper
+import pytest
 
 # LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class IvanchoSubmittedDoubleGenesQueryTests(unittest.TestCase):
     TEST_DATA = {'geneRegionType': 'on',
                  'familyIds': '',
@@ -34,6 +36,7 @@ class IvanchoSubmittedDoubleGenesQueryTests(unittest.TestCase):
             self.assertEqual(1, gl.count('FMR1'))
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class AlexPopovSubmittedBadRegionQueryTests(unittest.TestCase):
     TEST_DATA = {'geneRegionType': 'on',
                  'familyIds': '',

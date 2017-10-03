@@ -14,10 +14,12 @@ from query_prepare import prepare_ssc_filter
 from rest_framework import status
 from rest_framework.test import APITestCase
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+import pytest
 
 LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class RecurrentLGDsGenesTests(APITestCase):
 
     def test_load_gene_set(self):
@@ -40,6 +42,7 @@ def count_iterable(iterable):
     return num + 1
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class PhenotypeFilterTests(APITestCase):
 
     def test_phenotype_BTN1A1_BTNL2(self):
@@ -157,6 +160,7 @@ class PhenotypeFilterTests(APITestCase):
         self.assertEqual(10, count_iterable(response.streaming_content))
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class PrepareSSCFilterTests(APITestCase):
 
     def test_present_in_parent_neither(self):
@@ -210,6 +214,7 @@ class PrepareSSCFilterTests(APITestCase):
         self.assertFalse('phenoType' in res)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class SSCPresentInParentTests(BaseAuthenticatedUserTest):
 
     def test_present_in_child_autism_only(self):
@@ -417,6 +422,7 @@ class SSCPresentInParentTests(BaseAuthenticatedUserTest):
         self.assertEqual('2', response.data['count'])
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class SSCPresentInChildDownloadTests(BaseAuthenticatedUserTest):
 
     def test_rec_lgds_download(self):

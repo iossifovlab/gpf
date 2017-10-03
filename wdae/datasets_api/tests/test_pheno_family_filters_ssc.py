@@ -38,7 +38,8 @@ class Test(BaseAuthenticatedUserTest):
                 },
                 {
                     'measureType': 'continuous',
-                    'measure': 'pheno_common.non_verbal_iq',
+                    'measure':
+                    'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
                     'role': 'prb',
                     'mmin': 80,
                     'mmax': 80

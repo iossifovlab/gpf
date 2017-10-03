@@ -9,10 +9,12 @@ from query_variants import prepare_inchild, prepare_effect_types, \
 import logging
 from rest_framework.test import APITestCase
 from helpers.wdae_query_variants import prepare_gene_sets, gene_set_loader2
+import pytest
 
 LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class InChildTests(APITestCase):
 
     def test_inchild_empty(self):
@@ -36,6 +38,7 @@ class InChildTests(APITestCase):
         self.assertIsNone(prepare_inchild({'inChild': 'ala-bala'}))
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class EffectTypesTests(APITestCase):
     ALL = """LGDs,CNVs,nonsynonymous,CNV-,CNV+,frame-shift,intron,""" \
         """no-frame-shift-new-stop,synonymous,nonsense,no-frame-shift,""" \
@@ -101,6 +104,7 @@ class EffectTypesTests(APITestCase):
             prepare_effect_types({'effectTypes': 'ala-bala'}), None)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class VariantTypesTests(APITestCase):
 
     def test_variant_types_all(self):
@@ -130,6 +134,7 @@ class VariantTypesTests(APITestCase):
             prepare_variant_types({'variantTypes': 'bala'}))
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class FamilesTests(APITestCase):
 
     def test_families_empty(self):
@@ -169,6 +174,7 @@ class FamilesTests(APITestCase):
             ['111', '222'])
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class GeneSymsTests(APITestCase):
 
     def test_gen_syms_empty(self):
@@ -209,6 +215,7 @@ class GeneSymsTests(APITestCase):
             set(['CDH1', 'SCO2']))
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class GeneSetsTests(APITestCase):
 
     DISEASE_AIDS = set(['IFNG', 'KIR3DL1', 'CXCL12'])
@@ -261,6 +268,7 @@ class GeneSetsTests(APITestCase):
              'geneTerm': 'PSD'}))
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class StudiesTests(APITestCase):
 
     def test_denovo_studies_empty(self):
