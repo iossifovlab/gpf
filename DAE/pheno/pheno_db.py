@@ -79,9 +79,9 @@ class Measure(object):
 
         m.description = row['description']
         m.default_filter = row['default_filter']
-        m.values_domain = row['values_domain']
-        m.min_value = row['min_value']
-        m.max_value = row['max_value']
+        m.values_domain = row.get('values_domain')
+        m.min_value = row.get('min_value')
+        m.max_value = row.get('max_value')
 
         return m
 
@@ -113,7 +113,8 @@ class PhenoDB(object):
         self.db = DbManager(dbfile=dbfile)
         self.db.build()
 
-    def _get_measures_df(self, instrument=None, measure_type=None):
+    def _get_measures_df(
+            self, instrument=None, measure_type=None, skip_meta=False):
         """
         Returns data frame containing measures information.
 
@@ -137,7 +138,6 @@ class PhenoDB(object):
                 'continuous', 'ordinal', 'categorical', 'unknown'])
 
         measure = self.db.measure
-
         columns = [
             measure.c.measure_id,
             measure.c.instrument_name,
@@ -146,14 +146,18 @@ class PhenoDB(object):
             measure.c.measure_type,
             measure.c.individuals,
             measure.c.default_filter,
-            self.db.meta_measure.c.values_domain,
-            self.db.meta_measure.c.min_value,
-            self.db.meta_measure.c.max_value,
         ]
+        if not skip_meta:
+            columns.extend([
+                self.db.meta_measure.c.values_domain,
+                self.db.meta_measure.c.min_value,
+                self.db.meta_measure.c.max_value,
+            ])
         s = select(columns)
-        s = s.select_from(
-            self.db.measure.join(self.db.meta_measure)
-        )
+        if not skip_meta:
+            s = s.select_from(
+                self.db.measure.join(self.db.meta_measure)
+            )
         s = s.where(not_(measure.c.measure_type.is_(None)))
         if instrument is not None:
             s = s.where(measure.c.instrument_name == instrument)
@@ -162,19 +166,22 @@ class PhenoDB(object):
 
         df = pd.read_sql(s, self.db.engine)
 
-        res_df = df[[
+        df_columns = [
             'measure_id', 'measure_name', 'instrument_name',
             'description', 'individuals', 'measure_type',
             'default_filter',
-
-            'values_domain',
-            'min_value',
-            'max_value',
-        ]]
-
+        ]
+        if not skip_meta:
+            df_columns.extend([
+                'values_domain',
+                'min_value',
+                'max_value',
+            ])
+        res_df = df[df_columns]
         return res_df
 
-    def get_measures(self, instrument=None, measure_type=None):
+    def get_measures(
+            self, instrument=None, measure_type=None, skip_meta=False):
         """
         Returns a dictionary of measures objects.
 
@@ -186,17 +193,19 @@ class PhenoDB(object):
         type of measures are returned.
 
         """
-        df = self._get_measures_df(instrument, measure_type)
+        df = self._get_measures_df(
+            instrument, measure_type, skip_meta=skip_meta)
+
         res = OrderedDict()
         for row in df.to_dict('records'):
             m = Measure._from_dict(row)
             res[m.measure_id] = m
         return res
 
-    def _load_instruments(self):
+    def _load_instruments(self, skip_meta=False):
         instruments = OrderedDict()
 
-        df = self._get_measures_df()
+        df = self._get_measures_df(skip_meta=skip_meta)
         instrument_names = df.instrument_name.unique()
 
         for instrument_name in instrument_names:
@@ -229,13 +238,13 @@ class PhenoDB(object):
             f.familyId = family_id
             self.families[family_id] = f
 
-    def load(self):
+    def load(self, skip_meta=False):
         """Loads basic families, instruments and measures data from
         the phenotype database."""
         if self.families is None:
             self._load_families()
         if self.instruments is None:
-            self._load_instruments()
+            self._load_instruments(skip_meta=skip_meta)
 
     def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
         """

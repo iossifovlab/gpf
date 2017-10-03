@@ -13,7 +13,7 @@ import math
 from box import Box
 from collections import defaultdict, OrderedDict
 from pheno.utils.commons import remove_annoying_characters
-from pheno.pheno_db import PhenoDB, Measure
+from pheno.pheno_db import PhenoDB
 
 
 class PrepareBase(object):
@@ -477,7 +477,7 @@ class PrepareMetaMeasures(PrepareBase):
     def __init__(self, config):
         super(PrepareMetaMeasures, self).__init__(config)
         self.pheno = PhenoDB(dbfile=self.db.dbfile)
-        self.pheno.load()
+        self.pheno.load(skip_meta=True)
 
     def build(self):
         measures = self.db.get_measures()
