@@ -5,20 +5,21 @@ Created on Apr 10, 2017
 '''
 import os
 import matplotlib as mpl
+from pheno.pheno_regression import PhenoRegression
+from pheno.pheno_db import Measure
 mpl.use('PS')
-
-from pheno_browser.db import DbManager
-from pheno.common import Role
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # @IgnorePep8
 plt.ioff()
 
-from DAE import pheno
-from pheno_browser.graphs import draw_linregres, draw_measure_violinplot,\
-    draw_categorical_violin_distribution,\
-    draw_ordinal_violin_distribution
-from pheno_browser.models import VariableBrowserModelManager,\
-    VariableBrowserModel
-from common.progress import progress, progress_nl
+from pheno_browser.db import DbManager  # @IgnorePep8
+from pheno.common import Role  # @IgnorePep8
+
+from DAE import pheno  # @IgnorePep8
+from pheno_browser.graphs import draw_linregres  # @IgnorePep8
+from pheno_browser.graphs import draw_measure_violinplot  # @IgnorePep8
+from pheno_browser.graphs import draw_categorical_violin_distribution  # @IgnorePep8
+from pheno_browser.graphs import draw_ordinal_violin_distribution  # @IgnorePep8
+from common.progress import progress, progress_nl  # @IgnorePep8
 
 
 class PreparePhenoBrowserBase(object):
@@ -31,6 +32,8 @@ class PreparePhenoBrowserBase(object):
         self.output_dir = output_dir
         self.output_base = os.path.basename(output_dir)
         self.pheno_db = pheno.get_pheno_db(pheno_db)
+        self.pheno_regressiong = PhenoRegression.build(pheno_db)
+
         self.browser_db = os.path.join(
             output_dir,
             "{}_browser.db".format(pheno_db)
@@ -42,9 +45,12 @@ class PreparePhenoBrowserBase(object):
         df.loc[df.role == Role.dad, 'role'] = Role.parent
         return df
 
-    def _augment_measure_values_df(self, augment, measure):
-        augment_instrument = augment['instrument_name']
-        augment_measure = augment['measure_name']
+    def _augment_measure_values_df(self, augment, augment_name, measure):
+        assert augment is not None
+        assert isinstance(augment, Measure)
+
+        augment_instrument = augment.instrument_name
+        augment_measure = augment.measure_name
 
         if augment_instrument is not None:
             augment_id = '{}.{}'.format(
@@ -64,17 +70,25 @@ class PreparePhenoBrowserBase(object):
         df.loc[df.role == Role.dad, 'role'] = Role.parent
 
         columns = list(df.columns)
-        columns[columns.index(augment_id)] = augment['name']
+        columns[columns.index(augment_id)] = augment_name
         df.columns = columns
         return df
 
     def load_measure_and_age(self, measure):
-        return self._augment_measure_values_df(
-            self.pheno_db.age, measure)
+        age_id = self.pheno_regressiong.get_age_measure_id(measure.measure_id)
+        if not age_id:
+            return None
+        age = self.pheno_db.get_measure(age_id)
+        return self._augment_measure_values_df(age, 'age', measure)
 
     def load_measure_and_nonverbal_iq(self, measure):
+        nonverbal_iq_id = self.pheno_regressiong.get_nonverbal_iq_measure_id(
+            measure.measure_id)
+        if not nonverbal_iq_id:
+            return None
+        nonverbal_iq = self.pheno_db.get_measure(nonverbal_iq_id)
         return self._augment_measure_values_df(
-            self.pheno_db.nonverbal_iq, measure)
+            nonverbal_iq, 'nonverbal_iq', measure)
 
     def figure_filepath(self, measure, suffix):
         filename = "{}.{}.png".format(measure.measure_id, suffix)
