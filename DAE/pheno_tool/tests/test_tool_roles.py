@@ -5,6 +5,7 @@ Created on Nov 22, 2016
 '''
 from pheno_tool.tool import PhenoTool
 from pheno_tool.genotype_helper import VariantsType as VT
+from pheno.common import Role
 
 
 def test_siblings(phdb, autism_candidates_genes, all_ssc_studies):
@@ -23,7 +24,7 @@ def test_siblings(phdb, autism_candidates_genes, all_ssc_studies):
     )
 
     for vals in res.phenotypes.values():
-        assert vals['role'] == 'sib'
+        assert vals['role'] == Role.sib
 
 
 def test_prb_or_sib(phdb, autism_candidates_genes, all_ssc_studies):
@@ -42,4 +43,4 @@ def test_prb_or_sib(phdb, autism_candidates_genes, all_ssc_studies):
     )
 
     for vals in res.phenotypes.values():
-        assert vals['role'] in set(['prb', 'sib'])
+        assert vals['role'] in set([Role.prb, Role.sib])

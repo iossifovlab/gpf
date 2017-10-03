@@ -78,12 +78,12 @@ def test_list_of_subjects(phdb, all_ssc_studies):
     tool = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'sib'],
                      measure_id='ssc_commonly_used.height')
     persons = tool.list_of_subjects()
-    assert 5170 == len(persons)
+    assert 5177 == len(persons)
 
     tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'],
                      measure_id='ssc_commonly_used.height')
     persons = tool.list_of_subjects()
-    assert 2719 == len(persons)
+    assert 2726 == len(persons)
 
     tool = PhenoTool(phdb, all_ssc_studies, roles=['sib'],
                      measure_id='ssc_commonly_used.height')
