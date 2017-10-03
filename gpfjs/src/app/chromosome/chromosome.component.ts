@@ -83,6 +83,7 @@ export class ChromosomeComponent implements OnInit {
   baseStarPathDescription: string;
   maxTopStackIndex: number = 1;
   maxBottomStackIndex: number = 1;
+  maxStackIndex: number = 1;
 
   constructor() { }
 
@@ -135,12 +136,7 @@ export class ChromosomeComponent implements OnInit {
           }
         }
 
-        if (proband) {
-          this.maxTopStackIndex = this.maxTopStackIndex < stackIndex ? stackIndex : this.maxTopStackIndex;
-        } else {
-          this.maxBottomStackIndex = this.maxBottomStackIndex < stackIndex ? stackIndex : this.maxBottomStackIndex;
-        }
-
+        this.maxStackIndex = this.maxStackIndex < stackIndex ? stackIndex : this.maxStackIndex;
 
         this.variants.push({
           x: x,
@@ -154,12 +150,12 @@ export class ChromosomeComponent implements OnInit {
       }
     }
 
-    this.svgHeight = this.chromosomeHeight + this.starWidth * (this.maxTopStackIndex + this.maxBottomStackIndex);
+    this.svgHeight = this.chromosomeHeight + this.starWidth * 2 * (this.maxStackIndex);
 
     for (let band of this.chromosome.bands) {
       let bandComponent: ChromosomeBandComponent = {
         x: this.startingPoint + band.start * this.scale,
-        y: this.starWidth * this.maxTopStackIndex + 1,
+        y: this.starWidth * this.maxStackIndex + 1,
         width: (band.end - band.start) * this.scale,
         height: this.chromosomeHeight - 2,
         color: COLORS[band.color]

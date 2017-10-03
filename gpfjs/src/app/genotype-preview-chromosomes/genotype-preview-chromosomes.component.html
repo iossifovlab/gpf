@@ -1,9 +1,22 @@
-<div *ngIf="genotypePreviewsArray">
-  <gpf-chromosome
-    *ngFor="let chromosome of chromosomes"
-    [chromosome]="chromosome"
-    [genotypePreviews]="genotypePreviewsByChromosome[chromosome.id]"
-    [referenceLargestLength]="largestLength"
-    [centromerePosition]="centromerePosition"
-    [width]="width"></gpf-chromosome>
+<div *ngIf="genotypePreviewsArray && chromosomes">
+  <table>
+    <tr *ngFor="let i of [0,1,2,3,4,5,6,7,8,9,10,11]">
+      <td>
+        <gpf-chromosome
+          [chromosome]="chromosomes[i]"
+          [genotypePreviews]="genotypePreviewsByChromosome[chromosomes[i].id]"
+          [referenceLargestLength]="leftLargestLength"
+          [centromerePosition]="leftCentromerePosition"
+          [width]="leftColumnWidth"></gpf-chromosome>
+      </td>
+      <td>
+        <gpf-chromosome
+          [chromosome]="chromosomes[i+12]"
+          [genotypePreviews]="genotypePreviewsByChromosome[chromosomes[i+12].id]"
+          [referenceLargestLength]="rightLargestLength"
+          [centromerePosition]="rightCentromerePosition"
+          [width]="rightColumnWidth"></gpf-chromosome>
+      </td>
+    </tr>
+  </table>
 <div>

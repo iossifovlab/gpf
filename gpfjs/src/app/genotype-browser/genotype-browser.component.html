@@ -26,8 +26,9 @@
     [genotypePreviewsArray]=genotypePreviewsArray>
   </gpf-genotype-preview-table>
   <gpf-genotype-preview-chromosomes
-	 	*ngIf="tablePreview === false && genotypePreviewsArray"
+    class="chromosomes-preview"
+    *ngIf="tablePreview === false && genotypePreviewsArray"
     width="1110"
-	 	[genotypePreviewsArray]="genotypePreviewsArray">
-	</gpf-genotype-preview-chromosomes>
+    [genotypePreviewsArray]="genotypePreviewsArray">
+  </gpf-genotype-preview-chromosomes>
 </div>
