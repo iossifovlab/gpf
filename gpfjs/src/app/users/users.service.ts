@@ -61,6 +61,10 @@ export class UsersService {
     return this.userInfo$.value;
   }
 
+  getUserInfoObservable() {
+    return this.userInfo$.asObservable();
+  }
+
   getUserInfo(): Observable<any> {
     let options = new RequestOptions({ withCredentials: true });
 
