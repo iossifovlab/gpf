@@ -10,8 +10,9 @@ from pheno.common import Role
 
 def test_siblings(phdb, autism_candidates_genes, all_ssc_studies):
 
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['sib'],
-                     measure_id='vineland_ii.community_raw_score')
+    tool = PhenoTool(
+        phdb, all_ssc_studies, roles=[Role.sib],
+        measure_id='vineland_ii.community_raw_score')
     res = tool.calc(
         VT(
             effect_types=['nonsynonymous', ],
@@ -29,8 +30,9 @@ def test_siblings(phdb, autism_candidates_genes, all_ssc_studies):
 
 def test_prb_or_sib(phdb, autism_candidates_genes, all_ssc_studies):
 
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'sib'],
-                     measure_id='vineland_ii.community_raw_score')
+    tool = PhenoTool(
+        phdb, all_ssc_studies, roles=[Role.prb, Role.sib],
+        measure_id='vineland_ii.community_raw_score')
     res = tool.calc(
         VT(
             effect_types=['nonsynonymous', ],

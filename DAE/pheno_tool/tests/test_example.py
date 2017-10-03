@@ -3,10 +3,10 @@ Created on Nov 15, 2016
 
 @author: lubo
 '''
-from DAE import get_gene_sets_symNS, vDB
-from pheno.pheno_db import PhenoDB
+from DAE import get_gene_sets_symNS, vDB, pheno
 from pheno_tool.tool import PhenoTool
 from pheno_tool.genotype_helper import VariantsType as VT
+from pheno.common import Role
 
 
 def test_example_1():
@@ -18,12 +18,11 @@ def test_example_1():
     transmitted_study = vDB.get_study('w1202s766e611')
     studies.append(transmitted_study)
 
-    phdb = PhenoDB()
-    phdb.load()
+    phdb = pheno.get_pheno_db('ssc')
 
-    tool = PhenoTool(phdb, studies, roles=['prb'],
+    tool = PhenoTool(phdb, studies, roles=[Role.prb],
                      measure_id='ssc_commonly_used.head_circumference',
-                     normalize_by=['pheno_common.age']
+                     normalize_by=['pheno_common.age_at_assessment']
                      )
 
     res = tool.calc(
@@ -35,7 +34,7 @@ def test_example_1():
         )
     )
 
-
+    assert res is not None
 
 
 def test_example_2():
@@ -47,11 +46,10 @@ def test_example_2():
     transmitted_study = vDB.get_study('w1202s766e611')
     studies.append(transmitted_study)
 
-    phdb = PhenoDB()
-    phdb.load()
+    phdb = pheno.get_pheno_db('ssc')
 
     tool = PhenoTool(
-        phdb, studies, roles=['prb', 'mom', 'dad'],
+        phdb, studies, roles=[Role.prb, Role.mom, Role.dad],
         measure_id='ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
     )
 
@@ -67,3 +65,4 @@ def test_example_2():
         )
     )
 
+    assert res is not None
