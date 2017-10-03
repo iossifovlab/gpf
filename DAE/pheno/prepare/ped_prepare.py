@@ -477,7 +477,7 @@ class PrepareMetaMeasures(PrepareBase):
     def __init__(self, config):
         super(PrepareMetaMeasures, self).__init__(config)
         self.pheno = PhenoDB(dbfile=self.db.dbfile)
-        self.pheno.load(meta=False)
+        self.pheno.load()
 
     def build(self):
         measures = self.db.get_measures()
