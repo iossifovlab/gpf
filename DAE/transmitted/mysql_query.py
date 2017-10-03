@@ -84,7 +84,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         self.query = copy.deepcopy(self.DEFAULT_QUERY)
 
     def execute(self, select):
-        import MySQLdb as mdb
+        import MySQLdb as mdb  # @UnresolvedImport
         #         if not self.connection:
         #             self.connect()
         LOGGER.info("creating new mysql connection")
@@ -503,6 +503,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             "where {}".format(where)
 
         LOGGER.debug("select: %s", select)
+        connection = None
+        cursor = None
         try:
             connection, cursor = self.execute(select)
             v = cursor.fetchone()
@@ -534,6 +536,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             "on tfv.summary_variant_id = tsv.id " \
             "where {}".format(where)
 
+        connection = None
+        cursor = None
         try:
             connection, cursor = self.execute(select)
             v = cursor.fetchone()

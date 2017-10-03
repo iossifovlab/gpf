@@ -292,7 +292,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             if source == 'legacy':
                 assert pedigree_selector['id'] == 'phenotype'
             else:
-                assert self.pheno_db is not None
+                assert self.pheno_db is not None, repr(self.descriptor)
                 measure_id = source
                 assert self.pheno_db.has_measure(measure_id)
                 self._augment_pedigree_selector(
