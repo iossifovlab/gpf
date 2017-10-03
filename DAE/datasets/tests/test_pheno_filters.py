@@ -12,16 +12,16 @@ def test_verbal_iq_interval_ssc(ssc):
     query['phenoFilters'] = [
         {
             'measureType': 'continuous',
-            'measure': 'pheno_common.verbal_iq',
+            'measure': 'ssc_core_descriptive.ssc_diagnosis_verbal_iq',
             'role': 'prb',
             'mmin': 10,
-            'mmax': 20
+            'mmax': 11
         }
     ]
     res = ssc.get_family_pheno_filters(**query)
     assert len(res) == 1
 
-    assert len(res[0]) == 120
+    assert len(res[0]) == 15
 
 
 def test_head_circumference_interval(ssc):
@@ -117,7 +117,7 @@ def test_pheno_filter_combine_variants(ssc):
         },
         {
             'measureType': 'continuous',
-            'measure': 'pheno_common.non_verbal_iq',
+            'measure': 'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
             'role': 'prb',
             'mmin': 80,
             'mmax': 80

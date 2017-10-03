@@ -18,6 +18,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def __init__(self, dataset_descriptor):
         self.descriptor = dataset_descriptor
+        print("loading dataset <{}>; pheno db: <{}>".format(
+            self.descriptor['id'],
+            self.descriptor['phenoDB'],
+        ))
         self.pheno_db = None
         self.families = None
         self.persons = None
@@ -261,7 +265,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 if mf['filterType'] == 'single':
                     measure_id = mf['measure']
                     measure = self.pheno_db.get_measure(measure_id)
-                    mf['domain'] = measure.value_domain.split(',')
+                    mf['domain'] = measure.values_domain.split(',')
 
     def load_family_filters_by_study(self):
         if self.pheno_db is None:

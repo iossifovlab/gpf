@@ -7,78 +7,14 @@ import matplotlib as mpl
 from pheno.common import Role, Gender
 mpl.use('PS')
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # @IgnorePep8
 plt.ioff()
 
-import numpy as np
-import pandas as pd
-import seaborn as sns
-import statsmodels.api as sm
+import numpy as np  # @IgnorePep8
+import seaborn as sns  # @IgnorePep8
+import statsmodels.api as sm  # @IgnorePep8
 
-from collections import defaultdict
-import traceback
-
-
-def roles():
-    return [
-        'all',
-        'M',
-        'F',
-        'prb',
-        'prbM',
-        'prbF',
-        'sib',
-        'sibM',
-        'sibF',
-        'parents',
-        'dad',
-        'mom',
-    ]
-
-
-def roles_indices(df):
-    return [
-        ('all', None),
-        ('M', df.gender == 'M'),
-        ('F', df.gender == 'F'),
-
-        ('prb', df.role == 'prb'),
-        ('prbM', np.logical_and(df.role == 'prb', df.gender == 'M')),
-        ('prbF', np.logical_and(df.role == 'prb', df.gender == 'F')),
-
-        ('sib', df.role == 'sib'),
-        ('sibM', np.logical_and(df.role == 'sib', df.gender == 'M')),
-        ('sibF', np.logical_and(df.role == 'sib', df.gender == 'F')),
-
-        ('parents', np.logical_or(df.role == 'dad', df.role == 'mom')),
-        ('dad', df.role == 'dad'),
-        ('mom', df.role == 'mom'),
-    ]
-
-
-def roles_split(df, measure_ids):
-    data = defaultdict(list)
-    for (role, index) in roles_indices(df):
-        if index is None:
-            size = len(df)
-            gender = df['gender'].values
-        else:
-            size = np.sum(index)
-            gender = df[index]['gender'].values
-
-        data['role'].append([role] * size)
-        data['gender'].append(gender)
-
-        for mid in measure_ids:
-            if index is None:
-                data[mid].append(df[mid].values)
-            else:
-                data[mid].append(df[index][mid].values)
-
-    data = {
-        key: np.hstack(value) for (key, value) in data.items()
-    }
-    return pd.DataFrame(data=data)
+import traceback  # @IgnorePep8
 
 
 def names(col1, col2):
@@ -115,8 +51,8 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
 
     dd = df.dropna()
 
-    dmale = dd[dd.gender == 'M']
-    dfemale = dd[dd.gender == 'F']
+    dmale = dd[dd.gender == Gender.M]
+    dfemale = dd[dd.gender == Gender.F]
 
     name1, name2 = names(col1, col2)
     ax.set_xlabel(name1)
@@ -179,8 +115,8 @@ def draw_distribution(df, measure_id, ax=None):
     color_male, color_female = male_female_colors()
     ax.hist(
         [
-            df[df.gender == 'F'][measure_id],
-            df[df.gender == 'M'][measure_id]
+            df[df.gender == Gender.F][measure_id],
+            df[df.gender == Gender.M][measure_id]
         ],
         color=[color_female, color_male],
         stacked=True,
