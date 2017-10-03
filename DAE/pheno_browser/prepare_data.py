@@ -69,9 +69,7 @@ class PreparePhenoBrowserBase(object):
         df.loc[df.role == Role.mom, 'role'] = Role.parent
         df.loc[df.role == Role.dad, 'role'] = Role.parent
 
-        columns = list(df.columns)
-        columns[columns.index(augment_id)] = augment_name
-        df.columns = columns
+        df.rename(columns={augment_id: augment_name}, inplace=True)
         return df
 
     def load_measure_and_age(self, measure):

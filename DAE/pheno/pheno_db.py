@@ -333,12 +333,6 @@ class PhenoDB(object):
         assert measure_id in self.measures
         return self.measures[measure_id]
 
-    @staticmethod
-    def _rename_value_column(measure_id, df):
-        names = df.columns.tolist()
-        names[names.index('value')] = measure_id
-        df.columns = names
-
     def _build_default_filter_clause(self, m, default_filter):
         if default_filter == 'skip' or m.default_filter is None:
             return None
@@ -395,8 +389,7 @@ class PhenoDB(object):
                 s = s.where(text(filter_clause))
 
         df = pd.read_sql(s, self.db.engine)
-
-        self._rename_value_column(measure.measure_id, df)
+        df.rename(columns={'value': measure.measure_id}, inplace=True)
         return df
 
     def get_measure_values_df(self, measure_id,
