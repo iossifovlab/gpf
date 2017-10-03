@@ -47,10 +47,6 @@ class WdaeUserManager(BaseUserManager):
 
         return user
 
-    def update(self, **kwargs):
-        print("kwargs", kwargs)
-        return super(WdaeUserManager, self).update(**kwargs)
-
     def create(self, **kwargs):
         return self.create_user(**kwargs)
 

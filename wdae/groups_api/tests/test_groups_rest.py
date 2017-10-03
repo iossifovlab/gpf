@@ -27,6 +27,18 @@ def groups_model():
     return Group
 
 
+@pytest.fixture()
+def group(db, groups_model):
+    return groups_model.objects.create(name='New Group')
+
+
+@pytest.fixture()
+def group_with_user(db, group, user):
+    user.groups.add(group)
+
+    return group, user
+
+
 def test_admin_can_get_groups(admin_client, groups_endpoint):
     response = admin_client.get(groups_endpoint)
     assert response.status_code is status.HTTP_200_OK
@@ -95,31 +107,30 @@ def test_admin_cant_create_groups(admin_client, groups_endpoint):
     assert response.status_code is status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_admin_can_rename_groups(admin_client, groups_instance_url, groups_model):
-    first_group = groups_model.objects.first()
-    assert first_group is not None
+def test_admin_can_rename_groups(
+        admin_client, groups_instance_url, group_with_user):
+    group, _ = group_with_user
+    assert group is not None
 
     test_name = 'AwesomeGroup'
-    assert first_group.name is not test_name
+    assert group.name is not test_name
 
     data = {
-        'id': first_group.id,
+        'id': group.id,
         'name': test_name
     }
 
-    response = admin_client.put(groups_instance_url(first_group.pk),
+    response = admin_client.put(groups_instance_url(group.pk),
                                 data=data)
     print(response)
     assert response.status_code is status.HTTP_200_OK
     assert response.data['name'] == test_name
 
-    first_group.refresh_from_db()
-    assert first_group.name == test_name
+    group.refresh_from_db()
+    assert group.name == test_name
 
 
-def test_group_has_all_users(admin_client, groups_instance_url):
-    group = Group.objects.create(name='New Group')
-
+def test_group_has_all_users(admin_client, groups_instance_url, group):
     test_emails = ['test@email.com', 'other@email.com', 'last@example.com']
     for email in test_emails:
         group.user_set.create(email=email)
@@ -130,10 +141,41 @@ def test_group_has_all_users(admin_client, groups_instance_url):
         assert email in response.data['users']
 
 
-def test_group_has_all_datasets(admin_client, groups_instance_url):
-    dataset = Dataset.objects.create(dataset_id='My Dataset')
+def test_no_empty_groups_are_accessible(
+        admin_client, groups_endpoint, groups_instance_url):
+    groups_count = Group.objects.count()
+    new_group = Group.objects.create(name='New Group')
 
+    response = admin_client.get(groups_endpoint)
+    assert response.status_code is status.HTTP_200_OK
+    assert len(response.data) == groups_count
+
+    response = admin_client.get(groups_instance_url(new_group.id))
+    assert response.status_code is status.HTTP_404_NOT_FOUND
+
+
+def test_empty_group_with_permissions_is_shown(admin_client, groups_endpoint):
+    groups_count = Group.objects.count()
+    dataset = Dataset.objects.create(dataset_id='My Dataset')
     group = Group.objects.create(name='New Group')
+
+    shortcuts.assign_perm('view', group, dataset)
+
+    response = admin_client.get(groups_endpoint)
+    assert response.status_code is status.HTTP_200_OK
+    assert len(response.data) == groups_count + 1
+    new_group_reponse = next(
+        (response_group for response_group in response.data
+         if response_group['name'] == group.name),
+        None)
+    assert new_group_reponse
+    assert new_group_reponse['datasets'][0] == dataset.dataset_id
+
+
+def test_group_has_all_datasets(
+        admin_client, groups_instance_url, group_with_user):
+    group, _ = group_with_user
+    dataset = Dataset.objects.create(dataset_id='My Dataset')
 
     response = admin_client.get(groups_instance_url(group.id))
     assert response.status_code is status.HTTP_200_OK
@@ -145,3 +187,6 @@ def test_group_has_all_datasets(admin_client, groups_instance_url):
     assert response.status_code is status.HTTP_200_OK
     assert len(response.data['datasets']) == 1
     assert response.data['datasets'][0] == dataset.dataset_id
+
+
+

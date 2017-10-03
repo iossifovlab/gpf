@@ -26,8 +26,4 @@ class GroupRetrieveSerializer(GroupSerializer):
 
     def get_datasets(self, group):
         datasets = shortcuts.get_objects_for_group(group, 'view', klass=Dataset)
-        # print(datasets)
-        # if len(datasets) > 0:
-        #     print(type(datasets[0]))
-
         return map(lambda d: d.dataset_id, datasets)
