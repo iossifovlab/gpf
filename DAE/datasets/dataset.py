@@ -10,6 +10,7 @@ from common.query_base import QueryBase, GeneSymsMixin
 from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
 from datasets.family_pheno_base import FamilyPhenoQueryMixin
+from pheno.pheno_regression import PhenoRegression
 
 
 class Dataset(QueryBase, FamilyPhenoQueryMixin):
@@ -210,11 +211,14 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def load_pheno_db(self):
         pheno_db = None
+        pheno_reg = None
         if 'phenoDB' in self.descriptor:
             pheno_id = self.descriptor['phenoDB']
             if pheno.has_pheno_db(pheno_id):
                 pheno_db = pheno.get_pheno_db(pheno_id)
+                pheno_reg = PhenoRegression.build(pheno_id)
         self.pheno_db = pheno_db
+        self.pheno_reg = pheno_reg
 
     def load_families(self):
         families = {}

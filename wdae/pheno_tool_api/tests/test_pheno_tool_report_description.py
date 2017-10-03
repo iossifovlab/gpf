@@ -71,6 +71,6 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(
             description,
             'ssc_hwhc.head_circumference ~ '
-            'pheno_common.age + '
-            'pheno_common.non_verbal_iq'
+            'pheno_common.age_at_assessment + '
+            'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq'
         )
