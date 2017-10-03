@@ -49,8 +49,8 @@ class PhenoRegression(object):
 
     def _get_common_normalization_measure_id(
             self, base_measure_config, measure_id):
-        assert self.pheno_db.has_measure(measure_id)
         if base_measure_config.get('instrument_name', None) is None:
+            assert self.pheno_db.has_measure(measure_id)
             measure = self.pheno_db.get_measure(measure_id)
             base_measure_config['instrument_name'] = measure.instrument_name
         result_id = "{instrument_name}.{measure_name}".format(
