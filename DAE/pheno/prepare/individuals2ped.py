@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+import itertools
 import argparse
 import csv
 from collections import defaultdict
@@ -8,11 +9,12 @@ from pheno.common import RoleMapping
 
 class Individual(object):
 
-    def __init__(self, individual_id, family_id, sex, role):
+    def __init__(self, individual_id, family_id, sex, role, affected):
         self.sex = sex
         self.individual_id = individual_id
         self.family_id = family_id
         self.role = RoleMapping.SPARK[role]
+        self.affected = affected
 
     def __repr__(self):
         return self.individual_id if self.individual_id is not None \
@@ -47,6 +49,32 @@ class IndividualUnit(object):
         parents = self.get_or_create_parents()
         return parents.children
 
+    # methods for visualisation
+    def get_individual_id(self):
+        if self.individual:
+            return self.individual.individual_id
+        return 0
+
+    def get_father_id(self):
+        if not self.parents:
+            return 0
+        return self.parents.father.get_individual_id()
+
+    def get_mother_id(self):
+        if not self.parents:
+            return 0
+        return self.parents.mother.get_individual_id()
+
+    def get_gender(self):
+        if not self.individual:
+            return 'unknown'
+        return 1 if self.individual.sex == 'Male' else 2
+
+    def get_affected(self):
+        if not self.individual:
+            return 'unknown'
+        return 1 if self.individual.affected == 'False' else 2
+
 
 class SibshipUnit(object):
     def __init__(self, individuals=None):
@@ -79,10 +107,11 @@ class MatingUnit(object):
 class SPARKCsvIndividualsReader(object):
 
     COLUMNS_TO_FIELDS = {
-        'role': 'role',
-        'family_id': 'family_id',
-        'subject_sp_id': 'individual_id',
-        'sex': 'sex'
+        "role": "role",
+        "family_id": "family_id",
+        "subject_sp_id": "individual_id",
+        "sex": "sex",
+        "asd": "affected"
     }
 
     def read_structure(self, individuals):
@@ -107,7 +136,7 @@ class SPARKCsvIndividualsReader(object):
         return self.read_structure(individuals)
 
     def read_filename(self, filename):
-        with open(filename, 'r') as csv_file:
+        with open(filename, "r") as csv_file:
             families = self.read_csv_file(csv_file)
 
         return families
@@ -234,21 +263,57 @@ class FamilyToPedigree(object):
         for individual in other:
             individual_unit = self.get_individual(probant_unit, individual.role)
             individual_unit.individual = individual
+            individual_id_to_individual_unit[individual.individual_id] = \
+                individual_unit
 
-        return probant
+        return individual_id_to_individual_unit
+
+
+class PedigreeToCsv(object):
+
+    def __init__(self, filename):
+        self.filename = filename
+
+    def write_pedigrees(self, pedigrees):
+        with open(self.filename, "w") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow([
+                "familyId", "individualId", "dadId", "momId", "gender",
+                "status", "role"])
+            writer.writerows(map(self.get_row, pedigrees))
+
+    @staticmethod
+    def get_row(individual):
+        return [
+            individual.individual.family_id,
+            individual.get_individual_id(),
+            individual.get_father_id(),
+            individual.get_mother_id(),
+            individual.get_gender(),
+            individual.get_affected(),
+            individual.individual.role.name
+        ]
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('file', type=str)
+    parser.add_argument("file", type=str)
+    parser.add_argument("--output", dest="output", default="output.ped", type=str)
     args = parser.parse_args()
 
     reader = SPARKCsvIndividualsReader()
     families = reader.read_filename(args.file)
 
+    pedigrees = {}
+
     for family_name, members in families.items():
-        print(FamilyToPedigree().to_pedigree(members))
+        pedigree = FamilyToPedigree().to_pedigree(members)
+        pedigrees[family_name] = pedigree.values()
+
+    pedigrees_list = list(itertools.chain(*pedigrees.values()))
+
+    PedigreeToCsv(args.output).write_pedigrees(pedigrees_list)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
