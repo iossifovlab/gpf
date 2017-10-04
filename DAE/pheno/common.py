@@ -20,12 +20,14 @@ class Status(enum.Enum):
 
 class Role(enum.Enum):
     mom = 10
-    dad = 22
+    dad = 20
     parent = 1
     prb = 30
     sib = 40
     maternal_uncle = 11
     maternal_aunt = 12
+    paternal_uncle = 21
+    paternal_aunt = 22
     maternal_half_sibling = 41
     paternal_half_sibling = 42
     maternal_grandmother = -11
