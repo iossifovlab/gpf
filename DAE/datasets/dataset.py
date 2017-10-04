@@ -178,12 +178,16 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             GeneSymsMixin.get_gene_weights_query(**kwargs)
         if not weights_id:
             return set([])
+        if weights_id not in cls.gene_weights_loader:
+            return set([])
+        weights = cls.gene_weights_loader[weights_id]
+        return weights.get_genes(wmin=range_start, wmax=range_end)
+
+    @property
+    def gene_weights_loader(cls):
         if cls.GENE_WEIGHTS_LOADER is None:
             cls.GENE_WEIGHTS_LOADER = WeightsLoader()
-        if weights_id not in cls.GENE_WEIGHTS_LOADER:
-            return set([])
-        weights = cls.GENE_WEIGHTS_LOADER[weights_id]
-        return weights.get_genes(wmin=range_start, wmax=range_end)
+        return cls.GENE_WEIGHTS_LOADER
 
     @classmethod
     def get_gene_syms(cls, **kwargs):
@@ -482,6 +486,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         '_ch_prof_',
         'valstatus',
         "phenoInChS",
+        'LGD_rank',
+        'pRec_rank',
+        'RVIS_rank',
+        'pLI_rank'
     ]
 
     def get_pheno_columns(self):
@@ -530,6 +538,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if pheno_columns and self.pheno_db:
             families = self.pheno_db.families
 
+        gene_weights = {key: value.to_dict()
+                        for key, value
+                        in self.gene_weights_loader.weights.items()}
+
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
 
@@ -540,6 +552,12 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             for (_role, _source, label) in pheno_columns:
                 v.atts[label] = fatts.get(label, '')
             v._phenotype_ = v.study.get_attr('study.phenotype')
+
+            for key, value in gene_weights.items():
+                genes = {effect['sym'] for effect in v.geneEffect}
+                v.atts[key] = ';'.join([str(value[gene])
+                                        for gene in genes
+                                        if gene in value])
             return v
 
         return generate_response(
@@ -555,6 +573,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if pheno_columns and self.pheno_db:
             families = self.pheno_db.families
 
+        gene_weights = {key: value.to_dict()
+                        for key, value
+                        in self.gene_weights_loader.weights.items()}
+
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
 
@@ -565,6 +587,13 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             for (_role, _source, label) in pheno_columns:
                 v.atts[label] = fatts.get(label, '')
             v._phenotype_ = v.study.get_attr('study.phenotype')
+
+            for key, value in gene_weights.items():
+                genes = {effect['sym'] for effect in v.geneEffect}
+                v.atts[key] = ';'.join([str(value[gene])
+                                        for gene in genes
+                                        if gene in value])
+
             return v
 
         return generate_response(
