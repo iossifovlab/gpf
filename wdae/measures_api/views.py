@@ -9,6 +9,7 @@ from rest_framework.exceptions import NotAuthenticated
 import traceback
 from genotype_browser.views import QueryBaseView
 import numpy as np
+from pheno.common import MeasureType
 
 
 class PhenoMeasuresView(QueryBaseView):
@@ -41,7 +42,7 @@ class PhenoMeasuresView(QueryBaseView):
                 res = [
                     {
                         'measure': m.measure_id,
-                        'domain': m.value_domain.split(',')
+                        'domain': m.values_domain.split(',')
                     }
                     for m in res.values()
                 ]
@@ -74,7 +75,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
             assert dataset.pheno_db.has_measure(pheno_measure)
 
             measure = dataset.pheno_db.get_measure(pheno_measure)
-            assert measure.measure_type == 'continuous'
+            assert measure.measure_type == MeasureType.continuous
 
             df = dataset.pheno_db.get_measure_values_df(
                 pheno_measure)

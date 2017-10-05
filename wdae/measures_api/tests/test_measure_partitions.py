@@ -16,7 +16,7 @@ class Test(APITestCase):
     def test_non_verbal_iq_partitions(self):
         data = {
             "datasetId": "SSC",
-            "measure": "pheno_common.non_verbal_iq",
+            "measure": "ssc_core_descriptive.ssc_diagnosis_nonverbal_iq",
             "min": 9,
             "max": 40,
         }
@@ -34,7 +34,7 @@ class Test(APITestCase):
                 'count': 224,
                 'percent': 0.08107129931234165
             },
-            'measure': u'pheno_common.non_verbal_iq',
+            'measure': u'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
             'left': {
                 'count': 0,
                 'percent': 0.0
@@ -45,15 +45,15 @@ class Test(APITestCase):
         self.assertIn('mid', data)
 
         self.assertEquals(
-            u'pheno_common.non_verbal_iq',
+            u'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
             data['measure']
         )
 
         self.assertEquals(
-            2539,
+            2552,
             data['right']['count']
         )
         self.assertEquals(
-            224,
+            226,
             data['mid']['count']
         )
