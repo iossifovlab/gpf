@@ -87,22 +87,16 @@ class IndividualUnit(object):
         return self.get_mother_individual().get_mother_individual()
 
     def get_paternal_half_sibling(self):
-        father = self.get_mother_individual()
+        father = self.get_father_individual()
 
-        new_mating_unit = MatingUnit()
-        new_mating_unit.father = father
-
-        father.mating_units.append(new_mating_unit)
+        new_mating_unit = MatingUnit(mother=None, father=father)
 
         return IndividualUnit(None, parents=new_mating_unit)
 
     def get_maternal_half_sibling(self):
         mother = self.get_mother_individual()
 
-        new_mating_unit = MatingUnit()
-        new_mating_unit.mother = mother
-
-        mother.mating_units.append(new_mating_unit)
+        new_mating_unit = MatingUnit(mother=mother, father=None)
 
         return IndividualUnit(None, parents=new_mating_unit)
 
@@ -124,13 +118,18 @@ class IndividualUnit(object):
 
     def get_gender(self):
         if not self.individual:
-            return 'unknown'
+            return 'UNKNOWN'
         return self.individual.gender.value
 
     def get_status(self):
         if not self.individual:
-            return 'unknown'
+            return 'UNKNOWN'
         return self.individual.status.value
+
+    def get_role(self):
+        if not self.individual or not self.individual.role:
+            return 'UNKNOWN'
+        return self.individual.role.name
 
 
 class SibshipUnit(object):
@@ -302,14 +301,15 @@ class PedigreeToCsv(object):
             individual.get_mother_id(),
             individual.get_gender(),
             individual.get_status(),
-            individual.individual.role.name
+            individual.get_role()
         ]
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=str)
-    parser.add_argument("--output", dest="output", default="output.ped", type=str)
+    parser.add_argument(
+        "--output", dest="output", default="output.ped", type=str)
     args = parser.parse_args()
 
     reader = SPARKCsvIndividualsReader()
