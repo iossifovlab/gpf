@@ -3,118 +3,160 @@ Created on Dec 11, 2015
 
 @author: lubo
 '''
-import unittest
 from rest_framework import status
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+from datasets_api.models import Dataset
+import copy
+from datasets.tests.requests import EXAMPLE_QUERY_SD, EXAMPLE_QUERY_SSC
 
 
 class Test(BaseAuthenticatedUserTest):
+    @classmethod
+    def setUpTestData(cls):
+        Dataset.recreate_dataset_perm('SD', [])
+        Dataset.recreate_dataset_perm('SSC', [])
+        Dataset.recreate_dataset_perm('VIP', [])
+        Dataset.recreate_dataset_perm('SPARK', [])
 
     def test_rvis_rank_in_autism_zero_genes(self):
-        data = {
-            "geneWeight": "RVIS_rank",
-            "geneWeightMin": 1.0,
-            "geneWeightMax": 5.0,
-            "denovoStudies": "ALL WHOLE EXOME",
-            "phenoType": "autism",
-            "gender": "female,male",
+        data = copy.deepcopy(EXAMPLE_QUERY_SD)
+        data["geneWeights"] = {
+            "weight": "RVIS_rank",
+            "rangeStart": 1.0,
+            "rangeEnd": 5.0
         }
+        data["pedigreeSelector"] = {
+            'id': "phenotype",
+            "checkedValues": ["autism", ]
+        }
+        data['effectTypes'] = [
+            'Frame-shift',
+            'Nonsense',
+            'Splice-site',
+            'Missense',
+            'Synonymous',
+        ]
 
-        url = '/api/query_variants_preview'
+        url = '/api/v3/genotype_browser/preview'
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('19', response.data['count'])
 
     def test_rvis_rank_zero_to_one_in_autism(self):
-        data = {
-            "geneWeight": "RVIS_rank",
-            "geneWeightMin": 0.0,
-            "geneWeightMax": 1.0,
-            "denovoStudies": "ALL WHOLE EXOME",
-            "phenoType": "autism",
-            "gender": "female,male",
+        data = copy.deepcopy(EXAMPLE_QUERY_SD)
+        data["geneWeights"] = {
+            "weight": "RVIS_rank",
+            "rangeStart": 0.0,
+            "rangeEnd": 1.0
         }
+        data["pedigreeSelector"] = {
+            'id': "phenotype",
+            "checkedValues": ["autism", ]
+        }
+        data['effectTypes'] = [
+            'Frame-shift',
+            'Nonsense',
+            'Splice-site',
+            'Missense',
+            'Synonymous',
+        ]
 
-        url = '/api/query_variants_preview'
+        url = '/api/v3/genotype_browser/preview'
+
+#         data = {
+#             "geneWeight": "RVIS_rank",
+#             "geneWeightMin": 0.0,
+#             "geneWeightMax": 1.0,
+#             "denovoStudies": "ALL WHOLE EXOME",
+#             "phenoType": "autism",
+#             "gender": "female,male",
+#         }
+#
+#         url = '/api/query_variants_preview'
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('5', response.data['count'])
 
     def test_ssc_rest_call_by_gene_weight_rvis_25_to_30(self):
-        data = {
-            "geneWeight": "RVIS_rank",
-            "geneWeightMin": 25,
-            "geneWeightMax": 30,
-            "gender": "female,male",
-            'effectTypes':
-            'frame-shift,nonsense,splice-site',
-            'presentInChild': 'autism only',
-            'presentInParent': 'father only,mother and father,'
-            'mother only,neither',
-            'rarity': 'ultraRare',
+        data = copy.deepcopy(EXAMPLE_QUERY_SSC)
+        data["geneWeights"] = {
+            "weight": "RVIS_rank",
+            "rangeStart": 25.0,
+            "rangeEnd": 30.0
+        }
+        data["presentInChild"] = [
+            "affected only",
+        ]
+        data["presentInParent"] = [
+            'father only', 'mother only', 'mother and father', "neither"
+        ]
+        data['rarity'] = {
+            'ultraRare': True,
         }
 
-        url = '/api/ssc_query_variants_preview'
+        url = '/api/v3/genotype_browser/preview'
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('9', response.data['count'])
 
     def test_ssc_rest_call_by_gene_syms(self):
-        data = {
-            'denovoStudies': 'ALL SSC',
-            'geneSyms': 'AHNAK2,MUC16',
-            'gender': 'female,male',
-            'rarity': 'ultraRare',
-            'effectTypes':
-            'frame-shift,nonsense,splice-site',
-            'presentInChild': 'autism only',
-            'presentInParent': 'father only,mother and father,'
-            'mother only,neither',
-            'transmittedStudies': 'w1202s766e611',
+        data = copy.deepcopy(EXAMPLE_QUERY_SSC)
+        data["geneSymbols"] = 'AHNAK2,MUC16'
+        data["presentInChild"] = [
+            "affected only",
+        ]
+        data["presentInParent"] = [
+            'father only', 'mother only', 'mother and father', "neither"
+        ]
+        data['rarity'] = {
+            'ultraRare': True,
         }
 
-        url = '/api/ssc_query_variants_preview'
+        url = '/api/v3/genotype_browser/preview'
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('15', response.data['count'])
 
     def test_sd_rest_call_by_gene_weight_rvis_25_to_30(self):
-
-        data = {
-            "geneWeight": "RVIS_rank",
-            "geneWeightMin": 25,
-            "geneWeightMax": 30,
-            "gender": "female,male",
-            'effectTypes': 'missense,synonymous',
-            'phenoType': 'autism,unaffected',
+        data = copy.deepcopy(EXAMPLE_QUERY_SD)
+        data["geneWeights"] = {
+            "weight": "RVIS_rank",
+            "rangeStart": 25.0,
+            "rangeEnd": 30.0
         }
+        data["pedigreeSelector"] = {
+            'id': "phenotype",
+            "checkedValues": ["autism", "unaffected"]
+        }
+        data['effectTypes'] = [
+            'Missense',
+            'Synonymous',
+        ]
 
-        url = '/api/sd_query_variants_preview'
+        url = '/api/v3/genotype_browser/preview'
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('18', response.data['count'])
 
     def test_sd_rest_call_by_gene_syms(self):
-
-        data = {
-            'gender': 'female,male',
-            'effectTypes': 'missense,synonymous',
-            'phenoType': 'autism,unaffected',
-            'variantTypes': 'del,ins,sub',
-            'geneSyms': 'AHNAK2,MUC16'
+        data = copy.deepcopy(EXAMPLE_QUERY_SD)
+        data["geneSymbols"] = 'AHNAK2,MUC16'
+        data["pedigreeSelector"] = {
+            'id': "phenotype",
+            "checkedValues": ["autism", "unaffected"]
         }
+        data['effectTypes'] = [
+            'Missense',
+            'Synonymous',
+        ]
 
-        url = '/api/sd_query_variants_preview'
+        url = '/api/v3/genotype_browser/preview'
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual('19', response.data['count'])
-
-
-if __name__ == "__main__":
-    unittest.main()
