@@ -5,16 +5,18 @@ import csv
 from collections import defaultdict
 from pheno.common import Role
 from pheno.common import RoleMapping
+from pheno.common import Status
+from pheno.common import Gender
 
 
 class Individual(object):
 
-    def __init__(self, individual_id, family_id, sex, role, affected):
-        self.sex = sex
+    def __init__(self, individual_id, family_id, gender, role, status):
+        self.gender = gender
         self.individual_id = individual_id
         self.family_id = family_id
         self.role = role
-        self.affected = affected
+        self.status = status
 
     def __repr__(self):
         return "Individual({})".format(
@@ -123,12 +125,12 @@ class IndividualUnit(object):
     def get_gender(self):
         if not self.individual:
             return 'unknown'
-        return 1 if self.individual.sex == 'Male' else 2
+        return self.individual.gender.value
 
-    def get_affected(self):
+    def get_status(self):
         if not self.individual:
             return 'unknown'
-        return 1 if self.individual.affected == 'False' else 2
+        return self.individual.status.value
 
 
 class SibshipUnit(object):
@@ -165,8 +167,18 @@ class SPARKCsvIndividualsReader(object):
         "role": "role",
         "family_id": "family_id",
         "subject_sp_id": "individual_id",
-        "sex": "sex",
-        "asd": "affected"
+        "sex": "gender",
+        "asd": "status"
+    }
+
+    STATUS_TO_ENUM = {
+        "True": Status.affected,
+        "False": Status.unaffected
+    }
+
+    GENDER_TO_ENUM = {
+        "Male": Gender.M,
+        "Female": Gender.F
     }
 
     def read_structure(self, individuals):
@@ -186,6 +198,10 @@ class SPARKCsvIndividualsReader(object):
                 in SPARKCsvIndividualsReader.COLUMNS_TO_FIELDS.items()
             }
             kwargs["role"] = RoleMapping.SPARK[kwargs["role"]]
+            kwargs["status"] = SPARKCsvIndividualsReader \
+                .STATUS_TO_ENUM[kwargs["status"]]
+            kwargs["gender"] = SPARKCsvIndividualsReader \
+                .GENDER_TO_ENUM[kwargs["gender"]]
 
             individuals.append(Individual(**kwargs))
 
@@ -285,7 +301,7 @@ class PedigreeToCsv(object):
             individual.get_father_id(),
             individual.get_mother_id(),
             individual.get_gender(),
-            individual.get_affected(),
+            individual.get_status(),
             individual.individual.role.name
         ]
 
