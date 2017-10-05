@@ -128,6 +128,9 @@ import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remo
 import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
 import { UsersActionsComponent } from './users-actions/users-actions.component';
 import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
+import { GenotypePreviewChromosomesComponent } from './genotype-preview-chromosomes/genotype-preview-chromosomes.component';
+import { ChromosomeService } from './chromosome-service/chromosome.service';
+import { ChromosomeComponent } from './chromosome/chromosome.component';
 
 const appRoutes: Routes = [
   {
@@ -296,6 +299,8 @@ const appRoutes: Routes = [
     UserGroupsSelectorComponent,
     UsersActionsComponent,
     DatasetsTableComponent,
+    GenotypePreviewChromosomesComponent,
+    ChromosomeComponent,
   ],
   imports: [
     BrowserModule,
@@ -336,6 +341,7 @@ const appRoutes: Routes = [
     StudiesSummariesService,
     VariantReportsService,
     UsersGroupsService,
+    ChromosomeService
   ],
 
   entryComponents: [

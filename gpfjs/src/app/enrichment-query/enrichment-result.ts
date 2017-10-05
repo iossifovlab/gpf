@@ -1,4 +1,4 @@
-import { GenotypePreview } from '../genotype-preview-table/genotype-preview';
+import { GenotypePreview } from '../genotype-preview-model/genotype-preview';
 
 export class GenotypePreviewWithDatasetId extends GenotypePreview {
   datasetId: string;

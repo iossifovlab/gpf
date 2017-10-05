@@ -15,12 +15,20 @@
 	    <input name="queryData" type="hidden">
 	    <button class="btn btn-md btn-primary btn-right" type="submit">Download</button>
 	  </form>
-	  <input type="button" class="btn btn-md btn-primary" value="Preview" (click)="submitQuery()">
+	  <input type="button" class="btn btn-md btn-primary" value="Table Preview" (click)="tablePreview = true; submitQuery()">
+	  <input type="button" class="btn btn-md btn-primary" value="Graphical Preview" (click)="tablePreview = false; submitQuery()">
   </div>
 </div>
 <div class="genotype-browser-results">
   <gpf-genotype-preview-table
+  	*ngIf="tablePreview"
     [phenoColumns]="selectedDataset?.genotypeBrowser?.phenoColumns"
     [genotypePreviewsArray]=genotypePreviewsArray>
   </gpf-genotype-preview-table>
+  <gpf-genotype-preview-chromosomes
+    class="chromosomes-preview"
+    *ngIf="tablePreview === false && genotypePreviewsArray"
+    width="1110"
+    [genotypePreviewsArray]="genotypePreviewsArray">
+  </gpf-genotype-preview-chromosomes>
 </div>

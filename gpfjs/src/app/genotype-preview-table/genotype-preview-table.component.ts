@@ -1,5 +1,5 @@
 import { Input, Component } from '@angular/core';
-import { GenotypePreview, GenotypePreviewsArray } from './genotype-preview';
+import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
 import { PhenoColumn } from '../datasets/datasets';
 
 @Component({
