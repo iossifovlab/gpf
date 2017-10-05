@@ -91,7 +91,7 @@ class PhenoMeasuresView(APIView):
             instrument = instruments[0]
 
         browser_dbfile = self.get_browser_dbfile(
-            dataset.pheno_db.pheno_db)
+            dataset.pheno_name)
 
         with VariableBrowserModelManager(dbfile=browser_dbfile) as vm:
             df = vm.load_df(where="instrument_name='{}'".format(instrument))

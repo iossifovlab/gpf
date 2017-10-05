@@ -47,6 +47,14 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return self.descriptor['id']
 
     @property
+    def pheno_name(self):
+        return self.descriptor['phenoDB']
+
+    @property
+    def pheno_id(self):
+        return self.descriptor['phenoDB']
+
+    @property
     def studies(self):
         if self._studies is None:
             if self.descriptor['studies'] is None:
