@@ -69,4 +69,8 @@ export class UserCreateComponent implements OnInit {
       .subscribe(() => this.router.navigate(['/management']));
   }
 
+  goBack() {
+    this.router.navigate(['/management']);
+  }
+
 }

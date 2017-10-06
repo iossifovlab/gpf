@@ -72,4 +72,8 @@ export class UserEditComponent implements OnInit {
       .take(1)
       .subscribe(() => this.router.navigate(['/management']));
   }
+
+  goBack() {
+    this.router.navigate(['/management']);
+  }
 }
