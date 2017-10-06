@@ -51,7 +51,7 @@ def parse_config(args):
 
     if args.role_mapping:
         config.person.role.mapping = args.role_mapping
-    assert config.person.role.mapping in set(['SPARK', 'SSC'])
+    assert config.person.role.mapping in set(['SPARK', 'SSC', 'INTERNAL'])
 
     if args.min_individuals is not None and args.min_individuals >= 0:
         config.classification.min_individuals = args.min_individuals

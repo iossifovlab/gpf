@@ -57,6 +57,7 @@ class PreparePersons(PrepareBase):
             "can't find column '{}' into pedigree file".format(role_column)
         mapping_name = self.config.person.role.mapping
         mapping = getattr(RoleMapping(), mapping_name)
+        print(mapping)
         assert mapping is not None, \
             "bad role mapping '{}'".format(mapping_name)
 
@@ -181,7 +182,7 @@ class PreparePersons(PrepareBase):
                 'role': Role(row['role']),
                 'status': Status(row['status']),
                 'gender': Gender(row['gender']),
-                'sample_id': self._build_sample_id(row['sampleId']),
+                'sample_id': self._build_sample_id(row.get('sampleId')),
             }
             persons.append(p)
         ins = self.db.person.insert()

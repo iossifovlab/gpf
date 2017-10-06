@@ -286,9 +286,9 @@ class PedigreeToCsv(object):
 
     def write_pedigrees(self, pedigrees):
         with open(self.filename, "w") as csv_file:
-            writer = csv.writer(csv_file)
+            writer = csv.writer(csv_file, delimiter='\t')
             writer.writerow([
-                "familyId", "individualId", "dadId", "momId", "gender",
+                "familyId", "personId", "dadId", "momId", "gender",
                 "status", "role"])
             writer.writerows(map(self.get_row, pedigrees))
 
