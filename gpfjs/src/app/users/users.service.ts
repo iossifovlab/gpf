@@ -3,7 +3,7 @@ import { Headers, Http, Response, RequestOptions, URLSearchParams } from '@angul
 import { Observable } from 'rxjs';
 
 import 'rxjs/add/operator/toPromise';
-import { BehaviorSubject } from 'rxjs';
+import { ReplaySubject } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie';
@@ -22,7 +22,8 @@ export class UsersService {
   private bulkAddGroupUrl = `${this.usersUrl}/bulk_add_group`;
   private bulkRemoveGroupUrl = `${this.usersUrl}/bulk_remove_group`;
 
-  private userInfo$ = new BehaviorSubject<{}>(null);
+  private userInfo$ = new ReplaySubject<{}>(1);
+  private lastUserInfo = null;
 
   constructor(
     private http: Http,
@@ -58,7 +59,7 @@ export class UsersService {
   }
 
   cachedUserInfo() {
-    return this.userInfo$.value;
+    return this.lastUserInfo;
   }
 
   getUserInfoObservable() {
@@ -75,6 +76,7 @@ export class UsersService {
       })
       .do(userInfo => {
         this.userInfo$.next(userInfo);
+        this.lastUserInfo = userInfo;
       });
   }
 
