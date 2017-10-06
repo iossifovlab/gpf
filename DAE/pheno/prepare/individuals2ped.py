@@ -5,20 +5,22 @@ import csv
 from collections import defaultdict
 from pheno.common import Role
 from pheno.common import RoleMapping
+from pheno.common import Status
+from pheno.common import Gender
 
 
 class Individual(object):
 
-    def __init__(self, individual_id, family_id, sex, role, affected):
-        self.sex = sex
+    def __init__(self, individual_id, family_id, gender, role, status):
+        self.gender = gender
         self.individual_id = individual_id
         self.family_id = family_id
-        self.role = RoleMapping.SPARK[role]
-        self.affected = affected
+        self.role = role
+        self.status = status
 
     def __repr__(self):
-        return self.individual_id if self.individual_id is not None \
-            else "UNKNOWN"
+        return "Individual({})".format(
+            self.individual_id if self.individual_id is not None else "UNKNOWN")
 
 
 class IndividualUnit(object):
@@ -39,6 +41,7 @@ class IndividualUnit(object):
     def __repr__(self):
         return repr(self.individual)
 
+    # methods for traversal
     def get_or_create_parents(self):
         if not self.parents:
             self.parents = MatingUnit()
@@ -48,6 +51,54 @@ class IndividualUnit(object):
     def get_or_create_sibship(self):
         parents = self.get_or_create_parents()
         return parents.children
+
+    def get_father_individual(self):
+        return self.get_or_create_parents().father
+
+    def get_mother_individual(self):
+        return self.get_or_create_parents().mother
+
+    def get_sibling_individual(self):
+        parents = self.get_or_create_parents()
+        return IndividualUnit(None, parents=parents)
+
+    def get_maternal_aunt(self):
+        return self.get_mother_individual().get_sibling_individual()
+
+    def get_maternal_uncle(self):
+        return self.get_mother_individual().get_sibling_individual()
+
+    def get_paternal_aunt(self):
+        return self.get_father_individual().get_sibling_individual()
+
+    def get_paternal_uncle(self):
+        return self.get_father_individual().get_sibling_individual()
+
+    def get_paternal_grandfather(self):
+        return self.get_father_individual().get_father_individual()
+
+    def get_paternal_grandmother(self):
+        return self.get_father_individual().get_mother_individual()
+
+    def get_maternal_grandfather(self):
+        return self.get_mother_individual().get_father_individual()
+
+    def get_maternal_grandmother(self):
+        return self.get_mother_individual().get_mother_individual()
+
+    def get_paternal_half_sibling(self):
+        father = self.get_father_individual()
+
+        new_mating_unit = MatingUnit(mother=None, father=father)
+
+        return IndividualUnit(None, parents=new_mating_unit)
+
+    def get_maternal_half_sibling(self):
+        mother = self.get_mother_individual()
+
+        new_mating_unit = MatingUnit(mother=mother, father=None)
+
+        return IndividualUnit(None, parents=new_mating_unit)
 
     # methods for visualisation
     def get_individual_id(self):
@@ -67,13 +118,18 @@ class IndividualUnit(object):
 
     def get_gender(self):
         if not self.individual:
-            return 'unknown'
-        return 1 if self.individual.sex == 'Male' else 2
+            return 'UNKNOWN'
+        return self.individual.gender.value
 
-    def get_affected(self):
+    def get_status(self):
         if not self.individual:
-            return 'unknown'
-        return 1 if self.individual.affected == 'False' else 2
+            return 'UNKNOWN'
+        return self.individual.status.value
+
+    def get_role(self):
+        if not self.individual or not self.individual.role:
+            return 'UNKNOWN'
+        return self.individual.role.name
 
 
 class SibshipUnit(object):
@@ -110,8 +166,18 @@ class SPARKCsvIndividualsReader(object):
         "role": "role",
         "family_id": "family_id",
         "subject_sp_id": "individual_id",
-        "sex": "sex",
-        "asd": "affected"
+        "sex": "gender",
+        "asd": "status"
+    }
+
+    STATUS_TO_ENUM = {
+        "True": Status.affected,
+        "False": Status.unaffected
+    }
+
+    GENDER_TO_ENUM = {
+        "Male": Gender.M,
+        "Female": Gender.F
     }
 
     def read_structure(self, individuals):
@@ -130,6 +196,11 @@ class SPARKCsvIndividualsReader(object):
                 for (column, field)
                 in SPARKCsvIndividualsReader.COLUMNS_TO_FIELDS.items()
             }
+            kwargs["role"] = RoleMapping.SPARK[kwargs["role"]]
+            kwargs["status"] = SPARKCsvIndividualsReader \
+                .STATUS_TO_ENUM[kwargs["status"]]
+            kwargs["gender"] = SPARKCsvIndividualsReader \
+                .GENDER_TO_ENUM[kwargs["gender"]]
 
             individuals.append(Individual(**kwargs))
 
@@ -143,125 +214,64 @@ class SPARKCsvIndividualsReader(object):
 
 
 class FamilyToPedigree(object):
-    def get_father_individual(self, individual):
-        return individual.get_or_create_parents().father
 
-    def get_mother_individual(self, individual):
-        return individual.get_or_create_parents().mother
-
-    def get_sibling_individual(self, individual):
-        parents = individual.get_or_create_parents()
-        return IndividualUnit(None, parents=parents)
-
-    def get_maternal_aunt(self, individual):
-        return self.get_sibling_individual(
-            self.get_mother_individual(individual))
-
-    def get_maternal_uncle(self, individual):
-        return self.get_sibling_individual(
-            self.get_mother_individual(individual))
-
-    def get_paternal_aunt(self, individual):
-        return self.get_sibling_individual(
-            self.get_father_individual(individual))
-
-    def get_paternal_uncle(self, individual):
-        return self.get_sibling_individual(
-            self.get_father_individual(individual))
-
-    def get_paternal_grandfather(self, individual):
-        return self.get_father_individual(
-            self.get_father_individual(individual))
-
-    def get_paternal_grandmother(self, individual):
-        return self.get_mother_individual(
-            self.get_father_individual(individual))
-
-    def get_maternal_grandfather(self, individual):
-        return self.get_father_individual(
-            self.get_mother_individual(individual))
-
-    def get_maternal_grandmother(self, individual):
-        return self.get_mother_individual(
-            self.get_mother_individual(individual))
-
-    def get_paternal_half_sibling(self, individual):
-        father = self.get_mother_individual(individual)
-
-        new_mating_unit = MatingUnit()
-        new_mating_unit.father = father
-
-        father.mating_units.append(new_mating_unit)
-
-        return IndividualUnit(None, parents=new_mating_unit)
-
-    def get_maternal_half_sibling(self, individual):
-        mother = self.get_mother_individual(individual)
-
-        new_mating_unit = MatingUnit()
-        new_mating_unit.mother = mother
-
-        mother.mating_units.append(new_mating_unit)
-
-        return IndividualUnit(None, parents=new_mating_unit)
-
-    def get_individual(self, probant, role):
+    def get_individual(self, proband, role):
         if role == Role.dad:
-            return self.get_father_individual(probant)
+            return proband.get_father_individual()
 
         if role == Role.mom:
-            return self.get_mother_individual(probant)
+            return proband.get_mother_individual()
 
         if role == Role.sib:
-            return self.get_sibling_individual(probant)
+            return proband.get_sibling_individual()
 
         if role == Role.maternal_aunt:
-            return self.get_maternal_aunt(probant)
+            return proband.get_maternal_aunt()
 
         if role == Role.maternal_uncle:
-            return self.get_maternal_uncle(probant)
+            return proband.get_maternal_uncle()
 
         if role == Role.paternal_aunt:
-            return self.get_paternal_aunt(probant)
+            return proband.get_paternal_aunt()
 
         if role == Role.paternal_uncle:
-            return self.get_paternal_uncle(probant)
+            return proband.get_paternal_uncle()
 
         if role == Role.paternal_grandfather:
-            return self.get_paternal_grandfather(probant)
+            return proband.get_paternal_grandfather()
 
         if role == Role.paternal_grandmother:
-            return self.get_paternal_grandmother(probant)
+            return proband.get_paternal_grandmother()
 
         if role == Role.maternal_grandfather:
-            return self.get_maternal_grandfather(probant)
+            return proband.get_maternal_grandfather()
 
         if role == Role.maternal_grandmother:
-            return self.get_maternal_grandmother(probant)
+            return proband.get_maternal_grandmother()
 
         if role == Role.paternal_half_sibling:
-            return self.get_paternal_half_sibling(probant)
+            return proband.get_paternal_half_sibling()
 
         if role == Role.maternal_half_sibling:
-            return self.get_maternal_half_sibling(probant)
+            return proband.get_maternal_half_sibling()
 
         raise NotImplementedError("Unknown individual role: {}".format(role))
 
     def to_pedigree(self, family_members):
         individual_id_to_individual_unit = {}
-        probant = [individual for individual in family_members
+        proband = [individual for individual in family_members
                    if individual.role == Role.prb]
-        assert len(probant) == 1
-        probant = probant[0]
+        assert len(proband) == 1
+        proband = proband[0]
 
         other = [individual for individual in family_members
                  if individual.role != Role.prb]
 
-        probant_unit = IndividualUnit(probant)
-        individual_id_to_individual_unit[probant.individual_id] = probant_unit
+        proband_unit = IndividualUnit(proband)
+        individual_id_to_individual_unit[proband.individual_id] = proband_unit
 
         for individual in other:
-            individual_unit = self.get_individual(probant_unit, individual.role)
+            individual_unit = self.get_individual(proband_unit, individual.role)
             individual_unit.individual = individual
             individual_id_to_individual_unit[individual.individual_id] = \
                 individual_unit
@@ -290,15 +300,16 @@ class PedigreeToCsv(object):
             individual.get_father_id(),
             individual.get_mother_id(),
             individual.get_gender(),
-            individual.get_affected(),
-            individual.individual.role.name
+            individual.get_status(),
+            individual.get_role()
         ]
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=str)
-    parser.add_argument("--output", dest="output", default="output.ped", type=str)
+    parser.add_argument(
+        "--output", dest="output", default="output.ped", type=str)
     args = parser.parse_args()
 
     reader = SPARKCsvIndividualsReader()
