@@ -26,6 +26,10 @@ class PedigreeMember(object):
     def __repr__(self):
         return self.individual_id
 
+    def assign_role(self, role):
+        assert not self.role and self.role != role
+        self.role = role
+
 
 class SPARKCsvPedigreeReader(object):
 
@@ -115,55 +119,63 @@ class PedigreeToFamily(object):
             grandparents = father.parents
 
             if grandparents.father.individual:
-                grandparents.father.individual.role = \
-                    Role.paternal_grandfather
+                grandparents.father.individual.assign_role(
+                    Role.paternal_grandfather)
 
             if grandparents.mother.individual:
-                grandparents.mother.individual.role = \
-                    Role.paternal_grandmother
+                grandparents.mother.individual.assign_role(
+                    Role.paternal_grandmother)
 
             for individual in grandparents.children.individuals:
                 if individual.individual.role:
                     continue
 
                 if individual.individual.gender == Gender.M:
-                    individual.individual.role = Role.paternal_uncle
+                    individual.individual.assign_role(Role.paternal_uncle)
                 if individual.individual.gender == Gender.F:
-                    individual.individual.role = Role.paternal_aunt
+                    individual.individual.assign_role(Role.paternal_aunt)
 
         for other_mating_unit in father.mating_units:
             for child in other_mating_unit.children.individuals:
                 if not child.individual.role:
-                    child.individual.role = Role.paternal_half_sibling
+                    child.individual.assign_role(Role.paternal_half_sibling)
 
     def _assign_roles_maternal(self, mother):
         if mother.parents:
             grandparents = mother.parents
 
             if grandparents.father.individual:
-                grandparents.father.individual.role = \
-                    Role.maternal_grandfather
+                grandparents.father.individual.assign_role(
+                    Role.maternal_grandfather)
 
             if grandparents.mother.individual:
-                grandparents.mother.individual.role = \
-                    Role.maternal_grandmother
+                grandparents.mother.individual.assign_role(
+                    Role.maternal_grandmother)
 
             for individual in grandparents.children.individuals:
                 if individual.individual.role:
                     continue
 
                 if individual.individual.gender == Gender.M:
-                    individual.individual.role = Role.maternal_uncle
+                    individual.individual.assign_role(Role.maternal_uncle)
                 if individual.individual.gender == Gender.F:
-                    individual.individual.role = Role.maternal_aunt
+                    individual.individual.assign_role(Role.maternal_aunt)
 
         for mating_Units in mother.mating_units:
             for child in mating_Units.children.individuals:
                 if not child.individual.role:
-                    child.individual.role = Role.maternal_half_sibling
+                    child.individual.assign_role(Role.maternal_half_sibling)
+
+    def _assign_roles_children(self, proband):
+        for mating_unit in proband.mating_units:
+            for child in mating_unit.children.individuals:
+                child.individual.assign_role(Role.child)
+
 
     def _assign_roles(self, proband):
-        proband.individual.role = Role.prb
+        proband.individual.assign_role(Role.prb)
+
+        self._assign_roles_children(proband)
 
         if not proband.parents:
             return
@@ -172,17 +184,17 @@ class PedigreeToFamily(object):
 
         for individual in parents.children.individuals:
             if individual != proband:
-                individual.individual.role = Role.sib
+                individual.individual.assign_role(Role.sib)
 
         if parents.father.individual:
             father = proband.get_father_individual()
-            father.individual.role = Role.dad
+            father.individual.assign_role(Role.dad)
 
             self._assign_roles_paternal(father)
 
         if parents.mother.individual:
             mother = proband.get_mother_individual()
-            mother.individual.role = Role.mom
+            mother.individual.assign_role(Role.mom)
 
             self._assign_roles_maternal(mother)
 
