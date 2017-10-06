@@ -202,8 +202,8 @@ class PedigreeToFamily(object):
         individuals = self._link_pedigree_members(members)
         affected = filter(
             lambda x: x.individual.status == Status.affected, individuals)
-        proband = next(member for member in sorted(
-            affected, key=lambda x: x.individual.individual_id))
+        proband = sorted(
+            affected, key=lambda x: x.individual.individual_id)[0]
 
         self._assign_roles(proband)
 
