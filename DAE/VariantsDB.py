@@ -277,7 +277,7 @@ class Study:
         for fl in flsS.split('\n'):
             print >> sys.stderr, "Loading file", fl, "for collection ", self.name
             dt = genfromtxt(fl, delimiter='\t', dtype=None, names=True,
-                            case_sensitive=True)
+                            case_sensitive=True, deletechars='')
             if len(dt.shape) == 0:
                 dt = dt.reshape(1)
             hasCenter = 'center' in dt.dtype.names
