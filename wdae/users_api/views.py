@@ -180,7 +180,7 @@ def get_user_info(request):
     user = request.user
     if user.is_authenticated():
         return Response({'loggedIn': True, 'email': user.email,
-                         'isAdministrator': user.is_superuser},
+                         'isAdministrator': user.is_staff},
                         status.HTTP_200_OK)
     else:
         return Response({'loggedIn': False}, status.HTTP_200_OK)
