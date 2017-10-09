@@ -29,7 +29,8 @@ class Instrument(object):
         self.measures = OrderedDict()
 
     def __repr__(self):
-        return "Instrument({}, {})".format(self.name, len(self.measures))
+        return "Instrument({}, {})".format(
+            self.instrument_name, len(self.measures))
 
 
 class Measure(object):

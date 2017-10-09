@@ -41,8 +41,6 @@ class PreparePhenoBrowserBase(object):
 
     def load_measure(self, measure):
         df = self.pheno_db.get_persons_values_df([measure.measure_id])
-        df.loc[df.role == Role.mom, 'role'] = Role.parent
-        df.loc[df.role == Role.dad, 'role'] = Role.parent
         return df
 
     def _augment_measure_values_df(self, augment, augment_name, measure):

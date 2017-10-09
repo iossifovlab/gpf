@@ -129,33 +129,22 @@ def draw_distribution(df, measure_id, ax=None):
     ax.set_ylabel('count')
 
 
-def role_counts(df):
+def role_counts(df, role):
     counts = {
-        'prb': len(df[df.role == 'prb']),
-        'prbM': len(df[np.logical_and(df.role == 'prb', df.gender == 'M')]),
-        'prbF': len(df[np.logical_and(df.role == 'prb', df.gender == 'F')]),
-
-        'sib': len(df[df.role == 'sib']),
-        'sibM': len(df[np.logical_and(df.role == 'sib', df.gender == 'M')]),
-        'sibF': len(df[np.logical_and(df.role == 'sib', df.gender == 'F')]),
-
-        'parent': len(df[df.role == 'parent']),
-        'parentM': len(df[np.logical_and(
-            df.role == 'parent', df.gender == 'M')]),
-        'parentF': len(df[np.logical_and(
-            df.role == 'parent', df.gender == 'F')]),
+        'role_name': role,
+        'role_total': len(df.query('role == @role')),
+        'male_total': len(df.query('role == @role & gender == "M"')),
+        'female_total': len(df.query('role == @role & gender == "F"'))
     }
     return counts
 
 
-def role_labels(df):
-    counts = role_counts(df)
+def role_labels(df, ordered_roles):
+    # counts =
     return [
-        "prb: {prb:>4d}\n  M: {prbM:>4d}\n  F: {prbF:>4d}".format(**counts),
-        "sib: {sib:>4d}\n  M: {sibM:>4d}\n  F: {sibF:>4d}".format(**counts),
-        "parent: {parent:>4d}\n   dad: {parentM:>4d}\n   mom: {parentF:>4d}"
-        .format(**counts),
-    ]
+        "{role_name}:{role_total:>4d}\nM: {male_total:>4d}\n"
+        "F: {female_total:>4d}".format(**role_counts(df, role))
+        for role in ordered_roles]
 
 
 def gender_palette_light():
@@ -173,9 +162,11 @@ def draw_measure_violinplot(df, measure_id, ax=None):
         ax = plt.gca()
 
     palette = gender_palette()
+    roles = df["role"].unique()
+    print("unique roles:", roles)
     sns.violinplot(
         data=df, x='role', y=measure_id, hue='gender',
-        order=['prb', 'sib', 'parent'], hue_order=['M', 'F'],
+        order=roles, hue_order=['M', 'F'],
         linewidth=1, split=True,
         scale='count',
         scale_hue=False,
@@ -185,13 +176,13 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     palette = gender_palette_light()
     sns.stripplot(
         data=df, x='role', y=measure_id, hue='gender',
-        order=['prb', 'sib', 'parent'], hue_order=['M', 'F'],
+        order=roles, hue_order=['M', 'F'],
         jitter=0.025, size=2,
         palette=palette,
         linewidth=0.1)
 
-    labels = role_labels(df)
-    plt.xticks([0, 1, 2], labels)
+    labels = role_labels(df, roles)
+    plt.xticks(range(0, len(labels)), labels)
 
 
 def draw_categorical_violin_distribution(df, measure_id, ax=None):
