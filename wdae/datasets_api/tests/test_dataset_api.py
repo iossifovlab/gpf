@@ -24,7 +24,7 @@ class DatasetApiTest(APITestCase):
         data = response.data
 
         self.assertIn('data', data)
-        self.assertEquals(4, len(data['data']))
+        self.assertEquals(3, len(data['data']))
 
     def test_get_dataset_ssc(self):
         url = '/api/v3/datasets/SSC'
