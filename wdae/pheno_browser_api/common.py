@@ -65,6 +65,8 @@ class PhenoBrowserCommon(object):
 
     @staticmethod
     def should_recompute(dbname):
+        if not os.path.exists(pheno.get_dbfile(dbname)):
+            return True
         existing_hashsum = PhenoBrowserCommon.get_cache_hashsum(dbname)
         actual_hashsum = PhenoBrowserCommon.get_db_hashsum(dbname)
         return existing_hashsum != actual_hashsum
