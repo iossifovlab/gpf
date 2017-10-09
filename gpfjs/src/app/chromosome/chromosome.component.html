@@ -4,19 +4,19 @@
     <g>
       <defs>
         <clipPath id="colorClipLeft{{chromosome.id}}">
-          <rect [attr.height]="chromosomeHeight" [attr.width]="leftWidth" [attr.x]="startingPoint" [attr.y]="starWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+          <rect [attr.height]="chromosomeHeight" [attr.width]="leftWidth" [attr.x]="startingPoint" [attr.y]="variantSignWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
           </rect>
         </clipPath>
         <clipPath id="colorClipRight{{chromosome.id}}">
-          <rect [attr.height]="chromosomeHeight" [attr.width]="rightWidth" [attr.x]="startingPoint + leftWidth" [attr.y]="starWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+          <rect [attr.height]="chromosomeHeight" [attr.width]="rightWidth" [attr.x]="startingPoint + leftWidth" [attr.y]="variantSignWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
           </rect>
         </clipPath>
       </defs>
 
-      <rect [attr.height]="chromosomeHeight" [attr.width]="leftWidth" [attr.x]="startingPoint" [attr.y]="starWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+      <rect [attr.height]="chromosomeHeight" [attr.width]="leftWidth" [attr.x]="startingPoint" [attr.y]="variantSignWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
       </rect>
 
-      <rect [attr.height]="chromosomeHeight" [attr.width]="rightWidth" [attr.x]="startingPoint + leftWidth" [attr.y]="starWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+      <rect [attr.height]="chromosomeHeight" [attr.width]="rightWidth" [attr.x]="startingPoint + leftWidth" [attr.y]="variantSignWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
       </rect>
 
       <rect *ngFor="let band of leftBands" [attr.clip-path]="'url(#colorClipLeft' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" [attr.y]="band.y" [style.fill]="band.color">
@@ -27,16 +27,33 @@
 
       <a *ngFor="let variant of variants"
         [attr.xlink:href]="variant.genomeBrowserUrl"
-        target="_blank">
+        target="_blank"
+        on-mouseover="hoveredVariant = variant"
+        [ngbPopover]="popoverContent"
+        triggers="mouseenter:mouseleave"
+        container="body">
         <path
-          attr.d="M {{variant.x}} {{variant.proband ? (maxStackIndex - variant.stackIndex) * starWidth : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * starWidth}} {{baseStarPathDescription}}"
-          [style.fill]="variant.color"
-          on-mouseover="hoveredVariant = variant"
-          [ngbPopover]="popoverContent"
-          triggers="mouseenter:mouseleave"
-          container="body"
-          >
+          *ngIf="variant.figure == 1"
+          attr.d="M {{variant.x}} {{variant.proband ? (maxStackIndex - variant.stackIndex) * variantSignWidth : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * variantSignWidth}} {{baseStarPathDescription}}"
+          [style.fill]="variant.color">
         </path>
+        <rect
+          *ngIf="variant.figure == 2"
+          [attr.x]="variant.x - variantSignWidth / 2"
+          [attr.y]="variant.proband ? (maxStackIndex - variant.stackIndex) * variantSignWidth : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * variantSignWidth"
+          [attr.width]="variantSignWidth - 1"
+          [attr.height]="variantSignWidth - 1"
+          [style.fill]="variant.color"
+          [style.stroke]="white"
+          style.stroke-width="1px">
+        </rect>
+        <circle
+          *ngIf="variant.figure == 3"
+          [attr.cx]="variant.x"
+          [attr.cy]="variantSignWidth / 2 + (variant.proband ? (maxStackIndex - variant.stackIndex) * variantSignWidth : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * variantSignWidth)"
+          [attr.r]="variantSignWidth / 2"
+          [style.fill]="variant.color">
+        </circle>
       </a>
     </g>
   </svg>

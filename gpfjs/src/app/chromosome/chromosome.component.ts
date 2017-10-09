@@ -22,6 +22,28 @@ const COLORS: ColorsMap = {
 
 const GENOME_BROWSER: string = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr";
 
+enum Figure {
+  None = 0,
+  Star,
+  Square,
+  Circle,
+}
+
+const FIGURES_EFFECTS: Map<Figure, Array<string>> = new Map([
+  [Figure.Star, ['nonsense', 'frame-shift', 'splice-site']],
+  [Figure.Square, ['missense', 'no-frame-shift', 'noStart', 'noEnd']],
+  [Figure.Circle, ['synonymous', 'non-coding', 'intron', 'intergenic', '3"UTR', '5"UTR']]
+]);
+
+function getFigureByEffect(effect: string) : Figure {
+  for (let key of Array.from(FIGURES_EFFECTS.keys())) {
+    if (FIGURES_EFFECTS.get(key).indexOf(effect) != -1) {
+      return key;
+    }
+  }
+  return Figure.None;
+}
+
 class ChromosomeBandComponent {
   x: number;
   y: number;
@@ -32,6 +54,7 @@ class ChromosomeBandComponent {
 
 class GenotypeVariantComponent {
   x: number;
+  figure: Figure;
   color: string;
   proband: boolean;
   stackIndex: number;
@@ -65,9 +88,9 @@ export class ChromosomeComponent implements OnInit {
   chromosomeHeight: number = 15;
 
   @Input()
-  starWidth: number = 9.5;
+  variantSignWidth: number = 9.5;
 
-  baseStarWidth: number = 9.5;
+  baseVariantSignWidth: number = 9.5;
 
   nameWidth: number = 30;
 
@@ -88,7 +111,7 @@ export class ChromosomeComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-    let starScale: number = this.starWidth / this.baseStarWidth;;
+    let starScale: number = this.variantSignWidth / this.baseVariantSignWidth;;
 
     this.baseStarPathDescription = `l ${1.64 * starScale} ${3.2 * starScale}
                                 l ${3.2 * starScale} ${0.4 * starScale}
@@ -102,10 +125,10 @@ export class ChromosomeComponent implements OnInit {
 
 
     this.svgWidth = this.width - this.nameWidth;
-    this.scale = (this.svgWidth - this.starWidth) / this.referenceLargestLength;
+    this.scale = (this.svgWidth - this.variantSignWidth) / this.referenceLargestLength;
     this.leftWidth = this.chromosome.leftWidth() * this.scale;
     this.rightWidth = this.chromosome.rightWidth() * this.scale;
-    this.startingPoint = this.centromerePosition * this.scale - this.leftWidth + this.starWidth / 2;
+    this.startingPoint = this.centromerePosition * this.scale - this.leftWidth + this.variantSignWidth / 2;
 
     this.genotypePreviews = _.sortBy(this.genotypePreviews, genotypePreview => +genotypePreview.location.split(':')[1]);
 
@@ -121,7 +144,7 @@ export class ChromosomeComponent implements OnInit {
         for (let i = this.variants.length - 1; i >= 0; i--) {
           let variant = this.variants[i];
           if (variant.proband == proband) {
-            if ((x - variant.x) < this.starWidth) {
+            if ((x - variant.x) < this.variantSignWidth) {
               stackIndexMap[variant.stackIndex] = true;
             } else {
               break;
@@ -140,6 +163,7 @@ export class ChromosomeComponent implements OnInit {
 
         this.variants.push({
           x: x,
+          figure: getFigureByEffect(genotypePreview.worstEffectType),
           color: male ? 'blue' : 'red',
           stackIndex: stackIndex,
           proband: proband,
@@ -150,12 +174,12 @@ export class ChromosomeComponent implements OnInit {
       }
     }
 
-    this.svgHeight = this.chromosomeHeight + this.starWidth * 2 * (this.maxStackIndex);
+    this.svgHeight = this.chromosomeHeight + this.variantSignWidth * 2 * (this.maxStackIndex);
 
     for (let band of this.chromosome.bands) {
       let bandComponent: ChromosomeBandComponent = {
         x: this.startingPoint + band.start * this.scale,
-        y: this.starWidth * this.maxStackIndex + 1,
+        y: this.variantSignWidth * this.maxStackIndex + 1,
         width: (band.end - band.start) * this.scale,
         height: this.chromosomeHeight - 2,
         color: COLORS[band.color]
