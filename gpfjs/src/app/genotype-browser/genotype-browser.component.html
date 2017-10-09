@@ -19,7 +19,10 @@
 	  <input type="button" class="btn btn-md btn-primary" value="Graphical Preview" (click)="tablePreview = false; submitQuery()">
   </div>
 </div>
-<div class="genotype-browser-results">
+<div class="genotype-browser-results" *ngIf="genotypePreviewsArray">
+  <p class="overview">
+    {{genotypePreviewsArray.total}} variants selected ({{ genotypePreviewsArray.genotypePreviews.length }} shown)
+  </p>
   <gpf-genotype-preview-table
   	*ngIf="tablePreview"
     [phenoColumns]="selectedDataset?.genotypeBrowser?.phenoColumns"
