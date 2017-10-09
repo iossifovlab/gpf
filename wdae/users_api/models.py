@@ -140,12 +140,12 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         if self.is_active:
             self.is_active = False
 
-    def reset_password(self):
+    def reset_password(self, by_admin=False):
         self.set_unusable_password()
         self.save()
 
         verif_path = _create_verif_path(self)
-        send_reset_email(self, verif_path)
+        send_reset_email(self, verif_path, by_admin)
 
     def register_preexisting_user(self, name):
         self.date_joined = timezone.now()
@@ -187,11 +187,11 @@ def send_verif_email(user, verif_path):
     user.email_user(email['subject'], email['message'])
 
 
-def send_reset_email(user, verif_path):
+def send_reset_email(user, verif_path, by_admin=False):
     ''' Returns dict - subject and message of the email '''
     email = _create_reset_mail(
         settings.EMAIL_VERIFICATION_HOST,
-        settings.EMAIL_VERIFICATION_PATH, str(verif_path.path))
+        settings.EMAIL_VERIFICATION_PATH, str(verif_path.path), by_admin)
 
     user.email_user(email['subject'], email['message'])
 
@@ -210,12 +210,18 @@ def _create_verif_email(host, path, verification_path):
     return _build_email_template(settings)
 
 
-def _create_reset_mail(host, path, verification_path):
+def _create_reset_mail(host, path, verification_path, by_admin=False):
+    message = 'Hello. To change your password in ' \
+        'GPF: Genotype and Phenotype in Families ' \
+        'please follow this link: '
+    if by_admin:
+        message = 'Hello. Your password has been reset by an admin. Your old ' \
+            'password will not work. To set a new password in ' \
+            'GPF: Genotype and Phenotype in Families ' \
+            'please follow this link: '
     settings = {
         'subject': 'GPF: Password reset',
-        'initial_message': 'Hello. To change your password in '
-        'GPF: Genotype and Phenotype in Families '
-        'please follow this link: ',
+        'initial_message': message,
         'host': host,
         'path': path,
         'verification_path': verification_path

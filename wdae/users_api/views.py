@@ -57,8 +57,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def password_reset(self, request, pk=None):
         self.check_permissions(request)
         user = get_object_or_404(get_user_model(), pk=pk)
-        print(user)
-        user.reset_password()
+
+        user.reset_password(by_admin=True)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
