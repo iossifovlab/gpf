@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
 import { Chromosome } from '../chromosome-service/chromosome';
 import { GenotypePreview } from '../genotype-preview-model/genotype-preview';
@@ -68,7 +68,7 @@ class GenotypeVariantComponent {
   templateUrl: './chromosome.component.html',
   styleUrls: ['./chromosome.component.css']
 })
-export class ChromosomeComponent implements OnInit {
+export class ChromosomeComponent implements OnChanges {
 
   @Input()
   chromosome: Chromosome;
@@ -110,7 +110,7 @@ export class ChromosomeComponent implements OnInit {
 
   constructor() { }
 
-  ngOnInit() {
+  ngOnChanges(changes: SimpleChanges) {
     let starScale: number = this.variantSignWidth / this.baseVariantSignWidth;;
 
     this.baseStarPathDescription = `l ${1.64 * starScale} ${3.2 * starScale}
@@ -123,13 +123,13 @@ export class ChromosomeComponent implements OnInit {
                                 l ${-2.4 * starScale} ${-2.3 * starScale}
                                 l ${3.44 * starScale} ${-0.3 * starScale}`;
 
-
     this.svgWidth = this.width - this.nameWidth;
     this.scale = (this.svgWidth - this.variantSignWidth) / this.referenceLargestLength;
     this.leftWidth = this.chromosome.leftWidth() * this.scale;
     this.rightWidth = this.chromosome.rightWidth() * this.scale;
     this.startingPoint = this.centromerePosition * this.scale - this.leftWidth + this.variantSignWidth / 2;
 
+    this.variants = [];
     this.genotypePreviews = _.sortBy(this.genotypePreviews, genotypePreview => +genotypePreview.location.split(':')[1]);
 
     if (this.genotypePreviews) {
@@ -176,6 +176,8 @@ export class ChromosomeComponent implements OnInit {
 
     this.svgHeight = this.chromosomeHeight + this.variantSignWidth * 2 * (this.maxStackIndex);
 
+    this.leftBands = [];
+    this.rightBands = [];
     for (let band of this.chromosome.bands) {
       let bandComponent: ChromosomeBandComponent = {
         x: this.startingPoint + band.start * this.scale,
