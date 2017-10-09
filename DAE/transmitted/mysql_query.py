@@ -35,6 +35,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         'familyIds': list,
         'TMM_ALL': bool,
         'limit': int,
+        'genomicScores': list,
     }
 
     DEFAULT_QUERY = {
@@ -54,6 +55,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         'familyIds': None,
         'TMM_ALL': False,
         'limit': None,
+        'genomicScores': []
     }
 
     def _get_config_property(self, name):
@@ -125,6 +127,22 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             if self['minAltFreqPrcnt']:
                 where.append(
                     ' ( tsv.alt_freq >= {} ) '.format(self['minAltFreqPrcnt']))
+
+        res = ' AND '.join(where)
+        return res
+
+    def _build_genomic_scores_where(self):
+        where = []
+        for score in self['genomicScores']:
+            column_names = {
+                'SSC-freq': 'tsv.ssc_freq',
+                'EVS-freq': 'tsv.evs_freq',
+                'E65-freq': 'tsv.e65_freq'
+            }
+            where.append('( {} >= {} )'.format(column_names[score['metric']],
+                                               score['min']))
+            where.append('( {} <= {} )'.format(column_names[score['metric']],
+                                               score['max']))
 
         res = ' AND '.join(where)
         return res
@@ -328,7 +346,10 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
                 where.append(w)
         fw = self._build_freq_where()
         if fw:
-            where.append(self._build_freq_where())
+            where.append(fw)
+        genomic_scores = self._build_genomic_scores_where()
+        if genomic_scores:
+            where.append(genomic_scores)
         if not where:
             return ""
         w = ' AND '.join(where)
