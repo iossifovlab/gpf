@@ -6,18 +6,18 @@ import { GenotypePreview } from '../genotype-preview-model/genotype-preview';
 import * as _ from 'lodash';
 
 interface ColorsMap {
-  [id: number]: string;
+  [gieStain: string]: string;
 }
 
 const COLORS: ColorsMap = {
-  1 : 'white',
-  2 : '#E8E8E8',
-  3 : '#E0E0E0',
-  4 : '#D8D8D8', 
-  5 : '#D0D0D0',
-  6 : '#808080',
-  7 : '#A0A0A0',
-  8 : '#C7C7C7',
+  'acen' : '#8B2323',
+  'gneg' : '#FFF',
+  'gpos100' : '#000',
+  'gpos25' : '##E5E5E5',
+  'gpos50' : '#B3B3B3',
+  'gpos75' : '#666',
+  'gvar' : '#FFF',
+  'stalk' : '#CD3333',
 };
 
 const GENOME_BROWSER: string = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr";
@@ -28,6 +28,7 @@ class ChromosomeBandComponent {
   width: number;
   height: number;
   color: string;
+  tooltip: string;
 }
 
 class GenotypeVariantComponent {
@@ -158,7 +159,8 @@ export class ChromosomeComponent implements OnInit {
         y: this.starWidth * this.maxStackIndex + 1,
         width: (band.end - band.start) * this.scale,
         height: this.chromosomeHeight - 2,
-        color: COLORS[band.color]
+        color: COLORS[band.gieStain],
+        tooltip: band.name
       };
       if (band.end <= this.chromosome.leftWidth()) {
         this.leftBands.push(bandComponent);
