@@ -8,3 +8,11 @@
   margin: 0 auto;
   width: fit-content;
 }
+
+
+.genotype-browser-results .overview {
+  border-top: 1px solid rgba(0,0,0,0.125);
+  padding-top: 20px;
+  font-size: 0.75em;
+  font-weight: 500;
+}

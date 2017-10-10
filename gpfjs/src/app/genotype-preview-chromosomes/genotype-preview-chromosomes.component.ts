@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 
 import { GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
 import { Chromosome } from '../chromosome-service/chromosome';
@@ -11,7 +11,7 @@ import * as _ from 'lodash';
   templateUrl: './genotype-preview-chromosomes.component.html',
   styleUrls: ['./genotype-preview-chromosomes.component.css']
 })
-export class GenotypePreviewChromosomesComponent implements OnInit {
+export class GenotypePreviewChromosomesComponent implements OnInit, OnChanges {
 
   @Input()
   width: number;
@@ -38,13 +38,6 @@ export class GenotypePreviewChromosomesComponent implements OnInit {
   constructor(private chromosomeService: ChromosomeService) { }
 
   ngOnInit() {
-
-    this.leftColumnWidth = 2 * this.width / 3;
-    this.rightColumnWidth = this.width / 3;
-
-    this.genotypePreviewsByChromosome = _.groupBy(this.genotypePreviewsArray.genotypePreviews,
-      genotypePreview => genotypePreview.location.split(':')[0]);
-
     this.chromosomeService.getChromosomes().then(chromosomes => {
       this.chromosomes = chromosomes;
       // TODO chromosomes 1 left part & 2 right part are the longest
@@ -53,6 +46,21 @@ export class GenotypePreviewChromosomesComponent implements OnInit {
       this.rightLargestLength = this.chromosomes[22].leftWidth() + this.chromosomes[12].rightWidth();
       this.rightCentromerePosition = this.chromosomes[22].centromerePosition;
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.genotypePreviewsArray) {
+      if (this.genotypePreviewsArray) {
+        this.genotypePreviewsByChromosome = _.groupBy(this.genotypePreviewsArray.genotypePreviews,
+          genotypePreview => genotypePreview.location.split(':')[0]);
+      } else {
+        this.genotypePreviewsByChromosome = null;
+      }
+    }
+    if (changes.width) {
+      this.leftColumnWidth = 2 * this.width / 3;
+      this.rightColumnWidth = this.width / 3;
+    }
   }
 
 }
