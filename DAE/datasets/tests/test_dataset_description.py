@@ -4,6 +4,7 @@ Created on Jul 21, 2017
 @author: lubo
 '''
 import pprint
+import pytest
 
 
 # def test_datasets_description_simple(datasets_config):
@@ -15,7 +16,7 @@ import pprint
 #     print(test["description"])
 #     assert test['description'] is not None
 
-
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_datasets_missing_description_simple(datasets_config):
     pprint.pprint(datasets_config)
 
