@@ -15,6 +15,24 @@ def create_measure_object(measure):
     }
 
 
+def draw_continuous_measure(measure, db, drawer):
+    assert measure.measure_type == "continuous"
+    measure_object = create_measure_object(measure)
+
+    drawer.build_values_violinplot(measure, measure_object)
+    measure_object.pop('measure_type')
+    db.save(measure_object)
+
+
+def draw_categorical_measure(measure, db, drawer):
+    assert measure.measure_type == "categorical"
+    measure_object = create_measure_object(measure)
+
+    drawer.build_values_categorical_distribution(measure, measure_object)
+    measure_object.pop('measure_type')
+    db.save(measure_object)
+
+
 def main():
     output_folder = './output'
     db_name = 'sqlite.db'
@@ -27,13 +45,13 @@ def main():
     db.build()
 
     instrument = drawer.pheno_db.instruments['individuals']
-    measure = instrument.measures['age_at_registration_years']
-    measure_object = create_measure_object(measure)
+    # draw_continuous_measure(
+    #     instrument.measures['age_at_registration_years'], db, drawer
+    # )
 
-    drawer.build_values_violinplot(measure, measure_object)
-    measure_object.pop('measure_type')
-    db.save(measure_object)
-
+    draw_categorical_measure(
+        instrument.measures['asd'], db, drawer
+    )
 
 if __name__ == '__main__':
     main()
