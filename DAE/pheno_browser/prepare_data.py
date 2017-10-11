@@ -222,12 +222,12 @@ class PreparePhenoBrowserBase(object):
 
         if measure.measure_type == 'continuous':
             self.build_values_violinplot(measure, v)
-            self.build_regression_by_nviq(measure, v)
-            self.build_regression_by_age(measure, v)
+            # self.build_regression_by_nviq(measure, v)
+            # self.build_regression_by_age(measure, v)
         elif measure.measure_type == 'ordinal':
             self.build_values_ordinal_distribution(measure, v)
-            self.build_regression_by_nviq(measure, v)
-            self.build_regression_by_age(measure, v)
+            # self.build_regression_by_nviq(measure, v)
+            # self.build_regression_by_age(measure, v)
         elif measure.measure_type == 'categorical':
             self.build_values_categorical_distribution(measure, v)
         else:

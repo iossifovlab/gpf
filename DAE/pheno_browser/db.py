@@ -28,6 +28,7 @@ class DbManager(object):
                    nullable=False, index=True, unique=True, primary_key=True),
             Column('instrument_name', String(64), nullable=False, index=True),
             Column('measure_name', String(64), nullable=False, index=True),
+            Column('measure_type', String(64), nullable=False),
             Column('values_domain', String(256)),
 
             Column('figure_distribution_small', String(256)),

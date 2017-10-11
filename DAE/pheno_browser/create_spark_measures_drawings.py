@@ -20,7 +20,6 @@ def draw_continuous_measure(measure, db, drawer):
     measure_object = create_measure_object(measure)
 
     drawer.build_values_violinplot(measure, measure_object)
-    measure_object.pop('measure_type')
     db.save(measure_object)
 
 
@@ -29,7 +28,15 @@ def draw_categorical_measure(measure, db, drawer):
     measure_object = create_measure_object(measure)
 
     drawer.build_values_categorical_distribution(measure, measure_object)
-    measure_object.pop('measure_type')
+    db.save(measure_object)
+
+
+def draw_ordinal_measure(measure, db, drawer):
+    print(measure.measure_type)
+    assert measure.measure_type == "ordinal"
+    measure_object = create_measure_object(measure)
+
+    drawer.build_values_ordinal_distribution(measure, measure_object)
     db.save(measure_object)
 
 
@@ -45,13 +52,22 @@ def main():
     db.build()
 
     instrument = drawer.pheno_db.instruments['individuals']
-    # draw_continuous_measure(
-    #     instrument.measures['age_at_registration_years'], db, drawer
-    # )
+    draw_continuous_measure(
+        instrument.measures['age_at_registration_years'], db, drawer
+    )
 
     draw_categorical_measure(
-        instrument.measures['asd'], db, drawer
+        instrument.measures['diagnosis'], db, drawer
     )
+
+    # ordinal = {measure.measure_type for instrument in drawer.pheno_db.instruments.values()
+    #            for measure in instrument.measures.values()}
+    # print(ordinal)
+
+    # draw_ordinal_measure(
+    #     instrument.measures['q18_physical_illness'], db, drawer
+    # )
+
 
 if __name__ == '__main__':
     main()
