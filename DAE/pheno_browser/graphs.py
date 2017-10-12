@@ -52,8 +52,8 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
 
     dd = df.dropna()
 
-    dmale = dd[dd.gender == Gender.M]
-    dfemale = dd[dd.gender == Gender.F]
+    dmale = dd[dd.gender == 'M']
+    dfemale = dd[dd.gender == 'F']
 
     name1, name2 = names(col1, col2)
     ax.set_xlabel(name1)
@@ -162,6 +162,20 @@ def roles_to_draw(df):
     return df["role"].value_counts().index.values.tolist()
 
 
+def _enumerate_by_count(df, column_name):
+    occurrence_counts = df[column_name].value_counts()
+    occurrence_ordered = occurrence_counts.index.values.tolist()
+    occurrences_map = {
+        value: number for (number, value) in enumerate(occurrence_ordered)
+    }
+    occurrences_reverse_map = {
+        number: value for (number, value) in enumerate(occurrence_ordered)
+    }
+
+    return (df[column_name].apply(lambda x: occurrences_map[x]),
+            occurrences_reverse_map)
+
+
 def draw_measure_violinplot(df, measure_id, ax=None):
     if ax is None:
         ax = plt.gca()
@@ -172,7 +186,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     roles = roles_to_draw(df)
     assert len(roles) > 0
 
-    fig.set_size_inches(1 * len(roles), 8)
+    fig.set_size_inches(2 + len(roles), 8)
 
     sns.violinplot(
         data=df, x='role', y=measure_id, hue='gender',
@@ -193,21 +207,8 @@ def draw_measure_violinplot(df, measure_id, ax=None):
 
     labels = role_labels(df, roles)
     plt.xticks(range(0, len(labels)), labels)
+    ax.set_ylabel(measure_id)
     plt.tight_layout()
-
-
-def _enumerate_by_count(df, column_name):
-    occurrence_counts = df[column_name].value_counts()
-    occurrence_ordered = occurrence_counts.index.values.tolist()
-    occurrences_map = {
-        value: number for (number, value) in enumerate(occurrence_ordered)
-    }
-    occurrences_reverse_map = {
-        number: value for (number, value) in enumerate(occurrence_ordered)
-    }
-
-    return (df[column_name].apply(lambda x: occurrences_map[x]),
-            occurrences_reverse_map)
 
 
 def draw_categorical_violin_distribution(df, measure_id, ax=None):
@@ -215,6 +216,8 @@ def draw_categorical_violin_distribution(df, measure_id, ax=None):
         ax = plt.gca()
 
     df = df.copy()
+    if df.empty:
+        return
 
     numerical_measure_name = measure_id + "_numerical"
     df[numerical_measure_name], reverse_map = \
@@ -256,10 +259,10 @@ def draw_categorical_violin_distribution(df, measure_id, ax=None):
     )
 
     x_locations = np.arange(
-        0, len(roles) * 2 * binned_maximum + 1, 2 * binned_maximum)
+        0, len(roles) * 2 * binned_maximum, 2 * binned_maximum)
 
     _fig, ax = plt.subplots()
-    _fig.set_size_inches(1 * len(roles), 8)
+    _fig.set_size_inches(2 + len(roles), 8)
     for count, (male, female) in enumerate(binned_datasets):
         x_loc = x_locations[count]
 
@@ -270,14 +273,16 @@ def draw_categorical_violin_distribution(df, measure_id, ax=None):
 
     ax.set_yticks(y_locations)
     ax.set_yticklabels(map(lambda x: textwrap.fill(x, 20), values_domain))
-    ax.set_xlim(2 * -binned_maximum, 6 * binned_maximum + 5)
+    ax.set_xlim(2 * -binned_maximum, len(roles) * 2 * binned_maximum)
     ax.set_ylim(-1, np.max(y_locations) + 1)
 
     ax.set_ylabel(measure_id)
+    ax.set_xlabel('role')
     labels = role_labels(df, roles)
     plt.xticks(x_locations, labels)
 
     male_female_legend(color_male, color_female, ax)
+
     plt.tight_layout()
 
 

@@ -118,7 +118,7 @@ class PreparePhenoBrowserBase(object):
         )
 
     def build_regression_by_age(self, measure, res):
-        age_id = self.pheno_db.get_age_measure_id(measure.measure_id)
+        age_id = self.pheno_regressiong.get_age_measure_id(measure.measure_id)
         if age_id is None:
             return None, None
         if measure.measure_id == age_id:
@@ -127,30 +127,30 @@ class PreparePhenoBrowserBase(object):
         df = self.load_measure_and_age(measure)
         if df is None:
             return None, None
-
-        dd = df[df.role == Role.prb]
+        dd = df[df.role == 'prb']
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
                 dd, 'age', measure.measure_id, jitter=0.1)
-            res.pvalue_correlation_age_male = res_male.pvalues['age'] \
+            res['pvalue_correlation_age_male'] = res_male.pvalues['age'] \
                 if res_male is not None else None
-            res.pvalue_correlation_age_female = res_female.pvalues['age'] \
+            res['pvalue_correlation_age_female'] = res_female.pvalues['age'] \
                 if res_female is not None else None
 
-            (res.figure_correlation_age_small,
-             res.figure_correlation_age) = \
+            (res['figure_correlation_age_small'],
+             res['figure_correlation_age']) = \
                 self.save_fig(measure, "prb_regression_by_age")
-            return (res.pvalue_correlation_age_male,
-                    res.pvalue_correlation_age_female)
+            return (res['pvalue_correlation_age_male'],
+                    res['pvalue_correlation_age_female'])
         return None, None
 
     def build_regression_by_nviq(self, measure, res):
-        nviq_id = self.pheno_db.get_nonverbal_iq_measure_id(measure.measure_id)
+        nviq_id = self.pheno_regressiong \
+            .get_nonverbal_iq_measure_id(measure.measure_id)
         if nviq_id is None:
             return None, None
         if measure.measure_id == nviq_id:
             return None, None
-        age_id = self.pheno_db.get_age_measure_id(measure.measure_id)
+        age_id = self.pheno_regressiong.get_age_measure_id(measure.measure_id)
         if measure.measure_id == age_id:
             return None, None
 
@@ -158,22 +158,22 @@ class PreparePhenoBrowserBase(object):
         if df is None:
             return None, None
 
-        dd = df[df.role == Role.prb]
+        dd = df[df.role == 'prb']
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
                 dd, 'nonverbal_iq', measure.measure_id, jitter=0.1)
-            res.pvalue_correlation_nviq_male = \
+            res['pvalue_correlation_nviq_male'] = \
                 res_male.pvalues['nonverbal_iq'] \
                 if res_male is not None else None
-            res.pvalue_correlation_nviq_female = \
+            res['pvalue_correlation_nviq_female'] = \
                 res_female.pvalues['nonverbal_iq'] \
                 if res_female is not None else None
 
-            (res.figure_correlation_nviq_small,
-             res.figure_correlation_nviq) = self.save_fig(
+            (res['figure_correlation_nviq_small'],
+             res['figure_correlation_nviq']) = self.save_fig(
                  measure, "prb_regression_by_nviq")
-            return (res.pvalue_correlation_nviq_male,
-                    res.pvalue_correlation_nviq_female)
+            return (res['pvalue_correlation_nviq_male'],
+                    res['pvalue_correlation_nviq_female'])
         return None, None
 
     def build_values_violinplot(self, measure, res):
@@ -222,12 +222,12 @@ class PreparePhenoBrowserBase(object):
 
         if measure.measure_type == 'continuous':
             self.build_values_violinplot(measure, v)
-            # self.build_regression_by_nviq(measure, v)
-            # self.build_regression_by_age(measure, v)
+            self.build_regression_by_nviq(measure, v)
+            self.build_regression_by_age(measure, v)
         elif measure.measure_type == 'ordinal':
             self.build_values_ordinal_distribution(measure, v)
-            # self.build_regression_by_nviq(measure, v)
-            # self.build_regression_by_age(measure, v)
+            self.build_regression_by_nviq(measure, v)
+            self.build_regression_by_age(measure, v)
         elif measure.measure_type == 'categorical':
             self.build_values_categorical_distribution(measure, v)
         else:

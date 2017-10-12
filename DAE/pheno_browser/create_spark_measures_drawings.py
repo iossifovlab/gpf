@@ -53,15 +53,11 @@ def main():
     db = DbManager(dbfile=os.path.join(output_folder, db_name))
     db.build()
 
-    instrument = drawer.pheno_db.instruments['individuals']
+    instrument = drawer.pheno_db.instruments['basic_medical_screening']
 
-    draw_continuous_measure(
-        instrument.measures['age_at_registration_years'], db, drawer
-    )
+    drawer.handle_measure(instrument.measures['birth_def_urogen_uter_agen'])
 
-    draw_categorical_measure(
-        instrument.measures['diagnosis'], db, drawer
-    )
+    # drawer.handle_measure(instrument.measures['status'])
 
     # ordinal = {measure.measure_type for instrument in drawer.pheno_db.instruments.values()
     #            for measure in instrument.measures.values()}
