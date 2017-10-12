@@ -3,6 +3,7 @@ Created on Apr 10, 2017
 
 @author: lubo
 '''
+import textwrap
 import matplotlib as mpl
 from pheno.common import Role, Gender
 mpl.use('PS')
@@ -131,7 +132,7 @@ def draw_distribution(df, measure_id, ax=None):
 
 def role_counts(df, role):
     counts = {
-        'role_name': role,
+        'role_name': textwrap.fill(role, 9),
         'role_total': len(df.query('role == @role')),
         'male_total': len(df.query('role == @role & gender == "M"')),
         'female_total': len(df.query('role == @role & gender == "F"'))
@@ -165,8 +166,13 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     if ax is None:
         ax = plt.gca()
 
+    fig = plt.gcf()
+
     palette = gender_palette()
     roles = roles_to_draw(df)
+    assert len(roles) > 0
+
+    fig.set_size_inches(1 * len(roles), 8)
 
     sns.violinplot(
         data=df, x='role', y=measure_id, hue='gender',
@@ -187,6 +193,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
 
     labels = role_labels(df, roles)
     plt.xticks(range(0, len(labels)), labels)
+    plt.tight_layout()
 
 
 def _enumerate_by_count(df, column_name):
@@ -249,9 +256,10 @@ def draw_categorical_violin_distribution(df, measure_id, ax=None):
     )
 
     x_locations = np.arange(
-        0, len(roles) * 2 * binned_maximum, 2 * binned_maximum)
+        0, len(roles) * 2 * binned_maximum + 1, 2 * binned_maximum)
 
     _fig, ax = plt.subplots()
+    _fig.set_size_inches(1 * len(roles), 8)
     for count, (male, female) in enumerate(binned_datasets):
         x_loc = x_locations[count]
 
@@ -261,8 +269,8 @@ def draw_categorical_violin_distribution(df, measure_id, ax=None):
                 left=x_loc, color=color_female)
 
     ax.set_yticks(y_locations)
-    ax.set_yticklabels(values_domain)
-    ax.set_xlim(2 * -binned_maximum, 6 * binned_maximum)
+    ax.set_yticklabels(map(lambda x: textwrap.fill(x, 20), values_domain))
+    ax.set_xlim(2 * -binned_maximum, 6 * binned_maximum + 5)
     ax.set_ylim(-1, np.max(y_locations) + 1)
 
     ax.set_ylabel(measure_id)
@@ -270,6 +278,7 @@ def draw_categorical_violin_distribution(df, measure_id, ax=None):
     plt.xticks(x_locations, labels)
 
     male_female_legend(color_male, color_female, ax)
+    plt.tight_layout()
 
 
 def draw_ordinal_violin_distribution(df, measure_id, ax=None):

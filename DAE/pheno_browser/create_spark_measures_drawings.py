@@ -2,6 +2,8 @@
 import os
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
 from pheno_browser.db import DbManager
+
+
 # from DAE import pheno # @IgnorePep8
 
 
@@ -52,6 +54,7 @@ def main():
     db.build()
 
     instrument = drawer.pheno_db.instruments['individuals']
+
     draw_continuous_measure(
         instrument.measures['age_at_registration_years'], db, drawer
     )
