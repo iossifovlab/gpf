@@ -2,7 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
-import { RequestOptions } from '@angular/http';
+import { RequestOptions, Http, XHRBackend } from '@angular/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -69,7 +69,7 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule, Routes, Router } from '@angular/router';
 import { StateRestoreService } from './store/state-restore.service';
 import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -131,6 +131,7 @@ import { DatasetsTableComponent } from './datasets-table/datasets-table.componen
 import { GenotypePreviewChromosomesComponent } from './genotype-preview-chromosomes/genotype-preview-chromosomes.component';
 import { ChromosomeService } from './chromosome-service/chromosome.service';
 import { ChromosomeComponent } from './chromosome/chromosome.component';
+import { RedirectOnErrorHttpService } from './config/redirect-on-error.service'
 
 const appRoutes: Routes = [
   {
@@ -341,7 +342,9 @@ const appRoutes: Routes = [
     StudiesSummariesService,
     VariantReportsService,
     UsersGroupsService,
-    ChromosomeService
+    ChromosomeService,
+    { provide: Http, useClass: RedirectOnErrorHttpService,
+      deps: [XHRBackend, RequestOptions, Router]}
   ],
 
   entryComponents: [
