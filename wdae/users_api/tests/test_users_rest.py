@@ -1,6 +1,7 @@
 import pytest
 from django.core.urlresolvers import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 from django.contrib.auth.models import Group
 
 
@@ -85,6 +86,13 @@ def three_users_in_a_group(db, three_new_users, empty_group):
         user.refresh_from_db()
 
     return three_new_users, empty_group
+
+
+@pytest.fixture()
+def logged_in_user(active_user):
+    client = APIClient()
+    client.login(email=active_user.email, password='secret')
+    return active_user, client
 
 
 def test_admin_can_get_default_users(admin_client, users_endpoint):
@@ -338,6 +346,23 @@ def test_admin_can_remove_password_of_user(
     assert not active_user.is_active
 
 
+def test_removing_user_password_deauthenticates_them(
+        admin_client, logged_in_user, user_remove_password_endpoint):
+    user, user_client = logged_in_user
+    response = user_client.get('/api/v3/users/get_user_info')
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['loggedIn']
+
+    url = user_remove_password_endpoint(user.pk)
+
+    response = admin_client.post(url)
+    assert response.status_code is status.HTTP_204_NO_CONTENT
+
+    response = user_client.get('/api/v3/users/get_user_info')
+    assert response.status_code == status.HTTP_200_OK
+    assert not response.data['loggedIn']
+
+
 def test_user_cant_remove_other_user_password(
         user_client, user_remove_password_endpoint, active_user):
     assert active_user.has_usable_password()
@@ -390,6 +415,23 @@ def test_admin_can_reset_user_password(
     active_user.refresh_from_db()
     assert not active_user.has_usable_password()
     assert not active_user.is_active
+
+
+def test_resetting_user_password_deauthenticates_them(
+        admin_client, logged_in_user, user_reset_password_endpoint):
+    user, user_client = logged_in_user
+    response = user_client.get('/api/v3/users/get_user_info')
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['loggedIn']
+
+    url = user_reset_password_endpoint(user.pk)
+
+    response = admin_client.post(url)
+    assert response.status_code is status.HTTP_204_NO_CONTENT
+
+    response = user_client.get('/api/v3/users/get_user_info')
+    assert response.status_code == status.HTTP_200_OK
+    assert not response.data['loggedIn']
 
 
 def test_user_cant_reset_other_user_password(
