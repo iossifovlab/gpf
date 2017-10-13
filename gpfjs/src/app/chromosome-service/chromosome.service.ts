@@ -6,7 +6,7 @@ import { Chromosome, ChromosomeBand } from './chromosome';
 @Injectable()
 export class ChromosomeService {
 
-  chromosomeUrl: string = 'chromosomes';
+  chromosomeUrl: string = 'chromosomes/';
 
   constructor(private http: Http) { }
 
