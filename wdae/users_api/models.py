@@ -10,6 +10,7 @@ from django.core.mail import send_mail
 # from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
     PermissionsMixin
+from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.conf import settings
 from guardian.conf import settings as guardian_settings
@@ -146,6 +147,13 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
         verif_path = _create_verif_path(self)
         send_reset_email(self, verif_path, by_admin)
+
+    def deauthenticate(self):
+        all_sessions = Session.objects.all()
+        for session in all_sessions:
+            session_data = session.get_decoded()
+            if self.pk == session_data.get('_auth_user_id'):
+                session.delete()
 
     def register_preexisting_user(self, name):
         self.date_joined = timezone.now()
