@@ -41,20 +41,22 @@
         </path>
         <rect
           *ngIf="variant.figure == 2"
-          [attr.x]="variant.x - variantSignWidth / 2"
-          [attr.y]="variant.proband ? (maxStackIndex - variant.stackIndex) * variantSignWidth : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * variantSignWidth"
-          [attr.width]="variantSignWidth - 1"
-          [attr.height]="variantSignWidth - 1"
+          [attr.x]="variant.x - variantSignWidth / 2 + 1"
+          [attr.y]="variant.proband ? (maxStackIndex - variant.stackIndex) * variantSignWidth + 1 : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * variantSignWidth + 1"
+          [attr.width]="variantSignWidth - 2"
+          [attr.height]="variantSignWidth - 2"
           [style.fill]="variant.color"
-          [style.stroke]="white"
-          style.stroke-width="1px">
+          [style.stroke]="'white'"
+          [style.stroke-width]="'1px'">
         </rect>
         <circle
           *ngIf="variant.figure == 3"
           [attr.cx]="variant.x"
           [attr.cy]="variantSignWidth / 2 + (variant.proband ? (maxStackIndex - variant.stackIndex) * variantSignWidth : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * variantSignWidth)"
-          [attr.r]="variantSignWidth / 2"
-          [style.fill]="variant.color">
+          [attr.r]="variantSignWidth / 2 - 0.75"
+          [style.fill]="variant.color"
+          [style.stroke]="'white'"
+          [style.stroke-width]="'1px'">
         </circle>
       </a>
     </g>
