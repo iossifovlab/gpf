@@ -27,7 +27,9 @@ class PedigreeMember(object):
         return self.individual_id
 
     def assign_role(self, role):
-        assert not self.role and self.role != role
+        assert not self.role or self.role == role, \
+            "{},{},{}!={}".format(
+                self.family_id, self.individual_id, self.role, role)
         self.role = role
 
 

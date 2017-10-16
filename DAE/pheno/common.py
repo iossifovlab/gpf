@@ -96,7 +96,6 @@ class RoleMapping(object):
     }
 
 
-
 def default_config():
     config = {
         'family': {
