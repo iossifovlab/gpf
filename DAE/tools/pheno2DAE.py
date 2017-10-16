@@ -160,8 +160,8 @@ USAGE
             '--role-mapping',
             dest='role_mapping',
             help='sets role column mapping rules; '
-            'available choices "SPARK", "SSC"; '
-            'default value is "SPARK"'
+            'available choices "SPARK", "SSC", "INTERNAL"; '
+            'default value is "INTERNAL"'
         )
 
         parser.add_argument(

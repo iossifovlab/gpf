@@ -105,7 +105,7 @@ def default_config():
             'role': {
                 'type': 'column',
                 'column': 'role',
-                'mapping': 'SPARK'
+                'mapping': 'INTERNAL'
             },
         },
         'db': {
