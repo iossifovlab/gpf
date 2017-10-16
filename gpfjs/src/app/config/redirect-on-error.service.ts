@@ -20,7 +20,8 @@ export class RedirectOnErrorHttpService extends Http {
 
   request(url: string | Request, options?: RequestOptionsArgs): Observable<Response> {
     return super.request(url, options).catch((error: Response) => {
-      if (error.status === 401 || error.status === 403) {
+      if (error.status >= 400 && error.status < 500) {
+        console.warn("redirect because of error...");
         this.router.navigate(['/']);
       }
       return Observable.throw(error);
