@@ -463,7 +463,7 @@ class PrepareVariables(PrepareBase):
                 measure.measure_type = MeasureType.continuous
                 return measure
             if self.check_ordinal_rank(rank, individuals):
-                measure.measure_type = MeasureType.continuous
+                measure.measure_type = MeasureType.ordinal
                 return measure
             if self.check_categorical_rank(rank, individuals):
                 measure.measure_type = MeasureType.categorical
