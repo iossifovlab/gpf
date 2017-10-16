@@ -502,7 +502,9 @@ class PrepareMetaMeasures(PrepareBase):
         if measure_type == MeasureType.continuous:
             values_domain = "[{}, {}]".format(min_value, max_value)
         else:
-            values_domain = ",".join(sorted(values.unique()))
+            unique_values = sorted(values.unique())
+            unique_values = [str(v) for v in unique_values]
+            values_domain = ",".join(unique_values)
 
         meta = {
             'measure_id': measure.id,
