@@ -490,6 +490,8 @@ class PrepareMetaMeasures(PrepareBase):
         df = self.pheno.get_measure_values_df(measure.measure_id)
         measure_type = measure.measure_type
         values = df[measure.measure_id]
+        rank = len(values.unique())
+
         if measure_type in \
                 set([MeasureType.continuous, MeasureType.ordinal]):
             min_value = values.values.min()
@@ -507,6 +509,7 @@ class PrepareMetaMeasures(PrepareBase):
             'min_value': min_value,
             'max_value': max_value,
             'values_domain': values_domain,
+            'rank': rank,
         }
         try:
             insert = self.db.meta_measure.insert().values(**meta)

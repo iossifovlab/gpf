@@ -68,6 +68,7 @@ class DbManager(object):
             Column('min_value', Float(), nullable=True),
             Column('max_value', Float(), nullable=True),
             Column('values_domain', String(255), nullable=True),
+            Column('rank', Integer(), nullable=True),
         )
 
     def _build_value_tables(self):
