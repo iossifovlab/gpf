@@ -31,16 +31,7 @@ class PedigreeMember(object):
         self.role = role
 
 
-class SPARKCsvPedigreeReader(object):
-
-    COLUMNS_TO_FIELDS = {
-        "familyId": "family_id",
-        "individualId": "individual_id",
-        "momId": "mother_id",
-        "dadId": "father_id",
-        "gender": "gender",
-        "status": "status"
-    }
+class CsvPedigreeReader(object):
 
     def read_structure(self, individuals):
         families = defaultdict(list)
@@ -51,15 +42,15 @@ class SPARKCsvPedigreeReader(object):
 
     def read_csv_file(self, csv_file):
         individuals = []
-        reader = csv.DictReader(csv_file)
+        reader = csv.DictReader(csv_file, delimiter='\t')
         for row in reader:
             kwargs = {
                 field: row[column]
-                for (column, field)
-                in SPARKCsvPedigreeReader.COLUMNS_TO_FIELDS.items()
+                for (column, field) in self.COLUMNS_TO_FIELDS.items()
             }
-            kwargs["status"] = Status(int(kwargs["status"]))
-            kwargs["gender"] = Gender(int(kwargs["gender"]))
+
+            kwargs["status"] = Status(self.convert_status(kwargs["status"]))
+            kwargs["gender"] = Gender(self.convert_gender(kwargs["gender"]))
             kwargs["role"] = None
 
             individual = PedigreeMember(**kwargs)
@@ -73,6 +64,24 @@ class SPARKCsvPedigreeReader(object):
             families = self.read_csv_file(csv_file)
 
         return families
+
+
+class SPARKCsvPedigreeReader(CsvPedigreeReader):
+
+    COLUMNS_TO_FIELDS = {
+        "familyId": "family_id",
+        "personId": "individual_id",
+        "momId": "mother_id",
+        "dadId": "father_id",
+        "gender": "gender",
+        "status": "status"
+    }
+
+    def convert_status(self, val):
+        return int(val)
+
+    def convert_gender(self, val):
+        return int(val)
 
 
 class PedigreeToFamily(object):
@@ -171,7 +180,6 @@ class PedigreeToFamily(object):
             for child in mating_unit.children.individuals:
                 child.individual.assign_role(Role.child)
 
-
     def _assign_roles(self, proband):
         proband.individual.assign_role(Role.prb)
 
@@ -208,6 +216,15 @@ class PedigreeToFamily(object):
         self._assign_roles(proband)
 
         return individuals
+
+    def build_families(self, families):
+        pedigrees = {}
+
+        for family_name, members in families.items():
+            pedigree = self.to_family(members)
+            pedigrees[family_name] = pedigree
+
+        return pedigrees
 
 
 class FamilyToCsv(object):
