@@ -20,7 +20,8 @@ class Individual(object):
 
     def __repr__(self):
         return "Individual({})".format(
-            self.individual_id if self.individual_id is not None else "UNKNOWN")
+            self.individual_id if self.individual_id is not None
+            else "UNKNOWN")
 
 
 class IndividualUnit(object):
@@ -271,7 +272,8 @@ class FamilyToPedigree(object):
         individual_id_to_individual_unit[proband.individual_id] = proband_unit
 
         for individual in other:
-            individual_unit = self.get_individual(proband_unit, individual.role)
+            individual_unit = self.get_individual(
+                proband_unit, individual.role)
             individual_unit.individual = individual
             individual_id_to_individual_unit[individual.individual_id] = \
                 individual_unit

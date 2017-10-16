@@ -49,6 +49,13 @@ class CsvPedigreeReader(object):
                 for (column, field) in self.COLUMNS_TO_FIELDS.items()
             }
 
+            kwargs['individual_id'] = self.convert_individual_id(
+                kwargs['family_id'], kwargs['individual_id'])
+            kwargs['mother_id'] = self.convert_individual_id(
+                kwargs['family_id'], kwargs['mother_id'])
+            kwargs['father_id'] = self.convert_individual_id(
+                kwargs['family_id'], kwargs['father_id'])
+
             kwargs["status"] = Status(self.convert_status(kwargs["status"]))
             kwargs["gender"] = Gender(self.convert_gender(kwargs["gender"]))
             kwargs["role"] = None
@@ -67,7 +74,6 @@ class CsvPedigreeReader(object):
 
 
 class SPARKCsvPedigreeReader(CsvPedigreeReader):
-
     COLUMNS_TO_FIELDS = {
         "familyId": "family_id",
         "personId": "individual_id",
@@ -82,6 +88,42 @@ class SPARKCsvPedigreeReader(CsvPedigreeReader):
 
     def convert_gender(self, val):
         return int(val)
+
+    def convert_individual_id(self, _family_id, individual_id):
+        return individual_id
+
+
+class AGRERawCsvPedigreeReader(CsvPedigreeReader):
+    COLUMNS_TO_FIELDS = {
+        "family_id": "family_id",
+        "Person": "individual_id",
+        "Mother": "mother_id",
+        "Father": "father_id",
+        "Sex": "gender",
+        "Scored Affected Status": "status"
+    }
+
+    def convert_status(self, val):
+        if val:
+            return Status.affected.value
+        else:
+            return Status.unaffected.value
+
+    def convert_gender(self, val):
+        if val == 'Female':
+            return Gender.F.value
+        elif val == 'Male':
+            return Gender.M.value
+        else:
+            raise ValueError("unexpected sex: {}".format(val))
+
+    def convert_individual_id(self, family_id, individual_id):
+        assert isinstance(individual_id, str)
+
+        if individual_id == '0' or individual_id == 0:
+            return '0'
+        res = "{}{:02d}".format(family_id, int(individual_id))
+        return res
 
 
 class PedigreeToFamily(object):
