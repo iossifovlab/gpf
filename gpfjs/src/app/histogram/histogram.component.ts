@@ -33,6 +33,7 @@ export class HistogramComponent  {
 
   @Input() logScaleY = false;
   @Input() showCounts = true;
+  @Input() xLabels: Array<number>
 
   beforeRangeText: string;
   insideRangeText: string;
@@ -129,11 +130,20 @@ export class HistogramComponent  {
     var y = this.logScaleY ?  d3.scaleLog() : d3.scaleLinear();
     y.range([height, 0]).domain([1, d3.max(this.bars)]);
 
-    let labels = d3.range(-2, 2.1, 1).map(x => Math.pow(10, x))
     // Add the x Axis
+    let labels;
+    if (this.xLabels) {
+        labels = this.xLabels
+    }
+    else {
+        labels = d3.ticks(this.domainMin, this.domainMax, 10)
+    }
+
+    let values = labels.map(x => this.getClosestIndexByValue(x))
+
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(this.xScale).tickValues(["0", "26", "51", "76"]).tickFormat((d,i) => this.bins[parseInt(d)] as any))
+      .call(d3.axisBottom(this.xScale).tickValues(values as any).tickFormat((d,i) => labels[i] as any))
 
     let leftAxis = d3.axisLeft(y);
     leftAxis.ticks(3).tickFormat(d3.format(".0f"));
@@ -202,13 +212,7 @@ export class HistogramComponent  {
   }
 
   get selectedStartIndex() {
-      for(var i  = 1; i < this.bins.length; i++) {
-          if (this.round(this.bins[i]) > this.rangeStart) {
-              var prev = Math.abs(this.rangeStart - this.bins[i - 1])
-              var curr = Math.abs(this.rangeStart - this.bins[i])
-              return prev < curr ? i - 1 : i;
-          }
-      }
+      return this.getClosestIndexByValue(this.rangeStart)
   }
 
   set selectedEndIndex(index: number) {
@@ -219,20 +223,14 @@ export class HistogramComponent  {
   }
 
   get selectedEndIndex() {
-      for(var i  = 1; i < this.bins.length; i++) {
-          if (this.round(this.bins[i + 1]) >= this.rangeEnd) {
-              var prev = Math.abs(this.rangeEnd - this.bins[i - 1])
-              var curr = Math.abs(this.rangeEnd - this.bins[i])
-              return prev < curr ? i - 1 : i;
-          }
-      }
+      return this.getClosestIndexByValue(this.rangeEnd) - 1
   }
 
   round(value: number): number{
       return Math.round(value * 1000) / 1000
   }
 
-  getIndexByX(x) {
+  getClosestIndexByX(x) {
       for(var i  = 1; i < this.xScale.domain().length; i++) {
           var prev_val = (i - 1) * this.xScale.step()
           var curr_val = i * this.xScale.step()
@@ -246,12 +244,22 @@ export class HistogramComponent  {
       return this.xScale.domain().length - 1
   }
 
+  getClosestIndexByValue(val) {
+      for(var i  = 1; i < this.bins.length; i++) {
+          if (this.round(this.bins[i]) >= val) {
+              var prev = Math.abs(val - this.bins[i - 1])
+              var curr = Math.abs(val - this.bins[i])
+              return prev < curr ? i - 1 : i;
+          }
+      }
+  }
+
   startXChange(newPositionX) {
-      this.selectedStartIndex = this.getIndexByX(newPositionX);
+      this.selectedStartIndex = this.getClosestIndexByX(newPositionX);
   }
 
   endXChange(newPositionX) {
-      this.selectedEndIndex = this.getIndexByX(newPositionX);
+      this.selectedEndIndex = this.getClosestIndexByX(newPositionX);
   }
 
 }
