@@ -11,6 +11,7 @@
 		    *ngIf="histogramData"
 		    width="650" height="145"
             [logScaleY]="true"
+            [showCounts]="false"
 		    [bins]="histogramData.bins"
 		    [bars]="histogramData.bars"
 		    [domainMin]="histogramData.min"

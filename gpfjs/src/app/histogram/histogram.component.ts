@@ -32,6 +32,7 @@ export class HistogramComponent  {
   @Input() rangesCounts: Array<number>;
 
   @Input() logScaleY = false;
+  @Input() showCounts = true;
 
   beforeRangeText: string;
   insideRangeText: string;
@@ -83,9 +84,14 @@ export class HistogramComponent  {
 
   formatEstimateText(count: number, estimate: boolean = true) {
     let perc = count/this.barsTotalSum * 100
-    let string = estimate ? "~" : "";
-    return string + count.toFixed(0) + " (" +  perc.toFixed(2) +"%)";
-    //return perc.toFixed(5) + "%";
+
+    if (this.showCounts) {
+        let string = estimate ? "~" : "";
+        return string + count.toFixed(0) + " (" +  perc.toFixed(2) +"%)";
+    }
+    else {
+        return perc.toFixed(2) + "%";
+    }
   }
 
   estimateRangeTexts() {
