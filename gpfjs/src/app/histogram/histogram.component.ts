@@ -1,6 +1,7 @@
 import { Input, Component, OnInit, ViewChild, Output, EventEmitter, SimpleChanges } from '@angular/core';
 import { GeneWeights } from '../gene-weights/gene-weights';
 import * as d3 from 'd3';
+import { Subject } from 'rxjs/Subject';
 
 @Component({
   selector: 'gpf-histogram',
@@ -8,6 +9,9 @@ import * as d3 from 'd3';
   styleUrls: ['./histogram.component.css']
 })
 export class HistogramComponent  {
+  private rangeStartSubject = new Subject<number>();
+  private rangeEndSubject = new Subject<number>();
+
   private internalRangeStart: number;
   private internalRangeEnd: number;
 
@@ -43,6 +47,11 @@ export class HistogramComponent  {
   private svg: any;
 
   scaledBins: Array<number>;
+
+  ngOnInit() {
+      this.rangeStartSubject.debounceTime(100).distinctUntilChanged().subscribe((start) => this.rangeStartChange.emit(start))
+      this.rangeEndSubject.debounceTime(100).distinctUntilChanged().subscribe((end) => this.rangeEndChange.emit(end))
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if ("domainMin" in changes || "domainMax" in changes || "bins" in changes || "bars" in changes) {
@@ -144,7 +153,7 @@ export class HistogramComponent  {
   set rangeStart(rangeStart) {
     this.internalRangeStart = rangeStart;
     this.onRangeChange();
-    this.rangeStartChange.emit(this.internalRangeStart);
+    this.rangeStartSubject.next(this.internalRangeStart)
   }
 
   get rangeStart() {
@@ -154,9 +163,8 @@ export class HistogramComponent  {
   @Input()
   set rangeEnd(rangeEnd) {
     this.internalRangeEnd = rangeEnd;
-
     this.onRangeChange();
-    this.rangeEndChange.emit(this.internalRangeEnd);
+    this.rangeEndSubject.next(this.internalRangeEnd)
   }
 
   get rangeEnd() {
@@ -184,7 +192,7 @@ export class HistogramComponent  {
     if (index < 0 || index > this.selectedEndIndex) return;
     this.internalRangeStart = this.round(this.bins[index])
     this.onRangeChange();
-    this.rangeStartChange.emit(this.internalRangeStart);
+    this.rangeStartSubject.next(this.internalRangeStart)
   }
 
   get selectedStartIndex() {
@@ -201,7 +209,7 @@ export class HistogramComponent  {
     if (index < this.selectedStartIndex || index >= this.bars.length) return;
     this.internalRangeEnd = this.round(this.bins[index + 1])
     this.onRangeChange();
-    this.rangeEndChange.emit(this.internalRangeEnd);
+    this.rangeEndSubject.next(this.internalRangeEnd)
   }
 
   get selectedEndIndex() {
@@ -228,6 +236,8 @@ export class HistogramComponent  {
               return prev < curr ? i - 1 : i;
           }
       }
+
+      return this.xScale.domain().length - 1
   }
 
   startXChange(newPositionX) {
