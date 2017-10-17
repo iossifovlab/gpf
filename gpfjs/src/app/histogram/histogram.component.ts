@@ -27,6 +27,8 @@ export class HistogramComponent  {
 
   @Input() rangesCounts: Array<number>;
 
+  @Input() logScaleY = false;
+
   beforeRangeText: string;
   insideRangeText: string;
   afterRangeText: string;
@@ -111,9 +113,8 @@ export class HistogramComponent  {
       .domain(Array.from(this.bars.keys()).map(x => x.toString()))
       .range([0, width]);
 
-    var y = d3.scaleLog().range([height, 0]);
-
-    y.domain([1, d3.max(this.bars)]);
+    var y = this.logScaleY ?  d3.scaleLog() : d3.scaleLinear();
+    y.range([height, 0]).domain([1, d3.max(this.bars)]);
 
     let labels = d3.range(-2, 2.1, 1).map(x => Math.pow(10, x))
     // Add the x Axis

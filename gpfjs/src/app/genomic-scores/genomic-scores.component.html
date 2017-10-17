@@ -10,6 +10,7 @@
       <gpf-histogram
 		    *ngIf="histogramData"
 		    width="650" height="145"
+            [logScaleY]="true"
 		    [bins]="histogramData.bins"
 		    [bars]="histogramData.bars"
 		    [domainMin]="histogramData.min"
