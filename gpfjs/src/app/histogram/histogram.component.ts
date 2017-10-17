@@ -124,7 +124,7 @@ export class HistogramComponent  {
     let svg = d3.select(this.histogramContainer.nativeElement)
 
     this.xScale = d3.scaleBand()
-      .domain(Array.from(this.bars.keys()).map(x => x.toString()))
+      .domain(Array.from(this.bins.keys()).map(x => x.toString()))
       .range([0, width]);
 
     var y = this.logScaleY ?  d3.scaleLog() : d3.scaleLinear();
