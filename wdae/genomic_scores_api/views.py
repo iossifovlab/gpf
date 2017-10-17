@@ -24,7 +24,7 @@ class GenomicScoresView(APIView):
             for row in reader:
                 if len(row[0]) > 0:
                     bars.append(float(row[0]))
-                if len(row[0]) > 0:
+                if len(row[1]) > 0:
                     bins.append(float(row[1]))
 
         result = {
