@@ -33,7 +33,7 @@ export class HistogramComponent  {
   insideRangeText: string;
   afterRangeText: string;
 
-  private xScale: d3.ScaleBand< string>;
+  xScale: d3.ScaleBand< string>;
   private barsTotalSum: number;
   private barWidth: number;
 
@@ -43,8 +43,6 @@ export class HistogramComponent  {
   private svg: any;
 
   scaledBins: Array<number>;
-  internalSelectedStartIndex = 0;
-  internalSelectedEndIndex = 0;
 
   ngOnChanges(changes: SimpleChanges) {
     if ("domainMin" in changes || "domainMax" in changes || "bins" in changes || "bars" in changes) {
@@ -145,14 +143,6 @@ export class HistogramComponent  {
   @Input()
   set rangeStart(rangeStart) {
     this.internalRangeStart = rangeStart;
-    for(var i  = 1; i < this.bins.length; i++) {
-        if (this.bins[i] > rangeStart) {
-            var prev = Math.abs(rangeStart - this.bins[i - 1])
-            var curr = Math.abs(rangeStart - this.bins[i])
-            this.internalSelectedStartIndex = prev < curr ? i - 1 : i;
-            break;
-        }
-    }
     this.onRangeChange();
     this.rangeStartChange.emit(this.internalRangeStart);
   }
@@ -164,14 +154,7 @@ export class HistogramComponent  {
   @Input()
   set rangeEnd(rangeEnd) {
     this.internalRangeEnd = rangeEnd;
-    for(var i  = 1; i < this.bins.length; i++) {
-        if (this.bins[i] > rangeEnd) {
-            var prev = Math.abs(rangeEnd - this.bins[i - 1])
-            var curr = Math.abs(rangeEnd - this.bins[i])
-            this.internalSelectedEndIndex = prev < curr ? i - 1 : i;
-            break;
-        }
-    }
+
     this.onRangeChange();
     this.rangeEndChange.emit(this.internalRangeEnd);
   }
@@ -181,42 +164,60 @@ export class HistogramComponent  {
   }
 
 
-  startStepUp() {
+  startStepUp(event: any) {
+      if (this.selectedStartIndex + 1 >= this.bars.length) return;
       this.selectedStartIndex += 1
   }
 
-  startStepDown() {
+  startStepDown(event: any) {
+      if (this.selectedStartIndex <= 0) return;
       this.selectedStartIndex -= 1
   }
 
-  endStepUp() {
+  endStepUp(event: any) {
+      if (this.selectedEndIndex + 1 >= this.bars.length) return;
       this.selectedEndIndex += 1
   }
 
-  endStepDown() {
+  endStepDown(event: any) {
+      if (this.selectedEndIndex <= 0) return;
       this.selectedEndIndex -= 1
   }
 
   set selectedStartIndex(index: number) {
-    this.internalSelectedStartIndex = index
-    this.internalRangeStart = Math.round(this.bins[index] * 1000) / 1000
+    this.internalRangeStart = this.round(this.bins[index])
     this.onRangeChange();
     this.rangeStartChange.emit(this.internalRangeStart);
   }
 
   get selectedStartIndex() {
-    return this.internalSelectedStartIndex
+      for(var i  = 1; i < this.bins.length; i++) {
+          if (this.round(this.bins[i]) > this.rangeStart) {
+              var prev = Math.abs(this.rangeStart - this.bins[i - 1])
+              var curr = Math.abs(this.rangeStart - this.bins[i])
+              return prev < curr ? i - 1 : i;
+          }
+      }
   }
 
   set selectedEndIndex(index: number) {
-    this.internalSelectedEndIndex = index
-    this.internalRangeEnd = Math.round(this.bins[index + 1] * 1000) / 1000
+    this.internalRangeEnd = this.round(this.bins[index + 1])
     this.onRangeChange();
     this.rangeEndChange.emit(this.internalRangeEnd);
   }
 
   get selectedEndIndex() {
-    return this.internalSelectedEndIndex
+      for(var i  = 1; i < this.bins.length; i++) {
+          if (this.round(this.bins[i + 1]) >= this.rangeEnd) {
+              var prev = Math.abs(this.rangeEnd - this.bins[i - 1])
+              var curr = Math.abs(this.rangeEnd - this.bins[i])
+              return prev < curr ? i - 1 : i;
+          }
+      }
+  }
+
+  round(value: number): number{
+      return Math.round(value * 1000) / 1000
   }
 
 }
