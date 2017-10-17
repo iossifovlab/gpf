@@ -54,7 +54,6 @@ class ReportStudies(APIView):
         names = []
         for name in itertools.chain(get_denovo_studies_names(),
                                     get_transmitted_studies_names()):
-            print(name)
             if name[0] in seen:
                 continue
             names.append(name)
