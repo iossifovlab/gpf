@@ -165,26 +165,23 @@ export class HistogramComponent  {
 
 
   startStepUp(event: any) {
-      if (this.selectedStartIndex + 1 >= this.bars.length) return;
       this.selectedStartIndex += 1
   }
 
   startStepDown(event: any) {
-      if (this.selectedStartIndex <= 0) return;
       this.selectedStartIndex -= 1
   }
 
   endStepUp(event: any) {
-      if (this.selectedEndIndex + 1 >= this.bars.length) return;
       this.selectedEndIndex += 1
   }
 
   endStepDown(event: any) {
-      if (this.selectedEndIndex <= 0) return;
       this.selectedEndIndex -= 1
   }
 
   set selectedStartIndex(index: number) {
+    if (index < 0 || index > this.selectedEndIndex) return;
     this.internalRangeStart = this.round(this.bins[index])
     this.onRangeChange();
     this.rangeStartChange.emit(this.internalRangeStart);
@@ -201,6 +198,7 @@ export class HistogramComponent  {
   }
 
   set selectedEndIndex(index: number) {
+    if (index < this.selectedStartIndex || index >= this.bars.length) return;
     this.internalRangeEnd = this.round(this.bins[index + 1])
     this.onRangeChange();
     this.rangeEndChange.emit(this.internalRangeEnd);
