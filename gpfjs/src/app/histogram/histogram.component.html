@@ -4,12 +4,12 @@
 	    <g #histogramContainer transform="translate(0, 50)"> </g>
 		<g gpf-histogram-range-selector-line [(index)]="selectedStartIndex" [scale]="xScale" [textOnRight]="false" [text]=beforeRangeText></g>
 		<g gpf-histogram-range-selector-line [(index)]="selectedEndIndex" [scale]="xScale" [textOnRight]="true" [text]=afterRangeText></g>
-	    <text y=0 [attr.x]="(xScale(selectedStartIndex) + xScale(selectedEndIndex)) / 2" dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}</text>
+	    <text y=0 [attr.x.px]="(xScale(selectedStartIndex.toString()) + xScale(selectedEndIndex.toString())) / 2" dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}</text>
 	  </g>
 	</svg>
 
 	<div class="histogram-controls">
-	<div class="histogram-to">
+	  <div class="histogram-to">
 	        <label>To (Max: {{ domainMax }})</label>
 			<div class="stepper">
 		        <input
