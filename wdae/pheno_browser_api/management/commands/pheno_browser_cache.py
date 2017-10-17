@@ -34,7 +34,7 @@ class Command(BaseCommand, PhenoBrowserCommon):
             'By default works on all configured pheno DBs')
 
     def handle(self, *args, **options):
-        if(len(args) != 0):
+        if len(args) != 0:
             raise CommandError('Unexpected arguments passed')
 
         force = options.get('force', False)

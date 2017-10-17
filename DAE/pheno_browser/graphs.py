@@ -217,6 +217,7 @@ def draw_categorical_violin_distribution(df, measure_id, ax=None):
 
     df = df.copy()
     if df.empty:
+        print("empty!")
         return
 
     numerical_measure_name = measure_id + "_numerical"

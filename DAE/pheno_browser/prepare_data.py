@@ -70,6 +70,16 @@ class PreparePhenoBrowserBase(object):
         df.rename(columns={augment_id: augment_name}, inplace=True)
         return df
 
+    @staticmethod
+    def _measure_to_dict(measure):
+        return {
+            'measure_id': measure.measure_id,
+            'instrument_name': measure.instrument_name,
+            'measure_name': measure.measure_name,
+            'measure_type': measure.measure_type,
+            'values_domain': measure.values_domain
+        }
+
     def load_measure_and_age(self, measure):
         age_id = self.pheno_regressiong.get_age_measure_id(measure.measure_id)
         if not age_id:
@@ -117,16 +127,17 @@ class PreparePhenoBrowserBase(object):
                 measure, suffix)
         )
 
-    def build_regression_by_age(self, measure, res):
+    def build_regression_by_age(self, measure):
+        res = {}
         age_id = self.pheno_regressiong.get_age_measure_id(measure.measure_id)
         if age_id is None:
-            return None, None
+            return res
         if measure.measure_id == age_id:
-            return None, None
+            return res
 
         df = self.load_measure_and_age(measure)
         if df is None:
-            return None, None
+            return res
         dd = df[df.role == 'prb']
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
@@ -139,66 +150,81 @@ class PreparePhenoBrowserBase(object):
             (res['figure_correlation_age_small'],
              res['figure_correlation_age']) = \
                 self.save_fig(measure, "prb_regression_by_age")
-            return (res['pvalue_correlation_age_male'],
-                    res['pvalue_correlation_age_female'])
-        return None, None
+            return res
+        return res
 
-    def build_regression_by_nviq(self, measure, res):
+    def build_regression_by_nviq(self, measure):
+        res = {}
         nviq_id = self.pheno_regressiong \
             .get_nonverbal_iq_measure_id(measure.measure_id)
         if nviq_id is None:
-            return None, None
+            return res
         if measure.measure_id == nviq_id:
-            return None, None
+            return res
         age_id = self.pheno_regressiong.get_age_measure_id(measure.measure_id)
         if measure.measure_id == age_id:
-            return None, None
+            return res
 
         df = self.load_measure_and_nonverbal_iq(measure)
         if df is None:
-            return None, None
+            return res
 
         dd = df[df.role == 'prb']
-        if len(dd) > 5:
-            res_male, res_female = draw_linregres(
-                dd, 'nonverbal_iq', measure.measure_id, jitter=0.1)
-            res['pvalue_correlation_nviq_male'] = \
-                res_male.pvalues['nonverbal_iq'] \
-                if res_male is not None else None
-            res['pvalue_correlation_nviq_female'] = \
-                res_female.pvalues['nonverbal_iq'] \
-                if res_female is not None else None
+        if len(dd) <= 5:
+            return res
 
-            (res['figure_correlation_nviq_small'],
-             res['figure_correlation_nviq']) = self.save_fig(
-                 measure, "prb_regression_by_nviq")
-            return (res['pvalue_correlation_nviq_male'],
-                    res['pvalue_correlation_nviq_female'])
-        return None, None
+        res_male, res_female = draw_linregres(
+            dd, 'nonverbal_iq', measure.measure_id, jitter=0.1)
 
-    def build_values_violinplot(self, measure, res):
+        res['pvalue_correlation_nviq_male'] = \
+            res_male.pvalues['nonverbal_iq'] \
+            if res_male is not None else None
+        res['pvalue_correlation_nviq_female'] = \
+            res_female.pvalues['nonverbal_iq'] \
+            if res_female is not None else None
+
+        (res['figure_correlation_nviq_small'],
+         res['figure_correlation_nviq']) = self.save_fig(
+             measure, "prb_regression_by_nviq")
+        return res
+
+    def build_values_violinplot(self, measure):
         df = self.load_measure(measure)
         draw_measure_violinplot(df, measure.measure_id)
+
+        res = {}
         (res['figure_distribution_small'],
          res['figure_distribution']) = self.save_fig(measure, "violinplot")
 
-    def build_values_categorical_distribution(self, measure, res):
+        return res
+
+    def build_values_categorical_distribution(self, measure):
         df = self.load_measure(measure)
         draw_categorical_violin_distribution(df, measure.measure_id)
+
+        res = {}
         (res['figure_distribution_small'],
          res['figure_distribution']) = self.save_fig(measure, "distribution")
 
-    def build_values_other_distribution(self, measure, res):
+        return res
+
+    def build_values_other_distribution(self, measure):
         df = self.load_measure(measure)
         draw_categorical_violin_distribution(df, measure.measure_id)
+
+        res = {}
         (res['figure_distribution_small'],
          res['figure_distribution']) = self.save_fig(measure, "distribution")
+        return res
 
-    def build_values_ordinal_distribution(self, measure, res):
+    def build_values_ordinal_distribution(self, measure):
         df = self.load_measure(measure)
         draw_ordinal_violin_distribution(df, measure.measure_id)
+
+        res = {}
         (res['figure_distribution_small'],
          res['figure_distribution']) = self.save_fig(measure, "distribution")
+        return res
 
     def dump_browser_variable(self, var):
         print('-------------------------------------------')
@@ -211,28 +237,20 @@ class PreparePhenoBrowserBase(object):
         print('-------------------------------------------')
 
     def handle_measure(self, measure):
-
-        v = {
-            'measure_id': measure.measure_id,
-            'instrument_name': measure.instrument_name,
-            'measure_name': measure.measure_name,
-            'measure_type': measure.measure_type,
-            'values_domain': measure.values_domain
-        }
-
+        res = PreparePhenoBrowserBase._measure_to_dict(measure)
         if measure.measure_type == 'continuous':
-            self.build_values_violinplot(measure, v)
-            self.build_regression_by_nviq(measure, v)
-            self.build_regression_by_age(measure, v)
+            res.update(self.build_values_violinplot(measure))
+            res.update(self.build_regression_by_nviq(measure))
+            res.update(self.build_regression_by_age(measure))
         elif measure.measure_type == 'ordinal':
-            self.build_values_ordinal_distribution(measure, v)
-            self.build_regression_by_nviq(measure, v)
-            self.build_regression_by_age(measure, v)
+            res.update(self.build_values_ordinal_distribution(measure))
+            res.update(self.build_regression_by_nviq(measure))
+            res.update(self.build_regression_by_age(measure))
         elif measure.measure_type == 'categorical':
-            self.build_values_categorical_distribution(measure, v)
+            res.update(self.build_values_categorical_distribution(measure))
         else:
-            self.build_values_other_distribution(measure, v)
-        return v
+            res.update(self.build_values_other_distribution(measure))
+        return res
 
     def run(self):
         db = DbManager(dbfile=self.browser_db)
