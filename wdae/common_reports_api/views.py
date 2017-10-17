@@ -13,6 +13,7 @@ from common_reports_api.families import FamiliesDataCSV
 from common_reports_api.serializers import StudyVariantReportsSerializer
 from common_reports_api.studies import get_denovo_studies_names,\
     get_transmitted_studies_names
+import itertools
 
 
 class VariantReportsView(APIView):
@@ -48,9 +49,18 @@ class FamiliesDataDownloadView(APIView):
 
 class ReportStudies(APIView):
 
-    def get(self, request):
-        return Response({"report_studies": get_denovo_studies_names() +
-                         get_transmitted_studies_names()})
+    def get(self, _request):
+        seen = set()
+        names = []
+        for name in itertools.chain(get_denovo_studies_names(),
+                                    get_transmitted_studies_names()):
+            print(name)
+            if name[0] in seen:
+                continue
+            names.append(name)
+            seen.add(name[0])
+
+        return Response({"report_studies": names})
 
 
 class StudiesSummaries(APIView):
