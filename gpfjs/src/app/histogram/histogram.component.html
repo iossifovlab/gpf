@@ -2,8 +2,8 @@
 	<svg [attr.width]="width" [attr.height]="height">
 	  <g [attr.transform]="'translate(' + marginLeft +',' + marginTop + ')'">
 	    <g #histogramContainer transform="translate(0, 50)"> </g>
-		<g gpf-histogram-range-selector-line [(index)]="selectedStartIndex" [scale]="xScale" [textOnRight]="false" [text]=beforeRangeText></g>
-		<g gpf-histogram-range-selector-line [(index)]="selectedEndIndex" [scale]="xScale" [textOnRight]="true" [text]=afterRangeText></g>
+		<g gpf-histogram-range-selector-line (xChange)="startXChange($event)" [x]="xScale(selectedStartIndex.toString())" [textOnRight]="false" [text]=beforeRangeText></g>
+		<g gpf-histogram-range-selector-line (xChange)="endXChange($event)" [x]="xScale(selectedEndIndex.toString())" [textOnRight]="true" [text]=afterRangeText></g>
 	    <text y=0 [attr.x.px]="(xScale(selectedStartIndex.toString()) + xScale(selectedEndIndex.toString())) / 2" dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}</text>
 	  </g>
 	</svg>

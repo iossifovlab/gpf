@@ -21,8 +21,8 @@ export class HistogramRangeSelectorLineComponent {
   @Input() textOnRight: boolean = true;
 
   @Input() scale: any;
-  @Input() index = 0;
-  @Output() indexChange = new EventEmitter();
+  @Input() x = 0;
+  @Output() xChange = new EventEmitter();
 
   ngOnInit() {
     d3.select(this.draggable.nativeElement).
@@ -36,20 +36,6 @@ export class HistogramRangeSelectorLineComponent {
   }
 
   onDrag(newPositionX) {
-      for(var i  = 1; i < this.scale.domain().length; i++) {
-          var prev_val = (i - 1) * this.scale.step()
-          var curr_val = i * this.scale.step()
-          if (curr_val> newPositionX) {
-              var prev = Math.abs(newPositionX - prev_val)
-              var curr = Math.abs(newPositionX - curr_val)
-              this.index = prev < curr ? i - 1 : i;
-              this.indexChange.emit(this.index);
-              break;
-          }
-      }
-  }
-
-  get x() {
-      return this.scale.step() * this.index;
+      this.xChange.emit(newPositionX);
   }
 }

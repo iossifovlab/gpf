@@ -218,4 +218,24 @@ export class HistogramComponent  {
       return Math.round(value * 1000) / 1000
   }
 
+  getIndexByX(x) {
+      for(var i  = 1; i < this.xScale.domain().length; i++) {
+          var prev_val = (i - 1) * this.xScale.step()
+          var curr_val = i * this.xScale.step()
+          if (curr_val> x) {
+              var prev = Math.abs(x - prev_val)
+              var curr = Math.abs(x - curr_val)
+              return prev < curr ? i - 1 : i;
+          }
+      }
+  }
+
+  startXChange(newPositionX) {
+      this.selectedStartIndex = this.getIndexByX(newPositionX);
+  }
+
+  endXChange(newPositionX) {
+      this.selectedEndIndex = this.getIndexByX(newPositionX);
+  }
+
 }
