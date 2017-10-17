@@ -118,7 +118,7 @@ export class HistogramComponent  {
     // Add the x Axis
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(this.xScale).tickValues(["0", "26", "76"]).tickFormat((d,i) => this.bins[parseInt(d)] as any))
+      .call(d3.axisBottom(this.xScale).tickValues(["0", "26", "51", "76"]).tickFormat((d,i) => this.bins[parseInt(d)] as any))
 
     let leftAxis = d3.axisLeft(y);
     leftAxis.ticks(3).tickFormat(d3.format(".0f"));
