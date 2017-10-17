@@ -41,7 +41,6 @@ export class HistogramComponent  {
 
   xScale: d3.ScaleBand< string>;
   private barsTotalSum: number;
-  private barWidth: number;
 
   private lastValidStart = 0;
   private lastValidEnd = 0;
@@ -119,11 +118,11 @@ export class HistogramComponent  {
 
     let width = 400.0;
     let height = 50;
-    this.barWidth = width / this.bars.length - 2;
-    console.log(this.barWidth, width, this.bars.length)
+
     let svg = d3.select(this.histogramContainer.nativeElement)
 
     this.xScale = d3.scaleBand()
+      .paddingInner(0.5)
       .domain(Array.from(this.bins.keys()).map(x => x.toString()))
       .range([0, width]);
 
@@ -155,7 +154,7 @@ export class HistogramComponent  {
       .enter().append("rect")
       .style("fill", "steelblue")
       .attr("x", (d: any) => this.xScale(d.index.toString()))
-      .attr("width", this.barWidth)
+      .attr("width", this.xScale.bandwidth())
       .attr("y", function(d: any) { return y(d.bar); })
       .attr("height", function(d: any) { return height - y(d.bar); });
     this.svg = svg;

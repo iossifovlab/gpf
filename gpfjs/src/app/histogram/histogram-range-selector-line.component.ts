@@ -20,7 +20,7 @@ export class HistogramRangeSelectorLineComponent {
   @Input() text: string;
   @Input() textOnRight: boolean = true;
 
-  @Input() scale: any;
+  @Input() width: any;
   @Input() x = 0;
   @Output() xChange = new EventEmitter();
 
