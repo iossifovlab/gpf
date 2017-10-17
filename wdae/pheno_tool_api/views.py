@@ -89,6 +89,11 @@ class PhenoToolView(APIView):
                     assert res['positive']['deviation'] == 0
                     assert res['pValue'] == 'NA'
                     res['positive']['mean'] = res['negative']['mean']
+                if res['negative']['count'] == 0:
+                    assert res['negative']['mean'] == 0
+                    assert res['negative']['deviation'] == 0
+                    assert res['pValue'] == 'NA'
+                    res['negative']['mean'] = res['positive']['mean']
 
     @staticmethod
     def _build_report_description(measure_id, normalize_by):
