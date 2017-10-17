@@ -231,7 +231,9 @@ export class HistogramComponent  {
   }
 
   getClosestIndexByX(x) {
-      for(var i  = 1; i < this.xScale.domain().length; i++) {
+      //Domain uses bins count which is larger than bars by 1 element
+      let maxIndex = this.xScale.domain().length - 2
+      for(var i  = 1; i <= maxIndex; i++) {
           var prev_val = (i - 1) * this.xScale.step()
           var curr_val = i * this.xScale.step()
           if (curr_val> x) {
@@ -240,8 +242,7 @@ export class HistogramComponent  {
               return prev < curr ? i - 1 : i;
           }
       }
-
-      return this.xScale.domain().length - 1
+      return maxIndex
   }
 
   getClosestIndexByValue(val) {
@@ -261,5 +262,4 @@ export class HistogramComponent  {
   endXChange(newPositionX) {
       this.selectedEndIndex = this.getClosestIndexByX(newPositionX);
   }
-
 }
