@@ -96,8 +96,11 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
       error => {
         console.warn(error);
         this.loadingService.setLoadingStop();
+      },
+      () => {
+        this.loadingService.setLoadingStop();
       }
-    )
+    );
   }
 
   onSubmit(event) {

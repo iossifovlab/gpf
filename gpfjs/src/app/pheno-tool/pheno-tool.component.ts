@@ -84,6 +84,9 @@ export class PhenoToolComponent extends QueryStateCollector implements OnInit {
       error => {
         console.log(error);
         this.loadingService.setLoadingStop();
+      },
+      () => {
+        this.loadingService.setLoadingStop();
       }
     )
   }
