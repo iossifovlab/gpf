@@ -29,8 +29,6 @@ class GenomicScoresView(APIView):
 
         result = {
             "id": missense_score,
-            "min": min(bins),
-            "max": max(bins),
             "bars": bars,
             "bins": bins,
         }
