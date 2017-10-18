@@ -62,7 +62,7 @@ export class UsersService {
     return this.lastUserInfo;
   }
 
-  getUserInfoObservable() {
+  getUserInfoObservable(): Observable<any> {
     return this.userInfo$.asObservable();
   }
 

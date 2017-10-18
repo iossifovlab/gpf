@@ -3,6 +3,7 @@ import { UsersService } from './users.service';
 import { Store } from '@ngrx/store';
 import { USER_LOGIN, USER_LOGOUT } from './users-store'
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Observable } from 'rxjs';
 import { RegistrationComponent } from '../registration/registration.component';
 import { ForgotPasswordComponent } from '../forgot-password/forgot-password.component';
 
@@ -14,9 +15,10 @@ import { ForgotPasswordComponent } from '../forgot-password/forgot-password.comp
 export class UsersComponent implements OnInit {
   private username;
   private password;
-  displayedUsername: string;
   private loginError = false;
   hideDropdown = true;
+  userInfo$: Observable<any>;
+
 
   @ViewChild('dropdownButton') dropdownButton: ElementRef;
   @ViewChild('dialog') dialog: ElementRef;
@@ -29,12 +31,12 @@ export class UsersComponent implements OnInit {
 
   ngOnInit() {
     this.reloadUserData();
+    this.userInfo$ = this.usersService.getUserInfoObservable().share();
   }
 
   reloadUserData() {
     this.usersService.getUserInfo().subscribe(
       (userData) => {
-        this.displayedUsername = userData.email;
         this.store.dispatch({
           'type': userData.loggedIn ? USER_LOGIN : USER_LOGOUT,
         });
@@ -75,7 +77,7 @@ export class UsersComponent implements OnInit {
 
   @HostListener('document:click', ['$event'])
   onClick(event) {
-    if (this.dialog && this.dropdownButton){
+    if (this.dialog && this.dropdownButton) {
       if (!this.dialog.nativeElement.contains(event.target) &&
       !this.dropdownButton.nativeElement.contains(event.target)) {
         this.hideDropdown = true;

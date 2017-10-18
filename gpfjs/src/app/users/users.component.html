@@ -1,11 +1,11 @@
-<div *ngIf="displayedUsername" class="row justify-content-end dropdown">
+<div *ngIf="(userInfo$ | async)?.email as email" class="row justify-content-end dropdown">
   <div class="align-self-center">
-    <span class="username-field">{{ displayedUsername }}</span>
+    <span class="username-field">{{ email }}</span>
     <button class="btn btn-sm" (click)="logout()">Logout</button>
   </div>
 </div>
 
-<div *ngIf="!displayedUsername" class="row justify-content-end dropdown">
+<div *ngIf="!(userInfo$ | async)?.email" class="row justify-content-end dropdown">
   <div>
     <button #dropdownButton (click)="hideDropdown = !hideDropdown"
       class="btn btn-secondary dropdown-toggle" type="button">

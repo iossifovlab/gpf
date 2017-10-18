@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { RequestOptions, Http, XHRBackend } from '@angular/http';
@@ -131,7 +131,7 @@ import { DatasetsTableComponent } from './datasets-table/datasets-table.componen
 import { GenotypePreviewChromosomesComponent } from './genotype-preview-chromosomes/genotype-preview-chromosomes.component';
 import { ChromosomeService } from './chromosome-service/chromosome.service';
 import { ChromosomeComponent } from './chromosome/chromosome.component';
-import { RedirectOnErrorHttpService } from './config/redirect-on-error.service'
+import { RedirectOnErrorHttpService } from './config/redirect-on-error.service';
 
 const appRoutes: Routes = [
   {
@@ -344,7 +344,7 @@ const appRoutes: Routes = [
     UsersGroupsService,
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,
-      deps: [XHRBackend, RequestOptions, Router]}
+      deps: [XHRBackend, RequestOptions, Injector]}
   ],
 
   entryComponents: [
