@@ -4,8 +4,6 @@ export class GenomicScoresHistogramData {
       json['id'],
       json['bars'],
       json['bins'],
-      +json['min'],
-      +json['max'],
     );
   }
 
@@ -13,8 +11,6 @@ export class GenomicScoresHistogramData {
     readonly metric: string,
     readonly bars: number[],
     readonly bins: number[],
-    readonly min: number,
-    readonly max: number,
   ) { }
 
 }

@@ -15,20 +15,25 @@ export class GeneWeightsState {
   @IsNumber()
   @Min(0)
   @IsLessThanOrEqual("rangeEnd")
-  @IsMoreThanOrEqual("weight.min")
+  @IsMoreThanOrEqual("domainMin")
   rangeStart: number;
 
   @IsNumber()
   @Min(0)
   @IsMoreThanOrEqual("rangeStart")
-  @IsLessThanOrEqual("weight.max")
+  @IsLessThanOrEqual("domainMax")
   rangeEnd: number;
+
+  domainMin: number;
+  domainMax: number;
 };
 
 const initialState: GeneWeightsState = {
   weight: null,
   rangeStart: 0,
-  rangeEnd: 0
+  rangeEnd: 0,
+  domainMin: 0,
+  domainMax: 0
 };
 
 export function geneWeightsReducer(
@@ -47,7 +52,9 @@ export function geneWeightsReducer(
       return {
         weight: action.payload[0],
         rangeStart: action.payload[1],
-        rangeEnd: action.payload[2]
+        rangeEnd: action.payload[2],
+        domainMin: action.payload[1],
+        domainMax: action.payload[2]
       };
     case GENE_WEIGHTS_INIT:
       return initialState;

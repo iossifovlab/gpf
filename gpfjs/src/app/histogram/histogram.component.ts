@@ -24,8 +24,6 @@ export class HistogramComponent  {
   @Input() marginTop = 10;
   @ViewChild('histogramContainer') histogramContainer: any;
 
-  @Input() domainMin: number;
-  @Input() domainMax: number;
   @Input() bins: Array<number>;
   @Input() bars: Array<number>;
 
@@ -55,7 +53,7 @@ export class HistogramComponent  {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if ("domainMin" in changes || "domainMax" in changes || "bins" in changes || "bars" in changes) {
+    if ("bins" in changes || "bars" in changes) {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
@@ -135,7 +133,7 @@ export class HistogramComponent  {
         labels = this.xLabels
     }
     else {
-        labels = d3.ticks(this.domainMin, this.domainMax, 10)
+        labels = d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10)
     }
 
     let values = labels.map(x => this.getClosestIndexByValue(x))
@@ -165,8 +163,11 @@ export class HistogramComponent  {
   }
 
   @Input()
-  set rangeStart(rangeStart) {
-    this.internalRangeStart = rangeStart;
+  set rangeStart(rangeStart: any) {
+    this.internalRangeStart = parseFloat(rangeStart);
+    if (isNaN(this.internalRangeStart)) {
+        this.internalRangeStart = null
+    }
     this.onRangeChange();
     this.rangeStartSubject.next(this.internalRangeStart)
   }
@@ -176,8 +177,11 @@ export class HistogramComponent  {
   }
 
   @Input()
-  set rangeEnd(rangeEnd) {
-    this.internalRangeEnd = rangeEnd;
+  set rangeEnd(rangeEnd: any) {
+    this.internalRangeEnd = parseFloat(rangeEnd);
+    if (isNaN(this.internalRangeEnd)) {
+        this.internalRangeEnd = null
+    }
     this.onRangeChange();
     this.rangeEndSubject.next(this.internalRangeEnd)
   }
@@ -252,6 +256,7 @@ export class HistogramComponent  {
               return prev < curr ? i - 1 : i;
           }
       }
+      return 0
   }
 
   startXChange(newPositionX) {
