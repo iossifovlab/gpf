@@ -9,14 +9,14 @@ import csv
 class GenomicScoresView(APIView):
     def __init__(self):
         self.histograms_data_dir = os.path.join(os.environ['DAE_DB_DIR'],
-                                                'missense_scores/')
+                                                'genomic_scores/')
 
     def get(self, request):
         if ('score_id' not in request.query_params):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        missense_score = request.query_params['score_id']
+        genomic_scores = request.query_params['score_id']
 
-        filename = os.path.join(self.histograms_data_dir, missense_score)
+        filename = os.path.join(self.histograms_data_dir, genomic_scores)
         bars = []
         bins = []
         with open(filename, 'rb') as f:
@@ -28,7 +28,7 @@ class GenomicScoresView(APIView):
                     bins.append(float(row[1]))
 
         result = {
-            "id": missense_score,
+            "id": genomic_scores,
             "bars": bars,
             "bins": bins,
         }
