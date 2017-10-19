@@ -24,6 +24,9 @@ export class GpfTableHeaderCellComponent {
   }
 
   onSortClick(sortBySubcolumn: GpfTableSubheaderComponent) {
+    if (!sortBySubcolumn.sortable) {
+      return true;
+    }
     let sortInfo: SortInfo;
     if (this.sortingInfo && this.sortingInfo.sortBySubcolumn === sortBySubcolumn) {
       sortInfo = new SortInfo(sortBySubcolumn, !this.sortingInfo.sortOrderAsc);
@@ -31,6 +34,7 @@ export class GpfTableHeaderCellComponent {
       sortInfo = new SortInfo(sortBySubcolumn, true);
     }
     this.sortingInfoChange.emit(sortInfo);
+    return true;
   }
 
   get imgPathPrefix() {
