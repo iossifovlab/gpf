@@ -178,13 +178,13 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             GeneSymsMixin.get_gene_weights_query(**kwargs)
         if not weights_id:
             return set([])
-        if weights_id not in cls.gene_weights_loader:
+        if weights_id not in cls.get_gene_weights_loader():
             return set([])
-        weights = cls.gene_weights_loader[weights_id]
+        weights = cls.get_gene_weights_loader()[weights_id]
         return weights.get_genes(wmin=range_start, wmax=range_end)
 
-    @property
-    def gene_weights_loader(cls):
+    @classmethod
+    def get_gene_weights_loader(cls):
         if cls.GENE_WEIGHTS_LOADER is None:
             cls.GENE_WEIGHTS_LOADER = WeightsLoader()
         return cls.GENE_WEIGHTS_LOADER
@@ -540,7 +540,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
         gene_weights = {key: value.to_dict()
                         for key, value
-                        in self.gene_weights_loader.weights.items()}
+                        in self.get_gene_weights_loader().weights.items()}
 
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
@@ -575,7 +575,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
         gene_weights = {key: value.to_dict()
                         for key, value
-                        in self.gene_weights_loader.weights.items()}
+                        in self.get_gene_weights_loader().weights.items()}
 
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
