@@ -26,6 +26,7 @@ class Weights(GeneInfoConfig):
         self.desc = self.config.get(self.section_name, 'desc')
         self.step = self.config.get(self.section_name, 'step')
         self.df = None
+        self.dict = None
         self._load_weights()
 
     def _load_weights(self):
@@ -82,10 +83,9 @@ class Weights(GeneInfoConfig):
         """
         Returns dictionary of all defined weights keyed by gene symbol.
         """
-        result = {}
-        for _index, row in self.df.iterrows():
-            result[row['gene']] = row[self.name]
-        return result
+        if self.dict is None:
+            self.dict = self.df.set_index('gene')[self.name].to_dict()
+        return self.dict
 
     def to_df(self):
         """
