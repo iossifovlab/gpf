@@ -1,7 +1,7 @@
 import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { UsersService } from './users.service';
 import { Store } from '@ngrx/store';
-import { USER_LOGIN, USER_LOGOUT } from './users-store'
+import { USER_LOGIN, USER_LOGOUT } from './users-store';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
 import { RegistrationComponent } from '../registration/registration.component';
