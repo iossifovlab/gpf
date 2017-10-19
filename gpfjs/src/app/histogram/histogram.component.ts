@@ -146,15 +146,14 @@ export class HistogramComponent  {
     leftAxis.ticks(3).tickFormat(d3.format(".0f"));
     svg.append("g")
         .call(leftAxis);
-
     svg.selectAll("bar")
       .data(barsBinsArray)
       .enter().append("rect")
       .style("fill", "steelblue")
       .attr("x", (d: any) => this.xScale(d.index.toString()))
       .attr("width", this.xScale.bandwidth())
-      .attr("y", function(d: any) { return y(d.bar); })
-      .attr("height", function(d: any) { return height - y(d.bar); });
+      .attr("y", (d: any) => d.bar == 0 ? 0 : y(d.bar))
+      .attr("height", (d: any) => height - (d.bar == 0 ? 0 : y(d.bar)));
     this.svg = svg;
 
     this.onRangeChange();

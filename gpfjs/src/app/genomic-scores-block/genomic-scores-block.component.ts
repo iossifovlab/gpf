@@ -77,6 +77,9 @@ export class GenomicScoresBlockComponent extends QueryStateProvider {
 
                 return {
                     genomicScores: genomicScoresState.genomicScoresState.map(el => {
+                        if (el.histogramData === null) {
+                            return {}
+                        }
                         return {
                             metric: el.histogramData.metric,
                             rangeStart: el.rangeStart,
