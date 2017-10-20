@@ -217,7 +217,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
 
 
 def draw_categorical_violin_distribution(
-        df, measure_id, ax=None, numerical_categories=False):
+        df, measure_id, ax=None, numerical_categories=False, max_categories=25):
     if ax is None:
         ax = plt.gca()
 
@@ -234,6 +234,7 @@ def draw_categorical_violin_distribution(
     else:
         df[numerical_measure_name], values_domain = \
             _enumerate_by_natural_order(df, measure_id)
+    values_domain = values_domain[:max_categories]
     y_locations = np.arange(len(values_domain))
 
     bin_edges = y_locations - 0.5
