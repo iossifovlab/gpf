@@ -175,10 +175,15 @@ def _enumerate_by_count(df, column_name):
 
 def _enumerate_by_natural_order(df, column_name):
     values_domain = df[column_name].unique()
-    values_domain = map(float, values_domain)
-    values_domain = sorted(values_domain)
-    values_domain = map(str, values_domain)
-    return df[column_name].apply(float), values_domain
+    # values_domain = map(float, values_domain)
+    values_domain = sorted(values_domain, key=lambda x: float(x))
+    # values_domain = map(str, values_domain)
+    values_map = {
+        value: number for (number, value) in enumerate(values_domain)
+    }
+
+    result = df[column_name].apply(lambda x: values_map[x])
+    return result, values_domain
 
 
 def draw_measure_violinplot(df, measure_id, ax=None):
@@ -295,6 +300,7 @@ def draw_categorical_violin_distribution(
 
 
 def draw_ordinal_violin_distribution(df, measure_id, ax=None):
+    df = df.copy()
     df[measure_id] = df[measure_id].apply(lambda x: str(x))
     draw_categorical_violin_distribution(
         df, measure_id, numerical_categories=True)
