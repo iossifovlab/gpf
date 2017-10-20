@@ -238,6 +238,7 @@ class PreparePhenoBrowserBase(object):
 
     def handle_measure(self, measure):
         res = PreparePhenoBrowserBase._measure_to_dict(measure)
+
         if measure.measure_type == 'continuous':
             res.update(self.build_values_violinplot(measure))
             res.update(self.build_regression_by_nviq(measure))

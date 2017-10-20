@@ -168,12 +168,17 @@ def _enumerate_by_count(df, column_name):
     occurrences_map = {
         value: number for (number, value) in enumerate(occurrence_ordered)
     }
-    occurrences_reverse_map = {
-        number: value for (number, value) in enumerate(occurrence_ordered)
-    }
 
     return (df[column_name].apply(lambda x: occurrences_map[x]),
-            occurrences_reverse_map)
+            occurrence_ordered)
+
+
+def _enumerate_by_natural_order(df, column_name):
+    values_domain = df[column_name].unique()
+    values_domain = map(float, values_domain)
+    values_domain = sorted(values_domain)
+    values_domain = map(str, values_domain)
+    return df[column_name].apply(float), values_domain
 
 
 def draw_measure_violinplot(df, measure_id, ax=None):
@@ -211,23 +216,24 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     plt.tight_layout()
 
 
-def draw_categorical_violin_distribution(df, measure_id, ax=None):
+def draw_categorical_violin_distribution(
+        df, measure_id, ax=None, numerical_categories=False):
     if ax is None:
         ax = plt.gca()
 
     df = df.copy()
     if df.empty:
-        print("empty!")
         return
-
-    numerical_measure_name = measure_id + "_numerical"
-    df[numerical_measure_name], reverse_map = \
-        _enumerate_by_count(df, measure_id)
 
     color_male, color_female = male_female_colors()
 
-    values_domain = map(
-        lambda x: x[1], sorted(reverse_map.items()))
+    numerical_measure_name = measure_id + "_numerical"
+    if not numerical_categories:
+        df[numerical_measure_name], values_domain = \
+            _enumerate_by_count(df, measure_id)
+    else:
+        df[numerical_measure_name], values_domain = \
+            _enumerate_by_natural_order(df, measure_id)
     y_locations = np.arange(len(values_domain))
 
     bin_edges = y_locations - 0.5
@@ -288,63 +294,6 @@ def draw_categorical_violin_distribution(df, measure_id, ax=None):
 
 
 def draw_ordinal_violin_distribution(df, measure_id, ax=None):
-    if ax is None:
-        ax = plt.gca()
-
-    df = df.copy()
-
-    color_male, color_female = male_female_colors()
-    df[measure_id] = df[measure_id].apply(lambda v: round(v))
-
-    values_domain = sorted(df[measure_id].unique())
-    y_locations = np.arange(np.min(values_domain), np.max(values_domain) + 1)
-
-    bin_edges = y_locations - 0.5
-    centers = bin_edges
-    heights = 0.8
-
-    hist_range = (np.min(y_locations), np.max(y_locations))
-
-    datasets = []
-    binned_datasets = []
-
-    for role in ['prb', 'sib', 'parent']:
-        df_role = df[df.role == role]
-
-        df_male = df_role[df_role.gender == 'M']
-        df_female = df_role[df_role.gender == 'F']
-
-        mdata = df_male[measure_id].values
-        fdata = df_female[measure_id].values
-        datasets.append((mdata, fdata))
-
-        binned_datasets.append([
-            np.histogram(d, range=hist_range, bins=len(y_locations))[0]
-            for d in [mdata, fdata]
-        ])
-
-    binned_maximum = np.max(
-        [np.max([np.max(m), np.max(f)]) for (m, f) in binned_datasets]
-    )
-
-    x_locations = np.arange(0, 3 * 2 * binned_maximum, 2 * binned_maximum)
-
-    _fig, ax = plt.subplots()
-    for count, (male, female) in enumerate(binned_datasets):
-        x_loc = x_locations[count]
-
-        lefts = x_loc - male
-        ax.barh(centers, male, height=heights, left=lefts, color=color_male)
-        ax.barh(centers, female, height=heights,
-                left=x_loc, color=color_female)
-
-    ax.set_yticks(y_locations)
-    ax.set_yticklabels(y_locations)
-    ax.set_xlim(2 * -binned_maximum, 6 * binned_maximum)
-    ax.set_ylim(np.min(y_locations) - 1, np.max(y_locations) + 1)
-
-    ax.set_ylabel(measure_id)
-    labels = role_labels(df)
-    plt.xticks(x_locations, labels)
-
-    male_female_legend(color_male, color_female, ax)
+    df[measure_id] = df[measure_id].apply(lambda x: str(x))
+    draw_categorical_violin_distribution(
+        df, measure_id, numerical_categories=True)
