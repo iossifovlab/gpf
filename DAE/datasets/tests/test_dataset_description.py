@@ -24,4 +24,4 @@ def test_datasets_missing_description_simple(datasets_config):
     assert test is not None
 
     print(test["description"])
-    assert test['description'] is None
+    assert test['description'] is not None

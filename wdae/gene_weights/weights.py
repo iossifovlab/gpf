@@ -29,9 +29,9 @@ class Weights(Preload):
             result.append({"weight": w.name,
                            "desc": w.desc,
                            "min": float("{:.4G}".format(
-                               w.df[weight_name].min() - 1)),
+                               w.df[weight_name].min())),
                            "max": float("{:.4G}".format(
-                               w.df[weight_name].max() + 1)),
+                               w.df[weight_name].max())),
                            "bars": bars,
                            "bins": bins,
                            "step": w.step, })

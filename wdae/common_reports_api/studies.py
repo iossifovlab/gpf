@@ -109,8 +109,19 @@ class StudiesSummaries(Precompute):
 
     @classmethod
     def build_studies_summaries(cls):
-        summaries = cls.__build_denovo_studies_summaries()
-        summaries.extend(cls.__build_transmitted_studies_summaries())
+        summaries = []
+        seen = set()
+        for summary in cls.__build_denovo_studies_summaries():
+            if summary['study name'] in seen:
+                continue
+            summaries.append(summary)
+            seen.add(summary['study name'])
+
+        for summary in cls.__build_transmitted_studies_summaries():
+            if summary['study name'] in seen:
+                continue
+            summaries.append(summary)
+            seen.add(summary['study name'])
 
         return {
             "columns": [

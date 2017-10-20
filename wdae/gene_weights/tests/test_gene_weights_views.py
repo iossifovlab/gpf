@@ -12,7 +12,7 @@ class GeneWeightsListViewTest(APITestCase):
         url = "/api/v3/gene_weights"
         response = self.client.get(url)
         self.assertEqual(200, response.status_code)
-        self.assertEqual(4, len(response.data))
+        self.assertEqual(5, len(response.data))
         for w in response.data:
             self.assertIn('min', w)
             self.assertIn('max', w)

@@ -3,6 +3,8 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import os
 from gene.config import GeneInfoConfig
 import sqlite3

@@ -191,8 +191,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
 
         res = m.group(1), int(m.group(2)), int(m.group(3))
         return " ( tsv.chrome = '{}' AND " \
-            "tsv.position > {} AND " \
-            "tsv.position < {} ) ".format(*res)
+            "tsv.position >= {} AND " \
+            "tsv.position <= {} ) ".format(*res)
 
     def _build_regions_where(self):
         assert self['regionS']

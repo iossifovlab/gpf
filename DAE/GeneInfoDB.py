@@ -127,7 +127,10 @@ class GeneInfoDB:
         else:
             raise Exception("Unknown name space for the " + id + " gene terms: |" + gt.geneNS + "|" + inNS + "|")
         return gt
-        
+
+    def getChromosomesFile(self):
+        return self.config.get('chromosomes', 'file')
+
     def _loadGeneRegions(self):
         geneRegionsFile = self.config.get('GeneInfo', 'geneRgnsFile')
         f = gzip.open(geneRegionsFile)

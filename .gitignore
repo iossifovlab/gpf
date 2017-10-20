@@ -9,7 +9,7 @@ wdae.sql
 .settings
 .vagrant
 .ipynb_checkpoints
-htmlcov
-junit.xml
 .coverage
+htmlcov
 coverage.xml
+junit.xml
