@@ -152,8 +152,8 @@ export class HistogramComponent  {
       .style("fill", "steelblue")
       .attr("x", (d: any) => this.xScale(d.index.toString()))
       .attr("width", this.xScale.bandwidth())
-      .attr("y", (d: any) => d.bar == 0 ? 0 : y(d.bar))
-      .attr("height", (d: any) => height - (d.bar == 0 ? 0 : y(d.bar)));
+      .attr("y", (d: any) => d.bar == 0 ? height : y(d.bar))
+      .attr("height", (d: any) => d.bar == 0 ? 0 : height -  y(d.bar));
     this.svg = svg;
 
     this.onRangeChange();
