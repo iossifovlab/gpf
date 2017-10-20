@@ -91,13 +91,15 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
           (genotypePreviewsArray) => {
             this.genotypePreviewsArray = genotypePreviewsArray;
             this.loadingService.setLoadingStop();
+          },
+          error => {
+            this.loadingService.setLoadingStop();
+          },
+          () => {
+            this.loadingService.setLoadingStop();
           });
       },
       error => {
-        console.warn(error);
-        this.loadingService.setLoadingStop();
-      },
-      () => {
         this.loadingService.setLoadingStop();
       }
     );
