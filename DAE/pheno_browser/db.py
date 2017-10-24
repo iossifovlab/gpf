@@ -4,8 +4,9 @@ Created on Aug 31, 2017
 @author: lubo
 '''
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy import Table, Column, String, Float
+from sqlalchemy import Table, Column, String, Float, Enum
 from sqlalchemy.sql import select
+from pheno.common import MeasureType
 # import traceback
 
 
@@ -28,7 +29,7 @@ class DbManager(object):
                    nullable=False, index=True, unique=True, primary_key=True),
             Column('instrument_name', String(64), nullable=False, index=True),
             Column('measure_name', String(64), nullable=False, index=True),
-            Column('measure_type', String(64), nullable=False),
+            Column('measure_type', Enum(MeasureType), nullable=False),
             Column('values_domain', String(256)),
 
             Column('figure_distribution_small', String(256)),

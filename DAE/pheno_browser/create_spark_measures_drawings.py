@@ -21,10 +21,10 @@ def main():
     instrument = drawer.pheno_db.instruments['individuals']
     instrument2 = drawer.pheno_db.instruments['basic_medical_screening']
 
-    # drawer.handle_measure(instrument.measures['age_at_registration_years'])
-    # drawer.handle_measure(instrument.measures['diagnosis'])
-    # drawer.handle_measure(instrument2.measures['age_at_eval_years'])
-    drawer.handle_measure(instrument2.measures['birth_def_urogen_uter_agen'])
+    drawer.handle_measure(instrument.measures['age_at_registration_years'])
+    drawer.handle_measure(instrument.measures['diagnosis'])
+    drawer.handle_measure(instrument2.measures['age_at_eval_years'])
+    # drawer.handle_measure(instrument2.measures['birth_def_urogen_uter_agen'])
 
     # drawer.handle_measure(instrument.measures['status'])
 

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt  # @IgnorePep8
 plt.ioff()
 
 from pheno_browser.db import DbManager  # @IgnorePep8
-from pheno.common import Role  # @IgnorePep8
+from pheno.common import Role, MeasureType  # @IgnorePep8
 
 from DAE import pheno  # @IgnorePep8
 from pheno_browser.graphs import draw_linregres  # @IgnorePep8
@@ -138,7 +138,7 @@ class PreparePhenoBrowserBase(object):
         df = self.load_measure_and_age(measure)
         if df is None:
             return res
-        dd = df[df.role == 'prb']
+        dd = df[df.role == Role.prb]
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
                 dd, 'age', measure.measure_id, jitter=0.1)
@@ -239,15 +239,15 @@ class PreparePhenoBrowserBase(object):
     def handle_measure(self, measure):
         res = PreparePhenoBrowserBase._measure_to_dict(measure)
 
-        if measure.measure_type == 'continuous':
+        if measure.measure_type == MeasureType.continuous:
             res.update(self.build_values_violinplot(measure))
             res.update(self.build_regression_by_nviq(measure))
             res.update(self.build_regression_by_age(measure))
-        elif measure.measure_type == 'ordinal':
+        elif measure.measure_type == MeasureType.ordinal:
             res.update(self.build_values_ordinal_distribution(measure))
             res.update(self.build_regression_by_nviq(measure))
             res.update(self.build_regression_by_age(measure))
-        elif measure.measure_type == 'categorical':
+        elif measure.measure_type == MeasureType.categorical:
             res.update(self.build_values_categorical_distribution(measure))
         else:
             res.update(self.build_values_other_distribution(measure))

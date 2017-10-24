@@ -52,8 +52,8 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
 
     dd = df.dropna()
 
-    dmale = dd[dd.gender == 'M']
-    dfemale = dd[dd.gender == 'F']
+    dmale = dd[dd.gender == Gender.M]
+    dfemale = dd[dd.gender == Gender.F]
 
     name1, name2 = names(col1, col2)
     ax.set_xlabel(name1)
@@ -131,11 +131,15 @@ def draw_distribution(df, measure_id, ax=None):
 
 
 def role_counts(df, role):
+    male_gender = Gender.M
+    female_gender = Gender.F
     counts = {
-        'role_name': textwrap.fill(role, 9),
+        'role_name': textwrap.fill(role.name, 9),
         'role_total': len(df.query('role == @role')),
-        'male_total': len(df.query('role == @role & gender == "M"')),
-        'female_total': len(df.query('role == @role & gender == "F"'))
+        'male_total': len(df.query('role == @role & gender == @male_gender')),
+        'female_total': len(
+            df.query('role == @role & gender == @female_gender')
+        )
     }
     return counts
 
@@ -175,9 +179,7 @@ def _enumerate_by_count(df, column_name):
 
 def _enumerate_by_natural_order(df, column_name):
     values_domain = df[column_name].unique()
-    # values_domain = map(float, values_domain)
     values_domain = sorted(values_domain, key=lambda x: float(x))
-    # values_domain = map(str, values_domain)
     values_map = {
         value: number for (number, value) in enumerate(values_domain)
     }
@@ -200,7 +202,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
 
     sns.violinplot(
         data=df, x='role', y=measure_id, hue='gender',
-        order=roles, hue_order=['M', 'F'],
+        order=roles, hue_order=[Gender.M, Gender.F],
         linewidth=1, split=True,
         scale='count',
         scale_hue=False,
@@ -210,7 +212,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     palette = gender_palette_light()
     sns.stripplot(
         data=df, x='role', y=measure_id, hue='gender',
-        order=roles, hue_order=['M', 'F'],
+        order=roles, hue_order=[Gender.M, Gender.F],
         jitter=0.025, size=2,
         palette=palette,
         linewidth=0.1)
@@ -226,9 +228,10 @@ def draw_categorical_violin_distribution(
     if ax is None:
         ax = plt.gca()
 
-    df = df.copy()
     if df.empty:
         return
+
+    df = df.copy()
 
     color_male, color_female = male_female_colors()
 
@@ -248,19 +251,17 @@ def draw_categorical_violin_distribution(
 
     hist_range = (np.min(y_locations), np.max(y_locations))
 
-    datasets = []
     binned_datasets = []
     roles = roles_to_draw(df)
 
     for role in roles:
         df_role = df[df.role == role]
 
-        df_male = df_role[df_role.gender == 'M']
-        df_female = df_role[df_role.gender == 'F']
+        df_male = df_role[df_role.gender == Gender.M]
+        df_female = df_role[df_role.gender == Gender.F]
 
         male_data = df_male[numerical_measure_name].values
         female_data = df_female[numerical_measure_name].values
-        datasets.append((male_data, female_data))
 
         binned_datasets.append([
             np.histogram(d, range=hist_range, bins=len(y_locations))[0]
