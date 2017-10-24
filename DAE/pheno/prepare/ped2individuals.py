@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+import abc
 import itertools
 import argparse
 import csv
@@ -34,6 +35,23 @@ class PedigreeMember(object):
 
 
 class CsvPedigreeReader(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def convert_individual_id(self, family_id, individual_id):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def convert_status(self, status):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def convert_gender(self, gender):
+        raise NotImplementedError()
+
+    @abc.abstractproperty
+    def COLUMNS_TO_FIELDS(self):
+        raise NotImplementedError()
 
     def read_structure(self, individuals):
         families = defaultdict(list)
@@ -76,14 +94,17 @@ class CsvPedigreeReader(object):
 
 
 class SPARKCsvPedigreeReader(CsvPedigreeReader):
-    COLUMNS_TO_FIELDS = {
-        "familyId": "family_id",
-        "personId": "individual_id",
-        "momId": "mother_id",
-        "dadId": "father_id",
-        "gender": "gender",
-        "status": "status"
-    }
+
+    @property
+    def COLUMNS_TO_FIELDS(self):
+        return {
+            "familyId": "family_id",
+            "personId": "individual_id",
+            "momId": "mother_id",
+            "dadId": "father_id",
+            "gender": "gender",
+            "status": "status"
+        }
 
     def convert_status(self, val):
         return int(val)
@@ -96,14 +117,17 @@ class SPARKCsvPedigreeReader(CsvPedigreeReader):
 
 
 class AGRERawCsvPedigreeReader(CsvPedigreeReader):
-    COLUMNS_TO_FIELDS = {
-        "family_id": "family_id",
-        "Person": "individual_id",
-        "Mother": "mother_id",
-        "Father": "father_id",
-        "Sex": "gender",
-        "Scored Affected Status": "status"
-    }
+
+    @property
+    def COLUMNS_TO_FIELDS(self):
+        return {
+            "family_id": "family_id",
+            "Person": "individual_id",
+            "Mother": "mother_id",
+            "Father": "father_id",
+            "Sex": "gender",
+            "Scored Affected Status": "status"
+        }
 
     def convert_status(self, val):
         if val:
@@ -189,6 +213,8 @@ class PedigreeToFamily(object):
                     individual.individual.assign_role(Role.paternal_aunt)
 
         for other_mating_unit in father.mating_units:
+            if other_mating_unit.mother.individual.role != Role.mom:
+                other_mating_unit.mother.individual.assign_role(Role.step_mom)
             for child in other_mating_unit.children.individuals:
                 if not child.individual.role:
                     child.individual.assign_role(Role.paternal_half_sibling)
@@ -214,8 +240,10 @@ class PedigreeToFamily(object):
                 if individual.individual.gender == Gender.F:
                     individual.individual.assign_role(Role.maternal_aunt)
 
-        for mating_Units in mother.mating_units:
-            for child in mating_Units.children.individuals:
+        for other_mating_unit in mother.mating_units:
+            if other_mating_unit.father.individual.role != Role.dad:
+                other_mating_unit.father.individual.assign_role(Role.step_dad)
+            for child in other_mating_unit.children.individuals:
                 if not child.individual.role:
                     child.individual.assign_role(Role.maternal_half_sibling)
 
@@ -242,12 +270,16 @@ class PedigreeToFamily(object):
             father = proband.get_father_individual()
             father.individual.assign_role(Role.dad)
 
-            self._assign_roles_paternal(father)
-
         if parents.mother.individual:
             mother = proband.get_mother_individual()
             mother.individual.assign_role(Role.mom)
 
+        if parents.father.individual:
+            father = proband.get_father_individual()
+            self._assign_roles_paternal(father)
+
+        if parents.mother.individual:
+            mother = proband.get_mother_individual()
             self._assign_roles_maternal(mother)
 
     def to_family(self, members):
@@ -302,7 +334,7 @@ def main():
                         type=str)
     args = parser.parse_args()
 
-    reader = SPARKCsvPedigreeReader()
+    reader = AGRERawCsvPedigreeReader()
     families = reader.read_filename(args.file)
 
     pedigrees = {}

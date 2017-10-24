@@ -21,6 +21,8 @@ class Status(enum.Enum):
 class Role(enum.Enum):
     mom = 10
     dad = 20
+    step_mom = 23
+    step_dad = 13
     parent = 1
     prb = 30
     sib = 40
