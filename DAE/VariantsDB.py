@@ -275,9 +275,18 @@ class Study:
         flsS = self.vdb._config.get(self._configSection, propName)
         varList = []
         for fl in flsS.split('\n'):
+
+            def float_conv(x):
+                try:
+                    return float(x or np.nan)
+                except:
+                    return np.nan
             print >> sys.stderr, "Loading file", fl, "for collection ", self.name
             dt = genfromtxt(fl, delimiter='\t', dtype=None, names=True,
-                            case_sensitive=True, deletechars='')
+                            case_sensitive=True, deletechars='', 
+                            converters={"SSC-freq": float_conv,
+                                        "EVS-freq": float_conv,
+                                        "E65-freq": float_conv})
             if len(dt.shape) == 0:
                 dt = dt.reshape(1)
             hasCenter = 'center' in dt.dtype.names
