@@ -5,6 +5,9 @@ Created on Apr 10, 2017
 '''
 import os
 import matplotlib as mpl
+import numpy as np
+from numpy.core.operand_flag_tests import inplace_add
+
 from pheno.pheno_regression import PhenoRegression
 from pheno.pheno_db import Measure
 mpl.use('PS')
@@ -139,6 +142,9 @@ class PreparePhenoBrowserBase(object):
         if df is None:
             return res
         dd = df[df.role == Role.prb]
+        dd.loc[:, 'age'] = dd['age'].astype(np.float32)
+        dd = dd[np.isfinite(dd.age)]
+
         if len(dd) > 5:
             res_male, res_female = draw_linregres(
                 dd, 'age', measure.measure_id, jitter=0.1)
@@ -169,7 +175,10 @@ class PreparePhenoBrowserBase(object):
         if df is None:
             return res
 
-        dd = df[df.role == 'prb']
+        dd = df[df.role == Role.prb]
+        dd.loc[:, 'nonverbal_iq'] = dd['nonverbal_iq'].astype(np.float32)
+        dd = dd[np.isfinite(dd.nonverbal_iq)]
+
         if len(dd) <= 5:
             return res
 
@@ -260,6 +269,7 @@ class PreparePhenoBrowserBase(object):
         for instrument in self.pheno_db.instruments.values():
             progress_nl()
             for measure in instrument.measures.values():
+                # print(measure)
                 progress()
                 var = self.handle_measure(measure)
                 db.save(var)
