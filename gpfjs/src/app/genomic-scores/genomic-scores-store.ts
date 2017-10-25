@@ -77,8 +77,8 @@ export function genomicScoresReducer(
         let newScore = {
             metric: action.payload[1],
             histogramData: action.payload[2],
-            rangeStart: action.payload[3],
-            rangeEnd: action.payload[4]
+            rangeStart: null,
+            rangeEnd: null
         };
         let newStateScore = state.genomicScoresState.map((item, index) => {
             if (index == action.payload[0]) {

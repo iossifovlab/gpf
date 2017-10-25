@@ -52,7 +52,7 @@ export class GenomicScoresComponent {
       (histogramData) => {
         this.store.dispatch({
           'type': GENOMIC_SCORES_CHANGE,
-          'payload': [this.index, selectedMetric, histogramData, histogramData.bins[0], histogramData.bins[histogramData.bins.length-1]]
+          'payload': [this.index, selectedMetric, histogramData]
         });
     });
   }

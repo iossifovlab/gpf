@@ -48,8 +48,32 @@ export class HistogramComponent  {
   scaledBins: Array<number>;
 
   ngOnInit() {
-      this.rangeStartSubject.debounceTime(100).distinctUntilChanged().subscribe((start) => this.rangeStartChange.emit(start))
-      this.rangeEndSubject.debounceTime(100).distinctUntilChanged().subscribe((end) => this.rangeEndChange.emit(end))
+      this.rangeStartSubject
+      .debounceTime(100)
+      .distinctUntilChanged()
+      .subscribe((start) => {
+          let step = Math.abs(this.bins[1] - this.bins[0]) / 1e10;
+          if (Math.abs(start - this.bins[0]) < step) {
+            this.rangeStartChange.emit(null)
+          }
+          else {
+            this.rangeStartChange.emit(start)
+          }
+      })
+
+      this.rangeEndSubject
+      .debounceTime(100)
+      .distinctUntilChanged()
+      .subscribe((end) => { 
+          let step = Math.abs(this.bins[this.bins.length - 1] 
+            - this.bins[this.bins.length - 2]) / 1e10;
+          if (Math.abs(end - this.bins[this.bins.length - 1]) < step) {
+            this.rangeEndChange.emit(null)
+          }
+          else {
+            this.rangeEndChange.emit(end)
+          }
+      })
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -163,9 +187,14 @@ export class HistogramComponent  {
 
   @Input()
   set rangeStart(rangeStart: any) {
-    this.internalRangeStart = parseFloat(rangeStart);
-    if (isNaN(this.internalRangeStart)) {
-        this.internalRangeStart = null
+    if (rangeStart == null) {
+        this.internalRangeStart = this.bins[0]
+    }
+    else {
+        this.internalRangeStart = parseFloat(rangeStart);
+        if (isNaN(this.internalRangeStart)) {
+            this.internalRangeStart = null
+        }
     }
     this.onRangeChange();
     this.rangeStartSubject.next(this.internalRangeStart)
@@ -177,9 +206,14 @@ export class HistogramComponent  {
 
   @Input()
   set rangeEnd(rangeEnd: any) {
-    this.internalRangeEnd = parseFloat(rangeEnd);
-    if (isNaN(this.internalRangeEnd)) {
-        this.internalRangeEnd = null
+    if (rangeEnd == null) {
+        this.internalRangeEnd = this.bins[this.bins.length - 1]
+    }
+    else {
+        this.internalRangeEnd = parseFloat(rangeEnd);
+        if (isNaN(this.internalRangeEnd)) {
+            this.internalRangeEnd = null
+        }
     }
     this.onRangeChange();
     this.rangeEndSubject.next(this.internalRangeEnd)
