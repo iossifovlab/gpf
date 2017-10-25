@@ -46,8 +46,8 @@ def test_effect_type_vs_worst_effect_counterexample():
     assert count == 1
 
 
-def variant_response_dict(v):
-    g = generate_response([v])
+def variant_response_dict(v, atts):
+    g = generate_response([v], atts)
     names = g.next()
     vr = g.next()
     d = dict(zip(names, vr))
@@ -59,11 +59,12 @@ def test_effect_type_genes_list():
         'denovoStudies': 'ALL SSC',
         'geneRegion': 'chr5:140,117,933-140,900,259',
     }
+    columns = ['worstEffect', 'geneEffect', 'genes']
     vs = dae_query_variants(query)
     count = 0
     for v in itertools.chain(*vs):
         count += 1
-        d = variant_response_dict(v)
+        d = variant_response_dict(v, columns)
 
         assert 'worst requested effect' in d
         assert 'all effects' in d

@@ -3,6 +3,8 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
+import itertools
+
 from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
@@ -14,10 +16,10 @@ import traceback
 import preloaded
 from rest_framework.exceptions import NotAuthenticated
 import json
-from query_variants import join_line
-import itertools
+from query_variants import join_line, generate_web_response
 from datasets_api.permissions import IsDatasetAllowed
 from functools import partial
+from datasets.metadataset import MetaDataset
 
 
 class QueryBaseView(views.APIView):
@@ -35,47 +37,33 @@ class QueryBaseView(views.APIView):
 
 class QueryPreviewView(QueryBaseView):
 
+    MAX_SHOWN_VARIANTS = 1000
+
+    MAX_VARIANTS = 2000
+
     def __init__(self):
         super(QueryPreviewView, self).__init__()
 
-    def prepare_variants_response(self, columns, all_variants):
-        common_cols = list(set.intersection(*[set(l) for l in columns]))
-        cols_map = {name: index for (index, name) in enumerate(common_cols)}
-
-        rows = []
+    def __prepare_variants_response(self, cols, rows):
+        limitted_rows = []
         count = 0
-
-        for current_cols, variants in zip(columns, all_variants):
-            for v in variants:
-                count += 1
-                if count <= 1000:
-                    row = [None for x in range(len(common_cols))]
-                    for i, col_name in enumerate(current_cols):
-                        if col_name in cols_map:
-                            index = cols_map[col_name]
-                            row[index] = v[i]
-                    rows.append(row)
-                if count > 2000:
-                    break
-            if count > 2000:
+        for row in rows:
+            count += 1
+            if count <= self.MAX_SHOWN_VARIANTS:
+                limitted_rows.append(row)
+            if count > self.MAX_VARIANTS:
                 break
 
-        if count <= 2000:
+        if count <= self.MAX_SHOWN_VARIANTS:
             count = str(count)
         else:
-            count = 'more than 2000'
+            count = 'more than {}'.format(self.MAX_VARIANTS)
 
         return {
             'count': count,
-            'cols': common_cols,
-            'rows': rows
+            'cols': cols,
+            'rows': limitted_rows
         }
-
-    def prepare_legend_response(self, dataset, **data):
-        legend = dataset.get_pedigree_selector(**data)
-        response = legend.domain[:]
-        response.append(legend.default)
-        return response
 
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 preview request: " +
@@ -83,29 +71,24 @@ class QueryPreviewView(QueryBaseView):
 
         data = request.data
         try:
-            legend = []
-            all_variants = []
-            columns = []
-            for dataset_id in data['datasetId']:
-                dataset = self.datasets_factory.get_dataset(dataset_id)
-                self.check_object_permissions(request, dataset_id)
+            dataset_id = data['datasetId']
+            self.check_object_permissions(request, dataset_id)
 
-                for leg in self.prepare_legend_response(dataset, **data):
-                    if leg not in legend:
-                        legend.append(leg)
+            if dataset_id == MetaDataset.ID:
+                data['dataset_ids'] = filter(
+                    lambda dataset_id: request.user.has_perm(dataset_id),
+                    self.datasets_config.get_dataset_ids())
 
-                v = dataset.get_variants_preview(
-                    safe=True,
-                    limit=2000,
-                    **data
-                )
-                columns.append(v.next())
-                all_variants.append(v)
-            res = self.prepare_variants_response(columns, all_variants)
+            dataset = self.datasets_factory.get_dataset(dataset_id)
 
-            res['legend'] = legend
+            response = self.__prepare_variants_response(
+                **generate_web_response(
+                    dataset.get_variants(safe=True, **data),
+                    dataset.get_columns()))
 
-            return Response(res, status=status.HTTP_200_OK)
+            response['legend'] = dataset.get_legend(safe=True, **data)
+
+            return Response(response, status=status.HTTP_200_OK)
         except NotAuthenticated:
             print("error while processing genotype query")
             traceback.print_exc()

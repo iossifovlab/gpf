@@ -333,6 +333,23 @@ class Variant:
         res = [ph, res]
         return res
 
+    def __eq__(self, other):
+        return (self.variant == other.variant and self.location == other.location
+            and self.familyId == other.familyId)
+
+    def __lt__(self, other):
+        return self.sort_key < other.sort_key
+
+    CHROMOSOMES_ORDER = dict(
+        {str(x): '0' + str(x) for x in range(1, 10)}.items() +
+        {str(x): str(x) for x in range(10, 23)}.items() +
+        { 'X': '23', 'Y': '24' }.items())
+
+    @property
+    def sort_key(self):
+        chromosome, position = self.location.split(':')
+        return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome), int(position.split('-')[0]))
+
     def pedigree_v3(self, legend):
         def get_color(p):
             return legend.get_color(p.atts[legend.id])

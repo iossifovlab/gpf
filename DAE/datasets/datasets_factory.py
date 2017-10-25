@@ -7,6 +7,7 @@ import copy
 
 from datasets.config import DatasetsConfig
 from datasets.dataset import Dataset
+from datasets.metadataset import MetaDataset
 
 
 class DatasetsFactory(dict):
@@ -17,17 +18,28 @@ class DatasetsFactory(dict):
         else:
             self.datasets_config = datasets_config
 
-    def get_dataset(self, dataset_id):
-        if dataset_id in self:
-            return self[dataset_id]
+    def __load_single_dataset(self, dataset_id):
         dataset_descriptor = self.datasets_config.get_dataset_desc(dataset_id)
         if dataset_descriptor is None:
             return None
-        dataset = Dataset(dataset_descriptor)
+        if dataset_id != MetaDataset.ID:
+            dataset = Dataset(dataset_descriptor)
+        else:
+            dataset = MetaDataset(
+                self.datasets_config.get_dataset_desc(MetaDataset.ID),
+                [self.get_dataset(dataset_id)
+                 for dataset_id in self.datasets_config.get_dataset_ids()])
         dataset.load()
-
-        self[dataset_id] = dataset
         return dataset
+
+    def get_dataset(self, dataset_id):
+        if dataset_id in self:
+            return self[dataset_id]
+        else:
+            dataset = self.__load_single_dataset(dataset_id)
+            if dataset is not None:
+                self[dataset_id] = dataset
+            return dataset
 
     def get_description_datasets(self):
         datasets_description = self.datasets_config.get_datasets()

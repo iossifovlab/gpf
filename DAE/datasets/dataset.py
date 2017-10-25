@@ -113,8 +113,6 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return fm
 
     def get_in_child(self, safe=True, **kwargs):
-        super(Dataset, self).get_in_child(**kwargs)
-
         person_grouping = self.get_pedigree_selector(
             safe=safe, default=False, ** kwargs)
         if person_grouping is not None and \
@@ -128,6 +126,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             if selected_phenotypes == set(['unaffected']):
                 return 'sib'
         return None
+
+    def get_studies(self, safe=True, **kwargs):
+        studies = self.studies[:]
+        return self._filter_studies(studies, safe, **kwargs)
 
     def get_denovo_studies(self, safe=True, **kwargs):
         studies = self.denovo_studies[:]
@@ -385,7 +387,6 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 **kwargs),
             'effectTypes': self.get_effect_types(
                 safe=safe,
-                dataset_descriptor=self.descriptor,
                 **kwargs),
             'variantTypes': self.get_variant_types(
                 safe=safe,
@@ -454,11 +455,22 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 yield v
 
     def get_variants(self, safe=True, **kwargs):
-        phenotype_filter = self._get_phenotype_filter(**kwargs)
-
         denovo = self.get_denovo_variants(safe=safe, **kwargs)
         transmitted = self.get_transmitted_variants(safe=safe, **kwargs)
-        variants = itertools.chain.from_iterable([denovo, transmitted])
+        augment_vars = self._get_var_augmenter(safe=safe, **kwargs)
+        variants = itertools.imap(augment_vars,
+            itertools.chain.from_iterable([denovo, transmitted]))
+        return self._phenotype_filter(variants, **kwargs)
+
+    def get_legend(self, **kwargs):
+        legend = self.get_pedigree_selector(**kwargs)
+        response = legend.domain[:]
+        response.append(legend.default)
+        return response
+
+
+    def _phenotype_filter(self, variants, **kwargs):
+        phenotype_filter = self._get_phenotype_filter(**kwargs)
         if phenotype_filter is None:
             for v in variants:
                 yield v
@@ -467,18 +479,36 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 if phenotype_filter(v):
                     yield v
 
+    def get_columns(self):
+        return self.COMMON_COLUMNS[:] + [label for (_, _, label) in self.get_pheno_columns()]
+
     COMMON_COLUMNS = [
+        'familyId',
+        'location',
+        'variant',
+        'bestSt',
+        'fromParentS',
+        'inChS',
         'effectType',
+        'worstEffect',
+        'genes',
+        'geneEffect',
+        'requestedGeneEffects',
+        'popType',
         'effectDetails',
         'all.altFreq',
         'all.nAltAlls',
+        'all.nParCalled',
+        '_ch_prof_',
+        'studyName',
+        '_phenotype_',
+        'counts',
+        'valstatus',
+        '_pedigree_',
+        'phenoInChs',
         'SSCfreq',
         'EVSfreq',
         'E65freq',
-        'all.nParCalled',
-        '_ch_prof_',
-        'valstatus',
-        "phenoInChS",
     ]
 
     def get_pheno_columns(self):
@@ -499,12 +529,14 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return columns
 
     def get_variants_preview(self, safe=True, **kwargs):
-        variants = self.get_variants(safe=safe, **kwargs)
+        variants = self.get_variants(safe, **kwargs)
+        columns = self.get_columns()
+        return generate_response(variants, columns)
+
+    def _get_var_augmenter(self, safe=True, **kwargs):
         legend = self.get_pedigree_selector(**kwargs)
         pheno_columns = self.get_pheno_columns()
-        columns = self.COMMON_COLUMNS[:]
-        columns.append('_pedigree_')
-        columns.extend([label for (_, _, label) in pheno_columns])
+
         families = {}
         if pheno_columns and self.pheno_db:
             families = self.pheno_db.families
@@ -513,17 +545,15 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
 
             v.atts["_ch_prof_"] = chProf
-            v.atts["_pedigree_"] = v.pedigree_v3(legend)
+            if (include_pedigree):
+                v.atts["_pedigree_"] = v.pedigree_v3(legend)
             family = families.get(v.familyId, None)
             fatts = family.atts if family else {}
             for (_role, _source, label) in pheno_columns:
                 v.atts[label] = fatts.get(label, '')
             v._phenotype_ = v.study.get_attr('study.phenotype')
             return v
-
-        return generate_response(
-            itertools.imap(augment_vars, variants), columns
-        )
+        return augment_vars
 
     def get_variants_csv(self, safe=True, **kwargs):
         variants = self.get_variants(safe=safe, **kwargs)
@@ -534,17 +564,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if pheno_columns and self.pheno_db:
             families = self.pheno_db.families
 
-        def augment_vars(v):
-            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
-
-            v.atts["_ch_prof_"] = chProf
-            v.atts["_phenotype_"] = v.study.get_attr('study.phenotype')
-            family = families.get(v.familyId, None)
-            fatts = family.atts if family else {}
-            for (_role, _source, label) in pheno_columns:
-                v.atts[label] = fatts.get(label, '')
-            v._phenotype_ = v.study.get_attr('study.phenotype')
-            return v
+        augment_vars = get_var_augmenter(safe, False, **kwargs)
 
         return generate_response(
             itertools.imap(augment_vars, variants), columns

@@ -9,6 +9,8 @@ from Config import Config
 import collections
 import os
 
+from datasets.metadataset import MetaDataset
+
 
 class PedigreeSelector(dict):
 
@@ -82,14 +84,17 @@ class DatasetsConfig(object):
             self.config.read(dae_config.variantsDBconfFile)
 
     def get_datasets(self):
+        return [self.get_dataset_desc(dataset_id)
+                for dataset_id in self.get_dataset_ids()]
+
+    def get_dataset_ids(self):
         res = []
         for section in self.config.sections():
             (section_type, section_id) = self.split_section(section)
             if section_id is None:
                 continue
-            if section_type == 'dataset':
-                dataset = self.get_dataset_desc(section_id)
-                res.append(dataset)
+            if section_type == 'dataset' and section_id != MetaDataset.ID:
+                res.append(section_id)
         return res
 
     def _get_boolean(self, section, option):

@@ -164,6 +164,7 @@ if __name__ == "__main__":
         args_dict = parse_cli_arguments(sys.argv[1:])
         generator = get_variants(args_dict)
 
+
         for l in generator:
             sys.stdout.write(join_line(l, '\t'))
     except ValueError, ex:
