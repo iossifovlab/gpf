@@ -199,40 +199,50 @@ class PreparePhenoBrowserBase(object):
 
     def build_values_violinplot(self, measure):
         df = self.load_measure(measure)
-        draw_measure_violinplot(df, measure.measure_id)
+        drawn = draw_measure_violinplot(df, measure.measure_id)
 
         res = {}
-        (res['figure_distribution_small'],
-         res['figure_distribution']) = self.save_fig(measure, "violinplot")
+
+        if drawn:
+            (res['figure_distribution_small'],
+             res['figure_distribution']) = self.save_fig(measure, "violinplot")
 
         return res
 
     def build_values_categorical_distribution(self, measure):
         df = self.load_measure(measure)
-        draw_categorical_violin_distribution(df, measure.measure_id)
+        drawn = draw_categorical_violin_distribution(df, measure.measure_id)
 
         res = {}
-        (res['figure_distribution_small'],
-         res['figure_distribution']) = self.save_fig(measure, "distribution")
+        if drawn:
+            (res['figure_distribution_small'],
+             res['figure_distribution']) = \
+                self.save_fig(measure, "distribution")
 
         return res
 
     def build_values_other_distribution(self, measure):
         df = self.load_measure(measure)
-        draw_categorical_violin_distribution(df, measure.measure_id)
+        drawn = draw_categorical_violin_distribution(df, measure.measure_id)
 
         res = {}
-        (res['figure_distribution_small'],
-         res['figure_distribution']) = self.save_fig(measure, "distribution")
+        if drawn:
+            (res['figure_distribution_small'],
+             res['figure_distribution']) = \
+                self.save_fig(measure, "distribution")
+
         return res
 
     def build_values_ordinal_distribution(self, measure):
         df = self.load_measure(measure)
-        draw_ordinal_violin_distribution(df, measure.measure_id)
+        drawn = draw_ordinal_violin_distribution(df, measure.measure_id)
 
         res = {}
-        (res['figure_distribution_small'],
-         res['figure_distribution']) = self.save_fig(measure, "distribution")
+        if drawn:
+            (res['figure_distribution_small'],
+             res['figure_distribution']) = \
+                self.save_fig(measure, "distribution")
+
         return res
 
     def dump_browser_variable(self, var):
@@ -246,6 +256,7 @@ class PreparePhenoBrowserBase(object):
         print('-------------------------------------------')
 
     def handle_measure(self, measure):
+        print(measure)
         res = PreparePhenoBrowserBase._measure_to_dict(measure)
 
         if measure.measure_type == MeasureType.continuous:

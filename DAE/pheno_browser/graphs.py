@@ -206,7 +206,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     roles = roles_to_draw(df)
 
     if len(roles) == 0:
-        return
+        return False
 
     fig.set_size_inches(2 + len(roles), 8)
 
@@ -232,6 +232,8 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     ax.set_ylabel(measure_id)
     plt.tight_layout()
 
+    return True
+
 
 def draw_categorical_violin_distribution(
         df, measure_id, ax=None, numerical_categories=False,
@@ -240,7 +242,7 @@ def draw_categorical_violin_distribution(
         ax = plt.gca()
 
     if df.empty:
-        return
+        return False
 
     df = df.copy()
 
@@ -264,6 +266,8 @@ def draw_categorical_violin_distribution(
 
     binned_datasets = []
     roles = roles_to_draw(df)
+    if len(roles) == 0:
+        return False
 
     for role in roles:
         df_role = df[df.role == role]
@@ -310,9 +314,11 @@ def draw_categorical_violin_distribution(
 
     plt.tight_layout()
 
+    return True
+
 
 def draw_ordinal_violin_distribution(df, measure_id, ax=None):
     df = df.copy()
     df[measure_id] = df[measure_id].apply(lambda x: str(x))
-    draw_categorical_violin_distribution(
+    return draw_categorical_violin_distribution(
         df, measure_id, numerical_categories=True)
