@@ -167,7 +167,11 @@ def gender_palette():
 
 
 def roles_to_draw(df):
-    return df["role"].value_counts().index.values.tolist()
+    return [
+        name
+        for (name, count) in df["role"].value_counts().to_dict().items()
+        if count >= ROLES_COUNT_CUTOFF
+    ]
 
 
 def _enumerate_by_count(df, column_name):
@@ -200,7 +204,9 @@ def draw_measure_violinplot(df, measure_id, ax=None):
 
     palette = gender_palette()
     roles = roles_to_draw(df)
-    assert len(roles) > 0
+
+    if len(roles) == 0:
+        return
 
     fig.set_size_inches(2 + len(roles), 8)
 
@@ -247,7 +253,6 @@ def draw_categorical_violin_distribution(
     else:
         df[numerical_measure_name], values_domain = \
             _enumerate_by_natural_order(df, measure_id)
-    print(values_domain)
     values_domain = values_domain[:max_categories]
     y_locations = np.arange(len(values_domain))
 
@@ -260,12 +265,8 @@ def draw_categorical_violin_distribution(
     binned_datasets = []
     roles = roles_to_draw(df)
 
-    for role in roles[:]:
+    for role in roles:
         df_role = df[df.role == role]
-
-        if df_role.shape[0] < ROLES_COUNT_CUTOFF:
-            roles.remove(role)
-            continue
 
         df_male = df_role[df_role.gender == Gender.M]
         df_female = df_role[df_role.gender == Gender.F]
