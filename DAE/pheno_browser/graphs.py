@@ -18,6 +18,9 @@ import statsmodels.api as sm  # @IgnorePep8
 import traceback  # @IgnorePep8
 
 
+MAX_CATEGORIES_COUNT = 15
+
+
 def names(col1, col2):
     name1 = col1.split('.')[-1]
     name2 = col2.split('.')[-1]
@@ -224,7 +227,8 @@ def draw_measure_violinplot(df, measure_id, ax=None):
 
 
 def draw_categorical_violin_distribution(
-        df, measure_id, ax=None, numerical_categories=False, max_categories=25):
+        df, measure_id, ax=None, numerical_categories=False,
+        max_categories=MAX_CATEGORIES_COUNT):
     if ax is None:
         ax = plt.gca()
 
