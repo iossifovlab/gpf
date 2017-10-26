@@ -242,10 +242,11 @@ def draw_categorical_violin_distribution(
     else:
         df[numerical_measure_name], values_domain = \
             _enumerate_by_natural_order(df, measure_id)
+    print(values_domain)
     values_domain = values_domain[:max_categories]
     y_locations = np.arange(len(values_domain))
 
-    bin_edges = y_locations - 0.5
+    bin_edges = y_locations
     centers = bin_edges
     heights = 0.8
 
