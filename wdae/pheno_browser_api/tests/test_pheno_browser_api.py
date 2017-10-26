@@ -50,7 +50,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertIn('base_image_url', response.data)
         self.assertIn('measures', response.data)
 
-        self.assertEquals(58, len(response.data['measures']))
+        self.assertEquals(169, len(response.data['measures']))
 
     def test_measures_vip_bad_json(self):
         problem_urls = [
