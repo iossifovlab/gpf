@@ -1,9 +1,11 @@
-<ng-template [ngTemplateOutlet]="cellContent.contentTemplateRef" [ngOutletContext]="{$implicit: data}">
-</ng-template>
-<span *ngIf="!cellContent.contentTemplateRef">{{ data[cellContent.field] }}</span>
+<div [ngClass]="{'fixed-height': !noScrollOptimization }">
+  <ng-template [ngTemplateOutlet]="cellContent.contentTemplateRef" [ngOutletContext]="{$implicit: data}">
+  </ng-template>
+  <span *ngIf="!cellContent.contentTemplateRef">{{ data[cellContent.field] }}</span>
 
-<div *ngFor="let child of cellContent.subcontentChildren" style="text-align: center;">
-    <ng-template [ngTemplateOutlet]="child.contentTemplateRef" [ngOutletContext]="{$implicit: data}">
-    </ng-template>
-    <span *ngIf="!child.contentTemplateRef">{{ data[child.field] }}</span>
+  <div *ngFor="let child of cellContent.subcontentChildren" style="text-align: center;">
+      <ng-template [ngTemplateOutlet]="child.contentTemplateRef" [ngOutletContext]="{$implicit: data}">
+      </ng-template>
+      <span *ngIf="!child.contentTemplateRef">{{ data[child.field] }}</span>
+  </div>
 </div>

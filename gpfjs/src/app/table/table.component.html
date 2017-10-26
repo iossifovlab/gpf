@@ -15,6 +15,7 @@
         <gpf-table-view-cell #cells *ngFor="let column of columnsChildren"
             [columnInfo]="column"
             [data]="data"
+            [noScrollOptimization]="noScrollOptimization"
             [style.width]="column.columnWidth ? column.columnWidth : null"
             style="vertical-align: middle">
         </gpf-table-view-cell>

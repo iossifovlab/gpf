@@ -3,11 +3,13 @@ import { GpfTableColumnComponent } from '../component/column.component';
 
 @Component({
     selector: 'gpf-table-view-cell',
-    templateUrl: './cell.component.html'
+    templateUrl: './cell.component.html',
+    styleUrls: ['./cell.component.css'],
 })
 export class GpfTableCellComponent {
     @Input() columnInfo: GpfTableColumnComponent;
     @Input() data: any;
+    @Input() noScrollOptimization: boolean;
 
     constructor() {
     }
