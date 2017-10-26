@@ -19,6 +19,7 @@ import traceback  # @IgnorePep8
 
 
 MAX_CATEGORIES_COUNT = 15
+ROLES_COUNT_CUTOFF = 20
 
 
 def names(col1, col2):
@@ -259,8 +260,12 @@ def draw_categorical_violin_distribution(
     binned_datasets = []
     roles = roles_to_draw(df)
 
-    for role in roles:
+    for role in roles[:]:
         df_role = df[df.role == role]
+
+        if df_role.shape[0] < ROLES_COUNT_CUTOFF:
+            roles.remove(role)
+            continue
 
         df_male = df_role[df_role.gender == Gender.M]
         df_female = df_role[df_role.gender == Gender.F]
