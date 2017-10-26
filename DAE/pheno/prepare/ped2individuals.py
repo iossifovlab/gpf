@@ -195,16 +195,17 @@ class PedigreeToFamily(object):
         if father.parents:
             grandparents = father.parents
 
-            if grandparents.father.individual:
+            if grandparents.father.has_individual():
                 grandparents.father.individual.assign_role(
                     Role.paternal_grandfather)
 
-            if grandparents.mother.individual:
+            if grandparents.mother.has_individual():
                 grandparents.mother.individual.assign_role(
                     Role.paternal_grandmother)
 
             for individual in grandparents.children.individuals:
-                if individual.individual.role:
+                if (not individual.has_individual()
+                        or individual.individual.role):
                     continue
 
                 if individual.individual.gender == Gender.M:
@@ -213,6 +214,9 @@ class PedigreeToFamily(object):
                     individual.individual.assign_role(Role.paternal_aunt)
 
         for other_mating_unit in father.mating_units:
+            if not other_mating_unit.mother.has_individual():
+                continue
+
             if other_mating_unit.mother.individual.role != Role.mom:
                 other_mating_unit.mother.individual.assign_role(Role.step_mom)
             for child in other_mating_unit.children.individuals:
@@ -223,16 +227,17 @@ class PedigreeToFamily(object):
         if mother.parents:
             grandparents = mother.parents
 
-            if grandparents.father.individual:
+            if grandparents.father.has_individual():
                 grandparents.father.individual.assign_role(
                     Role.maternal_grandfather)
 
-            if grandparents.mother.individual:
+            if grandparents.mother.has_individual():
                 grandparents.mother.individual.assign_role(
                     Role.maternal_grandmother)
 
             for individual in grandparents.children.individuals:
-                if individual.individual.role:
+                if (not individual.has_individual()
+                            or individual.individual.role):
                     continue
 
                 if individual.individual.gender == Gender.M:
@@ -241,6 +246,9 @@ class PedigreeToFamily(object):
                     individual.individual.assign_role(Role.maternal_aunt)
 
         for other_mating_unit in mother.mating_units:
+            if not other_mating_unit.father.has_individual():
+                continue
+
             if other_mating_unit.father.individual.role != Role.dad:
                 other_mating_unit.father.individual.assign_role(Role.step_dad)
             for child in other_mating_unit.children.individuals:
@@ -266,19 +274,19 @@ class PedigreeToFamily(object):
             if individual != proband:
                 individual.individual.assign_role(Role.sib)
 
-        if parents.father.individual:
+        if parents.father.has_individual():
             father = proband.get_father_individual()
             father.individual.assign_role(Role.dad)
 
-        if parents.mother.individual:
+        if parents.mother.has_individual():
             mother = proband.get_mother_individual()
             mother.individual.assign_role(Role.mom)
 
-        if parents.father.individual:
+        if parents.father.has_individual():
             father = proband.get_father_individual()
             self._assign_roles_paternal(father)
 
-        if parents.mother.individual:
+        if parents.mother.has_individual():
             mother = proband.get_mother_individual()
             self._assign_roles_maternal(mother)
 

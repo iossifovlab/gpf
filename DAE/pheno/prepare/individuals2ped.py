@@ -42,6 +42,9 @@ class IndividualUnit(object):
     def __repr__(self):
         return repr(self.individual)
 
+    def has_individual(self):
+        return bool(self.individual)
+
     # methods for traversal
     def get_or_create_parents(self):
         if not self.parents:
