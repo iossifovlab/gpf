@@ -32,6 +32,7 @@ export class HistogramComponent  {
   @Input() logScaleY = false;
   @Input() showCounts = true;
   @Input() xLabels: Array<number>
+  @Input() centerLabels = false;
 
   beforeRangeText: string;
   insideRangeText: string;
@@ -81,6 +82,8 @@ export class HistogramComponent  {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
+      this.rangeStart = null;
+      this.rangeEnd = null;
     }
 
     if ("rangesCounts" in changes ) {
@@ -144,27 +147,14 @@ export class HistogramComponent  {
     let svg = d3.select(this.histogramContainer.nativeElement)
 
     this.xScale = d3.scaleBand()
-      .paddingInner(0.1)
-      .domain(Array.from(this.bins.keys()).map(x => x.toString()))
+      .padding(0.1)
+      .domain(Array.from(this.bars.keys()).map(x => x.toString()))
       .range([0, width]);
 
     var y = this.logScaleY ?  d3.scaleLog() : d3.scaleLinear();
     y.range([height, 0]).domain([1, d3.max(this.bars)]);
 
-    // Add the x Axis
-    let labels;
-    if (this.xLabels) {
-        labels = this.xLabels
-    }
-    else {
-        labels = d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10)
-    }
-
-    let values = labels.map(x => this.getClosestIndexByValue(x))
-
-    svg.append("g")
-      .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(this.xScale).tickValues(values as any).tickFormat((d,i) => labels[i] as any))
+    this.redrawXAxis(svg, width, height);
 
     let leftAxis = d3.axisLeft(y);
     leftAxis.ticks(3).tickFormat(d3.format(".0f"));
@@ -185,6 +175,45 @@ export class HistogramComponent  {
     this.selectedEndIndex = this.bars.length - 1;
   }
 
+  redrawXAxis(svg, width, height) {
+    // Add the x Axis
+    let labels;
+    if (this.xLabels) {
+        labels = this.xLabels
+    }
+    else {
+        labels = d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10)
+    }
+
+    var axisVals = [Number.MIN_VALUE];
+    var axisX = [0];
+    for(var i  = 0; i < this.bins.length - 1; i++) {
+        var leftX;
+        if (this.centerLabels) {
+            leftX = this.xScale(i.toString()) + this.xScale.bandwidth() / 2;
+        }
+        else {
+            leftX = this.xScale(i.toString()) - this.xScale.step() * this.xScale.paddingOuter() / 2;
+        }
+        axisX.push(leftX);
+        axisVals.push(this.bins[i]);
+    }
+
+    if (this.centerLabels) {
+        axisX.push(width);
+        axisVals.push(Number.MAX_VALUE);
+    } 
+    else {
+        axisX.push(width);
+        axisVals.push(this.bins[this.bins.length - 1]);
+    }
+    var scaleXAxis = d3.scaleQuantile().range(axisX).domain(axisVals);
+
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(scaleXAxis).tickValues(labels as any).tickFormat((d,i) => labels[i] as any))
+  }
+
   @Input()
   set rangeStart(rangeStart: any) {
     if (rangeStart == null) {
@@ -203,7 +232,7 @@ export class HistogramComponent  {
   get rangeStart() {
     return this.internalRangeStart;
   }
-
+ 
   @Input()
   set rangeEnd(rangeEnd: any) {
     if (rangeEnd == null) {
@@ -268,7 +297,7 @@ export class HistogramComponent  {
 
   getClosestIndexByX(x) {
       //Domain uses bins count which is larger than bars by 1 element
-      let maxIndex = this.xScale.domain().length - 2
+      let maxIndex = this.xScale.domain().length - 1
       for(var i  = 1; i <= maxIndex; i++) {
           var prev_val = (i - 1) * this.xScale.step()
           var curr_val = i * this.xScale.step()
@@ -282,14 +311,14 @@ export class HistogramComponent  {
   }
 
   getClosestIndexByValue(val) {
-      for(var i  = 1; i < this.bins.length; i++) {
+      for(var i  = 1; i < this.bins.length - 1; i++) {
           if (this.round(this.bins[i]) >= val) {
               var prev = Math.abs(val - this.bins[i - 1])
               var curr = Math.abs(val - this.bins[i])
               return prev < curr ? i - 1 : i;
           }
       }
-      return 0
+      return this.bins.length - 1
   }
 
   startXChange(newPositionX) {
