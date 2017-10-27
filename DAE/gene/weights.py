@@ -24,7 +24,9 @@ class Weights(GeneInfoConfig):
         self.name = weights_name
         self.section_name = 'geneWeights.{}'.format(weights_name)
         self.desc = self.config.get(self.section_name, 'desc')
-        self.step = self.config.get(self.section_name, 'step')
+        self.bins = int(self.config.get(self.section_name, 'bins'))
+        self.yscale = self.config.get(self.section_name, 'yscale')
+
         self.df = None
         self._dict = None
         self._load_weights()
@@ -41,9 +43,6 @@ class Weights(GeneInfoConfig):
         self.df.dropna(inplace=True)
 
         return self.df
-
-#     def weights(self):
-#         return self.df[self.name]
 
     def min(self):
         """
