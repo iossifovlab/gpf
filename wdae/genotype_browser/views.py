@@ -121,38 +121,26 @@ class QueryDownloadView(QueryBaseView):
         data = self._parse_query_params(request.data)
 
         try:
-            all_variants = []
-            columns = []
-            for dataset_id in data['datasetId']:
-                dataset = self.datasets_factory.get_dataset(dataset_id)
-                self.check_object_permissions(request, dataset_id)
+            self.check_object_permissions(request, data['datasetId'])
 
-                generator = dataset.get_variants_csv(safe=True, **data)
-                columns.append(generator.next())
-                all_variants.append(generator)
+            if data['datasetId'] == MetaDataset.ID:
+                data['dataset_ids'] = filter(
+                    lambda dataset_id: request.user.has_perm(dataset_id),
+                    self.datasets_config.get_dataset_ids())
 
-            common_cols_set = set.intersection(*[set(l) for l in columns])
-            common_cols = [col for col in columns[0] if col in common_cols_set]
-            cols_map = {name: index
-                        for (index, name) in enumerate(common_cols)}
+            dataset = self.datasets_factory.get_dataset(data['datasetId'])
 
-            def filter_sort_common_columns(columns, v):
-                row = [None for x in range(len(common_cols))]
-                for i, col_name in enumerate(current_cols):
-                    if col_name in cols_map:
-                        index = cols_map[col_name]
-                        row[index] = v[i]
-                return join_line(row)
+            columns = dataset.get_columns()
+            columns.remove('_pedigree_')
+            variants_data = generate_web_response(
+                dataset.get_variants(safe=True, user=request.user, **data),
+                columns)
 
-            all_gens = [itertools.imap(partial(filter_sort_common_columns,
-                                               columns), variants)
-                        for current_cols, variants
-                        in zip(columns, all_variants)]
-
-            all_gens = [itertools.imap(join_line, [common_cols])] + all_gens
+            all_gens = itertools.imap(join_line,
+                itertools.chain([variants_data['cols']], variants_data['rows']))
 
             response = StreamingHttpResponse(
-                itertools.chain(*all_gens), content_type='text/csv'
+                all_gens, content_type='text/csv'
             )
 
             response['Content-Disposition'] = 'attachment; filename=unruly.csv'

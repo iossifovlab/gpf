@@ -545,8 +545,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
 
             v.atts["_ch_prof_"] = chProf
-            if (include_pedigree):
-                v.atts["_pedigree_"] = v.pedigree_v3(legend)
+            v.atts["_pedigree_"] = v.pedigree_v3(legend)
             family = families.get(v.familyId, None)
             fatts = family.atts if family else {}
             for (_role, _source, label) in pheno_columns:
@@ -554,18 +553,3 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             v._phenotype_ = v.study.get_attr('study.phenotype')
             return v
         return augment_vars
-
-    def get_variants_csv(self, safe=True, **kwargs):
-        variants = self.get_variants(safe=safe, **kwargs)
-        pheno_columns = self.get_pheno_columns()
-        columns = self.COMMON_COLUMNS[:]
-        columns.extend([label for (_, _, label) in pheno_columns])
-        families = {}
-        if pheno_columns and self.pheno_db:
-            families = self.pheno_db.families
-
-        augment_vars = get_var_augmenter(safe, False, **kwargs)
-
-        return generate_response(
-            itertools.imap(augment_vars, variants), columns
-        )

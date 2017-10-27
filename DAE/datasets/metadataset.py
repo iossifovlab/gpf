@@ -31,7 +31,7 @@ class MetaDataset(Dataset):
         previous_variant = next(variants)
         for variant in variants:
             if previous_variant == variant:
-                previous_variant.studyName += ", " + variant.studyName
+                previous_variant.studyName += "; " + variant.studyName
             else:
                 yield previous_variant
                 previous_variant = variant
@@ -57,7 +57,7 @@ class MetaDataset(Dataset):
         for study in studies:
             if len(unique_studies) == 0 or unique_studies[-1].name != study.name:
                 study.dataset_name = reduce(
-                    lambda x, y: '{}, {}'.format(x, y),
+                    lambda x, y: '{}; {}'.format(x, y),
                     studies_datasets[study.name])
                 unique_studies.append(study)
 
