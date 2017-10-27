@@ -141,8 +141,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             }
             where.append('( {} >= {} )'.format(column_names[score['metric']],
                                                score['min']))
-            where.append('( {} <= {} )'.format(column_names[score['metric']],
-                                               score['max']))
+            where.append('( {} < {} )'.format(column_names[score['metric']],
+                                              score['max']))
 
         res = ' AND '.join(where)
         return res

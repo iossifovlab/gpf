@@ -21,10 +21,9 @@ class TransmissionLegacy(TransmissionConfig):
 
     def genomic_scores_filter(self, atts, genomicScores):
         try:
-            msg = [atts[score['metric']] for score in genomicScores]
             return all([score['min'] <= float(atts[score['metric']])
-                        <= score['max']
-                        for score in genomicScores])
+                        < score['max']
+                        for sc in genomicScores])
         except ValueError:
             return False
         except KeyError:

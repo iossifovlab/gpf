@@ -64,19 +64,23 @@ class GeneWeightsPartitionsView(views.APIView):
         w = self.weights.get_weight(weight_name)
         df = w.df
 
-        wmin = float(data["min"])
-        wmax = float(data["max"])
+        try:
+            wmin = float(data["min"])
+        except TypeError:
+            wmin = float("-inf")
+
+        try:
+            wmax = float(data["max"])
+        except TypeError:
+            wmax = float("inf")
 
         total = 1.0 * len(df)
         ldf = df[df[weight_name] < wmin]
-        rdf = df[df[weight_name] > wmax]
+        rdf = df[df[weight_name] >= wmax]
         mdf = df[np.logical_and(
-            df[weight_name] >= wmin, df[weight_name] <= wmax)]
+            df[weight_name] >= wmin, df[weight_name] < wmax)]
 
-        res = {"weights": weight_name,
-               "wmin": wmin,
-               "wmax": wmax,
-               "left": {"count": len(ldf), "percent": len(ldf) / total},
+        res = {"left": {"count": len(ldf), "percent": len(ldf) / total},
                "mid": {"count": len(mdf), "percent": len(mdf) / total},
                "right": {"count": len(rdf), "percent": len(rdf) / total}}
         return Response(res)

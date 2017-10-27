@@ -71,11 +71,11 @@ class Weights(GeneInfoConfig):
         df.dropna(inplace=True)
 
         if wmin is None or wmin < df.min() or wmin > df.max():
-            wmin = df.min()
+            wmin = float("-inf")
         if wmax is None or wmax < df.min() or wmax > df.max():
-            wmax = df.max()
+            wmax = float("inf")
 
-        index = np.logical_and(df.values >= wmin, df.values <= wmax)
+        index = np.logical_and(df.values >= wmin, df.values < wmax)
         genes = self.df[index].gene
         return set(genes.values)
 
