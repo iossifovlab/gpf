@@ -21,14 +21,19 @@ import traceback  # @IgnorePep8
 MAX_CATEGORIES_COUNT = 15
 ROLES_COUNT_CUTOFF = 20
 ROLES = [
-    [Role.prb], [Role.sib], [Role.mom, Role.dad],
-    [Role.paternal_grandfather, Role.paternal_grandmother],
-    [Role.maternal_grandfather, Role.maternal_grandmother],
-    [Role.paternal_uncle, Role.paternal_aunt],
-    [Role.maternal_uncle, Role.maternal_aunt],
+    [Role.prb],
+    [Role.sib],
+    [Role.mom, Role.dad],
+    [
+        Role.paternal_grandfather, Role.paternal_grandmother,
+        Role.maternal_grandfather, Role.maternal_grandmother
+    ],
+    [
+        Role.paternal_uncle, Role.paternal_aunt,
+        Role.maternal_uncle, Role.maternal_aunt
+    ],
     [Role.step_mom, Role.step_dad],
-    [Role.paternal_half_sibling],
-    [Role.maternal_half_sibling],
+    [Role.paternal_half_sibling, Role.maternal_half_sibling],
     [Role.child]
  ]
 
@@ -287,7 +292,6 @@ def draw_categorical_violin_distribution(
 
     if len(roles) == 0:
         return False
-
 
     for subroles in roles:
         df_role = df[df.role.isin(subroles)]
