@@ -12,16 +12,7 @@ export class GeneWeightsState {
   @IsNotEmpty()
   weight: GeneWeights;
 
-  @IsNumber()
-  @Min(0)
-  @IsLessThanOrEqual("rangeEnd")
-  @IsMoreThanOrEqual("domainMin")
   rangeStart: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsMoreThanOrEqual("rangeStart")
-  @IsLessThanOrEqual("domainMax")
   rangeEnd: number;
 
   domainMin: number;
@@ -51,8 +42,8 @@ export function geneWeightsReducer(
     case GENE_WEIGHTS_CHANGE:
       return {
         weight: action.payload[0],
-        rangeStart: action.payload[1],
-        rangeEnd: action.payload[2],
+        rangeStart: null,
+        rangeEnd: null,
         domainMin: action.payload[1],
         domainMax: action.payload[2]
       };

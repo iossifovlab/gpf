@@ -46,16 +46,7 @@ export class CategoricalFilterState extends PhenoFilterState {
 };
 
 export class ContinuousFilterState extends PhenoFilterState {
-  @IsNumber()
-  @Min(0)
-  @IsLessThanOrEqual('mmax')
-  @IsMoreThanOrEqual('domainMin')
   mmin: number;
-
-  @IsNumber()
-  @Min(0)
-  @IsMoreThanOrEqual('mmin')
-  @IsLessThanOrEqual('domainMax')
   mmax: number;
 
   domainMin: number;
@@ -117,8 +108,8 @@ export function phenoFiltersReducer(
                 measure: action.payload.measure,
                 domainMin: action.payload.domainMin,
                 domainMax: action.payload.domainMax,
-                mmin: action.payload.domainMin,
-                mmax: action.payload.domainMax
+                mmin: null,
+                mmax: null
               });
           }
           return currentElement;
