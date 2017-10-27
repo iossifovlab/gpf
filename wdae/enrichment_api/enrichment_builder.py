@@ -27,12 +27,17 @@ class EnrichmentBuilder(object):
     def build_person_grouping_selector(
             self, person_grouping, person_grouping_selector):
 
-        results = {}
         gh = GH.from_dataset(
             self.dataset,
             person_grouping,
             person_grouping_selector)
 
+        children_stats = gh.get_children_stats()
+        children_count = children_stats['M'] + children_stats['F']
+        if children_count <= 0:
+            return None
+
+        results = {}
         for effect_type in self.EFFECT_TYPES:
             enrichment_results = self.tool.calc(
                 effect_type,
@@ -62,7 +67,8 @@ class EnrichmentBuilder(object):
             res = self.build_person_grouping_selector(
                 person_grouping_id,
                 person_grouping_selector['id'])
-            results.append(res)
+            if res:
+                results.append(res)
         self.results = results
         return self.results
 

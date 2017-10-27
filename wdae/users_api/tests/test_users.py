@@ -195,7 +195,7 @@ class UsersAPITest(APITestCase):
         cls.res = WdaeUser.objects.create_user(email='fake@fake.com')
         cls.res.name = 'fname'
         cls.res.email = 'fake@fake.com'
-        cls.res.is_active = True
+        cls.res.set_password('alabala')
         cls.res.save()
 
         cls.researcher_id = '11aa--bb'
@@ -242,7 +242,6 @@ class UserAuthenticationTest(APITestCase):
     def setUp(self):
         self.user = WdaeUser.objects.create_user(email='test@example.com')
         self.user.set_password("pass")
-        self.user.is_active = True
         self.user.save()
 
     def test_successful_auth(self):
@@ -282,3 +281,121 @@ class UserAuthenticationTest(APITestCase):
         response = self.client.get('/api/v3/users/get_user_info')
         self.assertEqual(response.data['loggedIn'], True)
         self.assertEqual(response.data['email'], 'test@example.com')
+
+
+class UserGroups(APITestCase):
+
+    def setUp(self):
+        self.user = WdaeUser.objects.create_user(email='test@example.com')
+        self.user.set_password("pass")
+        self.user.save()
+
+        self.admin_group = Group.objects.create(name=WdaeUser.SUPERUSER_GROUP)
+
+    def test_without_admin_group_does_not_have_is_staff(self):
+        assert not self.user.is_staff
+
+    def test_adding_admin_group_sets_is_staff(self):
+        self.user.groups.add(self.admin_group)
+
+        assert self.user.is_staff
+
+    def test_removing_admin_group_unsets_is_staff(self):
+        self.user.groups.add(self.admin_group)
+
+        self.user.groups.remove(self.admin_group)
+        assert not self.user.is_staff
+
+    def test_deleting_some_group_does_not_break_is_staff(self):
+        group = Group.objects.create(name="Some Other Group1")
+
+        assert not self.user.is_staff
+        self.user.groups.add(self.admin_group)
+        assert self.user.is_staff
+
+        group.delete()
+        assert self.user.is_staff
+
+    def test_deleting_admin_group_unsets_is_staff(self):
+        self.user.groups.add(self.admin_group)
+        self.admin_group.delete()
+
+        self.user.refresh_from_db()
+        assert not self.user.groups.filter(name=WdaeUser.SUPERUSER_GROUP)\
+            .exists()
+        assert not self.user.is_staff
+
+    def test_adding_through_admin_group_sets_is_staff(self):
+        self.admin_group.user_set.add(self.user)
+
+        self.user.refresh_from_db()
+
+        assert self.user.is_staff
+
+    def test_adding_multiple_users_through_admin_group_sets_is_staff(self):
+        other_user = WdaeUser.objects.create(email="email@test.com")
+        self.admin_group.user_set.add(self.user, other_user)
+
+        self.user.refresh_from_db()
+        other_user.refresh_from_db()
+
+        assert self.user.is_staff
+        assert other_user.is_staff
+
+
+class UserWithoutPassword(APITestCase):
+
+    def setUp(self):
+        self.user = WdaeUser.objects.create(email="email@test.com")
+
+    def test_is_inactive_when_newly_created(self):
+        assert not self.user.is_active
+
+    def test_is_inactive_when_password_is_set_to_none(self):
+        self.user.set_password(None)
+        self.user.save()
+
+        self.user.refresh_from_db()
+
+        assert not self.user.is_active
+
+    def test_is_active_when_password_is_set(self):
+        self.user.set_password('alabala')
+        self.user.save()
+
+        self.user.refresh_from_db()
+
+        assert self.user.is_active
+
+    def test_is_inactive_when_password_is_reset(self):
+        self.user.reset_password()
+
+        self.user.refresh_from_db()
+
+        assert not self.user.is_active
+
+
+class UserWithPassword(APITestCase):
+
+    def setUp(self):
+        self.user = WdaeUser.objects.create(email="email@test.com")
+        self.user.set_password('alabala')
+        self.user.save()
+
+        self.user.refresh_from_db()
+
+    def test_user_is_inactive_when_password_is_set_to_none(self):
+        self.user.set_password(None)
+        self.user.save()
+
+        self.user.refresh_from_db()
+
+        assert not self.user.is_active
+
+    def test_user_is_inactive_when_password_is_reset(self):
+        self.user.reset_password()
+
+        self.user.refresh_from_db()
+        assert not self.user.is_active
+
+

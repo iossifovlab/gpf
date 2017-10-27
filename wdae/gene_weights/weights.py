@@ -25,11 +25,20 @@ class Weights(Preload):
             w = self.loader[weight_name]
             assert w.df is not None
 
-            bars, bins = np.histogram(w.values(), 150)
-            result.append({"weight": w.name,
-                           "desc": w.desc,
-                           "bars": bars,
-                           "bins": bins})
+            step = (w.max() - w.min()) / (w.bins - 1)
+
+            bars, bins = np.histogram(
+                w.values(), w.bins,
+                range=[w.min(), w.max() + step])
+            # bins = np.round(bins, -int(np.log(step)))
+
+            result.append({
+                "weight": w.name,
+                "desc": w.desc,
+                "bars": bars,
+                "bins": bins,
+                "yscale": w.yscale
+            })
         return result
 
     def load(self):

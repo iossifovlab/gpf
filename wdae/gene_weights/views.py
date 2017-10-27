@@ -5,9 +5,12 @@ Created on Dec 10, 2015
 '''
 from rest_framework import views, status
 from rest_framework.response import Response
+from django.http.response import StreamingHttpResponse
 from preloaded import register
 import numpy as np
 from users_api.authentication import SessionAuthenticationWithoutCSRF
+from query_variants import join_line
+import itertools
 
 
 class GeneWeightsListView(views.APIView):
@@ -15,6 +18,24 @@ class GeneWeightsListView(views.APIView):
     def get(self, request):
         weights = register.get('gene_weights')
         return Response(weights.desc)
+
+
+class GeneWeightsDownloadView(views.APIView):
+
+    def get(self, request, weight):
+        weights = register.get('gene_weights')
+        df = weights.get_weight(weight).df
+        columns = df.columns.values.tolist()
+        m = itertools.imap(lambda x: [str(getattr(x, col)) for col in columns],
+                           df.itertuples())
+        m = itertools.chain([columns], m)
+
+        response = StreamingHttpResponse(itertools.imap(join_line, m),
+                                         content_type='text/csv')
+
+        response['Content-Disposition'] = 'attachment; filename=weights.csv'
+        response['Expires'] = '0'
+        return response
 
 
 class GeneWeightsGetGenesView(views.APIView):

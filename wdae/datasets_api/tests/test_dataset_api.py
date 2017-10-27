@@ -5,6 +5,7 @@ Created on Jan 20, 2017
 '''
 from rest_framework.test import APITestCase
 from rest_framework import status
+from guardian.shortcuts import get_groups_with_perms
 from datasets_api.models import Dataset
 
 
@@ -91,3 +92,32 @@ class DatasetApiTest(APITestCase):
         self.assertEquals(2, len(pedigrees))
 
         self.assertIn('phenoColumns', gbdata)
+
+    def test_datasets_have_default_groups(self):
+        url = '/api/v3/datasets/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+
+        self.assertIn('data', data)
+        for dataset in data['data']:
+            dataset_id = dataset['id']
+            assert next((group for group in dataset['groups']
+                         if group['name'] == dataset_id), None)
+
+    def test_datasets_have_all_their_groups(self):
+        url = '/api/v3/datasets/'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+
+        self.assertIn('data', data)
+        for dataset_response in data['data']:
+            dataset_id = dataset_response['id']
+            dataset = Dataset.objects.get(dataset_id=dataset_id)
+            dataset_groups = get_groups_with_perms(dataset)
+
+            assert len(dataset_groups) == len(dataset_response['groups'])
+            for group in dataset_groups:
+                assert next((g for g in dataset_response['groups']
+                             if g['name'] == group.name), None)

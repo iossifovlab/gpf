@@ -3,19 +3,103 @@ Created on Aug 10, 2016
 
 @author: lubo
 '''
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import BaseUserManager, Group
+from django.shortcuts import get_object_or_404, get_list_or_404
+from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework.decorators import detail_route, list_route
+import django.contrib.auth
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import django.contrib.auth
 from rest_framework.decorators import authentication_classes
-from models import VerificationPath
+from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
+from rest_framework import permissions
+from rest_framework import filters
 from users_api.authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF
-from django.views.decorators.csrf import ensure_csrf_cookie
+from users_api.models import VerificationPath
+from users_api.serializers import UserSerializer
+from users_api.serializers import UserWithoutEmailSerializer
+from users_api.serializers import BulkGroupOperationSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    queryset = get_user_model().objects.all()
+    permission_classes = (permissions.IsAdminUser,)
+    pagination_class = None
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('groups__name', 'email', 'name')
+
+    def get_serializer_class(self):
+        serializer_class = self.serializer_class
+
+        if self.action == 'update' or self.action == 'partial_update':
+            serializer_class = UserWithoutEmailSerializer
+
+        return serializer_class
+
+    @detail_route(methods=['post'])
+    def password_remove(self, request, pk=None):
+        self.check_permissions(request)
+        user = get_object_or_404(get_user_model(), pk=pk)
+
+        if user.has_usable_password():
+            user.set_unusable_password()
+            user.save()
+            user.deauthenticate()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @detail_route(methods=['post'])
+    def password_reset(self, request, pk=None):
+        self.check_permissions(request)
+        user = get_object_or_404(get_user_model(), pk=pk)
+
+        user.reset_password(by_admin=True)
+        user.deauthenticate()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @list_route(methods=['post'])
+    def bulk_add_group(self, request):
+        self.check_permissions(request)
+
+        serializer = BulkGroupOperationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        users = get_list_or_404(get_user_model(), id__in=data['userIds'])
+        if len(users) != len(data['userIds']):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            group, _ = Group.objects.get_or_create(name=data['group'])
+
+            group.user_set.add(*users)
+
+        return Response(status=status.HTTP_200_OK)
+
+    @list_route(methods=['post'])
+    def bulk_remove_group(self, request):
+        serializer = BulkGroupOperationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        users = get_list_or_404(get_user_model(), id__in=data['userIds'])
+        if len(users) != len(data['userIds']):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        group = get_object_or_404(Group, name=data['group'])
+        with transaction.atomic():
+            group.user_set.remove(*users)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -29,6 +113,7 @@ def reset_password(request):
                              ' for registration. Please, register first'},
                             status=status.HTTP_409_CONFLICT)
         user.reset_password()
+        user.deauthenticate()
 
         return Response({}, status.HTTP_200_OK)
     except user_model.DoesNotExist:
@@ -97,7 +182,8 @@ def logout(request):
 def get_user_info(request):
     user = request.user
     if user.is_authenticated():
-        return Response({'loggedIn': True, 'email': user.email},
+        return Response({'loggedIn': True, 'email': user.email,
+                         'isAdministrator': user.is_staff},
                         status.HTTP_200_OK)
     else:
         return Response({'loggedIn': False}, status.HTTP_200_OK)
