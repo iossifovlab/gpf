@@ -27,7 +27,7 @@ from common.progress import progress, progress_nl  # @IgnorePep8
 
 class PreparePhenoBrowserBase(object):
 
-    LARGE_DPI = 300
+    LARGE_DPI = 150
     SMALL_DPI = 16
 
     def __init__(self, pheno_db, output_dir):

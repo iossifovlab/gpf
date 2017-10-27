@@ -5,7 +5,7 @@ Created on Apr 10, 2017
 '''
 import textwrap
 import matplotlib as mpl
-from pheno.common import Role, Gender
+from pheno.common import Gender
 mpl.use('PS')
 
 import matplotlib.pyplot as plt  # @IgnorePep8
@@ -31,13 +31,6 @@ def names(col1, col2):
 def male_female_colors():
     [color_male, color_female] = gender_palette()
     return color_male, color_female
-
-
-def extra_color():
-    colors = iter(plt.rcParams['axes.prop_cycle'])
-    colors.next()
-    colors.next()
-    return colors.next()['color']
 
 
 def male_female_legend(color_male, color_female, ax=None):
@@ -110,6 +103,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
         ax.plot(dfemale[col1], res_female.predict(), color=color_female)
 
     male_female_legend(color_male, color_female, ax)
+    plt.tight_layout()
     return res_male, res_female
 
 
@@ -127,11 +121,11 @@ def draw_distribution(df, measure_id, ax=None):
         stacked=True,
         bins=20,
         normed=False)
-    # sns.kdeplot(df[col], ax=ax, color=extra_color())
     male_female_legend(color_male, color_female, ax)
 
     ax.set_xlabel(measure_id)
     ax.set_ylabel('count')
+    plt.tight_layout()
 
 
 def role_counts(df, role):
@@ -174,6 +168,11 @@ def roles_to_draw(df):
     ]
 
 
+def set_figure_size(figure, x_count):
+    scale = 3.0 / 4.0
+    figure.set_size_inches((8 + x_count) * scale, 8 * scale)
+
+
 def _enumerate_by_count(df, column_name):
     occurrence_counts = df[column_name].value_counts()
     occurrence_ordered = occurrence_counts.index.values.tolist()
@@ -208,7 +207,7 @@ def draw_measure_violinplot(df, measure_id, ax=None):
     if len(roles) == 0:
         return False
 
-    fig.set_size_inches(2 + len(roles), 8)
+    set_figure_size(fig, len(roles))
 
     sns.violinplot(
         data=df, x='role', y=measure_id, hue='gender',
@@ -291,7 +290,7 @@ def draw_categorical_violin_distribution(
         0, len(roles) * 2 * binned_maximum, 2 * binned_maximum)
 
     _fig, ax = plt.subplots()
-    _fig.set_size_inches(2 + len(roles), 8)
+    set_figure_size(_fig, len(roles))
     for count, (male, female) in enumerate(binned_datasets):
         x_loc = x_locations[count]
 
