@@ -26,10 +26,18 @@ class Weights(Preload):
             assert w.df is not None
 
             step = (w.max() - w.min()) / (w.bins - 1)
+            dec = - np.log10(step)
+            dec = dec if dec >= 0 else 0
+            dec = int(dec)
+
+            bleft = np.around(w.min(), dec)
+            bright = np.around(w.max() + step, dec)
+
+            print(weight_name, bright, dec, step)
 
             bars, bins = np.histogram(
                 w.values(), w.bins,
-                range=[w.min(), w.max() + step])
+                range=[bleft, bright])
             # bins = np.round(bins, -int(np.log(step)))
 
             result.append({
