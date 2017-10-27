@@ -12,11 +12,11 @@ Vagrant.configure(2) do |config|
 	vagrant.vm.box = "ubuntu/xenial64"
 	vagrant.vm.hostname = "vagrant"
 	vagrant.vm.network "private_network", ip: "192.168.200.17"
+	vagrant.disksize.size='20GB'
 
   end
 
-
-  config.vm.provision "shell", path: "scripts/bootstrap.sh"
+  # config.vm.provision "shell", path: "scripts/bootstrap.sh"
   config.vm.synced_folder ENV['DAE_DB_DIR'], "/data-dev"
 
 
