@@ -153,9 +153,10 @@ class PreparePhenoBrowserBase(object):
             res['pvalue_correlation_age_female'] = res_female.pvalues['age'] \
                 if res_female is not None else None
 
-            (res['figure_correlation_age_small'],
-             res['figure_correlation_age']) = \
-                self.save_fig(measure, "prb_regression_by_age")
+            if res_male is not None or res_female is not None:
+                (res['figure_correlation_age_small'],
+                 res['figure_correlation_age']) = \
+                    self.save_fig(measure, "prb_regression_by_age")
             return res
         return res
 
@@ -192,9 +193,10 @@ class PreparePhenoBrowserBase(object):
             res_female.pvalues['nonverbal_iq'] \
             if res_female is not None else None
 
-        (res['figure_correlation_nviq_small'],
-         res['figure_correlation_nviq']) = self.save_fig(
-             measure, "prb_regression_by_nviq")
+        if res_male is not None or res_female is not None:
+            (res['figure_correlation_nviq_small'],
+             res['figure_correlation_nviq']) = self.save_fig(
+                 measure, "prb_regression_by_nviq")
         return res
 
     def build_values_violinplot(self, measure):
