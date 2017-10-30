@@ -258,7 +258,6 @@ class PreparePhenoBrowserBase(object):
         print('-------------------------------------------')
 
     def handle_measure(self, measure):
-        print(measure)
         res = PreparePhenoBrowserBase._measure_to_dict(measure)
 
         if measure.measure_type == MeasureType.continuous:
@@ -282,7 +281,6 @@ class PreparePhenoBrowserBase(object):
         for instrument in self.pheno_db.instruments.values():
             progress_nl()
             for measure in instrument.measures.values():
-                # print(measure)
-                progress()
+                progress(text=str(measure) + "\n")
                 var = self.handle_measure(measure)
                 db.save(var)
