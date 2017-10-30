@@ -213,11 +213,10 @@ def draw_measure_violinplot(df, measure_id, roles=ROLES, ax=None):
              if df.role.isin(subroles).sum() >= ROLES_COUNT_CUTOFF]
 
     if len(roles) == 0:
-        pass
+        return False
 
     roles_to_role_groups = {}
     roles_order = []
-
 
     for subroles in roles:
         subroles_name = ", ".join([role.name for role in subroles])
