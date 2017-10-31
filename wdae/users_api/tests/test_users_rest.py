@@ -3,6 +3,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from django.contrib.auth.models import Group
+from users_api.models import WdaeUser
 
 
 @pytest.fixture()
@@ -305,6 +306,66 @@ def test_admin_can_remove_user_group(
 
     active_user.refresh_from_db()
     assert not active_user.groups.filter(id=empty_group.id).exists()
+
+
+def test_single_admin_cant_remove_superuser_group_from_self(
+        admin_user, admin_client, users_instance_url):
+    data = {
+        'groups': [
+            group.name
+            for group in admin_user.groups
+            .exclude(name=WdaeUser.SUPERUSER_GROUP).all()
+        ]
+    }
+    response = admin_client.put(
+        users_instance_url(admin_user.pk), data, format='json')
+
+    assert response.status_code is not status.HTTP_200_OK
+
+    admin_user.refresh_from_db()
+    assert admin_user.groups.filter(name=WdaeUser.SUPERUSER_GROUP).exists()
+
+
+def test_two_admins_can_remove_superuser_group_from_self(
+        admin_user, admin_client, user_model, users_instance_url):
+    other_superuser = user_model.objects.create_superuser(
+        'other_admin@test.com', 'supersecret')
+    other_superuser.groups.add(Group.objects.get(name=WdaeUser.SUPERUSER_GROUP))
+    data = {
+        'groups': [
+            group.name
+            for group in admin_user.groups
+            .exclude(name=WdaeUser.SUPERUSER_GROUP).all()
+        ]
+    }
+    response = admin_client.put(
+        users_instance_url(admin_user.pk), data, format='json')
+
+    assert response.status_code is status.HTTP_200_OK
+
+    admin_user.refresh_from_db()
+    assert not admin_user.groups.filter(name=WdaeUser.SUPERUSER_GROUP).exists()
+
+
+def test_two_admins_can_remove_superuser_group_from_other(
+        admin_user, admin_client, user_model, users_instance_url):
+    other_superuser = user_model.objects.create_superuser(
+        'other_admin@test.com', 'supersecret')
+    data = {
+        'groups': [
+            group.name
+            for group in other_superuser.groups
+            .exclude(name=WdaeUser.SUPERUSER_GROUP).all()
+        ]
+    }
+    response = admin_client.put(
+        users_instance_url(other_superuser.pk), data, format='json')
+
+    assert response.status_code is status.HTTP_200_OK
+
+    other_superuser.refresh_from_db()
+    assert not other_superuser.groups.filter(name=WdaeUser.SUPERUSER_GROUP) \
+        .exists()
 
 
 def test_protected_groups_cant_be_removed(
