@@ -20,14 +20,15 @@ class Individual(object):
 
     def __repr__(self):
         return "Individual({})".format(
-            self.individual_id if self.individual_id is not None
+            str(self.individual_id) if self.individual_id is not None
             else "UNKNOWN")
 
 
 class IndividualUnit(object):
+    NO_RANK = -3673473456
 
     def __init__(self, individual=None, mating_units=None,
-                 parents=None):
+                 parents=None, rank=NO_RANK):
 
         if mating_units is None:
             mating_units = []
@@ -35,12 +36,35 @@ class IndividualUnit(object):
         self.mating_units = mating_units
         self.parents = parents
         self.individual = individual
+        self.rank = rank
 
         if parents:
             parents.children.individuals.add(self)
 
     def __repr__(self):
-        return repr(self.individual)
+        return repr(self.individual) + " (" + str(self.rank) + ")"
+
+    def add_ranks(self):
+        self._add_rank(0)
+
+    def _add_rank(self, rank):
+        if self.rank != IndividualUnit.NO_RANK:
+            return
+
+        self.rank = rank
+
+        for mu in self.mating_units:
+            for child in mu.children.individuals:
+                child._add_rank(rank - 1)
+
+            mu.father._add_rank(rank)
+            mu.mother._add_rank(rank)
+
+        if self.parents:
+            if self.parents.father:
+                self.parents.father._add_rank(rank + 1)
+            if self.parents.mother:
+                self.parents.mother._add_rank(rank + 1)
 
     def has_individual(self):
         return bool(self.individual)

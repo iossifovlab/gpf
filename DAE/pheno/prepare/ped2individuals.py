@@ -322,14 +322,20 @@ class PedigreeToFamily(object):
 
     def to_family(self, members):
         individuals = self._link_pedigree_members(members)
-        affected = filter(
-            lambda x: x.individual.status == Status.affected, individuals)
-        proband = sorted(
-            affected, key=lambda x: x.individual.individual_id)[0]
+
+        proband = self.get_proband(individuals)
 
         self._assign_roles(proband)
 
         return individuals
+
+    def get_proband(self, individuals):
+        affected = self.get_affected(individuals)
+        return sorted(affected, key=lambda x: x.individual.individual_id)[0]
+
+    def get_affected(self, individuals):
+        return filter(
+            lambda x: x.individual.status == Status.affected, individuals)
 
     def build_families(self, families):
         pedigrees = {}
@@ -339,6 +345,14 @@ class PedigreeToFamily(object):
             pedigrees[family_name] = pedigree
 
         return pedigrees
+
+
+class AGREPedigreeToFamily(PedigreeToFamily):
+
+    def get_proband(self, individuals):
+        individuals[0].add_ranks()
+        affected = self.get_affected(individuals)
+        return sorted(affected, key=lambda x: x.rank)[0]
 
 
 class FamilyToCsv(object):
@@ -378,7 +392,7 @@ def main():
     pedigrees = {}
 
     for family_name, members in families.items():
-        pedigree = PedigreeToFamily().to_family(members)
+        pedigree = AGREPedigreeToFamily().to_family(members)
         pedigrees[family_name] = pedigree
 
     pedigrees_list = list(itertools.chain(*pedigrees.values()))
