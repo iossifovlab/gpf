@@ -2,6 +2,14 @@
     <div *ngIf="genotypePreviewsArray">
         <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
             <gpf-table-column>
+                <gpf-table-header caption="dataset">
+                </gpf-table-header>
+                <gpf-table-header>
+                </gpf-table-header>
+                <gpf-table-content field="dataset">
+                </gpf-table-content>
+            </gpf-table-column>
+            <gpf-table-column>
                 <gpf-table-header caption="family">
                 </gpf-table-header>
                 <gpf-table-header>

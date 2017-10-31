@@ -132,6 +132,8 @@ import { GenotypePreviewChromosomesComponent } from './genotype-preview-chromoso
 import { ChromosomeService } from './chromosome-service/chromosome.service';
 import { ChromosomeComponent } from './chromosome/chromosome.component';
 import { RedirectOnErrorHttpService } from './config/redirect-on-error.service';
+import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
+import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
 
 const appRoutes: Routes = [
   {
@@ -144,7 +146,7 @@ const appRoutes: Routes = [
     children: [
       {
         path: 'browser',
-        component: GenotypeBrowserComponent
+        component: GenotypeBrowserSingleViewComponent
       },
       {
         path: 'enrichment',
@@ -165,6 +167,15 @@ const appRoutes: Routes = [
       {
         path: '**',
         redirectTo: 'browser'
+      }
+    ]
+  },
+  {
+    path: 'all-datasets',
+    children : [
+      {
+        path: 'browser',
+        component: GenotypeBrowserMetaViewComponent
       }
     ]
   },
@@ -302,6 +313,8 @@ const appRoutes: Routes = [
     DatasetsTableComponent,
     GenotypePreviewChromosomesComponent,
     ChromosomeComponent,
+    GenotypeBrowserSingleViewComponent,
+    GenotypeBrowserMetaViewComponent,
   ],
   imports: [
     BrowserModule,

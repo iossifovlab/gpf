@@ -57,7 +57,8 @@ let FIELD_TO_OBJECT_PROPERTY: Map<string, string> = new Map([
   ['children description', 'childrenDescription'],
   ['validation status', 'validationStatus'],
   ['_pedigree_', 'pedigreeDataFromArray'],
-  ['phenoInChS', 'phenoInChS']
+  ['phenoInChS', 'phenoInChS'],
+  ['dataset', 'dataset']
 ]);
 
 export class GenotypePreview {
