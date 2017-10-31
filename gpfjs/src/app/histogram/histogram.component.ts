@@ -181,12 +181,20 @@ export class HistogramComponent  {
     if (this.xLabels) {
         labels = this.xLabels
     }
+    else if (this.bins.length < 10) {
+        if (this.centerLabels) {
+            labels = this.bins.slice(0, -1)
+        }
+        else {
+            labels = this.bins
+        }
+    }
     else {
-        labels = d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10)
+        labels = d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
     }
 
-    var axisVals = [Number.MIN_VALUE];
-    var axisX = [0];
+    let axisX = [0];
+    let axisVals = [Number.NEGATIVE_INFINITY];
     for(var i  = 0; i < this.bins.length - 1; i++) {
         var leftX;
         if (this.centerLabels) {
@@ -201,7 +209,7 @@ export class HistogramComponent  {
 
     if (this.centerLabels) {
         axisX.push(width);
-        axisVals.push(Number.MAX_VALUE);
+        axisVals.push(Number.POSITIVE_INFINITY);
     } 
     else {
         axisX.push(width);
