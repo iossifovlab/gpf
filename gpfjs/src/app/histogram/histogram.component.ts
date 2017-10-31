@@ -182,12 +182,8 @@ export class HistogramComponent  {
         labels = this.xLabels
     }
     else if (this.bins.length < 10) {
-        if (this.centerLabels) {
-            labels = this.bins.slice(0, -1)
-        }
-        else {
-            labels = this.bins
-        }
+        labels = this.bins.slice(0, -1)
+        this.centerLabels = true;
     }
     else {
         labels = d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
