@@ -4,23 +4,25 @@ Created on Feb 29, 2016
 @author: lubo
 '''
 import preloaded
-from DAE import get_gene_sets_symNS
+# from DAE import get_gene_sets_symNS
+from gene.gene_set_collections import GeneSetsCollection
 
 
 class GeneSetPreload(preloaded.register.Preload):
 
     def __init__(self, name):
         self.name = name
-        self.gene_term = None
+        self.gsc = None
 
     def is_loaded(self):
-        return self.gene_term
+        return self.gsc
 
     def load(self):
-        self.gene_term = get_gene_sets_symNS(self.name)
+        self.gsc = GeneSetsCollection(self.name)
+        self.gsc.load()
 
     def get(self):
-        return self.gene_term
+        return self.gsc
 
 
 class GoTermsPreload(GeneSetPreload):
