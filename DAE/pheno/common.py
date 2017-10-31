@@ -27,6 +27,7 @@ class Role(enum.Enum):
     prb = 30
     sib = 40
     child = 50
+    spouse = 2
     maternal_uncle = 11
     maternal_aunt = 12
     paternal_uncle = 21
