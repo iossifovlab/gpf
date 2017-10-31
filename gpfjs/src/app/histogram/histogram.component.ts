@@ -190,7 +190,7 @@ export class HistogramComponent  {
     }
 
     let axisX = [0];
-    let axisVals = [Number.NEGATIVE_INFINITY];
+    let axisVals = [];
     for(var i  = 0; i < this.bins.length - 1; i++) {
         var leftX;
         if (this.centerLabels) {
@@ -211,7 +211,7 @@ export class HistogramComponent  {
         axisX.push(width);
         axisVals.push(this.bins[this.bins.length - 1]);
     }
-    var scaleXAxis = d3.scaleQuantile().range(axisX).domain(axisVals);
+    var scaleXAxis = d3.scaleThreshold().range(axisX).domain(axisVals);
 
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
