@@ -2,6 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from datasets_api.models import Dataset
+from django.contrib.auth.models import Group
+from users_api.models import WdaeUser
 
 
 @pytest.fixture()
@@ -33,6 +35,8 @@ def user(db, user_model):
 def admin_user(db, user_model):
     u = user_model.objects.create_superuser('admin@example.com', 'secret')
     u.save()
+    admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
+    u.groups.add(admin_group)
 
     return u
 
