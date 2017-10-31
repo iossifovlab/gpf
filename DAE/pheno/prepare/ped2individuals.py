@@ -224,6 +224,8 @@ class PedigreeToFamily(object):
                 if individual.individual.gender == Gender.F:
                     individual.individual.assign_role(Role.paternal_aunt)
 
+                self._assign_roles_paternal_cousin(individual)
+
         self._assign_roles_paternal_other_families(father)
 
     def _assign_roles_maternal_other_families(self, mother):
@@ -259,7 +261,19 @@ class PedigreeToFamily(object):
                 if individual.individual.gender == Gender.F:
                     individual.individual.assign_role(Role.maternal_aunt)
 
+                self._assign_roles_maternal_cousin(individual)
+
         self._assign_roles_maternal_other_families(mother)
+
+    def _assign_roles_maternal_cousin(self, uncle_or_aunt):
+        for mating_unit in uncle_or_aunt.mating_units:
+            for child in mating_unit.children.individuals:
+                child.individual.assign_role(Role.maternal_cousin)
+
+    def _assign_roles_paternal_cousin(self, uncle_or_aunt):
+        for mating_unit in uncle_or_aunt.mating_units:
+            for child in mating_unit.children.individuals:
+                child.individual.assign_role(Role.paternal_cousin)
 
     def _assign_roles_children(self, proband):
         for mating_unit in proband.mating_units:
