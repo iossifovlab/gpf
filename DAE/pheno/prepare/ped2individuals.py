@@ -28,7 +28,7 @@ class PedigreeMember(object):
         return self.individual_id
 
     def assign_role(self, role):
-        assert not self.role or self.role == role, \
+        assert self.role == Role.unknown or self.role == role, \
             "{},{},{}!={}".format(
                 self.family_id, self.individual_id, self.role, role)
         self.role = role
@@ -78,7 +78,7 @@ class CsvPedigreeReader(object):
 
             kwargs["status"] = Status(self.convert_status(kwargs["status"]))
             kwargs["gender"] = Gender(self.convert_gender(kwargs["gender"]))
-            kwargs["role"] = None
+            kwargs["role"] = Role.unknown
 
             individual = PedigreeMember(**kwargs)
 
