@@ -9,6 +9,7 @@ import DAE
 from pheno_tool.family_filters import FamilyFilters
 from pheno_tool.genotype_helper import GenotypeHelper
 from pheno_tool.tool import PhenoFilterBuilder
+from gene.gene_set_collections import GeneSetsCollection
 
 
 @pytest.fixture(scope='session')
@@ -35,9 +36,10 @@ def family_filters(request, phdb):
 
 @pytest.fixture(scope='session')
 def gene_set(request):
-    gt = DAE.get_gene_sets_symNS('main')
-    gene_set = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
-    return gene_set
+    gsc = GeneSetsCollection('main')
+    gsc.load()
+    gene_set = gsc.get_gene_set('autism candidates from Iossifov PNAS 2015')
+    return gene_set['syms']
 
 
 @pytest.fixture(scope='session')
@@ -53,9 +55,10 @@ def all_ssc_studies(request):
 
 @pytest.fixture(scope='session')
 def autism_candidates_genes(request):
-    gt = DAE.get_gene_sets_symNS('main')
-    gene_syms = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
-    return gene_syms
+    gsc = GeneSetsCollection('main')
+    gsc.load()
+    gene_syms = gsc.get_gene_set('autism candidates from Iossifov PNAS 2015')
+    return gene_syms['syms']
 
 
 @pytest.fixture(scope='session')

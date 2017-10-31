@@ -3,16 +3,18 @@ Created on Nov 15, 2016
 
 @author: lubo
 '''
-from DAE import get_gene_sets_symNS, vDB, pheno
+from DAE import vDB, pheno
 from pheno_tool.tool import PhenoTool
 from pheno_tool.genotype_helper import VariantsType as VT
 from pheno.common import Role
+from gene.gene_set_collections import GeneSetsCollection
 
 
 def test_example_1():
     # load gene set
-    gt = get_gene_sets_symNS('main')
-    gene_syms = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
+    gsc = GeneSetsCollection('main')
+    gsc.load()
+    gene_syms = gsc.get_gene_set('autism candidates from Iossifov PNAS 2015')
 
     studies = vDB.get_studies('ALL SSC')
     transmitted_study = vDB.get_study('w1202s766e611')
@@ -39,8 +41,9 @@ def test_example_1():
 
 def test_example_2():
     # load gene set
-    gt = get_gene_sets_symNS('main')
-    gene_syms = gt.t2G['autism candidates from Iossifov PNAS 2015'].keys()
+    gsc = GeneSetsCollection('main')
+    gsc.load()
+    gene_syms = gsc.get_gene_set('autism candidates from Iossifov PNAS 2015')
 
     studies = vDB.get_studies('ALL SSC')
     transmitted_study = vDB.get_study('w1202s766e611')

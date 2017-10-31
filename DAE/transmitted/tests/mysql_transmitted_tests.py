@@ -5,7 +5,8 @@ Created on Sep 24, 2015
 '''
 import unittest
 from transmitted.mysql_query import MysqlTransmittedQuery
-from DAE import vDB, get_gene_sets_symNS
+from DAE import vDB
+from gene.gene_set_collections import GeneSetsCollection
 
 
 def count(vs):
@@ -16,9 +17,9 @@ def count(vs):
 
 
 def get_gene_set_syms(gene_set, gene_term):
-    gt = get_gene_sets_symNS(gene_set)
-    if gt and gene_term in gt.t2G:
-        return gt.t2G[gene_term].keys()
+    gsc = GeneSetsCollection(gene_set)
+    gsc.load()
+    gene_set = gsc.get_gene_set(gene_term)
 
 
 class SummaryVariantsLenTest(unittest.TestCase):
