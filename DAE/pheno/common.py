@@ -101,6 +101,18 @@ class RoleMapping(object):
         'maternal_half_sibling': Role.maternal_half_sibling,
     }
 
+    VIP = {
+        'Mother': Role.mom,
+        'Father': Role.dad,
+        'Initially identified proband': Role.prb,
+        'Sibling': Role.sib,
+        'Uncle': Role.maternal_uncle,
+        'Cousin': Role.maternal_cousin,
+        'Grandfather': Role.maternal_grandfather,
+        'Grandmother': Role.maternal_grandmother,
+        'Half sibling': Role.maternal_half_sibling,
+    }
+
 
 def default_config():
     config = {

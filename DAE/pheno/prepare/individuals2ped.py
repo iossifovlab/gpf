@@ -1,4 +1,6 @@
 #!/usr/bin/env python2.7
+import sys
+import abc
 import itertools
 import argparse
 import csv
@@ -188,25 +190,31 @@ class MatingUnit(object):
         self.father.mating_units.append(self)
 
 
-class SPARKCsvIndividualsReader(object):
+class CsvIndividualsReader(object):
+    __metaclass__ = abc.ABCMeta
 
-    COLUMNS_TO_FIELDS = {
-        "role": "role",
-        "family_id": "family_id",
-        "subject_sp_id": "individual_id",
-        "sex": "gender",
-        "asd": "status"
-    }
+    @abc.abstractmethod
+    def convert_individual_id(self, family_id, individual_id):
+        raise NotImplementedError()
 
-    STATUS_TO_ENUM = {
-        "True": Status.affected,
-        "False": Status.unaffected
-    }
+    @abc.abstractmethod
+    def convert_status(self, status):
+        raise NotImplementedError()
 
-    GENDER_TO_ENUM = {
-        "Male": Gender.M,
-        "Female": Gender.F
-    }
+    @abc.abstractmethod
+    def convert_role(self, role):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def convert_gender(self, gender):
+        raise NotImplementedError()
+
+    def convert_family_id(self, family_id):
+        return family_id
+
+    @abc.abstractproperty
+    def FIELDS_TO_COLUMNS(self):
+        raise NotImplementedError()
 
     def read_structure(self, individuals):
         families = defaultdict(list)
@@ -221,14 +229,15 @@ class SPARKCsvIndividualsReader(object):
         for row in reader:
             kwargs = {
                 field: row[column]
-                for (column, field)
-                in SPARKCsvIndividualsReader.COLUMNS_TO_FIELDS.items()
+                for (field, column)
+                in self.FIELDS_TO_COLUMNS.items()
             }
-            kwargs["role"] = RoleMapping.SPARK[kwargs["role"]]
-            kwargs["status"] = SPARKCsvIndividualsReader \
-                .STATUS_TO_ENUM[kwargs["status"]]
-            kwargs["gender"] = SPARKCsvIndividualsReader \
-                .GENDER_TO_ENUM[kwargs["gender"]]
+            kwargs["family_id"] = self.convert_family_id(kwargs["family_id"])
+            kwargs["individual_id"] = self.convert_individual_id(
+                kwargs["family_id"], kwargs["individual_id"])
+            kwargs["status"] = self.convert_status(kwargs["status"])
+            kwargs["role"] = self.convert_role(kwargs["role"])
+            kwargs["gender"] = self.convert_gender(kwargs["gender"])
 
             individuals.append(Individual(**kwargs))
 
@@ -241,7 +250,81 @@ class SPARKCsvIndividualsReader(object):
         return families
 
 
+class SPARKCsvIndividualsReader(CsvIndividualsReader):
+
+    @property
+    def FIELDS_TO_COLUMNS(self):
+        return {
+            "role": "role",
+            "family_id": "family_id",
+            "individual_id": "subject_sp_id",
+            "gender": "sex",
+            "status": "asd"
+        }
+
+    STATUS_TO_ENUM = {
+        "True": Status.affected,
+        "False": Status.unaffected
+    }
+
+    GENDER_TO_ENUM = {
+        "Male": Gender.M,
+        "Female": Gender.F
+    }
+
+    def convert_status(self, status):
+        return self.STATUS_TO_ENUM[status]
+
+    def convert_gender(self, gender):
+        return self.GENDER_TO_ENUM[gender]
+
+    def convert_individual_id(self, family_id, individual_id):
+        return individual_id
+
+    def convert_role(self, role):
+        return RoleMapping.SPARK[role]
+
+
+class VIPCsvIndividualsReader(CsvIndividualsReader):
+
+    @property
+    def FIELDS_TO_COLUMNS(self):
+        return {
+            "role": "relationship_to_iip",
+            "family_id": "sfari_id",
+            "individual_id": "sfari_id",
+            "gender": "sex",
+            "status": "genetic_status"
+        }
+
+    GENDER_TO_ENUM = {
+        "male": Gender.M,
+        "female": Gender.F
+    }
+
+    def convert_family_id(self, family_id):
+        return family_id.split("-")[0]
+
+    def convert_individual_id(self, family_id, individual_id):
+        return individual_id
+
+    def convert_role(self, role):
+        return RoleMapping.VIP[role]
+
+    def convert_gender(self, gender):
+        return self.GENDER_TO_ENUM[gender]
+
+    def convert_status(self, status):
+        return Status.unaffected if status == 'Negative (normal)' \
+            else Status.affected
+
+
 class FamilyToPedigree(object):
+
+    AMBIGUOUS_ROLES = [
+        Role.maternal_cousin, Role.paternal_cousin,
+        Role.maternal_half_sibling, Role.paternal_half_sibling
+    ]
 
     def get_individual(self, proband, role):
         if role == Role.dad:
@@ -283,22 +366,59 @@ class FamilyToPedigree(object):
         if role == Role.maternal_half_sibling:
             return proband.get_maternal_half_sibling()
 
+        if role == Role.paternal_cousin:
+            return IndividualUnit()
+
+        if role == Role.maternal_cousin:
+            return IndividualUnit()
+
         raise NotImplementedError("Unknown individual role: {}".format(role))
 
-    def to_pedigree(self, family_members):
-        individual_id_to_individual_unit = {}
-        proband = [individual for individual in family_members
-                   if individual.role == Role.prb]
-        assert len(proband) == 1
-        proband = proband[0]
+    def print_ambiguous_warning(self, individual, verbose=True):
+        if verbose and individual.role in self.AMBIGUOUS_ROLES:
+            msg = "family {} (person {}) with ambiguous role: {}\n".format(
+                individual.family_id, individual.individual_id, individual.role)
+            sys.stderr.write(msg)
 
+    def assert_propper_family(self, family_members):
+        assert len(family_members) != 0, "No members for family"
+
+        family_name = family_members[0].family_id
+
+        moms = [fm for fm in family_members if fm.role == Role.mom]
+        moms_count = len(moms)
+        assert moms_count < 2, \
+            "{}: {} moms - {}".format(family_name, moms_count, moms)
+
+        dads = [fm for fm in family_members if fm.role == Role.dad]
+        dads_count = len(dads)
+        assert dads_count < 2, \
+            "{}: {} moms - {}".format(family_name, dads_count, dads)
+
+        probands = [fm for fm in family_members if fm.role == Role.prb]
+        probands_count = len(probands)
+        assert probands_count < 2, \
+            "{}: {} probands - {}".format(family_name, probands_count, probands)
+
+    def to_pedigree(self, family_members):
+        self.assert_propper_family(family_members)
+
+        individual_id_to_individual_unit = {}
+        probands = [individual for individual in family_members
+                    if individual.role == Role.prb]
         other = [individual for individual in family_members
                  if individual.role != Role.prb]
 
-        proband_unit = IndividualUnit(proband)
-        individual_id_to_individual_unit[proband.individual_id] = proband_unit
+        proband_unit = IndividualUnit()
+        if len(probands) == 1:
+            proband = probands[0]
+            proband_unit.individual = proband
+
+            individual_id_to_individual_unit[proband.individual_id] = \
+                proband_unit
 
         for individual in other:
+            self.print_ambiguous_warning(individual)
             individual_unit = self.get_individual(
                 proband_unit, individual.role)
             individual_unit.individual = individual
@@ -341,14 +461,17 @@ def main():
         "--output", dest="output", default="output.ped", type=str)
     args = parser.parse_args()
 
-    reader = SPARKCsvIndividualsReader()
+    reader = VIPCsvIndividualsReader()
     families = reader.read_filename(args.file)
 
     pedigrees = {}
 
     for family_name, members in families.items():
-        pedigree = FamilyToPedigree().to_pedigree(members)
-        pedigrees[family_name] = pedigree.values()
+        try:
+            pedigree = FamilyToPedigree().to_pedigree(members)
+            pedigrees[family_name] = pedigree.values()
+        except AssertionError as e:
+            print("skipping {}; reason: {}".format(family_name, str(e)))
 
     pedigrees_list = list(itertools.chain(*pedigrees.values()))
 
