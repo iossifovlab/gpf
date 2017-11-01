@@ -32,7 +32,8 @@ export class HistogramComponent  {
   @Input() logScaleY = false;
   @Input() showCounts = true;
   @Input() xLabels: Array<number>
-  @Input() centerLabels = false;
+  @Input() centerLabels: boolean;
+  @Input() showMinMaxInput: boolean;
 
   beforeRangeText: string;
   insideRangeText: string;
@@ -93,6 +94,42 @@ export class HistogramComponent  {
         this.afterRangeText  = this.formatEstimateText(this.rangesCounts[2], false);
       }
     }
+  }
+
+  get showMinMaxInputWithDefaultValue() {
+    if (this.showMinMaxInput === undefined) {
+        if (this.bins.length < 10) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+    return this.showMinMaxInput;
+  }
+
+  get centerLabelsWithDefaultValue() {
+    if (this.centerLabels === undefined) {
+        if (this.bins.length < 10) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    return this.centerLabels;
+  }
+
+  get xLabelsWithDefaultValue() {
+    if (this.xLabels === undefined) {
+        if (this.bins.length < 10) {
+            return this.bins.slice(0, -1);
+        }
+        else {
+            return d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
+        }
+    }
+    return this.xLabels;
   }
 
   onRangeChange() {
@@ -176,24 +213,11 @@ export class HistogramComponent  {
   }
 
   redrawXAxis(svg, width, height) {
-    // Add the x Axis
-    let labels;
-    if (this.xLabels) {
-        labels = this.xLabels
-    }
-    else if (this.bins.length < 10) {
-        labels = this.bins.slice(0, -1)
-        this.centerLabels = true;
-    }
-    else {
-        labels = d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
-    }
-
     let axisX = [0];
     let axisVals = [];
     for(var i  = 0; i < this.bins.length - 1; i++) {
         var leftX;
-        if (this.centerLabels) {
+        if (this.centerLabelsWithDefaultValue) {
             leftX = this.xScale(i.toString()) + this.xScale.bandwidth() / 2;
         }
         else {
@@ -203,7 +227,7 @@ export class HistogramComponent  {
         axisVals.push(this.bins[i]);
     }
 
-    if (this.centerLabels) {
+    if (this.centerLabelsWithDefaultValue) {
         axisX.push(width);
         axisVals.push(Number.POSITIVE_INFINITY);
     } 
@@ -215,7 +239,7 @@ export class HistogramComponent  {
 
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(scaleXAxis).tickValues(labels as any).tickFormat((d,i) => labels[i] as any))
+      .call(d3.axisBottom(scaleXAxis).tickValues(this.xLabelsWithDefaultValue as any).tickFormat((d,i) => this.xLabelsWithDefaultValue[i] as any))
   }
 
   @Input()

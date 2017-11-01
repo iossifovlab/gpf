@@ -8,7 +8,7 @@
 	  </g>
 	</svg>
 
-	<div class="histogram-controls">
+	<div class="histogram-controls" *ngIf="showMinMaxInputWithDefaultValue">
 	  <div class="histogram-to">
 	        <label>To (Max: {{ bins[bins.length - 1] }})</label>
 			<div class="stepper">
