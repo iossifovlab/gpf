@@ -57,6 +57,7 @@ ANNOYING_CHARACTERS = {
     '\xe2\x89\xa5': '>=',
     '\xbd': ' 1/2',
     '\x92': "'",
+    '\x93': '"',
 }
 
 
