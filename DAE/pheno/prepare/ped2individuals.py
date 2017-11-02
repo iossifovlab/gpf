@@ -362,10 +362,10 @@ class FamilyToCsv(object):
 
     def write_pedigrees(self, pedigrees):
         with open(self.filename, "w") as csv_file:
-            writer = csv.writer(csv_file)
+            writer = csv.writer(csv_file, delimiter='\t')
             writer.writerow([
-                "familyId", "individualId", "gender",
-                "status", "role"])
+                "familyId", "personId", "dadId", "momId",
+                "gender", "status", "role"])
             writer.writerows(map(self.get_row, pedigrees))
 
     @staticmethod
@@ -373,6 +373,8 @@ class FamilyToCsv(object):
         return [
             individual.individual.family_id,
             individual.get_individual_id(),
+            individual.get_father_id(),
+            individual.get_mother_id(),
             individual.get_gender(),
             individual.get_status(),
             individual.get_role()
