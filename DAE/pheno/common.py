@@ -114,6 +114,7 @@ class RoleMapping(object):
         'Grandfather': Role.maternal_grandfather,
         'Grandmother': Role.maternal_grandmother,
         'Half sibling': Role.maternal_half_sibling,
+        'Aunt': Role.maternal_aunt,
     }
 
 
