@@ -34,7 +34,7 @@ class CLIError(Exception):
 def parse_config(args):
     config = default_config()
     config.verbose = args.verbose
-    config.instruments = args.instruments
+    config.instruments.dir = args.instruments
     config.pedigree = args.pedigree
     config.db.filename = args.output
     if args.skip_columns:
@@ -53,6 +53,9 @@ def parse_config(args):
         config.person.role.mapping = args.role_mapping
     assert config.person.role.mapping in set(['SPARK', 'SSC', 'INTERNAL'])
 
+    if args.person_column:
+        config.person.column = args.person_column
+
     if args.min_individuals is not None and args.min_individuals >= 0:
         config.classification.min_individuals = args.min_individuals
 
@@ -64,6 +67,9 @@ def parse_config(args):
 
     if args.continuous is not None and args.continuous >= 0:
         config.classification.continuous.min_rank = args.continuous
+
+    if args.tab_separated:
+        config.instruments.tab_separated = True
 
     return config
 
@@ -168,6 +174,20 @@ USAGE
             '-M', '--meta',
             dest='meta',
             help="updates measure meta data only",
+            action="store_true"
+        )
+
+        parser.add_argument(
+            '-P', '--person-column',
+            dest='person_column',
+            help="sets name of a column in instrument's files, "
+            "containing personId"
+        )
+
+        parser.add_argument(
+            '-T', '--tab-separated',
+            dest='tab_separated',
+            help="instruments file are tab separated",
             action="store_true"
         )
         # Process arguments

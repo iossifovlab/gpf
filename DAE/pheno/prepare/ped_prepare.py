@@ -207,6 +207,14 @@ class PrepareVariables(PrepareBase):
         self.pedigree_df = pedigree_df
         self.sample_ids = None
 
+    def _get_person_column_name(self, df):
+        if self.config.person.column:
+            person_id = self.config.person.column
+        else:
+            person_id = df.columns[0]
+        print("Person ID: {}".format(person_id))
+        return person_id
+
     def load_instrument(self, instrument_name, filenames):
         assert filenames
         assert all([os.path.exists(f) for f in filenames])
@@ -219,9 +227,18 @@ class PrepareVariables(PrepareBase):
         assert instrument_name == instrument_names[0]
 
         dataframes = []
+        sep = ','
+        print(self.config)
+
+        if self.config.instruments.tab_separated:
+            sep = '\t'
+
         for filename in filenames:
-            df = pd.read_csv(filename, sep=',')
-            person_id = df.columns[0]
+            df = pd.read_csv(filename, sep=sep)
+            person_id = self._get_person_column_name(df)
+            print("renaming column '{}' in instrument: {}".format(
+                person_id, instrument_name))
+
             df.rename(columns={person_id: self.PERSON_ID}, inplace=True)
             dataframes.append(df)
         assert len(dataframes) >= 1
@@ -342,11 +359,10 @@ class PrepareVariables(PrepareBase):
             self.build_measure('pheno_common', measure_name, df)
 
     def build_measure(self, instrument_name, measure_name, df):
-        if measure_name in self.config.skip.measures or \
-                measure_name == self.PID_COLUMN:
-            return
         mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].dropna()
         mdf.rename(columns={measure_name: 'value'}, inplace=True)
+
+        print(mdf.head())
 
         measure = self._build_measure(
             instrument_name, measure_name, mdf)
@@ -360,7 +376,11 @@ class PrepareVariables(PrepareBase):
         assert df is not None
         assert self.PERSON_ID in df.columns
 
-        for measure_name in df.columns[1:]:
+        for measure_name in df.columns:
+            if measure_name in self.config.skip.measures or \
+                    measure_name == self.PID_COLUMN or \
+                    measure_name == self.PERSON_ID:
+                continue
             self.build_measure(instrument_name, measure_name, df)
         return df
 
@@ -437,7 +457,7 @@ class PrepareVariables(PrepareBase):
 
     def _build_measure(self, instrument_name, measure_name, df):
         measure = self._default_measure(instrument_name, measure_name)
-
+        print(df.head())
         values = df['value']
         unique_values = values.unique()
         rank = len(unique_values)

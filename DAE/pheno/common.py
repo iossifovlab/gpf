@@ -122,12 +122,17 @@ def default_config():
         'family': {
             'composite_key': False,
         },
+        'instruments': {
+            'tab_separated': False,
+            'dir': '.',
+        },
         'person': {
             'role': {
                 'type': 'column',
                 'column': 'role',
                 'mapping': 'INTERNAL'
             },
+            'column': None,
         },
         'db': {
             'filename': 'pheno.db'
