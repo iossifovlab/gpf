@@ -6,7 +6,7 @@ export const GENOMIC_SCORE_ADD = 'GENOMIC_SCORE_ADD';
 export const GENOMIC_SCORE_REMOVE = 'GENOMIC_SCORE_REMOVE';
 
 import { GenomicScoresHistogramData } from './genomic-scores';
-import { IsNotEmpty, IsNumber, Min, Max } from "class-validator";
+import { IsNotEmpty, IsNumber, Min, Max, ValidateIf } from "class-validator";
 import { IsLessThanOrEqual } from "../utils/is-less-than-validator"
 import { IsMoreThanOrEqual } from "../utils/is-more-than-validator"
 
@@ -14,19 +14,24 @@ export class GenomicScoreState {
     @IsNotEmpty()
     histogramData: GenomicScoresHistogramData;
 
+    @ValidateIf(o => o.rangeStart !== null)
     @IsNumber()
-    @Min(0)
     @IsLessThanOrEqual("rangeEnd")
-    @IsMoreThanOrEqual("histogramData.min")
+    @IsMoreThanOrEqual("domainMin")
+    @IsLessThanOrEqual("domainMax")
     rangeStart: number;
 
+
+    @ValidateIf(o => o.rangeEnd !== null)
     @IsNumber()
-    @Min(0)
     @IsMoreThanOrEqual("rangeStart")
-    @IsLessThanOrEqual("histogramData.max")
+    @IsMoreThanOrEqual("domainMin")
+    @IsLessThanOrEqual("domainMax")
     rangeEnd: number;
 
     metric: any;
+    domainMin: any;
+    domainMax: any;
 
     constructor() {
         this.histogramData = null;
@@ -78,7 +83,9 @@ export function genomicScoresReducer(
             metric: action.payload[1],
             histogramData: action.payload[2],
             rangeStart: null,
-            rangeEnd: null
+            rangeEnd: null,
+            domainMin: action.payload[2].bins[0],
+            domainMax: action.payload[2].bins[action.payload[2].bins.length - 1]
         };
         let newStateScore = state.genomicScoresState.map((item, index) => {
             if (index == action.payload[0]) {

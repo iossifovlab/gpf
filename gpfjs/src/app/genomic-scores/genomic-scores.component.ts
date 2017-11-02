@@ -4,11 +4,12 @@ import { GenomicScoresService } from './genomic-scores.service'
 import { GenomicScoresHistogramData } from './genomic-scores';
 import { Observable }        from 'rxjs/Observable';
 import { ValidationError } from "class-validator";
-import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
+import { GenomicScoresState, GenomicScoreState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
          GENOMIC_SCORES_RANGE_START_CHANGE, GENOMIC_SCORES_RANGE_END_CHANGE
  } from './genomic-scores-store';
  import { Store } from '@ngrx/store';
- import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+ import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+ import { transformAndValidate } from "class-transformer-validator";
 
 @Component({
   selector: 'gpf-genomic-scores',
@@ -34,13 +35,21 @@ export class GenomicScoresComponent {
     );
     this.genomicScoresState.subscribe(
       ([genomicScoresState, isValid, validationErrors]) => {
-        //this.errors = validationErrorsToStringArray(validationErrors);
         if (this.index < genomicScoresState.genomicScoresState.length) {
-            console.log(this.index, genomicScoresState, genomicScoresState.genomicScoresState[this.index])
-            this.internalSelectedMetric = genomicScoresState.genomicScoresState[this.index].metric;
-            this.histogramData = genomicScoresState.genomicScoresState[this.index].histogramData;
-            this.internalRangeStart = genomicScoresState.genomicScoresState[this.index].rangeStart;
-            this.internalRangeEnd = genomicScoresState.genomicScoresState[this.index].rangeEnd;
+            let state = genomicScoresState.genomicScoresState[this.index];
+
+            this.internalSelectedMetric = state.metric;
+            this.histogramData = state.histogramData;
+            this.internalRangeStart = state.rangeStart;
+            this.internalRangeEnd = state.rangeEnd;
+
+            transformAndValidate(GenomicScoreState, state)
+                .then((state) => {
+                    this.errors = [];
+                })
+                .catch(error => {
+                    this.errors = validationErrorsToStringArray(error);
+                });
         }
       }
     );
