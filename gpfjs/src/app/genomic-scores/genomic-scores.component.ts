@@ -43,6 +43,10 @@ export class GenomicScoresComponent {
             this.internalRangeStart = state.rangeStart;
             this.internalRangeEnd = state.rangeEnd;
 
+            if (this.internalSelectedMetric == null) {
+                this.selectedMetric = this.datasetConfig.genotypeBrowser.genomicMetrics[0]
+            }
+
             transformAndValidate(GenomicScoreState, state)
                 .then((state) => {
                     this.errors = [];
