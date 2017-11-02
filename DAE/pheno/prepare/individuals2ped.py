@@ -282,7 +282,8 @@ class SPARKCsvIndividualsReader(CsvIndividualsReader):
         return individual_id
 
     def convert_role(self, role):
-        return RoleMapping.SPARK[role]
+        return RoleMapping.SPARK[role] \
+            if role in RoleMapping.SPARK else Role.unknown
 
 
 class VIPCsvIndividualsReader(CsvIndividualsReader):
@@ -309,7 +310,8 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
         return individual_id
 
     def convert_role(self, role):
-        return RoleMapping.VIP[role]
+        return RoleMapping.VIP[role] \
+            if role in RoleMapping.VIP else Role.unknown
 
     def convert_gender(self, gender):
         return self.GENDER_TO_ENUM[gender]
@@ -370,6 +372,9 @@ class FamilyToPedigree(object):
             return IndividualUnit()
 
         if role == Role.maternal_cousin:
+            return IndividualUnit()
+
+        if role == Role.unknown:
             return IndividualUnit()
 
         raise NotImplementedError("Unknown individual role: {}".format(role))
@@ -471,7 +476,8 @@ def main():
             pedigree = FamilyToPedigree().to_pedigree(members)
             pedigrees[family_name] = pedigree.values()
         except AssertionError as e:
-            print("skipping {}; reason: {}".format(family_name, str(e)))
+            sys.stderr.write(
+                "skipping {}; reason: {}\n".format(family_name, str(e)))
 
     pedigrees_list = list(itertools.chain(*pedigrees.values()))
 
