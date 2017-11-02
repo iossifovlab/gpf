@@ -276,6 +276,7 @@ class PrepareVariables(PrepareBase):
             return
 
         def convert(v): return v
+
         if measure.measure_type == MeasureType.categorical or \
                 measure.measure_type == MeasureType.other:
             def convert(v):
@@ -455,10 +456,27 @@ class PrepareVariables(PrepareBase):
         measure = Box(measure)
         return measure
 
+    def _convert_measure_values_to_float(self, df):
+        values = df['value'].values
+
+        def convert(v):
+            if type(v) == str and v.strip() == '':
+                return np.nan
+            return float(v)
+
+        vfunc = np.vectorize(convert)
+        result = vfunc(values)
+
+        df['value'] = result
+        print(list(result))
+
+        df.dropna(inplace=True)
+
     def _build_measure(self, instrument_name, measure_name, df):
         measure = self._default_measure(instrument_name, measure_name)
-        print(df.head())
         values = df['value']
+        print(measure)
+        print(list(values))
         unique_values = values.unique()
         rank = len(unique_values)
         individuals = len(df)
@@ -473,12 +491,17 @@ class PrepareVariables(PrepareBase):
                 values.dtype, instrument_name, measure_name))
             values_type = self.check_values_type(unique_values)
 
+        print("rank: {}; values type: {}; unique values: {}".format(
+            rank, values_type, unique_values))
+
         if values_type in set([str, bool, np.bool, np.dtype('bool')]):
             if self.check_categorical_rank(rank, individuals):
                 measure.measure_type = MeasureType.categorical
                 return measure
         elif values_type in set([int, float, np.float, np.int,
                                  np.dtype('int64'), np.dtype('float64')]):
+            self._convert_measure_values_to_float(df)
+
             if self.check_continuous_rank(rank, individuals):
                 measure.measure_type = MeasureType.continuous
                 return measure

@@ -55,6 +55,7 @@ ANNOYING_CHARACTERS = {
     '\xcc\xb1': '',         # modifier - under line
     '\xe2\x89\xa4': '<=',
     '\xe2\x89\xa5': '>=',
+    '\xbd': ' 1/2',
 }
 
 
