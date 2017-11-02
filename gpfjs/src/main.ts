@@ -7,6 +7,9 @@ import { AppModule } from './app/app.module';
 
 import 'rxjs/add/operator/takeUntil';
 import 'rxjs/add/operator/take';
+import 'rxjs/add/observable/fromPromise';
+import 'rxjs/add/observable/combineLatest';
+
 
 if (environment.production) {
   enableProdMode();
