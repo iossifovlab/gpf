@@ -316,7 +316,7 @@ export class HistogramComponent  {
   }
 
   get selectedEndIndex() {
-      return this.getClosestIndexByValue(this.rangeEnd) - 1
+      return this.getClosestIndexByValue(this.rangeEnd) - 1;
   }
 
   round(value: number): number{
@@ -335,7 +335,7 @@ export class HistogramComponent  {
               return prev < curr ? i - 1 : i;
           }
       }
-      return maxIndex
+      return maxIndex - 1;
   }
 
   getClosestIndexByValue(val) {
