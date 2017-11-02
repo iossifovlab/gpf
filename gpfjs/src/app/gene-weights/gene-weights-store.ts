@@ -16,11 +16,13 @@ export class GeneWeightsState {
   @IsNumber()
   @IsLessThanOrEqual("rangeEnd")
   @IsMoreThanOrEqual("domainMin")
+  @IsLessThanOrEqual("domainMax")
   rangeStart: number;
 
   @ValidateIf(o => o.rangeEnd !== null)
   @IsNumber()
   @IsMoreThanOrEqual("rangeStart")
+  @IsMoreThanOrEqual("domainMin")
   @IsLessThanOrEqual("domainMax")
   rangeEnd: number;
 
