@@ -8,6 +8,7 @@ from sqlalchemy import Table, Column, String, Float, Enum
 from sqlalchemy.sql import select
 from pheno.common import MeasureType
 # import traceback
+import pandas as pd
 
 
 class DbManager(object):
@@ -75,3 +76,9 @@ class DbManager(object):
                 return vs[0]
             else:
                 return None
+
+    def get_instrument_df(self, instrument_name):
+        s = self.variable_browser.select()
+        s = s.where(self.variable_browser.c.instrument_name == instrument_name)
+        df = pd.read_sql(s, self.engine)
+        return df

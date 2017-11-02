@@ -382,7 +382,9 @@ class FamilyToPedigree(object):
     def print_ambiguous_warning(self, individual, verbose=True):
         if verbose and individual.role in self.AMBIGUOUS_ROLES:
             msg = "family {} (person {}) with ambiguous role: {}\n".format(
-                individual.family_id, individual.individual_id, individual.role)
+                individual.family_id,
+                individual.individual_id,
+                individual.role)
             sys.stderr.write(msg)
 
     def assert_propper_family(self, family_members):
@@ -403,7 +405,8 @@ class FamilyToPedigree(object):
         probands = [fm for fm in family_members if fm.role == Role.prb]
         probands_count = len(probands)
         assert probands_count < 2, \
-            "{}: {} probands - {}".format(family_name, probands_count, probands)
+            "{}: {} probands - {}".format(family_name,
+                                          probands_count, probands)
 
     def to_pedigree(self, family_members):
         self.assert_propper_family(family_members)
