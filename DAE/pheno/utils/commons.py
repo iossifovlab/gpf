@@ -35,10 +35,10 @@ ANNOYING_CHARACTERS = {
     '\xc2\x84': ',,',       # High code double comma
     '\xc2\x85': '...',      # Tripple dot
     '\xc2\x88': '^',        # High carat
-    '\xc2\x91': '\x27',     # Forward single quote
-    '\xc2\x92': '\x27',     # Reverse single quote
-    '\xc2\x93': '\x22',     # Forward double quote
-    '\xc2\x94': '\x22',     # Reverse double quote
+    '\xc2\x91': "'",     # Forward single quote
+    '\xc2\x92': "'",     # Reverse single quote
+    '\xc2\x93': '"',     # Forward double quote
+    '\xc2\x94': '"',     # Reverse double quote
     '\xc2\x95': ' ',
     '\xc2\x96': '-',        # High hyphen
     '\xc2\x97': '--',       # Double hyphen
@@ -56,6 +56,7 @@ ANNOYING_CHARACTERS = {
     '\xe2\x89\xa4': '<=',
     '\xe2\x89\xa5': '>=',
     '\xbd': ' 1/2',
+    '\x92': "'",
 }
 
 

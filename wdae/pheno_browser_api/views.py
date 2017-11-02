@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 import preloaded
-from pheno_browser.models import VariableBrowserModelManager
 from django.conf import settings
 import os
 from pheno_browser_api.common import PhenoBrowserCommon
