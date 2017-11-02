@@ -28,10 +28,13 @@ class PedigreeMember(object):
         return self.individual_id
 
     def assign_role(self, role):
-        assert self.role == Role.unknown or self.role == role, \
+        assert not self.has_role() or self.role == role, \
             "{},{},{}!={}".format(
                 self.family_id, self.individual_id, self.role, role)
         self.role = role
+
+    def has_role(self):
+        return self.role != Role.unknown
 
 
 class CsvPedigreeReader(object):
@@ -193,14 +196,17 @@ class PedigreeToFamily(object):
 
     def _assign_roles_paternal_other_families(self, father):
         for other_mating_unit in father.mating_units:
-            if not other_mating_unit.mother.has_individual():
+            if (other_mating_unit.mother.has_individual()
+                    and other_mating_unit.mother.individual.role == Role.mom):
                 continue
 
+            for child in other_mating_unit.children.individuals:
+                child.individual.assign_role(Role.paternal_half_sibling)
+
+            if not other_mating_unit.mother.has_individual():
+                continue
             if other_mating_unit.mother.individual.role != Role.mom:
                 other_mating_unit.mother.individual.assign_role(Role.step_mom)
-            for child in other_mating_unit.children.individuals:
-                if not child.individual.role:
-                    child.individual.assign_role(Role.paternal_half_sibling)
 
     def _assign_roles_paternal(self, father):
         if father.parents:
@@ -216,7 +222,7 @@ class PedigreeToFamily(object):
 
             for individual in grandparents.children.individuals:
                 if (not individual.has_individual()
-                        or individual.individual.role):
+                        or individual.individual.has_role()):
                     continue
 
                 if individual.individual.gender == Gender.M:
@@ -230,14 +236,17 @@ class PedigreeToFamily(object):
 
     def _assign_roles_maternal_other_families(self, mother):
         for other_mating_unit in mother.mating_units:
-            if not other_mating_unit.father.has_individual():
+            if (other_mating_unit.father.has_individual()
+                    and other_mating_unit.father.individual.role == Role.dad):
                 continue
 
+            for child in other_mating_unit.children.individuals:
+                child.individual.assign_role(Role.maternal_half_sibling)
+
+            if not other_mating_unit.father.has_individual():
+                continue
             if other_mating_unit.father.individual.role != Role.dad:
                 other_mating_unit.father.individual.assign_role(Role.step_dad)
-            for child in other_mating_unit.children.individuals:
-                if not child.individual.role:
-                    child.individual.assign_role(Role.maternal_half_sibling)
 
     def _assign_roles_maternal(self, mother):
         if mother.parents:
@@ -253,7 +262,7 @@ class PedigreeToFamily(object):
 
             for individual in grandparents.children.individuals:
                 if (not individual.has_individual()
-                        or individual.individual.role):
+                        or individual.individual.has_role()):
                     continue
 
                 if individual.individual.gender == Gender.M:
