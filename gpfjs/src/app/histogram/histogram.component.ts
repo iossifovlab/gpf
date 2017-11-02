@@ -305,7 +305,8 @@ export class HistogramComponent  {
   }
 
   get selectedStartIndex() {
-      return this.getClosestIndexByValue(this.rangeStart)
+      let maxIndex = this.bins.length - 2;
+      return Math.min(maxIndex, this.getClosestIndexByValue(this.rangeStart));
   }
 
   set selectedEndIndex(index: number) {
