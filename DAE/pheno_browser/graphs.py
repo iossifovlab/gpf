@@ -5,12 +5,13 @@ Created on Apr 10, 2017
 """
 import textwrap
 import matplotlib as mpl
-from pheno.common import Role, Gender
+from pheno.common import Role, Status, Gender
 mpl.use("PS")
 
 import matplotlib.pyplot as plt  # @IgnorePep8
 plt.ioff()
 
+import pandas as pd
 import numpy as np  # @IgnorePep8
 import seaborn as sns  # @IgnorePep8
 import statsmodels.api as sm  # @IgnorePep8
@@ -20,22 +21,57 @@ import traceback  # @IgnorePep8
 
 MAX_CATEGORIES_COUNT = 15
 ROLES_COUNT_CUTOFF = 20
-ROLES = [
-    [Role.prb],
-    [Role.sib],
-    [Role.mom, Role.dad],
-    [
+ROLES_DEFINITION = [
+    {"label": "probands", "roles": [Role.prb]},
+    {"label": "siblings", "roles": [Role.sib]},
+    {"label": "parents", "roles": [Role.mom, Role.dad]},
+    {"label": "grandparents", "roles": [
         Role.paternal_grandfather, Role.paternal_grandmother,
         Role.maternal_grandfather, Role.maternal_grandmother
-    ],
-    [
+    ]},
+    {"label": "parental siblings", "roles": [
         Role.paternal_uncle, Role.paternal_aunt,
         Role.maternal_uncle, Role.maternal_aunt
-    ],
-    [Role.step_mom, Role.step_dad],
-    [Role.paternal_half_sibling, Role.maternal_half_sibling],
-    [Role.child]
+    ]},
+    {"label": "step parents", "roles": [Role.step_mom, Role.step_dad]},
+    {"label": "half siblings",
+     "roles": [Role.paternal_half_sibling, Role.maternal_half_sibling]},
+    {"label": "children", "roles": [Role.child]}
  ]
+
+
+class GraphColumn(object):
+
+    def __init__(self, name, roles, status, df):
+        self.name = name
+        self.roles = roles
+        self.status = status
+        self.df = df
+
+    def all_count(self):
+        return self.df.shape[0]
+
+    def males_count(self):
+        return self.df[self.df.gender == Gender.M].shape[0]
+
+    def females_count(self):
+        return self.df[self.df.gender == Gender.F].shape[0]
+
+    @property
+    def label(self):
+        return self.name + "\n" + self.status.name
+
+    @staticmethod
+    def build(df, role_definition, status):
+        roles = role_definition["roles"]
+        default_name = ", ".join([role.name for role in roles])
+        label = role_definition["label"] \
+            if "label" in role_definition else default_name
+
+        df_roles = df[df.role.isin(roles)]
+        df_roles_status = df_roles[df_roles.status == status]
+
+        return GraphColumn(label, roles, status, df_roles_status)
 
 
 def names(col1, col2):
@@ -144,23 +180,22 @@ def draw_distribution(df, measure_id, ax=None):
     plt.tight_layout()
 
 
-def role_counts(df, roles):
-    role_names = [role.name for role in roles]
+def column_counts(column):
     counts = {
-        "role_name": textwrap.fill(", ".join(role_names), 9),
-        "role_total": df.role.isin(roles).sum(),
-        "male_total": df[df.gender == Gender.M].role.isin(roles).sum(),
-        "female_total": df[df.gender == Gender.F].role.isin(roles).sum()
+        "column_name": textwrap.fill(column.name, 9),
+        "column_status": "$\it{" + column.status.name + "}$",
+        "column_total": column.all_count(),
+        "male_total": column.males_count(),
+        "female_total": column.females_count()
     }
     return counts
 
 
-def role_labels(df, ordered_roles):
-    # counts =
+def role_labels(ordered_columns):
     return [
-        "{role_name}\nall:{role_total:>4d}\nM: {male_total:>4d}\n"
-        "F: {female_total:>4d}".format(**role_counts(df, roles))
-        for roles in ordered_roles]
+        "{column_name}\n{column_status}\nall:{column_total:>4d}\nM: {male_total:>4d}\n"
+        "F: {female_total:>4d}".format(**column_counts(column))
+        for column in ordered_columns]
 
 
 def gender_palette_light():
@@ -200,7 +235,8 @@ def _enumerate_by_natural_order(df, column_name):
     return result, values_domain
 
 
-def draw_measure_violinplot(df, measure_id, roles=ROLES, ax=None):
+def draw_measure_violinplot(
+        df, measure_id, roles_definition=ROLES_DEFINITION, ax=None):
     if ax is None:
         ax = plt.gca()
 
@@ -208,30 +244,26 @@ def draw_measure_violinplot(df, measure_id, roles=ROLES, ax=None):
     fig = plt.gcf()
 
     palette = gender_palette()
-    roles = [subroles
-             for subroles in roles
-             if df.role.isin(subroles).sum() >= ROLES_COUNT_CUTOFF]
+    columns = get_columns_to_draw(roles_definition, df)
 
-    if len(roles) == 0:
+    if len(columns) == 0:
         return False
 
-    roles_to_role_groups = {}
-    roles_order = []
+    column_dfs = []
+    for column in columns:
+        column_df = column.df
+        column_df["column_name"] = column.label
+        column_dfs.append(column_df)
+    df_with_column_names = pd.concat(column_dfs)
 
-    for subroles in roles:
-        subroles_name = ", ".join([role.name for role in subroles])
-        roles_order.append(subroles_name)
+    assert df.shape[1] == df_with_column_names.shape[1] - 1
+    column_names = [column.label for column in columns]
 
-        for role in subroles:
-            roles_to_role_groups[role] = subroles_name
-
-    df["grouped_role"] = df.role.map(roles_to_role_groups)
-
-    set_figure_size(fig, len(roles))
+    set_figure_size(fig, len(columns))
 
     sns.violinplot(
-        data=df, x="grouped_role", y=measure_id, hue="gender",
-        order=roles_order, hue_order=[Gender.M, Gender.F],
+        data=df_with_column_names, x="column_name", y=measure_id, hue="gender",
+        order=column_names, hue_order=[Gender.M, Gender.F],
         linewidth=1, split=True,
         scale="count",
         scale_hue=False,
@@ -240,13 +272,13 @@ def draw_measure_violinplot(df, measure_id, roles=ROLES, ax=None):
 
     palette = gender_palette_light()
     sns.stripplot(
-        data=df, x="grouped_role", y=measure_id, hue="gender",
-        order=roles_order, hue_order=[Gender.M, Gender.F],
+        data=df_with_column_names, x="column_name", y=measure_id, hue="gender",
+        order=column_names, hue_order=[Gender.M, Gender.F],
         jitter=0.025, size=2,
         palette=palette,
         linewidth=0.1)
 
-    labels = role_labels(df, roles)
+    labels = role_labels(columns)
     plt.xticks(range(0, len(labels)), labels)
     ax.set_ylabel(measure_id)
     plt.tight_layout()
@@ -254,9 +286,21 @@ def draw_measure_violinplot(df, measure_id, roles=ROLES, ax=None):
     return True
 
 
+def get_columns_to_draw(roles, df):
+    columns = []
+    for subroles in roles:
+        for status in [Status.affected, Status.unaffected]:
+            columns.append(GraphColumn.build(df, subroles, status))
+
+    dfs = [column for column in columns
+           if column.all_count() >= ROLES_COUNT_CUTOFF]
+
+    return dfs
+
+
 def draw_categorical_violin_distribution(
-        df, measure_id, roles=ROLES, ax=None, numerical_categories=False,
-        max_categories=MAX_CATEGORIES_COUNT):
+        df, measure_id, roles_definition=ROLES_DEFINITION, ax=None,
+        numerical_categories=False, max_categories=MAX_CATEGORIES_COUNT):
     if ax is None:
         ax = plt.gca()
 
@@ -277,6 +321,10 @@ def draw_categorical_violin_distribution(
     values_domain = values_domain[:max_categories]
     y_locations = np.arange(len(values_domain))
 
+    columns = get_columns_to_draw(roles_definition, df)
+    if len(columns) == 0:
+        return False
+
     bin_edges = y_locations
     centers = bin_edges
     heights = 0.8
@@ -285,15 +333,8 @@ def draw_categorical_violin_distribution(
 
     binned_datasets = []
 
-    roles = [subroles
-             for subroles in roles
-             if df.role.isin(subroles).sum() >= ROLES_COUNT_CUTOFF]
-
-    if len(roles) == 0:
-        return False
-
-    for subroles in roles:
-        df_role = df[df.role.isin(subroles)]
+    for column in columns:
+        df_role = column.df
 
         df_male = df_role[df_role.gender == Gender.M]
         df_female = df_role[df_role.gender == Gender.F]
@@ -311,10 +352,10 @@ def draw_categorical_violin_distribution(
     )
 
     x_locations = np.arange(
-        0, len(roles) * 2 * binned_maximum, 2 * binned_maximum)
+        0, len(columns) * 2 * binned_maximum, 2 * binned_maximum)
 
     _fig, ax = plt.subplots()
-    set_figure_size(_fig, len(roles))
+    set_figure_size(_fig, len(columns))
     for count, (male, female) in enumerate(binned_datasets):
         x_loc = x_locations[count]
 
@@ -325,12 +366,12 @@ def draw_categorical_violin_distribution(
 
     ax.set_yticks(y_locations)
     ax.set_yticklabels(map(lambda x: textwrap.fill(x, 20), values_domain))
-    ax.set_xlim(2 * -binned_maximum, len(roles) * 2 * binned_maximum)
+    ax.set_xlim(2 * -binned_maximum, len(columns) * 2 * binned_maximum)
     ax.set_ylim(-1, np.max(y_locations) + 1)
 
     ax.set_ylabel(measure_id)
     ax.set_xlabel("role")
-    labels = role_labels(df, roles)
+    labels = role_labels(columns)
     plt.xticks(x_locations, labels)
 
     male_female_legend(color_male, color_female, ax)
