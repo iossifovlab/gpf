@@ -84,9 +84,11 @@ export class HistogramComponent  {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
-      if (this.resetRange) {
-        this.rangeStart = null;
-        this.rangeEnd = null;
+      if (this.rangeStartWithoutNull === null || this.resetRange) {
+        this.rangeStartWithoutNull = this.bins[0];
+      }
+      if (this.rangeEndWithoutNull === null || this.resetRange) {
+        this.rangeEndWithoutNull = this.bins[this.bins.length - 1];
       }
       this.resetRange = true;
     }
@@ -261,7 +263,7 @@ export class HistogramComponent  {
  
   @Input()
   set rangeEnd(rangeEnd: any) {
-    if (rangeEnd == null) {
+    if (rangeEnd == null && this.rangeEndWithoutNull != null) {
         this.rangeEndWithoutNull = this.bins[this.bins.length - 1];
     }
     else {
