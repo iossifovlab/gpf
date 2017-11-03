@@ -84,9 +84,11 @@ export class HistogramComponent  {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
-      if (this.resetRange) {
-        this.rangeStart = null;
-        this.rangeEnd = null;
+      if (this.rangeStart === null || this.resetRange) {
+          this.rangeStart = this.bins[0];
+      }
+      if (this.rangeEnd === null || this.resetRange) {
+        this.rangeEnd = this.bins[this.bins.length - 1];
       }
       this.resetRange = true;
     }
@@ -248,7 +250,7 @@ export class HistogramComponent  {
   @Input()
   set rangeStart(rangeStart: any) {
     if (rangeStart == null) {
-        this.internalRangeStart = this.bins[0]
+        this.internalRangeStart = null;
     }
     else {
         this.internalRangeStart = parseFloat(rangeStart);
@@ -267,7 +269,7 @@ export class HistogramComponent  {
   @Input()
   set rangeEnd(rangeEnd: any) {
     if (rangeEnd == null) {
-        this.internalRangeEnd = this.bins[this.bins.length - 1]
+        this.internalRangeEnd = null;
     }
     else {
         this.internalRangeEnd = parseFloat(rangeEnd);
@@ -308,6 +310,7 @@ export class HistogramComponent  {
   }
 
   get selectedStartIndex() {
+      if (this.rangeStart === null) return 0;
       let maxIndex = this.bins.length - 2;
       return Math.min(maxIndex, this.getClosestIndexByValue(this.rangeStart));
   }
@@ -320,6 +323,7 @@ export class HistogramComponent  {
   }
 
   get selectedEndIndex() {
+      if (this.rangeEnd === null) return this.bins.length - 2;
       return this.getClosestIndexByValue(this.rangeEnd) - 1;
   }
 
