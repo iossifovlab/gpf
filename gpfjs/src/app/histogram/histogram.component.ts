@@ -105,7 +105,7 @@ export class HistogramComponent  {
   get showMinMaxInputWithDefaultValue() {
     if (this.showMinMaxInput === undefined) {
         if (this.bins.length < 10) {
-            return false;
+            return true;
         }
         else {
             return true;
@@ -333,8 +333,8 @@ export class HistogramComponent  {
 
   getClosestIndexByX(x) {
       //Domain uses bins count which is larger than bars by 1 element
-      let maxIndex = this.xScale.domain().length - 1
-      for(var i  = 1; i <= maxIndex; i++) {
+      let maxIndex = this.xScale.domain().length;
+      for(var i  = 1; i < maxIndex; i++) {
           var prev_val = (i - 1) * this.xScale.step()
           var curr_val = i * this.xScale.step()
           if (curr_val> x) {
@@ -357,11 +357,30 @@ export class HistogramComponent  {
       return this.bins.length - 1
   }
 
-  startXChange(newPositionX) {
-      this.selectedStartIndex = this.getClosestIndexByX(newPositionX);
+  get startX() {
+    let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    console.log(distBetweenBars)
+    if (this.selectedStartIndex) {
+        return this.xScale(this.selectedStartIndex.toString()) - distBetweenBars / 2 - 1;
+    }
+    return 0;
   }
 
-  endXChange(newPositionX) {
-      this.selectedEndIndex = this.getClosestIndexByX(newPositionX);
+  set startX(newPositionX) {
+    let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    this.selectedStartIndex = this.getClosestIndexByX(newPositionX + distBetweenBars / 2 + 1)
+  }
+
+  get endX() {
+    let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    if (this.selectedEndIndex) {
+        return this.xScale(this.selectedEndIndex.toString()) + this.xScale.bandwidth() + distBetweenBars / 2 - 1;
+    }
+    return 0;
+  }
+
+  set endX(newPositionX) {
+    let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    this.selectedEndIndex = this.getClosestIndexByX(newPositionX - this.xScale.bandwidth() - distBetweenBars / 2 + 1);
   }
 }
