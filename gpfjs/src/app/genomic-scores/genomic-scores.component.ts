@@ -10,6 +10,7 @@ import { GenomicScoresState, GenomicScoreState, GENOMIC_SCORES_INIT, GENOMIC_SCO
  import { Store } from '@ngrx/store';
  import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
  import { transformAndValidate } from "class-transformer-validator";
+ import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-genomic-scores',
@@ -28,7 +29,8 @@ export class GenomicScoresComponent {
 
   constructor(
     private store: Store<any>,
-    private genomicsScoresService: GenomicScoresService
+    private genomicsScoresService: GenomicScoresService,
+    private stateRestoreService: StateRestoreService
   )  {
     this.genomicScoresState = toObservableWithValidation(
       GenomicScoresState, this.store.select('genomicScores')
@@ -42,10 +44,6 @@ export class GenomicScoresComponent {
             this.histogramData = state.histogramData;
             this.internalRangeStart = state.rangeStart;
             this.internalRangeEnd = state.rangeEnd;
-
-            if (this.internalSelectedMetric == null) {
-                this.selectedMetric = this.datasetConfig.genotypeBrowser.genomicMetrics[0]
-            }
 
             transformAndValidate(GenomicScoreState, state)
                 .then((state) => {
@@ -95,5 +93,31 @@ export class GenomicScoresComponent {
   get rangeEnd() {
     return this.internalRangeEnd;
   }
+
+    ngOnInit() {
+        this.stateRestoreService.getState(this.constructor.name + this.index).subscribe(
+            (state) => {
+                if (state['genomicScores']) {
+                    if (this.index < state['genomicScores'].length) {
+                        let score = state['genomicScores'][this.index];
+                        for (let metric of this.datasetConfig.genotypeBrowser.genomicMetrics) {
+                            if (metric.id === score.metric) {
+                                this.genomicsScoresService.getHistogramData(this.datasetConfig.id, metric.id).subscribe(
+                                  (histogramData) => {
+                                    this.store.dispatch({
+                                      'type': GENOMIC_SCORES_CHANGE,
+                                      'payload': [this.index, metric, histogramData]
+                                    });
+                                    this.rangeStart = score.rangeStart;
+                                    this.rangeEnd = score.rangeEnd;
+                                    return;
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    }
 
 }

@@ -32,6 +32,7 @@ export class GenomicScoreState {
     metric: any;
     domainMin: any;
     domainMax: any;
+    id: any;
 
     constructor() {
         this.histogramData = null;
@@ -96,7 +97,9 @@ export function genomicScoresReducer(
         return Object.assign({}, state, { genomicScoresState: newStateScore });
     }
     case GENOMIC_SCORE_ADD: {
-        let newStateAdd = [...state.genomicScoresState, new GenomicScoreState()];
+        let scoreState = new GenomicScoreState();
+        scoreState.id = action.payload;
+        let newStateAdd = [...state.genomicScoresState, scoreState];
         return Object.assign({}, state, { genomicScoresState: newStateAdd });
     }
     case GENOMIC_SCORE_REMOVE: {

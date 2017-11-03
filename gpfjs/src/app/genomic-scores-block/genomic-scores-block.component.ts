@@ -11,6 +11,7 @@ import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
  } from '../genomic-scores/genomic-scores-store';
  import { Store } from '@ngrx/store';
  import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
+ import { StateRestoreService } from '../store/state-restore.service';
 
 
 @Component({
@@ -22,21 +23,23 @@ import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
 })
 export class GenomicScoresBlockComponent extends QueryStateProvider {
     @Input() datasetConfig: Dataset;
+    private filterId = 0;
     scores = [];
 
     get imgPathPrefix() {
       return environment.imgPathPrefix;
     }
 
-    trackByMetric(index: number, data: any) {
-        console.log("trackByMetric", data.metric)
-        return data.metric;
+    trackById(index: number, data: any) {
+        return data.id;
     }
 
     addFilter() {
         this.store.dispatch({
           'type': GENOMIC_SCORE_ADD,
+          'payload': this.filterId
         });
+        this.filterId++;
     }
 
     removeFilter(index) {
@@ -48,7 +51,10 @@ export class GenomicScoresBlockComponent extends QueryStateProvider {
 
     private genomicScoresState: Observable<[GenomicScoresState, boolean,
                                              ValidationError[]]>;
-    constructor(private store: Store<any>)  {
+    constructor(
+        private store: Store<any>,
+        private stateRestoreService: StateRestoreService
+    )  {
       super();
       this.genomicScoresState = toObservableWithValidation(
         GenomicScoresState, this.store.select('genomicScores')
@@ -61,9 +67,24 @@ export class GenomicScoresBlockComponent extends QueryStateProvider {
     }
 
     ngOnInit() {
-      this.store.dispatch({
-        'type': GENOMIC_SCORES_INIT,
-      });
+        this.store.dispatch({
+            'type': GENOMIC_SCORES_INIT,
+        });
+
+        this.stateRestoreService.getState(this.constructor.name).subscribe(
+            (state) => {
+                console.log(state['genomicScores'])
+                if (state['genomicScores']) {
+                    for (let score of state['genomicScores']) {
+                        if (score['metric']) {
+                            this.store.dispatch({
+                                'type': GENOMIC_SCORE_ADD,
+                            });
+                        }
+                    }
+                }
+            }
+        );
     }
 
     getState() {
