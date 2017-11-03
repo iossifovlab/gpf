@@ -65,19 +65,19 @@ class CsvPedigreeReader(object):
 
     def read_csv_file(self, csv_file):
         individuals = []
-        reader = csv.DictReader(csv_file, delimiter='\t')
+        reader = csv.DictReader(csv_file, delimiter="\t")
         for row in reader:
             kwargs = {
                 field: row[column]
                 for (column, field) in self.COLUMNS_TO_FIELDS.items()
             }
 
-            kwargs['individual_id'] = self.convert_individual_id(
-                kwargs['family_id'], kwargs['individual_id'])
-            kwargs['mother_id'] = self.convert_individual_id(
-                kwargs['family_id'], kwargs['mother_id'])
-            kwargs['father_id'] = self.convert_individual_id(
-                kwargs['family_id'], kwargs['father_id'])
+            kwargs["individual_id"] = self.convert_individual_id(
+                kwargs["family_id"], kwargs["individual_id"])
+            kwargs["mother_id"] = self.convert_individual_id(
+                kwargs["family_id"], kwargs["mother_id"])
+            kwargs["father_id"] = self.convert_individual_id(
+                kwargs["family_id"], kwargs["father_id"])
 
             kwargs["status"] = Status(self.convert_status(kwargs["status"]))
             kwargs["gender"] = Gender(self.convert_gender(kwargs["gender"]))
@@ -139,9 +139,9 @@ class AGRERawCsvPedigreeReader(CsvPedigreeReader):
             return Status.unaffected.value
 
     def convert_gender(self, val):
-        if val == 'Female':
+        if val == "Female":
             return Gender.F.value
-        elif val == 'Male':
+        elif val == "Male":
             return Gender.M.value
         else:
             raise ValueError("unexpected sex: {}".format(val))
@@ -149,22 +149,28 @@ class AGRERawCsvPedigreeReader(CsvPedigreeReader):
     def convert_individual_id(self, family_id, individual_id):
         assert isinstance(individual_id, str)
 
-        if individual_id == '0' or individual_id == 0:
-            return '0'
+        if individual_id == "0" or individual_id == 0:
+            return "0"
         res = "{}{:02d}".format(family_id, int(individual_id))
         return res
 
 
 class PedigreeToFamily(object):
 
+    def _get_or_create_new_individual(self, individuals_by_id, individual_id):
+        if individual_id == "0":
+            result = IndividualUnit()
+        else:
+            result = individuals_by_id[individual_id]
+
+        return result
+
     def _link_pedigree_members(self, members):
         individuals = []
-        individuals_by_id = {}
-        mating_units_by_id = {}
+        individuals_by_id = defaultdict(IndividualUnit)
+        mating_units_by_id = defaultdict(list)
 
         for member in members:
-            if member.individual_id not in individuals_by_id:
-                individuals_by_id[member.individual_id] = IndividualUnit()
             individual = individuals_by_id[member.individual_id]
             individual.individual = member
 
@@ -173,42 +179,38 @@ class PedigreeToFamily(object):
         for individual in individuals:
             father_id = individual.individual.father_id
             mother_id = individual.individual.mother_id
+            mother = self._get_or_create_new_individual(
+                individuals_by_id, mother_id)
+            father = self._get_or_create_new_individual(
+                individuals_by_id, father_id)
 
-            if mother_id != "0" or father_id != "0":
+            mating_unit_id = "{},{}".format(mother_id, father_id)
 
-                mating_unit_id = "{},{}".format(mother_id, father_id)
-                if mating_unit_id not in mating_units_by_id:
-                    mother = None
-                    if mother_id in individuals_by_id:
-                        mother = individuals_by_id[mother_id]
-                    father = None
-                    if father_id in individuals_by_id:
-                        father = individuals_by_id[father_id]
+            if (mother.has_individual() and father.has_individual()
+                    and mating_unit_id in mating_units_by_id):
+                assert len(mating_units_by_id[mating_unit_id]) == 1
+                parents = mating_units_by_id[mating_unit_id][0]
+            else:
+                parents = MatingUnit(mother=mother, father=father)
+                mating_units_by_id[mating_unit_id].append(parents)
 
-                    mating_units_by_id[mating_unit_id] = \
-                        MatingUnit(mother=mother, father=father)
-
-                parents = mating_units_by_id[mating_unit_id]
-                individual.parents = parents
-                parents.children.individuals.add(individual)
+            individual.parents = parents
+            parents.children.individuals.add(individual)
 
         return individuals
 
-    def _assign_roles_paternal_other_families(self, father):
+    def _assign_roles_paternal_other_families(self, father, mother):
         for other_mating_unit in father.mating_units:
-            if (other_mating_unit.mother.has_individual()
-                    and other_mating_unit.mother.individual.role == Role.mom):
+            if other_mating_unit.mother == mother:
                 continue
 
             for child in other_mating_unit.children.individuals:
                 child.individual.assign_role(Role.paternal_half_sibling)
 
-            if not other_mating_unit.mother.has_individual():
-                continue
-            if other_mating_unit.mother.individual.role != Role.mom:
+            if other_mating_unit.mother.has_individual():
                 other_mating_unit.mother.individual.assign_role(Role.step_mom)
 
-    def _assign_roles_paternal(self, father):
+    def _assign_roles_paternal(self, father, mother):
         if father.parents:
             grandparents = father.parents
 
@@ -232,23 +234,20 @@ class PedigreeToFamily(object):
 
                 self._assign_roles_paternal_cousin(individual)
 
-        self._assign_roles_paternal_other_families(father)
+        self._assign_roles_paternal_other_families(father, mother)
 
-    def _assign_roles_maternal_other_families(self, mother):
+    def _assign_roles_maternal_other_families(self, father, mother):
         for other_mating_unit in mother.mating_units:
-            if (other_mating_unit.father.has_individual()
-                    and other_mating_unit.father.individual.role == Role.dad):
+            if other_mating_unit.father == father:
                 continue
 
             for child in other_mating_unit.children.individuals:
                 child.individual.assign_role(Role.maternal_half_sibling)
 
-            if not other_mating_unit.father.has_individual():
-                continue
-            if other_mating_unit.father.individual.role != Role.dad:
+            if other_mating_unit.father.has_individual():
                 other_mating_unit.father.individual.assign_role(Role.step_dad)
 
-    def _assign_roles_maternal(self, mother):
+    def _assign_roles_maternal(self, father, mother):
         if mother.parents:
             grandparents = mother.parents
 
@@ -272,7 +271,7 @@ class PedigreeToFamily(object):
 
                 self._assign_roles_maternal_cousin(individual)
 
-        self._assign_roles_maternal_other_families(mother)
+        self._assign_roles_maternal_other_families(father, mother)
 
     def _assign_roles_maternal_cousin(self, uncle_or_aunt):
         for mating_unit in uncle_or_aunt.mating_units:
@@ -313,21 +312,21 @@ class PedigreeToFamily(object):
             if individual != proband:
                 individual.individual.assign_role(Role.sib)
 
+        father = proband.get_father_individual()
         if parents.father.has_individual():
-            father = proband.get_father_individual()
             father.individual.assign_role(Role.dad)
 
+        mother = proband.get_mother_individual()
         if parents.mother.has_individual():
-            mother = proband.get_mother_individual()
             mother.individual.assign_role(Role.mom)
 
         if parents.father.has_individual():
             father = proband.get_father_individual()
-            self._assign_roles_paternal(father)
+            self._assign_roles_paternal(father, mother)
 
         if parents.mother.has_individual():
             mother = proband.get_mother_individual()
-            self._assign_roles_maternal(mother)
+            self._assign_roles_maternal(father, mother)
 
     def to_family(self, members):
         individuals = self._link_pedigree_members(members)
@@ -371,7 +370,7 @@ class FamilyToCsv(object):
 
     def write_pedigrees(self, pedigrees):
         with open(self.filename, "w") as csv_file:
-            writer = csv.writer(csv_file, delimiter='\t')
+            writer = csv.writer(csv_file, delimiter="\t")
             writer.writerow([
                 "familyId", "personId", "dadId", "momId",
                 "gender", "status", "role"])
@@ -397,7 +396,7 @@ def main():
                         type=str)
     args = parser.parse_args()
 
-    reader = AGRERawCsvPedigreeReader()
+    reader = SPARKCsvPedigreeReader()
     families = reader.read_filename(args.file)
 
     pedigrees = {}
