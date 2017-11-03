@@ -143,7 +143,7 @@ def default_config():
             ]
         },
         'classification': {
-            'min_individuals': 20,
+            'min_individuals': 10,
             'continuous': {
                 'min_rank': 15
             },

@@ -266,14 +266,17 @@ class PrepareVariables(PrepareBase):
         return df
 
     def _save_measure(self, measure, mdf):
+        if len(mdf) < self.config.classification.min_individuals:
+            print('skip saving measure: {}; measurings: {}'.format(
+                measure.measure_id, len(mdf)))
+            print(mdf.head())
+            return
+
         to_save = measure.to_dict()
         ins = self.db.measure.insert().values(**to_save)
         with self.db.engine.begin() as connection:
             result = connection.execute(ins)
             measure_id = result.inserted_primary_key[0]
-        if len(mdf) == 0:
-            print('empty measure: {}'.format(measure.measure_id))
-            return
 
         def convert(v): return v
 
@@ -363,11 +366,8 @@ class PrepareVariables(PrepareBase):
         mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].dropna()
         mdf.rename(columns={measure_name: 'value'}, inplace=True)
 
-        print(mdf.head())
-
         measure = self._build_measure(
             instrument_name, measure_name, mdf)
-        print(instrument_name, measure_name, measure)
         self._save_measure(measure, mdf)
 
     def build_instrument(self, instrument_name, filenames):
@@ -475,8 +475,6 @@ class PrepareVariables(PrepareBase):
     def _build_measure(self, instrument_name, measure_name, df):
         measure = self._default_measure(instrument_name, measure_name)
         values = df['value']
-        print(measure)
-        print(list(values))
         unique_values = values.unique()
         rank = len(unique_values)
         individuals = len(df)
@@ -486,12 +484,16 @@ class PrepareVariables(PrepareBase):
             return measure
 
         values_type = values.dtype
+
+        print("rank: {}; values type: {}; unique values: {}".format(
+            rank, values_type, unique_values))
+
         if values_type == np.object:
             print("checking values type ({}) for {}:{}".format(
                 values.dtype, instrument_name, measure_name))
             values_type = self.check_values_type(unique_values)
 
-        print("rank: {}; values type: {}; unique values: {}".format(
+        print("-> rank: {}; values type: {}; unique values: {}".format(
             rank, values_type, unique_values))
 
         if values_type in set([str, bool, np.bool, np.dtype('bool')]):
@@ -501,6 +503,14 @@ class PrepareVariables(PrepareBase):
         elif values_type in set([int, float, np.float, np.int,
                                  np.dtype('int64'), np.dtype('float64')]):
             self._convert_measure_values_to_float(df)
+
+            values = df['value']
+            unique_values = values.unique()
+            rank = len(unique_values)
+            individuals = len(df)
+            measure.individuals = individuals
+            print("->>> rank: {}; values type: {}; unique values: {}".format(
+                rank, values_type, unique_values))
 
             if self.check_continuous_rank(rank, individuals):
                 measure.measure_type = MeasureType.continuous
