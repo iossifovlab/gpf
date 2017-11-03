@@ -83,8 +83,6 @@ export class HistogramComponent  {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
-      this.rangeStart = null;
-      this.rangeEnd = null;
     }
 
     if ("rangesCounts" in changes ) {
@@ -209,7 +207,6 @@ export class HistogramComponent  {
 
     this.onRangeChange();
     this.scaledBins = barsBinsArray.map(d => d.bin == 0 ? 0 : this.xScale(d.bin));
-    this.selectedEndIndex = this.bars.length - 1;
   }
 
   redrawXAxis(svg, width, height) {
