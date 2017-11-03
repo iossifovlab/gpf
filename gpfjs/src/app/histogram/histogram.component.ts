@@ -84,11 +84,9 @@ export class HistogramComponent  {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
-      if (this.rangeStart === null || this.resetRange) {
-          this.rangeStart = this.bins[0];
-      }
-      if (this.rangeEnd === null || this.resetRange) {
-        this.rangeEnd = this.bins[this.bins.length - 1];
+      if (this.resetRange) {
+        this.rangeStart = null;
+        this.rangeEnd = null;
       }
       this.resetRange = true;
     }
@@ -105,7 +103,7 @@ export class HistogramComponent  {
   get showMinMaxInputWithDefaultValue() {
     if (this.showMinMaxInput === undefined) {
         if (this.bins.length < 10) {
-            return true;
+            return false;
         }
         else {
             return true;
@@ -250,6 +248,33 @@ export class HistogramComponent  {
   @Input()
   set rangeStart(rangeStart: any) {
     if (rangeStart == null) {
+        this.rangeStartWithoutNull = this.bins[0];
+    }
+    else {
+        this.rangeStartWithoutNull = rangeStart;
+    }
+  }
+
+  get rangeStart() {
+    return this.rangeStartWithoutNull;
+  }
+ 
+  @Input()
+  set rangeEnd(rangeEnd: any) {
+    if (rangeEnd == null) {
+        this.rangeEndWithoutNull = this.bins[this.bins.length - 1];
+    }
+    else {
+        this.rangeEndWithoutNull = rangeEnd;
+    }
+  }
+
+  get rangeEnd() {
+    return this.rangeEndWithoutNull;
+  }
+
+  set rangeStartWithoutNull(rangeStart: any) {
+    if (rangeStart == null) {
         this.internalRangeStart = null;
     }
     else {
@@ -262,12 +287,11 @@ export class HistogramComponent  {
     this.rangeStartSubject.next(this.internalRangeStart)
   }
 
-  get rangeStart() {
+  get rangeStartWithoutNull() {
     return this.internalRangeStart;
   }
  
-  @Input()
-  set rangeEnd(rangeEnd: any) {
+  set rangeEndWithoutNull(rangeEnd: any) {
     if (rangeEnd == null) {
         this.internalRangeEnd = null;
     }
@@ -281,7 +305,7 @@ export class HistogramComponent  {
     this.rangeEndSubject.next(this.internalRangeEnd)
   }
 
-  get rangeEnd() {
+  get rangeEndWithoutNull() {
     return this.internalRangeEnd;
   }
 

@@ -16,7 +16,7 @@
 		          class="steps form-control"
 		          required type="text"
 		          #inputRangeEnd="ngModel"
-		          [(ngModel)]="rangeEnd"
+		          [(ngModel)]="rangeEndWithoutNull"
 		          placeholder="end">
 				<button type="button" class="step up" (click)="endStepUp($event)">&#x25B2;</button>
 				<button type="button" class="step down" (click)="endStepDown($event)">&#x25BC;</button>
@@ -29,7 +29,7 @@
 		          class="steps form-control"
 		          required type="text"
 		          #inputRangeStart="ngModel"
-		          [(ngModel)]="rangeStart"
+		          [(ngModel)]="rangeStartWithoutNull"
 		          placeholder="start">
 			  <button type="button" class="step up" (click)="startStepUp($event)">&#x25B2;</button>
 			  <button type="button" class="step down" (click)="startStepDown($event)">&#x25BC;</button>
