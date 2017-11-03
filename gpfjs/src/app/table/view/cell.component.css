@@ -1,4 +1,5 @@
 .fixed-height {
-  max-height: 77px; /* 94 - 2*8 for padding - 1 for border */
+  max-height: 94px;
+  height: 94px;
   overflow: auto;
 }
