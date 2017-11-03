@@ -6,7 +6,6 @@ Created on Apr 10, 2017
 import os
 import matplotlib as mpl
 import numpy as np
-from numpy.core.operand_flag_tests import inplace_add
 
 from pheno.pheno_regression import PhenoRegression
 from pheno.pheno_db import Measure
@@ -116,6 +115,9 @@ class PreparePhenoBrowserBase(object):
         return filepath
 
     def save_fig(self, measure, suffix):
+        if '/' in measure.measure_id:
+            return (None, None)
+
         small_filepath = self.figure_filepath(
             measure, "{}_small".format(suffix))
         plt.savefig(small_filepath, dpi=self.SMALL_DPI)

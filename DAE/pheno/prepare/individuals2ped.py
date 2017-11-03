@@ -295,7 +295,8 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
             "family_id": "sfari_id",
             "individual_id": "sfari_id",
             "gender": "sex",
-            "status": "genetic_status"
+            # "status": "genetic_status",
+            "status": "genetic_status_16p",
         }
 
     GENDER_TO_ENUM = {
@@ -317,8 +318,10 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
         return self.GENDER_TO_ENUM[gender]
 
     def convert_status(self, status):
-        return Status.unaffected if status == 'Negative (normal)' \
+        return Status.unaffected if status == 'negative' \
             else Status.affected
+#         return Status.unaffected if status == 'Negative (normal)' \
+#             else Status.affected
 
 
 class FamilyToPedigree(object):
