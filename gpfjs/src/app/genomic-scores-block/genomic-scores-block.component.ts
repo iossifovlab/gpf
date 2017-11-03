@@ -4,14 +4,15 @@ import { QueryStateProvider } from '../query/query-state-provider';
 import { environment } from '../../environments/environment';
 
 import { Observable }        from 'rxjs/Observable';
-import { ValidationError } from "class-validator";
-import { GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
+import { ValidationError } from 'class-validator';
+import { GenomicScoreState, GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
          GENOMIC_SCORES_RANGE_START_CHANGE, GENOMIC_SCORES_RANGE_END_CHANGE,
          GENOMIC_SCORE_ADD, GENOMIC_SCORE_REMOVE
  } from '../genomic-scores/genomic-scores-store';
  import { Store } from '@ngrx/store';
  import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
  import { StateRestoreService } from '../store/state-restore.service';
+ import { transformAndValidateSync } from 'class-transformer-validator';
 
 
 @Component({
@@ -91,13 +92,13 @@ export class GenomicScoresBlockComponent extends QueryStateProvider {
         return this.genomicScoresState.take(1).map(
             ([genomicScoresState, isValid, validationErrors]) => {
                 if (!isValid) {
-                    //  this.flashingAlert = true;
-                    //  setTimeout(()=>{ this.flashingAlert = false }, 1000)
                     throw "invalid geneWeights state"
                 }
 
                 return {
                     genomicScores: genomicScoresState.genomicScoresState.map(el => {
+                        transformAndValidateSync(GenomicScoreState, el);
+
                         if (el.histogramData === null) {
                             return {}
                         }

@@ -32,7 +32,7 @@
     "angular2-markdown": "^1.6.0",
     "bootstrap": "^4.0.0-beta",
     "class-transformer": "^0.1.6",
-    "class-transformer-validator": "^0.2.0",
+    "class-transformer-validator": "^0.4.0",
     "class-validator": "^0.7.0",
     "codelyzer": "^2.0.1",
     "core-js": "^2.4.1",
