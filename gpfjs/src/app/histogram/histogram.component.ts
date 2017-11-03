@@ -383,11 +383,7 @@ export class HistogramComponent  {
 
   get startX() {
     let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
-    console.log(distBetweenBars)
-    if (this.selectedStartIndex) {
-        return this.xScale(this.selectedStartIndex.toString()) - distBetweenBars / 2 - 1;
-    }
-    return 0;
+    return this.xScale(this.selectedStartIndex.toString()) - distBetweenBars / 2 - 1;
   }
 
   set startX(newPositionX) {
@@ -397,10 +393,7 @@ export class HistogramComponent  {
 
   get endX() {
     let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
-    if (this.selectedEndIndex) {
-        return this.xScale(this.selectedEndIndex.toString()) + this.xScale.bandwidth() + distBetweenBars / 2 - 1;
-    }
-    return 0;
+    return this.xScale(this.selectedEndIndex.toString()) + this.xScale.bandwidth() + distBetweenBars / 2 - 1;
   }
 
   set endX(newPositionX) {
