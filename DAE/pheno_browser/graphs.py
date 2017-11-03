@@ -281,6 +281,7 @@ def draw_measure_violinplot(
     labels = role_labels(columns)
     plt.xticks(range(0, len(labels)), labels)
     ax.set_ylabel(measure_id)
+    ax.set_xlabel("role")
     plt.tight_layout()
 
     return True
