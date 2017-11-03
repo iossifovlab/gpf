@@ -21,21 +21,22 @@ import traceback  # @IgnorePep8
 
 MAX_CATEGORIES_COUNT = 15
 ROLES_COUNT_CUTOFF = 20
-ROLES = [
-    [Role.prb],
-    [Role.sib],
-    [Role.mom, Role.dad],
-    [
+ROLES_DEFINITION = [
+    {"label": "probands", "roles": [Role.prb]},
+    {"label": "siblings", "roles": [Role.sib]},
+    {"label": "parents", "roles": [Role.mom, Role.dad]},
+    {"label": "grandparents", "roles": [
         Role.paternal_grandfather, Role.paternal_grandmother,
         Role.maternal_grandfather, Role.maternal_grandmother
-    ],
-    [
+    ]},
+    {"label": "parental siblings", "roles": [
         Role.paternal_uncle, Role.paternal_aunt,
         Role.maternal_uncle, Role.maternal_aunt
-    ],
-    [Role.step_mom, Role.step_dad],
-    [Role.paternal_half_sibling, Role.maternal_half_sibling],
-    [Role.child]
+    ]},
+    {"label": "step parents", "roles": [Role.step_mom, Role.step_dad]},
+    {"label": "half siblings",
+     "roles": [Role.paternal_half_sibling, Role.maternal_half_sibling]},
+    {"label": "children", "roles": [Role.child]}
  ]
 
 
@@ -59,6 +60,18 @@ class GraphColumn(object):
     @property
     def label(self):
         return self.name + "\n" + self.status.name
+
+    @staticmethod
+    def build(df, role_definition, status):
+        roles = role_definition["roles"]
+        default_name = ", ".join([role.name for role in roles])
+        label = role_definition["label"] \
+            if "label" in role_definition else default_name
+
+        df_roles = df[df.role.isin(roles)]
+        df_roles_status = df_roles[df_roles.status == status]
+
+        return GraphColumn(label, roles, status, df_roles_status)
 
 
 def names(col1, col2):
@@ -222,7 +235,8 @@ def _enumerate_by_natural_order(df, column_name):
     return result, values_domain
 
 
-def draw_measure_violinplot(df, measure_id, ordered_roles=ROLES, ax=None):
+def draw_measure_violinplot(
+        df, measure_id, roles_definition=ROLES_DEFINITION, ax=None):
     if ax is None:
         ax = plt.gca()
 
@@ -230,7 +244,7 @@ def draw_measure_violinplot(df, measure_id, ordered_roles=ROLES, ax=None):
     fig = plt.gcf()
 
     palette = gender_palette()
-    columns = get_columns_to_draw(ordered_roles, df)
+    columns = get_columns_to_draw(roles_definition, df)
 
     if len(columns) == 0:
         return False
@@ -242,12 +256,6 @@ def draw_measure_violinplot(df, measure_id, ordered_roles=ROLES, ax=None):
         column_dfs.append(column_df)
     df_with_column_names = pd.concat(column_dfs)
 
-    print(df_with_column_names.head())
-    # print(df.shape[0], df_with_column_names.shape[0])
-    # diff = set(df.index.tolist()) - set(df_with_column_names.index.tolist())
-    # print(diff)
-    # print(df.loc[diff])
-    # assert df.shape[0] == df_with_column_names.shape[0]
     assert df.shape[1] == df_with_column_names.shape[1] - 1
     column_names = [column.label for column in columns]
 
@@ -278,21 +286,11 @@ def draw_measure_violinplot(df, measure_id, ordered_roles=ROLES, ax=None):
     return True
 
 
-def get_graph_column(df, subroles=None, status=Status.affected):
-    if not subroles:
-        subroles = []
-    df_roles = df[df.role.isin(subroles)]
-    df_roles_status = df_roles[df_roles.status == status]
-    name = ", ".join([role.name for role in subroles])
-
-    return GraphColumn(name, subroles, status, df_roles_status)
-
-
 def get_columns_to_draw(roles, df):
     columns = []
     for subroles in roles:
         for status in [Status.affected, Status.unaffected]:
-            columns.append(get_graph_column(df, subroles, status))
+            columns.append(GraphColumn.build(df, subroles, status))
 
     dfs = [column for column in columns
            if column.all_count() >= ROLES_COUNT_CUTOFF]
@@ -301,7 +299,7 @@ def get_columns_to_draw(roles, df):
 
 
 def draw_categorical_violin_distribution(
-        df, measure_id, ordered_roles=ROLES, ax=None,
+        df, measure_id, roles_definition=ROLES_DEFINITION, ax=None,
         numerical_categories=False, max_categories=MAX_CATEGORIES_COUNT):
     if ax is None:
         ax = plt.gca()
@@ -323,6 +321,10 @@ def draw_categorical_violin_distribution(
     values_domain = values_domain[:max_categories]
     y_locations = np.arange(len(values_domain))
 
+    columns = get_columns_to_draw(roles_definition, df)
+    if len(columns) == 0:
+        return False
+
     bin_edges = y_locations
     centers = bin_edges
     heights = 0.8
@@ -330,11 +332,6 @@ def draw_categorical_violin_distribution(
     hist_range = (np.min(y_locations), np.max(y_locations))
 
     binned_datasets = []
-
-    columns = get_columns_to_draw(ordered_roles, df)
-
-    if len(columns) == 0:
-        return False
 
     for column in columns:
         df_role = column.df
