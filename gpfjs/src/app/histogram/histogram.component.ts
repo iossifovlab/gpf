@@ -48,6 +48,7 @@ export class HistogramComponent  {
   private svg: any;
 
   scaledBins: Array<number>;
+  private resetRange = false;
 
   ngOnInit() {
       this.rangeStartSubject
@@ -83,6 +84,11 @@ export class HistogramComponent  {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
+      if (this.resetRange) {
+        this.rangeStart = null;
+        this.rangeEnd = null;
+      }
+      this.resetRange = true;
     }
 
     if ("rangesCounts" in changes ) {
