@@ -37,11 +37,21 @@ def parse_config(args):
     config.instruments.dir = args.instruments
     config.pedigree = args.pedigree
     config.db.filename = args.output
+
+    skip_columns = set([])
+    if args.skip_file:
+        assert os.path.exists(args.skip_file)
+        with open(args.skip_file, 'r') as infile:
+            columns = infile.readlines()
+            columns = [col.strip() for col in columns]
+            skip_columns += set(columns)
     if args.skip_columns:
-        skip_columns = set([
+        columns = set([
             col for col in args.skip_columns.split(',')
         ])
-        config.skip.measures = skip_columns
+        skip_columns += columns
+
+    config.skip.measures = skip_columns
     if args.composite_fids:
         config.family.composite_key = args.composite_fids
 
@@ -147,6 +157,12 @@ USAGE
             type=str,
             dest="skip_columns",
             help="comma separated list of instruments columns to skip")
+
+        parser.add_argument(
+            '--skip-file',
+            type=str,
+            dest="skip_file",
+            help="file with list of instruments columns to skip")
 
         parser.add_argument(
             '--composite-fids',
