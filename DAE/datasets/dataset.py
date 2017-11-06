@@ -530,17 +530,20 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         legend = self.get_pedigree_selector(**kwargs)
         pheno_columns = self.get_pheno_columns()
         genotype_columns = self.get_genotype_columns()
+        genotype_column_keys = {key for (key, _) in genotype_columns}
+
         columns = self.COMMON_COLUMNS[:]
         columns.append('_pedigree_')
         columns.extend([label for (_, _, label) in pheno_columns])
-        columns.extend([label for (label, _) in genotype_columns])
+        columns.extend(genotype_column_keys)
         families = {}
         if pheno_columns and self.pheno_db:
             families = self.pheno_db.families
 
         gene_weights = {key: value.to_dict()
                         for key, value
-                        in self.get_gene_weights_loader().weights.items()}
+                        in self.get_gene_weights_loader().weights.items()
+                        if key in genotype_column_keys}
 
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
