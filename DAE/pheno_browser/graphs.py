@@ -357,6 +357,7 @@ def draw_categorical_violin_distribution(
 
     _fig, ax = plt.subplots()
     set_figure_size(_fig, len(columns))
+    female_text_offeset = binned_maximum * 0.05
     for count, (male, female) in enumerate(binned_datasets):
         x_loc = x_locations[count]
 
@@ -364,6 +365,17 @@ def draw_categorical_violin_distribution(
         ax.barh(centers, male, height=heights, left=lefts, color=color_male)
         ax.barh(centers, female, height=heights,
                 left=x_loc, color=color_female)
+
+        for y, (male_count, female_count) in enumerate(zip(male, female)):
+            ax.text(
+                x_loc - male_count, y, str(male_count),
+                horizontalalignment="center", verticalalignment="bottom",
+                rotation=90, rotation_mode="anchor")
+            ax.text(
+                x_loc + female_count + female_text_offeset, y,
+                str(female_count), horizontalalignment="center",
+                verticalalignment="top", rotation=90, rotation_mode="anchor")
+
 
     ax.set_yticks(y_locations)
     ax.set_yticklabels(map(lambda x: textwrap.fill(x, 20), values_domain))
