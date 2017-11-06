@@ -17,6 +17,7 @@ class DatasetApiTest(APITestCase):
         Dataset.recreate_dataset_perm('VIP', [])
         Dataset.recreate_dataset_perm('TEST', [])
         Dataset.recreate_dataset_perm('SPARK', [])
+        Dataset.recreate_dataset_perm('AGRE_WG', [])
 
     def test_get_datasets(self):
         url = '/api/v3/datasets/'
@@ -25,7 +26,7 @@ class DatasetApiTest(APITestCase):
         data = response.data
 
         self.assertIn('data', data)
-        self.assertEquals(4, len(data['data']))
+        self.assertEquals(5, len(data['data']))
 
     def test_get_dataset_ssc(self):
         url = '/api/v3/datasets/SSC'

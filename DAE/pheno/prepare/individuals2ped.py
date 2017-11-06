@@ -292,7 +292,7 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
     def FIELDS_TO_COLUMNS(self):
         return {
             "role": "relationship_to_iip",
-            "family_id": "sfari_id",
+            "family_id": "family",
             "individual_id": "sfari_id",
             "gender": "sex",
             # "status": "genetic_status",

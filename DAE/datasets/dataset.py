@@ -11,6 +11,7 @@ from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
 from datasets.family_pheno_base import FamilyPhenoQueryMixin
 from pheno.pheno_regression import PhenoRegression
+from collections import defaultdict
 
 
 class Dataset(QueryBase, FamilyPhenoQueryMixin):
@@ -212,6 +213,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if self.families:
             return
         self.load_families()
+        self.load_pheno_families()
         self.load_pedigree_selectors()
         self.load_pheno_columns()
         self.load_pheno_filters()
@@ -238,7 +240,29 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         self.persons = {}
         for fam in self.families.values():
             for p in fam.memberInOrder:
+                p.familyId = fam.familyId
                 self.persons[p.personId] = p
+
+    def load_pheno_families(self):
+        self.geno2pheno_families = defaultdict(set)
+        self.pheno2geno_families = defaultdict(set)
+
+        self.pheno_families = defaultdict(dict)
+        self.pheno_persons = {}
+        if not self.pheno_db:
+            return
+
+        person_df = self.pheno_db.get_persons_df()
+        persons = person_df.to_dict(orient='records')
+        for p in persons:
+            pid = p['person_id']
+            self.pheno_persons[pid] = p
+            self.pheno_families[p['family_id']][pid] = p
+            if pid in self.persons:
+                geno_person = self.persons[pid]
+                geno_fid = geno_person.familyId
+                self.geno2pheno_families[geno_fid].add(p['family_id'])
+                self.pheno2geno_families[p['family_id']].add(geno_fid)
 
     def load_pheno_columns(self):
         pheno_columns = self.get_pheno_columns()
@@ -251,13 +275,16 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             values = self.pheno_db.get_persons_values_df(
                 [source], roles=[role])
             values.dropna(inplace=True)
-            for fid in values['family_id'].unique():
-                fam = self.pheno_db.families.get(fid, None)
-                if not fam:
+            for pheno_fid in values['family_id'].unique():
+                fvalues = values[values.family_id == pheno_fid]
+                if len(fvalues) == 0:
                     continue
-                fvalues = values[values.family_id == fid]
-                if len(fvalues) > 0:
-                    fam.atts[label] = fvalues[source].values[0]
+                geno_fids = self.pheno2geno_families[pheno_fid]
+                for fid in geno_fids:
+                    geno_fam = self.families.get(fid)
+                    if not geno_fam:
+                        continue
+                    geno_fam.atts[label] = fvalues[source].values[0]
 
     def load_pheno_filters(self):
         if self.pheno_db is None:
@@ -523,7 +550,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         columns.extend([label for (_, _, label) in pheno_columns])
         families = {}
         if pheno_columns and self.pheno_db:
-            families = self.pheno_db.families
+            families = self.families
 
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))

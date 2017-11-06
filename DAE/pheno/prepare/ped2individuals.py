@@ -63,9 +63,9 @@ class CsvPedigreeReader(object):
 
         return families
 
-    def read_csv_file(self, csv_file):
+    def read_csv_file(self, csv_file, delimiter="\t"):
         individuals = []
-        reader = csv.DictReader(csv_file, delimiter="\t")
+        reader = csv.DictReader(csv_file, delimiter=delimiter)
         for row in reader:
             kwargs = {
                 field: row[column]
@@ -89,9 +89,9 @@ class CsvPedigreeReader(object):
 
         return self.read_structure(individuals)
 
-    def read_filename(self, filename):
+    def read_filename(self, filename, delimiter="\t"):
         with open(filename, "r") as csv_file:
-            families = self.read_csv_file(csv_file)
+            families = self.read_csv_file(csv_file, delimiter=delimiter)
 
         return families
 
@@ -153,6 +153,35 @@ class AGRERawCsvPedigreeReader(CsvPedigreeReader):
             return "0"
         res = "{}{:02d}".format(family_id, int(individual_id))
         return res
+
+
+class VIPCsvPedigreeReader(CsvPedigreeReader):
+
+    @property
+    def COLUMNS_TO_FIELDS(self):
+        return {
+            "family": "family_id",
+            "sfari_id": "individual_id",
+            "mother": "mother_id",
+            "father": "father_id",
+            "sex": "gender",
+            "genetic_status_16p": "status"
+        }
+
+    GENDER_TO_ENUM = {
+        "male": Gender.M,
+        "female": Gender.F
+    }
+
+    def convert_status(self, status):
+        return Status.unaffected if status == 'negative' \
+            else Status.affected
+
+    def convert_gender(self, gender):
+        return self.GENDER_TO_ENUM[gender].value
+
+    def convert_individual_id(self, _family_id, individual_id):
+        return individual_id
 
 
 class PedigreeToFamily(object):
@@ -396,8 +425,9 @@ def main():
                         type=str)
     args = parser.parse_args()
 
-    reader = SPARKCsvPedigreeReader()
-    families = reader.read_filename(args.file)
+    # reader = SPARKCsvPedigreeReader()
+    reader = VIPCsvPedigreeReader()
+    families = reader.read_filename(args.file, delimiter=",")
 
     pedigrees = {}
 
