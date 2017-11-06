@@ -479,17 +479,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         'effectDetails',
         'all.altFreq',
         'all.nAltAlls',
-        'SSC-freq',
-        'EVS-freq',
-        'E65-freq',
         'all.nParCalled',
         '_ch_prof_',
         'valstatus',
-        "phenoInChS",
-        'LGD_rank',
-        'pRec_rank',
-        'RVIS_rank',
-        'pLI_rank'
+        "phenoInChS"
     ]
 
     def get_pheno_columns(self):
@@ -558,9 +551,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
             for key, value in gene_weights.items():
                 genes = {effect['sym'] for effect in v.geneEffect}
-                v.atts[key] = ';'.join([str(value[gene])
-                                        for gene in genes
-                                        if gene in value])
+                v.atts[key] = [value[gene] for gene in genes if gene in value]
             return v
 
         return generate_response(
