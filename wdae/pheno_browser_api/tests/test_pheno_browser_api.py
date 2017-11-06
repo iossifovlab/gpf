@@ -40,7 +40,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('default', response.data)
         self.assertIn('instruments', response.data)
-        self.assertEquals(71, len(response.data['instruments']))
+        self.assertEquals(69, len(response.data['instruments']))
 
     def test_measures_vip_diagnosis_summary(self):
         url = "{}?dataset_id=VIP&instrument=diagnosis_summary".format(

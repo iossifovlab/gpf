@@ -82,7 +82,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
 
-        self.assertEquals('122', data['count'])
+        self.assertEquals('121', data['count'])
 
     def test_pheno_family_filters_by_study_type(self):
         url = '/api/v3/genotype_browser/preview'
@@ -114,4 +114,4 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
 
-        self.assertEquals('412', data['count'])
+        self.assertEquals('411', data['count'])
