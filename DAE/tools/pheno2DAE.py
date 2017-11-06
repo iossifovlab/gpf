@@ -44,12 +44,12 @@ def parse_config(args):
         with open(args.skip_file, 'r') as infile:
             columns = infile.readlines()
             columns = [col.strip() for col in columns]
-            skip_columns += set(columns)
+            skip_columns = skip_columns | set(columns)
     if args.skip_columns:
         columns = set([
             col for col in args.skip_columns.split(',')
         ])
-        skip_columns += columns
+        skip_columns = skip_columns | columns
 
     config.skip.measures = skip_columns
     if args.composite_fids:
