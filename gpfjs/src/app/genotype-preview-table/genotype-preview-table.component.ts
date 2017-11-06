@@ -1,6 +1,7 @@
 import { Input, Component } from '@angular/core';
 import { GenotypePreview, GenotypePreviewsArray } from './genotype-preview';
 import { AdditionalColumn, AdditionalColumnSlot } from '../datasets/datasets';
+import { sprintf } from 'sprintf-js';
 
 @Component({
   selector: 'gpf-genotype-preview-table',
@@ -57,9 +58,14 @@ export class GenotypePreviewTableComponent {
   formattedData(data:any, slot: AdditionalColumnSlot) {
       if (data.additionalData[slot.id]) {
           if (slot.format) {
-              return slot.format.replace("{}", data.additionalData[slot.id])
+              if (data.additionalData[slot.id].constructor === Array) {
+                    return data.additionalData[slot.id].map(
+                        x => sprintf(slot.format, x)
+                    )
+              }
+              return sprintf(slot.format, data.additionalData[slot.id]);
           }
-          return data.additionalData[slot.id]
+          return data.additionalData[slot.id];
       }
       return ""
   }
