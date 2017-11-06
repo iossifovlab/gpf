@@ -66,30 +66,6 @@
                     <gpf-table-subcontent field="genes"></gpf-table-subcontent>
                 </gpf-table-content>
             </gpf-table-column>
-            <gpf-table-column>
-                <gpf-table-header caption="gene weights">
-                </gpf-table-header>
-                <gpf-table-header>
-                    <gpf-table-subheader caption="LGD" field="LGD_rank"></gpf-table-subheader>
-                    <gpf-table-subheader caption="pRec" field="pRec_rank"></gpf-table-subheader>
-                    <gpf-table-subheader caption="RVIS" field="RVIS_rank"></gpf-table-subheader>
-                    <gpf-table-subheader caption="pLI" field="pLI_rank"></gpf-table-subheader>
-                </gpf-table-header>
-                <gpf-table-content>
-                    <gpf-table-subcontent field="LGD_rank">
-                        <span *gpfTableCellContent="let data">{{ data.additionalData['LGD_rank'] }}</span>
-                    </gpf-table-subcontent>
-                    <gpf-table-subcontent field="pRec_rank">
-                        <span *gpfTableCellContent="let data">{{ data.additionalData['pRec_rank'] }}</span>
-                    </gpf-table-subcontent>
-                    <gpf-table-subcontent field="RVIS_rank">
-                        <span *gpfTableCellContent="let data">{{ data.additionalData['RVIS_rank'] }}</span>
-                    </gpf-table-subcontent>
-                    <gpf-table-subcontent field="pLI_rank">
-                        <span *gpfTableCellContent="let data">{{ data.additionalData['pLI_rank'] }}</span>
-                    </gpf-table-subcontent>
-                </gpf-table-content>
-            </gpf-table-column>
             <gpf-table-column *ngFor="let column of additionalColumns">
                 <gpf-table-header caption="{{ column.name }}">
                 </gpf-table-header>
