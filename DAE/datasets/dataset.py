@@ -264,6 +264,19 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 self.geno2pheno_families[geno_fid].add(p['family_id'])
                 self.pheno2geno_families[p['family_id']].add(geno_fid)
 
+    def get_geno_families(self, pheno_families):
+        if not pheno_families:
+            return pheno_families
+        fr = [self.pheno2geno_families.get(fid, set([])) for
+              fid in pheno_families]
+
+        result = reduce(
+            lambda accum, ff: accum | ff,
+            fr,
+            set([])
+        )
+        return result
+
     def load_pheno_columns(self):
         pheno_columns = self.get_pheno_columns()
         if pheno_columns is None:

@@ -98,6 +98,8 @@ class FamilyPhenoQueryMixin(object):
             ff is None or isinstance(ff, set)
             for ff in result
         ])
+        result = map(self.get_geno_families, result)
+
         return filter(lambda ff: isinstance(ff, set), result)
 
     def _filter_continuous_filter(self, safe=True, **kwargs):

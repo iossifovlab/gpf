@@ -100,3 +100,34 @@ def test_family_ids_simple_transmitted(ssc):
         assert v.familyId == '11563'
 
     assert 1 == count
+
+
+def test_verbal_iq_interval_vip(vip, vip_pheno):
+    fd = vip
+    assert fd is not None
+
+    measure_id = 'diagnosis_summary.best_nonverbal_iq'
+    family_ids = fd.get_families_by_measure_continuous(
+        measure_id, 82, 83, roles=[Role.prb])
+    assert family_ids is not None
+    print(family_ids)
+
+    assert 7 == len(family_ids)
+
+    df = vip_pheno.get_persons_values_df(
+        [measure_id], roles=[Role.prb])
+    df.dropna(inplace=True)
+
+    res = df[df.family_id.isin(set(family_ids))]
+
+    assert np.all(res[measure_id] >= 82)
+    assert np.all(res[measure_id] <= 83)
+
+    geno_families = vip.get_geno_families(family_ids)
+    print(geno_families)
+
+    assert len(geno_families) == 6
+    assert geno_families == set([
+        '14740.x7-14740.x8', '14716.x1-14716.x2', '14779.x6-14779.x3',
+        '14713.x3-14713.x6', '14702.x1-14702.x2', '14762.x27-14762.x28'
+    ])
