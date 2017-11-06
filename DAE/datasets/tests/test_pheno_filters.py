@@ -4,7 +4,7 @@ Created on Mar 25, 2017
 @author: lubo
 '''
 import copy
-from datasets.tests.requests import EXAMPLE_QUERY_SSC
+from datasets.tests.requests import EXAMPLE_QUERY_SSC, EXAMPLE_QUERY_VIP
 
 
 def test_verbal_iq_interval_ssc(ssc):
@@ -229,3 +229,29 @@ def test_pheno_filters_combine_categorical_q2(ssc):
     vs = ssc.get_variants(**query)
     vs = list(vs)
     assert len(vs) == 0
+
+
+def test_verbal_iq_interval_vip(vip):
+
+    query = copy.deepcopy(EXAMPLE_QUERY_VIP)
+    query['phenoFilters'] = [
+        {
+            'measureType': 'continuous',
+            'measure': 'diagnosis_summary.best_nonverbal_iq',
+            'role': 'prb',
+            'mmin': 51,
+            'mmax': 51
+        }
+    ]
+    query['effectTypes'] = [
+        'Missense',
+    ]
+    query["presentInParent"] = [
+        "neither"
+    ]
+    del query['pedigreeSelector']
+
+    vs = vip.get_variants(**query)
+    vs = list(vs)
+    assert len(vs) == 2
+    assert vs[0].familyId == '14904.x3-14904.x6'
