@@ -138,6 +138,10 @@ class DatasetsConfig(object):
             self._get_genotype_browser_pheno_filters(section)
         family_study_filters = \
             self._get_genotype_browser_family_study_filters(section)
+        genotype_columns = \
+            self._get_genotype_browser_genotype_columns(section)
+        genomic_metrics = \
+            self._get_genotype_browser_genomic_metrics(section)
 
         return {
             'mainForm': main_form,
@@ -151,7 +155,9 @@ class DatasetsConfig(object):
             'hasPedigreeSelector': pedigree_selector,
             'phenoColumns': pheno_columns,
             'phenoFilters': pheno_filters,
-            'familyStudyFilters': family_study_filters
+            'familyStudyFilters': family_study_filters,
+            'genotypeColumns': genotype_columns,
+            'genomicMetrics': genomic_metrics
         }
 
     def _get_genotype_browser_family_study_filters(self, section):
@@ -221,6 +227,66 @@ class DatasetsConfig(object):
             'measureType': measure_type,
             'measureFilter': measure_filter
         }
+
+    def _get_genotype_browser_genomic_metrics(self, section):
+        result = []
+        metrics = self._get_string_list(
+            section, 'genotypeBrowser.genomicMetrics')
+        if not metrics:
+            return None
+
+        for metric in metrics:
+            metric_id, metric_name = metric.split(":")
+            result.append({
+                'id': metric_id,
+                'name': metric_name
+            })
+
+        return result
+
+    def _get_genotype_browser_genotype_columns(self, section):
+        result = []
+        columns = self._get_string_list(
+            section, 'genotypeBrowser.genotype.columns')
+        if not columns:
+            return None
+
+        for col in columns:
+            column = self._get_genotype_browser_genotype_column(section, col)
+            result.append(column)
+
+        return result
+
+    def _get_genotype_browser_genotype_column(self, section, col_id):
+        prefix = 'genotypeBrowser.genotype.{}'.format(col_id)
+        name = self._get_string(
+            section, '{}.{}'.format(prefix, 'name'))
+        slots = self._get_string_list(
+            section, '{}.{}'.format(prefix, 'slots'))
+        column = {}
+        column['name'] = name
+
+        column_slots = []
+        for slot in slots:
+            slot_arr = slot.split(":")
+            if len(slot_arr) == 1:
+                source = slot_arr[0]
+                label = slot_arr[0]
+                label_format = "{}"
+            elif len(slot_arr) == 2:
+                source, label = slot_arr
+                label_format = "{}"
+            elif len(slot_arr) == 3:
+                source, label, label_format = slot_arr
+            column_slots.append(
+                {
+                    'source': source,
+                    'name': label,
+                    'id': source,
+                    'format': label_format
+                })
+        column['slots'] = column_slots
+        return column
 
     def _get_genotype_browser_pheno_columns(self, section):
         result = []

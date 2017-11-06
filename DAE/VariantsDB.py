@@ -179,8 +179,19 @@ class Study:
         for v in vs:
             yield v
 
+    def genomic_scores_filter(self, variant, genomicScores):
+        try:
+            return all([score['min'] <= float(variant.atts[score['metric']])
+                        <= score['max']
+                        for score in genomicScores])
+        except ValueError:
+            return False
+        except KeyError:
+            return False
+        return False
+
     def get_denovo_variants(self, inChild=None, presentInChild=None,
-                            presentInParent=None,
+                            presentInParent=None, genomicScores=[],
                             gender=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None,
@@ -204,8 +215,11 @@ class Study:
             reg_matcher = regions_matcher(regionS)
 
         dnvData = self._load_dnv_data(callSet)
+
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
+                continue
+            if not self.genomic_scores_filter(v, genomicScores):
                 continue
             if pipFilter and not pipFilter(v.fromParentS):
                 continue
@@ -261,9 +275,18 @@ class Study:
         flsS = self.vdb._config.get(self._configSection, propName)
         varList = []
         for fl in flsS.split('\n'):
+
+            def float_conv(x):
+                try:
+                    return float(x or np.nan)
+                except:
+                    return np.nan
             print >> sys.stderr, "Loading file", fl, "for collection ", self.name
             dt = genfromtxt(fl, delimiter='\t', dtype=None, names=True,
-                            case_sensitive=True)
+                            case_sensitive=True, deletechars='', 
+                            converters={"SSC-freq": float_conv,
+                                        "EVS-freq": float_conv,
+                                        "E65-freq": float_conv})
             if len(dt.shape) == 0:
                 dt = dt.reshape(1)
             hasCenter = 'center' in dt.dtype.names
@@ -684,7 +707,7 @@ class Study:
 
 class VariantsDB:
 
-    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None, 
+    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None,
                  phDB=None, genomesDB=None):
         self.sfariDB = sfariDB
         self.giDB = giDB

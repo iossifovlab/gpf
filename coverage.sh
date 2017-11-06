@@ -8,6 +8,7 @@ py.test -v --cov-config coveragerc \
     --cov family_counters_api \
     --cov gene_sets \
     --cov gene_weights \
+    --cov genomic_scores_api \
     --cov genotype_browser \
     --cov groups_api \
     --cov helpers \

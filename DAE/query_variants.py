@@ -603,8 +603,6 @@ def generate_response(vs, atts=[], sep='\t'):
                 mavs.append("")
         hack = []
         for a in atts:
-            if a in ['SSCfreq', 'EVSfreq', 'E65freq', ] and a not in v.atts:
-                a = a[:3] + '-' + a[3:]
             if a in v.atts:
                 val = v.atts[a]
                 if not isinstance(val, list):
