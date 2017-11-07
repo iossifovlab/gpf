@@ -42,7 +42,7 @@ class Test(BaseAuthenticatedUserTest):
                     'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
                     'role': 'prb',
                     'mmin': 80,
-                    'mmax': 80
+                    'mmax': 80.5
                 }
             ]
         }

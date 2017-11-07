@@ -30,14 +30,10 @@ class GeneWeightsTest(unittest.TestCase):
 
     def test_get_genes_by_weight(self):
         g = self.weights.get_genes_by_weight('LGD_rank', 1.5, 5.0)
-        self.assertEqual(4, len(g))
+        self.assertEqual(3, len(g))
 
         g = self.weights.get_genes_by_weight('LGD_rank', -1, 5.0)
-        self.assertEqual(5, len(g))
+        self.assertEqual(4, len(g))
 
         g = self.weights.get_genes_by_weight('LGD_rank', 1.0, 5.0)
-        self.assertEqual(5, len(g))
-
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertEqual(4, len(g))

@@ -31,4 +31,6 @@ class GeneWeightsGetGenesViewTest(APITestCase):
         }
         response = self.client.post(url, data, format='json')
         self.assertEqual(200, response.status_code)
-        self.assertEqual(4, len(response.data))
+        print(response.data)
+
+        self.assertEqual(3, len(response.data))

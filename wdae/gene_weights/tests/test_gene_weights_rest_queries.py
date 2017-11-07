@@ -41,14 +41,14 @@ class Test(BaseAuthenticatedUserTest):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('19', response.data['count'])
+        self.assertEqual('17', response.data['count'])
 
     def test_rvis_rank_zero_to_one_in_autism(self):
         data = copy.deepcopy(EXAMPLE_QUERY_SD)
         data["geneWeights"] = {
             "weight": "RVIS_rank",
-            "rangeStart": 0.0,
-            "rangeEnd": 1.0
+            "rangeStart": 16530,
+            "rangeEnd": 16754
         }
         data["pedigreeSelector"] = {
             'id': "phenotype",
@@ -58,8 +58,6 @@ class Test(BaseAuthenticatedUserTest):
             'Frame-shift',
             'Nonsense',
             'Splice-site',
-            'Missense',
-            'Synonymous',
         ]
 
         url = '/api/v3/genotype_browser/preview'
@@ -77,7 +75,7 @@ class Test(BaseAuthenticatedUserTest):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('5', response.data['count'])
+        self.assertEqual('9', response.data['count'])
 
     def test_ssc_rest_call_by_gene_weight_rvis_25_to_30(self):
         data = copy.deepcopy(EXAMPLE_QUERY_SSC)
@@ -100,7 +98,7 @@ class Test(BaseAuthenticatedUserTest):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('9', response.data['count'])
+        self.assertEqual('7', response.data['count'])
 
     def test_ssc_rest_call_by_gene_syms(self):
         data = copy.deepcopy(EXAMPLE_QUERY_SSC)
@@ -141,7 +139,7 @@ class Test(BaseAuthenticatedUserTest):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual('18', response.data['count'])
+        self.assertEqual('17', response.data['count'])
 
     def test_sd_rest_call_by_gene_syms(self):
         data = copy.deepcopy(EXAMPLE_QUERY_SD)
