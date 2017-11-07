@@ -376,7 +376,6 @@ def draw_categorical_violin_distribution(
                 str(female_count), horizontalalignment="center",
                 verticalalignment="top", rotation=90, rotation_mode="anchor")
 
-
     ax.set_yticks(y_locations)
     ax.set_yticklabels(map(lambda x: textwrap.fill(x, 20), values_domain))
     ax.set_xlim(2 * -binned_maximum, len(columns) * 2 * binned_maximum)

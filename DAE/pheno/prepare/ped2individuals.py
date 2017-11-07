@@ -11,6 +11,19 @@ from pheno.common import Gender
 from pheno.common import Role
 
 
+class PedigreeError(Exception):
+
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
+class NoProband(PedigreeError):
+    pass
+
+
 class PedigreeMember(object):
 
     def __init__(
@@ -56,7 +69,8 @@ class CsvPedigreeReader(object):
     def COLUMNS_TO_FIELDS(self):
         raise NotImplementedError()
 
-    def read_structure(self, individuals):
+    @staticmethod
+    def read_structure(individuals):
         families = defaultdict(list)
         for individual in individuals:
             families[individual.family_id].append(individual)
@@ -79,15 +93,15 @@ class CsvPedigreeReader(object):
             kwargs["father_id"] = self.convert_individual_id(
                 kwargs["family_id"], kwargs["father_id"])
 
-            kwargs["status"] = Status(self.convert_status(kwargs["status"]))
-            kwargs["gender"] = Gender(self.convert_gender(kwargs["gender"]))
+            kwargs["status"] = self.convert_status(kwargs["status"])
+            kwargs["gender"] = self.convert_gender(kwargs["gender"])
             kwargs["role"] = Role.unknown
 
             individual = PedigreeMember(**kwargs)
 
             individuals.append(individual)
 
-        return self.read_structure(individuals)
+        return CsvPedigreeReader.read_structure(individuals)
 
     def read_filename(self, filename, delimiter="\t"):
         with open(filename, "r") as csv_file:
@@ -110,10 +124,10 @@ class SPARKCsvPedigreeReader(CsvPedigreeReader):
         }
 
     def convert_status(self, val):
-        return int(val)
+        return Status.affected if int(val) == 2 else Status.unaffected
 
     def convert_gender(self, val):
-        return int(val)
+        return Gender.M if int(val) == 1 else Gender.F
 
     def convert_individual_id(self, _family_id, individual_id):
         return individual_id
@@ -134,15 +148,15 @@ class AGRERawCsvPedigreeReader(CsvPedigreeReader):
 
     def convert_status(self, val):
         if val:
-            return Status.affected.value
+            return Status.affected
         else:
-            return Status.unaffected.value
+            return Status.unaffected
 
     def convert_gender(self, val):
         if val == "Female":
-            return Gender.F.value
+            return Gender.F
         elif val == "Male":
-            return Gender.M.value
+            return Gender.M
         else:
             raise ValueError("unexpected sex: {}".format(val))
 
@@ -357,10 +371,12 @@ class PedigreeToFamily(object):
             mother = proband.get_mother_individual()
             self._assign_roles_maternal(father, mother)
 
-    def to_family(self, members):
+    def to_family(self, members, family_id='unknown'):
         individuals = self._link_pedigree_members(members)
 
         proband = self.get_proband(individuals)
+        if proband is None:
+            raise NoProband("No proband in family '{}'".format(family_id))
 
         self._assign_roles(proband)
 
@@ -368,6 +384,8 @@ class PedigreeToFamily(object):
 
     def get_proband(self, individuals):
         affected = self.get_affected(individuals)
+        if len(affected) == 0:
+            return None
         return sorted(affected, key=lambda x: x.individual.individual_id)[0]
 
     def get_affected(self, individuals):
@@ -378,8 +396,11 @@ class PedigreeToFamily(object):
         pedigrees = {}
 
         for family_name, members in families.items():
-            pedigree = self.to_family(members)
-            pedigrees[family_name] = pedigree
+            try:
+                pedigree = self.to_family(members, family_name)
+                pedigrees[family_name] = pedigree
+            except NoProband:
+                continue
 
         return pedigrees
 
@@ -389,6 +410,8 @@ class AGREPedigreeToFamily(PedigreeToFamily):
     def get_proband(self, individuals):
         individuals[0].add_ranks()
         affected = self.get_affected(individuals)
+        if len(affected) == 0:
+            return None
         return sorted(affected, key=lambda x: x.rank)[0]
 
 
