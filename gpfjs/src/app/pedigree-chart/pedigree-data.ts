@@ -1,4 +1,4 @@
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 
 export class Individual {
   matingUnits = new Array<MatingUnit>();

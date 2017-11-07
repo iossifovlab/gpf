@@ -2,17 +2,19 @@ import {
   PresentInParentState, PRESENT_IN_PARENT_INIT, PRESENT_IN_PARENT_CHECK_ALL,
   PRESENT_IN_PARENT_UNCHECK_ALL, PRESENT_IN_PARENT_UNCHECK,
   PRESENT_IN_PARENT_CHECK, PRESENT_IN_PARENT_RANGE_START_CHANGE,
-  PRESENT_IN_PARENT_RANGE_END_CHANGE, PRESENT_IN_PARENT_ULTRA_RARE_CHANGE
+  PRESENT_IN_PARENT_RANGE_END_CHANGE, PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
+  PRESENT_IN_PARENT_RARITY_TYPE_CHANGE,
+  RARITY_ULTRARARE, RARITY_INTERVAL, RARITY_RARE, RARITY_ALL
 } from './present-in-parent';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { QueryStateProvider } from '../query/query-state-provider'
-import { QueryData, Rarity } from '../query/query'
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
-import { ValidationError } from "class-validator";
-import { StateRestoreService } from '../store/state-restore.service'
+import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryData, Rarity } from '../query/query';
+import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { ValidationError } from 'class-validator';
+import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-present-in-parent',
@@ -46,25 +48,25 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
 
   restoreCheckedState(state) {
     for (let key of state) {
-      if (key == 'father only') {
+      if (key === 'father only') {
         this.store.dispatch({
           'type': PRESENT_IN_PARENT_CHECK,
           'payload': 'fatherOnly'
         });
       }
-      if (key == 'mother only') {
+      if (key === 'mother only') {
         this.store.dispatch({
           'type': PRESENT_IN_PARENT_CHECK,
           'payload': 'motherOnly'
         });
       }
-      if (key == 'mother and father') {
+      if (key === 'mother and father') {
         this.store.dispatch({
           'type': PRESENT_IN_PARENT_CHECK,
           'payload': 'motherFather'
         });
       }
-      if (key == 'neither') {
+      if (key === 'neither') {
         this.store.dispatch({
           'type': PRESENT_IN_PARENT_CHECK,
           'payload': 'neither'
@@ -79,8 +81,7 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
         'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
         'payload': true
       });
-    }
-    else {
+    } else {
       this.store.dispatch({
         'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
         'payload': false
@@ -107,18 +108,21 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   restoreRadioButtonState(state) {
-    this.rarityRadio = "ultraRare";     //Default
-    console.log("radio", state['minFreq'], state['maxFreq'])
-    if (!state['ultraRare']) {
-      if (state['minFreq'] && state['minFreq'] > 0) {
-        this.rarityRadio = "interval";
-      }
-      else {
-        if (state['maxFreq'] && state['maxFreq'] < 100) {
-          this.rarityRadio = "rare";
-        }
-        else {
-          this.rarityRadio = "all";
+    this.setFrequenciesState(
+      state['ultraRare'], state['minFreq'], state['maxFreq']);
+  }
+
+  setFrequenciesState(ultraRare, minFrequency, maxFrequency) {
+    if (ultraRare) {
+      this.ultraRareValueChange(true);
+    } else {
+      if (minFrequency && minFrequency > 0) {
+        this.rarityTypeChange(RARITY_INTERVAL);
+      } else {
+        if (maxFrequency && maxFrequency < 100) {
+          this.rarityTypeChange(RARITY_RARE);
+        } else {
+          this.rarityTypeChange(RARITY_ALL);
         }
       }
     }
@@ -128,7 +132,6 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
     this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['presentInParent'] && state['presentInParent']['presentInParent']) {
-          console.log("presentInParent", state['presentInParent'])
           this.store.dispatch({
             'type': PRESENT_IN_PARENT_UNCHECK_ALL,
           });
@@ -136,7 +139,7 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
         }
 
         if (state['presentInParent'] && state['presentInParent']['rarity']) {
-          this.restoreRarity(state['presentInParent']['rarity'])
+          this.restoreRarity(state['presentInParent']['rarity']);
         }
       }
     );
@@ -161,6 +164,8 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
         this.rarityIntervalStartInternal = presentInParentState.rarityIntervalStart;
         this.rarityIntervalEndInternal = presentInParentState.rarityIntervalEnd;
         this.ultraRare = presentInParentState.ultraRare;
+        this.rarityRadio = presentInParentState.rarityType;
+
       }
     );
   }
@@ -187,7 +192,6 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   rarityChangeValue(start: number, end: number) {
-    this.ultraRareValueChange(false);
     this.rarityIntervalStart = start;
     this.rarityIntervalEnd = end;
   }
@@ -215,9 +219,16 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
     return this.rarityIntervalEndInternal;
   }
 
+  rarityTypeChange(rarityType: string) {
+    this.store.dispatch({
+      'type': PRESENT_IN_PARENT_RARITY_TYPE_CHANGE,
+      'payload': rarityType
+    });
+  }
+
   ultraRareValueChange(ultraRare: boolean) {
     if (ultraRare) {
-      this.rarityRadio = "ultraRare";
+      this.rarityRadio = 'ultraRare';
     }
     this.store.dispatch({
       'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
@@ -226,19 +237,18 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   rarityRadioChange(rarity: string): void {
-    console.log('rarity radio changed: ', rarity);
     this.ultraRareValueChange(false);
     switch (rarity) {
       case 'all':
-        this.rarityRadio = 'all';
+        this.rarityTypeChange(RARITY_ALL);
         this.rarityChangeValue(0, 100);
         break;
       case 'rare':
-        this.rarityRadio = 'rare';
+        this.rarityTypeChange(RARITY_RARE);
         this.rarityChangeValue(0, 1);
         break;
       case 'interval':
-        this.rarityRadio = 'interval';
+        this.rarityTypeChange(RARITY_INTERVAL);
         this.rarityChangeValue(0, 1);
         break;
       default:
@@ -251,9 +261,8 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
       ([presentInParentState, isValid, validationErrors]) => {
         if (!isValid) {
           this.flashingAlert = true;
-          setTimeout(()=>{ this.flashingAlert = false }, 1000)
-
-           throw "invalid state"
+          setTimeout(() => { this.flashingAlert = false; }, 1000);
+           throw 'invalid state';
         }
 
         let result = new Array<string>();

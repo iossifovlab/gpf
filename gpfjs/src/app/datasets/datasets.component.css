@@ -2,12 +2,6 @@
 	width: 310px;
 }
 
-.sidenav-container {
-  display: flex;
-  flex-direction: row;
-  min-height: calc(100% - 58px);
-}
-
 .content {
   margin: 0;
   width: 100%;

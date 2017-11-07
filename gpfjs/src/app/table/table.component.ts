@@ -89,7 +89,7 @@ export class GpfTableComponent {
   }
 
   get afterDataCellHeight(): number {
-    if (this.noScrollOptimization) {
+    if (this.noScrollOptimization || !this.dataSource) {
       return 0;
     }
     return (this.dataSource.length - this.getScrollIndices()[1]) * this.lastRowHeight;

@@ -18,6 +18,13 @@
   <div class="sidenav-container">
     <div *ngIf="showSidenav" class="sidenav flex-column" [@fromLeft]="showSidenav">
       <ul class="nav navbar-nav navbar-custom">
+        <li class="nav-item" *ngIf="('' | userInfo)?.isAdministrator">
+          <a class="nav-link"
+            routerLink="/management"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="hideSidenav()">Management</a>
+        </li>
         <li class="nav-item">
           <a class="nav-link"
             routerLink="/datasets"
@@ -37,7 +44,7 @@
 
     <div *ngIf="showSidenav" (click)="hideSidenav()" [@fadeInOut]="showSidenav" class="blackscreen"></div>
 
-    <router-outlet></router-outlet>
+    <router-outlet style="display: flex; flex-direction: row;"></router-outlet>
   </div>
   <router-outlet name="popup"></router-outlet>
 </div>

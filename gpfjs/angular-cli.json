@@ -21,13 +21,16 @@
       "styles": [
         "../node_modules/bootstrap/dist/css/bootstrap.min.css",
         "../node_modules/font-awesome/css/font-awesome.css",
+        "../node_modules/select2/dist/css/select2.min.css",
+        "../node_modules/select2-bootstrap-theme/dist/select2-bootstrap.min.css",
         "styles.css"
       ],
       "scripts": [
         "../node_modules/jquery/dist/jquery.min.js",
         "../node_modules/tether/dist/js/tether.min.js",
         "../node_modules/popper.js/dist/umd/popper.min.js",
-        "../node_modules/bootstrap/dist/js/bootstrap.min.js"
+        "../node_modules/bootstrap/dist/js/bootstrap.min.js",
+        "../node_modules/select2/dist/js/select2.min.js"
       ],
       "environmentSource": "environments/environment.ts",
       "environments": {

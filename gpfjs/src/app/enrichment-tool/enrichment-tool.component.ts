@@ -44,12 +44,17 @@ export class EnrichmentToolComponent extends QueryStateCollector {
           (enrichmentResults) => {
             this.enrichmentResults = enrichmentResults;
             this.loadingService.setLoadingStop();
+          },
+          error => {
+            this.loadingService.setLoadingStop();
+          },
+          () => {
+            this.loadingService.setLoadingStop();
           });
       },
       error => {
-        console.warn(error);
         this.loadingService.setLoadingStop();
       }
-    )
+    );
   }
 }

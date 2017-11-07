@@ -12,6 +12,7 @@ gpf-table {
 .table-chart {
   width: 128px;
   height: 88px;
+  border: none;
 }
 
 .expanded-span {

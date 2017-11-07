@@ -1,8 +1,8 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
-import { RequestOptions } from '@angular/http';
+import { RequestOptions, Http, XHRBackend } from '@angular/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -69,7 +69,7 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule, Routes, Router } from '@angular/router';
 import { StateRestoreService } from './store/state-restore.service';
 import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -116,6 +116,26 @@ import { GenomicScoresService } from './genomic-scores/genomic-scores.service'
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component'
 
 import { MarkdownModule } from 'angular2-markdown';
+import { UserManagementComponent } from './user-management/user-management.component';
+import { UserInfoPipe } from './users/user-info.pipe';
+import { UsersTableComponent } from './users-table/users-table.component';
+import { GroupsTableComponent } from './groups-table/groups-table.component';
+import { UserEditComponent } from './user-edit/user-edit.component';
+import { ManagementComponent } from './management/management.component';
+import { UsersGroupsService } from './users-groups/users-groups.service';
+
+import { Select2Module } from 'ng2-select2';
+import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
+import { UserCreateComponent } from './user-create/user-create.component';
+import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
+import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remove.component';
+import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
+import { UsersActionsComponent } from './users-actions/users-actions.component';
+import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
+import { GenotypePreviewChromosomesComponent } from './genotype-preview-chromosomes/genotype-preview-chromosomes.component';
+import { ChromosomeService } from './chromosome-service/chromosome.service';
+import { ChromosomeComponent } from './chromosome/chromosome.component';
+import { RedirectOnErrorHttpService } from './config/redirect-on-error.service';
 
 const appRoutes: Routes = [
   {
@@ -168,6 +188,33 @@ const appRoutes: Routes = [
       {
         path: 'reports',
         component: VariantReportsComponent
+      }
+    ]
+  },
+  {
+    path: 'management',
+    component: ManagementComponent,
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        component: UserManagementComponent
+      },
+      {
+        path: 'users/create',
+        component: UserCreateComponent
+      },
+      {
+        path: 'users/add-group',
+        component: GroupsBulkAddComponent
+      },
+      {
+        path: 'users/remove-group',
+        component: GroupsBulkRemoveComponent
+      },
+      {
+        path: 'users/:id',
+        component: UserEditComponent
       }
     ]
   },
@@ -246,7 +293,21 @@ const appRoutes: Routes = [
     VariantReportsComponent,
     DatasetDescriptionComponent,
     GenomicScoresComponent,
-    GenomicScoresBlockComponent
+    GenomicScoresBlockComponent,
+    UserInfoPipe,
+    UserManagementComponent,
+    UsersTableComponent,
+    GroupsTableComponent,
+    UserEditComponent,
+    ManagementComponent,
+    UserCreateComponent,
+    GroupsBulkAddComponent,
+    GroupsBulkRemoveComponent,
+    UserGroupsSelectorComponent,
+    UsersActionsComponent,
+    DatasetsTableComponent,
+    GenotypePreviewChromosomesComponent,
+    ChromosomeComponent,
   ],
   imports: [
     BrowserModule,
@@ -262,6 +323,10 @@ const appRoutes: Routes = [
     CookieModule.forRoot(),
     BrowserAnimationsModule,
     MarkdownModule.forRoot(),
+    Select2Module,
+    ConfirmationPopoverModule.forRoot({
+      confirmButtonType: 'danger'
+    })
   ],
   providers: [
     ConfigService,
@@ -282,7 +347,11 @@ const appRoutes: Routes = [
     PValueIntensityPipe,
     StudiesSummariesService,
     VariantReportsService,
-    GenomicScoresService
+    GenomicScoresService,
+    UsersGroupsService,
+    ChromosomeService,
+    { provide: Http, useClass: RedirectOnErrorHttpService,
+      deps: [XHRBackend, RequestOptions, Injector]}
   ],
 
   entryComponents: [

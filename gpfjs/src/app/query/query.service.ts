@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import 'rxjs/add/operator/toPromise';
 
 import { ConfigService } from '../config/config.service';
-import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-table/genotype-preview';
+import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
 import { QueryData } from './query';
 
 

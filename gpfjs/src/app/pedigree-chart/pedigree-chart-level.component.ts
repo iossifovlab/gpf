@@ -1,5 +1,5 @@
 import { Input, Component, OnInit } from '@angular/core';
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import { Individual } from './pedigree-data';
 
 class PedigreeDataWithPosition  {

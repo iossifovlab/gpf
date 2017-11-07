@@ -1,0 +1,13 @@
+.chromosome {
+  display: table;
+}
+
+.chromosome-name {
+  display: table-cell;
+  vertical-align: middle;
+  padding: 0 10px;
+}
+
+.chromosome svg {
+  display: table-cell;
+}

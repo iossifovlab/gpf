@@ -3,9 +3,9 @@ import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
   QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver,
   AfterViewInit, Query, ElementRef
 } from '@angular/core';
-import { GpfTableContentHeaderComponent } from '../../component/header.component'
-import { GpfTableSubheaderComponent } from '../../component/subheader.component'
-import { SortInfo } from '../../table.component'
+import { GpfTableContentHeaderComponent } from '../../component/header.component';
+import { GpfTableSubheaderComponent } from '../../component/subheader.component';
+import { SortInfo } from '../../table.component';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -24,6 +24,9 @@ export class GpfTableHeaderCellComponent {
   }
 
   onSortClick(sortBySubcolumn: GpfTableSubheaderComponent) {
+    if (!sortBySubcolumn.sortable) {
+      return true;
+    }
     let sortInfo: SortInfo;
     if (this.sortingInfo && this.sortingInfo.sortBySubcolumn === sortBySubcolumn) {
       sortInfo = new SortInfo(sortBySubcolumn, !this.sortingInfo.sortOrderAsc);
@@ -31,7 +34,7 @@ export class GpfTableHeaderCellComponent {
       sortInfo = new SortInfo(sortBySubcolumn, true);
     }
     this.sortingInfoChange.emit(sortInfo);
-    console.log("sort", sortInfo)
+    return true;
   }
 
   get imgPathPrefix() {

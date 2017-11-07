@@ -1,5 +1,5 @@
 import { Input, Component, OnInit, SimpleChanges } from '@angular/core';
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import { Individual, MatingUnit } from './pedigree-data';
 
 @Component({

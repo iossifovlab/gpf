@@ -1,7 +1,11 @@
-<gpf-table noScrollOptimization="true" [dataSource]="measures" style="display: inline-block">
+<gpf-table [dataSource]="measures" style="display: inline-block">
     <gpf-table-column>
         <gpf-table-header caption="Proband Pheno Measure" field="measureName"></gpf-table-header>
-        <gpf-table-content field="measureName"></gpf-table-content>
+        <gpf-table-content>
+            <span *gpfTableCellContent="let data">
+                <div ngbTooltip="{{data.measureName}}">{{ data.measureName }}</div>
+            </span>
+        </gpf-table-content>
     </gpf-table-column>
     <gpf-table-column>
         <gpf-table-header caption="Pheno Measure Values"></gpf-table-header>

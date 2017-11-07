@@ -1,5 +1,5 @@
 import { Input, Component } from '@angular/core';
-import { GenotypePreview, GenotypePreviewsArray } from './genotype-preview';
+import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
 import { AdditionalColumn, AdditionalColumnSlot } from '../datasets/datasets';
 import { sprintf } from 'sprintf-js';
 

@@ -1,0 +1,68 @@
+<div class="chromosome">
+  <div class="chromosome-name">{{chromosome.id}}</div>
+  <svg [attr.width]="svgWidth" [attr.height]="svgHeight">
+    <g>
+      <defs>
+        <clipPath id="colorClipLeft{{chromosome.id}}">
+          <rect [attr.height]="chromosomeHeight" [attr.width]="leftWidth" [attr.x]="startingPoint" [attr.y]="variantSignWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+          </rect>
+        </clipPath>
+        <clipPath id="colorClipRight{{chromosome.id}}">
+          <rect [attr.height]="chromosomeHeight" [attr.width]="rightWidth" [attr.x]="startingPoint + leftWidth" [attr.y]="variantSignWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+          </rect>
+        </clipPath>
+      </defs>
+
+      <rect [attr.height]="chromosomeHeight" [attr.width]="leftWidth" [attr.x]="startingPoint" [attr.y]="variantSignWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+      </rect>
+
+      <rect [attr.height]="chromosomeHeight" [attr.width]="rightWidth" [attr.x]="startingPoint + leftWidth" [attr.y]="variantSignWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
+      </rect>
+
+      <rect *ngFor="let band of leftBands" [attr.clip-path]="'url(#colorClipLeft' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" [attr.y]="band.y" [style.fill]="band.color">
+        <title>{{band.tooltip}}</title>
+      </rect>
+
+      <rect *ngFor="let band of rightBands" [attr.clip-path]="'url(#colorClipRight' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" [attr.y]="band.y" [style.fill]="band.color">
+        <title>{{band.tooltip}}</title>
+      </rect>
+
+      <a *ngFor="let variant of variants"
+        [attr.xlink:href]="variant.genomeBrowserUrl"
+        target="_blank"
+        on-mouseover="hoveredVariant = variant"
+        [ngbPopover]="popoverContent"
+        triggers="mouseenter:mouseleave"
+        container="body">
+        <path
+          *ngIf="variant.figure == 1"
+          attr.d="M {{variant.x}} {{variant.proband ? (maxStackIndex - variant.stackIndex) * variantSignWidth : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * variantSignWidth}} {{baseStarPathDescription}}"
+          [style.fill]="variant.color">
+        </path>
+        <rect
+          *ngIf="variant.figure == 2"
+          [attr.x]="variant.x - variantSignWidth / 2 + 1"
+          [attr.y]="variant.proband ? (maxStackIndex - variant.stackIndex) * variantSignWidth + 1 : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * variantSignWidth + 1"
+          [attr.width]="variantSignWidth - 2"
+          [attr.height]="variantSignWidth - 2"
+          [style.fill]="variant.color"
+          [style.stroke]="'white'"
+          [style.stroke-width]="'1px'">
+        </rect>
+        <circle
+          *ngIf="variant.figure == 3"
+          [attr.cx]="variant.x"
+          [attr.cy]="variantSignWidth / 2 + (variant.proband ? (maxStackIndex - variant.stackIndex) * variantSignWidth : chromosomeHeight + (maxStackIndex + variant.stackIndex - 1) * variantSignWidth)"
+          [attr.r]="variantSignWidth / 2 - 0.75"
+          [style.fill]="variant.color"
+          [style.stroke]="'white'"
+          [style.stroke-width]="'1px'">
+        </circle>
+      </a>
+    </g>
+  </svg>
+  <ng-template #popoverContent>
+    <div>{{hoveredVariant.genes}}</div>
+    <div>{{hoveredVariant.location}}</div>
+  </ng-template>
+</div>
