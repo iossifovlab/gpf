@@ -139,10 +139,12 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
                 'EVS-freq': 'tsv.evs_freq',
                 'E65-freq': 'tsv.e65_freq'
             }
-            where.append('( {} >= {} )'.format(column_names[score['metric']],
-                                               score['min']))
-            where.append('( {} < {} )'.format(column_names[score['metric']],
-                                              score['max']))
+            if score['min'] != float("-inf"):
+                where.append('( {} >= {} )'.format(
+                    column_names[score['metric']], score['min']))
+            if score['max'] != float("inf"):
+                where.append('( {} < {} )'.format(
+                    column_names[score['metric']], score['max']))
 
         res = ' AND '.join(where)
         return res
