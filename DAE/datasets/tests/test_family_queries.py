@@ -16,7 +16,7 @@ def test_verbal_iq_interval_ssc(ssc, ssc_pheno):
 
     measure_id = 'ssc_core_descriptive.ssc_diagnosis_verbal_iq'
     family_ids = fd.get_families_by_measure_continuous(
-        measure_id, 10, 11, roles=[Role.prb])
+        measure_id, 10, 11.1, roles=[Role.prb])
     assert family_ids is not None
 
     assert 15 == len(family_ids)
@@ -38,7 +38,7 @@ def test_head_circumference_interval(ssc, ssc_pheno):
     assert fd is not None
 
     family_ids = fd.get_families_by_measure_continuous(
-        'ssc_commonly_used.head_circumference', 49, 50, roles=[Role.prb])
+        'ssc_commonly_used.head_circumference', 49, 50.1, roles=[Role.prb])
     assert family_ids is not None
     # assert 102 == len(family_ids)
 
@@ -108,7 +108,7 @@ def test_verbal_iq_interval_vip(vip, vip_pheno):
 
     measure_id = 'diagnosis_summary.best_nonverbal_iq'
     family_ids = fd.get_families_by_measure_continuous(
-        measure_id, 82, 83, roles=[Role.prb])
+        measure_id, 82, 83.1, roles=[Role.prb])
     assert family_ids is not None
     print(family_ids)
 

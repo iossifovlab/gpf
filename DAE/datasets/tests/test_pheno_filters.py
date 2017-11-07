@@ -15,7 +15,7 @@ def test_verbal_iq_interval_ssc(ssc):
             'measure': 'ssc_core_descriptive.ssc_diagnosis_verbal_iq',
             'role': 'prb',
             'mmin': 10,
-            'mmax': 11
+            'mmax': 11.1
         }
     ]
     res = ssc.get_family_pheno_filters(**query)
@@ -32,7 +32,7 @@ def test_head_circumference_interval(ssc):
             'measure': 'ssc_commonly_used.head_circumference',
             'role': 'prb',
             'mmin': 49,
-            'mmax': 50
+            'mmax': 50.1
         }
     ]
     res = ssc.get_family_pheno_filters(**query)
@@ -79,7 +79,7 @@ def test_head_circumference_interval_variants(ssc):
             'measure': 'ssc_commonly_used.head_circumference',
             'role': 'prb',
             'mmin': 49,
-            'mmax': 50
+            'mmax': 50.1
         }
     ]
     vs = ssc.get_variants(**query)
@@ -120,7 +120,7 @@ def test_pheno_filter_combine_variants(ssc):
             'measure': 'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
             'role': 'prb',
             'mmin': 80,
-            'mmax': 80
+            'mmax': 80.1
         }
     ]
 
@@ -240,7 +240,7 @@ def test_verbal_iq_interval_vip(vip):
             'measure': 'diagnosis_summary.best_nonverbal_iq',
             'role': 'prb',
             'mmin': 51,
-            'mmax': 51
+            'mmax': 51.1
         }
     ]
     query['effectTypes'] = [
