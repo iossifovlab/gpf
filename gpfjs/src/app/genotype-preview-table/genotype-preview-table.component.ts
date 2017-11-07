@@ -23,6 +23,14 @@ export class GenotypePreviewTableComponent {
       if (leftVal == null) return -1;
       if (rightVal == null) return 1;
 
+      if (leftVal.constructor === Array) {
+        leftVal = leftVal[0]
+      }
+
+      if (rightVal.constructor === Array) {
+        rightVal = rightVal[0]
+      }
+
       if (!isNaN(leftVal) && !isNaN(rightVal)) {
         return +leftVal - +rightVal;
       }
