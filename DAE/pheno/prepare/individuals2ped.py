@@ -472,7 +472,7 @@ def main():
         "--output", dest="output", default="output.ped", type=str)
     args = parser.parse_args()
 
-    reader = VIPCsvIndividualsReader()
+    reader = SPARKCsvIndividualsReader()
     families = reader.read_filename(args.file)
 
     pedigrees = {}
