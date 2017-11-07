@@ -122,20 +122,25 @@ class PhenoMeasurePartitionsView(QueryBaseView):
             assert dataset.pheno_db.has_measure(pheno_measure)
 
             df = dataset.pheno_db.get_measure_values_df(pheno_measure)
-            mmin = float(data["min"])
-            mmax = float(data["max"])
+
+            try:
+                mmin = float(data["min"])
+            except TypeError:
+                mmin = float("-inf")
+
+            try:
+                mmax = float(data["max"])
+            except TypeError:
+                mmax = float("inf")
 
             total = 1.0 * len(df)
 
             ldf = df[df[pheno_measure] < mmin]
-            rdf = df[df[pheno_measure] > mmax]
+            rdf = df[df[pheno_measure] >= mmax]
             mdf = df[np.logical_and(df[pheno_measure] >= mmin,
-                                    df[pheno_measure] <= mmax)]
+                                    df[pheno_measure] < mmax)]
 
-            res = {"measure": pheno_measure,
-                   "min": mmin,
-                   "max": mmax,
-                   "left": {"count": len(ldf), "percent": len(ldf) / total},
+            res = {"left": {"count": len(ldf), "percent": len(ldf) / total},
                    "mid": {"count": len(mdf), "percent": len(mdf) / total},
                    "right": {"count": len(rdf), "percent": len(rdf) / total}}
             return Response(res)

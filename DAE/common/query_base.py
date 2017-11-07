@@ -463,8 +463,9 @@ class GenomicScoresMixin(object):
             return []
         genomic_scores_filter = [{
             'metric': score['metric'],
-            'min': score['rangeStart'],
-            'max': score['rangeEnd'],
+            'min': (score['rangeStart']
+                    if score['rangeStart'] else float("-inf")),
+            'max': score['rangeEnd'] if score['rangeEnd'] else float("inf"),
         } for score in genomic_scores]
         return genomic_scores_filter
 

@@ -535,17 +535,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         'effectDetails',
         'all.altFreq',
         'all.nAltAlls',
-        'SSC-freq',
-        'EVS-freq',
-        'E65-freq',
         'all.nParCalled',
         '_ch_prof_',
         'valstatus',
-        "phenoInChS",
-        'LGD_rank',
-        'pRec_rank',
-        'RVIS_rank',
-        'pLI_rank'
+        "phenoInChS"
     ]
 
     def get_pheno_columns(self):
@@ -586,17 +579,20 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         legend = self.get_pedigree_selector(**kwargs)
         pheno_columns = self.get_pheno_columns()
         genotype_columns = self.get_genotype_columns()
+        genotype_column_keys = {key for (key, _) in genotype_columns}
+
         columns = self.COMMON_COLUMNS[:]
         columns.append('_pedigree_')
         columns.extend([label for (_, _, label) in pheno_columns])
-        columns.extend([label for (label, _) in genotype_columns])
+        columns.extend(genotype_column_keys)
         families = {}
         if pheno_columns and self.pheno_db:
             families = self.families
 
         gene_weights = {key: value.to_dict()
                         for key, value
-                        in self.get_gene_weights_loader().weights.items()}
+                        in self.get_gene_weights_loader().weights.items()
+                        if key in genotype_column_keys}
 
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
@@ -611,9 +607,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
             for key, value in gene_weights.items():
                 genes = {effect['sym'] for effect in v.geneEffect}
-                v.atts[key] = ';'.join([str(value[gene])
-                                        for gene in genes
-                                        if gene in value])
+                v.atts[key] = [value[gene] for gene in genes if gene in value]
             return v
 
         return generate_response(

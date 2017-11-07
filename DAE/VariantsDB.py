@@ -182,7 +182,7 @@ class Study:
     def genomic_scores_filter(self, variant, genomicScores):
         try:
             return all([score['min'] <= float(variant.atts[score['metric']])
-                        <= score['max']
+                        < score['max']
                         for score in genomicScores])
         except ValueError:
             return False
