@@ -249,7 +249,7 @@ export class HistogramComponent  {
 
   @Input()
   set rangeStart(rangeStart: any) {
-    if (rangeStart == null) {
+    if (rangeStart == null && this.rangeStartWithoutNull != null) {
         this.rangeStartWithoutNull = this.bins[0];
     }
     else {
