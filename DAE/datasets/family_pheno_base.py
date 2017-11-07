@@ -15,7 +15,7 @@ class FamilyPhenoQueryMixin(object):
         mvals = df[measure_id]
         selected = None
         if mmin is not None and mmax is not None:
-            selected = df[np.logical_and(mvals >= mmin, mvals <= mmax)]
+            selected = df[np.logical_and(mvals >= mmin, mvals < mmax)]
         elif mmin is not None:
             selected = df[mvals >= mmin]
         elif mmax is not None:
