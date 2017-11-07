@@ -11,7 +11,7 @@ mpl.use("PS")
 import matplotlib.pyplot as plt  # @IgnorePep8
 plt.ioff()
 
-import pandas as pd
+import pandas as pd  # @IgnorePep8
 import numpy as np  # @IgnorePep8
 import seaborn as sns  # @IgnorePep8
 import statsmodels.api as sm  # @IgnorePep8
@@ -19,8 +19,8 @@ import statsmodels.api as sm  # @IgnorePep8
 import traceback  # @IgnorePep8
 
 
-MAX_CATEGORIES_COUNT = 15
-ROLES_COUNT_CUTOFF = 20
+MAX_CATEGORIES_COUNT = 12
+ROLES_COUNT_CUTOFF = 7
 ROLES_DEFINITION = [
     {"label": "probands", "roles": [Role.prb]},
     {"label": "siblings", "roles": [Role.sib]},
