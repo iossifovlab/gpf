@@ -617,8 +617,12 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     def get_variants_csv(self, safe=True, **kwargs):
         variants = self.get_variants(safe=safe, **kwargs)
         pheno_columns = self.get_pheno_columns()
+        genotype_columns = self.get_genotype_columns()
+        genotype_column_keys = {key for (key, _) in genotype_columns}
+
         columns = self.COMMON_COLUMNS[:]
         columns.extend([label for (_, _, label) in pheno_columns])
+        columns.extend(genotype_column_keys)
         families = {}
         if pheno_columns and self.pheno_db:
             families = self.pheno_db.families
