@@ -4,7 +4,7 @@ import abc
 import itertools
 import argparse
 import csv
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from pheno.common import Role
 from pheno.common import RoleMapping
 from pheno.common import Status
@@ -134,16 +134,16 @@ class IndividualUnit(object):
     def get_individual_id(self):
         if self.individual:
             return self.individual.individual_id
-        return 0
+        return '0'
 
     def get_father_id(self):
         if not self.parents:
-            return 0
+            return '0'
         return self.parents.father.get_individual_id()
 
     def get_mother_id(self):
         if not self.parents:
-            return 0
+            return '0'
         return self.parents.mother.get_individual_id()
 
     def get_gender(self):
@@ -414,7 +414,7 @@ class FamilyToPedigree(object):
     def to_pedigree(self, family_members):
         self.assert_propper_family(family_members)
 
-        individual_id_to_individual_unit = {}
+        individual_id_to_individual_unit = OrderedDict()
         probands = [individual for individual in family_members
                     if individual.role == Role.prb]
         other = [individual for individual in family_members
@@ -436,7 +436,7 @@ class FamilyToPedigree(object):
             individual_id_to_individual_unit[individual.individual_id] = \
                 individual_unit
 
-        return individual_id_to_individual_unit
+        return individual_id_to_individual_unit.values()
 
 
 class PedigreeToCsv(object):
@@ -480,7 +480,7 @@ def main():
     for family_name, members in families.items():
         try:
             pedigree = FamilyToPedigree().to_pedigree(members)
-            pedigrees[family_name] = pedigree.values()
+            pedigrees[family_name] = pedigree
         except AssertionError as e:
             sys.stderr.write(
                 "skipping {}; reason: {}\n".format(family_name, str(e)))
