@@ -111,6 +111,10 @@ import { VariantReportsComponent } from './variant-reports/variant-reports.compo
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
+import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component'
+import { GenomicScoresService } from './genomic-scores/genomic-scores.service'
+import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component'
+
 import { MarkdownModule } from 'angular2-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { UserInfoPipe } from './users/user-info.pipe';
@@ -299,6 +303,8 @@ const appRoutes: Routes = [
     CommonReportsComponent,
     VariantReportsComponent,
     DatasetDescriptionComponent,
+    GenomicScoresComponent,
+    GenomicScoresBlockComponent,
     UserInfoPipe,
     UserManagementComponent,
     UsersTableComponent,
@@ -354,6 +360,7 @@ const appRoutes: Routes = [
     PValueIntensityPipe,
     StudiesSummariesService,
     VariantReportsService,
+    GenomicScoresService,
     UsersGroupsService,
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,

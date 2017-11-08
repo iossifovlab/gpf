@@ -65,19 +65,19 @@ export class PedigreeSelector extends IdName {
   }
 }
 
-export class PhenoColumnSlot {
-  static fromJson(json: any): PhenoColumnSlot {
-    return new PhenoColumnSlot(
+export class GenomicMetric {
+  static fromJson(json: any): GenomicMetric {
+    return new GenomicMetric(
       json['id'],
       json['name']
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<PhenoColumnSlot> {
+  static fromJsonArray(jsonArray: Array<Object>): Array<GenomicMetric> {
     if (!jsonArray) {
       return undefined;
     }
-    return jsonArray.map((json) => PhenoColumnSlot.fromJson(json));
+    return jsonArray.map((json) => GenomicMetric.fromJson(json));
   }
 
   constructor(
@@ -86,24 +86,47 @@ export class PhenoColumnSlot {
   ) {}
 }
 
-export class PhenoColumn {
-  static fromJson(json: any): PhenoColumn {
-    return new PhenoColumn(
+export class AdditionalColumnSlot {
+  static fromJson(json: any): AdditionalColumnSlot {
+    return new AdditionalColumnSlot(
+      json['id'],
       json['name'],
-      PhenoColumnSlot.fromJsonArray(json['slots']),
+      json['format']
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<PhenoColumn> {
+  static fromJsonArray(jsonArray: Array<Object>): Array<AdditionalColumnSlot> {
     if (!jsonArray) {
       return undefined;
     }
-    return jsonArray.map((json) => PhenoColumn.fromJson(json));
+    return jsonArray.map((json) => AdditionalColumnSlot.fromJson(json));
+  }
+
+  constructor(
+    readonly id: string,
+    readonly name: string,
+    readonly format: string,
+  ) {}
+}
+
+export class AdditionalColumn {
+  static fromJson(json: any): AdditionalColumn {
+    return new AdditionalColumn(
+      json['name'],
+      AdditionalColumnSlot.fromJsonArray(json['slots']),
+    );
+  }
+
+  static fromJsonArray(jsonArray: Array<Object>): Array<AdditionalColumn> {
+    if (!jsonArray) {
+      return [];
+    }
+    return jsonArray.map((json) => AdditionalColumn.fromJson(json));
   }
 
   constructor(
     readonly name: string,
-    readonly slots: Array<PhenoColumnSlot>
+    readonly slots: Array<AdditionalColumnSlot>
   ) {}
 }
 
@@ -158,9 +181,11 @@ export class GenotypeBrowser {
       json['hasFamilyFilters'],
       json['hasStudyTypes'],
       json['mainForm'],
-      PhenoColumn.fromJsonArray(json['phenoColumns']),
+      [...AdditionalColumn.fromJsonArray(json['genotypeColumns']),
+       ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters']),
+      GenomicMetric.fromJsonArray(json['genomicMetrics'])
     );
   }
 
@@ -172,9 +197,10 @@ export class GenotypeBrowser {
     readonly hasFamilyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly mainForm: string,
-    readonly phenoColumns: Array<PhenoColumn>,
+    readonly additionalColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
-    readonly familyStudyFilters: Array<PhenoFilter>
+    readonly familyStudyFilters: Array<PhenoFilter>,
+    readonly genomicMetrics: Array<GenomicMetric>,
   ) {
 
   }

@@ -9,7 +9,7 @@ export const PHENO_FILTERS_CONTINUOUS_SET_MAX = 'PHENO_FILTERS_CONTINUOUS_SET_MA
 export const PHENO_FILTERS_CATEGORICAL_SET_SELECTION = 'PHENO_FILTERS_CATEGORICAL_SET_SELECTION';
 
 import { Validate } from 'class-validator';
-import { IsNumber, Min, Max } from 'class-validator';
+import { IsNumber, Min, Max, ValidateIf } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
@@ -46,15 +46,18 @@ export class CategoricalFilterState extends PhenoFilterState {
 };
 
 export class ContinuousFilterState extends PhenoFilterState {
+  @ValidateIf(o => o.mmin !== null)
   @IsNumber()
-  @Min(0)
   @IsLessThanOrEqual('mmax')
   @IsMoreThanOrEqual('domainMin')
+  @IsLessThanOrEqual('domainMax')
   mmin: number;
 
+
+  @ValidateIf(o => o.mmax !== null)
   @IsNumber()
-  @Min(0)
   @IsMoreThanOrEqual('mmin')
+  @IsMoreThanOrEqual('domainMin')
   @IsLessThanOrEqual('domainMax')
   mmax: number;
 
@@ -117,8 +120,8 @@ export function phenoFiltersReducer(
                 measure: action.payload.measure,
                 domainMin: action.payload.domainMin,
                 domainMax: action.payload.domainMax,
-                mmin: action.payload.domainMin,
-                mmax: action.payload.domainMax
+                mmin: null,
+                mmax: null
               });
           }
           return currentElement;

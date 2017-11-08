@@ -1,19 +1,20 @@
 <div class="row">
     <div class="col-sm-3">
-          <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
-		    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
+      <select class="form-control" [(ngModel)]="selectedMetric" required>
+		    <option *ngFor="let metric of datasetConfig.genotypeBrowser.genomicMetrics" [ngValue]="metric">
+          {{metric.name}}
+        </option>
 		  </select>
-      <div *ngIf="selectedGeneWeights" style="margin-top: 5px;">
-        <a href="{{ getDownloadLink() }}">Download</a>
-      </div>
     </div>
     <div class="col-sm-9">
       <gpf-histogram
-		    *ngIf="selectedGeneWeights"
+		    *ngIf="histogramData"
 		    width="650" height="145"
-		    [bins]="selectedGeneWeights.bins"
-				[bars]="selectedGeneWeights.bars"
-				[logScaleY]="selectedGeneWeights.logScaleY"
+            [logScaleY]="true"
+            [showCounts]="false"
+            [xLabels]="[0, 0.05, 0.1, 0.5, 1.0, 5.0, 10, 50, 100]"
+		    [bins]="histogramData.bins"
+		    [bars]="histogramData.bars"
 		    [rangesCounts]="rangesCounts"
 		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
 		  </gpf-histogram>

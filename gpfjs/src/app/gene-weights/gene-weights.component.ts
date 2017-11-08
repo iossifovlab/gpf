@@ -73,7 +73,7 @@ export class GeneWeightsComponent extends QueryStateProvider {
   set selectedGeneWeights(selectedGeneWeights: GeneWeights) {
     this.store.dispatch({
       'type': GENE_WEIGHTS_CHANGE,
-      'payload': [selectedGeneWeights, selectedGeneWeights.min, selectedGeneWeights.max]
+      'payload': [selectedGeneWeights, selectedGeneWeights.bins[0], selectedGeneWeights.bins[selectedGeneWeights.bins.length - 1]]
     });
   }
 
@@ -89,7 +89,7 @@ export class GeneWeightsComponent extends QueryStateProvider {
             if (geneWeight.weight == state['geneWeights']['weight']) {
               this.store.dispatch({
                 'type': GENE_WEIGHTS_CHANGE,
-                'payload': [geneWeight, geneWeight.min, geneWeight.max]
+                'payload': [geneWeight, geneWeight.bins[0], geneWeight.bins[geneWeight.bins.length - 1]]
               });
             }
           }
@@ -175,6 +175,7 @@ export class GeneWeightsComponent extends QueryStateProvider {
 
            throw "invalid geneWeights state"
         }
+
         return { geneWeights: {
           weight: geneWeightsState.weight.weight,
           rangeStart: geneWeightsState.rangeStart,

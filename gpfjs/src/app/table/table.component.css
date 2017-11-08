@@ -11,8 +11,8 @@ gpf-table-view-header-cell {
 }
 
 gpf-table-view-cell {
-    height: 80px;
-    max-height: 80px;
+    height: 111px;
+    max-height: 111px;
     border: 1px solid #dddddd;
     width: 150px;
     max-width: 150px;

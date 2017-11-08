@@ -34,17 +34,19 @@ export class GpfTableSubheaderComponent {
     if (!isNaN(leftVal) && !isNaN(rightVal)) {
       return +leftVal - +rightVal;
     }
-
     return leftVal.localeCompare(rightVal);
   }
 
   sort(data: any, ascending: boolean) {
+    data.forEach((element, idx) => {
+        element.arrayPosition = idx;
+    });
     data.sort((a, b) => {
-      if (ascending) {
-        return this.comparator(a, b);
-      } else {
-        return this.comparator(b, a);
+      let compareResult = ascending ? this.comparator(a, b) : this.comparator(b, a);
+      if (compareResult === 0) {
+        return a.arrayPosition - b.arrayPosition;
       }
+      return compareResult;
     });
   }
 }

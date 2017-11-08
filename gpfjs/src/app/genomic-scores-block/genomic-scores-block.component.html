@@ -1,0 +1,23 @@
+<div class="form-block">
+  <div class="card">
+      <div class="card-header card-title">
+          Genomic scores
+          <span class="clickable" style="padding: 5px" (click)="addFilter()">
+              <span style="line-height:30px; padding: 5px">
+                  Add filter
+              </span>
+              <img style="height: 30px;" src="{{imgPathPrefix}}add_filter.svg">
+          </span>
+      </div>
+      <div class="card-block">
+        <div style="padding: 5px" *ngFor="let score of scores; trackBy: trackById; let i = index">
+            <img class="clickable" style="float: left; display: block; height: 30px;" src="{{imgPathPrefix}}remove_filter.svg" (click)="removeFilter(i)">
+            <span style="padding: 5px; display: block; overflow: hidden">
+                <gpf-genomic-scores [datasetConfig]="datasetConfig" [index]="i">
+                </gpf-genomic-scores>
+            </span>
+        </div>
+
+      </div>
+  </div>
+</div>
