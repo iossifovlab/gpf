@@ -607,7 +607,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
             for key, value in gene_weights.items():
                 genes = {effect['sym'] for effect in v.geneEffect}
-                v.atts[key] = [value[gene] for gene in genes if gene in value]
+                values = [value[gene] for gene in genes if gene in value]
+                if len(values) > 0:
+                    v.atts[key] = min(values)
             return v
 
         return generate_response(
@@ -644,9 +646,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
             for key, value in gene_weights.items():
                 genes = {effect['sym'] for effect in v.geneEffect}
-                v.atts[key] = ';'.join([str(value[gene])
-                                        for gene in genes
-                                        if gene in value])
+                values = [value[gene] for gene in genes if gene in value]
+                if len(values) > 0:
+                    v.atts[key] = min(values)
 
             return v
 
