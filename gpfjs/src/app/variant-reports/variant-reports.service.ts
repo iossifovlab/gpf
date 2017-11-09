@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
+import { Http, RequestOptions } from '@angular/http';
 
 import { Observable } from 'rxjs';
 
@@ -18,8 +18,9 @@ export class VariantReportsService {
   ) { }
 
   getStudies() {
+    let options = new RequestOptions({ withCredentials: true });
     return this.http
-      .get(this.studiesUrl)
+      .get(this.studiesUrl, options)
       .map(response => Studies.fromJson(response.json()))
       .catch(error => {
         console.log(error);
@@ -28,9 +29,10 @@ export class VariantReportsService {
   }
 
   getVariantReport(study: Study) {
+    let options = new RequestOptions({ withCredentials: true });
     let url = `${this.variantsUrl}${study.name}`;
     return this.http
-      .get(url)
+      .get(url, options)
       .map(response => VariantReport.fromJson(response.json()))
       .catch(error => {
         console.log(error);

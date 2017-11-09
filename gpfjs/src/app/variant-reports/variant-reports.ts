@@ -163,7 +163,8 @@ export class VariantReport {
       json['study_name'],
       json['study_description'],
       FamilyReport.fromJson(json['families_report']),
-      DenovoReport.fromJson(json['denovo_report'])
+      DenovoReport.fromJson(json['denovo_report']),
+      json['is_downloadable']
     );
   }
 
@@ -171,7 +172,8 @@ export class VariantReport {
     readonly studyName: string,
     readonly studyDescription: string,
     readonly familyReport: FamilyReport,
-    readonly denovoReport: DenovoReport
+    readonly denovoReport: DenovoReport,
+    readonly isDownloadable: boolean
 
 
   ) {}
