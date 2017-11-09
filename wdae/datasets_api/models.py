@@ -13,6 +13,9 @@ class Dataset(models.Model):
             ('view', 'View dataset'),
         )
 
+    def __repr__(self):
+        return self.dataset_id
+
     @classmethod
     def recreate_dataset_perm(cls, dataset_id, authorized_groups):
         datasetObject, _ = cls.objects.get_or_create(dataset_id=dataset_id)

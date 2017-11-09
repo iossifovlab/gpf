@@ -1,38 +1,47 @@
 # from django.core.cache import cache
 import preloaded
 from datasets_api.models import Dataset
+from DAE import vDB
+from collections import defaultdict
+import itertools
 
 
-
-def user_has_study_permission(user, study_name):
+def user_has_study_permission(user, study_group_name):
     # study_name_to_dataset_id = cache.get('study_name_to_dataset_id')
     # if study_name_to_dataset_id is None:
     #     print('Building cache...')
-    studies = {
-        ds.dataset_id: set(
-            map(lambda d: d.name, ds.studies)
-            + ds.descriptor['studies'].split(',')
-        )
-        for ds in user_has_study_permission.datasets_factory.get_datasets()
-    }
-    study_name_to_dataset_id = {
-            study_name: dataset_id
-            for dataset_id, study_names in studies.items()
-            for study_name in study_names
-        }
+    study_name_to_dataset_id = defaultdict(list)
+    for ds in user_has_study_permission.datasets_factory.get_datasets():
+        studies = [vDB.get_studies(study) for study in ds.descriptor['studies'].split(',')]
+        studies = itertools.chain(*studies)
+        studies = [study.name for study in studies]
+        for study in studies:
+            study_name_to_dataset_id[study].append(ds.name)
+        # studies[ds.dataset_id] = studies
+    # study_name_to_dataset_id = {
+    #         study_name: dataset_id
+    #         for dataset_id, study_names in studies.items()
+    #         for study_name in study_names
+    #     }
 
     #     cache.set('study_name_to_dataset_id', study_name_to_dataset_id, None)
-
     has_permission = False
 
-    if study_name in study_name_to_dataset_id:
-        ds_id = study_name_to_dataset_id[study_name]
-        try:
-            db_dataset = Dataset.objects.get(dataset_id=ds_id)
-            if user.has_perm('datasets_api.view', db_dataset):
-                has_permission = True
-        except Dataset.DoesNotExist:
-            raise
+    studies = vDB.get_studies(study_group_name)
+    ds_to_check = map(
+        lambda s: study_name_to_dataset_id[s.name], studies)
+
+    ds_to_check = set(map(frozenset, ds_to_check))
+
+    has_permission = all(
+        any(
+            user.has_perm('datasets_api.view', d)
+            for d in itertools.imap(
+                lambda d: Dataset.objects.get(dataset_id=d),
+                datasets)
+            )
+        for datasets in ds_to_check
+    )
 
     return has_permission
 
