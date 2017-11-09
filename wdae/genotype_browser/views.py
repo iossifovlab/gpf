@@ -76,7 +76,8 @@ class QueryPreviewView(QueryBaseView):
 
             if dataset_id == MetaDataset.ID:
                 data['dataset_ids'] = filter(
-                    lambda dataset_id: request.user.has_perm(dataset_id),
+                    lambda dataset_id: IsDatasetAllowed.user_has_permission(
+                        request.user, dataset_id),
                     self.datasets_config.get_dataset_ids())
 
             dataset = self.datasets_factory.get_dataset(dataset_id)
@@ -125,7 +126,8 @@ class QueryDownloadView(QueryBaseView):
 
             if data['datasetId'] == MetaDataset.ID:
                 data['dataset_ids'] = filter(
-                    lambda dataset_id: request.user.has_perm(dataset_id),
+                    lambda dataset_id: IsDatasetAllowed.user_has_permission(
+                        request.user, dataset_id),
                     self.datasets_config.get_dataset_ids())
 
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
