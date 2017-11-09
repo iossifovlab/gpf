@@ -46,6 +46,9 @@ class FamiliesDataDownloadView(APIView):
         if not report:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        if not user_has_study_permission(request.user, study_name):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         families_data = FamiliesDataCSV(report.studies)
         response = StreamingHttpResponse(
             families_data.serialize(),
