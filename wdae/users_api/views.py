@@ -50,6 +50,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if user.has_usable_password():
             user.set_unusable_password()
             user.save()
+            user.deauthenticate()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -59,6 +60,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(get_user_model(), pk=pk)
 
         user.reset_password(by_admin=True)
+        user.deauthenticate()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -111,6 +113,7 @@ def reset_password(request):
                              ' for registration. Please, register first'},
                             status=status.HTTP_409_CONFLICT)
         user.reset_password()
+        user.deauthenticate()
 
         return Response({}, status.HTTP_200_OK)
     except user_model.DoesNotExist:

@@ -6,6 +6,7 @@ Created on Nov 29, 2016
 from collections import Counter
 
 import numpy as np
+from pheno.common import MeasureType
 
 
 class PhenoFilter(object):
@@ -23,7 +24,7 @@ class PhenoFilterSet(PhenoFilter):
         super(PhenoFilterSet, self).__init__(phdb, measure_id)
 
         measure_type = phdb.get_measure(measure_id).measure_type
-        assert measure_type == 'categorical'
+        assert measure_type == MeasureType.categorical
 
         assert isinstance(values_set, list) or isinstance(values_set, set)
         self.value_set = values_set
@@ -36,9 +37,9 @@ class PhenoFilterRange(PhenoFilter):
 
     def __init__(self, phdb, measure_id, values_range):
         super(PhenoFilterRange, self).__init__(phdb, measure_id)
-
         measure_type = phdb.get_measure(measure_id).measure_type
-        assert measure_type == 'continuous' or measure_type == 'ordinal'
+        assert measure_type == MeasureType.continuous or \
+            measure_type == MeasureType.ordinal
 
         assert isinstance(values_range, list) or \
             isinstance(values_range, tuple)
@@ -63,13 +64,13 @@ class PhenoFilterBuilder(object):
     def __init__(self, phdb):
         self.phdb = phdb
 
-    def make_filter(self, measure_id, constrants):
+    def make_filter(self, measure_id, constraints):
         measure = self.phdb.get_measure(measure_id)
         assert measure is not None
-        if measure.measure_type == 'categorical':
-            return PhenoFilterSet(self.phdb, measure_id, constrants)
+        if measure.measure_type == MeasureType.categorical:
+            return PhenoFilterSet(self.phdb, measure_id, constraints)
         else:
-            return PhenoFilterRange(self.phdb, measure_id, constrants)
+            return PhenoFilterRange(self.phdb, measure_id, constraints)
 
 
 class PhenoResult(object):

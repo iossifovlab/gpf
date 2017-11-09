@@ -10,6 +10,8 @@ from common.query_base import QueryBase, GeneSymsMixin
 from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
 from datasets.family_pheno_base import FamilyPhenoQueryMixin
+from pheno.pheno_regression import PhenoRegression
+from collections import defaultdict
 
 
 class Dataset(QueryBase, FamilyPhenoQueryMixin):
@@ -18,6 +20,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def __init__(self, dataset_descriptor):
         self.descriptor = dataset_descriptor
+        print("loading dataset <{}>; pheno db: <{}>".format(
+            self.descriptor['id'],
+            self.descriptor['phenoDB'],
+        ))
         self.pheno_db = None
         self.families = None
         self.persons = None
@@ -40,6 +46,14 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     @property
     def dataset_id(self):
         return self.descriptor['id']
+
+    @property
+    def pheno_name(self):
+        return self.descriptor['phenoDB']
+
+    @property
+    def pheno_id(self):
+        return self.descriptor['phenoDB']
 
     @property
     def studies(self):
@@ -180,12 +194,16 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             GeneSymsMixin.get_gene_weights_query(**kwargs)
         if not weights_id:
             return set([])
+        if weights_id not in cls.get_gene_weights_loader():
+            return set([])
+        weights = cls.get_gene_weights_loader()[weights_id]
+        return weights.get_genes(wmin=range_start, wmax=range_end)
+
+    @classmethod
+    def get_gene_weights_loader(cls):
         if cls.GENE_WEIGHTS_LOADER is None:
             cls.GENE_WEIGHTS_LOADER = WeightsLoader()
-        if weights_id not in cls.GENE_WEIGHTS_LOADER:
-            return set([])
-        weights = cls.GENE_WEIGHTS_LOADER[weights_id]
-        return weights.get_genes(wmin=range_start, wmax=range_end)
+        return cls.GENE_WEIGHTS_LOADER
 
     @classmethod
     def get_gene_syms(cls, **kwargs):
@@ -201,6 +219,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if self.families:
             return
         self.load_families()
+        self.load_pheno_families()
         self.load_pedigree_selectors()
         self.load_pheno_columns()
         self.load_pheno_filters()
@@ -208,11 +227,14 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def load_pheno_db(self):
         pheno_db = None
+        pheno_reg = None
         if 'phenoDB' in self.descriptor:
             pheno_id = self.descriptor['phenoDB']
             if pheno.has_pheno_db(pheno_id):
                 pheno_db = pheno.get_pheno_db(pheno_id)
+                pheno_reg = PhenoRegression.build(pheno_id)
         self.pheno_db = pheno_db
+        self.pheno_reg = pheno_reg
 
     def load_families(self):
         families = {}
@@ -224,7 +246,42 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         self.persons = {}
         for fam in self.families.values():
             for p in fam.memberInOrder:
+                p.familyId = fam.familyId
                 self.persons[p.personId] = p
+
+    def load_pheno_families(self):
+        self.geno2pheno_families = defaultdict(set)
+        self.pheno2geno_families = defaultdict(set)
+
+        self.pheno_families = defaultdict(dict)
+        self.pheno_persons = {}
+        if not self.pheno_db:
+            return
+
+        person_df = self.pheno_db.get_persons_df()
+        persons = person_df.to_dict(orient='records')
+        for p in persons:
+            pid = p['person_id']
+            self.pheno_persons[pid] = p
+            self.pheno_families[p['family_id']][pid] = p
+            if pid in self.persons:
+                geno_person = self.persons[pid]
+                geno_fid = geno_person.familyId
+                self.geno2pheno_families[geno_fid].add(p['family_id'])
+                self.pheno2geno_families[p['family_id']].add(geno_fid)
+
+    def get_geno_families(self, pheno_families):
+        if not pheno_families:
+            return pheno_families
+        fr = [self.pheno2geno_families.get(fid, set([])) for
+              fid in pheno_families]
+
+        result = reduce(
+            lambda accum, ff: accum | ff,
+            fr,
+            set([])
+        )
+        return result
 
     def load_pheno_columns(self):
         pheno_columns = self.get_pheno_columns()
@@ -237,13 +294,16 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             values = self.pheno_db.get_persons_values_df(
                 [source], roles=[role])
             values.dropna(inplace=True)
-            for fid in values['family_id'].unique():
-                fam = self.pheno_db.families.get(fid, None)
-                if not fam:
+            for pheno_fid in values['family_id'].unique():
+                fvalues = values[values.family_id == pheno_fid]
+                if len(fvalues) == 0:
                     continue
-                fvalues = values[values.family_id == fid]
-                if len(fvalues) > 0:
-                    fam.atts[label] = fvalues[source].values[0]
+                geno_fids = self.pheno2geno_families[pheno_fid]
+                for fid in geno_fids:
+                    geno_fam = self.families.get(fid)
+                    if not geno_fam:
+                        continue
+                    geno_fam.atts[label] = fvalues[source].values[0]
 
     def load_pheno_filters(self):
         if self.pheno_db is None:
@@ -263,7 +323,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 if mf['filterType'] == 'single':
                     measure_id = mf['measure']
                     measure = self.pheno_db.get_measure(measure_id)
-                    mf['domain'] = measure.value_domain.split(',')
+                    mf['domain'] = measure.values_domain.split(',')
 
     def load_family_filters_by_study(self):
         if self.pheno_db is None:
@@ -408,6 +468,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 **kwargs),
             'familyIds': self.get_family_ids(
                 safe=safe,
+                **kwargs),
+            'genomicScores': self.get_genomic_scores(
+                safe=safe,
                 **kwargs)
         }
 
@@ -480,7 +543,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                     yield v
 
     def get_columns(self):
-        return self.COMMON_COLUMNS[:] + [label for (_, _, label) in self.get_pheno_columns()]
+        return self.COMMON_COLUMNS[:] + \
+            [label for (_, _, label) in self.get_pheno_columns()] + \
+            [key for (key, _) in self.get_genotype_columns()]
 
     COMMON_COLUMNS = [
         'familyId',
@@ -505,10 +570,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         'counts',
         'valstatus',
         '_pedigree_',
-        'phenoInChs',
-        'SSCfreq',
-        'EVSfreq',
-        'E65freq',
+        'phenoInChs'
     ]
 
     def get_pheno_columns(self):
@@ -528,6 +590,22 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 for s in slots])
         return columns
 
+    def get_genotype_columns(self):
+        gb = self.descriptor['genotypeBrowser']
+        if gb is None:
+            return None
+
+        pheno_columns = gb.get('genotypeColumns', [])
+        if not pheno_columns:
+            return []
+        columns = []
+        for pheno_column in pheno_columns:
+            slots = pheno_column['slots']
+            columns.extend([
+                (s['source'], s['name'])
+                for s in slots])
+        return columns
+
     def get_variants_preview(self, safe=True, **kwargs):
         variants = self.get_variants(safe, **kwargs)
         columns = self.get_columns()
@@ -536,10 +614,17 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     def _get_var_augmenter(self, safe=True, **kwargs):
         legend = self.get_pedigree_selector(**kwargs)
         pheno_columns = self.get_pheno_columns()
+        genotype_columns = self.get_genotype_columns()
+        genotype_column_keys = {key for (key, _) in genotype_columns}
 
         families = {}
         if pheno_columns and self.pheno_db:
-            families = self.pheno_db.families
+            families = self.families
+
+        gene_weights = {key: value.to_dict()
+                        for key, value
+                        in self.get_gene_weights_loader().weights.items()
+                        if key in genotype_column_keys}
 
         def augment_vars(v):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
@@ -551,5 +636,12 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             for (_role, _source, label) in pheno_columns:
                 v.atts[label] = fatts.get(label, '')
             v._phenotype_ = v.study.get_attr('study.phenotype')
+
+            for key, value in gene_weights.items():
+                genes = {effect['sym'] for effect in v.geneEffect}
+                values = [value[gene] for gene in genes if gene in value]
+                if len(values) > 0:
+                    v.atts[key] = min(values)
             return v
+
         return augment_vars

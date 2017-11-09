@@ -19,31 +19,31 @@ config = Config()
 
 giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
 sfariDB = SfariCollection(config.sfariDBdir)
-phDB = phenoDB.rawTableFactory(config.phenoDBFile)
+# phDB = phenoDB.rawTableFactory(config.phenoDBFile)
 genomesDB = GenomesDB(config.daeDir, config.genomesDBconfFile)
 
 vDB = VariantsDB(config.daeDir, config.variantsDBconfFile,
-                 sfariDB=sfariDB, giDB=giDB, phDB=phDB, genomesDB=genomesDB)
+                 sfariDB=sfariDB, giDB=giDB, phDB=None, genomesDB=genomesDB)
 
 
-def get_gene_sets_symNS(geneSetsDef, denovoStudies=None):
-    if geneSetsDef == 'denovo':
-        geneTerms = vDB.get_denovo_sets(denovoStudies)
-    else:
-        try:
-            geneTerms = giDB.getGeneTerms(geneSetsDef)
-        except:
-            geneTerms = loadGeneTerm(geneSetsDef)
-
-        if geneTerms.geneNS == 'id':
-            def rF(x):
-                if x in giDB.genes:
-                    return giDB.genes[x].sym
-            geneTerms.renameGenes("sym", rF)
-
-        if geneTerms.geneNS != 'sym':
-            raise Exception('Only work with id or sym namespace')
-    return geneTerms
+# def get_gene_sets_symNS(geneSetsDef, denovoStudies=None):
+#     if geneSetsDef == 'denovo':
+#         geneTerms = vDB.get_denovo_sets(denovoStudies)
+#     else:
+#         try:
+#             geneTerms = giDB.getGeneTerms(geneSetsDef)
+#         except:
+#             geneTerms = loadGeneTerm(geneSetsDef)
+# 
+#         if geneTerms.geneNS == 'id':
+#             def rF(x):
+#                 if x in giDB.genes:
+#                     return giDB.genes[x].sym
+#             geneTerms.renameGenes("sym", rF)
+# 
+#         if geneTerms.geneNS != 'sym':
+#             raise Exception('Only work with id or sym namespace')
+#     return geneTerms
 
 pheno = PhenoFactory()
 

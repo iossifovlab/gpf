@@ -4,7 +4,7 @@ Created on Oct 21, 2015
 @author: lubo
 '''
 
-from DAE import get_gene_sets_symNS
+# from DAE import get_gene_sets_symNS
 from helpers.dae_query import combine_denovo_gene_sets
 from preloaded import register
 from query_prepare import prepare_gene_syms, prepare_string_value
@@ -18,7 +18,8 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
         if register.has_key(gene_set_label):  # @IgnorePep8
             return register.get(gene_set_label)
 
-        gene_term = get_gene_sets_symNS(gene_set_label)
+        gene_term = None  # get_gene_sets_symNS(gene_set_label)
+        assert False
     else:
         gene_term = combine_denovo_gene_sets(gene_set_phenotype)
 

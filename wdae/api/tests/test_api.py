@@ -5,8 +5,10 @@ from rest_framework.test import APITestCase
 #     get_transmitted_studies_names
 from VariantAnnotation import get_effect_types
 from query_variants import get_variant_types, get_child_types
+import pytest
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class ApiTest(APITestCase):
 
     def test_query_variants(self):

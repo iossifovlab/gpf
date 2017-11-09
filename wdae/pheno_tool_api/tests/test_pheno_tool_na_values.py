@@ -43,7 +43,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(result['effect'], 'LGDs')
         self.assertEqual(
             result['femaleResults']['negative']['count'],
-            374
+            376
         )
         self.assertEqual(
             result['femaleResults']['positive']['count'],
@@ -69,7 +69,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(result['effect'], 'Missense')
         self.assertEqual(
             result['femaleResults']['negative']['count'],
-            374
+            376
         )
         self.assertEqual(
             result['femaleResults']['positive']['count'],
@@ -95,7 +95,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(result['effect'], 'Synonymous')
         self.assertEqual(
             result['femaleResults']['negative']['count'],
-            374
+            376
         )
         self.assertEqual(
             result['femaleResults']['positive']['count'],
@@ -121,7 +121,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(result['effect'], 'CNV')
         self.assertEqual(
             result['femaleResults']['negative']['count'],
-            374
+            376
         )
         self.assertEqual(
             result['femaleResults']['positive']['count'],

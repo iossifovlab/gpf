@@ -10,7 +10,6 @@ from rest_framework.response import Response
 from rest_framework import status
 
 import preloaded
-from pheno_browser.models import VariableBrowserModelManager
 from django.conf import settings
 import os
 from pheno_browser_api.common import PhenoBrowserCommon
@@ -18,6 +17,7 @@ from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
 import cStringIO
 from django.http.response import HttpResponse
+from pheno_browser.db import DbManager
 
 
 class PhenoInstrumentsView(APIView):
@@ -91,10 +91,13 @@ class PhenoMeasuresView(APIView):
             instrument = instruments[0]
 
         browser_dbfile = self.get_browser_dbfile(
-            dataset.pheno_db.pheno_db)
+            dataset.pheno_name)
 
-        with VariableBrowserModelManager(dbfile=browser_dbfile) as vm:
-            df = vm.load_df(where="instrument_name='{}'".format(instrument))
+        db = DbManager(dbfile=browser_dbfile)
+        db.build()
+
+        df = db.get_instrument_df(instrument)
+
         res = []
         for row in df.itertuples():
             m = dict(vars(row))
@@ -109,7 +112,7 @@ class PhenoMeasuresView(APIView):
 
             if m['values_domain'] is None:
                 m['values_domain'] = ""
-
+            m['measure_type'] = m['measure_type'].name
             res.append(m)
         return Response({
             'base_image_url': self.base_url,

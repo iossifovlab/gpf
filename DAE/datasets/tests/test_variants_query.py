@@ -15,7 +15,11 @@ def count(vs):
 def test_get_variants_with_gene_weights(sd):
     query = {
         "datasetId": "SD",
-        "effectTypes": None,
+        "effectTypes": [
+            'Frame-shift',
+            'Nonsense',
+            'Splice-site',
+        ],
         "gender": None,
         "variantTypes": None,
         "presentInChild": None,
@@ -31,15 +35,15 @@ def test_get_variants_with_gene_weights(sd):
         "geneSet": None,
         "geneWeights": {
             "weight": "RVIS_rank",
-            "rangeStart": 0,
-            "rangeEnd": 1
+            "rangeStart": 16530,
+            "rangeEnd": 16754
         },
         "regions": None
     }
 
     vs = sd.get_variants(**query)
     assert vs is not None
-    assert 5 == count(vs)
+    assert 9 == count(vs)
 
 
 def test_get_variants_with_null_gene_weights(sd):

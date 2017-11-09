@@ -4,17 +4,22 @@ Created on Nov 8, 2016
 @author: lubo
 '''
 import pytest
-from DAE import get_gene_sets_symNS, vDB
+from DAE import vDB
 from datasets.config import DatasetsConfig
 from datasets.datasets_factory import DatasetsFactory
 from enrichment_tool.background import SamochaBackground
+from gene.gene_set_collections import GeneSetsCollection
 
 
 @pytest.fixture(scope='session')
 def gene_set(request):
-    gt = get_gene_sets_symNS('main')
-    gene_set = gt.t2G['chromatin modifiers'].keys()
-    return gene_set
+    # gt = get_gene_sets_symNS('main')
+    # gene_set = gt.t2G['chromatin modifiers'].keys()
+    gsc = GeneSetsCollection('main')
+    gsc.load()
+    gene_set = gsc.get_gene_set('chromatin modifiers')
+
+    return gene_set['syms']
 
 
 @pytest.fixture(scope='session')

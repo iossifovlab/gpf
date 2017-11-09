@@ -3,38 +3,49 @@ Created on Aug 23, 2016
 
 @author: lubo
 '''
-import ConfigParser
 
 from Config import Config
-import os
+import reusables
+from box import ConfigBox
 # import traceback
 
 
-class PhenoConfig(object):
+class PhenoConfig(ConfigBox):
 
-    def __init__(self, **kwargs):
-        super(PhenoConfig, self).__init__()
-        self.pheno_db = kwargs.get('pheno_db', 'ssc')
-        config = kwargs.get('config', None)
-        # print("PhenoConfig: config={}".format(config))
-        # traceback.print_stack()
-
-        if config:
-            # print("using config argument...")
-            assert isinstance(config, ConfigParser.SafeConfigParser)
-            self.config = config
-        else:
+    @staticmethod
+    def from_file(filename=None):
+        if filename is None:
             dae_config = Config()
             wd = dae_config.daeDir
-            self.config = ConfigParser.SafeConfigParser({'wd': wd})
-            self.config.read(dae_config.phenoDBconfFile)
+            filename = dae_config.phenoDBconfFile
 
-    def get_dbfile(self, dbname=None):
-        if dbname is None:
-            dbfile = self.config.get(self.pheno_db, 'cache_file')
-        else:
-            dbfile = self.config.get(dbname, 'cache_file')
+        conf = reusables.config_dict(
+            filename,
+            auto_find=False,
+            verify=True,
+            defaults={'wd': wd})
 
-        if dbfile[0] != '/':
-            dbfile = os.path.join(self.config.get('cache_dir', 'dir'), dbfile)
+        return PhenoConfig(conf)
+
+    @staticmethod
+    def from_dict(data):
+        return PhenoConfig(data)
+
+    def __init__(self, data, **kwargs):
+        super(PhenoConfig, self).__init__(data, **kwargs)
+
+    def get_dbfile(self, dbname):
+        assert dbname in self.pheno.list("dbs")
+
+        dbfile = self[dbname].dbfile
         return dbfile
+
+    def get_dbconfig(self, dbname):
+        assert dbname in self.pheno.list("dbs")
+        return self[dbname]
+
+    def get_age(self, dbname):
+        return self[dbname].age
+
+    def get_nonverbal_iq(self, dbname):
+        return self[dbname].nonverbal_iq

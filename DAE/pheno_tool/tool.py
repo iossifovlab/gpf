@@ -16,6 +16,7 @@ from pheno_tool.genotype_helper import VariantsType as VT
 
 from pheno_tool.pheno_common import PhenoFilterBuilder, PhenoResult
 import statsmodels.api as sm
+from pheno.common import Role, Gender
 
 # from utils.profiler import profile
 
@@ -49,7 +50,7 @@ class PhenoTool(object):
         assert all([phdb.has_measure(m) for m in normalize_by])
 
         assert len(roles) >= 1
-        assert all([r in ['prb', 'sib', 'mom', 'dad'] for r in roles])
+        assert all([isinstance(r, Role) for r in roles])
 
         self.phdb = phdb
         self.studies = studies
@@ -82,10 +83,12 @@ class PhenoTool(object):
     @classmethod
     def _studies_persons(cls, studies, roles):
         persons = {}
+        role_names = [r.name for r in roles]
         for st in studies:
             for fam in st.families.values():
                 for person in fam.memberInOrder:
-                    if person.role in roles and person.personId not in persons:
+                    if person.role in role_names and \
+                            person.personId not in persons:
                         persons[person.personId] = person
         return persons
 
@@ -93,9 +96,7 @@ class PhenoTool(object):
     def _measures_persons_df(cls, phdb, roles, measures, persons):
         df = phdb.get_persons_values_df(measures, roles=roles)
         df.dropna(inplace=True)
-
         df = df[df.person_id.isin(persons)]
-
         return df
 
     @classmethod
@@ -276,7 +277,7 @@ class PhenoTool(object):
             return self._calc_stats(df, None)
         else:
             result = {}
-            for gender in ['M', 'F']:
+            for gender in [Gender.M, Gender.F]:
                 p = self._calc_stats(df, gender)
                 result[gender] = p
             return result

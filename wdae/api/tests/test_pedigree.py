@@ -9,8 +9,10 @@ from query_variants import prepare_denovo_filters, get_denovo_variants
 from DAE import vDB
 from Variant import normalRefCopyNumber
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+import pytest
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class Test(BaseAuthenticatedUserTest):
 
     def test_chrome_X_pedigree(self):

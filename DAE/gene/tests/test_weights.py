@@ -29,13 +29,13 @@ def test_weights_get_genes():
     # w.load_weights()
 
     genes = w.get_genes(1.5, 5.0)
-    assert 4 == len(genes)
+    assert 3 == len(genes)
 
     genes = w.get_genes(-1, 5.0)
-    assert 5 == len(genes)
+    assert 4 == len(genes)
 
     genes = w.get_genes(1, 5.0)
-    assert 5 == len(genes)
+    assert 4 == len(genes)
 
 
 def test_list_gene_weights():

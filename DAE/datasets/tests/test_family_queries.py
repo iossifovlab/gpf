@@ -3,31 +3,34 @@ Created on Mar 3, 2017
 
 @author: lubo
 '''
-import pytest
 import numpy as np
 
-import DAE
 import copy
 from datasets.tests.requests import EXAMPLE_QUERY_SSC
+from pheno.common import Role
 
 
 def test_verbal_iq_interval_ssc(ssc, ssc_pheno):
     fd = ssc
     assert fd is not None
 
+    measure_id = 'ssc_core_descriptive.ssc_diagnosis_verbal_iq'
     family_ids = fd.get_families_by_measure_continuous(
-        'pheno_common.verbal_iq', 10, 20, roles=['prb'])
+        measure_id, 10, 11.1, roles=[Role.prb])
     assert family_ids is not None
 
-    assert 120 == len(family_ids)
+    assert 15 == len(family_ids)
 
     df = ssc_pheno.get_persons_values_df(
-        ['pheno_common.verbal_iq'], roles=['prb'])
+        [measure_id], roles=[Role.prb])
     df.dropna(inplace=True)
 
     res = df[df.family_id.isin(set(family_ids))]
-    assert np.all(res['pheno_common.verbal_iq'] >= 10)
-    assert np.all(res['pheno_common.verbal_iq'] <= 20)
+    print(res[res[measure_id] > 20])
+    print(res[res.family_id.isin(set(['13143', '13593', '14683']))])
+
+    assert np.all(res[measure_id] >= 10)
+    assert np.all(res[measure_id] <= 11)
 
 
 def test_head_circumference_interval(ssc, ssc_pheno):
@@ -35,12 +38,12 @@ def test_head_circumference_interval(ssc, ssc_pheno):
     assert fd is not None
 
     family_ids = fd.get_families_by_measure_continuous(
-        'ssc_commonly_used.head_circumference', 49, 50, roles=['prb'])
+        'ssc_commonly_used.head_circumference', 49, 50.1, roles=[Role.prb])
     assert family_ids is not None
     # assert 102 == len(family_ids)
 
     df = ssc_pheno.get_persons_values_df(
-        ['ssc_commonly_used.head_circumference'], roles=['prb'])
+        ['ssc_commonly_used.head_circumference'], roles=[Role.prb])
     df.dropna(inplace=True)
 
     res = df[np.logical_and(
@@ -97,3 +100,34 @@ def test_family_ids_simple_transmitted(ssc):
         assert v.familyId == '11563'
 
     assert 1 == count
+
+
+def test_verbal_iq_interval_vip(vip, vip_pheno):
+    fd = vip
+    assert fd is not None
+
+    measure_id = 'diagnosis_summary.best_nonverbal_iq'
+    family_ids = fd.get_families_by_measure_continuous(
+        measure_id, 82, 83.1, roles=[Role.prb])
+    assert family_ids is not None
+    print(family_ids)
+
+    assert 7 == len(family_ids)
+
+    df = vip_pheno.get_persons_values_df(
+        [measure_id], roles=[Role.prb])
+    df.dropna(inplace=True)
+
+    res = df[df.family_id.isin(set(family_ids))]
+
+    assert np.all(res[measure_id] >= 82)
+    assert np.all(res[measure_id] <= 83)
+
+    geno_families = vip.get_geno_families(family_ids)
+    print(geno_families)
+
+    assert len(geno_families) == 6
+    assert geno_families == set([
+        '14740.x7-14740.x8', '14716.x1-14716.x2', '14779.x6-14779.x3',
+        '14713.x3-14713.x6', '14702.x1-14702.x2', '14762.x27-14762.x28'
+    ])

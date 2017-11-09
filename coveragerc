@@ -1,0 +1,8 @@
+[run]
+omit=*/tests/*
+branch=true
+
+[paths]
+source =
+    */DAE/
+    */wdae/

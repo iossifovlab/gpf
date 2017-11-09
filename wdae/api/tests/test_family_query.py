@@ -2,7 +2,7 @@ import unittest
 import itertools
 
 #from DAE import vDB
-from query_variants import dae_query_variants, get_parents_race, get_verbal_iq
+#  from query_variants import dae_query_variants, get_parents_race, get_verbal_iq
 
 # class FamilyRaceTests(unittest.TestCase):
   

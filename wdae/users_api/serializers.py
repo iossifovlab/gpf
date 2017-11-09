@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group
 from django.db import transaction
 
 from users_api.validators import ProtectedGroupsValidator
+from users_api.validators import SomeSuperuserLeftValidator
 
 
 class CreatableSlugRelatedField(serializers.SlugRelatedField):
@@ -25,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
     groups = serializers.ListSerializer(
         child=CreatableSlugRelatedField(
             slug_field='name', queryset=Group.objects.all()),
-        validators=[ProtectedGroupsValidator()])
+        validators=[ProtectedGroupsValidator(), SomeSuperuserLeftValidator()])
 
     hasPassword = serializers.BooleanField(source='is_active', read_only=True)
 

@@ -19,6 +19,16 @@ class TransmissionLegacy(TransmissionConfig):
         assert self._get_params("format") == 'legacy' or \
             self._get_params('indexFile') is not None
 
+    def genomic_scores_filter(self, atts, genomicScores):
+        try:
+            return all([sc['min'] <= float(atts[sc['metric']]) < sc['max']
+                        for sc in genomicScores])
+        except ValueError:
+            return False
+        except KeyError:
+            return False
+        return False
+
     def filter_transmitted_variants(self, f, colNms,
                                     minParentsCalled=0,
                                     maxAltFreqPrcnt=5.0,
@@ -26,7 +36,8 @@ class TransmissionLegacy(TransmissionConfig):
                                     variantTypes=None,
                                     effectTypes=None,
                                     ultraRareOnly=False,
-                                    geneSyms=None):
+                                    geneSyms=None,
+                                    genomicScores=[]):
         if maxAltFreqPrcnt is None:
             maxAltFreqPrcnt = -1
         if minAltFreqPrcnt is None:
@@ -71,6 +82,9 @@ class TransmissionLegacy(TransmissionConfig):
             if ultraRareOnly:
                 if not ultraRare: continue
 
+            if not self.genomic_scores_filter(mainAtts, genomicScores):
+                continue
+
             geneEffect = None
             if effectTypes or geneSymsUpper:
                 geneEffect = parseGeneEffect(mainAtts['effectGene'])
@@ -101,8 +115,8 @@ class TransmissionLegacy(TransmissionConfig):
                                          variantTypes=None, effectTypes=None,
                                          ultraRareOnly=False, geneSyms=None,
                                          regionS=None,
-                                         limit=None):
-
+                                         limit=None,
+                                         genomicScores=[]):
         transmittedVariantsFile = self._get_params('indexFile') + ".txt.bgz"
         print("Loading trasmitted variants from {}".
               format(transmittedVariantsFile))
@@ -136,7 +150,7 @@ class TransmissionLegacy(TransmissionConfig):
                             variantTypes,
                             effectTypes,
                             ultraRareOnly,
-                            geneSyms):
+                            geneSyms, genomicScores):
 
                         yield v
                 except ValueError as ex:
@@ -153,7 +167,7 @@ class TransmissionLegacy(TransmissionConfig):
                                                       variantTypes,
                                                       effectTypes,
                                                       ultraRareOnly,
-                                                      geneSyms):
+                                                      geneSyms, genomicScores):
                 yield v
 
         if regionS:
@@ -175,7 +189,8 @@ class TransmissionLegacy(TransmissionConfig):
                                  familyIds=None,
                                  regionS=None,
                                  TMM_ALL=False,
-                                 limit=None):
+                                 limit=None,
+                                 genomicScores=[]):
         if limit is None:
             limit = 0
 
@@ -210,13 +225,10 @@ class TransmissionLegacy(TransmissionConfig):
         else:
             tbf = pysam.Tabixfile(transmittedVariantsTOOMANYFile)
 
-        for vs in self.get_transmitted_summary_variants(minParentsCalled,
-                                                        maxAltFreqPrcnt,
-                                                        minAltFreqPrcnt,
-                                                        variantTypes,
-                                                        effectTypes,
-                                                        ultraRareOnly,
-                                                        geneSyms, regionS):
+        for vs in self.get_transmitted_summary_variants(
+                minParentsCalled, maxAltFreqPrcnt, minAltFreqPrcnt,
+                variantTypes, effectTypes, ultraRareOnly, geneSyms, regionS,
+                genomicScores=genomicScores):
             if not vs:
                 continue
 

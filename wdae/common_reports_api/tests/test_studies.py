@@ -17,12 +17,12 @@ class ApiTest(APITestCase):
             response.data,
             {"transmitted_studies": get_transmitted_studies_names()})
 
-    def test_report_studies(self):
-        response = self.client.get(
-            '/api/v3/common_reports/report_studies')
-        data = {"report_studies": get_denovo_studies_names() +
-                get_transmitted_studies_names()}
-        self.assertEqual(response.data, data)
+#     def test_report_studies(self):
+#         response = self.client.get(
+#             '/api/v3/common_reports/report_studies')
+#         data = {"report_studies": get_denovo_studies_names() +
+#                 get_transmitted_studies_names()}
+#         self.assertEqual(response.data, data)
 
     def test_denovo_studies_list(self):
         data = get_denovo_studies_names()

@@ -4,8 +4,10 @@ Created on Jun 11, 2015
 @author: lubo
 '''
 from django.test import TestCase
+import pytest
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class Test(TestCase):
 
     def setUp(self):

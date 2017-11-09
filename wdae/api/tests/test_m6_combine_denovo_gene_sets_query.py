@@ -3,9 +3,9 @@ Created on Sep 29, 2015
 
 @author: lubo
 '''
-import unittest
 from rest_framework.test import APITestCase
 from rest_framework import status
+import pytest
 
 
 def count_iterable(iterable):
@@ -14,6 +14,7 @@ def count_iterable(iterable):
     return num + 1
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class Test(APITestCase):
 
     def test_single_phenotype(self):
@@ -59,7 +60,3 @@ class Test(APITestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(25 + 1, count_iterable(response.streaming_content))
-
-
-if __name__ == "__main__":
-    unittest.main()

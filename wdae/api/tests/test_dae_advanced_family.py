@@ -1,12 +1,14 @@
 import unittest
 
 from helpers.wdae_query_variants import wdae_query_wrapper
+import pytest
 
 # import logging
 
 # LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class AdvancedFamilyFilterTests(unittest.TestCase):
     TEST_DATA_1 = {"denovoStudies": ["ALL SSC"],
                    "transmittedStudies": 'None',

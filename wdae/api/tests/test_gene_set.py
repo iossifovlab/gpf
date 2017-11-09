@@ -2,9 +2,11 @@ import unittest
 import logging
 from DAE import giDB
 from collections import defaultdict
+import pytest
 LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class GeneSetTests(unittest.TestCase):
     def test_gene_terms_main(self):
         gene_terms = giDB.getGeneTerms('main')
@@ -22,5 +24,5 @@ class GeneSetTests(unittest.TestCase):
             self.assertEquals(0, len(res))
 
     def test_gene_terms_main_reverse(self):
-        #gene_terms = giDB.getGeneTerms('main')
+        # gene_terms = giDB.getGeneTerms('main')
         pass

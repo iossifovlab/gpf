@@ -4,6 +4,7 @@ Created on Mar 2, 2017
 @author: lubo
 '''
 import numpy as np
+from pheno.common import MeasureType
 
 
 class FamilyPhenoQueryMixin(object):
@@ -15,7 +16,7 @@ class FamilyPhenoQueryMixin(object):
         mvals = df[measure_id]
         selected = None
         if mmin is not None and mmax is not None:
-            selected = df[np.logical_and(mvals >= mmin, mvals <= mmax)]
+            selected = df[np.logical_and(mvals >= mmin, mvals < mmax)]
         elif mmin is not None:
             selected = df[mvals >= mmin]
         elif mmax is not None:
@@ -65,8 +66,8 @@ class FamilyPhenoQueryMixin(object):
         assert self.pheno_db is not None
 
         m = self.pheno_db.get_measure(measure_id)
-        assert m.measure_type == 'categorical'
-        return set(m.value_domain.split(','))
+        assert m.measure_type == MeasureType.categorical
+        return set(m.values_domain.split(','))
 
     def get_family_pheno_filters(self, safe=True, **kwargs):
         assert self.pheno_db is not None
@@ -97,16 +98,19 @@ class FamilyPhenoQueryMixin(object):
             ff is None or isinstance(ff, set)
             for ff in result
         ])
+        result = map(self.get_geno_families, result)
+
         return filter(lambda ff: isinstance(ff, set), result)
 
     def _filter_continuous_filter(self, safe=True, **kwargs):
         measure_id = kwargs.get('measure', None)
         measure_type = kwargs.get('measureType', None)
         if safe:
-            assert measure_type == 'continuous'
+            assert measure_type == 'continuous' or \
+                measure_type == MeasureType.continuous
             assert self.pheno_db.has_measure(measure_id)
             m = self.pheno_db.get_measure(measure_id)
-            assert m.measure_type == 'continuous'
+            assert m.measure_type == MeasureType.continuous
 
         role = kwargs.get('role', None)
         if not role:
@@ -125,10 +129,11 @@ class FamilyPhenoQueryMixin(object):
         measure_type = kwargs.get('measureType', None)
 
         if safe:
-            assert measure_type == 'categorical'
+            assert measure_type == 'categorical' or \
+                measure_type == MeasureType.categorical
             assert self.pheno_db.has_measure(measure_id)
             m = self.pheno_db.get_measure(measure_id)
-            assert m.measure_type == 'categorical'
+            assert m.measure_type == MeasureType.categorical
 
         role = kwargs.get('role', None)
         if role is not None:
