@@ -18,7 +18,7 @@ export function validationErrorsToStringArray(validationErrors: ValidationError[
   validationErrors.map((elem) => {
     for (let object in elem.constraints) {
       if (elem.constraints.hasOwnProperty(object)) {
-      errors.push(elem.constraints[object]);
+        errors.push(elem.constraints[object]);
       }
     }
   });

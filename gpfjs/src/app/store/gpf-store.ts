@@ -12,7 +12,6 @@ import { GeneSetsState, geneSetsReducer } from '../gene-sets/gene-sets-state';
 import { StudyTypesState, studyTypesReducer } from '../study-types/study-types';
 import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-models/enrichment-models-state';
 import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
-import { PhenoToolMeasureState, phenoToolMeasureStateReducer} from '../pheno-tool-measure/pheno-tool-measure';
 
 export interface GpfState {
   datasets: DatasetsState;
@@ -29,7 +28,6 @@ export interface GpfState {
   enrichmentModels: EnrichmentModelsState;
   studyTypes: StudyTypesState;
   phenoFilters: PhenoFiltersState;
-  phenoToolMeasure: PhenoToolMeasureState;
 };
 
 const reducers = {
@@ -47,5 +45,4 @@ const reducers = {
   studyTypes: studyTypesReducer,
   enrichmentModels: enrichmentModelsReducer,
   phenoFilters: phenoFiltersReducer,
-  phenoToolMeasure: phenoToolMeasureStateReducer
 };

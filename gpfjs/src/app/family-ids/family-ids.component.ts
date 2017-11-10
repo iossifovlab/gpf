@@ -11,7 +11,10 @@ import { StateRestoreService } from '../store/state-restore.service';
   selector: 'gpf-family-ids',
   templateUrl: './family-ids.component.html',
   styleUrls: ['./family-ids.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => FamilyIdsComponent) }]
+  providers: [{
+    provide: QueryStateProvider,
+    useExisting: forwardRef(() => FamilyIdsComponent)
+  }]
 })
 export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
   flashingAlert = false;

@@ -16,8 +16,8 @@ export class StateRestoreService {
   constructor(
     private router: Router
   ) {
-    //Reset state when tool/dataset is changed
-    //This prevents restoring the initial state constantly
+    // Reset state when tool/dataset is changed
+    // This prevents restoring the initial state constantly
     router.events.subscribe(
       (params) => {
         let newUrl = this.router.url.split(';')[0];
