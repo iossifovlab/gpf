@@ -15,7 +15,6 @@ export interface PedigreeSelectorState {
   checkedValues: string[];
 }
 
-
 export class QueryData {
   public static trueFalseToStringArray(obj: any): string[] {
     let values = Array<string>();

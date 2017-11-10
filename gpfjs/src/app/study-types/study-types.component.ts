@@ -1,14 +1,13 @@
-import { StudyTypesState, STUDY_TYPES_INIT, STUDY_TYPES_CHECK_ALL, STUDY_TYPES_UNCHECK_ALL, STUDY_TYPES_UNCHECK, STUDY_TYPES_CHECK } from './study-types';
+import { StudyTypes } from './study-types';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
-import { ValidationError } from "class-validator";
-import { QueryStateProvider } from '../query/query-state-provider'
-import { QueryData } from '../query/query'
-import { StateRestoreService } from '../store/state-restore.service'
+import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { ValidationError } from 'class-validator';
+import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryData } from '../query/query';
+import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-study-types',
@@ -18,87 +17,62 @@ import { StateRestoreService } from '../store/state-restore.service'
 
 })
 export class StudyTypesComponent extends QueryStateProvider implements OnInit {
-  we: boolean = true;
-  tg: boolean = true;
 
-  studyTypesState: Observable<[StudyTypesState, boolean, ValidationError[]]>;
+  studyTypes = new StudyTypes();
 
   errors: string[];
   flashingAlert = false;
 
   constructor(
-    private store: Store<any>,
     private stateRestoreService: StateRestoreService
   ) {
     super();
-    this.studyTypesState = toObservableWithValidation(StudyTypesState, this.store.select('studyTypes'));
   }
 
   ngOnInit() {
-    this.store.dispatch({
-      'type': STUDY_TYPES_INIT,
-    });
-
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
-        if (state['studyType']) {
-          this.store.dispatch({
-            'type': STUDY_TYPES_UNCHECK_ALL,
-          });
-
-          for (let studyType of state['studyType']) {
-            if (studyType === 'we' || studyType === 'tg') {
-              this.store.dispatch({
-                'type': STUDY_TYPES_CHECK,
-                'payload': studyType
-              });
+    this.stateRestoreService.getState(this.constructor.name)
+      .subscribe(state => {
+          if (state['studyType']) {
+            for (let studyType of state['studyType']) {
+              if (studyType === 'we') {
+                this.studyTypes.we = true;
+              }
+              if (studyType === 'tg') {
+                this.studyTypes.tg = true;
+              }
             }
           }
-        }
-      }
-    )
-
-    this.studyTypesState.subscribe(
-      ([state, isValid, validationErrors]) => {
-        this.errors = validationErrorsToStringArray(validationErrors);
-
-        this.we = state.we;
-        this.tg = state.tg;
-      }
-    );
+        });
   }
 
   selectAll(): void {
-    this.store.dispatch({
-      'type': STUDY_TYPES_CHECK_ALL,
-    });
+    this.studyTypes.tg = true;
+    this.studyTypes.we = true;
   }
 
   selectNone(): void {
-    this.store.dispatch({
-      'type': STUDY_TYPES_UNCHECK_ALL,
-    });
+    this.studyTypes.tg = false;
+    this.studyTypes.we = false;
   }
 
   studyTypesCheckValue(studyType: string, value: boolean): void {
-    if (studyType === 'we' || studyType === 'tg') {
-      this.store.dispatch({
-        'type': value ? STUDY_TYPES_CHECK : STUDY_TYPES_UNCHECK,
-        'payload': studyType
-      });
+    if (studyType === 'we') {
+      this.studyTypes.we = value;
+    } else if (studyType === 'tg') {
+      this.studyTypes.tg = value;
     }
   }
 
   getState() {
-    return this.studyTypesState.take(1).map(
-      ([studyTypesState, isValid, validationErrors]) => {
-        if (!isValid) {
-          this.flashingAlert = true;
-          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+    return toValidationObservable(this.studyTypes)
+      .map(statue =>
+        ({ studyTypes: QueryData.trueFalseToStringArray(this.studyTypes) }))
+      .catch(errors => {
+        this.errors = validationErrorsToStringArray(errors);
+        this.flashingAlert = true;
+        setTimeout(() => { this.flashingAlert = false; }, 1000);
 
-          throw "invalid state"
-        }
-        return { studyTypes: QueryData.trueFalseToStringArray(studyTypesState) }
+        return Observable.throw(`${this.constructor.name}: invalid measure state`);
     });
   }
 
