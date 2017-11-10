@@ -1,14 +1,11 @@
-import {
-  GeneSymbolsState, GENE_SYMBOLS_CHANGE, GENE_SYMBOLS_INIT
-} from './gene-symbols';
+import { GeneSymbols } from './gene-symbols';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
-import { ValidationError } from "class-validator";
-import { QueryStateProvider } from '../query/query-state-provider'
-import { StateRestoreService } from '../store/state-restore.service'
+import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { ValidationError } from 'class-validator';
+import { QueryStateProvider } from '../query/query-state-provider';
+import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-gene-symbols',
@@ -16,68 +13,31 @@ import { StateRestoreService } from '../store/state-restore.service'
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSymbolsComponent) }]
 })
 export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
-  geneSymbolsInternal: string;
+  private geneSymbols = new GeneSymbols();
   errors: string[];
-  geneSymbolsState: Observable<[GeneSymbolsState, boolean, ValidationError[]]>;
 
-  private flashingAlert: boolean = false;
+  private flashingAlert = false;
 
   constructor(
-    private store: Store<any>,
     private stateRestoreService: StateRestoreService
   ) {
     super();
-    this.geneSymbolsState = toObservableWithValidation(GeneSymbolsState, this.store.select('geneSymbols'));
   }
 
   ngOnInit() {
-    this.store.dispatch({
-      'type': GENE_SYMBOLS_INIT,
-    });
-
     this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['geneSymbols']) {
-          this.store.dispatch({
-            'type': GENE_SYMBOLS_CHANGE,
-            'payload': state['geneSymbols'].join("\n")
-          });
+          this.geneSymbols.geneSymbols = state['geneSymbols'].join('\n');
         }
-      }
-    )
-
-    this.geneSymbolsState.subscribe(
-      ([geneSymbolsState, isValid, validationErrors]) => {
-        if (geneSymbolsState) {
-          this.errors = validationErrorsToStringArray(validationErrors);
-          this.geneSymbolsInternal = geneSymbolsState.geneSymbols;
-        }
-      }
-    );
+      });
   }
 
-  set geneSymbols(geneSymbols: string) {
-    this.store.dispatch({
-      'type': GENE_SYMBOLS_CHANGE,
-      'payload': geneSymbols
-    });
-  }
-
-  get geneSymbols() {
-    return this.geneSymbolsInternal;
-  }
 
   getState() {
-    return this.geneSymbolsState.take(1).map(
-      ([geneSymbols, isValid, validationErrors]) => {
-        if (!isValid) {
-          this.flashingAlert = true;
-          setTimeout(()=>{ this.flashingAlert = false }, 1000)
-
-          throw "invalid state"
-        }
-
-        let result = geneSymbols.geneSymbols
+    return toValidationObservable(this.geneSymbols)
+      .map(state => {
+        let result = state.geneSymbols
           .split(/[,\s]/)
           .filter(s => s !== '')
           .map(s => s.toUpperCase());
@@ -85,7 +45,13 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
           return {};
         }
 
-        return { geneSymbols: result }
-    });
+        return { geneSymbols: result };
+      })
+      .catch(errors => {
+        this.flashingAlert = true;
+        setTimeout(() => { this.flashingAlert = false; }, 1000);
+
+        return Observable.throw(`${this.constructor.name}: invalid state`);
+      });
   }
 }

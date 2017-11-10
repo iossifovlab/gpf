@@ -6,7 +6,6 @@ import { VariantTypesState, variantTypesReducer } from '../varianttypes/variantt
 import { GeneWeightsState, geneWeightsReducer } from '../gene-weights/gene-weights-store';
 import { PresentInChildState, presentInChildReducer } from '../present-in-child/present-in-child';
 import { PresentInParentState, presentInParentReducer } from '../present-in-parent/present-in-parent';
-import { GeneSymbolsState, geneSymbolsReducer } from '../gene-symbols/gene-symbols';
 import { GeneSetsState} from '../gene-sets/gene-sets-state';
 import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
 
@@ -19,7 +18,6 @@ export interface GpfState {
   geneWeights: GeneWeightsState;
   presentInChild: PresentInChildState;
   presentInParent: PresentInParentState;
-  geneSymbols: GeneSymbolsState;
   geneSets: GeneSetsState;
   phenoFilters: PhenoFiltersState;
 };
@@ -33,6 +31,5 @@ const reducers = {
   geneWeights: geneWeightsReducer,
   presentInChild: presentInChildReducer,
   presentInParent: presentInParentReducer,
-  geneSymbols: geneSymbolsReducer,
   phenoFilters: phenoFiltersReducer,
 };
