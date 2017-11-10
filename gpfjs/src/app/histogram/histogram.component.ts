@@ -29,6 +29,7 @@ export class HistogramComponent  {
 
   @Input() rangesCounts: Array<number>;
 
+  @Input() logScaleX = false;
   @Input() logScaleY = false;
   @Input() showCounts = true;
   @Input() xLabels: Array<number>
@@ -130,9 +131,17 @@ export class HistogramComponent  {
     if (this.xLabels === undefined) {
         if (this.bins.length < 10) {
             return this.bins.slice(0, -1);
-        }
-        else {
-            return d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
+        } else {
+            if (!this.logScaleX) {
+                return d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
+            }
+            let domainMin = this.bins[0] === 0.0 ? this.bins[1] : this.bins[0];
+            let domainMax = this.bins[this.bins.length - 1];
+
+            let magnitudeMin = Math.abs(Math.log10(domainMin));
+            let magnitudeMax = Math.abs(Math.log10(domainMax));
+            let count = Math.min(10, Math.floor(Math.abs(magnitudeMax - magnitudeMin)));
+            return d3.scaleLog().domain([domainMin, domainMax]).ticks(count);
         }
     }
     return this.xLabels;
@@ -258,7 +267,7 @@ export class HistogramComponent  {
   }
 
   get rangeStart() {
-    return this.rangeStartWithoutNull;
+    return this.internalRangeStart;
   }
  
   @Input()
@@ -272,7 +281,7 @@ export class HistogramComponent  {
   }
 
   get rangeEnd() {
-    return this.rangeEndWithoutNull;
+    return this.internalRangeEnd;
   }
 
   set rangeStartWithoutNull(rangeStart: any) {
@@ -290,7 +299,8 @@ export class HistogramComponent  {
   }
 
   get rangeStartWithoutNull() {
-    return this.internalRangeStart;
+    if (this.internalRangeStart === undefined || this.internalRangeStart === null) return null;
+    return this.internalRangeStart.toPrecision(5);
   }
  
   set rangeEndWithoutNull(rangeEnd: any) {
@@ -308,7 +318,8 @@ export class HistogramComponent  {
   }
 
   get rangeEndWithoutNull() {
-    return this.internalRangeEnd;
+      if (this.internalRangeEnd === undefined || this.internalRangeEnd === null) return null;
+      return this.internalRangeEnd.toPrecision(5);
   }
 
 
@@ -330,7 +341,7 @@ export class HistogramComponent  {
 
   set selectedStartIndex(index: number) {
     if (index < 0 || index > this.selectedEndIndex) return;
-    this.internalRangeStart = this.round(this.bins[index])
+    this.internalRangeStart = this.bins[index]
     this.onRangeChange();
     this.rangeStartSubject.next(this.internalRangeStart)
   }
@@ -343,7 +354,7 @@ export class HistogramComponent  {
 
   set selectedEndIndex(index: number) {
     if (index < this.selectedStartIndex || index >= this.bars.length) return;
-    this.internalRangeEnd = this.round(this.bins[index + 1])
+    this.internalRangeEnd = this.bins[index + 1]
     this.onRangeChange();
     this.rangeEndSubject.next(this.internalRangeEnd)
   }
@@ -351,10 +362,6 @@ export class HistogramComponent  {
   get selectedEndIndex() {
       if (this.rangeEnd === null) return this.bins.length - 2;
       return this.getClosestIndexByValue(this.rangeEnd) - 1;
-  }
-
-  round(value: number): number{
-      return Math.round(value * 1000) / 1000
   }
 
   getClosestIndexByX(x) {
@@ -374,7 +381,7 @@ export class HistogramComponent  {
 
   getClosestIndexByValue(val) {
       for(var i  = 1; i < this.bins.length - 1; i++) {
-          if (this.round(this.bins[i]) >= val) {
+          if (this.bins[i] >= val) {
               var prev = Math.abs(val - this.bins[i - 1])
               var curr = Math.abs(val - this.bins[i])
               return prev < curr ? i - 1 : i;
