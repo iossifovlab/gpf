@@ -89,20 +89,6 @@ class RoleMapping(object):
     INTERNAL = {
         key: value for key, value in Role.__members__.items()
     }
-#     INTERNAL = {
-#         'mom': Role.mom,
-#         'dad': Role.dad,
-#         'prb': Role.prb,
-#         'sib': Role.sib,
-#         'maternal_uncle': Role.maternal_uncle,
-#         'paternal_grandfather': Role.paternal_grandfather,
-#         'paternal_grandmother': Role.paternal_grandmother,
-#         'maternal_aunt': Role.maternal_aunt,
-#         'maternal_grandfather': Role.maternal_grandfather,
-#         'maternal_grandmother': Role.maternal_grandmother,
-#         'paternal_half_sibling': Role.paternal_half_sibling,
-#         'maternal_half_sibling': Role.maternal_half_sibling,
-#     }
 
     VIP = {
         'Mother': Role.mom,

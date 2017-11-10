@@ -41,6 +41,14 @@ class DatasetsFactory(dict):
                 self[dataset_id] = dataset
             return dataset
 
+    def get_datasets(self):
+        result = []
+        dataset_descriptors = self.get_description_datasets()
+        for dataset_descriptor in dataset_descriptors:
+            result.append(self.get_dataset(dataset_descriptor['id']))
+
+        return result
+
     def get_description_datasets(self):
         datasets_description = self.datasets_config.get_datasets()
         result = []

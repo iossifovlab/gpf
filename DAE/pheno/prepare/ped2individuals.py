@@ -449,8 +449,10 @@ def main():
     args = parser.parse_args()
 
     # reader = SPARKCsvPedigreeReader()
-    reader = VIPCsvPedigreeReader()
-    families = reader.read_filename(args.file, delimiter=",")
+    # reader = VIPCsvPedigreeReader()
+    reader = AGRERawCsvPedigreeReader()
+
+    families = reader.read_filename(args.file, delimiter="\t")
 
     pedigrees = {}
 

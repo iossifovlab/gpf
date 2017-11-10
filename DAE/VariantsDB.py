@@ -102,6 +102,9 @@ class StudyGroup:
         if self.vdb._config.has_option(self._configSection, attName):
             return self.vdb._config.get(self._configSection, attName)
 
+    def __repr__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.name)
+
 
 class Study:
 
@@ -124,6 +127,9 @@ class Study:
             self.description = self.vdb._config.get(
                 self._configSection, 'description')
         self.phdb = None
+
+    def __repr__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.name)
 
     def get_targeted_genes(self):
         if not self.vdb._config.has_option(self._configSection, "targetedGenes"):

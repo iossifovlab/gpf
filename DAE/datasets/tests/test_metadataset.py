@@ -7,7 +7,8 @@ from Variant import Variant
 
 @pytest.fixture
 def metadataset():
-    return MetaDataset({}, [])
+    datasets = [Dataset({ 'id': 'DS1', 'phenoDB' : {} }), Dataset({ 'id': 'DS2', 'phenoDB' : {} })]
+    return MetaDataset({ 'id': 'META', 'phenoDB' : {} }, datasets)
 
 def test_id():
     assert MetaDataset.ID == 'META'
@@ -18,8 +19,7 @@ def test_columns(mocker, metadataset):
     assert ['dataset'] == metadataset.get_columns()
 
 def test_get_legend(mocker, metadataset):
-    ds1, ds2 = Dataset({ 'id': 'DS1' }), Dataset({ 'id': 'DS2' })
-    metadataset.datasets = [ds1, ds2]
+    ds1, ds2 = metadataset.datasets
     
     mocker.patch.object(ds1, 'get_legend')
     ds1.get_legend.return_value = ['legend1', 'repeating_legend', 'legend2', 'repeating_legend']
@@ -31,7 +31,7 @@ def test_get_legend(mocker, metadataset):
     assert 3 == len(legend)
 
 def test_get_variants(mocker, metadataset):
-    ds1, ds2 = Dataset({ 'id': 'DS1' }), Dataset({ 'id': 'DS2' })
+    ds1, ds2 = metadataset.datasets
     st1, st2 = mocker.MagicMock(), mocker.MagicMock()
     variants = [
         Variant({ 'location': '1:100', 'variant': 'var1', 'familyId': '1' }),
@@ -44,8 +44,6 @@ def test_get_variants(mocker, metadataset):
 
     for i in range(0, len(variants)):
         variants[i].study = st1 if i < 3 else st2
-
-    metadataset.datasets = [ds1, ds2]
 
     mocker.patch.object(ds1, 'get_studies')
     ds1.get_studies.return_value = [st1]

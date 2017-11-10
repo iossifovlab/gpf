@@ -286,6 +286,42 @@ class SPARKCsvIndividualsReader(CsvIndividualsReader):
             if role in RoleMapping.SPARK else Role.unknown
 
 
+class InternalCsvIndividualsReader(CsvIndividualsReader):
+
+    @property
+    def FIELDS_TO_COLUMNS(self):
+        return {
+            "role": "role",
+            "family_id": "family_id",
+            "individual_id": "individual_id",
+            "gender": "sex",
+            "status": "affected"
+        }
+
+    STATUS_TO_ENUM = {
+        "True": Status.affected,
+        "False": Status.unaffected
+    }
+
+    GENDER_TO_ENUM = {
+        "Male": Gender.M,
+        "Female": Gender.F
+    }
+
+    def convert_status(self, status):
+        return self.STATUS_TO_ENUM[status]
+
+    def convert_gender(self, gender):
+        return self.GENDER_TO_ENUM[gender]
+
+    def convert_individual_id(self, family_id, individual_id):
+        return individual_id
+
+    def convert_role(self, role):
+        return RoleMapping.INTERNAL[role] \
+            if role in RoleMapping.INTERNAL else Role.unknown
+
+
 class VIPCsvIndividualsReader(CsvIndividualsReader):
 
     @property

@@ -24,7 +24,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('default', response.data)
         self.assertIn('instruments', response.data)
-        self.assertEquals(103, len(response.data['instruments']))
+        self.assertEquals(99, len(response.data['instruments']))
 
     def test_measures_ssc_commonly_used(self):
         url = "{}?dataset_id=SSC&instrument=ssc_commonly_used".format(

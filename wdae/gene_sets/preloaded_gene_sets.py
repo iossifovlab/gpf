@@ -3,11 +3,15 @@ Created on Feb 29, 2016
 
 @author: lubo
 '''
-import preloaded
-# from DAE import get_gene_sets_symNS
+import cPickle
+import zlib
+
 from gene.gene_set_collections import GeneSetsCollection
+import precompute
+import preloaded
 
 
+# from DAE import get_gene_sets_symNS
 class GeneSetPreload(preloaded.register.Preload):
 
     def __init__(self, name):
@@ -53,3 +57,27 @@ class MiRNADarnellDomainsPreload(GeneSetPreload):
 
     def __init__(self):
         super(MiRNADarnellDomainsPreload, self).__init__('miRNA.Darnell')
+
+
+# class PrecomputeDenovoGeneSets(precompute.register.Precompute):
+#     def __init__(self):
+#         self.denovo_gene_sets = {}
+#
+#     def precompute(self):
+#         self.denovo_gene_sets = build_denovo_gene_sets()
+#
+#     def is_precomputed(self):
+#         return self.denovo_gene_sets
+#
+#     def serialize(self):
+#         result = {}
+#         for key, gs in self.denovo_gene_sets.items():
+#             data = zlib.compress(cPickle.dumps(gs))
+#             result[key] = data
+#
+#         return result
+#
+#     def deserialize(self, data):
+#         self.denovo_gene_sets = {
+#             k: cPickle.loads(zlib.decompress(d))
+#             for k, d in data.items()}

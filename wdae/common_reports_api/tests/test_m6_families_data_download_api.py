@@ -4,17 +4,11 @@ Created on Aug 3, 2015
 @author: lubo
 '''
 import unittest
-from rest_framework.test import APITestCase
 from rest_framework import status
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
-class Test(APITestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+class Test(BaseAuthenticatedUserTest):
 
     def test_get_ok(self):
         url = '/api/v3/common_reports/families_data/IossifovWE2014'

@@ -26,14 +26,16 @@ class Test(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         data = response.data
-        self.assertEquals(3503, len(data))
+        self.assertEquals(3459, len(data))
 
         last = data[-1]
 
         self.assertEquals(
             last['measure'],
-            'ssc_treatment_hx_school_classroom.age15_class_other_1on1_spec'
+            'ssc_treatment_hx_school_classroom.'
+            'age17_class_special_ed_1on1_time'
+            # 'ssc_treatment_hx_school_classroom.age15_class_other_1on1_spec'
         )
         self.assertEquals(
             last['domain'],
-            [u'0.0', u'100.0'])
+            [u'0.0', u'100.0', u'30.0'])
