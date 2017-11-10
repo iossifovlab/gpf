@@ -193,7 +193,9 @@ def column_counts(column):
 
 def role_labels(ordered_columns):
     return [
-        "{column_name}\n{column_status}\nall:{column_total:>4d}\nM: {male_total:>4d}\n"
+        "{column_name}\n{column_status}\n"
+        "all:{column_total:>4d}\n"
+        "M: {male_total:>4d}\n"
         "F: {female_total:>4d}".format(**column_counts(column))
         for column in ordered_columns]
 
