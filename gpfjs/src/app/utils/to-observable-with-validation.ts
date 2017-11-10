@@ -1,27 +1,25 @@
 import { Injectable } from '@angular/core';
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { transformAndValidate } from "class-transformer-validator";
-import { ValidationError } from "class-validator";
+import { ValidationError, validate } from 'class-validator';
 
-export const toObservableWithValidation = <T>(targetClass, observable: Observable<object>): Observable<[T, boolean, ValidationError[]]> => {
-  return observable.switchMap(value => {
-    return Observable.fromPromise(transformAndValidate(targetClass, value)).map(validationState => {
-      return [value, true, []];
-    })
-    .catch(errors => {
-      return Observable.of([value, false, errors]);
+export function toValidationObservable<T>(obj: T): Observable<T> {
+  return Observable.fromPromise(validate(obj))
+    .switchMap(errors => {
+      if (errors.length === 0) {
+        return Observable.of(obj);
+      }
+      return Observable.throw(errors);
     });
-
-  });
-}
+};
 
 
-export const validationErrorsToStringArray = (validationErrors: ValidationError[]): Array<string> => {
+export function validationErrorsToStringArray(validationErrors: ValidationError[]): Array<string> {
   let errors: string[] = [];
   validationErrors.map((elem) => {
     for (let object in elem.constraints) {
+      if (elem.constraints.hasOwnProperty(object)) {
       errors.push(elem.constraints[object]);
+      }
     }
   });
   return errors;
