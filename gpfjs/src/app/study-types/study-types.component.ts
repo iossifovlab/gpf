@@ -32,17 +32,17 @@ export class StudyTypesComponent extends QueryStateProvider implements OnInit {
   ngOnInit() {
     this.stateRestoreService.getState(this.constructor.name)
       .subscribe(state => {
-          if (state['studyType']) {
-            for (let studyType of state['studyType']) {
-              if (studyType === 'we') {
-                this.studyTypes.we = true;
-              }
-              if (studyType === 'tg') {
-                this.studyTypes.tg = true;
-              }
+        if (state['studyType']) {
+          for (let studyType of state['studyType']) {
+            if (studyType === 'we') {
+              this.studyTypes.we = true;
+            }
+            if (studyType === 'tg') {
+              this.studyTypes.tg = true;
             }
           }
-        });
+        }
+      });
   }
 
   selectAll(): void {

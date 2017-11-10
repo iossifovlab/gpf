@@ -51,13 +51,13 @@ export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
         }
 
         return { familyIds: result };
-    })
-    .catch(errors => {
+      })
+      .catch(errors => {
         this.errors = validationErrorsToStringArray(errors);
         this.flashingAlert = true;
         setTimeout(() => { this.flashingAlert = false; }, 1000);
         return Observable.throw(`${this.constructor.name}: invalid state`);
-    });
+      });
   }
 
 }
