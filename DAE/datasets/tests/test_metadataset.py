@@ -18,18 +18,6 @@ def test_columns(mocker, metadataset):
     get_pheno_columns.return_value = []
     assert ['dataset'] == metadataset.get_columns()
 
-def test_get_legend(mocker, metadataset):
-    ds1, ds2 = metadataset.datasets
-    
-    mocker.patch.object(ds1, 'get_legend')
-    ds1.get_legend.return_value = ['legend1', 'repeating_legend', 'legend2', 'repeating_legend']
-    mocker.patch.object(ds2, 'get_legend')
-    ds2.get_legend.return_value = ['not-included']
-
-    legend = metadataset.get_legend(dataset_ids=['DS1'])
-    assert  set(legend).issubset(['legend1', 'repeating_legend', 'legend2'])
-    assert 3 == len(legend)
-
 def test_get_variants(mocker, metadataset):
     ds1, ds2 = metadataset.datasets
     st1, st2 = mocker.MagicMock(), mocker.MagicMock()

@@ -11,17 +11,6 @@ class MetaDataset(Dataset):
         super(MetaDataset, self).__init__(meta_dataset_descriptor)
         self.datasets = datasets
 
-    def get_legend(self, **kwargs):
-        dataset_ids = kwargs['dataset_ids']
-        legend = []
-        for leg in itertools.chain(
-              *[dataset.get_legend(**kwargs)
-                for dataset in self.datasets
-                if dataset.dataset_id in dataset_ids]):
-            if leg not in legend:
-                legend.append(leg)
-        return legend
-
     def get_columns(self):
         return ['dataset'] + super(MetaDataset, self).get_columns()
 
