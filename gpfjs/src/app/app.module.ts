@@ -45,9 +45,6 @@ import { UsersService } from './users/users.service';
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
 import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
 
-import { StoreModule } from '@ngrx/store';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-
 import { gpfReducer } from './store/gpf-store';
 import { StudyTypesComponent } from './study-types/study-types.component';
 
@@ -311,8 +308,6 @@ const appRoutes: Routes = [
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    StoreModule.provideStore(gpfReducer),
-    StoreDevtoolsModule.instrumentOnlyWithExtension(),
     RouterModule.forRoot(appRoutes),
     CookieModule.forRoot(),
     BrowserAnimationsModule,

@@ -1,8 +1,3 @@
-import { ActionReducer } from '@ngrx/store';
-import { combineReducers } from '@ngrx/store';
-
-
-
 import { DatasetsState, datasetsReducer } from '../datasets/datasets';
 import { EffectTypesState, effectTypesReducer } from '../effecttypes/effecttypes';
 import { GenderState, genderReducer } from '../gender/gender';
@@ -14,7 +9,6 @@ import { PresentInParentState, presentInParentReducer } from '../present-in-pare
 import { GeneSymbolsState, geneSymbolsReducer } from '../gene-symbols/gene-symbols';
 import { RegionsFilterState, regionsFilterReducer } from '../regions-filter/regions-filter';
 import { GeneSetsState, geneSetsReducer } from '../gene-sets/gene-sets-state';
-import { UsersState, usersReducer } from '../users/users-store';
 import { StudyTypesState, studyTypesReducer } from '../study-types/study-types';
 import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-models/enrichment-models-state';
 import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
@@ -33,7 +27,6 @@ export interface GpfState {
   geneSymbols: GeneSymbolsState;
   regionsFilter: RegionsFilterState;
   geneSets: GeneSetsState;
-  users: UsersState;
   enrichmentModels: EnrichmentModelsState;
   studyTypes: StudyTypesState;
   phenoFilters: PhenoFiltersState;
@@ -53,16 +46,9 @@ const reducers = {
   geneSymbols: geneSymbolsReducer,
   regionsFilter: regionsFilterReducer,
   geneSets: geneSetsReducer,
-  users: usersReducer,
   studyTypes: studyTypesReducer,
   enrichmentModels: enrichmentModelsReducer,
   phenoFilters: phenoFiltersReducer,
   familyIds: familyIdsReducer,
   phenoToolMeasure: phenoToolMeasureStateReducer
-};
-
-const productionReducer: ActionReducer<GpfState> = combineReducers(reducers);
-
-export function gpfReducer(state: any, action: any) {
-  return productionReducer(state, action);
 };

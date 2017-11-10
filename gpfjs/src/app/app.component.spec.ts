@@ -17,7 +17,6 @@ import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { gpfReducer } from './store/gpf-store';
-import { StoreModule } from '@ngrx/store';
 
 /*
 describe('AppComponent', () => {

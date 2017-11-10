@@ -1,10 +1,9 @@
-import { UsersState } from '../users/users-store';
+import { UsersService } from '../users/users.service';
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, DatasetsState } from './datasets';
 
 import { IdName } from '../common/idname';
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
 import { ActivatedRoute, Params, Router } from '@angular/router';
@@ -22,18 +21,15 @@ export class DatasetsComponent implements OnInit {
   selectedDataset: Dataset;
   @Output() selectedDatasetChange = new EventEmitter<Dataset>();
 
-  usersState: Observable<UsersState>;
-
   selectedDatasetId: string;
 
   constructor(
-    private store: Store<any>,
+    private usersService: UsersService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
     private location: Location
   ) {
-    this.usersState = this.store.select('users');
   }
 
   ngOnInit() {
@@ -44,10 +40,10 @@ export class DatasetsComponent implements OnInit {
       }
     );
 
-    this.usersState.subscribe(
+    this.usersService.getUserInfoObservable().subscribe(
       state => {
         if (state) {
-          this.datasetsService.getDatasets().subscribe(
+          this.datasetsService.getDatasets().take(1).subscribe(
             (datasets) => {
               this.datasets = datasets;
               this.selectDatasetById();
