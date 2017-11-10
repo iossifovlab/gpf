@@ -8,7 +8,7 @@ import { ActivatedRoute, Params } from '@angular/router';
 })
 export class GenotypeBrowserSingleViewComponent implements OnInit {
 
-  private selectedDatasetId: string;
+  selectedDatasetId: string;
 
   constructor(
     private route: ActivatedRoute
