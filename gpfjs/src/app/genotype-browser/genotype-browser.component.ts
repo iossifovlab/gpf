@@ -73,6 +73,8 @@ export class GenotypeBrowserComponent extends QueryStateCollector implements OnC
     this.datasetsService.getDataset(this.selectedDatasetId).subscribe(
       (dataset: Dataset) => {
         this.selectedDataset = dataset;
+        // TODO FIXME when we remove the store
+        this.datasetsService.setSelectedDataset(dataset);
     })
   }
 
