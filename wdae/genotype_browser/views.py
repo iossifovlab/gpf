@@ -115,6 +115,18 @@ class QueryDownloadView(QueryBaseView):
         query = json.loads(res['queryData'])
         return query
 
+    DOWNLOAD_LIMIT = 10000
+
+    @staticmethod
+    def __limit(variants, limit):
+        count = 0
+        for variant in variants:
+            if count <= limit:
+                yield variant
+                count+=1
+            else:
+                break
+
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 download request: " +
                                str(request.data)))
@@ -140,8 +152,9 @@ class QueryDownloadView(QueryBaseView):
                 columns, dataset.get_column_labels())
 
             response = StreamingHttpResponse(
-                itertools.imap(join_line, variants_data), content_type='text/csv'
-            )
+                self.__limit(itertools.imap(join_line, variants_data),
+                    self.DOWNLOAD_LIMIT),
+                content_type='text/csv')
 
             response['Content-Disposition'] = 'attachment; filename=unruly.csv'
             response['Expires'] = '0'
