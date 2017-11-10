@@ -9,7 +9,6 @@ import { PresentInParentState, presentInParentReducer } from '../present-in-pare
 import { GeneSymbolsState, geneSymbolsReducer } from '../gene-symbols/gene-symbols';
 import { RegionsFilterState, regionsFilterReducer } from '../regions-filter/regions-filter';
 import { GeneSetsState, geneSetsReducer } from '../gene-sets/gene-sets-state';
-import { EnrichmentModelsState, enrichmentModelsReducer } from '../enrichment-models/enrichment-models-state';
 import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
 
 export interface GpfState {
@@ -24,7 +23,6 @@ export interface GpfState {
   geneSymbols: GeneSymbolsState;
   regionsFilter: RegionsFilterState;
   geneSets: GeneSetsState;
-  enrichmentModels: EnrichmentModelsState;
   phenoFilters: PhenoFiltersState;
 };
 
@@ -40,6 +38,5 @@ const reducers = {
   geneSymbols: geneSymbolsReducer,
   regionsFilter: regionsFilterReducer,
   geneSets: geneSetsReducer,
-  enrichmentModels: enrichmentModelsReducer,
   phenoFilters: phenoFiltersReducer,
 };
