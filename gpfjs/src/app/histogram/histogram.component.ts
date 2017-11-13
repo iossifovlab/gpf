@@ -15,6 +15,9 @@ export class HistogramComponent  {
   private internalRangeStart: number;
   private internalRangeEnd: number;
 
+  private internalRangeStartField: number;
+  private internalRangeEndField: number;
+
   @Output() rangeStartChange = new EventEmitter();
   @Output() rangeEndChange = new EventEmitter();
 
@@ -85,11 +88,9 @@ export class HistogramComponent  {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
-      if (this.rangeStartWithoutNull === null || this.resetRange) {
-        this.rangeStartWithoutNull = this.bins[0];
-      }
-      if (this.rangeEndWithoutNull === null || this.resetRange) {
-        this.rangeEndWithoutNull = this.bins[this.bins.length - 1];
+      if (this.resetRange) {
+        this.rangeStart = null;
+        this.rangeEnd = null;
       }
       this.resetRange = true;
     }
@@ -258,26 +259,40 @@ export class HistogramComponent  {
 
   @Input()
   set rangeStart(rangeStart: any) {
-    if (rangeStart == null && this.rangeStartWithoutNull != null) {
-        this.rangeStartWithoutNull = this.bins[0];
+    this.setRangeStart(rangeStart);
+    this.internalRangeStartField = this.rangeStart.toPrecision(5);
+  }
+
+  setRangeStart(rangeStart: any) {
+    if (rangeStart == null) {
+        this.internalRangeStart = this.bins[0];
     }
     else {
-        this.rangeStartWithoutNull = rangeStart;
+        this.internalRangeStart = rangeStart;
     }
+    this.onRangeChange();
+    this.rangeStartSubject.next(this.rangeStart)
   }
 
   get rangeStart() {
     return this.internalRangeStart;
   }
- 
+
   @Input()
   set rangeEnd(rangeEnd: any) {
-    if (rangeEnd == null && this.rangeEndWithoutNull != null) {
-        this.rangeEndWithoutNull = this.bins[this.bins.length - 1];
+    this.setRangeEnd(rangeEnd);
+    this.internalRangeEndField = this.rangeEnd.toPrecision(5);
+  }
+
+  setRangeEnd(rangeEnd: any) {
+    if (rangeEnd == null) {
+        this.internalRangeEnd = this.bins[this.bins.length - 1];
     }
     else {
-        this.rangeEndWithoutNull = rangeEnd;
+        this.internalRangeEnd = rangeEnd;
     }
+    this.onRangeChange();
+    this.rangeEndSubject.next(this.rangeEnd)
   }
 
   get rangeEnd() {
@@ -285,41 +300,21 @@ export class HistogramComponent  {
   }
 
   set rangeStartWithoutNull(rangeStart: any) {
-    if (rangeStart == null) {
-        this.internalRangeStart = null;
-    }
-    else {
-        this.internalRangeStart = parseFloat(rangeStart);
-        if (isNaN(this.internalRangeStart)) {
-            this.internalRangeStart = null
-        }
-    }
-    this.onRangeChange();
-    this.rangeStartSubject.next(this.internalRangeStart)
+    this.internalRangeStartField = rangeStart;
+    this.setRangeStart(parseFloat(rangeStart));
   }
 
   get rangeStartWithoutNull() {
-    if (this.internalRangeStart === undefined || this.internalRangeStart === null) return null;
-    return this.internalRangeStart.toPrecision(5);
+    return this.internalRangeStartField;
   }
- 
+
   set rangeEndWithoutNull(rangeEnd: any) {
-    if (rangeEnd == null) {
-        this.internalRangeEnd = null;
-    }
-    else {
-        this.internalRangeEnd = parseFloat(rangeEnd);
-        if (isNaN(this.internalRangeEnd)) {
-            this.internalRangeEnd = null
-        }
-    }
-    this.onRangeChange();
-    this.rangeEndSubject.next(this.internalRangeEnd)
+    this.internalRangeEndField = rangeEnd;
+    this.setRangeEnd(parseFloat(rangeEnd));
   }
 
   get rangeEndWithoutNull() {
-      if (this.internalRangeEnd === undefined || this.internalRangeEnd === null) return null;
-      return this.internalRangeEnd.toPrecision(5);
+    return this.internalRangeEndField;
   }
 
 
@@ -341,9 +336,7 @@ export class HistogramComponent  {
 
   set selectedStartIndex(index: number) {
     if (index < 0 || index > this.selectedEndIndex) return;
-    this.internalRangeStart = this.bins[index]
-    this.onRangeChange();
-    this.rangeStartSubject.next(this.internalRangeStart)
+    this.rangeStart = this.bins[index]
   }
 
   get selectedStartIndex() {
@@ -354,9 +347,7 @@ export class HistogramComponent  {
 
   set selectedEndIndex(index: number) {
     if (index < this.selectedStartIndex || index >= this.bars.length) return;
-    this.internalRangeEnd = this.bins[index + 1]
-    this.onRangeChange();
-    this.rangeEndSubject.next(this.internalRangeEnd)
+    this.rangeEnd = this.bins[index + 1]
   }
 
   get selectedEndIndex() {
