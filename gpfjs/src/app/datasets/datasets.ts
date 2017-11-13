@@ -229,33 +229,3 @@ export class Dataset extends IdName {
   }
 }
 
-
-export interface DatasetsState {
-  selectedDataset: Dataset;
-  datasets: Dataset[];
-};
-
-const initialDatasetState = {
-  selectedDataset: undefined,
-  datasets: undefined
-};
-
-export const DATASETS_INIT = 'DATASETS_INIT';
-export const DATASETS_SELECT = 'DATASETS_SELECT';
-
-export function datasetsReducer(state: DatasetsState = initialDatasetState, action) {
-  switch (action.type) {
-    case DATASETS_INIT:
-      return {
-        datasets: action.payload,
-        selectedDataset: null
-      };
-    case DATASETS_SELECT:
-      return {
-        datasets: state.datasets,
-        selectedDataset: action.payload
-      };
-    default:
-      return state;
-  }
-}

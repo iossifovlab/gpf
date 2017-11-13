@@ -5,30 +5,39 @@ import { Observable } from 'rxjs';
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
 
-import {
-  Dataset, DatasetsState,
-  DATASETS_INIT, DATASETS_SELECT
-} from '../datasets/datasets';
+import { Dataset, DatasetsState } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 
 import 'rxjs/add/operator/map';
-import { Subject, BehaviorSubject } from 'rxjs';
-import { Store } from '@ngrx/store';
+import { Subject, ReplaySubject, BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class DatasetsService {
   private datasetUrl = 'datasets/';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
-  datasetsStore: Observable<DatasetsState>;
+  private datasets$ = new ReplaySubject<Array<Dataset>>(1);
+  private selectedDataset$: Observable<Dataset>;
+  private _selectedDatasetId$ = new BehaviorSubject<string>(null);
 
   constructor(
     private http: Http,
     private config: ConfigService,
-    private store: Store<any>
   ) {
+    this.selectedDataset$ = Observable
+      .combineLatest(this.datasets$, this._selectedDatasetId$)
+      .map(([datasets, selectedDatasetId]) => {
+        if (!selectedDatasetId) {
+          return null;
+        }
+        let selectedDataset = datasets.find(ds => ds.id === selectedDatasetId);
 
-    this.datasetsStore = store.select('datasets');
+        if (!selectedDataset) {
+          this._selectedDatasetId$.next('');
+        }
+
+        return selectedDataset;
+      });
   }
 
   getDatasets(): Observable<Dataset[]> {
@@ -37,10 +46,7 @@ export class DatasetsService {
       .get(this.datasetUrl, options)
       .map(res => {
         let datasets = Dataset.fromJsonArray(res.json().data);
-        this.store.dispatch({
-          'type': DATASETS_INIT,
-          'payload': datasets
-        });
+        this.datasets$.next(datasets);
         return datasets;
       });
   }
@@ -56,11 +62,22 @@ export class DatasetsService {
   }
 
   setSelectedDataset(dataset: Dataset): void {
-    this.store.dispatch({
-      'type': DATASETS_SELECT,
-      'payload': dataset
+    if (this._selectedDatasetId$.getValue() !== dataset.id) {
+      this._selectedDatasetId$.next(dataset.id);
+    }
+  }
 
-    });
-    // this.selectedDataset.next(dataset);
+  setSelectedDatasetById(datasetId: string): void {
+    if (this._selectedDatasetId$.getValue() !== datasetId) {
+      this._selectedDatasetId$.next(datasetId);
+    }
+  }
+
+  getSelectedDataset() {
+    return this.selectedDataset$;
+  }
+
+  getDatasetsObservable() {
+    return this.datasets$.asObservable();
   }
 }
