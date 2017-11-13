@@ -27,6 +27,7 @@
     "@ngrx/core": "^1.2.0",
     "@ngrx/store": "^2.2.1",
     "@types/d3": "^4.7.0",
+    "@types/geojson": "1.0.5",
     "@types/lodash": "^4.14.74",
     "@types/node": "^6.0.65",
     "@types/sprintf": "^0.1.0",
