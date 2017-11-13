@@ -2,7 +2,6 @@ import { DatasetsState, datasetsReducer } from '../datasets/datasets';
 import { EffectTypesState, effectTypesReducer } from '../effecttypes/effecttypes';
 import { GenderState, genderReducer } from '../gender/gender';
 import { PedigreeSelectorState, pedigreeSelectorReducer } from '../pedigree-selector/pedigree-selector';
-import { VariantTypesState, variantTypesReducer } from '../varianttypes/varianttypes';
 import { GeneWeightsState, geneWeightsReducer } from '../gene-weights/gene-weights-store';
 import { GeneSetsState} from '../gene-sets/gene-sets-state';
 import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
@@ -12,7 +11,6 @@ export interface GpfState {
   pedigreeSelector: PedigreeSelectorState;
   effectTypes: EffectTypesState;
   gender: GenderState;
-  variantTypes: VariantTypesState;
   geneWeights: GeneWeightsState;
   geneSets: GeneSetsState;
   phenoFilters: PhenoFiltersState;
@@ -23,7 +21,6 @@ const reducers = {
   pedigreeSelector: pedigreeSelectorReducer,
   effectTypes: effectTypesReducer,
   gender: genderReducer,
-  variantTypes: variantTypesReducer,
   geneWeights: geneWeightsReducer,
   phenoFilters: phenoFiltersReducer,
 };
