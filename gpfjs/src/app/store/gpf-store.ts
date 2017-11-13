@@ -5,7 +5,6 @@ import { PedigreeSelectorState, pedigreeSelectorReducer } from '../pedigree-sele
 import { VariantTypesState, variantTypesReducer } from '../varianttypes/varianttypes';
 import { GeneWeightsState, geneWeightsReducer } from '../gene-weights/gene-weights-store';
 import { PresentInChildState, presentInChildReducer } from '../present-in-child/present-in-child';
-import { PresentInParentState, presentInParentReducer } from '../present-in-parent/present-in-parent';
 import { GeneSetsState} from '../gene-sets/gene-sets-state';
 import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
 
@@ -17,7 +16,6 @@ export interface GpfState {
   variantTypes: VariantTypesState;
   geneWeights: GeneWeightsState;
   presentInChild: PresentInChildState;
-  presentInParent: PresentInParentState;
   geneSets: GeneSetsState;
   phenoFilters: PhenoFiltersState;
 };
@@ -30,6 +28,5 @@ const reducers = {
   variantTypes: variantTypesReducer,
   geneWeights: geneWeightsReducer,
   presentInChild: presentInChildReducer,
-  presentInParent: presentInParentReducer,
   phenoFilters: phenoFiltersReducer,
 };

@@ -1,18 +1,12 @@
 import {
-  PresentInParentState, PRESENT_IN_PARENT_INIT, PRESENT_IN_PARENT_CHECK_ALL,
-  PRESENT_IN_PARENT_UNCHECK_ALL, PRESENT_IN_PARENT_UNCHECK,
-  PRESENT_IN_PARENT_CHECK, PRESENT_IN_PARENT_RANGE_START_CHANGE,
-  PRESENT_IN_PARENT_RANGE_END_CHANGE, PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
-  PRESENT_IN_PARENT_RARITY_TYPE_CHANGE,
-  RARITY_ULTRARARE, RARITY_INTERVAL, RARITY_RARE, RARITY_ALL
+  PresentInParent, RARITY_ULTRARARE, RARITY_INTERVAL, RARITY_RARE, RARITY_ALL
 } from './present-in-parent';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { QueryStateProvider } from '../query/query-state-provider';
 import { QueryData, Rarity } from '../query/query';
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
 
@@ -22,85 +16,51 @@ import { StateRestoreService } from '../store/state-restore.service';
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PresentInParentComponent) }]
 })
 export class PresentInParentComponent extends QueryStateProvider implements OnInit {
-  motherOnly: boolean;
-  fatherOnly: boolean;
-  motherFather: boolean;
-  neither: boolean;
-
-  rarityIntervalStartInternal: number;
-  rarityIntervalEndInternal: number;
   ultraRare: boolean;
 
   rarityRadio: string;
 
-  presentInParentState: Observable<[PresentInParentState, boolean, ValidationError[]]>;
+  presentInParent = new PresentInParent();
 
   errors: string[];
   flashingAlert = false;
 
   constructor(
-    private store: Store<any>,
     private stateRestoreService: StateRestoreService
   ) {
     super();
-    this.presentInParentState = toObservableWithValidation(PresentInParentState, this.store.select('presentInParent'));
   }
 
   restoreCheckedState(state) {
     for (let key of state) {
       if (key === 'father only') {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_CHECK,
-          'payload': 'fatherOnly'
-        });
+        this.presentInParent.fatherOnly = true;
       }
       if (key === 'mother only') {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_CHECK,
-          'payload': 'motherOnly'
-        });
+        this.presentInParent.motherOnly = true;
       }
       if (key === 'mother and father') {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_CHECK,
-          'payload': 'motherFather'
-        });
+        this.presentInParent.motherFather = true;
       }
       if (key === 'neither') {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_CHECK,
-          'payload': 'neither'
-        });
+        this.presentInParent.neither = true;
       }
     }
   }
 
   restoreRarity(state) {
     if (state['ultraRare']) {
-      this.store.dispatch({
-        'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
-        'payload': true
-      });
+      this.presentInParent.ultraRare = true;
+      this.presentInParent.rarityType = RARITY_ULTRARARE;
     } else {
-      this.store.dispatch({
-        'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
-        'payload': false
-      });
+      this.presentInParent.ultraRare = false;
 
-      if (state['minFreq']
-        ) {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_RANGE_START_CHANGE,
-          'payload': state['minFreq']
-        });
+      if (state['minFreq']) {
+        this.presentInParent.rarityIntervalStart = state['minFreq'];
       }
 
-      if (state['maxFreq']
-        ) {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_RANGE_END_CHANGE,
-          'payload': state['maxFreq']
-        });
+      if (state['maxFreq']) {
+        this.presentInParent.rarityIntervalEnd = state['minFreq'];
       }
 
       this.restoreRadioButtonState(state);
@@ -128,14 +88,11 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
     }
   }
 
-  restoreStateSubscribe() {
+  restoreState() {
     this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['presentInParent'] && state['presentInParent']['presentInParent']) {
-          this.store.dispatch({
-            'type': PRESENT_IN_PARENT_UNCHECK_ALL,
-          });
-          this.restoreCheckedState(state['presentInParent']['presentInParent'])
+          this.restoreCheckedState(state['presentInParent']['presentInParent']);
         }
 
         if (state['presentInParent'] && state['presentInParent']['rarity']) {
@@ -146,94 +103,43 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   ngOnInit() {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_INIT,
-    });
-
-    this.restoreStateSubscribe();
-
-    this.presentInParentState.subscribe(
-      ([presentInParentState, isValid, validationErrors]) => {
-        this.errors = validationErrorsToStringArray(validationErrors);
-
-        this.motherOnly = presentInParentState.motherOnly;
-        this.fatherOnly = presentInParentState.fatherOnly;
-        this.motherFather = presentInParentState.motherFather;
-        this.neither = presentInParentState.neither;
-
-        this.rarityIntervalStartInternal = presentInParentState.rarityIntervalStart;
-        this.rarityIntervalEndInternal = presentInParentState.rarityIntervalEnd;
-        this.ultraRare = presentInParentState.ultraRare;
-        this.rarityRadio = presentInParentState.rarityType;
-
-      }
-    );
+    this.restoreState();
   }
 
   selectAll(): void {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_CHECK_ALL,
-    });
+    this.presentInParent.fatherOnly = true;
+    this.presentInParent.motherOnly = true;
+    this.presentInParent.motherFather = true;
+    this.presentInParent.neither = true;
   }
 
   selectNone(): void {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_UNCHECK_ALL,
-    });
+    this.presentInParent.fatherOnly = false;
+    this.presentInParent.motherOnly = false;
+    this.presentInParent.motherFather = false;
+    this.presentInParent.neither = false;
   }
 
   presentInChildCheckValue(key: string, value: boolean): void {
     if (key === 'motherOnly' || key === 'fatherOnly' || key === 'motherFather' || key === 'neither') {
-      this.store.dispatch({
-        'type': value ? PRESENT_IN_PARENT_CHECK : PRESENT_IN_PARENT_UNCHECK,
-        'payload': key
-      });
+      this.presentInParent[key] = value;
     }
   }
 
   rarityChangeValue(start: number, end: number) {
-    this.rarityIntervalStart = start;
-    this.rarityIntervalEnd = end;
-  }
-
-  set rarityIntervalStart(start: number) {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_RANGE_START_CHANGE,
-      'payload': start
-    });
-  }
-
-  get rarityIntervalStart() {
-    return this.rarityIntervalStartInternal;
-  }
-
-
-  set rarityIntervalEnd(end: number) {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_RANGE_END_CHANGE,
-      'payload': end
-    });
-  }
-
-  get rarityIntervalEnd() {
-    return this.rarityIntervalEndInternal;
+    this.presentInParent.rarityIntervalStart = start;
+    this.presentInParent.rarityIntervalEnd = end;
   }
 
   rarityTypeChange(rarityType: string) {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_RARITY_TYPE_CHANGE,
-      'payload': rarityType
-    });
+    this.presentInParent.rarityType = rarityType;
   }
 
   ultraRareValueChange(ultraRare: boolean) {
+    this.presentInParent.ultraRare = ultraRare;
     if (ultraRare) {
-      this.rarityRadio = 'ultraRare';
+      this.presentInParent.rarityType = RARITY_ULTRARARE;
     }
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
-      'payload': ultraRare
-    });
   }
 
   rarityRadioChange(rarity: string): void {
@@ -257,32 +163,26 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   getState() {
-    return this.presentInParentState.take(1).map(
-      ([presentInParentState, isValid, validationErrors]) => {
-        if (!isValid) {
-          this.flashingAlert = true;
-          setTimeout(() => { this.flashingAlert = false; }, 1000);
-           throw 'invalid state';
-        }
-
+    return toValidationObservable(this.presentInParent)
+      .map(presentInParent => {
         let result = new Array<string>();
-        if (presentInParentState.fatherOnly) {
+        if (presentInParent.fatherOnly) {
           result.push('father only');
         }
-        if (presentInParentState.motherOnly) {
+        if (presentInParent.motherOnly) {
           result.push('mother only');
         }
-        if (presentInParentState.motherFather) {
+        if (presentInParent.motherFather) {
           result.push('mother and father');
         }
-        if (presentInParentState.neither) {
+        if (presentInParent.neither) {
           result.push('neither');
         }
 
         let rarity: Rarity = {
-          ultraRare: presentInParentState.ultraRare,
-          minFreq: presentInParentState.rarityIntervalStart,
-          maxFreq: presentInParentState.rarityIntervalEnd
+          ultraRare: presentInParent.ultraRare,
+          minFreq: presentInParent.rarityIntervalStart,
+          maxFreq: presentInParent.rarityIntervalEnd
         };
         if (rarity.ultraRare) {
           rarity.minFreq = null;
@@ -297,7 +197,18 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
           }
         }
 
-        return { presentInParent: { presentInParent: result, rarity: rarity }}
-    });
+        return {
+          presentInParent: {
+            presentInParent: result,
+            rarity: rarity
+          }
+        };
+      })
+      .catch(errors => {
+        this.errors = validationErrorsToStringArray(errors);
+        this.flashingAlert = true;
+        setTimeout(() => { this.flashingAlert = false; }, 1000);
+        return Observable.throw(`${this.constructor.name}: invalid state`);
+      });
   }
 }

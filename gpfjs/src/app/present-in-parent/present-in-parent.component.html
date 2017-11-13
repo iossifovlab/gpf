@@ -11,8 +11,8 @@
           <label>
             <input #motherOnlyCheckbox
                 type="checkbox"
-                [checked]="motherOnly"
-                (change)="presentInChildCheckValue('motherOnly',motherOnlyCheckbox.checked)">
+                [checked]="presentInParent.motherOnly"
+                (change)="presentInChildCheckValue('presentInParent.motherOnly', motherOnlyCheckbox.checked)">
             mother only
           </label>
         </div>
@@ -21,8 +21,8 @@
             <input
                 #fatherOnlyCheckbox
                 type="checkbox"
-                [checked]="fatherOnly"
-                (change)="presentInChildCheckValue('fatherOnly',fatherOnlyCheckbox.checked)">
+                [checked]="presentInParentStatefatherOnly"
+                (change)="presentInChildCheckValue('fatherOnly', fatherOnlyCheckbox.checked)">
             father only
           </label>
         </div>
@@ -31,8 +31,8 @@
             <input
                 #motherFatherCheckbox
                 type="checkbox"
-                [checked]="motherFather"
-                (change)="presentInChildCheckValue('motherFather',motherFatherCheckbox.checked)">
+                [checked]="presentInParent.motherFather"
+                (change)="presentInChildCheckValue('motherFather', motherFatherCheckbox.checked)">
             mother and father
           </label>
         </div>
@@ -41,35 +41,35 @@
             <input
                 #neitherCheckbox
                 type="checkbox"
-                [checked]="neither"
-                (change)="presentInChildCheckValue('neither',neitherCheckbox.checked)">
+                [checked]="presentInParent.neither"
+                (change)="presentInChildCheckValue('neither', neitherCheckbox.checked)">
             neither
           </label>
         </div>
 
-        <div *ngIf="motherOnly || fatherOnly || motherFather">
+        <div *ngIf="presentInParent.motherOnly || presentInParent.fatherOnly || presentInParent.motherFather">
           <div>Rarity:</div>
           <div>
             <input #ultraRareRadio
                 type="radio"
                 name="rarity"
                 (change)="ultraRareValueChange(ultraRareRadio.checked)"
-                value="ultraRare" [checked]="rarityRadio == 'ultraRare'">Ultra Rare<br/>
+                value="ultraRare" [checked]="presentInParent.rarityType == 'ultraRare'">Ultra Rare<br/>
             <input #allRadio
                 type="radio"
                 name="rarity"
                 (change)="rarityRadioChange('all')"
-                value="all" [checked]="rarityRadio == 'all'">All
+                value="all" [checked]="presentInParent.rarityType == 'all'">All
             <input #rareRadio
                 type="radio"
                 name="rarity"
                 (change)="rarityRadioChange('rare')"
-                value="rare" [checked]="rarityRadio == 'rare'">Rare
+                value="rare" [checked]="presentInParent.rarityType == 'rare'">Rare
             <input #intervalRadio
                 type="radio"
                 name="rarity"
                 (change)="rarityRadioChange('interval')"
-                value="interval" [checked]="rarityRadio == 'interval'">Interval
+                value="interval" [checked]="presentInParent.rarityType == 'interval'">Interval
           </div>
           <div class='row'>
             <div *ngIf="rarityRadio == 'interval'">
@@ -78,9 +78,9 @@
                     type="number"
                     step="0.01"
                     min=0
-                    max="{{ rarityIntervalEnd }}"
+                    max="{{ presentInParent.rarityIntervalEnd }}"
                     style="width: 63px"
-                    [(ngModel)]="rarityIntervalStart">%-
+                    [(ngModel)]="presentInParent.rarityIntervalStart">%-
             </div>
             <div *ngIf="rarityRadio == 'rare' || rarityRadio == 'interval'">
                 <span *ngIf="rarityRadio == 'rare'">Max: </span>
@@ -88,10 +88,10 @@
                     #inputRangeEnd="ngModel"
                     type="number"
                     step="0.01"
-                    min="{{ rarityIntervalStart }}"
+                    min="{{ presentInParent.rarityIntervalStart }}"
                     max=100
                     style="width: 63px"
-                    [(ngModel)]="rarityIntervalEnd">%
+                    [(ngModel)]="presentInParent.rarityIntervalEnd">%
             </div>
           </div>
         </div>
