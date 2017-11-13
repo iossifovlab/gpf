@@ -11,7 +11,7 @@
           <label>
             <input #maleCheckbox
                 type="checkbox"
-                [checked]="male"
+                [checked]="gender.male"
                 (change)="genderCheckValue('male',maleCheckbox.checked)">
             <span class="gender-icon male" ></span>
           </label>
@@ -21,7 +21,7 @@
             <input
                 #femaleCheckbox
                 type="checkbox"
-                [checked]="female"
+                [checked]="gender.female"
                 (change)="genderCheckValue('female',femaleCheckbox.checked)">
             <span class="gender-icon female"></span>
           </label>
