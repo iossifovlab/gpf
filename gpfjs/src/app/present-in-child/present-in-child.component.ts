@@ -8,6 +8,7 @@ import { toValidationObservable, validationErrorsToStringArray } from '../utils/
 import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
 
+// TODO: rewrite template
 @Component({
   selector: 'gpf-present-in-child',
   templateUrl: './present-in-child.component.html',
