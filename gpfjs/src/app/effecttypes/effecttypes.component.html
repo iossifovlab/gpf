@@ -38,7 +38,7 @@
       </gpf-effecttypes-column>
 
       <gpf-effecttypes-column
-        *ngIf="hasCNV | async"
+        *ngIf="hasCNV"
         [columnName]="'CNV'"
         [effectTypesLabels]="cnvColumn"
         [effectTypes]="effectTypes"

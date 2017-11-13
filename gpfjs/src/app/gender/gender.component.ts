@@ -12,7 +12,10 @@ import { StateRestoreService } from '../store/state-restore.service';
   selector: 'gpf-gender',
   templateUrl: './gender.component.html',
   styleUrls: ['./gender.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GenderComponent) }]
+  providers: [{
+    provide: QueryStateProvider,
+    useExisting: forwardRef(() => GenderComponent)
+  }]
 })
 export class GenderComponent extends QueryStateProvider implements OnInit {
 

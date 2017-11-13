@@ -15,7 +15,8 @@ import { GenderComponent } from './gender/gender.component';
 import { PresentInChildComponent } from './present-in-child/present-in-child.component';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
-import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes/effecttypes.component';
+import { EffecttypesComponent } from './effecttypes/effecttypes.component';
+import { EffecttypesColumnComponent } from './effecttypes/effecttypes-column.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
 
