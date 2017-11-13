@@ -10,7 +10,6 @@ from datasets.config import DatasetsConfig
 from models import Dataset
 from django.db.utils import OperationalError
 
-
 class DatasetsPreload(Preload):
 
     def __init__(self):
@@ -19,7 +18,7 @@ class DatasetsPreload(Preload):
         self.factory = DatasetsFactory(self.dataset_config)
 
         try:
-            for ds in self.dataset_config.get_datasets():
+            for ds in self.dataset_config.get_datasets(True):
                 Dataset.recreate_dataset_perm(ds['id'], ds['authorizedGroups'])
         except OperationalError:
             # Database migrations are probably not run yet, ignore exception

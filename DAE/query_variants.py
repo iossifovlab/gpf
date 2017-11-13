@@ -489,7 +489,21 @@ def do_query_variants(data, atts=[]):
 
     res_variants = itertools.chain(*vsl)
     return generate_response(itertools.imap(augment_vars, res_variants),
-                             ['effectType',
+                             ['familyId',
+                              'studyName',
+                              '_phenotype_',
+                              'location',
+                              'variant',
+                              'bestSt',
+                              'fromParentS',
+                              'inChS',
+                              'worstEffect',
+                              'genes',
+                              'counts',
+                              'geneEffect',
+                              'requestedGeneEffects',
+                              'popType',
+                              'effectType',
                               'effectDetails',
                               'all.altFreq',
                               'all.nAltAlls',
@@ -546,75 +560,64 @@ COLUMN_TITLES = {
     '_phenotype_': 'study phenotype',
     'counts': 'count',
     'valstatus': 'validation status',
+    '_pedigree_': '_pedigree_',
+    'phenoInChs': 'phenoInChs',
+    'dataset': 'dataset',
+    'SSCfreq': 'SSCfreq',
+    'EVSfreq': 'EVSfreq',
+    'E65freq': 'E65freq',
 }
 
+def ge2Str(gs):
+    return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
+
+SPECIAL_ATTRS_FORMAT = {
+    "bestSt": mat2Str,
+    "counts": mat2Str,
+    "geneEffect": ge2Str,
+    "requestedGeneEffects": ge2Str,
+}
+
+SPECIAL_GENE_EFFECTS = {
+    "genes": __gene_effect_get_genes,
+    "worstEffect": __gene_effect_get_worst_effect
+}
 
 def attr_title(attr_key):
     return COLUMN_TITLES.get(attr_key, attr_key)
 
-
-def generate_response(vs, atts=[], sep='\t'):
-    def ge2Str(gs):
-        return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
-
-    mainAtts = [
-        'familyId',
-        'studyName',
-        '_phenotype_',
-        'location',
-        'variant',
-        'bestSt',
-        'fromParentS',
-        'inChS',
-        'worstEffect',
-        'genes',
-        'counts',
-        'geneEffect',
-        'requestedGeneEffects',
-        'popType'
-    ]
-
-    specialStrF = {
-        "bestSt": mat2Str,
-        "counts": mat2Str,
-        "geneEffect": ge2Str,
-        "requestedGeneEffects": ge2Str,
+def generate_web_response(variants, attrs=COLUMN_TITLES.keys(), sep='\t'):
+    response = generate_response(variants, attrs, sep)
+    return {
+        'cols': next(response),
+        'rows': response
     }
 
-    specialGeneEffects = {
-        "genes": __gene_effect_get_genes,
-        "worstEffect": __gene_effect_get_worst_effect
-    }
+def generate_response(variants, attrs=COLUMN_TITLES.keys(), sep='\t'):
+    variant_rows = transform_variants_to_lists(variants, attrs, sep)
+    return itertools.chain([map(attr_title, attrs)], variant_rows)
 
-    yield [attr_title(attr) for attr in mainAtts + atts]
-
-    for v in vs:
-        mavs = []
-        for att in mainAtts:
+def transform_variants_to_lists(variants, attrs, sep='\t'):
+    for v in variants:
+        row_variant = []
+        for attr in attrs:
             try:
-                if att in specialStrF:
-                    mavs.append(specialStrF[att](getattr(v, att)))
-                elif att in specialGeneEffects:
-                    mavs.append(specialGeneEffects[att](
+                if attr in SPECIAL_ATTRS_FORMAT:
+                    row_variant.append(SPECIAL_ATTRS_FORMAT[attr](getattr(v, attr, '')))
+                elif attr in SPECIAL_GENE_EFFECTS:
+                    row_variant.append(SPECIAL_GENE_EFFECTS[attr](
                         getattr(v, 'requestedGeneEffects')))
+                elif attr in v.atts:
+                    val = v.atts[attr]
+                    if not isinstance(val, list):
+                        val = str(val).replace(sep, ';').replace("'", '"')
+                    row_variant.append(val if val and val != 'False' and
+                                val != 'None' else "")
                 else:
-                    mavs.append(getattr(v, att))
+                    row_variant.append(getattr(v, attr))
             except Exception:
-                mavs.append("")
-        hack = []
-        for a in atts:
-            if a in v.atts:
-                val = v.atts[a]
-                if not isinstance(val, list):
-                    val = str(val).replace(sep, ';').replace("'", '"')
-                hack.append(val if val and val != 'False' and
-                            val != 'None' else "")
-            else:
-                hack.append(getattr(v, a, ''))
-        yield (mavs + hack)
-
-#         yield (mavs + [str(v.atts[a]).replace(sep, ';').replace("'", '"')
-#                 if a in v.atts else str(getattr(v, a, '')) for a in atts])
+                row_variant.append('')
+        yield row_variant
 
 
 def join_line(l, sep=','):
@@ -623,5 +626,7 @@ def join_line(l, sep=','):
 
 
 def save_vs(tf, vs, atts=[]):
-    for line in itertools.imap(join_line, generate_response(vs, atts)):
+    response = generate_response(vs, atts)
+    tf.write(response['cols'])
+    for line in itertools.imap(join_line, response['rows']):
         tf.write(line)
