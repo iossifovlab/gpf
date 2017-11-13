@@ -11,38 +11,35 @@
           <label>
             <input #affectedOnlyCheckbox
                 type="checkbox"
-                [checked]="affectedOnly"
-                (change)="presentInChildCheckValue('affected only',affectedOnlyCheckbox.checked)">
+                [checked]="presentInChild.selected.has('affected only')"
+                (change)="presentInChildCheckValue('affected only', affectedOnlyCheckbox.checked)">
             affected only
           </label>
         </div>
         <div class="checkbox">
           <label>
-            <input
-                #unaffectedOnlyCheckbox
+            <input #unaffectedOnlyCheckbox
                 type="checkbox"
-                [checked]="unaffectedOnly"
-                (change)="presentInChildCheckValue('unaffected only',unaffectedOnlyCheckbox.checked)">
+                [checked]="presentInChild.selected.has('unaffected only')"
+                (change)="presentInChildCheckValue('unaffected only', unaffectedOnlyCheckbox.checked)">
             unaffected only
           </label>
         </div>
         <div class="checkbox">
           <label>
-            <input
-                #affectedUnaffectedCheckbox
+            <input #affectedUnaffectedCheckbox
                 type="checkbox"
-                [checked]="affectedUnaffected"
-                (change)="presentInChildCheckValue('affected and unaffected',affectedUnaffectedCheckbox.checked)">
+                [checked]="presentInChild.selected.has('affected and unaffected')"
+                (change)="presentInChildCheckValue('affected and unaffected', affectedUnaffectedCheckbox.checked)">
             affected and unaffected
           </label>
         </div>
         <div class="checkbox">
           <label>
-            <input
-                #neitherCheckbox
+            <input #neitherCheckbox
                 type="checkbox"
-                [checked]="neither"
-                (change)="presentInChildCheckValue('neither',neitherCheckbox.checked)">
+                [checked]="presentInChild.selected.has('neither')"
+                (change)="presentInChildCheckValue('neither', neitherCheckbox.checked)">
             neither
           </label>
         </div>

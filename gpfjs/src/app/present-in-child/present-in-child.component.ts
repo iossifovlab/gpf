@@ -1,99 +1,71 @@
-import {
-  PresentInChildState, PRESENT_IN_CHILD_CHECK_ALL, PRESENT_IN_CHILD_INIT,
-  PRESENT_IN_CHILD_SET,  PRESENT_IN_CHILD_UNCHECK_ALL,
-  PRESENT_IN_CHILD_UNCHECK, PRESENT_IN_CHILD_CHECK
-} from './present-in-child';
+import { PresentInChild, ALL_STATES } from './present-in-child';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { QueryStateProvider } from '../query/query-state-provider'
-import { QueryData } from '../query/query'
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
-import { ValidationError } from "class-validator";
-import { StateRestoreService } from '../store/state-restore.service'
+import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryData } from '../query/query';
+import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { ValidationError } from 'class-validator';
+import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-present-in-child',
   templateUrl: './present-in-child.component.html',
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PresentInChildComponent) }]
+  providers: [{
+    provide: QueryStateProvider, useExisting: forwardRef(() => PresentInChildComponent) }]
 })
 export class PresentInChildComponent extends QueryStateProvider implements OnInit {
-  affectedOnly: boolean = true;
-  unaffectedOnly: boolean = true;
-  affectedUnaffected: boolean = true;
-  neither: boolean = true;
 
-  presentInChildState: Observable<[PresentInChildState, boolean, ValidationError[]]>;
+  presentInChild = new PresentInChild();
 
   errors: string[];
   flashingAlert = false;
 
   constructor(
-    private store: Store<any>,
     private stateRestoreService: StateRestoreService
   ) {
     super();
-    this.presentInChildState = toObservableWithValidation(PresentInChildState, this.store.select('presentInChild'));
   }
 
   ngOnInit() {
-    this.store.dispatch({
-      'type': PRESENT_IN_CHILD_INIT,
-    });
-
     this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
         if (state['presentInChild']) {
-          this.store.dispatch({
-            'type': PRESENT_IN_CHILD_SET,
-            'payload': state['presentInChild']
-          });
+          this.presentInChild.selected = new Set(state['presentInChild']);
         }
       }
     );
 
-    this.presentInChildState.subscribe(
-      ([state, isValid, validationErrors]) => {
-        this.errors = validationErrorsToStringArray(validationErrors);
-
-        this.affectedOnly = state.selected.indexOf('affected only') !== -1;
-        this.unaffectedOnly = state.selected.indexOf('unaffected only') !== -1;
-        this.affectedUnaffected = state.selected.indexOf('affected and unaffected') !== -1;
-        this.neither = state.selected.indexOf('neither') !== -1;
-      }
-    );
   }
 
   selectAll(): void {
-    this.store.dispatch({
-      'type': PRESENT_IN_CHILD_CHECK_ALL,
-    });
+    this.presentInChild.selected = new Set(ALL_STATES);
   }
 
   selectNone(): void {
-    this.store.dispatch({
-      'type': PRESENT_IN_CHILD_UNCHECK_ALL,
-    });
+    this.presentInChild.selected = new Set();
   }
 
   presentInChildCheckValue(key: string, value: boolean): void {
-    this.store.dispatch({
-      'type': value ? PRESENT_IN_CHILD_CHECK : PRESENT_IN_CHILD_UNCHECK,
-      'payload': key
-    });
+    if (value) {
+      this.presentInChild.selected.add(key);
+    } else {
+      this.presentInChild.selected.delete(key);
+    }
   }
 
   getState() {
-    return this.presentInChildState.take(1).map(
-      ([state, isValid, validationErrors]) => {
-        if (!isValid) {
-          this.flashingAlert = true;
-          setTimeout(()=>{ this.flashingAlert = false }, 1000)
-
-           throw "invalid state"
-        }
-        return { presentInChild: state.selected }
-    });
+    return toValidationObservable(this.presentInChild)
+      .map(state => {
+        return {
+          presentInChild: Array.from(state.selected)
+        };
+      })
+      .catch(errors => {
+        this.errors = validationErrorsToStringArray(errors);
+        this.flashingAlert = true;
+        setTimeout(() => { this.flashingAlert = false; }, 1000);
+        return Observable.throw(`${this.constructor.name}: invalid state`);
+      });
   }
 }
