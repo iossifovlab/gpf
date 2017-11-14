@@ -87,43 +87,43 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
 
   ngOnInit() {
 
-    this.geneSetsState.subscribe(
-      ([geneSets, isValid, validationErrors])  => {
-        if (geneSets == null) {
-          return;
-        }
-        this.errors = validationErrorsToStringArray(validationErrors);
+    // FIXME
+    // this.geneSetsState.subscribe(
+    //   ([geneSets, isValid, validationErrors])  => {
+    //     if (geneSets == null) {
+    //       return;
+    //     }
 
-        let refreshData = false;
+    //     let refreshData = false;
 
-        if (this.internalSelectedGeneSetsCollection !== geneSets.geneSetsCollection) {
-          this.internalSelectedGeneSetsCollection = geneSets.geneSetsCollection;
-          this.geneSets = null;
-          this.searchQuery = '';
-          refreshData = true;
-        }
-        this.selectedGeneSet = geneSets.geneSet;
+    //     if (this.internalSelectedGeneSetsCollection !== geneSets.geneSetsCollection) {
+    //       this.internalSelectedGeneSetsCollection = geneSets.geneSetsCollection;
+    //       this.geneSets = null;
+    //       this.searchQuery = '';
+    //       refreshData = true;
+    //     }
+    //     this.selectedGeneSet = geneSets.geneSet;
 
-        if (this.isGeneSetsTypesUpdated(geneSets.geneSetsTypes)) {
-          this.geneSetsTypes = geneSets.geneSetsTypes;
+    //     if (this.isGeneSetsTypesUpdated(geneSets.geneSetsTypes)) {
+    //       this.geneSetsTypes = geneSets.geneSetsTypes;
 
-          if (this.internalSelectedGeneSetsCollection
-            && this.internalSelectedGeneSetsCollection.types.length  > 0
-            && geneSets.geneSetsTypes.size == 0) {
+    //       if (this.internalSelectedGeneSetsCollection
+    //         && this.internalSelectedGeneSetsCollection.types.length  > 0
+    //         && geneSets.geneSetsTypes.size == 0) {
 
-            this.geneSets = null;
-            refreshData = false;
-            this.errors.push("Select at least one gene type");
-          } else {
-            refreshData = true;
-          }
-        }
+    //         this.geneSets = null;
+    //         refreshData = false;
+    //         this.errors.push('Select at least one gene type');
+    //       } else {
+    //         refreshData = true;
+    //       }
+    //     }
 
-        if (refreshData) {
-          this.onSearch(this.searchQuery);
-        }
-      }
-    );
+    //     if (refreshData) {
+    //       this.onSearch(this.searchQuery);
+    //     }
+    //   }
+    // );
 
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
@@ -227,7 +227,8 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   getState() {
     return toValidationObservable(this.geneSetsState).map(geneSetsState => {
         let geneSetsTypes = Array.from(geneSetsState.geneSetsTypes).map(t => t.id);
-        return { geneSet : {
+        return {
+          geneSet : {
             geneSetsCollection: geneSetsState.geneSetsCollection.name,
             geneSet: geneSetsState.geneSet.name,
             geneSetsTypes: geneSetsTypes
