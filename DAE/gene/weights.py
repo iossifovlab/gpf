@@ -25,6 +25,7 @@ class Weights(GeneInfoConfig):
         self.section_name = 'geneWeights.{}'.format(weights_name)
         self.desc = self.config.get(self.section_name, 'desc')
         self.bins = int(self.config.get(self.section_name, 'bins'))
+        self.xscale = self.config.get(self.section_name, 'xscale')
         self.yscale = self.config.get(self.section_name, 'yscale')
 
         self.df = None

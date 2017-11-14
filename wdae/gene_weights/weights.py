@@ -33,10 +33,24 @@ class Weights(Preload):
             bleft = np.around(w.min(), dec)
             bright = np.around(w.max() + step, dec)
 
-            print(weight_name, bright, dec, step)
+            print(weight_name, bleft, bright, dec, step)
+
+            if w.xscale == "log":
+                # Max numbers of items in first bin
+                max_count = w.values().size / w.bins
+
+                # Find a bin small enough to fit max_count items
+                for bleft in range(-1, -200, -1):
+                    if (w.values() < 10 ** bleft).sum() < max_count:
+                        break
+                
+                bins_in = [0] + list(np.logspace(bleft, np.log10(bright),
+                                                 w.bins))
+            else:
+                bins_in = w.bins
 
             bars, bins = np.histogram(
-                w.values(), w.bins,
+                w.values(), bins_in,
                 range=[bleft, bright])
             # bins = np.round(bins, -int(np.log(step)))
 
@@ -45,6 +59,7 @@ class Weights(Preload):
                 "desc": w.desc,
                 "bars": bars,
                 "bins": bins,
+                "xscale": w.xscale,
                 "yscale": w.yscale
             })
         return result
