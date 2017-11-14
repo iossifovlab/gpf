@@ -23,7 +23,8 @@ sfariDB = SfariCollection(config.sfariDBdir)
 genomesDB = GenomesDB(config.daeDir, config.genomesDBconfFile, config.data_dir)
 
 vDB = VariantsDB(config.daeDir, config.variantsDBconfFile,
-                 sfariDB=sfariDB, giDB=giDB, phDB=None, genomesDB=genomesDB)
+                 sfariDB=sfariDB, 
+                 giDB=giDB, phDB=None, genomesDB=genomesDB)
 
 
 # def get_gene_sets_symNS(geneSetsDef, denovoStudies=None):

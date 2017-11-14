@@ -15,7 +15,12 @@ class BackgroundConfig(object):
         self.dae_config = Config()
 
         wd = self.dae_config.daeDir
-        self.config = ConfigParser.SafeConfigParser({'wd': wd})
+        data_dir = self.dae_config.data_dir
+
+        self.config = ConfigParser.SafeConfigParser({
+            'wd': wd,
+            'data': data_dir
+        })
         self.config.read(self.dae_config.enrichmentConfFile)
 
     def __getitem__(self, args):
