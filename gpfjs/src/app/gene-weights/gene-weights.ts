@@ -1,4 +1,5 @@
 export class GeneWeights {
+  readonly logScaleX: boolean;
   readonly logScaleY: boolean;
   static fromJson(json: any): GeneWeights {
     return new GeneWeights(
@@ -6,6 +7,7 @@ export class GeneWeights {
       json['weight'],
       json['bins'],
       json['desc'],
+      json['xscale'],
       json['yscale']
     );
   }
@@ -20,14 +22,11 @@ export class GeneWeights {
     readonly weight: string,
     readonly bins: number[],
     readonly desc: string,
+    xScale: string,
     yScale: string
   ) { 
-    if (yScale == 'log') {
-      this.logScaleY = true;
-    }
-    else {
-      this.logScaleY = false;
-    }
+    this.logScaleX = xScale === 'log';
+    this.logScaleY = yScale === 'log';
 
   }
 

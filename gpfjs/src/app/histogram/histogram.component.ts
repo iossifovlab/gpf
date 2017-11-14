@@ -15,6 +15,9 @@ export class HistogramComponent  {
   private internalRangeStart: number;
   private internalRangeEnd: number;
 
+  private internalRangeStartField: number;
+  private internalRangeEndField: number;
+
   @Output() rangeStartChange = new EventEmitter();
   @Output() rangeEndChange = new EventEmitter();
 
@@ -29,6 +32,7 @@ export class HistogramComponent  {
 
   @Input() rangesCounts: Array<number>;
 
+  @Input() logScaleX = false;
   @Input() logScaleY = false;
   @Input() showCounts = true;
   @Input() xLabels: Array<number>
@@ -84,11 +88,9 @@ export class HistogramComponent  {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
-      if (this.rangeStartWithoutNull === null || this.resetRange) {
-        this.rangeStartWithoutNull = this.bins[0];
-      }
-      if (this.rangeEndWithoutNull === null || this.resetRange) {
-        this.rangeEndWithoutNull = this.bins[this.bins.length - 1];
+      if (this.resetRange) {
+        this.rangeStart = null;
+        this.rangeEnd = null;
       }
       this.resetRange = true;
     }
@@ -130,9 +132,17 @@ export class HistogramComponent  {
     if (this.xLabels === undefined) {
         if (this.bins.length < 10) {
             return this.bins.slice(0, -1);
-        }
-        else {
-            return d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
+        } else {
+            if (!this.logScaleX) {
+                return d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
+            }
+            let domainMin = this.bins[0] === 0.0 ? this.bins[1] : this.bins[0];
+            let domainMax = this.bins[this.bins.length - 1];
+
+            let magnitudeMin = Math.abs(Math.log10(domainMin));
+            let magnitudeMax = Math.abs(Math.log10(domainMax));
+            let count = Math.min(10, Math.floor(Math.abs(magnitudeMax - magnitudeMin)));
+            return d3.scaleLog().domain([domainMin, domainMax]).ticks(count);
         }
     }
     return this.xLabels;
@@ -249,66 +259,62 @@ export class HistogramComponent  {
 
   @Input()
   set rangeStart(rangeStart: any) {
-    if (rangeStart == null && this.rangeStartWithoutNull != null) {
-        this.rangeStartWithoutNull = this.bins[0];
+    this.setRangeStart(rangeStart);
+    this.internalRangeStartField = this.rangeStart.toPrecision(5);
+  }
+
+  setRangeStart(rangeStart: any) {
+    if (rangeStart == null) {
+        this.internalRangeStart = this.bins[0];
     }
     else {
-        this.rangeStartWithoutNull = rangeStart;
+        this.internalRangeStart = rangeStart;
     }
+    this.onRangeChange();
+    this.rangeStartSubject.next(this.rangeStart)
   }
 
   get rangeStart() {
-    return this.rangeStartWithoutNull;
+    return this.internalRangeStart;
   }
- 
+
   @Input()
   set rangeEnd(rangeEnd: any) {
-    if (rangeEnd == null && this.rangeEndWithoutNull != null) {
-        this.rangeEndWithoutNull = this.bins[this.bins.length - 1];
+    this.setRangeEnd(rangeEnd);
+    this.internalRangeEndField = this.rangeEnd.toPrecision(5);
+  }
+
+  setRangeEnd(rangeEnd: any) {
+    if (rangeEnd == null) {
+        this.internalRangeEnd = this.bins[this.bins.length - 1];
     }
     else {
-        this.rangeEndWithoutNull = rangeEnd;
+        this.internalRangeEnd = rangeEnd;
     }
+    this.onRangeChange();
+    this.rangeEndSubject.next(this.rangeEnd)
   }
 
   get rangeEnd() {
-    return this.rangeEndWithoutNull;
+    return this.internalRangeEnd;
   }
 
   set rangeStartWithoutNull(rangeStart: any) {
-    if (rangeStart == null) {
-        this.internalRangeStart = null;
-    }
-    else {
-        this.internalRangeStart = parseFloat(rangeStart);
-        if (isNaN(this.internalRangeStart)) {
-            this.internalRangeStart = null
-        }
-    }
-    this.onRangeChange();
-    this.rangeStartSubject.next(this.internalRangeStart)
+    this.internalRangeStartField = rangeStart;
+    this.setRangeStart(parseFloat(rangeStart));
   }
 
   get rangeStartWithoutNull() {
-    return this.internalRangeStart;
+    return this.internalRangeStartField;
   }
- 
+
   set rangeEndWithoutNull(rangeEnd: any) {
-    if (rangeEnd == null) {
-        this.internalRangeEnd = null;
-    }
-    else {
-        this.internalRangeEnd = parseFloat(rangeEnd);
-        if (isNaN(this.internalRangeEnd)) {
-            this.internalRangeEnd = null
-        }
-    }
-    this.onRangeChange();
-    this.rangeEndSubject.next(this.internalRangeEnd)
+    this.internalRangeEndField = rangeEnd;
+    this.setRangeEnd(parseFloat(rangeEnd));
   }
 
   get rangeEndWithoutNull() {
-    return this.internalRangeEnd;
+    return this.internalRangeEndField;
   }
 
 
@@ -330,9 +336,7 @@ export class HistogramComponent  {
 
   set selectedStartIndex(index: number) {
     if (index < 0 || index > this.selectedEndIndex) return;
-    this.internalRangeStart = this.round(this.bins[index])
-    this.onRangeChange();
-    this.rangeStartSubject.next(this.internalRangeStart)
+    this.rangeStart = this.bins[index]
   }
 
   get selectedStartIndex() {
@@ -343,18 +347,12 @@ export class HistogramComponent  {
 
   set selectedEndIndex(index: number) {
     if (index < this.selectedStartIndex || index >= this.bars.length) return;
-    this.internalRangeEnd = this.round(this.bins[index + 1])
-    this.onRangeChange();
-    this.rangeEndSubject.next(this.internalRangeEnd)
+    this.rangeEnd = this.bins[index + 1]
   }
 
   get selectedEndIndex() {
       if (this.rangeEnd === null) return this.bins.length - 2;
       return this.getClosestIndexByValue(this.rangeEnd) - 1;
-  }
-
-  round(value: number): number{
-      return Math.round(value * 1000) / 1000
   }
 
   getClosestIndexByX(x) {
@@ -374,7 +372,7 @@ export class HistogramComponent  {
 
   getClosestIndexByValue(val) {
       for(var i  = 1; i < this.bins.length - 1; i++) {
-          if (this.round(this.bins[i]) >= val) {
+          if (this.bins[i] >= val) {
               var prev = Math.abs(val - this.bins[i - 1])
               var curr = Math.abs(val - this.bins[i])
               return prev < curr ? i - 1 : i;
