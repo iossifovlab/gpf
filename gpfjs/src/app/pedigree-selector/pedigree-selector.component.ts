@@ -1,5 +1,5 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
-import { Dataset, PedigreeSelector, DatasetsState } from '../datasets/datasets';
+import { Component, Input, OnChanges, SimpleChanges, forwardRef } from '@angular/core';
+import { PedigreeSelector } from '../datasets/datasets';
 import { PedigreeSelectorState } from './pedigree-selector';
 
 import { Observable } from 'rxjs';
@@ -12,12 +12,15 @@ import { StateRestoreService } from '../store/state-restore.service';
   selector: 'gpf-pedigree-selector',
   templateUrl: './pedigree-selector.component.html',
   styleUrls: ['./pedigree-selector.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PedigreeSelectorComponent) }]
+  providers: [{
+    provide: QueryStateProvider,
+    useExisting: forwardRef(() => PedigreeSelectorComponent)
+  }]
 })
-export class PedigreeSelectorComponent extends QueryStateProvider implements OnInit {
-  selectedDataset: Dataset;
+export class PedigreeSelectorComponent extends QueryStateProvider implements OnChanges {
+  @Input()
   pedigrees: PedigreeSelector[];
-  datasetsState: Observable<DatasetsState>; // FIXME: load from datasets service...
+
   pedigreeState = new PedigreeSelectorState();
 
   errors: string[];
@@ -49,37 +52,22 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnI
     );
   }
 
-  ngOnInit() {
-    this.datasetsState.subscribe(
-      (datasetsState) => {
-        let dataset = datasetsState.selectedDataset;
-        if (dataset) {
-          this.selectedDataset = dataset;
-          if (dataset.pedigreeSelectors && dataset.pedigreeSelectors.length > 0) {
-            this.pedigrees = dataset.pedigreeSelectors;
-            this.selectPedigree(0);
-          }
-          this.restoreStateSubscribe();
-        }
-      }
-    );
+  ngOnChanges(changes: SimpleChanges) {
+    if (!changes['pedigrees']) {
+      return;
+    }
+    if (!changes['pedigrees'].previousValue || changes['pedigrees'].previousValue.length === 0) {
+      this.selectPedigree(0);
+      this.restoreStateSubscribe();
+    }
   }
 
 
   pedigreeSelectorSwitch(): string {
-    if (!this.selectedDataset) {
-      return undefined;
+    if (!this.pedigrees || this.pedigrees.length === 0) {
+      return;
     }
-    if (!this.selectedDataset.pedigreeSelectors) {
-      return undefined;
-    }
-    if (this.selectedDataset.pedigreeSelectors.length === 0) {
-      return undefined;
-    }
-    if (!this.pedigreeState.pedigree || !this.pedigreeState.pedigree.domain) {
-      return undefined;
-    }
-    if (this.selectedDataset.pedigreeSelectors.length === 1) {
+    if (this.pedigrees.length === 1) {
       return 'single';
     }
     return 'multi';

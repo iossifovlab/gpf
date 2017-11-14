@@ -16,14 +16,14 @@
 			<gpf-gender></gpf-gender>
 		  </div>
 		  <div>
-			<gpf-varianttypes></gpf-varianttypes>
+			<gpf-varianttypes [hasCNV]="hasCNV | async"></gpf-varianttypes>
 		  </div>
 		</div>
 
         <div *ngIf="hasStudyTypes | async" class="col-lg-2">
             <gpf-study-types></gpf-study-types>
         </div>
-		<gpf-effecttypes class="panel-row col-lg-4"> </gpf-effecttypes>
+		<gpf-effecttypes [hasCNV]="hasCNV | async" class="panel-row col-lg-4"> </gpf-effecttypes>
 	</div>
 
 </div>

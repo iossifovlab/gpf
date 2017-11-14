@@ -1,8 +1,8 @@
-import { DatasetsState } from '../datasets/datasets';
-import { VariantTypes } from './varianttypes';
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Input, Component, OnInit, forwardRef } from '@angular/core';
 
 import { Observable } from 'rxjs';
+
+import { VariantTypes } from './varianttypes';
 import { QueryStateProvider } from '../query/query-state-provider';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -17,7 +17,8 @@ import { DatasetsService } from '../datasets/datasets.service';
 export class VarianttypesComponent extends QueryStateProvider implements OnInit {
 
   variantTypes = new VariantTypes();
-  hasCNV = false; // FIXME: set this from datasets service...
+  @Input()
+  hasCNV = false;
 
   errors: string[];
   flashingAlert = false;

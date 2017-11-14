@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
 
-import { Dataset, DatasetsState } from '../datasets/datasets';
+import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 
 import 'rxjs/add/operator/map';

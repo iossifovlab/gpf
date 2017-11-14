@@ -3,7 +3,6 @@ import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@ang
 import { Observable } from 'rxjs';
 
 import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
-import { DatasetsState } from '../datasets/datasets';
 import { GpfState } from '../store/gpf-store';
 import { QueryStateProvider } from '../query/query-state-provider';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
@@ -18,6 +17,9 @@ import { StateRestoreService } from '../store/state-restore.service';
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => EffecttypesComponent) }]
 })
 export class EffecttypesComponent extends QueryStateProvider implements OnInit {
+  @Input()
+  hasCNV = false;
+
   codingColumn: string[] = CODING;
   nonCodingColumn: string[] = NONCODING;
   cnvColumn: string[] = CNV;
@@ -26,8 +28,6 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   private selectedEffectTypes = new Map<string, boolean>();
 
   effectTypes = new EffectTypes();
-  datasetsState: Observable<DatasetsState>;
-  hasCNV = false;
 
   errors: string[];
   flashingAlert = false;
@@ -36,7 +36,6 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
     private stateRestoreService: StateRestoreService
   ) {
     super();
-    this.hasCNV = true;
     this.initButtonGroups();
   }
 
