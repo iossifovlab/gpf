@@ -10,7 +10,6 @@ import collections
 import os
 
 from datasets.metadataset import MetaDataset
-from bokeh.sampledata.gapminder import data_dir
 
 
 class PedigreeSelector(dict):
