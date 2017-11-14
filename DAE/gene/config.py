@@ -37,7 +37,12 @@ class GeneInfoConfig(object):
         """
         dae_config = Config()
         wd = dae_config.daeDir
-        config = ConfigParser.SafeConfigParser({'wd': wd})
+        data_dir = dae_config.data_dir
+
+        config = ConfigParser.SafeConfigParser({
+            'wd': wd,
+            'data': data_dir,
+        })
         config.read(dae_config.geneInfoDBconfFile)
 
         weights = config.get('geneWeights', 'weights')
