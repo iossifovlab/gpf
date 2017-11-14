@@ -17,13 +17,17 @@ class PhenoConfig(ConfigBox):
         if filename is None:
             dae_config = Config()
             wd = dae_config.daeDir
+            data_dir = dae_config.data_dir
             filename = dae_config.phenoDBconfFile
 
         conf = reusables.config_dict(
             filename,
             auto_find=False,
             verify=True,
-            defaults={'wd': wd})
+            defaults={
+                'wd': wd,
+                'data': data_dir,
+            })
 
         return PhenoConfig(conf)
 

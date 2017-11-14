@@ -713,7 +713,8 @@ class Study:
 
 class VariantsDB:
 
-    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None,
+    def __init__(self, daeDir, data_dir=None, 
+                 confFile=None, sfariDB=None, giDB=None,
                  phDB=None, genomesDB=None):
         self.sfariDB = sfariDB
         self.giDB = giDB
@@ -724,7 +725,10 @@ class VariantsDB:
         if not confFile:
             confFile = daeDir + "/variantDB.conf"
 
-        self._config = ConfigParser.SafeConfigParser({'wd': daeDir})
+        self._config = ConfigParser.SafeConfigParser({
+            'wd': daeDir,
+            'data': data_dir
+        })
         self._config.optionxform = lambda x: x
 
         self._config.read(confFile)

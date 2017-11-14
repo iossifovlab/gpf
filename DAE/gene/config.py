@@ -21,7 +21,9 @@ class GeneInfoConfig(object):
         self.config = ConfigParser.SafeConfigParser({'wd': wd})
         self.config.read(self.dae_config.geneInfoDBconfFile)
         self.gene_info = GeneInfoDB(
-            self.dae_config.geneInfoDBconfFile, self.dae_config.daeDir)
+            self.dae_config.geneInfoDBconfFile, 
+            self.dae_config.daeDir,
+            self.dae_config.data_dir)
 
     @staticmethod
     def list_gene_weights():

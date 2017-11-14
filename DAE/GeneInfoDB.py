@@ -46,8 +46,11 @@ def mergeIntervals(intsP):
     return r
 
 class GeneInfoDB:
-    def __init__(self, confFile, wd):
-        self.config = ConfigParser.SafeConfigParser({'wd':wd});
+    def __init__(self, confFile, wd, data_dir):
+        self.config = ConfigParser.SafeConfigParser({
+            'wd':wd, 
+            'data': data_dir
+        });
         self.config.read(confFile)
 
         self.geneInfoF = self.config.get('GeneInfo', 'geneInfoFile')

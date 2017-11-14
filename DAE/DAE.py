@@ -9,7 +9,7 @@ from Variant import isVariant
 from Variant import normalRefCopyNumber
 from GeneInfoDB import GeneInfoDB
 from GeneTerms import loadGeneTerm 
-import phenoDB
+# import phenoDB
 from Sfari import SfariCollection
 from GenomesDB import GenomesDB
 
@@ -17,10 +17,10 @@ from Config import *
 from pheno.pheno_factory import PhenoFactory
 config = Config()
 
-giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir)
+giDB = GeneInfoDB(config.geneInfoDBconfFile, config.daeDir, config.data_dir)
 sfariDB = SfariCollection(config.sfariDBdir)
 # phDB = phenoDB.rawTableFactory(config.phenoDBFile)
-genomesDB = GenomesDB(config.daeDir, config.genomesDBconfFile)
+genomesDB = GenomesDB(config.daeDir, config.genomesDBconfFile, config.data_dir)
 
 vDB = VariantsDB(config.daeDir, config.variantsDBconfFile,
                  sfariDB=sfariDB, giDB=giDB, phDB=None, genomesDB=genomesDB)
