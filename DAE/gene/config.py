@@ -18,10 +18,15 @@ class GeneInfoConfig(object):
         self.dae_config = Config()
 
         wd = self.dae_config.daeDir
-        self.config = ConfigParser.SafeConfigParser({'wd': wd})
+        data_dir = self.dae_config.data_dir
+
+        self.config = ConfigParser.SafeConfigParser({
+            'wd': wd,
+            'data': data_dir
+        })
         self.config.read(self.dae_config.geneInfoDBconfFile)
         self.gene_info = GeneInfoDB(
-            self.dae_config.geneInfoDBconfFile, 
+            self.dae_config.geneInfoDBconfFile,
             self.dae_config.daeDir,
             self.dae_config.data_dir)
 
