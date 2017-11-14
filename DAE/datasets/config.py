@@ -10,6 +10,7 @@ import collections
 import os
 
 from datasets.metadataset import MetaDataset
+from bokeh.sampledata.gapminder import data_dir
 
 
 class PedigreeSelector(dict):
@@ -80,7 +81,11 @@ class DatasetsConfig(object):
         else:
             dae_config = Config()
             wd = dae_config.daeDir
-            self.config = ConfigParser.SafeConfigParser({'wd': wd})
+            data_dir = dae_config.data_dir
+            self.config = ConfigParser.SafeConfigParser({
+                'wd': wd,
+                'data': data_dir
+            })
             self.config.read(dae_config.variantsDBconfFile)
 
     def get_datasets(self, include_meta=False):
