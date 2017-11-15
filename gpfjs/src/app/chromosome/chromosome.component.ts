@@ -131,14 +131,15 @@ export class ChromosomeComponent implements OnChanges {
     this.startingPoint = this.centromerePosition * this.scale - this.leftWidth + this.variantSignWidth / 2;
 
     this.variants = [];
-    this.genotypePreviews = _.sortBy(this.genotypePreviews, genotypePreview => +genotypePreview.location.split(':')[1]);
+    this.genotypePreviews = _.sortBy(this.genotypePreviews,
+      (genotypePreview: GenotypePreview) => +genotypePreview.get('location').split(':')[1]);
 
     if (this.genotypePreviews) {
       for (let genotypePreview of this.genotypePreviews) {
-        let locationInChromosome: number = +genotypePreview.location.split(':')[1];
+        let locationInChromosome: number = +genotypePreview.get('location').split(':')[1];
         let x: number = locationInChromosome * this.scale + this.startingPoint;
-        let proband: boolean = genotypePreview.inChild.indexOf('prb') != -1;
-        let male: boolean = genotypePreview.inChild[3] == 'M';
+        let proband: boolean = genotypePreview.get('inChS').indexOf('prb') != -1;
+        let male: boolean = genotypePreview.get('inChS')[3] == 'M';
         let stackIndex;
 
         let stackIndexMap: Map<number, boolean> = new Map();
@@ -164,12 +165,12 @@ export class ChromosomeComponent implements OnChanges {
 
         this.variants.push({
           x: x,
-          figure: getFigureByEffect(genotypePreview.worstEffectType),
+          figure: getFigureByEffect(genotypePreview.get('effectType')),
           color: male ? 'blue' : 'red',
           stackIndex: stackIndex,
           proband: proband,
-          genes: genotypePreview.genes,
-          location: genotypePreview.location,
+          genes: genotypePreview.get('genes'),
+          location: genotypePreview.get('location'),
           genomeBrowserUrl: `${GENOME_BROWSER}${this.chromosome.id}:${locationInChromosome}-${locationInChromosome}`
         });
       }

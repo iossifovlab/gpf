@@ -1,88 +1,33 @@
 <div class="genome-preview">
     <div *ngIf="genotypePreviewsArray">
         <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
-            <gpf-table-column>
-                <gpf-table-header caption="dataset">
-                </gpf-table-header>
-                <gpf-table-header>
-                </gpf-table-header>
-                <gpf-table-content field="dataset">
-                </gpf-table-content>
-            </gpf-table-column>
-            <gpf-table-column>
-                <gpf-table-header caption="family">
-                </gpf-table-header>
-                <gpf-table-header>
-                    <gpf-table-subheader caption="familyId" field="familyId">
-                    </gpf-table-subheader>
-                    <gpf-table-subheader caption="stdy" field="study">
-                    </gpf-table-subheader>
-                </gpf-table-header>
-                <gpf-table-content>
-                    <gpf-table-subcontent field="familyId"></gpf-table-subcontent>
-                    <gpf-table-subcontent>
-                        <span *gpfTableCellContent="let data">
-                            <a target="_blank" href="">{{data.study}}</a>
-                        </span>
-                    </gpf-table-subcontent>
-                </gpf-table-content>
-            </gpf-table-column>
-            <gpf-table-column>
-                <gpf-table-header caption="variant">
-                </gpf-table-header>
-                <gpf-table-header>
-                    <gpf-table-subheader caption="loc" field="location" [comparator]=locationComparator>
-                    </gpf-table-subheader>
-                    <gpf-table-subheader caption="var" field="variant"></gpf-table-subheader>
-                </gpf-table-header>
-                <gpf-table-content>
-                    <gpf-table-subcontent>
-                        <span *gpfTableCellContent="let data">
-                            <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{data.location}}">{{data.location}}</a>
-                        </span>
-                    </gpf-table-subcontent>
-                    <gpf-table-subcontent field="variant"></gpf-table-subcontent>
-                </gpf-table-content>
-            </gpf-table-column>
-            <gpf-table-column>
-                <gpf-table-header caption="genotype">
-                </gpf-table-header>
-                <gpf-table-header>
-                    <gpf-table-subheader caption="ch" field="inChild"></gpf-table-subheader>
-                    <gpf-table-subheader caption="par" field="fromParent"></gpf-table-subheader>
-                </gpf-table-header>
-                <gpf-table-content>
-                    <gpf-table-subcontent>
-                        <span *gpfTableCellContent="let data">
-                            <gpf-pedigree-chart [pedigreeData]=data.pedigree></gpf-pedigree-chart>
-                        </span>
-                    </gpf-table-subcontent>
-                </gpf-table-content>
-            </gpf-table-column>
-            <gpf-table-column>
-                <gpf-table-header caption="effect">
-                </gpf-table-header>
-                <gpf-table-header>
-                    <gpf-table-subheader caption="type" field="worstEffectType"></gpf-table-subheader>
-                    <gpf-table-subheader caption="gene" field="genes"></gpf-table-subheader>
-                </gpf-table-header>
-                <gpf-table-content>
-                    <gpf-table-subcontent field="worstEffectType"></gpf-table-subcontent>
-                    <gpf-table-subcontent field="genes"></gpf-table-subcontent>
-                </gpf-table-content>
-            </gpf-table-column>
             <gpf-table-column *ngFor="let column of additionalColumns">
                 <gpf-table-header caption="{{ column.name }}">
                 </gpf-table-header>
                 <gpf-table-header>
                     <gpf-table-subheader *ngFor="let slot of column.slots" caption="{{ slot.name }}"
-                      [comparator]=additionalDataComparator(slot.id)>
+                      [comparator]=comparator(slot.source)>
                     </gpf-table-subheader>
                 </gpf-table-header>
                 <gpf-table-content>
-                    <gpf-table-subcontent *ngFor="let slot of column.slots">
-                      <span *gpfTableCellContent="let data">{{ formattedData(data, slot) }}</span>
+                    <gpf-table-subcontent *ngIf="column.source; else slots">
+                        <gpf-genotype-preview-field
+                            *gpfTableCellContent="let data"
+                            [field]="column.source"
+                            [value]="data.get(column.source)"
+                            [format]="column.format">
+                        </gpf-genotype-preview-field>
                     </gpf-table-subcontent>
+                    <ng-template #slots>
+                        <gpf-table-subcontent *ngFor="let slot of column.slots">
+                            <gpf-genotype-preview-field
+                                *gpfTableCellContent="let data"
+                                [field]="slot.source"
+                                [value]="data.get(slot.id)"
+                                [format]="slot.format">
+                            </gpf-genotype-preview-field>
+                        </gpf-table-subcontent>
+                    </ng-template>
                 </gpf-table-content>
             </gpf-table-column>
 

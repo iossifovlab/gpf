@@ -41,7 +41,7 @@ export class PedigreeSelector extends IdName {
     return new PedigreeSelector(
       json['id'],
       json['name'],
-      json['souce'],
+      json['source'],
       SelectorValue.fromJson(json['defaultValue']),
       SelectorValue.fromJsonArray(json['domain']),
     );
@@ -91,6 +91,7 @@ export class AdditionalColumnSlot {
     return new AdditionalColumnSlot(
       json['id'],
       json['name'],
+      json['source'],
       json['format']
     );
   }
@@ -105,6 +106,7 @@ export class AdditionalColumnSlot {
   constructor(
     readonly id: string,
     readonly name: string,
+    readonly source: string,
     readonly format: string,
   ) {}
 }
@@ -113,6 +115,7 @@ export class AdditionalColumn {
   static fromJson(json: any): AdditionalColumn {
     return new AdditionalColumn(
       json['name'],
+      json['source'],
       AdditionalColumnSlot.fromJsonArray(json['slots']),
     );
   }
@@ -126,6 +129,7 @@ export class AdditionalColumn {
 
   constructor(
     readonly name: string,
+    readonly source: string,
     readonly slots: Array<AdditionalColumnSlot>
   ) {}
 }
