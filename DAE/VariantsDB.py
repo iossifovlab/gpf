@@ -321,6 +321,8 @@ class Study:
 
     def _load_family_data(self):
         fdFile = self.vdb._config.get(self._configSection, "familyInfo.file")
+        print(fdFile)
+
         fdFormat = self.vdb._config.get(
             self._configSection, "familyInfo.fileFormat")
 
