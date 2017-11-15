@@ -1,14 +1,22 @@
 import { Input, Component, OnInit, ViewChild, Output, EventEmitter, SimpleChanges } from '@angular/core';
 import { GeneWeights } from '../gene-weights/gene-weights';
 import * as d3 from 'd3';
+import { Subject } from 'rxjs/Subject';
 
 @Component({
   selector: 'gpf-histogram',
-  templateUrl: './histogram.component.html'
+  templateUrl: './histogram.component.html',
+  styleUrls: ['./histogram.component.css']
 })
 export class HistogramComponent  {
+  private rangeStartSubject = new Subject<number>();
+  private rangeEndSubject = new Subject<number>();
+
   private internalRangeStart: number;
   private internalRangeEnd: number;
+
+  private internalRangeStartField: number;
+  private internalRangeEndField: number;
 
   @Output() rangeStartChange = new EventEmitter();
   @Output() rangeEndChange = new EventEmitter();
@@ -19,31 +27,72 @@ export class HistogramComponent  {
   @Input() marginTop = 10;
   @ViewChild('histogramContainer') histogramContainer: any;
 
-  @Input() domainMin: number;
-  @Input() domainMax: number;
   @Input() bins: Array<number>;
   @Input() bars: Array<number>;
 
   @Input() rangesCounts: Array<number>;
 
+  @Input() logScaleX = false;
+  @Input() logScaleY = false;
+  @Input() showCounts = true;
+  @Input() xLabels: Array<number>
+  @Input() centerLabels: boolean;
+  @Input() showMinMaxInput: boolean;
+
   beforeRangeText: string;
   insideRangeText: string;
   afterRangeText: string;
 
-  private xScale: d3.ScaleLinear<number, number>;
+  xScale: d3.ScaleBand< string>;
   private barsTotalSum: number;
-  private barWidth: number;
 
   private lastValidStart = 0;
   private lastValidEnd = 0;
 
   private svg: any;
 
+  scaledBins: Array<number>;
+  private resetRange = false;
+
+  ngOnInit() {
+      this.rangeStartSubject
+      .debounceTime(100)
+      .distinctUntilChanged()
+      .subscribe((start) => {
+          let step = Math.abs(this.bins[1] - this.bins[0]) / 1e10;
+          if (Math.abs(start - this.bins[0]) < step) {
+            this.rangeStartChange.emit(null)
+          }
+          else {
+            this.rangeStartChange.emit(start)
+          }
+      })
+
+      this.rangeEndSubject
+      .debounceTime(100)
+      .distinctUntilChanged()
+      .subscribe((end) => { 
+          let step = Math.abs(this.bins[this.bins.length - 1] 
+            - this.bins[this.bins.length - 2]) / 1e10;
+          if (Math.abs(end - this.bins[this.bins.length - 1]) < step) {
+            this.rangeEndChange.emit(null)
+          }
+          else {
+            this.rangeEndChange.emit(end)
+          }
+      })
+  }
+
   ngOnChanges(changes: SimpleChanges) {
-    if ("domainMin" in changes || "domainMax" in changes || "bins" in changes || "bars" in changes) {
+    if ("bins" in changes || "bars" in changes) {
       d3.select(this.histogramContainer.nativeElement).selectAll("g").remove();
       d3.select(this.histogramContainer.nativeElement).selectAll("rect").remove();
       this.redrawHistogram();
+      if (this.resetRange) {
+        this.rangeStart = null;
+        this.rangeEnd = null;
+      }
+      this.resetRange = true;
     }
 
     if ("rangesCounts" in changes ) {
@@ -55,6 +104,50 @@ export class HistogramComponent  {
     }
   }
 
+  get showMinMaxInputWithDefaultValue() {
+    if (this.showMinMaxInput === undefined) {
+        if (this.bins.length < 10) {
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+    return this.showMinMaxInput;
+  }
+
+  get centerLabelsWithDefaultValue() {
+    if (this.centerLabels === undefined) {
+        if (this.bins.length < 10) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    return this.centerLabels;
+  }
+
+  get xLabelsWithDefaultValue() {
+    if (this.xLabels === undefined) {
+        if (this.bins.length < 10) {
+            return this.bins.slice(0, -1);
+        } else {
+            if (!this.logScaleX) {
+                return d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
+            }
+            let domainMin = this.bins[0] === 0.0 ? this.bins[1] : this.bins[0];
+            let domainMax = this.bins[this.bins.length - 1];
+
+            let magnitudeMin = Math.abs(Math.log10(domainMin));
+            let magnitudeMax = Math.abs(Math.log10(domainMax));
+            let count = Math.min(10, Math.floor(Math.abs(magnitudeMax - magnitudeMin)));
+            return d3.scaleLog().domain([domainMin, domainMax]).ticks(count);
+        }
+    }
+    return this.xLabels;
+  }
+
   onRangeChange() {
     if (!this.xScale) {
       return;
@@ -62,24 +155,27 @@ export class HistogramComponent  {
 
     this.estimateRangeTexts();
     this.svg.selectAll("rect").style("fill", (d, index, objects) => {
-      return objects[index].x.baseVal.value < this.rangeStartX
-          || objects[index].x.baseVal.value > this.rangeEndX
+      return d.index < this.selectedStartIndex
+          || d.index > this.selectedEndIndex
            ? "lightsteelblue": "steelblue"})
   }
 
   formatEstimateText(count: number, estimate: boolean = true) {
     let perc = count/this.barsTotalSum * 100
-    let string = estimate ? "~" : "";
-    return string + count.toFixed(0) + " (" +  perc.toFixed(2) +"%)";
+
+    if (this.showCounts) {
+        let string = estimate ? "~" : "";
+        return string + count.toFixed(0) + " (" +  perc.toFixed(2) +"%)";
+    }
+    else {
+        return perc.toFixed(2) + "%";
+    }
   }
 
   estimateRangeTexts() {
-    let rangeStartIndex = this.rangeStartX/this.barWidth;
-    let rangeEndIndex = this.rangeEndX/this.barWidth;
-
-    let beforeRangeCount = d3.sum(this.bars.slice(0, rangeStartIndex));
-    let insideRangeCount = d3.sum(this.bars.slice(rangeStartIndex, rangeEndIndex));
-    let afterRangeCount  = d3.sum(this.bars.slice(rangeEndIndex));
+    let beforeRangeCount = d3.sum(this.bars.slice(0, this.selectedStartIndex));
+    let insideRangeCount = d3.sum(this.bars.slice(this.selectedStartIndex, this.selectedEndIndex + 1));
+    let afterRangeCount  = d3.sum(this.bars.slice(this.selectedEndIndex + 1));
 
     this.beforeRangeText = this.formatEstimateText(beforeRangeCount);
     this.insideRangeText = this.formatEstimateText(insideRangeCount);
@@ -92,93 +188,90 @@ export class HistogramComponent  {
     let barsBinsArray = [];
     for (var i = 0; i < this.bars.length; i++) {
       barsBinsArray[i] = {
+        index: i,
         bin: this.bins[i],
         bar: this.bars[i]
       };
     }
 
-    let width = 450;
+    let width = 400.0;
     let height = 50;
-    this.barWidth = width / this.bars.length;
+
     let svg = d3.select(this.histogramContainer.nativeElement)
 
-    this.xScale = d3.scaleLinear()
-      .domain([this.domainMin, this.domainMax])
-      .rangeRound([0, width]);
+    this.xScale = d3.scaleBand()
+      .padding(0.1)
+      .domain(Array.from(this.bars.keys()).map(x => x.toString()))
+      .range([0, width]);
 
-    var y = d3.scaleLinear().range([height, 0]);
+    var y = this.logScaleY ?  d3.scaleLog() : d3.scaleLinear();
+    y.range([height, 0]).domain([1, d3.max(this.bars)]);
 
-    y.domain([0, d3.max(this.bars)]);
-    // Add the x Axis
-    svg.append("g")
-      .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(this.xScale));
+    this.redrawXAxis(svg, width, height);
 
     let leftAxis = d3.axisLeft(y);
-    leftAxis.ticks(5);
+    leftAxis.ticks(3).tickFormat(d3.format(".0f"));
     svg.append("g")
         .call(leftAxis);
-
     svg.selectAll("bar")
       .data(barsBinsArray)
       .enter().append("rect")
       .style("fill", "steelblue")
-      .attr("x", (d: any) => { return this.xScale(d.bin);})
-      .attr("width", this.barWidth)
-      .attr("y", function(d: any) { return y(d.bar); })
-      .attr("height", function(d: any) { return height - y(d.bar); });
+      .attr("x", (d: any) => this.xScale(d.index.toString()))
+      .attr("width", this.xScale.bandwidth())
+      .attr("y", (d: any) => d.bar == 0 ? height : y(d.bar))
+      .attr("height", (d: any) => d.bar == 0 ? 0 : height -  y(d.bar));
     this.svg = svg;
 
     this.onRangeChange();
+    this.scaledBins = barsBinsArray.map(d => d.bin == 0 ? 0 : this.xScale(d.bin));
   }
 
-  get rangeStartX() {
-    let rangeStart = this.rangeStart;
-    if (rangeStart > this.rangeEnd
-        || rangeStart > this.domainMax
-        || rangeStart < this.domainMin ) {
-      rangeStart = this.lastValidStart;
+  redrawXAxis(svg, width, height) {
+    let axisX = [0];
+    let axisVals = [];
+    for(var i  = 0; i < this.bins.length - 1; i++) {
+        var leftX;
+        if (this.centerLabelsWithDefaultValue) {
+            leftX = this.xScale(i.toString()) + this.xScale.bandwidth() / 2;
+        }
+        else {
+            leftX = this.xScale(i.toString()) - this.xScale.step() * this.xScale.paddingOuter() / 2;
+        }
+        axisX.push(leftX);
+        axisVals.push(this.bins[i]);
     }
+
+    if (this.centerLabelsWithDefaultValue) {
+        axisX.push(width);
+        axisVals.push(Number.POSITIVE_INFINITY);
+    } 
     else {
-      this.lastValidStart = rangeStart;
+        axisX.push(width);
+        axisVals.push(this.bins[this.bins.length - 1]);
     }
-    return this.xScale(rangeStart);
-  }
+    var scaleXAxis = d3.scaleThreshold().range(axisX).domain(axisVals);
 
-  set rangeStartX(x: number) {
-    this.rangeStart = this.xScale.invert(x);
-  }
-
-  get rangeEndX() {
-    let rangeEnd = this.rangeEnd;
-    if (rangeEnd > this.domainMax
-        || rangeEnd < this.rangeStart
-        || rangeEnd < this.domainMin ) {
-      rangeEnd = this.lastValidEnd;
-    }
-    else {
-      this.lastValidEnd = rangeEnd;
-    }
-    return this.xScale(rangeEnd);
-  }
-
-  set rangeEndX(x: number) {
-    this.rangeEnd = this.xScale.invert(x);
-  }
-
-  get minX() {
-    return this.xScale(this.domainMin);
-  }
-
-  get maxX() {
-    return this.xScale(this.domainMax);
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(scaleXAxis).tickValues(this.xLabelsWithDefaultValue as any).tickFormat((d,i) => this.xLabelsWithDefaultValue[i] as any))
   }
 
   @Input()
-  set rangeStart(rangeStart) {
-    this.internalRangeStart = rangeStart;
+  set rangeStart(rangeStart: any) {
+    this.setRangeStart(rangeStart);
+    this.internalRangeStartField = this.rangeStart.toPrecision(5);
+  }
+
+  setRangeStart(rangeStart: any) {
+    if (rangeStart == null) {
+        this.internalRangeStart = this.bins[0];
+    }
+    else {
+        this.internalRangeStart = rangeStart;
+    }
     this.onRangeChange();
-    this.rangeStartChange.emit(this.internalRangeStart);
+    this.rangeStartSubject.next(this.rangeStart)
   }
 
   get rangeStart() {
@@ -186,14 +279,125 @@ export class HistogramComponent  {
   }
 
   @Input()
-  set rangeEnd(rangeEnd) {
-    this.internalRangeEnd = rangeEnd;
+  set rangeEnd(rangeEnd: any) {
+    this.setRangeEnd(rangeEnd);
+    this.internalRangeEndField = this.rangeEnd.toPrecision(5);
+  }
+
+  setRangeEnd(rangeEnd: any) {
+    if (rangeEnd == null) {
+        this.internalRangeEnd = this.bins[this.bins.length - 1];
+    }
+    else {
+        this.internalRangeEnd = rangeEnd;
+    }
     this.onRangeChange();
-    this.rangeEndChange.emit(this.internalRangeEnd);
+    this.rangeEndSubject.next(this.rangeEnd)
   }
 
   get rangeEnd() {
     return this.internalRangeEnd;
   }
 
+  set rangeStartWithoutNull(rangeStart: any) {
+    this.internalRangeStartField = rangeStart;
+    this.setRangeStart(parseFloat(rangeStart));
+  }
+
+  get rangeStartWithoutNull() {
+    return this.internalRangeStartField;
+  }
+
+  set rangeEndWithoutNull(rangeEnd: any) {
+    this.internalRangeEndField = rangeEnd;
+    this.setRangeEnd(parseFloat(rangeEnd));
+  }
+
+  get rangeEndWithoutNull() {
+    return this.internalRangeEndField;
+  }
+
+
+  startStepUp(event: any) {
+      this.selectedStartIndex += 1
+  }
+
+  startStepDown(event: any) {
+      this.selectedStartIndex -= 1
+  }
+
+  endStepUp(event: any) {
+      this.selectedEndIndex += 1
+  }
+
+  endStepDown(event: any) {
+      this.selectedEndIndex -= 1
+  }
+
+  set selectedStartIndex(index: number) {
+    if (index < 0 || index > this.selectedEndIndex) return;
+    this.rangeStart = this.bins[index]
+  }
+
+  get selectedStartIndex() {
+      if (this.rangeStart === null) return 0;
+      let maxIndex = this.bins.length - 2;
+      return Math.min(maxIndex, this.getClosestIndexByValue(this.rangeStart));
+  }
+
+  set selectedEndIndex(index: number) {
+    if (index < this.selectedStartIndex || index >= this.bars.length) return;
+    this.rangeEnd = this.bins[index + 1]
+  }
+
+  get selectedEndIndex() {
+      if (this.rangeEnd === null) return this.bins.length - 2;
+      return this.getClosestIndexByValue(this.rangeEnd) - 1;
+  }
+
+  getClosestIndexByX(x) {
+      //Domain uses bins count which is larger than bars by 1 element
+      let maxIndex = this.xScale.domain().length;
+      for(var i  = 1; i < maxIndex; i++) {
+          var prev_val = (i - 1) * this.xScale.step()
+          var curr_val = i * this.xScale.step()
+          if (curr_val> x) {
+              var prev = Math.abs(x - prev_val)
+              var curr = Math.abs(x - curr_val)
+              return prev < curr ? i - 1 : i;
+          }
+      }
+      return maxIndex - 1;
+  }
+
+  getClosestIndexByValue(val) {
+      for(var i  = 1; i < this.bins.length - 1; i++) {
+          if (this.bins[i] >= val) {
+              var prev = Math.abs(val - this.bins[i - 1])
+              var curr = Math.abs(val - this.bins[i])
+              return prev < curr ? i - 1 : i;
+          }
+      }
+      return this.bins.length - 1
+  }
+
+  get startX() {
+    let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    return this.xScale(this.selectedStartIndex.toString()) - distBetweenBars / 2 - 1;
+  }
+
+  set startX(newPositionX) {
+    let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    this.selectedStartIndex = this.getClosestIndexByX(newPositionX + distBetweenBars / 2 + 1)
+  }
+
+  get endX() {
+    let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    return this.xScale(this.selectedEndIndex.toString()) + this.xScale.bandwidth() + distBetweenBars / 2 - 1;
+  }
+
+  set endX(newPositionX) {
+    let distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    this.selectedEndIndex = this.getClosestIndexByX(newPositionX - this.xScale.bandwidth() - distBetweenBars / 2 + 1);
+  }
 }

@@ -50,14 +50,15 @@ let FIELD_TO_OBJECT_PROPERTY: Map<string, string> = new Map([
   ['effect details', 'effectDetails'],
   ['alternative allele frequency', 'alternativeAlleleFrequency'],
   ['number of alternative alleles', 'alternativeAllelesCount'],
-  ['SSCfreq', 'SSCfreqWithoutNan'],
-  ['EVSfreq', 'EVSfreqWithoutNan'],
-  ['E65freq', 'E65freqWithoutNan'],
+  // ['SSCfreq', 'SSCfreqWithoutNan'],
+  // ['EVSfreq', 'EVSfreqWithoutNan'],
+  // ['E65freq', 'E65freqWithoutNan'],
   ['number of genotyped parents', 'genotypedParentsCount'],
   ['children description', 'childrenDescription'],
   ['validation status', 'validationStatus'],
   ['_pedigree_', 'pedigreeDataFromArray'],
-  ['phenoInChS', 'phenoInChS']
+  ['phenoInChS', 'phenoInChS'],
+  ['dataset', 'dataset']
 ]);
 
 export class GenotypePreview {
@@ -102,7 +103,7 @@ export class GenotypePreview {
 
         if (propertyName) {
           result[propertyName] = propertyValue;
-        } else {
+      } else if (propertyValue !== 'nan' && propertyValue !== '') {
           result.additionalData[json.cols[elem]] = propertyValue;
         }
       }

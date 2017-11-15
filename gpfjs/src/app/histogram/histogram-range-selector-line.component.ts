@@ -8,8 +8,6 @@ import * as d3 from 'd3';
   styleUrls: ['./histogram-range-selector-line.component.css']
 })
 export class HistogramRangeSelectorLineComponent {
-  @Input() x = 0;
-  @Output() xChange = new EventEmitter();
   @Input() y = 10;
   @Input() height = 90;
 
@@ -21,6 +19,10 @@ export class HistogramRangeSelectorLineComponent {
 
   @Input() text: string;
   @Input() textOnRight: boolean = true;
+
+  @Input() width: any;
+  @Input() x = 0;
+  @Output() xChange = new EventEmitter();
 
   ngOnInit() {
     d3.select(this.draggable.nativeElement).
@@ -34,7 +36,6 @@ export class HistogramRangeSelectorLineComponent {
   }
 
   onDrag(newPositionX) {
-    this.x = Math.min(Math.max(newPositionX, this.minX), this.maxX);
-    this.xChange.emit(this.x);
+      this.xChange.emit(newPositionX);
   }
 }

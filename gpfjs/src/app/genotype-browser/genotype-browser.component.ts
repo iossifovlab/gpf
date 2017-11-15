@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { QueryStateCollector } from '../query/query-state-provider'
 import { Observable } from 'rxjs';
 import { Store } from '@ngrx/store';
@@ -16,13 +16,15 @@ import 'rxjs/add/operator/zip';
   templateUrl: './genotype-browser.component.html',
   styleUrls: ['./genotype-browser.component.css']
 })
-export class GenotypeBrowserComponent extends QueryStateCollector {
+export class GenotypeBrowserComponent extends QueryStateCollector implements OnChanges {
   genotypePreviewsArray: any;
   tablePreview: boolean;
 
+  @Input()
   private selectedDatasetId: string;
   private genotypeBrowserState: Object;
   selectedDataset: Dataset;
+  isMissenseSelected = false
 
   constructor(
     private store: Store<any>,
@@ -46,6 +48,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
           state => {
             this.genotypePreviewsArray = null
             let stateObject = Object.assign({}, ...state);
+            this.isMissenseSelected = stateObject.effectTypes.includes('Missense')
             this.genotypeBrowserState = Object.assign({},
                                           { datasetId: this.selectedDatasetId },
                                           stateObject);;
@@ -66,16 +69,13 @@ export class GenotypeBrowserComponent extends QueryStateCollector {
     );
   }
 
-  ngOnInit() {
-    this.route.parent.params.subscribe(
-      (params: Params) => {
-        this.selectedDatasetId = params['dataset'];
-        this.datasetsService.getDataset(this.selectedDatasetId).subscribe(
-          (dataset: Dataset) => {
-            this.selectedDataset = dataset;
-        })
-      }
-    );
+  ngOnChanges(changes: SimpleChanges) {
+    this.datasetsService.getDataset(this.selectedDatasetId).subscribe(
+      (dataset: Dataset) => {
+        this.selectedDataset = dataset;
+        // TODO FIXME when we remove the store
+        this.datasetsService.setSelectedDataset(dataset);
+    })
   }
 
   submitQuery() {

@@ -1,8 +1,8 @@
 <span style="font-weight: bold;">
-    <div style="float: left; clear: left; height: 100%;">
-        <div style="height: 100%; display: table; ">
-            <div style="height: 100%; display: table-cell; vertical-align: middle; ">
-                <div [class.clickable]="columnInfo.sortable" style="display: table-cell; vertical-align: middle; text-align: left" (click)="onSortClick(columnInfo)">
+    <div style="width: 100%; ; height: 100%;">
+        <div style="width: 100%; height: 100%; display: table; ">
+            <div style="width: 100%; height: 100%; display: table-cell; vertical-align: middle; ">
+                <div [class.clickable]="columnInfo.sortable" style="width: 100%; display: table-cell; vertical-align: middle; text-align: center" (click)="onSortClick(columnInfo)">
                     <ng-template *ngIf="columnInfo.contentTemplateRef" [ngTemplateOutlet]="columnInfo.contentTemplateRef">
                     </ng-template>
                     <span *ngIf="columnInfo.caption">{{ columnInfo.caption }}</span>

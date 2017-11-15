@@ -27,6 +27,13 @@
         </li>
         <li class="nav-item">
           <a class="nav-link"
+            [routerLink]="['/all-datasets/browser', { dataset: 'META'}]"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="hideSidenav()">All Datasets</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link"
             routerLink="/datasets"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: false }"

@@ -109,6 +109,10 @@ import { VariantReportsComponent } from './variant-reports/variant-reports.compo
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
+import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component'
+import { GenomicScoresService } from './genomic-scores/genomic-scores.service'
+import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component'
+
 import { MarkdownModule } from 'angular2-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { UserInfoPipe } from './users/user-info.pipe';
@@ -130,6 +134,8 @@ import { GenotypePreviewChromosomesComponent } from './genotype-preview-chromoso
 import { ChromosomeService } from './chromosome-service/chromosome.service';
 import { ChromosomeComponent } from './chromosome/chromosome.component';
 import { RedirectOnErrorHttpService } from './config/redirect-on-error.service';
+import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
+import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
 
 const appRoutes: Routes = [
   {
@@ -142,7 +148,7 @@ const appRoutes: Routes = [
     children: [
       {
         path: 'browser',
-        component: GenotypeBrowserComponent
+        component: GenotypeBrowserSingleViewComponent
       },
       {
         path: 'enrichment',
@@ -163,6 +169,15 @@ const appRoutes: Routes = [
       {
         path: '**',
         redirectTo: 'browser'
+      }
+    ]
+  },
+  {
+    path: 'all-datasets',
+    children : [
+      {
+        path: 'browser',
+        component: GenotypeBrowserMetaViewComponent
       }
     ]
   },
@@ -286,6 +301,8 @@ const appRoutes: Routes = [
     CommonReportsComponent,
     VariantReportsComponent,
     DatasetDescriptionComponent,
+    GenomicScoresComponent,
+    GenomicScoresBlockComponent,
     UserInfoPipe,
     UserManagementComponent,
     UsersTableComponent,
@@ -300,6 +317,8 @@ const appRoutes: Routes = [
     DatasetsTableComponent,
     GenotypePreviewChromosomesComponent,
     ChromosomeComponent,
+    GenotypeBrowserSingleViewComponent,
+    GenotypeBrowserMetaViewComponent,
   ],
   imports: [
     BrowserModule,
@@ -337,6 +356,7 @@ const appRoutes: Routes = [
     PValueIntensityPipe,
     StudiesSummariesService,
     VariantReportsService,
+    GenomicScoresService,
     UsersGroupsService,
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,

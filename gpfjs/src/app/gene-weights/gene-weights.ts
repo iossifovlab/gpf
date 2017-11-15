@@ -1,13 +1,14 @@
 export class GeneWeights {
+  readonly logScaleX: boolean;
+  readonly logScaleY: boolean;
   static fromJson(json: any): GeneWeights {
     return new GeneWeights(
       json['bars'],
       json['weight'],
-      +json['min'],
-      +json['max'],
-      +json['step'],
       json['bins'],
-      json['desc']
+      json['desc'],
+      json['xscale'],
+      json['yscale']
     );
   }
 
@@ -15,15 +16,19 @@ export class GeneWeights {
     return jsonArray.map((json) => GeneWeights.fromJson(json));
   }
 
+
   constructor(
     readonly bars: number[],
     readonly weight: string,
-    readonly min: number,
-    readonly max: number,
-    readonly step: number,
     readonly bins: number[],
     readonly desc: string,
-  ) { }
+    xScale: string,
+    yScale: string
+  ) { 
+    this.logScaleX = xScale === 'log';
+    this.logScaleY = yScale === 'log';
+
+  }
 
 }
 

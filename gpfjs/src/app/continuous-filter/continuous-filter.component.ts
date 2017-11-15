@@ -66,8 +66,6 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName).subscribe(
         (histogramData) => {
           this.histogramData = histogramData;
-          this.rangeStart = histogramData.min;
-          this.rangeEnd = histogramData.max;
 
           this.stateRestoreService.getState(this.constructor.name + this.filterId).subscribe(
             (state) => {

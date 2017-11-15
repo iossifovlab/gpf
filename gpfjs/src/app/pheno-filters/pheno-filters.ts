@@ -36,14 +36,14 @@ export class CategoricalFilterState extends PhenoFilterState {
 };
 
 export class ContinuousFilterState extends PhenoFilterState {
+  @ValidateIf(o => o.mmin !== null)
   @IsNumber()
-  @Min(0)
   @IsLessThanOrEqual('mmax')
   @IsMoreThanOrEqual('domainMin')
   mmin: number;
 
+  @ValidateIf(o => o.mmax !== null)
   @IsNumber()
-  @Min(0)
   @IsMoreThanOrEqual('mmin')
   @IsLessThanOrEqual('domainMax')
   mmax: number;

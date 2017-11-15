@@ -13,6 +13,9 @@ export function IsMoreThanOrEqual(property: string, validationOptions?: Validati
                     const [relatedPropertyName] = args.constraints;
                     try {
                       var relatedValue = relatedPropertyName.split('.').reduce((a, b) => a[b], (args.object as any));
+                      if (relatedValue === null) {
+                        return true;
+                      }
                       return typeof value === "number" &&
                              typeof relatedValue === "number" &&
                              value >= relatedValue;
