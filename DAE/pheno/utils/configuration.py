@@ -28,6 +28,7 @@ class PhenoConfig(ConfigBox):
                 'wd': wd,
                 'data': data_dir,
             })
+        print(conf)
 
         return PhenoConfig(conf)
 
