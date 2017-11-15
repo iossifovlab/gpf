@@ -446,11 +446,17 @@ def main():
     parser.add_argument("file", type=str)
     parser.add_argument("--output", dest="output", default="output.ped",
                         type=str)
+    parser.add_argument("--pheno", dest="pheno", type=str)
     args = parser.parse_args()
 
-    # reader = SPARKCsvPedigreeReader()
-    # reader = VIPCsvPedigreeReader()
-    reader = AGRERawCsvPedigreeReader()
+    reader = None
+    if args.pheno == 'spark':
+        reader = SPARKCsvPedigreeReader()
+    elif args.pheno == 'vip':
+        reader = VIPCsvPedigreeReader()
+    elif args.pheno == 'agre':
+        reader = AGRERawCsvPedigreeReader()
+    assert reader is not None
 
     families = reader.read_filename(args.file, delimiter="\t")
 

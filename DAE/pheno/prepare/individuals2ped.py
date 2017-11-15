@@ -506,9 +506,15 @@ def main():
     parser.add_argument("file", type=str)
     parser.add_argument(
         "--output", dest="output", default="output.ped", type=str)
+    parser.add_argument("--pheno", dest="pheno", type=str)
     args = parser.parse_args()
 
-    reader = SPARKCsvIndividualsReader()
+    reader = None
+    if args.pheno == 'spark':
+        reader = SPARKCsvIndividualsReader()
+
+    assert reader is not None
+
     families = reader.read_filename(args.file)
 
     pedigrees = {}
