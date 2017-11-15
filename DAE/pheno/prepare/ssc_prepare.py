@@ -85,7 +85,9 @@ def load_and_join():
 
 
 def load_instrument(instrument_name):
-    data_dev_dir = os.environ['DAE_DB_DIR']
+    data_db_dir = os.environ['DAE_DB_DIR']
+    data_dev_dir = os.environ.get('DAE_DATA_DIR', data_db_dir)
+
     pheno_ssc_15_dir = os.path.join(data_dev_dir, 'pheno/15/instruments')
     ssc_measures_dirs = [
         'Designated Unaffected Sibling Data',
