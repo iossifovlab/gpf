@@ -11,7 +11,9 @@ from pheno.common import Role, Gender, Status
 
 
 def load_and_join():
-    data_dev_dir = os.environ['DAE_DB_DIR']
+    data_db_dir = os.environ['DAE_DB_DIR']
+    data_dev_dir = os.environ.get('DAE_DATA_DIR', data_db_dir)
+
     individuals_v15_filename = os.path.join(
         data_dev_dir,
         'pheno/15',
