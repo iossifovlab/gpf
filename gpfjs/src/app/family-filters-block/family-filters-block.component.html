@@ -14,7 +14,7 @@
       <ngb-tab *ngIf="datasetConfig.genotypeBrowser.phenoFilters"
                id="pheno-filters" title="Advanced">
           <ng-template ngbTabContent>
-              <gpf-pheno-filters [datasetConfig]="datasetConfig">
+              <gpf-pheno-filters [dataset]="dataset">
               </gpf-pheno-filters>
           </ng-template>
       </ngb-tab>

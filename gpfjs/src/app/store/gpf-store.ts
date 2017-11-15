@@ -1,5 +1,5 @@
 import { GeneWeightsState, geneWeightsReducer } from '../gene-weights/gene-weights-store';
-import { PhenoFiltersState, phenoFiltersReducer } from '../pheno-filters/pheno-filters';
+import { PhenoFiltersState } from '../pheno-filters/pheno-filters';
 
 export interface GpfState {
   geneWeights: GeneWeightsState;
@@ -8,5 +8,4 @@ export interface GpfState {
 
 const reducers = {
   geneWeights: geneWeightsReducer,
-  phenoFilters: phenoFiltersReducer,
 };

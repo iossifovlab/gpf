@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, forwardRef, ViewChild, Output, EventEmitter } from '@angular/core';
-import { MeasuresService } from '../measures/measures.service'
-import { ContinuousMeasure } from '../measures/measures'
+import { MeasuresService } from '../measures/measures.service';
+import { ContinuousMeasure } from '../measures/measures';
+import { DatasetsService } from '../datasets/datasets.service';
 
 @Component({
   selector: 'gpf-pheno-measure-selector',
@@ -8,9 +9,8 @@ import { ContinuousMeasure } from '../measures/measures'
   styleUrls: ['./pheno-measure-selector.component.css']
 })
 export class PhenoMeasureSelectorComponent implements OnInit {
-  @Input() datasetId: string;
-  @ViewChild("inputGroup") inputGroupSpan: any;
-  @ViewChild("searchBox") searchBox: any;
+  @ViewChild('inputGroup') inputGroupSpan: any;
+  @ViewChild('searchBox') searchBox: any;
 
   measures: Array<ContinuousMeasure>;
   filteredMeasures: Array<ContinuousMeasure>;
@@ -21,18 +21,22 @@ export class PhenoMeasureSelectorComponent implements OnInit {
   @Output() measuresChange = new EventEmitter();
 
   constructor(
-    private measuresService: MeasuresService
+    private measuresService: MeasuresService,
+    private datasetsService: DatasetsService
   ) { }
 
   ngOnInit() {
-
-    this.measuresService.getContinuousMeasures(this.datasetId).subscribe(
-      (measures) => {
-        this.measures = measures;
-        this.searchBoxChange('');
-        this.measuresChange.emit(this.measures);
+    this.datasetsService.getSelectedDataset().subscribe(dataset => {
+      if (!dataset) {
+        return;
       }
-    )
+      this.measuresService.getContinuousMeasures(dataset.id)
+        .subscribe(measures => {
+          this.measures = measures;
+          this.searchBoxChange('');
+          this.measuresChange.emit(this.measures);
+        });
+    });
   }
 
   @Input()
@@ -53,7 +57,7 @@ export class PhenoMeasureSelectorComponent implements OnInit {
 
   onFocus(event) {
     event.stopPropagation();
-    this.inputGroupSpan.nativeElement.classList.add("show");
+    this.inputGroupSpan.nativeElement.classList.add('show');
     this.selectedMeasure = null;
   }
 
@@ -62,9 +66,8 @@ export class PhenoMeasureSelectorComponent implements OnInit {
 
     this.filteredMeasures = this.measures.filter(
       (value) => {
-        return ~value.name.indexOf(searchFieldValue);
-      }
-    )
+        return value.name.indexOf(searchFieldValue) !== -1;
+      });
   }
 
 }

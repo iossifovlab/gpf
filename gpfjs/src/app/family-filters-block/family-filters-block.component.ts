@@ -17,7 +17,7 @@ import { NgbTabChangeEvent } from '@ng-bootstrap/ng-bootstrap';
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => FamilyFiltersBlockComponent) }]
 })
 export class FamilyFiltersBlockComponent extends QueryStateCollector implements AfterViewInit, OnDestroy {
-  @Input() datasetConfig: Dataset;
+  @Input() dataset: Dataset;
   @Input() genotypeBrowserState: Object;
   @ViewChild('tabset') ngbTabset;
 
