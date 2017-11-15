@@ -447,6 +447,8 @@ def main():
     parser.add_argument("--output", dest="output", default="output.ped",
                         type=str)
     parser.add_argument("--pheno", dest="pheno", type=str)
+    parser.add_argument("--delimiter", dest="delimiter", default="\t",
+                        type=str)
     args = parser.parse_args()
 
     reader = None
@@ -458,7 +460,8 @@ def main():
         reader = AGRERawCsvPedigreeReader()
     assert reader is not None
 
-    families = reader.read_filename(args.file, delimiter="\t")
+    delimiter = args.delimiter
+    families = reader.read_filename(args.file, delimiter=delimiter)
 
     pedigrees = {}
 
