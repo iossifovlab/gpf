@@ -715,9 +715,10 @@ class Study:
 
 class VariantsDB:
 
-    def __init__(self, daeDir, data_dir=None, 
+    def __init__(self, daeDir,
                  confFile=None, sfariDB=None, giDB=None,
-                 phDB=None, genomesDB=None):
+                 phDB=None, genomesDB=None,
+                 data_dir=None):
         self.sfariDB = sfariDB
         self.giDB = giDB
 

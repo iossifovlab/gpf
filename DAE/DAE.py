@@ -22,7 +22,9 @@ sfariDB = SfariCollection(config.sfariDBdir)
 # phDB = phenoDB.rawTableFactory(config.phenoDBFile)
 genomesDB = GenomesDB(config.daeDir, config.genomesDBconfFile, config.data_dir)
 
-vDB = VariantsDB(config.daeDir, config.variantsDBconfFile,
+vDB = VariantsDB(config.daeDir, 
+                 data_dir=config.data_dir, 
+                 confFile=config.variantsDBconfFile,
                  sfariDB=sfariDB, 
                  giDB=giDB, phDB=None, genomesDB=genomesDB)
 
