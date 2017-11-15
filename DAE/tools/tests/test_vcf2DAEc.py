@@ -1,4 +1,4 @@
-from tools.vcf2DAEc import getGT
+from tools.vcf2DAEc import getGT, getVrtFam
 from itertools import izip_longest
 
 
@@ -66,3 +66,13 @@ def test_getGT_one_per_each_alt():
     assert(all(a == b for a, b in izip_longest(gt, [0, 1, 1])))
     assert(all(a == b for a, b in izip_longest(cx, [-1, -1, -1])))
 
+
+def test_getVrtFam():
+    data = DataMock([2, 1], ['A', 'T'])
+    fx, gt, cx = getVrtFam(['1'], data)
+    print(fx, gt, cx)
+    assert(fx)
+    assert(len(gt) == 1)
+    assert(len(cx) == 1)
+    assert(all(a == b for a, b in izip_longest(gt[0], [0, 1, 1])))
+    assert(all(a == b for a, b in izip_longest(cx[0], [-1, -1, -1])))
