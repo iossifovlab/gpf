@@ -149,6 +149,7 @@ class IndividualUnit(object):
     def get_gender(self):
         if not self.individual:
             return 'UNKNOWN'
+
         return self.individual.gender.value
 
     def get_status(self):

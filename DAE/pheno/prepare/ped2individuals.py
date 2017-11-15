@@ -192,7 +192,7 @@ class VIPCsvPedigreeReader(CsvPedigreeReader):
             else Status.affected
 
     def convert_gender(self, gender):
-        return self.GENDER_TO_ENUM[gender].value
+        return self.GENDER_TO_ENUM[gender]
 
     def convert_individual_id(self, _family_id, individual_id):
         return individual_id
