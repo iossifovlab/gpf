@@ -15,7 +15,6 @@ import {
 // import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
 import { Observable } from 'rxjs';
 import { gpfReducer } from '../store/gpf-store';
-import { StoreModule } from '@ngrx/store';
 
 
 /*
@@ -143,7 +142,7 @@ describe('DatasetService', () => {
       ],
       imports: [
         HttpModule,
-        StoreModule.provideStore(gpfReducer),
+
       ],
 
     });

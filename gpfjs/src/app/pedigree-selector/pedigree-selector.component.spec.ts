@@ -6,7 +6,6 @@ import { DebugElement } from '@angular/core';
 import { PedigreeSelectorComponent } from './pedigree-selector.component';
 
 import { gpfReducer } from '../store/gpf-store';
-import { StoreModule } from '@ngrx/store';
 
 describe('PedigreeselectorComponent', () => {
   let component: PedigreeSelectorComponent;
@@ -16,7 +15,7 @@ describe('PedigreeselectorComponent', () => {
     TestBed.configureTestingModule({
       declarations: [PedigreeSelectorComponent],
       imports: [
-        StoreModule.provideStore(gpfReducer),
+
       ],
       providers: [
       ]

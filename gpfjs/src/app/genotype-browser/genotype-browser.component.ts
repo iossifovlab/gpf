@@ -1,12 +1,11 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { QueryStateCollector } from '../query/query-state-provider'
+import { Component, Input, OnChanges, AfterViewInit, SimpleChanges } from '@angular/core';
+import { QueryStateCollector } from '../query/query-state-provider';
 import { Observable } from 'rxjs';
-import { Store } from '@ngrx/store';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { StateRestoreService } from '../store/state-restore.service'
+import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import 'rxjs/add/operator/zip';
@@ -16,7 +15,8 @@ import 'rxjs/add/operator/zip';
   templateUrl: './genotype-browser.component.html',
   styleUrls: ['./genotype-browser.component.css']
 })
-export class GenotypeBrowserComponent extends QueryStateCollector implements OnChanges {
+export class GenotypeBrowserComponent extends QueryStateCollector
+    implements OnChanges, AfterViewInit {
   genotypePreviewsArray: any;
   tablePreview: boolean;
 
@@ -24,10 +24,9 @@ export class GenotypeBrowserComponent extends QueryStateCollector implements OnC
   private selectedDatasetId: string;
   private genotypeBrowserState: Object;
   selectedDataset: Dataset;
-  isMissenseSelected = false
+  isMissenseSelected = false;
 
   constructor(
-    private store: Store<any>,
     private queryService: QueryService,
     readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
@@ -40,31 +39,35 @@ export class GenotypeBrowserComponent extends QueryStateCollector implements OnC
   }
 
   ngAfterViewInit() {
-    this.store.subscribe(
-      (param) => {
-        let state = this.collectState();
-        Observable.zip(...state)
+    // FIXME: figure out when to collect the state
+    // this.store.subscribe(
+      // (param) => {
+        let stateArray = this.collectState();
+        Observable.zip(...stateArray)
         .subscribe(
           state => {
-            this.genotypePreviewsArray = null
+            this.genotypePreviewsArray = null;
             let stateObject = Object.assign({}, ...state);
-            this.isMissenseSelected = stateObject.effectTypes.includes('Missense')
+            this.isMissenseSelected = stateObject.effectTypes.includes('Missense');
             this.genotypeBrowserState = Object.assign({},
                                           { datasetId: this.selectedDatasetId },
-                                          stateObject);;
-            this.router.navigate(['.', { state: JSON.stringify(stateObject)}], { relativeTo: this.route });
+                                          stateObject);
+            this.router.navigate(
+              [ '.', { state: JSON.stringify(stateObject) }],
+              { relativeTo: this.route }
+            );
           },
           error => {
-            this.genotypePreviewsArray = null
+            this.genotypePreviewsArray = null;
             console.warn(error);
           }
-        )
-      }
-    )
+        );
+    //   }
+    // )
 
     this.route.params.take(1).subscribe(
       (params: Params) => {
-        this.stateRestoreService.onParamsUpdate(params['state'])
+        this.stateRestoreService.onParamsUpdate(params['state']);
       }
     );
   }
@@ -75,13 +78,13 @@ export class GenotypeBrowserComponent extends QueryStateCollector implements OnC
         this.selectedDataset = dataset;
         // TODO FIXME when we remove the store
         this.datasetsService.setSelectedDataset(dataset);
-    })
+    });
   }
 
   submitQuery() {
     this.loadingService.setLoadingStart();
-    let state = this.collectState();
-    Observable.zip(...state)
+    let stateArray = this.collectState();
+    Observable.zip(...stateArray)
     .subscribe(
       state => {
         let queryData = Object.assign({},
@@ -106,8 +109,8 @@ export class GenotypeBrowserComponent extends QueryStateCollector implements OnC
   }
 
   onSubmit(event) {
-    let state = this.collectState();
-    Observable.zip(...state)
+    let stateArray = this.collectState();
+    Observable.zip(...stateArray)
     .subscribe(
       state => {
         let queryData = Object.assign({},
@@ -117,6 +120,6 @@ export class GenotypeBrowserComponent extends QueryStateCollector implements OnC
         event.target.submit();
       },
       error => null
-    )
+    );
   }
 }

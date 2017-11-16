@@ -6,7 +6,6 @@ import { DebugElement } from '@angular/core';
 import { VarianttypesComponent } from './varianttypes.component';
 
 import { gpfReducer } from '../store/gpf-store';
-import { StoreModule } from '@ngrx/store';
 
 describe('VarianttypesComponent', () => {
   let component: VarianttypesComponent;
@@ -16,7 +15,7 @@ describe('VarianttypesComponent', () => {
     TestBed.configureTestingModule({
       declarations: [VarianttypesComponent],
       imports: [
-        StoreModule.provideStore(gpfReducer),
+
       ],
       providers: [
       ]

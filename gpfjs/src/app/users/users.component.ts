@@ -1,7 +1,5 @@
 import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { UsersService } from './users.service';
-import { Store } from '@ngrx/store';
-import { USER_LOGIN, USER_LOGOUT } from './users-store';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
 import { RegistrationComponent } from '../registration/registration.component';
@@ -25,7 +23,6 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private modalService: NgbModal,
-    private store: Store<any>,
     private usersService: UsersService
   ) { }
 
@@ -35,12 +32,7 @@ export class UsersComponent implements OnInit {
   }
 
   reloadUserData() {
-    this.usersService.getUserInfo().subscribe(
-      (userData) => {
-        this.store.dispatch({
-          'type': userData.loggedIn ? USER_LOGIN : USER_LOGOUT,
-        });
-    });
+    this.usersService.getUserInfo();
   }
 
   login() {
@@ -51,8 +43,7 @@ export class UsersComponent implements OnInit {
           this.username = null;
           this.password = null;
           this.loginError = false;
-        }
-        else {
+        } else {
           this.loginError = true;
         }
 

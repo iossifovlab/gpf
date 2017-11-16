@@ -1,9 +1,9 @@
 import { AfterContentInit, ContentChildren, QueryList, ViewChildren, forwardRef } from '@angular/core';
 
-import { GeneSetsComponent } from '../gene-sets/gene-sets.component'
-import { GenesBlockComponent } from '../genes-block/genes-block.component'
-import { UsersComponent } from '../users/users.component'
-import { GenderComponent } from '../gender/gender.component'
+import { GeneSetsComponent } from '../gene-sets/gene-sets.component';
+import { GenesBlockComponent } from '../genes-block/genes-block.component';
+import { UsersComponent } from '../users/users.component';
+import { GenderComponent } from '../gender/gender.component';
 
 
 export class QueryStateProvider {

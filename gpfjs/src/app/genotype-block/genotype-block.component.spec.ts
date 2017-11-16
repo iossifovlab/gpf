@@ -12,7 +12,6 @@ import { EffecttypesComponent, EffecttypesColumnComponent } from '../effecttypes
 import { PedigreeSelectorComponent } from '../pedigree-selector/pedigree-selector.component';
 
 import { gpfReducer } from '../store/gpf-store';
-import { StoreModule } from '@ngrx/store';
 
 
 describe('GenotypeBlockComponent', () => {
@@ -32,7 +31,7 @@ describe('GenotypeBlockComponent', () => {
       ],
       imports: [
         NgbModule.forRoot(),
-        StoreModule.provideStore(gpfReducer),
+
 
       ],
       providers: [

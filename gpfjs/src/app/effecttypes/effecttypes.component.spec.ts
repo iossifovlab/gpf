@@ -6,7 +6,6 @@ import { DebugElement } from '@angular/core';
 import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes.component';
 
 import { gpfReducer } from '../store/gpf-store';
-import { StoreModule } from '@ngrx/store';
 
 /*
 describe('EffecttypesComponent', () => {
@@ -21,7 +20,7 @@ describe('EffecttypesComponent', () => {
         EffecttypesColumnComponent,
       ],
       imports: [
-        StoreModule.provideStore(gpfReducer),
+
       ],
       providers: [
       ]
@@ -39,5 +38,5 @@ describe('EffecttypesComponent', () => {
     expect(component).toBeTruthy();
   });
 });
- 
+
  */

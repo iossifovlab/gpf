@@ -37,7 +37,7 @@ describe('AppComponent', () => {
       ],
       imports: [
         NgbModule.forRoot(),
-        StoreModule.provideStore(gpfReducer),
+
       ],
       providers: [
         {
