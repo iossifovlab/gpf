@@ -1,34 +1,32 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, OnInit, Input, forwardRef } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { QueryStateProvider } from '../query/query-state-provider';
 import { environment } from '../../environments/environment';
 
-import { Observable }        from 'rxjs/Observable';
-import { ValidationError } from 'class-validator';
-import { GenomicScoreState, GenomicScoresState, GENOMIC_SCORES_INIT, GENOMIC_SCORES_CHANGE,
-         GENOMIC_SCORES_RANGE_START_CHANGE, GENOMIC_SCORES_RANGE_END_CHANGE,
-         GENOMIC_SCORE_ADD, GENOMIC_SCORE_REMOVE
- } from '../genomic-scores/genomic-scores-store';
- import { Store } from '@ngrx/store';
- import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
- import { StateRestoreService } from '../store/state-restore.service';
- import { transformAndValidateSync } from 'class-transformer-validator';
+import { Observable } from 'rxjs/Observable';
+
+import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
+import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { StateRestoreService } from '../store/state-restore.service';
+import { transformAndValidate } from 'class-transformer-validator';
 
 
 @Component({
-  selector: 'gpf-genomic-scores-block',
-  templateUrl: './genomic-scores-block.component.html',
-  styleUrls: ['./genomic-scores-block.component.css'],
-  providers: [{provide: QueryStateProvider,
-               useExisting: forwardRef(() => GenomicScoresBlockComponent) }]
+    selector: 'gpf-genomic-scores-block',
+    templateUrl: './genomic-scores-block.component.html',
+    styleUrls: ['./genomic-scores-block.component.css'],
+    providers: [{
+        provide: QueryStateProvider,
+        useExisting: forwardRef(() => GenomicScoresBlockComponent)
+    }]
 })
-export class GenomicScoresBlockComponent extends QueryStateProvider {
-    @Input() datasetConfig: Dataset;
-    private filterId = 0;
+export class GenomicScoresBlockComponent extends QueryStateProvider implements OnInit {
+    @Input() dataset: Dataset;
+    private genomicScoresState = new GenomicScoresState();
     scores = [];
 
     get imgPathPrefix() {
-      return environment.imgPathPrefix;
+        return environment.imgPathPrefix;
     }
 
     trackById(index: number, data: any) {
@@ -36,51 +34,27 @@ export class GenomicScoresBlockComponent extends QueryStateProvider {
     }
 
     addFilter() {
-        this.store.dispatch({
-          'type': GENOMIC_SCORE_ADD,
-          'payload': this.filterId
-        });
-        this.filterId++;
+        this.genomicScoresState.genomicScoresState.push(new GenomicScoreState());
     }
 
-    removeFilter(index) {
-        this.store.dispatch({
-          'type': GENOMIC_SCORE_REMOVE,
-          'payload': index
-        });
+    removeFilter(genomicScore: GenomicScoreState) {
+        this.genomicScoresState.genomicScoresState = this.genomicScoresState
+            .genomicScoresState.filter(gs => gs.id !== genomicScore.id);
     }
 
-    private genomicScoresState: Observable<[GenomicScoresState, boolean,
-                                             ValidationError[]]>;
     constructor(
-        private store: Store<any>,
         private stateRestoreService: StateRestoreService
-    )  {
-      super();
-      this.genomicScoresState = toObservableWithValidation(
-        GenomicScoresState, this.store.select('genomicScores')
-      );
-      this.genomicScoresState.subscribe(
-        ([genomicScoresState, isValid, validationErrors]) => {
-          this.scores = genomicScoresState.genomicScoresState;
-        }
-      );
+    ) {
+        super();
     }
 
     ngOnInit() {
-        this.store.dispatch({
-            'type': GENOMIC_SCORES_INIT,
-        });
-
-        this.stateRestoreService.getState(this.constructor.name).subscribe(
-            (state) => {
-                console.log(state['genomicScores'])
+        this.stateRestoreService.getState(this.constructor.name)
+            .subscribe(state => {
                 if (state['genomicScores']) {
                     for (let score of state['genomicScores']) {
                         if (score['metric']) {
-                            this.store.dispatch({
-                                'type': GENOMIC_SCORE_ADD,
-                            });
+                            this.addFilter();
                         }
                     }
                 }
@@ -89,27 +63,28 @@ export class GenomicScoresBlockComponent extends QueryStateProvider {
     }
 
     getState() {
-        return this.genomicScoresState.take(1).map(
-            ([genomicScoresState, isValid, validationErrors]) => {
-                if (!isValid) {
-                    throw "invalid geneWeights state"
-                }
-
+        return toValidationObservable(this.genomicScoresState)
+            .map(genomicScoresState => {
                 return {
-                    genomicScores: genomicScoresState.genomicScoresState.map(el => {
-                        transformAndValidateSync(GenomicScoreState, el);
+                    genomicScores: genomicScoresState.genomicScoresState
+                        .map(el => {
+                            transformAndValidate(GenomicScoreState, el);
 
-                        if (el.histogramData === null) {
-                            return {}
-                        }
-                        return {
-                            metric: el.histogramData.metric,
-                            rangeStart: el.rangeStart,
-                            rangeEnd: el.rangeEnd
-                        }
-                    })
-                }
-            }
-        )
+                            if (el.histogramData === null) {
+                                return {};
+                            }
+                            return {
+                                metric: el.histogramData.metric,
+                                rangeStart: el.rangeStart,
+                                rangeEnd: el.rangeEnd
+                            };
+                        })
+                };
+            })
+            .catch(errors => {
+                return Observable.throw(
+                    `${this.constructor.name}: invalid state`
+                );
+            });
     }
 }

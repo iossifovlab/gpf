@@ -2,7 +2,6 @@ import { GeneWeightsState, geneWeightsReducer } from '../gene-weights/gene-weigh
 
 export interface GpfState {
   geneWeights: GeneWeightsState;
-  genomicScores: GenomicScoresState;
 };
 
 const reducers = {

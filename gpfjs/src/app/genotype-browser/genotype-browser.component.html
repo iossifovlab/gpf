@@ -4,7 +4,7 @@
   <gpf-genotype-block></gpf-genotype-block>
   <gpf-genomic-scores-block
     *ngIf="selectedDataset"
-    [datasetConfig]="selectedDataset">
+    [dataset]="selectedDataset">
   </gpf-genomic-scores-block>
   <gpf-family-filters-block
     *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
