@@ -11,9 +11,6 @@ class MetaDataset(Dataset):
         super(MetaDataset, self).__init__(meta_dataset_descriptor)
         self.datasets = datasets
 
-    def get_columns(self):
-        return ['dataset'] + super(MetaDataset, self).get_columns()
-
     @staticmethod
     def __distinct(variants, max_count=None):
         count = 0;

@@ -267,21 +267,24 @@ class DatasetsConfig(object):
         prefix = 'genotypeBrowser.genotype.{}'.format(col_id)
         name = self._get_string(
             section, '{}.{}'.format(prefix, 'name'))
+        source = self._get_string(
+            section, '{}.{}'.format(prefix, 'source'))
         slots = self._get_string_list(
             section, '{}.{}'.format(prefix, 'slots'))
         column = {}
         column['name'] = name
+        column['source'] = source
 
         column_slots = []
-        for slot in slots:
+        for slot in slots or []:
             slot_arr = slot.split(":")
             if len(slot_arr) == 1:
                 source = slot_arr[0]
                 label = slot_arr[0]
-                label_format = "{}"
+                label_format = "%s"
             elif len(slot_arr) == 2:
                 source, label = slot_arr
-                label_format = "{}"
+                label_format = "%s"
             elif len(slot_arr) == 3:
                 source, label, label_format = slot_arr
             column_slots.append(
@@ -324,7 +327,7 @@ class DatasetsConfig(object):
                     'role': role,
                     'source': source,
                     'name': label,
-                    'id': '{}.{}'.format(name, label),
+                    'id': '{}.{}'.format(role, source),
                 })
         column['slots'] = column_slots
         return column
