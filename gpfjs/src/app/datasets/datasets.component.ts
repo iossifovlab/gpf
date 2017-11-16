@@ -42,13 +42,14 @@ export class DatasetsComponent implements OnInit {
     this.datasets$ = this.datasetsService.getDatasetsObservable();
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
 
-    this.usersService.getUserInfoObservable()
+    this.usersService.getUserInfo()
       .switchMap(_ => this.datasetsService.getDatasets())
       .take(1)
-      .subscribe(
-        (datasets) => {
+      .subscribe(datasets => {
+        if (!this.datasetsService.hasSelectedDataset()) {
           this.datasetsService.setSelectedDataset(datasets[0]);
-        });
+        }
+      });
 
     this.selectedDataset$.subscribe(selectedDataset => {
       if (!selectedDataset) {
@@ -56,7 +57,7 @@ export class DatasetsComponent implements OnInit {
       }
 
       this.router.navigate([selectedDataset.id], { relativeTo: this.route });
-      this.registerAlertVisible = selectedDataset.accessRights;
+      this.registerAlertVisible = !selectedDataset.accessRights;
       if (selectedDataset.accessRights) {
         this.selectedDatasetChange.emit(selectedDataset);
       }

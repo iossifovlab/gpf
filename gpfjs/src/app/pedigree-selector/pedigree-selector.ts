@@ -1,12 +1,13 @@
+import { Validate } from 'class-validator';
+
 import { PedigreeSelector } from '../datasets/datasets';
-import { ArrayNotEmpty } from 'class-validator';
+import { SetNotEmpty } from '../utils/set.validators';
 
 export class PedigreeSelectorState {
   pedigree: PedigreeSelector = null;
 
-  @ArrayNotEmpty({
+  @Validate(SetNotEmpty, {
     message: 'select at least one'
   })
   checkedValues = new Set();
 };
-

@@ -33,8 +33,9 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
   }
 
   restoreStateSubscribe() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+    this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
+      .subscribe(state => {
         if (state['pedigreeSelector'] && state['pedigreeSelector']['id']) {
           for (let pedigree of  this.pedigrees) {
             if (pedigree.id === state['pedigreeSelector']['id']) {
@@ -48,15 +49,15 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
           this.pedigreeState.checkedValues =
             new Set(state['pedigreeSelector']['checkedValues']);
         }
-      }
-    );
+      });
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (!changes['pedigrees']) {
       return;
     }
-    if (!changes['pedigrees'].previousValue || changes['pedigrees'].previousValue.length === 0) {
+    if (changes['pedigrees'].currentValue
+        && changes['pedigrees'].currentValue.length !== 0) {
       this.selectPedigree(0);
       this.restoreStateSubscribe();
     }
@@ -64,6 +65,7 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
 
 
   pedigreeSelectorSwitch(): string {
+    console.log(this.pedigrees);
     if (!this.pedigrees || this.pedigrees.length === 0) {
       return;
     }
@@ -102,11 +104,12 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
   }
 
   getState() {
+    console.log(Array.from(this.pedigreeState.checkedValues));
     return toValidationObservable(this.pedigreeState)
       .map(pedigreeState => ({
         pedigreeSelector: {
           id: pedigreeState.pedigree.id,
-          checkedValues: pedigreeState.checkedValues
+          checkedValues: Array.from(pedigreeState.checkedValues)
         }
       }))
       .catch(errors => {

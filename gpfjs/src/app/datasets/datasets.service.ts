@@ -17,14 +17,14 @@ export class DatasetsService {
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
-  private selectedDataset$: Observable<Dataset>;
+  private selectedDataset$ = new ReplaySubject<Dataset>(1);
   private _selectedDatasetId$ = new BehaviorSubject<string>(null);
 
   constructor(
     private http: Http,
     private config: ConfigService,
   ) {
-    this.selectedDataset$ = Observable
+    Observable
       .combineLatest(this.datasets$, this._selectedDatasetId$)
       .map(([datasets, selectedDatasetId]) => {
         if (!selectedDatasetId) {
@@ -37,6 +37,9 @@ export class DatasetsService {
         }
 
         return selectedDataset;
+      })
+      .subscribe(dataset => {
+        this.selectedDataset$.next(dataset);
       });
   }
 
@@ -74,10 +77,14 @@ export class DatasetsService {
   }
 
   getSelectedDataset() {
-    return this.selectedDataset$;
+    return this.selectedDataset$.asObservable();
   }
 
   getDatasetsObservable() {
     return this.datasets$.asObservable();
+  }
+
+  hasSelectedDataset() {
+    return !!this._selectedDatasetId$.getValue();
   }
 }

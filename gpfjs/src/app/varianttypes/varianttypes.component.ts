@@ -1,4 +1,6 @@
-import { Input, Component, OnInit, forwardRef } from '@angular/core';
+import {
+  Input, Component, OnInit, OnChanges, SimpleChanges, forwardRef
+} from '@angular/core';
 
 import { Observable } from 'rxjs';
 
@@ -14,7 +16,8 @@ import { DatasetsService } from '../datasets/datasets.service';
   styleUrls: ['./varianttypes.component.css'],
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => VarianttypesComponent) }]
 })
-export class VarianttypesComponent extends QueryStateProvider implements OnInit {
+export class VarianttypesComponent extends QueryStateProvider
+    implements OnInit, OnChanges {
 
   variantTypes = new VariantTypes();
   @Input()
@@ -37,6 +40,12 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
           this.variantTypes.selected = state['variantTypes'].slice();
         }
       });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['hasCNV']) {
+      this.selectAll();
+    }
   }
 
   selectAll(): void {
@@ -62,6 +71,7 @@ export class VarianttypesComponent extends QueryStateProvider implements OnInit 
   }
 
   getState() {
+    console.log("getstate called...");
     return toValidationObservable(this.variantTypes)
       .map(variantTypes => ({
         variantTypes: Array.from(variantTypes.selected)

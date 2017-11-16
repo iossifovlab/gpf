@@ -1,4 +1,4 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, AfterViewInit, forwardRef } from '@angular/core';
 
 import { Observable } from 'rxjs';
 
@@ -12,20 +12,24 @@ import { DatasetsService } from '../datasets/datasets.service';
   styleUrls: ['./genotype-block.component.css'],
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => GenotypeBlockComponent) }]
 })
-export class GenotypeBlockComponent extends QueryStateCollector implements OnInit {
+export class GenotypeBlockComponent extends QueryStateCollector implements AfterViewInit {
   hasCNV: Observable<boolean>;
   hasPedigreeSelector: Observable<boolean>;
   hasPresentInChild: Observable<boolean>;
   hasPresentInParent: Observable<boolean>;
   hasStudyTypes: Observable<boolean>;
   pedigrees: Observable<Array<PedigreeSelector>>;
+  selectedDataset$: Observable<Dataset>;
 
   constructor(
     private datasetsService: DatasetsService
   ) {
     super();
-    let selectedDataset$: Observable<Dataset> =
-      this.datasetsService.getSelectedDataset().share();
+  }
+
+  ngAfterViewInit() {
+    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    let selectedDataset$ = this.selectedDataset$;
     this.hasCNV = selectedDataset$.map(dataset => {
       if (!dataset) {
         return false;
@@ -33,6 +37,9 @@ export class GenotypeBlockComponent extends QueryStateCollector implements OnIni
       return dataset.genotypeBrowser.hasCNV;
     });
     this.hasPedigreeSelector = selectedDataset$.map(dataset => {
+      console.log(dataset);
+      console.log(dataset.genotypeBrowser.hasPedigreeSelector);
+      console.log(dataset.pedigreeSelectors);
       if (!dataset) {
         return false;
       }
@@ -62,9 +69,6 @@ export class GenotypeBlockComponent extends QueryStateCollector implements OnIni
       }
       return dataset.pedigreeSelectors;
     });
-  }
-
-  ngOnInit() {
   }
 
 }

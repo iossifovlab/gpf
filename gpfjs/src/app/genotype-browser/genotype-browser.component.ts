@@ -21,9 +21,9 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   tablePreview: boolean;
 
   @Input()
-  private selectedDatasetId: string;
+  selectedDatasetId: string;
+  selectedDataset$: Observable<Dataset>;
   private genotypeBrowserState: Object;
-  selectedDataset: Dataset;
   isMissenseSelected = false;
 
   constructor(
@@ -39,6 +39,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   }
 
   ngAfterViewInit() {
+    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
     // FIXME: figure out when to collect the state
     // this.store.subscribe(
       // (param) => {
@@ -73,12 +74,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    this.datasetsService.getDataset(this.selectedDatasetId).subscribe(
-      (dataset: Dataset) => {
-        this.selectedDataset = dataset;
-        // TODO FIXME when we remove the store
-        this.datasetsService.setSelectedDataset(dataset);
-    });
+    this.datasetsService.setSelectedDatasetById(this.selectedDatasetId);
   }
 
   submitQuery() {
@@ -96,6 +92,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
             this.loadingService.setLoadingStop();
           },
           error => {
+            console.warn(error);
             this.loadingService.setLoadingStop();
           },
           () => {
@@ -103,6 +100,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
           });
       },
       error => {
+        console.warn(error);
         this.loadingService.setLoadingStop();
       }
     );

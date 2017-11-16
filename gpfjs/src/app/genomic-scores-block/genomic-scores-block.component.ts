@@ -39,7 +39,7 @@ export class GenomicScoresBlockComponent extends QueryStateProvider implements O
 
     removeFilter(genomicScore: GenomicScoreState) {
         this.genomicScoresState.genomicScoresState = this.genomicScoresState
-            .genomicScoresState.filter(gs => gs.id !== genomicScore.id);
+            .genomicScoresState.filter(gs => gs !== genomicScore);
     }
 
     constructor(

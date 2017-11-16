@@ -3,12 +3,12 @@
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
   <gpf-genomic-scores-block
-    *ngIf="selectedDataset"
+    *ngIf="selectedDataset$ | async as selectedDataset"
     [dataset]="selectedDataset">
   </gpf-genomic-scores-block>
   <gpf-family-filters-block
-    *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
-    [dataset]="selectedDataset"
+    *ngIf="(selectedDataset$ | async)?.genotypeBrowser?.hasFamilyFilters"
+    [dataset]="(selectedDataset$ | async)"
     [genotypeBrowserState]="genotypeBrowserState">
   </gpf-family-filters-block>
 
@@ -29,7 +29,7 @@
   </p>
   <gpf-genotype-preview-table
   	*ngIf="tablePreview"
-    [additionalColumns]="selectedDataset?.genotypeBrowser?.additionalColumns"
+    [additionalColumns]="(selectedDataset$ | async)?.genotypeBrowser?.additionalColumns"
     [genotypePreviewsArray]=genotypePreviewsArray>
   </gpf-genotype-preview-table>
   <gpf-genotype-preview-chromosomes
