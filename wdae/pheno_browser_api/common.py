@@ -19,7 +19,9 @@ class PhenoBrowserCommon(object):
             settings,
             "PHENO_BROWSER_CACHE",
             None)
-        return os.path.join(cache_dir, 'pheno_browser', dbname)
+        dbdir = os.path.join(cache_dir, 'pheno_browser', dbname)
+        print(dbdir)
+        return dbdir
 
     @staticmethod
     def get_cache_hashsum(dbname):
