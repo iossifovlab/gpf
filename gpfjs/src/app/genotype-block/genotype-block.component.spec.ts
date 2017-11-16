@@ -8,10 +8,9 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { GenotypeBlockComponent } from './genotype-block.component';
 import { GenderComponent } from '../gender/gender.component';
 import { VarianttypesComponent } from '../varianttypes/varianttypes.component';
-import { EffecttypesComponent, EffecttypesColumnComponent } from '../effecttypes/effecttypes.component';
+import { EffecttypesComponent } from '../effecttypes/effecttypes.component';
 import { PedigreeSelectorComponent } from '../pedigree-selector/pedigree-selector.component';
 
-import { gpfReducer } from '../store/gpf-store';
 
 
 describe('GenotypeBlockComponent', () => {
@@ -25,7 +24,6 @@ describe('GenotypeBlockComponent', () => {
         GenderComponent,
         VarianttypesComponent,
         EffecttypesComponent,
-        EffecttypesColumnComponent,
         GenotypeBlockComponent,
         PedigreeSelectorComponent,
       ],

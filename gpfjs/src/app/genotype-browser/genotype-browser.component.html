@@ -8,7 +8,7 @@
   </gpf-genomic-scores-block>
   <gpf-family-filters-block
     *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
-    [datasetConfig]="selectedDataset"
+    [dataset]="selectedDataset"
     [genotypeBrowserState]="genotypeBrowserState">
   </gpf-family-filters-block>
 

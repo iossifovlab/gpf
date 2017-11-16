@@ -9,7 +9,6 @@ import { DatasetsService } from './datasets.service';
 import { DatasetsServiceStub } from '../datasets/datasets.service.spec';
 
 
-import { gpfReducer } from '../store/gpf-store';
 
 let datasetService = new DatasetsServiceStub();
 

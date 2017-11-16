@@ -1,20 +1,20 @@
 <div class="row">
     <div class="col-sm-3">
       <select class="form-control" [(ngModel)]="selectedMetric" required>
-		    <option *ngFor="let metric of datasetConfig.genotypeBrowser.genomicMetrics" [ngValue]="metric">
+		    <option *ngFor="let metric of dataset.genotypeBrowser.genomicMetrics" [ngValue]="metric">
           {{metric.name}}
         </option>
 		  </select>
     </div>
     <div class="col-sm-9">
       <gpf-histogram
-		    *ngIf="histogramData"
+		    *ngIf="genomicScoreState.histogramData"
 		    width="650" height="145"
             [logScaleY]="true"
             [showCounts]="false"
             [xLabels]="[0, 0.05, 0.1, 0.5, 1.0, 5.0, 10, 50, 100]"
-		    [bins]="histogramData.bins"
-		    [bars]="histogramData.bars"
+		    [bins]="genomicScoreState.histogramData.bins"
+		    [bars]="genomicScoreState.histogramData.bars"
 		    [rangesCounts]="rangesCounts"
 		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
 		  </gpf-histogram>

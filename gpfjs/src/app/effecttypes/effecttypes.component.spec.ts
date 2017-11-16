@@ -3,9 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
-import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes.component';
-
-import { gpfReducer } from '../store/gpf-store';
+import { EffecttypesComponent } from './effecttypes.component';
 
 /*
 describe('EffecttypesComponent', () => {

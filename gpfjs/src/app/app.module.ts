@@ -46,7 +46,6 @@ import { UsersService } from './users/users.service';
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
 import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
 
-import { gpfReducer } from './store/gpf-store';
 import { StudyTypesComponent } from './study-types/study-types.component';
 
 import { CookieModule } from 'ngx-cookie';

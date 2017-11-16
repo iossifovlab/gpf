@@ -1,6 +1,6 @@
 <div class="family-filters-block form-block">
   <div class="card">
-    <gpf-tabset #tabset (tabChange)="resetFiltersIfAllFamilies($event)">
+    <gpf-tabset #tabset> <!-- (tabChange)="resetFiltersIfAllFamilies($event)"> -->
       <div class="gpf-tabset-left">
         Families
       </div>
@@ -11,7 +11,7 @@
               <gpf-family-ids></gpf-family-ids>
           </ng-template>
       </ngb-tab>
-      <ngb-tab *ngIf="datasetConfig.genotypeBrowser.phenoFilters"
+      <ngb-tab *ngIf="dataset?.genotypeBrowser?.phenoFilters"
                id="pheno-filters" title="Advanced">
           <ng-template ngbTabContent>
               <gpf-pheno-filters [dataset]="dataset">

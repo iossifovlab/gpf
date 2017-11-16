@@ -1,4 +1,4 @@
-import { Validate } from 'class-validator';
+import { Validate, ValidateIf } from 'class-validator';
 import { IsNumber, Min, Max } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';

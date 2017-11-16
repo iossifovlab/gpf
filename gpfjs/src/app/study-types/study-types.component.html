@@ -11,7 +11,7 @@
           <label>
             <input #weCheckbox
                 type="checkbox"
-                [checked]="we"
+                [checked]="studyTypes.we"
                 (change)="studyTypesCheckValue('we',weCheckbox.checked)">
             <span>WE</span>
           </label>
@@ -21,7 +21,7 @@
             <input
                 #tgCheckbox
                 type="checkbox"
-                [checked]="tg"
+                [checked]="studyTypes.tg"
                 (change)="studyTypesCheckValue('tg',tgCheckbox.checked)">
             <span>TG</span>
           </label>

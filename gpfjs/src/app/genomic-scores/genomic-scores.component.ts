@@ -18,9 +18,6 @@ export class GenomicScoresComponent implements OnInit {
   @Input() index: number;
   @Input() genomicScoreState: GenomicScoreState;
 
-  histogramData: GenomicScoresHistogramData;
-  private internalRangeStart = 0;
-  private internalRangeEnd = 0;
   errors: string[];
 
   constructor(

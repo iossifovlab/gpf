@@ -1,5 +1,5 @@
 import { GeneSetsState } from '../gene-sets/gene-sets-state';
-import { GeneSymbolsState } from '../gene-symbols/gene-symbols';
+import { GeneSymbols } from '../gene-symbols/gene-symbols';
 import { GeneWeightsState } from '../gene-weights/gene-weights-store';
 
 export interface GeneSetState {
@@ -20,7 +20,7 @@ export class CommonQueryData {
   }
 
   protected static prepareGeneSymbols(state: any): string[] {
-    let geneSymbols: GeneSymbolsState = state.geneSymbols;
+    let geneSymbols: GeneSymbols = state.geneSymbols;
 
     if (geneSymbols === null) {
       return null;

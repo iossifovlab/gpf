@@ -22,7 +22,7 @@ import { transformAndValidate } from 'class-transformer-validator';
 })
 export class GenomicScoresBlockComponent extends QueryStateProvider implements OnInit {
     @Input() dataset: Dataset;
-    private genomicScoresState = new GenomicScoresState();
+    genomicScoresState = new GenomicScoresState();
     scores = [];
 
     get imgPathPrefix() {

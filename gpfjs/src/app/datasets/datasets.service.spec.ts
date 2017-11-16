@@ -14,7 +14,6 @@ import {
 
 // import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
 import { Observable } from 'rxjs';
-import { gpfReducer } from '../store/gpf-store';
 
 
 /*

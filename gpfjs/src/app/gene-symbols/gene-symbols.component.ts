@@ -13,7 +13,7 @@ import { StateRestoreService } from '../store/state-restore.service';
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSymbolsComponent) }]
 })
 export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
-  private geneSymbols = new GeneSymbols();
+  geneSymbols = new GeneSymbols();
   errors: string[];
 
   private flashingAlert = false;

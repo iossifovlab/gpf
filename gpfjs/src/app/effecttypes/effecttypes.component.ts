@@ -3,7 +3,6 @@ import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@ang
 import { Observable } from 'rxjs';
 
 import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
-import { GpfState } from '../store/gpf-store';
 import { QueryStateProvider } from '../query/query-state-provider';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';

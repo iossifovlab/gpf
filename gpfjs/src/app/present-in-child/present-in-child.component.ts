@@ -29,10 +29,10 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
   }
 
   ngOnInit() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+    this.stateRestoreService.getState(this.constructor.name)
+      .subscribe(state => {
         if (state['presentInChild']) {
-          this.presentInChild.selected = new Set(state['presentInChild']);
+          this.presentInChild.selected = new Set(state['presentInChild'] as string[]);
         }
       }
     );

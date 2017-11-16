@@ -2,7 +2,7 @@
   <nav class="navbar navbar-custom navbar-toggleable-md navbar-expand-lg navbar-light bg-light">
     <ul class="navbar-nav">
       <li class="nav-item">
-        <div *ngIf="selectedDataset" class="btn-group">
+        <div *ngIf="(selectedDataset$ | async) as selectedDataset" class="btn-group">
           <div class="dropdown">
             <button
               class="dataset-selector btn btn-outline-secondary dropdown-toggle navbar-brand"
@@ -25,19 +25,19 @@
           </div>
         </div>
       </li>
-      <li *ngIf="selectedDataset?.genotypeBrowser" class="nav-item">
+      <li *ngIf="(selectedDataset$ | async)?.genotypeBrowser" class="nav-item">
         <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
       </li>
-      <li *ngIf="selectedDataset?.phenotypeBrowser" class="nav-item">
+      <li *ngIf="(selectedDataset$ | async)?.phenotypeBrowser" class="nav-item">
         <a class="nav-link" routerLink="phenotypeBrowser" routerLinkActive="active">Phenotype Browser</a>
       </li>
-      <li *ngIf="selectedDataset?.enrichmentTool" class="nav-item">
+      <li *ngIf="(selectedDataset$ | async)?.enrichmentTool" class="nav-item">
         <a class="nav-link" routerLink="enrichment" routerLinkActive="active">Enrichment Tool</a>
       </li>
-      <li *ngIf="selectedDataset?.phenotypeGenotypeTool" class="nav-item">
+      <li *ngIf="(selectedDataset$ | async)?.phenotypeGenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
       </li>
-      <li *ngIf="selectedDataset?.description" class="nav-item">
+      <li *ngIf="(selectedDataset$ | async)?.description" class="nav-item">
         <a class="nav-link" routerLink="description" routerLinkActive="active">Dataset Description</a>
       </li>
     </ul>

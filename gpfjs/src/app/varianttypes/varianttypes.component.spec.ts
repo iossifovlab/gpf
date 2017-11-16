@@ -5,7 +5,6 @@ import { DebugElement } from '@angular/core';
 
 import { VarianttypesComponent } from './varianttypes.component';
 
-import { gpfReducer } from '../store/gpf-store';
 
 describe('VarianttypesComponent', () => {
   let component: VarianttypesComponent;

@@ -15,8 +15,6 @@ import { ValidationError } from 'class-validator';
   }]
 })
 export class PhenoToolMeasureComponent extends QueryStateProvider implements OnInit {
-  @Input() datasetId: string;
-
   phenoToolMeasure = new PhenoToolMeasure();
 
   errors: string[];

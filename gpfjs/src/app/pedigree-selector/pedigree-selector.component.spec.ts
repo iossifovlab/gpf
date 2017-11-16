@@ -5,7 +5,6 @@ import { DebugElement } from '@angular/core';
 
 import { PedigreeSelectorComponent } from './pedigree-selector.component';
 
-import { gpfReducer } from '../store/gpf-store';
 
 describe('PedigreeselectorComponent', () => {
   let component: PedigreeSelectorComponent;
