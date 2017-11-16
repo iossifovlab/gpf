@@ -49,7 +49,7 @@ def getGT(sample, data):
 
     cx = vIO.getCount(dx)
     if len(cx) == len(cnt):
-        cnt[:] = c
+        cnt[:] = cx
     # if cx and cnt not agree, then ignore
 
     return True, GT, cnt  # , GQ
