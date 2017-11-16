@@ -11,36 +11,31 @@ import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/observable/of';
-import { Store } from '@ngrx/store';
-import { QueryStateProvider } from '../query/query-state-provider'
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
-import { ValidationError } from "class-validator";
-import { StateRestoreService } from '../store/state-restore.service'
+import { QueryStateProvider } from '../query/query-state-provider';
+import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { ValidationError } from 'class-validator';
+import { StateRestoreService } from '../store/state-restore.service';
 import { ConfigService } from '../config/config.service';
 
-import { GeneWeightsState, GENE_WEIGHTS_CHANGE, GENE_WEIGHTS_INIT,
-         GENE_WEIGHTS_RANGE_START_CHANGE, GENE_WEIGHTS_RANGE_END_CHANGE
-
- } from './gene-weights-store';
+import { GeneWeightsState } from './gene-weights-store';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'gpf-gene-weights',
   templateUrl: './gene-weights.component.html',
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneWeightsComponent) }]
+  providers: [{
+    provide: QueryStateProvider,
+    useExisting: forwardRef(() => GeneWeightsComponent)
+  }]
 })
-export class GeneWeightsComponent extends QueryStateProvider {
+export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
   private rangeChanges = new Subject<[string, number, number]>();
   private partitions: Observable<Partitions>;
 
-  private internalSelectedGeneWeights: GeneWeights;
-
   geneWeightsArray: GeneWeights[];
-  private internalRangeStart: number;
-  private internalRangeEnd: number;
 
-  private rangesCounts: Array<number>;
-  private geneWeightsState: Observable<[GeneWeightsState, boolean, ValidationError[]]>;
+  rangesCounts: Observable<Array<number>>;
+  private geneWeightsState = new GeneWeightsState();
 
   errors: string[];
   flashingAlert = false;
@@ -49,36 +44,24 @@ export class GeneWeightsComponent extends QueryStateProvider {
   constructor(
     private geneWeightsService: GeneWeightsService,
     private changeDetectorRef: ChangeDetectorRef,
-    private store: Store<any>,
     private stateRestoreService: StateRestoreService,
     private config: ConfigService
-  )  {
+  ) {
     super();
-    this.geneWeightsState = toObservableWithValidation(GeneWeightsState, this.store.select('geneWeights'));
-    this.geneWeightsState.subscribe(
-      ([geneWeightsState, isValid, validationErrors]) => {
-        this.errors = validationErrorsToStringArray(validationErrors);
-
-        this.internalSelectedGeneWeights = geneWeightsState.weight;
-        this.internalRangeStart = geneWeightsState.rangeStart;
-        this.internalRangeEnd = geneWeightsState.rangeEnd;
-
-        if (isValid) {
-          this.rangeChanges.next([geneWeightsState.weight.weight, this.internalRangeStart, this.internalRangeEnd]);
-        }
-      }
-    );
   }
 
   set selectedGeneWeights(selectedGeneWeights: GeneWeights) {
-    this.store.dispatch({
-      'type': GENE_WEIGHTS_CHANGE,
-      'payload': [selectedGeneWeights, selectedGeneWeights.bins[0], selectedGeneWeights.bins[selectedGeneWeights.bins.length - 1]]
-    });
+    this.geneWeightsState.weight = selectedGeneWeights;
+    this.geneWeightsState.rangeStart = null;
+    this.geneWeightsState.rangeEnd = null;
+    this.geneWeightsState.domainMin = selectedGeneWeights.bins[0];
+    this.geneWeightsState.domainMax =
+      selectedGeneWeights.bins[selectedGeneWeights.bins.length - 1];
+
   }
 
   get selectedGeneWeights() {
-    return this.internalSelectedGeneWeights;
+    return this.geneWeightsState.weight;
   }
 
   restoreStateSubscribe() {
@@ -86,45 +69,30 @@ export class GeneWeightsComponent extends QueryStateProvider {
       (state) => {
         if (state['geneWeights'] && state['geneWeights']['weight']) {
           for (let geneWeight of this.geneWeightsArray) {
-            if (geneWeight.weight == state['geneWeights']['weight']) {
-              this.store.dispatch({
-                'type': GENE_WEIGHTS_CHANGE,
-                'payload': [geneWeight, geneWeight.bins[0], geneWeight.bins[geneWeight.bins.length - 1]]
-              });
+            if (geneWeight.weight === state['geneWeights']['weight']) {
+              this.selectedGeneWeights = geneWeight;
             }
           }
         }
 
         if (state['geneWeights'] && state['geneWeights']['rangeStart']) {
-          this.store.dispatch({
-            'type': GENE_WEIGHTS_RANGE_START_CHANGE,
-            'payload': state['geneWeights']['rangeStart']
-          });
+          this.rangeStart = state['geneWeights']['rangeStart'];
         }
 
         if (state['geneWeights'] && state['geneWeights']['rangeEnd']) {
-          this.store.dispatch({
-            'type': GENE_WEIGHTS_RANGE_END_CHANGE,
-            'payload': state['geneWeights']['rangeEnd']
-          });
+          this.rangeEnd = state['geneWeights']['rangeEnd'];
         }
-      }
-    )
+      });
   }
 
   ngOnInit() {
-    this.store.dispatch({
-      'type': GENE_WEIGHTS_INIT,
-    });
+    this.geneWeightsService.getGeneWeights()
+      .subscribe(geneWeights => {
+          this.geneWeightsArray = geneWeights;
+          this.selectedGeneWeights = geneWeights[0];
 
-    this.geneWeightsService.getGeneWeights().subscribe(
-      (geneWeights) => {
-        this.geneWeightsArray = geneWeights;
-        this.selectedGeneWeights = geneWeights[0];
-
-        this.restoreStateSubscribe();
-    });
-
+          this.restoreStateSubscribe();
+      });
 
     this.partitions = this.rangeChanges
       .debounceTime(100)
@@ -134,54 +102,49 @@ export class GeneWeightsComponent extends QueryStateProvider {
       })
       .catch(error => {
         console.log(error);
-        return null;
+        return Observable.of(null);
       });
 
-    this.partitions.subscribe(
+    this.rangesCounts = this.partitions.map(
       (partitions) => {
-        this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
+         return [partitions.leftCount, partitions.midCount, partitions.rightCount];
     });
   }
 
-
   set rangeStart(range: number) {
-    this.store.dispatch({
-      'type': GENE_WEIGHTS_RANGE_START_CHANGE,
-      'payload': range
-    });
+    this.geneWeightsState.rangeStart = range;
   }
 
   get rangeStart() {
-    return this.internalRangeStart;
+    return this.geneWeightsState.rangeStart;
   }
 
   set rangeEnd(range: number) {
-    this.store.dispatch({
-      'type': GENE_WEIGHTS_RANGE_END_CHANGE,
-      'payload': range
-    });
+    this.geneWeightsState.rangeEnd = range;
   }
 
   get rangeEnd() {
-    return this.internalRangeEnd;
+    return this.geneWeightsState.rangeEnd;
   }
 
   getState() {
-    return this.geneWeightsState.take(1).map(
-      ([geneWeightsState, isValid, validationErrors]) => {
-        if (!isValid) {
-          this.flashingAlert = true;
-          setTimeout(()=>{ this.flashingAlert = false }, 1000)
+    return toValidationObservable(this.geneWeightsState)
+      .map(geneWeightsState => {
 
-           throw "invalid geneWeights state"
-        }
-
-        return { geneWeights: {
-          weight: geneWeightsState.weight.weight,
-          rangeStart: geneWeightsState.rangeStart,
-          rangeEnd: geneWeightsState.rangeEnd
-        }}
-    });
+        return {
+          geneWeights: {
+            weight: geneWeightsState.weight.weight,
+            rangeStart: geneWeightsState.rangeStart,
+            rangeEnd: geneWeightsState.rangeEnd
+          }
+        };
+      })
+      .catch(errors => {
+        this.errors = validationErrorsToStringArray(errors);
+        this.flashingAlert = true;
+        setTimeout(() => { this.flashingAlert = false; }, 1000);
+        return Observable.throw(`${this.constructor.name}: invalid state`);
+      });
   }
 
   getDownloadLink(): string {
