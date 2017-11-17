@@ -35,3 +35,11 @@ def test_vip_pheno_filters(datasets_config):
     assert 'name' in pheno_filters[0]
     assert 'measureType' in pheno_filters[0]
     assert 'measureFilter' in pheno_filters[0]
+
+def test_meta_genes_block_show_all_is_false(datasets_config):
+    meta = datasets_config.get_dataset_desc('META')
+    assert meta['genotypeBrowser']['genesBlockShowAll'] == False
+
+def test_sd_genes_block_show_all_is_true(datasets_config):
+    sd = datasets_config.get_dataset_desc('SD')
+    assert sd['genotypeBrowser']['genesBlockShowAll']
