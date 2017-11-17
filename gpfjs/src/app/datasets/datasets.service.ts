@@ -6,6 +6,7 @@ import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
 
 import { Dataset } from '../datasets/datasets';
+import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
 
 import 'rxjs/add/operator/map';
@@ -22,7 +23,8 @@ export class DatasetsService {
 
   constructor(
     private http: Http,
-    private config: ConfigService
+    private config: ConfigService,
+    private usersService: UsersService
   ) {
     Observable
       .combineLatest(this.datasets$, this._selectedDatasetId$)
@@ -41,6 +43,13 @@ export class DatasetsService {
       .subscribe(dataset => {
         this.selectedDataset$.next(dataset);
       });
+
+    this.usersService.getUserInfoObservable()
+      .map(user => user.email || '')
+      .distinctUntilChanged()
+      .subscribe(() => {
+        this.getDatasets().take(1).subscribe(() => {});
+      });
   }
 
   getDatasets(): Observable<Dataset[]> {
@@ -49,6 +58,7 @@ export class DatasetsService {
       .get(this.datasetUrl, options)
       .map(res => {
         let datasets = Dataset.fromJsonArray(res.json().data);
+        console.log("Next datasets", datasets);
         this.datasets$.next(datasets);
         return datasets;
       });

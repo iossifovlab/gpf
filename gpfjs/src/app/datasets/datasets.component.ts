@@ -39,8 +39,7 @@ export class DatasetsComponent implements OnInit {
     this.datasets$ = this.datasetsService.getDatasetsObservable();
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
 
-    this.usersService.getUserInfo()
-      .switchMap(_ => this.datasetsService.getDatasets())
+    this.datasets$
       .take(1)
       .subscribe(datasets => {
         if (!this.datasetsService.hasSelectedDataset()) {

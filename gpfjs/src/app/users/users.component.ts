@@ -1,4 +1,5 @@
 import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { UsersService } from './users.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable } from 'rxjs';
@@ -23,7 +24,9 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private modalService: NgbModal,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private router: Router,
+    private currentRoute: ActivatedRoute
   ) { }
 
   ngOnInit() {
@@ -32,7 +35,11 @@ export class UsersComponent implements OnInit {
   }
 
   reloadUserData() {
-    this.usersService.getUserInfo();
+    this.usersService.getUserInfo()
+      .take(1)
+      .subscribe(() => {
+        // this.router.navigate(['.'], { relativeTo: this.currentRoute });
+      });
   }
 
   login() {
