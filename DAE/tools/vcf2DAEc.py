@@ -15,6 +15,47 @@ from ped2NucFam import *
 import vrtIOutil as vIO
 
 
+class FamilyVariant:
+    def __init__(self, familyInfo, altsCount):
+        self.GT = numpy.zeros((len(familyInfo['ids']), altsCount,),
+                              dtype=numpy.int)
+        self.familyInfo = familyInfo
+        self.altsCount = altsCount
+        self._cnt = None
+
+    @property
+    def cnt(self):
+        if self._cnt is None:
+            self._cnt = numpy.zeros((len(self.familyInfo['ids']), 
+                                    self.altsCount,), dtype=numpy.int)
+        return self._cnt
+
+    def get_cnt_str(self, ix):
+        if self._cnt is None:
+            return "-1"
+        return array2str(self._cnt, ix, delim=' ')
+
+
+def generateFamilyVariants(data, fam, fInfo):
+    individuals = {personId: familyId
+                   for familyId in fam
+                   for personId in fInfo[familyId]['ids']}
+
+    interesting = dict()
+    altsCount = len(data.alts) + 1
+
+    for k, v in data.samples.items():
+        if v['GT'][0] is None:
+            continue
+        if any([a != 0 for a in v['GT']]):
+            familyId = individuals[k]
+            if familyId not in interesting:
+                interesting[familyId] = FamilyVariant(fInfo[familyId],
+                                                      altsCount)
+
+    return interesting
+
+
 def percentageGentype(data):
     tlx = len(data.samples)
     clx = 0
@@ -27,7 +68,9 @@ def percentageGentype(data):
     return 100. * clx / tlx
 
 
-def getGT(sample, data):
+def getGT(sample, data, familyVariant, n):
+    GT = familyVariant.GT[n]
+
     try:
         dx = data.samples[sample]
     except KeyError, e:
@@ -36,23 +79,20 @@ def getGT(sample, data):
 
     #GQ  = getGQ( dx )
 
-    GT = numpy.zeros((len(data.alts) + 1,), dtype=numpy.int)
-    cnt = numpy.zeros((len(data.alts) + 1,), dtype=numpy.int) - \
-        1  # default -1 for No Info
-
     if None in dx['GT']:  # [0] is None:
-        return False, GT, cnt  # , GQ
+        return False
 
     gt = list(dx['GT'])
     for ix in gt:
         GT[ix] += 1
+        
 
     cx = vIO.getCount(dx)
-    if len(cx) == len(cnt):
-        cnt[:] = cx
+    if len(cx) == len(GT):
+        familyVariant.cnt[n] = cx
     # if cx and cnt not agree, then ignore
 
-    return True, GT, cnt  # , GQ
+    return True
 
 # add more data on fam Info
 
@@ -79,26 +119,22 @@ def makeFamInfoConv(fInfo, pInfo):
     # print fInfo
 
 
-def getVrtFam(fam, data):
+def getVrtFam(familyVariant, data):
+    fam = familyVariant.familyInfo['ids']
     flag = True
 
-    GT = numpy.zeros((len(fam), len(data.alts) + 1,), dtype=numpy.int)
-    cnt = numpy.zeros((len(fam), len(data.alts) + 1,), dtype=numpy.int)
     #strx = []
     # print fam
     for n, pid in enumerate(fam):
         #fx, gt, cx, gq = getGT( pid, data )
-        fx, gt, cx = getGT(pid, data)
+        fx = getGT(pid, data, familyVariant, n)
 
         if not fx:
             flag = False
 
-        GT[n, :] = gt
-        cnt[n, :] = cx
-
         #strx.append( '/'.join(map(str,gq)) )
     # print GT
-    return flag, GT, cnt  # , ','.join(strx)
+    return flag
 
 
 def array2str(mx, ix, delim=''):
@@ -116,9 +152,12 @@ def array2str(mx, ix, delim=''):
     return strx
 
 
-def fixNonAutoX(GT, isM):  # fam, pInfo ):
+def fixNonAutoX(familyVariant):  # fam, pInfo ):
     # Sex (1=male; 2=female; other=unknown)
     # assume [numFam]x[genotype count] and genotype are 0,1,2
+
+    GT = familyVariant.GT
+    isM = familyVariant.familyInfo['isMale']
 
     for n, im in enumerate(isM):
         if im == 0:
@@ -166,7 +205,10 @@ mStat = {  \
 # autosome
 
 
-def isDenovo(st, fm):  # fm : fa and ma index
+def isDenovo(familyVariant):  # fm : fa and ma index
+    st = familyVariant.GT
+    fm = familyVariant.familyInfo['iFM']
+
     assert sum(st.sum(1) != 2) == 0, 'copy number assume to be 2 for all'
     # mendel state for copy number 2 for all
     mdl = mStat[(2, 2, 2)]
@@ -185,7 +227,11 @@ def isDenovo(st, fm):  # fm : fa and ma index
 
 
 # fm : fa and ma index, isM: is Male array of 0 1(True)
-def isDenovoNonAutosomalX(st, fm, isM):
+def isDenovoNonAutosomalX(familyVariant):
+    st = familyVariant.GT
+    fm = familyVariant.familyInfo['iFM']
+    isM = familyVariant.familyInfo['isMale']
+
     assert sum(st.sum(1) != (2 - isM)) == 0, 'copy number assume to be 2 for female, ' + \
         'and 1 for male male({:s}) copy({:s})'.format(
         ','.join(map(str, isM)), ','.join(['/'.join(map(str, s)) for s in st]))
@@ -325,6 +371,7 @@ def main():
     cchr = ''
     output = {}
     for rx in vf:
+        familyVariants = generateFamilyVariants(rx, fam, fInfo)
         pgt = percentageGentype(rx)
         if pgt < ox.minPercentOfGenotypeSamples:
             continue
@@ -348,34 +395,31 @@ def main():
 
         dx = []
         # save ok families, check whether autosomal or de novo
-        for fid in fam:
-            fIx = fInfo[fid]
-            #flag, GT, cnt, qual = getVrtFam( fIx['ids'], rx )
-            flag, GT, cnt = getVrtFam(fIx['ids'], rx)
-            # if 4235521 in px and fid == '14752.x6.m0-14752.x8':
-            #       print fInfo[fid]
-            #       print fid, flag, array2str(GT,1,delim=' '), '-', array2str(cnt,1,delim=' '), qual
+        for familyId in familyVariants:
+            familyVariant = familyVariants[familyId]
+            flag = getVrtFam(familyVariant, rx)
+
             if not flag:
                 continue  # print px, vx, rx.chrom, rx.pos, rx.ref, rx.alts
 
             if nonAutoX:
                 # fInfo[fid]['ids'], pInfo )
-                flag = fixNonAutoX(GT, fIx['isMale'])
+                flag = fixNonAutoX(familyVariant)
                 if not flag:
                     continue  # fail to fix
 
-                flag = isDenovoNonAutosomalX(GT, fIx['iFM'], fIx['isMale'])
+                flag = isDenovoNonAutosomalX(familyVariant)
                 if flag:
                     continue  # denovo
             else:
-                flag = isDenovo(GT, fIx['iFM'])  # isDenovo( GT ):
+                flag = isDenovo(familyVariant)  # isDenovo( GT ):
                 # print GT
                 if flag:
                     continue  # denovo
 
             # NOTE: main data set
             #dx.append( [fIx['newFid'], GT, cnt, qual] )
-            dx.append([fIx['newFid'], GT, cnt, fIx['notChild']])
+            dx.append(familyVariant)
             # notChild(index who is not child of any in this family)
 
         # NOTE: skip none found
@@ -397,7 +441,11 @@ def main():
             strx = []
             cAlt, tAll = 0, 0
             # dx: fid, GT, cnt, notChild(index who is not child of any in this family)
-            for (fid, GT, cnt, nCi) in dx:
+            for familyVariant in dx:
+                fid = familyVariant.familyInfo['newFid']
+                GT = familyVariant.GT
+                cnt = familyVariant.cnt
+                nCi = familyVariant.familyInfo['notChild']
                 # assume that all the ill-regualr genotype for X Y are correct
                 # assume that all of auto have 2 copy, X non-Autosomal 1, and Y male(1) and female(0)
                 tAll += sum(GT[nCi, :].sum(1))
@@ -409,7 +457,7 @@ def main():
                 # only concern about non children
 
                 strx.append(fid + ':' + array2str(GT, ix, delim='') +
-                            ':' + array2str(cnt, ix, delim=' '))
+                            ':' + familyVariant.get_cnt_str(ix))
 
             fC = len(strx)
             if fC < 1:
