@@ -132,6 +132,7 @@ class QueryDownloadView(QueryBaseView):
                                str(request.data)))
 
         data = self._parse_query_params(request.data)
+        user = request.user
 
         try:
             self.check_object_permissions(request, data['datasetId'])
@@ -139,7 +140,7 @@ class QueryDownloadView(QueryBaseView):
             if data['datasetId'] == MetaDataset.ID:
                 data['dataset_ids'] = filter(
                     lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                        request.user, dataset_id),
+                        user, dataset_id),
                     self.datasets_config.get_dataset_ids())
 
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
@@ -148,12 +149,15 @@ class QueryDownloadView(QueryBaseView):
             columns.remove('pedigree')
 
             variants_data = generate_response(
-                dataset.get_variants(safe=True, user=request.user, **data),
+                dataset.get_variants(safe=True, **data),
                 columns, dataset.get_column_labels())
 
+            if not (user.is_authenticated() and user.has_unlimitted_download):
+                variants_data = self.__limit(variants_data,
+                    self.DOWNLOAD_LIMIT)
+
             response = StreamingHttpResponse(
-                self.__limit(itertools.imap(join_line, variants_data),
-                    self.DOWNLOAD_LIMIT),
+                itertools.imap(join_line, variants_data),
                 content_type='text/csv')
 
             response['Content-Disposition'] = 'attachment; filename=unruly.csv'
