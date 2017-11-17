@@ -2,10 +2,10 @@
   <gpf-genes-block></gpf-genes-block>
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
-  <gpf-genomic-scores-block
-    *ngIf="selectedDataset$ | async as selectedDataset"
-    [dataset]="selectedDataset">
-  </gpf-genomic-scores-block>
+  <span *ngIf="selectedDataset$ | async">
+    <gpf-genomic-scores-block>
+    </gpf-genomic-scores-block>
+  </span>
   <gpf-family-filters-block
     *ngIf="(selectedDataset$ | async)?.genotypeBrowser?.hasFamilyFilters"
     [dataset]="(selectedDataset$ | async)"

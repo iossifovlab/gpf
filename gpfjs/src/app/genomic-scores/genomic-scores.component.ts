@@ -8,22 +8,24 @@ import { GenomicScoreState } from './genomic-scores-store';
  import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
  import { transformAndValidate } from 'class-transformer-validator';
  import { StateRestoreService } from '../store/state-restore.service';
+ import { DatasetsService } from '../datasets/datasets.service';
 
 @Component({
   selector: 'gpf-genomic-scores',
   templateUrl: './genomic-scores.component.html',
 })
 export class GenomicScoresComponent implements OnInit {
-  @Input() dataset: Dataset;
   @Input() index: number;
   @Input() genomicScoreState: GenomicScoreState;
 
   errors: string[];
+  private dataset: Dataset;
 
   constructor(
     private genomicsScoresService: GenomicScoresService,
-    private stateRestoreService: StateRestoreService
-  )  {
+    private stateRestoreService: StateRestoreService,
+    private datasetsService: DatasetsService
+  ) {
   }
 
 
@@ -65,7 +67,9 @@ export class GenomicScoresComponent implements OnInit {
   }
 
     ngOnInit() {
-        this.stateRestoreService
+        this.datasetsService.getSelectedDataset().subscribe(dataset => {
+          this.dataset = dataset;
+          this.stateRestoreService
             .getState(this.constructor.name + this.index)
             .subscribe(state => {
                 if (!state['genomicScores'] || this.index < state['genomicScores'].length) {
@@ -81,6 +85,6 @@ export class GenomicScoresComponent implements OnInit {
                 this.rangeStart = score.rangeStart;
                 this.rangeEnd = score.rangeEnd;
             });
-    }
-
+        });
+  }
 }

@@ -3,23 +3,24 @@
     <ul class="navbar-nav">
       <li class="nav-item">
         <div *ngIf="(selectedDataset$ | async) as selectedDataset" class="btn-group">
-          <div class="dropdown">
+          <div ngbDropdown>
             <button
-              class="dataset-selector btn btn-outline-secondary dropdown-toggle navbar-brand"
+              ngbDropdownToggle
+              class="dataset-selector btn btn-outline-secondary navbar-brand"
               type="button"
               id="dropdownMenuButton"
-              data-toggle="dropdown"
               aria-haspopup="true"
               aria-expanded="false">{{selectedDataset.name}}
             </button>
             <div
-              class="dropdown-menu dataset-selector"
+              ngbDropdownMenu
+              class="dataset-selector"
               aria-labelledby="dropdownMenuButton">
               <a
                 *ngFor="let dataset of (datasets$ | async)"
                 class="dropdown-item"
-                routerLink="../{{ dataset.id }}"
-                routerLinkActive="active"
+                (click)="selectDataset(dataset)"
+                [class.active]="dataset.id === selectedDataset.id"
                 [style.opacity]="dataset.accessRights ? 1.0 : 0.3">{{ dataset.name }}</a>
             </div>
           </div>

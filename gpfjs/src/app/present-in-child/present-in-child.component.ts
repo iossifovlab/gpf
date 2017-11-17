@@ -34,8 +34,7 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
         if (state['presentInChild']) {
           this.presentInChild.selected = new Set(state['presentInChild'] as string[]);
         }
-      }
-    );
+      });
 
   }
 

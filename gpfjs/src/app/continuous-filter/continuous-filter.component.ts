@@ -43,7 +43,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
           .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd);
       })
       .catch(error => {
-        console.log(error);
+        console.warn(error);
         return Observable.of(null);
       });
 

@@ -13,7 +13,7 @@
         <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById;">
             <img class="clickable" style="float: left; display: block; height: 30px;" src="{{imgPathPrefix}}remove_filter.svg" (click)="removeFilter(score)">
             <span style="padding: 5px; display: block; overflow: hidden">
-                <gpf-genomic-scores [dataset]="dataset" [genomicScoreState]="score">
+                <gpf-genomic-scores [genomicScoreState]="score">
                 </gpf-genomic-scores>
             </span>
         </div>

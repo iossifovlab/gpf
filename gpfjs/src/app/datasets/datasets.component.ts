@@ -1,5 +1,5 @@
 import { UsersService } from '../users/users.service';
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, NgZone } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset } from './datasets';
 
@@ -21,14 +21,12 @@ export class DatasetsComponent implements OnInit {
   selectedDataset$: Observable<Dataset>;
   @Output() selectedDatasetChange = new EventEmitter<Dataset>();
 
-  selectedDatasetId: string;
-
   constructor(
     private usersService: UsersService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
-    private location: Location
+    private location: Location,
   ) {
   }
 
@@ -36,8 +34,7 @@ export class DatasetsComponent implements OnInit {
     this.route.params.subscribe(
       (params: Params) => {
         this.datasetsService.setSelectedDatasetById(params['dataset']);
-      }
-    );
+      });
 
     this.datasets$ = this.datasetsService.getDatasetsObservable();
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
@@ -47,7 +44,7 @@ export class DatasetsComponent implements OnInit {
       .take(1)
       .subscribe(datasets => {
         if (!this.datasetsService.hasSelectedDataset()) {
-          this.datasetsService.setSelectedDataset(datasets[0]);
+          this.router.navigate(['/', 'datasets', datasets[0].id]);
         }
       });
 
@@ -55,12 +52,14 @@ export class DatasetsComponent implements OnInit {
       if (!selectedDataset) {
         return;
       }
-
-      this.router.navigate([selectedDataset.id], { relativeTo: this.route });
       this.registerAlertVisible = !selectedDataset.accessRights;
       if (selectedDataset.accessRights) {
         this.selectedDatasetChange.emit(selectedDataset);
       }
     });
+  }
+
+  selectDataset(dataset: Dataset) {
+      this.router.navigate(['/', 'datasets', dataset.id]);
   }
 }

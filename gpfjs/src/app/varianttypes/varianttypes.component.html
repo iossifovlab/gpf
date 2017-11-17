@@ -14,7 +14,7 @@
       <label> <input
         #subCheckbox
         type="checkbox"
-        [checked]="variantTypes.selected.has('sub')"
+        [checked]="variantTypes?.selected?.has('sub')"
         (change)="variantTypesCheckValue('sub', subCheckbox.checked)"> sub
       </label>
     </div>
@@ -22,7 +22,7 @@
       <label> <input
         #insCheckbox
         type="checkbox"
-        [checked]="variantTypes.selected.has('ins')"
+        [checked]="variantTypes?.selected?.has('ins')"
         (change)="variantTypesCheckValue('ins', insCheckbox.checked)"> ins
       </label>
     </div>
@@ -30,7 +30,7 @@
       <label> <input
         #delCheckbox
         type="checkbox"
-        [checked]="variantTypes.selected.has('del')"
+        [checked]="variantTypes?.selected?.has('del')"
         (change)="variantTypesCheckValue('del', delCheckbox.checked)"> del
       </label>
     </div>
@@ -39,7 +39,7 @@
       <label> <input
         #cnvCheckbox
         type="checkbox"
-        [checked]="variantTypes.selected.has('CNV')"
+        [checked]="variantTypes?.selected?.has('CNV')"
         (change)="variantTypesCheckValue('CNV', cnvCheckbox.checked)"> CNV
       </label>
     </div>

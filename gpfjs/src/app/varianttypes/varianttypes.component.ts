@@ -37,7 +37,7 @@ export class VarianttypesComponent extends QueryStateProvider
     this.stateRestoreService.getState(this.constructor.name)
       .subscribe(state => {
         if (state['variantTypes']) {
-          this.variantTypes.selected = state['variantTypes'].slice();
+          this.variantTypes.selected = new Set(state['variantTypes'] as string[]);
         }
       });
   }

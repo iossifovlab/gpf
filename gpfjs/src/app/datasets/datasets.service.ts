@@ -22,7 +22,7 @@ export class DatasetsService {
 
   constructor(
     private http: Http,
-    private config: ConfigService,
+    private config: ConfigService
   ) {
     Observable
       .combineLatest(this.datasets$, this._selectedDatasetId$)
