@@ -48,6 +48,7 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
         return { geneSymbols: result };
       })
       .catch(errors => {
+        this.errors = validationErrorsToStringArray(errors);
         this.flashingAlert = true;
         setTimeout(() => { this.flashingAlert = false; }, 1000);
 

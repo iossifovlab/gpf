@@ -49,6 +49,7 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
         return { regions: result };
       })
       .catch(errors => {
+        this.errors = validationErrorsToStringArray(errors);
         this.flashingAlert = true;
         setTimeout(() => { this.flashingAlert = false; }, 1000);
         return Observable.throw(`${this.constructor.name}: invalid state`);

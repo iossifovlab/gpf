@@ -63,9 +63,7 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
     }
   }
 
-
   pedigreeSelectorSwitch(): string {
-    console.log(this.pedigrees);
     if (!this.pedigrees || this.pedigrees.length === 0) {
       return;
     }
@@ -104,7 +102,6 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
   }
 
   getState() {
-    console.log(Array.from(this.pedigreeState.checkedValues));
     return toValidationObservable(this.pedigreeState)
       .map(pedigreeState => ({
         pedigreeSelector: {

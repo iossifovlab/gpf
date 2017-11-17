@@ -86,6 +86,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
                                       ...state);
+        console.log("query data", queryData)
         this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
           (genotypePreviewsArray) => {
             this.genotypePreviewsArray = genotypePreviewsArray;

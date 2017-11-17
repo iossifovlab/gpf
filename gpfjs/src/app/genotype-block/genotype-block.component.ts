@@ -37,9 +37,6 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
       return dataset.genotypeBrowser.hasCNV;
     });
     this.hasPedigreeSelector = selectedDataset$.map(dataset => {
-      console.log(dataset);
-      console.log(dataset.genotypeBrowser.hasPedigreeSelector);
-      console.log(dataset.pedigreeSelectors);
       if (!dataset) {
         return false;
       }
