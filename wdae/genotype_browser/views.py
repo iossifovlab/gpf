@@ -54,7 +54,7 @@ class QueryPreviewView(QueryBaseView):
             if count > self.MAX_VARIANTS:
                 break
 
-        if count <= self.MAX_SHOWN_VARIANTS:
+        if count <= self.MAX_VARIANTS:
             count = str(count)
         else:
             count = 'more than {}'.format(self.MAX_VARIANTS)
