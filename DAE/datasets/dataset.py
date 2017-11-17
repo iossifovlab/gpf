@@ -288,7 +288,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if pheno_columns is None:
             return
 
-        for (role, source, label) in pheno_columns:
+        for (role, source, attr, _) in pheno_columns:
             assert self.pheno_db.has_measure(source), \
                 'missing measure {}'.format(source)
             values = self.pheno_db.get_persons_values_df(
@@ -303,7 +303,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                     geno_fam = self.families.get(fid)
                     if not geno_fam:
                         continue
-                    geno_fam.atts[label] = fvalues[source].values[0]
+                    geno_fam.atts[attr] = fvalues[source].values[0]
 
     def load_pheno_filters(self):
         if self.pheno_db is None:
@@ -543,35 +543,13 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                     yield v
 
     def get_columns(self):
-        return self.COMMON_COLUMNS[:] + \
-            [label for (_, _, label) in self.get_pheno_columns()] + \
-            [key for (key, _) in self.get_genotype_columns()]
+        return [key for (key, _) in self.get_genotype_columns()] + \
+            [key for (_, _, key, _) in self.get_pheno_columns()]
 
-    COMMON_COLUMNS = [
-        'familyId',
-        'location',
-        'variant',
-        'bestSt',
-        'fromParentS',
-        'inChS',
-        'effectType',
-        'worstEffect',
-        'genes',
-        'geneEffect',
-        'requestedGeneEffects',
-        'popType',
-        'effectDetails',
-        'all.altFreq',
-        'all.nAltAlls',
-        'all.nParCalled',
-        '_ch_prof_',
-        'studyName',
-        '_phenotype_',
-        'counts',
-        'valstatus',
-        '_pedigree_',
-        'phenoInChs'
-    ]
+    def get_column_labels(self):
+        column_labels = { key: label for (key, label) in self.get_genotype_columns() }
+        column_labels.update({ key: label for (_, _, key, label) in self.get_pheno_columns() })
+        return  column_labels
 
     def get_pheno_columns(self):
         gb = self.descriptor['genotypeBrowser']
@@ -586,7 +564,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             name = pheno_column['name']
             slots = pheno_column['slots']
             columns.extend([
-                (s['role'], s['source'], '{}.{}'.format(name, s['name']))
+                (s['role'], s['source'], s['id'], '{} {}'.format(name, s['name']))
                 for s in slots])
         return columns
 
@@ -595,21 +573,22 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if gb is None:
             return None
 
-        pheno_columns = gb.get('genotypeColumns', [])
-        if not pheno_columns:
+        geno_columns = gb.get('genotypeColumns', [])
+        if not geno_columns:
             return []
         columns = []
-        for pheno_column in pheno_columns:
-            slots = pheno_column['slots']
+        for geno_column in geno_columns:
+            slots = geno_column['slots']
             columns.extend([
                 (s['source'], s['name'])
                 for s in slots])
+            if geno_column.get('source', None):
+                columns.append((geno_column['source'], geno_column['name']))
         return columns
 
     def get_variants_preview(self, safe=True, **kwargs):
-        variants = self.get_variants(safe, **kwargs)
-        columns = self.get_columns()
-        return generate_response(variants, columns)
+        return generate_response(self.get_variants(safe, **kwargs),
+            self.get_columns(), self.get_column_labels())
 
     def _get_var_augmenter(self, safe=True, **kwargs):
         legend = self.get_pedigree_selector(**kwargs)
@@ -630,11 +609,12 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
 
             v.atts["_ch_prof_"] = chProf
-            v.atts["_pedigree_"] = v.pedigree_v3(legend)
+            v.atts["pedigree"] = v.pedigree_v3(legend)
             family = families.get(v.familyId, None)
             fatts = family.atts if family else {}
-            for (_role, _source, label) in pheno_columns:
-                v.atts[label] = fatts.get(label, '')
+            for (_, _, key, _) in pheno_columns:
+                v.atts[key] = fatts.get(key, '')
+
             v._phenotype_ = v.study.get_attr('study.phenotype')
 
             for key, value in gene_weights.items():

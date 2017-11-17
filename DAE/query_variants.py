@@ -535,7 +535,7 @@ def __gene_effect_get_genes(gs):
     return ';'.join(genes)
 
 
-COLUMN_TITLES = {
+DEFAULT_COLUMN_TITLES = {
     'familyId': 'family id',
     'location': 'location',
     'variant': 'variant',
@@ -583,19 +583,17 @@ SPECIAL_GENE_EFFECTS = {
     "worstEffect": __gene_effect_get_worst_effect
 }
 
-def attr_title(attr_key):
-    return COLUMN_TITLES.get(attr_key, attr_key)
-
-def generate_web_response(variants, attrs=COLUMN_TITLES.keys(), sep='\t'):
-    response = generate_response(variants, attrs, sep)
+def generate_web_response(variants, attrs, sep='\t'):
     return {
-        'cols': next(response),
-        'rows': response
+        'cols': attrs,
+        'rows': transform_variants_to_lists(variants, attrs, sep)
     }
 
-def generate_response(variants, attrs=COLUMN_TITLES.keys(), sep='\t'):
+def generate_response(variants, attrs=DEFAULT_COLUMN_TITLES.keys(),
+        attr_labels=DEFAULT_COLUMN_TITLES, sep='\t'):
     variant_rows = transform_variants_to_lists(variants, attrs, sep)
-    return itertools.chain([map(attr_title, attrs)], variant_rows)
+    return itertools.chain([map(lambda attr: attr_labels.get(attr, attr), attrs)],
+                           variant_rows)
 
 def transform_variants_to_lists(variants, attrs, sep='\t'):
     for v in variants:

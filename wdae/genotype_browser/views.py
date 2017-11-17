@@ -16,7 +16,7 @@ import traceback
 import preloaded
 from rest_framework.exceptions import NotAuthenticated
 import json
-from query_variants import join_line, generate_web_response
+from query_variants import join_line, generate_web_response, generate_response
 from datasets_api.permissions import IsDatasetAllowed
 from functools import partial
 from datasets.metadataset import MetaDataset
@@ -133,16 +133,14 @@ class QueryDownloadView(QueryBaseView):
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
 
             columns = dataset.get_columns()
-            columns.remove('_pedigree_')
-            variants_data = generate_web_response(
-                dataset.get_variants(safe=True, user=request.user, **data),
-                columns)
+            columns.remove('pedigree')
 
-            all_gens = itertools.imap(join_line,
-                itertools.chain([variants_data['cols']], variants_data['rows']))
+            variants_data = generate_response(
+                dataset.get_variants(safe=True, user=request.user, **data),
+                columns, dataset.get_column_labels())
 
             response = StreamingHttpResponse(
-                all_gens, content_type='text/csv'
+                itertools.imap(join_line, variants_data), content_type='text/csv'
             )
 
             response['Content-Disposition'] = 'attachment; filename=unruly.csv'

@@ -13,11 +13,6 @@ def metadataset():
 def test_id():
     assert MetaDataset.ID == 'META'
 
-def test_columns(mocker, metadataset):
-    get_pheno_columns = mocker.patch('datasets.dataset.Dataset.get_columns', autospec=True)
-    get_pheno_columns.return_value = []
-    assert ['dataset'] == metadataset.get_columns()
-
 def test_get_variants(mocker, metadataset):
     ds1, ds2 = metadataset.datasets
     st1, st2 = mocker.MagicMock(), mocker.MagicMock()
