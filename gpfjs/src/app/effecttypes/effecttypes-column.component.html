@@ -5,7 +5,7 @@
       <input
         #checkbox
         type="checkbox"
-        [checked]="effectTypesValues[i]"
+        [checked]="effectTypes.selected.indexOf(effect) !== -1"
         (change)="checkEffectType(i, checkbox.checked);
                   $event.stopPropagation()">
       {{effect}}
