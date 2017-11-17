@@ -428,22 +428,6 @@ class PrepareVariables(PrepareBase):
             return False
         return True
 
-    @staticmethod
-    def _value_domain_list(unique_values):
-        DOMAIN_MAX_DISPLAY = 5
-        unique_values = sorted(unique_values)
-        unique_values = [str(v) for v in unique_values]
-        if len(unique_values) >= DOMAIN_MAX_DISPLAY:
-            unique_values = unique_values[:DOMAIN_MAX_DISPLAY + 1]
-            unique_values[DOMAIN_MAX_DISPLAY] = '...'
-        return "{}".format(','.join([v for v in unique_values]))
-
-    @staticmethod
-    def _value_domain_range(unique_values):
-        min_value = min(unique_values)
-        max_value = max(unique_values)
-        return "[{},{}]".format(min_value, max_value)
-
     def _default_measure(self, instrument_name, measure_name):
         measure = {
             'measure_type': MeasureType.other,
@@ -472,6 +456,10 @@ class PrepareVariables(PrepareBase):
 
         df.dropna(inplace=True)
 
+    @staticmethod
+    def _split_nonfloat_values(self, values):
+        pass
+
     def _build_measure(self, instrument_name, measure_name, df):
         measure = self._default_measure(instrument_name, measure_name)
         values = df['value']
@@ -495,6 +483,9 @@ class PrepareVariables(PrepareBase):
 
         print("-> rank: {}; values type: {}; unique values: {}".format(
             rank, values_type, unique_values))
+
+        if values_type == str:
+            pass
 
         if values_type in set([str, bool, np.bool, np.dtype('bool')]):
             if self.check_categorical_rank(rank, individuals):
