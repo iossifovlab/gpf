@@ -41,10 +41,6 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
       .switchMap(([datasetId, measureName, internalRangeStart, internalRangeEnd]) => {
         return this.measuresService
           .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd);
-      })
-      .catch(error => {
-        console.warn(error);
-        return Observable.of(null);
       });
 
     this.partitions.subscribe(
@@ -66,6 +62,8 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName).subscribe(
         (histogramData) => {
           this.histogramData = histogramData;
+          this.continuousFilterState.mmin = histogramData.min;
+          this.continuousFilterState.mmax = histogramData.max;
 
           this.stateRestoreService.getState(this.constructor.name + this.filterId).subscribe(
             (state) => {

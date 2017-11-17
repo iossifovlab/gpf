@@ -22,6 +22,7 @@ export class CategoricalFilterState extends PhenoFilterState {
 
   constructor(
     id: string,
+    // name: string,
     type: string,
     role: string,
     measure: string

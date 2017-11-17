@@ -41,30 +41,31 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnChang
             phenoFilter, plainToClass(ContinuousFilterState, phenoFilter)
           ] as [PhenoFilter, PhenoFilterState];
         }
+        console.log(phenoFilter);
+        const categoricalFilterState = new CategoricalFilterState(
+          phenoFilter.name,
+          phenoFilter.measureType,
+          phenoFilter.measureFilter.role,
+          phenoFilter.measureFilter.measure,
+        );
 
         return [
-          phenoFilter, plainToClass(CategoricalFilterState, phenoFilter)
+          phenoFilter, categoricalFilterState
         ] as [PhenoFilter, PhenoFilterState];
 
-      })
-      .filter(([_, f]) => !f.isEmpty());
+      });
+      // .filter(([_, f]) => !f.isEmpty());
+
+    console.log(this.phenoFiltersState);
   }
 
   get categoricalPhenoFilters() {
-    if (this.phenoFiltersState.length === 0) {
-      return null;
-    }
-
     return this.phenoFiltersState.filter(
       ([_, phenoFilter]) => phenoFilter.measureType === 'categorical'
     );
   }
 
   get continuousPhenoFilters() {
-    if (this.phenoFiltersState.length === 0) {
-      return null;
-    }
-
     return this.phenoFiltersState.filter(
       ([_, phenoFilter]) => phenoFilter.measureType === 'continuous'
     );
@@ -73,9 +74,7 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnChang
   getState() {
     return toValidationObservable(this.phenoFiltersState)
       .map(phenoFiltersState => ({
-        phenoFilters: {
-          phenoFilters: phenoFiltersState.map(x => x[1])
-        }
+        phenoFilters: phenoFiltersState.map(x => x[1]).filter(f => !f.isEmpty())
       }))
       .catch(errors => {
         this.errors = validationErrorsToStringArray(errors);

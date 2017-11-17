@@ -1,4 +1,4 @@
-{{ categoricalFilterState?.measure }}:
+{{ categoricalFilterState?.id }}:
 <div class="input-group">
   <select class="form-control" [(ngModel)]="selectedValue" required>
     <option *ngFor="let value of categoricalFilter?.measureFilter?.domain" [ngValue]="value">
