@@ -20,9 +20,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   geneSetsCollections: Array<GeneSetsCollection>;
   geneSets: Array<GeneSet>;
   private internalSelectedGeneSetsCollection: GeneSetsCollection;
-  selectedGeneSet: GeneSet;
   private searchQuery: string;
-  private geneSetsTypes: Set<any>;
   private geneSetsState = new GeneSetsState();
 
   private geneSetsQueryChange = new Subject<[string, string, Array<string>]>();
@@ -39,25 +37,6 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     super();
   }
 
-  isGeneSetsTypesUpdated(geneSetsTypes: Set<any>): boolean {
-    if (!this.geneSetsTypes && geneSetsTypes) {
-      return true;
-    }
-    if (this.geneSetsTypes && !geneSetsTypes) {
-      return true;
-    }
-    if (this.geneSetsTypes.size !== geneSetsTypes.size) {
-      return true;
-    }
-    for (let a in this.geneSetsTypes) {
-      if (!geneSetsTypes.has(a)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   restoreStateSubscribe() {
     this.stateRestoreService.getState(this.constructor.name).subscribe(
       (state) => {
@@ -72,6 +51,9 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
               }
             }
           }
+        } else {
+           console.log("search called!");
+          this.onSearch('');
         }
       });
   }
@@ -86,45 +68,6 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   }
 
   ngOnInit() {
-
-    // FIXME
-    // this.geneSetsState.subscribe(
-    //   ([geneSets, isValid, validationErrors])  => {
-    //     if (geneSets == null) {
-    //       return;
-    //     }
-
-    //     let refreshData = false;
-
-    //     if (this.internalSelectedGeneSetsCollection !== geneSets.geneSetsCollection) {
-    //       this.internalSelectedGeneSetsCollection = geneSets.geneSetsCollection;
-    //       this.geneSets = null;
-    //       this.searchQuery = '';
-    //       refreshData = true;
-    //     }
-    //     this.selectedGeneSet = geneSets.geneSet;
-
-    //     if (this.isGeneSetsTypesUpdated(geneSets.geneSetsTypes)) {
-    //       this.geneSetsTypes = geneSets.geneSetsTypes;
-
-    //       if (this.internalSelectedGeneSetsCollection
-    //         && this.internalSelectedGeneSetsCollection.types.length  > 0
-    //         && geneSets.geneSetsTypes.size == 0) {
-
-    //         this.geneSets = null;
-    //         refreshData = false;
-    //         this.errors.push('Select at least one gene type');
-    //       } else {
-    //         refreshData = true;
-    //       }
-    //     }
-
-    //     if (refreshData) {
-    //       this.onSearch(this.searchQuery);
-    //     }
-    //   }
-    // );
-
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
         this.geneSetsCollections = geneSetsCollections;
@@ -134,8 +77,8 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     );
 
     this.geneSetsResult = this.geneSetsQueryChange
-      .debounceTime(1000)
       .distinctUntilChanged()
+      .debounceTime(1000)
       .switchMap(term => {
         return this.geneSetsService.getGeneSets(term[0], term[1], term[2]);
       })
@@ -168,7 +111,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     }
 
     let geneSetsTypesNames = new Array<string>();
-    this.geneSetsTypes.forEach((value) => {
+    this.geneSetsState.geneSetsTypes.forEach((value) => {
       geneSetsTypesNames.push(value.id);
     });
 
@@ -196,7 +139,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   }
 
   isSelectedGeneType(geneType): boolean {
-    return this.geneSetsTypes.has(geneType);
+    return this.geneSetsState.geneSetsTypes.has(geneType);
   }
 
   setSelectedGeneType(geneType, value) {
@@ -208,16 +151,26 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   }
 
   get selectedGeneSetsCollection(): GeneSetsCollection {
-    return this.internalSelectedGeneSetsCollection;
+    return this.geneSetsState.geneSetsCollection;
   }
 
   set selectedGeneSetsCollection(selectedGeneSetsCollection: GeneSetsCollection) {
     this.geneSetsState.geneSetsCollection = selectedGeneSetsCollection;
     this.geneSetsState.geneSet = null;
+    this.geneSetsState.geneSetsTypes = new Set();
+    this.geneSets = [];
 
     if (selectedGeneSetsCollection.types.length > 0) {
       this.setSelectedGeneType(selectedGeneSetsCollection.types[0], true);
     }
+  }
+
+  get selectedGeneSet(): GeneSet {
+    return this.geneSetsState.geneSet;
+  }
+
+  set selectedGeneSet(geneSet) {
+    this.geneSetsState.geneSet = geneSet;
   }
 
   getDownloadLink(selectedGeneSet: GeneSet): string {
