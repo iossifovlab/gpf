@@ -8,8 +8,8 @@ export class EnrichmentModels {
     }
 
     return new EnrichmentModels(
-      json['counting'].map((j) => new IdDescription(json.name, json.desc)),
-      json['background'].map((j) => new IdDescription(json.name, json.desc)),
+      json['counting'].map((j) => new IdDescription(j.name, j.desc)),
+      json['background'].map((j) => new IdDescription(j.name, j.desc)),
     );
   }
 

@@ -28,8 +28,10 @@ export class EnrichmentModelsComponent extends QueryStateProvider implements OnI
   }
 
   ngOnInit() {
-    this.enrichmentModelsService.getBackgroundModels().subscribe(
-      (res) => {
+    this.enrichmentModelsService.getBackgroundModels()
+      .take(1)
+      .subscribe(res => {
+        console.log(res)
         this.enrichmentModels = res;
 
         this.selectedEnrichmentModel.background = res.backgrounds[0];

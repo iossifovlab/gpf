@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
-import { QueryStateCollector } from '../query/query-state-provider'
+import { QueryStateCollector } from '../query/query-state-provider';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
@@ -11,7 +11,7 @@ import { Observable } from 'rxjs';
   templateUrl: './enrichment-tool.component.html',
   styleUrls: ['./enrichment-tool.component.css']
 })
-export class EnrichmentToolComponent extends QueryStateCollector {
+export class EnrichmentToolComponent extends QueryStateCollector implements OnInit {
   enrichmentResults: EnrichmentResults;
   private selectedDatasetId: string;
 
@@ -33,13 +33,14 @@ export class EnrichmentToolComponent extends QueryStateCollector {
 
   submitQuery() {
     this.loadingService.setLoadingStart();
-    let state = this.collectState();
-    Observable.zip(...state)
+    let stateArray = this.collectState();
+    Observable.zip(...stateArray)
     .subscribe(
       state => {
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
                                       ...state);
+        console.log(queryData)
         this.enrichmentQueryService.getEnrichmentTest(queryData).subscribe(
           (enrichmentResults) => {
             this.enrichmentResults = enrichmentResults;

@@ -71,7 +71,6 @@ export class VarianttypesComponent extends QueryStateProvider
   }
 
   getState() {
-    console.log("getstate called...");
     return toValidationObservable(this.variantTypes)
       .map(variantTypes => ({
         variantTypes: Array.from(variantTypes.selected)
