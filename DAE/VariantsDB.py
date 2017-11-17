@@ -27,6 +27,7 @@ import logging
 from Variant import Variant, mat2Str, filter_gene_effect, str2Mat,\
     present_in_child_filter,\
     denovo_present_in_parent_filter
+from Family import Family, Person
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
@@ -55,32 +56,6 @@ def regions_matcher(regions):
               vpos >= beg and
               vpos <= end)
              for(chrom, beg, end) in reg_defs])
-
-
-class Family:
-
-    def __init__(self, atts=None):
-        if atts:
-            self.atts = atts
-        else:
-            self.atts = {}
-        self.memberInOrder = []
-
-    def __repr__(self):
-        return "Family({}: {})".format(self.familyId, self.memberInOrder)
-
-
-class Person:
-
-    def __init__(self, atts=None):
-        if atts:
-            self.atts = atts
-        else:
-            self.atts = {}
-
-    def __repr__(self):
-        return "Person({}; {}; {})".format(
-            self.personId, self.role, self.gender)
 
 
 class StudyGroup:
@@ -140,8 +115,11 @@ class Study:
         tGsF.close()
         return tgsS
 
+    def has_attr(self, attName):
+        return self.vdb._config.has_option(self._configSection, attName)
+
     def get_attr(self, attName):
-        if self.vdb._config.has_option(self._configSection, attName):
+        if self.has_attr(attName):
             return self.vdb._config.get(self._configSection, attName)
 
     def _get_transmitted_impl(self, callSet):
@@ -202,7 +180,6 @@ class Study:
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None,
                             limit=None):
-
         picFilter = present_in_child_filter(presentInChild, gender)
         pipFilter = denovo_present_in_parent_filter(presentInParent)
 
@@ -320,6 +297,9 @@ class Study:
         return self.badFamilies
 
     def _load_family_data(self):
+        if not self.vdb._config.has_option(self._configSection, "familyInfo.file"):
+            self.families = {}
+            return
         fdFile = self.vdb._config.get(self._configSection, "familyInfo.file")
         print(fdFile)
 

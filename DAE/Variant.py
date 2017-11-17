@@ -6,6 +6,8 @@ Created on Oct 21, 2015
 import numpy as np
 import operator
 
+from Family import Person
+
 
 def normalRefCopyNumber(location, gender):
     clnInd = location.find(":")
@@ -23,12 +25,12 @@ def normalRefCopyNumber(location, gender):
         if pos < 60001 or (pos > 2699520 and pos < 154931044) \
                 or pos > 155260560:
 
-            if gender == 'M':
+            if gender == 'M' or gender == 'U':
                 return 1
             elif gender != 'F':
                 raise Exception('weird gender ' + gender)
     elif chrome in ['chrY', 'Y', '24', 'chr24']:
-        if gender == 'M':
+        if gender == 'M' or gender == 'U':
             return 1
         elif gender == 'F':
             return 0
@@ -162,7 +164,8 @@ class Variant:
     def __init__(self, atts, familyIdAtt="familyId", locationAtt="location",
                  variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
                  countsAtt="counts", effectGeneAtt="effectGene",
-                 altFreqPrcntAtt="all.altFreq"):
+                 altFreqPrcntAtt="all.altFreq", genderAtt='gender',
+                 phenotypeAtt='phenotype', studyNameAtt='studyName'):
         self.atts = atts
 
         self.familyIdAtt = familyIdAtt
@@ -173,6 +176,9 @@ class Variant:
         self.countsAtt = countsAtt
         self.effectGeneAtt = effectGeneAtt
         self.altFreqPrcntAtt = altFreqPrcntAtt
+        self.genderAtt = genderAtt
+        self.phenotypeAtt = phenotypeAtt
+        self.studyNameAtt = studyNameAtt
 
     @property
     def familyId(self):
@@ -180,12 +186,13 @@ class Variant:
             return self._familyId
         except AttributeError:
             pass
-        self._familyId = str(self.atts[self.familyIdAtt])
+        self._familyId = self.atts.get(self.familyIdAtt, None)
+        self._familyId = str(self._familyId) if self._familyId else self._familyId
         return self._familyId
 
     @property
     def studyName(self):
-        return self.study.name
+        return self.atts.get(self.studyNameAtt, self.study.name)
 
     @property
     def location(self):
@@ -253,32 +260,29 @@ class Variant:
         try:
             return self._memberInOrder
         except AttributeError:
-            family = self.study.families[self.familyId]
-            self._memberInOrder = family.memberInOrder
+            if self.familyId:
+                family = self.study.families[self.familyId]
+                self._memberInOrder = family.memberInOrder
+            else:
+                person = Person()
+                #person.personId
+                person.gender = self.atts.get(self.genderAtt, 'U')
+                person.role = 'sib' if self.phenotype == 'unaffected' else 'prb'
+                self._memberInOrder = [person]
         return self._memberInOrder
 
     @property
     def inChS(self):
-        mbrs = self.memberInOrder
-        # mbrs = elf.study.families[self.familyId].memberInOrder
-        bs = self.bestSt
         childStr = ''
-        for c in xrange(2, len(mbrs)):
-            if isVariant(bs, c, self.location, mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
+        for index, person in enumerate(self.memberInOrder):
+            if person.is_child and \
+                    isVariant(self.bestSt, index, self.location, person.gender):
+                childStr += (person.role + person.gender)
         return childStr
 
     @property
     def phenoInChS(self):
-        mbrs = self.memberInOrder
-        # mbrs = elf.study.families[self.familyId].memberInOrder
-        bs = self.bestSt
-        childStr = ''
-        for c in xrange(2, len(mbrs)):
-            if isVariant(bs, c, self.location, mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
-        phenotype = self.study.get_attr('study.phenotype')
-        return childStr.replace('prb', phenotype)
+        return self.inChS.replace('prb', self.phenotype)
 
     @property
     def fromParentS(self):
@@ -295,6 +299,11 @@ class Variant:
                 parentStr += mbrs[c].role
         return parentStr
 
+    @property
+    def phenotype(self):
+        return self.atts.get(self.phenotypeAtt,
+            self.study.get_attr('study.phenotype'))
+
     VIP_COLORS = {
         'deletion': '#e35252',
         'duplication': '#98e352',
@@ -308,7 +317,7 @@ class Variant:
         mbrs = self.memberInOrder
         bs = self.bestSt
 
-        ph = self.study.get_attr('study.phenotype')
+        ph = self.phenotype
         colors = None
         if self.study.name[:3] == 'VIP' and \
                 hasattr(self.study, 'genetic_status'):
