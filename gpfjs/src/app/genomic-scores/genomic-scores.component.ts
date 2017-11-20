@@ -19,7 +19,7 @@ export class GenomicScoresComponent implements OnInit {
   @Input() genomicScoreState: GenomicScoreState;
 
   errors: string[];
-  private dataset: Dataset;
+  dataset: Dataset;
 
   constructor(
     private genomicsScoresService: GenomicScoresService,
