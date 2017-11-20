@@ -11,6 +11,7 @@ from collections import defaultdict, OrderedDict
 
 from VariantsDB import Person, Family
 from pheno.db import DbManager
+from pheno.common import MeasureType
 
 
 class Instrument(object):
@@ -60,6 +61,8 @@ class Measure(object):
     def __init__(self, name):
         self.name = name
         self.measure_name = name
+        self.measure_type = MeasureType.other
+        self.values_domain = None
 
     def __repr__(self):
         return "Measure({}, {}, {})".format(

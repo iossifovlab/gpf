@@ -6,6 +6,8 @@ Created on Nov 16, 2017
 import numpy as np
 import itertools
 import enum
+from pheno.common import MeasureType
+from numpy import rank
 
 
 class ClassifierReport(object):
@@ -77,17 +79,14 @@ def convert_to_numeric(val):
 
 class MeasureClassifier(object):
 
-    def __init__(self, measure, df):
-        self.measure = measure
-        self.df = df
+    def __init__(self, config):
+        self.config = config
 
     @staticmethod
-    def numeric_classifier(values):
+    def classify(values):
         assert isinstance(values, np.ndarray)
 
         r = ClassifierReport()
-
-        print(values.dtype)
 
         if values.dtype in set([int, float, np.float, np.int,
                                 np.dtype('int64'), np.dtype('float64')]):
@@ -110,15 +109,17 @@ class MeasureClassifier(object):
 
             for convertable, vals in grouped:
                 vals = list(vals)
+                print(convertable, vals)
+
                 if convertable == Convertible.nan:
                     r.count_without_values = len(vals)
                 elif convertable == Convertible.numeric:
                     r.count_with_values += len(vals)
-                    r.count_with_numeric_values = len(vals)
+                    r.count_with_numeric_values += len(vals)
                 else:
                     assert convertable == Convertible.non_numeric
                     r.count_with_values += len(vals)
-                    r.count_with_non_numeric_values = len(vals)
+                    r.count_with_non_numeric_values += len(vals)
             return r
 
         if values.dtype == bool:
@@ -149,8 +150,7 @@ class MeasureClassifier(object):
         return result
 
     @staticmethod
-    def should_convert_to_numeric(values, cutoff=0.03):
-        classifier = MeasureClassifier.numeric_classifier(values)
+    def should_convert_to_numeric(classifier, cutoff=0.01):
         non_numeric = (1.0 * classifier.count_with_non_numeric_values) / \
             classifier.count_with_values
 
@@ -158,3 +158,71 @@ class MeasureClassifier(object):
             return True
 
         return False
+
+    def check_continuous_rank(self, rank, individuals):
+        if rank < self.config.classification.continuous.min_rank:
+            return False
+        if individuals < self.config.classification.min_individuals:
+            return False
+        return True
+
+    def check_ordinal_rank(self, rank, individuals):
+        if rank < self.config.classification.ordinal.min_rank:
+            return False
+        if individuals < self.config.classification.min_individuals:
+            return False
+        return True
+
+    def check_categorical_rank(self, rank, individuals):
+        if rank < self.config.classification.categorical.min_rank:
+            return False
+        if individuals < self.config.classification.min_individuals:
+            return False
+        return True
+
+    def numeric_classifier(self, classifier_report, measure, values):
+        if not self.should_convert_to_numeric(classifier_report):
+            return None
+
+        values = self.convert_to_numeric(values)
+        unique_values = np.unique(values)
+
+        rank = len(unique_values)
+        individuals = classifier_report.count_with_values
+
+        if self.check_continuous_rank(rank, individuals):
+            measure.measure_type = MeasureType.continuous
+            measure.individuals = individuals
+            measure.rank = rank
+            return measure
+        elif self.check_ordinal_rank(rank, individuals):
+            measure.measure_type = MeasureType.continuous
+            measure.individuals = individuals
+            measure.rank = rank
+            return measure
+
+        return None
+
+    def text_classifier(self, classifier_report, measure, values):
+        values = self.convert_to_string(values)
+        unique_values = np.unique(values)
+        rank = len(unique_values)
+        individuals = classifier_report.count_with_values
+
+        if not self.check_categorical_rank(rank, individuals):
+            measure.measure_type = MeasureType.other
+            measure.individuals = individuals
+            measure.rank = rank
+            return measure
+
+        max_len = max(map(len, unique_values))
+        if max_len > 32:
+            measure.measure_type = MeasureType.text
+        elif rank > 0.5 * individuals:
+            measure.measure_type = MeasureType.text
+        else:
+            measure.measure_type = MeasureType.categorical
+
+        measure.individuals = individuals
+        measure.rank = rank
+        return measure
