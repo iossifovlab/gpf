@@ -18,10 +18,10 @@ class ClassifierReport(object):
         self.count_with_numeric_values = None
         self.count_with_non_numeric_values = None
 
-        self.unique_values = None
-        self.rank = None
-        self.individuals = None
+        # self.rank = None
         self.histogram = None
+        self.unique_values = None
+        self.values = None
 
     def __repr__(self):
         return "ClassifierReport(with values: {}; "\
@@ -35,13 +35,12 @@ class ClassifierReport(object):
             )
 
     def log_line(self):
-        return ','.join(map(str, [
+        return '\t'.join(map(str, [
             self.count_with_values,
             self.count_with_numeric_values,
             self.count_with_non_numeric_values,
             self.count_without_values,
             self.rank,
-            self.individuals,
         ]))
 
 
@@ -51,6 +50,8 @@ def is_nan(val):
     if isinstance(val, str):
         if val.strip() == '':
             return True
+    if type(val) in set([float, np.float64, np.float32]) and np.isnan(val):
+        return True
     return False
 
 
@@ -111,10 +112,14 @@ class MeasureClassifier(object):
 
         if values.dtype in set([int, float, np.float, np.int,
                                 np.dtype('int64'), np.dtype('float64')]):
-            r.count_with_values = len(values)
-            r.count_with_numeric_values = len(values)
+            total = len(values)
+            values = MeasureClassifier.convert_to_numeric(values)
+            real_values = np.array([v for v in values if not is_nan(v)])
+
+            r.count_with_values = len(real_values)
+            r.count_with_numeric_values = len(real_values)
             r.count_with_non_numeric_values = 0
-            r.count_without_values = 0
+            r.count_without_values = total - r.count_with_values
 
             return r
 
@@ -130,7 +135,6 @@ class MeasureClassifier(object):
 
             for convertable, vals in grouped:
                 vals = list(vals)
-
                 if convertable == Convertible.nan:
                     r.count_without_values = len(vals)
                 elif convertable == Convertible.numeric:
@@ -171,6 +175,9 @@ class MeasureClassifier(object):
 
     @staticmethod
     def should_convert_to_numeric(classifier, cutoff=0.06):
+        if classifier.count_with_values == 0:
+            return False
+
         non_numeric = (1.0 * classifier.count_with_non_numeric_values) / \
             classifier.count_with_values
 
@@ -212,6 +219,14 @@ class MeasureClassifier(object):
         rank = len(unique_values)
         individuals = classifier_report.count_with_values
         classifier_report.rank = rank
+        classifier_report.unique_values = unique_values
+        classifier_report.values = values
+
+        if rank == 0 or \
+                individuals < self.config.classification.min_individuals:
+            measure.measure_type = MeasureType.skipped
+            measure.individuals = individuals
+            return measure
 
         if self.check_continuous_rank(rank, individuals):
             measure.measure_type = MeasureType.continuous
@@ -228,20 +243,25 @@ class MeasureClassifier(object):
         values = self.convert_to_string(values)
         unique_values = np.unique(values)
         unique_values = np.array([v for v in unique_values if v is not None])
-        max_len = max(map(len, unique_values))
 
         rank = len(unique_values)
         individuals = classifier_report.count_with_values
         classifier_report.rank = rank
+        classifier_report.unique_values = unique_values
+        classifier_report.values = values
+
+        if rank == 0 or \
+                individuals < self.config.classification.min_individuals:
+            measure.measure_type = MeasureType.skipped
+            measure.individuals = individuals
+            return measure
 
         if not self.check_categorical_rank(rank, individuals):
-            print("MEASURE: {}; rank: {}, individuals: {}".format(
-                measure.measure_id, rank, individuals
-            ))
             measure.measure_type = MeasureType.other
             measure.individuals = individuals
             return measure
 
+        max_len = max(map(len, unique_values))
         if max_len > 32:
             measure.measure_type = MeasureType.text
         elif rank > individuals / 3.0:

@@ -269,15 +269,32 @@ class PrepareVariables(PrepareBase):
         filename, _ext = os.path.splitext(db_filename)
         return filename + '.log'
 
+    def log_header(self):
+        with open(self.log_filename, 'w') as log:
+            log.write('\t'.join([
+                'measure_id',
+                'instrument_name',
+                'measure_name',
+                'type',
+                'individuals',
+                'count_with_values',
+                'count_with_numeric_values',
+                'count_with_non_numeric_values',
+                'count_without_values',
+                'rank',
+            ]))
+            log.write('\n')
+
     def log_measure(self, measure, classifier_report):
         with open(self.log_filename, 'a') as log:
-            log.write(','.join([
+            log.write('\t'.join([
                 measure.measure_id,
                 measure.instrument_name,
                 measure.measure_name,
+                measure.measure_type.name,
                 str(measure.individuals),
             ]))
-            log.write(',')
+            log.write('\t')
             log.write(classifier_report.log_line())
             log.write('\n')
 
@@ -306,6 +323,7 @@ class PrepareVariables(PrepareBase):
         with self.db.engine.begin() as connection:
             result = connection.execute(ins)
             measure_id = result.inserted_primary_key[0]
+            self.log_measure(measure, classifier_report)
 
         values = OrderedDict()
         for _index, row in mdf.iterrows():
@@ -345,6 +363,7 @@ class PrepareVariables(PrepareBase):
 
     def build(self, instruments_dirname):
         self.build_pheno_common()
+        self.log_header()
 
         instruments = defaultdict(list)
         self._collect_instruments(instruments_dirname, instruments)
