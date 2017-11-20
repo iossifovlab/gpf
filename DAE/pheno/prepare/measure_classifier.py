@@ -19,6 +19,8 @@ class ClassifierReport(object):
         self.count_with_non_numeric_values = None
 
         self.unique_values = None
+        self.rank = None
+        self.individuals = None
         self.histogram = None
 
     def __repr__(self):
@@ -37,7 +39,9 @@ class ClassifierReport(object):
             self.count_with_values,
             self.count_with_numeric_values,
             self.count_with_non_numeric_values,
-            self.count_without_values
+            self.count_without_values,
+            self.rank,
+            self.individuals,
         ]))
 
 
@@ -207,7 +211,7 @@ class MeasureClassifier(object):
 
         rank = len(unique_values)
         individuals = classifier_report.count_with_values
-        print(rank, individuals, unique_values)
+        classifier_report.rank = rank
 
         if self.check_continuous_rank(rank, individuals):
             measure.measure_type = MeasureType.continuous
@@ -228,6 +232,7 @@ class MeasureClassifier(object):
 
         rank = len(unique_values)
         individuals = classifier_report.count_with_values
+        classifier_report.rank = rank
 
         if not self.check_categorical_rank(rank, individuals):
             print("MEASURE: {}; rank: {}, individuals: {}".format(
