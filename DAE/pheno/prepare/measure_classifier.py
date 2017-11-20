@@ -201,10 +201,13 @@ class MeasureClassifier(object):
             return None
 
         values = self.convert_to_numeric(values)
-        unique_values = np.unique(values)
+        unique_values = np.unique(np.array([
+            filter(lambda v: not np.isnan(v), values)
+        ]))
 
         rank = len(unique_values)
         individuals = classifier_report.count_with_values
+        print(rank, individuals, unique_values)
 
         if self.check_continuous_rank(rank, individuals):
             measure.measure_type = MeasureType.continuous
@@ -220,6 +223,9 @@ class MeasureClassifier(object):
     def text_classifier(self, classifier_report, measure, values):
         values = self.convert_to_string(values)
         unique_values = np.unique(values)
+        unique_values = np.array([v for v in unique_values if v is not None])
+        max_len = max(map(len, unique_values))
+
         rank = len(unique_values)
         individuals = classifier_report.count_with_values
 
@@ -231,11 +237,9 @@ class MeasureClassifier(object):
             measure.individuals = individuals
             return measure
 
-        unique_values = np.array([v for v in unique_values if v is not None])
-        max_len = max(map(len, unique_values))
         if max_len > 32:
             measure.measure_type = MeasureType.text
-        elif rank > 0.5 * individuals:
+        elif rank > individuals / 3.0:
             measure.measure_type = MeasureType.text
         else:
             measure.measure_type = MeasureType.categorical
