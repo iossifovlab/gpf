@@ -9,10 +9,8 @@ import pandas as pd
 from pheno.db import DbManager
 from pheno.common import RoleMapping, Role, Status, Gender, MeasureType
 import os
-import math
 from box import Box
 from collections import defaultdict, OrderedDict
-from pheno.utils.commons import remove_annoying_characters
 from pheno.pheno_db import PhenoDB
 from pheno.prepare.measure_classifier import MeasureClassifier
 
@@ -267,11 +265,30 @@ class PrepareVariables(PrepareBase):
         df.rename(columns=columns, inplace=True)
         return df
 
-    def _save_measure(self, measure, mdf):
+    @property
+    def log_filename(self):
+        db_filename = self.config.db.filename
+        filename, _ext = os.path.splitext(db_filename)
+        return filename + '.log'
+
+    def log_measure(self, measure, classifier_report):
+        with open(self.log_filename, 'a') as log:
+            log.write(','.join([
+                measure.measure_id,
+                measure.instrument_name,
+                measure.measure_name,
+                measure.individuals,
+            ]))
+            log.write(',')
+            log.write(classifier_report.log_line())
+            log.write('\n')
+
+    def save_measure(self, classifier_report, measure, mdf):
         if len(mdf) < self.config.classification.min_individuals:
             print('skip saving measure: {}; measurings: {}'.format(
                 measure.measure_id, len(mdf)))
-            print(mdf.head())
+            measure.measure_type = MeasureType.skipped
+            self.log_measure(measure, classifier_report)
             return
 
         to_save = measure.to_dict()
@@ -280,15 +297,17 @@ class PrepareVariables(PrepareBase):
             result = connection.execute(ins)
             measure_id = result.inserted_primary_key[0]
 
-        def convert(v): return v
+        values = mdf['value'].values
+        if MeasureType.is_numeric(measure.measure_type):
+            values = MeasureClassifier.convert_to_numeric(values)
+        else:
+            values = MeasureClassifier.convert_to_string(values)
+        assert len(values) == len(mdf)
 
-        if measure.measure_type == MeasureType.categorical or \
-                measure.measure_type == MeasureType.other:
-            def convert(v):
-                if type(v) in set([str, unicode]):
-                    return unicode(remove_annoying_characters(v))
-                else:
-                    return unicode(v)
+        values_series = pd.Series(data=values, index=mdf.index)
+        mdf['values'] = values_series
+
+        mdf = mdf.dropna()
 
         values = OrderedDict()
         for _index, row in mdf.iterrows():
@@ -297,7 +316,7 @@ class PrepareVariables(PrepareBase):
             v = {
                 self.PERSON_ID: pid,
                 'measure_id': measure_id,
-                'value': convert(row['value'])
+                'value': row['value']
             }
             if k in values:
                 print("updating measure {} value {} with {}".format(
@@ -365,12 +384,12 @@ class PrepareVariables(PrepareBase):
             self.build_measure('pheno_common', measure_name, df)
 
     def build_measure(self, instrument_name, measure_name, df):
-        mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].dropna()
+        mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].copy()
         mdf.rename(columns={measure_name: 'value'}, inplace=True)
 
-        measure = self._build_measure(
+        report, measure = self.classify_measure(
             instrument_name, measure_name, mdf)
-        self._save_measure(measure, mdf)
+        self.save_measure(report, measure, mdf)
 
     def build_instrument(self, instrument_name, filenames):
         assert instrument_name is not None
@@ -387,51 +406,8 @@ class PrepareVariables(PrepareBase):
             self.build_measure(instrument_name, measure_name, df)
         return df
 
-    @classmethod
-    def check_values_type(cls, values):
-        boolean = all([isinstance(v, bool) for v in values])
-        if boolean:
-            return bool
-
-        try:
-            vals = [v.strip() for v in values
-                    if not (isinstance(v, float) or isinstance(v, int))]
-            fvals = [float(v) for v in vals if v != '']
-        except ValueError:
-            return str
-
-        hvals = [math.floor(v) for v in fvals]
-        lvals = [math.ceil(v) for v in fvals]
-
-        check_float = [v1 == v2 for (v1, v2) in zip(hvals, lvals)]
-        if all(check_float):
-            return int
-        else:
-            return float
-
-    def check_continuous_rank(self, rank, individuals):
-        if rank < self.config.classification.continuous.min_rank:
-            return False
-        if individuals < self.config.classification.min_individuals:
-            return False
-        return True
-
-    def check_ordinal_rank(self, rank, individuals):
-        if rank < self.config.classification.ordinal.min_rank:
-            return False
-        if individuals < self.config.classification.min_individuals:
-            return False
-        return True
-
-    def check_categorical_rank(self, rank, individuals):
-        if rank < self.config.classification.categorical.min_rank:
-            return False
-        if individuals < self.config.classification.min_individuals:
-            return False
-        return True
-
     @staticmethod
-    def create_measure(instrument_name, measure_name):
+    def create_default_measure(instrument_name, measure_name):
         measure = {
             'measure_type': MeasureType.other,
             'measure_name': measure_name,
@@ -443,44 +419,25 @@ class PrepareVariables(PrepareBase):
         measure = Box(measure)
         return measure
 
-    def _convert_measure_values_to_float(self, df):
-        values = df['value'].values
-
-        def convert(v):
-            if type(v) == str and v.strip() == '':
-                return np.nan
-            return float(v)
-
-        vfunc = np.vectorize(convert)
-        result = vfunc(values)
-
-        df['value'] = result
-        print(list(result))
-
-        df.dropna(inplace=True)
-
-    def _build_measure(self, instrument_name, measure_name, df):
-        measure = self.create_measure(instrument_name, measure_name)
+    def classify_measure(self, instrument_name, measure_name, df):
+        measure = self.create_default_measure(instrument_name, measure_name)
         values = df['value']
-        # unique_values = values.unique()
-        # rank = len(unique_values)
         individuals = len(df)
         measure.individuals = individuals
-        # measure.rank = rank
-
-        if individuals == 0:
-            return measure
 
         classifier_report = self.classifier.classify(values.values)
+
+        if individuals == 0:
+            return classifier_report, measure
 
         numeric_measure = self.classifier.numeric_classifier(
             classifier_report, measure, values.values)
         if numeric_measure:
-            return numeric_measure
+            return classifier_report, numeric_measure
 
         text_measure = self.classifier.text_classifier(
             classifier_report, measure, values.values)
-        return text_measure
+        return classifier_report, text_measure
 
 
 class PrepareMetaMeasures(PrepareBase):

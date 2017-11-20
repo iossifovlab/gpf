@@ -111,7 +111,7 @@ class DbManager(object):
             return self.value_ordinal
         elif value_type == MeasureType.categorical:
             return self.value_categorical
-        elif value_type == MeasureType.other:
+        elif value_type == MeasureType.other or value_type == MeasureType.text:
             return self.value_other
         else:
             raise ValueError("unsupported value type: {}".format(value_type))

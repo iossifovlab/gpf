@@ -68,6 +68,15 @@ class MeasureType(enum.Enum):
         else:
             assert ValueError("unexpected measure type"), measure_type
 
+    @staticmethod
+    def is_numeric(measure_type):
+        return measure_type == MeasureType.continuous or \
+            measure_type == MeasureType.ordinal
+
+    @staticmethod
+    def is_text(measure_type):
+        return not MeasureType.is_numeric(measure_type)
+
 
 class RoleMapping(object):
     SPARK = {
@@ -164,12 +173,12 @@ def default_config():
 #     if continuous < ordinal:
 #         print('continuous min rank expected to be >= ordinal min rank')
 #         return False
-# 
+#
 #     individuals = config.classification.min_individuals
 #     if individuals < 1:
 #         print('minimal number of individuals expected to be >= 1')
 #         return False
-# 
+#
 #     return True
 
 

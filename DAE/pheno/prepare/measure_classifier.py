@@ -7,6 +7,7 @@ import numpy as np
 import itertools
 import enum
 from pheno.common import MeasureType
+from pheno.utils.commons import remove_annoying_characters
 
 
 class ClassifierReport(object):
@@ -30,6 +31,14 @@ class ClassifierReport(object):
                 self.count_with_non_numeric_values,
                 self.count_without_values
             )
+
+    def log_line(self):
+        return ','.join([
+            self.count_with_values,
+            self.count_with_numeric_values,
+            self.count_with_non_numeric_values,
+            self.count_without_values
+        ])
 
 
 def is_nan(val):
@@ -74,6 +83,15 @@ def convert_to_numeric(val):
     if is_convertible_to_numeric(val) == Convertible.numeric:
         return float(val)
     return np.nan
+
+
+def convert_to_string(val):
+    if is_nan(val):
+        return None
+    if type(val) in set([str, unicode]):
+        return unicode(remove_annoying_characters(val))
+    else:
+        return unicode(val)
 
 
 class MeasureClassifier(object):
@@ -144,7 +162,7 @@ class MeasureClassifier(object):
 
     @staticmethod
     def convert_to_string(values):
-        result = np.array([str(val) for val in values])
+        result = np.array([convert_to_string(val) for val in values])
         return result
 
     @staticmethod
@@ -213,6 +231,7 @@ class MeasureClassifier(object):
             measure.individuals = individuals
             return measure
 
+        unique_values = np.array([v for v in unique_values if v is not None])
         max_len = max(map(len, unique_values))
         if max_len > 32:
             measure.measure_type = MeasureType.text
