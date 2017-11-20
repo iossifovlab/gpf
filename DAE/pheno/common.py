@@ -48,8 +48,8 @@ class MeasureType(enum.Enum):
     ordinal = 2
     categorical = 3
     text = 4
-    skipped = 5
     other = 100
+    skipped = 1000
 
     @staticmethod
     def from_str(measure_type):

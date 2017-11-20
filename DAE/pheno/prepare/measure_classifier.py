@@ -33,12 +33,12 @@ class ClassifierReport(object):
             )
 
     def log_line(self):
-        return ','.join([
+        return ','.join(map(str, [
             self.count_with_values,
             self.count_with_numeric_values,
             self.count_with_non_numeric_values,
             self.count_without_values
-        ])
+        ]))
 
 
 def is_nan(val):

@@ -56,7 +56,6 @@ class PreparePersons(PrepareBase):
             "can't find column '{}' into pedigree file".format(role_column)
         mapping_name = self.config.person.role.mapping
         mapping = getattr(RoleMapping(), mapping_name)
-        print(mapping)
         assert mapping is not None, \
             "bad role mapping '{}'".format(mapping_name)
 
@@ -228,13 +227,12 @@ class PrepareVariables(PrepareBase):
 
         dataframes = []
         sep = ','
-        print(self.config)
 
         if self.config.instruments.tab_separated:
             sep = '\t'
 
         for filename in filenames:
-            df = pd.read_csv(filename, sep=sep)
+            df = pd.read_csv(filename, sep=sep, low_memory=False)
             person_id = self._get_person_column_name(df)
             print("renaming column '{}' in instrument: {}".format(
                 person_id, instrument_name))
@@ -277,13 +275,25 @@ class PrepareVariables(PrepareBase):
                 measure.measure_id,
                 measure.instrument_name,
                 measure.measure_name,
-                measure.individuals,
+                str(measure.individuals),
             ]))
             log.write(',')
             log.write(classifier_report.log_line())
             log.write('\n')
 
     def save_measure(self, classifier_report, measure, mdf):
+
+        values = mdf['value'].values
+        if MeasureType.is_numeric(measure.measure_type):
+            values = MeasureClassifier.convert_to_numeric(values)
+        else:
+            values = MeasureClassifier.convert_to_string(values)
+        assert len(values) == len(mdf)
+
+        values_series = pd.Series(data=values, index=mdf.index)
+        mdf['values'] = values_series
+
+        mdf = mdf.dropna()
         if len(mdf) < self.config.classification.min_individuals:
             print('skip saving measure: {}; measurings: {}'.format(
                 measure.measure_id, len(mdf)))
@@ -297,18 +307,6 @@ class PrepareVariables(PrepareBase):
             result = connection.execute(ins)
             measure_id = result.inserted_primary_key[0]
 
-        values = mdf['value'].values
-        if MeasureType.is_numeric(measure.measure_type):
-            values = MeasureClassifier.convert_to_numeric(values)
-        else:
-            values = MeasureClassifier.convert_to_string(values)
-        assert len(values) == len(mdf)
-
-        values_series = pd.Series(data=values, index=mdf.index)
-        mdf['values'] = values_series
-
-        mdf = mdf.dropna()
-
         values = OrderedDict()
         for _index, row in mdf.iterrows():
             pid = int(row[self.PID_COLUMN])
@@ -319,11 +317,10 @@ class PrepareVariables(PrepareBase):
                 'value': row['value']
             }
             if k in values:
-                print(row)
                 print("updating measure {} for person {} value {} "
                       "with {}".format(
                           measure.measure_id,
-                          pid,
+                          row['person_id'],
                           values[k]['value'],
                           row['value'])
                       )
@@ -331,6 +328,7 @@ class PrepareVariables(PrepareBase):
 
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
+
         with self.db.engine.begin() as connection:
             connection.execute(ins, values.values())
 
@@ -341,7 +339,6 @@ class PrepareVariables(PrepareBase):
                 name, ext = os.path.splitext(basename)
                 if ext.lower() != '.csv':
                     continue
-                print(root, filename)
                 instruments[name].append(
                     os.path.abspath(os.path.join(root, filename))
                 )
