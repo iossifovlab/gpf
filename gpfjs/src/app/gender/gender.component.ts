@@ -31,6 +31,7 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
 
   ngOnInit() {
     this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
       .subscribe((state) => {
         if (state['gender']) {
           this.selectNone();

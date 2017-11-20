@@ -27,14 +27,14 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnChang
     super();
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes) {
     if (!this.dataset) {
       return;
     }
 
     this.phenoFiltersState =
       this.dataset.genotypeBrowser.phenoFilters
-      .concat(this.dataset.genotypeBrowser.familyStudyFilters)
+      .concat(this.dataset.genotypeBrowser.familyStudyFilters || [])
       .map(phenoFilter => {
         if (phenoFilter.measureType === 'continuous') {
           return [
@@ -54,7 +54,6 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnChang
         ] as [PhenoFilter, PhenoFilterState];
 
       });
-      // .filter(([_, f]) => !f.isEmpty());
 
     console.log(this.phenoFiltersState);
   }

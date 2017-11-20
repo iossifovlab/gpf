@@ -30,9 +30,9 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
 
   ngAfterViewInit() {
     this.stateRestoreService.getState(this.constructor.name)
-      .takeUntil(this.ngUnsubscribe)
-      .subscribe(
-        (state) => {
+      .take(1)
+      // .takeUntil(this.ngUnsubscribe)
+      .subscribe(state => {
           if ('familyIds' in state) {
             this.ngbTabset.select('family-ids');
           } else if ('phenoFilters' in state) {

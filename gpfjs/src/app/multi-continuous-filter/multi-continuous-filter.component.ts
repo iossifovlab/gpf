@@ -58,7 +58,9 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   updateMeasures(measures) {
     this.measures = measures;
 
-    this.stateRestoreService.getState(this.constructor.name + this.continuousFilterState.id)
+    this.stateRestoreService
+      .getState(this.constructor.name + this.continuousFilterState.id)
+      .take(1)
       .subscribe((state) => {
         if (state['phenoFilters']) {
           this.restoreContinuousFilter(state['phenoFilters']);

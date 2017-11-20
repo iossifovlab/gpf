@@ -25,8 +25,9 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
   }
 
   ngOnInit() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+    this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
+      .subscribe(state => {
         if (state['geneSymbols']) {
           this.geneSymbols.geneSymbols = state['geneSymbols'].join('\n');
         }

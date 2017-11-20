@@ -21,8 +21,9 @@ export class RegionsBlockComponent extends QueryStateCollector implements AfterV
   }
 
   ngAfterViewInit() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+    this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
+      .subscribe(state => {
         if ('regions' in state) {
           this.ngbTabset.select('regions-filter');
         }

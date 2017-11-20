@@ -14,7 +14,10 @@ import { DatasetsService } from '../datasets/datasets.service';
   selector: 'gpf-varianttypes',
   templateUrl: './varianttypes.component.html',
   styleUrls: ['./varianttypes.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => VarianttypesComponent) }]
+  providers: [{
+    provide: QueryStateProvider,
+    useExisting: forwardRef(() => VarianttypesComponent)
+  }]
 })
 export class VarianttypesComponent extends QueryStateProvider
     implements OnInit, OnChanges {
@@ -35,6 +38,7 @@ export class VarianttypesComponent extends QueryStateProvider
 
   ngOnInit() {
     this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
       .subscribe(state => {
         if (state['variantTypes']) {
           this.variantTypes.selected = new Set(state['variantTypes'] as string[]);

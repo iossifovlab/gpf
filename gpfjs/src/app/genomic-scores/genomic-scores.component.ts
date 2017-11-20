@@ -69,8 +69,8 @@ export class GenomicScoresComponent implements OnInit {
     ngOnInit() {
         this.datasetsService.getSelectedDataset().subscribe(dataset => {
           this.dataset = dataset;
-          this.stateRestoreService
-            .getState(this.constructor.name + this.index)
+          this.stateRestoreService.getState(this.constructor.name + this.index)
+            .take(1)
             .subscribe(state => {
                 if (!state['genomicScores'] || this.index < state['genomicScores'].length) {
                     return;

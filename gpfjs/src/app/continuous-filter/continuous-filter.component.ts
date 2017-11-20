@@ -65,8 +65,9 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
           this.continuousFilterState.mmin = histogramData.min;
           this.continuousFilterState.mmax = histogramData.max;
 
-          this.stateRestoreService.getState(this.constructor.name + this.filterId).subscribe(
-            (state) => {
+          this.stateRestoreService.getState(this.constructor.name + this.filterId)
+            .take(1)
+            .subscribe(state => {
               if (state['phenoFilters']) {
                 this.restoreContinuousFilter(state['phenoFilters']);
               }

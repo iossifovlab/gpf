@@ -41,8 +41,9 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   ngOnInit() {
     this.selectInitialValues();
 
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+    this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
+      .subscribe(state => {
         if (state['effectTypes']) {
           this.selectEffectTypesSet(state['effectTypes']);
         }

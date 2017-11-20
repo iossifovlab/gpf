@@ -38,8 +38,9 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   }
 
   restoreStateSubscribe() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+    this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
+      .subscribe(state => {
         if (state['geneSet'] && state['geneSet']['geneSetsCollection']) {
           for (let geneSetCollection of this.geneSetsCollections) {
             if (geneSetCollection.name === state['geneSet']['geneSetsCollection']) {
@@ -53,7 +54,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
           }
         } else {
            console.log("search called!");
-          this.onSearch('');
+           this.onSearch('');
         }
       });
   }

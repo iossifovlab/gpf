@@ -31,6 +31,7 @@ export class StudyTypesComponent extends QueryStateProvider implements OnInit {
 
   ngOnInit() {
     this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
       .subscribe(state => {
         if (state['studyType']) {
           for (let studyType of state['studyType']) {

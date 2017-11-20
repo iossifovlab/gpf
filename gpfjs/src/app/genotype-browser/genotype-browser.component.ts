@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, AfterViewInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, AfterViewInit, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
@@ -86,7 +86,6 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
                                       ...state);
-        console.log("query data", queryData)
         this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
           (genotypePreviewsArray) => {
             this.genotypePreviewsArray = genotypePreviewsArray;

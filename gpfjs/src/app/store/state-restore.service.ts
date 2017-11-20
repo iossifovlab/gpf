@@ -18,8 +18,8 @@ export class StateRestoreService {
   ) {
     // Reset state when tool/dataset is changed
     // This prevents restoring the initial state constantly
-    router.events.subscribe(
-      (params) => {
+    router.events
+      .subscribe(params => {
         let newUrl = this.router.url.split(';')[0];
         if (this.firstUrl == null) {
           this.firstUrl = newUrl;
@@ -27,8 +27,7 @@ export class StateRestoreService {
           this.state.next({});
           this.emptyObjectSend = true;
         }
-      }
-    );
+      });
   }
 
   getState(key: string): Observable<any> {

@@ -50,6 +50,7 @@ export class GenomicScoresBlockComponent extends QueryStateProvider implements O
 
     ngOnInit() {
         this.stateRestoreService.getState(this.constructor.name)
+            .take(1)
             .subscribe(state => {
                 if (state['genomicScores']) {
                     for (let score of state['genomicScores']) {

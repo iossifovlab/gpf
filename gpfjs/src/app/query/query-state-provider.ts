@@ -1,4 +1,4 @@
-import { AfterContentInit, ContentChildren, QueryList, ViewChildren, forwardRef, DoCheck } from '@angular/core';
+import { DoCheck, ContentChildren, QueryList, ViewChildren, forwardRef, OnChanges } from '@angular/core';
 
 import { Subject, Observable } from 'rxjs';
 import { Scheduler } from 'rxjs';
@@ -11,21 +11,17 @@ import { GenderComponent } from '../gender/gender.component';
 import * as _ from 'lodash';
 
 
-export class QueryStateProvider implements DoCheck {
-  stateChange$ = new Subject<boolean>();
-  private lastState: any;
-
+export class QueryStateProvider {
   getState() {
     return null;
-  }
-
-  ngDoCheck() {
-    this.stateChange$.next(true);
   }
 }
 
 
-export class QueryStateCollector {
+export class QueryStateCollector implements DoCheck {
+  private stateObjectString = '';
+  private stateChange$ = new Subject<boolean>();
+
   @ViewChildren(forwardRef(() => QueryStateProvider))
   directContentChildren: QueryList<QueryStateProvider>;
 
@@ -33,37 +29,51 @@ export class QueryStateCollector {
   contentChildren: QueryList<QueryStateCollector>;
 
   collectState() {
-    let directState = this.directContentChildren.map((children) => children.getState());
-    let indirectState = this.contentChildren.reduce((acc, current) => acc.concat(current.collectState()), []);
+    let directState = [];
+    let indirectState = [];
+    if (this.directContentChildren) {
+      directState = this.directContentChildren.map((children) => children.getState());
+    }
+    if (this.contentChildren) {
+      indirectState = this.contentChildren.reduce((acc, current) => acc.concat(current.collectState()), []);
+    }
     return directState.concat(indirectState);
   }
 
-  getDirectStateChange() {
-    return this.directContentChildren.map(children => children.stateChange$);
-  }
-
-  getStateObservables(): Subject<boolean>[] {
-    let directState = this.getDirectStateChange();
-    let indirectState = this.contentChildren
-      .reduce((acc, current) => acc.concat(current.getStateObservables()), new Array<Subject<boolean>>());
-    return _.flattenDeep(directState.concat(indirectState));
+  ngDoCheck() {
+    this.stateChange$.next(true);
   }
 
   getStateChange() {
-    let so = this.getStateObservables();
-
-    return Observable.merge(...so)
+    return Observable
+      .combineLatest(this.stateChange$, this.directContentChildren.changes, this.contentChildren.changes)
       .subscribeOn(Scheduler.async)
-      .debounceTime(500);
+      .debounceTime(500)
+      .switchMap(_ => {
+        let stateArray = this.collectState();
+        return Observable.zip(...stateArray)
+          .catch(error => {
+            return Observable.of([]);
+          })
+          .map(state => {
+            if (!state || state.length === 0) {
+              return this.stateObjectString;
+            }
+            let stateString = JSON.stringify(Object.assign({}, ...state));
+            if (stateString !== this.stateObjectString) {
+              this.stateObjectString = stateString;
+            }
+            return this.stateObjectString;
+          });
+      })
+      .distinctUntilChanged();
   }
 
   detectNextStateChange(lambda: () => any) {
     this.getStateChange()
-      .take(1)
       .subscribe(_ => {
-        console.log("change run");
+        console.log("change detected");
         lambda();
-        this.detectNextStateChange(lambda);
       });
   }
 }

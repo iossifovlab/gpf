@@ -25,8 +25,9 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
   }
 
   ngOnInit() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+    this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
+      .subscribe(state => {
         if (state['regions']) {
           this.regionsFilter.regionsFilter = state['regions'].join('\n');
         }

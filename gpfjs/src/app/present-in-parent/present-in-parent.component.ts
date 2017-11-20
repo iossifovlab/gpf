@@ -89,8 +89,9 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   restoreState() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+    this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
+      .subscribe(state => {
         if (state['presentInParent'] && state['presentInParent']['presentInParent']) {
           this.restoreCheckedState(state['presentInParent']['presentInParent']);
         }
