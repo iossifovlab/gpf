@@ -102,8 +102,8 @@ class DatasetsConfig(object):
                 res.append(section_id)
         return res
 
-    def _get_boolean(self, section, option):
-        res = False
+    def _get_boolean(self, section, option, default=False):
+        res = default
         if self.config.has_option(section, option):
             res = self.config.getboolean(section, option)
         return res
@@ -135,6 +135,8 @@ class DatasetsConfig(object):
             section, 'genotypeBrowser.hasPresentInParent')
         study_types = self._get_boolean(
             section, 'genotypeBrowser.hasStudyTypes')
+        genes_block_show_all = self._get_boolean(section,
+            'genotypeBrowser.genesBlockShowAll', True)
 
         family_filters = \
             self._get_boolean(
@@ -163,6 +165,7 @@ class DatasetsConfig(object):
             'hasStudyTypes': study_types,
             'hasFamilyFilters': family_filters,
             'hasPedigreeSelector': pedigree_selector,
+            'genesBlockShowAll': genes_block_show_all,
             'phenoColumns': pheno_columns,
             'phenoFilters': pheno_filters,
             'familyStudyFilters': family_study_filters,
