@@ -5,7 +5,7 @@ import sys
 import os
 import pysam
 import numpy
-from collections import namedtuple, defaultdict
+from collections import namedtuple, defaultdict, OrderedDict
 from itertools import izip
 import itertools
 
@@ -16,79 +16,114 @@ import vrtIOutil as vIO
 
 
 class FamilyVariant:
-    def __init__(self, familyInfo, altsCount):
+    def __init__(self, familyInfo, altsCount, samplesWithRef):
         self.GT = numpy.zeros((len(familyInfo['ids']), altsCount,),
                               dtype=numpy.int)
         self.familyInfo = familyInfo
         self.altsCount = altsCount
         self._cnt = None
 
+        for n, pid in enumerate(self.familyInfo['ids']):
+            if pid in samplesWithRef:
+                self.GT[n][0] = 2
+                v = samplesWithRef[pid]
+
+                cx = vIO.getCount(v)
+                if len(cx) == len(self.GT[n]):
+                    #print(cx)
+                    self.cnt[n] = cx
+
     @property
     def cnt(self):
         if self._cnt is None:
-            self._cnt = numpy.zeros((len(self.familyInfo['ids']), 
-                                    self.altsCount,), dtype=numpy.int)
+            self._cnt = numpy.zeros((len(self.familyInfo['ids']),
+                                    self.altsCount,), dtype=numpy.int) - 1
         return self._cnt
-
+    
     def get_cnt_str(self, ix):
         if self._cnt is None:
             return "-1"
         return array2str(self._cnt, ix, delim=' ')
 
+    def get_n(self, personId):
+        for n, pid in enumerate(self.familyInfo['ids']):
+            if pid == personId:
+                return n
+
 
 def generateFamilyVariants(data, fam, fInfo):
+    tlx = len(data.samples)
+    clx = 0
+
     individuals = {personId: familyId
                    for familyId in fam
                    for personId in fInfo[familyId]['ids']}
 
-    interesting = dict()
+    interesting = OrderedDict()
+    samplesWithRef = dict()
+    incomplete = set()
     altsCount = len(data.alts) + 1
 
     for k, v in data.samples.items():
-        if v['GT'][0] is None:
-            continue
-        if any([a != 0 for a in v['GT']]):
-            familyId = individuals[k]
-            if familyId not in interesting:
-                interesting[familyId] = FamilyVariant(fInfo[familyId],
-                                                      altsCount)
+        familyId = individuals[k]
 
-    return interesting
+        gt = v['GT']
 
-
-def percentageGentype(data):
-    tlx = len(data.samples)
-    clx = 0
-    for k, v in data.samples.items():
-        #print >> sys.stderr, v['GT'][0], v['GT']
-        if v['GT'][0] is None:
+        if gt[0] is None:
+            incomplete.add(familyId)
             continue
         clx += 1
 
-    return 100. * clx / tlx
+        ref = True
+        for a in gt:
+            if a != 0:
+                ref = False
+                break
+
+        if ref:
+            if familyId not in interesting:
+                samplesWithRef[k] = v
+            else:
+                family = interesting[familyId]
+                n = family.get_n(k)
+                GT = family.GT[n]
+                GT[0] = 2
+
+                cx = vIO.getCount(v)
+                if len(cx) == len(GT):
+                   # print(cx)
+                    family.cnt[n] = cx
+
+        else:
+            if familyId not in interesting:
+                interesting[familyId] = FamilyVariant(fInfo[familyId],
+                                                      altsCount,
+                                                      samplesWithRef)
+            getGT(v, gt, interesting[familyId],
+                  interesting[familyId].get_n(k))
+
+    filtered = [family for k, family in interesting.items()
+                if k not in incomplete]
+
+    count = len(fam) - len(incomplete)
+    filtered.sort(key=lambda elem: elem.familyInfo['fid'])
+    #print("generateFamilyVariants", len(fam), len(incomplete), len(interesting), len(samplesWithRef))
+
+    return filtered, 100. * clx / tlx, count
 
 
-def getGT(sample, data, familyVariant, n):
+def getGT(sample, gt, familyVariant, n):
     GT = familyVariant.GT[n]
 
-    try:
-        dx = data.samples[sample]
-    except KeyError, e:
-        print sample, 'not found on ', sorted(data.samples.keys())
-        exit(1)
-
-    #GQ  = getGQ( dx )
-
-    if None in dx['GT']:  # [0] is None:
+    if None in gt:  # [0] is None:
         return False
 
-    gt = list(dx['GT'])
     for ix in gt:
         GT[ix] += 1
-        
 
-    cx = vIO.getCount(dx)
+    cx = vIO.getCount(sample)
     if len(cx) == len(GT):
+        #print(cx)
         familyVariant.cnt[n] = cx
     # if cx and cnt not agree, then ignore
 
@@ -117,24 +152,6 @@ def makeFamInfoConv(fInfo, pInfo):
         v['notChild'] = numpy.array(nC)
 
     # print fInfo
-
-
-def getVrtFam(familyVariant, data):
-    fam = familyVariant.familyInfo['ids']
-    flag = True
-
-    #strx = []
-    # print fam
-    for n, pid in enumerate(fam):
-        #fx, gt, cx, gq = getGT( pid, data )
-        fx = getGT(pid, data, familyVariant, n)
-
-        if not fx:
-            flag = False
-
-        #strx.append( '/'.join(map(str,gq)) )
-    # print GT
-    return flag
 
 
 def array2str(mx, ix, delim=''):
@@ -371,8 +388,9 @@ def main():
     cchr = ''
     output = {}
     for rx in vf:
-        familyVariants = generateFamilyVariants(rx, fam, fInfo)
-        pgt = percentageGentype(rx)
+        familyVariants, pgt, count = generateFamilyVariants(rx, fam, fInfo)
+
+        count2 = count - len(familyVariants)
         if pgt < ox.minPercentOfGenotypeSamples:
             continue
         #print >> sys.stderr, 'pcntg', pgt
@@ -395,26 +413,24 @@ def main():
 
         dx = []
         # save ok families, check whether autosomal or de novo
-        for familyId in familyVariants:
-            familyVariant = familyVariants[familyId]
-            flag = getVrtFam(familyVariant, rx)
-
-            if not flag:
-                continue  # print px, vx, rx.chrom, rx.pos, rx.ref, rx.alts
-
+        for familyVariant in familyVariants:
             if nonAutoX:
                 # fInfo[fid]['ids'], pInfo )
                 flag = fixNonAutoX(familyVariant)
                 if not flag:
+                    count -= 1
                     continue  # fail to fix
 
                 flag = isDenovoNonAutosomalX(familyVariant)
                 if flag:
+                    count -= 1
                     continue  # denovo
             else:
                 flag = isDenovo(familyVariant)  # isDenovo( GT ):
                 # print GT
                 if flag:
+                    count -= 1
+                    #nt("skipping isDenovo", familyVariant.familyInfo['fid'])
                     continue  # denovo
 
             # NOTE: main data set
@@ -428,7 +444,7 @@ def main():
         # skip if failed families are more than certain threshold
         # if len(dx)/(1.*len(fam))*100. < ox.minPercentOfGenotypeFamilies: continue
 
-        nPC = 2 * len(dx)
+        nPC = 2 * count
         nPcntC = (1. * nPC) / (2 * len(fam)) * 100.
         for n, (p, v) in enumerate(izip(px, vx)):
             ix = n + 1
@@ -465,6 +481,8 @@ def main():
 
             strx = ';'.join(strx)
             # print strx
+
+            tAll += 4 * count2
 
             # chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
             # fid:bestState:counts:qualityScore
