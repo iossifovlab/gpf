@@ -1,14 +1,16 @@
-import { Component, Input, OnChanges, AfterViewInit, SimpleChanges } from '@angular/core';
-import { QueryStateCollector } from '../query/query-state-provider';
+import { Component, Input, OnInit, OnChanges, AfterViewInit, SimpleChanges } from '@angular/core';
+import { ActivatedRoute, Params, Router } from '@angular/router';
+
 import { Observable } from 'rxjs';
+import 'rxjs/add/operator/zip';
+
+import { QueryStateCollector } from '../query/query-state-provider';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
-import { ActivatedRoute, Params, Router } from '@angular/router';
 import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
-import 'rxjs/add/operator/zip';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -16,7 +18,7 @@ import 'rxjs/add/operator/zip';
   styleUrls: ['./genotype-browser.component.css']
 })
 export class GenotypeBrowserComponent extends QueryStateCollector
-    implements OnChanges, AfterViewInit {
+    implements OnInit, OnChanges, AfterViewInit {
   genotypePreviewsArray: any;
   tablePreview: boolean;
 
@@ -39,15 +41,11 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   }
 
   ngAfterViewInit() {
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
-    // FIXME: figure out when to collect the state
-    // this.store.subscribe(
-      // (param) => {
+    this.detectNextStateChange(() => {
         let stateArray = this.collectState();
         Observable.zip(...stateArray)
         .subscribe(
           state => {
-            this.genotypePreviewsArray = null;
             let stateObject = Object.assign({}, ...state);
             this.isMissenseSelected = stateObject.effectTypes.includes('Missense');
             this.genotypeBrowserState = Object.assign({},
@@ -61,16 +59,18 @@ export class GenotypeBrowserComponent extends QueryStateCollector
           error => {
             this.genotypePreviewsArray = null;
             console.warn(error);
-          }
-        );
-    //   }
-    // )
+          });
+      });
 
     this.route.params.take(1).subscribe(
       (params: Params) => {
         this.stateRestoreService.onParamsUpdate(params['state']);
       }
     );
+  }
+
+  ngOnInit() {
+    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
   }
 
   ngOnChanges(changes: SimpleChanges) {

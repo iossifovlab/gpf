@@ -38,7 +38,8 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
       .subscribe(state => {
         if (state['pedigreeSelector'] && state['pedigreeSelector']['id']) {
           for (let pedigree of  this.pedigrees) {
-            if (pedigree.id === state['pedigreeSelector']['id']) {
+            if (pedigree.id === state['pedigreeSelector']['id']
+                  && (!this.pedigreeState.pedigree || this.pedigreeState.pedigree.id !== pedigree.id)) {
               this.pedigreeState.pedigree = pedigree;
               this.pedigreeState.checkedValues =
                 new Set(pedigree.domain.map(sv => sv.id));
@@ -46,8 +47,11 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
           }
         }
         if (state['pedigreeSelector'] && state['pedigreeSelector']['checkedValues']) {
-          this.pedigreeState.checkedValues =
-            new Set(state['pedigreeSelector']['checkedValues']);
+          let checkedValues = new Set(state['pedigreeSelector']['checkedValues']);
+          if (checkedValues.size !== this.pedigreeState.checkedValues.size ||
+              Array.from(this.pedigreeState.checkedValues).filter(v => checkedValues.has(v)).length !== 0) {
+            this.pedigreeState.checkedValues = checkedValues;
+          }
         }
       });
   }
@@ -79,7 +83,8 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
   }
 
   selectPedigree(index): void {
-    if (index >= 0 && index < this.pedigrees.length) {
+    if (index >= 0 && index < this.pedigrees.length
+        && this.pedigreeState.pedigree !== this.pedigrees[index]) {
       this.pedigreeState.pedigree = this.pedigrees[index];
       this.selectAll();
     }
