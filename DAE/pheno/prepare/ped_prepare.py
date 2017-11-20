@@ -14,6 +14,7 @@ from box import Box
 from collections import defaultdict, OrderedDict
 from pheno.utils.commons import remove_annoying_characters
 from pheno.pheno_db import PhenoDB
+from pheno.prepare.measure_classifier import MeasureClassifier
 
 
 class PrepareBase(object):
@@ -206,6 +207,7 @@ class PrepareVariables(PrepareBase):
         super(PrepareVariables, self).__init__(config)
         self.pedigree_df = pedigree_df
         self.sample_ids = None
+        self.classifier = MeasureClassifier(config)
 
     def _get_person_column_name(self, df):
         if self.config.person.column:
@@ -428,7 +430,8 @@ class PrepareVariables(PrepareBase):
             return False
         return True
 
-    def _default_measure(self, instrument_name, measure_name):
+    @staticmethod
+    def create_measure(instrument_name, measure_name):
         measure = {
             'measure_type': MeasureType.other,
             'measure_name': measure_name,
@@ -456,65 +459,28 @@ class PrepareVariables(PrepareBase):
 
         df.dropna(inplace=True)
 
-    @staticmethod
-    def _split_nonfloat_values(self, values):
-        pass
-
     def _build_measure(self, instrument_name, measure_name, df):
-        measure = self._default_measure(instrument_name, measure_name)
+        measure = self.create_measure(instrument_name, measure_name)
         values = df['value']
-        unique_values = values.unique()
-        rank = len(unique_values)
+        # unique_values = values.unique()
+        # rank = len(unique_values)
         individuals = len(df)
         measure.individuals = individuals
+        # measure.rank = rank
 
         if individuals == 0:
             return measure
 
-        values_type = values.dtype
+        classifier_report = self.classifier.classify(values.values)
 
-        print("rank: {}; values type: {}; unique values: {}".format(
-            rank, values_type, unique_values))
+        numeric_measure = self.classifier.numeric_classifier(
+            classifier_report, measure, values.values)
+        if numeric_measure:
+            return numeric_measure
 
-        if values_type == np.object:
-            print("checking values type ({}) for {}:{}".format(
-                values.dtype, instrument_name, measure_name))
-            values_type = self.check_values_type(unique_values)
-
-        print("-> rank: {}; values type: {}; unique values: {}".format(
-            rank, values_type, unique_values))
-
-        if values_type == str:
-            pass
-
-        if values_type in set([str, bool, np.bool, np.dtype('bool')]):
-            if self.check_categorical_rank(rank, individuals):
-                measure.measure_type = MeasureType.categorical
-                return measure
-        elif values_type in set([int, float, np.float, np.int,
-                                 np.dtype('int64'), np.dtype('float64')]):
-            self._convert_measure_values_to_float(df)
-
-            values = df['value']
-            unique_values = values.unique()
-            rank = len(unique_values)
-            individuals = len(df)
-            measure.individuals = individuals
-            print("->>> rank: {}; values type: {}; unique values: {}".format(
-                rank, values_type, unique_values))
-
-            if self.check_continuous_rank(rank, individuals):
-                measure.measure_type = MeasureType.continuous
-                return measure
-            if self.check_ordinal_rank(rank, individuals):
-                measure.measure_type = MeasureType.ordinal
-                return measure
-            if self.check_categorical_rank(rank, individuals):
-                measure.measure_type = MeasureType.categorical
-                return measure
-
-        measure.measure_type = MeasureType.other
-        return measure
+        text_measure = self.classifier.text_classifier(
+            classifier_report, measure, values.values)
+        return text_measure
 
 
 class PrepareMetaMeasures(PrepareBase):

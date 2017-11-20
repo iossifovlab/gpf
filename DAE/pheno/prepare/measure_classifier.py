@@ -7,7 +7,6 @@ import numpy as np
 import itertools
 import enum
 from pheno.common import MeasureType
-from numpy import rank
 
 
 class ClassifierReport(object):
@@ -109,7 +108,6 @@ class MeasureClassifier(object):
 
             for convertable, vals in grouped:
                 vals = list(vals)
-                print(convertable, vals)
 
                 if convertable == Convertible.nan:
                     r.count_without_values = len(vals)
@@ -150,7 +148,7 @@ class MeasureClassifier(object):
         return result
 
     @staticmethod
-    def should_convert_to_numeric(classifier, cutoff=0.01):
+    def should_convert_to_numeric(classifier, cutoff=0.06):
         non_numeric = (1.0 * classifier.count_with_non_numeric_values) / \
             classifier.count_with_values
 
@@ -193,12 +191,10 @@ class MeasureClassifier(object):
         if self.check_continuous_rank(rank, individuals):
             measure.measure_type = MeasureType.continuous
             measure.individuals = individuals
-            measure.rank = rank
             return measure
         elif self.check_ordinal_rank(rank, individuals):
             measure.measure_type = MeasureType.continuous
             measure.individuals = individuals
-            measure.rank = rank
             return measure
 
         return None
@@ -210,9 +206,11 @@ class MeasureClassifier(object):
         individuals = classifier_report.count_with_values
 
         if not self.check_categorical_rank(rank, individuals):
+            print("MEASURE: {}; rank: {}, individuals: {}".format(
+                measure.measure_id, rank, individuals
+            ))
             measure.measure_type = MeasureType.other
             measure.individuals = individuals
-            measure.rank = rank
             return measure
 
         max_len = max(map(len, unique_values))
@@ -224,5 +222,4 @@ class MeasureClassifier(object):
             measure.measure_type = MeasureType.categorical
 
         measure.individuals = individuals
-        measure.rank = rank
         return measure
