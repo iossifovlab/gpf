@@ -29,7 +29,7 @@
   </p>
   <gpf-genotype-preview-table
   	*ngIf="tablePreview"
-    [additionalColumns]="selectedDataset?.genotypeBrowser?.additionalColumns"
+    [columns]="selectedDataset?.genotypeBrowser?.columns"
     [genotypePreviewsArray]=genotypePreviewsArray>
   </gpf-genotype-preview-table>
   <gpf-genotype-preview-chromosomes

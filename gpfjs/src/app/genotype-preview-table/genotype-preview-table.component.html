@@ -1,7 +1,7 @@
 <div class="genome-preview">
     <div *ngIf="genotypePreviewsArray">
         <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
-            <gpf-table-column *ngFor="let column of additionalColumns">
+            <gpf-table-column *ngFor="let column of columns">
                 <gpf-table-header caption="{{ column.name }}">
                 </gpf-table-header>
                 <gpf-table-header>
