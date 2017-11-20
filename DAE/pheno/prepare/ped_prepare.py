@@ -319,11 +319,14 @@ class PrepareVariables(PrepareBase):
                 'value': row['value']
             }
             if k in values:
-                print("updating measure {} value {} with {}".format(
-                    measure.measure_id,
-                    values[k]['value'],
-                    row['value'])
-                )
+                print(row)
+                print("updating measure {} for person {} value {} "
+                      "with {}".format(
+                          measure.measure_id,
+                          pid,
+                          values[k]['value'],
+                          row['value'])
+                      )
             values[k] = v
 
         value_table = self.db.get_value_table(measure.measure_type)
