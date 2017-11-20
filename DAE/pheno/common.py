@@ -160,26 +160,26 @@ def default_config():
     return Box(config)
 
 
-# def check_config_pheno_db(config):
-#     categorical = config.classification.categorical.min_rank
-#     if categorical < 1:
-#         print('categorical min rank expected to be > 0')
-#         return False
-#     ordinal = config.classification.ordinal.min_rank
-#     if ordinal < categorical:
-#         print('ordianl min rank expected to be >= categorical min rank')
-#         return False
-#     continuous = config.classification.continuous.min_rank
-#     if continuous < ordinal:
-#         print('continuous min rank expected to be >= ordinal min rank')
-#         return False
-#
-#     individuals = config.classification.min_individuals
-#     if individuals < 1:
-#         print('minimal number of individuals expected to be >= 1')
-#         return False
-#
-#     return True
+def check_config_pheno_db(config):
+    categorical = config.classification.categorical.min_rank
+    if categorical < 1:
+        print('categorical min rank expected to be > 0')
+        return False
+    ordinal = config.classification.ordinal.min_rank
+    if ordinal < categorical:
+        print('ordianl min rank expected to be >= categorical min rank')
+        return False
+    continuous = config.classification.continuous.min_rank
+    if continuous < ordinal:
+        print('continuous min rank expected to be >= ordinal min rank')
+        return False
+
+    individuals = config.classification.min_individuals
+    if individuals < 1:
+        print('minimal number of individuals expected to be >= 1')
+        return False
+
+    return True
 
 
 def dump_config(config):
