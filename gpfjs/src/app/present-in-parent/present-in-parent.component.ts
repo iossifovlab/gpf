@@ -60,7 +60,7 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
       }
 
       if (state['maxFreq']) {
-        this.presentInParent.rarityIntervalEnd = state['minFreq'];
+        this.presentInParent.rarityIntervalEnd = state['maxFreq'];
       }
 
       this.restoreRadioButtonState(state);
