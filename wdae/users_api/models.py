@@ -82,6 +82,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     DEFAULT_GROUPS_FOR_USER = ('any_user', )
     RESEARCHER_GROUP_PREFIX = 'SFID#'
     SUPERUSER_GROUP = 'admin'
+    UMLIMITTED_DOWNLOAD_GROUP = 'unlimitted'
 
     objects = WdaeUserManager()
 
@@ -106,6 +107,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     @property
     def protected_groups(self):
         return self.groups.filter(name__in=self.get_protected_group_names())
+
+    @property
+    def has_unlimitted_download(self):
+        return self.groups.filter(name=self.UMLIMITTED_DOWNLOAD_GROUP).count() > 0
 
     def email_user(self, subject, message, from_email=None):
         override = None
