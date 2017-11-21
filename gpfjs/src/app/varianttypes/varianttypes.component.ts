@@ -47,7 +47,7 @@ export class VarianttypesComponent extends QueryStateProvider
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['hasCNV']) {
+    if (changes['hasCNV'] && changes['hasCNV'].previousValue !== null) {
       this.selectAll();
     }
   }
