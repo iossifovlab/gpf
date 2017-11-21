@@ -46,6 +46,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         Observable.zip(...stateArray)
         .subscribe(
           state => {
+            this.genotypePreviewsArray = null;
             let stateObject = Object.assign({}, ...state);
             this.isMissenseSelected = stateObject.effectTypes.includes('Missense');
             this.genotypeBrowserState = Object.assign({},
