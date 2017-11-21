@@ -15,95 +15,116 @@ from ped2NucFam import *
 import vrtIOutil as vIO
 
 
+class IndividualVariant(object):
+    def __init__(self, personId, family):
+        self.id = personId
+        self.family = family
+        self.ref = True
+        self._gt = None
+
+
 class FamilyVariant:
-    def __init__(self, familyInfo, altsCount, samplesWithRef):
-        self.GT = numpy.zeros((len(familyInfo['ids']), altsCount,),
-                              dtype=numpy.int)
+    def __init__(self, familyInfo, altsCount):
         self.familyInfo = familyInfo
-        self.altsCount = altsCount
+        self.incomplete = False
+        self.individuals = dict()
+
+        self._GT = None
         self._cnt = None
+        self.altsCount = altsCount
 
-        for n, pid in enumerate(self.familyInfo['ids']):
-            if pid in samplesWithRef:
-                self.GT[n][0] = 2
-                v = samplesWithRef[pid]
+    def _updateGT(self, individualId, n):
+        GT = self._GT[n]
+        if individualId in self.individuals:
+            for ix in self.individuals[individualId].gt:
+                    GT[ix] += 1
+        else:
+            GT[0] = 2
 
-                cx = vIO.getCount(v)
-                if len(cx) == len(self.GT[n]):
-                    #print(cx)
-                    self.cnt[n] = cx
+    def _updateCnt(self, data, individualId, n):
+        if individualId in self.individuals:
+            sample = self.individuals[individualId].sample
+        else:
+            sample = data.samples[individualId]
+        cx = vIO.getCount(sample)
+
+        if len(cx) == len(self.GT[n]):
+            self.cnt[n] = cx
+
+    def addSample(self, personId, sample, gt):
+        if self.incomplete:
+            return
+        var = IndividualVariant(personId, self)
+        var.sample = sample
+        var.gt = gt
+        self.individuals[personId] = var
+    
+    @property
+    def GT(self):
+        if self._GT is None:
+            self._GT = numpy.zeros((len(self.familyInfo['ids']),
+                                   self.altsCount,), dtype=numpy.int)
+            for i, individualId in enumerate(self.familyInfo['ids']):
+                self._updateGT(individualId, i)
+        return self._GT
 
     @property
     def cnt(self):
         if self._cnt is None:
             self._cnt = numpy.zeros((len(self.familyInfo['ids']),
                                     self.altsCount,), dtype=numpy.int) - 1
+            for i, individualId in enumerate(self.familyInfo['ids']):
+                self._updateCnt(individualId, i)
         return self._cnt
-    
+
+    def fixCnt(self, data):
+        self._cnt = numpy.zeros((len(self.familyInfo['ids']),
+                                self.altsCount,), dtype=numpy.int) - 1
+        for i, individualId in enumerate(self.familyInfo['ids']):
+            self._updateCnt(data, individualId, i)
+
     def get_cnt_str(self, ix):
-        if self._cnt is None:
-            return "-1"
-        return array2str(self._cnt, ix, delim=' ')
-
-    def get_n(self, personId):
-        for n, pid in enumerate(self.familyInfo['ids']):
-            if pid == personId:
-                return n
+        return array2str(self.cnt, ix, delim=' ')
 
 
-def generateFamilyVariants(data, fam, fInfo):
+def generateFamilyVariants(data, fam, fInfo, individualToFamily):
     tlx = len(data.samples)
     clx = 0
 
-    individuals = {personId: familyId
-                   for familyId in fam
-                   for personId in fInfo[familyId]['ids']}
-
-    interesting = OrderedDict()
-    samplesWithRef = dict()
+    individuals = dict()
+    interestingFamilies = dict()
     incomplete = set()
     altsCount = len(data.alts) + 1
 
     for k, v in data.samples.items():
-        familyId = individuals[k]
+        familyId = individualToFamily[k]
 
         gt = v['GT']
 
         if gt[0] is None:
             incomplete.add(familyId)
             continue
-        clx += 1
 
-        ref = True
+        interesting = False
         for a in gt:
             if a != 0:
-                ref = False
+                interesting = True
                 break
 
-        if ref:
-            if familyId not in interesting:
-                samplesWithRef[k] = v
+        if interesting:
+            if familyId not in interestingFamilies:
+                familyInfo = fInfo[familyId]
+                familyVariant = FamilyVariant(familyInfo, altsCount)
+                interestingFamilies[familyId] = familyVariant
             else:
-                family = interesting[familyId]
-                n = family.get_n(k)
-                GT = family.GT[n]
-                GT[0] = 2
+                familyVariant = interestingFamilies[familyId]
 
-                cx = vIO.getCount(v)
-                if len(cx) == len(GT):
-                   # print(cx)
-                    family.cnt[n] = cx
+            familyVariant.addSample(k, v, gt)
 
-        else:
-            if familyId not in interesting:
-                interesting[familyId] = FamilyVariant(fInfo[familyId],
-                                                      altsCount,
-                                                      samplesWithRef)
-            getGT(v, gt, interesting[familyId],
-                  interesting[familyId].get_n(k))
+        clx += 1
 
-    filtered = [family for k, family in interesting.items()
-                if k not in incomplete]
+    filtered = [family for familyId, family in interestingFamilies.items()
+                if familyId not in incomplete]
 
     count = len(fam) - len(incomplete)
     filtered.sort(key=lambda elem: elem.familyInfo['fid'])
@@ -112,22 +133,7 @@ def generateFamilyVariants(data, fam, fInfo):
     return filtered, 100. * clx / tlx, count
 
 
-def getGT(sample, gt, familyVariant, n):
-    GT = familyVariant.GT[n]
 
-    if None in gt:  # [0] is None:
-        return False
-
-    for ix in gt:
-        GT[ix] += 1
-
-    cx = vIO.getCount(sample)
-    if len(cx) == len(GT):
-        #print(cx)
-        familyVariant.cnt[n] = cx
-    # if cx and cnt not agree, then ignore
-
-    return True
 
 # add more data on fam Info
 
@@ -315,6 +321,7 @@ def famInVCF(fInfo, vcfs):
     return fam
 
 
+
 def main():
     # svip.ped
     #svip-FB-vars.vcf.gz, svip-PL-vars.vcf.gz, svip-JHC-vars.vcf.gz
@@ -387,8 +394,17 @@ def main():
     def digitP(x): return '{:.4f}'.format(x)
     cchr = ''
     output = {}
+
+    individualToFamily = dict()
+
+    for familyId in fam:
+        familyInfo = fInfo[familyId]
+        for personId in familyInfo['ids']:
+            individualToFamily[personId] = familyId
+
     for rx in vf:
-        familyVariants, pgt, count = generateFamilyVariants(rx, fam, fInfo)
+        familyVariants, pgt, count = generateFamilyVariants(rx, fam, fInfo,
+                                                            individualToFamily)
 
         count2 = count - len(familyVariants)
         if pgt < ox.minPercentOfGenotypeSamples:
@@ -414,6 +430,7 @@ def main():
         dx = []
         # save ok families, check whether autosomal or de novo
         for familyVariant in familyVariants:
+            familyVariant.fixCnt(rx)
             if nonAutoX:
                 # fInfo[fid]['ids'], pInfo )
                 flag = fixNonAutoX(familyVariant)
@@ -464,6 +481,7 @@ def main():
                 nCi = familyVariant.familyInfo['notChild']
                 # assume that all the ill-regualr genotype for X Y are correct
                 # assume that all of auto have 2 copy, X non-Autosomal 1, and Y male(1) and female(0)
+
                 tAll += sum(GT[nCi, :].sum(1))
 
                 if sum(GT[:, ix]) < 1:
@@ -487,6 +505,7 @@ def main():
             # chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
             # fid:bestState:counts:qualityScore
             # 11948:2112/0110:40 20 20 40/0 20 20 0:0:0;... writing format
+
             freqAlt = (1. * cAlt) / tAll * 100.
 
             #pix = 0
