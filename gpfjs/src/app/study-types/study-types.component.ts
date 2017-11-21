@@ -33,8 +33,9 @@ export class StudyTypesComponent extends QueryStateProvider implements OnInit {
     this.stateRestoreService.getState(this.constructor.name)
       .take(1)
       .subscribe(state => {
-        if (state['studyType']) {
-          for (let studyType of state['studyType']) {
+        if (state['studyTypes']) {
+          this.selectNone();
+          for (let studyType of state['studyTypes']) {
             if (studyType === 'we') {
               this.studyTypes.we = true;
             }
