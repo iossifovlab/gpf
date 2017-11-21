@@ -84,6 +84,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
     Observable.zip(...stateArray)
     .subscribe(
       state => {
+        this.genotypePreviewsArray = null;
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
                                       ...state);

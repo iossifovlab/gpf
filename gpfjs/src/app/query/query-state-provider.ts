@@ -45,10 +45,12 @@ export class QueryStateCollector implements DoCheck {
   }
 
   getStateChange() {
-    return Observable
+    let observable = Observable
       .combineLatest(this.stateChange$, this.directContentChildren.changes, this.contentChildren.changes)
       .subscribeOn(Scheduler.async)
-      .debounceTime(500)
+      .share();
+
+    return Observable.concat(observable.first(), observable.skip(1).debounceTime(500))
       .switchMap(_ => {
         let stateArray = this.collectState();
         return Observable.zip(...stateArray)

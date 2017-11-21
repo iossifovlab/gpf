@@ -37,10 +37,10 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
     Observable.zip(...stateArray)
     .subscribe(
       state => {
+        this.enrichmentResults = null;
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
                                       ...state);
-        console.log(queryData)
         this.enrichmentQueryService.getEnrichmentTest(queryData).subscribe(
           (enrichmentResults) => {
             this.enrichmentResults = enrichmentResults;
