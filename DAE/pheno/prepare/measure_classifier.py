@@ -93,8 +93,10 @@ def convert_to_numeric(val):
 def convert_to_string(val):
     if is_nan(val):
         return None
-    if type(val) in set([str, unicode]):
-        return unicode(remove_annoying_characters(val))
+
+    if type(val) in set([str, unicode]) or \
+            isinstance(val, str) or isinstance(val, unicode):
+        return unicode(remove_annoying_characters(val).decode('utf-8'))
     else:
         return unicode(val)
 

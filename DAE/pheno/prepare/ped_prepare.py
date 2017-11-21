@@ -12,7 +12,8 @@ import os
 from box import Box
 from collections import defaultdict, OrderedDict
 from pheno.pheno_db import PhenoDB
-from pheno.prepare.measure_classifier import MeasureClassifier
+from pheno.prepare.measure_classifier import MeasureClassifier,\
+    convert_to_string
 
 
 class PrepareBase(object):
@@ -303,11 +304,15 @@ class PrepareVariables(PrepareBase):
         values = mdf['value'].values
         if MeasureType.is_numeric(measure.measure_type):
             values = MeasureClassifier.convert_to_numeric(values)
+            values_series = pd.Series(data=values, index=mdf.index)
+            must_be_unicode = False
         else:
             values = MeasureClassifier.convert_to_string(values)
+            values_series = pd.Series(
+                data=values, index=mdf.index, dtype=np.object)
+            must_be_unicode = True
         assert len(values) == len(mdf)
 
-        values_series = pd.Series(data=values, index=mdf.index)
         mdf['values'] = values_series
 
         mdf = mdf.dropna()
@@ -329,18 +334,23 @@ class PrepareVariables(PrepareBase):
         for _index, row in mdf.iterrows():
             pid = int(row[self.PID_COLUMN])
             k = (pid, measure_id)
+            value = row['value']
+            if must_be_unicode:
+                value = convert_to_string(value)
+                assert isinstance(value, unicode), row['value']
             v = {
                 self.PERSON_ID: pid,
                 'measure_id': measure_id,
-                'value': row['value']
+                'value': value
             }
+
             if k in values:
                 print("updating measure {} for person {} value {} "
                       "with {}".format(
                           measure.measure_id,
                           row['person_id'],
                           values[k]['value'],
-                          row['value'])
+                          value)
                       )
             values[k] = v
 
