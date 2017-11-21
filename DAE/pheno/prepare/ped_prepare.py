@@ -320,6 +320,7 @@ class PrepareVariables(PrepareBase):
             print('skip saving measure: {}; measurings: {}'.format(
                 measure.measure_id, len(mdf)))
             measure.measure_type = MeasureType.skipped
+            classifier_report.count_with_values = len(mdf)
             self.log_measure(measure, classifier_report)
             return
 
@@ -457,6 +458,7 @@ class PrepareVariables(PrepareBase):
         classifier_report = self.classifier.classify(values.values)
 
         if individuals == 0:
+            classifier_report.rank = 0
             return classifier_report, measure
 
         numeric_measure = self.classifier.numeric_classifier(
