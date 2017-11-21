@@ -85,7 +85,7 @@ class QueryPreviewView(QueryBaseView):
             response = self.__prepare_variants_response(
                 **generate_web_response(
                     dataset.get_variants(safe=True, **data),
-                    dataset.get_columns()))
+                    dataset.get_preview_columns()))
 
             response['legend'] = dataset.get_legend(safe=True, **data)
 
@@ -145,7 +145,7 @@ class QueryDownloadView(QueryBaseView):
 
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
 
-            columns = dataset.get_columns()
+            columns = dataset.get_download_columns()
             columns.remove('pedigree')
 
             variants_data = generate_response(

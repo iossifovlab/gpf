@@ -542,16 +542,29 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 if phenotype_filter(v):
                     yield v
 
-    def get_columns(self):
-        return [key for (key, _) in self.get_genotype_columns()] + \
-            [key for (_, _, key, _) in self.get_pheno_columns()]
+    def get_columns(self, matches=None):
+        return [key for (key, _) in self.get_genotype_columns(matches)] + \
+            [key for (_, _, key, _) in self.get_pheno_columns(matches)]
+
+    def __get_columns_for(self, view_type):
+        gb = self.descriptor['genotypeBrowser']
+        if gb is None:
+            return self.get_columns()
+        columns = gb[view_type + 'Columns']
+        return self.get_columns(lambda column: column['id'] in columns)
+
+    def get_preview_columns(self):
+        return self.__get_columns_for('preview')
+
+    def get_download_columns(self):
+        return self.__get_columns_for('download')
 
     def get_column_labels(self):
         column_labels = { key: label for (key, label) in self.get_genotype_columns() }
         column_labels.update({ key: label for (_, _, key, label) in self.get_pheno_columns() })
         return  column_labels
 
-    def get_pheno_columns(self):
+    def get_pheno_columns(self, matches=None):
         gb = self.descriptor['genotypeBrowser']
         if gb is None:
             return None
@@ -559,6 +572,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         pheno_columns = gb.get('phenoColumns', [])
         if not pheno_columns:
             return []
+        if matches:
+            pheno_columns = filter(matches, pheno_columns)
         columns = []
         for pheno_column in pheno_columns:
             name = pheno_column['name']
@@ -568,7 +583,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 for s in slots])
         return columns
 
-    def get_genotype_columns(self):
+    def get_genotype_columns(self, matches=None):
         gb = self.descriptor['genotypeBrowser']
         if gb is None:
             return None
@@ -576,6 +591,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         geno_columns = gb.get('genotypeColumns', [])
         if not geno_columns:
             return []
+        if matches:
+            geno_columns = filter(matches, geno_columns)
         columns = []
         for geno_column in geno_columns:
             slots = geno_column['slots']

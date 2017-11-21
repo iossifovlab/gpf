@@ -155,6 +155,17 @@ class DatasetsConfig(object):
         genomic_metrics = \
             self._get_genotype_browser_genomic_metrics(section)
 
+        default_columns = \
+            self._get_string_list(
+                section, 'genotypeBrowser.genotype.columns', []) + \
+            self._get_string_list(
+                section, 'genotypeBrowser.pheno.columns', [])
+        preview_columns = \
+            self._get_string_list(section, 'genotypeBrowser.previewColumns', default_columns)
+
+        download_columns = \
+            self._get_string_list(section, 'genotypeBrowser.downloadColumns', default_columns)
+
         return {
             'mainForm': main_form,
             'hasDenovo': has_denovo,
@@ -170,7 +181,9 @@ class DatasetsConfig(object):
             'phenoFilters': pheno_filters,
             'familyStudyFilters': family_study_filters,
             'genotypeColumns': genotype_columns,
-            'genomicMetrics': genomic_metrics
+            'genomicMetrics': genomic_metrics,
+            'previewColumns': preview_columns,
+            'downloadColumns': download_columns,
         }
 
     def _get_genotype_browser_family_study_filters(self, section):
@@ -279,6 +292,7 @@ class DatasetsConfig(object):
         slots = self._get_string_list(
             section, '{}.{}'.format(prefix, 'slots'))
         column = {}
+        column['id'] = col_id
         column['name'] = name
         column['source'] = source
 
@@ -324,6 +338,7 @@ class DatasetsConfig(object):
         slots = self._get_string_list(
             section, '{}.{}'.format(prefix, 'slots'))
         column = {}
+        column['id'] = col_id
         column['name'] = name
 
         column_slots = []
