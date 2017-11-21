@@ -72,7 +72,7 @@
                 value="interval" [checked]="presentInParent.rarityType == 'interval'">Interval
           </div>
           <div class='row'>
-            <div *ngIf="rarityRadio == 'interval'">
+            <div *ngIf="presentInParent.rarityType == 'interval'">
                 <input
                     #inputRangeStart="ngModel"
                     type="number"
@@ -82,8 +82,8 @@
                     style="width: 63px"
                     [(ngModel)]="presentInParent.rarityIntervalStart">%-
             </div>
-            <div *ngIf="rarityRadio == 'rare' || rarityRadio == 'interval'">
-                <span *ngIf="rarityRadio == 'rare'">Max: </span>
+            <div *ngIf="presentInParent.rarityType == 'rare' || presentInParent.rarityType == 'interval'">
+                <span *ngIf="presentInParent.rarityType == 'rare'">Max: </span>
                 <input
                     #inputRangeEnd="ngModel"
                     type="number"
