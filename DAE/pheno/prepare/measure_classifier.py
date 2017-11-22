@@ -34,21 +34,24 @@ class ClassifierReport(object):
             "with values: {}; "\
             "with numeric values: {}; " \
             "with non-numeric values: {}; "\
-            "without values: {})".format(
+            "without values: {}; " \
+            "unique values: {})".format(
                 self.count_total,
                 self.count_with_values,
                 self.count_with_numeric_values,
                 self.count_with_non_numeric_values,
-                self.count_without_values
+                self.count_without_values,
+                self.count_unique_values,
             )
 
     def log_line(self):
         return '\t'.join(map(str, [
+            self.count_total,
             self.count_with_values,
             self.count_with_numeric_values,
             self.count_with_non_numeric_values,
             self.count_without_values,
-            self.rank,
+            self.count_unique_values,
         ]))
 
 
@@ -80,6 +83,8 @@ def is_convertible_to_numeric(val):
         return Convertible.nan
 
     if isinstance(val, bool):
+        return Convertible.non_numeric
+    if isinstance(val, np.bool_):
         return Convertible.non_numeric
 
     try:
@@ -126,7 +131,9 @@ class MeasureClassifier(object):
         report.count_unique_values = len(unique_values)
         report.unique_values = unique_values
         report.numeric_values = values
-        report.string_values = MeasureClassifier.convert_to_string(values)
+        report.string_values = MeasureClassifier.convert_to_string(real_values)
+        report.value_max_len = max(map(len, report.string_values))
+
         assert report.count_total == \
             report.count_with_values + report.count_without_values
         assert report.count_with_values == \
@@ -143,6 +150,7 @@ class MeasureClassifier(object):
         report.count_with_non_numeric_values = 0
         for convertable, vals in grouped:
             vals = list(vals)
+
             if convertable == Convertible.nan:
                 report.count_without_values += len(vals)
             elif convertable == Convertible.numeric:
@@ -153,9 +161,12 @@ class MeasureClassifier(object):
                 report.count_with_values += len(vals)
                 report.count_with_non_numeric_values += len(vals)
 
-        report.string_values = MeasureClassifier.convert_to_string(values)
+        report.string_values = np.array([
+            v for v in MeasureClassifier.convert_to_string(values)
+            if v is not None])
         report.unique_values = np.unique(report.string_values)
         report.count_unique_values = len(report.unique_values)
+        report.value_max_len = max(map(len, report.string_values))
         assert report.count_total == \
             report.count_with_values + report.count_without_values
         assert report.count_with_values == \
@@ -235,69 +246,96 @@ class MeasureClassifier(object):
             return False
         return True
 
-    def numeric_classifier(self, classifier_report, measure, series):
-        values = series.values
-        if not self.should_convert_to_numeric(classifier_report):
-            return None
+    def classify(self, report):
+        config = self.config.classification
+        if report.count_with_values < config.min_individuals:
+            return MeasureType.skipped
+        non_numeric = (1.0 * report.count_with_non_numeric_values) / \
+            report.count_with_values
 
-        values = self.convert_to_numeric(values)
-        unique_values = np.unique(np.array([
-            filter(lambda v: not np.isnan(v), values)
-        ]))
-
-        rank = len(unique_values)
-        individuals = classifier_report.count_with_values
-        classifier_report.rank = rank
-        classifier_report.unique_values = unique_values
-        classifier_report.values = values
-
-        if rank == 0 or \
-                individuals < self.config.classification.min_individuals:
-            measure.measure_type = MeasureType.skipped
-            measure.individuals = individuals
-            return measure
-
-        if self.check_continuous_rank(rank, individuals):
-            measure.measure_type = MeasureType.continuous
-            measure.individuals = individuals
-            return measure
-        elif self.check_ordinal_rank(rank, individuals):
-            measure.measure_type = MeasureType.continuous
-            measure.individuals = individuals
-            return measure
-
-        return None
-
-    def text_classifier(self, classifier_report, measure, series):
-        values = series.values
-        values = self.convert_to_string(values)
-        unique_values = np.unique(values)
-        unique_values = np.array([v for v in unique_values if v is not None])
-
-        rank = len(unique_values)
-        individuals = classifier_report.count_with_values
-        classifier_report.rank = rank
-        classifier_report.unique_values = unique_values
-        classifier_report.values = values
-
-        if rank == 0 or \
-                individuals < self.config.classification.min_individuals:
-            measure.measure_type = MeasureType.skipped
-            measure.individuals = individuals
-            return measure
-
-        if not self.check_categorical_rank(rank, individuals):
-            measure.measure_type = MeasureType.other
-            measure.individuals = individuals
-            return measure
-
-        max_len = max(map(len, unique_values))
-        if max_len > 32:
-            measure.measure_type = MeasureType.text
-        elif rank > individuals / 3.0:
-            measure.measure_type = MeasureType.text
+        if non_numeric <= config.non_numeric_cutoff:
+            # numeric measure
+            if report.count_unique_values >= config.continuous.min_rank:
+                return MeasureType.continuous
+            if report.count_unique_values >= config.ordinal.min_rank:
+                return MeasureType.ordinal
+            if report.count_unique_values >= config.categorical.min_rank:
+                return MeasureType.categorical
+            return MeasureType.other
         else:
-            measure.measure_type = MeasureType.categorical
+            # text measure
+            if report.value_max_len > config.value_max_len:
+                return MeasureType.text
+            if report.count_unique_values > report.count_with_values / 3.0:
+                return MeasureType.text
+            if report.count_unique_values >= config.categorical.min_rank:
+                return MeasureType.categorical
+            return MeasureType.other
 
-        measure.individuals = individuals
-        return measure
+#     def text_classifier(self, classifier_report, measure, series):
+#         values = series.values
+#         values = self.convert_to_string(values)
+#         unique_values = np.unique(values)
+#         unique_values = np.array([v for v in unique_values if v is not None])
+#
+#         rank = len(unique_values)
+#         individuals = classifier_report.count_with_values
+#         classifier_report.rank = rank
+#         classifier_report.unique_values = unique_values
+#         classifier_report.values = values
+#
+#         if rank == 0 or \
+#                 individuals < self.config.classification.min_individuals:
+#             measure.measure_type = MeasureType.skipped
+#             measure.individuals = individuals
+#             return measure
+#
+#         if not self.check_categorical_rank(rank, individuals):
+#             measure.measure_type = MeasureType.other
+#             measure.individuals = individuals
+#             return measure
+#
+#         max_len = max(map(len, unique_values))
+#         if max_len > 32:
+#             measure.measure_type = MeasureType.text
+#         elif rank > individuals / 3.0:
+#             measure.measure_type = MeasureType.text
+#         else:
+#             measure.measure_type = MeasureType.categorical
+#
+#         measure.individuals = individuals
+#         return measure
+#
+#
+#     def numeric_classifier(self, classifier_report, measure, series):
+#         values = series.values
+#         if not self.should_convert_to_numeric(classifier_report):
+#             return None
+#
+#         values = self.convert_to_numeric(values)
+#         unique_values = np.unique(np.array([
+#             filter(lambda v: not np.isnan(v), values)
+#         ]))
+#
+#         rank = len(unique_values)
+#         individuals = classifier_report.count_with_values
+#         classifier_report.rank = rank
+#         classifier_report.unique_values = unique_values
+#         classifier_report.values = values
+#
+#         if rank == 0 or \
+#                 individuals < self.config.classification.min_individuals:
+#             measure.measure_type = MeasureType.skipped
+#             measure.individuals = individuals
+#             return measure
+#
+#         if self.check_continuous_rank(rank, individuals):
+#             measure.measure_type = MeasureType.continuous
+#             measure.individuals = individuals
+#             return measure
+#         elif self.check_ordinal_rank(rank, individuals):
+#             measure.measure_type = MeasureType.continuous
+#             measure.individuals = individuals
+#             return measure
+#
+#         return None

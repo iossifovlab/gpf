@@ -145,6 +145,8 @@ def default_config():
         },
         'classification': {
             'min_individuals': 10,
+            'non_numeric_cutoff': 0.06,
+            'value_max_len': 32,
             'continuous': {
                 'min_rank': 15
             },
