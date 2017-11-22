@@ -133,7 +133,10 @@ class MeasureClassifier(object):
         report.unique_values = unique_values
         report.numeric_values = values
         report.string_values = MeasureClassifier.convert_to_string(real_values)
-        report.value_max_len = max(map(len, report.string_values))
+        if len(report.string_values) == 0:
+            report.value_max_len = 0
+        else:
+            report.value_max_len = max(map(len, report.string_values))
 
         assert report.count_total == \
             report.count_with_values + report.count_without_values
@@ -210,8 +213,9 @@ class MeasureClassifier(object):
 
     @staticmethod
     def convert_to_string(values):
-        result = np.array([convert_to_string(val) for val in values])
-        return result
+        if len(values) == 0:
+            return np.array([])
+        return np.array([convert_to_string(val) for val in values])
 
     def classify(self, report):
         config = self.config.classification
