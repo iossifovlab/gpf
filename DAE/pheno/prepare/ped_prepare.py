@@ -13,7 +13,7 @@ from box import Box
 from collections import defaultdict, OrderedDict
 from pheno.pheno_db import PhenoDB
 from pheno.prepare.measure_classifier import MeasureClassifier,\
-    convert_to_string
+    convert_to_string, convert_to_numeric
 
 
 class PrepareBase(object):
@@ -301,28 +301,13 @@ class PrepareVariables(PrepareBase):
 
     def save_measure(self, classifier_report, measure, mdf):
 
-        values = mdf['value'].values
-        if MeasureType.is_numeric(measure.measure_type):
-            values = MeasureClassifier.convert_to_numeric(values)
-            values_series = pd.Series(data=values, index=mdf.index)
-            must_be_unicode = False
-        else:
-            values = MeasureClassifier.convert_to_string(values)
-            values_series = pd.Series(
-                data=values, index=mdf.index, dtype=np.object)
-            must_be_unicode = True
-        assert len(values) == len(mdf)
-
-        mdf['values'] = values_series
-
-        mdf = mdf.dropna()
-        if len(mdf) < self.config.classification.min_individuals:
+        if measure.measure_type == MeasureType.skipped:
             print('skip saving measure: {}; measurings: {}'.format(
-                measure.measure_id, len(mdf)))
-            measure.measure_type = MeasureType.skipped
-            classifier_report.count_with_values = len(mdf)
+                measure.measure_id, classifier_report.count_with_values))
             self.log_measure(measure, classifier_report)
             return
+
+        measure.individuals = classifier_report.count_with_values
 
         to_save = measure.to_dict()
         ins = self.db.measure.insert().values(**to_save)
@@ -336,9 +321,17 @@ class PrepareVariables(PrepareBase):
             pid = int(row[self.PID_COLUMN])
             k = (pid, measure_id)
             value = row['value']
-            if must_be_unicode:
+            if MeasureType.is_text(measure.measure_type):
                 value = convert_to_string(value)
+                if value is None:
+                    continue
                 assert isinstance(value, unicode), row['value']
+            elif MeasureType.is_numeric(measure.measure_type):
+                value = convert_to_numeric(value)
+                if np.isnan(value):
+                    continue
+            else:
+                assert False, measure.measure_type.name
             v = {
                 self.PERSON_ID: pid,
                 'measure_id': measure_id,
