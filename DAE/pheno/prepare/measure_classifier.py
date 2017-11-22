@@ -4,6 +4,7 @@ Created on Nov 16, 2017
 @author: lubo
 '''
 import numpy as np
+import pandas as pd
 import itertools
 import enum
 from pheno.common import MeasureType
@@ -13,21 +14,28 @@ from pheno.utils.commons import remove_annoying_characters
 class ClassifierReport(object):
 
     def __init__(self):
+        self.instrument_name = None
+        self.measure_name = None
         self.count_with_values = None
         self.count_without_values = None
         self.count_with_numeric_values = None
         self.count_with_non_numeric_values = None
+        self.count_unique_values = None
+        self.count_total = None
 
         # self.rank = None
-        self.histogram = None
         self.unique_values = None
-        self.values = None
+        self.numeric_values = None
+        self.string_values = None
+        self.distribution = None
 
     def __repr__(self):
-        return "ClassifierReport(with values: {}; "\
+        return "ClassifierReport(total: {}; " \
+            "with values: {}; "\
             "with numeric values: {}; " \
             "with non-numeric values: {}; "\
             "without values: {})".format(
+                self.count_total,
                 self.count_with_values,
                 self.count_with_numeric_values,
                 self.count_with_non_numeric_values,
@@ -66,11 +74,10 @@ def is_convertible_to_numeric(val):
         return Convertible.nan
     if isinstance(val, str):
         val = val.strip()
-        if val.strip() == '':
+        if val == '':
             return Convertible.nan
-    if isinstance(val, float):
-        if np.isnan(val):
-            return Convertible.nan
+    if isinstance(val, float) and np.isnan(val):
+        return Convertible.nan
 
     if isinstance(val, bool):
         return Convertible.non_numeric
@@ -107,21 +114,31 @@ class MeasureClassifier(object):
         self.config = config
 
     @staticmethod
-    def classify(values):
-        assert isinstance(values, np.ndarray)
+    def meta_measures(series, r=None):
+        assert isinstance(series, pd.Series)
 
-        r = ClassifierReport()
+        if r is None:
+            r = ClassifierReport()
+
+        r.count_total = len(series)
+        values = series.values
+        r.count_without_values = r.count_total - len(values)
 
         if values.dtype in set([int, float, np.float, np.int,
                                 np.dtype('int64'), np.dtype('float64')]):
             total = len(values)
             values = MeasureClassifier.convert_to_numeric(values)
             real_values = np.array([v for v in values if not is_nan(v)])
+            unique_values = np.unique(real_values)
 
             r.count_with_values = len(real_values)
             r.count_with_numeric_values = len(real_values)
             r.count_with_non_numeric_values = 0
-            r.count_without_values = total - r.count_with_values
+            r.count_without_values += total - r.count_with_values
+            r.count_unique_values = len(unique_values)
+            r.unique_values = unique_values
+            r.numeric_values = values
+            r.string_values = MeasureClassifier.convert_to_string(values)
 
             return r
 
@@ -131,14 +148,14 @@ class MeasureClassifier(object):
                 is_convertible_to_numeric
             )
             r.count_with_values = 0
-            r.count_without_values = 0
             r.count_with_numeric_values = 0
             r.count_with_non_numeric_values = 0
 
             for convertable, vals in grouped:
                 vals = list(vals)
+                # print(convertable.name, len(vals))
                 if convertable == Convertible.nan:
-                    r.count_without_values = len(vals)
+                    r.count_without_values += len(vals)
                 elif convertable == Convertible.numeric:
                     r.count_with_values += len(vals)
                     r.count_with_numeric_values += len(vals)
@@ -146,6 +163,10 @@ class MeasureClassifier(object):
                     assert convertable == Convertible.non_numeric
                     r.count_with_values += len(vals)
                     r.count_with_non_numeric_values += len(vals)
+            r.string_values = MeasureClassifier.convert_to_string(values)
+            r.unique_values = np.unique(r.string_values)
+            r.count_unique_values = len(r.unique_values)
+
             return r
 
         if values.dtype == bool:
@@ -209,7 +230,8 @@ class MeasureClassifier(object):
             return False
         return True
 
-    def numeric_classifier(self, classifier_report, measure, values):
+    def numeric_classifier(self, classifier_report, measure, series):
+        values = series.values
         if not self.should_convert_to_numeric(classifier_report):
             return None
 
@@ -241,7 +263,8 @@ class MeasureClassifier(object):
 
         return None
 
-    def text_classifier(self, classifier_report, measure, values):
+    def text_classifier(self, classifier_report, measure, series):
+        values = series.values
         values = self.convert_to_string(values)
         unique_values = np.unique(values)
         unique_values = np.array([v for v in unique_values if v is not None])

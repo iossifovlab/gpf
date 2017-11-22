@@ -455,19 +455,19 @@ class PrepareVariables(PrepareBase):
         individuals = len(df)
         measure.individuals = individuals
 
-        classifier_report = self.classifier.classify(values.values)
+        classifier_report = self.classifier.meta_measures(values)
 
         if individuals == 0:
             classifier_report.rank = 0
             return classifier_report, measure
 
         numeric_measure = self.classifier.numeric_classifier(
-            classifier_report, measure, values.values)
+            classifier_report, measure, values)
         if numeric_measure:
             return classifier_report, numeric_measure
 
         text_measure = self.classifier.text_classifier(
-            classifier_report, measure, values.values)
+            classifier_report, measure, values)
         return classifier_report, text_measure
 
 
