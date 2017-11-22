@@ -114,68 +114,73 @@ class MeasureClassifier(object):
         self.config = config
 
     @staticmethod
-    def meta_measures(series, r=None):
+    def meta_measures_numeric(values, report):
+        total = len(values)
+        values = MeasureClassifier.convert_to_numeric(values)
+        real_values = np.array([v for v in values if not is_nan(v)])
+        unique_values = np.unique(real_values)
+        report.count_with_values = len(real_values)
+        report.count_with_numeric_values = len(real_values)
+        report.count_with_non_numeric_values = 0
+        report.count_without_values += total - report.count_with_values
+        report.count_unique_values = len(unique_values)
+        report.unique_values = unique_values
+        report.numeric_values = values
+        report.string_values = MeasureClassifier.convert_to_string(values)
+        assert report.count_total == \
+            report.count_with_values + report.count_without_values
+        assert report.count_with_values == \
+            report.count_with_numeric_values + \
+            report.count_with_non_numeric_values
+        return report
+
+    @staticmethod
+    def meta_measures_text(values, report):
+        grouped = itertools.groupby(values,
+                                    is_convertible_to_numeric)
+        report.count_with_values = 0
+        report.count_with_numeric_values = 0
+        report.count_with_non_numeric_values = 0
+        for convertable, vals in grouped:
+            vals = list(vals)
+            if convertable == Convertible.nan:
+                report.count_without_values += len(vals)
+            elif convertable == Convertible.numeric:
+                report.count_with_values += len(vals)
+                report.count_with_numeric_values += len(vals)
+            else:
+                assert convertable == Convertible.non_numeric
+                report.count_with_values += len(vals)
+                report.count_with_non_numeric_values += len(vals)
+
+        report.string_values = MeasureClassifier.convert_to_string(values)
+        report.unique_values = np.unique(report.string_values)
+        report.count_unique_values = len(report.unique_values)
+        assert report.count_total == \
+            report.count_with_values + report.count_without_values
+        assert report.count_with_values == \
+            report.count_with_numeric_values + \
+            report.count_with_non_numeric_values
+        return report
+
+    @staticmethod
+    def meta_measures(series, report=None):
         assert isinstance(series, pd.Series)
 
-        if r is None:
-            r = ClassifierReport()
+        if report is None:
+            report = ClassifierReport()
 
-        r.count_total = len(series)
+        report.count_total = len(series)
         values = series.values
-        r.count_without_values = r.count_total - len(values)
+        report.count_without_values = report.count_total - len(values)
 
         if values.dtype in set([int, float, np.float, np.int,
                                 np.dtype('int64'), np.dtype('float64')]):
-            total = len(values)
-            values = MeasureClassifier.convert_to_numeric(values)
-            real_values = np.array([v for v in values if not is_nan(v)])
-            unique_values = np.unique(real_values)
+            return MeasureClassifier.meta_measures_numeric(values, report)
 
-            r.count_with_values = len(real_values)
-            r.count_with_numeric_values = len(real_values)
-            r.count_with_non_numeric_values = 0
-            r.count_without_values += total - r.count_with_values
-            r.count_unique_values = len(unique_values)
-            r.unique_values = unique_values
-            r.numeric_values = values
-            r.string_values = MeasureClassifier.convert_to_string(values)
-
-            return r
-
-        if values.dtype == np.object or values.dtype.char == 'S':
-            grouped = itertools.groupby(
-                values,
-                is_convertible_to_numeric
-            )
-            r.count_with_values = 0
-            r.count_with_numeric_values = 0
-            r.count_with_non_numeric_values = 0
-
-            for convertable, vals in grouped:
-                vals = list(vals)
-                # print(convertable.name, len(vals))
-                if convertable == Convertible.nan:
-                    r.count_without_values += len(vals)
-                elif convertable == Convertible.numeric:
-                    r.count_with_values += len(vals)
-                    r.count_with_numeric_values += len(vals)
-                else:
-                    assert convertable == Convertible.non_numeric
-                    r.count_with_values += len(vals)
-                    r.count_with_non_numeric_values += len(vals)
-            r.string_values = MeasureClassifier.convert_to_string(values)
-            r.unique_values = np.unique(r.string_values)
-            r.count_unique_values = len(r.unique_values)
-
-            return r
-
-        if values.dtype == bool:
-            r.count_with_values = len(values)
-            r.count_with_numeric_values = 0
-            r.count_with_non_numeric_values = len(values)
-            r.count_without_values = 0
-
-            return r
+        if values.dtype == np.object or values.dtype.char == 'S' or \
+                values.dtype == bool:
+            return MeasureClassifier.meta_measures_text(values, report)
 
         assert False, "NOT SUPPORTED VALUES TYPES"
 
