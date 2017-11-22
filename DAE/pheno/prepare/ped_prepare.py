@@ -14,6 +14,8 @@ from collections import defaultdict, OrderedDict
 from pheno.pheno_db import PhenoDB
 from pheno.prepare.measure_classifier import MeasureClassifier,\
     convert_to_string, convert_to_numeric
+from multiprocessing import Pool
+from numpy.testing.utils import measure
 
 
 class PrepareCommon(object):
@@ -213,6 +215,9 @@ class Task(PrepareCommon):
     def next(self):
         raise NotImplemented()
 
+    def __call__(self):
+        return self.run()
+
 
 class ClassifyMeasureTask(Task):
 
@@ -243,9 +248,72 @@ class ClassifyMeasureTask(Task):
         self.measure.individuals = self.classifier_report.count_with_values
         self.measure.measure_type = classifier.classify(
             self.classifier_report)
+        return self
 
     def done(self):
         return self.measure, self.classifier_report, self.mdf
+
+
+class MeasureValuesTask(Task):
+
+    def __init__(self, measure, mdf):
+        self.measure = measure
+        self.mdf = mdf
+
+    def run(self):
+        measure_id = self.measure.db_id
+        measure = self.measure
+
+        values = OrderedDict()
+        for _index, row in self.mdf.iterrows():
+            pid = int(row[self.PID_COLUMN])
+            k = (pid, measure_id)
+            value = row['value']
+            if MeasureType.is_text(measure.measure_type):
+                value = convert_to_string(value)
+                if value is None:
+                    continue
+                assert isinstance(value, unicode), row['value']
+            elif MeasureType.is_numeric(measure.measure_type):
+                value = convert_to_numeric(value)
+                if np.isnan(value):
+                    continue
+            else:
+                assert False, measure.measure_type.name
+            v = {
+                self.PERSON_ID: pid,
+                'measure_id': measure_id,
+                'value': value
+            }
+
+            if k in values:
+                print("updating measure {} for person {} value {} "
+                      "with {}".format(
+                          measure.measure_id,
+                          row['person_id'],
+                          values[k]['value'],
+                          value)
+                      )
+            values[k] = v
+        self.values = values
+        return self
+
+    def done(self):
+        return self.measure, self.values
+
+
+class TaskQueue(object):
+    def __init__(self):
+        self.queue = []
+
+    def put(self, task):
+        self.queue.append(task)
+
+    def empty(self):
+        return len(self.queue) == 0
+
+    def get(self):
+        return self.queue.pop(0)
 
 
 class PrepareVariables(PrepareBase):
@@ -255,6 +323,8 @@ class PrepareVariables(PrepareBase):
         self.pedigree_df = pedigree_df
         self.sample_ids = None
         self.classifier = MeasureClassifier(config)
+
+        self.pool = Pool(processes=8)
 
     def _get_person_column_name(self, df):
         if self.config.person.column:
@@ -336,6 +406,7 @@ class PrepareVariables(PrepareBase):
             log.write('\n')
 
     def log_measure(self, measure, classifier_report):
+        print(classifier_report.log_line())
         with open(self.log_filename, 'a') as log:
             log.write('\t'.join([
                 measure.measure_id,
@@ -350,6 +421,8 @@ class PrepareVariables(PrepareBase):
 
     def save_measure(self, measure):
         to_save = measure.to_dict()
+        print(to_save)
+        assert 'db_id' not in to_save, to_save
         ins = self.db.measure.insert().values(**to_save)
         with self.db.engine.begin() as connection:
             result = connection.execute(ins)
@@ -489,8 +562,49 @@ class PrepareVariables(PrepareBase):
         assert df is not None
         assert self.PERSON_ID in df.columns
 
+        classify_queue = TaskQueue()
+        save_queue = TaskQueue()
+
         for measure_name in df.columns:
-            self.build_measure(instrument_name, measure_name, df)
+            # self.build_measure(instrument_name, measure_name, df)
+            if measure_name == self.PID_COLUMN or \
+                    measure_name == self.PERSON_ID:
+                continue
+            classify_task = ClassifyMeasureTask(
+                self.config, instrument_name, measure_name, df)
+            res = self.pool.apply_async(classify_task)
+            classify_queue.put(res)
+        while not classify_queue.empty():
+            res = classify_queue.get()
+            task = res.get()
+            measure, classifier_report, _mdf = task.done()
+            self.log_measure(measure, classifier_report)
+            if measure.measure_type == MeasureType.skipped:
+                print('skip saving measure: {}; measurings: {}'.format(
+                    measure.measure_id, classifier_report.count_with_values))
+                continue
+            save_queue.put(task)
+
+        if self.config.report_only:
+            return
+
+        values_queue = TaskQueue()
+        while not save_queue.empty():
+            task = save_queue.get()
+            measure, classifier_report, mdf = task.done()
+
+            measure_id = self.save_measure(measure)
+            measure.db_id = measure_id
+            values_task = MeasureValuesTask(measure, mdf)
+            res = self.pool.apply_async(values_task)
+            values_queue.put(res)
+
+        while not values_queue.empty():
+            res = values_queue.get()
+            values_task = res.get()
+            measure, values = values_task.done()
+            self.save_measure_values(measure, values)
+
         return df
 
     @staticmethod
