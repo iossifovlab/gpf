@@ -170,7 +170,10 @@ class MeasureClassifier(object):
             if v is not None])
         report.unique_values = np.unique(report.string_values)
         report.count_unique_values = len(report.unique_values)
-        report.value_max_len = max(map(len, report.string_values))
+        if len(report.string_values) == 0:
+            report.value_max_len = 0
+        else:
+            report.value_max_len = max(map(len, report.string_values))
         assert report.count_total == \
             report.count_with_values + report.count_without_values
         assert report.count_with_values == \
