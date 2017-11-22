@@ -122,6 +122,7 @@ class RoleMapping(object):
 def default_config():
     config = {
         'report_only': False,
+        'parallel': 4,
         'family': {
             'composite_key': False,
         },

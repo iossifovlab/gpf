@@ -16,7 +16,7 @@ from pheno.prepare.measure_classifier import MeasureClassifier,\
     convert_to_string, convert_to_numeric
 
 
-class PrepareBase(object):
+class PrepareCommon(object):
     PID_COLUMN = "$PID"
     PERSON_ID = 'person_id'
 
@@ -26,6 +26,9 @@ class PrepareBase(object):
         # 'sampleId',
         # 'role',
     ]
+
+
+class PrepareBase(PrepareCommon):
 
     def __init__(self, config):
         assert config is not None
@@ -197,6 +200,52 @@ class PreparePersons(PrepareBase):
         ped_df = self.prepare(ped_df)
         self.save(ped_df)
         return ped_df
+
+
+class Task(PrepareCommon):
+
+    def run(self):
+        raise NotImplemented()
+
+    def done(self):
+        raise NotImplemented()
+
+    def next(self):
+        raise NotImplemented()
+
+
+class ClassifyMeasureTask(Task):
+
+    def __init__(self, config, instrument_name, measure_name, df):
+        self.config = config
+        self.mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].copy()
+        self.mdf.rename(columns={measure_name: 'value'}, inplace=True)
+        self.measure = self.create_default_measure(
+            instrument_name, measure_name)
+
+    @staticmethod
+    def create_default_measure(instrument_name, measure_name):
+        measure = {
+            'measure_type': MeasureType.other,
+            'measure_name': measure_name,
+            'instrument_name': instrument_name,
+            'measure_id': '{}.{}'.format(instrument_name, measure_name),
+            'individuals': None,
+            'default_filter': None
+        }
+        measure = Box(measure)
+        return measure
+
+    def run(self):
+        values = self.mdf['value']
+        classifier = MeasureClassifier(self.config)
+        self.classifier_report = classifier.meta_measures(values)
+        self.measure.individuals = self.classifier_report.count_with_values
+        self.measure.measure_type = classifier.classify(
+            self.classifier_report)
+
+    def done(self):
+        return self.measure, self.classifier_report, self.mdf
 
 
 class PrepareVariables(PrepareBase):
@@ -404,15 +453,24 @@ class PrepareVariables(PrepareBase):
             self.build_measure('pheno_common', measure_name, df)
 
     def build_measure(self, instrument_name, measure_name, df):
-        mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].copy()
-        mdf.rename(columns={measure_name: 'value'}, inplace=True)
+        if measure_name == self.PID_COLUMN or \
+                measure_name == self.PERSON_ID:
+            return
 
-        classifier_report, measure = self.classify_measure(
-            instrument_name, measure_name, mdf)
+        classify_task = ClassifyMeasureTask(
+            self.config, instrument_name, measure_name, df)
+
+        classify_task.run()
+        measure, classifier_report, mdf = classify_task.done()
+
+        if measure_name in self.config.skip.measures:
+            measure.measure_type = MeasureType.skipped
 
         self.log_measure(measure, classifier_report)
+
         if self.config.report_only:
             return
+
         if measure.measure_type == MeasureType.skipped:
             print('skip saving measure: {}; measurings: {}'.format(
                 measure.measure_id, classifier_report.count_with_values))
@@ -432,10 +490,6 @@ class PrepareVariables(PrepareBase):
         assert self.PERSON_ID in df.columns
 
         for measure_name in df.columns:
-            if measure_name in self.config.skip.measures or \
-                    measure_name == self.PID_COLUMN or \
-                    measure_name == self.PERSON_ID:
-                continue
             self.build_measure(instrument_name, measure_name, df)
         return df
 
