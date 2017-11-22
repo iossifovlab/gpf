@@ -299,22 +299,17 @@ class PrepareVariables(PrepareBase):
             log.write(classifier_report.log_line())
             log.write('\n')
 
-    def save_measure(self, classifier_report, measure, mdf):
-
-        if measure.measure_type == MeasureType.skipped:
-            print('skip saving measure: {}; measurings: {}'.format(
-                measure.measure_id, classifier_report.count_with_values))
-            self.log_measure(measure, classifier_report)
-            return
-
-        measure.individuals = classifier_report.count_with_values
-
+    def save_measure(self, measure):
         to_save = measure.to_dict()
         ins = self.db.measure.insert().values(**to_save)
         with self.db.engine.begin() as connection:
             result = connection.execute(ins)
             measure_id = result.inserted_primary_key[0]
-            self.log_measure(measure, classifier_report)
+
+        return measure_id
+
+    def prepare_measure_values(self, measure, mdf):
+        measure_id = measure.db_id
 
         values = OrderedDict()
         for _index, row in mdf.iterrows():
@@ -347,7 +342,9 @@ class PrepareVariables(PrepareBase):
                           value)
                       )
             values[k] = v
+        return values
 
+    def save_measure_values(self, measure, values):
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
 
@@ -410,9 +407,22 @@ class PrepareVariables(PrepareBase):
         mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].copy()
         mdf.rename(columns={measure_name: 'value'}, inplace=True)
 
-        report, measure = self.classify_measure(
+        classifier_report, measure = self.classify_measure(
             instrument_name, measure_name, mdf)
-        self.save_measure(report, measure, mdf)
+
+        self.log_measure(measure, classifier_report)
+        if self.config.report_only:
+            return
+        if measure.measure_type == MeasureType.skipped:
+            print('skip saving measure: {}; measurings: {}'.format(
+                measure.measure_id, classifier_report.count_with_values))
+            return
+
+        measure_id = self.save_measure(measure)
+        measure.db_id = measure_id
+
+        values = self.prepare_measure_values(measure, mdf)
+        self.save_measure_values(measure, values)
 
     def build_instrument(self, instrument_name, filenames):
         assert instrument_name is not None
@@ -445,11 +455,11 @@ class PrepareVariables(PrepareBase):
     def classify_measure(self, instrument_name, measure_name, df):
         measure = self.create_default_measure(instrument_name, measure_name)
         values = df['value']
-        individuals = len(df)
-        measure.individuals = individuals
 
         classifier_report = self.classifier.meta_measures(values)
+        measure.individuals = classifier_report.count_with_values
         measure.measure_type = self.classifier.classify(classifier_report)
+
         return classifier_report, measure
 
 
