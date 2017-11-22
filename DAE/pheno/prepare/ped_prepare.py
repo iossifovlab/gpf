@@ -324,7 +324,7 @@ class PrepareVariables(PrepareBase):
         self.sample_ids = None
         self.classifier = MeasureClassifier(config)
 
-        self.pool = Pool(processes=8)
+        self.pool = Pool(processes=self.config.parallel)
 
     def _get_person_column_name(self, df):
         if self.config.person.column:
