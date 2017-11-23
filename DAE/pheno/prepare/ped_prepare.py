@@ -153,7 +153,7 @@ class PreparePersons(PrepareBase):
         assert set(cls.PED_COLUMNS) <= set(df.columns)
         return df
 
-    def prepare(self, ped_df):
+    def prepare_pedigree(self, ped_df):
         assert set(self.PED_COLUMNS) <= set(ped_df.columns)
         ped_df = self._prepare_families(ped_df)
         ped_df = self._prepare_persons(ped_df)
@@ -193,14 +193,15 @@ class PreparePersons(PrepareBase):
         with self.db.engine.connect() as connection:
             connection.execute(ins, persons)
 
-    def save(self, ped_df):
+    def save_pedigree(self, ped_df):
         self._save_families(ped_df)
         self._save_persons(ped_df)
 
-    def build(self, pedfile):
+    def build_pedigree(self, pedfile):
         ped_df = self.load_pedfile(pedfile)
-        ped_df = self.prepare(ped_df)
-        self.save(ped_df)
+        ped_df = self.prepare_pedigree(ped_df)
+        self.save_pedigree(ped_df)
+        self.pedigree_df = ped_df
         return ped_df
 
 
@@ -316,11 +317,10 @@ class TaskQueue(object):
         return self.queue.pop(0)
 
 
-class PrepareVariables(PrepareBase):
+class PrepareVariables(PreparePersons):
 
-    def __init__(self, config, pedigree_df):
-        super(PrepareVariables, self).__init__(config)
-        self.pedigree_df = pedigree_df
+    def __init__(self, config):
+        super(PreparePersons, self).__init__(config)
         self.sample_ids = None
         self.classifier = MeasureClassifier(config)
 
@@ -386,6 +386,8 @@ class PrepareVariables(PrepareBase):
     @property
     def log_filename(self):
         db_filename = self.config.db.filename
+        if db_filename == 'memory':
+            db_filename = 'output.db'
         filename, _ext = os.path.splitext(db_filename)
         return filename + '_report_log.tsv'
 
@@ -404,7 +406,6 @@ class PrepareVariables(PrepareBase):
 
     def save_measure(self, measure):
         to_save = measure.to_dict()
-        print(to_save)
         assert 'db_id' not in to_save, to_save
         ins = self.db.measure.insert().values(**to_save)
         with self.db.engine.begin() as connection:
@@ -467,9 +468,10 @@ class PrepareVariables(PrepareBase):
                     os.path.abspath(os.path.join(root, filename))
                 )
 
-    def build(self, instruments_dirname):
-        self.build_pheno_common()
+    def build_variables(self, instruments_dirname):
         self.log_header()
+
+        self.build_pheno_common()
 
         instruments = defaultdict(list)
         self._collect_instruments(instruments_dirname, instruments)
@@ -621,7 +623,7 @@ class PrepareMetaMeasures(PrepareBase):
         self.pheno = PhenoDB(dbfile=self.db.dbfile)
         self.pheno.load(skip_meta=True)
 
-    def build(self):
+    def build_meta(self):
         measures = self.db.get_measures()
         for m in measures.values():
             self.build_meta_measure(m)

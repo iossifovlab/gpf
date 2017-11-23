@@ -13,7 +13,7 @@ from argparse import RawDescriptionHelpFormatter
 import traceback
 from pheno.common import dump_config,\
     check_config_pheno_db, default_config
-from pheno.prepare.ped_prepare import PreparePersons, PrepareVariables,\
+from pheno.prepare.ped_prepare import PrepareVariables,\
     PrepareMetaMeasures
 
 
@@ -83,9 +83,10 @@ def parse_config(args):
 
     if args.report_only:
         config.report_only = True
+        config.db.filename = 'memory'
 
     if args.parallel:
-        config.paralle = args.parallel
+        config.parallel = args.parallel
 
     return config
 
@@ -251,14 +252,13 @@ USAGE
             raise Exception("bad classification boundaries")
 
         if not args.meta:
-            prep = PreparePersons(config)
-            ped_df = prep.build(args.pedigree)
+            prep = PrepareVariables(config)
+            prep.build_pedigree(args.pedigree)
+            prep.build_variables(args.instruments)
 
-            prep = PrepareVariables(config, ped_df)
-            prep.build(args.instruments)
-
-        prep = PrepareMetaMeasures(config)
-        prep.build()
+        if not args.report_only:
+            prep = PrepareMetaMeasures(config)
+            prep.build_meta()
 
         return 0
     except KeyboardInterrupt:

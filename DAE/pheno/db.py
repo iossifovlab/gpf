@@ -17,7 +17,10 @@ class DbManager(object):
     def __init__(self, dbfile):
         self.dbfile = dbfile
         self.metadata = MetaData()
-        self.engine = create_engine("sqlite:///{}".format(dbfile))
+        if self.dbfile == 'memory':
+            self.engine = create_engine("sqlite://")
+        else:
+            self.engine = create_engine("sqlite:///{}".format(dbfile))
 
     def build(self):
         self._build_person_tables()
