@@ -9,51 +9,107 @@ import itertools
 import enum
 from pheno.common import MeasureType
 from pheno.utils.commons import remove_annoying_characters
+from collections import Counter
+import copy
 
 
 class ClassifierReport(object):
 
+    MAX_CHARS = 32
+    DISTRIBUTION_CUTOFF = 20
+
     def __init__(self):
         self.instrument_name = None
         self.measure_name = None
+        self.measure_type = None
+        self.count_total = None
         self.count_with_values = None
         self.count_without_values = None
         self.count_with_numeric_values = None
         self.count_with_non_numeric_values = None
         self.count_unique_values = None
-        self.count_total = None
 
         self.value_max_len = None
+
         self.unique_values = None
         self.numeric_values = None
         self.string_values = None
         self.distribution = None
 
-    def __repr__(self):
-        return "ClassifierReport(total: {}; " \
-            "with values: {}; "\
-            "with numeric values: {}; " \
-            "with non-numeric values: {}; "\
-            "without values: {}; " \
-            "unique values: {})".format(
-                self.count_total,
-                self.count_with_values,
-                self.count_with_numeric_values,
-                self.count_with_non_numeric_values,
-                self.count_without_values,
-                self.count_unique_values,
-            )
+    def set_measure(self, measure):
+        self.instrument_name = measure.instrument_name
+        self.measure_name = measure.measure_name
+        self.measure_type = measure.measure_type.name
+        return self
 
-    def log_line(self):
-        return '\t'.join(map(str, [
-            self.count_total,
-            self.count_with_values,
-            self.count_with_numeric_values,
-            self.count_with_non_numeric_values,
-            self.count_without_values,
-            self.count_unique_values,
-            self.value_max_len,
-        ]))
+    @staticmethod
+    def short_attributes():
+        return [
+            'instrument_name',
+            'measure_name',
+            'measure_type',
+            'count_total',
+            'count_with_values',
+            'count_with_numeric_values',
+            'count_with_non_numeric_values',
+            'count_without_values',
+            'count_unique_values',
+            'value_max_len',
+        ]
+
+    def __repr__(self):
+        return self.log_line()
+
+    def log_line(self, short=False):
+        attributes = self.short_attributes()
+        values = [str(getattr(self, attr)) for attr in attributes]
+        if not short:
+            distribution = self.calc_distribution_report()
+            distribution = [
+                "{}\t{}".format(v, c) for (v, c) in distribution
+            ]
+            values.extend(distribution)
+        return '\t'.join(values)
+
+    @staticmethod
+    def short_header_line():
+        attributes = ClassifierReport.short_attributes()
+        return '\t'.join(attributes)
+
+    @staticmethod
+    def header_line(short=False):
+        attributes = ClassifierReport.short_attributes()
+        if not short:
+            distribution = [
+                "v{}\tc{}".format(i, i)
+                for i in range(1, ClassifierReport.DISTRIBUTION_CUTOFF + 1)
+            ]
+            attributes.extend(distribution)
+        return '\t'.join(attributes)
+
+    def calc_distribution_report(self):
+        if self.distribution:
+            return copy.deepcopy(self.distribution)
+
+        assert self.string_values is not None
+        counts = Counter()
+        for val in self.string_values:
+            counts[val] += 1
+        distribution = [(val, count) for (val, count) in counts.items()]
+        distribution = sorted(distribution, key=lambda (_val, count): -count)
+        distribution = distribution[:self.DISTRIBUTION_CUTOFF]
+        distribution = [
+            (val[:self.MAX_CHARS], count)
+            for (val, count) in distribution
+        ]
+        if len(distribution) < self.DISTRIBUTION_CUTOFF:
+            ext = [
+                (' ', ' ')
+                for _i in range(self.DISTRIBUTION_CUTOFF - len(distribution))
+            ]
+            distribution.extend(ext)
+        self.distribution = distribution
+        return copy.deepcopy(self.distribution)
 
 
 def is_nan(val):

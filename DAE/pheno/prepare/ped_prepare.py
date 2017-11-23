@@ -13,7 +13,7 @@ from box import Box
 from collections import defaultdict, OrderedDict
 from pheno.pheno_db import PhenoDB
 from pheno.prepare.measure_classifier import MeasureClassifier,\
-    convert_to_string, convert_to_numeric
+    convert_to_string, convert_to_numeric, ClassifierReport
 from multiprocessing import Pool
 from numpy.testing.utils import measure
 
@@ -391,31 +391,14 @@ class PrepareVariables(PrepareBase):
 
     def log_header(self):
         with open(self.log_filename, 'w') as log:
-            log.write('\t'.join([
-                'measure_id',
-                'instrument_name',
-                'measure_name',
-                'type',
-                'individuals',
-                'count_with_values',
-                'count_with_numeric_values',
-                'count_with_non_numeric_values',
-                'count_without_values',
-                'rank',
-            ]))
+            log.write(ClassifierReport.header_line())
             log.write('\n')
 
     def log_measure(self, measure, classifier_report):
-        print(classifier_report.log_line())
+        classifier_report.set_measure(measure)
+        print(classifier_report.log_line(short=True))
+
         with open(self.log_filename, 'a') as log:
-            log.write('\t'.join([
-                measure.measure_id,
-                measure.instrument_name,
-                measure.measure_name,
-                measure.measure_type.name,
-                str(measure.individuals),
-            ]))
-            log.write('\t')
             log.write(classifier_report.log_line())
             log.write('\n')
 
