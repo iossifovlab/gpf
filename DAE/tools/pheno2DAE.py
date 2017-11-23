@@ -81,6 +81,12 @@ def parse_config(args):
     if args.tab_separated:
         config.instruments.tab_separated = True
 
+    if args.report_only:
+        config.report_only = True
+
+    if args.parallel:
+        config.paralle = args.parallel
+
     return config
 
 
@@ -206,12 +212,29 @@ USAGE
             help="instruments file are tab separated",
             action="store_true"
         )
+
+        parser.add_argument(
+            '--report-only',
+            dest='report_only',
+            help='runs the tool in report only mode',
+            action='store_true'
+        )
+        parser.add_argument(
+            '--parallel',
+            type=int,
+            dest="parallel",
+            help="size of executors pool to use for processing"
+        )
         # Process arguments
         args = parser.parse_args()
 
-        if not args.output:
+        if not args.output and not args.report_only:
             raise CLIError(
-                "output filename should be specified")
+                "output filename should be specified"
+            )
+
+        if not args.output:
+            args.output = 'output.db'
 
         if not args.meta:
             if not args.pedigree:
