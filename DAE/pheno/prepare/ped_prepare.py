@@ -387,7 +387,7 @@ class PrepareVariables(PrepareBase):
     def log_filename(self):
         db_filename = self.config.db.filename
         filename, _ext = os.path.splitext(db_filename)
-        return filename + '.log'
+        return filename + '_report_log.tsv'
 
     def log_header(self):
         with open(self.log_filename, 'w') as log:
