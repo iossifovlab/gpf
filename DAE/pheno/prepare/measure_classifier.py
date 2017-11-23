@@ -104,7 +104,7 @@ class ClassifierReport(object):
         ]
         if len(distribution) < self.DISTRIBUTION_CUTOFF:
             ext = [
-                (' ', ' ')
+                ('na', 'na')
                 for _i in range(self.DISTRIBUTION_CUTOFF - len(distribution))
             ]
             distribution.extend(ext)
