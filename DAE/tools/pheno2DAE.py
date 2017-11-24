@@ -82,8 +82,8 @@ def parse_config(args):
         config.instruments.tab_separated = True
 
     if args.report_only:
-        config.report_only = True
         config.db.filename = 'memory'
+        config.report_only = args.report_only
 
     if args.parallel:
         config.parallel = args.parallel
@@ -218,14 +218,16 @@ USAGE
             '--report-only',
             dest='report_only',
             help='runs the tool in report only mode',
-            action='store_true'
+            type=str
         )
+
         parser.add_argument(
             '--parallel',
             type=int,
             dest="parallel",
             help="size of executors pool to use for processing"
         )
+
         # Process arguments
         args = parser.parse_args()
 

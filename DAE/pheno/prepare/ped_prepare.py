@@ -386,10 +386,14 @@ class PrepareVariables(PreparePersons):
     @property
     def log_filename(self):
         db_filename = self.config.db.filename
-        if db_filename == 'memory':
-            db_filename = 'output.db'
-        filename, _ext = os.path.splitext(db_filename)
-        return filename + '_report_log.tsv'
+        if self.config.report_only:
+            filename = self.config.report_only
+            assert db_filename == 'memory'
+            return filename
+        else:
+            filename, _ext = os.path.splitext(db_filename)
+            filename = filename + '_report_log.tsv'
+            return filename
 
     def log_header(self):
         with open(self.log_filename, 'w') as log:
