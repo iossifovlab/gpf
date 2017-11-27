@@ -45,16 +45,15 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
           for (let geneSetCollection of this.geneSetsCollections) {
             if (geneSetCollection.name === state['geneSet']['geneSetsCollection']) {
               this.geneSetsState.geneSetsCollection = geneSetCollection;
-              this.geneSetsState.geneSet = null;
 
               if (state['geneSet']['geneSetsTypes']) {
                 this.restoreGeneTypes(state['geneSet']['geneSetsTypes'], geneSetCollection);
               }
+              this.onSearch();
             }
           }
         } else {
-           console.log("search called!");
-           this.onSearch('');
+           this.onSearch();
         }
       });
   }
@@ -64,7 +63,6 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
       .filter(geneType => geneSetsTypes.indexOf(geneType.name) !== -1);
     if (geneTypes.length !== 0) {
       this.geneSetsState.geneSetsTypes = new Set(geneTypes);
-      this.geneSetsState.geneSet = null;
     }
   }
 
@@ -79,12 +77,12 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
 
     this.geneSetsResult = this.geneSetsQueryChange
       .distinctUntilChanged()
-      .debounceTime(1000)
+      .debounceTime(300)
       .switchMap(term => {
         return this.geneSetsService.getGeneSets(term[0], term[1], term[2]);
       })
       .catch(error => {
-        console.log(error);
+        console.warn(error);
         return Observable.of(null);
       });
 
@@ -106,7 +104,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
       });
   }
 
-  onSearch(searchTerm: string) {
+  onSearch(searchTerm = '') {
     if (!this.selectedGeneSetsCollection) {
       return;
     }
@@ -135,7 +133,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     this.geneSetsState.geneSet = event;
 
     if (event == null) {
-      this.onSearch('');
+      this.onSearch();
     }
   }
 
@@ -164,6 +162,7 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
     if (selectedGeneSetsCollection.types.length > 0) {
       this.setSelectedGeneType(selectedGeneSetsCollection.types[0], true);
     }
+    this.onSearch();
   }
 
   get selectedGeneSet(): GeneSet {
