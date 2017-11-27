@@ -4,7 +4,7 @@ import { Component, OnInit, forwardRef } from '@angular/core';
 import { Observable } from 'rxjs';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
@@ -12,11 +12,8 @@ import { StateRestoreService } from '../store/state-restore.service';
   templateUrl: './gene-symbols.component.html',
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSymbolsComponent) }]
 })
-export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
+export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implements OnInit {
   geneSymbols = new GeneSymbols();
-  errors: string[];
-
-  private flashingAlert = false;
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -36,7 +33,7 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
 
 
   getState() {
-    return toValidationObservable(this.geneSymbols)
+    return this.validateAndGetState(this.geneSymbols)
       .map(state => {
         let result = state.geneSymbols
           .split(/[,\s]/)
@@ -47,13 +44,6 @@ export class GeneSymbolsComponent extends QueryStateProvider implements OnInit {
         }
 
         return { geneSymbols: result };
-      })
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-
-        return Observable.throw(`${this.constructor.name}: invalid state`);
       });
   }
 }

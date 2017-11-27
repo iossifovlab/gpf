@@ -4,7 +4,7 @@ import {
 import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Observable } from 'rxjs';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { QueryData, Rarity } from '../query/query';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
@@ -15,15 +15,12 @@ import { StateRestoreService } from '../store/state-restore.service';
   templateUrl: './present-in-parent.component.html',
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PresentInParentComponent) }]
 })
-export class PresentInParentComponent extends QueryStateProvider implements OnInit {
+export class PresentInParentComponent extends QueryStateWithErrorsProvider implements OnInit {
   ultraRare: boolean;
 
   rarityRadio: string;
 
   presentInParent = new PresentInParent();
-
-  errors: string[];
-  flashingAlert = false;
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -164,7 +161,7 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   getState() {
-    return toValidationObservable(this.presentInParent)
+    return this.validateAndGetState(this.presentInParent)
       .map(presentInParent => {
         let result = new Array<string>();
         if (presentInParent.fatherOnly) {
@@ -204,12 +201,6 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
             rarity: rarity
           }
         };
-      })
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-        return Observable.throw(`${this.constructor.name}: invalid state`);
       });
   }
 }

@@ -3,7 +3,7 @@ import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@ang
 import { Observable } from 'rxjs';
 
 import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -15,7 +15,7 @@ import { StateRestoreService } from '../store/state-restore.service';
   styleUrls: ['./effecttypes.component.css'],
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => EffecttypesComponent) }]
 })
-export class EffecttypesComponent extends QueryStateProvider implements OnInit {
+export class EffecttypesComponent extends QueryStateWithErrorsProvider implements OnInit {
   @Input()
   hasCNV = false;
 
@@ -27,9 +27,6 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   private selectedEffectTypes = new Map<string, boolean>();
 
   effectTypes = new EffectTypes();
-
-  errors: string[];
-  flashingAlert = false;
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -84,16 +81,10 @@ export class EffecttypesComponent extends QueryStateProvider implements OnInit {
   }
 
   getState() {
-    return toValidationObservable(this.effectTypes)
+    return this.validateAndGetState(this.effectTypes)
       .map(effectTypes => ({
         effectTypes: effectTypes.selected
-      }))
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-        return Observable.throw(`${this.constructor.name}: invalid state`);
-      });
+      }));
   }
 
 }

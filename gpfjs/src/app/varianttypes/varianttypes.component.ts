@@ -5,7 +5,7 @@ import {
 import { Observable } from 'rxjs';
 
 import { VariantTypes } from './varianttypes';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from '../datasets/datasets.service';
@@ -19,15 +19,12 @@ import { DatasetsService } from '../datasets/datasets.service';
     useExisting: forwardRef(() => VarianttypesComponent)
   }]
 })
-export class VarianttypesComponent extends QueryStateProvider
+export class VarianttypesComponent extends QueryStateWithErrorsProvider
     implements OnInit, OnChanges {
 
   variantTypes = new VariantTypes();
   @Input()
   hasCNV = false;
-
-  errors: string[];
-  flashingAlert = false;
 
   constructor(
     private stateRestoreService: StateRestoreService,
@@ -75,16 +72,9 @@ export class VarianttypesComponent extends QueryStateProvider
   }
 
   getState() {
-    return toValidationObservable(this.variantTypes)
+    return this.validateAndGetState(this.variantTypes)
       .map(variantTypes => ({
         variantTypes: Array.from(variantTypes.selected)
-      }))
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-
-        return Observable.throw(`${this.constructor.name}: invalid state`);
-      });
+      }));
   }
 }

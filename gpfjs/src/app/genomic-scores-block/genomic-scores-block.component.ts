@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, forwardRef } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { environment } from '../../environments/environment';
 
 import { Observable } from 'rxjs/Observable';
@@ -20,7 +20,7 @@ import { transformAndValidate } from 'class-transformer-validator';
         useExisting: forwardRef(() => GenomicScoresBlockComponent)
     }]
 })
-export class GenomicScoresBlockComponent extends QueryStateProvider implements OnInit {
+export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider implements OnInit {
     @Input() dataset: Dataset;
     genomicScoresState = new GenomicScoresState();
     scores = [];
@@ -64,7 +64,7 @@ export class GenomicScoresBlockComponent extends QueryStateProvider implements O
     }
 
     getState() {
-        return toValidationObservable(this.genomicScoresState)
+        return this.validateAndGetState(this.genomicScoresState)
             .map(genomicScoresState => {
                 return {
                     genomicScores: genomicScoresState.genomicScoresState
@@ -81,11 +81,6 @@ export class GenomicScoresBlockComponent extends QueryStateProvider implements O
                             };
                         })
                 };
-            })
-            .catch(errors => {
-                return Observable.throw(
-                    `${this.constructor.name}: invalid state`
-                );
             });
     }
 }

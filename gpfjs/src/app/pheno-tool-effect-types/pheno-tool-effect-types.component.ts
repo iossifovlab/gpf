@@ -6,7 +6,7 @@ import {
   PHENO_TOOL_ALL, PHENO_TOOL_OTHERS, PHENO_TOOL_CNV, PHENO_TOOL_LGDS,
   PHENO_TOOL_INITIAL_VALUES
 } from './pheno-tool-effect-types';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
 import { EffecttypesComponent } from '../effecttypes/effecttypes.component';
 

@@ -5,7 +5,7 @@ import { PedigreeSelectorState } from './pedigree-selector';
 import { Observable } from 'rxjs';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
@@ -17,14 +17,11 @@ import { StateRestoreService } from '../store/state-restore.service';
     useExisting: forwardRef(() => PedigreeSelectorComponent)
   }]
 })
-export class PedigreeSelectorComponent extends QueryStateProvider implements OnChanges {
+export class PedigreeSelectorComponent extends QueryStateWithErrorsProvider implements OnChanges {
   @Input()
   pedigrees: PedigreeSelector[];
 
   pedigreeState = new PedigreeSelectorState();
-
-  errors: string[];
-  private flashingAlert = false;
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -107,18 +104,12 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnC
   }
 
   getState() {
-    return toValidationObservable(this.pedigreeState)
+    return this.validateAndGetState(this.pedigreeState)
       .map(pedigreeState => ({
         pedigreeSelector: {
           id: pedigreeState.pedigree.id,
           checkedValues: Array.from(pedigreeState.checkedValues)
         }
-      }))
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-        return Observable.throw(`${this.constructor.name}: invalid state`);
-      });
+      }));
   }
 }

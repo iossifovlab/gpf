@@ -136,6 +136,7 @@ import { RedirectOnErrorHttpService } from './config/redirect-on-error.service';
 import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
 import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
+import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 
 const appRoutes: Routes = [
   {
@@ -320,6 +321,7 @@ const appRoutes: Routes = [
     GenotypeBrowserSingleViewComponent,
     GenotypeBrowserMetaViewComponent,
     GenotypePreviewFieldComponent,
+    ErrorsAlertComponent,
   ],
   imports: [
     BrowserModule,

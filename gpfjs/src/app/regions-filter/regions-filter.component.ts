@@ -2,7 +2,7 @@ import { RegionsFilter } from './regions-filter';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Observable } from 'rxjs';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -12,11 +12,9 @@ import { StateRestoreService } from '../store/state-restore.service';
   templateUrl: './regions-filter.component.html',
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => RegionsFilterComponent) }]
 })
-export class RegionsFilterComponent extends QueryStateProvider implements OnInit {
+export class RegionsFilterComponent extends QueryStateWithErrorsProvider implements OnInit {
 
   regionsFilter = new RegionsFilter();
-  flashingAlert = false;
-  errors: string[];
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -36,7 +34,7 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
 
 
   getState() {
-    return toValidationObservable(this.regionsFilter)
+    return this.validateAndGetState(this.regionsFilter)
       .map(state => {
         let regionsFilter: string = state.regionsFilter;
         let result = regionsFilter
@@ -48,12 +46,6 @@ export class RegionsFilterComponent extends QueryStateProvider implements OnInit
         }
 
         return { regions: result };
-      })
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-        return Observable.throw(`${this.constructor.name}: invalid state`);
       });
   }
 

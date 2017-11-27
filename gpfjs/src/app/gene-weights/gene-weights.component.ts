@@ -11,7 +11,7 @@ import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/observable/of';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -28,7 +28,7 @@ import { GeneWeightsState } from './gene-weights-store';
     useExisting: forwardRef(() => GeneWeightsComponent)
   }]
 })
-export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
+export class GeneWeightsComponent extends QueryStateWithErrorsProvider implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 
@@ -36,10 +36,6 @@ export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
 
   rangesCounts: Observable<Array<number>>;
   private geneWeightsState = new GeneWeightsState();
-
-  errors: string[];
-  flashingAlert = false;
-
 
   constructor(
     private geneWeightsService: GeneWeightsService,
@@ -140,7 +136,7 @@ export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
   }
 
   getState() {
-    return toValidationObservable(this.geneWeightsState)
+    return this.validateAndGetState(this.geneWeightsState)
       .map(geneWeightsState => {
 
         return {
@@ -150,12 +146,6 @@ export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
             rangeEnd: geneWeightsState.rangeEnd
           }
         };
-      })
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-        return Observable.throw(`${this.constructor.name}: invalid state`);
       });
   }
 

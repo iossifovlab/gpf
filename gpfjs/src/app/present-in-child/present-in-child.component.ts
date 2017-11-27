@@ -2,7 +2,7 @@ import { PresentInChild, ALL_STATES } from './present-in-child';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { Observable } from 'rxjs';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { QueryData } from '../query/query';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
@@ -15,12 +15,9 @@ import { StateRestoreService } from '../store/state-restore.service';
   providers: [{
     provide: QueryStateProvider, useExisting: forwardRef(() => PresentInChildComponent) }]
 })
-export class PresentInChildComponent extends QueryStateProvider implements OnInit {
+export class PresentInChildComponent extends QueryStateWithErrorsProvider implements OnInit {
 
   presentInChild = new PresentInChild();
-
-  errors: string[];
-  flashingAlert = false;
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -56,17 +53,11 @@ export class PresentInChildComponent extends QueryStateProvider implements OnIni
   }
 
   getState() {
-    return toValidationObservable(this.presentInChild)
+    return this.validateAndGetState(this.presentInChild)
       .map(state => {
         return {
           presentInChild: Array.from(state.selected)
         };
-      })
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-        return Observable.throw(`${this.constructor.name}: invalid state`);
       });
   }
 }

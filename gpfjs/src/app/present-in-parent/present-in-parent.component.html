@@ -96,11 +96,6 @@
           </div>
         </div>
     </div>
-    <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
-      <ul>
-        <li *ngFor="let error of errors">
-          {{ error }}
-        </li>
-      </ul>
-    </div>
+
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

@@ -3,22 +3,36 @@ import { DoCheck, ContentChildren, QueryList, ViewChildren, forwardRef, OnChange
 import { Subject, Observable } from 'rxjs';
 import { Scheduler } from 'rxjs';
 
-import { GeneSetsComponent } from '../gene-sets/gene-sets.component';
-import { GenesBlockComponent } from '../genes-block/genes-block.component';
-import { UsersComponent } from '../users/users.component';
-import { GenderComponent } from '../gender/gender.component';
+import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
 
 import * as _ from 'lodash';
 
 
-export class QueryStateProvider {
-  getState() {
-    return null;
-  }
+export abstract class QueryStateProvider {
+  abstract getState(): Observable<object>;
 }
 
+export abstract class QueryStateWithErrorsProvider extends QueryStateProvider {
 
-export class QueryStateCollector implements DoCheck {
+  errors = new Array<string>();
+
+  protected validateAndGetState(object): Observable<any> {
+    return toValidationObservable(object)
+      .map(value => {
+        this.errors = [];
+        return value;
+      })
+      .catch(errors => {
+        this.errors = validationErrorsToStringArray(errors);
+        return Observable.throw(
+          `${this.constructor.name}: invalid state`,
+          Scheduler.async);
+      });
+  }
+
+}
+
+export abstract class QueryStateCollector implements DoCheck {
   private stateObjectString = '';
   private stateChange$ = new Subject<boolean>();
 
@@ -31,10 +45,11 @@ export class QueryStateCollector implements DoCheck {
   collectState() {
     let directState = [];
     let indirectState = [];
-    if (this.directContentChildren) {
-      directState = this.directContentChildren.map((children) => children.getState());
+    if (this.directContentChildren && this.directContentChildren.length > 0) {
+      directState = this.directContentChildren
+        .map(children => children.getState());
     }
-    if (this.contentChildren) {
+    if (this.contentChildren && this.contentChildren.length > 0) {
       indirectState = this.contentChildren.reduce((acc, current) => acc.concat(current.collectState()), []);
     }
     return directState.concat(indirectState);
@@ -55,6 +70,7 @@ export class QueryStateCollector implements DoCheck {
         let stateArray = this.collectState();
         return Observable.zip(...stateArray)
           .catch(error => {
+            console.warn(error);
             return Observable.of([]);
           })
           .map(state => {

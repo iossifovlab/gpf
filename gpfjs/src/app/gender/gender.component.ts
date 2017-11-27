@@ -4,7 +4,7 @@ import { Component, OnInit, forwardRef } from '@angular/core';
 import { Observable } from 'rxjs';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { QueryData } from '../query/query';
 import { StateRestoreService } from '../store/state-restore.service';
 
@@ -17,11 +17,9 @@ import { StateRestoreService } from '../store/state-restore.service';
     useExisting: forwardRef(() => GenderComponent)
   }]
 })
-export class GenderComponent extends QueryStateProvider implements OnInit {
+export class GenderComponent extends QueryStateWithErrorsProvider implements OnInit {
 
   gender = new Gender();
-  errors: string[];
-  flashingAlert = false;
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -61,15 +59,9 @@ export class GenderComponent extends QueryStateProvider implements OnInit {
   }
 
   getState() {
-    return toValidationObservable(this.gender)
+    return this.validateAndGetState(this.gender)
       .map(genderState => ({
         gender: QueryData.trueFalseToStringArray(genderState)
-      }))
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-        return Observable.throw(`${this.constructor.name}: invalid state`);
-      });
+      }));
   }
 }

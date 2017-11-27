@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, forwardRef } from '@angular/core';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { Observable } from 'rxjs';
 import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
 import { PhenoToolMeasure }  from './pheno-tool-measure';
@@ -14,11 +14,8 @@ import { ValidationError } from 'class-validator';
     useExisting: forwardRef(() => PhenoToolMeasureComponent)
   }]
 })
-export class PhenoToolMeasureComponent extends QueryStateProvider implements OnInit {
+export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider implements OnInit {
   phenoToolMeasure = new PhenoToolMeasure();
-
-  errors: string[];
-  flashingAlert = false;
 
   constructor() {
     super();
@@ -28,18 +25,11 @@ export class PhenoToolMeasureComponent extends QueryStateProvider implements OnI
   }
 
   getState() {
-    return toValidationObservable(this.phenoToolMeasure)
+    return this.validateAndGetState(this.phenoToolMeasure)
       .map(state => ({
         measureId: state.measure.name,
         normalizeBy: state.normalizeBy
-      }))
-      .catch(errors => {
-        this.flashingAlert = true;
-        this.errors = validationErrorsToStringArray(errors);
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-
-        return Observable.throw(`${this.constructor.name}: invalid measure state`);
-      });
+      }));
   }
 
   onNormalizeByChange(value: any, event): void {

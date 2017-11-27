@@ -1,6 +1,6 @@
 import { Component, OnInit, forwardRef } from '@angular/core';
 import { validate } from 'class-validator';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { Observable } from 'rxjs';
 import { FamilyIds } from './family-ids';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
@@ -16,9 +16,7 @@ import { StateRestoreService } from '../store/state-restore.service';
     useExisting: forwardRef(() => FamilyIdsComponent)
   }]
 })
-export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
-  flashingAlert = false;
-  errors: string[];
+export class FamilyIdsComponent extends QueryStateWithErrorsProvider implements OnInit {
 
   familyIds = new FamilyIds();
 
@@ -42,7 +40,7 @@ export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
   }
 
   getState() {
-    return toValidationObservable(this.familyIds).map(familyIds => {
+    return this.validateAndGetState(this.familyIds).map(familyIds => {
         let result = familyIds.familyIds
           .split(/[,\s]/)
           .filter(s => s !== '');
@@ -51,12 +49,6 @@ export class FamilyIdsComponent extends QueryStateProvider implements OnInit {
         }
 
         return { familyIds: result };
-      })
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-        return Observable.throw(`${this.constructor.name}: invalid state`);
       });
   }
 

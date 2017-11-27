@@ -18,12 +18,5 @@
 		    [rangesCounts]="rangesCounts"
 		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
 		  </gpf-histogram>
-		  <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
-		    <ul>
-		      <li *ngFor="let error of errors">
-		        {{ error }}
-		      </li>
-		    </ul>
-		  </div>
     </div>
 </div>

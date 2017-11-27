@@ -5,7 +5,6 @@ import { GenomicScoresHistogramData } from './genomic-scores';
 import { Observable }        from 'rxjs/Observable';
 import { ValidationError } from 'class-validator';
 import { GenomicScoreState } from './genomic-scores-store';
- import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
  import { transformAndValidate } from 'class-transformer-validator';
  import { StateRestoreService } from '../store/state-restore.service';
  import { DatasetsService } from '../datasets/datasets.service';
@@ -18,7 +17,6 @@ export class GenomicScoresComponent implements OnInit {
   @Input() index: number;
   @Input() genomicScoreState: GenomicScoreState;
 
-  errors: string[];
   dataset: Dataset;
 
   constructor(

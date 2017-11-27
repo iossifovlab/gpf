@@ -1,6 +1,6 @@
 import { Component, OnChanges, Input, forwardRef } from '@angular/core';
 import { Dataset, PhenoFilter } from '../datasets/datasets';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import {
   PhenoFilterState, PhenoFiltersState, CategoricalFilterState,
@@ -16,12 +16,10 @@ import { plainToClass } from 'class-transformer';
   styleUrls: ['./pheno-filters.component.css'],
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PhenoFiltersComponent) }]
 })
-export class PhenoFiltersComponent extends QueryStateProvider implements OnChanges {
+export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implements OnChanges {
   @Input() dataset: Dataset;
 
   private phenoFiltersState = new Array<[PhenoFilter, PhenoFilterState]>();
-  errors: string[];
-  flashingAlert = false;
 
   constructor() {
     super();
@@ -71,16 +69,10 @@ export class PhenoFiltersComponent extends QueryStateProvider implements OnChang
   }
 
   getState() {
-    return toValidationObservable(this.phenoFiltersState)
+    return this.validateAndGetState(this.phenoFiltersState)
       .map(phenoFiltersState => ({
         phenoFilters: phenoFiltersState.map(x => x[1]).filter(f => !f.isEmpty())
-      }))
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-        return Observable.throw(`${this.constructor.name}: invalid state`);
-      });
+      }));
   }
 
 }

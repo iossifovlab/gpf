@@ -5,18 +5,21 @@ import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';
-import { QueryStateProvider } from '../query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-gene-sets',
   templateUrl: './gene-sets.component.html',
   styleUrls: ['./gene-sets.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSetsComponent) }]
+  providers: [{
+    provide: QueryStateProvider,
+    useExisting: forwardRef(() => GeneSetsComponent)
+  }]
 })
-export class GeneSetsComponent extends QueryStateProvider implements OnInit {
+export class GeneSetsComponent extends QueryStateWithErrorsProvider implements OnInit {
   geneSetsCollections: Array<GeneSetsCollection>;
   geneSets: Array<GeneSet>;
   private internalSelectedGeneSetsCollection: GeneSetsCollection;
@@ -25,9 +28,6 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
 
   private geneSetsQueryChange = new Subject<[string, string, Array<string>]>();
   private geneSetsResult: Observable<GeneSet[]>;
-
-  errors: string[];
-  flashingAlert = false;
 
   constructor(
     private geneSetsService: GeneSetsService,
@@ -178,8 +178,10 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
   }
 
   getState() {
-    return toValidationObservable(this.geneSetsState).map(geneSetsState => {
-        let geneSetsTypes = Array.from(geneSetsState.geneSetsTypes).map(t => t.id);
+    return this.validateAndGetState(this.geneSetsState)
+      .map(geneSetsState => {
+        let geneSetsTypes = Array.from(
+          geneSetsState.geneSetsTypes, (t: any) => t.id);
         return {
           geneSet : {
             geneSetsCollection: geneSetsState.geneSetsCollection.name,
@@ -187,13 +189,6 @@ export class GeneSetsComponent extends QueryStateProvider implements OnInit {
             geneSetsTypes: geneSetsTypes
           }
         };
-      })
-      .catch(errors => {
-        this.errors = validationErrorsToStringArray(errors);
-        this.flashingAlert = true;
-        setTimeout(() => { this.flashingAlert = false; }, 1000);
-
-        return Observable.throw(`${this.constructor.name}: invalid state`);
       });
   }
 }

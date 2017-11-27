@@ -33,12 +33,6 @@
       (<a href="{{ getDownloadLink(selectedGeneSet) }}">Download</a>)
     </div>
 
-	<div *ngIf="errors?.length > 0" class="alert alert-danger" style="margin-top: 20px" [class.flashing]="flashingAlert">
-	  <ul>
-	    <li *ngFor="let error of errors">
-	      {{ error }}
-	    </li>
-	  </ul>
-	</div>
-</div>
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+  </div>
 </div>
