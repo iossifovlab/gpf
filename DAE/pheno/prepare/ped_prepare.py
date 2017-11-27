@@ -437,6 +437,7 @@ class PrepareVariables(PreparePersons):
                 instruments[name].append(
                     os.path.abspath(os.path.join(root, filename))
                 )
+        return instruments
 
     def build_variables(self, instruments_dirname):
         self.log_header()
