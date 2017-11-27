@@ -266,15 +266,16 @@ class MeasureValuesTask(Task):
         measure = self.measure
 
         values = OrderedDict()
-        for _index, row in self.mdf.iterrows():
-            pid = int(row[self.PID_COLUMN])
+        measure_values = self.mdf.to_dict(orient='records')
+        for record in measure_values:
+            pid = int(record[self.PID_COLUMN])
             k = (pid, measure_id)
-            value = row['value']
+            value = record['value']
             if MeasureType.is_text(measure.measure_type):
                 value = convert_to_string(value)
                 if value is None:
                     continue
-                assert isinstance(value, unicode), row['value']
+                assert isinstance(value, unicode), record['value']
             elif MeasureType.is_numeric(measure.measure_type):
                 value = convert_to_numeric(value)
                 if np.isnan(value):
@@ -291,7 +292,7 @@ class MeasureValuesTask(Task):
                 print("updating measure {} for person {} value {} "
                       "with {}".format(
                           measure.measure_id,
-                          row['person_id'],
+                          record['person_id'],
                           values[k]['value'],
                           value)
                       )
