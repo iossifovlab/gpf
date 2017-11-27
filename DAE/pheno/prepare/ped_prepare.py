@@ -480,7 +480,9 @@ class PrepareVariables(PreparePersons):
         instruments = defaultdict(list)
         self._collect_instruments(instruments_dirname, instruments)
         for instrument_name, instrument_filenames in instruments.items():
-            self.build_instrument(instrument_name, instrument_filenames)
+            assert instrument_name is not None
+            df = self.load_instrument(instrument_name, instrument_filenames)
+            self.build_instrument(instrument_name, df)
 
     def _augment_person_ids(self, df):
         persons = self.get_persons()
@@ -502,17 +504,19 @@ class PrepareVariables(PreparePersons):
 
     def build_pheno_common(self):
         pheno_common_measures = set(self.pedigree_df.columns) - \
-            (set(self.PED_COLUMNS) | set(['sampleId', 'role']))
+            (set(self.PED_COLUMNS) | set(['sampleId']))
 
         df = self.pedigree_df.copy(deep=True)
-
         df.rename(columns={'personId': self.PERSON_ID}, inplace=True)
-
         assert self.PERSON_ID in df.columns
         df = self._augment_person_ids(df)
 
-        for measure_name in pheno_common_measures:
-            self.build_measure('pheno_common', measure_name, df)
+        pheno_common_columns = [
+            self.PERSON_ID, self.PID_COLUMN,
+        ]
+        pheno_common_columns.extend(pheno_common_measures)
+
+        self.build_instrument('pheno_common', df[pheno_common_columns])
 
     def build_measure(self, instrument_name, measure_name, df):
         if measure_name == self.PID_COLUMN or \
@@ -544,9 +548,7 @@ class PrepareVariables(PreparePersons):
         values = self.prepare_measure_values(measure, mdf)
         self.save_measure_values(measure, values)
 
-    def build_instrument(self, instrument_name, filenames):
-        assert instrument_name is not None
-        df = self.load_instrument(instrument_name, filenames)
+    def build_instrument(self, instrument_name, df):
 
         assert df is not None
         assert self.PERSON_ID in df.columns
@@ -555,7 +557,6 @@ class PrepareVariables(PreparePersons):
         save_queue = TaskQueue()
 
         for measure_name in df.columns:
-            # self.build_measure(instrument_name, measure_name, df)
             if measure_name == self.PID_COLUMN or \
                     measure_name == self.PERSON_ID:
                 continue
