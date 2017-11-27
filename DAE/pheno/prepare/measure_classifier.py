@@ -212,6 +212,7 @@ class MeasureClassifier(object):
         report.count_with_values = 0
         report.count_with_numeric_values = 0
         report.count_with_non_numeric_values = 0
+        numeric_values = []
         for convertable, vals in grouped:
             vals = list(vals)
 
@@ -220,6 +221,7 @@ class MeasureClassifier(object):
             elif convertable == Convertible.numeric:
                 report.count_with_values += len(vals)
                 report.count_with_numeric_values += len(vals)
+                numeric_values.extend(vals)
             else:
                 assert convertable == Convertible.non_numeric
                 report.count_with_values += len(vals)
@@ -230,7 +232,8 @@ class MeasureClassifier(object):
             if v is not None])
         report.unique_values = np.unique(report.string_values)
         report.count_unique_values = len(report.unique_values)
-        report.count_unique_numeric_values = 0
+        report.count_unique_numeric_values = \
+            len(np.unique(np.array(numeric_values)))
 
         if len(report.string_values) == 0:
             report.value_max_len = 0
@@ -282,88 +285,89 @@ class MeasureClassifier(object):
             return np.array([])
         return np.array([convert_to_string(val) for val in values])
 
-    def classify(self, report):
-        config = self.config.classification
-        if report.count_with_values < config.min_individuals:
-            return MeasureType.skipped
-        non_numeric = (1.0 * report.count_with_non_numeric_values) / \
-            report.count_with_values
+    def classify(self, rep):
+        conf = self.config.classification
 
-        if non_numeric <= config.non_numeric_cutoff:
-            # numeric measure
-            if report.count_unique_values >= config.continuous.min_rank:
-                return MeasureType.continuous
-            if report.count_unique_values >= config.ordinal.min_rank:
-                return MeasureType.ordinal
-            if report.count_unique_values >= config.categorical.min_rank:
-                return MeasureType.categorical
-            return MeasureType.other
-        else:
-            # text measure
-            if report.value_max_len > config.value_max_len:
-                return MeasureType.text
-            if report.count_unique_values > report.count_with_values / 3.0:
-                return MeasureType.text
-            if report.count_unique_values >= config.categorical.min_rank:
-                return MeasureType.categorical
-            return MeasureType.other
-
-    def classify2(self, report):
-        config = self.config.classification
-
-        if report.count_with_values < config.min_individuals:
+        if rep.count_with_values < conf.min_individuals:
             return MeasureType.raw
 
-        non_numeric = (1.0 * report.count_with_non_numeric_values) / \
-            report.count_with_values
+        non_numeric = (1.0 * rep.count_with_non_numeric_values) / \
+            rep.count_with_values
 
-        if non_numeric <= config.non_numeric_cutoff:
-            if report.count_unique_numeric_values >= config.continuous.min_rank:
+        if non_numeric <= conf.non_numeric_cutoff:
+            if rep.count_unique_numeric_values >= conf.continuous.min_rank:
                 return MeasureType.continuous
 
-            if report.count_unique_numeric_values >= config.ordinal.min_rank:
+            if rep.count_unique_numeric_values >= conf.ordinal.min_rank:
                 return MeasureType.ordinal
 
             return MeasureType.raw
         else:
-            if report.count_unique_values >= config.categorical.min_rank and \
-                    report.count_unique_values <= config.categorical.max_rank and \
-                    report.value_max_len <= config.value_max_len:
+            if rep.count_unique_values >= conf.categorical.min_rank and \
+                    rep.count_unique_values <= conf.categorical.max_rank and \
+                    rep.value_max_len <= conf.value_max_len:
                 return MeasureType.categorical
 
             return MeasureType.raw
 
-    # type definition graph? correlation phenoTool
-    # MeasureType.skipped <explicitly requested in config> NA NA NA
-    # MeasureType.continuous more than a 'few' numeric possible Y Y Y
-    # MeasureType.ordinal one or a 'few' numeric possible Y Y (but one v) Y (but one v)
-    # MeasureType.categorical one or a 'few' non-numeric possible Y F N
-    # MeasureType.raw everything else N N N
-    #
-    # In the future we may fish out these from the 'raw'
-    # MeasureType.text free text N N N
-    # MeasureType.id id column N N N
+#     def classify(self, report):
+#         config = self.config.classification
+#         if report.count_with_values < config.min_individuals:
+#             return MeasureType.skipped
+#         non_numeric = (1.0 * report.count_with_non_numeric_values) / \
+#             report.count_with_values
+#
+#         if non_numeric <= config.non_numeric_cutoff:
+#             # numeric measure
+#             if report.count_unique_values >= config.continuous.min_rank:
+#                 return MeasureType.continuous
+#             if report.count_unique_values >= config.ordinal.min_rank:
+#                 return MeasureType.ordinal
+#             if report.count_unique_values >= config.categorical.min_rank:
+#                 return MeasureType.categorical
+#             return MeasureType.other
+#         else:
+#             # text measure
+#             if report.value_max_len > config.value_max_len:
+#                 return MeasureType.text
+#             if report.count_unique_values > report.count_with_values / 3.0:
+#                 return MeasureType.text
+#             if report.count_unique_values >= config.categorical.min_rank:
+#                 return MeasureType.categorical
+#             return MeasureType.other
 
-    # The default configuration
-    #     {
-    #      'classification': {
-    #      'min_individuals': 1,
-    #      'non_numeric_cutoff': 0.06,
-    #      'value_max_len': 32,
-    #      'continuous': {
-    #      'min_rank': 15
-    #      },
-    #      'ordinal': {
-    #      'min_rank': 1
-    #      },
-    #      'categorical': {
-    #      'min_rank': 1,
-    #      'max_rank': 15
-    #      }
-    #     }
-    # Report fields
-    #     report.count_with_values
-    #     report.count_with_non_numeric_values (## NEW)
-    #     report.count_unique_values
-    #     report.count_unique_numeric_values
-    #     report.value_max_len
+
+# type definition graph? correlation phenoTool
+# MeasureType.skipped <explicitly requested in config> NA NA NA
+# MeasureType.continuous more than a 'few' numeric possible Y Y Y
+# MeasureType.ordinal one or a 'few' numeric possible Y Y (but one v) Y (but one v)
+# MeasureType.categorical one or a 'few' non-numeric possible Y F N
+# MeasureType.raw everything else N N N
+#
+# In the future we may fish out these from the 'raw'
+# MeasureType.text free text N N N
+# MeasureType.id id column N N N
+
+# The default configuration
+#     {
+#      'classification': {
+#      'min_individuals': 1,
+#      'non_numeric_cutoff': 0.06,
+#      'value_max_len': 32,
+#      'continuous': {
+#      'min_rank': 15
+#      },
+#      'ordinal': {
+#      'min_rank': 1
+#      },
+#      'categorical': {
+#      'min_rank': 1,
+#      'max_rank': 15
+#      }
+#     }
+# Report fields
+#     report.count_with_values
+#     report.count_with_non_numeric_values (## NEW)
+#     report.count_unique_values
+#     report.count_unique_numeric_values
+#     report.value_max_len
