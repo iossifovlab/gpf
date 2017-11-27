@@ -48,6 +48,7 @@ class MeasureType(enum.Enum):
     ordinal = 2
     categorical = 3
     text = 4
+    raw = 5
     other = 100
     skipped = 1000
 
@@ -59,8 +60,8 @@ class MeasureType(enum.Enum):
             return MeasureType.ordinal
         elif measure_type == MeasureType.categorical.name:
             return MeasureType.categorical
-        elif measure_type == MeasureType.other.name:
-            return MeasureType.other
+        elif measure_type == MeasureType.other.raw:
+            return MeasureType.raw
         elif measure_type == measure_type.text.name:
             return MeasureType.text
         elif measure_type == MeasureType.skipped.name:
@@ -146,17 +147,18 @@ def default_config():
             ]
         },
         'classification': {
-            'min_individuals': 10,
+            'min_individuals': 1,
             'non_numeric_cutoff': 0.06,
             'value_max_len': 32,
             'continuous': {
                 'min_rank': 15
             },
             'ordinal': {
-                'min_rank': 5
+                'min_rank': 1
             },
             'categorical': {
-                'min_rank': 2
+                'min_rank': 1,
+                'max_rank': 15,
             }
         },
     }

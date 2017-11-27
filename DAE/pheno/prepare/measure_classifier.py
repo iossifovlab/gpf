@@ -28,6 +28,7 @@ class ClassifierReport(object):
         self.count_with_numeric_values = None
         self.count_with_non_numeric_values = None
         self.count_unique_values = None
+        self.count_unique_numeric_values = None
 
         self.value_max_len = None
 
@@ -54,6 +55,7 @@ class ClassifierReport(object):
             'count_with_non_numeric_values',
             'count_without_values',
             'count_unique_values',
+            'count_unique_numeric_values',
             'value_max_len',
         ]
 
@@ -104,7 +106,7 @@ class ClassifierReport(object):
         ]
         if len(distribution) < self.DISTRIBUTION_CUTOFF:
             ext = [
-                ('na', 'na')
+                (' ', ' ')
                 for _i in range(self.DISTRIBUTION_CUTOFF - len(distribution))
             ]
             distribution.extend(ext)
@@ -186,8 +188,10 @@ class MeasureClassifier(object):
         report.count_with_non_numeric_values = 0
         report.count_without_values += total - report.count_with_values
         report.count_unique_values = len(unique_values)
+        report.count_unique_numeric_values = len(unique_values)
+
         report.unique_values = unique_values
-        report.numeric_values = values
+        report.numeric_values = real_values
         report.string_values = MeasureClassifier.convert_to_string(real_values)
         if len(report.string_values) == 0:
             report.value_max_len = 0
@@ -226,6 +230,8 @@ class MeasureClassifier(object):
             if v is not None])
         report.unique_values = np.unique(report.string_values)
         report.count_unique_values = len(report.unique_values)
+        report.count_unique_numeric_values = 0
+
         if len(report.string_values) == 0:
             report.value_max_len = 0
         else:
@@ -301,3 +307,63 @@ class MeasureClassifier(object):
             if report.count_unique_values >= config.categorical.min_rank:
                 return MeasureType.categorical
             return MeasureType.other
+
+    def classify2(self, report):
+        config = self.config.classification
+
+        if report.count_with_values < config.min_individuals:
+            return MeasureType.raw
+
+        non_numeric = (1.0 * report.count_with_non_numeric_values) / \
+            report.count_with_values
+
+        if non_numeric <= config.non_numeric_cutoff:
+            if report.count_unique_numeric_values >= config.continuous.min_rank:
+                return MeasureType.continuous
+
+            if report.count_unique_numeric_values >= config.ordinal.min_rank:
+                return MeasureType.ordinal
+
+            return MeasureType.raw
+        else:
+            if report.count_unique_values >= config.categorical.min_rank and \
+                    report.count_unique_values <= config.categorical.max_rank and \
+                    report.value_max_len <= config.value_max_len:
+                return MeasureType.categorical
+
+            return MeasureType.raw
+
+    # type definition graph? correlation phenoTool
+    # MeasureType.skipped <explicitly requested in config> NA NA NA
+    # MeasureType.continuous more than a 'few' numeric possible Y Y Y
+    # MeasureType.ordinal one or a 'few' numeric possible Y Y (but one v) Y (but one v)
+    # MeasureType.categorical one or a 'few' non-numeric possible Y F N
+    # MeasureType.raw everything else N N N
+    #
+    # In the future we may fish out these from the 'raw'
+    # MeasureType.text free text N N N
+    # MeasureType.id id column N N N
+
+    # The default configuration
+    #     {
+    #      'classification': {
+    #      'min_individuals': 1,
+    #      'non_numeric_cutoff': 0.06,
+    #      'value_max_len': 32,
+    #      'continuous': {
+    #      'min_rank': 15
+    #      },
+    #      'ordinal': {
+    #      'min_rank': 1
+    #      },
+    #      'categorical': {
+    #      'min_rank': 1,
+    #      'max_rank': 15
+    #      }
+    #     }
+    # Report fields
+    #     report.count_with_values
+    #     report.count_with_non_numeric_values (## NEW)
+    #     report.count_unique_values
+    #     report.count_unique_numeric_values
+    #     report.value_max_len
