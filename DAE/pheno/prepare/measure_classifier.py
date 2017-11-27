@@ -340,7 +340,8 @@ class MeasureClassifier(object):
 # type definition graph? correlation phenoTool
 # MeasureType.skipped <explicitly requested in config> NA NA NA
 # MeasureType.continuous more than a 'few' numeric possible Y Y Y
-# MeasureType.ordinal one or a 'few' numeric possible Y Y (but one v) Y (but one v)
+# MeasureType.ordinal one or a 'few' numeric possible Y Y (but one v)
+#                                                           Y (but one v)
 # MeasureType.categorical one or a 'few' non-numeric possible Y F N
 # MeasureType.raw everything else N N N
 #
