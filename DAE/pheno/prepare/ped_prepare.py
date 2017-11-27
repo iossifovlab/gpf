@@ -418,42 +418,6 @@ class PrepareVariables(PreparePersons):
 
         return measure_id
 
-    def prepare_measure_values(self, measure, mdf):
-        measure_id = measure.db_id
-
-        values = OrderedDict()
-        for _index, row in mdf.iterrows():
-            pid = int(row[self.PID_COLUMN])
-            k = (pid, measure_id)
-            value = row['value']
-            if MeasureType.is_text(measure.measure_type):
-                value = convert_to_string(value)
-                if value is None:
-                    continue
-                assert isinstance(value, unicode), row['value']
-            elif MeasureType.is_numeric(measure.measure_type):
-                value = convert_to_numeric(value)
-                if np.isnan(value):
-                    continue
-            else:
-                assert False, measure.measure_type.name
-            v = {
-                self.PERSON_ID: pid,
-                'measure_id': measure_id,
-                'value': value
-            }
-
-            if k in values:
-                print("updating measure {} for person {} value {} "
-                      "with {}".format(
-                          measure.measure_id,
-                          row['person_id'],
-                          values[k]['value'],
-                          value)
-                      )
-            values[k] = v
-        return values
-
     def save_measure_values(self, measure, values):
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
@@ -461,7 +425,8 @@ class PrepareVariables(PreparePersons):
         with self.db.engine.begin() as connection:
             connection.execute(ins, values.values())
 
-    def _collect_instruments(self, dirname, instruments):
+    def _collect_instruments(self, dirname):
+        instruments = defaultdict(list)
         for root, _dirnames, filenames in os.walk(dirname):
             for filename in filenames:
                 basename = os.path.basename(filename)
@@ -477,8 +442,7 @@ class PrepareVariables(PreparePersons):
 
         self.build_pheno_common()
 
-        instruments = defaultdict(list)
-        self._collect_instruments(instruments_dirname, instruments)
+        instruments = self._collect_instruments(instruments_dirname)
         for instrument_name, instrument_filenames in instruments.items():
             assert instrument_name is not None
             df = self.load_instrument(instrument_name, instrument_filenames)
@@ -515,38 +479,7 @@ class PrepareVariables(PreparePersons):
             self.PERSON_ID, self.PID_COLUMN,
         ]
         pheno_common_columns.extend(pheno_common_measures)
-
         self.build_instrument('pheno_common', df[pheno_common_columns])
-
-    def build_measure(self, instrument_name, measure_name, df):
-        if measure_name == self.PID_COLUMN or \
-                measure_name == self.PERSON_ID:
-            return
-
-        classify_task = ClassifyMeasureTask(
-            self.config, instrument_name, measure_name, df)
-
-        classify_task.run()
-        measure, classifier_report, mdf = classify_task.done()
-
-        if measure_name in self.config.skip.measures:
-            measure.measure_type = MeasureType.skipped
-
-        self.log_measure(measure, classifier_report)
-
-        if self.config.report_only:
-            return
-
-        if measure.measure_type == MeasureType.skipped:
-            print('skip saving measure: {}; measurings: {}'.format(
-                measure.measure_id, classifier_report.count_with_values))
-            return
-
-        measure_id = self.save_measure(measure)
-        measure.db_id = measure_id
-
-        values = self.prepare_measure_values(measure, mdf)
-        self.save_measure_values(measure, values)
 
     def build_instrument(self, instrument_name, df):
 
