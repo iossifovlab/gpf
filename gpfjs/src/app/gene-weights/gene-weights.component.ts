@@ -4,7 +4,7 @@ import { Input, Component, OnInit, ViewChild, ViewEncapsulation, Output,
 import { FormControl } from '@angular/forms';
 import { GeneWeights, Partitions } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
-import { Subject }           from 'rxjs/Subject';
+import { ReplaySubject }           from 'rxjs/ReplaySubject';
 import { Observable }        from 'rxjs/Observable';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/debounceTime';
@@ -29,7 +29,7 @@ import { GeneWeightsState } from './gene-weights-store';
   }]
 })
 export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
-  private rangeChanges = new Subject<[string, number, number]>();
+  private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 
   geneWeightsArray: GeneWeights[];
@@ -48,6 +48,30 @@ export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
     private config: ConfigService
   ) {
     super();
+
+    this.partitions = this.rangeChanges
+      .debounceTime(100)
+      .distinctUntilChanged()
+      .switchMap(([weight, internalRangeStart, internalRangeEnd]) => {
+        return this.geneWeightsService.getPartitions(weight, internalRangeStart, internalRangeEnd);
+      })
+      .catch(error => {
+        console.warn(error);
+        return Observable.of(null);
+      });
+
+    this.rangesCounts = this.partitions.map(
+      (partitions) => {
+         return [partitions.leftCount, partitions.midCount, partitions.rightCount];
+    });
+  }
+
+  private updateLabels() {
+    this.rangeChanges.next([
+      this.geneWeightsState.weight.weight,
+      this.geneWeightsState.rangeStart,
+      this.geneWeightsState.rangeEnd
+    ]);
   }
 
   set selectedGeneWeights(selectedGeneWeights: GeneWeights) {
@@ -57,7 +81,7 @@ export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
     this.geneWeightsState.domainMin = selectedGeneWeights.bins[0];
     this.geneWeightsState.domainMax =
       selectedGeneWeights.bins[selectedGeneWeights.bins.length - 1];
-
+    this.updateLabels();
   }
 
   get selectedGeneWeights() {
@@ -87,6 +111,7 @@ export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
   }
 
   ngOnInit() {
+
     this.geneWeightsService.getGeneWeights()
       .subscribe(geneWeights => {
           this.geneWeightsArray = geneWeights;
@@ -94,26 +119,11 @@ export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
 
           this.restoreStateSubscribe();
       });
-
-    this.partitions = this.rangeChanges
-      .debounceTime(100)
-      .distinctUntilChanged()
-      .switchMap(([weight, internalRangeStart, internalRangeEnd]) => {
-        return this.geneWeightsService.getPartitions(weight, internalRangeStart, internalRangeEnd);
-      })
-      .catch(error => {
-        console.log(error);
-        return Observable.of(null);
-      });
-
-    this.rangesCounts = this.partitions.map(
-      (partitions) => {
-         return [partitions.leftCount, partitions.midCount, partitions.rightCount];
-    });
   }
 
   set rangeStart(range: number) {
     this.geneWeightsState.rangeStart = range;
+    this.updateLabels();
   }
 
   get rangeStart() {
@@ -122,6 +132,7 @@ export class GeneWeightsComponent extends QueryStateProvider implements OnInit {
 
   set rangeEnd(range: number) {
     this.geneWeightsState.rangeEnd = range;
+    this.updateLabels();
   }
 
   get rangeEnd() {

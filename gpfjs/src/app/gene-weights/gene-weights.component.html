@@ -15,7 +15,7 @@
             [bars]="selectedGeneWeights.bars"
             [logScaleX]="selectedGeneWeights.logScaleX"
 			[logScaleY]="selectedGeneWeights.logScaleY"
-		    [rangesCounts]="rangesCounts"
+		    [rangesCounts]="rangesCounts | async"
 		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
 		  </gpf-histogram>
 		  <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">

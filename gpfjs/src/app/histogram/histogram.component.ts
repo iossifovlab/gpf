@@ -35,7 +35,7 @@ export class HistogramComponent  {
   @Input() logScaleX = false;
   @Input() logScaleY = false;
   @Input() showCounts = true;
-  @Input() xLabels: Array<number>
+  @Input() xLabels: Array<number>;
   @Input() centerLabels: boolean;
   @Input() showMinMaxInput: boolean;
 
@@ -71,8 +71,8 @@ export class HistogramComponent  {
       this.rangeEndSubject
       .debounceTime(100)
       .distinctUntilChanged()
-      .subscribe((end) => { 
-          let step = Math.abs(this.bins[this.bins.length - 1] 
+      .subscribe((end) => {
+          let step = Math.abs(this.bins[this.bins.length - 1]
             - this.bins[this.bins.length - 2]) / 1e10;
           if (Math.abs(end - this.bins[this.bins.length - 1]) < step) {
             this.rangeEndChange.emit(null)
@@ -245,7 +245,7 @@ export class HistogramComponent  {
     if (this.centerLabelsWithDefaultValue) {
         axisX.push(width);
         axisVals.push(Number.POSITIVE_INFINITY);
-    } 
+    }
     else {
         axisX.push(width);
         axisVals.push(this.bins[this.bins.length - 1]);
