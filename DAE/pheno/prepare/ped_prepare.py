@@ -470,7 +470,7 @@ class PrepareVariables(PreparePersons):
 
     def build_pheno_common(self):
         pheno_common_measures = set(self.pedigree_df.columns) - \
-            (set(self.PED_COLUMNS) | set(['sampleId']))
+            (set(self.PED_COLUMNS) | set(['sampleId', 'role']))
 
         df = self.pedigree_df.copy(deep=True)
         df.rename(columns={'personId': self.PERSON_ID}, inplace=True)
