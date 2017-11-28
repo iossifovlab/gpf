@@ -13,8 +13,7 @@ from argparse import RawDescriptionHelpFormatter
 import traceback
 from pheno.common import dump_config,\
     check_config_pheno_db, default_config
-from pheno.prepare.ped_prepare import PrepareVariables,\
-    PrepareMetaMeasures
+from pheno.prepare.ped_prepare import PrepareVariables
 
 
 class CLIError(Exception):
@@ -194,13 +193,6 @@ USAGE
         )
 
         parser.add_argument(
-            '-M', '--meta',
-            dest='meta',
-            help="updates measure meta data only",
-            action="store_true"
-        )
-
-        parser.add_argument(
             '-P', '--person-column',
             dest='person_column',
             help="sets name of a column in instrument's files, "
@@ -239,13 +231,12 @@ USAGE
         if not args.output:
             args.output = 'output.db'
 
-        if not args.meta:
-            if not args.pedigree:
-                raise CLIError(
-                    "pedigree file must be specified")
-            if not args.instruments:
-                raise CLIError(
-                    "instruments directory should be specified")
+        if not args.pedigree:
+            raise CLIError(
+                "pedigree file must be specified")
+        if not args.instruments:
+            raise CLIError(
+                "instruments directory should be specified")
 
         config = parse_config(args)
         dump_config(config)
@@ -253,14 +244,9 @@ USAGE
         if not check_config_pheno_db(config):
             raise Exception("bad classification boundaries")
 
-        if not args.meta:
-            prep = PrepareVariables(config)
-            prep.build_pedigree(args.pedigree)
-            prep.build_variables(args.instruments)
-
-        if not args.report_only:
-            prep = PrepareMetaMeasures(config)
-            prep.build_meta()
+        prep = PrepareVariables(config)
+        prep.build_pedigree(args.pedigree)
+        prep.build_variables(args.instruments)
 
         return 0
     except KeyboardInterrupt:

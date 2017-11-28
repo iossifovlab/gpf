@@ -61,17 +61,12 @@ class DbManager(object):
             Column('measure_type', Enum(MeasureType), index=True),
             Column('individuals', Integer()),
             Column('default_filter', String(255)),
-            UniqueConstraint('instrument_name', 'measure_name',
-                             name='measure_key'),
-        )
-        self.meta_measure = Table(
-            'meta_measure', self.metadata,
-            Column('measure_id', ForeignKey('measure.id'),
-                   unique=True, index=True, primary_key=True),
             Column('min_value', Float(), nullable=True),
             Column('max_value', Float(), nullable=True),
             Column('values_domain', String(255), nullable=True),
             Column('rank', Integer(), nullable=True),
+            UniqueConstraint('instrument_name', 'measure_name',
+                             name='measure_key'),
         )
 
     def _build_value_tables(self):
@@ -114,7 +109,7 @@ class DbManager(object):
             return self.value_ordinal
         elif value_type == MeasureType.categorical:
             return self.value_categorical
-        elif value_type == MeasureType.other or value_type == MeasureType.text:
+        elif value_type == MeasureType.raw or value_type == MeasureType.text:
             return self.value_other
         else:
             raise ValueError("unsupported value type: {}".format(value_type))

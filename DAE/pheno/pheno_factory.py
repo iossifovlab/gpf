@@ -30,6 +30,7 @@ class PhenoFactory(object):
             raise ValueError("can't find pheno DB {}; available pheno DBs: {}"
                              .format(dbname, self.get_pheno_db_names()))
         import pheno_db
+        print("loading pheno db <{}>".format(dbname))
         phdb = pheno_db.PhenoDB(dbfile=self.get_dbfile(dbname))
         phdb.load()
         return phdb

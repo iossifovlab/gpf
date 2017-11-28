@@ -11,7 +11,6 @@ from pheno.common import RoleMapping, Role, Status, Gender, MeasureType
 import os
 from box import Box
 from collections import defaultdict, OrderedDict
-from pheno.pheno_db import PhenoDB
 from pheno.prepare.measure_classifier import MeasureClassifier,\
     convert_to_string, convert_to_numeric, ClassifierReport
 from multiprocessing import Pool
@@ -237,10 +236,36 @@ class ClassifyMeasureTask(Task):
             'instrument_name': instrument_name,
             'measure_id': '{}.{}'.format(instrument_name, measure_name),
             'individuals': None,
-            'default_filter': None
+            'default_filter': None,
+            'min_value': None,
+            'max_value': None,
+            'values_domain': None,
+            'rank': None,
         }
         measure = Box(measure)
         return measure
+
+    def build_meta_measure(self):
+        measure_type = self.measure.measure_type
+
+        if measure_type in \
+                set([MeasureType.continuous, MeasureType.ordinal]):
+            min_value = np.min(self.classifier_report.unique_values)
+            max_value = np.max(self.classifier_report.unique_values)
+        else:
+            min_value = None
+            max_value = None
+        if measure_type == MeasureType.continuous:
+            values_domain = "[{}, {}]".format(min_value, max_value)
+        else:
+            distribution = self.classifier_report.calc_distribution_report()
+            unique_values = [v for (v, _) in distribution if v.strip() != '']
+            values_domain = ",".join(unique_values)
+
+        self.measure.min_value = min_value
+        self.measure.max_value = max_value
+        self.measure.values_domain = values_domain
+        self.rank = self.classifier_report.count_unique_values
 
     def run(self):
         values = self.mdf['value']
@@ -249,6 +274,7 @@ class ClassifyMeasureTask(Task):
         self.measure.individuals = self.classifier_report.count_with_values
         self.measure.measure_type = classifier.classify(
             self.classifier_report)
+        self.build_meta_measure()
         return self
 
     def done(self):
@@ -269,6 +295,7 @@ class MeasureValuesTask(Task):
         measure_values = self.mdf.to_dict(orient='records')
         for record in measure_values:
             pid = int(record[self.PID_COLUMN])
+            assert pid, measure.measure_id
             k = (pid, measure_id)
             value = record['value']
             if MeasureType.is_text(measure.measure_type):
@@ -420,6 +447,12 @@ class PrepareVariables(PreparePersons):
         return measure_id
 
     def save_measure_values(self, measure, values):
+        if len(values) == 0:
+            print("skiping measure {} without values".format(
+                measure.measure_id))
+            return
+        print("saving measure {} values {}".format(
+            measure.measure_id, len(values)))
         value_table = self.db.get_value_table(measure.measure_type)
         ins = value_table.insert()
 
@@ -556,54 +589,54 @@ class PrepareVariables(PreparePersons):
         return classifier_report, measure
 
 
-class PrepareMetaMeasures(PrepareBase):
-
-    def __init__(self, config):
-        super(PrepareMetaMeasures, self).__init__(config)
-        self.pheno = PhenoDB(dbfile=self.db.dbfile)
-        self.pheno.load(skip_meta=True)
-
-    def build_meta(self):
-        measures = self.db.get_measures()
-        for m in measures.values():
-            self.build_meta_measure(m)
-
-    def build_meta_measure(self, measure):
-        print("processing meta measures for {}".format(measure.measure_id))
-        df = self.pheno.get_measure_values_df(measure.measure_id)
-        measure_type = measure.measure_type
-        values = df[measure.measure_id]
-        rank = len(values.unique())
-
-        if measure_type in \
-                set([MeasureType.continuous, MeasureType.ordinal]):
-            min_value = values.values.min()
-            max_value = values.values.max()
-        else:
-            min_value = None
-            max_value = None
-        if measure_type == MeasureType.continuous:
-            values_domain = "[{}, {}]".format(min_value, max_value)
-        else:
-            unique_values = sorted(values.unique())
-            unique_values = [str(v) for v in unique_values]
-            values_domain = ",".join(unique_values)
-
-        meta = {
-            'measure_id': measure.id,
-            'min_value': min_value,
-            'max_value': max_value,
-            'values_domain': values_domain,
-            'rank': rank,
-        }
-        try:
-            insert = self.db.meta_measure.insert().values(**meta)
-            with self.db.engine.begin() as connection:
-                connection.execute(insert)
-        except Exception:
-            del meta['measure_id']
-            update = self.db.meta_measure.update().values(**meta).where(
-                self.db.meta_measure.c.measure_id == measure.id
-            )
-            with self.db.engine.begin() as connection:
-                connection.execute(update)
+# class PrepareMetaMeasures(PrepareBase):
+#
+#     def __init__(self, config):
+#         super(PrepareMetaMeasures, self).__init__(config)
+#         self.pheno = PhenoDB(dbfile=self.db.dbfile)
+#         self.pheno.load(skip_meta=True)
+#
+#     def build_meta(self):
+#         measures = self.db.get_measures()
+#         for m in measures.values():
+#             self.build_meta_measure(m)
+#
+#     def build_meta_measure(self, measure):
+#         print("processing meta measures for {}".format(measure.measure_id))
+#         df = self.pheno.get_measure_values_df(measure.measure_id)
+#         measure_type = measure.measure_type
+#         values = df[measure.measure_id]
+#         rank = len(values.unique())
+#
+#         if measure_type in \
+#                 set([MeasureType.continuous, MeasureType.ordinal]):
+#             min_value = values.values.min()
+#             max_value = values.values.max()
+#         else:
+#             min_value = None
+#             max_value = None
+#         if measure_type == MeasureType.continuous:
+#             values_domain = "[{}, {}]".format(min_value, max_value)
+#         else:
+#             unique_values = sorted(values.unique())
+#             unique_values = [str(v) for v in unique_values]
+#             values_domain = ",".join(unique_values)
+#
+#         meta = {
+#             'measure_id': measure.id,
+#             'min_value': min_value,
+#             'max_value': max_value,
+#             'values_domain': values_domain,
+#             'rank': rank,
+#         }
+#         try:
+#             insert = self.db.meta_measure.insert().values(**meta)
+#             with self.db.engine.begin() as connection:
+#                 connection.execute(insert)
+#         except Exception:
+#             del meta['measure_id']
+#             update = self.db.meta_measure.update().values(**meta).where(
+#                 self.db.meta_measure.c.measure_id == measure.id
+#             )
+#             with self.db.engine.begin() as connection:
+#                 connection.execute(update)
