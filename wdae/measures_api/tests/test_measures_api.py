@@ -18,7 +18,7 @@ class Test(APITestCase):
 
         data = response.data
 
-        self.assertEquals(891, len(data))
+        self.assertEquals(954, len(data))
 
     def test_measures_categorical(self):
         url = self.URL.format('categorical')
@@ -26,7 +26,7 @@ class Test(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         data = response.data
-        self.assertEquals(3459, len(data))
+        self.assertEquals(2176, len(data))
 
         last = data[-1]
 
