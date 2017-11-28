@@ -14,7 +14,7 @@ export abstract class QueryStateProvider {
 
 export abstract class QueryStateWithErrorsProvider extends QueryStateProvider {
 
-  errors = new Array<string>();
+  errors: string[] | string[][];
 
   protected validateAndGetState(object): Observable<any> {
     return toValidationObservable(object)
@@ -50,7 +50,8 @@ export abstract class QueryStateCollector implements DoCheck {
         .map(children => children.getState());
     }
     if (this.contentChildren && this.contentChildren.length > 0) {
-      indirectState = this.contentChildren.reduce((acc, current) => acc.concat(current.collectState()), []);
+      indirectState = this.contentChildren
+        .reduce((acc, current) => acc.concat(current.collectState()), []);
     }
     return directState.concat(indirectState);
   }

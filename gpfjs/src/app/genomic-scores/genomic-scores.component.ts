@@ -5,9 +5,8 @@ import { GenomicScoresHistogramData } from './genomic-scores';
 import { Observable }        from 'rxjs/Observable';
 import { ValidationError } from 'class-validator';
 import { GenomicScoreState } from './genomic-scores-store';
- import { transformAndValidate } from 'class-transformer-validator';
- import { StateRestoreService } from '../store/state-restore.service';
- import { DatasetsService } from '../datasets/datasets.service';
+import { StateRestoreService } from '../store/state-restore.service';
+import { DatasetsService } from '../datasets/datasets.service';
 
 @Component({
   selector: 'gpf-genomic-scores',
@@ -16,12 +15,12 @@ import { GenomicScoreState } from './genomic-scores-store';
 export class GenomicScoresComponent implements OnInit {
   @Input() index: number;
   @Input() genomicScoreState: GenomicScoreState;
+  @Input() errors: string[];
 
   dataset: Dataset;
 
   constructor(
     private genomicsScoresService: GenomicScoresService,
-    private stateRestoreService: StateRestoreService,
     private datasetsService: DatasetsService
   ) {
   }
@@ -64,25 +63,10 @@ export class GenomicScoresComponent implements OnInit {
     return this.genomicScoreState.rangeEnd;
   }
 
-    ngOnInit() {
-        this.datasetsService.getSelectedDataset().subscribe(dataset => {
+  ngOnInit() {
+      this.datasetsService.getSelectedDataset()
+        .subscribe(dataset => {
           this.dataset = dataset;
-          this.stateRestoreService.getState(this.constructor.name + this.index)
-            .take(1)
-            .subscribe(state => {
-                if (!state['genomicScores'] || this.index < state['genomicScores'].length) {
-                    return;
-                }
-                let score = state['genomicScores'][this.index];
-                let metric = this.dataset.genotypeBrowser.genomicMetrics
-                    .find(m => m.id === score.metric);
-                if (!metric) {
-                    return;
-                }
-                this.selectedMetric = metric;
-                this.rangeStart = score.rangeStart;
-                this.rangeEnd = score.rangeEnd;
-            });
         });
   }
 }

@@ -10,14 +10,12 @@
           </span>
       </div>
       <div class="card-block">
-        <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById;">
+        <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById; let i = index">
             <img class="clickable" style="float: left; display: block; height: 30px;" src="{{imgPathPrefix}}remove_filter.svg" (click)="removeFilter(score)">
             <span style="padding: 5px; display: block; overflow: hidden">
-                <gpf-genomic-scores [genomicScoreState]="score">
+                <gpf-genomic-scores [genomicScoreState]="score" [errors]="errors && errors[i]">
                 </gpf-genomic-scores>
             </span>
-
-            <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
         </div>
 
       </div>

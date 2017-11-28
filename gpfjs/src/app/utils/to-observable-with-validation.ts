@@ -13,14 +13,51 @@ export function toValidationObservable<T>(obj: T): Observable<T> {
 };
 
 
-export function validationErrorsToStringArray(validationErrors: ValidationError[]): Array<string> {
-  let errors: string[] = [];
-  validationErrors.map((elem) => {
-    for (let object in elem.constraints) {
-      if (elem.constraints.hasOwnProperty(object)) {
-        errors.push(elem.constraints[object]);
+export function validationErrorsToStringArray(validationErrors: ValidationError[]): Array<string> | Array<Array<string>> {
+  let errors: string[] | string[][];
+
+  validationErrors.map(elem => {
+    if (elem.constraints) {
+      if (!errors) {
+        errors = new Array<string>();
       }
+      (errors as string[]).push(...getSingleError(elem));
+    } else {
+      if (!errors) {
+        errors = new Array<Array<string>>();
+      }
+      (errors as string[][]).push(...getMultipleErrors(elem));
     }
+
   });
+
   return errors;
+}
+
+function getSingleError(elem) {
+  let result = new Array<string>();
+
+  for (let object in elem.constraints) {
+    if (elem.constraints.hasOwnProperty(object)) {
+      result.push(elem.constraints[object]);
+    }
+  }
+
+  return result;
+}
+
+function getMultipleErrors(elem) {
+  let result = new Array<Array<string>>();
+
+  for (let elemOuter of elem.children) {
+    let errors = new Array<string>();
+
+    for (let elemInner of elemOuter.children) {
+      errors.push(...getSingleError(elemInner));
+    }
+
+    result.push(errors);
+  }
+
+  return result;
 }

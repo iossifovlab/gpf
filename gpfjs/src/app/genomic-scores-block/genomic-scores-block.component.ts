@@ -6,9 +6,7 @@ import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs/Observable';
 
 import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { StateRestoreService } from '../store/state-restore.service';
-import { transformAndValidate } from 'class-transformer-validator';
 
 
 @Component({
@@ -52,7 +50,7 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
         this.stateRestoreService.getState(this.constructor.name)
             .take(1)
             .subscribe(state => {
-                if (state['genomicScores']) {
+                if (state['genomicScores'] && state['genomicScores'].length > 0) {
                     for (let score of state['genomicScores']) {
                         if (score['metric']) {
                             this.addFilter();
@@ -68,12 +66,8 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
             .map(genomicScoresState => {
                 return {
                     genomicScores: genomicScoresState.genomicScoresState
+                        .filter(el => el.histogramData)
                         .map(el => {
-                            transformAndValidate(GenomicScoreState, el);
-
-                            if (el.histogramData === null) {
-                                return {};
-                            }
                             return {
                                 metric: el.histogramData.metric,
                                 rangeStart: el.rangeStart,
