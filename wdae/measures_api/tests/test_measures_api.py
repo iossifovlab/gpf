@@ -32,10 +32,13 @@ class Test(APITestCase):
 
         self.assertEquals(
             last['measure'],
-            'ssc_treatment_hx_school_classroom.'
-            'age17_class_special_ed_1on1_time'
+            'medhx_fam_genetic.smith_lemli_opitz_y_n'
+            # 'ssc_treatment_hx_school_classroom.'
+            # 'age17_class_special_ed_1on1_time'
             # 'ssc_treatment_hx_school_classroom.age15_class_other_1on1_spec'
         )
         self.assertEquals(
             last['domain'],
-            [u'0.0', u'100.0', u'30.0'])
+            [u'False']
+            # [u'0.0', u'100.0', u'30.0']
+        )
