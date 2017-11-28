@@ -232,9 +232,10 @@ class MeasureClassifier(object):
             if v is not None])
         report.unique_values = np.unique(report.string_values)
         report.count_unique_values = len(report.unique_values)
+        report.numeric_values = \
+            MeasureClassifier.convert_to_numeric(np.array(numeric_values))
         report.count_unique_numeric_values = \
-            len(np.unique(np.array(numeric_values)))
-
+            len(np.unique(report.numeric_values))
         if len(report.string_values) == 0:
             report.value_max_len = 0
         else:

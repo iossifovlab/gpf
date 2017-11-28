@@ -15,6 +15,7 @@ from pheno.prepare.measure_classifier import MeasureClassifier,\
     convert_to_string, convert_to_numeric, ClassifierReport
 from multiprocessing import Pool
 from numpy.testing.utils import measure
+import traceback
 
 
 class PrepareCommon(object):
@@ -250,8 +251,8 @@ class ClassifyMeasureTask(Task):
 
         if measure_type in \
                 set([MeasureType.continuous, MeasureType.ordinal]):
-            min_value = np.min(self.classifier_report.unique_values)
-            max_value = np.max(self.classifier_report.unique_values)
+            min_value = np.min(self.classifier_report.numeric_values)
+            max_value = np.max(self.classifier_report.numeric_values)
         else:
             min_value = None
             max_value = None
@@ -268,13 +269,19 @@ class ClassifyMeasureTask(Task):
         self.rank = self.classifier_report.count_unique_values
 
     def run(self):
-        values = self.mdf['value']
-        classifier = MeasureClassifier(self.config)
-        self.classifier_report = classifier.meta_measures(values)
-        self.measure.individuals = self.classifier_report.count_with_values
-        self.measure.measure_type = classifier.classify(
-            self.classifier_report)
-        self.build_meta_measure()
+        try:
+            print("classifying measure {}".format(self.measure.measure_id))
+            values = self.mdf['value']
+            classifier = MeasureClassifier(self.config)
+            self.classifier_report = classifier.meta_measures(values)
+            self.measure.individuals = self.classifier_report.count_with_values
+            self.measure.measure_type = classifier.classify(
+                self.classifier_report)
+            self.build_meta_measure()
+        except Exception as ex:
+            print("problem processing measure: {}".format(
+                self.measure.measure_id))
+            traceback.print_exc()
         return self
 
     def done(self):
