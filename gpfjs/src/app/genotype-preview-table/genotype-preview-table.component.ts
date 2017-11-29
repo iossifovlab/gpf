@@ -9,7 +9,7 @@ import { AdditionalColumn, AdditionalColumnSlot } from '../datasets/datasets';
 })
 export class GenotypePreviewTableComponent {
   @Input() genotypePreviewsArray: GenotypePreviewsArray
-  @Input() additionalColumns: Array<AdditionalColumn>;
+  @Input() columns: Array<AdditionalColumn>;
   constructor(
   ) { }
 

@@ -1,5 +1,5 @@
 <div class="container">
-  <gpf-genes-block></gpf-genes-block>
+  <gpf-genes-block [showAllTab]="(selectedDataset$ | async)?.genotypeBrowser?.genesBlockShowAll"></gpf-genes-block>
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
   <span *ngIf="selectedDataset$ | async">
@@ -29,7 +29,7 @@
   </p>
   <gpf-genotype-preview-table
   	*ngIf="tablePreview"
-    [additionalColumns]="(selectedDataset$ | async)?.genotypeBrowser?.additionalColumns"
+    [columns]="selectedDataset?.genotypeBrowser?.columns"
     [genotypePreviewsArray]=genotypePreviewsArray>
   </gpf-genotype-preview-table>
   <gpf-genotype-preview-chromosomes

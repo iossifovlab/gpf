@@ -1,7 +1,7 @@
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
 import { UserGroup } from '../users-groups/users-groups';
-
+import * as _ from 'lodash';
 
 export class SelectorValue extends IdName {
   static fromJson(json: any): SelectorValue {
@@ -114,6 +114,7 @@ export class AdditionalColumnSlot {
 export class AdditionalColumn {
   static fromJson(json: any): AdditionalColumn {
     return new AdditionalColumn(
+      json['id'],
       json['name'],
       json['source'],
       AdditionalColumnSlot.fromJsonArray(json['slots']),
@@ -128,6 +129,7 @@ export class AdditionalColumn {
   }
 
   constructor(
+    readonly id: string,
     readonly name: string,
     readonly source: string,
     readonly slots: Array<AdditionalColumnSlot>
@@ -185,6 +187,8 @@ export class GenotypeBrowser {
       json['hasFamilyFilters'],
       json['hasStudyTypes'],
       json['mainForm'],
+      json['genesBlockShowAll'],
+      json['previewColumns'],
       [...AdditionalColumn.fromJsonArray(json['genotypeColumns']),
        ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
@@ -192,6 +196,8 @@ export class GenotypeBrowser {
       GenomicMetric.fromJsonArray(json['genomicMetrics'])
     );
   }
+
+  readonly columns: Array<AdditionalColumn>;
 
   constructor(
     readonly hasPedigreeSelector: boolean,
@@ -201,13 +207,18 @@ export class GenotypeBrowser {
     readonly hasFamilyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly mainForm: string,
-    readonly additionalColumns: Array<AdditionalColumn>,
+    readonly genesBlockShowAll: boolean,
+    readonly previewColumnsIds: string[],
+    readonly allColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
     readonly familyStudyFilters: Array<PhenoFilter>,
     readonly genomicMetrics: Array<GenomicMetric>,
   ) {
-
+    this.columns = _.filter(this.allColumns,
+      (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
   }
+
+
 }
 
 export class Dataset extends IdName {
