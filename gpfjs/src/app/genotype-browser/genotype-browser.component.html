@@ -1,41 +1,41 @@
-<div class="container">
-  <gpf-genes-block [showAllTab]="(selectedDataset$ | async)?.genotypeBrowser?.genesBlockShowAll"></gpf-genes-block>
-  <gpf-regions-block></gpf-regions-block>
-  <gpf-genotype-block></gpf-genotype-block>
-  <span *ngIf="selectedDataset$ | async">
-    <gpf-genomic-scores-block [dataset]="selectedDataset$ | async">
+<div *ngIf="selectedDataset$ | async as dataset">
+  <div class="container">
+    <gpf-genes-block [showAllTab]="dataset?.genotypeBrowser?.genesBlockShowAll"></gpf-genes-block>
+    <gpf-regions-block></gpf-regions-block>
+    <gpf-genotype-block></gpf-genotype-block>
+    <gpf-genomic-scores-block [dataset]="dataset">
     </gpf-genomic-scores-block>
-  </span>
-  <gpf-family-filters-block
-    *ngIf="(selectedDataset$ | async)?.genotypeBrowser?.hasFamilyFilters"
-    [dataset]="(selectedDataset$ | async)"
-    [genotypeBrowserState]="genotypeBrowserState">
-  </gpf-family-filters-block>
+    <gpf-family-filters-block
+      *ngIf="dataset?.genotypeBrowser?.hasFamilyFilters"
+      [dataset]="dataset"
+      [genotypeBrowserState]="genotypeBrowserState">
+    </gpf-family-filters-block>
 
-  <div class="form-block">
-	  <form
-	      (ngSubmit)="onSubmit($event)"
-	      action="{{ configService.baseUrl }}genotype_browser/download" method="post">
-	    <input name="queryData" type="hidden">
-	    <button class="btn btn-md btn-primary btn-right" type="submit">Download</button>
-	  </form>
-	  <input type="button" class="btn btn-md btn-primary" value="Table Preview" (click)="tablePreview = true; submitQuery()">
-	  <input type="button" class="btn btn-md btn-primary" value="Graphical Preview" (click)="tablePreview = false; submitQuery()">
+    <div class="form-block">
+  	  <form
+  	      (ngSubmit)="onSubmit($event)"
+  	      action="{{ configService.baseUrl }}genotype_browser/download" method="post">
+  	    <input name="queryData" type="hidden">
+  	    <button class="btn btn-md btn-primary btn-right" type="submit">Download</button>
+  	  </form>
+  	  <input type="button" class="btn btn-md btn-primary" value="Table Preview" (click)="tablePreview = true; submitQuery()">
+  	  <input type="button" class="btn btn-md btn-primary" value="Graphical Preview" (click)="tablePreview = false; submitQuery()">
+    </div>
   </div>
-</div>
-<div class="genotype-browser-results" *ngIf="genotypePreviewsArray">
-  <p class="overview">
-    {{genotypePreviewsArray.total}} variants selected ({{ genotypePreviewsArray.genotypePreviews.length }} shown)
-  </p>
-  <gpf-genotype-preview-table
-  	*ngIf="tablePreview"
-    [columns]="selectedDataset?.genotypeBrowser?.columns"
-    [genotypePreviewsArray]=genotypePreviewsArray>
-  </gpf-genotype-preview-table>
-  <gpf-genotype-preview-chromosomes
-    class="chromosomes-preview"
-    *ngIf="tablePreview === false"
-    width="1110"
-    [genotypePreviewsArray]="genotypePreviewsArray">
-  </gpf-genotype-preview-chromosomes>
+  <div class="genotype-browser-results" *ngIf="genotypePreviewsArray">
+    <p class="overview">
+      {{genotypePreviewsArray.total}} variants selected ({{ genotypePreviewsArray.genotypePreviews.length }} shown)
+    </p>
+    <gpf-genotype-preview-table
+    	*ngIf="tablePreview"
+      [columns]="dataset?.genotypeBrowser?.columns"
+      [genotypePreviewsArray]="genotypePreviewsArray">
+    </gpf-genotype-preview-table>
+    <gpf-genotype-preview-chromosomes
+      class="chromosomes-preview"
+      *ngIf="tablePreview === false"
+      width="1110"
+      [genotypePreviewsArray]="genotypePreviewsArray">
+    </gpf-genotype-preview-chromosomes>
+  </div>
 </div>

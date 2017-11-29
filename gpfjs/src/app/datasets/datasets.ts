@@ -178,6 +178,9 @@ export class PhenoFilter {
 }
 
 export class GenotypeBrowser {
+
+  readonly columns: Array<AdditionalColumn>;
+
   static fromJson(json: any): GenotypeBrowser {
     return new GenotypeBrowser(
       json['hasPedigreeSelector'],
@@ -196,8 +199,6 @@ export class GenotypeBrowser {
       GenomicMetric.fromJsonArray(json['genomicMetrics'])
     );
   }
-
-  readonly columns: Array<AdditionalColumn>;
 
   constructor(
     readonly hasPedigreeSelector: boolean,
