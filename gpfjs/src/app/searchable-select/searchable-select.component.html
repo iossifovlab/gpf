@@ -20,7 +20,7 @@
         type="button"
         style="cursor: pointer"
         (click)="onSelect(element)">
-        <ng-template *ngIf="template?.templateRef" [ngTemplateOutlet]="template.templateRef" [ngOutletContext]="{$implicit: element}">
+        <ng-template *ngIf="template?.templateRef" [ngTemplateOutlet]="template.templateRef" [ngTemplateOutletContext]="{$implicit: element}">
         </ng-template>
        </button>
     </div>

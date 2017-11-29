@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, Input, forwardRef, ViewChild,
-         ChangeDetectorRef, OnDestroy } from '@angular/core';
+         OnDestroy } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -18,11 +18,8 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   @Input() genotypeBrowserState: Object;
   @ViewChild('tabset') ngbTabset;
 
-  private ngUnsubscribe: Subject<void> = new Subject<void>();
-
   constructor(
-    private stateRestoreService: StateRestoreService,
-    private changeDetectorRef: ChangeDetectorRef
+    private stateRestoreService: StateRestoreService
   ) {
     super();
   }
@@ -31,7 +28,6 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   ngAfterViewInit() {
     this.stateRestoreService.getState(this.constructor.name)
       .take(1)
-      // .takeUntil(this.ngUnsubscribe)
       .subscribe(state => {
           if ('familyIds' in state) {
             this.ngbTabset.select('family-ids');
@@ -39,25 +35,11 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
             this.ngbTabset.select('pheno-filters');
           }
 
-          this.changeDetectorRef.detectChanges();
         }
       );
   }
 
   ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
   }
-
-  // resetFiltersIfAllFamilies(event: NgbTabChangeEvent) {
-  //   if (event.activeId && event.nextId === 'all-families') {
-  //       this.store.dispatch({
-  //         'type': FAMILY_IDS_RESET
-  //       });
-  //       this.store.dispatch({
-  //         'type': PHENO_FILTERS_RESET
-  //       });
-  //   }
-  // }
 
 }
