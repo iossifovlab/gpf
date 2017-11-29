@@ -1,8 +1,10 @@
 <div class="row">
     <div class="col-sm-3">
-      <select class="form-control" [(ngModel)]="selectedMetric" required>
-		    <option *ngFor="let metric of dataset.genotypeBrowser.genomicMetrics" [ngValue]="metric">
-          {{metric.name}}
+      <select class="form-control"
+        [ngModel]="selectedMetric"
+        (ngModelChange)="chooseMetric($event)" required>
+		    <option *ngFor="let metric of genomicMetrics" [ngValue]="metric">
+          {{ metric.name }}
         </option>
 		  </select>
     </div>

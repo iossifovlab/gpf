@@ -31,8 +31,11 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
         return data.id;
     }
 
-    addFilter() {
-        this.genomicScoresState.genomicScoresState.push(new GenomicScoreState());
+    addFilter(genomicScoreState: GenomicScoreState = null) {
+        if (!genomicScoreState) {
+            genomicScoreState = new GenomicScoreState();
+        }
+        this.genomicScoresState.genomicScoresState.push(genomicScoreState);
     }
 
     removeFilter(genomicScore: GenomicScoreState) {
@@ -52,9 +55,11 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
             .subscribe(state => {
                 if (state['genomicScores'] && state['genomicScores'].length > 0) {
                     for (let score of state['genomicScores']) {
-                        if (score['metric']) {
-                            this.addFilter();
-                        }
+                        let genomicScore = new GenomicScoreState();
+                        genomicScore.metric = score['metric'];
+                        genomicScore.rangeStart = score['rangeStart'];
+                        genomicScore.rangeEnd = score['rangeEnd'];
+                        this.addFilter(genomicScore);
                     }
                 }
             }

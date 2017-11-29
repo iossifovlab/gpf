@@ -3,7 +3,7 @@
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block></gpf-genotype-block>
   <span *ngIf="selectedDataset$ | async">
-    <gpf-genomic-scores-block>
+    <gpf-genomic-scores-block [dataset]="selectedDataset$ | async">
     </gpf-genomic-scores-block>
   </span>
   <gpf-family-filters-block
