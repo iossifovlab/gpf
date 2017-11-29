@@ -44,6 +44,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
     this.detectNextStateChange(() => {
         let stateArray = this.collectState();
         Observable.zip(...stateArray)
+        .take(1)
         .subscribe(
           state => {
             this.genotypePreviewsArray = null;

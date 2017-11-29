@@ -63,21 +63,21 @@ export abstract class QueryStateCollector implements DoCheck {
   getStateChange() {
     let observable = Observable
       .combineLatest(this.stateChange$, this.directContentChildren.changes, this.contentChildren.changes)
-      .subscribeOn(Scheduler.async)
+      .subscribeOn(Scheduler.queue)
       .share();
 
-    return Observable.concat(observable.first(), observable.skip(1).debounceTime(500))
+    return Observable.concat(observable.first(), observable.skip(1).debounceTime(200))
       .switchMap(_ => {
         let stateArray = this.collectState();
         return Observable.zip(...stateArray)
           .catch(error => {
-            console.warn(error);
             return Observable.of([]);
           })
           .map(state => {
             if (!state || state.length === 0) {
-              return this.stateObjectString;
+              return '';
             }
+
             let stateString = JSON.stringify(Object.assign({}, ...state));
             if (stateString !== this.stateObjectString) {
               this.stateObjectString = stateString;
@@ -85,13 +85,13 @@ export abstract class QueryStateCollector implements DoCheck {
             return this.stateObjectString;
           });
       })
-      .distinctUntilChanged();
+      .distinctUntilChanged()
+      .subscribeOn(Scheduler.queue);
   }
 
-  detectNextStateChange(lambda: () => any) {
+  detectNextStateChange(lambda: () => any, errorLambda?: (any) => any) {
     this.getStateChange()
       .subscribe(_ => {
-        console.log("change detected");
         lambda();
       });
   }
