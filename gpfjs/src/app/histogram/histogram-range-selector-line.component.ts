@@ -1,4 +1,7 @@
-import { Input, Component, OnInit, ViewChild, ViewChildren, ViewEncapsulation, Output, EventEmitter, SimpleChanges, QueryList } from '@angular/core';
+import {
+  Input, Component, OnInit, AfterViewInit, ViewChild, ViewChildren,
+  ViewEncapsulation, Output, EventEmitter, SimpleChanges, QueryList
+} from '@angular/core';
 import * as d3 from 'd3';
 
 @Component({
@@ -7,7 +10,7 @@ import * as d3 from 'd3';
   templateUrl: './histogram-range-selector-line.component.html',
   styleUrls: ['./histogram-range-selector-line.component.css']
 })
-export class HistogramRangeSelectorLineComponent {
+export class HistogramRangeSelectorLineComponent implements OnInit, AfterViewInit {
   @Input() y = 10;
   @Input() height = 90;
 
@@ -18,7 +21,7 @@ export class HistogramRangeSelectorLineComponent {
   @ViewChildren('triangle') triangles: QueryList<any>;
 
   @Input() text: string;
-  @Input() textOnRight: boolean = true;
+  @Input() textOnRight = true;
 
   @Input() width: any;
   @Input() x = 0;
@@ -26,13 +29,14 @@ export class HistogramRangeSelectorLineComponent {
 
   ngOnInit() {
     d3.select(this.draggable.nativeElement).
-      call(d3.drag().on("drag", () => this.onDrag(d3.event.x)))
+      call(d3.drag().on('drag', () => this.onDrag(d3.event.x)));
   }
 
   ngAfterViewInit() {
     this.triangles.forEach((triangle) => {
-      d3.select(triangle.nativeElement).attr("d", d3.symbol().type((d3.symbolTriangle)));
-    })
+      d3.select(triangle.nativeElement)
+        .attr('d', d3.symbol().type((d3.symbolTriangle)));
+    });
   }
 
   onDrag(newPositionX) {

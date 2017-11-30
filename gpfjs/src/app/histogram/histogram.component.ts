@@ -43,7 +43,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   insideRangeText: string;
   afterRangeText: string;
 
-  xScale: d3.ScaleBand< string>;
+  xScale: d3.ScaleBand<string>;
   private barsTotalSum: number;
 
   private lastValidStart = 0;
@@ -349,7 +349,8 @@ export class HistogramComponent implements OnInit, OnChanges {
         return 0;
       }
       let maxIndex = this.bins.length - 2;
-      return Math.min(maxIndex, this.getClosestIndexByValue(this.rangeStart));
+      let closest = this.getClosestIndexByValue(this.rangeStart);
+      return Math.min(maxIndex, closest);
   }
 
   set selectedEndIndex(index: number) {
@@ -363,7 +364,7 @@ export class HistogramComponent implements OnInit, OnChanges {
       if (this.rangeEnd === null) {
         return this.bins.length - 2;
       }
-      return this.getClosestIndexByValue(this.rangeEnd) - 1;
+      return Math.max(0, this.getClosestIndexByValue(this.rangeEnd) - 1);
   }
 
   getClosestIndexByX(x) {
