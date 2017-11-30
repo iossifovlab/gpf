@@ -26,20 +26,16 @@ export class DatasetsService {
     private config: ConfigService,
     private usersService: UsersService
   ) {
-    Observable
-      .combineLatest(this.datasets$, this._selectedDatasetId$)
-      .map(([datasets, selectedDatasetId]) => {
+    this._selectedDatasetId$.asObservable()
+      .switchMap(selectedDatasetId => {
         if (!selectedDatasetId) {
-          return null;
-        }
-        let selectedDataset = datasets.find(ds => ds.id === selectedDatasetId);
-
-        if (!selectedDataset) {
-          this._selectedDatasetId$.next('');
+          return Observable.of(null);
         }
 
-        return selectedDataset;
+        return this.getDataset(selectedDatasetId);
       })
+      .catch(errors => Observable.of(null))
+      .filter(a => !!a)
       .subscribe(dataset => {
         this.selectedDataset$.next(dataset);
       });
@@ -58,7 +54,6 @@ export class DatasetsService {
       .get(this.datasetUrl, options)
       .map(res => {
         let datasets = Dataset.fromJsonArray(res.json().data);
-        console.log("Next datasets", datasets);
         this.datasets$.next(datasets);
         return datasets;
       });
