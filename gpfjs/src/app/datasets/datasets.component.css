@@ -7,19 +7,28 @@
 }
 
 .content {
-  margin: 0;
-  width: 100%;
-  min-height: 100%;
-  position: relative;
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+    position: relative;
 }
 
-
 #dropdownMenuButton {
-  color: #000;
+    color: #000;
 }
 
 .show>#dropdownMenuButton,
 #dropdownMenuButton:hover,
 #dropdownMenuButton:active {
-  color: #fff;
+    color: #fff;
+}
+
+.warning-alert {
+    position: absolute;
+    top: 70px;
+    width: calc(100% - 30px);
+    min-height: 480px;
+    height: 100%;
+    left: 15px;
+    z-index: 100;
 }
