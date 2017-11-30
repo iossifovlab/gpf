@@ -50,8 +50,7 @@ export class DatasetsService {
 
   getDatasets(): Observable<Dataset[]> {
     let options = new RequestOptions({ withCredentials: true });
-    return this.http
-      .get(this.datasetUrl, options)
+    return this.http.get(this.datasetUrl, options)
       .map(res => {
         let datasets = Dataset.fromJsonArray(res.json().data);
         this.datasets$.next(datasets);
@@ -61,9 +60,9 @@ export class DatasetsService {
 
   getDataset(datasetId: string): Observable<Dataset> {
     let url = `${this.datasetUrl}${datasetId}`;
+    let options = new RequestOptions({ withCredentials: true });
 
-    return this.http
-      .get(url)
+    return this.http.get(url, options)
       .map(res => {
         return Dataset.fromJson(res.json().data);
       });
