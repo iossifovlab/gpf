@@ -57,7 +57,6 @@ export class HistogramComponent implements OnInit, OnChanges {
   ngOnInit() {
       this.rangeStartSubject
       .debounceTime(100)
-      .distinctUntilChanged()
       .subscribe((start) => {
           let step = Math.abs(this.bins[1] - this.bins[0]) / 1e10;
           if (Math.abs(start - this.bins[0]) < step) {
@@ -69,7 +68,6 @@ export class HistogramComponent implements OnInit, OnChanges {
 
       this.rangeEndSubject
       .debounceTime(100)
-      .distinctUntilChanged()
       .subscribe((end) => {
           let step = Math.abs(this.bins[this.bins.length - 1]
             - this.bins[this.bins.length - 2]) / 1e10;
@@ -150,6 +148,10 @@ export class HistogramComponent implements OnInit, OnChanges {
     }
 
     this.estimateRangeTexts();
+    this.colorBars();
+  }
+
+  colorBars() {
     this.svg.selectAll('rect').style('fill', (d, index, objects) => {
       return d.index < this.selectedStartIndex
           || d.index > this.selectedEndIndex
@@ -219,7 +221,7 @@ export class HistogramComponent implements OnInit, OnChanges {
       .attr('height', (d: any) => d.bar === 0 ? 0 : height -  y(d.bar));
     this.svg = svg;
 
-    this.onRangeChange();
+    this.colorBars();
     this.scaledBins = barsBinsArray.map(d => d.bin === 0 ? 0 : this.xScale(d.bin));
   }
 
@@ -269,7 +271,7 @@ export class HistogramComponent implements OnInit, OnChanges {
         this.internalRangeStart = rangeStart;
     }
     this.onRangeChange();
-    this.rangeStartSubject.next(this.rangeStart);
+    this.rangeStartSubject.next(this.internalRangeStart);
   }
 
   get rangeStart() {
@@ -291,7 +293,7 @@ export class HistogramComponent implements OnInit, OnChanges {
         this.internalRangeEnd = rangeEnd;
     }
     this.onRangeChange();
-    this.rangeEndSubject.next(this.rangeEnd);
+    this.rangeEndSubject.next(this.internalRangeEnd);
   }
 
   get rangeEnd() {
@@ -302,6 +304,8 @@ export class HistogramComponent implements OnInit, OnChanges {
     let rangeStartFloat = parseFloat(rangeStart);
     if (!isNaN(rangeStartFloat)) {
       this.setRangeStart(parseFloat(rangeStart));
+    } else {
+      this.setRangeStart(null);
     }
   }
 
@@ -313,6 +317,8 @@ export class HistogramComponent implements OnInit, OnChanges {
     let rangeEndFloat = parseFloat(rangeEnd);
     if (!isNaN(rangeEndFloat)) {
       this.setRangeEnd(parseFloat(rangeEnd));
+    } else {
+      this.setRangeEnd(null);
     }
   }
 
