@@ -11,7 +11,7 @@
 .step {
     font-size: 6px;
     width: 20px;
-    height: 8px;
+    height: 10px;
     position: absolute;
     right: 0px;
     margin: 2px;
@@ -26,4 +26,13 @@
 
 .step.down {
     bottom: 0px;
+}
+
+.no-arrows {
+    -moz-appearance:textfield;
+}
+
+.no-arrows::-webkit-outer-spin-button,
+.no-arrows::-webkit-inner-spin-button {
+    -webkit-appearance: none;
 }
