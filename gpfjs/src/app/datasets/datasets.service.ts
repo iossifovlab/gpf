@@ -44,7 +44,7 @@ export class DatasetsService {
       .map(user => user.email || '')
       .distinctUntilChanged()
       .subscribe(() => {
-        this.getDatasets().take(1).subscribe(() => {});
+        this.reloadAllDatasets();
       });
   }
 
@@ -80,6 +80,10 @@ export class DatasetsService {
     }
   }
 
+  reloadSelectedDataset() {
+    this._selectedDatasetId$.next(this._selectedDatasetId$.value);
+  }
+
   getSelectedDataset() {
     return this.selectedDataset$.asObservable();
   }
@@ -90,5 +94,9 @@ export class DatasetsService {
 
   hasSelectedDataset() {
     return !!this._selectedDatasetId$.getValue();
+  }
+
+  private reloadAllDatasets() {
+    this.getDatasets().take(1).subscribe(() => {});
   }
 }
