@@ -1,6 +1,6 @@
 import { DoCheck, OnDestroy, ContentChildren, QueryList, ViewChildren, forwardRef, OnChanges } from '@angular/core';
 
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { ReplaySubject, Observable, Subscription } from 'rxjs';
 import { Scheduler } from 'rxjs';
 
 import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
@@ -34,7 +34,7 @@ export abstract class QueryStateWithErrorsProvider extends QueryStateProvider {
 
 export abstract class QueryStateCollector implements DoCheck, OnDestroy {
   private stateObjectString = '';
-  private stateChange$ = new BehaviorSubject<boolean>(true);
+  private stateChange$ = new ReplaySubject<boolean>(1);
   private subscriptions = new Array<Subscription>();
 
   @ViewChildren(forwardRef(() => QueryStateProvider))
