@@ -29,16 +29,16 @@ class PreparePhenoBrowserBase(object):
     LARGE_DPI = 150
     SMALL_DPI = 16
 
-    def __init__(self, pheno_db, output_dir):
+    def __init__(self, pheno_name, pheno_db, pheno_regression, output_dir):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         self.output_base = os.path.basename(output_dir)
-        self.pheno_db = pheno.get_pheno_db(pheno_db)
-        self.pheno_regressiong = PhenoRegression.build(pheno_db)
+        self.pheno_db = pheno_db
+        self.pheno_regressiong = pheno_regression
 
         self.browser_db = os.path.join(
             output_dir,
-            "{}_browser.db".format(pheno_db)
+            "{}_browser.db".format(pheno_name)
         )
 
     def load_measure(self, measure):
