@@ -31,12 +31,7 @@ export class StateRestoreService {
   }
 
   getState(key: string): Observable<any> {
-    if (this.subscribedKeys.has(key)) {
-      return Observable.of({});
-    } else {
-      this.subscribedKeys.add(key);
-      return this.state;
-    }
+    return this.state;
   }
 
   onParamsUpdate(jsonEncodedState: string) {

@@ -35,6 +35,8 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
       this.continuousFilterState.measure = filter.measure;
       this.continuousFilterState.domainMin = filter.domainMin;
       this.continuousFilterState.domainMax = filter.domainMax;
+      this.continuousFilterState.mmax = filter.mmax;
+      this.continuousFilterState.mmin = filter.mmin;
       if (this.measures) {
         let measure = this.measures.find(m => m.name === filter.measure);
         if (measure) {
@@ -59,9 +61,9 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
     this.measures = measures;
 
     this.stateRestoreService
-      .getState(this.constructor.name + this.continuousFilterState.id)
+      .getState(this.constructor.name)
       .take(1)
-      .subscribe((state) => {
+      .subscribe(state => {
         if (state['phenoFilters']) {
           this.restoreContinuousFilter(state['phenoFilters']);
         }

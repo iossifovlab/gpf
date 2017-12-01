@@ -17,6 +17,8 @@ export class PhenoMeasureSelectorComponent implements OnInit {
   internalSelectedMeasure: ContinuousMeasure;
   searchString: string;
 
+  @Input() initialSelectedMeasure: string;
+
   @Output() selectedMeasureChange = new EventEmitter();
   @Output() measuresChange = new EventEmitter();
 
@@ -27,13 +29,18 @@ export class PhenoMeasureSelectorComponent implements OnInit {
 
   ngOnInit() {
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
-      if (!dataset) {
-        return;
-      }
       this.measuresService.getContinuousMeasures(dataset.id)
         .subscribe(measures => {
           this.measures = measures;
-          this.searchBoxChange('');
+          let search = this.initialSelectedMeasure;
+          if (this.initialSelectedMeasure) {
+            this.selectedMeasure = this.measures
+              .find(m => m.name === this.initialSelectedMeasure);
+          }
+          if (!this.selectedMeasure) {
+            search = '';
+          }
+          this.searchBoxChange(search);
           this.measuresChange.emit(this.measures);
         });
     });
