@@ -278,7 +278,7 @@ class ClassifyMeasureTask(Task):
             self.measure.measure_type = classifier.classify(
                 self.classifier_report)
             self.build_meta_measure()
-        except Exception as ex:
+        except Exception as _ex:
             print("problem processing measure: {}".format(
                 self.measure.measure_id))
             traceback.print_exc()

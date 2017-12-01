@@ -64,7 +64,8 @@ class ClassifierReport(object):
 
     def log_line(self, short=False):
         attributes = self.short_attributes()
-        values = [str(getattr(self, attr)) for attr in attributes]
+        values = [str(getattr(self, attr)).strip() for attr in attributes]
+        values = [v.replace('\n', ' ') for v in values]
         if not short:
             distribution = self.calc_distribution_report()
             distribution = [
