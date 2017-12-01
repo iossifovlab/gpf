@@ -83,8 +83,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
     this.loadingService.setLoadingStart();
     let stateArray = this.collectState();
     Observable.zip(...stateArray)
-    .subscribe(
-      state => {
+      .subscribe(state => {
         this.genotypePreviewsArray = null;
         let queryData = Object.assign({},
                                       {datasetId: this.selectedDatasetId},
@@ -101,12 +100,11 @@ export class GenotypeBrowserComponent extends QueryStateCollector
           () => {
             this.loadingService.setLoadingStop();
           });
-      },
-      error => {
-        console.warn(error);
-        this.loadingService.setLoadingStop();
-      }
-    );
+        },
+        error => {
+          console.warn(error);
+          this.loadingService.setLoadingStop();
+        });
   }
 
   onSubmit(event) {

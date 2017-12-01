@@ -1,4 +1,7 @@
-import { Component, OnInit, Input, forwardRef, ViewChild, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, forwardRef, ViewChild, Output, EventEmitter } from '@angular/core';
+
+import { Subscription } from 'rxjs';
+
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { DatasetsService } from '../datasets/datasets.service';
@@ -8,7 +11,7 @@ import { DatasetsService } from '../datasets/datasets.service';
   templateUrl: './pheno-measure-selector.component.html',
   styleUrls: ['./pheno-measure-selector.component.css']
 })
-export class PhenoMeasureSelectorComponent implements OnInit {
+export class PhenoMeasureSelectorComponent implements OnInit, OnDestroy {
   @ViewChild('inputGroup') inputGroupSpan: any;
   @ViewChild('searchBox') searchBox: any;
 
@@ -21,6 +24,7 @@ export class PhenoMeasureSelectorComponent implements OnInit {
 
   @Output() selectedMeasureChange = new EventEmitter();
   @Output() measuresChange = new EventEmitter();
+  private subscription: Subscription;
 
   constructor(
     private measuresService: MeasuresService,
@@ -28,22 +32,30 @@ export class PhenoMeasureSelectorComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.datasetsService.getSelectedDataset().subscribe(dataset => {
-      this.measuresService.getContinuousMeasures(dataset.id)
-        .subscribe(measures => {
-          this.measures = measures;
-          let search = this.initialSelectedMeasure;
-          if (this.initialSelectedMeasure) {
-            this.selectedMeasure = this.measures
-              .find(m => m.name === this.initialSelectedMeasure);
-          }
-          if (!this.selectedMeasure) {
-            search = '';
-          }
-          this.searchBoxChange(search);
-          this.measuresChange.emit(this.measures);
-        });
-    });
+    this.subscription = this.datasetsService.getSelectedDataset()
+      .subscribe(dataset => {
+        this.measuresService.getContinuousMeasures(dataset.id)
+          .subscribe(measures => {
+            this.measures = measures;
+            let search = this.initialSelectedMeasure;
+            if (this.initialSelectedMeasure) {
+              this.selectedMeasure = this.measures
+                .find(m => m.name === this.initialSelectedMeasure);
+            }
+            if (!this.selectedMeasure) {
+              search = '';
+            }
+            this.searchBoxChange(search);
+            this.measuresChange.emit(this.measures);
+          });
+      });
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+      this.subscription = null;
+    }
   }
 
   @Input()
@@ -71,8 +83,8 @@ export class PhenoMeasureSelectorComponent implements OnInit {
   searchBoxChange(searchFieldValue) {
     this.searchString = searchFieldValue;
 
-    this.filteredMeasures = this.measures.filter(
-      (value) => {
+    this.filteredMeasures = this.measures
+      .filter(value => {
         return value.name.indexOf(searchFieldValue) !== -1;
       });
   }
