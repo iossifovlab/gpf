@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Headers, Http, Response, RequestOptions } from '@angular/http';
-import { Observable } from 'rxjs';
+import { Observable, Scheduler } from 'rxjs';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Router } from '@angular/router';
 
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/subscribeOn';
 
 @Injectable()
 export class StateRestoreService {
@@ -31,7 +32,7 @@ export class StateRestoreService {
   }
 
   getState(key: string): Observable<any> {
-    return this.state;
+    return this.state.asObservable().subscribeOn(Scheduler.async);
   }
 
   onParamsUpdate(jsonEncodedState: string) {

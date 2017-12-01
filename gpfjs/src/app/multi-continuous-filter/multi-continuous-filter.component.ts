@@ -10,7 +10,10 @@ import { StateRestoreService } from '../store/state-restore.service';
   selector: 'gpf-multi-continuous-filter',
   templateUrl: './multi-continuous-filter.component.html',
   styleUrls: ['./multi-continuous-filter.component.css'],
-  providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => MultiContinuousFilterComponent) }]
+  providers: [{
+    provide: QueryStateCollector,
+    useExisting: forwardRef(() => MultiContinuousFilterComponent)
+  }]
 })
 export class MultiContinuousFilterComponent extends QueryStateCollector implements OnInit {
   @Input() datasetId: string;

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Headers, Http, Response, RequestOptions } from '@angular/http';
-import { Observable } from 'rxjs';
+import { Observable, Scheduler } from 'rxjs';
 
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
@@ -85,7 +85,7 @@ export class DatasetsService {
   }
 
   getSelectedDataset() {
-    return this.selectedDataset$.asObservable();
+    return this.selectedDataset$.asObservable().subscribeOn(Scheduler.async);
   }
 
   getDatasetsObservable() {

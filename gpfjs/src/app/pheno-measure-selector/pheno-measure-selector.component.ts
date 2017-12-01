@@ -22,8 +22,8 @@ export class PhenoMeasureSelectorComponent implements OnInit, OnDestroy {
 
   @Input() initialSelectedMeasure: string;
 
-  @Output() selectedMeasureChange = new EventEmitter();
-  @Output() measuresChange = new EventEmitter();
+  @Output() selectedMeasureChange = new EventEmitter(true);
+  @Output() measuresChange = new EventEmitter(true);
   private subscription: Subscription;
 
   constructor(
