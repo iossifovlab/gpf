@@ -15,3 +15,9 @@
 .gender-icon.female {
     border-radius: 40px;
 }
+
+.gender-icon.unknown {
+    border-radius: 5px;
+    text-align: center;
+    font-size: 0.8em;
+}

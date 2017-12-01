@@ -3,9 +3,11 @@ import { Equals, ValidateIf } from 'class-validator';
 export class Gender {
   female = true;
 
-  @ValidateIf(o => !o.female)
+  male = true;
+
+  @ValidateIf(o => !o.female && !o.male)
   @Equals(true, {
     message: 'select at least one'
   })
-  male = true;
+  unknown = true;
 };
