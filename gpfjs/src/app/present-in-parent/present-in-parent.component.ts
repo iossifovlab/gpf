@@ -119,7 +119,8 @@ export class PresentInParentComponent extends QueryStateWithErrorsProvider imple
   }
 
   presentInChildCheckValue(key: string, value: boolean): void {
-    if (key === 'motherOnly' || key === 'fatherOnly' || key === 'motherFather' || key === 'neither') {
+    if (key === 'motherOnly' || key === 'fatherOnly'
+        || key === 'motherFather' || key === 'neither') {
       this.presentInParent[key] = value;
     }
   }
