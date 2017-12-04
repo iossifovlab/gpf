@@ -649,16 +649,11 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
         def augment_vars(v):
             if v.familyId:
-                print(type(v))
-                chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
-                v.atts["_ch_prof_"] = chProf
                 v.atts["pedigree"] = v.pedigree_v3(legend)
                 family = families.get(v.familyId, None)
                 fatts = family.atts if family else {}
                 for (_, _, key, _) in pheno_columns:
                     v.atts[key] = fatts.get(key, '')
-
-            v._phenotype_ = v.study.get_attr('study.phenotype')
 
             for key, value in gene_weights.items():
                 genes = {effect['sym'] for effect in v.geneEffect}

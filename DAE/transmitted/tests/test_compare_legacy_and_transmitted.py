@@ -16,7 +16,7 @@ from transmitted.mysql_query import MysqlTransmittedQuery
 #         VT(
 #             effect_types=['LGDs'],
 #             gene_syms=autism_candidates_genes,
-#             present_in_child=['autism only', 'autism and unaffected'],
+#             present_in_child=['affected only', 'affected and unaffected'],
 #             present_in_parent=[
 #                 'father only', 'mother and father', 'neither'],
 #         )
@@ -33,7 +33,7 @@ def test_compare_father_ultra_rare(autism_candidates_genes):
         'maxAltFreqPrcnt': -1,
         'minAltFreqPrcnt': -1,
         'ultraRareOnly': True,
-        'presentInChild': ['autism only', 'autism and unaffected'],
+        'presentInChild': ['affected only', 'affected and unaffected'],
         'presentInParent': ['father only', 'mother and father'],
         'geneSyms': autism_candidates_genes,
         'effectTypes': [
@@ -68,7 +68,7 @@ def test_compare_father_rarity(autism_candidates_genes):
         'minParentsCalled': -1,
         'maxAltFreqPrcnt': 1.0,
         'minAltFreqPrcnt': -1,
-        'presentInChild': ['autism only', 'autism and unaffected'],
+        'presentInChild': ['affected only', 'affected and unaffected'],
         'presentInParent': ['father only', 'mother and father', 'neither'],
         'geneSyms': autism_candidates_genes,
         'effectTypes': [

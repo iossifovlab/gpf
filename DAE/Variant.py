@@ -5,9 +5,11 @@ Created on Oct 21, 2015
 '''
 import numpy as np
 import operator
+import logging
 
 from Family import Person
 
+LOGGER = logging.getLogger(__name__)
 
 def normalRefCopyNumber(location, gender):
     clnInd = location.find(":")
@@ -25,12 +27,26 @@ def normalRefCopyNumber(location, gender):
         if pos < 60001 or (pos > 2699520 and pos < 154931044) \
                 or pos > 155260560:
 
-            if gender == 'M' or gender == 'U':
+            if gender == 'M':
+                return 1
+            elif gender == 'U':
+                LOGGER.warn(
+                    'unknown gender when calculating normal number of allels '
+                    'in chr%s',
+                    location
+                )
                 return 1
             elif gender != 'F':
                 raise Exception('weird gender ' + gender)
     elif chrome in ['chrY', 'Y', '24', 'chr24']:
-        if gender == 'M' or gender == 'U':
+        if gender == 'M':
+            return 1
+        elif gender == 'U':
+            LOGGER.warn(
+                'unknown gender when calculating normal number of allels '
+                'in chr%s',
+                location
+            )
             return 1
         elif gender == 'F':
             return 0
@@ -415,80 +431,36 @@ class Variant:
 
 
 PRESENT_IN_CHILD_FILTER_MAPPING = {
-    "autism only":
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
-    "affected only":
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
-    "unaffected only":
-    lambda inCh: (len(inCh) == 4 and 's' == inCh[0]),
-    "autism and unaffected":
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
-    "affected and unaffected":
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
-    "neither":
-    lambda inCh: len(inCh) == 0,
-
-    ("autism only", 'F'):
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
-    ("affected only", 'F'):
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
-    ("unaffected only", 'F'):
-    lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
-    ("autism and unaffected", 'F'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('F' == inCh[3] or 'F' == inCh[7])),
-    ("affected and unaffected", 'F'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('F' == inCh[3] or 'F' == inCh[7])),
-    ("neither", 'F'):
-    lambda inCh: (len(inCh) == 0),
-
-    ("autism only", 'M'):
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
-    ("affected only", 'M'):
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
-    ("unaffected only", 'M'):
-    lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
-    ("autism and unaffected", 'M'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('M' == inCh[3] or 'M' == inCh[7])),
-    ("affected and unaffected", 'M'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('M' == inCh[3] or 'M' == inCh[7])),
-    ("neither", 'M'):
-    lambda inCh: (len(inCh) == 0),
-    'F':
-    lambda inCh: ('F' in inCh),
-    'M':
-    lambda inCh: ('M' in inCh),
+    'affected only':
+        lambda inCh, gender: len(inCh) == 4 and 'p' == inCh[0] and \
+            (not gender or gender == inCh[3]),
+    'unaffected only':
+        lambda inCh, gender: len(inCh) == 4 and 's' == inCh[0] and \
+            (not gender or gender == inCh[3]),
+    'affected and unaffected':
+        lambda inCh, gender: len(inCh) >= 8 and 'p' == inCh[0] and \
+            (not gender or gender == inCh[3] or gender == inCh[7]),
+    'neither':
+        lambda inCh, gender: len(inCh) == 0,
+    'gender':
+        lambda inCh, gender: gender in inCh,
 }
 
 
 def present_in_child_filter(present_in_child=None, gender=None):
     fall = []
-    if present_in_child and gender:
-        assert len(gender) == 1
-        g = gender[0]
-        if len(present_in_child) == 4:
-            fall = [PRESENT_IN_CHILD_FILTER_MAPPING[g]]
-        else:
-            fall = [PRESENT_IN_CHILD_FILTER_MAPPING[(pic, g)]
-                    for pic in present_in_child]
-    elif present_in_child:
-        if len(present_in_child) < 4:
-            fall = [PRESENT_IN_CHILD_FILTER_MAPPING[pic]
-                    for pic in present_in_child]
-    elif gender:
-        assert len(gender) == 1
-        g = gender[0]
-        fall = [PRESENT_IN_CHILD_FILTER_MAPPING[g]]
 
-    if len(fall) == 0:
-        return None
-    elif len(fall) == 1:
-        return fall[0]
+    if present_in_child and len(present_in_child) != 4:
+        fall = [PRESENT_IN_CHILD_FILTER_MAPPING[pic]
+                for pic in present_in_child]
+        if gender is None:
+            gender = [None]
+    elif gender:
+        fall = [PRESENT_IN_CHILD_FILTER_MAPPING['gender']]
     else:
-        return lambda inCh: any([f(inCh) for f in fall])
+        return None
+
+    return lambda inCh: any([f(inCh, g) for f in fall for g in gender])
 
 
 def present_in_parent_filter(present_in_parent):

@@ -203,13 +203,13 @@ class StudyTypesMixin(object):
 
 
 class ChildGenderMixin(object):
-    GENDER = ['male', 'female']
-    GENDER_MAP = {'male': 'M', 'female': 'F'}
+    GENDER = ['male', 'female', 'unknown']
+    GENDER_MAP = {'male': 'M', 'female': 'F', 'unknown': 'U'}
 
     def build_child_gender(self, gender):
-        assert gender in ['all', 'male', 'female']
+        assert gender in ['all', 'male', 'female', 'unknown']
         if gender == 'all':
-            return ['male', 'female']
+            return ['male', 'female', 'unknown']
         else:
             return [gender]
 
@@ -239,10 +239,8 @@ class PresentInMixin(object):
     ]
 
     PRESENT_IN_CHILD_TYPES = [
-        "autism only",
         "affected only",
         "unaffected only",
-        "autism and unaffected",
         "affected and unaffected",
         "neither",
     ]
