@@ -12,6 +12,7 @@ from pheno import pheno_db
 from pheno.pheno_regression import PhenoRegression
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
 import hashlib
+from __builtin__ import str
 
 
 class CLIError(Exception):
@@ -65,11 +66,21 @@ def calc_dbfile_hashsum(dbfilename):
     return hashsum
 
 
-def build_pheno_browser(dbfile, pheno_name, output_dir):
+def build_pheno_browser(
+        dbfile, pheno_name, output_dir,
+        age, nonverbal_iq):
     phenodb = pheno_db.PhenoDB(dbfile=dbfile)
     phenodb.load()
 
-    pheno_regression = PhenoRegression.build_from_config(pheno_name)
+    age = PhenoRegression.build_common_normalization_config(
+        pheno_name, age)
+    nonverbal_iq = PhenoRegression.build_common_normalization_config(
+        pheno_name, nonverbal_iq)
+    pheno_regression = PhenoRegression(
+        phenodb,
+        age,
+        nonverbal_iq
+    )
     prep = PreparePhenoBrowserBase(
         pheno_name, phenodb, pheno_regression, output_dir)
     prep.run()
@@ -122,6 +133,20 @@ USAGE
             help='output base dir',
             metavar='path')
 
+        parser.add_argument(
+            '--age',
+            dest="age",
+            help="pheno measure ID represenging age at assesment",
+            type=str
+        )
+
+        parser.add_argument(
+            '--nonverbal_iq',
+            dest="nonverbal_iq",
+            help="pheno measure ID representing non-verbal IQ measure",
+            type=str,
+        )
+
         # Process arguments
         args = parser.parse_args()
 
@@ -137,7 +162,10 @@ USAGE
             raise CLIError(
                 "pheno db file name must be specified")
 
-        build_pheno_browser(args.dbfile, args.pheno_name, args.output)
+        build_pheno_browser(
+            args.dbfile, args.pheno_name, args.output,
+            age=args.age, nonverbal_iq=args.nonverbal_iq
+        )
 
         return 0
     except KeyboardInterrupt:

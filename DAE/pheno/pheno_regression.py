@@ -22,10 +22,9 @@ class PhenoRegression(object):
         nonverbal_iq = PhenoRegression._load_common_normalization_config(
             dbconfig, 'nonverbal_iq')
 
-        return PhenoRegression(dbconfig, pheno_db, age, nonverbal_iq)
+        return PhenoRegression(pheno_db, age, nonverbal_iq)
 
-    def __init__(self, dbconfig, pheno_db, age, nonverbal_iq):
-        self.dbconfig = dbconfig
+    def __init__(self, pheno_db, age, nonverbal_iq):
         self.pheno_db = pheno_db
         self.age = age
         self.nonverbal_iq = nonverbal_iq
@@ -36,6 +35,13 @@ class PhenoRegression(object):
             return None
 
         measure_id = dbconfig[name]
+        return PhenoRegression.build_common_normalization_config(
+            name, measure_id)
+
+    @staticmethod
+    def build_common_normalization_config(name, measure_id):
+        if measure_id is None:
+            return None
         parts = measure_id.split(':')
         if len(parts) == 1:
             instrument_name = None
@@ -63,11 +69,16 @@ class PhenoRegression(object):
             return None
 
     def get_age_measure_id(self, measure_id):
+        if self.age is None:
+            return None
         age = copy.copy(self.age)
         return self._get_common_normalization_measure_id(
             age, measure_id)
 
     def get_nonverbal_iq_measure_id(self, measure_id):
+        if self.nonverbal_iq is None:
+            return None
+
         nonverbal_iq = copy.copy(self.nonverbal_iq)
         return self._get_common_normalization_measure_id(
             nonverbal_iq, measure_id)
