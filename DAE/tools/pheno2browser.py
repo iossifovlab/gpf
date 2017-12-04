@@ -69,7 +69,7 @@ def build_pheno_browser(dbfile, pheno_name, output_dir):
     phenodb = pheno_db.PhenoDB(dbfile=dbfile)
     phenodb.load()
 
-    pheno_regression = PhenoRegression.build(pheno_name)
+    pheno_regression = PhenoRegression.build_from_config(pheno_name)
     prep = PreparePhenoBrowserBase(
         pheno_name, phenodb, pheno_regression, output_dir)
     prep.run()

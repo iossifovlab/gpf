@@ -17,23 +17,25 @@ class PhenoRegression(object):
         pheno_db.load()
 
         dbconfig = config.get_dbconfig(dbname)
+        age = PhenoRegression._load_common_normalization_config(
+            dbconfig, 'age')
+        nonverbal_iq = PhenoRegression._load_common_normalization_config(
+            dbconfig, 'nonverbal_iq')
 
-        return PhenoRegression(dbconfig, pheno_db)
+        return PhenoRegression(dbconfig, pheno_db, age, nonverbal_iq)
 
-    def __init__(self, dbconfig, pheno_db):
+    def __init__(self, dbconfig, pheno_db, age, nonverbal_iq):
         self.dbconfig = dbconfig
         self.pheno_db = pheno_db
+        self.age = age
+        self.nonverbal_iq = nonverbal_iq
 
-        self.age = self._load_common_normalization_config(
-            'age')
-        self.nonverbal_iq = self._load_common_normalization_config(
-            'nonverbal_iq')
-
-    def _load_common_normalization_config(self, name):
-        if name not in self.dbconfig:
+    @staticmethod
+    def _load_common_normalization_config(dbconfig, name):
+        if name not in dbconfig:
             return None
 
-        measure_id = self.dbconfig[name]
+        measure_id = dbconfig[name]
         parts = measure_id.split(':')
         if len(parts) == 1:
             instrument_name = None

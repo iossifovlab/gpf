@@ -270,14 +270,12 @@ class PreparePhenoBrowserBase(object):
             res.update(self.build_regression_by_age(measure))
         elif measure.measure_type == MeasureType.categorical:
             res.update(self.build_values_categorical_distribution(measure))
-        else:
-            res.update(self.build_values_other_distribution(measure))
         return res
 
     def run(self):
         db = DbManager(dbfile=self.browser_db)
         db.build()
-        
+
         for instrument in self.pheno_db.instruments.values():
             progress_nl()
             for measure in instrument.measures.values():
