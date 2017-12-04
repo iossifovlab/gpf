@@ -11,7 +11,7 @@ from pheno.pheno_db import PhenoDB
 class PhenoRegression(object):
 
     @staticmethod
-    def build(dbname, config_filename=None):
+    def build_from_config(dbname, config_filename=None):
         config = PhenoConfig.from_file(config_filename)
         pheno_db = PhenoDB(dbfile=config.get_dbfile(dbname))
         pheno_db.load()

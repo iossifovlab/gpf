@@ -385,7 +385,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         from pheno.pheno_factory import PhenoFactory
         pf = PhenoFactory()
         pheno_db = pf.get_pheno_db('ssc')
-        pheno_reg = PhenoRegression.build('ssc')
+        pheno_reg = PhenoRegression.build_from_config('ssc')
         assert pheno_db is not None
         measure_id = pheno_reg.get_nonverbal_iq_measure_id(None)
         nvIQ = pheno_db.get_measure_values(measure_id)

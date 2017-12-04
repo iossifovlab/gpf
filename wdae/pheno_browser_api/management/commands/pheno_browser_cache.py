@@ -59,7 +59,8 @@ class Command(BaseCommand, PhenoBrowserCommon):
                     os.makedirs(output_dir)
 
                 pheno_db = pheno.get_pheno_db(pheno_name)
-                pheno_regression = PhenoRegression.build(pheno_name)
+                pheno_regression = PhenoRegression.build_from_config(
+                    pheno_name)
 
                 prep = PreparePhenoBrowserBase(
                     pheno_name, pheno_db, pheno_regression, output_dir)

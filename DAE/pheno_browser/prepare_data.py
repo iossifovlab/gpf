@@ -7,7 +7,6 @@ import os
 import matplotlib as mpl
 import numpy as np
 
-from pheno.pheno_regression import PhenoRegression
 from pheno.pheno_db import Measure
 mpl.use('PS')
 import matplotlib.pyplot as plt  # @IgnorePep8
@@ -16,7 +15,6 @@ plt.ioff()
 from pheno_browser.db import DbManager  # @IgnorePep8
 from pheno.common import Role, MeasureType  # @IgnorePep8
 
-from DAE import pheno  # @IgnorePep8
 from pheno_browser.graphs import draw_linregres  # @IgnorePep8
 from pheno_browser.graphs import draw_measure_violinplot  # @IgnorePep8
 from pheno_browser.graphs import draw_categorical_violin_distribution  # @IgnorePep8

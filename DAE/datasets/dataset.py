@@ -232,7 +232,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             pheno_id = self.descriptor['phenoDB']
             if pheno.has_pheno_db(pheno_id):
                 pheno_db = pheno.get_pheno_db(pheno_id)
-                pheno_reg = PhenoRegression.build(pheno_id)
+                pheno_reg = PhenoRegression.build_from_config(pheno_id)
         self.pheno_db = pheno_db
         self.pheno_reg = pheno_reg
 
