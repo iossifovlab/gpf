@@ -160,7 +160,7 @@ class EffectTypesMixin(object):
 
 class VariantTypesMixin(object):
     VARIANT_TYPES = [
-        'del', 'ins', 'sub', 'CNV'
+        'del', 'ins', 'sub', 'CNV', 'complex'
     ]
 
     @classmethod

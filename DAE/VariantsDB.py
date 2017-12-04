@@ -211,7 +211,8 @@ class Study:
             elif inChild and inChild not in v.inChS:
                 continue
 
-            if variantTypes and v.variant[0:3] not in variantTypes:
+            if variantTypes and all(map(
+                    lambda vt: not v.variant.startswith(vt), variantTypes)):
                 continue
             if reg_matcher:
                 smcP = v.location.find(":")
