@@ -8,6 +8,10 @@ import copy
 from datasets.config import DatasetsConfig
 from datasets.dataset import Dataset
 from datasets.metadataset import MetaDataset
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class DatasetsFactory(dict):
@@ -34,8 +38,11 @@ class DatasetsFactory(dict):
 
     def get_dataset(self, dataset_id):
         if dataset_id in self:
+            logger.info("dataset {} found in dataset cache".format(dataset_id))
             return self[dataset_id]
         else:
+            logger.warn("dataset {} NOT FOUND in dataset cache".format(
+                dataset_id))
             dataset = self.__load_single_dataset(dataset_id)
             if dataset is not None:
                 self[dataset_id] = dataset

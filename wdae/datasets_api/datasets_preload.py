@@ -10,6 +10,9 @@ from datasets.config import DatasetsConfig
 from models import Dataset
 from django.db.utils import OperationalError, ProgrammingError
 from precompute.register import Precompute
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DatasetsPreload(Preload, Precompute):
@@ -48,7 +51,7 @@ class DatasetsPreload(Preload, Precompute):
             settings,
             "PRELOAD_ACTIVE",
             False)
-
+        logger.warn("PRELOAD_ACTIVE is {}".format(preload_active))
         if preload_active:
             for dset in self.dataset_config.get_datasets():
                 dataset_id = dset['id']

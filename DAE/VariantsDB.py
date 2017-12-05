@@ -267,7 +267,7 @@ class Study:
             else:
                 yield v
 
-    def _load_dnv_data(self, callSetP):
+    def _load_dnv_data(self, callSetP=None):
         callSet = "default"
         propName = "denovoCalls.files"
 
