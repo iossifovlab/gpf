@@ -222,13 +222,13 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     def load(self):
         if self.families:
             return
+        self.load_studies()
         self.load_families()
         self.load_pheno_families()
         self.load_pedigree_selectors()
         self.load_pheno_columns()
         self.load_pheno_filters()
         self.load_family_filters_by_study()
-        self.load_studies()
 
     def load_studies(self):
         for st in self.studies:
