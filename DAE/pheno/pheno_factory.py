@@ -5,6 +5,10 @@ Created on Dec 8, 2016
 '''
 
 from pheno.utils.configuration import PhenoConfig
+import logging
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class PhenoFactory(object):
@@ -30,7 +34,7 @@ class PhenoFactory(object):
             raise ValueError("can't find pheno DB {}; available pheno DBs: {}"
                              .format(dbname, self.get_pheno_db_names()))
         import pheno_db
-        print("loading pheno db <{}>".format(dbname))
+        LOGGER.info("loading pheno db <{}>".format(dbname))
         phdb = pheno_db.PhenoDB(dbfile=self.get_dbfile(dbname))
         phdb.load()
         return phdb

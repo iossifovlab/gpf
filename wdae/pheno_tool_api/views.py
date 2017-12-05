@@ -11,6 +11,10 @@ from functools import partial
 from django.http.response import StreamingHttpResponse
 import json
 from pheno.common import Role, Gender
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class PhenoToolView(APIView):
@@ -128,7 +132,7 @@ class PhenoToolView(APIView):
             return Response(response)
 
         except NotAuthenticated:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 

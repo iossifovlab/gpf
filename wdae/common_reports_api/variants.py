@@ -12,6 +12,9 @@ import cPickle
 import zlib
 from common_reports_api.studies import get_denovo_studies_names, \
     get_transmitted_studies_names
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class CommonBase(object):
@@ -65,7 +68,7 @@ class CommonBase(object):
         pedigree = [[family_configuration[i: i + 3],
                      family_configuration[i + 3: i + 4],
                      0] for i in range(0, len(family_configuration), 4)]
-        print(family_configuration, pedigree)
+        LOGGER.debug("{}; {}".format(family_configuration, pedigree))
         result = [['mom', 'F', 0], ['dad', 'M', 0]]
         result.extend(pedigree)
         return result

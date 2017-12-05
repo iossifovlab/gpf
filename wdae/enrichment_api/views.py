@@ -15,6 +15,9 @@ from common.query_base import GeneSymsMixin
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EnrichmentModelsMixin(object):
@@ -176,7 +179,7 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
             }
             return Response(enrichment)
         except Exception:
-            print("error while processing genotype query")
+            LOGGER.exception("error while processing genotype query")
             traceback.print_exc()
 
             return Response(status=status.HTTP_400_BAD_REQUEST)

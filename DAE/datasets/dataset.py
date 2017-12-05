@@ -12,6 +12,10 @@ from gene.weights import WeightsLoader
 from datasets.family_pheno_base import FamilyPhenoQueryMixin
 from pheno.pheno_regression import PhenoRegression
 from collections import defaultdict
+import logging
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Dataset(QueryBase, FamilyPhenoQueryMixin):
@@ -20,7 +24,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def __init__(self, dataset_descriptor):
         self.descriptor = dataset_descriptor
-        print("loading dataset <{}>; pheno db: <{}>".format(
+        LOGGER.info("loading dataset <{}>; pheno db: <{}>".format(
             self.descriptor['id'],
             self.descriptor['phenoDB'],
         ))

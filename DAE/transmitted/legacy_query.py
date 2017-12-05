@@ -10,6 +10,9 @@ import pysam
 import copy
 from transmitted.base_query import TransmissionConfig
 from collections import Counter
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TransmissionLegacy(TransmissionConfig):
@@ -54,8 +57,8 @@ class TransmissionLegacy(TransmissionConfig):
             # FIXME: empty strings for additional frequences:
             # 'EVS-freq', 'E65-freq'
             if len(colNms) != len(vls):
-                print("colNms len: {}; variant col: {}".
-                      format(len(colNms), len(vls)))
+                LOGGER.error("colNms len: {}; variant col: {}".
+                             format(len(colNms), len(vls)))
                 raise Exception("Incorrect transmitted variants file: ")
             mainAtts = dict(zip(colNms, vls))
 
@@ -76,11 +79,13 @@ class TransmissionLegacy(TransmissionConfig):
             try:
                 ultraRare = int(mainAtts['all.nAltAlls']) == 1
             except ValueError:
-                if ultraRareOnly: raise Exception('ValueError with option "ultraRareOnly"')
+                if ultraRareOnly:
+                    raise Exception('ValueError with option "ultraRareOnly"')
                 ultraRare = False
 
             if ultraRareOnly:
-                if not ultraRare: continue
+                if not ultraRare:
+                    continue
 
             if not self.genomic_scores_filter(mainAtts, genomicScores):
                 continue
@@ -118,8 +123,8 @@ class TransmissionLegacy(TransmissionConfig):
                                          limit=None,
                                          genomicScores=[]):
         transmittedVariantsFile = self._get_params('indexFile') + ".txt.bgz"
-        print("Loading trasmitted variants from {}".
-              format(transmittedVariantsFile))
+        LOGGER.info("Loading trasmitted variants from {}".
+                    format(transmittedVariantsFile))
 
         if isinstance(effectTypes, str):
             effectTypes = self.study.vdb.effectTypesSet(effectTypes)
@@ -154,12 +159,11 @@ class TransmissionLegacy(TransmissionConfig):
 
                         yield v
                 except ValueError as ex:
-                    print("Bad region: {}".format(ex))
+                    LOGGER.warn("Bad region: {}".format(ex))
                     continue
         else:
             f = gzip.open(transmittedVariantsFile)
             colNms = f.readline().strip().split("\t")
-            # print(colNms)
             for v in self.filter_transmitted_variants(f, colNms,
                                                       minParentsCalled,
                                                       maxAltFreqPrcnt,
@@ -212,7 +216,6 @@ class TransmissionLegacy(TransmissionConfig):
             'TMM_ALL': TMM_ALL,
             'limit': limit
         }
-        # print(query)
 
         transmittedVariantsTOOMANYFile = \
             self._get_params('indexFile') + "-TOOMANY.txt.bgz"
@@ -256,8 +259,9 @@ class TransmissionLegacy(TransmissionConfig):
                         if chrom == chrom and pos == posL and var == varL:
                             flns.append(fdL)
                     if len(flns) != 1:
-                        print("Error: chrome: {}, posI: {}, flns: {}".format(
-                            chrom, posI, flns))
+                        LOGGER.error(
+                            "Error: chrome: {}, posI: {}, flns: {}".format(
+                                chrom, posI, flns))
                         raise Exception('TOOMANY mismatch')
                     fmsData = flns[0]
 

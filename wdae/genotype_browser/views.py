@@ -11,15 +11,19 @@ from django.http.response import StreamingHttpResponse
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
-from helpers.logger import log_filter, LOGGER
+from helpers.logger import log_filter
+from helpers.logger import LOGGER
+
 import traceback
 import preloaded
 from rest_framework.exceptions import NotAuthenticated
 import json
 from query_variants import join_line, generate_web_response, generate_response
 from datasets_api.permissions import IsDatasetAllowed
-from functools import partial
 from datasets.metadataset import MetaDataset
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class QueryBaseView(views.APIView):
@@ -91,12 +95,12 @@ class QueryPreviewView(QueryBaseView):
 
             return Response(response, status=status.HTTP_200_OK)
         except NotAuthenticated:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         except Exception:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -123,7 +127,7 @@ class QueryDownloadView(QueryBaseView):
         for variant in variants:
             if count <= limit:
                 yield variant
-                count+=1
+                count += 1
             else:
                 break
 
@@ -154,7 +158,7 @@ class QueryDownloadView(QueryBaseView):
 
             if not (user.is_authenticated() and user.has_unlimitted_download):
                 variants_data = self.__limit(variants_data,
-                    self.DOWNLOAD_LIMIT)
+                                             self.DOWNLOAD_LIMIT)
 
             response = StreamingHttpResponse(
                 itertools.imap(join_line, variants_data),
