@@ -145,19 +145,23 @@ class PreparePhenoBrowserBase(object):
         dd.loc[:, 'age'] = dd['age'].astype(np.float32)
         dd = dd[np.isfinite(dd.age)]
 
-        if len(dd) > 5:
-            res_male, res_female = draw_linregres(
-                dd, 'age', measure.measure_id, jitter=0.1)
-            res['pvalue_correlation_age_male'] = res_male.pvalues['age'] \
-                if res_male is not None else None
-            res['pvalue_correlation_age_female'] = res_female.pvalues['age'] \
-                if res_female is not None else None
-
-            if res_male is not None or res_female is not None:
-                (res['figure_correlation_age_small'],
-                 res['figure_correlation_age']) = \
-                    self.save_fig(measure, "prb_regression_by_age")
+        if dd[measure.measure_id].nunique() == 1:
             return res
+
+        if len(dd) <= 5:
+            return res
+
+        res_male, res_female = draw_linregres(
+            dd, 'age', measure.measure_id, jitter=0.1)
+        res['pvalue_correlation_age_male'] = res_male.pvalues['age'] \
+            if res_male is not None else None
+        res['pvalue_correlation_age_female'] = res_female.pvalues['age'] \
+            if res_female is not None else None
+
+        if res_male is not None or res_female is not None:
+            (res['figure_correlation_age_small'],
+             res['figure_correlation_age']) = \
+                self.save_fig(measure, "prb_regression_by_age")
         return res
 
     def build_regression_by_nviq(self, measure):
@@ -181,6 +185,9 @@ class PreparePhenoBrowserBase(object):
         dd = dd[np.isfinite(dd.nonverbal_iq)]
 
         if len(dd) <= 5:
+            return res
+
+        if dd[measure.measure_id].nunique() == 1:
             return res
 
         res_male, res_female = draw_linregres(
