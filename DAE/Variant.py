@@ -280,8 +280,8 @@ class Variant:
                 family = self.study.families[self.familyId]
                 self._memberInOrder = family.memberInOrder
             else:
-                person = Person()
-                #person.personId
+                person = Person(self.atts)
+                person.personId = None
                 person.gender = self.atts.get(self.genderAtt, 'U')
                 person.role = 'sib' if self.phenotype == 'unaffected' else 'prb'
                 self._memberInOrder = [person]
@@ -384,28 +384,20 @@ class Variant:
         members = self.memberInOrder
         bs = self.bestSt
 
-        mom = members[0]
-        dad = members[1]
-
-        res = [
-            [[self.familyId, mom.personId, '', '',
-              mom.gender, get_color(mom)],
-             variant_count_v3(bs, 0, self.location,
-                              mom.gender, denovo_parent)],
-            [[self.familyId, dad.personId, '', '',
-              dad.gender, get_color(dad)],
-             variant_count_v3(bs, 1, self.location,
-                              dad.gender, denovo_parent)]
-        ]
-
-        for c, p in enumerate(members[2:], 2):
-            res.append(
-                [[self.familyId, p.personId, dad.personId, mom.personId,
-                  p.gender, get_color(p)],
-                 variant_count_v3(bs, c, self.location,
-                                  dad.gender, denovo_parent)]
-            )
-        res = [reduce(operator.add, row) for row in res]
+        res = []
+        dad_id, mom_id = '', ''
+        for index, person in enumerate(members):
+            person_list = [self.familyId, person.personId, person.gender, get_color(person)]
+            if person.is_child:
+                person_list[2:2] += [dad_id, mom_id]
+            else:
+                person_list[2:2] += ['', '']
+                if person.role == "mom":
+                    mom_id = person.personId
+                elif person.role == "dad":
+                    dad_id = person.personId
+            res.append(person_list + variant_count_v3(bs, index, self.location,
+                person.gender, denovo_parent))
         return res
 
     def denovo_parent(self):

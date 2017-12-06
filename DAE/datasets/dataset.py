@@ -648,8 +648,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                         if key in genotype_column_keys}
 
         def augment_vars(v):
+            v.atts["pedigree"] = v.pedigree_v3(legend)
             if v.familyId:
-                v.atts["pedigree"] = v.pedigree_v3(legend)
                 family = families.get(v.familyId, None)
                 fatts = family.atts if family else {}
                 for (_, _, key, _) in pheno_columns:
