@@ -1,6 +1,8 @@
-<svg:rect *ngIf="pedigreeData.gender=='M'"
+<svg:rect *ngIf="pedigreeData.gender=='M' || pedigreeData.gender=='U'"
      x=0
      y=0
+     attr.rx="{{pedigreeData.gender=='U' ? '5' : '0'}}"
+     attr.ry="{{pedigreeData.gender=='U' ? '5' : '0'}}"
      width=21
      height=21
      stroke="black"
@@ -8,6 +10,7 @@
      fill-opacity="1"
      [attr.fill]="pedigreeData.color"
 />
+
 <svg:circle *ngIf="pedigreeData.gender=='F'"
      cx=10.5
      cy=10.5

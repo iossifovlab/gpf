@@ -1,6 +1,9 @@
-<svg width="100" height="70">
-     <svg:line x1=50 y1=20 x2=50 y2=40 stroke="black" stroke-width="1" />
-     <svg:g gpf-pedigree-chart-level [pedigreeData]=levels[0] connectingLineYPosition=15 transform="translate(0 5)" />
-     <svg:g gpf-pedigree-chart-level [pedigreeData]=levels[1] connectingLineYPosition=0  transform="translate(0 40)"/>
+<svg width="100" attr.height="{{35+40*(levels.length-1)}}">
+  <svg:g gpf-pedigree-chart-level [pedigreeData]=levels[0] connectingLineYPosition=15 transform="translate(0 5)" />
+
+  <ng-template ngFor [ngForOf]="levels | slice:1" let-level let-i="index">
+    <svg:line x1=50 attr.y1="{{20*(i+1)}}" x2=50 attr.y2="{{20*(i+2)}}" stroke="black" stroke-width="1" />
+    <svg:g gpf-pedigree-chart-level [pedigreeData]=level connectingLineYPosition=0  attr.transform="translate(0 {{40*(i+1)}})"/>
+  </ng-template>
 
 </svg>

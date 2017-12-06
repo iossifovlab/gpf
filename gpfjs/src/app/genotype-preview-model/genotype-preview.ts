@@ -1,8 +1,3 @@
-const enum Gender {
-  MALE = 1,
-  FEMALE = 2
-}
-
 export class PedigreeData {
 
   static fromArray(arr: Array<any>): PedigreeData {

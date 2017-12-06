@@ -46,7 +46,6 @@ export class PedigreeChartComponent {
 
     }
 
-    let rootMatingUnit = idsToMatingUnit.get(",").children.individuals[0].matingUnits[0];
     this.traverseLevel(idsToMatingUnit.get(",").children.individuals, 0);
   }
 
