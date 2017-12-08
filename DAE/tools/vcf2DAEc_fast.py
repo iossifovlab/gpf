@@ -244,15 +244,22 @@ def main():
     individualToFamily = dict()
     individualToIndex = dict()
 
-    for familyId in fam:
-        familyInfo = fInfo[familyId]
-        for personId in familyInfo['ids']:
-            individualToFamily[personId] = familyId
-
     samples_arr = np.asarray(vf.samples)
     for i, sampleId in enumerate(vf.samples):
         individualToIndex[sampleId] = i
-    
+
+    for familyId in fam:
+        familyInfo = fInfo[familyId]
+
+        indicies = []
+        for personId in familyInfo['ids']:
+            individualToFamily[personId] = familyId
+            index = individualToIndex[personId] * 2
+            indicies.append(index)
+            indicies.append(index + 1)
+
+        familyInfo['indicies'] = np.array(indicies)
+
     output = {}
     for variant in vf:
         missingIndexes = np.where(variant.gt_types == 2)
