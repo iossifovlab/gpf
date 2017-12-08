@@ -18,6 +18,9 @@ const COLORS: ColorsMap = {
   'gpos75' : '#666',
   'gvar' : '#FFF',
   'stalk' : '#CD3333',
+  'M' : 'blue',
+  'F' : 'red',
+  'U' : 'green'
 };
 
 const GENOME_BROWSER: string = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr";
@@ -139,7 +142,7 @@ export class ChromosomeComponent implements OnChanges {
         let locationInChromosome: number = +genotypePreview.get('location').split(':')[1];
         let x: number = locationInChromosome * this.scale + this.startingPoint;
         let proband: boolean = genotypePreview.get('inChS').indexOf('prb') != -1;
-        let male: boolean = genotypePreview.get('inChS')[3] == 'M';
+        let sex: string = genotypePreview.get('inChS')[3];
         let stackIndex;
 
         let stackIndexMap: Map<number, boolean> = new Map();
@@ -166,7 +169,7 @@ export class ChromosomeComponent implements OnChanges {
         this.variants.push({
           x: x,
           figure: getFigureByEffect(genotypePreview.get('effectType')),
-          color: male ? 'blue' : 'red',
+          color: COLORS[sex],
           stackIndex: stackIndex,
           proband: proband,
           genes: genotypePreview.get('genes'),
