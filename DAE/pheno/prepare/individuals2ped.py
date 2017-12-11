@@ -440,7 +440,7 @@ class FamilyToPedigree(object):
         dads = [fm for fm in family_members if fm.role == Role.dad]
         dads_count = len(dads)
         assert dads_count < 2, \
-            "{}: {} moms - {}".format(family_name, dads_count, dads)
+            "{}: {} dads - {}".format(family_name, dads_count, dads)
 
         probands = [fm for fm in family_members if fm.role == Role.prb]
         probands_count = len(probands)

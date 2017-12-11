@@ -150,7 +150,10 @@ class QueryDownloadView(QueryBaseView):
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
 
             columns = dataset.get_download_columns()
-            columns.remove('pedigree')
+            try:
+                columns.remove('pedigree')
+            except ValueError:
+                pass
 
             variants_data = generate_response(
                 dataset.get_variants(safe=True, **data),
