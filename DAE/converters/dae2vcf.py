@@ -28,15 +28,31 @@ class DaeToVcf(object):
                     dataset_id, dataset_config.get_dataset_ids()
                 )
             )
+        kwargs = {
+            "presentInParent": [
+                "father only",
+                "mother only",
+                "mother and father",
+                "neither"
+            ],
+            "rarity": {
+                "ultraRare": True,
+                "minFreq": None,
+                "maxFreq": None
+            }
+        }
 
-        variants = dataset.get_denovo_variants(safe=True)
+        cohort = set()
+
+        variants = dataset.get_transmitted_variants(safe=True, **kwargs)
         variant_records = []
         total = 0
         counts = 0
+
         for variant in variants:
             total += 1
             try:
-                variant.countsAtt = 'Count'
+                # variant.countsAtt = 'Count'
                 variant.counts
                 # print("dir one:", dir(variant))
                 # print('location', variant.location)
@@ -45,9 +61,14 @@ class DaeToVcf(object):
                 # print('bestSt', variant.bestSt, variant.bestStAtt)
                 # print('member', variant.memberInOrder)
                 # print('counts', variant.counts)
+                cohort |= set(variant.memberInOrder)
 
-                chromosome, position, reference, alternative = \
-                    vcfVarFormat(variant.location, variant.variant)
+                try:
+                    chromosome, position, reference, alternative = \
+                        vcfVarFormat(variant.location, variant.variant)
+                except Exception as e:
+                    print(e, variant.memberInOrder, variant.location, variant.familyId)
+                    continue
                 # print(chromosome, position, reference, alternative)
 
                 variant_records.append(VcfVariant(
@@ -56,26 +77,77 @@ class DaeToVcf(object):
                     reference=reference,
                     alternative=alternative,
                     quality=100,
-                    # info={'END': position + 1},
-                    # format_={},
-                    samples=[]
+                    info={'END': position + len(alternative) - 1},
+                    format_={},
+                    samples=[],
+                    metadata=self._get_metadata_for_variant(variant)
                 ))
+                # break
             except KeyError:
                 continue
             counts += 1
+
+        cohort_set = set([x.personId for x in cohort])
+        assert len(cohort_set) == len(cohort)
 
         print("{} variants with counts, {} total ({}%)".format(
             counts, total, (counts / float(total)) * 100
         ))
 
-        writer = VcfWriter(output_filename)
+        ordered_cohort = list(cohort)
+        samples_names = [x.personId for x in ordered_cohort]
+
+        for variant in variant_records:
+            variant.samples = self._generate_samples(variant, ordered_cohort)
+
+        writer = VcfWriter(output_filename, samples_names)
         writer.write_variants(variant_records)
 
+    def _get_metadata_for_variant(self, variant):
+        return {
+            p.personId: {
+                'GT': self._get_genotype_info(index, variant),
+                'AD': self._get_alleles_coverage_info(index, variant)
+            } for index, p in enumerate(variant.memberInOrder)
+        }
+
+    @staticmethod
+    def _generate_samples(variant, cohort):
+        samples = []
+        for member in cohort:
+            if member.personId in variant.metadata:
+                samples.append(variant.metadata[member.personId])
+            else:
+                samples.append({})
+
+        return samples
+
+    @staticmethod
+    def _get_genotype_info(index, variant):
+        assert len(variant.bestSt[0]) > index, 'Ref index out of bounds'
+        assert len(variant.bestSt[1]) > index, 'Alt index out of bounds'
+        ref = variant.bestSt[0][index]
+        alt = variant.bestSt[1][index]
+
+        if ref == 2 and alt == 0:
+            return ('0', '0')
+        elif ref == 1 and alt == 1:
+            return ('0', '1')
+        raise NotImplementedError(
+            'Unknown genotype - ref={}, alt={}'.format(ref, alt))
+
+    @staticmethod
+    def _get_alleles_coverage_info(index, variant):
+        assert len(variant.counts[0]) > index, 'Ref index out of bounds'
+        assert len(variant.counts[1]) > index, 'Alt index out of bounds'
+
+        return (variant.counts[0][index], variant.counts[1][index])
 
 class VcfWriter(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, samples_labels):
         self.filename = filename
+        self.samples_labels = samples_labels
 
     def write_variants(self, variants_array):
         chromosomes = [v.chromosome for v in variants_array]
@@ -100,7 +172,6 @@ class VcfWriter(object):
                 info=variant.info,
                 samples=variant.samples
             ))
-        print('created rows')
 
         for row in rows:
             vcf_file.write(row)
@@ -116,7 +187,8 @@ class VcfWriter(object):
             'Allelic depths for the ref and alt alleles in the order listed')
         header.info.add('END', 1, 'Integer', 'Stop position of the interval')
 
-        header.add_sample('SAMPLE01')
+        for sample in self.samples_labels:
+            header.add_sample(sample)
 
         chromosomes = set([str(num) for num in range(1, 23)] + ['X', 'Y'])
         chromosomes |= additional_chromosomes
@@ -132,11 +204,11 @@ class VcfVariant(object):
 
     def __init__(self, chromosome='.', position=0, id_='.', reference='.',
                  alternative='.', quality=100, filter_='.', info=None,
-                 format_=None, samples=None):
-        # if not info:
-        #     info = {}
+                 format_=None, samples=None, metadata=None):
         if not samples:
             samples = []
+        if not metadata:
+            metadata = {}
 
         self.chromosome = chromosome
         self.position = position
@@ -148,12 +220,12 @@ class VcfVariant(object):
         self.info = info
         self.format = format_
         self.samples = samples
+        self.metadata = metadata
 
 
 class VcfVariantSample(object):
 
     def __init__(self, genotype, allele_depth, **kwargs):
-        # if kwargs
         self.genotype = genotype
         self.allele_depth = allele_depth
         self.kwargs = kwargs
@@ -168,6 +240,7 @@ def vcfVarFormat(loc, var):
         return chr, pos, mS.group(1), mS.group(2)
 
     mI = insRE.match(var)
+    # print(mI)
     if mI:
         sq = mI.group(1)
         reference = GA.getSequence(chr, pos-1, pos-1)
@@ -182,10 +255,9 @@ def vcfVarFormat(loc, var):
     raise Exception('weird variant:' + var)
 
 
-
 def main():
     converter = DaeToVcf()
-    converter.convert('AGRE_WG', './output.vcf')
+    converter.convert('SSC', './output.vcf')
 
 
 if __name__ == '__main__':
