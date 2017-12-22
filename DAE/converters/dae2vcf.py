@@ -133,10 +133,8 @@ class DaeToVcf(object):
         elif ref == 1 and alt == 1:
             return '0/1'
         elif ref == 1 and alt == 0:
-            print("Variant (1,0):", variant.location, variant.variant)
             return '0'
         elif ref == 0 and alt == 1:
-            print("Variant (0,1):", variant.location, variant.variant)
             return '1'
         raise NotImplementedError(
             'Unknown genotype - ref={}, alt={}'.format(ref, alt)
