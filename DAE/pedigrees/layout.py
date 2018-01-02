@@ -165,7 +165,7 @@ class Layout:
         individual_position = self._id_to_position[individual]
 
         ordered = list(others)
-        print(ordered)
+        # print(ordered)
         indices = [level.index(i) for i in ordered]
         indices = sorted(indices)
 
@@ -175,9 +175,9 @@ class Layout:
         right_of_common_parent = [i for i in indices if i > common_parent_index]
         right_of_common_parent_reversed = list(reversed(right_of_common_parent))
 
-        print(indices)
-        print(left_of_common_parent)
-        print(right_of_common_parent)
+        # print(indices)
+        # print(left_of_common_parent)
+        # print(right_of_common_parent)
 
         for index, parent_index in enumerate(left_of_common_parent[:-1]):
             parent = level[parent_index]
