@@ -77,6 +77,10 @@ class Realization:
             # print("max width reached!")
             return False
 
+        if self._has_forbidden_edge(new_vertex):
+            # print("_has_forbidden_edge!")
+            return False
+
         if not self._old_dangling_same(new_vertex, temp_realization):
             # print("_old_dangling_same!")
             return False
@@ -87,10 +91,6 @@ class Realization:
 
         if not self._new_active_valid(new_vertex, temp_realization):
             # print("_new_active_valid!")
-            return False
-
-        if self._has_forbidden_edge(new_vertex):
-            # print("_has_forbidden_edge!")
             return False
 
         return True
@@ -200,7 +200,7 @@ class SandwichSolver(object):
         forbidden_graph = sandwich_instance.forbidden_graph
         for count in range(0, len(forbidden_graph.edges())):
             for edges_to_remove in itertools.combinations(
-                    forbidden_graph.edges(),
+                    sorted(forbidden_graph.edges()),
                     count):
 
                 current_forbidden_graph = copy_graph(forbidden_graph)
@@ -215,6 +215,7 @@ class SandwichSolver(object):
                 if result:
                     print("removed forbidden:", count)
                     return result
+
 
     @staticmethod
     def try_solve(sandwich_instance):

@@ -25,11 +25,15 @@ class IndividualWithCoordinates:
 
 class Line:
 
-    def __init__(self, x1, y1, x2, y2):
+    def __init__(self, x1, y1, x2, y2, curved=False, curve_height=None):
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
+        self.curved = curved
+        self.curve_height = curve_height
+
+        assert self.curved == (self.curve_height is not None)
 
     def __repr__(self):
         return "[({},{}) - ({},{})]".format(self.x1, self.y1, self.x2, self.y2)
@@ -65,11 +69,13 @@ class Layout:
                 # print(moved_individuals, "aligned parents of children")
                 moved_individuals += self._align_children_of_parents()
                 # print(moved_individuals, "aligned children of parents")
+                moved_individuals += self._align_multiple_mates()
             else:
                 moved_individuals += self._align_children_of_parents()
                 # print(moved_individuals, "aligned children of parents")
                 moved_individuals += self._align_parents_of_children()
                 # print(moved_individuals, "aligned parents of children")
+                moved_individuals += self._align_multiple_mates()
 
             # moved_individuals += self._set_mates_equally_apart()
             # print(moved_individuals, "set mates equally apart")
@@ -87,32 +93,36 @@ class Layout:
 
     def _create_lines(self, y_offset=15):
         for level in self.positions:
-            num_individuals = len(level)
-
-            for index, individual in enumerate(level):
+            for start, individual in enumerate(level):
                 if individual.individual.parents:
                     self.lines.append(Line(
                         individual.x_center, individual.y,
                         individual.x_center, individual.y_center - y_offset
                     ))
 
-                if index + 1 >= num_individuals:
-                    continue
-
-                other_individual = level[index+1]
-
-                if (individual.individual.are_mates(
-                        other_individual.individual)):
-                    self.lines.append(Line(
-                        individual.x + individual.size, individual.y_center,
-                        other_individual.x, other_individual.y_center
-                    ))
-                    middle_x = (individual.x_center +
-                                other_individual.x_center) / 2.0
-                    self.lines.append(Line(
-                        middle_x, individual.y_center,
-                        middle_x, individual.y_center + y_offset
-                    ))
+                for i, other_individual in enumerate(level[start+1:]):
+                    are_next_to_eachother = (i == 0)
+                    if (individual.individual.are_mates(
+                            other_individual.individual)):
+                        if are_next_to_eachother:
+                            self.lines.append(Line(
+                                individual.x + individual.size,
+                                individual.y_center,
+                                other_individual.x, other_individual.y_center
+                            ))
+                        else:
+                            self.lines.append(Line(
+                                individual.x + individual.size,
+                                individual.y_center,
+                                other_individual.x, other_individual.y_center,
+                                True, y_offset / 2.0
+                            ))
+                        middle_x = (individual.x_center +
+                                    other_individual.x_center) / 2.0
+                        self.lines.append(Line(
+                            middle_x, individual.y_center,
+                            middle_x, individual.y_center + y_offset
+                        ))
 
             i = 0
             while i < len(level) - 1:
@@ -137,6 +147,75 @@ class Layout:
 
         for individual in self._id_to_position.values():
             individual.x = individual.x - min_x + x_offset
+
+    def _align_multiple_mates(self):
+        moved = 0
+        for level in self._individuals_by_rank:
+            for individual in level:
+                if len(individual.mating_units) > 2:
+                    moved += self._align_multiple_mates_of_individual(
+                        individual, level)
+
+        return moved
+
+    def _align_multiple_mates_of_individual(self, individual, level):
+        moved = 0
+
+        others = {mu.other_parent(individual) for mu in individual.mating_units}
+        individual_position = self._id_to_position[individual]
+
+        ordered = list(others)
+        print(ordered)
+        indices = [level.index(i) for i in ordered]
+        indices = sorted(indices)
+
+        common_parent_index = level.index(individual)
+
+        left_of_common_parent = [i for i in indices if i < common_parent_index]
+        right_of_common_parent = [i for i in indices if i > common_parent_index]
+        right_of_common_parent_reversed = list(reversed(right_of_common_parent))
+
+        print(indices)
+        print(left_of_common_parent)
+        print(right_of_common_parent)
+
+        for index, parent_index in enumerate(left_of_common_parent[:-1]):
+            parent = level[parent_index]
+            parent_position = self._id_to_position[parent]
+            to_compare = level[left_of_common_parent[index + 1]]
+
+            arch_width = individual_position.x - parent_position.x
+
+            compare_width = \
+                individual_position.x - self._id_to_position[to_compare].x + individual_position.size
+
+            if arch_width < 2*compare_width:
+                # print("left of", individual_position)
+                # print("arch_width", arch_width, "2*compare_width", 2*compare_width)
+                # print("moving", parent_position, "with", -(2*compare_width - arch_width))
+
+                moved += self._move([parent_position], -(2*compare_width - arch_width))
+
+        for index, parent_index in enumerate(right_of_common_parent_reversed[:-1]):
+            parent = level[parent_index]
+            parent_position = self._id_to_position[parent]
+
+            to_compare = level[right_of_common_parent_reversed[index + 1]]
+
+            arch_width = parent_position.x - individual_position.x
+
+            compare_width = \
+                self._id_to_position[to_compare].x - individual_position.x + individual_position.size
+
+            if arch_width < 2 * compare_width:
+                # print("parent", parent_index)
+                # print("to_compare", right_of_common_parent_reversed[index + 1])
+                # print("right of", individual_position)
+                # print("arch_width", arch_width, "2*compare_width", 2*compare_width)
+                # print("moving", parent_position, "with", -(2*compare_width - arch_width))
+                moved += self._move([parent_position], 2*compare_width - arch_width)
+
+        return moved
 
     def _set_mates_equally_apart(self):
         moved = 0
@@ -218,10 +297,7 @@ class Layout:
 
         offset = parents_center - children_center
 
-        if abs(offset) > 1e-5:
-            return self._move(children, offset)
-
-        return 0
+        return self._move(children, offset)
 
     def _align_parents_of_children(self):
         moved = 0
@@ -249,16 +325,24 @@ class Layout:
         mother_position = self._id_to_position[mother]
         father_position = self._id_to_position[father]
 
+        ordered_parents = [mother_position, father_position]
+        if mother_position.x > father_position.x:
+            ordered_parents = [father_position, mother_position]
+
         parents_center = (mother_position.x + father_position.x) / 2.0
 
         offset = children_center - parents_center
+        if offset > 0:
+            return self._move(ordered_parents[1:], offset)
+        return self._move(ordered_parents[0:1], offset)
 
-        if abs(offset) > 1e-5:
-            return self._move([mother_position, father_position], offset)
-        return 0
 
     def _move(self, individuals, offset, already_moved=set(), min_gap=8.0):
         assert len(individuals) > 0
+
+        if abs(offset) < 1e-5:
+            return 0
+
         individuals = list(set(individuals) - already_moved)
 
         min_individual = reduce(lambda a, b: a if a.x < b.x else b,

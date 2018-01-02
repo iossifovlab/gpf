@@ -252,6 +252,12 @@ class MatingUnit(IndividualGroup):
     def children_set(self):
         return set(self.children.individuals)
 
+    def other_parent(self, this_parent):
+        assert this_parent == self.mother or this_parent == self.father
+        if this_parent == self.mother:
+            return self.father
+        return self.mother
+
 
 def main():
     parser = argparse.ArgumentParser(description="Draw PDP.")

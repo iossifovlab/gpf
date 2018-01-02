@@ -3,6 +3,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
+from matplotlib.path import Path
 from matplotlib.backends.backend_pdf import PdfPages
 
 
@@ -36,6 +37,7 @@ class OffsetLayoutDrawer(object):
             figure = plt.figure()
 
         figure.lines += self._draw_lines()
+        figure.patches += self._draw_rounded_lines()
 
         figure.patches += self._draw_members()
 
@@ -45,11 +47,41 @@ class OffsetLayoutDrawer(object):
         result = []
 
         for line in self._layout.lines:
-            result.append(mlines.Line2D(
-                [line.x1 + self._x_offset, line.x2 + self._x_offset],
-                [line.y1 + self._y_offset, line.y2 + self._y_offset],
-                color="black"
-            ))
+            if not line.curved:
+                result.append(mlines.Line2D(
+                    [line.x1 + self._x_offset, line.x2 + self._x_offset],
+                    [line.y1 + self._y_offset, line.y2 + self._y_offset],
+                    color="black"
+                ))
+
+        return result
+
+    def _draw_rounded_lines(self):
+        result = []
+
+        for line in self._layout.lines:
+            if line.curved:
+                start = (line.x1 + self._x_offset, line.y1 + self._y_offset)
+                end = (line.x2 + self._x_offset, line.y2 + self._y_offset)
+                verts = [
+                    start,
+                    (start[0], start[1] + line.curve_height),
+                    (end[0], end[1] + line.curve_height),
+                    end,
+                ]
+
+                codes = [
+                    Path.MOVETO,
+                    Path.CURVE4,
+                    Path.CURVE4,
+                    Path.CURVE4,
+                ]
+
+                path = Path(verts, codes)
+
+                result.append(
+                    mpatches.PathPatch(path, facecolor='none')
+                )
 
         return result
 
