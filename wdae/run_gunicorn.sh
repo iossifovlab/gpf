@@ -2,10 +2,12 @@
 
 
 gunicorn \
-    --workers=16 \
+    --preload \
+    --worker-class gthread \
+    --workers 4 \
+    --threads 4 \
     --bind=127.0.0.1:8000 \
     --timeout=600 \
     --access-logfile logs/access.log \
     --error-logfile logs/error.log \
-    --preload \
     wdae.gunicorn_wsgi:application
