@@ -56,7 +56,9 @@ class Layout:
         self._create_positioned_individuals()
         self._create_lines()
 
-    def _optimize_drawing(self, max_iter=100):
+    def _optimize_drawing(self, max_iter=50):
+        # for level in self._individuals_by_rank:
+        #     print(level)
         moved_individuals = -1
         counter = 1
 
@@ -186,34 +188,27 @@ class Layout:
 
             arch_width = individual_position.x - parent_position.x
 
-            compare_width = \
-                individual_position.x - self._id_to_position[to_compare].x + individual_position.size
+            compare_width = individual_position.x - \
+                self._id_to_position[to_compare].x + individual_position.size
 
             if arch_width < 2*compare_width:
-                # print("left of", individual_position)
-                # print("arch_width", arch_width, "2*compare_width", 2*compare_width)
-                # print("moving", parent_position, "with", -(2*compare_width - arch_width))
+                moved += self._move(
+                    [parent_position], -(2*compare_width - arch_width))
 
-                moved += self._move([parent_position], -(2*compare_width - arch_width))
-
-        for index, parent_index in enumerate(right_of_common_parent_reversed[:-1]):
+        for i, parent_index in enumerate(right_of_common_parent_reversed[:-1]):
             parent = level[parent_index]
             parent_position = self._id_to_position[parent]
 
-            to_compare = level[right_of_common_parent_reversed[index + 1]]
+            to_compare = level[right_of_common_parent_reversed[i + 1]]
 
             arch_width = parent_position.x - individual_position.x
 
-            compare_width = \
-                self._id_to_position[to_compare].x - individual_position.x + individual_position.size
+            compare_width = self._id_to_position[to_compare].x - \
+                individual_position.x + individual_position.size
 
             if arch_width < 2 * compare_width:
-                # print("parent", parent_index)
-                # print("to_compare", right_of_common_parent_reversed[index + 1])
-                # print("right of", individual_position)
-                # print("arch_width", arch_width, "2*compare_width", 2*compare_width)
-                # print("moving", parent_position, "with", -(2*compare_width - arch_width))
-                moved += self._move([parent_position], 2*compare_width - arch_width)
+                moved += self._move(
+                    [parent_position], 2*compare_width - arch_width)
 
         return moved
 
@@ -335,7 +330,6 @@ class Layout:
         if offset > 0:
             return self._move(ordered_parents[1:], offset)
         return self._move(ordered_parents[0:1], offset)
-
 
     def _move(self, individuals, offset, already_moved=set(), min_gap=8.0):
         assert len(individuals) > 0

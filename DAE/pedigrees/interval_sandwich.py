@@ -2,6 +2,7 @@ import networkx as nx
 import itertools
 from collections import deque
 import copy
+import pprint
 
 
 class Interval(object):
@@ -198,10 +199,21 @@ class SandwichSolver(object):
     @staticmethod
     def solve(sandwich_instance):
         forbidden_graph = sandwich_instance.forbidden_graph
+        # print("all forbidden:", len(forbidden_graph.edges()))
+        # pprint.pprint(forbidden_graph.edges())
+        # print("all required:", len(sandwich_instance.required_graph.edges()))
+        # pprint.pprint(sandwich_instance.required_graph.edges())
+        # print("common:")
+        # pprint.pprint(set(sandwich_instance.required_graph.edges()) &
+        #               set(sandwich_instance.forbidden_graph.edges()))
         for count in range(0, len(forbidden_graph.edges())):
             for edges_to_remove in itertools.combinations(
                     sorted(forbidden_graph.edges()),
                     count):
+                # if count == 2:
+                #     return
+
+                # print("removing", edges_to_remove)
 
                 current_forbidden_graph = copy_graph(forbidden_graph)
                 current_forbidden_graph.remove_edges_from(edges_to_remove)
@@ -213,7 +225,7 @@ class SandwichSolver(object):
 
                 result = SandwichSolver.try_solve(current_instance)
                 if result:
-                    print("removed forbidden:", count)
+                    print("removed:", count)  # , edges_to_remove)
                     return result
 
 

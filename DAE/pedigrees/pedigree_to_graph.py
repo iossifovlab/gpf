@@ -96,7 +96,15 @@ class Pedigree:
         same_rank_edges = {frozenset([i1, i2])
                            for i1 in individuals for i2 in individuals
                            if i1 is not i2 and i1.rank is i2.rank}
+        multiple_partners_edges = {
+            frozenset([i1, i2])
+            for i1 in individuals
+            for i2 in [m.other_parent(i1) for m in i1.mating_units]
+            if len(i1.mating_units) > 2
+        }
+        same_rank_edges -= multiple_partners_edges
         same_rank_edges = set(map(tuple, same_rank_edges))
+
 
         # Eb+
         mating_edges = {(i, m) for i in individuals for m in mating_units
@@ -134,6 +142,14 @@ class Pedigree:
         required_set = mating_edges | sibship_edges | mates_siblings_edges
         forbidden_set = same_rank_edges | same_generation_not_mates \
             | same_generation_not_siblings | intergenerational_edges
+
+        # print("same_rank_edges", len(same_rank_edges), same_rank_edges)
+        # print("same_generation_not_mates",
+        #       len(same_generation_not_mates), same_generation_not_mates)
+        # print("same_generation_not_siblings",
+        #       len(same_generation_not_siblings), same_generation_not_siblings)
+        # print("intergenerational_edges",
+        #       len(intergenerational_edges), intergenerational_edges)
 
         # print("all vertices", len(all_vertices), all_vertices)
         # print("required edges", len(required_set), required_set)
