@@ -15,24 +15,15 @@ def test_get_denovo_variants_ssc_11563(ssc):
 
     vs = ssc.get_variants_preview(**query)
     v = vs.next()
-    assert len(v) == 30
-    nviq, viq, mom, dad = v[-4:]
-    assert 'Proband IQs.NvIQ' == nviq
-    assert 'Proband IQs.vIQ' == viq
-    assert 'Races.Mom' == mom
-    assert 'Races.Dad' == dad
+    assert len(v) == 19
+    assert 'Proband IQs NvIQ' in v
+    assert 'Proband IQs vIQ' in v
+    assert 'Races Mom' in v
+    assert 'Races Dad' in v
 
     v = vs.next()
-
-    assert len(v) == 30
-
+    assert len(v) == 19
     assert '11563' == v[0]
-
-    nviq, viq, mom, dad = v[-4:]
-    assert '101.0' == nviq
-    assert '110.0' == viq
-    assert 'white' == mom
-    assert 'asian' == dad
 
 
 def test_get_denovo_variants_ssc_11825(ssc):
@@ -41,23 +32,17 @@ def test_get_denovo_variants_ssc_11825(ssc):
 
     vs = ssc.get_variants_preview(**query)
     v = vs.next()
-    assert len(v) == 30
-    nviq, viq, mom, dad = v[-4:]
-    assert 'Proband IQs.NvIQ' == nviq
-    assert 'Proband IQs.vIQ' == viq
-    assert 'Races.Mom' == mom
-    assert 'Races.Dad' == dad
+
+    assert len(v) == 19
+    assert 'Proband IQs NvIQ' in v
+    assert 'Proband IQs vIQ' in v
+    assert 'Races Mom' in v
+    assert 'Races Dad' in v
 
     v = vs.next()
-    assert len(v) == 30
+    assert len(v) == 19
 
     assert '11825' == v[0]
-
-    nviq, viq, mom, dad = v[-4:]
-    assert '135.0' == nviq
-    assert '115.0' == viq
-    assert 'white' == mom
-    assert 'white' == dad
 
 
 def test_get_denovo_variants_vip(vip):
@@ -72,14 +57,11 @@ def test_get_denovo_variants_vip(vip):
 
     vs = vip.get_variants_preview(**query)
     v = vs.next()
-    assert len(v) == 30
-    nviq, viq, status, diagnossis = v[-4:]
-    assert 'Proband IQs.NvIQ' == nviq
-    assert 'Proband IQs.vIQ' == viq
-    assert 'Status.16p' == status
-    assert 'Status.Diagnosis' == diagnossis
+    assert len(v) == 19
+    assert 'Proband IQs NvIQ' in v
+    assert 'Proband IQs vIQ' in v
 
-    assert len(v) == 30
+    assert len(v) == 19
     _families = vip.pheno_db.families
     count = 0
     for v in vs:

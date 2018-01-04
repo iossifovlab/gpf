@@ -347,13 +347,6 @@ class RarityMixin(object):
         return 0
 
 
-class InChildMixin(object):
-
-    @staticmethod
-    def get_in_child(**kwargs):
-        return None
-
-
 class GeneSymsMixin(object):
 
     @staticmethod
@@ -454,17 +447,33 @@ class FamiliesMixin(object):
         return set(family_ids)
 
 
+class GenomicScoresMixin(object):
+
+    @staticmethod
+    def get_genomic_scores(safe=True, **kwargs):
+        genomic_scores = kwargs.get('genomicScores', None)
+        if not genomic_scores:
+            return []
+        genomic_scores_filter = [{
+            'metric': score['metric'],
+            'min': (score['rangeStart']
+                    if score['rangeStart'] else float("-inf")),
+            'max': score['rangeEnd'] if score['rangeEnd'] else float("inf"),
+        } for score in genomic_scores]
+        return genomic_scores_filter
+
+
 class QueryBase(
         EffectTypesMixin,
         VariantTypesMixin,
         StudyTypesMixin,
         ChildGenderMixin,
         PresentInMixin,
-        InChildMixin,
         GeneSymsMixin,
         RegionsMixin,
         RarityMixin,
-        FamiliesMixin):
+        FamiliesMixin,
+        GenomicScoresMixin):
 
     IN_CHILD_TYPES = [
         'prb',

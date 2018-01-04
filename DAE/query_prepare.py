@@ -66,6 +66,9 @@ def prepare_gene_syms(data):
         gl = gene_sym
         return set(gl)
 
+    if isinstance(gene_sym, set):
+        return gene_sym
+
     elif isinstance(gene_sym, str) or isinstance(gene_sym, unicode):
         gl = [s.strip()
               for s in str(gene_sym).replace(',', ' ').split()

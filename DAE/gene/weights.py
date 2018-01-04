@@ -24,8 +24,12 @@ class Weights(GeneInfoConfig):
         self.name = weights_name
         self.section_name = 'geneWeights.{}'.format(weights_name)
         self.desc = self.config.get(self.section_name, 'desc')
-        self.step = self.config.get(self.section_name, 'step')
+        self.bins = int(self.config.get(self.section_name, 'bins'))
+        self.xscale = self.config.get(self.section_name, 'xscale')
+        self.yscale = self.config.get(self.section_name, 'yscale')
+
         self.df = None
+        self._dict = None
         self._load_weights()
 
     def _load_weights(self):
@@ -40,9 +44,6 @@ class Weights(GeneInfoConfig):
         self.df.dropna(inplace=True)
 
         return self.df
-
-#     def weights(self):
-#         return self.df[self.name]
 
     def min(self):
         """
@@ -70,11 +71,11 @@ class Weights(GeneInfoConfig):
         df.dropna(inplace=True)
 
         if wmin is None or wmin < df.min() or wmin > df.max():
-            wmin = df.min()
+            wmin = float("-inf")
         if wmax is None or wmax < df.min() or wmax > df.max():
-            wmax = df.max()
+            wmax = float("inf")
 
-        index = np.logical_and(df.values >= wmin, df.values <= wmax)
+        index = np.logical_and(df.values >= wmin, df.values < wmax)
         genes = self.df[index].gene
         return set(genes.values)
 
@@ -82,10 +83,9 @@ class Weights(GeneInfoConfig):
         """
         Returns dictionary of all defined weights keyed by gene symbol.
         """
-        result = {}
-        for _index, row in self.df.iterrows():
-            result[row['gene']] = row[self.name]
-        return result
+        if self._dict is None:
+            self._dict = self.df.set_index('gene')[self.name].to_dict()
+        return self._dict
 
     def to_df(self):
         """

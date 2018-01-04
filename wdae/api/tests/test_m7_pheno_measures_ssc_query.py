@@ -5,8 +5,10 @@ Created on Oct 23, 2015
 '''
 from rest_framework import status
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+import pytest
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class Test(BaseAuthenticatedUserTest):
 
     def test_verbal_iq_from0_to50(self):

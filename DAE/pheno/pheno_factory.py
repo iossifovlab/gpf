@@ -5,48 +5,36 @@ Created on Dec 8, 2016
 '''
 
 from pheno.utils.configuration import PhenoConfig
-import os
+import logging
 
 
-class PhenoFactory(PhenoConfig):
+LOGGER = logging.getLogger(__name__)
 
-    def __init__(self):
+
+class PhenoFactory(object):
+
+    def __init__(self, config_filename=None):
         super(PhenoFactory, self).__init__()
-        dbs = self.config.get('pheno', 'dbs')
-        available = [dbname.strip() for dbname in dbs.split(',')]
-        available = [dbname for dbname in available
-                     if self._check_pheno_db(dbname)]
-        self._available = set(available)
+        self.config = PhenoConfig.from_file(config_filename)
 
-    def _check_pheno_db(self, dbname):
-        assert self.config.has_section('cache_dir')
-        assert self.config.has_option('cache_dir', 'dir')
+    def get_dbfile(self, dbname):
+        return self.config.get_dbfile(dbname)
 
-        if not self.config.has_section(dbname):
-            # print("section: {} not found".format(dbname))
-            return False
-        if not self.config.has_option(dbname, 'cache_file'):
-            # print("section: {} option {} not found".format(
-            #    dbname, 'cache_file'))
-            return False
-        dbfile = self.get_dbfile(dbname=dbname)
-        if not os.path.isfile(dbfile):
-            # print("cache file for {} not found: {}".format(dbname, dbfile))
-            return False
-
-        return True
+    def get_dbconfig(self, dbname):
+        return self.config.get_dbconfig(dbname)
 
     def has_pheno_db(self, dbname):
-        return dbname in self._available
+        return dbname in self.config.pheno.list("dbs")
 
     def get_pheno_db_names(self):
-        return [n for n in self._available]
+        return self.config.pheno.list("dbs")[:]
 
     def get_pheno_db(self, dbname):
         if not self.has_pheno_db(dbname):
             raise ValueError("can't find pheno DB {}; available pheno DBs: {}"
-                             .format(dbname, self._available))
+                             .format(dbname, self.get_pheno_db_names()))
         import pheno_db
-        phdb = pheno_db.PhenoDB(pheno_db=dbname)
+        LOGGER.info("loading pheno db <{}>".format(dbname))
+        phdb = pheno_db.PhenoDB(dbfile=self.get_dbfile(dbname))
         phdb.load()
         return phdb

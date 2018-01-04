@@ -11,6 +11,10 @@ from importlib import import_module
 from DAE import pheno
 from pheno_browser_api.common import PhenoBrowserCommon
 from common.progress import red_print
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class WdaePrecomputeConfig(AppConfig):
@@ -36,10 +40,12 @@ class WdaePrecomputeConfig(AppConfig):
         from preloaded.register import register
         for key, cls_name in settings.PRELOAD_CONFIG.items():
             m, c = self._split_class_name(cls_name)
+            logger.info("preloading  {}.{}".format(m, c))
             module = import_module(m)
             cls = getattr(module, c)
             preload = cls()
             register(key, preload)
+        logger.warn("PRELOADING DONE!!!")
 
     def _check_pheno_browser_api_cache(self):
         pheno_db_names = pheno.get_pheno_db_names()
@@ -53,6 +59,7 @@ class WdaePrecomputeConfig(AppConfig):
                 )
 
     def ready(self):
+        logger.warn("WdaePrecomputeConfig.read() started...")
         AppConfig.ready(self)
         self._check_pheno_browser_api_cache()
         self._load_precomputed()

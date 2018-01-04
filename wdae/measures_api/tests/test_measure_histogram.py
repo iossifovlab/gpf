@@ -16,7 +16,7 @@ class Test(APITestCase):
     def test_non_verbal_iq_histogram(self):
         data = {
             "datasetId": "SSC",
-            "measure": "pheno_common.non_verbal_iq",
+            "measure": "ssc_core_descriptive.ssc_diagnosis_nonverbal_iq",
         }
         response = self.client.post(self.URL, data, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -27,7 +27,9 @@ class Test(APITestCase):
         self.assertIn('min', data)
         self.assertIn('max', data)
 
-        self.assertEquals('pheno_common.non_verbal_iq', data['measure'])
+        self.assertEquals(
+            'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
+            data['measure'])
         self.assertEquals(9.0, data['min'])
         self.assertEquals(161.0, data['max'])
 

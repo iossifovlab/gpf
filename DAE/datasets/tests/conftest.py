@@ -43,5 +43,12 @@ def ssc_pheno(request):
 
 
 @pytest.fixture(scope='session')
+def vip_pheno():
+    pf = DAE.pheno
+    db = pf.get_pheno_db('vip')
+    return db
+
+
+@pytest.fixture(scope='session')
 def spark(request,  datasets_factory):
     return datasets_factory.get_dataset('SPARK')

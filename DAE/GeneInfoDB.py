@@ -46,8 +46,11 @@ def mergeIntervals(intsP):
     return r
 
 class GeneInfoDB:
-    def __init__(self, confFile, wd):
-        self.config = ConfigParser.SafeConfigParser({'wd':wd});
+    def __init__(self, confFile, wd, data_dir):
+        self.config = ConfigParser.SafeConfigParser({
+            'wd':wd, 
+            'data': data_dir
+        });
         self.config.read(confFile)
 
         self.geneInfoF = self.config.get('GeneInfo', 'geneInfoFile')
@@ -127,7 +130,10 @@ class GeneInfoDB:
         else:
             raise Exception("Unknown name space for the " + id + " gene terms: |" + gt.geneNS + "|" + inNS + "|")
         return gt
-        
+
+    def getChromosomesFile(self):
+        return self.config.get('chromosomes', 'file')
+
     def _loadGeneRegions(self):
         geneRegionsFile = self.config.get('GeneInfo', 'geneRgnsFile')
         f = gzip.open(geneRegionsFile)

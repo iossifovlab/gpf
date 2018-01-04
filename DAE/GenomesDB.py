@@ -26,13 +26,16 @@ gmDB.....
 '''
 
 class GenomesDB:
-    def __init__(self, daeDir, confFile=None):
+    def __init__(self, daeDir, confFile=None, data_dir=None):
         
         self.daeDir = daeDir
         if not confFile:
             confFile = daeDir + "/genomesDB.conf"
 
-        self.config = ConfigParser.SafeConfigParser({'wd':daeDir})
+        self.config = ConfigParser.SafeConfigParser({
+            'wd': daeDir,
+            'data': data_dir
+        })
         self.config.optionxform = lambda x: x
         self.config.read(confFile)
 

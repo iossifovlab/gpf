@@ -4,18 +4,12 @@ Created on Aug 3, 2015
 @author: lubo
 '''
 from rest_framework import status
-from rest_framework.test import APITestCase
 from precompute import register
 from common_reports_api.serializers import StudyVariantReportsSerializer
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
-class Test(APITestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+class Test(BaseAuthenticatedUserTest):
 
     def test_get_ok(self):
         url = '/api/v3/common_reports/variant_reports/IossifovWE2014'

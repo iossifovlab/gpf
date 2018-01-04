@@ -4,7 +4,7 @@ Created on Mar 25, 2017
 @author: lubo
 '''
 import copy
-from datasets.tests.requests import EXAMPLE_QUERY_SSC
+from datasets.tests.requests import EXAMPLE_QUERY_SSC, EXAMPLE_QUERY_VIP
 
 
 def test_verbal_iq_interval_ssc(ssc):
@@ -12,16 +12,16 @@ def test_verbal_iq_interval_ssc(ssc):
     query['phenoFilters'] = [
         {
             'measureType': 'continuous',
-            'measure': 'pheno_common.verbal_iq',
+            'measure': 'ssc_core_descriptive.ssc_diagnosis_verbal_iq',
             'role': 'prb',
             'mmin': 10,
-            'mmax': 20
+            'mmax': 11.1
         }
     ]
     res = ssc.get_family_pheno_filters(**query)
     assert len(res) == 1
 
-    assert len(res[0]) == 120
+    assert len(res[0]) == 15
 
 
 def test_head_circumference_interval(ssc):
@@ -32,7 +32,7 @@ def test_head_circumference_interval(ssc):
             'measure': 'ssc_commonly_used.head_circumference',
             'role': 'prb',
             'mmin': 49,
-            'mmax': 50
+            'mmax': 50.1
         }
     ]
     res = ssc.get_family_pheno_filters(**query)
@@ -79,7 +79,7 @@ def test_head_circumference_interval_variants(ssc):
             'measure': 'ssc_commonly_used.head_circumference',
             'role': 'prb',
             'mmin': 49,
-            'mmax': 50
+            'mmax': 50.1
         }
     ]
     vs = ssc.get_variants(**query)
@@ -117,10 +117,10 @@ def test_pheno_filter_combine_variants(ssc):
         },
         {
             'measureType': 'continuous',
-            'measure': 'pheno_common.non_verbal_iq',
+            'measure': 'ssc_core_descriptive.ssc_diagnosis_nonverbal_iq',
             'role': 'prb',
             'mmin': 80,
-            'mmax': 80
+            'mmax': 80.1
         }
     ]
 
@@ -229,3 +229,29 @@ def test_pheno_filters_combine_categorical_q2(ssc):
     vs = ssc.get_variants(**query)
     vs = list(vs)
     assert len(vs) == 0
+
+
+def test_verbal_iq_interval_vip(vip):
+
+    query = copy.deepcopy(EXAMPLE_QUERY_VIP)
+    query['phenoFilters'] = [
+        {
+            'measureType': 'continuous',
+            'measure': 'diagnosis_summary.best_nonverbal_iq',
+            'role': 'prb',
+            'mmin': 51,
+            'mmax': 51.1
+        }
+    ]
+    query['effectTypes'] = [
+        'Missense',
+    ]
+    query["presentInParent"] = [
+        "neither"
+    ]
+    del query['pedigreeSelector']
+
+    vs = vip.get_variants(**query)
+    vs = list(vs)
+    assert len(vs) == 2
+    assert vs[0].familyId == '14904.x3-14904.x6'

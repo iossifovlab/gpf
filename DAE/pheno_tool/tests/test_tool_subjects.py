@@ -4,55 +4,56 @@ Created on Nov 25, 2016
 @author: lubo
 '''
 from pheno_tool.tool import PhenoTool
+from pheno.common import Role
 
 
 def test_pheno_tool_studies_proband_subjects(phdb, all_ssc_studies):
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'],
+    tool = PhenoTool(phdb, all_ssc_studies, roles=[Role.prb],
                      measure_id='ssc_commonly_used.height')
     assert tool is not None
 
-    persons = tool._studies_persons(all_ssc_studies, ['prb'])
+    persons = tool._studies_persons(all_ssc_studies, [Role.prb])
     assert persons is not None
 
     assert 2870 == len(persons)
     for p in persons.values():
-        assert 'prb' == p.role
+        assert Role.prb.name == p.role
 
 
 def test_pheno_tool_studies_siblings(phdb, all_ssc_studies):
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['sib'],
+    tool = PhenoTool(phdb, all_ssc_studies, roles=[Role.sib],
                      measure_id='ssc_commonly_used.height')
     assert tool is not None
 
-    persons = tool._studies_persons(all_ssc_studies, ['sib'])
+    persons = tool._studies_persons(all_ssc_studies, [Role.sib])
     assert persons is not None
 
     assert 2696 == len(persons)
     for p in persons.values():
-        assert 'sib' == p.role
+        assert Role.sib.name == p.role
 
 
 def test_studies_probands_and_siblings(phdb, all_ssc_studies):
-    probands = PhenoTool._studies_persons(all_ssc_studies, ['prb'])
+    probands = PhenoTool._studies_persons(all_ssc_studies, [Role.prb])
     assert 2870 == len(probands)
 
-    siblings = PhenoTool._studies_persons(all_ssc_studies, ['sib'])
+    siblings = PhenoTool._studies_persons(all_ssc_studies, [Role.sib])
     assert 2696 == len(siblings)
 
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'sib'],
+    tool = PhenoTool(phdb, all_ssc_studies, roles=[Role.prb, Role.sib],
                      measure_id='ssc_commonly_used.height')
-    persons = PhenoTool._studies_persons(all_ssc_studies, ['prb', 'sib'])
+    persons = PhenoTool._studies_persons(all_ssc_studies, [Role.prb, Role.sib])
     for pid, person in persons.items():
         if pid in probands:
             assert tool._assert_persons_equal(person, probands[pid])
-            assert person.role == 'prb'
+            assert person.role == Role.prb.name
         else:
             assert tool._assert_persons_equal(person, siblings[pid])
             assert pid in siblings
-            assert person.role == 'sib'
+            assert person.role == Role.sib.name
 
 
-def test_report_wrong_probands_roles(phdb, all_ssc_studies):
+def test_report_wrong_probands_roles(all_ssc_studies):
     wrong_probands = set(["11664.p2", "12310.p2", "11324.p2", "11370.p2"])
     for st in all_ssc_studies:
         for fam in st.families.values():
@@ -62,30 +63,30 @@ def test_report_wrong_probands_roles(phdb, all_ssc_studies):
 
 
 def test_studies_proband_and_siblings_subjects(phdb, all_ssc_studies):
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'sib'],
+    tool = PhenoTool(phdb, all_ssc_studies, roles=[Role.prb, Role.sib],
                      measure_id='ssc_commonly_used.height')
     assert tool is not None
 
-    persons = PhenoTool._studies_persons(all_ssc_studies, ['prb', 'sib'])
+    persons = PhenoTool._studies_persons(all_ssc_studies, [Role.prb, Role.sib])
     assert persons is not None
 
     assert 5566 == len(persons)
     for p in persons.values():
-        assert 'prb' == p.role or 'sib' == p.role
+        assert Role.prb.name == p.role or Role.sib.name == p.role
 
 
 def test_list_of_subjects(phdb, all_ssc_studies):
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb', 'sib'],
+    tool = PhenoTool(phdb, all_ssc_studies, roles=[Role.prb, Role.sib],
                      measure_id='ssc_commonly_used.height')
     persons = tool.list_of_subjects()
-    assert 5170 == len(persons)
+    assert 5177 == len(persons)
 
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['prb'],
+    tool = PhenoTool(phdb, all_ssc_studies, roles=[Role.prb],
                      measure_id='ssc_commonly_used.height')
     persons = tool.list_of_subjects()
-    assert 2719 == len(persons)
+    assert 2726 == len(persons)
 
-    tool = PhenoTool(phdb, all_ssc_studies, roles=['sib'],
+    tool = PhenoTool(phdb, all_ssc_studies, roles=[Role.sib],
                      measure_id='ssc_commonly_used.height')
     persons = tool.list_of_subjects()
     assert 2451 == len(persons)

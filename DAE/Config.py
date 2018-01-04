@@ -12,14 +12,17 @@ import ConfigParser
 class Config:
 
     def __init__(self):
-
+        self._dae_data_dir = os.environ.get('DAE_DATA_DIR', None)
         self._daeDir = os.environ['DAE_DB_DIR']
 
-        self._daeConfig = ConfigParser.SafeConfigParser({'wd': self._daeDir})
+        self._daeConfig = ConfigParser.SafeConfigParser({
+            'wd': self._daeDir,
+            'data': self._dae_data_dir
+        })
         self._daeConfig.optionxform = lambda x: x
         self._daeConfig.read(os.path.join(self._daeDir, "DAE.conf"))
 
-        self._phenoDBFile = self._daeConfig.get('phenoDB', 'file')
+        # self._phenoDBFile = self._daeConfig.get('phenoDB', 'file')
 
         self._phenoDBconfFile = self._daeConfig.get('phenoDB', 'confFile')
         self._phenoDBdir = self._daeConfig.get('phenoDB', 'dir')
@@ -42,8 +45,12 @@ class Config:
         return self._daeDir
 
     @property
-    def phenoDBFile(self):
-        return self._phenoDBFile
+    def data_dir(self):
+        return self._dae_data_dir
+
+#     @property
+#     def phenoDBFile(self):
+#         return self._phenoDBFile
 
     @property
     def phenoDBdir(self):

@@ -6,9 +6,9 @@ Created on May 26, 2017
 import sys
 
 
-def progress(verbose=1):
+def progress(text='.', verbose=1):
     if verbose:
-        sys.stderr.write('.')
+        sys.stderr.write(text)
 
 
 def progress_nl(verbose=1):

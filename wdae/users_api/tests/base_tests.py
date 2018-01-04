@@ -17,6 +17,8 @@ class BaseAuthenticatedUserTest(APITestCase):
         Dataset.recreate_dataset_perm('SD', [])
         Dataset.recreate_dataset_perm('SSC', [])
         Dataset.recreate_dataset_perm('VIP', [])
+        Dataset.recreate_dataset_perm('SPARK', [])
+        Dataset.recreate_dataset_perm('AGRE_WG', [])
 
         User = get_user_model()
         u = User.objects.create(

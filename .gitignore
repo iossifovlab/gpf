@@ -7,5 +7,12 @@ wdae.sql
 .project
 .pydevproject
 .settings
+.ipynb_checkpoints
 .vagrant
 .ipynb_checkpoints
+.coverage
+htmlcov
+coverage.xml
+junit.xml
+logs
+output

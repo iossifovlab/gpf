@@ -7,8 +7,10 @@ import unittest
 from rest_framework.test import APITestCase
 import urllib
 from rest_framework import status
+import pytest
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class Test(APITestCase):
 
     def setUp(self):

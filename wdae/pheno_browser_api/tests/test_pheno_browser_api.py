@@ -24,7 +24,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('default', response.data)
         self.assertIn('instruments', response.data)
-        self.assertEquals(58, len(response.data['instruments']))
+        self.assertEquals(103, len(response.data['instruments']))
 
     def test_measures_ssc_commonly_used(self):
         url = "{}?dataset_id=SSC&instrument=ssc_commonly_used".format(
@@ -40,7 +40,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('default', response.data)
         self.assertIn('instruments', response.data)
-        self.assertEquals(67, len(response.data['instruments']))
+        self.assertEquals(71, len(response.data['instruments']))
 
     def test_measures_vip_diagnosis_summary(self):
         url = "{}?dataset_id=VIP&instrument=diagnosis_summary".format(
@@ -50,7 +50,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertIn('base_image_url', response.data)
         self.assertIn('measures', response.data)
 
-        self.assertEquals(58, len(response.data['measures']))
+        self.assertEquals(169, len(response.data['measures']))
 
     def test_measures_vip_bad_json(self):
         problem_urls = [

@@ -333,6 +333,23 @@ class Variant:
         res = [ph, res]
         return res
 
+    def __eq__(self, other):
+        return (self.variant == other.variant and self.location == other.location
+            and self.familyId == other.familyId)
+
+    def __lt__(self, other):
+        return self.sort_key < other.sort_key
+
+    CHROMOSOMES_ORDER = dict(
+        {str(x): '0' + str(x) for x in range(1, 10)}.items() +
+        {str(x): str(x) for x in range(10, 23)}.items() +
+        { 'X': '23', 'Y': '24' }.items())
+
+    @property
+    def sort_key(self):
+        chromosome, position = self.location.split(':')
+        return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome), int(position.split('-')[0]))
+
     def pedigree_v3(self, legend):
         def get_color(p):
             return legend.get_color(p.atts[legend.id])
@@ -398,7 +415,7 @@ PRESENT_IN_CHILD_FILTER_MAPPING = {
     "autism and unaffected":
     lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
     "affected and unaffected":
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh),
     "neither":
     lambda inCh: len(inCh) == 0,
 
@@ -409,11 +426,11 @@ PRESENT_IN_CHILD_FILTER_MAPPING = {
     ("unaffected only", 'F'):
     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
     ("autism and unaffected", 'F'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('F' == inCh[3] or 'F' == inCh[7])),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+                  ('F' in inCh)),
     ("affected and unaffected", 'F'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('F' == inCh[3] or 'F' == inCh[7])),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+                  ('F' in inCh)),
     ("neither", 'F'):
     lambda inCh: (len(inCh) == 0),
 
@@ -424,11 +441,11 @@ PRESENT_IN_CHILD_FILTER_MAPPING = {
     ("unaffected only", 'M'):
     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
     ("autism and unaffected", 'M'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('M' == inCh[3] or 'M' == inCh[7])),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+                  ('M' in inCh)),
     ("affected and unaffected", 'M'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('M' == inCh[3] or 'M' == inCh[7])),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+                  ('M' in inCh)),
     ("neither", 'M'):
     lambda inCh: (len(inCh) == 0),
     'F':

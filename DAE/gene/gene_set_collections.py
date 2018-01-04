@@ -3,6 +3,8 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import os
 from gene.config import GeneInfoConfig
 import sqlite3
@@ -12,6 +14,10 @@ import traceback
 from DAE import vDB
 from itertools import groupby
 import cPickle
+from pheno.pheno_regression import PhenoRegression
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class CacheMixin(object):
@@ -98,7 +104,7 @@ class DenovoGeneSetsType(object):
         assert self.gene_term is not None
 
         if gene_set_id not in self.gene_term.t2G:
-            print("gene set {} not found...".format(gene_set_id))
+            LOGGER.warn("gene set {} not found...".format(gene_set_id))
             return set()
         syms = self.gene_term.t2G[gene_set_id].keys()
         return set(syms)
@@ -378,12 +384,13 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         }
         return res
 
-    def get_measure(self, measure_id):
+    def get_nonverbal_iq(self):
         from pheno.pheno_factory import PhenoFactory
         pf = PhenoFactory()
         pheno_db = pf.get_pheno_db('ssc')
+        pheno_reg = PhenoRegression.build_from_config('ssc')
         assert pheno_db is not None
-
+        measure_id = pheno_reg.get_nonverbal_iq_measure_id(None)
         nvIQ = pheno_db.get_measure_values(measure_id)
         assert nvIQ is not None
 
@@ -394,7 +401,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return res
 
     def prb_set(self, studies):
-        nvIQ = self.get_measure('pheno_common.non_verbal_iq')
+        nvIQ = self.get_nonverbal_iq()
 
         res = {
             "LGDs": self.genes_sets(

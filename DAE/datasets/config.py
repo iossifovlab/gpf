@@ -9,6 +9,8 @@ from Config import Config
 import collections
 import os
 
+from datasets.metadataset import MetaDataset
+
 
 class PedigreeSelector(dict):
 
@@ -78,22 +80,30 @@ class DatasetsConfig(object):
         else:
             dae_config = Config()
             wd = dae_config.daeDir
-            self.config = ConfigParser.SafeConfigParser({'wd': wd})
+            data_dir = dae_config.data_dir
+            self.config = ConfigParser.SafeConfigParser({
+                'wd': wd,
+                'data': data_dir
+            })
             self.config.read(dae_config.variantsDBconfFile)
 
-    def get_datasets(self):
+    def get_datasets(self, include_meta=False):
+        return [self.get_dataset_desc(dataset_id)
+                for dataset_id in self.get_dataset_ids(include_meta)]
+
+    def get_dataset_ids(self, include_meta=False):
         res = []
         for section in self.config.sections():
             (section_type, section_id) = self.split_section(section)
             if section_id is None:
                 continue
-            if section_type == 'dataset':
-                dataset = self.get_dataset_desc(section_id)
-                res.append(dataset)
+            if section_type == 'dataset' and \
+                    (include_meta or section_id != MetaDataset.ID):
+                res.append(section_id)
         return res
 
-    def _get_boolean(self, section, option):
-        res = False
+    def _get_boolean(self, section, option, default=False):
+        res = default
         if self.config.has_option(section, option):
             res = self.config.getboolean(section, option)
         return res
@@ -125,6 +135,8 @@ class DatasetsConfig(object):
             section, 'genotypeBrowser.hasPresentInParent')
         study_types = self._get_boolean(
             section, 'genotypeBrowser.hasStudyTypes')
+        genes_block_show_all = self._get_boolean(section,
+            'genotypeBrowser.genesBlockShowAll', True)
 
         family_filters = \
             self._get_boolean(
@@ -138,6 +150,21 @@ class DatasetsConfig(object):
             self._get_genotype_browser_pheno_filters(section)
         family_study_filters = \
             self._get_genotype_browser_family_study_filters(section)
+        genotype_columns = \
+            self._get_genotype_browser_genotype_columns(section)
+        genomic_metrics = \
+            self._get_genotype_browser_genomic_metrics(section)
+
+        default_columns = \
+            self._get_string_list(
+                section, 'genotypeBrowser.genotype.columns', []) + \
+            self._get_string_list(
+                section, 'genotypeBrowser.pheno.columns', [])
+        preview_columns = \
+            self._get_string_list(section, 'genotypeBrowser.previewColumns', default_columns)
+
+        download_columns = \
+            self._get_string_list(section, 'genotypeBrowser.downloadColumns', default_columns)
 
         return {
             'mainForm': main_form,
@@ -149,9 +176,14 @@ class DatasetsConfig(object):
             'hasStudyTypes': study_types,
             'hasFamilyFilters': family_filters,
             'hasPedigreeSelector': pedigree_selector,
+            'genesBlockShowAll': genes_block_show_all,
             'phenoColumns': pheno_columns,
             'phenoFilters': pheno_filters,
-            'familyStudyFilters': family_study_filters
+            'familyStudyFilters': family_study_filters,
+            'genotypeColumns': genotype_columns,
+            'genomicMetrics': genomic_metrics,
+            'previewColumns': preview_columns,
+            'downloadColumns': download_columns,
         }
 
     def _get_genotype_browser_family_study_filters(self, section):
@@ -222,6 +254,70 @@ class DatasetsConfig(object):
             'measureFilter': measure_filter
         }
 
+    def _get_genotype_browser_genomic_metrics(self, section):
+        result = []
+        metrics = self._get_string_list(
+            section, 'genotypeBrowser.genomicMetrics')
+        if not metrics:
+            return None
+
+        for metric in metrics:
+            metric_id, metric_name = metric.split(":")
+            result.append({
+                'id': metric_id,
+                'name': metric_name
+            })
+
+        return result
+
+    def _get_genotype_browser_genotype_columns(self, section):
+        result = []
+        columns = self._get_string_list(
+            section, 'genotypeBrowser.genotype.columns')
+        if not columns:
+            return None
+
+        for col in columns:
+            column = self._get_genotype_browser_genotype_column(section, col)
+            result.append(column)
+
+        return result
+
+    def _get_genotype_browser_genotype_column(self, section, col_id):
+        prefix = 'genotypeBrowser.genotype.{}'.format(col_id)
+        name = self._get_string(
+            section, '{}.{}'.format(prefix, 'name'))
+        source = self._get_string(
+            section, '{}.{}'.format(prefix, 'source'))
+        slots = self._get_string_list(
+            section, '{}.{}'.format(prefix, 'slots'))
+        column = {}
+        column['id'] = col_id
+        column['name'] = name
+        column['source'] = source
+
+        column_slots = []
+        for slot in slots or []:
+            slot_arr = slot.split(":")
+            if len(slot_arr) == 1:
+                source = slot_arr[0]
+                label = slot_arr[0]
+                label_format = "%s"
+            elif len(slot_arr) == 2:
+                source, label = slot_arr
+                label_format = "%s"
+            elif len(slot_arr) == 3:
+                source, label, label_format = slot_arr
+            column_slots.append(
+                {
+                    'source': source,
+                    'name': label,
+                    'id': source,
+                    'format': label_format
+                })
+        column['slots'] = column_slots
+        return column
+
     def _get_genotype_browser_pheno_columns(self, section):
         result = []
         columns = self._get_string_list(
@@ -242,6 +338,7 @@ class DatasetsConfig(object):
         slots = self._get_string_list(
             section, '{}.{}'.format(prefix, 'slots'))
         column = {}
+        column['id'] = col_id
         column['name'] = name
 
         column_slots = []
@@ -252,7 +349,7 @@ class DatasetsConfig(object):
                     'role': role,
                     'source': source,
                     'name': label,
-                    'id': '{}.{}'.format(name, label),
+                    'id': '{}.{}'.format(role, source),
                 })
         column['slots'] = column_slots
         return column

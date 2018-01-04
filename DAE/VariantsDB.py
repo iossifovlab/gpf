@@ -102,6 +102,9 @@ class StudyGroup:
         if self.vdb._config.has_option(self._configSection, attName):
             return self.vdb._config.get(self._configSection, attName)
 
+    def __repr__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.name)
+
 
 class Study:
 
@@ -124,6 +127,9 @@ class Study:
             self.description = self.vdb._config.get(
                 self._configSection, 'description')
         self.phdb = None
+
+    def __repr__(self):
+        return '<{}: {}>'.format(self.__class__.__name__, self.name)
 
     def get_targeted_genes(self):
         if not self.vdb._config.has_option(self._configSection, "targetedGenes"):
@@ -179,8 +185,19 @@ class Study:
         for v in vs:
             yield v
 
+    def genomic_scores_filter(self, variant, genomicScores):
+        try:
+            return all([score['min'] <= float(variant.atts[score['metric']])
+                        < score['max']
+                        for score in genomicScores])
+        except ValueError:
+            return False
+        except KeyError:
+            return False
+        return False
+
     def get_denovo_variants(self, inChild=None, presentInChild=None,
-                            presentInParent=None,
+                            presentInParent=None, genomicScores=[],
                             gender=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None,
@@ -204,8 +221,11 @@ class Study:
             reg_matcher = regions_matcher(regionS)
 
         dnvData = self._load_dnv_data(callSet)
+
         for v in dnvData:
             if familyIds and v.familyId not in familyIds:
+                continue
+            if not self.genomic_scores_filter(v, genomicScores):
                 continue
             if pipFilter and not pipFilter(v.fromParentS):
                 continue
@@ -247,7 +267,7 @@ class Study:
             else:
                 yield v
 
-    def _load_dnv_data(self, callSetP):
+    def _load_dnv_data(self, callSetP=None):
         callSet = "default"
         propName = "denovoCalls.files"
 
@@ -261,9 +281,18 @@ class Study:
         flsS = self.vdb._config.get(self._configSection, propName)
         varList = []
         for fl in flsS.split('\n'):
+
+            def float_conv(x):
+                try:
+                    return float(x or np.nan)
+                except:
+                    return np.nan
             print >> sys.stderr, "Loading file", fl, "for collection ", self.name
             dt = genfromtxt(fl, delimiter='\t', dtype=None, names=True,
-                            case_sensitive=True)
+                            case_sensitive=True, deletechars='', 
+                            converters={"SSC-freq": float_conv,
+                                        "EVS-freq": float_conv,
+                                        "E65-freq": float_conv})
             if len(dt.shape) == 0:
                 dt = dt.reshape(1)
             hasCenter = 'center' in dt.dtype.names
@@ -292,6 +321,8 @@ class Study:
 
     def _load_family_data(self):
         fdFile = self.vdb._config.get(self._configSection, "familyInfo.file")
+        print(fdFile)
+
         fdFormat = self.vdb._config.get(
             self._configSection, "familyInfo.fileFormat")
 
@@ -684,8 +715,10 @@ class Study:
 
 class VariantsDB:
 
-    def __init__(self, daeDir, confFile=None, sfariDB=None, giDB=None, 
-                 phDB=None, genomesDB=None):
+    def __init__(self, daeDir,
+                 confFile=None, sfariDB=None, giDB=None,
+                 phDB=None, genomesDB=None,
+                 data_dir=None):
         self.sfariDB = sfariDB
         self.giDB = giDB
 
@@ -695,7 +728,10 @@ class VariantsDB:
         if not confFile:
             confFile = daeDir + "/variantDB.conf"
 
-        self._config = ConfigParser.SafeConfigParser({'wd': daeDir})
+        self._config = ConfigParser.SafeConfigParser({
+            'wd': daeDir,
+            'data': data_dir
+        })
         self._config.optionxform = lambda x: x
 
         self._config.read(confFile)
@@ -925,116 +961,116 @@ class VariantsDB:
         print >>sys.stderr, "nCompleteIns:", nCompleteIns
         return vars
 
-    def get_denovo_sets(self, dnvStds):
-        r = GeneTerms()
-        r.geneNS = "sym"
-
-        def getMeasure(mName):
-            from DAE import phDB
-            strD = dict(zip(phDB.families, phDB.get_variable(mName)))
-            # fltD = {f:float(m) for f,m in strD.items() if m!=''}
-            fltD = {}
-            for f, m in strD.items():
-                try:
-                    mf = float(m)
-                    # if mf>70:
-                    fltD[f] = float(m)
-                except:
-                    pass
-            return fltD
-
-        nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq')
-
-        def addSet(setname, genes, desc=None):
-            if not genes:
-                return
-            if desc:
-                r.tDesc[setname] = desc
-            else:
-                r.tDesc[setname] = setname
-            for gSym in genes:
-                r.t2G[setname][gSym] += 1
-                r.g2T[gSym][setname] += 1
-
-        def genes(inChild, effectTypes, inGenesSet=None, minIQ=None, maxIQ=None):
-            if inGenesSet:
-                vs = self.get_denovo_variants(
-                    dnvStds, effectTypes=effectTypes, inChild=inChild, geneSyms=inGenesSet)
-            else:
-                vs = self.get_denovo_variants(
-                    dnvStds, effectTypes=effectTypes, inChild=inChild)
-            if not (minIQ or maxIQ):
-                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects}
-            if minIQ:
-                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] >= minIQ}
-            if maxIQ:
-                return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] < maxIQ}
-
-        def set_genes(geneSetDef):
-            gtId, tmId = geneSetDef.split(":")
-            return set(self.giDB.getGeneTerms(gtId).t2G[tmId].keys())
-
-        def recSingleGenes(inChild, effectTypes):
-            vs = self.get_denovo_variants(
-                dnvStds, effectTypes=effectTypes, inChild=inChild)
-
-            gnSorted = sorted([[ge['sym'], v]
-                               for v in vs for ge in v.requestedGeneEffects])
-            sym2Vars = {sym: [t[1] for t in tpi]
-                        for sym, tpi in groupby(gnSorted, key=lambda x: x[0])}
-            sym2FN = {sym: len(set([v.familyId for v in vs]))
-                      for sym, vs in sym2Vars.items()}
-            return {g for g, nf in sym2FN.items() if nf > 1}, {g for g, nf in sym2FN.items() if nf == 1}
-
-        addSet("prb.LoF",             genes('prb', 'LGDs'))
-        recPrbLGDs, sinPrbLGDs = recSingleGenes('prb', 'LGDs')
-        addSet("prb.LoF.Recurrent",   recPrbLGDs)
-        addSet("prb.LoF.Single",      sinPrbLGDs)
-
-        addSet("prb.LoF.Male",        genes('prbM', 'LGDs'))
-        addSet("prb.LoF.Female",      genes('prbF', 'LGDs'))
-
-        addSet("prb.LoF.LowIQ",       genes('prb', 'LGDs', maxIQ=90))
-        addSet("prb.LoF.HighIQ",      genes('prb', 'LGDs', minIQ=90))
-
-        addSet("prb.LoF.FMRP",        genes(
-            'prb', 'LGDs', set_genes("main:FMR1-targets")))
-        # addSet("prbLGDsInCHDs",     genes('prb','LGDs',set("CHD1,CHD2,CHD3,CHD4,CHD5,CHD6,CHD7,CHD8,CHD9".split(','))))
-
-        addSet("prb.Missense",        genes('prb', 'missense'))
-        addSet("prb.Missense.Male",   genes('prbM', 'missense'))
-        addSet("prb.Missense.Female", genes('prbF', 'missense'))
-        addSet("prb.Synonymous",      genes('prb', 'synonymous'))
-
-        addSet("sib.LoF",             genes('sib', 'LGDs'))
-        addSet("sib.Missense",        genes('sib', 'missense'))
-        addSet("sib.Synonymous",      genes('sib', 'synonymous'))
-
-        '''
-        addSet("A",      recPrbLGDs, "recPrbLGDs")
-        addSet("B",      genes('prbF','LGDs'), "prbF")
-        addSet("C",      genes('prb','LGDs',set_genes("main:FMR1-targets")), "prbFMRP")
-        addSet("D",      genes('prb','LGDs',maxIQ=90),"prbML")
-        addSet("E",      genes('prb','LGDs',minIQ=90),"prbMH")
-
-        addSet("AB",     set(r.t2G['A']) | set(r.t2G['B']))
-        addSet("ABC",    set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C']))
-        addSet("ABCD",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) )
-        addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
-        '''
-
-        recPrbCNVs, sinPrbCNVs = recSingleGenes('prb', 'CNVs')
-        addSet("prb.CNV.Recurrent",     recPrbCNVs)
-
-        addSet("prb.CNV",   genes('prb', 'CNVs'))
-        addSet("prb.Dup",   genes('prb', 'CNV+'))
-        addSet("prb.Del",   genes('prb', 'CNV-'))
-
-        addSet("sib.CNV",   genes('sib', 'CNVs'))
-        addSet("sib.Dup",   genes('sib', 'CNV+'))
-        addSet("sib.Del",   genes('sib', 'CNV-'))
-
-        return r
+#     def get_denovo_sets(self, dnvStds):
+#         r = GeneTerms()
+#         r.geneNS = "sym"
+# 
+#         def getMeasure(mName):
+#             from DAE import phDB
+#             strD = dict(zip(phDB.families, phDB.get_variable(mName)))
+#             # fltD = {f:float(m) for f,m in strD.items() if m!=''}
+#             fltD = {}
+#             for f, m in strD.items():
+#                 try:
+#                     mf = float(m)
+#                     # if mf>70:
+#                     fltD[f] = float(m)
+#                 except:
+#                     pass
+#             return fltD
+# 
+#         nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq')
+# 
+#         def addSet(setname, genes, desc=None):
+#             if not genes:
+#                 return
+#             if desc:
+#                 r.tDesc[setname] = desc
+#             else:
+#                 r.tDesc[setname] = setname
+#             for gSym in genes:
+#                 r.t2G[setname][gSym] += 1
+#                 r.g2T[gSym][setname] += 1
+# 
+#         def genes(inChild, effectTypes, inGenesSet=None, minIQ=None, maxIQ=None):
+#             if inGenesSet:
+#                 vs = self.get_denovo_variants(
+#                     dnvStds, effectTypes=effectTypes, inChild=inChild, geneSyms=inGenesSet)
+#             else:
+#                 vs = self.get_denovo_variants(
+#                     dnvStds, effectTypes=effectTypes, inChild=inChild)
+#             if not (minIQ or maxIQ):
+#                 return {ge['sym'] for v in vs for ge in v.requestedGeneEffects}
+#             if minIQ:
+#                 return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] >= minIQ}
+#             if maxIQ:
+#                 return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] < maxIQ}
+# 
+#         def set_genes(geneSetDef):
+#             gtId, tmId = geneSetDef.split(":")
+#             return set(self.giDB.getGeneTerms(gtId).t2G[tmId].keys())
+# 
+#         def recSingleGenes(inChild, effectTypes):
+#             vs = self.get_denovo_variants(
+#                 dnvStds, effectTypes=effectTypes, inChild=inChild)
+# 
+#             gnSorted = sorted([[ge['sym'], v]
+#                                for v in vs for ge in v.requestedGeneEffects])
+#             sym2Vars = {sym: [t[1] for t in tpi]
+#                         for sym, tpi in groupby(gnSorted, key=lambda x: x[0])}
+#             sym2FN = {sym: len(set([v.familyId for v in vs]))
+#                       for sym, vs in sym2Vars.items()}
+#             return {g for g, nf in sym2FN.items() if nf > 1}, {g for g, nf in sym2FN.items() if nf == 1}
+# 
+#         addSet("prb.LoF",             genes('prb', 'LGDs'))
+#         recPrbLGDs, sinPrbLGDs = recSingleGenes('prb', 'LGDs')
+#         addSet("prb.LoF.Recurrent",   recPrbLGDs)
+#         addSet("prb.LoF.Single",      sinPrbLGDs)
+# 
+#         addSet("prb.LoF.Male",        genes('prbM', 'LGDs'))
+#         addSet("prb.LoF.Female",      genes('prbF', 'LGDs'))
+# 
+#         addSet("prb.LoF.LowIQ",       genes('prb', 'LGDs', maxIQ=90))
+#         addSet("prb.LoF.HighIQ",      genes('prb', 'LGDs', minIQ=90))
+# 
+#         addSet("prb.LoF.FMRP",        genes(
+#             'prb', 'LGDs', set_genes("main:FMR1-targets")))
+#         # addSet("prbLGDsInCHDs",     genes('prb','LGDs',set("CHD1,CHD2,CHD3,CHD4,CHD5,CHD6,CHD7,CHD8,CHD9".split(','))))
+# 
+#         addSet("prb.Missense",        genes('prb', 'missense'))
+#         addSet("prb.Missense.Male",   genes('prbM', 'missense'))
+#         addSet("prb.Missense.Female", genes('prbF', 'missense'))
+#         addSet("prb.Synonymous",      genes('prb', 'synonymous'))
+# 
+#         addSet("sib.LoF",             genes('sib', 'LGDs'))
+#         addSet("sib.Missense",        genes('sib', 'missense'))
+#         addSet("sib.Synonymous",      genes('sib', 'synonymous'))
+# 
+#         '''
+#         addSet("A",      recPrbLGDs, "recPrbLGDs")
+#         addSet("B",      genes('prbF','LGDs'), "prbF")
+#         addSet("C",      genes('prb','LGDs',set_genes("main:FMR1-targets")), "prbFMRP")
+#         addSet("D",      genes('prb','LGDs',maxIQ=90),"prbML")
+#         addSet("E",      genes('prb','LGDs',minIQ=90),"prbMH")
+# 
+#         addSet("AB",     set(r.t2G['A']) | set(r.t2G['B']))
+#         addSet("ABC",    set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C']))
+#         addSet("ABCD",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) )
+#         addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
+#         '''
+# 
+#         recPrbCNVs, sinPrbCNVs = recSingleGenes('prb', 'CNVs')
+#         addSet("prb.CNV.Recurrent",     recPrbCNVs)
+# 
+#         addSet("prb.CNV",   genes('prb', 'CNVs'))
+#         addSet("prb.Dup",   genes('prb', 'CNV+'))
+#         addSet("prb.Del",   genes('prb', 'CNV-'))
+# 
+#         addSet("sib.CNV",   genes('sib', 'CNVs'))
+#         addSet("sib.Dup",   genes('sib', 'CNV+'))
+#         addSet("sib.Del",   genes('sib', 'CNV-'))
+# 
+#         return r
 
     # THE ONES BELOW SHOULD BE MOVED
     # return a list of valid variant types, add None to this list for the UI

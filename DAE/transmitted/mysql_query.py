@@ -35,6 +35,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         'familyIds': list,
         'TMM_ALL': bool,
         'limit': int,
+        'genomicScores': list,
     }
 
     DEFAULT_QUERY = {
@@ -54,6 +55,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         'familyIds': None,
         'TMM_ALL': False,
         'limit': None,
+        'genomicScores': []
     }
 
     def _get_config_property(self, name):
@@ -84,7 +86,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         self.query = copy.deepcopy(self.DEFAULT_QUERY)
 
     def execute(self, select):
-        import MySQLdb as mdb
+        import MySQLdb as mdb  # @UnresolvedImport
         #         if not self.connection:
         #             self.connect()
         LOGGER.info("creating new mysql connection")
@@ -125,6 +127,24 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             if self['minAltFreqPrcnt']:
                 where.append(
                     ' ( tsv.alt_freq >= {} ) '.format(self['minAltFreqPrcnt']))
+
+        res = ' AND '.join(where)
+        return res
+
+    def _build_genomic_scores_where(self):
+        where = []
+        for score in self['genomicScores']:
+            column_names = {
+                'SSC-freq': 'tsv.ssc_freq',
+                'EVS-freq': 'tsv.evs_freq',
+                'E65-freq': 'tsv.e65_freq'
+            }
+            if score['min'] != float("-inf"):
+                where.append('( {} >= {} )'.format(
+                    column_names[score['metric']], score['min']))
+            if score['max'] != float("inf"):
+                where.append('( {} < {} )'.format(
+                    column_names[score['metric']], score['max']))
 
         res = ' AND '.join(where)
         return res
@@ -191,8 +211,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
 
         res = m.group(1), int(m.group(2)), int(m.group(3))
         return " ( tsv.chrome = '{}' AND " \
-            "tsv.position > {} AND " \
-            "tsv.position < {} ) ".format(*res)
+            "tsv.position >= {} AND " \
+            "tsv.position <= {} ) ".format(*res)
 
     def _build_regions_where(self):
         assert self['regionS']
@@ -221,9 +241,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
                           self['presentInParent']))
         w = [self.PRESENT_IN_PARENT_MAPPING[pip]
              for pip in self['presentInParent']]
-        # print("PRESENT_IN_PARENT: {}".format(w))
         if len(set(w)) == 4:
-            # print("PRESENT_IN_PARENT: {}".format(set(w)))
             return None
 
         where = " ( {} ) ".format(' OR '.join(w))
@@ -323,12 +341,15 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         if self['regionS']:
             w = self._build_regions_where()
             if w is None:
-                print "bad regions: {}".format(self['regionS'])
+                LOGGER.warn("bad regions: {}".format(self['regionS']))
             else:
                 where.append(w)
         fw = self._build_freq_where()
         if fw:
-            where.append(self._build_freq_where())
+            where.append(fw)
+        genomic_scores = self._build_genomic_scores_where()
+        if genomic_scores:
+            where.append(genomic_scores)
         if not where:
             return ""
         w = ' AND '.join(where)
@@ -471,8 +492,6 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         except Exception as ex:
             LOGGER.error("unexpected db error: %s", ex)
             traceback.print_exc()
-            print("unexpected db error: {}".format(ex))
-            # connection.close()
             raise StopIteration
 
     def get_transmitted_variants(self, **kwargs):
@@ -503,6 +522,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             "where {}".format(where)
 
         LOGGER.debug("select: %s", select)
+        connection = None
+        cursor = None
         try:
             connection, cursor = self.execute(select)
             v = cursor.fetchone()
@@ -516,7 +537,6 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         except StopIteration:
             connection.close()
         except Exception as ex:
-            print("unexpected db error: %s", ex)
             traceback.print_exc()
             LOGGER.error("unexpected db error: %s", ex)
             if connection:
@@ -534,6 +554,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             "on tfv.summary_variant_id = tsv.id " \
             "where {}".format(where)
 
+        connection = None
+        cursor = None
         try:
             connection, cursor = self.execute(select)
             v = cursor.fetchone()

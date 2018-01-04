@@ -6,8 +6,10 @@ Created on Apr 26, 2016
 import unittest
 from helpers.default_ssc_study import get_ssc_all, get_ssc_denovo,\
     get_ssc_transmitted, get_ssc_denovo_studies, get_ssc_transmitted_studies
+import pytest
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class Test(unittest.TestCase):
 
     def test_default_ssc_all(self):
@@ -34,6 +36,3 @@ class Test(unittest.TestCase):
         for st in res:
             self.assertTrue(st.has_transmitted)
             self.assertFalse(st.has_denovo)
-
-if __name__ == "__main__":
-    unittest.main()

@@ -9,10 +9,12 @@ from helpers.dae_query import prepare_summary
 import logging
 import itertools
 from helpers.wdae_query_variants import prepare_gene_sets, wdae_query_wrapper
+import pytest
 
 LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class VariantsTests(unittest.TestCase):
 
     def test_studies_empty(self):
@@ -49,6 +51,7 @@ class VariantsTests(unittest.TestCase):
         self.assertFalse(fail)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class CombinedTests(unittest.TestCase):
     TEST_DATA_1 = {"denovoStudies": ["ALL WHOLE EXOME"],
                    "transmittedStudies": ["none"],
@@ -114,6 +117,7 @@ class CombinedTests(unittest.TestCase):
             self.assertTrue('prbF' in v[23])
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class GeneRegionCombinedTests(unittest.TestCase):
     TEST_DATA = {"denovoStudies": [],
                  "transmittedStudies": ["w1202s766e611"],
@@ -135,6 +139,7 @@ class GeneRegionCombinedTests(unittest.TestCase):
             self.assertTrue(loc <= 1020000, "%s: %s" % (str(loc), str(v[3])))
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class IvanchoSubmittedQueryTests(unittest.TestCase):
     TEST_DATA = {'geneRegionType': 'on',
                  'familyIds': '',
@@ -167,6 +172,7 @@ class IvanchoSubmittedQueryTests(unittest.TestCase):
         self.assertTrue(count > 0)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class PreviewQueryTests(unittest.TestCase):
     PREVIEW_TEST_1 = {"genes": "All",
                       "geneTerm": "",

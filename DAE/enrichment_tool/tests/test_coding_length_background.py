@@ -7,7 +7,8 @@ import numpy as np
 
 from enrichment_tool.background import CodingLenBackground
 import pytest
-from DAE import get_gene_sets_symNS
+from gene.gene_set_collections import GeneSetsCollection
+# from DAE import get_gene_sets_symNS
 
 
 def test_coding_length_background_default():
@@ -32,9 +33,13 @@ def background(request):
 
 @pytest.fixture(scope='module')
 def gene_syms(request):
-    gt = get_gene_sets_symNS('main')
-    gene_set = gt.t2G['FMRP Tuschl'].keys()
-    return gene_set
+    # gt = get_gene_sets_symNS('main')
+    # gene_set = gt.t2G['FMRP Tuschl'].keys()
+
+    gsc = GeneSetsCollection('main')
+    gsc.load()
+    gene_set = gsc.get_gene_set('FMRP Tuschl')
+    return gene_set['syms']
 
 
 def test_load(background):

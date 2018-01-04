@@ -10,6 +10,11 @@ from pheno_tool_api.genotype_helper import GenotypeHelper
 from functools import partial
 from django.http.response import StreamingHttpResponse
 import json
+from pheno.common import Role, Gender
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class PhenoToolView(APIView):
@@ -50,30 +55,32 @@ class PhenoToolView(APIView):
         result = tool.calc(variants_df, gender_split=True)
         return {
             "effect": effect,
-            "maleResults": cls.get_result_by_gender(result, 'M'),
-            "femaleResults": cls.get_result_by_gender(result, 'F'),
+            "maleResults": cls.get_result_by_gender(result, Gender.M),
+            "femaleResults": cls.get_result_by_gender(result, Gender.F),
         }
 
-    def get_normalize_measure_id(self, measure_id, normalize_by, pheno_db):
+    def get_normalize_measure_id(
+            self, measure_id, normalize_by, pheno_reg):
         if normalize_by == "non-verbal iq":
-            return pheno_db.get_nonverbal_iq_measure_id(measure_id)
+            return pheno_reg.get_nonverbal_iq_measure_id(measure_id)
         elif normalize_by == "age":
-            return pheno_db.get_age_measure_id(measure_id)
+            return pheno_reg.get_age_measure_id(measure_id)
 
     def prepare_pheno_tool(self, data):
         dataset_id = data['datasetId']
         measure_id = data['measureId']
         dataset = self.datasets_factory.get_dataset(dataset_id)
         normalize_by = [
-            self.get_normalize_measure_id(measure_id,
-                                          normalize_by_elem,
-                                          dataset.pheno_db)
+            self.get_normalize_measure_id(
+                measure_id,
+                normalize_by_elem,
+                dataset.pheno_reg)
             for normalize_by_elem in data['normalizeBy']
         ]
         normalize_by = filter(lambda n: n is not None, normalize_by)
 
         tool = PhenoTool(
-            dataset.pheno_db, dataset.studies, roles=['prb'],
+            dataset.pheno_db, dataset.studies, roles=[Role.prb],
             measure_id=measure_id, normalize_by=normalize_by
         )
 
@@ -89,6 +96,11 @@ class PhenoToolView(APIView):
                     assert res['positive']['deviation'] == 0
                     assert res['pValue'] == 'NA'
                     res['positive']['mean'] = res['negative']['mean']
+                if res['negative']['count'] == 0:
+                    assert res['negative']['mean'] == 0
+                    assert res['negative']['deviation'] == 0
+                    assert res['pValue'] == 'NA'
+                    res['negative']['mean'] = res['positive']['mean']
 
     @staticmethod
     def _build_report_description(measure_id, normalize_by):
@@ -120,7 +132,7 @@ class PhenoToolView(APIView):
             return Response(response)
 
         except NotAuthenticated:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 

@@ -9,6 +9,11 @@ from rest_framework.exceptions import NotAuthenticated
 import traceback
 from genotype_browser.views import QueryBaseView
 import numpy as np
+from pheno.common import MeasureType
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 
 class PhenoMeasuresView(QueryBaseView):
@@ -41,18 +46,18 @@ class PhenoMeasuresView(QueryBaseView):
                 res = [
                     {
                         'measure': m.measure_id,
-                        'domain': m.value_domain.split(',')
+                        'domain': m.values_domain.split(',')
                     }
                     for m in res.values()
                 ]
             return Response(res, status=status.HTTP_200_OK)
         except NotAuthenticated:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         except Exception:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -74,7 +79,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
             assert dataset.pheno_db.has_measure(pheno_measure)
 
             measure = dataset.pheno_db.get_measure(pheno_measure)
-            assert measure.measure_type == 'continuous'
+            assert measure.measure_type == MeasureType.continuous
 
             df = dataset.pheno_db.get_measure_values_df(
                 pheno_measure)
@@ -96,12 +101,12 @@ class PhenoMeasureHistogramView(QueryBaseView):
             return Response(result, status=status.HTTP_200_OK)
 
         except NotAuthenticated:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         except Exception:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -121,31 +126,36 @@ class PhenoMeasurePartitionsView(QueryBaseView):
             assert dataset.pheno_db.has_measure(pheno_measure)
 
             df = dataset.pheno_db.get_measure_values_df(pheno_measure)
-            mmin = float(data["min"])
-            mmax = float(data["max"])
+
+            try:
+                mmin = float(data["min"])
+            except TypeError:
+                mmin = float("-inf")
+
+            try:
+                mmax = float(data["max"])
+            except TypeError:
+                mmax = float("inf")
 
             total = 1.0 * len(df)
 
             ldf = df[df[pheno_measure] < mmin]
-            rdf = df[df[pheno_measure] > mmax]
+            rdf = df[df[pheno_measure] >= mmax]
             mdf = df[np.logical_and(df[pheno_measure] >= mmin,
-                                    df[pheno_measure] <= mmax)]
+                                    df[pheno_measure] < mmax)]
 
-            res = {"measure": pheno_measure,
-                   "min": mmin,
-                   "max": mmax,
-                   "left": {"count": len(ldf), "percent": len(ldf) / total},
+            res = {"left": {"count": len(ldf), "percent": len(ldf) / total},
                    "mid": {"count": len(mdf), "percent": len(mdf) / total},
                    "right": {"count": len(rdf), "percent": len(rdf) / total}}
             return Response(res)
 
         except NotAuthenticated:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         except Exception:
-            print("error while processing genotype query")
+            logger.exception("error while processing genotype query")
             traceback.print_exc()
 
             return Response(status=status.HTTP_400_BAD_REQUEST)

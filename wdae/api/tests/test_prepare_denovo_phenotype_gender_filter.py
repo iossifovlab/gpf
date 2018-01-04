@@ -4,8 +4,10 @@ from DAE import vDB
 from Variant import present_in_child_filter
 from query_prepare import prepare_denovo_phenotype_gender_filter1, \
     prepare_gender_filter
+import pytest
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
 
     @classmethod
@@ -146,6 +148,7 @@ class PrepareDenovoPhenotypeGenderFilterAutismStudyTests(unittest.TestCase):
         self.assertFalse(f(''))
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class PrepareDenovoPhenotypeGenderFilterSchizophreniaTests(unittest.TestCase):
 
     @classmethod

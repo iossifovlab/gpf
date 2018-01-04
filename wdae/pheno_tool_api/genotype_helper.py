@@ -6,6 +6,9 @@ Created on Nov 21, 2016
 import pandas as pd
 from collections import Counter
 from Variant import variantInMembers
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class GenotypeHelper(object):
@@ -21,7 +24,7 @@ class GenotypeHelper(object):
                     seen.add(vid)
                     result[p] += 1
                 else:
-                    print("skipping {}".format(vid))
+                    logger.info("skipping {}".format(vid))
         return result
 
     @classmethod

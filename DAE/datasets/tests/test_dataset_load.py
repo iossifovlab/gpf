@@ -26,3 +26,18 @@ def test_dataset_vip_supplement_pedigree_selector(vip):
     for p in vip.persons.values():
         assert p.atts['16pstatus']
         assert p.atts['phenotype']
+
+
+def test_dataset_pheno_families_load(vip):
+    vip.load_pheno_families()
+    vip.load_families()
+
+    for gf, pf in vip.geno2pheno_families.items():
+        assert len(pf) == 1, gf
+
+
+def test_dataset_load_pheno_columns(vip):
+    vip.load_families()
+    vip.load_pheno_families()
+
+    vip.load_pheno_columns()

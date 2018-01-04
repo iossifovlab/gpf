@@ -3,11 +3,13 @@ import unittest
 # from query_prepare_bak import prepare_gene_sets
 import logging
 from helpers.wdae_query_variants import wdae_query_wrapper
+import pytest
 # import itertools
 
 LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class PedigreeTests(unittest.TestCase):
     TEST_DATA_1 = {'geneRegionType': 'on',
                    'denovoStudies': 'wig1202',

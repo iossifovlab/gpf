@@ -25,16 +25,41 @@ class Weights(Preload):
             w = self.loader[weight_name]
             assert w.df is not None
 
-            bars, bins = np.histogram(w.values(), 150)
-            result.append({"weight": w.name,
-                           "desc": w.desc,
-                           "min": float("{:.4G}".format(
-                               w.df[weight_name].min() - 1)),
-                           "max": float("{:.4G}".format(
-                               w.df[weight_name].max() + 1)),
-                           "bars": bars,
-                           "bins": bins,
-                           "step": w.step, })
+            step = (w.max() - w.min()) / (w.bins - 1)
+            dec = - np.log10(step)
+            dec = dec if dec >= 0 else 0
+            dec = int(dec)
+
+            bleft = np.around(w.min(), dec)
+            bright = np.around(w.max() + step, dec)
+
+            if w.xscale == "log":
+                # Max numbers of items in first bin
+                max_count = w.values().size / w.bins
+
+                # Find a bin small enough to fit max_count items
+                for bleft in range(-1, -200, -1):
+                    if (w.values() < 10 ** bleft).sum() < max_count:
+                        break
+
+                bins_in = [0] + list(np.logspace(bleft, np.log10(bright),
+                                                 w.bins))
+            else:
+                bins_in = w.bins
+
+            bars, bins = np.histogram(
+                w.values(), bins_in,
+                range=[bleft, bright])
+            # bins = np.round(bins, -int(np.log(step)))
+
+            result.append({
+                "weight": w.name,
+                "desc": w.desc,
+                "bars": bars,
+                "bins": bins,
+                "xscale": w.xscale,
+                "yscale": w.yscale
+            })
         return result
 
     def load(self):

@@ -11,7 +11,9 @@ from collections import Counter
 from Variant import variantInMembers
 from VariantAnnotation import get_effect_types
 from query_prepare import build_effect_types_list
+import logging
 
+LOGGER = logging.getLogger(__name__)
 
 DEFAULT_STUDY = 'ALL SSC'
 DEFAULT_TRANSMITTED = 'w1202s766e611'
@@ -153,7 +155,7 @@ class GenotypeHelper(object):
                     seen.add(vid)
                     result[p] += 1
                 else:
-                    print("skipping {}".format(vid))
+                    LOGGER.info("skipping {}".format(vid))
         return result
 
     def get_persons_variants_df(self, variants_type):

@@ -13,6 +13,8 @@ from common_reports_api.families import FamiliesDataCSV
 from common_reports_api.serializers import StudyVariantReportsSerializer
 from common_reports_api.studies import get_denovo_studies_names,\
     get_transmitted_studies_names
+from common_reports_api.permissions import user_has_study_permission
+import itertools
 
 
 class VariantReportsView(APIView):
@@ -23,8 +25,16 @@ class VariantReportsView(APIView):
         report = self.variant_reports[study_name]
         if not report:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = StudyVariantReportsSerializer(report)
-        return Response(serializer.data)
+        serializer = StudyVariantReportsSerializer(
+            report, context={'request': request})
+        res = serializer.data.copy()
+
+        self.augment_is_downloadable(res, study_name, request)
+        return Response(res)
+
+    def augment_is_downloadable(self, res, study_name, request):
+        res['is_downloadable'] = user_has_study_permission(
+            request.user, study_name)
 
 
 class FamiliesDataDownloadView(APIView):
@@ -35,6 +45,9 @@ class FamiliesDataDownloadView(APIView):
         report = self.variant_reports[study_name]
         if not report:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if not user_has_study_permission(request.user, study_name):
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         families_data = FamiliesDataCSV(report.studies)
         response = StreamingHttpResponse(
@@ -48,9 +61,17 @@ class FamiliesDataDownloadView(APIView):
 
 class ReportStudies(APIView):
 
-    def get(self, request):
-        return Response({"report_studies": get_denovo_studies_names() +
-                         get_transmitted_studies_names()})
+    def get(self, _request):
+        seen = set()
+        names = []
+        for name in itertools.chain(get_denovo_studies_names(),
+                                    get_transmitted_studies_names()):
+            if name[0] in seen:
+                continue
+            names.append(name)
+            seen.add(name[0])
+
+        return Response({"report_studies": names})
 
 
 class StudiesSummaries(APIView):

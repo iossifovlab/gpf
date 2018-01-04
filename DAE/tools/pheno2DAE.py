@@ -11,19 +11,9 @@ import os
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import traceback
-from pheno.prepare.nuc_ped_prepare import NucPedPrepareIndividuals,\
-    NucPedPrepareVariables, NucPedPrepareMetaVariables
-from pheno.common import config_pheno_db, adjust_config_pheno_db, dump_config,\
-    check_config_pheno_db
-
-__all__ = []
-__version__ = 0.1
-__date__ = '2017-03-20'
-__updated__ = '2017-03-20'
-
-DEBUG = 0
-TESTRUN = 0
-PROFILE = 0
+from pheno.common import dump_config,\
+    check_config_pheno_db, default_config
+from pheno.prepare.ped_prepare import PrepareVariables
 
 
 class CLIError(Exception):
@@ -40,6 +30,66 @@ class CLIError(Exception):
         return self.msg
 
 
+def parse_config(args):
+    config = default_config()
+    config.verbose = args.verbose
+    config.instruments.dir = args.instruments
+    config.pedigree = args.pedigree
+    config.db.filename = args.output
+
+    skip_columns = set([])
+    if args.skip_file:
+        assert os.path.exists(args.skip_file)
+        with open(args.skip_file, 'r') as infile:
+            columns = infile.readlines()
+            columns = [col.strip() for col in columns]
+            skip_columns = skip_columns | set(columns)
+    if args.skip_columns:
+        columns = set([
+            col for col in args.skip_columns.split(',')
+        ])
+        skip_columns = skip_columns | columns
+
+    config.skip.measures = skip_columns
+    if args.composite_fids:
+        config.family.composite_key = args.composite_fids
+
+    if args.role:
+        config.person.role.type = args.role
+    assert config.person.role.type in set(['column', 'guess'])
+
+    if args.role_mapping:
+        config.person.role.mapping = args.role_mapping
+    assert config.person.role.mapping in set(['SPARK', 'SSC', 'INTERNAL'])
+
+    if args.person_column:
+        config.person.column = args.person_column
+
+    if args.min_individuals is not None and args.min_individuals >= 0:
+        config.classification.min_individuals = args.min_individuals
+
+    if args.categorical is not None and args.categorical >= 0:
+        config.classification.categorical.min_rank = args.categorical
+
+    if args.ordinal is not None and args.ordinal >= 0:
+        config.classification.ordinal.min_rank = args.ordinal
+
+    if args.continuous is not None and args.continuous >= 0:
+        config.classification.continuous.min_rank = args.continuous
+
+    if args.tab_separated:
+        config.instruments.tab_separated = True
+
+    if args.report_only:
+        config.db.filename = 'memory'
+        config.report_only = args.report_only
+
+    if args.parallel:
+        config.parallel = args.parallel
+
+    return config
+
+
 def main(argv=None):  # IGNORE:C0111
     '''Command line options.'''
 
@@ -49,10 +99,6 @@ def main(argv=None):  # IGNORE:C0111
         sys.argv.extend(argv)
 
     program_name = os.path.basename(sys.argv[0])
-    program_version = "v%s" % __version__
-    program_build_date = str(__updated__)
-    program_version_message = '%%(prog)s %s (%s)' % (
-        program_version, program_build_date)
     program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
     program_license = '''%s
 
@@ -68,17 +114,14 @@ USAGE
             "-v", "--verbose", dest="verbose",
             action="count", help="set verbosity level [default: %(default)s]")
         parser.add_argument(
-            '-V', '--version', action='version',
-            version=program_version_message)
-        parser.add_argument(
             "-i", "--instruments",
             dest="instruments",
             help="directory where all instruments are located",
             metavar="path")
         parser.add_argument(
-            "-f", "--families",
-            dest="families",
-            help="file where families description are located",
+            "-p", "--pedigree",
+            dest="pedigree",
+            help="pedigree file where families descriptions are located",
             metavar="path")
 
         parser.add_argument(
@@ -122,55 +165,88 @@ USAGE
             help="comma separated list of instruments columns to skip")
 
         parser.add_argument(
+            '--skip-file',
+            type=str,
+            dest="skip_file",
+            help="file with list of instruments columns to skip")
+
+        parser.add_argument(
             '--composite-fids',
             action="store_true",
             dest='composite_fids',
             help="builds composite family IDs from parents' IDs"
         )
 
+        parser.add_argument(
+            '-r', '--role',
+            dest='role',
+            help='sets role handling; available choices "column", "guess"; '
+            'default value is "column"'
+        )
+
+        parser.add_argument(
+            '--role-mapping',
+            dest='role_mapping',
+            help='sets role column mapping rules; '
+            'available choices "SPARK", "SSC", "INTERNAL"; '
+            'default value is "INTERNAL"'
+        )
+
+        parser.add_argument(
+            '-P', '--person-column',
+            dest='person_column',
+            help="sets name of a column in instrument's files, "
+            "containing personId"
+        )
+
+        parser.add_argument(
+            '-T', '--tab-separated',
+            dest='tab_separated',
+            help="instruments file are tab separated",
+            action="store_true"
+        )
+
+        parser.add_argument(
+            '--report-only',
+            dest='report_only',
+            help='runs the tool in report only mode',
+            type=str
+        )
+
+        parser.add_argument(
+            '--parallel',
+            type=int,
+            dest="parallel",
+            help="size of executors pool to use for processing"
+        )
+
         # Process arguments
         args = parser.parse_args()
 
-        verbose = args.verbose
-        instruments_directory = args.instruments
-        families_filename = args.families
-        output = args.output
-        skip_columns = args.skip_columns
-        if skip_columns:
-            skip_columns = set([
-                col for col in skip_columns.split(',')
-            ])
-        composite_fids = args.composite_fids
-
-        if not families_filename:
+        if not args.output and not args.report_only:
             raise CLIError(
-                "families file must be specified")
-        if not output:
+                "output filename should be specified"
+            )
+
+        if not args.output:
+            args.output = 'output.db'
+
+        if not args.pedigree:
             raise CLIError(
-                "output filename should be specified")
+                "pedigree file must be specified")
+        if not args.instruments:
+            raise CLIError(
+                "instruments directory should be specified")
 
-        config = config_pheno_db(output)
-        config = adjust_config_pheno_db(config, args)
-
+        config = parse_config(args)
         dump_config(config)
+
         if not check_config_pheno_db(config):
             raise Exception("bad classification boundaries")
 
-        prep_individuals = NucPedPrepareIndividuals(config)
-        prep_individuals.prepare(
-            families_filename, composite_fids=composite_fids, verbose=verbose)
-
-        prep_variables = NucPedPrepareVariables(config)
-        prep_variables.setup(verbose)
-        prep_variables.prepare_pedigree_instrument(
-            prep_individuals, families_filename, verbose)
-        if instruments_directory:
-            prep_variables.prepare_instruments(
-                prep_individuals, instruments_directory, verbose,
-                skip_columns)
-
-        prep_meta = NucPedPrepareMetaVariables(config)
-        prep_meta.prepare(verbose)
+        prep = PrepareVariables(config)
+        prep.build_pedigree(args.pedigree)
+        prep.build_variables(args.instruments)
 
         return 0
     except KeyboardInterrupt:
@@ -178,8 +254,6 @@ USAGE
     except Exception, e:
         traceback.print_exc()
 
-        if DEBUG or TESTRUN:
-            raise(e)
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
@@ -187,18 +261,4 @@ USAGE
 
 
 if __name__ == "__main__":
-    if TESTRUN:
-        import doctest
-        doctest.testmod()
-    if PROFILE:
-        import cProfile
-        import pstats
-        profile_filename = 'pheno_prepare_profile.txt'
-        cProfile.run('main()', profile_filename)
-        statsfile = open("profile_stats.txt", "wb")
-        p = pstats.Stats(profile_filename, stream=statsfile)
-        stats = p.strip_dirs().sort_stats('cumulative')
-        stats.print_stats()
-        statsfile.close()
-        sys.exit(0)
     sys.exit(main())

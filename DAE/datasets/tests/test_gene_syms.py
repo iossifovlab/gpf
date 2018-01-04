@@ -27,7 +27,7 @@ def test_gene_weights_rvis_5():
         'geneWeights': {
             'weight': 'RVIS_rank',
             'rangeStart': 0,
-            'rangeEnd': 5
+            'rangeEnd': 5.01
         }
     }
 

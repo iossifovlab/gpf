@@ -18,10 +18,17 @@ class GeneInfoConfig(object):
         self.dae_config = Config()
 
         wd = self.dae_config.daeDir
-        self.config = ConfigParser.SafeConfigParser({'wd': wd})
+        data_dir = self.dae_config.data_dir
+
+        self.config = ConfigParser.SafeConfigParser({
+            'wd': wd,
+            'data': data_dir
+        })
         self.config.read(self.dae_config.geneInfoDBconfFile)
         self.gene_info = GeneInfoDB(
-            self.dae_config.geneInfoDBconfFile, self.dae_config.daeDir)
+            self.dae_config.geneInfoDBconfFile,
+            self.dae_config.daeDir,
+            self.dae_config.data_dir)
 
     @staticmethod
     def list_gene_weights():
@@ -30,7 +37,12 @@ class GeneInfoConfig(object):
         """
         dae_config = Config()
         wd = dae_config.daeDir
-        config = ConfigParser.SafeConfigParser({'wd': wd})
+        data_dir = dae_config.data_dir
+
+        config = ConfigParser.SafeConfigParser({
+            'wd': wd,
+            'data': data_dir,
+        })
         config.read(dae_config.geneInfoDBconfFile)
 
         weights = config.get('geneWeights', 'weights')

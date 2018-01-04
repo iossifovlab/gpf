@@ -5,8 +5,10 @@ Created on Apr 5, 2016
 '''
 from rest_framework import status
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+import pytest
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 class Tests(BaseAuthenticatedUserTest):
 
     def test_sentry_ssc_download_exception_request(self):
