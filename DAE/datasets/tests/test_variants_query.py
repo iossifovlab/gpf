@@ -162,9 +162,10 @@ def test_get_variants_with_rarity_interval(ssc):
     assert vs is not None
     assert 3 == count(vs)
 
+
 def test_get_complex_variants(denovodb):
     query = {
-        "datasetId": "denovo-db",
+        "datasetId": "denovo_db",
         "effectTypes": [
             "Nonsense",
             "Frame-shift",
@@ -176,13 +177,16 @@ def test_get_complex_variants(denovodb):
     }
     vs = denovodb.get_variants(**query)
     assert vs is not None
-    assert 7 == count(vs)
+    assert 1 == count(vs)
+
 
 def test_get_unknown_gender_variants(denovodb):
     query = {
-        "datasetId": "denovo-db",
+        "datasetId": "denovo_db",
         "effectTypes": [
             "Nonsense",
+            "Frame-shift",
+            "Splice-site"
         ],
         "variantTypes": [
             "complex"

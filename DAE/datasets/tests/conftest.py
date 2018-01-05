@@ -34,9 +34,11 @@ def vip(request,  datasets_factory):
 def sd(request,  datasets_factory):
     return datasets_factory.get_dataset('SD')
 
+
 @pytest.fixture(scope='session')
 def denovodb(request,  datasets_factory):
-    return datasets_factory.get_dataset('denovo-db')
+    return datasets_factory.get_dataset('denovo_db')
+
 
 @pytest.fixture(scope='session')
 def ssc_pheno(request):
