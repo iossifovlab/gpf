@@ -11,6 +11,7 @@ dependencies:
 - _license=1.1=py27_1
 - _nb_ext_conf=0.3.0=py27_0
 - alabaster=0.7.9=py27_0
+- alembic=0.9.6=py_0
 - anaconda-clean=1.0.0=py27_0
 - anaconda-client=1.5.1=py27_0
 - anaconda=custom=py27_0
