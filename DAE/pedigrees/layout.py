@@ -25,15 +25,53 @@ class IndividualWithCoordinates:
 
 class Line:
 
-    def __init__(self, x1, y1, x2, y2, curved=False, curve_height=None):
+    def __init__(self, x1, y1, x2, y2, curved=False, curve_base_height=None):
         self.x1 = x1
         self.y1 = y1
         self.x2 = x2
         self.y2 = y2
         self.curved = curved
-        self.curve_height = curve_height
+        self.curve_base_height = curve_base_height
 
-        assert self.curved == (self.curve_height is not None)
+        assert self.curved == (self.curve_base_height is not None)
+
+    def curve_p0(self):
+        return (self.x1, self.y1)
+
+    def curve_p1(self):
+        return (self.x1 + 10, self.y1 + self.curve_base_height*3.0)
+
+    def curve_p2(self):
+        return (self.x2, self.y2)
+
+    def curve_p3(self):
+        return (self.x2, self.y2)
+
+    def inverse_curve_p1(self):
+        return (self.x1 - 10, self.y1 - self.curve_base_height*3.0)
+
+    def inverse_curve_p2(self):
+        return (self.x2, self.y2)
+
+    def curve_y_at(self, t):
+        assert 0 <= t <= 1
+
+        one_minus_t = 1.0 - t
+
+        return (one_minus_t**3) * self.curve_p0()[1] + \
+            3 * (one_minus_t**2) * t * self.curve_p1()[1] + \
+            3 * one_minus_t * (t**2) * self.curve_p2()[1] + \
+            (t**3) * self.curve_p3()[1]
+
+    def inverse_curve_y_at(self, t):
+        assert 0 <= t <= 1
+
+        one_minus_t = 1.0 - t
+
+        return (one_minus_t**3) * self.curve_p0()[1] + \
+            3 * (one_minus_t**2) * t * self.inverse_curve_p1()[1] + \
+            3 * one_minus_t * (t**2) * self.inverse_curve_p2()[1] + \
+            (t**3) * self.curve_p3()[1]
 
     def __repr__(self):
         return "[({},{}) - ({},{})]".format(self.x1, self.y1, self.x2, self.y2)
@@ -106,23 +144,35 @@ class Layout:
                     are_next_to_eachother = (i == 0)
                     if (individual.individual.are_mates(
                             other_individual.individual)):
+                        middle_x = (individual.x_center +
+                                    other_individual.x_center) / 2.0
                         if are_next_to_eachother:
                             self.lines.append(Line(
                                 individual.x + individual.size,
                                 individual.y_center,
                                 other_individual.x, other_individual.y_center
                             ))
-                        else:
                             self.lines.append(Line(
-                                individual.x + individual.size,
-                                individual.y_center,
-                                other_individual.x, other_individual.y_center,
-                                True, y_offset / 2.0
+                                middle_x, individual.y_center,
+                                middle_x, individual.y_center + y_offset
                             ))
-                        middle_x = (individual.x_center +
-                                    other_individual.x_center) / 2.0
+                            continue
+
+                        line = Line(
+                            individual.x + individual.size,
+                            individual.y_center,
+                            other_individual.x, other_individual.y_center,
+                            True, y_offset
+                        )
+                        self.lines.append(line)
+
+                        percent_x = \
+                            (middle_x - individual.x_center) / \
+                            (other_individual.x_center - individual.x_center)
+                        center_y = line.inverse_curve_y_at(percent_x)
+
                         self.lines.append(Line(
-                            middle_x, individual.y_center,
+                            middle_x, center_y,
                             middle_x, individual.y_center + y_offset
                         ))
 

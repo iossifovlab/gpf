@@ -36,87 +36,90 @@ class OffsetLayoutDrawer(object):
         if figure is None:
             figure = plt.figure()
 
-        figure.lines += self._draw_lines()
-        figure.patches += self._draw_rounded_lines()
+        self._draw_lines(figure)
+        self._draw_rounded_lines(figure)
 
-        figure.patches += self._draw_members()
+        self._draw_members(figure)
 
         return figure
 
-    def _draw_lines(self):
-        result = []
+    def _draw_lines(self, figure):
+        lines = []
 
         for line in self._layout.lines:
             if not line.curved:
-                result.append(mlines.Line2D(
+                lines.append(mlines.Line2D(
                     [line.x1 + self._x_offset, line.x2 + self._x_offset],
                     [line.y1 + self._y_offset, line.y2 + self._y_offset],
                     color="black"
                 ))
 
-        return result
+        figure.lines += lines
 
-    def _draw_rounded_lines(self):
-        result = []
+    def _draw_rounded_lines(self, figure):
+        patches = []
+        lines = []
+
+        elementwise_sum = lambda x, y: tuple([x[0] + y[0], x[1] + y[1]])
 
         for line in self._layout.lines:
             if line.curved:
-                start = (line.x1 + self._x_offset, line.y1 + self._y_offset)
-                end = (line.x2 + self._x_offset, line.y2 + self._y_offset)
+                offset = (self._x_offset, self._y_offset)
                 verts = [
-                    start,
-                    (start[0], start[1] + line.curve_height),
-                    (end[0], end[1] + line.curve_height),
-                    end,
+                    elementwise_sum(line.curve_p0(), offset),
+                    elementwise_sum(line.curve_p1(), offset),
+                    elementwise_sum(line.curve_p2(), offset),
+                    elementwise_sum(line.curve_p3(), offset)
                 ]
 
                 codes = [
                     Path.MOVETO,
                     Path.CURVE4,
                     Path.CURVE4,
-                    Path.CURVE4,
+                    Path.CURVE4
                 ]
 
                 path = Path(verts, codes)
 
-                result.append(
+                patches.append(
                     mpatches.PathPatch(path, facecolor='none')
                 )
 
-        return result
+                # line = ()
 
-    def _draw_members(self):
-        result = []
+        figure.lines += lines
+        figure.patches += patches
+
+    def _draw_members(self, figure):
+        patches = []
 
         for level in self._layout.positions:
             for individual in level:
                 if individual.individual.member.sex == '1':
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
-                    result.append(mpatches.Circle(
+                    patches.append(mpatches.Circle(
                         coords, individual.size / 2,
                         facecolor="white", edgecolor="black"))
                 else:
                     coords = [individual.x + self._x_offset,
                               individual.y + self._y_offset]
-                    result.append(mpatches.Rectangle(
+                    patches.append(mpatches.Rectangle(
                                   coords, individual.size, individual.size,
                                   facecolor="white", edgecolor="black"))
 
-        return result
+        figure.patches += patches
 
     def _horizontal_mirror_layout(self):
         highest_y = max([i.y for level in self._layout.positions
                          for i in level]) + 10
-        highest_y_line = max([line.y1 for line in self._layout.lines] +
-                             [line.y2 for line in self._layout.lines]) + 10
 
         for level in self._layout.positions:
             for individual in level:
                 individual.y = highest_y - individual.y
 
         for line in self._layout.lines:
-            line.y1 = highest_y_line - line.y1 + \
+            line.y1 = highest_y - line.y1 + \
                 self._layout.positions[0][0].size
-            line.y2 = highest_y_line - line.y2 + \
+            line.y2 = highest_y - line.y2 + \
                 self._layout.positions[0][0].size
