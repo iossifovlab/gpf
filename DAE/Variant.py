@@ -6,7 +6,6 @@ Created on Oct 21, 2015
 import numpy as np
 import operator
 
-
 def normalRefCopyNumber(location, gender):
     clnInd = location.find(":")
     chrome = location[0:clnInd]
@@ -399,6 +398,9 @@ class Variant:
 #     def get_normal_refCN(self,c):
 #         return normalRefCopyNumber(self.location,v.study.families[v.familyId]
 #                                    .memberInOrder[c].gender)
+    def variant_count_in_person(self, c):
+        return variant_count_v3(self.bestSt, c, self.location,
+                                self.memberInOrder[c].gender, self.denovo_parent())[0]
 
     def is_variant_in_person(self, c):
         return isVariant(self.bestSt, c, self.location,

@@ -31,6 +31,7 @@ from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
 from ConfigParser import NoOptionError
+from variant_db.variant_query import VariantQuery
 
 LOGGER = logging.getLogger(__name__)
 
@@ -158,6 +159,9 @@ class Study:
             elif impl_format == 'mysql':
                 self.transmission_impl[callSet] = \
                     MysqlTransmittedQuery(self, callSet)
+            elif impl_format == 'new_mysql':
+                self.transmission_impl[callSet] = \
+                    VariantQuery(self)
             else:
                 raise Exception("unexpected transmission format")
 
