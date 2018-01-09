@@ -9,14 +9,11 @@ import numpy as np
 from collections import namedtuple, defaultdict, OrderedDict
 from itertools import izip
 import itertools
-
-#from vcf2DAEutil import *
 import variantFormat as vrtF
 from ped2NucFam import *
 import vrtIOutil as vIO
-
-
 # add more data on fam Info
+
 
 class Family:
     def __init__(self, familyInfo):
@@ -308,17 +305,16 @@ def main():
             px, vx = vrtF.vcf2cshlFormat2(variant.POS, variant.REF, variant.ALT)
 
             altsCount = len(variant.ALT)
-            cnt = np.zeros((len(fam), altsCount + 1,), dtype=numpy.int)
             interestingIndexes = np.where(np.logical_or(variant.gt_types == 1,
                                                         variant.gt_types == 3))
             interestingIds = samples_arr[interestingIndexes]
             interestingFamilies = {individualToFamily[individual]
-                                for individual in interestingIds
-                                if individual in individualToFamily}
+                                   for individual in interestingIds
+                                   if individual in individualToFamily}
 
             missingFamilies = {individualToFamily[individual]
-                            for individual in missingIds
-                            if individual in individualToFamily}
+                               for individual in missingIds
+                               if individual in individualToFamily}
 
             count = fam_count - len(missingFamilies)
             #print(interestingFamilies)
