@@ -44,22 +44,61 @@ class DaeToVcf(object):
                 "minFreq": None,
                 "maxFreq": None
             },
-            "regions": ["X:0-100000000"]
+            "effectTypes": [
+                "Nonsense",
+                "Frame-shift",
+                "Splice-site",
+                "Missense",
+                "Non-frame-shift",
+                "noStart",
+                "noEnd",
+                "Synonymous",
+                "Non coding",
+                "Intron",
+                "Intergenic",
+                "3'-UTR",
+                "5'-UTR",
+                "CNV+",
+                "CNV-"
+            ],
+            "familyIds": [
+                "AU1921202_AU1921201",
+                "AU1921102_AU1921101",
+                "AU1921212_AU1921211",
+                # "AU1072202_AU1072201",
+                # "AU1072212_AU1072211"
+            ],
+            "gender": [
+                "female",
+                "male"
+            ],
+            "variantTypes": [
+                "sub",
+                "ins",
+                "del",
+                "CNV"
+            ]
         }
 
-        cohort = set()
+        cohort = []
 
         variants = dataset.get_transmitted_variants(safe=True, **kwargs)
         variant_records = []
         total = 0
         counts = 0
 
-        for variant in itertools.islice(variants, 1000):
+        for variant in itertools.islice(variants, 1000000):
             total += 1
             try:
 
                 chromosome, position, reference, alternative = \
                     vcfVarFormat(variant.location, variant.variant)
+
+                if len(chromosome) > 2:
+                    print("skipping variant in {}".format(chromosome))
+                    total -= 1
+                    continue
+                chromosome = self._fix_chromosome_name(chromosome)
 
                 variant_records.append(VcfVariant(
                     chromosome=chromosome,
@@ -67,21 +106,21 @@ class DaeToVcf(object):
                     reference=reference,
                     alternative=alternative,
                     quality=100,
-                    info={'END': position + len(alternative) - 1},
+                    info={'END': position + max(len(reference), len(alternative)) - 1},
                     format_='GT:AD',
                     samples=[],
                     metadata=self._get_metadata_for_variant(variant)
                 ))
-                cohort |= set(variant.memberInOrder)
+                cohort += variant.memberInOrder
             except (AssertionError, KeyError, NotImplementedError) as e:
                 print(e, variant)
                 continue
             counts += 1
 
-        cohort_set = set(['FAMILY_' + str(x.personId) for x in cohort])
-        assert len(cohort_set) == len(cohort), "cohort with different count"
+        cohort_set = set(str(x.personId) for x in cohort)
+        ordered_cohort = list(cohort_set)
 
-        print("Cohort length: {}".format(len(cohort)))
+        print("Cohort length: {}".format(len(ordered_cohort)))
         print("Variants count: {}".format(len(variant_records)))
 
         print("{} variants with counts, {} total ({}%)".format(
@@ -89,12 +128,9 @@ class DaeToVcf(object):
             (counts / float(total)) * 100 if total != 0 else float("inf")
         ))
 
-        ordered_cohort = list(cohort)
-        samples_names = [str(x.personId) for x in ordered_cohort]
-
         chromosomes = set(str(v.chromosome) for v in variant_records)
 
-        writer = VcfWriter(output_filename, samples_names, chromosomes)
+        writer = VcfWriter(output_filename, ordered_cohort, chromosomes)
         writer.open()
 
         for variant in variant_records:
@@ -112,14 +148,18 @@ class DaeToVcf(object):
             } for index, p in enumerate(variant.memberInOrder)
         }
 
+    def _fix_chromosome_name(self, chromosome):
+        return chromosome
+
     @staticmethod
     def _generate_samples(variant, cohort):
-        empty = {'GT': '.', 'AD': '.'}
+        empty = {'GT': '0/0', 'AD': '0,0'}
         get = variant.metadata.get
-        people_ids = itertools.imap(lambda x: x.personId, cohort)
-        samples = map(lambda i: get(i, empty), people_ids)
+        samples = map(lambda i: get(i, empty), cohort)
 
         return samples
+
+    ORDERED_GENOTYPE_INFO = ['0/0', '0', '0/1', '1']
 
     @staticmethod
     def _get_genotype_info(index, variant):
@@ -128,17 +168,22 @@ class DaeToVcf(object):
         ref = variant.bestSt[0][index]
         alt = variant.bestSt[1][index]
 
-        if ref == 2 and alt == 0:
-            return '0/0'
-        elif ref == 1 and alt == 1:
-            return '0/1'
-        elif ref == 1 and alt == 0:
-            return '0'
-        elif ref == 0 and alt == 1:
-            return '1'
-        raise NotImplementedError(
-            'Unknown genotype - ref={}, alt={}'.format(ref, alt)
-        )
+        # equivalent to:
+        # if ref == 2 and alt == 0:
+        #     return '0/0'
+        # if ref == 1 and alt == 1:
+        #     return '0/1'
+        # if ref == 1 and alt == 0:
+        #     return '0'
+        # if ref == 0 and alt == 1:
+        #     return '1'
+        genotype_index = alt - ref + 2
+
+        assert 0 <= genotype_index < len(DaeToVcf.ORDERED_GENOTYPE_INFO),\
+            'unknown genotype: ref = {}, alt = {}'.format(ref, alt)
+
+        return DaeToVcf.ORDERED_GENOTYPE_INFO[genotype_index]
+
 
     @staticmethod
     def _get_alleles_coverage_info(index, variant):
@@ -340,7 +385,7 @@ def vcfVarFormat(loc, var):
 
 def main():
     converter = DaeToVcf()
-    converter.convert('SSC', './output.vcf')
+    converter.convert('AGRE_WG', './output.vcf')
 
 
 if __name__ == '__main__':
