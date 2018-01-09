@@ -48,7 +48,7 @@ class Line:
         return (self.x2, self.y2)
 
     def inverse_curve_p1(self):
-        return (self.x1 - 10, self.y1 - self.curve_base_height*3.0)
+        return (self.x1 + 10, self.y1 - self.curve_base_height*3.0)
 
     def inverse_curve_p2(self):
         return (self.x2, self.y2)
