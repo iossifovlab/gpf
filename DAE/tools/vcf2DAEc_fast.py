@@ -127,7 +127,6 @@ class Family:
             self.families.append(indicies)
 
         parent_indicies = []
-        print(self.familyInfo['notChild'])
         for personId in self.familyInfo['notChild']:
             index = individualToIndex[self.familyInfo['ids'][personId]] * 2
             parent_indicies.append(index)
@@ -329,13 +328,10 @@ def main():
         print >> outTOOMANY, '\t'.join(
             'chr,position,variant,familyData'.split(','))
 
-        #fam = [x for x in sorted(fInfo.keys())]
-        #vf = pysam.VariantFile( dfile )
-        vf = [Batch(f, fInfo) for f in dfile.split(",")]
-        fam = [item for f in vf for item in f.fam]
+        batches = [Batch(f, fInfo) for f in dfile.split(",")]
+        fam = [item for f in batches for item in f.fam]
         fam_count = len(fam)
 
-        print(fam)
         # # print family Info in a format
         FAMOUT = ox.outputPrefix + '-families.txt'
         printFamData(fInfo, pInfo, proj=ox.project, lab=ox.lab,
@@ -344,16 +340,18 @@ def main():
         def keyfunc(variant):
             return (variant['variant'].CHROM, variant['variant'].POS)
     
-        for key, group in groupby(merge(keyfunc, *vf), keyfunc):
+        for key, group in groupby(merge(keyfunc, *batches), keyfunc):
             chrom, pos = key
 
             allIterestingFamilies = set()
             allMissingFamilies = set()
             allFamilies = []
             variants = []
+            missingCount = 0
 
             for variant in group:
                 missingIndexes = np.where(variant['variant'].gt_types == 2)
+                missingCount += missingIndexes[0].shape[0]
                 missingIds = variant['batch'].samples_arr[missingIndexes]
 
                 individualToFamily = variant['batch'].individualToFamily
@@ -386,12 +384,16 @@ def main():
                 for n, (p, v) in enumerate(izip(px, vx)):
                     variants.append((n, p, v, variant, families))
 
+            pgt = (1 - missingCount / (4 * fam_count)) * 100
+            if pgt < ox.minPercentOfGenotypeSamples:
+                continue
+
             for key, group in groupby(sorted(variants, key=lambda x: (x[1], x[2])), lambda x: (x[1], x[2])):
                 p, v = key
 
                 if v.find('*') >= 0:
                         continue
-                strx = []
+                output = []
 
                 cnt_in_parent = 0
 
@@ -409,21 +411,23 @@ def main():
 
                         cnt_in_parent += family.variant_present_in_parent(
                             variant['variant'], n + 1)
-                        strx.append("{}:{}:{}".format(familyInfo['newFid'], GT, cnt))
-                if len(strx) < 1:
+                        output.append((familyInfo['newFid'], GT, cnt))
+                if len(output) < 1:
                     continue
                 
-                l = len(strx)
+                l = len(output)
+                strx = ["{}:{}:{}".format(familyId, GT, cnt)
+                        for familyId, GT, cnt in sorted(output, key=lambda x: x[0])]
                 strx = ';'.join(strx)
                 
                 # print strx
                 dnv_count = len(allIterestingFamilies - allMissingFamilies) - len(allFamilies)
                 count = fam_count - len(allMissingFamilies)
 
-                tAll = 4 * len(families)
+                tAll = 4 * len(allFamilies)
                 tAll += 4 * (fam_count - len(allMissingFamilies) - len(allIterestingFamilies - allMissingFamilies))
                 nPC = (count - dnv_count) * 2
-                #print(count, fam_count, len(missingFamilies), len(interestingFamilies), len(families), dnv_count)
+
                 nPcntC = (count - dnv_count) / fam_count * 100
                 cAlt = cnt_in_parent
                 freqAlt = (1. * cAlt) / tAll * 100.
