@@ -39,6 +39,7 @@ def upgrade():
         sa.Column('chromosome', sa.String(length=2), nullable=False),
         sa.Column('location', sa.Integer(), nullable=False),
         sa.Column('worst_effect_id', sa.Integer(), nullable=True),
+        sa.Column('effects_details', sa.String(length=256), nullable=False),
         sa.Column('n_par_called', sa.Integer(), nullable=True),
         sa.Column('n_alt_alls', sa.Integer(), nullable=True),
         sa.Column('prcnt_par_called', sa.Float(), nullable=True),
@@ -84,6 +85,8 @@ def upgrade():
         sa.Column('present_in_unaffected', sa.Boolean(), nullable=False),
         sa.Column('present_in_mom', sa.Boolean(), nullable=False),
         sa.Column('present_in_dad', sa.Boolean(), nullable=False),
+        sa.Column('best_state', sa.String(256), nullable=False),
+        sa.Column('counts', sa.String(256), nullable=False),
         sa.ForeignKeyConstraint(['family_id'], ['family.id'], ),
         sa.ForeignKeyConstraint(['variant_id'], ['variant.id'], ),
         sa.PrimaryKeyConstraint('variant_id', 'family_id')

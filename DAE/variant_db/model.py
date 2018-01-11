@@ -81,6 +81,7 @@ class Variant(Base):
     # TODO CNV variants not handled with a single location
     location = Column(Integer, nullable=False)
     worst_effect_id = Column(ForeignKey('effect.id'))
+    effects_details = Column(String(256))
     n_par_called = Column(Integer, index=True)
     n_alt_alls = Column(Integer, index=True)
     prcnt_par_called = Column(Float, index=True)
@@ -145,7 +146,9 @@ class FamilyVariant(Base):
     present_in_unaffected = Column(Boolean, nullable=False)
     present_in_mom = Column(Boolean, nullable=False)
     present_in_dad = Column(Boolean, nullable=False)
-    
+    best_state = Column(String(256), nullable=False)
+    counts = Column(String(256), nullable=False)
+
     family = relationship('Family')
     variant = relationship('Variant')
 
