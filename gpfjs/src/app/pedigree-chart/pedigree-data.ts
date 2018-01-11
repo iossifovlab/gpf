@@ -1,4 +1,4 @@
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import { IntervalForVertex } from '../utils/interval-sandwich';
 
 export abstract class IndividualSet {

@@ -1,9 +1,9 @@
-import { Input, Component, OnInit } from '@angular/core';
+import { Input, Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { Observable, BehaviorSubject } from 'rxjs';
 
 import { IntervalForVertex } from '../utils/interval-sandwich';
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import {
   PerfectlyDrawablePedigreeService
 } from '../perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
@@ -13,7 +13,8 @@ type OrderedIndividuals = Array<Individual>;
 
 @Component({
   selector: 'gpf-pedigree-chart',
-  templateUrl: './pedigree-chart.component.html'
+  templateUrl: './pedigree-chart.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PedigreeChartComponent implements OnInit {
 

@@ -1,12 +1,13 @@
-import { Input, Component, OnInit } from '@angular/core';
+import { Input, Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import { Individual, IndividualWithPosition, Line, MatingUnit, ParentalUnit } from './pedigree-data';
 import { difference } from '../utils/sets-helper';
 
 @Component({
   selector: '[gpf-pedigree-chart-level]',
-  templateUrl: './pedigree-chart-level.component.html'
+  templateUrl: './pedigree-chart-level.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PedigreeChartLevelComponent implements OnInit {
   pedigreeDataWithLayout: IndividualWithPosition[];
@@ -28,7 +29,9 @@ export class PedigreeChartLevelComponent implements OnInit {
         this.positionedIndividuals.push(
           this.generateLayout(this.individuals[i], i));
       }
+      let start = Date.now();
       this.optimizeDrawing(this.positionedIndividuals);
+      console.warn("drawing optimizing", Date.now() - start, "ms");
       for (let individual of this.positionedIndividuals) {
         this.lines = this.lines.concat(
           this.generateLines(individual));
@@ -128,7 +131,7 @@ export class PedigreeChartLevelComponent implements OnInit {
         let dist2 = mateCoordinates[2].xCenter - mateCoordinates[1].xCenter;
 
         if (dist1 < 0 || dist2 < 0) {
-            console.warn("negative dist...", dist1, dist2);
+            console.warn('negative dist...', dist1, dist2);
             return 0;
         }
         if (Math.abs(dist1 - dist2) < 1e-7) {
@@ -190,7 +193,7 @@ export class PedigreeChartLevelComponent implements OnInit {
       let [first, last] = this.getFirstAndLastChild(level, mates);
       result.push(level.slice(level.indexOf(first), level.indexOf(last) + 1));
     }
-    return pedigreeDataWithPositions;
+    // return pedigreeDataWithPositions;
 
     return result;
   }

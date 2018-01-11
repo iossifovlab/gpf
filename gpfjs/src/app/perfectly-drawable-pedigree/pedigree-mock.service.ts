@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 
 @Injectable()
 export class PedigreeMockService {

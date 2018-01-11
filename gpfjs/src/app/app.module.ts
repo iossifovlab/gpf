@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
+import { HttpModule, Http, XHRBackend } from '@angular/http';
 import { RequestOptions } from '@angular/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -15,7 +15,8 @@ import { GenderComponent } from './gender/gender.component';
 import { PresentInChildComponent } from './present-in-child/present-in-child.component';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
 import { VarianttypesComponent } from './varianttypes/varianttypes.component';
-import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes/effecttypes.component';
+import { EffecttypesComponent } from './effecttypes/effecttypes.component';
+import { EffecttypesColumnComponent } from './effecttypes/effecttypes-column.component';
 import { GenotypePreviewTableComponent } from './genotype-preview-table/genotype-preview-table.component';
 import { QueryService } from './query/query.service';
 
@@ -45,10 +46,6 @@ import { UsersService } from './users/users.service';
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
 import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
 
-import { StoreModule } from '@ngrx/store';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-
-import { gpfReducer } from './store/gpf-store';
 import { StudyTypesComponent } from './study-types/study-types.component';
 
 import { CookieModule } from 'ngx-cookie';

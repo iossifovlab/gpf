@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import { Individual, MatingUnit, IndividualSet, ParentalUnit } from '../pedigree-chart/pedigree-data';
 import { Edge as GraphEdge, Vertex as GraphVertex } from '../utils/undirected-graph';
 import {
@@ -15,7 +15,7 @@ type Edge = GraphEdge<Vertex>;
 export class PerfectlyDrawablePedigreeService {
 
   createSandwichInstance(family: PedigreeData[]) {
-    
+
     let idToNodeMap = new Map<string, Individual>();
     let idsToMatingUnit = new Map<string, MatingUnit>();
 
@@ -29,7 +29,7 @@ export class PerfectlyDrawablePedigreeService {
       }
     };
 
-    for (let individual of family){
+    for (let individual of family) {
       let mother = getOrCreateIndividual(individual.mother);
       let father = getOrCreateIndividual(individual.father);
       if (mother !== father && !idsToMatingUnit.has(individual.mother + ',' + individual.father)) {
@@ -155,12 +155,17 @@ export class PerfectlyDrawablePedigreeService {
     return new SandwichInstance(allVertices, requiredEdges, forbiddenEdges);
   }
 
-  isPDP(family: PedigreeData[]): [SandwichInstance<Vertex>, IntervalForVertex<Vertex>[]] {
+  isPDP(family: PedigreeData[]) {
+    let start = Date.now();
     let sandwichInstance = this.createSandwichInstance(family);
+    let result: [SandwichInstance<Vertex>, IntervalForVertex<Vertex>[]] =
+      [sandwichInstance, solveSandwich(sandwichInstance)] ;
 
-    return [sandwichInstance, solveSandwich(sandwichInstance)];
+    console.warn('isPDP took', Date.now() - start, 'ms');
+
+    return result;
+
   }
-
 
   fixRank(intervals: Array<Individual>) {
     if (!intervals) {

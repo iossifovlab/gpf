@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 
 import { Observable, BehaviorSubject } from 'rxjs';
 
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import { Individual, MatingUnitWithIntervals, IndividualSet, ParentalUnit, IndividualWithPosition } from '../pedigree-chart/pedigree-data';
 import {
   hasIntersection, intersection, equal, isSubset, difference

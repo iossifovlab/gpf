@@ -1,7 +1,7 @@
 import { Component, AfterViewInit, ElementRef, ViewChild, Input } from '@angular/core';
 
 
-import { PedigreeData } from '../genotype-preview-table/genotype-preview';
+import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 import {
   PerfectlyDrawablePedigreeService
 } from '../perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';

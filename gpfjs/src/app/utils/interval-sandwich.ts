@@ -295,7 +295,7 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
   }
 
   let start = Date.now();
-  let lexicalSort = (a: {}, b: {}) => a.toString().localeCompare(b.toString())
+  let lexicalSort = (a: {}, b: {}) => a.toString().localeCompare(b.toString());
 
   let realizationsQueue = new Array<Realization<T>>();
 
@@ -305,7 +305,7 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
                       [new IntervalForVertex(vertex)], [vertex])
     );
   }
-  realizationsQueue = realizationsQueue.sort(lexicalSort)
+  realizationsQueue = realizationsQueue.sort(lexicalSort);
 
   let visitedRealizationMap = {};
   let currentIteration = 0;
@@ -320,8 +320,8 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
     }
     leftVertices = leftVertices.sort(lexicalSort);
 
-    if (currentIteration === 10000) {
-      // console.log("Premature termination on", currentIteration, "iterations");
+    if (currentIteration === 1000) {
+      console.warn('Premature termination on', currentIteration, 'iterations');
       return null;
     }
 
@@ -337,7 +337,7 @@ export function solveSandwich<T>(sandwichInstance: SandwichInstance<T>) {
 
       if (sandwichInstance.vertices.length === currentRealizationCopy.domain.length) {
         // console.log("Took", Date.now() - start, "ms");
-        console.log(currentRealizationCopy.intervals.map(i => i.toString()))
+        // console.log(currentRealizationCopy.intervals.map(i => i.toString()))
         return currentRealizationCopy.intervals;
       } else {
         // console.log("Checking realization", currentRealizationCopy);
