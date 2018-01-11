@@ -24,7 +24,7 @@ export class PedigreeChartComponent implements OnInit {
   }
 
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
-  private isNotPdp$: Observable<boolean>;
+  isNotPdp$: Observable<boolean>;
   levels$: Observable<Array<OrderedIndividuals>>;
 
   constructor(
