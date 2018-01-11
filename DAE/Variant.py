@@ -318,6 +318,7 @@ class Variant:
                     '#ffffff')
                 for p in mbrs]
 
+
         denovo_parent = self.denovo_parent()
         res = [reduce(operator.add, [[m.role,
                                       m.gender],
@@ -356,32 +357,16 @@ class Variant:
 
         denovo_parent = self.denovo_parent()
 
-        members = self.memberInOrder
         bs = self.bestSt
 
-        mom = members[0]
-        dad = members[1]
-
-        res = [
-            [[self.familyId, mom.personId, '', '',
-              mom.gender, get_color(mom)],
-             variant_count_v3(bs, 0, self.location,
-                              mom.gender, denovo_parent)],
-            [[self.familyId, dad.personId, '', '',
-              dad.gender, get_color(dad)],
-             variant_count_v3(bs, 1, self.location,
-                              dad.gender, denovo_parent)]
+        return [
+            [
+                self.familyId, p.personId, p.dadId, p.momId, p.gender,
+                get_color(p)
+            ] +
+            variant_count_v3(bs, index, self.location, p.gender, denovo_parent)
+            for index, p in enumerate(self.memberInOrder)
         ]
-
-        for c, p in enumerate(members[2:], 2):
-            res.append(
-                [[self.familyId, p.personId, dad.personId, mom.personId,
-                  p.gender, get_color(p)],
-                 variant_count_v3(bs, c, self.location,
-                                  dad.gender, denovo_parent)]
-            )
-        res = [reduce(operator.add, row) for row in res]
-        return res
 
     def denovo_parent(self):
         denovo_parent = None

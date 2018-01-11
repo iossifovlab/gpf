@@ -93,6 +93,7 @@ class TransmissionLegacy(TransmissionConfig):
                                                           geneSymsUpper)
                 if not requestedGeneEffects:
                     continue
+
             v = Variant(mainAtts)
             v.study = self.study
 

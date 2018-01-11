@@ -289,7 +289,7 @@ class Study:
                     return np.nan
             print >> sys.stderr, "Loading file", fl, "for collection ", self.name
             dt = genfromtxt(fl, delimiter='\t', dtype=None, names=True,
-                            case_sensitive=True, deletechars='', 
+                            case_sensitive=True, deletechars='',
                             converters={"SSC-freq": float_conv,
                                         "EVS-freq": float_conv,
                                         "E65-freq": float_conv})
@@ -329,6 +329,7 @@ class Study:
         fmMethod = {
             "quadReportSSC": self._load_family_data_from_quad_report,
             "simple": self._load_family_data_from_simple,
+            "pedigree": self._load_family_data_from_pedigree,
             "pickle": self._load_family_data_from_pickle,
             "StateWE2012-data1-format": self._load_family_data_from_StateWE2012_data1,
             "EichlerWE2012-SupTab1-format": self._load_family_data_from_EichlerWE2012_SupTab1,
@@ -423,6 +424,36 @@ class Study:
                 families[fmId].memberInOrder.append(p)
             except AttributeError:
                 families[fmId].memberInOrder = [p]
+        return families, {}
+
+    @staticmethod
+    def _load_family_data_from_pedigree(family_file):
+        id_converter = lambda x: x if x != '0' else ''
+        dt = genfromtxt(
+            family_file, delimiter='\t', dtype=None, names=True,
+            case_sensitive=True, comments="asdgasdgasdga",
+            converters={
+                'momId': id_converter,
+                'dadId': id_converter
+            })
+        families = defaultdict(Family)
+        for dtR in dt:
+            fmId = str(dtR['familyId'])
+            families[fmId].familyId = fmId
+            atts = {x: dtR[x] for x in dt.dtype.names}
+
+            assert 'personId' in atts
+            assert 'gender' in atts
+            assert 'role' in atts
+            assert 'momId' in atts
+            assert 'dadId' in atts
+
+            p = Person(atts)
+            for key, item in atts.items():
+                setattr(p, key, item)
+
+            families[fmId].memberInOrder.append(p)
+
         return families, {}
 
     @staticmethod
@@ -964,7 +995,7 @@ class VariantsDB:
 #     def get_denovo_sets(self, dnvStds):
 #         r = GeneTerms()
 #         r.geneNS = "sym"
-# 
+#
 #         def getMeasure(mName):
 #             from DAE import phDB
 #             strD = dict(zip(phDB.families, phDB.get_variable(mName)))
@@ -978,9 +1009,9 @@ class VariantsDB:
 #                 except:
 #                     pass
 #             return fltD
-# 
+#
 #         nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq')
-# 
+#
 #         def addSet(setname, genes, desc=None):
 #             if not genes:
 #                 return
@@ -991,7 +1022,7 @@ class VariantsDB:
 #             for gSym in genes:
 #                 r.t2G[setname][gSym] += 1
 #                 r.g2T[gSym][setname] += 1
-# 
+#
 #         def genes(inChild, effectTypes, inGenesSet=None, minIQ=None, maxIQ=None):
 #             if inGenesSet:
 #                 vs = self.get_denovo_variants(
@@ -1005,15 +1036,15 @@ class VariantsDB:
 #                 return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] >= minIQ}
 #             if maxIQ:
 #                 return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] < maxIQ}
-# 
+#
 #         def set_genes(geneSetDef):
 #             gtId, tmId = geneSetDef.split(":")
 #             return set(self.giDB.getGeneTerms(gtId).t2G[tmId].keys())
-# 
+#
 #         def recSingleGenes(inChild, effectTypes):
 #             vs = self.get_denovo_variants(
 #                 dnvStds, effectTypes=effectTypes, inChild=inChild)
-# 
+#
 #             gnSorted = sorted([[ge['sym'], v]
 #                                for v in vs for ge in v.requestedGeneEffects])
 #             sym2Vars = {sym: [t[1] for t in tpi]
@@ -1021,55 +1052,55 @@ class VariantsDB:
 #             sym2FN = {sym: len(set([v.familyId for v in vs]))
 #                       for sym, vs in sym2Vars.items()}
 #             return {g for g, nf in sym2FN.items() if nf > 1}, {g for g, nf in sym2FN.items() if nf == 1}
-# 
+#
 #         addSet("prb.LoF",             genes('prb', 'LGDs'))
 #         recPrbLGDs, sinPrbLGDs = recSingleGenes('prb', 'LGDs')
 #         addSet("prb.LoF.Recurrent",   recPrbLGDs)
 #         addSet("prb.LoF.Single",      sinPrbLGDs)
-# 
+#
 #         addSet("prb.LoF.Male",        genes('prbM', 'LGDs'))
 #         addSet("prb.LoF.Female",      genes('prbF', 'LGDs'))
-# 
+#
 #         addSet("prb.LoF.LowIQ",       genes('prb', 'LGDs', maxIQ=90))
 #         addSet("prb.LoF.HighIQ",      genes('prb', 'LGDs', minIQ=90))
-# 
+#
 #         addSet("prb.LoF.FMRP",        genes(
 #             'prb', 'LGDs', set_genes("main:FMR1-targets")))
 #         # addSet("prbLGDsInCHDs",     genes('prb','LGDs',set("CHD1,CHD2,CHD3,CHD4,CHD5,CHD6,CHD7,CHD8,CHD9".split(','))))
-# 
+#
 #         addSet("prb.Missense",        genes('prb', 'missense'))
 #         addSet("prb.Missense.Male",   genes('prbM', 'missense'))
 #         addSet("prb.Missense.Female", genes('prbF', 'missense'))
 #         addSet("prb.Synonymous",      genes('prb', 'synonymous'))
-# 
+#
 #         addSet("sib.LoF",             genes('sib', 'LGDs'))
 #         addSet("sib.Missense",        genes('sib', 'missense'))
 #         addSet("sib.Synonymous",      genes('sib', 'synonymous'))
-# 
+#
 #         '''
 #         addSet("A",      recPrbLGDs, "recPrbLGDs")
 #         addSet("B",      genes('prbF','LGDs'), "prbF")
 #         addSet("C",      genes('prb','LGDs',set_genes("main:FMR1-targets")), "prbFMRP")
 #         addSet("D",      genes('prb','LGDs',maxIQ=90),"prbML")
 #         addSet("E",      genes('prb','LGDs',minIQ=90),"prbMH")
-# 
+#
 #         addSet("AB",     set(r.t2G['A']) | set(r.t2G['B']))
 #         addSet("ABC",    set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C']))
 #         addSet("ABCD",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) )
 #         addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
 #         '''
-# 
+#
 #         recPrbCNVs, sinPrbCNVs = recSingleGenes('prb', 'CNVs')
 #         addSet("prb.CNV.Recurrent",     recPrbCNVs)
-# 
+#
 #         addSet("prb.CNV",   genes('prb', 'CNVs'))
 #         addSet("prb.Dup",   genes('prb', 'CNV+'))
 #         addSet("prb.Del",   genes('prb', 'CNV-'))
-# 
+#
 #         addSet("sib.CNV",   genes('sib', 'CNVs'))
 #         addSet("sib.Dup",   genes('sib', 'CNV+'))
 #         addSet("sib.Del",   genes('sib', 'CNV-'))
-# 
+#
 #         return r
 
     # THE ONES BELOW SHOULD BE MOVED
