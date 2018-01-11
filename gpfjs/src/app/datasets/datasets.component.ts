@@ -1,10 +1,9 @@
-import { UsersState } from '../users/users-store';
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { UsersService } from '../users/users.service';
+import { Component, OnInit, Input, Output, EventEmitter, NgZone } from '@angular/core';
 import { DatasetsService } from './datasets.service';
-import { Dataset, DatasetsState } from './datasets';
+import { Dataset } from './datasets';
 
 import { IdName } from '../common/idname';
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
 import { ActivatedRoute, Params, Router } from '@angular/router';
@@ -18,73 +17,54 @@ import { Location } from '@angular/common';
 })
 export class DatasetsComponent implements OnInit {
   registerAlertVisible = false;
-  datasets: Dataset[];
-  selectedDataset: Dataset;
+  datasets$: Observable<Dataset[]>;
+  selectedDataset$: Observable<Dataset>;
   @Output() selectedDatasetChange = new EventEmitter<Dataset>();
 
-  usersState: Observable<UsersState>;
-
-  selectedDatasetId: string;
-
   constructor(
-    private store: Store<any>,
+    private usersService: UsersService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
-    private location: Location
+    private location: Location,
   ) {
-    this.usersState = this.store.select('users');
   }
 
   ngOnInit() {
     this.route.params.subscribe(
       (params: Params) => {
-        this.selectedDatasetId = params['dataset'];
-        this.selectDatasetById();
-      }
-    );
+        this.datasetsService.setSelectedDatasetById(params['dataset']);
+      });
 
-    this.usersState.subscribe(
-      state => {
-        if (state) {
-          this.datasetsService.getDatasets().subscribe(
-            (datasets) => {
-              console.log(datasets);
-              this.datasets = datasets;
-              this.selectDatasetById();
-            });
+    this.datasets$ = this.datasetsService.getDatasetsObservable();
+    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+
+    this.datasets$
+      .take(1)
+      .subscribe(datasets => {
+        if (!this.datasetsService.hasSelectedDataset()) {
+          this.router.navigate(['/', 'datasets', datasets[0].id]);
         }
-      }
-    );
+      });
+
+    this.usersService.getUserInfoObservable()
+      .subscribe(_ => {
+        this.datasetsService.reloadSelectedDataset();
+      });
+
+    this.selectedDataset$
+      .subscribe(selectedDataset => {
+        if (!selectedDataset) {
+          return;
+        }
+        this.registerAlertVisible = !selectedDataset.accessRights;
+        if (selectedDataset.accessRights) {
+          this.selectedDatasetChange.emit(selectedDataset);
+        }
+      });
   }
 
-  selectDatasetById() {
-    if (!this.datasets) {
-      return;
-    }
-
-    if (!this.selectedDatasetId) {
-      this.router.navigate([this.datasets[0].id], { relativeTo: this.route });
-    }
-
-    for (let idx in this.datasets) {
-      if (this.datasets[idx].id === this.selectedDatasetId) {
-        this.selectDataset(+idx);
-        return;
-      }
-    }
-  }
-
-  selectDataset(index: number): void {
-    if (index >= 0 && index < this.datasets.length) {
-      this.selectedDataset = this.datasets[index];
-      if (this.datasets[index].accessRights) {
-        this.datasetsService.setSelectedDataset(this.selectedDataset);
-        this.registerAlertVisible = false;
-        this.selectedDatasetChange.emit(this.selectedDataset);
-      } else {
-        this.registerAlertVisible = true;
-      }
-    }
+  selectDataset(dataset: Dataset) {
+      this.router.navigate(['/', 'datasets', dataset.id]);
   }
 }

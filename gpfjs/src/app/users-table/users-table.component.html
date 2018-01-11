@@ -1,0 +1,133 @@
+<ng-template #confirmation let-options="options">
+  <div [ngClass]="[
+    'popover',
+    'show',
+    'bs-popover-' + options.placement,
+    options.popoverClass
+  ]">
+    <div style="left: calc(50% - 5px)" class="arrow"></div>
+    <h3 class="popover-header" [innerHTML]="options.title"></h3>
+    <div class="popover-body">
+      <p [innerHTML]="options.message"></p>
+      <div class="row">
+        <div
+          class="col-xs-12 col-12 text-center">
+          <button
+            *ngIf="!options.hideConfirmButton"
+            [mwlFocus]="options.focusButton === 'confirm'"
+            [class]="'btn btn-' + options.confirmButtonType"
+            (click)="options.onConfirm({clickEvent: $event})"
+            [innerHtml]="options.confirmText">
+          </button>
+          <button
+            *ngIf="!options.hideCancelButton"
+            [mwlFocus]="options.focusButton === 'cancel'"
+            [class]="'btn btn-' + options.cancelButtonType"
+            (click)="options.onCancel({clickEvent: $event})"
+            [innerHtml]="options.cancelText">
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<div class="row">
+  <div class="col-12 mt-3">
+    <gpf-table noScrollOptimization="true" [dataSource]="users" style="display: inline-block">
+      <gpf-table-column columnWidth="50px">
+        <gpf-table-header>
+          <gpf-table-subheader>
+            <span *gpfTableCellContent="let data">
+              <div>Selected</div>
+              <div class="select-unselect-all">
+                <input type="checkbox" [(ngModel)]="allSelected" (ngModelChange)="checkUncheckAll(allSelected)"/>
+              </div>
+            </span>
+          </gpf-table-subheader>
+        </gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+              <span *gpfTableCellContent="let data">
+                  <input type="checkbox" [(ngModel)]="data.selected" />
+              </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
+      </gpf-table-column>
+
+      <gpf-table-column>
+        <gpf-table-header caption="Name"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data">
+                {{ data.user.name }}
+            </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
+      </gpf-table-column>
+
+      <gpf-table-column>
+        <gpf-table-header caption="Email"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <div *gpfTableCellContent="let data">
+              <a [routerLink]="['/management/users', data.user.id]">{{ data.user.email }}</a>
+            </div>
+          </gpf-table-subcontent>
+        </gpf-table-content>
+      </gpf-table-column>
+
+      <gpf-table-column>
+        <gpf-table-header caption="Groups"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data">
+              <div *ngFor="let group of data.user.groups">
+                <div>{{ group }}
+                  <button
+                    *ngIf="!isDefaultGroup(data.user, group)"
+                    class="close clickable"
+                    mwlConfirmationPopover
+                    confirmText="Remove group"
+                    title="Remove group"
+                    [customTemplate]="confirmation"
+                    message="Removing the group '{{ group }}' could change which datasets {{ data.user.name }} ({{ data.user.email }}) has access to."
+                    (confirm)="removeGroup(data.user, group)">
+                    <div style="font-size: 1.3rem;">&times;</div>
+                  </button>
+                </div>
+              </div>
+            </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
+      </gpf-table-column>
+
+      <gpf-table-column columnWidth="50px">
+        <gpf-table-header caption="Has password"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data">
+              <span *ngIf="data.user.hasPassword">
+                <i class="fa fa-check" aria-hidden="true"></i>
+              </span>
+            </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
+      </gpf-table-column>
+
+      <gpf-table-column columnWidth="150px">
+        <gpf-table-header caption="Actions"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data" class="action-buttons">
+              <gpf-users-actions [user]="data.user"></gpf-users-actions>
+            </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
+      </gpf-table-column>
+    </gpf-table>
+    <div *ngIf="users?.length === 0">
+      No results
+    </div>
+  </div>
+</div>

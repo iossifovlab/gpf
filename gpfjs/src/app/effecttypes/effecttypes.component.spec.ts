@@ -3,10 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
-import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes.component';
-
-import { gpfReducer } from '../store/gpf-store';
-import { StoreModule } from '@ngrx/store';
+import { EffecttypesComponent } from './effecttypes.component';
 
 /*
 describe('EffecttypesComponent', () => {
@@ -21,7 +18,7 @@ describe('EffecttypesComponent', () => {
         EffecttypesColumnComponent,
       ],
       imports: [
-        StoreModule.provideStore(gpfReducer),
+
       ],
       providers: [
       ]
@@ -39,5 +36,5 @@ describe('EffecttypesComponent', () => {
     expect(component).toBeTruthy();
   });
 });
- 
+
  */

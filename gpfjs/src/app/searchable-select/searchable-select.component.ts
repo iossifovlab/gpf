@@ -1,5 +1,7 @@
-import { Component, Input, Output, EventEmitter, ViewChild, ContentChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, QueryList, ContentChild, ViewChildren } from '@angular/core';
 import { SearchableSelectTemplateDirective } from './searchable-select-template.directive';
+import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
+import { NgZone } from '@angular/core';
 
 @Component({
   selector: 'gpf-searchable-select',
@@ -10,9 +12,13 @@ export class SearchableSelectComponent {
   @Input() caption: string;
   @Output() search  = new EventEmitter();
   @Output() selectItem  = new EventEmitter();
-  @ViewChild('inputGroup') inputGroupSpan: any;
+  @ViewChild(NgbDropdown) dropdown: NgbDropdown;
   @ViewChild('searchBox') searchBox: any;
   @ContentChild(SearchableSelectTemplateDirective) template: SearchableSelectTemplateDirective;
+
+  constructor(
+    private ngZone: NgZone
+  ) {}
 
   searchBoxChange(searchFieldValue) {
     this.search.emit(searchFieldValue);
@@ -20,9 +26,14 @@ export class SearchableSelectComponent {
 
   onFocus(event) {
     event.stopPropagation();
+
+    this.ngZone.run(() => {
+      if (!this.dropdown.isOpen()) {
+        this.dropdown.open();
+      }
+    });
     setTimeout(() => {
       this.searchBox.nativeElement.focus();
-      this.inputGroupSpan.nativeElement.classList.add('show');
     });
     this.onSelect(null);
   }

@@ -9,8 +9,6 @@ import { DatasetsService } from './datasets.service';
 import { DatasetsServiceStub } from '../datasets/datasets.service.spec';
 
 
-import { gpfReducer } from '../store/gpf-store';
-import { StoreModule } from '@ngrx/store';
 
 let datasetService = new DatasetsServiceStub();
 
@@ -23,7 +21,7 @@ describe('DatasetComponent', () => {
     TestBed.configureTestingModule({
       declarations: [DatasetsComponent],
       imports: [
-        StoreModule.provideStore(gpfReducer),
+
       ],
       providers: [
         {

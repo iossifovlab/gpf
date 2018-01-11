@@ -1,49 +1,54 @@
 <div class="content">
-  <nav class="navbar navbar-light navbar-toggleable-md bg-faded">
-    <span class="nav-item">
-      <div *ngIf="selectedDataset" class="btn-group">
-        <div class="dropdown">
-          <button
-            class="dataset-selector btn btn-secondary dropdown-toggle navbar-brand"
-            type="button"
-            id="dropdownMenuButton"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="false">{{selectedDataset.name}}
-          </button>
-          <div
-            class="dropdown-menu"
-            aria-labelledby="dropdownMenuButton">
-            <a
-              *ngFor="let dataset of datasets; let i=index"
-              class="dropdown-item"
-              routerLink="../{{ dataset.id }}"
-              routerLinkActive="active"
-              [style.opacity]="dataset.accessRights ? 1.0 : 0.3">{{ dataset.name }}</a>
+  <nav *ngIf="(selectedDataset$ | async) as selectedDataset"
+    class="navbar navbar-custom navbar-toggleable-md navbar-expand-lg navbar-light bg-light">
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <div class="btn-group">
+          <div ngbDropdown>
+            <button
+              ngbDropdownToggle
+              class="dataset-selector btn btn-outline-secondary navbar-brand"
+              type="button"
+              id="dropdownMenuButton"
+              aria-haspopup="true"
+              aria-expanded="false">{{selectedDataset.name}}
+            </button>
+            <div
+              ngbDropdownMenu
+              class="dataset-selector"
+              aria-labelledby="dropdownMenuButton">
+              <a
+                *ngFor="let dataset of (datasets$ | async)"
+                class="dropdown-item"
+                (click)="selectDataset(dataset)"
+                [class.active]="dataset.id === selectedDataset.id"
+                [style.opacity]="dataset.accessRights ? 1.0 : 0.3">{{ dataset.name }}</a>
+            </div>
           </div>
         </div>
-      </div>
-    </span>
-    <ul class="navbar-nav mr-auto">
-      <li *ngIf="selectedDataset?.genotypeBrowser" class="nav-item">
+      </li>
+      <li *ngIf="selectedDataset.genotypeBrowser" class="nav-item">
         <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
       </li>
-      <li *ngIf="selectedDataset?.enrichmentTool" class="nav-item">
+      <li *ngIf="selectedDataset.phenotypeBrowser" class="nav-item">
+        <a class="nav-link" routerLink="phenotypeBrowser" routerLinkActive="active">Phenotype Browser</a>
+      </li>
+      <li *ngIf="selectedDataset.enrichmentTool" class="nav-item">
         <a class="nav-link" routerLink="enrichment" routerLinkActive="active">Enrichment Tool</a>
       </li>
-      <li *ngIf="selectedDataset?.phenotypeGenotypeTool" class="nav-item">
+      <li *ngIf="selectedDataset.phenotypeGenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
       </li>
-      <li *ngIf="selectedDataset?.phenotypeBrowser" class="nav-item">
-        <a class="nav-link" routerLink="phenotypeBrowser" routerLinkActive="active">Phenotype Browser</a>
+      <li *ngIf="selectedDataset.description" class="nav-item">
+        <a class="nav-link" routerLink="description" routerLinkActive="active">Dataset Description</a>
       </li>
     </ul>
   </nav>
+
   <router-outlet class="content"></router-outlet>
 
   <div *ngIf="registerAlertVisible"
-       class="alert alert-danger"
-       style="position: absolute; top: 70px; width: 1140px; height: 100%; left: 50%; margin-left:-570px; z-index: 100">
+       class="alert alert-danger warning-alert">
     <p>The SSC data are accessible to SFARI approved investigators. Approved investigators register (create an account) in Genotype and Phenotype in Families (GPF) and then use that account to access the collection.</p>
     <p>The process to gain access is described below:</p>
     <ol>
@@ -60,7 +65,7 @@
     Genotype and Phenotype in Families
 
     <div style="width: 100%; text-align: center;">
-      <input type="button" (click)="location.back()" value="Go back" />
+      <input class="btn btn-primary" type="button" (click)="location.back()" value="Go back" />
     </div>
   </div>
 </div>

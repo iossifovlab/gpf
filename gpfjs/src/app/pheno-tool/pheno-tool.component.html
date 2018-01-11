@@ -1,11 +1,11 @@
 <div class="container">
   <gpf-genes-block [showAllTab]="true"></gpf-genes-block>
-  <gpf-pheno-tool-measure [datasetId]="selectedDatasetId"></gpf-pheno-tool-measure>
+  <gpf-pheno-tool-measure></gpf-pheno-tool-measure>
   <gpf-pheno-tool-genotype-block></gpf-pheno-tool-genotype-block>
 
   <gpf-family-filters-block
     *ngIf="selectedDataset?.genotypeBrowser?.hasFamilyFilters"
-    [datasetConfig]="selectedDataset"
+    [dataset]="selectedDataset"
     [genotypeBrowserState]="phenoToolState">
   </gpf-family-filters-block>
 

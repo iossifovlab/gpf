@@ -11,7 +11,7 @@
           <label>
             <input #maleCheckbox
                 type="checkbox"
-                [checked]="male"
+                [checked]="gender.male"
                 (change)="genderCheckValue('male',maleCheckbox.checked)">
             <span class="gender-icon male" ></span>
           </label>
@@ -21,18 +21,12 @@
             <input
                 #femaleCheckbox
                 type="checkbox"
-                [checked]="female"
+                [checked]="gender.female"
                 (change)="genderCheckValue('female',femaleCheckbox.checked)">
             <span class="gender-icon female"></span>
           </label>
         </div>
     </div>
 
-    <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
-      <ul>
-        <li *ngFor="let error of errors">
-          {{ error }}
-        </li>
-      </ul>
-    </div>
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

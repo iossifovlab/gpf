@@ -190,6 +190,7 @@ export class PedigreeChartLevelComponent implements OnInit {
       let [first, last] = this.getFirstAndLastChild(level, mates);
       result.push(level.slice(level.indexOf(first), level.indexOf(last) + 1));
     }
+    return pedigreeDataWithPositions;
 
     return result;
   }

@@ -1,28 +1,63 @@
 import { Injectable } from '@angular/core';
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { transformAndValidate } from "class-transformer-validator";
-import { ValidationError } from "class-validator";
+import { ValidationError, validate } from 'class-validator';
 
-export const toObservableWithValidation = <T>(targetClass, observable: Observable<object>): Observable<[T, boolean, ValidationError[]]> => {
-  return observable.switchMap(value => {
-    return Observable.fromPromise(transformAndValidate(targetClass, value)).map(validationState => {
-      return [value, true, []];
-    })
-    .catch(errors => {
-      return Observable.of([value, false, errors]);
+export function toValidationObservable<T>(obj: T): Observable<T> {
+  return Observable.fromPromise(validate(obj))
+    .switchMap(errors => {
+      if (errors.length === 0) {
+        return Observable.of(obj);
+      }
+      return Observable.throw(errors);
     });
+};
+
+
+export function validationErrorsToStringArray(validationErrors: ValidationError[]): Array<string> | Array<Array<string>> {
+  let errors: string[] | string[][];
+
+  validationErrors.map(elem => {
+    if (elem.constraints) {
+      if (!errors) {
+        errors = new Array<string>();
+      }
+      (errors as string[]).push(...getSingleError(elem));
+    } else {
+      if (!errors) {
+        errors = new Array<Array<string>>();
+      }
+      (errors as string[][]).push(...getMultipleErrors(elem));
+    }
 
   });
+
+  return errors;
 }
 
+function getSingleError(elem) {
+  let result = new Array<string>();
 
-export const validationErrorsToStringArray = (validationErrors: ValidationError[]): Array<string> => {
-  let errors: string[] = [];
-  validationErrors.map((elem) => {
-    for (let object in elem.constraints) {
-      errors.push(elem.constraints[object]);
+  for (let object in elem.constraints) {
+    if (elem.constraints.hasOwnProperty(object)) {
+      result.push(elem.constraints[object]);
     }
-  });
-  return errors;
+  }
+
+  return result;
+}
+
+function getMultipleErrors(elem) {
+  let result = new Array<Array<string>>();
+
+  for (let elemOuter of elem.children) {
+    let errors = new Array<string>();
+
+    for (let elemInner of elemOuter.children) {
+      errors.push(...getSingleError(elemInner));
+    }
+
+    result.push(errors);
+  }
+
+  return result;
 }

@@ -1,0 +1,14 @@
+<div class="effectypes-col">
+  <em>{{columnName}}</em>
+  <div *ngFor="let effect of effectTypesLabels; let i=index" class="checkbox">
+    <label>
+      <input
+        #checkbox
+        type="checkbox"
+        [checked]="effectTypes.selected.indexOf(effect) !== -1"
+        (change)="checkEffectType(i, checkbox.checked);
+                  $event.stopPropagation()">
+      {{effect}}
+    </label>
+  </div>
+</div>

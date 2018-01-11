@@ -1,9 +1,8 @@
 import { Component, OnInit, forwardRef } from '@angular/core';
 
 import { IdDescription } from '../common/iddescription';
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { QueryStateCollector } from '../query/query-state-provider'
+import { QueryStateCollector } from '../query/query-state-provider';
 
 @Component({
   selector: 'gpf-enrichment-models-block',

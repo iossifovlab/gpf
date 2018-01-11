@@ -1,20 +1,14 @@
 <div *ngIf="enrichmentModels?.backgrounds" style="display:inline-block; width: 300px; padding: 15px">
   Background Models:
-  <select class="form-control" style="width: 100%" [(ngModel)]="selectedBackground">
+  <select class="form-control" style="width: 100%" [(ngModel)]="selectedEnrichmentModel.background">
     <option *ngFor="let background of enrichmentModels.backgrounds" [ngValue]="background">{{background.id}}</option>
   </select>
 </div>
 <div *ngIf="enrichmentModels?.countings" style="display:inline-block; width: 300px; padding: 15px">
   Counting Models:
-  <select class="form-control" style="width: 100%" [(ngModel)]="selectedCounting">
+  <select class="form-control" style="width: 100%" [(ngModel)]="selectedEnrichmentModel.counting">
     <option *ngFor="let counting of enrichmentModels.countings" [ngValue]="counting">{{counting.id}}</option>
   </select>
 </div>
 
-<div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
-  <ul>
-    <li *ngFor="let error of errors">
-      {{ error }}
-    </li>
-  </ul>
-</div>
+<gpf-errors-alert [errors]="errors"></gpf-errors-alert>

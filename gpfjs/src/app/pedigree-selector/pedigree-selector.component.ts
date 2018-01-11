@@ -1,123 +1,74 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
-import { Dataset, PedigreeSelector, DatasetsState } from '../datasets/datasets';
-import {
-  PedigreeSelectorState, PEDIGREE_SELECTOR_INIT,
-  PEDIGREE_SELECTOR_SET_CHECKED_VALUES, PEDIGREE_SELECTOR_CHECK_VALUE,
-  PEDIGREE_SELECTOR_UNCHECK_VALUE
-} from './pedigree-selector';
+import { Component, Input, OnChanges, SimpleChanges, forwardRef } from '@angular/core';
+import { PedigreeSelector } from '../datasets/datasets';
+import { PedigreeSelectorState } from './pedigree-selector';
 
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
-import { ValidationError } from "class-validator";
-import { QueryStateProvider } from '../query/query-state-provider'
-import { StateRestoreService } from '../store/state-restore.service'
+import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { ValidationError } from 'class-validator';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-pedigree-selector',
   templateUrl: './pedigree-selector.component.html',
   styleUrls: ['./pedigree-selector.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PedigreeSelectorComponent) }]
+  providers: [{
+    provide: QueryStateProvider,
+    useExisting: forwardRef(() => PedigreeSelectorComponent)
+  }]
 })
-export class PedigreeSelectorComponent extends QueryStateProvider implements OnInit {
-  selectedDataset: Dataset;
-  selectedPedigree: PedigreeSelector;
+export class PedigreeSelectorComponent extends QueryStateWithErrorsProvider implements OnChanges {
+  @Input()
   pedigrees: PedigreeSelector[];
-  pedigreeCheck: boolean[];
-  datasetsState: Observable<DatasetsState>;
-  pedigreeState: Observable<[PedigreeSelectorState, boolean, ValidationError[]]>;
 
-  errors: string[];
-  private flashingAlert = false;
+  pedigreeState = new PedigreeSelectorState();
 
   constructor(
-    private store: Store<any>,
     private stateRestoreService: StateRestoreService
   ) {
     super();
-    this.datasetsState = this.store.select('datasets');
-    this.pedigreeState = toObservableWithValidation(PedigreeSelectorState, this.store.select('pedigreeSelector'));
-
   }
 
   restoreStateSubscribe() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+    this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
+      .subscribe(state => {
         if (state['pedigreeSelector'] && state['pedigreeSelector']['id']) {
           for (let pedigree of  this.pedigrees) {
-            if (pedigree.id == state['pedigreeSelector']['id']) {
-              this.store.dispatch({
-                'type': PEDIGREE_SELECTOR_INIT,
-                'payload': pedigree,
-              });
+            if (pedigree.id === state['pedigreeSelector']['id']
+                  && (!this.pedigreeState.pedigree || this.pedigreeState.pedigree.id !== pedigree.id)) {
+              this.pedigreeState.pedigree = pedigree;
+              this.pedigreeState.checkedValues =
+                new Set(pedigree.domain.map(sv => sv.id));
             }
           }
         }
         if (state['pedigreeSelector'] && state['pedigreeSelector']['checkedValues']) {
-          this.store.dispatch({
-            'type': PEDIGREE_SELECTOR_SET_CHECKED_VALUES,
-            'payload': state['pedigreeSelector']['checkedValues'],
-          });
-        }
-      }
-    );
-  }
-
-  ngOnInit() {
-    this.datasetsState.subscribe(
-      (datasetsState) => {
-        let dataset = datasetsState.selectedDataset;
-        if (dataset) {
-          console.log("DS", dataset,this.selectedDataset)
-          this.selectedDataset = dataset;
-          if (dataset.pedigreeSelectors && dataset.pedigreeSelectors.length > 0) {
-            this.pedigrees = dataset.pedigreeSelectors;
-            this.selectPedigree(0);
-          }
-          this.restoreStateSubscribe();
-        }
-      }
-    );
-    this.pedigreeState.subscribe(
-      ([pedigreeState, isValid, validationErrors]) => {
-        this.errors = validationErrorsToStringArray(validationErrors);
-
-        if (!pedigreeState) {
-          return;
-        }
-        this.selectedPedigree = pedigreeState.pedigree;
-        if (!this.selectedPedigree) {
-          return;
-        }
-        let checkedValues = pedigreeState.checkedValues;
-
-        for (let i = 0; i < this.selectedPedigree.domain.length; ++i) {
-          let pedigreeId = this.selectedPedigree.domain[i].id;
-          if (checkedValues.indexOf(pedigreeId) !== -1) {
-            this.pedigreeCheck[i] = true;
-          } else {
-            this.pedigreeCheck[i] = false;
+          let checkedValues = new Set(state['pedigreeSelector']['checkedValues']);
+          if (checkedValues.size !== this.pedigreeState.checkedValues.size ||
+              Array.from(this.pedigreeState.checkedValues).filter(v => checkedValues.has(v)).length !== 0) {
+            this.pedigreeState.checkedValues = checkedValues;
           }
         }
-      }
-    );
+      });
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (!changes['pedigrees']) {
+      return;
+    }
+    if (changes['pedigrees'].currentValue
+        && changes['pedigrees'].currentValue.length !== 0) {
+      this.selectPedigree(0);
+      this.restoreStateSubscribe();
+    }
+  }
 
   pedigreeSelectorSwitch(): string {
-    if (!this.selectedDataset) {
-      return undefined;
+    if (!this.pedigrees || this.pedigrees.length === 0) {
+      return;
     }
-    if (!this.selectedDataset.pedigreeSelectors) {
-      return undefined;
-    }
-    if (this.selectedDataset.pedigreeSelectors.length === 0) {
-      return undefined;
-    }
-    if (!this.selectedPedigree || !this.selectedPedigree.domain) {
-      return undefined;
-    }
-    if (this.selectedDataset.pedigreeSelectors.length === 1) {
+    if (this.pedigrees.length === 1) {
       return 'single';
     }
     return 'multi';
@@ -129,57 +80,36 @@ export class PedigreeSelectorComponent extends QueryStateProvider implements OnI
   }
 
   selectPedigree(index): void {
-    if (index >= 0 && index < this.pedigrees.length) {
-      this.selectedPedigree = this.pedigrees[index];
-      this.store.dispatch({
-        'type': PEDIGREE_SELECTOR_INIT,
-        'payload': this.selectedPedigree,
-      });
-      this.pedigreeCheck = new Array<boolean>(this.selectedPedigree.domain.length);
+    if (index >= 0 && index < this.pedigrees.length
+        && this.pedigreeState.pedigree !== this.pedigrees[index]) {
+      this.pedigreeState.pedigree = this.pedigrees[index];
       this.selectAll();
     }
   }
 
-  selectAll(): void {
-    this.store.dispatch({
-      'type': PEDIGREE_SELECTOR_SET_CHECKED_VALUES,
-      'payload': this.selectedPedigree.domain.map(sv => sv.id),
-    });
+  selectAll() {
+    this.pedigreeState.checkedValues = new Set(this.pedigreeState.pedigree.domain.map(sv => sv.id));
   }
 
-  selectNone(): void {
-    this.store.dispatch({
-      'type': PEDIGREE_SELECTOR_SET_CHECKED_VALUES,
-      'payload': [],
-    });
+  selectNone() {
+    this.pedigreeState.checkedValues = new Set();
   }
 
-  pedigreeCheckValue(index: number, value: boolean): void {
-    if (index < 0 || index > this.selectedPedigree.domain.length) {
-      return;
+  pedigreeCheckValue(pedigreeSelector: PedigreeSelector, value: boolean): void {
+    if (value) {
+      this.pedigreeState.checkedValues.add(pedigreeSelector.id);
+    } else {
+      this.pedigreeState.checkedValues.delete(pedigreeSelector.id);
     }
-
-    this.store.dispatch({
-      'type': value ? PEDIGREE_SELECTOR_CHECK_VALUE : PEDIGREE_SELECTOR_UNCHECK_VALUE,
-      'payload': this.selectedPedigree.domain[index].id,
-
-    });
   }
 
   getState() {
-    return this.pedigreeState.take(1).map(
-      ([pedigreeState, isValid, validationErrors]) => {
-        if (!isValid) {
-          this.flashingAlert = true;
-          setTimeout(()=>{ this.flashingAlert = false }, 1000)
-
-          throw "invalid state"
-        }
-
-        return { pedigreeSelector: {
+    return this.validateAndGetState(this.pedigreeState)
+      .map(pedigreeState => ({
+        pedigreeSelector: {
           id: pedigreeState.pedigree.id,
-          checkedValues: pedigreeState.checkedValues
-        }};
-    });
+          checkedValues: Array.from(pedigreeState.checkedValues)
+        }
+      }));
   }
 }

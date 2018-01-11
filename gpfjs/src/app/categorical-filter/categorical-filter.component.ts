@@ -1,103 +1,55 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { Store } from '@ngrx/store';
-import {
-  PhenoFiltersState, CategoricalFilterState, PHENO_FILTERS_ADD_CATEGORICAL,
-  PHENO_FILTERS_CATEGORICAL_SET_SELECTION
-} from '../pheno-filters/pheno-filters';
+import { Component, OnChanges, SimpleChanges, Input } from '@angular/core';
+import { PhenoFiltersState, CategoricalFilterState } from '../pheno-filters/pheno-filters';
+import { PhenoFilter } from '../datasets/datasets';
 import { Observable } from 'rxjs/Observable';
-import { StateRestoreService } from '../store/state-restore.service'
+import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-categorical-filter',
   templateUrl: './categorical-filter.component.html',
   styleUrls: ['./categorical-filter.component.css']
 })
-export class CategoricalFilterComponent implements OnInit {
-  @Input() categoricalFilterConfig: any;
-
-  private phenoFiltersState: Observable<PhenoFiltersState>;
-  private internalSelectedValue: string;
+export class CategoricalFilterComponent implements OnChanges {
+  @Input() categoricalFilter: PhenoFilter;
+  @Input() categoricalFilterState: CategoricalFilterState;
 
   constructor(
-    private store: Store<any>,
     private stateRestoreService: StateRestoreService
   ) {
-    this.phenoFiltersState = this.store.select('phenoFilters');
   }
 
-  ngOnInit() {
-    this.store.dispatch({
-      'type': PHENO_FILTERS_ADD_CATEGORICAL,
-      'payload': {
-        'type': this.categoricalFilterConfig.measureType,
-        'name': this.categoricalFilterConfig.name,
-        'role': this.categoricalFilterConfig.measureFilter.role,
-        'measure': this.categoricalFilterConfig.measureFilter.measure
-      }
-    });
-
-    this.phenoFiltersState.subscribe(
-      (filtersState) => {
-        for (let filter of filtersState.phenoFilters) {
-          let categoricalFilter = filter as CategoricalFilterState;
-          if (filter.id == this.categoricalFilterConfig.name) {
-            if (!categoricalFilter.selection || categoricalFilter.selection.length == 0) {
-              this.internalSelectedValue = null;
-            }
-            else {
-              this.internalSelectedValue = categoricalFilter.selection[0];
-            }
+  ngOnChanges(change: SimpleChanges) {
+    if (change['categoricalFilterState'] && change['categoricalFilterState'].isFirstChange()) {
+      this.stateRestoreService
+        .getState(this.constructor.name + this.categoricalFilterState.id)
+        .take(1)
+        .subscribe(state => {
+          if (state['phenoFilters']) {
+            this.restoreCategoricalFilter(state['phenoFilters']);
           }
-        }
-      }
-    );
-
-    this.stateRestoreService.getState(this.constructor.name + this.categoricalFilterConfig.name).subscribe(
-      (state) => {
-        if (state['phenoFilters']) {
-          this.restoreCategoricalFilter(state['phenoFilters']);
-        }
-      }
-    )
+        });
+    }
   }
 
   restoreCategoricalFilter(state) {
-    for (let filter of state) {
-      if (filter.id == this.categoricalFilterConfig.name) {
-        this.store.dispatch({
-          'type': PHENO_FILTERS_CATEGORICAL_SET_SELECTION,
-          'payload': {
-            'id': this.categoricalFilterConfig.name,
-            'selection': filter.selection
-          }
-        });
-        break;
-      }
+    let phenoFilterState = state
+      .find(f => f.id === this.categoricalFilterState.id);
+    if (phenoFilterState) {
+      this.categoricalFilterState.selection =
+        phenoFilterState.selection.slice();
     }
   }
 
   set selectedValue(value) {
-    this.store.dispatch({
-      'type': PHENO_FILTERS_CATEGORICAL_SET_SELECTION,
-      'payload': {
-        'id': this.categoricalFilterConfig.name,
-        'selection': [value]
-      }
-    });
+    this.categoricalFilterState.selection = [value];
   }
 
   get selectedValue(): string {
-    return this.internalSelectedValue;
+    return this.categoricalFilterState.selection[0];
   }
 
   clear() {
-    this.store.dispatch({
-      'type': PHENO_FILTERS_CATEGORICAL_SET_SELECTION,
-      'payload': {
-        'id': this.categoricalFilterConfig.name,
-        'selection': []
-      }
-    });
+    this.categoricalFilterState.selection = [];
   }
 
 }

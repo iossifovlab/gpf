@@ -1,51 +1,34 @@
 <div class="genome-preview">
     <div *ngIf="genotypePreviewsArray">
-        <p class="overview">
-          {{genotypePreviewsArray.total}} variants selected ({{ genotypePreviewsArray.genotypePreviews.length }} shown)
-        </p>
         <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
-            <gpf-table-column header="family">
-                <gpf-table-subcolumn header="id" field="familyId"></gpf-table-subcolumn>
-                <gpf-table-subcolumn header="stdy" field="study">
-                    <span *gpfTableCellContent="let data">
-                        <a target="_blank" href="">{{data.study}}</a>
-                    </span>
-                </gpf-table-subcolumn>
-            </gpf-table-column>
-            <gpf-table-column header="variant">
-                <gpf-table-subcolumn header="loc" field="location" [comparator]=locationComparator>
-                    <span *gpfTableCellContent="let data">
-                        <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{data.location}}">{{data.location}}</a>
-                    </span>
-                </gpf-table-subcolumn>
-                <gpf-table-subcolumn header="var" field="variant"></gpf-table-subcolumn>
-            </gpf-table-column>
-            <gpf-table-column header="genotype">
-                <span *gpfTableCellContent="let data"><gpf-pedigree-chart [family]=data.pedigree></gpf-pedigree-chart></span>
-                <gpf-table-subcolumn header="ch" field="ch"></gpf-table-subcolumn>
-                <gpf-table-subcolumn header="par" field="par"></gpf-table-subcolumn>
-            </gpf-table-column>
-            <gpf-table-column header="effect">
-                <gpf-table-subcolumn header="type" field="worstEffectType"></gpf-table-subcolumn>
-                <gpf-table-subcolumn header="gene" field="genes"></gpf-table-subcolumn>
-            </gpf-table-column>
-            <gpf-table-column header="allele freq">
-                <gpf-table-subcolumn header="SSC" field="SSCfreq">
-                    <span *gpfTableCellContent="let data">{{data.SSCfreq === null ? "&nbsp;" : "SSC " + data.SSCfreq + "%"}}</span>
-                </gpf-table-subcolumn>
-                <gpf-table-subcolumn header="EVS" field="EVSfreq">
-                    <span *gpfTableCellContent="let data">{{data.EVSfreq === null ? "&nbsp;" : "EVS " + data.EVSfreq + "%"}}</span>
-                </gpf-table-subcolumn>
-                <gpf-table-subcolumn header="E65" field="E65freq">
-                    <span *gpfTableCellContent="let data">{{data.E65freq === null ? "&nbsp;"  : "E65 " +  data.E65freq + "%"}}</span>
-                </gpf-table-subcolumn>
-            </gpf-table-column>
-
-            <gpf-table-column *ngFor="let column of phenoColumns" header="{{ column.name }}">
-              <gpf-table-subcolumn *ngFor="let slot of column.slots" header="{{ slot.name }}"
-                [comparator]=additionalDataComparator(slot.id)>
-                <span *gpfTableCellContent="let data">{{ data.additionalData[slot.id] }}</span>
-              </gpf-table-subcolumn>
+            <gpf-table-column *ngFor="let column of columns">
+                <gpf-table-header caption="{{ column.name }}">
+                </gpf-table-header>
+                <gpf-table-header>
+                    <gpf-table-subheader *ngFor="let slot of column.slots" caption="{{ slot.name }}"
+                      [comparator]=comparator(slot.source)>
+                    </gpf-table-subheader>
+                </gpf-table-header>
+                <gpf-table-content>
+                    <gpf-table-subcontent *ngIf="column.source; else slots">
+                        <gpf-genotype-preview-field
+                            *gpfTableCellContent="let data"
+                            [field]="column.source"
+                            [value]="data.get(column.source)"
+                            [format]="column.format">
+                        </gpf-genotype-preview-field>
+                    </gpf-table-subcontent>
+                    <ng-template #slots>
+                        <gpf-table-subcontent *ngFor="let slot of column.slots">
+                            <gpf-genotype-preview-field
+                                *gpfTableCellContent="let data"
+                                [field]="slot.source"
+                                [value]="data.get(slot.id)"
+                                [format]="slot.format">
+                            </gpf-genotype-preview-field>
+                        </gpf-table-subcontent>
+                    </ng-template>
+                </gpf-table-content>
             </gpf-table-column>
 
             <div *gpfTableLegend style="text-align: left; border: 1px solid #dddddd; padding: 5px">
@@ -56,4 +39,6 @@
             </div>
         </gpf-table>
     </div>
+
+
 </div>

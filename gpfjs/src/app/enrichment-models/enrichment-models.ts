@@ -1,5 +1,5 @@
 import { IdDescription } from '../common/iddescription';
-
+import { IsNotEmpty } from 'class-validator';
 
 export class EnrichmentModels {
   static fromJson(json: any): EnrichmentModels {
@@ -8,8 +8,8 @@ export class EnrichmentModels {
     }
 
     return new EnrichmentModels(
-      json['counting'].map((json) => new IdDescription(json.name, json.desc)),
-      json['background'].map((json) => new IdDescription(json.name, json.desc)),
+      json['counting'].map((j) => new IdDescription(j.name, j.desc)),
+      json['background'].map((j) => new IdDescription(j.name, j.desc)),
     );
   }
 
@@ -19,3 +19,11 @@ export class EnrichmentModels {
   ) {
   }
 }
+
+export class EnrichmentModel {
+  @IsNotEmpty()
+  background: IdDescription;
+
+  @IsNotEmpty()
+  counting: IdDescription;
+};

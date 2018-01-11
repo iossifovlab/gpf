@@ -2,34 +2,36 @@
 	<svg [attr.width]="width" [attr.height]="height">
 	  <g [attr.transform]="'translate(' + marginLeft +',' + marginTop + ')'">
 	    <g #histogramContainer transform="translate(0, 50)"> </g>
-	    <g gpf-histogram-range-selector-line [(x)]="rangeStartX" [minX]="minX" [maxX]="rangeEndX" [textOnRight]="false" [text]=beforeRangeText></g>
-	    <g gpf-histogram-range-selector-line [(x)]="rangeEndX" [minX]="rangeStartX" [maxX]="maxX" [textOnRight]="true" [text]=afterRangeText></g>
-	    <text y=0 [attr.x]="(rangeStartX + rangeEndX) / 2" dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}</text>
+		<g gpf-histogram-range-selector-line [width]="2" [(x)]="startX" [textOnRight]="false" [text]=beforeRangeText></g>
+		<g gpf-histogram-range-selector-line [width]="2" [(x)]="endX" [textOnRight]="true" [text]=afterRangeText></g>
+	    <text y=0 [attr.x.px]="(xScale(selectedStartIndex.toString()) + xScale(selectedEndIndex.toString())) / 2" dy=".35em" text-anchor="middle" class="partitions-text">{{ insideRangeText }}</text>
 	  </g>
 	</svg>
 
-	<div class="histogram-controls">
-	<div class="histogram-to">
-	        <label>To (Max: {{ domainMax }})</label>
-	        <input
-	          class="form-control"
-	          required type="number"
-	          #inputRangeEnd="ngModel"
-	          [(ngModel)]="rangeEnd"
-	          min="{{ rangeStart  }}"
-	          max="{{ domainMax  }}"
-	          placeholder="end">
+	<div class="histogram-controls" *ngIf="showMinMaxInputWithDefaultValue">
+	    <div class="histogram-to">
+	        <label>To (Max: {{ bins[bins.length - 1] }})</label>
+			<div class="stepper">
+		        <input
+		          class="steps form-control no-arrows"
+		          required type="number"
+		          [(ngModel)]="rangeEndWithoutNull"
+		          placeholder="end">
+				<button type="button" class="step up" (click)="endStepUp($event)">&#x25B2;</button>
+				<button type="button" class="step down" (click)="endStepDown($event)">&#x25BC;</button>
+			</div>
 	    </div>
 	    <div class="histogram-from">
-	        <label>From (Min: {{ domainMin }})</label>
-	        <input
-	          class="form-control"
-	          required type="number"
-	          #inputRangeStart="ngModel"
-	          [(ngModel)]="rangeStart"
-	          min="{{ domainMin  }}"
-	          max="{{ rangeEnd  }}"
-	          placeholder="start">
+	        <label>From (Min: {{ bins[0] }})</label>
+			<div class="stepper">
+		        <input
+		          class="steps form-control no-arrows"
+		          required type="number"
+		          [(ngModel)]="rangeStartWithoutNull"
+		          placeholder="start">
+			  <button type="button" class="step up" (click)="startStepUp($event)">&#x25B2;</button>
+			  <button type="button" class="step down" (click)="startStepDown($event)">&#x25BC;</button>
+			</div>
 	    </div>
 	</div>
 </div>

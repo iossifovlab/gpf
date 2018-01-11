@@ -7,7 +7,7 @@ import { VarianttypesComponent } from './varianttypes/varianttypes.component';
 import { DatasetsService } from './datasets/datasets.service';
 import { DatasetsComponent } from './datasets/datasets.component';
 // import { DatasetsServiceStub } from './datasets/datasets.service.spec';
-import { EffecttypesComponent, EffecttypesColumnComponent } from './effecttypes/effecttypes.component';
+import { EffecttypesComponent } from './effecttypes/effecttypes.component';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
@@ -15,9 +15,6 @@ import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector
 
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
-import { gpfReducer } from './store/gpf-store';
-import { StoreModule } from '@ngrx/store';
 
 /*
 describe('AppComponent', () => {
@@ -38,7 +35,7 @@ describe('AppComponent', () => {
       ],
       imports: [
         NgbModule.forRoot(),
-        StoreModule.provideStore(gpfReducer),
+
       ],
       providers: [
         {

@@ -1,105 +1,63 @@
 import {
-  PresentInParentState, PRESENT_IN_PARENT_INIT, PRESENT_IN_PARENT_CHECK_ALL,
-  PRESENT_IN_PARENT_UNCHECK_ALL, PRESENT_IN_PARENT_UNCHECK,
-  PRESENT_IN_PARENT_CHECK, PRESENT_IN_PARENT_RANGE_START_CHANGE,
-  PRESENT_IN_PARENT_RANGE_END_CHANGE, PRESENT_IN_PARENT_ULTRA_RARE_CHANGE
+  PresentInParent, RARITY_ULTRARARE, RARITY_INTERVAL, RARITY_RARE, RARITY_ALL
 } from './present-in-parent';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { QueryStateProvider } from '../query/query-state-provider'
-import { QueryData, Rarity } from '../query/query'
-import { toObservableWithValidation, validationErrorsToStringArray } from '../utils/to-observable-with-validation'
-import { ValidationError } from "class-validator";
-import { StateRestoreService } from '../store/state-restore.service'
+import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+import { QueryData, Rarity } from '../query/query';
+import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
+import { ValidationError } from 'class-validator';
+import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-present-in-parent',
   templateUrl: './present-in-parent.component.html',
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PresentInParentComponent) }]
 })
-export class PresentInParentComponent extends QueryStateProvider implements OnInit {
-  motherOnly: boolean;
-  fatherOnly: boolean;
-  motherFather: boolean;
-  neither: boolean;
-
-  rarityIntervalStartInternal: number;
-  rarityIntervalEndInternal: number;
+export class PresentInParentComponent extends QueryStateWithErrorsProvider implements OnInit {
   ultraRare: boolean;
 
   rarityRadio: string;
 
-  presentInParentState: Observable<[PresentInParentState, boolean, ValidationError[]]>;
-
-  errors: string[];
-  flashingAlert = false;
+  presentInParent = new PresentInParent();
 
   constructor(
-    private store: Store<any>,
     private stateRestoreService: StateRestoreService
   ) {
     super();
-    this.presentInParentState = toObservableWithValidation(PresentInParentState, this.store.select('presentInParent'));
   }
 
   restoreCheckedState(state) {
     for (let key of state) {
-      if (key == 'father only') {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_CHECK,
-          'payload': 'fatherOnly'
-        });
+      if (key === 'father only') {
+        this.presentInParent.fatherOnly = true;
       }
-      if (key == 'mother only') {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_CHECK,
-          'payload': 'motherOnly'
-        });
+      if (key === 'mother only') {
+        this.presentInParent.motherOnly = true;
       }
-      if (key == 'mother and father') {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_CHECK,
-          'payload': 'motherFather'
-        });
+      if (key === 'mother and father') {
+        this.presentInParent.motherFather = true;
       }
-      if (key == 'neither') {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_CHECK,
-          'payload': 'neither'
-        });
+      if (key === 'neither') {
+        this.presentInParent.neither = true;
       }
     }
   }
 
   restoreRarity(state) {
     if (state['ultraRare']) {
-      this.store.dispatch({
-        'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
-        'payload': true
-      });
-    }
-    else {
-      this.store.dispatch({
-        'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
-        'payload': false
-      });
+      this.presentInParent.ultraRare = true;
+      this.presentInParent.rarityType = RARITY_ULTRARARE;
+    } else {
+      this.presentInParent.ultraRare = false;
 
-      if (state['minFreq']
-        ) {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_RANGE_START_CHANGE,
-          'payload': state['minFreq']
-        });
+      if (state['minFreq']) {
+        this.presentInParent.rarityIntervalStart = state['minFreq'];
       }
 
-      if (state['maxFreq']
-        ) {
-        this.store.dispatch({
-          'type': PRESENT_IN_PARENT_RANGE_END_CHANGE,
-          'payload': state['maxFreq']
-        });
+      if (state['maxFreq']) {
+        this.presentInParent.rarityIntervalEnd = state['maxFreq'];
       }
 
       this.restoreRadioButtonState(state);
@@ -107,138 +65,95 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   restoreRadioButtonState(state) {
-    this.rarityRadio = "ultraRare";     //Default
-    console.log("radio", state['minFreq'], state['maxFreq'])
-    if (!state['ultraRare']) {
-      if (state['minFreq'] && state['minFreq'] > 0) {
-        this.rarityRadio = "interval";
-      }
-      else {
-        if (state['maxFreq'] && state['maxFreq'] < 100) {
-          this.rarityRadio = "rare";
-        }
-        else {
-          this.rarityRadio = "all";
+    this.setFrequenciesState(
+      state['ultraRare'], state['minFreq'], state['maxFreq']);
+  }
+
+  setFrequenciesState(ultraRare, minFrequency, maxFrequency) {
+    if (ultraRare) {
+      this.ultraRareValueChange(true);
+    } else {
+      if (minFrequency && minFrequency > 0) {
+        this.rarityTypeChange(RARITY_INTERVAL);
+      } else {
+        if (maxFrequency && maxFrequency < 100) {
+          this.rarityTypeChange(RARITY_RARE);
+        } else {
+          this.rarityTypeChange(RARITY_ALL);
         }
       }
     }
   }
 
-  restoreStateSubscribe() {
-    this.stateRestoreService.getState(this.constructor.name).subscribe(
-      (state) => {
+  restoreState() {
+    this.stateRestoreService.getState(this.constructor.name)
+      .take(1)
+      .subscribe(state => {
         if (state['presentInParent'] && state['presentInParent']['presentInParent']) {
-          console.log("presentInParent", state['presentInParent'])
-          this.store.dispatch({
-            'type': PRESENT_IN_PARENT_UNCHECK_ALL,
-          });
-          this.restoreCheckedState(state['presentInParent']['presentInParent'])
+          this.restoreCheckedState(state['presentInParent']['presentInParent']);
         }
 
         if (state['presentInParent'] && state['presentInParent']['rarity']) {
-          this.restoreRarity(state['presentInParent']['rarity'])
+          this.restoreRarity(state['presentInParent']['rarity']);
         }
       }
     );
   }
 
   ngOnInit() {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_INIT,
-    });
-
-    this.restoreStateSubscribe();
-
-    this.presentInParentState.subscribe(
-      ([presentInParentState, isValid, validationErrors]) => {
-        this.errors = validationErrorsToStringArray(validationErrors);
-
-        this.motherOnly = presentInParentState.motherOnly;
-        this.fatherOnly = presentInParentState.fatherOnly;
-        this.motherFather = presentInParentState.motherFather;
-        this.neither = presentInParentState.neither;
-
-        this.rarityIntervalStartInternal = presentInParentState.rarityIntervalStart;
-        this.rarityIntervalEndInternal = presentInParentState.rarityIntervalEnd;
-        this.ultraRare = presentInParentState.ultraRare;
-      }
-    );
+    this.restoreState();
   }
 
   selectAll(): void {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_CHECK_ALL,
-    });
+    this.presentInParent.fatherOnly = true;
+    this.presentInParent.motherOnly = true;
+    this.presentInParent.motherFather = true;
+    this.presentInParent.neither = true;
   }
 
   selectNone(): void {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_UNCHECK_ALL,
-    });
+    this.presentInParent.fatherOnly = false;
+    this.presentInParent.motherOnly = false;
+    this.presentInParent.motherFather = false;
+    this.presentInParent.neither = false;
   }
 
   presentInChildCheckValue(key: string, value: boolean): void {
-    if (key === 'motherOnly' || key === 'fatherOnly' || key === 'motherFather' || key === 'neither') {
-      this.store.dispatch({
-        'type': value ? PRESENT_IN_PARENT_CHECK : PRESENT_IN_PARENT_UNCHECK,
-        'payload': key
-      });
+    if (key === 'motherOnly' || key === 'fatherOnly'
+        || key === 'motherFather' || key === 'neither') {
+      this.presentInParent[key] = value;
     }
   }
 
   rarityChangeValue(start: number, end: number) {
-    this.ultraRareValueChange(false);
-    this.rarityIntervalStart = start;
-    this.rarityIntervalEnd = end;
+    this.presentInParent.rarityIntervalStart = start;
+    this.presentInParent.rarityIntervalEnd = end;
   }
 
-  set rarityIntervalStart(start: number) {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_RANGE_START_CHANGE,
-      'payload': start
-    });
-  }
-
-  get rarityIntervalStart() {
-    return this.rarityIntervalStartInternal;
-  }
-
-
-  set rarityIntervalEnd(end: number) {
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_RANGE_END_CHANGE,
-      'payload': end
-    });
-  }
-
-  get rarityIntervalEnd() {
-    return this.rarityIntervalEndInternal;
+  rarityTypeChange(rarityType: string) {
+    this.presentInParent.rarityType = rarityType;
   }
 
   ultraRareValueChange(ultraRare: boolean) {
+    this.presentInParent.ultraRare = ultraRare;
     if (ultraRare) {
-      this.rarityRadio = "ultraRare";
+      this.presentInParent.rarityType = RARITY_ULTRARARE;
     }
-    this.store.dispatch({
-      'type': PRESENT_IN_PARENT_ULTRA_RARE_CHANGE,
-      'payload': ultraRare
-    });
   }
 
   rarityRadioChange(rarity: string): void {
-    console.log('rarity radio changed: ', rarity);
     this.ultraRareValueChange(false);
     switch (rarity) {
       case 'all':
-        this.rarityRadio = 'all';
+        this.rarityTypeChange(RARITY_ALL);
         this.rarityChangeValue(0, 100);
         break;
       case 'rare':
-        this.rarityRadio = 'rare';
+        this.rarityTypeChange(RARITY_RARE);
         this.rarityChangeValue(0, 1);
         break;
       case 'interval':
-        this.rarityRadio = 'interval';
+        this.rarityTypeChange(RARITY_INTERVAL);
         this.rarityChangeValue(0, 1);
         break;
       default:
@@ -247,33 +162,26 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
   }
 
   getState() {
-    return this.presentInParentState.take(1).map(
-      ([presentInParentState, isValid, validationErrors]) => {
-        if (!isValid) {
-          this.flashingAlert = true;
-          setTimeout(()=>{ this.flashingAlert = false }, 1000)
-
-           throw "invalid state"
-        }
-
+    return this.validateAndGetState(this.presentInParent)
+      .map(presentInParent => {
         let result = new Array<string>();
-        if (presentInParentState.fatherOnly) {
+        if (presentInParent.fatherOnly) {
           result.push('father only');
         }
-        if (presentInParentState.motherOnly) {
+        if (presentInParent.motherOnly) {
           result.push('mother only');
         }
-        if (presentInParentState.motherFather) {
+        if (presentInParent.motherFather) {
           result.push('mother and father');
         }
-        if (presentInParentState.neither) {
+        if (presentInParent.neither) {
           result.push('neither');
         }
 
         let rarity: Rarity = {
-          ultraRare: presentInParentState.ultraRare,
-          minFreq: presentInParentState.rarityIntervalStart,
-          maxFreq: presentInParentState.rarityIntervalEnd
+          ultraRare: presentInParent.ultraRare,
+          minFreq: presentInParent.rarityIntervalStart,
+          maxFreq: presentInParent.rarityIntervalEnd
         };
         if (rarity.ultraRare) {
           rarity.minFreq = null;
@@ -288,7 +196,12 @@ export class PresentInParentComponent extends QueryStateProvider implements OnIn
           }
         }
 
-        return { presentInParent: { presentInParent: result, rarity: rarity }}
-    });
+        return {
+          presentInParent: {
+            presentInParent: result,
+            rarity: rarity
+          }
+        };
+      });
   }
 }

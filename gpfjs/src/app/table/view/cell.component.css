@@ -1,0 +1,4 @@
+.fixed-height {
+  max-height: 94px;
+  overflow: auto;
+}

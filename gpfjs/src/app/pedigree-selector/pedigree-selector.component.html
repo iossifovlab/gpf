@@ -6,19 +6,19 @@
 
   <div
     *ngIf="pedigreeSelectorSwitch() == 'single'"
-    class="card-header card-title">{{ selectedPedigree.name }}</div>
+    class="card-header card-title">{{ pedigreeState.pedigree?.name }}</div>
   <div
     *ngIf="pedigreeSelectorSwitch() == 'multi'"
     class="card-header card-title">
     <div class="btn-group">
       <div class="dropdown">
         <button
-          class="btn btn-sm btn-secondary dropdown-toggle"
+          class="btn btn-sm dropdown-toggle"
           type="button"
           id="dropdownMenuButton"
           data-toggle="dropdown"
           aria-haspopup="true"
-          aria-expanded="false">{{selectedPedigree.name}}</button>
+          aria-expanded="false">{{ pedigreeState.pedigree?.name }}</button>
         <div
           class="dropdown-menu"
           aria-labelledby="dropdownMenuButton">
@@ -41,27 +41,20 @@
         (click)="selectNone()"
         class="btn btn-default">None</button>
     </div>
-    <div *ngIf="selectedPedigree">
-      <div
-        *ngFor="let selectorValue of selectedPedigree.domain; let i=index"
-        class="checkbox">
-        <label> <input
-          #checkbox
-          type="checkbox"
-          [checked]="pedigreeCheck[i]"
-          (change)="pedigreeCheckValue(i, checkbox.checked)"> <span
-          class="pedigree-icon"
-          [style.background-color]="selectorValue.color"></span>
-          {{selectorValue.name}}
-        </label>
-      </div>
+    <div
+      *ngFor="let selectorValue of pedigreeState.pedigree?.domain"
+      class="checkbox">
+      <label> <input
+        #checkbox
+        type="checkbox"
+        [checked]="pedigreeState.checkedValues.has(selectorValue.id)"
+        (change)="pedigreeCheckValue(selectorValue, checkbox.checked)"> <span
+        class="pedigree-icon"
+        [style.background-color]="selectorValue.color"></span>
+        {{selectorValue.name}}
+      </label>
     </div>
   </div>
-  <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
-    <ul>
-      <li *ngFor="let error of errors">
-        {{ error }}
-      </li>
-    </ul>
-  </div>
+
+  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

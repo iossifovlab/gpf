@@ -109,6 +109,37 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CommonReportsComponent } from './common-reports/common-reports.component';
 import { VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
+import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
+
+import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component';
+import { GenomicScoresService } from './genomic-scores/genomic-scores.service';
+import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
+
+import { MarkdownModule } from 'angular2-markdown';
+import { UserManagementComponent } from './user-management/user-management.component';
+import { UserInfoPipe } from './users/user-info.pipe';
+import { UsersTableComponent } from './users-table/users-table.component';
+import { GroupsTableComponent } from './groups-table/groups-table.component';
+import { UserEditComponent } from './user-edit/user-edit.component';
+import { ManagementComponent } from './management/management.component';
+import { UsersGroupsService } from './users-groups/users-groups.service';
+
+import { Select2Module } from 'ng2-select2';
+import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
+import { UserCreateComponent } from './user-create/user-create.component';
+import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
+import { GroupsBulkRemoveComponent } from './groups-bulk-remove/groups-bulk-remove.component';
+import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
+import { UsersActionsComponent } from './users-actions/users-actions.component';
+import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
+import { GenotypePreviewChromosomesComponent } from './genotype-preview-chromosomes/genotype-preview-chromosomes.component';
+import { ChromosomeService } from './chromosome-service/chromosome.service';
+import { ChromosomeComponent } from './chromosome/chromosome.component';
+import { RedirectOnErrorHttpService } from './config/redirect-on-error.service';
+import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
+import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
+import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
+import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
 import { VisPedigreeInputComponent } from './vis-pedigree-input/vis-pedigree-input.component';
@@ -130,7 +161,7 @@ const appRoutes: Routes = [
     children: [
       {
         path: 'browser',
-        component: GenotypeBrowserComponent
+        component: GenotypeBrowserSingleViewComponent
       },
       {
         path: 'enrichment',
@@ -145,8 +176,21 @@ const appRoutes: Routes = [
         component: PhenoBrowserComponent
       },
       {
+        path: 'description',
+        component: DatasetDescriptionComponent
+      },
+      {
         path: '**',
         redirectTo: 'browser'
+      }
+    ]
+  },
+  {
+    path: 'all-datasets',
+    children : [
+      {
+        path: 'browser',
+        component: GenotypeBrowserMetaViewComponent
       }
     ]
   },
@@ -166,6 +210,33 @@ const appRoutes: Routes = [
       {
         path: 'reports',
         component: VariantReportsComponent
+      }
+    ]
+  },
+  {
+    path: 'management',
+    component: ManagementComponent,
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        component: UserManagementComponent
+      },
+      {
+        path: 'users/create',
+        component: UserCreateComponent
+      },
+      {
+        path: 'users/add-group',
+        component: GroupsBulkAddComponent
+      },
+      {
+        path: 'users/remove-group',
+        component: GroupsBulkRemoveComponent
+      },
+      {
+        path: 'users/:id',
+        component: UserEditComponent
       }
     ]
   },
@@ -242,6 +313,27 @@ const appRoutes: Routes = [
     StudiesSummariesComponent,
     CommonReportsComponent,
     VariantReportsComponent,
+    DatasetDescriptionComponent,
+    GenomicScoresComponent,
+    GenomicScoresBlockComponent,
+    UserInfoPipe,
+    UserManagementComponent,
+    UsersTableComponent,
+    GroupsTableComponent,
+    UserEditComponent,
+    ManagementComponent,
+    UserCreateComponent,
+    GroupsBulkAddComponent,
+    GroupsBulkRemoveComponent,
+    UserGroupsSelectorComponent,
+    UsersActionsComponent,
+    DatasetsTableComponent,
+    GenotypePreviewChromosomesComponent,
+    ChromosomeComponent,
+    GenotypeBrowserSingleViewComponent,
+    GenotypeBrowserMetaViewComponent,
+    GenotypePreviewFieldComponent,
+    ErrorsAlertComponent,
     PerfectlyDrawablePedigreeComponent,
     VisPedigreeInputComponent,
     NonPdpPedigreesComponent,
@@ -254,11 +346,14 @@ const appRoutes: Routes = [
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    StoreModule.provideStore(gpfReducer),
-    StoreDevtoolsModule.instrumentOnlyWithExtension(),
     RouterModule.forRoot(appRoutes),
     CookieModule.forRoot(),
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    MarkdownModule.forRoot(),
+    Select2Module,
+    ConfirmationPopoverModule.forRoot({
+      confirmButtonType: 'danger'
+    })
   ],
   providers: [
     ConfigService,
@@ -279,6 +374,11 @@ const appRoutes: Routes = [
     PValueIntensityPipe,
     StudiesSummariesService,
     VariantReportsService,
+    GenomicScoresService,
+    UsersGroupsService,
+    ChromosomeService,
+    { provide: Http, useClass: RedirectOnErrorHttpService,
+      deps: [XHRBackend, RequestOptions, Injector]},
     PedigreeMockService,
     PerfectlyDrawablePedigreeService
   ],

@@ -1,42 +1,11 @@
+import { ArrayNotEmpty } from 'class-validator';
 
-export const EFFECT_TYPE_CHECK = 'EFFECT_TYPE_CHECK';
-export const EFFECT_TYPE_UNCHECK = 'EFFECT_TYPE_UNCHECK';
-export const EFFECT_TYPE_SET = 'EFFECT_TYPE_SET';
-export const EFFECT_TYPE_INIT = 'EFFECT_TYPE_INIT';
-
-import { ArrayNotEmpty } from "class-validator"
-
-export class EffectTypesState {
+export class EffectTypes {
   @ArrayNotEmpty({
-    message: "select at least one"
+    message: 'select at least one'
   })
-  selected: Array<string>;
+  selected: Array<string> = [];
 }
-
-const initialState: EffectTypesState = {
-  selected: []
-};
-
-export function effectTypesReducer(
-  state: EffectTypesState = null, action): EffectTypesState {
-  switch (action.type) {
-    case EFFECT_TYPE_CHECK:
-      return Object.assign({}, state,
-        { selected: [...state.selected.filter(et => et !== action.payload),
-                    action.payload ]});
-    case EFFECT_TYPE_UNCHECK:
-      return Object.assign({}, state,
-        { selected: state.selected.filter(et => et !== action.payload) });
-    case EFFECT_TYPE_SET:
-      return Object.assign({}, state,
-        { selected: [...action.payload] });
-    case EFFECT_TYPE_INIT:
-      return initialState;
-    default:
-      return state;
-  }
-};
-
 
 export const ALL: string[] = [
   'Nonsense',

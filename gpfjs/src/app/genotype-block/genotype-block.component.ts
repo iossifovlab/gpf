@@ -1,10 +1,10 @@
-import { DatasetsState } from '../datasets/datasets';
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, AfterViewInit, forwardRef } from '@angular/core';
 
-import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 
-import { QueryStateCollector } from '../query/query-state-provider'
+import { QueryStateCollector } from '../query/query-state-provider';
+import { Dataset, PedigreeSelector } from '../datasets/datasets';
+import { DatasetsService } from '../datasets/datasets.service';
 
 @Component({
   selector: 'gpf-genotype-block',
@@ -12,51 +12,60 @@ import { QueryStateCollector } from '../query/query-state-provider'
   styleUrls: ['./genotype-block.component.css'],
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => GenotypeBlockComponent) }]
 })
-export class GenotypeBlockComponent extends QueryStateCollector implements OnInit {
+export class GenotypeBlockComponent extends QueryStateCollector implements AfterViewInit {
   hasCNV: Observable<boolean>;
   hasPedigreeSelector: Observable<boolean>;
   hasPresentInChild: Observable<boolean>;
   hasPresentInParent: Observable<boolean>;
   hasStudyTypes: Observable<boolean>;
+  pedigrees: Observable<Array<PedigreeSelector>>;
+  selectedDataset$: Observable<Dataset>;
 
   constructor(
-    private store: Store<any>
+    private datasetsService: DatasetsService
   ) {
     super();
-    let datasetsState: Observable<DatasetsState> = this.store.select('datasets');
-    this.hasCNV = datasetsState.map(state => {
-      if (!state || !state.selectedDataset) {
-        return false;
-      }
-      return state.selectedDataset.genotypeBrowser.hasCNV;
-    });
-    this.hasPedigreeSelector = datasetsState.map(state => {
-      if (!state || !state.selectedDataset) {
-        return false;
-      }
-      return state.selectedDataset.genotypeBrowser.hasPedigreeSelector;
-    });
-    this.hasPresentInChild = datasetsState.map(state => {
-      if (!state || !state.selectedDataset) {
-        return false;
-      }
-      return state.selectedDataset.genotypeBrowser.hasPresentInChild;
-    });
-    this.hasPresentInParent = datasetsState.map(state => {
-      if (!state || !state.selectedDataset) {
-        return false;
-      }
-      return state.selectedDataset.genotypeBrowser.hasPresentInParent;
-    });
-    this.hasStudyTypes = datasetsState.map(state => {
-      if (!state || !state.selectedDataset) {
-        return false;
-      }
-      return state.selectedDataset.genotypeBrowser.hasStudyTypes;
-    });
   }
 
-  ngOnInit() {
+  ngAfterViewInit() {
+    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    let selectedDataset$ = this.selectedDataset$;
+    this.hasCNV = selectedDataset$.map(dataset => {
+      if (!dataset) {
+        return false;
+      }
+      return dataset.genotypeBrowser.hasCNV;
+    });
+    this.hasPedigreeSelector = selectedDataset$.map(dataset => {
+      if (!dataset) {
+        return false;
+      }
+      return dataset.genotypeBrowser.hasPedigreeSelector;
+    });
+    this.hasPresentInChild = selectedDataset$.map(dataset => {
+      if (!dataset) {
+        return false;
+      }
+      return dataset.genotypeBrowser.hasPresentInChild;
+    });
+    this.hasPresentInParent = selectedDataset$.map(dataset => {
+      if (!dataset) {
+        return false;
+      }
+      return dataset.genotypeBrowser.hasPresentInParent;
+    });
+    this.hasStudyTypes = selectedDataset$.map(dataset => {
+      if (!dataset) {
+        return false;
+      }
+      return dataset.genotypeBrowser.hasStudyTypes;
+    });
+    this.pedigrees = selectedDataset$.map(dataset => {
+      if (!dataset) {
+        return [];
+      }
+      return dataset.pedigreeSelectors;
+    });
   }
 
 }

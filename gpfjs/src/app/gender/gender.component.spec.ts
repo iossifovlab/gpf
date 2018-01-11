@@ -5,8 +5,6 @@ import { DebugElement } from '@angular/core';
 
 import { GenderComponent } from './gender.component';
 
-import { gpfReducer } from '../store/gpf-store';
-import { StoreModule } from '@ngrx/store';
 
 describe('GenderComponent', () => {
   let component: GenderComponent;
@@ -16,7 +14,7 @@ describe('GenderComponent', () => {
     TestBed.configureTestingModule({
       declarations: [GenderComponent],
       imports: [
-        StoreModule.provideStore(gpfReducer),
+
       ],
 
     })
@@ -34,22 +32,22 @@ describe('GenderComponent', () => {
   });
 
   it('both genders should be selected after create', () => {
-    expect(component.male).toBeTruthy();
-    expect(component.female).toBeTruthy();
+    expect(component.gender.male).toBeTruthy();
+    expect(component.gender.female).toBeTruthy();
   });
 
   it('both genders should be selected after selectAll', () => {
     component.selectAll();
 
-    expect(component.male).toBeTruthy();
-    expect(component.female).toBeTruthy();
+    expect(component.gender.male).toBeTruthy();
+    expect(component.gender.female).toBeTruthy();
   });
 
   it('both genders should be un-selected after selectNone', () => {
     component.selectNone();
 
-    expect(component.male).toBe(false);
-    expect(component.female).toBe(false);
+    expect(component.gender.male).toBe(false);
+    expect(component.gender.female).toBe(false);
   });
 
 });

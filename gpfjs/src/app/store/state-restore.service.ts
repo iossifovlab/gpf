@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Headers, Http, Response, RequestOptions } from '@angular/http';
-import { Observable } from 'rxjs';
+import { Observable, Scheduler } from 'rxjs';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Router } from '@angular/router';
 
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/subscribeOn';
 
 @Injectable()
 export class StateRestoreService {
@@ -16,10 +17,10 @@ export class StateRestoreService {
   constructor(
     private router: Router
   ) {
-    //Reset state when tool/dataset is changed
-    //This prevents restoring the initial state constantly
-    router.events.subscribe(
-      (params) => {
+    // Reset state when tool/dataset is changed
+    // This prevents restoring the initial state constantly
+    router.events
+      .subscribe(params => {
         let newUrl = this.router.url.split(';')[0];
         if (this.firstUrl == null) {
           this.firstUrl = newUrl;
@@ -27,17 +28,11 @@ export class StateRestoreService {
           this.state.next({});
           this.emptyObjectSend = true;
         }
-      }
-    );
+      });
   }
 
   getState(key: string): Observable<any> {
-    if (this.subscribedKeys.has(key)) {
-      return Observable.of({});
-    } else {
-      this.subscribedKeys.add(key);
-      return this.state;
-    }
+    return this.state.asObservable().subscribeOn(Scheduler.async);
   }
 
   onParamsUpdate(jsonEncodedState: string) {

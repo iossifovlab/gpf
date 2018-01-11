@@ -1,52 +1,11 @@
+import { Equals, ValidateIf } from 'class-validator';
 
-export const GENDER_CHECK = 'GENDER_CHECK';
-export const GENDER_UNCHECK = 'GENDER_UNCHECK';
-export const GENDER_CHECK_ALL = 'GENDER_CHECK_ALL';
-export const GENDER_UNCHECK_ALL = 'GENDER_UNCHECK_ALL';
-export const GENDER_INIT = 'GENDER_INIT';
-
-import { Equals, ValidateIf } from "class-validator";
-
-export class GenderState {
-  female: boolean;
+export class Gender {
+  female = true;
 
   @ValidateIf(o => !o.female)
   @Equals(true, {
-    message: "select at least one"
+    message: 'select at least one'
   })
-  male: boolean;
-};
-
-const initialState: GenderState = {
-  female: true,
-  male: true
-};
-
-export function genderReducer(
-  state: GenderState = null,
-  action): GenderState {
-
-
-  switch (action.type) {
-    case GENDER_CHECK:
-      return Object.assign({}, state,
-        { [action.payload]: true });
-    case GENDER_UNCHECK:
-      return Object.assign({}, state,
-        { [action.payload]: false });
-    case GENDER_CHECK_ALL:
-      return {
-        female: true,
-        male: true
-      };
-    case GENDER_UNCHECK_ALL:
-      return {
-        female: false,
-        male: false
-      };
-    case GENDER_INIT:
-      return initialState;
-    default:
-      return state;
-  }
+  male = true;
 };

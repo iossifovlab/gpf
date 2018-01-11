@@ -1,12 +1,13 @@
-{{ continuousFilterConfig?.name }}:
-<gpf-pheno-measure-selector [datasetId]="datasetId"
-                            [(selectedMeasure)]="selectedMeasure"
-                            (measuresChange)="updateMeasures($event)">
+{{ continuousFilterState['name'] }}:
+<gpf-pheno-measure-selector
+    [(selectedMeasure)]="selectedMeasure"
+    [initialSelectedMeasure]="continuousFilterState.measure"
+    (measuresChange)="updateMeasures($event)" >
 </gpf-pheno-measure-selector>
 
 <gpf-continuous-filter
   *ngIf=selectedMeasure
   [datasetId]=datasetId
-  [filterId]=continuousFilterConfig.name
+  [continuousFilterState]=continuousFilterState
   [measureName]=selectedMeasure?.name>
 </gpf-continuous-filter>

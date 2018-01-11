@@ -1,4 +1,4 @@
-//Loosely based on https://github.com/oxycoder/ng2-loading-animate
+// Loosely based on https://github.com/oxycoder/ng2-loading-animate
 
 import { Injectable, EventEmitter } from '@angular/core';
 

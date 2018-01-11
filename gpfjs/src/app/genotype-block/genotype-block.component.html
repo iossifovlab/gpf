@@ -1,8 +1,7 @@
-
 <div class="genotype-block form-block">
 	<div class="row row-eq-height">
 		<div *ngIf="hasPedigreeSelector | async" class="col-lg-3">
-			<gpf-pedigree-selector></gpf-pedigree-selector>
+			<gpf-pedigree-selector [pedigrees]="pedigrees | async"></gpf-pedigree-selector>
 		</div>
 		<div *ngIf="hasPresentInChild | async" class="col-lg-3">
 			<gpf-present-in-child></gpf-present-in-child>
@@ -16,14 +15,13 @@
 			<gpf-gender></gpf-gender>
 		  </div>
 		  <div>
-			<gpf-varianttypes></gpf-varianttypes>
+			<gpf-varianttypes [hasCNV]="hasCNV | async"></gpf-varianttypes>
 		  </div>
 		</div>
 
         <div *ngIf="hasStudyTypes | async" class="col-lg-2">
             <gpf-study-types></gpf-study-types>
         </div>
-		<gpf-effecttypes class="panel-row col-lg-4"> </gpf-effecttypes>
+		<gpf-effecttypes [hasCNV]="hasCNV | async" class="panel-row col-lg-4"> </gpf-effecttypes>
 	</div>
-
 </div>

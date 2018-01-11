@@ -1,6 +1,7 @@
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
-
+import { UserGroup } from '../users-groups/users-groups';
+import * as _ from 'lodash';
 
 export class SelectorValue extends IdName {
   static fromJson(json: any): SelectorValue {
@@ -40,7 +41,7 @@ export class PedigreeSelector extends IdName {
     return new PedigreeSelector(
       json['id'],
       json['name'],
-      json['souce'],
+      json['source'],
       SelectorValue.fromJson(json['defaultValue']),
       SelectorValue.fromJsonArray(json['domain']),
     );
@@ -64,19 +65,19 @@ export class PedigreeSelector extends IdName {
   }
 }
 
-export class PhenoColumnSlot {
-  static fromJson(json: any): PhenoColumnSlot {
-    return new PhenoColumnSlot(
+export class GenomicMetric {
+  static fromJson(json: any): GenomicMetric {
+    return new GenomicMetric(
       json['id'],
       json['name']
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<PhenoColumnSlot> {
+  static fromJsonArray(jsonArray: Array<Object>): Array<GenomicMetric> {
     if (!jsonArray) {
       return undefined;
     }
-    return jsonArray.map((json) => PhenoColumnSlot.fromJson(json));
+    return jsonArray.map((json) => GenomicMetric.fromJson(json));
   }
 
   constructor(
@@ -85,24 +86,53 @@ export class PhenoColumnSlot {
   ) {}
 }
 
-export class PhenoColumn {
-  static fromJson(json: any): PhenoColumn {
-    return new PhenoColumn(
+export class AdditionalColumnSlot {
+  static fromJson(json: any): AdditionalColumnSlot {
+    return new AdditionalColumnSlot(
+      json['id'],
       json['name'],
-      PhenoColumnSlot.fromJsonArray(json['slots']),
+      json['source'],
+      json['format']
     );
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<PhenoColumn> {
+  static fromJsonArray(jsonArray: Array<Object>): Array<AdditionalColumnSlot> {
     if (!jsonArray) {
       return undefined;
     }
-    return jsonArray.map((json) => PhenoColumn.fromJson(json));
+    return jsonArray.map((json) => AdditionalColumnSlot.fromJson(json));
   }
 
   constructor(
+    readonly id: string,
     readonly name: string,
-    readonly slots: Array<PhenoColumnSlot>
+    readonly source: string,
+    readonly format: string,
+  ) {}
+}
+
+export class AdditionalColumn {
+  static fromJson(json: any): AdditionalColumn {
+    return new AdditionalColumn(
+      json['id'],
+      json['name'],
+      json['source'],
+      AdditionalColumnSlot.fromJsonArray(json['slots']),
+    );
+  }
+
+  static fromJsonArray(jsonArray: Array<Object>): Array<AdditionalColumn> {
+    if (!jsonArray) {
+      return [];
+    }
+    return jsonArray.map((json) => AdditionalColumn.fromJson(json));
+  }
+
+  constructor(
+    readonly id: string,
+    readonly name: string,
+    readonly source: string,
+    readonly slots: Array<AdditionalColumnSlot>
   ) {}
 }
 
@@ -148,6 +178,9 @@ export class PhenoFilter {
 }
 
 export class GenotypeBrowser {
+
+  readonly columns: Array<AdditionalColumn>;
+
   static fromJson(json: any): GenotypeBrowser {
     return new GenotypeBrowser(
       json['hasPedigreeSelector'],
@@ -157,9 +190,13 @@ export class GenotypeBrowser {
       json['hasFamilyFilters'],
       json['hasStudyTypes'],
       json['mainForm'],
-      PhenoColumn.fromJsonArray(json['phenoColumns']),
+      json['genesBlockShowAll'],
+      json['previewColumns'],
+      [...AdditionalColumn.fromJsonArray(json['genotypeColumns']),
+       ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters']),
+      GenomicMetric.fromJsonArray(json['genomicMetrics'])
     );
   }
 
@@ -171,12 +208,18 @@ export class GenotypeBrowser {
     readonly hasFamilyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly mainForm: string,
-    readonly phenoColumns: Array<PhenoColumn>,
+    readonly genesBlockShowAll: boolean,
+    readonly previewColumnsIds: string[],
+    readonly allColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
-    readonly familyStudyFilters: Array<PhenoFilter>
+    readonly familyStudyFilters: Array<PhenoFilter>,
+    readonly genomicMetrics: Array<GenomicMetric>,
   ) {
-
+    this.columns = _.filter(this.allColumns,
+      (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
   }
+
+
 }
 
 export class Dataset extends IdName {
@@ -186,6 +229,7 @@ export class Dataset extends IdName {
     }
     return new Dataset(
       json['id'],
+      json['description'],
       json['name'],
       json['accessRights'],
       json['studies'],
@@ -196,6 +240,7 @@ export class Dataset extends IdName {
       json['phenotypeBrowser'],
       GenotypeBrowser.fromJson(json['genotypeBrowser']),
       PedigreeSelector.fromJsonArray(json['pedigreeSelectors']),
+      UserGroup.fromJsonArray(json['groups']),
     );
   }
 
@@ -209,6 +254,7 @@ export class Dataset extends IdName {
 
   constructor(
     readonly id: string,
+    readonly description: string,
     readonly name: string,
     readonly accessRights: boolean,
     readonly studies: string[],
@@ -219,38 +265,9 @@ export class Dataset extends IdName {
     readonly phenotypeBrowser: boolean,
     readonly genotypeBrowser: GenotypeBrowser,
     readonly pedigreeSelectors: PedigreeSelector[],
+    readonly groups: UserGroup[]
   ) {
     super(id, name);
   }
 }
 
-
-export interface DatasetsState {
-  selectedDataset: Dataset;
-  datasets: Dataset[];
-};
-
-const initialDatasetState = {
-  selectedDataset: undefined,
-  datasets: undefined
-};
-
-export const DATASETS_INIT = 'DATASETS_INIT';
-export const DATASETS_SELECT = 'DATASETS_SELECT';
-
-export function datasetsReducer(state: DatasetsState = initialDatasetState, action) {
-  switch (action.type) {
-    case DATASETS_INIT:
-      return {
-        datasets: action.payload,
-        selectedDataset: null
-      };
-    case DATASETS_SELECT:
-      return {
-        datasets: state.datasets,
-        selectedDataset: action.payload
-      };
-    default:
-      return state;
-  }
-}

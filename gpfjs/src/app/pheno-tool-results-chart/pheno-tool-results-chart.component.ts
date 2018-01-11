@@ -26,7 +26,7 @@ export class PhenoToolResultsChartComponent implements OnInit {
     this.yScale = d3.scaleLinear().range([this.innerHeight, 0]);
     this.calcMinMax();
 
-    let svg = d3.select(this.innerGroup.nativeElement)
+    let svg = d3.select(this.innerGroup.nativeElement);
     svg.selectAll(".axis").remove();
     svg.append("g")
       .attr("class", "axis")
@@ -52,6 +52,14 @@ export class PhenoToolResultsChartComponent implements OnInit {
     let max = Math.max( ...values );
 
     this.yScale.domain([min, max]);
+  }
+
+  calculateGap() {
+    if (!this.phenoToolResults.results ||
+        !this.phenoToolResults.results.length) {
+      return 0;
+    }
+    return (this.width - 200) / this.phenoToolResults.results.length;
   }
 
 }

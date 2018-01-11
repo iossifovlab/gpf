@@ -1,0 +1,38 @@
+.stepper {
+    width: 110px;
+    display: inline-block;
+    position: relative;
+}
+
+.steps {
+    width: 100%;
+}
+
+.step {
+    font-size: 6px;
+    width: 20px;
+    height: 10px;
+    position: absolute;
+    right: 0px;
+    margin: 2px;
+    z-position: 100;
+    vertical-align: middle;
+    line-height: 3px;
+}
+
+.step.up {
+    top: 0px;
+}
+
+.step.down {
+    bottom: 0px;
+}
+
+.no-arrows {
+    -moz-appearance:textfield;
+}
+
+.no-arrows::-webkit-outer-spin-button,
+.no-arrows::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}

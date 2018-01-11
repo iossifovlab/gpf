@@ -1,33 +1,49 @@
 import { NgModule } from '@angular/core';
 import { CommonModule }        from '@angular/common';
 
-import { GpfTableComponent,
-         GpfTableColumnComponent,
-         GpfTableCellComponent,
-         GpfTableSubcolumnComponent,
-         GpfTableCellHeaderDirective,
-         GpfTableCellContentDirective,
-         GpfTableHeaderComponent,
-         GpfTableLegendDirective } from './table.component';
+import { GpfTableComponent } from './table.component';
+import { ResizeService } from './resize.service';
+
+import { GpfTableColumnComponent } from './component/column.component';
+import { GpfTableSubheaderComponent } from './component/subheader.component';
+import { GpfTableContentHeaderComponent } from './component/header.component';
+import { GpfTableCellContentDirective } from './component/content.directive';
+import { GpfTableContentComponent } from './component/content.component';
+import { GpfTableSubcontentComponent } from './component/subcontent.component';
+import { GpfTableLegendDirective } from './component/legend.directive';
+
+import { GpfTableHeaderCellComponent } from './view/header/header-cell.component';
+import { GpfTableHeaderComponent } from './view/header/header.component';
+import { GpfTableCellComponent } from './view/cell.component';
+import { GpfTableEmptyCellComponent } from './view/empty-cell.component';
 
 @NgModule({
   declarations: [
     GpfTableComponent,
     GpfTableColumnComponent,
-    GpfTableSubcolumnComponent,
+    GpfTableSubheaderComponent,
+    GpfTableContentHeaderComponent,
     GpfTableCellContentDirective,
-    GpfTableCellHeaderDirective,
+    GpfTableHeaderCellComponent,
     GpfTableHeaderComponent,
     GpfTableCellComponent,
-    GpfTableLegendDirective
+    GpfTableLegendDirective,
+    GpfTableContentComponent,
+    GpfTableSubcontentComponent,
+    GpfTableEmptyCellComponent
+  ],
+  providers: [
+      ResizeService
   ],
   exports: [
     GpfTableComponent,
     GpfTableColumnComponent,
-    GpfTableSubcolumnComponent,
+    GpfTableSubheaderComponent,
+    GpfTableContentHeaderComponent,
     GpfTableCellContentDirective,
-    GpfTableCellHeaderDirective,
-    GpfTableLegendDirective
+    GpfTableLegendDirective,
+    GpfTableContentComponent,
+    GpfTableSubcontentComponent
   ],
   imports: [CommonModule]
 })

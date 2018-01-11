@@ -3,24 +3,21 @@
           <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
 		    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
 		  </select>
+      <div *ngIf="selectedGeneWeights" style="margin-top: 5px;">
+        <a href="{{ getDownloadLink() }}">Download</a>
+      </div>
     </div>
     <div class="col-sm-9">
       <gpf-histogram
 		    *ngIf="selectedGeneWeights"
 		    width="650" height="145"
 		    [bins]="selectedGeneWeights.bins"
-		    [bars]="selectedGeneWeights.bars"
-		    [domainMin]="selectedGeneWeights.min"
-		    [domainMax]="selectedGeneWeights.max"
-		    [rangesCounts]="rangesCounts"
+            [bars]="selectedGeneWeights.bars"
+            [logScaleX]="selectedGeneWeights.logScaleX"
+			[logScaleY]="selectedGeneWeights.logScaleY"
+		    [rangesCounts]="rangesCounts | async"
 		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
 		  </gpf-histogram>
-		  <div *ngIf="errors?.length > 0" class="alert alert-danger" [class.flashing]="flashingAlert">
-		    <ul>
-		      <li *ngFor="let error of errors">
-		        {{ error }}
-		      </li>
-		    </ul>
-		  </div>
+      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
 </div>
