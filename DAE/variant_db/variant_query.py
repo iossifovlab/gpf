@@ -5,7 +5,9 @@ from sqlalchemy import create_engine, or_, and_
 from sqlalchemy.orm import sessionmaker, aliased, joinedload, subqueryload, selectinload
 
 from transmitted.base_query import TransmissionConfig
-from variant_db.variant_view_model import VariantView
+from Variant import Variant as VariantView
+#from variant_db.variant_view_model import VariantView
+from variant_db.model import *
 
 LOGGER = logging.getLogger(__name__)
 
@@ -86,22 +88,37 @@ class VariantQuery(TransmissionConfig):
 
     def find_variants(self, **kwargs):
         with self.session() as session:
-            query = session.query(Variant, FamilyVariant).\
+            query = session.query(Variant, FamilyVariant, Family.family_ext_id).\
                 order_by(Variant.chromosome, Variant.location).\
-                filter(Variant.id == FamilyVariant.variant_id).\
-                        options(joinedload(Variant.worst_effect).\
-                                joinedload(Effect.gene)).\
-                        options(selectinload(Variant.effects).\
-                                joinedload(Effect.gene)).\
-                        options(joinedload(FamilyVariant.family).\
-                                selectinload(Family.members).\
-                                joinedload(FamilyMember.person).\
-                                selectinload(Person.person_variants))
+                filter(and_(Variant.id == FamilyVariant.variant_id,
+                    FamilyVariant.family_id == Family.id))#.\
+                        # options(joinedload(Variant.worst_effect).\
+                        #         joinedload(Effect.gene)).\
+                        # options(selectinload(Variant.effects).\
+                        #         joinedload(Effect.gene)).\
+                        # options(joinedload(FamilyVariant.family).\
+                        #         selectinload(Family.members).\
+                        #         joinedload(FamilyMember.person).\
+                        #         selectinload(Person.person_variants))
 
             if kwargs.get('genomicScores', False):
                 query = self._build_genomic_scores_where(query, kwargs['genomicScores'])
             if kwargs.get('presentInChild', False):
                 query = self._build_present_in_child_where(query, kwargs['presentInChild'])
             
-            for variant, family_variant in query:
-                yield VariantView(self.study, variant, family_variant.family)
+            for variant, family_variant, family_ext_id in query:
+                atts = dict(variant.__dict__)
+                atts.update(family_variant.__dict__)
+                atts['location'] = '{}:{}'.format(variant.chromosome, variant.location)
+                atts['family_ext_id'] = family_ext_id
+                v = VariantView(atts,
+                    familyIdAtt="family_ext_id",
+                    bestStAtt="best_state",
+                    effectGeneAtt="effects_details",
+                    altFreqPrcntAtt="alt_freq")
+                v.study = self.study
+                if variant.alt_freq == 1:
+                    v.popType = "ultraRare"
+                else:
+                    v.popType = "common"
+                yield v
