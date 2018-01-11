@@ -7,17 +7,82 @@ import os
 from cyvcf2 import VCF
 import numpy as np
 from collections import namedtuple, defaultdict, OrderedDict
-from itertools import izip
+from itertools import izip, groupby, imap
 import itertools
 import variantFormat as vrtF
 from ped2NucFam import *
 import vrtIOutil as vIO
+import heapq
 # add more data on fam Info
+
+
+def merge(key, *iterables):
+    h = []
+    h_append = h.append
+
+    _heapify = heapq.heapify
+    _heappop = heapq.heappop
+    _heapreplace = heapq.heapreplace
+
+    for order, it in enumerate(map(iter, iterables)):
+        try:
+            next = it.next
+            value = next()
+            h_append([key(value), order, value, next])
+        except StopIteration:
+            pass
+    _heapify(h)
+    while len(h) > 1:
+        try:
+            while True:
+                key_value, order, value, next = s = h[0]
+                yield value
+                value = next()
+                s[0] = key(value)
+                s[2] = value
+                _heapreplace(h, s)
+        except StopIteration:
+            _heappop(h)
+    if h:
+        key_value, order, value, next = h[0]
+        yield value
+        for v in next.__self__:
+            yield v
+
+
+class Batch:
+    def __init__(self, filename, fInfo):
+        self.vf = VCF(filename)
+        self.samples_arr = np.asarray(self.vf.samples)
+        individualToIndex = dict()
+        for i, sampleId in enumerate(self.vf.samples):
+            individualToIndex[sampleId] = i
+
+        self.fam = famInVCF(fInfo, self.vf)
+
+        self.individualToFamily = dict()
+
+        for familyId in self.fam:
+            familyInfo = fInfo[familyId]
+            family = Family(familyInfo)
+
+            indicies = []
+            for personId in familyInfo['ids']:
+                self.individualToFamily[personId] = family
+            
+            family.set_indicies(individualToIndex)
+
+    def __iter__(self):
+        def add_self(x):
+            return {
+                'batch': self,
+                'variant': x
+            }
+        return imap(add_self, self.vf.__iter__())
 
 
 class Family:
     def __init__(self, familyInfo):
-        
         self.familyInfo = familyInfo
 
     def is_mendelian(self, arr):
@@ -266,105 +331,104 @@ def main():
 
         #fam = [x for x in sorted(fInfo.keys())]
         #vf = pysam.VariantFile( dfile )
-        vf = VCF(dfile)
-        fam = famInVCF(fInfo, vf)
+        vf = [Batch(f, fInfo) for f in dfile.split(",")]
+        fam = [item for f in vf for item in f.fam]
         fam_count = len(fam)
 
-        # print family Info in a format
+        print(fam)
+        # # print family Info in a format
         FAMOUT = ox.outputPrefix + '-families.txt'
         printFamData(fInfo, pInfo, proj=ox.project, lab=ox.lab,
-                    listFam=fam, out=open(FAMOUT, 'w'))
+                     listFam=fam, out=open(FAMOUT, 'w'))
 
-        individualToFamily = dict()
-        individualToIndex = dict()
+        def keyfunc(variant):
+            return (variant['variant'].CHROM, variant['variant'].POS)
+    
+        for key, group in groupby(merge(keyfunc, *vf), keyfunc):
+            chrom, pos = key
 
-        samples_arr = np.asarray(vf.samples)
-        for i, sampleId in enumerate(vf.samples):
-            individualToIndex[sampleId] = i
+            allIterestingFamilies = set()
+            allMissingFamilies = set()
+            allFamilies = []
+            variants = []
 
-        for familyId in fam:
-            familyInfo = fInfo[familyId]
-            family = Family(familyInfo)
+            for variant in group:
+                missingIndexes = np.where(variant['variant'].gt_types == 2)
+                missingIds = variant['batch'].samples_arr[missingIndexes]
 
-            indicies = []
-            for personId in familyInfo['ids']:
-                individualToFamily[personId] = family
+                individualToFamily = variant['batch'].individualToFamily
 
-            family.set_indicies(individualToIndex)
+                interestingIndexes = np.where(np.logical_or(
+                    variant['variant'].gt_types == 1,
+                    variant['variant'].gt_types == 3))
 
-        output = {}
-        for variant in vf:
-            missingIndexes = np.where(variant.gt_types == 2)
-            missingIds = samples_arr[missingIndexes]
+                interestingIds = variant['batch'].samples_arr[interestingIndexes]
+                interestingFamilies = {individualToFamily[individual]
+                                       for individual in interestingIds
+                                       if individual in individualToFamily}
+                allIterestingFamilies |= interestingFamilies
 
-            pgt = (1 - missingIndexes[0].shape[0] / len(samples_arr)) * 100
-            if pgt < ox.minPercentOfGenotypeSamples:
-                continue
-
-            chrom = variant.CHROM
-            px, vx = vrtF.vcf2cshlFormat2(variant.POS, variant.REF, variant.ALT)
-
-            altsCount = len(variant.ALT)
-            interestingIndexes = np.where(np.logical_or(variant.gt_types == 1,
-                                                        variant.gt_types == 3))
-            interestingIds = samples_arr[interestingIndexes]
-            interestingFamilies = {individualToFamily[individual]
-                                   for individual in interestingIds
+                missingFamilies = {individualToFamily[individual]
+                                   for individual in missingIds
                                    if individual in individualToFamily}
+                allMissingFamilies |= missingFamilies
 
-            missingFamilies = {individualToFamily[individual]
-                               for individual in missingIds
-                               if individual in individualToFamily}
+                families = [family
+                            for family in sorted(interestingFamilies - missingFamilies,
+                                                 key=lambda(x): x.familyInfo['newFid'])
+                            if not family.is_denovo(variant['variant'].gt_idxs)]
+                allFamilies.extend(families)
 
-            count = fam_count - len(missingFamilies)
-            #print(interestingFamilies)
-            #print(missingFamilies)
+                px, vx = vrtF.vcf2cshlFormat2(variant['variant'].POS,
+                                              variant['variant'].REF,
+                                              variant['variant'].ALT)
 
-            families = [family
-                        for family in sorted(interestingFamilies - missingFamilies,
-                                            key=lambda(x): x.familyInfo['newFid'])
-                        if not family.is_denovo(variant.gt_idxs)]
+                for n, (p, v) in enumerate(izip(px, vx)):
+                    variants.append((n, p, v, variant, families))
 
-            dnv_count = len(interestingFamilies - missingFamilies) - len(families)
+            for key, group in groupby(sorted(variants, key=lambda x: (x[1], x[2])), lambda x: (x[1], x[2])):
+                p, v = key
 
-            l = [(n, p, v) for n, (p, v) in enumerate(izip(px, vx))]
-
-            for (n, p, v) in sorted(l, key=lambda x: (x[1], x[2])):
                 if v.find('*') >= 0:
                         continue
                 strx = []
 
                 cnt_in_parent = 0
 
-                for family in families:
-                    familyInfo = family.familyInfo
+                for g in group:
+                    n, p, v, variant, families = g
+                    altsCount = len(variant['variant'].ALT)
+                    for family in families:
+                        familyInfo = family.familyInfo
 
-                    if not family.variant_present(variant, n + 1):
-                        continue
+                        if not family.variant_present(variant['variant'], n + 1):
+                            continue
 
-                    GT = family.generate_gt(variant, n + 1)
-                    cnt = family.generate_cnt(variant, n + 1, altsCount)
+                        GT = family.generate_gt(variant['variant'], n + 1)
+                        cnt = family.generate_cnt(variant['variant'], n + 1, altsCount)
 
-                    cnt_in_parent += family.variant_present_in_parent(
-                        variant, n + 1)
-                    strx.append("{}:{}:{}".format(familyInfo['newFid'], GT, cnt))
+                        cnt_in_parent += family.variant_present_in_parent(
+                            variant['variant'], n + 1)
+                        strx.append("{}:{}:{}".format(familyInfo['newFid'], GT, cnt))
                 if len(strx) < 1:
                     continue
-
+                
                 l = len(strx)
                 strx = ';'.join(strx)
                 
                 # print strx
+                dnv_count = len(allIterestingFamilies - allMissingFamilies) - len(allFamilies)
+                count = fam_count - len(allMissingFamilies)
 
                 tAll = 4 * len(families)
-                tAll += 4 * (fam_count - len(missingFamilies) - len(interestingFamilies - missingFamilies))
+                tAll += 4 * (fam_count - len(allMissingFamilies) - len(allIterestingFamilies - allMissingFamilies))
                 nPC = (count - dnv_count) * 2
                 #print(count, fam_count, len(missingFamilies), len(interestingFamilies), len(families), dnv_count)
                 nPcntC = (count - dnv_count) / fam_count * 100
                 cAlt = cnt_in_parent
                 freqAlt = (1. * cAlt) / tAll * 100.
 
-                if v.startswith('complex') or (p, v) in output:
+                if v.startswith('complex'):
                     print >> sys.stdout, '\t'.join([chrom, str(p), v, strx, str(
                         nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)])
                     continue
@@ -376,6 +440,7 @@ def main():
                 else:
                     print >> out, '\t'.join([chrom, str(p), v, strx, str(
                         nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)])
+
 
 if __name__ == "__main__":
     main()
