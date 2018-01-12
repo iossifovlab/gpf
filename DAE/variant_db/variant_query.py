@@ -1,6 +1,7 @@
 import logging
 from contextlib import contextmanager
 
+import pandas as pd
 from sqlalchemy import create_engine, or_, and_
 from sqlalchemy.orm import sessionmaker, aliased, joinedload, subqueryload, selectinload
 
@@ -28,6 +29,7 @@ class VariantQuery(TransmissionConfig):
             port = 3306
 
         self.db_engine = create_engine(
+            #'mysql+mysqldb://{}:{}@{}:{}/{}'.format('seqpipe', 'lae0suNu', '127.0.0.1', '3306', 'variant_db')
             'mysql+mysqldb://{}:{}@{}:{}/{}'.format(user, password, host, port, db)
         )
 
@@ -43,6 +45,16 @@ class VariantQuery(TransmissionConfig):
         finally:
             session.close()
 
+    @staticmethod
+    def _build_effect_where(query, effects=None, gene_symbols=None):
+        query = query.join(Variant.effects).join(Effect.gene)
+        if effects is not None:
+            query = query.filter(Effect.effect_type.in_(
+                [EffectType(effect) for effect in effects]))
+        if gene_symbols is not None:
+            query = query.filter(Gene.symbol.in_(
+                [symbol.upper() for symbol in gene_symbols]))
+        return query
 
     @staticmethod
     def _build_genomic_scores_where(query, genomic_scores):
@@ -80,7 +92,6 @@ class VariantQuery(TransmissionConfig):
         if 'neither' in present_in_child:
             or_conditions.append(and_(FamilyVariant.present_in_affected == False,
                 FamilyVariant.present_in_unaffected == False))
-        print(or_conditions)
         return query.filter(or_(*or_conditions))
 
     def get_transmitted_variants(self, **kwargs):
@@ -88,36 +99,33 @@ class VariantQuery(TransmissionConfig):
 
     def find_variants(self, **kwargs):
         with self.session() as session:
-            query = session.query(Variant, FamilyVariant, Family.family_ext_id).\
+            query = session.query(Variant, FamilyVariant, Family.family_ext_id, Effect.effect_type).\
                 order_by(Variant.chromosome, Variant.location).\
                 filter(and_(Variant.id == FamilyVariant.variant_id,
-                    FamilyVariant.family_id == Family.id))#.\
-                        # options(joinedload(Variant.worst_effect).\
-                        #         joinedload(Effect.gene)).\
-                        # options(selectinload(Variant.effects).\
-                        #         joinedload(Effect.gene)).\
-                        # options(joinedload(FamilyVariant.family).\
-                        #         selectinload(Family.members).\
-                        #         joinedload(FamilyMember.person).\
-                        #         selectinload(Person.person_variants))
+                    FamilyVariant.family_id == Family.id,
+                    Variant.id == Effect.variant_id))
 
-            if kwargs.get('genomicScores', False):
+            if 'genomicScores' in kwargs:
                 query = self._build_genomic_scores_where(query, kwargs['genomicScores'])
-            if kwargs.get('presentInChild', False):
+            if 'presentInChild' in kwargs:
                 query = self._build_present_in_child_where(query, kwargs['presentInChild'])
-            
-            for variant, family_variant, family_ext_id in query:
-                atts = dict(variant.__dict__)
-                atts.update(family_variant.__dict__)
-                atts['location'] = '{}:{}'.format(variant.chromosome, variant.location)
-                atts['family_ext_id'] = family_ext_id
-                v = VariantView(atts,
+            if 'geneSyms' in kwargs or 'effectTypes' in kwargs:
+                query = self._build_effect_where(query, kwargs.get('effectTypes'),
+                    kwargs.get('geneSyms'))
+
+            data_frame = pd.read_sql(query.statement, query.session.bind)
+            data_frame.rename(columns={'effect_type' : 'effectType'}, inplace=True)
+            for row in data_frame.to_dict('records'):
+                #LOGGER.debug('Reading row {} from data frame'.format(index))
+                row['effectType'] = row['effectType'].value
+                row['location'] = '{}:{}'.format(row['chromosome'], row['location'])
+                v = VariantView(row,
                     familyIdAtt="family_ext_id",
                     bestStAtt="best_state",
                     effectGeneAtt="effects_details",
                     altFreqPrcntAtt="alt_freq")
                 v.study = self.study
-                if variant.alt_freq == 1:
+                if row['alt_freq'] == 1:
                     v.popType = "ultraRare"
                 else:
                     v.popType = "common"
