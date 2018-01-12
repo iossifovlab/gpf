@@ -13,6 +13,7 @@ import variantFormat as vrtF
 from ped2NucFam import *
 import vrtIOutil as vIO
 import heapq
+import time
 # add more data on fam Info
 
 
@@ -272,6 +273,7 @@ def digitP(x):
 
 
 def main():
+    start_time = time.time()
     # svip.ped
     #svip-FB-vars.vcf.gz, svip-PL-vars.vcf.gz, svip-JHC-vars.vcf.gz
     #pfile, dfile = 'data/svip.ped', 'data/svip-FB-vars.vcf.gz'
@@ -322,6 +324,9 @@ def main():
     # setup to print transmission files
     OUT = ox.outputPrefix + '.txt'
     TOOMANY = ox.outputPrefix + '-TOOMANY.txt'
+
+    output_count = 0
+
     with open(OUT, 'w') as out, open(TOOMANY, 'w') as outTOOMANY:
         print >> out, '\t'.join(
             'chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq'.split(','))
@@ -432,6 +437,8 @@ def main():
                 cAlt = cnt_in_parent
                 freqAlt = (1. * cAlt) / tAll * 100.
 
+                output_count += 1
+
                 if v.startswith('complex'):
                     print >> sys.stdout, '\t'.join([chrom, str(p), v, strx, str(
                         nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)])
@@ -444,7 +451,13 @@ def main():
                 else:
                     print >> out, '\t'.join([chrom, str(p), v, strx, str(
                         nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)])
-
+                
+                if output_count % 1000 == 0:
+                    sys.stdout.write("\r%d records ok time: %d secs" % (output_count, time.time() - start_time))
+                    sys.stdout.flush()
+    
+    sys.stdout.write("\rDone: %d records ok time: %d secs\n" % (output_count, time.time() - start_time))
+    sys.stdout.flush()
 
 if __name__ == "__main__":
     main()
