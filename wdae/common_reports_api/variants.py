@@ -32,22 +32,28 @@ class CommonBase(object):
     def effect_groups():
         return ['LGDs', 'nonsynonymous', 'UTRs', 'CNV']
 
-    @staticmethod
-    def phenotypes():
-        return ['autism',
-                'congenital heart disease',
-                'epilepsy',
-                'intellectual disability',
-                'schizophrenia',
-                'unaffected']
+    def all_phenotypes(self):
+        return self.COLORS.keys()
 
     COLORS = {
+        'acromelic frontonasal dysostosis': '#4286f4',
+        'amyotrophic lateral sclerosis': '#f49841',
+        'anophthalmia microphthalmia': '#f44141',
         'autism': '#e35252',
+        'bipolar disorder': '#775050',
+        'cantu syndrome': '#507677',
+        'congenital diaphragmatic hernia': '#735077',
         'congenital heart disease': '#b8008a',
+        'developmental disorder': '#4c2525',
+        'early onset alzheimer': '#ff7a7a',
+        'early onset parkinson': '#ffff79',
         'epilepsy': '#e3d252',
         'intellectual disability': '#99d8e8',
+        'neural tube defects': '#79ff9c',
         'schizophrenia': '#98e352',
+        'sporadic infantile spasm syndrome': '#79acff',
         'unaffected': '#ffffff',
+        #         'unknown': '#aaaaaa',
     }
 
     @classmethod
@@ -123,7 +129,7 @@ class CounterBase(CommonBase):
     def __init__(self, phenotype):
         super(CommonBase, self).__init__()
         self.phenotype = phenotype
-        if phenotype not in self.phenotypes():
+        if phenotype not in self.all_phenotypes():
             raise ValueError("unexpected phenotype '{}'".format(phenotype))
 
     def filter_studies(self, all_studies):
@@ -219,8 +225,15 @@ class ReportBase(CommonBase):
         self._calc_phenotypes()
 
     def _calc_phenotypes(self):
-        phenotypes = set([st.get_attr('study.phenotype')
-                          for st in self.studies])
+        phenotypes = set([
+            st.get_attr('study.phenotype')
+            for st in self.studies
+            if st.get_attr('study.phenotype') is not None
+        ])
+        if not phenotypes:
+            phenotypes = [
+                p for p in self.all_phenotypes() if p != 'unaffected'
+            ]
         phenotypes = list(phenotypes)
         phenotypes.sort()
         phenotypes.append('unaffected')
@@ -318,7 +331,7 @@ class DenovoEventsCounter(CounterBase):
             hasNew = False
             for ge in v.requestedGeneEffects:
                 sym = ge['sym']
-                kk = v.familyId + "." + sym
+                kk = str(v.familyId) + "." + sym
                 if kk not in seen:
                     hasNew = True
                     seen.add(kk)

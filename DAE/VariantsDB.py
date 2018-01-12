@@ -795,7 +795,7 @@ class VariantsDB:
             studies = self.get_studies(studies)
         for study in studies:
             for v in study.get_denovo_variants(**filters):
-                vKey = v.familyId + v.location + v.variant
+                vKey = str(v.familyId) + v.location + v.variant
                 if vKey in seenVs:
                     continue
                 yield v

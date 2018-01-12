@@ -11,7 +11,10 @@ def user_has_study_permission(user, study_group_name):
     # if study_name_to_dataset_id is None:
     study_name_to_dataset_id = defaultdict(list)
     for ds in user_has_study_permission.datasets_factory.get_datasets():
-        studies = [vDB.get_studies(study) for study in ds.descriptor['studies'].split(',')]
+        studies = [
+            vDB.get_studies(study)
+            for study in ds.descriptor['studies'].split(',')
+        ]
         studies = itertools.chain(*studies)
         studies = [study.name for study in studies]
         for study in studies:
@@ -24,7 +27,6 @@ def user_has_study_permission(user, study_group_name):
     #     }
 
     #     cache.set('study_name_to_dataset_id', study_name_to_dataset_id, None)
-    has_permission = False
 
     studies = vDB.get_studies(study_group_name)
     ds_to_check = map(
@@ -38,7 +40,7 @@ def user_has_study_permission(user, study_group_name):
             for d in itertools.imap(
                 lambda d: Dataset.objects.get(dataset_id=d),
                 datasets)
-            )
+        )
         for datasets in ds_to_check
     )
 
@@ -48,4 +50,5 @@ def user_has_study_permission(user, study_group_name):
 user_has_study_permission.datasets = preloaded.register.get('datasets')
 assert user_has_study_permission.datasets is not None
 
-user_has_study_permission.datasets_factory = user_has_study_permission.datasets.get_factory()
+user_has_study_permission.datasets_factory = \
+    user_has_study_permission.datasets.get_factory()
