@@ -52,8 +52,9 @@ def merge(key, *iterables):
 
 
 class Batch:
-    def __init__(self, filename, fInfo):
+    def __init__(self, filename, fInfo, region):
         self.vf = VCF(filename)
+        self.region = region
         self.samples_arr = np.asarray(self.vf.samples)
         individualToIndex = dict()
         for i, sampleId in enumerate(self.vf.samples):
@@ -79,6 +80,8 @@ class Batch:
                 'batch': self,
                 'variant': x
             }
+        if self.region is not None:
+            return imap(add_self, self.vf(self.region).__iter__())
         return imap(add_self, self.vf.__iter__())
 
 
@@ -299,6 +302,9 @@ def main():
 
     parser.add_option("-s", "--missingInfoAsNone", action="store_true", dest="missingInfoAsNone", default=False,
                       metavar="missingInfoAsNone", help="missing sample Genotype will be filled with 'None' for many VCF files input")
+    
+    parser.add_option("-r", "--region", dest="region", default=None,
+                      metavar="region", help="parse only selected region")
 
     ox, args = parser.parse_args()
     pfile, dfile = ox.pedFile, ox.dataFile
@@ -333,7 +339,7 @@ def main():
         print >> outTOOMANY, '\t'.join(
             'chr,position,variant,familyData'.split(','))
 
-        batches = [Batch(f, fInfo) for f in dfile.split(",")]
+        batches = [Batch(f, fInfo, ox.region) for f in dfile.split(",")]
         fam = [item for f in batches for item in f.fam]
         fam_count = len(fam)
 
