@@ -75,13 +75,13 @@ class Variant(Base):
     __tablename__ = 'variant'
     id = Column(Integer, primary_key=True)
     # TODO how long the varchar 256?
-    variant = Column(String(64), nullable=False)
+    variant = Column(String(256), nullable=False)
     variant_type = Column(Enum(VariantType), index=True, nullable=False)
     chromosome = Column(String(2), nullable=False)
     # TODO CNV variants not handled with a single location
     location = Column(Integer, nullable=False)
     worst_effect_id = Column(ForeignKey('effect.id'))
-    effects_details = Column(String(256))
+    effects_details = Column(String(1024))
     n_par_called = Column(Integer, index=True)
     n_alt_alls = Column(Integer, index=True)
     prcnt_par_called = Column(Float, index=True)
@@ -116,7 +116,7 @@ class Gene(Base):
     __tablename__ = 'gene'
     id = Column(Integer, primary_key=True)
     # TODO size of the varchar? is it really unique?
-    symbol = Column(String(64), unique=True, nullable=False)
+    symbol = Column(String(32), unique=True, nullable=False)
 
 class Effect(Base):
     __tablename__ = 'effect'
@@ -155,6 +155,7 @@ class FamilyVariant(Base):
 class Person(Base):
     __tablename__ = 'person'
     id = Column(Integer, primary_key=True)
+    # TODO add person_ext_id
     gender = Column(Enum(Gender), nullable=False)
 
     person_variants = relationship('PersonVariant')
