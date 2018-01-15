@@ -568,7 +568,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return [key for (key, _) in self.get_genotype_columns(matches)] + \
             [key for (_, _, key, _) in self.get_pheno_columns(matches)]
 
-    def __get_columns_for(self, view_type):
+    def _get_columns_for(self, view_type):
         gb = self.descriptor['genotypeBrowser']
         if gb is None:
             return self.get_columns()
@@ -576,10 +576,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return self.get_columns(lambda column: column['id'] in columns)
 
     def get_preview_columns(self):
-        return self.__get_columns_for('preview')
+        return self._get_columns_for('preview')
 
     def get_download_columns(self):
-        return self.__get_columns_for('download')
+        return self._get_columns_for('download')
 
     def get_column_labels(self):
         column_labels = {key: label for (

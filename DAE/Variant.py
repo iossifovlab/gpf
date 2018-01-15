@@ -11,6 +11,7 @@ from Family import Person
 
 LOGGER = logging.getLogger(__name__)
 
+
 def normalRefCopyNumber(location, gender):
     clnInd = location.find(":")
     chrome = location[0:clnInd]
@@ -203,7 +204,8 @@ class Variant:
         except AttributeError:
             pass
         self._familyId = self.atts.get(self.familyIdAtt, None)
-        self._familyId = str(self._familyId) if self._familyId else self._familyId
+        self._familyId = str(
+            self._familyId) if self._familyId else self._familyId
         return self._familyId
 
     @property
@@ -318,7 +320,7 @@ class Variant:
     @property
     def phenotype(self):
         return self.atts.get(self.phenotypeAtt,
-            self.study.get_attr('study.phenotype'))
+                             self.study.get_attr('study.phenotype'))
 
     VIP_COLORS = {
         'deletion': '#e35252',
@@ -359,8 +361,9 @@ class Variant:
         return res
 
     def __eq__(self, other):
-        return (self.variant == other.variant and self.location == other.location
-            and self.familyId == other.familyId)
+        return (self.variant == other.variant and
+                self.location == other.location and
+                self.familyId == other.familyId)
 
     def __lt__(self, other):
         return self.sort_key < other.sort_key
@@ -368,12 +371,13 @@ class Variant:
     CHROMOSOMES_ORDER = dict(
         {str(x): '0' + str(x) for x in range(1, 10)}.items() +
         {str(x): str(x) for x in range(10, 23)}.items() +
-        { 'X': '23', 'Y': '24' }.items())
+        {'X': '23', 'Y': '24'}.items())
 
     @property
     def sort_key(self):
         chromosome, position = self.location.split(':')
-        return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome), int(position.split('-')[0]))
+        return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome),
+                int(position.split('-')[0]))
 
     def pedigree_v3(self, legend):
         def get_color(p):
@@ -387,7 +391,8 @@ class Variant:
         res = []
         dad_id, mom_id = '', ''
         for index, person in enumerate(members):
-            person_list = [self.familyId, person.personId, person.gender, get_color(person)]
+            person_list = [self.familyId, person.personId,
+                           person.gender, get_color(person)]
             if person.is_child:
                 person_list[2:2] += [dad_id, mom_id]
             else:
@@ -396,8 +401,9 @@ class Variant:
                     mom_id = person.personId
                 elif person.role == "dad":
                     dad_id = person.personId
-            res.append(person_list + variant_count_v3(bs, index, self.location,
-                person.gender, denovo_parent))
+            res.append(person_list +
+                       variant_count_v3(bs, index, self.location,
+                                        person.gender, denovo_parent))
         return res
 
     def denovo_parent(self):
@@ -424,18 +430,65 @@ class Variant:
 
 PRESENT_IN_CHILD_FILTER_MAPPING = {
     'affected only':
-        lambda inCh, gender: len(inCh) == 4 and 'p' == inCh[0] and \
-            (not gender or gender == inCh[3]),
+        lambda inCh, gender: len(inCh) == 4 and 'p' == inCh[0] and
+    (not gender or gender == inCh[3]),
     'unaffected only':
-        lambda inCh, gender: len(inCh) == 4 and 's' == inCh[0] and \
-            (not gender or gender == inCh[3]),
+        lambda inCh, gender: len(inCh) == 4 and 's' == inCh[0] and
+    (not gender or gender == inCh[3]),
     'affected and unaffected':
-        lambda inCh, gender: len(inCh) >= 8 and 'p' == inCh[0] and \
-            (not gender or gender == inCh[3] or gender == inCh[7]),
+        lambda inCh, gender: len(inCh) >= 8 and 'p' == inCh[0] and
+    (not gender or gender == inCh[3] or gender == inCh[7]),
     'neither':
         lambda inCh, gender: len(inCh) == 0,
     'gender':
         lambda inCh, gender: gender in inCh,
+
+    #     "autism only":
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
+    #     "affected only":
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
+    #     "unaffected only":
+    #     lambda inCh: (len(inCh) == 4 and 's' == inCh[0]),
+    #     "autism and unaffected":
+    #     lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
+    #     "affected and unaffected":
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh),
+    #     "neither":
+    #     lambda inCh: len(inCh) == 0,
+    #
+    #     ("autism only", 'F'):
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
+    #     ("affected only", 'F'):
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
+    #     ("unaffected only", 'F'):
+    #     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
+    #     ("autism and unaffected", 'F'):
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+    #                   ('F' in inCh)),
+    #     ("affected and unaffected", 'F'):
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+    #                   ('F' in inCh)),
+    #     ("neither", 'F'):
+    #     lambda inCh: (len(inCh) == 0),
+    #
+    #     ("autism only", 'M'):
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
+    #     ("affected only", 'M'):
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
+    #     ("unaffected only", 'M'):
+    #     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
+    #     ("autism and unaffected", 'M'):
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+    #                   ('M' in inCh)),
+    #     ("affected and unaffected", 'M'):
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+    #                   ('M' in inCh)),
+    #     ("neither", 'M'):
+    #     lambda inCh: (len(inCh) == 0),
+    #     'F':
+    #     lambda inCh: ('F' in inCh),
+    #     'M':
+    #     lambda inCh: ('M' in inCh),
 }
 
 

@@ -34,6 +34,7 @@ class EnrichmentBuilder(object):
 
         children_stats = gh.get_children_stats()
         children_count = children_stats['M'] + children_stats['F']
+
         if children_count <= 0:
             return None
 

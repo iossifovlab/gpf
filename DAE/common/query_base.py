@@ -345,13 +345,6 @@ class RarityMixin(object):
         return 0
 
 
-class InChildMixin(object):
-
-    @staticmethod
-    def get_in_child(**kwargs):
-        return None
-
-
 class GeneSymsMixin(object):
 
     @staticmethod
@@ -474,7 +467,6 @@ class QueryBase(
         StudyTypesMixin,
         ChildGenderMixin,
         PresentInMixin,
-        InChildMixin,
         GeneSymsMixin,
         RegionsMixin,
         RarityMixin,
