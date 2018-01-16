@@ -521,11 +521,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         seen_vs = set()
         for st in self.get_denovo_studies(safe=safe, **kwargs):
             for v in st.get_denovo_variants(**denovo_filters):
-                v_key = (v.familyId if v.familyId else '') + v.location + v.variant
-                if v_key in seen_vs:
+                if v.key in seen_vs:
                     continue
                 yield v
-                seen_vs.add(v_key)
+                seen_vs.add(v.key)
 
     def get_transmitted_variants(self, safe=True, **kwargs):
         transmitted_filters = self.get_transmitted_filters(safe=safe, **kwargs)
