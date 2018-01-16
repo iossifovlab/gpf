@@ -6,9 +6,7 @@ from collections import defaultdict
 import itertools
 
 
-def user_has_study_permission(user, study_group_name):
-    # study_name_to_dataset_id = cache.get('study_name_to_dataset_id')
-    # if study_name_to_dataset_id is None:
+def get_datasets_by_study(study_group_name):
     study_name_to_dataset_id = defaultdict(list)
     for ds in user_has_study_permission.datasets_factory.get_datasets():
         studies = [
@@ -32,8 +30,12 @@ def user_has_study_permission(user, study_group_name):
     ds_to_check = map(
         lambda s: study_name_to_dataset_id[s.name], studies)
 
-    ds_to_check = set(map(frozenset, ds_to_check))
+    ds_to_check = map(frozenset, ds_to_check)
+    return ds_to_check
 
+
+def user_has_study_permission(user, study_group_name):
+    ds_to_check = set(get_datasets_by_study(study_group_name))
     has_permission = all(
         any(
             user.has_perm('datasets_api.view', d)
