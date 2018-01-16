@@ -38,6 +38,7 @@ def upgrade():
         sa.Column('variant_type', sa.Enum('substitution', 'deletion', 'insertion', 'cnv', 'complex', name='varianttype'), nullable=False),
         sa.Column('chromosome', sa.String(length=2), nullable=False),
         sa.Column('location', sa.Integer(), nullable=False),
+        sa.Column('location_end', sa.Integer(), nullable=True),
         sa.Column('worst_effect_id', sa.Integer(), nullable=True),
         sa.Column('effects_details', sa.String(length=1024), nullable=False),
         sa.Column('n_par_called', sa.Integer(), nullable=True),
@@ -59,7 +60,7 @@ def upgrade():
     op.create_index('name_value_idx', 'numeric_attribute', ['name', 'value'], unique=False)
     op.create_table('family',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('family_ext_id', sa.Integer(), nullable=True),
+        sa.Column('family_ext_id', sa.String(64), nullable=True),
         sa.Column('kids_count', sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('family_ext_id')

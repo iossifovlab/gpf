@@ -78,8 +78,8 @@ class Variant(Base):
     variant = Column(String(256), nullable=False)
     variant_type = Column(Enum(VariantType), index=True, nullable=False)
     chromosome = Column(String(2), nullable=False)
-    # TODO CNV variants not handled with a single location
     location = Column(Integer, nullable=False)
+    location_end = Column(Integer)
     worst_effect_id = Column(ForeignKey('effect.id'))
     effects_details = Column(String(1024))
     n_par_called = Column(Integer, index=True)
@@ -88,6 +88,9 @@ class Variant(Base):
     alt_freq = Column(Float, index=True)
 
     __table_args__ = (
+        # TODO shall we include the location_end?
+        # problem is if location_end is null
+        # solution: we can store location_end (equal to location) for non CNV variants
         UniqueConstraint('chromosome', 'location', 'variant_type', 'variant', name='chr_loc_var_uidx'),
     )
 
@@ -115,7 +118,6 @@ Variant.numeric_values = association_proxy(
 class Gene(Base):
     __tablename__ = 'gene'
     id = Column(Integer, primary_key=True)
-    # TODO size of the varchar? is it really unique?
     symbol = Column(String(32), unique=True, nullable=False)
 
 class Effect(Base):
@@ -124,7 +126,6 @@ class Effect(Base):
     variant_id = Column(Integer, ForeignKey('variant.id'), nullable=False)
     gene_id = Column(Integer, ForeignKey('gene.id'))
     effect_type = Column(Enum(EffectType), nullable=False)
-    # TODO effect details -> contains all effects; present in the old model so that we won't have to compile it
 
     gene = relationship('Gene')
 
@@ -134,8 +135,7 @@ Variant.worst_effect = relationship('Effect', primaryjoin=Variant.worst_effect_i
 class Family(Base):
     __tablename__ = 'family'
     id = Column(Integer, primary_key=True)
-    # do we need this? or set it directly in the id?
-    family_ext_id = Column(Integer, unique=True)
+    family_ext_id = Column(String(64), unique=True)
     kids_count = Column(Integer)
 
 class FamilyVariant(Base):
@@ -159,12 +159,6 @@ class Person(Base):
     gender = Column(Enum(Gender), nullable=False)
 
     person_variants = relationship('PersonVariant')
-
-    '''
-    ,
-        primaryjoin="and_(Variant.id == PersonVariant.variant_id,"
-                    "Person.id == PersonVariant.person_id)"
-    '''
 
     def alt_allele_count_for(self, variant_id):
         for person_variant in self.person_variants:
