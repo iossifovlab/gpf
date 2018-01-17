@@ -1,4 +1,5 @@
 #!/bin/env python
+from __future__ import print_function
 
 import ConfigParser
 import os
@@ -231,7 +232,6 @@ class Study:
                         if not reg_matcher(vChr, p):
                             continue
                 except ValueError:
-                    # print >> sys.stderr, v.atts
                     continue
 
             if effectTypes is not None or geneSymsUpper is not None:
@@ -263,11 +263,12 @@ class Study:
             def float_conv(x):
                 try:
                     return float(x or np.nan)
-                except:
+                except _:
                     return np.nan
-            print >> sys.stderr, "Loading file", fl, "for collection ", self.name
+            print("Loading file {} for collection {}".format(fl, self.name),
+                  file=sys.stderr)
             dt = genfromtxt(fl, delimiter='\t', dtype=None, names=True,
-                            case_sensitive=True, deletechars='', 
+                            case_sensitive=True, deletechars='',
                             converters={"SSC-freq": float_conv,
                                         "EVS-freq": float_conv,
                                         "E65-freq": float_conv})
@@ -298,12 +299,11 @@ class Study:
         return self.badFamilies
 
     def _load_family_data(self):
-        if not self.vdb._config.has_option(self._configSection, "familyInfo.file"):
+        if not self.vdb._config.has_option(
+                self._configSection, "familyInfo.file"):
             self.families = {}
             return
         fdFile = self.vdb._config.get(self._configSection, "familyInfo.file")
-        print(fdFile)
-
         fdFormat = self.vdb._config.get(
             self._configSection, "familyInfo.fileFormat")
 
@@ -321,9 +321,13 @@ class Study:
 
         if fdFormat not in fmMethod:
             raise Exception("Unknown Family File Format: " + fdFormat)
+        print("Loading family data from: {} for collection {}".format(
+             fdFile, self.name), file=sys.stderr)
 
         self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
         phenotype = self.get_attr('study.phenotype')
+        if not phenotype:
+            return
         for fam in self.families.values():
             fam.phenotype = phenotype
             fam.atts['phenotype'] = phenotype
@@ -478,7 +482,6 @@ class Study:
             dad.role = 'dad'
             dad.gender = 'M'
 
-            # print fid, pDct.keys()
             if len(pDct) == 1:
                 f.memberInOrder = [mom, dad, pDct['prb']]
             elif len(pDct) == 2:
@@ -518,7 +521,6 @@ class Study:
             f = Family()
             f.familyId = fid
 
-            # print fid, pDct.keys()
             if len(pDct) == 3:
                 f.memberInOrder = [pDct['mom'], pDct['dad'], pDct['prb']]
             elif len(pDct) == 4:
@@ -802,8 +804,9 @@ class VariantsDB:
                 seenVs.add(vKey)
 
     def _parse_validation_report(self, fn, knownFams, batchId=None):
-        print >>sys.stderr, "Parsing validation reprt file:|", fn, "|"
-        vars = []
+        print("Parsing validation reprt file:|{}|".format(fn),
+              file=sys.stderr)
+        variants = []
         dt = genfromtxt(
             fn, delimiter='\t', dtype=None, names=True, case_sensitive=True)
         # if there is only row of data in the file then the genfromtxt function returns a 0d array.
@@ -889,27 +892,29 @@ class VariantsDB:
                 v.memberInOrder = knownFams[v.familyId].memberInOrder
             else:
                 v.memberInOrder = []
-                print >>sys.stderr, "Breh, the family", v.familyId, "is unknown"
+                print("Breh, the family{} is unknown".format(v.familyId),
+                      file=sys.stderr)
 
             # nvf.write("\t".join((v.familyId,v.location,v.variant,v.bestStS,v.who,v.why,v.batchId,v.valCountsS,v.valBestStS,v.valStatus,v.resultNote,v.valParent)) + "\n")
-            vars.append(v)
+            variants.append(v)
         # nvf.close()
-        return vars
+        return variants
 
     def get_validation_variants(self):
         validationDir = self._config.get('validation', 'dir')
         studyNames = self._config.get('validation', 'studies')
         stdies = [self.get_study(x) for x in studyNames.split(',')]
 
-        print >>sys.stderr, "validationDir: |", validationDir, "|"
-        print >>sys.stderr, "studyNames: |", studyNames, "|"
+        print("validationDir: |{}|".format(validationDir), file=sys.stderr)
+        print("studyNames: |{}|".format(studyNames), file=sys.stderr)
 
         knownFams = {}
         for stdy in stdies:
             for f in stdy.families:
                 if f in knownFams:
-                    print >> sys.stderr, "Ha, family", f, "is more that one study: ", stdy.name, "and", knownFams[
-                        f]
+                    print("Ha, family {} is more that one study: "
+                          "{} and {}".format(
+                              f, stdy.name, knownFams[f]))
                 knownFams[f] = stdy.families[f]
 
         # print knownFams
@@ -935,17 +940,17 @@ class VariantsDB:
 
         nIncompleteIns = 0
         nCompleteIns = 0
-        vars = []
+        variants = []
         for fn in glob.glob(validationDir + '/*/reports/report*.txt'):
-            vars += self._parse_validation_report(fn, knownFams)
-        print >>sys.stderr, "nIncompleteIns:", nIncompleteIns
-        print >>sys.stderr, "nCompleteIns:", nCompleteIns
-        return vars
+            variants += self._parse_validation_report(fn, knownFams)
+        print("nIncompleteIns: {}".format(nIncompleteIns), file=sys.stderr)
+        print("nCompleteIns: {}".format(nCompleteIns), file=sys.stderr)
+        return variants
 
 #     def get_denovo_sets(self, dnvStds):
 #         r = GeneTerms()
 #         r.geneNS = "sym"
-# 
+#
 #         def getMeasure(mName):
 #             from DAE import phDB
 #             strD = dict(zip(phDB.families, phDB.get_variable(mName)))
@@ -959,9 +964,9 @@ class VariantsDB:
 #                 except:
 #                     pass
 #             return fltD
-# 
+#
 #         nvIQ = getMeasure('pcdv.ssc_diagnosis_nonverbal_iq')
-# 
+#
 #         def addSet(setname, genes, desc=None):
 #             if not genes:
 #                 return
@@ -972,7 +977,7 @@ class VariantsDB:
 #             for gSym in genes:
 #                 r.t2G[setname][gSym] += 1
 #                 r.g2T[gSym][setname] += 1
-# 
+#
 #         def genes(inChild, effectTypes, inGenesSet=None, minIQ=None, maxIQ=None):
 #             if inGenesSet:
 #                 vs = self.get_denovo_variants(
@@ -986,15 +991,15 @@ class VariantsDB:
 #                 return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] >= minIQ}
 #             if maxIQ:
 #                 return {ge['sym'] for v in vs for ge in v.requestedGeneEffects if v.familyId in nvIQ and nvIQ[v.familyId] < maxIQ}
-# 
+#
 #         def set_genes(geneSetDef):
 #             gtId, tmId = geneSetDef.split(":")
 #             return set(self.giDB.getGeneTerms(gtId).t2G[tmId].keys())
-# 
+#
 #         def recSingleGenes(inChild, effectTypes):
 #             vs = self.get_denovo_variants(
 #                 dnvStds, effectTypes=effectTypes, inChild=inChild)
-# 
+#
 #             gnSorted = sorted([[ge['sym'], v]
 #                                for v in vs for ge in v.requestedGeneEffects])
 #             sym2Vars = {sym: [t[1] for t in tpi]
@@ -1002,55 +1007,55 @@ class VariantsDB:
 #             sym2FN = {sym: len(set([v.familyId for v in vs]))
 #                       for sym, vs in sym2Vars.items()}
 #             return {g for g, nf in sym2FN.items() if nf > 1}, {g for g, nf in sym2FN.items() if nf == 1}
-# 
+#
 #         addSet("prb.LoF",             genes('prb', 'LGDs'))
 #         recPrbLGDs, sinPrbLGDs = recSingleGenes('prb', 'LGDs')
 #         addSet("prb.LoF.Recurrent",   recPrbLGDs)
 #         addSet("prb.LoF.Single",      sinPrbLGDs)
-# 
+#
 #         addSet("prb.LoF.Male",        genes('prbM', 'LGDs'))
 #         addSet("prb.LoF.Female",      genes('prbF', 'LGDs'))
-# 
+#
 #         addSet("prb.LoF.LowIQ",       genes('prb', 'LGDs', maxIQ=90))
 #         addSet("prb.LoF.HighIQ",      genes('prb', 'LGDs', minIQ=90))
-# 
+#
 #         addSet("prb.LoF.FMRP",        genes(
 #             'prb', 'LGDs', set_genes("main:FMR1-targets")))
 #         # addSet("prbLGDsInCHDs",     genes('prb','LGDs',set("CHD1,CHD2,CHD3,CHD4,CHD5,CHD6,CHD7,CHD8,CHD9".split(','))))
-# 
+#
 #         addSet("prb.Missense",        genes('prb', 'missense'))
 #         addSet("prb.Missense.Male",   genes('prbM', 'missense'))
 #         addSet("prb.Missense.Female", genes('prbF', 'missense'))
 #         addSet("prb.Synonymous",      genes('prb', 'synonymous'))
-# 
+#
 #         addSet("sib.LoF",             genes('sib', 'LGDs'))
 #         addSet("sib.Missense",        genes('sib', 'missense'))
 #         addSet("sib.Synonymous",      genes('sib', 'synonymous'))
-# 
+#
 #         '''
 #         addSet("A",      recPrbLGDs, "recPrbLGDs")
 #         addSet("B",      genes('prbF','LGDs'), "prbF")
 #         addSet("C",      genes('prb','LGDs',set_genes("main:FMR1-targets")), "prbFMRP")
 #         addSet("D",      genes('prb','LGDs',maxIQ=90),"prbML")
 #         addSet("E",      genes('prb','LGDs',minIQ=90),"prbMH")
-# 
+#
 #         addSet("AB",     set(r.t2G['A']) | set(r.t2G['B']))
 #         addSet("ABC",    set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C']))
 #         addSet("ABCD",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) )
 #         addSet("ABCDE",   set(r.t2G['A']) | set(r.t2G['B'])  | set(r.t2G['C'])  | set(r.t2G['D']) | set(r.t2G['E']) )
 #         '''
-# 
+#
 #         recPrbCNVs, sinPrbCNVs = recSingleGenes('prb', 'CNVs')
 #         addSet("prb.CNV.Recurrent",     recPrbCNVs)
-# 
+#
 #         addSet("prb.CNV",   genes('prb', 'CNVs'))
 #         addSet("prb.Dup",   genes('prb', 'CNV+'))
 #         addSet("prb.Del",   genes('prb', 'CNV-'))
-# 
+#
 #         addSet("sib.CNV",   genes('sib', 'CNVs'))
 #         addSet("sib.Dup",   genes('sib', 'CNV+'))
 #         addSet("sib.Del",   genes('sib', 'CNV-'))
-# 
+#
 #         return r
 
     # THE ONES BELOW SHOULD BE MOVED
@@ -1098,7 +1103,7 @@ def _safeVs(tf, vs, atts=[], sep="\t"):
 
 def viewVs(vs, atts=[]):
     tf = tempfile.NamedTemporaryFile("w", delete=False)
-    print >>sys.stderr, "temp file name: " + tf.name
+    print("temp file name: {}".format(tf.name), file=sys.stderr)
     _safeVs(tf, vs, atts)
     tf.close()
     os.system("oocalc " + tf.name)
@@ -1117,7 +1122,7 @@ def safeVs(vs, fn, atts=[]):
 
 if __name__ == "__main__":
     wd = os.environ['DAE_DB_DIR']
-    print "wd:", wd
+    print("wd: {}".format(wd))
 
     from Config import *
     config = Config()
@@ -1131,9 +1136,9 @@ if __name__ == "__main__":
 
     st = vDB.get_study("IossifovWE2014")
     fd = st.families['13394']
-    print fd.familyId, len(fd.memberInOrder), fd.atts
+    print(", ".join([fd.familyId, len(fd.memberInOrder), fd.atts]))
     for pd in fd.memberInOrder:
-        print "\t", pd.personId, pd.role, pd.gender, pd.atts
+        print(", ".join(["\t", pd.personId, pd.role, pd.gender, pd.atts]))
 
     '''
     for v in vDB.get_validation_variants():
