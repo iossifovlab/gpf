@@ -470,6 +470,15 @@ class GenomicScoresMixin(object):
         return genomic_scores_filter
 
 
+class RolesMixin(object):
+
+    @staticmethod
+    def get_role_filter(safe=True, **kwargs):
+        roles = kwargs.get('roles', None)
+
+        return roles
+
+
 class QueryBase(
         EffectTypesMixin,
         VariantTypesMixin,
@@ -481,7 +490,8 @@ class QueryBase(
         RegionsMixin,
         RarityMixin,
         FamiliesMixin,
-        GenomicScoresMixin):
+        GenomicScoresMixin,
+        RolesMixin):
 
     IN_CHILD_TYPES = [
         'prb',

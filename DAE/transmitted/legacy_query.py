@@ -179,6 +179,7 @@ class TransmissionLegacy(TransmissionConfig):
     def get_transmitted_variants(self, inChild=None,
                                  presentInChild=None,
                                  gender=None,
+                                 roles=None,
                                  presentInParent=None,
                                  minParentsCalled=0,
                                  maxAltFreqPrcnt=5.0,
@@ -200,6 +201,7 @@ class TransmissionLegacy(TransmissionConfig):
             'inChild': inChild,
             'presentInChild': presentInChild,
             'gender': gender,
+            'roles': roles,
             'presentInParent': presentInParent,
             'minParentsCalled': minParentsCalled,
             'maxAltFreqPrcnt': maxAltFreqPrcnt,
@@ -214,6 +216,7 @@ class TransmissionLegacy(TransmissionConfig):
             'limit': limit
         }
         # print(query)
+        roles_set = set(roles)
 
         transmittedVariantsTOOMANYFile = \
             self._get_params('indexFile') + "-TOOMANY.txt.bgz"
@@ -275,6 +278,13 @@ class TransmissionLegacy(TransmissionConfig):
                 v.atts['bestState'] = bestStateS
                 v.atts['counts'] = cntsS
 
+                if roles:
+                    # print("members in order", len(v.memberInOrder), v.memberInOrder)
+                    # print("best state", len(v.bestSt), v.bestSt)
+                    roles_in_order = [m.role for m in v.memberInOrder]
+                    if not any(role in roles_set and v.bestSt[1][i] > 0
+                               for i, role in enumerate(roles_in_order)):
+                        continue
                 if picFilter:
                     if not picFilter(v.inChS):
                         continue
