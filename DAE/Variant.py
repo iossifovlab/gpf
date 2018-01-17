@@ -265,7 +265,7 @@ class Variant:
         childStr = ''
         for c in xrange(2, len(mbrs)):
             if isVariant(bs, c, self.location, mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
+                childStr += (mbrs[c].role.name + mbrs[c].gender)
         return childStr
 
     @property
@@ -276,7 +276,7 @@ class Variant:
         childStr = ''
         for c in xrange(2, len(mbrs)):
             if isVariant(bs, c, self.location, mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
+                childStr += (mbrs[c].role.name + mbrs[c].gender)
         phenotype = self.study.get_attr('study.phenotype')
         return childStr.replace('prb', phenotype)
 

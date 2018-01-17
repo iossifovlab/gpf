@@ -5,6 +5,7 @@ Created on Feb 6, 2017
 '''
 import itertools
 from gene.weights import Weights
+from pheno.common import Status, Role
 import re
 # from gene.gene_set_collections import GeneSetsCollections
 
@@ -475,6 +476,9 @@ class RolesMixin(object):
     @staticmethod
     def get_role_filter(safe=True, **kwargs):
         roles = kwargs.get('roles', None)
+        assert roles is None or isinstance(roles, list)
+        if roles:
+            roles = [Role[role] for role in roles if role in Role.__members__]
 
         return roles
 

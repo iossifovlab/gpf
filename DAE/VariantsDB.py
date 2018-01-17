@@ -31,6 +31,7 @@ from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
 from ConfigParser import NoOptionError
+from pheno.common import Role, Status
 
 LOGGER = logging.getLogger(__name__)
 
@@ -429,12 +430,16 @@ class Study:
     @staticmethod
     def _load_family_data_from_pedigree(family_file):
         id_converter = lambda x: x if x != '0' else ''
+        role_converter = lambda x: Role[x] if x in Role.__members__ else Role.unknown
+        status_converter = lambda x: Status(int(x))
         dt = genfromtxt(
             family_file, delimiter='\t', dtype=None, names=True,
             case_sensitive=True, comments="asdgasdgasdga",
             converters={
                 'momId': id_converter,
-                'dadId': id_converter
+                'dadId': id_converter,
+                'role': role_converter,
+                'status': status_converter
             })
         families = defaultdict(Family)
         for dtR in dt:
@@ -447,6 +452,7 @@ class Study:
             assert 'role' in atts
             assert 'momId' in atts
             assert 'dadId' in atts
+            assert 'status' in atts
 
             p = Person(atts)
             for key, item in atts.items():
