@@ -117,6 +117,7 @@ class TransferToVariantDB:
                         gene_id = gene_ids[gene_symbol]
                     elif gene_symbol is not None:
                         gene_id = gene_id_seq
+                        gene_ids[gene_symbol] = gene_id
                         gene_id_seq += 1
                         genes.append({
                             'id': gene_id,
@@ -221,7 +222,7 @@ class TransferToVariantDB:
                 family_variants = []
                 person_variants = []
 
-                if count % 100000 == 0:
+                if len(people) >= 5000:
                     session.bulk_insert_mappings(Gene, genes)
                     session.bulk_insert_mappings(Family, families)
                     session.bulk_insert_mappings(Person, people)
@@ -233,6 +234,18 @@ class TransferToVariantDB:
                     families = []
                     people = []
                     family_members = []
+
+        session.bulk_insert_mappings(Gene, genes)
+        session.bulk_insert_mappings(Family, families)
+        session.bulk_insert_mappings(Person, people)
+        session.bulk_insert_mappings(FamilyMember, family_members)
+        LOGGER.debug('Transferred genes, families, people and members.')
+
+        session.bulk_insert_mappings(Variant, variants)
+        session.bulk_insert_mappings(NumericAttribute, numeric_attributes)
+        session.bulk_insert_mappings(Effect, effects)
+        session.bulk_insert_mappings(FamilyVariant, family_variants)
+        session.bulk_insert_mappings(PersonVariant, person_variants)
 
         session.commit()
         session.close()
