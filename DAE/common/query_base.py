@@ -474,7 +474,7 @@ class GenomicScoresMixin(object):
 class RolesMixin(object):
 
     @staticmethod
-    def get_role_filter(safe=True, **kwargs):
+    def get_roles_filter(safe=True, **kwargs):
         roles = kwargs.get('roles', None)
         assert roles is None or isinstance(roles, list)
         if roles:

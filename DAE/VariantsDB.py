@@ -199,7 +199,7 @@ class Study:
 
     def get_denovo_variants(self, inChild=None, presentInChild=None,
                             presentInParent=None, genomicScores=[],
-                            gender=None,
+                            gender=None, roles=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None,
                             limit=None):
