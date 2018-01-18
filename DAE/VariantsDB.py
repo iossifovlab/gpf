@@ -409,9 +409,16 @@ class Study:
 
     @staticmethod
     def _load_family_data_from_simple(reportF):
-        dt = genfromtxt(reportF, delimiter='\t', dtype=None,
-                        names=True, case_sensitive=True,
-                        comments="asdgasdgasdga")
+        role_converter = lambda x: \
+            Role[x] if x in Role.__members__ else Role.unknown
+        status_converter = lambda x: Status(int(x))
+        dt = genfromtxt(
+            reportF, delimiter='\t', dtype=None,
+            names=True, case_sensitive=True,
+            comments="asdgasdgasdga", converters={
+                'role': role_converter,
+                'status': status_converter
+            })
         families = defaultdict(Family)
         for dtR in dt:
             fmId = str(dtR['familyId'])
@@ -430,7 +437,8 @@ class Study:
     @staticmethod
     def _load_family_data_from_pedigree(family_file):
         id_converter = lambda x: x if x != '0' else ''
-        role_converter = lambda x: Role[x] if x in Role.__members__ else Role.unknown
+        role_converter = lambda x: \
+            Role[x] if x in Role.__members__ else Role.unknown
         status_converter = lambda x: Status(int(x))
         dt = genfromtxt(
             family_file, delimiter='\t', dtype=None, names=True,

@@ -101,7 +101,6 @@ class DaeToVcf(object):
                     print("skipping variant in {}".format(chromosome))
                     total -= 1
                     continue
-                chromosome = self._fix_chromosome_name(chromosome)
 
                 key = "{}:{};{}:{}".format(
                     chromosome, position, reference, alternative)
@@ -181,9 +180,6 @@ class DaeToVcf(object):
                 'AD': self._get_alleles_coverage_info(index, variant)
             } for index, p in enumerate(variant.memberInOrder)
         }
-
-    def _fix_chromosome_name(self, chromosome):
-        return chromosome
 
     @staticmethod
     def _generate_samples(variant, cohort):
@@ -393,7 +389,6 @@ class PyVcfTemplate(object):
     @staticmethod
     def _get_info(name, number, type, description):
         return _Info(name, number, type, description, '_', '_')
-
 
 
 def vcfVarFormat(loc, var):
