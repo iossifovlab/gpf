@@ -31,7 +31,7 @@ from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
 from ConfigParser import NoOptionError
-from pheno.common import Role, Status
+from pheno.common import Role, Status, Gender
 
 LOGGER = logging.getLogger(__name__)
 
@@ -412,12 +412,15 @@ class Study:
         role_converter = lambda x: \
             Role[x] if x in Role.__members__ else Role.unknown
         status_converter = lambda x: Status(int(x))
+        gender_converter = lambda x: Gender[x] \
+            if x in Gender.__members__ else Gender.F
         dt = genfromtxt(
             reportF, delimiter='\t', dtype=None,
             names=True, case_sensitive=True,
             comments="asdgasdgasdga", converters={
                 'role': role_converter,
-                'status': status_converter
+                'status': status_converter,
+                'gender': gender_converter
             })
         families = defaultdict(Family)
         for dtR in dt:
@@ -437,9 +440,12 @@ class Study:
     @staticmethod
     def _load_family_data_from_pedigree(family_file):
         id_converter = lambda x: x if x != '0' else ''
-        role_converter = lambda x: \
-            Role[x] if x in Role.__members__ else Role.unknown
+        role_converter = lambda x: Role[x] \
+            if x in Role.__members__ else Role.unknown
         status_converter = lambda x: Status(int(x))
+        gender_converter = lambda x: Gender[x] \
+            if x in Gender.__members__ else Gender.F
+        print("file:", family_file)
         dt = genfromtxt(
             family_file, delimiter='\t', dtype=None, names=True,
             case_sensitive=True, comments="asdgasdgasdga",
@@ -447,7 +453,8 @@ class Study:
                 'momId': id_converter,
                 'dadId': id_converter,
                 'role': role_converter,
-                'status': status_converter
+                'status': status_converter,
+                'gender': gender_converter
             })
         families = defaultdict(Family)
         for dtR in dt:
