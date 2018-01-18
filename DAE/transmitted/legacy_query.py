@@ -285,9 +285,7 @@ class TransmissionLegacy(TransmissionConfig):
                     roles_in_order = [m.role for m in v.memberInOrder]
                     if not any(role in roles_set and v.bestSt[1][i] > 0
                                for i, role in enumerate(roles_in_order)):
-                        print("skipped")
                         continue
-                    print("not skipped")
                 if picFilter:
                     if not picFilter(v.inChS):
                         continue

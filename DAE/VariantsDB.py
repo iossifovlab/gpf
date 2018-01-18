@@ -206,6 +206,7 @@ class Study:
 
         picFilter = present_in_child_filter(presentInChild, gender)
         pipFilter = denovo_present_in_parent_filter(presentInParent)
+        roles_set = set(roles if roles else [])
 
         geneSymsUpper = None
         if geneSyms is not None:
@@ -257,6 +258,15 @@ class Study:
                     # print >> sys.stderr, v.atts
                     continue
 
+            if roles:
+                # print("members in order", len(v.memberInOrder), v.memberInOrder)
+                # print("best state", len(v.bestSt), v.bestSt)
+                # print("roles", roles)
+                roles_in_order = [m.role for m in v.memberInOrder]
+                if not any(role in roles_set and v.bestSt[1][i] > 0
+                           for i, role in enumerate(roles_in_order)):
+                    continue
+
             if effectTypes is not None or geneSymsUpper is not None:
                 requestedGeneEffects = filter_gene_effect(
                     v.geneEffect, effectTypes, geneSymsUpper)
@@ -264,6 +274,7 @@ class Study:
                     continue
                 vc = copy.copy(v)
                 vc._requestedGeneEffect = requestedGeneEffects
+
                 yield vc
             else:
                 yield v
@@ -445,7 +456,7 @@ class Study:
         status_converter = lambda x: Status(int(x))
         gender_converter = lambda x: Gender[x] \
             if x in Gender.__members__ else Gender.F
-        print("file:", family_file)
+
         dt = genfromtxt(
             family_file, delimiter='\t', dtype=None, names=True,
             case_sensitive=True, comments="asdgasdgasdga",

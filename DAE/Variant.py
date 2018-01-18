@@ -292,7 +292,7 @@ class Variant:
         bs = self.bestSt
         for c in xrange(2):
             if isVariant(bs, c, self.location, mbrs[c].gender.name):
-                parentStr += mbrs[c].role
+                parentStr += mbrs[c].role.name
         return parentStr
 
     VIP_COLORS = {
