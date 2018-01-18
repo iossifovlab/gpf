@@ -40,9 +40,9 @@ class DaeToVcf(object):
                 "neither"
             ],
             "rarity": {
-                "ultraRare": True,
-                "minFreq": None,
-                "maxFreq": None
+                "ultraRare": False,
+                "minFreq": 0,
+                "maxFreq": 100
             },
             "effectTypes": [
                 "Nonsense",
