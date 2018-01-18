@@ -77,15 +77,17 @@ class DaeToVcf(object):
                 "ins",
                 "del",
                 "CNV"
-            ]
+            ],
+            "regions": ["22:0-51304566"]
         }
 
         cohort = []
 
         variants = dataset.get_transmitted_variants(safe=True, **kwargs)
-        variant_records = []
         total = 0
         counts = 0
+
+        variant_map = collections.OrderedDict()
 
         for variant in itertools.islice(variants, 1000000):
             total += 1
@@ -93,6 +95,7 @@ class DaeToVcf(object):
 
                 chromosome, position, reference, alternative = \
                     vcfVarFormat(variant.location, variant.variant)
+                end = position + max(len(reference), len(alternative)) - 1
 
                 if len(chromosome) > 2:
                     print("skipping variant in {}".format(chromosome))
@@ -100,17 +103,48 @@ class DaeToVcf(object):
                     continue
                 chromosome = self._fix_chromosome_name(chromosome)
 
-                variant_records.append(VcfVariant(
-                    chromosome=chromosome,
-                    position=position,
-                    reference=reference,
-                    alternative=alternative,
-                    quality=100,
-                    info={'END': position + max(len(reference), len(alternative)) - 1},
-                    format_='GT:AD',
-                    samples=[],
-                    metadata=self._get_metadata_for_variant(variant)
-                ))
+                key = "{}:{};{}:{}".format(
+                    chromosome, position, reference, alternative)
+
+                if key in variant_map:
+                    cached_variant = variant_map[key]
+                    metadata = self._get_metadata_for_variant(variant)
+                    cached_metadata = cached_variant.metadata
+
+                    common = set(metadata.keys()) & \
+                        set(cached_metadata.keys())
+
+                    for each in common:
+                        person1 = metadata[each]
+                        person2 = cached_metadata[each]
+                        assert person1['GT'] == person2['GT']
+                        if person1['AD'] != person2['AD']:
+                            print('different reads:', person1['AD'],
+                                  person2['AD'])
+
+                        ad1s = map(int, person1['AD'].split(','))
+                        ad2s = map(int, person2['AD'].split(','))
+
+                        if ad2s[1] > ad1s[1]:
+                            print("updating AD values {} -> {}".format(
+                                person2['AD'], person1['AD']
+                            ))
+                            person1['AD'] = person2['AD']
+
+
+                    cached_variant.metadata.update(metadata)
+                else:
+                    variant_map[key] = VcfVariant(
+                        chromosome=chromosome,
+                        position=position,
+                        reference=reference,
+                        alternative=alternative,
+                        quality=100,
+                        info={'END': end},
+                        format_='GT:AD',
+                        samples=[],
+                        metadata=self._get_metadata_for_variant(variant)
+                    )
                 cohort += variant.memberInOrder
             except (AssertionError, KeyError, NotImplementedError) as e:
                 print(e, variant)
@@ -121,19 +155,19 @@ class DaeToVcf(object):
         ordered_cohort = list(cohort_set)
 
         print("Cohort length: {}".format(len(ordered_cohort)))
-        print("Variants count: {}".format(len(variant_records)))
+        print("Variants count: {}".format(len(variant_map.values())))
 
         print("{} variants with counts, {} total ({}%)".format(
             counts, total,
             (counts / float(total)) * 100 if total != 0 else float("inf")
         ))
 
-        chromosomes = set(str(v.chromosome) for v in variant_records)
+        chromosomes = set(str(v.chromosome) for v in variant_map.values())
 
         writer = VcfWriter(output_filename, ordered_cohort, chromosomes)
         writer.open()
 
-        for variant in variant_records:
+        for variant in variant_map.values():
             variant.samples = self._generate_samples(variant, ordered_cohort)
             writer.write_variant(variant)
             variant.samples = None
@@ -159,7 +193,7 @@ class DaeToVcf(object):
 
         return samples
 
-    ORDERED_GENOTYPE_INFO = ['0/0', '0', '0/1', '1']
+    ORDERED_GENOTYPE_INFO = ['0/0', '0', '0/1', '1', '1/1']
 
     @staticmethod
     def _get_genotype_info(index, variant):
@@ -177,6 +211,8 @@ class DaeToVcf(object):
         #     return '0'
         # if ref == 0 and alt == 1:
         #     return '1'
+        # if ref == 0 and alt == 2:
+        #     return '1/1'
         genotype_index = alt - ref + 2
 
         assert 0 <= genotype_index < len(DaeToVcf.ORDERED_GENOTYPE_INFO),\

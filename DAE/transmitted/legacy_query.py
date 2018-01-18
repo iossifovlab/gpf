@@ -216,7 +216,7 @@ class TransmissionLegacy(TransmissionConfig):
             'limit': limit
         }
         # print(query)
-        roles_set = set(roles)
+        roles_set = set(roles if roles else [])
 
         transmittedVariantsTOOMANYFile = \
             self._get_params('indexFile') + "-TOOMANY.txt.bgz"

@@ -624,7 +624,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                         if key in genotype_column_keys}
 
         def augment_vars(v):
-            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+            chProf = "".join((p.role.name + p.gender for p in v.memberInOrder[2:]))
 
             v.atts["_ch_prof_"] = chProf
             v.atts["pedigree"] = v.pedigree_v3(legend)
