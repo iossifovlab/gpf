@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 import pandas as pd
 from sqlalchemy import create_engine, or_, and_
-from sqlalchemy.orm import sessionmaker, aliased, joinedload, subqueryload, selectinload
+from sqlalchemy.orm import sessionmaker, aliased, joinedload, subqueryload
 
 from transmitted.base_query import TransmissionConfig
 from Variant import Variant as VariantView
