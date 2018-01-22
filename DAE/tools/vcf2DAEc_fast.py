@@ -14,6 +14,7 @@ from ped2NucFam import *
 import vrtIOutil as vIO
 import heapq
 import time
+import re
 # add more data on fam Info
 
 
@@ -332,6 +333,9 @@ def main():
     TOOMANY = ox.outputPrefix + '-TOOMANY.txt'
 
     output_count = 0
+    start_region = None
+    if ox.region is not None:
+        start_region = int(re.match("chr([0-9]+):([0-9]+)-([0-9]+)", ox.region).group(2))
 
     with open(OUT, 'w') as out, open(TOOMANY, 'w') as outTOOMANY:
         print >> out, '\t'.join(
@@ -353,6 +357,9 @@ def main():
     
         for key, group in groupby(merge(keyfunc, *batches), keyfunc):
             chrom, pos = key
+
+            if start_region is not None and start_region > pos:
+                continue
 
             allIterestingFamilies = set()
             allMissingFamilies = set()
