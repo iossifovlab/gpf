@@ -31,7 +31,8 @@ def upgrade():
 
     op.create_foreign_key('fk_effect_gene', 'effect', 'gene', ['gene_id'], ['id'])
     op.create_foreign_key('fk_effect_variant', 'effect', 'variant', ['variant_id'], ['id'])
-
+    op.create_index('ix_effect_type', 'effect', ['effect_type'], unique=False)
+    
     op.create_foreign_key('fk_variant_worst_effect', 'variant', 'effect', ['worst_effect_id'], ['id'])
     op.create_index('ix_variant_alt_freq', 'variant', ['alt_freq'], unique=False)
     op.create_index('ix_variant_n_alt_alls', 'variant', ['n_alt_alls'], unique=False)
@@ -60,6 +61,8 @@ def downgrade():
     op.drop_constraint('fk_effect_gene', 'effect', type_='foreignkey')
     op.drop_constraint('fk_effect_variant', 'effect', type_='foreignkey')
 
+    op.drop_index('ix_effect_type', table_name='effect')
+    
     op.drop_constraint('fk_variant_worst_effect', 'variant', type_='foreignkey')
     op.drop_index('ix_variant_prcnt_par_called', table_name='variant')
     op.drop_index('ix_variant_n_par_called', table_name='variant')

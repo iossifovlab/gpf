@@ -56,7 +56,7 @@ def sqlalchemy_query_q401(limit=None):
         limit=limit)
 
     res = [v for v in tvs]
-    print("mysql_query_q401: {}".format(len(res)))
+    print("sqlalchemy_query_q401: {}".format(len(res)))
     return res
 
 

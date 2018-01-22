@@ -112,6 +112,7 @@ class VariantQuery(TransmissionConfig):
         'best_state': 'bestState',
         'effects_details': 'effectDetails',
         'alt_freq': 'all.altFreq',
+        'n_alt_alls': 'all.nAltAlls',
     }
 
     def find_variants(self, **kwargs):
@@ -126,6 +127,10 @@ class VariantQuery(TransmissionConfig):
                             FamilyVariant.family_id == Family.id,
                             Variant.worst_effect_id == Effect.id))
 
+            if 'ultraRareOnly' in kwargs:
+                ultra_rare = kwargs.get('ultraRareOnly')
+                if ultra_rare:
+                    query = query.filter(Variant.n_alt_alls == 1)
             if 'genomicScores' in kwargs:
                 query = self._build_genomic_scores_where(
                     query, kwargs['genomicScores'])
@@ -143,6 +148,8 @@ class VariantQuery(TransmissionConfig):
                 limit = kwargs.get('limit')
                 query = query.limit(limit)
 
+            print(query.statement)
+
             data_frame = pd.read_sql(query.statement, query.session.bind)
             data_frame.rename(
                 columns=self.COLUMNS_MAPPING, inplace=True)
@@ -157,7 +164,7 @@ class VariantQuery(TransmissionConfig):
                                 effectGeneAtt="effectsDetails",
                                 altFreqPrcntAtt="all.altFreq")
                 v.study = self.study
-                if row['all.altFreq'] == 1:
+                if row['all.nAltAlls'] == 1:
                     v.popType = "ultraRare"
                 else:
                     v.popType = "common"
