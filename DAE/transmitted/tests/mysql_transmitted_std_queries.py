@@ -11,8 +11,11 @@ from gene.gene_set_collections import GeneSetsCollection
 
 def get_gene_set_syms(gene_set, gene_term):
     gsc = GeneSetsCollection(gene_set)
+    assert gsc is not None
+
     gsc.load()
     gene_set = gsc.get_gene_set(gene_term)
+    return gene_set['syms']
 
 
 def dae_query_q101():

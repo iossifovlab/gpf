@@ -110,7 +110,7 @@ class VariantQuery(TransmissionConfig):
         'location': 'position',
         'family_ext_id': 'familyId',
         'best_state': 'bestState',
-        'effects_details': 'effectDetails',
+        'effects_details': 'effectsDetails',
         'alt_freq': 'all.altFreq',
         'n_alt_alls': 'all.nAltAlls',
     }
