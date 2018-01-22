@@ -1,15 +1,18 @@
 import enum
 
-from sqlalchemy import Column, Boolean, Integer, BigInteger, Float, String, Enum, ForeignKey, Index, UniqueConstraint
+from sqlalchemy import Column, Boolean, Integer, Float, String, \
+    Enum, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.associationproxy import association_proxy
 
+
 class Gender(enum.Enum):
     male = 'M'
     female = 'F'
     unknown = 'U'
+
 
 class FamilyRole(enum.Enum):
     unknown = 0
@@ -35,12 +38,14 @@ class FamilyRole(enum.Enum):
     paternal_grandmother = -21
     paternal_grandfather = -22
 
+
 class VariantType(enum.Enum):
     substitution = 1
     deletion = 2
     insertion = 3
     cnv = 4
     complex = 5
+
 
 class EffectType(enum.Enum):
     nonsense = 'nonsense'
@@ -64,12 +69,15 @@ class EffectType(enum.Enum):
     cnv_minus = 'CNV-'
     cds = 'CDS'
 
+
 class AttributeName(enum.Enum):
     ssc_freq = "ssc_freq"
     evs_freq = "evs_freq"
     e65_freq = "e65_freq"
 
+
 Base = declarative_base()
+
 
 class Variant(Base):
     __tablename__ = 'variant'
@@ -90,9 +98,12 @@ class Variant(Base):
     __table_args__ = (
         # TODO shall we include the location_end?
         # problem is if location_end is null
-        # solution: we can store location_end (equal to location) for non CNV variants
-        UniqueConstraint('chromosome', 'location', 'variant_type', 'variant', name='chr_loc_var_uidx'),
+        # solution: we can store location_end (equal to location) for non CNV
+        # variants
+        UniqueConstraint('chromosome', 'location', 'variant_type',
+                         'variant', name='chr_loc_var_uidx'),
     )
+
 
 class NumericAttribute(Base):
     __tablename__ = 'numeric_attribute'
@@ -104,10 +115,11 @@ class NumericAttribute(Base):
         Index('name_value_idx', 'name', 'value'),
     )
 
+
 Variant.numeric_attributes = relationship(
     'NumericAttribute',
     collection_class=attribute_mapped_collection('name'),
-    cascade = 'all, delete-orphan'
+    cascade='all, delete-orphan'
 )
 
 Variant.numeric_values = association_proxy(
@@ -115,10 +127,12 @@ Variant.numeric_values = association_proxy(
     creator=lambda k, v: NumericAttribute(name=k, value=v)
 )
 
+
 class Gene(Base):
     __tablename__ = 'gene'
     id = Column(Integer, primary_key=True)
     symbol = Column(String(32), unique=True, nullable=False)
+
 
 class Effect(Base):
     __tablename__ = 'effect'
@@ -129,14 +143,20 @@ class Effect(Base):
 
     gene = relationship('Gene')
 
-Variant.effects = relationship('Effect', primaryjoin=Variant.id==Effect.variant_id)
-Variant.worst_effect = relationship('Effect', primaryjoin=Variant.worst_effect_id==Effect.id, post_update=True)
+
+Variant.effects = relationship(
+    'Effect', primaryjoin=Variant.id == Effect.variant_id)
+Variant.worst_effect = relationship(
+    'Effect', primaryjoin=Variant.worst_effect_id == Effect.id,
+    post_update=True)
+
 
 class Family(Base):
     __tablename__ = 'family'
     id = Column(Integer, primary_key=True)
     family_ext_id = Column(String(64), unique=True)
     kids_count = Column(Integer)
+
 
 class FamilyVariant(Base):
     __tablename__ = 'family_variant'
@@ -152,6 +172,7 @@ class FamilyVariant(Base):
     family = relationship('Family')
     variant = relationship('Variant')
 
+
 class Person(Base):
     __tablename__ = 'person'
     id = Column(Integer, primary_key=True)
@@ -166,6 +187,7 @@ class Person(Base):
                 return person_variant.alt_allele_count
         return 0
 
+
 class FamilyMember(Base):
     __tablename__ = 'family_member'
     family_id = Column(Integer, ForeignKey('family.id'), primary_key=True)
@@ -175,7 +197,10 @@ class FamilyMember(Base):
 
     person = relationship('Person')
 
-Family.members = relationship('FamilyMember', order_by=FamilyMember.order_in_family)
+
+Family.members = relationship(
+    'FamilyMember', order_by=FamilyMember.order_in_family)
+
 
 class PersonVariant(Base):
     __tablename__ = 'person_variant'

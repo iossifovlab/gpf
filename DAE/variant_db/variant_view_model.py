@@ -34,6 +34,7 @@ def is_parent(family_member):
 class VariantView(object):
 
     def __init__(self, study, variant, family):
+        print(variant)
         self._variant = variant
         self._family = family
         self.study = study

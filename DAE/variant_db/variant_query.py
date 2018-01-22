@@ -3,16 +3,17 @@ from contextlib import contextmanager
 
 import pandas as pd
 from sqlalchemy import create_engine, or_, and_
-from sqlalchemy.orm import sessionmaker, aliased, joinedload, subqueryload
+from sqlalchemy.orm import sessionmaker, aliased
 
 from transmitted.base_query import TransmissionConfig
 from Variant import Variant as VariantView
-#from variant_db.variant_view_model import VariantView
-from variant_db.model import *
+from variant_db.model import *  # @UnusedWildImport
+# from variant_db.variant_view_model import VariantView
 
 LOGGER = logging.getLogger(__name__)
 
 Session = sessionmaker()
+
 
 class VariantQuery(TransmissionConfig):
 
@@ -29,8 +30,10 @@ class VariantQuery(TransmissionConfig):
             port = 3306
 
         self.db_engine = create_engine(
-            #'mysql+mysqldb://{}:{}@{}:{}/{}'.format('seqpipe', 'lae0suNu', '127.0.0.1', '3306', 'variant_db')
-            'mysql+mysqldb://{}:{}@{}:{}/{}'.format(user, password, host, port, db)
+            # 'mysql+mysqldb://{}:{}@{}:{}/{}'.format(
+            # 'seqpipe', 'lae0suNu', '127.0.0.1', '3306', 'variant_db')
+            'mysql+mysqldb://{}:{}@{}:{}/{}'.format(
+                user, password, host, port, db)
         )
 
     @contextmanager
@@ -39,7 +42,7 @@ class VariantQuery(TransmissionConfig):
         try:
             yield session
             session.commit()
-        except:
+        except Exception as _ex:
             session.rollback()
             raise
         finally:
@@ -81,51 +84,80 @@ class VariantQuery(TransmissionConfig):
             return query
         or_conditions = []
         if 'affected only' in present_in_child:
-            or_conditions.append(and_(FamilyVariant.present_in_affected == True,
-                FamilyVariant.present_in_unaffected == False))
+            or_conditions.append(
+                and_(FamilyVariant.present_in_affected == True,
+                     FamilyVariant.present_in_unaffected == False))
         if 'unaffected only' in present_in_child:
-            or_conditions.append(and_(FamilyVariant.present_in_affected == False,
-                FamilyVariant.present_in_unaffected == True))
+            or_conditions.append(
+                and_(FamilyVariant.present_in_affected == False,
+                     FamilyVariant.present_in_unaffected == True))
         if 'affected and unaffected' in present_in_child:
-            or_conditions.append(and_(FamilyVariant.present_in_affected == True,
-                FamilyVariant.present_in_unaffected == True))
+            or_conditions.append(
+                and_(FamilyVariant.present_in_affected == True,
+                     FamilyVariant.present_in_unaffected == True))
         if 'neither' in present_in_child:
-            or_conditions.append(and_(FamilyVariant.present_in_affected == False,
-                FamilyVariant.present_in_unaffected == False))
+            or_conditions.append(
+                and_(FamilyVariant.present_in_affected == False,
+                     FamilyVariant.present_in_unaffected == False))
         return query.filter(or_(*or_conditions))
 
     def get_transmitted_variants(self, **kwargs):
         return self.find_variants(**kwargs)
 
+    COLUMNS_MAPPING = {
+        'effect_type': 'effectType',
+        'chromosome': 'chr',
+        'location': 'position',
+        'family_ext_id': 'familyId',
+        'best_state': 'bestState',
+        'effects_details': 'effectDetails',
+        'alt_freq': 'all.altFreq',
+    }
+
     def find_variants(self, **kwargs):
         with self.session() as session:
-            query = session.query(Variant, FamilyVariant, Family.family_ext_id, Effect.effect_type).\
+            query = session.query(
+                Variant,
+                FamilyVariant,
+                Family.family_ext_id,
+                Effect.effect_type).\
                 order_by(Variant.chromosome, Variant.location).\
                 filter(and_(Variant.id == FamilyVariant.variant_id,
-                    FamilyVariant.family_id == Family.id,
-                    Variant.id == Effect.variant_id))
+                            FamilyVariant.family_id == Family.id,
+                            Variant.worst_effect_id == Effect.id))
 
             if 'genomicScores' in kwargs:
-                query = self._build_genomic_scores_where(query, kwargs['genomicScores'])
+                query = self._build_genomic_scores_where(
+                    query, kwargs['genomicScores'])
             if 'presentInChild' in kwargs:
-                query = self._build_present_in_child_where(query, kwargs['presentInChild'])
+                query = self._build_present_in_child_where(
+                    query, kwargs['presentInChild'])
             if 'geneSyms' in kwargs or 'effectTypes' in kwargs:
-                query = self._build_effect_where(query, kwargs.get('effectTypes'),
+                query = self._build_effect_where(
+                    query, kwargs.get('effectTypes'),
                     kwargs.get('geneSyms'))
+            if 'familyIds' in kwargs:
+                query = query.filter(
+                    Family.family_ext_id.in_(kwargs['familyIds']))
+            if 'limit' in kwargs:
+                limit = kwargs.get('limit')
+                query = query.limit(limit)
 
             data_frame = pd.read_sql(query.statement, query.session.bind)
-            data_frame.rename(columns={'effect_type' : 'effectType'}, inplace=True)
+            data_frame.rename(
+                columns=self.COLUMNS_MAPPING, inplace=True)
             for row in data_frame.to_dict('records'):
-                #LOGGER.debug('Reading row {} from data frame'.format(index))
+                # LOGGER.debug('Reading row {} from data frame'.format(index))
                 row['effectType'] = row['effectType'].value
-                row['location'] = '{}:{}'.format(row['chromosome'], row['location'])
+                row['location'] = '{}:{}'.format(
+                    row['chr'], row['position'])
                 v = VariantView(row,
-                    familyIdAtt="family_ext_id",
-                    bestStAtt="best_state",
-                    effectGeneAtt="effects_details",
-                    altFreqPrcntAtt="alt_freq")
+                                familyIdAtt="familyId",
+                                bestStAtt="bestState",
+                                effectGeneAtt="effectsDetails",
+                                altFreqPrcntAtt="all.altFreq")
                 v.study = self.study
-                if row['alt_freq'] == 1:
+                if row['all.altFreq'] == 1:
                     v.popType = "ultraRare"
                 else:
                     v.popType = "common"
