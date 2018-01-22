@@ -105,8 +105,8 @@ class PhenoTool(object):
         for _index, row in df.iterrows():
             person = Person()
             person.personId = row['person_id']
-            person.gender = row['gender']
-            person.role = row['role']
+            person.gender = Gender[row['gender']]
+            person.role = Role[row['role']]
             persons[person.personId] = person
         return persons
 

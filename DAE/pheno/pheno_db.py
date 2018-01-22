@@ -11,7 +11,8 @@ from collections import defaultdict, OrderedDict
 
 from VariantsDB import Person, Family
 from pheno.db import DbManager
-from pheno.common import MeasureType
+from pheno.common import MeasureType, Gender, Status, Role
+
 
 
 class Instrument(object):
@@ -313,6 +314,12 @@ class PhenoDB(object):
             p = Person(row)
             p.personId = person_id
             p.familyId = family_id
+            assert row['role'] in Role, \
+                "{} not a valid role".format(row['role'])
+            assert row['gender'] in Gender, \
+                "{} not a valid gender".format(row['gender'])
+            assert row['status'] in Status, \
+                "{} not a valid status".format(row['status'])
             p.role = row['role']
             p.gender = row['gender']
             p.status = row['status']
