@@ -215,12 +215,12 @@ class Test(VariantsCompareBase):
 
         self.assertVariantsEquals(res, mres, "q501")
 
-    def test_compare_sqlachemy_query_q701(self):
-        with Timer('sqlal q701') as _timeit:
-            res = sqlalchemy_query_q701()
-        with Timer('mysql q701') as _timeit:
-            mres = mysql_query_q701()
-        self.assertVariantsEquals(res, mres, "q701")
+#     def test_compare_sqlalchemy_query_q701(self):
+#         with Timer('sqlal q701') as _timeit:
+#             res = sqlalchemy_query_q701()
+#         with Timer('mysql q701') as _timeit:
+#             mres = mysql_query_q701()
+#         self.assertVariantsEquals(res, mres, "q701")
 
 
 def test_sqlalchemy_debug_query_genes():

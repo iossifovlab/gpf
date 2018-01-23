@@ -33,7 +33,8 @@ class VariantQuery(TransmissionConfig):
             # 'mysql+mysqldb://{}:{}@{}:{}/{}'.format(
             # 'seqpipe', 'lae0suNu', '127.0.0.1', '3306', 'variant_db')
             'mysql+mysqldb://{}:{}@{}:{}/{}'.format(
-                user, password, host, port, db)
+                user, password, host, port, db),
+            echo=True
         )
 
     @contextmanager
@@ -116,6 +117,20 @@ class VariantQuery(TransmissionConfig):
         'n_alt_alls': 'all.nAltAlls',
     }
 
+    def _build_variants_rarity(self, query, kwargs):
+        if 'ultraRareOnly' in kwargs:
+            ultra_rare = kwargs.get('ultraRareOnly')
+            if ultra_rare:
+                query = query.filter(Variant.n_alt_alls == 1)
+        else:
+            if kwargs.get('maxAltFreqPrcnt'):
+                val = float(kwargs.get('maxAltFreqPrcnt'))
+                query = query.filter(Variant.alt_freq <= val)
+            if kwargs.get('minAltFreqPrcnt'):
+                val = float(kwargs.get('minAltFreqPrcnt'))
+                query = query.filter(Variant.alt_freq >= val)
+        return query
+
     def find_variants(self, **kwargs):
         with self.session() as session:
             query = session.query(
@@ -128,10 +143,7 @@ class VariantQuery(TransmissionConfig):
                             FamilyVariant.family_id == Family.id,
                             Variant.worst_effect_id == Effect.id))
 
-            if 'ultraRareOnly' in kwargs:
-                ultra_rare = kwargs.get('ultraRareOnly')
-                if ultra_rare:
-                    query = query.filter(Variant.n_alt_alls == 1)
+            query = self._build_variants_rarity(query, kwargs)
             if 'genomicScores' in kwargs:
                 query = self._build_genomic_scores_where(
                     query, kwargs['genomicScores'])
