@@ -391,8 +391,6 @@ class Study:
         for _indId, indS in self.vdb.sfariDB.individual.items():
             if indS.collection != "ssc":
                 continue
-            print("!!!!!!!!_load_family_data_SSCTrios!!!!!!!")
-            print("indS.role", indS.role, indS, indS.role)
             buff[indS.familyId][indS.role] = indS
 
         rlsMp = zip(
@@ -440,19 +438,40 @@ class Study:
         return result
 
     @staticmethod
+    def gender_converter(gender):
+        return Gender(int(gender))
+
+    @staticmethod
+    def gender_converter_by_name(gender_name):
+        return Gender[gender_name]
+
+    @staticmethod
+    def gender_converter_by_name_or_value(gender_name_or_value):
+        if gender_name_or_value in Gender.__members__:
+            return Gender[gender_name_or_value]
+        print'not standard gender: {}'.format(gender_name_or_value)
+        # return Gender(gender_name_or_value)
+
+    @staticmethod
+    def role_converter(role):
+        if role in Role.__members__:
+            return Role[role]
+        print("Unknown role {}, defaulting to unknown".format(role))
+        return Role.unknown
+
+    @staticmethod
+    def status_converter(status):
+        return Status(int(status))
+
+    @staticmethod
     def _load_family_data_from_simple(reportF):
-        role_converter = lambda x: \
-            Role[x] if x in Role.__members__ else Role.unknown
-        status_converter = lambda x: Status(int(x))
-        gender_converter = lambda x: Gender[x] \
-            if x in Gender.__members__ else Gender.F
         dt = genfromtxt(
             reportF, delimiter='\t', dtype=None,
             names=True, case_sensitive=True,
             comments="asdgasdgasdga", converters={
-                'role': role_converter,
-                'status': status_converter,
-                'gender': gender_converter
+                'role': Study.role_converter,
+                'status': Study.status_converter,
+                'gender': Study.gender_converter_by_name_or_value
             })
         families = defaultdict(Family)
         for dtR in dt:
@@ -472,11 +491,6 @@ class Study:
     @staticmethod
     def _load_family_data_from_pedigree(family_file):
         id_converter = lambda x: x if x != '0' else ''
-        role_converter = lambda x: Role[x] \
-            if x in Role.__members__ else Role.unknown
-        status_converter = lambda x: Status(int(x))
-        gender_converter = lambda x: Gender[x] \
-            if x in Gender.__members__ else Gender.F
 
         dt = genfromtxt(
             family_file, delimiter='\t', dtype=None, names=True,
@@ -484,9 +498,9 @@ class Study:
             converters={
                 'momId': id_converter,
                 'dadId': id_converter,
-                'role': role_converter,
-                'status': status_converter,
-                'gender': gender_converter
+                'role': Study.role_converter,
+                'status': Study.status_converter,
+                'gender': Study.gender_converter_by_name_or_value
             })
         families = defaultdict(Family)
         for dtR in dt:
