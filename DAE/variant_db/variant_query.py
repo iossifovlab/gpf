@@ -50,15 +50,18 @@ class VariantQuery(TransmissionConfig):
             session.close()
 
     @staticmethod
-    def _build_effect_where(query, effects=None, gene_symbols=None):
-        eff = aliased(Effect)
-        query = query.join(eff, eff.variant_id == Variant.id).join(eff.gene)
+    def _build_effect_where(session, query, effects=None, gene_symbols=None):
+        effect_query = session.query(Effect.variant_id)
+
         if effects is not None:
-            query = query.filter(eff.effect_type.in_(
+            effect_query = effect_query.filter(Effect.effect_type.in_(
                 [EffectType(effect) for effect in effects]))
         if gene_symbols is not None:
-            query = query.filter(Gene.symbol.in_(
+            effect_query = effect_query.join(Effect.gene).filter(Gene.symbol.in_(
                 [symbol.upper() for symbol in gene_symbols]))
+
+        effect_subquery = effect_query.subquery()
+        query = query.filter(Variant.id.in_(effect_subquery))
         return query
 
     @staticmethod
@@ -138,10 +141,10 @@ class VariantQuery(TransmissionConfig):
                 FamilyVariant,
                 Family.family_ext_id,
                 Effect.effect_type).\
-                order_by(Variant.chromosome, Variant.location).\
-                filter(and_(Variant.id == FamilyVariant.variant_id,
-                            FamilyVariant.family_id == Family.id,
-                            Variant.worst_effect_id == Effect.id))
+                outerjoin(FamilyVariant.variant).\
+                outerjoin(FamilyVariant.family).\
+                outerjoin(Variant.worst_effect).\
+                order_by(Variant.chromosome, Variant.location)
 
             query = self._build_variants_rarity(query, kwargs)
             if 'genomicScores' in kwargs:
@@ -152,7 +155,7 @@ class VariantQuery(TransmissionConfig):
                     query, kwargs['presentInChild'])
             if 'geneSyms' in kwargs or 'effectTypes' in kwargs:
                 query = self._build_effect_where(
-                    query, kwargs.get('effectTypes'),
+                    session, query, kwargs.get('effectTypes'),
                     kwargs.get('geneSyms'))
             if 'familyIds' in kwargs:
                 query = query.filter(
