@@ -50,9 +50,10 @@ class VariantQuery(TransmissionConfig):
 
     @staticmethod
     def _build_effect_where(query, effects=None, gene_symbols=None):
-        query = query.join(Variant.effects).join(Effect.gene)
+        eff=aliased(Effect)
+        query = query.join(eff, eff.variant_id==Variant.id).join(eff.gene)
         if effects is not None:
-            query = query.filter(Effect.effect_type.in_(
+            query = query.filter(eff.effect_type.in_(
                 [EffectType(effect) for effect in effects]))
         if gene_symbols is not None:
             query = query.filter(Gene.symbol.in_(
@@ -144,11 +145,12 @@ class VariantQuery(TransmissionConfig):
             if 'familyIds' in kwargs:
                 query = query.filter(
                     Family.family_ext_id.in_(kwargs['familyIds']))
+            query = query.distinct()
             if 'limit' in kwargs:
                 limit = kwargs.get('limit')
                 query = query.limit(limit)
 
-            print(query.statement)
+            # print(query.statement)
 
             data_frame = pd.read_sql(query.statement, query.session.bind)
             data_frame.rename(

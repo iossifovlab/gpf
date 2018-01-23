@@ -6,7 +6,7 @@ Created on Jan 22, 2018
 from variant_db.variant_query import VariantQuery
 from DAE import vDB
 from transmitted.tests.mysql_transmitted_std_queries import mysql_query_q101,\
-    mysql_query_q201, mysql_query_q401, get_gene_set_syms
+    mysql_query_q201, mysql_query_q401, get_gene_set_syms, mysql_query_q501
 from transmitted.tests.variants_compare_base import VariantsCompareBase
 import time
 from transmitted.mysql_query import MysqlTransmittedQuery
@@ -80,9 +80,6 @@ def sqlalchemy_query_q501(limit=None):
     assert gene_syms
 
     gene_syms = set(gene_syms)
-    print(len(gene_syms))
-    # gene_syms = gene_syms - set(['INTS7'])
-    print(len(gene_syms))
 
     transmitted_study = vDB.get_study("variant_db")
     query = VariantQuery(transmitted_study)
@@ -136,22 +133,28 @@ def mysql_query_q501_without_SRGAP2(limit=None):
 class Test(VariantsCompareBase):
 
     def test_compare_sqlalchemy_query_q101(self):
-        res = sqlalchemy_query_q101()
-        mres = mysql_query_q101()
+        with Timer('sqlal q101') as _timeit:
+            res = sqlalchemy_query_q101()
+        with Timer('mysql q101') as _timeit:
+            mres = mysql_query_q101()
 
         assert res is not None
         self.assertVariantsEquals(res, mres, "q101")
 
     def test_compare_sqlalchemy_query_q201(self):
-        res = sqlalchemy_query_q201()
-        mres = mysql_query_q201()
+        with Timer('sqlal q201') as _timeit:
+            res = sqlalchemy_query_q201()
+        with Timer('mysql q201') as _timeit:
+            mres = mysql_query_q201()
 
         assert res is not None
         self.assertVariantsEquals(res, mres, "q201")
 
     def test_compare_sqlalchemy_query_q401(self):
-        res = sqlalchemy_query_q401()
-        mres = mysql_query_q401()
+        with Timer('sqlal q401') as _timeit:
+            res = sqlalchemy_query_q401()
+        with Timer('mysql q401') as _timeit:
+            mres = mysql_query_q401()
 
         assert res is not None
         self.assertVariantsEquals(res, mres, "q401")
@@ -160,7 +163,7 @@ class Test(VariantsCompareBase):
         with Timer('sqlal q501') as _timeit:
             res = sqlalchemy_query_q501()
         with Timer('mysql q501') as _timeit:
-            mres = mysql_query_q501_without_SRGAP2()
+            mres = mysql_query_q501()
 
         self.assertVariantsEquals(res, mres, "q501")
 
@@ -192,7 +195,7 @@ def test_sqlalchemy_debug_query_genes():
         minParentsCalled=None,
         maxAltFreqPrcnt=None,
         minAltFreqPrcnt=None,
-        geneSyms=['SRGAP2'],
+        geneSyms=['SRGAP2', 'SRGAP2B'],
         effectTypes=['frame-shift', 'splice-site', 'nonsense'],
         ultraRareOnly=True,
     )
@@ -209,7 +212,7 @@ def test_sqlalchemy_debug_query_genes():
         minParentsCalled=None,
         maxAltFreqPrcnt=None,
         minAltFreqPrcnt=None,
-        geneSyms=['SRGAP2'],
+        geneSyms=['SRGAP2', 'SRGAP2B'],
         effectTypes=['frame-shift', 'splice-site', 'nonsense'],
         ultraRareOnly=True,
     )
