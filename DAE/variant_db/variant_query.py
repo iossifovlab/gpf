@@ -50,8 +50,8 @@ class VariantQuery(TransmissionConfig):
 
     @staticmethod
     def _build_effect_where(query, effects=None, gene_symbols=None):
-        eff=aliased(Effect)
-        query = query.join(eff, eff.variant_id==Variant.id).join(eff.gene)
+        eff = aliased(Effect)
+        query = query.join(eff, eff.variant_id == Variant.id).join(eff.gene)
         if effects is not None:
             query = query.filter(eff.effect_type.in_(
                 [EffectType(effect) for effect in effects]))
