@@ -58,7 +58,6 @@ class TransmissionLegacy(TransmissionConfig):
                       format(len(colNms), len(vls)))
                 raise Exception("Incorrect transmitted variants file: ")
             mainAtts = dict(zip(colNms, vls))
-
             mainAtts["location"] = mainAtts["chr"] + ":" + mainAtts["position"]
 
             if minParentsCalled != -1:

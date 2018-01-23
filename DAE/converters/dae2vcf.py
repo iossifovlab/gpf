@@ -7,8 +7,10 @@ import re
 import itertools
 import collections
 import vcf as PyVCF
+from pprint import pprint
 from vcf.parser import _Contig, _Format, _Info, _Filter, _Call
 from vcf.model import make_calldata_tuple
+import copy
 
 
 GA = genomesDB.get_genome()
@@ -78,7 +80,8 @@ class DaeToVcf(object):
                 "del",
                 "CNV"
             ],
-            "regions": ["22:0-51304566"]
+            # "regions": ["22:0-51304566"],
+            "regions": ["1:0-249250621"],
         }
 
         cohort = []
@@ -88,8 +91,10 @@ class DaeToVcf(object):
         counts = 0
 
         variant_map = collections.OrderedDict()
+        with_difference = 0
+        without_difference = 0
 
-        for variant in itertools.islice(variants, 1000000):
+        for variant in variants:
             total += 1
             try:
 
@@ -113,21 +118,29 @@ class DaeToVcf(object):
                     common = set(metadata.keys()) & \
                         set(cached_metadata.keys())
 
+
                     for each in common:
                         person1 = metadata[each]
                         person2 = cached_metadata[each]
                         assert person1['GT'] == person2['GT']
                         if person1['AD'] != person2['AD']:
-                            print('different reads:', person1['AD'],
-                                  person2['AD'])
+                            with_difference += 1
+                            print('personId = {}'.format(each))
+                            self._print_variant_info_about_person(person2['_variant'], each)
+                            print('------')
+                            self._print_variant_info_about_person(person1['_variant'], each)
+                            print
+                            print
+                        else:
+                            without_difference += 1
 
                         ad1s = map(int, person1['AD'].split(','))
                         ad2s = map(int, person2['AD'].split(','))
 
                         if ad2s[1] > ad1s[1]:
-                            print("updating AD values {} -> {}".format(
-                                person2['AD'], person1['AD']
-                            ))
+                            # print("updating AD values {} -> {}".format(
+                            #     person2['AD'], person1['AD']
+                            # ))
                             person1['AD'] = person2['AD']
 
 
@@ -153,10 +166,12 @@ class DaeToVcf(object):
         cohort_set = set(str(x.personId) for x in cohort)
         ordered_cohort = list(cohort_set)
 
+        print("variants with different counts: {}".format(with_difference))
+        print("variants with same counts: {}".format(without_difference))
         print("Cohort length: {}".format(len(ordered_cohort)))
-        print("Variants count: {}".format(len(variant_map.values())))
+        print("output variants count: {}".format(len(variant_map.values())))
 
-        print("{} variants with counts, {} total ({}%)".format(
+        print("{} input variants with counts, {} total ({}%)".format(
             counts, total,
             (counts / float(total)) * 100 if total != 0 else float("inf")
         ))
@@ -173,11 +188,30 @@ class DaeToVcf(object):
 
         writer.close()
 
+    @staticmethod
+    def _print_variant_info_about_person(variant, person_id):
+        variant = variant
+        members_in_order = variant.memberInOrder
+        member1_index = (i for i, v in enumerate(members_in_order) if v.personId == person_id).next()
+        print('family {}'.format(variant.familyId))
+        print('variant {} {}'.format(variant.location, variant.variant))
+        print(
+            'variant memberInOrder position: {}, counts: {} {}'.format(
+                member1_index, variant.counts[0][member1_index],
+                variant.counts[1][member1_index]
+            )
+        )
+        print('variant memberInOrder')
+        pprint(members_in_order)
+        print('variant counts:')
+        pprint(variant.counts)
+
     def _get_metadata_for_variant(self, variant):
         return {
             p.personId: {
                 'GT': self._get_genotype_info(index, variant),
-                'AD': self._get_alleles_coverage_info(index, variant)
+                'AD': self._get_alleles_coverage_info(index, variant),
+                '_variant': variant
             } for index, p in enumerate(variant.memberInOrder)
         }
 
@@ -284,13 +318,31 @@ class VcfWriter(object):
         reverse_map = {v: k for k, v in record._sample_indexes.items()}
         calldata_tuple = make_calldata_tuple(variant.format.split(':'))
 
+        variant_samples = variant.samples
+        variant.samples = self._get_public_sample_data(variant_samples)
+
         samples = map(
             lambda x: _Call(record, reverse_map[x[0]],
                             calldata_tuple(**x[1])),
             enumerate(variant.samples))
+        variant.samples = variant_samples
 
         record.samples = samples
         self.writer.write_record(record)
+
+    @staticmethod
+    def _get_public_sample_data(variant_samples):
+        result = []
+
+        for sample in variant_samples:
+            sample_copy = copy.copy(sample)
+
+            result.append(sample_copy)
+            for key in sample:
+                if key[0] == '_':
+                    sample_copy.pop(key)
+
+        return result
 
     def _prepare_template(self, additional_chromosomes=set()):
         contigs = set([str(num) for num in range(1, 23)] + ['X', 'Y'])
