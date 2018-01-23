@@ -7,7 +7,7 @@ from variant_db.variant_query import VariantQuery
 from DAE import vDB
 from transmitted.tests.mysql_transmitted_std_queries import mysql_query_q101,\
     mysql_query_q201, mysql_query_q401, get_gene_set_syms, mysql_query_q501,\
-    mysql_query_q701
+    mysql_query_q701, mysql_query_q702
 from transmitted.tests.variants_compare_base import VariantsCompareBase
 import time
 from transmitted.mysql_query import MysqlTransmittedQuery
@@ -138,11 +138,37 @@ def sqlalchemy_query_q701(limit=None):
             "mother and father", "neither"
         ],
         presentInChild=[
-            "autism only", "autism and unaffected"
+            "affected only", "affected and unaffected"
         ],
         limit=limit)
     res = [v for v in tvs]
     print("sqlalchemy_query_q701: {}".format(len(res)))
+    return res
+
+
+def sqlalchemy_query_q702(limit=None):
+    effectTypes = ['splice-site', 'nonsense', 'missense', 'frame-shift']
+    familyIds = ['14174', ]
+    transmitted_study = vDB.get_study("variant_db")
+
+    query = VariantQuery(transmitted_study)
+
+    tvs = query.get_transmitted_variants(
+        minParentsCalled=None,
+        maxAltFreqPrcnt=1.0,
+        minAltFreqPrcnt=None,
+        effectTypes=effectTypes,
+        familyIds=familyIds,
+        presentInParent=[
+            "mother only", "father only",
+            "mother and father", "neither"
+        ],
+        presentInChild=[
+            "affected only", "affected and unaffected"
+        ],
+        limit=limit)
+    res = [v for v in tvs]
+    print("sqlalchemy_query_q702: {}".format(len(res)))
     return res
 
 
@@ -215,12 +241,19 @@ class Test(VariantsCompareBase):
 
         self.assertVariantsEquals(res, mres, "q501")
 
-#     def test_compare_sqlalchemy_query_q701(self):
-#         with Timer('sqlal q701') as _timeit:
-#             res = sqlalchemy_query_q701()
-#         with Timer('mysql q701') as _timeit:
-#             mres = mysql_query_q701()
-#         self.assertVariantsEquals(res, mres, "q701")
+    def test_compare_sqlalchemy_query_q701(self):
+        with Timer('sqlal q701') as _timeit:
+            res = sqlalchemy_query_q701()
+        with Timer('mysql q701') as _timeit:
+            mres = mysql_query_q701()
+        self.assertVariantsEquals(res, mres, "q701")
+
+    def test_compare_sqlalchemy_query_q702(self):
+        with Timer('sqlal q702') as _timeit:
+            res = sqlalchemy_query_q702()
+        with Timer('mysql q702') as _timeit:
+            mres = mysql_query_q702()
+        self.assertVariantsEquals(res, mres, "q702")
 
 
 def test_sqlalchemy_debug_query_genes():
