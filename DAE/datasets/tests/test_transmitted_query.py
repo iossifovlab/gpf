@@ -210,7 +210,7 @@ def test_transmitted_query_agre(agre):
     vs = agre.get_transmitted_variants(**Q_TRANSMITTED)
     assert vs is not None
     assert 0 == count(vs)
-    assert False
+    # assert False
 
     # vs = agre.get_variants(**Q_DENOVO_ONLY)
     # assert vs is not None
