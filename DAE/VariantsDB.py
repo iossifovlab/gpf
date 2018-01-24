@@ -795,7 +795,7 @@ class Study:
             ch1 = Person()
             ch1.personId = piF(qrpR['child1sample_id'])
             ch1.role = rlsMap[qrpR['child1role']]
-            ch1.gender = qrpR['child1gender']
+            ch1.gender = Gender[qrpR['child1gender']]
             transferPersonAtts(ch1, "child1")
 
             f.memberInOrder = [mom, dad, ch1]
