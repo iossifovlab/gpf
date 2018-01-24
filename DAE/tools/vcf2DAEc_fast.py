@@ -97,15 +97,6 @@ class Family:
         if ((arr[2] == arr[1] or arr[3] == arr[1]) and
                 (arr[4] == arr[0] or arr[5] == arr[0])):
             return True
-        if arr[0] != arr[1]:
-            if ((arr[2] == arr[0] and arr[3] == arr[1]) or
-                    (arr[2] == arr[1] and arr[3] == arr[0])):
-                if arr[4] != arr[5]:
-                    return True
-            if ((arr[4] == arr[0] and arr[5] == arr[1]) or
-                    (arr[4] == arr[1] and arr[5] == arr[0])):
-                if arr[2] != arr[3]:
-                    return True
         return False
 
     def set_indicies(self, individualToIndex):
