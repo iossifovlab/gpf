@@ -83,11 +83,10 @@ class PhenoTool(object):
     @classmethod
     def _studies_persons(cls, studies, roles):
         persons = {}
-        role_names = [r.name for r in roles]
         for st in studies:
             for fam in st.families.values():
                 for person in fam.memberInOrder:
-                    if person.role in role_names and \
+                    if person.role in roles and \
                             person.personId not in persons:
                         persons[person.personId] = person
         return persons
@@ -105,8 +104,8 @@ class PhenoTool(object):
         for _index, row in df.iterrows():
             person = Person()
             person.personId = row['person_id']
-            person.gender = Gender[row['gender']]
-            person.role = Role[row['role']]
+            person.gender = row['gender']
+            person.role = row['role']
             persons[person.personId] = person
         return persons
 
@@ -279,5 +278,5 @@ class PhenoTool(object):
             result = {}
             for gender in [Gender.M, Gender.F]:
                 p = self._calc_stats(df, gender)
-                result[gender] = p
+                result[gender.name] = p
             return result
