@@ -104,7 +104,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
                             self.person_grouping_selector:
                         continue
 
-                    counter[p.gender] += 1
+                    counter[p.gender.name] += 1
                     seen.add(iid)
         self._children_stats = counter
         return self._children_stats
