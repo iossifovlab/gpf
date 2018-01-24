@@ -7,6 +7,7 @@ from enrichment_tool.tool import EnrichmentTool
 import pytest
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
+from pheno.common import Role
 
 
 def test_enrichment_tool_gene_events(autism_studies,
@@ -14,7 +15,7 @@ def test_enrichment_tool_gene_events(autism_studies,
     tool = EnrichmentTool(samocha_background, GeneEventsCounter())
     assert tool is not None
 
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
 
     enrichment_results = tool.calc(
         'LGDs',
@@ -47,7 +48,7 @@ def test_enrichment_tool_events(autism_studies,
     tool = EnrichmentTool(samocha_background, EventsCounter())
     assert tool is not None
 
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
 
     enrichment_results = tool.calc(
         'LGDs',
