@@ -360,7 +360,7 @@ class Study:
             fam.phenotype = phenotype
             fam.atts['phenotype'] = phenotype
             for p in fam.memberInOrder:
-                if p.role == Role.prb:
+                if hasattr(p, 'status') and p.status == Status.affected:
                     p.phenotype = phenotype
                 else:
                     p.phenotype = 'unaffected'
