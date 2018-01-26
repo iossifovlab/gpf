@@ -6,6 +6,8 @@ Created on May 24, 2017
 import enum
 from box import Box
 from pprint import pprint
+from collections import OrderedDict
+from copy import deepcopy
 
 
 class Gender(enum.Enum):
@@ -118,6 +120,28 @@ class RoleMapping(object):
         'Half sibling': Role.maternal_half_sibling,
         'Aunt': Role.maternal_aunt,
     }
+
+
+ROLES_GRAPHS_DEFINITION = OrderedDict([
+    ("probands", [Role.prb]),
+    ("siblings", [Role.sib]),
+    ("parents", [Role.mom, Role.dad]),
+    ("grandparents", [
+        Role.paternal_grandfather, Role.paternal_grandmother,
+        Role.maternal_grandfather, Role.maternal_grandmother
+    ]),
+    ("parental siblings", [
+        Role.paternal_uncle, Role.paternal_aunt,
+        Role.maternal_uncle, Role.maternal_aunt
+    ]),
+    ("step parents", [Role.step_mom, Role.step_dad]),
+    ("half siblings", [Role.paternal_half_sibling, Role.maternal_half_sibling]),
+    ("children", [Role.child])
+])
+
+
+ROLES_FILTER_DEFINITION = deepcopy(ROLES_GRAPHS_DEFINITION)
+ROLES_FILTER_DEFAULT_ROLES = ['probands', 'siblings', 'parents']
 
 
 def default_config():

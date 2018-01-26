@@ -15,29 +15,13 @@ import pandas as pd  # @IgnorePep8
 import numpy as np  # @IgnorePep8
 import seaborn as sns  # @IgnorePep8
 import statsmodels.api as sm  # @IgnorePep8
+from pheno.common import ROLES_GRAPHS_DEFINITION
 
 import traceback  # @IgnorePep8
 
 
 MAX_CATEGORIES_COUNT = 12
 ROLES_COUNT_CUTOFF = 7
-ROLES_DEFINITION = [
-    {"label": "probands", "roles": [Role.prb]},
-    {"label": "siblings", "roles": [Role.sib]},
-    {"label": "parents", "roles": [Role.mom, Role.dad]},
-    {"label": "grandparents", "roles": [
-        Role.paternal_grandfather, Role.paternal_grandmother,
-        Role.maternal_grandfather, Role.maternal_grandmother
-    ]},
-    {"label": "parental siblings", "roles": [
-        Role.paternal_uncle, Role.paternal_aunt,
-        Role.maternal_uncle, Role.maternal_aunt
-    ]},
-    {"label": "step parents", "roles": [Role.step_mom, Role.step_dad]},
-    {"label": "half siblings",
-     "roles": [Role.paternal_half_sibling, Role.maternal_half_sibling]},
-    {"label": "children", "roles": [Role.child]}
- ]
 
 
 class GraphColumn(object):
@@ -62,11 +46,11 @@ class GraphColumn(object):
         return self.name + "\n" + self.status.name
 
     @staticmethod
-    def build(df, role_definition, status):
-        roles = role_definition["roles"]
+    def build(df, role_name, role_subroles, status):
+        roles = role_subroles
         default_name = ", ".join([role.name for role in roles])
-        label = role_definition["label"] \
-            if "label" in role_definition else default_name
+        label = role_name \
+            if role_name != "" else default_name
 
         df_roles = df[df.role.isin(roles)]
         df_roles_status = df_roles[df_roles.status == status]
@@ -238,7 +222,7 @@ def _enumerate_by_natural_order(df, column_name):
 
 
 def draw_measure_violinplot(
-        df, measure_id, roles_definition=ROLES_DEFINITION, ax=None):
+        df, measure_id, roles_definition=ROLES_GRAPHS_DEFINITION, ax=None):
     if ax is None:
         ax = plt.gca()
 
@@ -291,9 +275,10 @@ def draw_measure_violinplot(
 
 def get_columns_to_draw(roles, df):
     columns = []
-    for subroles in roles:
+    for role_name, role_subroles in roles.items():
         for status in [Status.affected, Status.unaffected]:
-            columns.append(GraphColumn.build(df, subroles, status))
+            columns.append(
+                GraphColumn.build(df, role_name, role_subroles, status))
 
     dfs = [column for column in columns
            if column.all_count() >= ROLES_COUNT_CUTOFF]
@@ -302,7 +287,7 @@ def get_columns_to_draw(roles, df):
 
 
 def draw_categorical_violin_distribution(
-        df, measure_id, roles_definition=ROLES_DEFINITION, ax=None,
+        df, measure_id, roles_definition=ROLES_GRAPHS_DEFINITION, ax=None,
         numerical_categories=False, max_categories=MAX_CATEGORIES_COUNT):
     if ax is None:
         ax = plt.gca()

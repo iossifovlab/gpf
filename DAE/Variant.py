@@ -5,6 +5,7 @@ Created on Oct 21, 2015
 '''
 import numpy as np
 import operator
+from pprint import pprint
 
 
 def normalRefCopyNumber(location, gender):
@@ -349,7 +350,10 @@ class Variant:
     @property
     def sort_key(self):
         chromosome, position = self.location.split(':')
-        return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome), int(position.split('-')[0]))
+        return (
+            self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome),
+            int(position.split('-')[0])
+        )
 
     def pedigree_v3(self, legend):
         def get_color(p):
