@@ -1,0 +1,40 @@
+<div class="card">
+    <div class="card-header card-title">Affected status</div>
+    <div class="card-block">
+        <div class="btn-group btn-group-sm">
+            <button (click)="selectAll()"
+                class="btn btn-default">All</button>
+            <button (click)="selectNone()"
+                class="btn btn-default">None</button>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input #affectedOnlyCheckbox
+                type="checkbox"
+                [checked]="statusFilter.selected.has('affected')"
+                (change)="statusFilterCheckValue('affected', affectedOnlyCheckbox.checked)">
+            affected
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input #unaffectedOnlyCheckbox
+                type="checkbox"
+                [checked]="statusFilter.selected.has('unaffected')"
+                (change)="statusFilterCheckValue('unaffected', unaffectedOnlyCheckbox.checked)">
+            unaffected
+          </label>
+        </div>
+        <div class="checkbox">
+          <label>
+            <input #affectedUnaffectedCheckbox
+                type="checkbox"
+                [checked]="statusFilter.selected.has('affected and unaffected')"
+                (change)="statusFilterCheckValue('affected and unaffected', affectedUnaffectedCheckbox.checked)">
+            affected and unaffected
+          </label>
+        </div>
+    </div>
+
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+</div>

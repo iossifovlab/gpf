@@ -142,6 +142,7 @@ import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock
 import { VisPedigreeInputComponent } from './vis-pedigree-input/vis-pedigree-input.component';
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
+import { StatusFilterComponent } from './status-filter/status-filter.component';
 
 const appRoutes: Routes = [
   {
@@ -334,6 +335,7 @@ const appRoutes: Routes = [
     PerfectlyDrawablePedigreeComponent,
     VisPedigreeInputComponent,
     NonPdpPedigreesComponent,
+    StatusFilterComponent,
   ],
   imports: [
     BrowserModule,
