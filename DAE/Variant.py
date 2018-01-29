@@ -526,3 +526,15 @@ def denovo_present_in_parent_filter(present_in_parent):
         return None
 
     return lambda fromParent: False
+
+
+def filter_by_status(variant, status):
+    statuses_in_order = [m.status for m in variant.memberInOrder]
+
+    for status_group in status:
+        for status in status_group:
+            if not any(member_status == status and variant.bestSt[1][i] > 0
+                       for i, member_status in enumerate(statuses_in_order)):
+                return True
+
+    return False

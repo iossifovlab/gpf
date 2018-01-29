@@ -10,6 +10,7 @@ from guardian.shortcuts import get_groups_with_perms
 from datasets_api.models import Dataset
 from groups_api.serializers import GroupSerializer
 import preloaded
+from DAE import StatusMixin
 
 
 class DatasetView(APIView):
@@ -36,6 +37,10 @@ class DatasetView(APIView):
 
         return dataset
 
+    def augment_status_filter(selfs, dataset):
+        dataset['statusFilter'] = list(StatusMixin.AFFECTED_MAPPING.keys())
+        return dataset
+
     def get(self, request, dataset_id=None):
         user = request.user
         if dataset_id is None:
@@ -43,12 +48,14 @@ class DatasetView(APIView):
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
+            res = [self.augment_status_filter(ds) for ds in res]
             return Response({'data': res})
         else:
             res = self.datasets_factory.get_description_dataset(dataset_id)
             if res:
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)
+                res = self.augment_status_filter(res)
                 return Response({'data': res})
             return Response(
                 {
