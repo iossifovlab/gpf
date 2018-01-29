@@ -26,7 +26,8 @@ import pickle
 import logging
 from Variant import Variant, mat2Str, filter_gene_effect, str2Mat,\
     present_in_child_filter,\
-    denovo_present_in_parent_filter
+    denovo_present_in_parent_filter, \
+    filter_by_status
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
@@ -199,14 +200,13 @@ class Study:
 
     def get_denovo_variants(self, inChild=None, presentInChild=None,
                             presentInParent=None, genomicScores=[],
-                            gender=None, roles=None,
+                            gender=None, roles=None, status=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
-                            familyIds=None, regionS=None, callSet=None,
-                            limit=None):
+                            familyIds=None, regionS=None, callSet=None):
 
         picFilter = present_in_child_filter(presentInChild, gender)
         pipFilter = denovo_present_in_parent_filter(presentInParent)
-        roles_set = set(roles if roles else [])
+
 
         geneSymsUpper = None
         if geneSyms is not None:
@@ -259,12 +259,13 @@ class Study:
                     continue
 
             if roles:
-                # print("members in order", len(v.memberInOrder), v.memberInOrder)
-                # print("best state", len(v.bestSt), v.bestSt)
-                # print("roles", roles)
                 roles_in_order = [m.role for m in v.memberInOrder]
-                if not any(role in roles_set and v.bestSt[1][i] > 0
+                if not any(role in roles and v.bestSt[1][i] > 0
                            for i, role in enumerate(roles_in_order)):
+                    continue
+
+            if status:
+                if filter_by_status(v, status):
                     continue
 
             if effectTypes is not None or geneSymsUpper is not None:
@@ -457,7 +458,6 @@ class Study:
         if role in Role.__members__:
             return Role[role]
         raise ValueError("Unknown role {}, defaulting to unknown".format(role))
-        # return Role.unknown
 
     @staticmethod
     def status_converter(status):

@@ -461,6 +461,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 safe=safe,
                 **kwargs),
             'roles': self.get_roles_filter(safe=safe, **kwargs),
+            'status': self.get_status_filter(safe=safe, **kwargs),
             'inChild': self.get_in_child(
                 safe=safe,
                 **kwargs),

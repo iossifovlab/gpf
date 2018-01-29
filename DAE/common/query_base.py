@@ -477,10 +477,34 @@ class RolesMixin(object):
     def get_roles_filter(safe=True, **kwargs):
         roles = kwargs.get('roles', None)
         assert roles is None or isinstance(roles, list)
+
         if roles:
-            roles = [Role[role] for role in roles if role in Role.__members__]
+            roles = {Role[role] for role in roles if role in Role.__members__}
 
         return roles
+
+
+class StatusMixin(object):
+
+    AFFECTED_MAPPING = {
+        "affected": [Status.affected],
+        "unaffected": [Status.unaffected],
+        "affected and unaffected": [Status.affected, Status.unaffected],
+    }
+
+    @staticmethod
+    def get_status_filter(safe=True, **kwargs):
+        status = kwargs.get('status', None)
+
+        assert status is None or isinstance(status, list)
+
+        if status:
+            status = [
+                StatusMixin.AFFECTED_MAPPING[s]
+                for s in status if status in StatusMixin.AFFECTED_MAPPING
+            ]
+
+        return status
 
 
 class QueryBase(
@@ -495,7 +519,8 @@ class QueryBase(
         RarityMixin,
         FamiliesMixin,
         GenomicScoresMixin,
-        RolesMixin):
+        RolesMixin,
+        StatusMixin):
 
     IN_CHILD_TYPES = [
         'prb',
