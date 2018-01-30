@@ -61,7 +61,7 @@ additional attributes:
 * members_in_order
 * best_state
 * counts
-* role
+
 
 
 ## Genotype in Families Interface
