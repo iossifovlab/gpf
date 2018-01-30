@@ -20,6 +20,7 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
   hasStudyTypes: Observable<boolean>;
   pedigrees: Observable<Array<PedigreeSelector>>;
   selectedDataset$: Observable<Dataset>;
+  rolesFilterOptions: Observable<Array<string>>;
 
   constructor(
     private datasetsService: DatasetsService
@@ -65,6 +66,12 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
         return [];
       }
       return dataset.pedigreeSelectors;
+    });
+    this.rolesFilterOptions = selectedDataset$.map(dataset => {
+      if (!dataset || !dataset.genotypeBrowser) {
+        return [];
+      }
+      return dataset.genotypeBrowser.rolesFilterOptions;
     });
   }
 

@@ -143,6 +143,7 @@ import { VisPedigreeInputComponent } from './vis-pedigree-input/vis-pedigree-inp
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { StatusFilterComponent } from './status-filter/status-filter.component';
+import { RolesFilterComponent } from './roles-filter/roles-filter.component';
 
 const appRoutes: Routes = [
   {
@@ -336,6 +337,7 @@ const appRoutes: Routes = [
     VisPedigreeInputComponent,
     NonPdpPedigreesComponent,
     StatusFilterComponent,
+    RolesFilterComponent,
   ],
   imports: [
     BrowserModule,
