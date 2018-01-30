@@ -58,9 +58,9 @@ Family variants have all the attributes of summary variants and also have follow
 additional attributes:
 
 * family_id
+* members_in_order
 * best_state
 * counts
-* person_id
 * role
 
 
