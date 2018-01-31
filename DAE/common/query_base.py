@@ -501,7 +501,7 @@ class StatusMixin(object):
         if status:
             status = [
                 StatusMixin.AFFECTED_MAPPING[s]
-                for s in status if status in StatusMixin.AFFECTED_MAPPING
+                for s in status if s in StatusMixin.AFFECTED_MAPPING
             ]
 
         return status
