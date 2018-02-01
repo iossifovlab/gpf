@@ -174,6 +174,9 @@ class Variant:
         self.effectGeneAtt = effectGeneAtt
         self.altFreqPrcntAtt = altFreqPrcntAtt
 
+    def get_attr(self, attr):
+        return self.atts.get(attr, None)
+
     @property
     def familyId(self):
         try:
@@ -294,6 +297,10 @@ class Variant:
             if isVariant(bs, c, self.location, mbrs[c].gender):
                 parentStr += mbrs[c].role
         return parentStr
+
+    @property
+    def phenotype(self):
+        return self.atts.get('phenotype', self.study.get_attr('study.phenotype'))
 
     VIP_COLORS = {
         'deletion': '#e35252',
