@@ -9,6 +9,7 @@ import os
 import traceback
 import sqlite3
 from itertools import groupby, chain
+from collections import OrderedDict
 import cPickle
 import logging
 from preloaded import register
@@ -20,11 +21,6 @@ from DAE import vDB
 from pheno.pheno_regression import PhenoRegression
 
 LOGGER = logging.getLogger(__name__)
-
-
-class CacheMixin(object):
-    pass
-
 
 class GeneSetsCollection(GeneInfoConfig):
 
@@ -74,9 +70,6 @@ class GeneSetsCollection(GeneInfoConfig):
         assert self.gene_sets_descriptions is not None
         return self.gene_sets_descriptions
 
-    def get_gene_sets_types(self):
-        return []
-
     def get_gene_sets_types_legend(self):
         return []
 
@@ -117,6 +110,14 @@ class DenovoGeneSetsType(object):
         return keys
 
 class DenovoGeneSetsCollection(GeneInfoConfig):
+
+    DATASET_PEDIGREE_SELECTORS = OrderedDict(
+        [('SD', {'id': 'phenotype', 'source': 'phenotype'}),
+         ('SSC', {'id': 'phenotype', 'source': 'phenotype'}),
+         ('AGRE_WG', {'id': 'phenotype', 'source': 'phenotype'}),
+         ('SPARK', {'id': 'phenotype', 'source': 'phenotype'}),
+         ('VIP', {'id': 'phenotype', 'source': 'phenotype'})]
+    )
 
     EFFECT_TYPES = [
         {
@@ -189,30 +190,34 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def load(self):
         if len(self.cache) == 0:
-            dataset = self._get_datasets_factory().get_dataset('SD')
-            self._gene_sets_for(dataset)
+            for dataset in self._get_datasets():
+                self._gene_sets_for(dataset)
         return self.get_gene_sets()
 
     @classmethod
-    def _get_datasets_factory(cls):
+    def _get_datasets(cls):
         if cls.DATASETS_FACTORY is None:
             cls.DATASETS_FACTORY = register.get('datasets').get_factory()
-        return cls.DATASETS_FACTORY
-
-    @classmethod
-    def get_gene_sets_types(cls):
-        return map(lambda phenotype_legend: phenotype_legend['name'],
-            cls.get_gene_sets_types_legend())
+        return [cls.DATASETS_FACTORY.get_dataset(id)
+                for id in cls.DATASET_PEDIGREE_SELECTORS.keys()]
 
     @classmethod
     def get_gene_sets_types_legend(cls):
-        return cls._get_datasets_factory().get_dataset('SD').get_legend()
+        return [{
+            'datasetId': dataset.dataset_id,
+            'datasetName': dataset.descriptor['name'],
+            'phenotypes': dataset.get_legend(
+                pedigreeSelector=cls.DATASET_PEDIGREE_SELECTORS[dataset.dataset_id])
+        } for dataset in cls._get_datasets()]
 
-    def get_gene_sets(self, gene_sets_types=['autism'], **kwargs):
-        gene_sets_types_desc = ','.join(gene_sets_types)
+    def get_gene_sets(self, gene_sets_types={'SD': ['autism']}, **kwargs):
+        gene_sets_types_desc = ','.join(set(chain(*gene_sets_types.values())))
         result = []
         for gsn in self.GENE_SETS_NAMES:
-            gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
+            gene_set_syms = set()
+            for dataset_id, phenotypes in gene_sets_types.iteritems():
+                gene_set_syms.update(
+                    self._get_gene_set_syms(gsn, dataset_id, phenotypes))
             result.append({
                 'name': gsn,
                 'count': len(gene_set_syms),
@@ -221,7 +226,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             })
         return result
 
-    def get_gene_set(self, gene_set_id, gene_sets_types=['autism'], **kwargs):
+    def get_gene_set(self, gene_set_id, gene_sets_types={'SD': ['autism']}, **kwargs):
         syms = self._get_gene_set_syms(gene_set_id, gene_sets_types)
         if not syms:
             return None
@@ -233,7 +238,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             "desc": "{} ({})".format(gene_set_id, ";".join(gene_sets_types)),
         }
 
-    def _get_gene_set_syms(self, name, phenotypes, dataset_id='SD'):
+    def _get_gene_set_syms(self, name, dataset_id, phenotypes):
         criterias = name.split('.')
         effect_type = criterias[0]
         effect_type_subsets = self.cache[dataset_id][effect_type]
@@ -259,13 +264,13 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _gene_sets_for(self, dataset):
         variant_criterias = {k : map(lambda d: dict(d, property=k), v)
                              for k, v in self.VARIANT_CRITERIAS.iteritems()}
-        gene_sets = {}
 
         dataset_cache = {effect_type['name']:
                             {phenotype['id']: {}
                              for phenotype in dataset.get_legend()}
                          for effect_type in self.EFFECT_TYPES}
         self.cache[dataset.name] = dataset_cache
+        pedigree_selector = self.DATASET_PEDIGREE_SELECTORS[dataset.dataset_id]
         for effect_type in self.EFFECT_TYPES:
             variants = list(dataset.get_denovo_variants(
                 effectTypes=effect_type['value']))
@@ -275,11 +280,14 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 for variant in filter(lambda v: self._matches(v, dataset, criteria), variants):
                     gene_symbols = {ge['sym'] for ge in variant.requestedGeneEffects}
                     if 'sib' in variant.inChS:
-                        effect_cache['unaffected']\
+                        effect_cache.setdefault('unaffected', {})\
                             .setdefault(key, set()).update(gene_symbols)
                     if 'prb' in variant.inChS:
-                        effect_cache[variant.phenotype]\
-                            .setdefault(key, set()).update(gene_symbols)
+                        family = dataset.families.get(variant.familyId, None)
+                        if family is not None and \
+                                pedigree_selector['source'] in family.atts:
+                            effect_cache.setdefault(family.atts[pedigree_selector['source']], {})\
+                                .setdefault(key, set()).update(gene_symbols)
 
             # recurrent / non recurrent
             gene_family_list = sorted(
@@ -390,7 +398,7 @@ class GeneSetsCollections(GeneInfoConfig):
 
         return self.gene_sets_collections.get(gene_sets_collection_id, None)
 
-    def get_gene_sets(self, gene_sets_collection_id, gene_sets_types=[]):
+    def get_gene_sets(self, gene_sets_collection_id, gene_sets_types):
         gsc = self.get_gene_sets_collection(gene_sets_collection_id)
         if gsc is None:
             return None
@@ -398,7 +406,7 @@ class GeneSetsCollections(GeneInfoConfig):
         return gsc.get_gene_sets(gene_sets_types)
 
     def get_gene_set(
-            self, gene_sets_collection_id, gene_set_id, gene_sets_types=[]):
+            self, gene_sets_collection_id, gene_set_id, gene_sets_types):
         gsc = self.get_gene_sets_collection(gene_sets_collection_id)
         if gsc is None:
             return None
