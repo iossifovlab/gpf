@@ -11,7 +11,7 @@ import sqlite3
 from itertools import groupby, chain
 import cPickle
 import logging
-import preloaded
+from preloaded import register
 
 # from denovo_gene_sets import build_denovo_gene_sets
 from gene.config import GeneInfoConfig
@@ -196,7 +196,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     @classmethod
     def _get_datasets_factory(cls):
         if cls.DATASETS_FACTORY is None:
-            cls.DATASETS_FACTORY = preloaded.register.get('datasets').get_factory()
+            cls.DATASETS_FACTORY = register.get('datasets').get_factory()
         return cls.DATASETS_FACTORY
 
     @classmethod
@@ -382,12 +382,11 @@ class GeneSetsCollections(GeneInfoConfig):
 
     def get_gene_sets_collection(self, gene_sets_collection_id):
         if gene_sets_collection_id not in self.gene_sets_collections:
-            if gene_sets_collection_id == 'denovo':
-                gsc = DenovoGeneSetsCollection()
-            else:
+            gsc = register.get(gene_sets_collection_id)
+            if gsc is None:
                 gsc = GeneSetsCollection(gene_sets_collection_id)
-            if gsc.load():
-                self.gene_sets_collections[gene_sets_collection_id] = gsc
+                gsc.load()
+            self.gene_sets_collections[gene_sets_collection_id] = gsc
 
         return self.gene_sets_collections.get(gene_sets_collection_id, None)
 
