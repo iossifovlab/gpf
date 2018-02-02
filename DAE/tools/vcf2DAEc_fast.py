@@ -367,7 +367,7 @@ def main():
     output_count = 0
     start_region = None
     if ox.region is not None:
-        start_region = int(re.match("chr([0-9]+):([0-9]+)-([0-9]+)", ox.region).group(2))
+        start_region = int(re.match("chr([0-9X]+):([0-9]+)-([0-9]+)", ox.region).group(2))
 
     with open(OUT, 'w') as out, open(TOOMANY, 'w') as outTOOMANY:
         print >> out, '\t'.join(
