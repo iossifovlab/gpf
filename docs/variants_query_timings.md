@@ -11,8 +11,8 @@
 |q401    | get all UR LGDs                            |   28311       |
 |q501    | get UR LGDs in FRMP genes                  |   746         |
 |q601    | get all UR LGDs in proband                 |   14441       |
-|q701    | get interesting with 1% frequency in quads |   203150      |
-|q801    |                                            |   1108452     |
+|q701    | get interesting rare variants in quads     |   203150      |
+|q801    | get interesting rare variants              |   1108452     |
 
 
 ## Study w1202s766e611
