@@ -160,14 +160,15 @@ class TransmissionLegacy(TransmissionConfig):
             f = gzip.open(transmittedVariantsFile)
             colNms = f.readline().strip().split("\t")
             # print(colNms)
-            for v in self.filter_transmitted_variants(f, colNms,
-                                                      minParentsCalled,
-                                                      maxAltFreqPrcnt,
-                                                      minAltFreqPrcnt,
-                                                      variantTypes,
-                                                      effectTypes,
-                                                      ultraRareOnly,
-                                                      geneSyms, genomicScores):
+            for v in self.filter_transmitted_variants(
+                    f, colNms,
+                    minParentsCalled,
+                    maxAltFreqPrcnt,
+                    minAltFreqPrcnt,
+                    variantTypes,
+                    effectTypes,
+                    ultraRareOnly,
+                    geneSyms, genomicScores):
                 yield v
 
         if regionS:
@@ -176,7 +177,7 @@ class TransmissionLegacy(TransmissionConfig):
             f.close()
 
     def get_transmitted_variants(
-            self,inChild=None,
+            self, inChild=None,
             presentInChild=None,
             gender=None,
             roles=None,

@@ -260,7 +260,9 @@ class Study:
 
             if roles:
                 roles_in_order = [m.role for m in v.memberInOrder]
-                if not any(role in roles and v.bestSt[1][i] > 0
+
+                if not any(role in roles and len(v.bestSt) > 1 and
+                           v.bestSt[1][i] > 0
                            for i, role in enumerate(roles_in_order)):
                     continue
 

@@ -156,7 +156,7 @@ def test_get_variants_with_rarity_interval(ssc):
         ],
         "rarity": {
             "minFreq": 95,
-        },
+        }
     }
     vs = ssc.get_variants(**query)
     assert vs is not None
