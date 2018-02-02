@@ -97,15 +97,22 @@ class Family:
         if ((arr[2] == arr[1] or arr[3] == arr[1]) and
                 (arr[4] == arr[0] or arr[5] == arr[0])):
             return True
+        return False
+
+    def is_mendelian_male_X(self, arr):
         if arr[0] != arr[1]:
-            if ((arr[2] == arr[0] and arr[3] == arr[1]) or
-                    (arr[2] == arr[1] and arr[3] == arr[0])):
-                if arr[4] != arr[5]:
-                    return True
-            if ((arr[4] == arr[0] and arr[5] == arr[1]) or
-                    (arr[4] == arr[1] and arr[5] == arr[0])):
-                if arr[2] != arr[3]:
-                    return True
+            return False
+
+        if (arr[4] == arr[0] or arr[5] == arr[0]):
+            return True
+        return False
+
+    def is_mendelian_male_Y(self, arr):
+        if arr[0] != arr[1]:
+            return False
+
+        if (arr[2] == arr[0] or arr[3] == arr[0]):
+            return True
         return False
 
     def set_indicies(self, individualToIndex):
@@ -129,7 +136,8 @@ class Family:
                 index = individualToIndex[personId] * 2
                 indicies.append(index)
                 indicies.append(index + 1)
-            self.families.append(indicies)
+            isChildMale = self.familyInfo['isMale'][iFM[0]] == 1
+            self.families.append((isChildMale, indicies))
 
         parent_indicies = []
         for personId in self.familyInfo['notChild']:
@@ -139,12 +147,36 @@ class Family:
 
         self.parent_indicies = np.array(parent_indicies)
 
-    def is_denovo(self, variant):
-        for family in self.families:
-            arr = variant[family]
-            if not self.is_mendelian(arr):
-                #print(self.familyInfo['newFid'])
+    def is_autosomal_region(self, variant):
+        if variant.CHROM == 'chrX':
+            if variant.start >= 10000 and variant.end <= 2781479:
                 return True
+            if variant.start >= 155701382 and variant.end <= 156030895:
+                return True
+            return False
+        if variant.CHROM == 'chrY':
+            if variant.start >= 10000 and variant.end <= 2781479:
+                return True
+            if variant.start >= 56887902 and variant.end <= 57217415:
+                return True
+            return False
+        return True
+
+    def is_denovo(self, variant):
+        for isChildMale, family in self.families:
+            arr = variant.gt_idxs[family]
+
+            if isChildMale:
+                if self.is_autosomal_region(variant):
+                    if not self.is_mendelian(arr):
+                        return True
+                elif variant.CHROM == 'chrX' and not self.is_mendelian_male_X(arr):
+                        return True
+                elif variant.CHROM == 'chrY' and not self.is_mendelian_male_Y(arr):
+                        return True
+            else:
+                if variant.CHROM == 'chrY' and not self.is_mendelian(arr):
+                    return True
         return False
 
     def variant_present(self, variant, index):
@@ -392,7 +424,7 @@ def main():
                 families = [family
                             for family in sorted(interestingFamilies - missingFamilies,
                                                  key=lambda(x): x.familyInfo['newFid'])
-                            if not family.is_denovo(variant['variant'].gt_idxs)]
+                            if not family.is_denovo(variant['variant'])]
                 allFamilies.extend(families)
 
                 px, vx = vrtF.vcf2cshlFormat2(variant['variant'].POS,
