@@ -6,9 +6,12 @@
 
     <div *ngIf="selectedGeneSetsCollection?.types" style="text-align: left; border: 1px solid #dddddd; width: 100%">
       <div *ngFor="let type of selectedGeneSetsCollection.types">
-        <input type="checkbox" [ngModel]="isSelectedGeneType(type)" (ngModelChange)="setSelectedGeneType(type, $event)">
-        <span class="pedigree-icon" [style.background-color]="type.color"></span>
-        {{ type.name }}
+        {{ type.datasetName }}
+        <div *ngFor="let phenotype of type.phenotypes">
+          <input type="checkbox" [ngModel]="isSelectedGeneType(type.datasetId, phenotype.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, phenotype.id, $event)">
+          <span class="pedigree-icon" [style.background-color]="phenotype.color"></span>
+          {{ phenotype.name }}
+        </div>
       </div>
     </div>
   </div>

@@ -4,7 +4,7 @@ export class GeneSetsCollection {
     return new GeneSetsCollection(
       json['name'],
       json['desc'],
-      json['types'],
+      GeneSetType.fromJsonArray(json['types'])
     );
   }
 
@@ -15,7 +15,7 @@ export class GeneSetsCollection {
   constructor(
     readonly name: string,
     readonly desc: string,
-    readonly types: Array<any>,
+    readonly types: Array<GeneSetType>,
   ) { }
 
 }
@@ -41,4 +41,25 @@ export class GeneSet {
     readonly download: string,
   ) { }
 
+}
+
+export class GeneSetType {
+
+  static fromJsonArray(jsonArray: Array<Object>): Array<GeneSetType> {
+    let result: Array<GeneSetType> = [];
+    for (let geneSetType of jsonArray) {
+      result.push(GeneSetType.fromJson(geneSetType));
+    }
+    return result;
+  }
+
+  static fromJson(json: any): GeneSetType {
+    return new GeneSetType(json.datasetId, json.datasetName, json.phenotypes);
+  }
+
+  constructor(
+    readonly datasetId: string,
+    readonly datasetName: string,
+    readonly phenotypes: Array<any>
+  ) { }
 }
