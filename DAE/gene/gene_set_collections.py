@@ -111,82 +111,60 @@ class DenovoGeneSetsType(object):
 
 class DenovoGeneSetsCollection(GeneInfoConfig):
 
-    DATASET_PEDIGREE_SELECTORS = OrderedDict(
-        [('SD', {'id': 'phenotype', 'source': 'phenotype'}),
-         ('SSC', {'id': 'phenotype', 'source': 'phenotype'}),
-         ('AGRE_WG', {'id': 'phenotype', 'source': 'phenotype'}),
-         ('SPARK', {'id': 'phenotype', 'source': 'phenotype'}),
-         ('VIP', {'id': 'phenotype', 'source': 'phenotype'})]
-    )
-
-    EFFECT_TYPES = [
-        {
-            'name': 'LGDs',
-            'value': 'LGDs',
-        },
-        {
-            'name': 'Missense',
-            'value': 'missense',
-        },
-        {
-            'name': 'Synonymous',
-            'value': 'synonymous',
-        }
-    ]
-
-    VARIANT_CRITERIAS = {
-        'inChild': [
-            {
-                'name': 'Female',
-                'value': 'F',
-                'type': 'in'
-            },
-            {
-                'name': 'Male',
-                'value': 'M',
-                'type': 'in'
-            }
-        ],
-        'Proband Nonverbal IQ': [
-            {
-                'name': 'HighIQ',
-                'value': '90',
-                'type': 'gt'
-            },
-            {
-                'name': 'LowIQ',
-                'value': '90',
-                'type': 'lt'
-            }
-        ]
-    }
-
-    VARIANT_CRITERIAS_NAMES = set(map(lambda cr: cr['name'],
-        chain(*VARIANT_CRITERIAS.values())))
-
-    GENE_SETS_NAMES = [
-        'LGDs',
-        'LGDs.Male',
-        'LGDs.Female',
-        'LGDs.HighIQ',
-        'LGDs.LowIQ',
-        'LGDs.Recurrent',
-        'LGDs.Single',
-        'LGDs.WE.Recurrent',
-        'Missense',
-        'Missense.Male',
-        'Missense.Female',
-        'Missense.Recurrent',
-        'Missense.WE.Recurrent',
-        'Synonymous',
-        'Synonymous.WE',
-        'Synonymous.WE.Recurrent',
-    ]
-
     DATASETS_FACTORY = None
 
     def __init__(self):
+        super(DenovoGeneSetsCollection, self).__init__()
+        self.gsc_id = 'denovo'
+        self._init_config()
         self.cache = {}
+
+    def _init_config(self):
+        self.datasets_pedigree_selectors = OrderedDict()
+        for pedigree_selector_str in self._get_att_list(
+                'datasets.pedigreeSelectors'):
+            pedigree_selector = pedigree_selector_str.split(':')
+            self.datasets_pedigree_selectors[pedigree_selector[0]] = {
+                'id': pedigree_selector[1],
+                'source': pedigree_selector[2]
+            }
+
+        self.effect_types = [
+            {'value': effect_type_arr[0], 'name' : effect_type_arr[1]}
+            for effect_type_arr in map(
+                lambda effect_type_str: effect_type_str.split(':'),
+                self._get_att_list('effectTypes'))
+        ]
+
+        self.variant_criterias = []
+        self.variant_criterias_names = set()
+        for variant_criteria_id in self._get_att_list('variantCriterias'):
+            source = self._get_att(
+                'variantCriterias.{}.source'.format(variant_criteria_id))
+            segments_arrs = map(
+                lambda segment_str: segment_str.split(':'),
+                self._get_att_list(
+                    'variantCriterias.{}.segments'.format(
+                        variant_criteria_id)))
+            self.variant_criterias.append(
+                [{
+                    'property': source,
+                    'name': segment_arr[0],
+                    'value': segment_arr[1],
+                    'type': segment_arr[2]
+                 }
+                 for segment_arr in segments_arrs]
+            )
+            self.variant_criterias_names.update([segment_arr[0]
+                for segment_arr in segments_arrs])
+
+        self.gene_sets_names = self._get_att_list('geneSetsNames')
+
+    def _get_att_list(self, att_name):
+        return self.gene_info.getGeneTermAttList(self.gsc_id, att_name)
+
+    def _get_att(self, att_name):
+        return self.gene_info.getGeneTermAtt(self.gsc_id, att_name)
 
     def load(self):
         if len(self.cache) == 0:
@@ -194,26 +172,26 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 self._gene_sets_for(dataset)
         return self.get_gene_sets()
 
-    @classmethod
-    def _get_datasets(cls):
-        if cls.DATASETS_FACTORY is None:
-            cls.DATASETS_FACTORY = register.get('datasets').get_factory()
-        return [cls.DATASETS_FACTORY.get_dataset(id)
-                for id in cls.DATASET_PEDIGREE_SELECTORS.keys()]
+    def _get_datasets(self):
+        if self.DATASETS_FACTORY is None:
+            self.DATASETS_FACTORY = register.get('datasets').get_factory()
+        return [self.DATASETS_FACTORY.get_dataset(id)
+                for id in self.datasets_pedigree_selectors.keys()]
 
-    @classmethod
-    def get_gene_sets_types_legend(cls):
+    def get_gene_sets_types_legend(self):
         return [{
             'datasetId': dataset.dataset_id,
             'datasetName': dataset.descriptor['name'],
             'phenotypes': dataset.get_legend(
-                pedigreeSelector=cls.DATASET_PEDIGREE_SELECTORS[dataset.dataset_id])
-        } for dataset in cls._get_datasets()]
+                pedigreeSelector=self.datasets_pedigree_selectors[dataset.dataset_id])
+        } for dataset in self._get_datasets()]
 
     def get_gene_sets(self, gene_sets_types={'SD': ['autism']}, **kwargs):
-        gene_sets_types_desc = ','.join(set(chain(*gene_sets_types.values())))
+        gene_sets_types_desc = '{}::{}'.format(
+            ', '.join(set(gene_sets_types.keys())),
+            ', '.join(set(chain(*gene_sets_types.values()))))
         result = []
-        for gsn in self.GENE_SETS_NAMES:
+        for gsn in self.gene_sets_names:
             gene_set_syms = set()
             for dataset_id, phenotypes in gene_sets_types.iteritems():
                 gene_set_syms.update(
@@ -243,7 +221,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         effect_type = criterias[0]
         effect_type_subsets = self.cache[dataset_id][effect_type]
 
-        variant_criterias = self.VARIANT_CRITERIAS_NAMES.intersection(criterias)
+        variant_criterias = self.variant_criterias_names.intersection(criterias)
         other_criterias = set(criterias[1:]) - variant_criterias
 
         result = set()
@@ -262,20 +240,18 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return result
 
     def _gene_sets_for(self, dataset):
-        variant_criterias = {k : map(lambda d: dict(d, property=k), v)
-                             for k, v in self.VARIANT_CRITERIAS.iteritems()}
 
         dataset_cache = {effect_type['name']:
                             {phenotype['id']: {}
                              for phenotype in dataset.get_legend()}
-                         for effect_type in self.EFFECT_TYPES}
+                         for effect_type in self.effect_types}
         self.cache[dataset.name] = dataset_cache
-        pedigree_selector = self.DATASET_PEDIGREE_SELECTORS[dataset.dataset_id]
-        for effect_type in self.EFFECT_TYPES:
+        pedigree_selector = self.datasets_pedigree_selectors[dataset.dataset_id]
+        for effect_type in self.effect_types:
             variants = list(dataset.get_denovo_variants(
                 effectTypes=effect_type['value']))
             effect_cache = dataset_cache[effect_type['name']]
-            for criteria in chain(*variant_criterias.values()):
+            for criteria in chain(*self.variant_criterias):
                 key = criteria['name']
                 for variant in filter(lambda v: self._matches(v, dataset, criteria), variants):
                     gene_symbols = {ge['sym'] for ge in variant.requestedGeneEffects}
@@ -370,7 +346,8 @@ class GeneSetsCollections(GeneInfoConfig):
                 continue
             gene_sets_types = []
             if gsc_id == 'denovo':
-                gene_sets_types = DenovoGeneSetsCollection.get_gene_sets_types_legend()
+                gene_sets_types = self.get_gene_sets_collection(gsc_id)\
+                    .get_gene_sets_types_legend()
             self.gene_sets_collections_desc.append(
                 {
                     'desc': label,
