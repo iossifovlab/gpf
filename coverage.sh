@@ -62,3 +62,4 @@ py.test -v --cov-config coveragerc \
     --cov transmitted \
     --cov utils \
     DAE/variant_db/tests/
+#     DAE/tools/tests
