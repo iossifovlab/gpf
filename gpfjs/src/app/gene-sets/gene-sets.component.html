@@ -1,19 +1,24 @@
 <div class="row">
   <div class="col-sm-3">
-    <select class="form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
+    <select class="row-sm-3 form-control" [(ngModel)]="selectedGeneSetsCollection" required style="width: 100%" >
       <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{collection.desc}}</option>
     </select>
-
-    <div *ngIf="selectedGeneSetsCollection?.types" style="text-align: left; border: 1px solid #dddddd; width: 100%">
-      <div *ngFor="let type of selectedGeneSetsCollection.types">
-        {{ type.datasetName }}
-        <div *ngFor="let phenotype of type.phenotypes">
-          <input type="checkbox" [ngModel]="isSelectedGeneType(type.datasetId, phenotype.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, phenotype.id, $event)">
-          <span class="pedigree-icon" [style.background-color]="phenotype.color"></span>
-          {{ phenotype.name }}
-        </div>
-      </div>
-    </div>
+    <!-- style="text-align: left; border: 1px solid #dddddd; width: 100%" -->
+    <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="denovo-geneset-type-0" destroyOnHide="false"
+        #acc="ngbAccordion" class="gene-sets-types row-sm-3">
+      <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types; let i = index" id="denovo-geneset-type-{{i}}">
+        <ng-template ngbPanelTitle>
+          <span class="dropdown-toggle">{{ type.datasetName }}</span>
+        </ng-template>
+        <ng-template ngbPanelContent>
+          <div *ngFor="let phenotype of type.phenotypes">
+            <input type="checkbox" [ngModel]="isSelectedGeneType(type.datasetId, phenotype.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, phenotype.id, $event)">
+            <span class="pedigree-icon" [style.background-color]="phenotype.color"></span>
+            {{ phenotype.name }}
+          </div>
+        </ng-template>
+      </ngb-panel>
+    </ngb-accordion>
   </div>
 
   <div class="col-sm-9">
