@@ -168,9 +168,22 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def load(self):
         if len(self.cache) == 0:
-            for dataset in self._get_datasets():
-                self._gene_sets_for(dataset)
+            self._pickle_cache()
         return self.get_gene_sets()
+
+    def _pickle_cache(self):
+        cache_file_path = self.gene_info.getGeneTermAtt(self.gsc_id, 'file')
+        if os.path.exists(cache_file_path):
+            file = open(cache_file_path, 'r')
+            self.cache = cPickle.load(file)
+        else:
+            self._generate_cache()
+            file = open(cache_file_path, 'w')
+            cPickle.dump(self.cache, file)
+
+    def _generate_cache(self):
+        for dataset in self._get_datasets():
+            self._gene_sets_for(dataset)
 
     def _get_datasets(self):
         if self.DATASETS_FACTORY is None:
