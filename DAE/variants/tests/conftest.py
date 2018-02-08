@@ -9,6 +9,11 @@ import pytest
 
 
 @pytest.fixture(scope='session')
-def uagre_loader():
+def uagre_config():
     config = Configure.from_file()
-    return StudyLoader(config['study.uagre'])
+    return config['study.uagre']
+
+
+@pytest.fixture(scope='session')
+def uagre_loader(uagre_config):
+    return StudyLoader(uagre_config)
