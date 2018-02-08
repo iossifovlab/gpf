@@ -129,7 +129,7 @@ def parseGeneEffect(effStr):
         geneEffect.append({'sym': "", 'symu': '', 'eff': effStr})
         return geneEffect
 
-    splitGeneEffect(effStr, geneEffect)
+    geneEffect = splitGeneEffect(effStr, geneEffect)
     return geneEffect
 
 

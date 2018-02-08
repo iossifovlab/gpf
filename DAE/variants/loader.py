@@ -3,10 +3,13 @@ Created on Feb 7, 2018
 
 @author: lubo
 '''
-import pandas as pd
-import os
 import gzip
+import os
+
 from cyvcf2 import VCF
+
+import numpy as np
+import pandas as pd
 
 
 class VCFWrapper(object):
@@ -14,6 +17,13 @@ class VCFWrapper(object):
     def __init__(self, filename):
         self.vcf_file = filename
         self.vcf = VCF(filename)
+        self._samples = None
+
+    @property
+    def samples(self):
+        if self._samples is None:
+            self._samples = np.array(self.vcf.samples)
+        return self._samples
 
 
 class StudyLoader(object):
