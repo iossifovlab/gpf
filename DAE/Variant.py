@@ -5,6 +5,7 @@ Created on Oct 21, 2015
 '''
 import numpy as np
 import operator
+from pprint import pprint
 
 def normalRefCopyNumber(location, gender):
     clnInd = location.find(":")
@@ -103,7 +104,7 @@ def isVariant(bs, c, location=None, gender=None):
 def variantInMembers(v):
     result = []
     for index, member in enumerate(v.memberInOrder):
-        if isVariant(v.bestSt, index, v.location, member.gender):
+        if isVariant(v.bestSt, index, v.location, member.gender.name):
             result.append(member.personId)
     return result
 
@@ -263,8 +264,8 @@ class Variant:
         bs = self.bestSt
         childStr = ''
         for c in xrange(2, len(mbrs)):
-            if isVariant(bs, c, self.location, mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
+            if isVariant(bs, c, self.location, mbrs[c].gender.name):
+                childStr += (mbrs[c].role.name + mbrs[c].gender.name)
         return childStr
 
     @property
@@ -274,8 +275,8 @@ class Variant:
         bs = self.bestSt
         childStr = ''
         for c in xrange(2, len(mbrs)):
-            if isVariant(bs, c, self.location, mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
+            if isVariant(bs, c, self.location, mbrs[c].gender.name):
+                childStr += (mbrs[c].role.name + mbrs[c].gender.name)
         phenotype = self.study.get_attr('study.phenotype')
         return childStr.replace('prb', phenotype)
 
@@ -290,8 +291,8 @@ class Variant:
         mbrs = self.memberInOrder
         bs = self.bestSt
         for c in xrange(2):
-            if isVariant(bs, c, self.location, mbrs[c].gender):
-                parentStr += mbrs[c].role
+            if isVariant(bs, c, self.location, mbrs[c].gender.name):
+                parentStr += mbrs[c].role.name
         return parentStr
 
     VIP_COLORS = {
@@ -316,6 +317,7 @@ class Variant:
                     self.study.genetic_status.get(p.personId, 'unknown'),
                     '#ffffff')
                 for p in mbrs]
+
 
         denovo_parent = self.denovo_parent()
         res = [reduce(operator.add, [[m.role,
@@ -347,7 +349,10 @@ class Variant:
     @property
     def sort_key(self):
         chromosome, position = self.location.split(':')
-        return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome), int(position.split('-')[0]))
+        return (
+            self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome),
+            int(position.split('-')[0])
+        )
 
     def pedigree_v3(self, legend):
         def get_color(p):
@@ -355,32 +360,17 @@ class Variant:
 
         denovo_parent = self.denovo_parent()
 
-        members = self.memberInOrder
         bs = self.bestSt
 
-        mom = members[0]
-        dad = members[1]
-
-        res = [
-            [[self.familyId, mom.personId, '', '',
-              mom.gender, get_color(mom)],
-             variant_count_v3(bs, 0, self.location,
-                              mom.gender, denovo_parent)],
-            [[self.familyId, dad.personId, '', '',
-              dad.gender, get_color(dad)],
-             variant_count_v3(bs, 1, self.location,
-                              dad.gender, denovo_parent)]
+        return [
+            [
+                self.familyId, p.personId, getattr(p, 'dadId', ''),
+                getattr(p, 'momId', ''), p.gender.name, get_color(p)
+            ] +
+            variant_count_v3(
+                bs, index, self.location, p.gender.name, denovo_parent)
+            for index, p in enumerate(self.memberInOrder)
         ]
-
-        for c, p in enumerate(members[2:], 2):
-            res.append(
-                [[self.familyId, p.personId, dad.personId, mom.personId,
-                  p.gender, get_color(p)],
-                 variant_count_v3(bs, c, self.location,
-                                  dad.gender, denovo_parent)]
-            )
-        res = [reduce(operator.add, row) for row in res]
-        return res
 
     def denovo_parent(self):
         denovo_parent = None
@@ -404,7 +394,7 @@ class Variant:
 
     def is_variant_in_person(self, c):
         return isVariant(self.bestSt, c, self.location,
-                         self.memberInOrder[c].gender)
+                         self.memberInOrder[c].gender.name)
 
 
 PRESENT_IN_CHILD_FILTER_MAPPING = {
@@ -538,3 +528,15 @@ def denovo_present_in_parent_filter(present_in_parent):
         return None
 
     return lambda fromParent: False
+
+
+def filter_by_status(variant, status):
+    statuses_in_order = [m.status for m in variant.memberInOrder]
+
+    for status_group in status:
+        for status in status_group:
+            if not any(member_status == status and variant.bestSt[1][i] > 0
+                       for i, member_status in enumerate(statuses_in_order)):
+                return True
+
+    return False

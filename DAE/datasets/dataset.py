@@ -418,6 +418,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             'presentInChild': self.get_present_in_child(
                 safe=safe,
                 **kwargs),
+            'roles': self.get_roles_filter(safe=safe, **kwargs),
+            'status': self.get_status_filter(safe=safe, **kwargs),
             'inChild': self.get_in_child(
                 safe=safe,
                 **kwargs),
@@ -598,7 +600,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                         if key in genotype_column_keys}
 
         def augment_vars(v):
-            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+            chProf = "".join((p.role.name + p.gender.name for p in v.memberInOrder[2:]))
 
             v.atts["_ch_prof_"] = chProf
             v.atts["pedigree"] = v.pedigree_v3(legend)

@@ -48,27 +48,6 @@ class QueryPreviewView(QueryBaseView):
     def __init__(self):
         super(QueryPreviewView, self).__init__()
 
-    def __prepare_variants_response(self, cols, rows):
-        limitted_rows = []
-        count = 0
-        for row in rows:
-            count += 1
-            if count <= self.MAX_SHOWN_VARIANTS:
-                limitted_rows.append(row)
-            if count > self.MAX_VARIANTS:
-                break
-
-        if count <= self.MAX_VARIANTS:
-            count = str(count)
-        else:
-            count = 'more than {}'.format(self.MAX_VARIANTS)
-
-        return {
-            'count': count,
-            'cols': cols,
-            'rows': limitted_rows
-        }
-
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 preview request: " +
                                str(request.data)))
@@ -104,6 +83,27 @@ class QueryPreviewView(QueryBaseView):
             traceback.print_exc()
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def __prepare_variants_response(self, cols, rows):
+        limitted_rows = []
+        count = 0
+        for row in rows:
+            count += 1
+            if count <= self.MAX_SHOWN_VARIANTS:
+                limitted_rows.append(row)
+            if count > self.MAX_VARIANTS:
+                break
+
+        if count <= self.MAX_VARIANTS:
+            count = str(count)
+        else:
+            count = 'more than {}'.format(self.MAX_VARIANTS)
+
+        return {
+            'count': count,
+            'cols': cols,
+            'rows': limitted_rows
+        }
 
 
 class QueryDownloadView(QueryBaseView):

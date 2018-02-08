@@ -4,7 +4,7 @@ Created on Oct 21, 2015
 @author: lubo
 '''
 from Variant import parseGeneEffect, filter_gene_effect, Variant,\
-    present_in_parent_filter, present_in_child_filter
+    present_in_parent_filter, present_in_child_filter, filter_by_status
 import gzip
 import pysam
 import copy
@@ -61,7 +61,6 @@ class TransmissionLegacy(TransmissionConfig):
                              format(len(colNms), len(vls)))
                 raise Exception("Incorrect transmitted variants file: ")
             mainAtts = dict(zip(colNms, vls))
-
             mainAtts["location"] = mainAtts["chr"] + ":" + mainAtts["position"]
 
             if minParentsCalled != -1:
@@ -98,6 +97,7 @@ class TransmissionLegacy(TransmissionConfig):
                                                           geneSymsUpper)
                 if not requestedGeneEffects:
                     continue
+
             v = Variant(mainAtts)
             v.study = self.study
 
@@ -164,14 +164,16 @@ class TransmissionLegacy(TransmissionConfig):
         else:
             f = gzip.open(transmittedVariantsFile)
             colNms = f.readline().strip().split("\t")
-            for v in self.filter_transmitted_variants(f, colNms,
-                                                      minParentsCalled,
-                                                      maxAltFreqPrcnt,
-                                                      minAltFreqPrcnt,
-                                                      variantTypes,
-                                                      effectTypes,
-                                                      ultraRareOnly,
-                                                      geneSyms, genomicScores):
+            # print(colNms)
+            for v in self.filter_transmitted_variants(
+                    f, colNms,
+                    minParentsCalled,
+                    maxAltFreqPrcnt,
+                    minAltFreqPrcnt,
+                    variantTypes,
+                    effectTypes,
+                    ultraRareOnly,
+                    geneSyms, genomicScores):
                 yield v
 
         if regionS:
@@ -179,22 +181,25 @@ class TransmissionLegacy(TransmissionConfig):
         else:
             f.close()
 
-    def get_transmitted_variants(self, inChild=None,
-                                 presentInChild=None,
-                                 gender=None,
-                                 presentInParent=None,
-                                 minParentsCalled=0,
-                                 maxAltFreqPrcnt=5.0,
-                                 minAltFreqPrcnt=-1,
-                                 variantTypes=None,
-                                 effectTypes=None,
-                                 ultraRareOnly=False,
-                                 geneSyms=None,
-                                 familyIds=None,
-                                 regionS=None,
-                                 TMM_ALL=False,
-                                 limit=None,
-                                 genomicScores=[]):
+    def get_transmitted_variants(
+            self, inChild=None,
+            presentInChild=None,
+            gender=None,
+            roles=None,
+            presentInParent=None,
+            minParentsCalled=0,
+            maxAltFreqPrcnt=5.0,
+            minAltFreqPrcnt=-1,
+            variantTypes=None,
+            effectTypes=None,
+            ultraRareOnly=False,
+            geneSyms=None,
+            familyIds=None,
+            regionS=None,
+            status=None,
+            TMM_ALL=False,
+            limit=None,
+            genomicScores=[]):
         if limit is None:
             limit = 0
 
@@ -203,6 +208,7 @@ class TransmissionLegacy(TransmissionConfig):
             'inChild': inChild,
             'presentInChild': presentInChild,
             'gender': gender,
+            'roles': roles,
             'presentInParent': presentInParent,
             'minParentsCalled': minParentsCalled,
             'maxAltFreqPrcnt': maxAltFreqPrcnt,
@@ -278,6 +284,14 @@ class TransmissionLegacy(TransmissionConfig):
                 v.atts['bestState'] = bestStateS
                 v.atts['counts'] = cntsS
 
+                if roles:
+                    roles_in_order = [m.role for m in v.memberInOrder]
+                    if not any(role in roles and v.bestSt[1][i] > 0
+                               for i, role in enumerate(roles_in_order)):
+                        continue
+                if status:
+                    if filter_by_status(v, status):
+                            continue
                 if picFilter:
                     if not picFilter(v.inChS):
                         continue

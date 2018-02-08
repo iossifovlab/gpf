@@ -32,7 +32,7 @@ class StudiesGenotypeHelper(GenotypeHelper):
         seen_vs = set()
         for st in self.denovo_studies:
             vs = st.get_denovo_variants(
-                inChild=self.in_child, effectTypes=effect_types)
+                inChild=self.in_child.name, effectTypes=effect_types)
             for v in vs:
                 v_key = v.familyId + v.location + v.variant
                 if v_key in seen_vs:
@@ -57,7 +57,7 @@ class StudiesGenotypeHelper(GenotypeHelper):
                     if p.role != self.in_child:
                         continue
 
-                    counter[p.gender] += 1
+                    counter[p.gender.name] += 1
                     seen.add(iid)
         self._children_stats = counter
         return self._children_stats
@@ -104,7 +104,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
                             self.person_grouping_selector:
                         continue
 
-                    counter[p.gender] += 1
+                    counter[p.gender.name] += 1
                     seen.add(iid)
         self._children_stats = counter
         return self._children_stats

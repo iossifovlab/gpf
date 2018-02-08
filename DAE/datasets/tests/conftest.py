@@ -52,3 +52,9 @@ def vip_pheno():
 @pytest.fixture(scope='session')
 def spark(request,  datasets_factory):
     return datasets_factory.get_dataset('SPARK')
+
+
+@pytest.fixture(scope='session')
+def agre(request,  datasets_factory):
+    return datasets_factory.get_dataset('AGRE_WG')
+

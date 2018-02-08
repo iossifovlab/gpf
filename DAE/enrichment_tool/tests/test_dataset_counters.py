@@ -6,17 +6,18 @@ Created on Apr 24, 2017
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
 from enrichment_tool.event_counters import EventsCounter,\
     overlap_enrichment_result_dict, GeneEventsCounter
+from pheno.common import Role
 
 
 def test_studies_variants_unaffected_with_effect_type_lgd(unaffected_studies):
     variants = GH. \
-        from_studies(unaffected_studies, 'sib'). \
+        from_studies(unaffected_studies, Role.sib). \
         get_variants('LGDs')
     variants = list(variants)
 
     seen = set()
     for v in variants:
-        assert 'sib' in v.inChS
+        assert Role.sib.name in v.inChS
         v_key = v.familyId + v.location + v.variant
         assert v_key not in seen
         seen.add(v_key)
@@ -32,13 +33,13 @@ def test_variants_unaffected_with_effect_type_lgd(sd, unaffected_studies):
     variants = list(variants)
 
     other_variants = GH. \
-        from_studies(unaffected_studies, 'sib'). \
+        from_studies(unaffected_studies, Role.sib). \
         get_variants('LGDs')
     other_variants = list(other_variants)
 
     seen = set()
     for v in variants:
-        assert 'sib' in v.inChS
+        assert Role.sib.name in v.inChS
         v_key = v.familyId + v.location + v.variant
         assert v_key not in seen
         seen.add(v_key)
@@ -86,7 +87,7 @@ def test_variants_unaffected_with_effect_type_missense(sd):
 
     count = 0
     for v in variants:
-        assert 'sib' in v.inChS
+        assert Role.sib.name in v.inChS
         assert 'missense' == v.requestedGeneEffects[0]['eff']
         count += 1
     assert 1482 == count
@@ -101,7 +102,7 @@ def test_variants_unaffected_with_effect_type_synonimous(sd):
 
     count = 0
     for v in variants:
-        assert 'sib' in v.inChS
+        assert Role.sib.name in v.inChS
         assert 'synonymous' == v.requestedGeneEffects[0]['eff']
         count += 1
     assert 627 == count
@@ -116,7 +117,7 @@ def test_variants_autism_with_effect_type_lgd(sd):
 
     count = 0
     for v in variants:
-        assert 'prb' in v.inChS
+        assert Role.prb.name in v.inChS
         count += 1
     assert 607 == count
 

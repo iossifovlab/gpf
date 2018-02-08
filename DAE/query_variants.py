@@ -468,7 +468,7 @@ def pedigree_data(v):
 
 
 def augment_vars(v):
-    chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
+    chProf = "".join((p.role.name + p.gender.name for p in v.memberInOrder[2:]))
 
     v.atts["_par_races_"] = None
     v.atts["_ch_prof_"] = chProf

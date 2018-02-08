@@ -6,65 +6,66 @@ Created on Nov 8, 2016
 from enrichment_tool.event_counters import EventsCounter,\
     GeneEventsCounter, overlap_enrichment_result_dict
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
+from pheno.common import Role
 
 
 def test_variants_unaffected_with_effect_type_lgd(unaffected_studies):
-    gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, Role.sib)
 
     variants = gh.get_variants('LGDs')
     assert variants is not None
 
     count = 0
     for v in variants:
-        assert 'sib' in v.inChS
+        assert Role.sib.name in v.inChS
         count += 1
     assert 232 == count
 
 
 def test_variants_unaffected_with_effect_type_missense(unaffected_studies):
-    gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, Role.sib)
 
     variants = gh.get_variants('missense')
     assert variants is not None
 
     count = 0
     for v in variants:
-        assert 'sib' in v.inChS
+        assert Role.sib.name in v.inChS
         assert 'missense' == v.requestedGeneEffects[0]['eff']
         count += 1
     assert 1482 == count
 
 
 def test_variants_unaffected_with_effect_type_synonimous(unaffected_studies):
-    gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, Role.sib)
 
     variants = gh.get_variants('synonymous')
     assert variants is not None
 
     count = 0
     for v in variants:
-        assert 'sib' in v.inChS
+        assert Role.sib.name in v.inChS
         assert 'synonymous' == v.requestedGeneEffects[0]['eff']
         count += 1
     assert 627 == count
 
 
 def test_variants_autism_with_effect_type_lgd(autism_studies):
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
 
     variants = gh.get_variants('LGDs')
     assert variants is not None
 
     count = 0
     for v in variants:
-        assert 'prb' in v.inChS
+        assert Role.prb.name in v.inChS
         count += 1
     assert 607 == count
 
 
 def test_events_autism_with_effect_type_lgd(autism_studies):
     counter = EventsCounter()
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
 
     result = counter.events(gh.get_variants('LGDs'))
     assert result is not None
@@ -76,7 +77,7 @@ def test_events_autism_with_effect_type_lgd(autism_studies):
 
 
 def test_events_unaffected_with_effect_type_lgd(unaffected_studies):
-    gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, Role.sib)
 
     counter = EventsCounter()
     result = counter.events(gh.get_variants('LGDs'))
@@ -89,7 +90,7 @@ def test_events_unaffected_with_effect_type_lgd(unaffected_studies):
 
 
 def test_events_schizophrenia_with_effect_type_lgd(schizophrenia_studies):
-    gh = GH.from_studies(schizophrenia_studies, 'prb')
+    gh = GH.from_studies(schizophrenia_studies, Role.prb)
     counter = EventsCounter()
 
     result = counter.events(gh.get_variants('LGDs'))
@@ -105,7 +106,7 @@ def test_events_schizophrenia_with_effect_type_lgd(schizophrenia_studies):
 def test_overlapped_events_autism_with_effect_type_lgd(
         autism_studies, gene_set):
 
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
     counter = EventsCounter()
 
     result = counter.events(gh.get_variants('LGDs'))
@@ -122,7 +123,7 @@ def test_overlapped_events_autism_with_effect_type_lgd(
 def test_overlapped_events_unaffected_with_effect_type_synonymous(
         unaffected_studies, gene_set):
 
-    gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, Role.sib)
 
     counter = EventsCounter()
 
@@ -139,7 +140,7 @@ def test_overlapped_events_unaffected_with_effect_type_synonymous(
 
 def test_overlapped_events_schizophrenia_with_effect_type_missense(
         schizophrenia_studies, gene_set):
-    gh = GH.from_studies(schizophrenia_studies, 'prb')
+    gh = GH.from_studies(schizophrenia_studies, Role.prb)
 
     counter = EventsCounter()
 
@@ -155,7 +156,7 @@ def test_overlapped_events_schizophrenia_with_effect_type_missense(
 
 
 def test_gene_events_autism_with_effect_type_lgd(autism_studies):
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
 
     counter = GeneEventsCounter()
 
@@ -168,7 +169,7 @@ def test_gene_events_autism_with_effect_type_lgd(autism_studies):
 
 
 def test_gene_events_unaffected_with_effect_type_lgd(unaffected_studies):
-    gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, Role.sib)
 
     counter = GeneEventsCounter()
 
@@ -181,7 +182,7 @@ def test_gene_events_unaffected_with_effect_type_lgd(unaffected_studies):
 
 
 def test_gene_events_schizophrenia_with_effect_type_lgd(schizophrenia_studies):
-    gh = GH.from_studies(schizophrenia_studies, 'prb')
+    gh = GH.from_studies(schizophrenia_studies, Role.prb)
 
     counter = GeneEventsCounter()
 
@@ -195,7 +196,7 @@ def test_gene_events_schizophrenia_with_effect_type_lgd(schizophrenia_studies):
 
 def test_overlapped_gene_events_autism_with_effect_type_lgd(
         autism_studies, gene_set):
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
     counter = GeneEventsCounter()
 
     result = counter.events(gh.get_variants('LGDs'))
@@ -211,7 +212,7 @@ def test_overlapped_gene_events_autism_with_effect_type_lgd(
 
 def test_overlapped_gene_events_unaffected_with_effect_type_synonymous(
         unaffected_studies, gene_set):
-    gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, Role.sib)
     counter = GeneEventsCounter()
 
     result = counter.events(gh.get_variants('synonymous'))
@@ -227,7 +228,7 @@ def test_overlapped_gene_events_unaffected_with_effect_type_synonymous(
 
 def test_overlapped_gene_events_schizophrenia_with_effect_type_missense(
         schizophrenia_studies, gene_set):
-    gh = GH.from_studies(schizophrenia_studies, 'prb')
+    gh = GH.from_studies(schizophrenia_studies, Role.prb)
     counter = GeneEventsCounter()
 
     result = counter.events(gh.get_variants('missense'))

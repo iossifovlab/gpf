@@ -55,8 +55,8 @@ class PhenoToolView(APIView):
         result = tool.calc(variants_df, gender_split=True)
         return {
             "effect": effect,
-            "maleResults": cls.get_result_by_gender(result, Gender.M),
-            "femaleResults": cls.get_result_by_gender(result, Gender.F),
+            "maleResults": cls.get_result_by_gender(result, Gender.M.name),
+            "femaleResults": cls.get_result_by_gender(result, Gender.F.name),
         }
 
     def get_normalize_measure_id(
