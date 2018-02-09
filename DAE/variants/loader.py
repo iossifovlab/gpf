@@ -14,7 +14,7 @@ import pandas as pd
 import re
 
 from DAE import genomesDB
-from numba import jit
+from numba import jit, jitclass
 
 
 class VCFWrapper(object):
@@ -142,6 +142,45 @@ class VcfVariantBase(object):
             self.position > other.position
 
 
+@jit
+def match_variants(vars_df, vcf):
+    vs_iter = iter(vcf.vcf)
+    count = 0
+    matched = pd.Series(
+        data=np.zeros(len(vars_df), dtype=np.bool),
+        index=vars_df.index, dtype=np.bool)
+
+    matched_vcf = []
+    for index, row in vars_df.iterrows():
+        # print(row)
+        v1 = VcfVariantBase.from_dae_variant(
+            row['chr'], row['position'], row['variant'])
+
+        variant = next(vs_iter)
+        v2 = VcfVariantBase.from_vcf_variant(variant)
+
+        while v1 > v2:
+            # print(index, "skipping vcf v2:", v2, "(", v1, ")")
+            variant = next(vs_iter)
+            v2 = VcfVariantBase.from_vcf_variant(variant)
+
+        if v1 < v2:
+            # print(index, "skipping dae v1:", v1, "(", v2, ")")
+            continue
+
+        if v1 != v2:
+            # print("skipping: postions matched, but not equal: ", v1, v2)
+            continue
+        # print(index, "matched...", v1, v2)
+        count += 1
+        matched[index] = True
+        matched_vcf.append(variant)
+
+    print("matched variants: ", count)
+    vars_df['matched'] = matched
+    return vars_df[matched], matched_vcf
+
+
 class VariantMatcher(object):
 
     def __init__(self, study_config):
@@ -153,42 +192,7 @@ class VariantMatcher(object):
         loader = StudyLoader(self.config)
         vcf = loader.load_vcf()
         vars_df = loader.load_summary()
-
-        vs_iter = iter(vcf.vcf)
-        count = 0
-        matched = pd.Series(
-            data=np.zeros(len(vars_df), dtype=np.bool),
-            index=vars_df.index, dtype=np.bool)
-
-        matched_vcf = []
-        for index, row in vars_df.iterrows():
-            # print(row)
-            v1 = VcfVariantBase.from_dae_variant(
-                row['chr'], row['position'], row['variant'])
-
-            variant = next(vs_iter)
-            v2 = VcfVariantBase.from_vcf_variant(variant)
-
-            while v1 > v2:
-                # print(index, "skipping vcf v2:", v2, "(", v1, ")")
-                variant = next(vs_iter)
-                v2 = VcfVariantBase.from_vcf_variant(variant)
-
-            if v1 < v2:
-                # print(index, "skipping dae v1:", v1, "(", v2, ")")
-                continue
-
-            if v1 != v2:
-                # print("skipping: postions matched, but not equal: ", v1, v2)
-                continue
-            # print(index, "matched...", v1, v2)
-            count += 1
-            matched[index] = True
-            matched_vcf.append(variant)
-
-        print("matched variants: ", count)
-        vars_df['matched'] = matched
-        return vars_df[matched], matched_vcf
+        return match_variants(vars_df, vcf)
 
     def match(self):
         self.vars_df, self.vcf_vars = self._run()
