@@ -68,7 +68,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
     def __init__(
             self, dataset, person_grouping,
             person_grouping_selector,
-            study_types=['WE']):
+            study_types=['WE', 'WG']):
 
         self.dataset = dataset
         self.person_grouping_id = person_grouping
@@ -84,7 +84,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
             person_grouping=self.person_grouping_id,
             person_grouping_selector=[self.person_grouping_selector],
             effectTypes=effect_types,
-            studyTypes=['WE'])
+            studyTypes=['WE', 'WG'])
         return list(variants)
 
     def get_children_stats(self):
@@ -100,6 +100,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
                     iid = "{}:{}".format(fid, p.personId)
                     if iid in seen:
                         continue
+
                     if p.atts[self.person_grouping_id] != \
                             self.person_grouping_selector:
                         continue
