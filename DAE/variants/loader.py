@@ -178,7 +178,10 @@ def match_variants(vars_df, vcf):
 
     print("matched variants: ", count)
     vars_df['matched'] = matched
-    return vars_df[matched], matched_vcf
+    vars_df = vars_df[matched]
+    vars_df = vars_df.reindex(index=np.arange(len(vars_df)))
+
+    return vars_df, matched_vcf
 
 
 class VariantMatcher(object):

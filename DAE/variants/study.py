@@ -16,6 +16,8 @@ from numba import jit
 @jit
 def split_gene_effect(effects):
     result = []
+    if not isinstance(effects, str):
+        return result
     for ge in effects.split("|"):
         sym, eff = ge.split(":")
         result.append({'sym': sym, 'eff': eff})
@@ -59,6 +61,8 @@ class Study(object):
         self.vars_df = matcher.vars_df
         self.vcf_vars = matcher.vcf_vars
         assert len(self.vars_df) == len(self.vcf_vars)
+        assert np.all(self.vars_df.index.values ==
+                      np.arange(len(self.vars_df)))
 
     def query_variants(self, **kwargs):
         pass
@@ -113,7 +117,10 @@ class Study(object):
 
     def query_effect_types(self, effect_types, df=None):
         if df is None:
+            assert np.all(self.vars_df.index.values ==
+                          np.arange(len(self.vars_df)))
             df = self.vars_df
+
         index = df['effectGene'].apply(
             lambda effect_gene:
             len(filter_gene_effect(effect_gene, effect_types, None)) > 0

@@ -38,6 +38,8 @@ def test_query_genes(uagre_study):
 
 
 def test_query_effect_types(uagre_study):
+    # print(uagre_study.vars_df['effectGene'])
+
     df = uagre_study.query_effect_types(['frame-shift'])
     assert len(df) == 2
 
@@ -82,7 +84,20 @@ def test_query_persons(uagre_study):
     assert len(pdf) == 2
     assert len(pgt) == 2
     assert len(persons) == 2
-    print(pdf)
+
+
+def test_query_persons_all(uagre_study):
+
+    pdf, pgt, persons = uagre_study.query_persons(['AU1921202'])
+    assert len(pdf) == 12044
+    assert len(pgt) == 12044
+    assert len(persons) == 1
+
+    pdf, pgt, persons = uagre_study.query_persons(
+        ['AU1921202', 'AU1921211'])
+    assert len(pdf) == 16822
+    assert len(pgt) == 16822
+    assert len(persons) == 2
 
 
 def test_query_persons_missing(uagre_study):
@@ -100,7 +115,6 @@ def test_query_persons_missing(uagre_study):
     assert len(pdf) == 0
     assert len(pgt) == 0
     assert len(persons) == 2
-    print(pdf)
 
 
 def test_query_families(uagre_study):
@@ -112,4 +126,16 @@ def test_query_families(uagre_study):
     assert len(pdf) == 2
     assert len(pgt) == 2
     assert len(persons) == 9
-    print(pdf)
+
+
+# def test_nan_gene_effects(uagre_study):
+#     df = uagre_study.vars_df
+#     df = df[df['effectGene'].isnull()]
+#     print(df)
+#
+#     loader = StudyLoader(uagre_study.config)
+#     vv = loader.load_summary()
+#
+#     print(len(vv))
+#     print(len(uagre_study.vars_df))
+#     print(len(df))
