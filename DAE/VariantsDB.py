@@ -812,7 +812,7 @@ class VariantsDB:
         seenVs = set()
         if isinstance(studies, str):
             studies = self.get_studies(studies)
-        for study in studies:
+        for study in filter(lambda st: st.has_denovo, studies):
             for v in study.get_denovo_variants(**filters):
                 vKey = v.familyId + v.location + v.variant
                 if vKey in seenVs:

@@ -3,19 +3,21 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+import ast
 from rest_framework import views, status
 from rest_framework.response import Response
 from gene.gene_set_collections import GeneSetsCollections
 from django.http.response import StreamingHttpResponse
 import itertools
 from django.utils.http import urlencode
-# from helpers.profiler import profile
+
+from preloaded import register
 
 
 class GeneSetsCollectionsView(views.APIView):
 
     def __init__(self):
-        self.gscs = GeneSetsCollections()
+        self.gscs = register.get('gene_sets_collections')
 
     def get(self, request):
         response = self.gscs.get_gene_sets_collections()
@@ -26,14 +28,16 @@ class GeneSetsView(views.APIView):
     """
         {
         "geneSetsCollection": "main",
-        "geneSetsTypes": ["autism", "epilepsy"],
+        "geneSetsTypes": {
+            "SD": ["autism", "epilepsy"],
+        },
         "filter": "ivan",
         "limit": 100
         }
     """
 
     def __init__(self):
-        self.gscs = GeneSetsCollections()
+        self.gscs = register.get('gene_sets_collections')
 
     @staticmethod
     def _build_download_url(query):
@@ -92,12 +96,14 @@ class GeneSetDownloadView(views.APIView):
         {
         "geneSetsCollection": "denovo",
         "geneSet": "LGDs",
-        "geneSetsTypes": ["autism", "epilepsy"]
+        "geneSetsTypes": {
+            "SD": ["autism", "epilepsy"]
+        }
         }
     """
 
     def __init__(self):
-        self.gscs = GeneSetsCollections()
+        self.gscs = register.get('gene_sets_collections')
 
     def post(self, request):
         data = request.data
@@ -141,7 +147,7 @@ class GeneSetDownloadView(views.APIView):
     def _parse_query_params(self, data):
         res = {str(k): str(v) for k, v in data.items()}
         if 'geneSetsTypes' in res:
-            res['geneSetsTypes'] = res['geneSetsTypes'].split(',')
+            res['geneSetsTypes'] = ast.literal_eval(res['geneSetsTypes'])
         return res
 
     def get(self, request):

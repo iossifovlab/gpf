@@ -6,64 +6,21 @@ Created on Feb 29, 2016
 import cPickle
 import zlib
 
-from gene.gene_set_collections import GeneSetsCollection, DenovoGeneSetsCollection
+from gene.gene_set_collections import GeneSetsCollections
 import precompute
 import preloaded
 
+class GeneSetsCollectionsPreload(preloaded.register.Preload):
 
-# from DAE import get_gene_sets_symNS
-class GeneSetPreload(preloaded.register.Preload):
-
-    def __init__(self, name):
-        self.name = name
-        self.gsc = None
+    def __init__(self):
+        self.gscs = None
 
     def is_loaded(self):
-        return self.gsc
+        return self.gscs
 
     def load(self):
-        self.gsc = GeneSetsCollection(self.name)
-        self.gsc.load()
+        self.gscs = GeneSetsCollections()
+        self.gscs.get_gene_sets_collections()
 
     def get(self):
-        return self.gsc
-
-
-class GoTermsPreload(GeneSetPreload):
-
-    def __init__(self):
-        super(GoTermsPreload, self).__init__('GO')
-
-
-class MainPreload(GeneSetPreload):
-
-    def __init__(self):
-        super(MainPreload, self).__init__('main')
-
-
-class MSigDBPreload(GeneSetPreload):
-
-    def __init__(self):
-        super(MSigDBPreload, self).__init__('MSigDB.curated')
-
-
-class ProteinDomainsPreload(GeneSetPreload):
-
-    def __init__(self):
-        super(ProteinDomainsPreload, self).__init__('domain')
-
-
-class MiRNADarnellDomainsPreload(GeneSetPreload):
-
-    def __init__(self):
-        super(MiRNADarnellDomainsPreload, self).__init__('miRNA.Darnell')
-
-
-class DenovoGeneSetsPreload(GeneSetPreload):
-
-    def __init__(self):
-        super(DenovoGeneSetsPreload, self).__init__('denovo')
-
-    def load(self):
-        self.gsc = DenovoGeneSetsCollection()
-        self.gsc.load()
+        return self.gscs
