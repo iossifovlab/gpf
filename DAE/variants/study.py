@@ -3,6 +3,8 @@ Created on Feb 8, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 from DAE import genomesDB
 from RegionOperations import Region
 import numpy as np
@@ -127,3 +129,28 @@ class Study(object):
                 effect_gene, effect_types, gene_symbols)) > 0
         )
         return df[index]
+
+    def query_persons(self, person_ids, df=None):
+        samples = self.ped_df['personId'].isin(set(person_ids)).values
+        persons = (self.ped_df['personId'].values)[samples]
+        matched = pd.Series(
+            data=np.zeros(len(self.vars_df), dtype=np.bool),
+            index=self.vars_df.index, dtype=np.bool)
+
+        if df is None:
+            df = self.vars_df
+        variants = self.vcf_vars
+
+        res = {}
+        for index, _row in df.iterrows():
+            v = variants[index]
+            gt = v.gt_types[samples]
+            if np.any(gt > 0):
+                matched[index] = True
+                res[index] = gt
+        return self.vars_df[matched], res, persons
+
+    def query_families(self, family_ids, df=None):
+        samples = self.ped_df['familyId'].isin(set(family_ids)).values
+        persons = (self.ped_df['personId'].values)[samples]
+        return self.query_persons(persons, df)

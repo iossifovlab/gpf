@@ -14,7 +14,7 @@ import pandas as pd
 import re
 
 from DAE import genomesDB
-from numba import jit, jitclass
+from numba import jit
 
 
 class VCFWrapper(object):

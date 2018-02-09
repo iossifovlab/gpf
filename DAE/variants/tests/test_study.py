@@ -66,3 +66,50 @@ def test_query_genes_3(uagre_study):
     assert df is not None
 
     assert len(df) == 81
+
+
+def test_query_persons(uagre_study):
+    genes = ['KIAA1751']
+    effect_types = ['frame-shift']
+    df = uagre_study.query_genes_effect_types(effect_types, genes)
+
+    pdf, pgt, persons = uagre_study.query_persons(['AU1921202'], df)
+    assert len(pdf) == 2
+    assert len(pgt) == 2
+    assert len(persons) == 1
+    pdf, pgt, persons = uagre_study.query_persons(
+        ['AU1921202', 'AU1921211'], df)
+    assert len(pdf) == 2
+    assert len(pgt) == 2
+    assert len(persons) == 2
+    print(pdf)
+
+
+def test_query_persons_missing(uagre_study):
+    genes = ['KIAA1751']
+    effect_types = ['frame-shift']
+    df = uagre_study.query_genes_effect_types(effect_types, genes)
+
+    pdf, pgt, persons = uagre_study.query_persons(['AU1921201'], df)
+    assert len(pdf) == 0
+    assert len(pgt) == 0
+    assert len(persons) == 1
+
+    pdf, pgt, persons = uagre_study.query_persons(
+        ['AU1921201', 'AU1921305'], df)
+    assert len(pdf) == 0
+    assert len(pgt) == 0
+    assert len(persons) == 2
+    print(pdf)
+
+
+def test_query_families(uagre_study):
+    genes = ['KIAA1751']
+    effect_types = ['frame-shift']
+    df = uagre_study.query_genes_effect_types(effect_types, genes)
+
+    pdf, pgt, persons = uagre_study.query_families(['AU1921'], df)
+    assert len(pdf) == 2
+    assert len(pgt) == 2
+    assert len(persons) == 9
+    print(pdf)
