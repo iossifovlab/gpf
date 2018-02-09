@@ -2,7 +2,6 @@ import networkx as nx
 import itertools
 from collections import deque
 import copy
-import pprint
 
 
 class Interval(object):
@@ -10,7 +9,6 @@ class Interval(object):
     def __init__(self, left=0.0, right=1.0):
         self.left = left
         self.right = right
-
 
 class IntervalForVertex(Interval):
 
@@ -22,9 +20,10 @@ class IntervalForVertex(Interval):
         return "i[{}> {}:{}]".format(self.vertex, self.left, self.right)
 
 
-class Realization:
+class Realization(object):
     def __init__(self, graph, forbidden_graph, intervals=None, domain=None,
-                 max_width=3):
+                 max_width=3, _cached_active_vertices=None,
+                 _cached_maximal_set=None, _graph_neighbors_cache=None):
         if domain is None:
             domain = []
         if intervals is None:
@@ -34,13 +33,27 @@ class Realization:
         self.intervals = intervals
         self.domain = domain
         self.max_width = max_width
+        self._cached_active_vertices = _cached_active_vertices
+        self._cached_maximal_set = _cached_maximal_set
+
+        if _graph_neighbors_cache is None:
+            print "_graph_neighbors_cache recomputed"
+            _graph_neighbors_cache = {
+                v: set(self.graph.neighbors(v))
+                for v in self.graph.nodes()
+            }
+
+        self._graph_neighbors_cache = _graph_neighbors_cache
 
     def copy(self):
         return Realization(
             self.graph, self.forbidden_graph,
             map(copy.copy, self.intervals),
             copy.copy(self.domain),
-            self.max_width
+            self.max_width,
+            self._cached_active_vertices,
+            self._cached_maximal_set,
+            self._graph_neighbors_cache
         )
 
     def __repr__(self):
@@ -51,6 +64,12 @@ class Realization:
 
         if not self.can_extend(vertex):
             return False
+
+        self.force_extend(vertex)
+
+        return True
+
+    def force_extend(self, vertex):
 
         max_right = next(self.get_interval(v).right
                          for v in self.get_maximal_set())
@@ -64,22 +83,24 @@ class Realization:
         self.domain.append(vertex)
         self.intervals.append(IntervalForVertex(vertex, p, p + 1))
 
-        return True
+        self._cached_active_vertices = None
+        self._cached_maximal_set = None
 
     def can_extend(self, new_vertex):
         temp_realization = Realization(
             self.graph,
             self.forbidden_graph,
             self.intervals + [IntervalForVertex(new_vertex)],
-            self.domain + [new_vertex]
+            self.domain + [new_vertex],
+            _graph_neighbors_cache=self._graph_neighbors_cache
         )
-
-        if temp_realization._exceeds_max_width():
-            # print("max width reached!")
-            return False
 
         if self._has_forbidden_edge(new_vertex):
             # print("_has_forbidden_edge!")
+            return False
+
+        if temp_realization._exceeds_max_width():
+            # print("max width reached!")
             return False
 
         if not self._old_dangling_same(new_vertex, temp_realization):
@@ -136,38 +157,68 @@ class Realization:
 
         return self.intervals[index]
 
-    def is_in_interval_order(self, v1, v2):
-        interval1 = self.get_interval(v1)
-        interval2 = self.get_interval(v2)
+    def is_in_interval_order(self, v1_idx, v2_idx):
+        # interval1 = self.get_interval(v1)
+        # interval2 = self.get_interval(v2)
 
-        if not interval1 or not interval2:
-            return False
+        # if (v1_idx < 0 or v1_idx >= len(self.domain) or
+        #         v2_idx < 0 or v2_idx >= len(self.domain)):
+        #     return False
+
+        interval1 = self.intervals[v1_idx]
+        interval2 = self.intervals[v2_idx]
 
         return interval1.right < interval2.left
 
-    def is_maximal(self, vertex):
-        is_maximal = [v is vertex or not self.is_in_interval_order(vertex, v)
-                      for v in self.domain]
-        return all(is_maximal)
+    def is_maximal(self, index):
+        for i, v in enumerate(self.domain):
+            if i != index and self.is_in_interval_order(index, i):
+                return False
+
+        return True
+        # return all(i == index or not self.is_in_interval_order(index, i)
+        #            for i, v in enumerate(self.domain))
 
     def get_maximal_set(self):
-        return {v for v in self.domain if self.is_maximal(v)}
+        if self._cached_maximal_set:
+            return self._cached_maximal_set
+
+        self._cached_maximal_set = {
+            v for i, v in enumerate(self.domain) if self.is_maximal(i)}
+
+        return self._cached_maximal_set
 
     def get_active_vertex_edges(self, vertex):
-        return set(self.graph.neighbors(vertex)).difference(self.domain)
+        return self._graph_neighbors_cache[vertex].difference(self.domain)
 
     def is_active_vertex(self, vertex):
-        neighbors = set(self.graph.neighbors(vertex))
-        return len(neighbors.difference(self.domain)) != 0
+        neighbors = self._graph_neighbors_cache[vertex] # set(self.graph.neighbors(vertex))
+
+        for v in neighbors:
+            if v not in self.domain:
+                return True
+
+        return False
 
     def get_active_vertices(self):
-        return {v for v in self.domain if self.is_active_vertex(v)}
+        if self._cached_active_vertices:
+            return self._cached_active_vertices
+
+        self._cached_active_vertices = set()
+        for v in self.domain:
+            if self.is_active_vertex(v):
+                self._cached_active_vertices.add(v)
+
+        # self._cached_active_vertices = {
+        #     v for v in self.domain if self.is_active_vertex(v)}
+
+        return self._cached_active_vertices
 
     def dangling(self, vertex):
         return self.get_active_vertex_edges(vertex)
 
 
-class SandwichInstance:
+class SandwichInstance(object):
     def __init__(self, vertices, required_graph, forbidden_graph):
         self.vertices = vertices
         self.required_graph = required_graph
@@ -213,7 +264,7 @@ class SandwichSolver(object):
                 # if count == 2:
                 #     return
 
-                # print("removing", edges_to_remove)
+                print("removing", edges_to_remove)
 
                 current_forbidden_graph = copy_graph(forbidden_graph)
                 current_forbidden_graph.remove_edges_from(edges_to_remove)
@@ -224,25 +275,27 @@ class SandwichSolver(object):
                     current_forbidden_graph)
 
                 result = SandwichSolver.try_solve(current_instance)
+
                 if result:
                     print("removed:", count)  # , edges_to_remove)
                     return result
-
 
     @staticmethod
     def try_solve(sandwich_instance):
         initial_realization = []
         current_iteration = 0
 
-        for vertex in sandwich_instance.vertices:
+        for i, vertex in enumerate(sandwich_instance.vertices):
             initial_realization.append(
                 Realization(
                     sandwich_instance.required_graph,
                     sandwich_instance.forbidden_graph,
                     [IntervalForVertex(vertex)],
-                    [vertex]
+                    [vertex],
+                    _graph_neighbors_cache=initial_realization[0]._graph_neighbors_cache if i > 0 else None
                 )
             )
+
         realizations_queue = deque(sorted(initial_realization, key=str))
 
         visited_realizations = {}
@@ -254,24 +307,28 @@ class SandwichSolver(object):
             realization = realizations_queue.pop()
             current_iteration += 1
 
-            if current_iteration == 10000:
-                print("exit ot 10k it")
-                return None
+            # if current_iteration == 100000:
+            #     print("Bailing at {} iterations...".format(current_iteration))
+            #     return None
 
             other_vertices = sandwich_instance.vertices \
                 .difference(realization.domain)
 
-            other_vertices = sorted(other_vertices, key=str)
+            can_extend_f = realization.can_extend
 
             for vertex in other_vertices:
-                cloned_realization = realization.copy()
+                # cloned_realization = realization.copy()
 
-                extended = cloned_realization.extend(vertex)
+                can_extend = can_extend_f(vertex)
 
-                if not extended:
+                if not can_extend:
                     continue
 
+                cloned_realization = realization.copy()
+                cloned_realization.force_extend(vertex)
+
                 if len(cloned_realization.domain) == vertices_length:
+                    print("iterations count", current_iteration)
                     return cloned_realization.intervals
                 else:
                     domain_string = repr(cloned_realization)

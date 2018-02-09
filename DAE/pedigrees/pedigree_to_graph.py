@@ -1,5 +1,4 @@
 #!/usr/bin/env python2.7
-
 import abc
 from collections import defaultdict
 import argparse
@@ -11,20 +10,20 @@ from layout import Layout
 from drawing import PDFLayoutDrawer, OffsetLayoutDrawer
 
 
-class CsvPedigreeReader:
+class CsvPedigreeReader(object):
 
     def read_file(self, file):
         families = {}
-        reader = csv.DictReader(file)
+        reader = csv.DictReader(file, delimiter='\t')
         for row in reader:
             kwargs = {
-                "family_id": row["family_id"],
-                "id": row["Person"],
-                "father": row["Father"],
-                "mother": row["Mother"],
-                "sex": row["Sex"],
+                "family_id": row["familyId"],
+                "id": row["personId"],
+                "father": row["dadId"],
+                "mother": row["momId"],
+                "sex": row["gender"],
                 "label": "",
-                "effect": row["Scored Affected Status"],
+                "effect": row["status"],
             }
             member = PedigreeMember(**kwargs)
             if member.family_id not in families:
@@ -35,7 +34,7 @@ class CsvPedigreeReader:
         return families.values()
 
 
-class PedigreeMember:
+class PedigreeMember(object):
     def __init__(self, id, family_id, mother, father, sex, effect, label):
         self.id = id
         self.family_id = family_id
@@ -45,7 +44,7 @@ class PedigreeMember:
         self.label = label
 
 
-class Pedigree:
+class Pedigree(object):
 
     def __init__(self, members):
         self.members = members
@@ -165,7 +164,7 @@ class Pedigree:
             individual.rank = -individual.rank
 
 
-class IndividualGroup:
+class IndividualGroup(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
@@ -279,22 +278,22 @@ def main():
     parser = argparse.ArgumentParser(description="Draw PDP.")
     parser.add_argument("file", metavar="f", type=argparse.FileType("r"),
                         help="the .ped file")
+    parser.add_argument("--output", metavar="o",
+                        help="the output filename file", default='first.pdf')
 
     args = parser.parse_args()
     pedigrees = CsvPedigreeReader().read_file(args.file)
 
-    pdf_drawer = PDFLayoutDrawer("first.pdf")
+    pdf_drawer = PDFLayoutDrawer(args.output)
 
     for family in sorted(pedigrees, key=lambda x: x.family_id):
-        # if family.family_id in ["AU1250", "AU1903"]:
         sandwich_instance = family.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
-        # print(intervals)
+
         if intervals is None:
             print(family.family_id)
             print("No intervals")
         if intervals:
-            # print("intervals", intervals)
             individuals_intervals = filter(
                 lambda interval: isinstance(interval.vertex, Individual),
                 intervals
