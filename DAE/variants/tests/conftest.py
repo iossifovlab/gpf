@@ -6,6 +6,7 @@ Created on Feb 7, 2018
 from variants.configure import Configure
 from variants.loader import StudyLoader
 import pytest
+from variants.study import Study
 
 
 @pytest.fixture(scope='session')
@@ -17,3 +18,10 @@ def uagre_config():
 @pytest.fixture(scope='session')
 def uagre_loader(uagre_config):
     return StudyLoader(uagre_config)
+
+
+@pytest.fixture(scope='session')
+def uagre_study(uagre_config):
+    study = Study(uagre_config)
+    study.load()
+    return study
