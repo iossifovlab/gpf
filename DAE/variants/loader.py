@@ -146,7 +146,7 @@ class VariantMatcher(object):
     def __init__(self, study_config):
         self.config = study_config
         self.vars_df = None
-        self.vcf = None
+        self.vcf_vars = None
 
     def _run(self):
         loader = StudyLoader(self.config)
@@ -190,4 +190,4 @@ class VariantMatcher(object):
         return vars_df[matched], matched_vcf
 
     def match(self):
-        self.vars_df, self.vcf = self._run()
+        self.vars_df, self.vcf_vars = self._run()

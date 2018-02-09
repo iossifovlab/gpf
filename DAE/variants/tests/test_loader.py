@@ -29,4 +29,4 @@ from variants.loader import VariantMatcher
 def test_matcher(uagre_config):
     matcher = VariantMatcher(uagre_config)
     matcher.match()
-    assert len(matcher.vars_df) == len(matcher.vcf)
+    assert len(matcher.vars_df) == len(matcher.vcf_vars)
