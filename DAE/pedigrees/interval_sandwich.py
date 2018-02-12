@@ -10,6 +10,15 @@ class Interval(object):
         self.left = left
         self.right = right
 
+    def intersection(self, other):
+        if self.left < other.right:
+            return None
+        return Interval(
+            max(self.left, other.left),
+            min(self.right, other.right)
+        )
+
+
 class IntervalForVertex(Interval):
 
     def __init__(self, vertex, left=0.0, right=1.0):
@@ -23,7 +32,8 @@ class IntervalForVertex(Interval):
 class Realization(object):
     def __init__(self, graph, forbidden_graph, intervals=None, domain=None,
                  max_width=3, _cached_active_vertices=None,
-                 _cached_maximal_set=None, _graph_neighbors_cache=None):
+                 _cached_maximal_set=None, _graph_neighbors_cache=None,
+                 _cached_dangling_set=None, _cached_vertex_degree=None):
         if domain is None:
             domain = []
         if intervals is None:
@@ -33,8 +43,16 @@ class Realization(object):
         self.intervals = intervals
         self.domain = domain
         self.max_width = max_width
+
+        self._domain_set = set(self.domain)
         self._cached_active_vertices = _cached_active_vertices
         self._cached_maximal_set = _cached_maximal_set
+        self._cached_dangling_set = _cached_dangling_set
+
+        if _cached_vertex_degree is None:
+            _cached_vertex_degree = {}
+
+        self._cached_vertex_degree = _cached_vertex_degree
 
         if _graph_neighbors_cache is None:
             print "_graph_neighbors_cache recomputed"
@@ -53,11 +71,13 @@ class Realization(object):
             self.max_width,
             self._cached_active_vertices,
             self._cached_maximal_set,
-            self._graph_neighbors_cache
+            self._graph_neighbors_cache,
+            self._cached_dangling_set,
+            self._cached_vertex_degree
         )
 
     def __repr__(self):
-        ordered_domain = sorted([repr(v) for v in self.domain])
+        ordered_domain = sorted(repr(v) for v in self.domain)
         return ";".join(ordered_domain)
 
     def extend(self, vertex):
@@ -83,8 +103,11 @@ class Realization(object):
         self.domain.append(vertex)
         self.intervals.append(IntervalForVertex(vertex, p, p + 1))
 
+        self._domain_set.add(vertex)
         self._cached_active_vertices = None
         self._cached_maximal_set = None
+        self._cached_dangling_set = None
+        self._cached_vertex_degree = {}
 
     def can_extend(self, new_vertex):
         temp_realization = Realization(
@@ -97,6 +120,9 @@ class Realization(object):
 
         if self._has_forbidden_edge(new_vertex):
             # print("_has_forbidden_edge!")
+            return False
+
+        if self._is_active_bounded(temp_realization, new_vertex):
             return False
 
         if temp_realization._exceeds_max_width():
@@ -115,7 +141,22 @@ class Realization(object):
             # print("_new_active_valid!")
             return False
 
+        assert self.get_active_vertices().issubset(self.get_maximal_set())
+
         return True
+
+    def _is_active_bounded(self, new_realization, new_vertex):
+        if len(self.get_active_vertices()) == self.max_width - 1:
+            if new_vertex not in self.dangling_set():
+                return True
+
+        active_vertices = self.get_active_vertices().intersection(
+            new_realization.get_active_vertices())
+        for active in active_vertices:
+            if new_realization.degree(active) != self.degree(active) + 1:
+                return True
+
+        return False
 
     def _exceeds_max_width(self):
         return len(self.get_active_vertices()) >= self.max_width
@@ -158,13 +199,6 @@ class Realization(object):
         return self.intervals[index]
 
     def is_in_interval_order(self, v1_idx, v2_idx):
-        # interval1 = self.get_interval(v1)
-        # interval2 = self.get_interval(v2)
-
-        # if (v1_idx < 0 or v1_idx >= len(self.domain) or
-        #         v2_idx < 0 or v2_idx >= len(self.domain)):
-        #     return False
-
         interval1 = self.intervals[v1_idx]
         interval2 = self.intervals[v2_idx]
 
@@ -176,8 +210,6 @@ class Realization(object):
                 return False
 
         return True
-        # return all(i == index or not self.is_in_interval_order(index, i)
-        #            for i, v in enumerate(self.domain))
 
     def get_maximal_set(self):
         if self._cached_maximal_set:
@@ -189,13 +221,13 @@ class Realization(object):
         return self._cached_maximal_set
 
     def get_active_vertex_edges(self, vertex):
-        return self._graph_neighbors_cache[vertex].difference(self.domain)
+        return self._graph_neighbors_cache[vertex].difference(self._domain_set)
 
     def is_active_vertex(self, vertex):
-        neighbors = self._graph_neighbors_cache[vertex] # set(self.graph.neighbors(vertex))
+        neighbors = self._graph_neighbors_cache[vertex]
 
         for v in neighbors:
-            if v not in self.domain:
+            if v not in self._domain_set:
                 return True
 
         return False
@@ -209,13 +241,33 @@ class Realization(object):
             if self.is_active_vertex(v):
                 self._cached_active_vertices.add(v)
 
-        # self._cached_active_vertices = {
-        #     v for v in self.domain if self.is_active_vertex(v)}
-
         return self._cached_active_vertices
 
     def dangling(self, vertex):
         return self.get_active_vertex_edges(vertex)
+
+    def dangling_set(self):
+        if self._cached_dangling_set:
+            return self._cached_dangling_set
+
+        self._cached_dangling_set = set(
+            v for active in self.get_active_vertices()
+            for v in self.dangling(active))
+
+        return self._cached_dangling_set
+
+    def degree(self, vertex):
+        if vertex in self._cached_vertex_degree:
+            return self._cached_vertex_degree[vertex]
+
+        v_interval = self.get_interval(vertex)
+        result = len([
+            1 for i in self.intervals
+            if v_interval.intersection(i) is not None]) - 1
+
+        self._cached_vertex_degree[vertex] = result
+
+        return result
 
 
 class SandwichInstance(object):
@@ -250,13 +302,7 @@ class SandwichSolver(object):
     @staticmethod
     def solve(sandwich_instance):
         forbidden_graph = sandwich_instance.forbidden_graph
-        # print("all forbidden:", len(forbidden_graph.edges()))
-        # pprint.pprint(forbidden_graph.edges())
-        # print("all required:", len(sandwich_instance.required_graph.edges()))
-        # pprint.pprint(sandwich_instance.required_graph.edges())
-        # print("common:")
-        # pprint.pprint(set(sandwich_instance.required_graph.edges()) &
-        #               set(sandwich_instance.forbidden_graph.edges()))
+        print(max(sandwich_instance.required_graph.degree().values()))
         for count in range(0, len(forbidden_graph.edges())):
             for edges_to_remove in itertools.combinations(
                     sorted(forbidden_graph.edges()),
@@ -292,16 +338,17 @@ class SandwichSolver(object):
                     sandwich_instance.forbidden_graph,
                     [IntervalForVertex(vertex)],
                     [vertex],
-                    _graph_neighbors_cache=initial_realization[0]._graph_neighbors_cache if i > 0 else None
+                    _graph_neighbors_cache=
+                    initial_realization[0]._graph_neighbors_cache
+                    if i > 0 else None
                 )
             )
 
         realizations_queue = deque(sorted(initial_realization, key=str))
 
-        visited_realizations = {}
+        visited_realizations = set()
 
         vertices_length = len(sandwich_instance.vertices)
-        # print(realizations_queue)
 
         while len(realizations_queue) > 0:
             realization = realizations_queue.pop()
@@ -314,10 +361,10 @@ class SandwichSolver(object):
             other_vertices = sandwich_instance.vertices \
                 .difference(realization.domain)
 
+            # other_vertices = sorted(other_vertices, key=str)
             can_extend_f = realization.can_extend
 
             for vertex in other_vertices:
-                # cloned_realization = realization.copy()
 
                 can_extend = can_extend_f(vertex)
 
@@ -333,7 +380,7 @@ class SandwichSolver(object):
                 else:
                     domain_string = repr(cloned_realization)
                     if domain_string not in visited_realizations:
-                        visited_realizations[domain_string] = True
+                        visited_realizations.add(domain_string)
                         realizations_queue.append(cloned_realization)
 
         return None
