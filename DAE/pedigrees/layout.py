@@ -88,13 +88,17 @@ class Layout:
             self._individuals_by_rank)
         self._generate_from_intervals()
 
+    @property
+    def id_to_position(self):
+        return {k.member.id: v for k, v in self._id_to_position.items()}
+
     def _generate_from_intervals(self):
 
         self._optimize_drawing()
         self._create_positioned_individuals()
         self._create_lines()
 
-    def _optimize_drawing(self, max_iter=50):
+    def _optimize_drawing(self, max_iter=100):
         # for level in self._individuals_by_rank:
         #     print(level)
         moved_individuals = -1
@@ -239,7 +243,7 @@ class Layout:
             arch_width = individual_position.x - parent_position.x
 
             compare_width = individual_position.x - \
-                self._id_to_position[to_compare].x + individual_position.size
+                            self._id_to_position[to_compare].x + individual_position.size
 
             if arch_width < 2*compare_width:
                 moved += self._move(
@@ -254,7 +258,7 @@ class Layout:
             arch_width = parent_position.x - individual_position.x
 
             compare_width = self._id_to_position[to_compare].x - \
-                individual_position.x + individual_position.size
+                            individual_position.x + individual_position.size
 
             if arch_width < 2 * compare_width:
                 moved += self._move(
