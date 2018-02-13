@@ -15,6 +15,7 @@ import re
 
 from DAE import genomesDB
 from numba import jit
+from variants.roles import Role
 
 
 class VCFWrapper(object):
@@ -52,7 +53,13 @@ class StudyLoader(object):
         assert self.config.pedigree
         assert os.path.exists(self.config.pedigree)
 
-        ped_df = pd.read_csv(self.config.pedigree, sep='\t', index_col=False)
+        ped_df = pd.read_csv(
+            self.config.pedigree, sep='\t', index_col=False,
+            converters={
+                'role': Role.from_name
+            }
+        )
+
         ped = {}
         for p in ped_df.to_dict(orient='records'):
             ped[p['personId']] = p
