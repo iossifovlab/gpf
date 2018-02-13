@@ -4,6 +4,7 @@ Created on Feb 9, 2018
 @author: lubo
 '''
 from RegionOperations import Region
+from variants.roles import RoleQuery, Role
 
 
 def test_study_load(uagre_study):

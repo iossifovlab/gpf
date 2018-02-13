@@ -56,10 +56,9 @@ class StudyLoader(object):
         ped_df = pd.read_csv(
             self.config.pedigree, sep='\t', index_col=False,
             converters={
-                'role': Role.from_name
+                'role': lambda r: Role.from_name(r).value
             }
         )
-
         ped = {}
         for p in ped_df.to_dict(orient='records'):
             ped[p['personId']] = p

@@ -138,7 +138,11 @@ class Study(object):
         return df[index]
 
     def query_persons(self, person_ids, df=None):
-        samples = self.ped_df['personId'].isin(set(person_ids)).values
+        samples = self.ped_df[
+            self.ped_df['personId'].isin(set(person_ids))
+        ].index.values
+        print(samples)
+
         persons = (self.ped_df['personId'].values)[samples]
         matched = pd.Series(
             data=np.zeros(len(self.vars_df), dtype=np.bool),
@@ -161,3 +165,15 @@ class Study(object):
         samples = self.ped_df['familyId'].isin(set(family_ids)).values
         persons = (self.ped_df['personId'].values)[samples]
         return self.query_persons(persons, df)
+
+    def query_roles(self, role_queries, df=None):
+        assert role_queries
+
+        for role_query in role_queries:
+            samples = self.ped_df[
+                (self.ped_df['role'] & role_query.value).values.astype(np.bool)
+            ].personId.values
+            print(samples)
+            df, variants, persons = self.query_persons(samples, df)
+
+        return df, variants, persons
