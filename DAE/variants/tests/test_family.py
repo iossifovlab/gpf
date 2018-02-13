@@ -3,7 +3,7 @@ Created on Feb 13, 2018
 
 @author: lubo
 '''
-from variants.family import Family
+from variants.family import Family, Families
 
 
 def test_study_load(uagre_loader):
@@ -16,7 +16,13 @@ def test_study_load(uagre_loader):
     assert fam is not None
 
     print(fam.samples)
-    print(fam.allels)
+    print(fam.alleles)
 
     print(fam.psamples(['AU1921101', 'AU1921311']))
-    print(fam.pallels(['AU1921101', 'AU1921311']))
+    print(fam.palleles(['AU1921101', 'AU1921311']))
+
+    families = Families()
+    families.families_build(ped_df)
+
+    assert len(families.families) == 1
+    assert len(families.persons) == 9

@@ -4,7 +4,6 @@ Created on Feb 9, 2018
 @author: lubo
 '''
 from RegionOperations import Region
-from variants.roles import RoleQuery, Role
 
 
 def test_study_load(uagre_study):
@@ -76,29 +75,25 @@ def test_query_persons(uagre_study):
     effect_types = ['frame-shift']
     df = uagre_study.query_genes_effect_types(effect_types, genes)
 
-    pdf, pgt, persons = uagre_study.query_persons(['AU1921202'], df)
+    pdf, pgt = uagre_study.query_persons(['AU1921202'], df)
     assert len(pdf) == 2
     assert len(pgt) == 2
-    assert len(persons) == 1
-    pdf, pgt, persons = uagre_study.query_persons(
+    pdf, pgt = uagre_study.query_persons(
         ['AU1921202', 'AU1921211'], df)
     assert len(pdf) == 2
     assert len(pgt) == 2
-    assert len(persons) == 2
 
 
 def test_query_persons_all(uagre_study):
 
-    pdf, pgt, persons = uagre_study.query_persons(['AU1921202'])
+    pdf, pgt = uagre_study.query_persons(['AU1921202'])
     assert len(pdf) == 12044
     assert len(pgt) == 12044
-    assert len(persons) == 1
 
-    pdf, pgt, persons = uagre_study.query_persons(
+    pdf, pgt = uagre_study.query_persons(
         ['AU1921202', 'AU1921211'])
     assert len(pdf) == 16822
     assert len(pgt) == 16822
-    assert len(persons) == 2
 
 
 def test_query_persons_missing(uagre_study):
@@ -106,16 +101,14 @@ def test_query_persons_missing(uagre_study):
     effect_types = ['frame-shift']
     df = uagre_study.query_genes_effect_types(effect_types, genes)
 
-    pdf, pgt, persons = uagre_study.query_persons(['AU1921201'], df)
+    pdf, pgt = uagre_study.query_persons(['AU1921201'], df)
     assert len(pdf) == 0
     assert len(pgt) == 0
-    assert len(persons) == 1
 
-    pdf, pgt, persons = uagre_study.query_persons(
+    pdf, pgt = uagre_study.query_persons(
         ['AU1921201', 'AU1921305'], df)
     assert len(pdf) == 0
     assert len(pgt) == 0
-    assert len(persons) == 2
 
 
 def test_query_families(uagre_study):
@@ -123,10 +116,9 @@ def test_query_families(uagre_study):
     effect_types = ['frame-shift']
     df = uagre_study.query_genes_effect_types(effect_types, genes)
 
-    pdf, pgt, persons = uagre_study.query_families(['AU1921'], df)
+    pdf, pgt = uagre_study.query_families(['AU1921'], df)
     assert len(pdf) == 2
     assert len(pgt) == 2
-    assert len(persons) == 9
 
 
 # def test_nan_gene_effects(uagre_study):

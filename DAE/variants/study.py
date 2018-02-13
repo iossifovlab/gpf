@@ -11,6 +11,9 @@ import numpy as np
 import pandas as pd
 from variants.loader import StudyLoader, VariantMatcher
 from numba import jit
+from variants.family import Families, Family
+from variants.variant import Variant
+from collections import defaultdict
 
 
 @jit
@@ -43,15 +46,18 @@ def filter_gene_effect(effects, effect_types, gene_symbols):
             if ge['eff'] in effect_types and ge['sym'] in gene_symbols]
 
 
-class Study(object):
+class Study(Families):
 
     def __init__(self, config):
+        super(Study, self).__init__()
         self.config = config
         self._gene_models = None
 
     def load(self):
         loader = StudyLoader(self.config)
         self.ped_df, self.ped = loader.load_pedigree()
+        self.families_build(self.ped_df)
+
         self.vcf = loader.load_vcf()
         self.samples = self.vcf.samples
 
@@ -141,25 +147,37 @@ class Study(object):
         samples = self.ped_df[
             self.ped_df['personId'].isin(set(person_ids))
         ].index.values
-        print(samples)
-
-        persons = (self.ped_df['personId'].values)[samples]
+        alleles = Family.samples_to_alleles(samples)
         matched = pd.Series(
             data=np.zeros(len(self.vars_df), dtype=np.bool),
             index=self.vars_df.index, dtype=np.bool)
 
+        families = self.families_query_by_person(person_ids)
         if df is None:
             df = self.vars_df
+
         variants = self.vcf_vars
 
-        res = {}
-        for index, _row in df.iterrows():
-            v = variants[index]
-            gt = v.gt_types[samples]
-            if np.any(gt > 0):
-                matched[index] = True
-                res[index] = gt
-        return self.vars_df[matched], res, persons
+        res = defaultdict(list)
+        for index, row in df.iterrows():
+            vcf = variants[index]
+            gt = vcf.gt_idxs[alleles]
+            if np.all(gt == 0):
+                continue
+
+            matched[index] = True
+            summary_variant = Variant.from_dict(row)
+
+            for fam in families.values():
+                gt = vcf.gt_idxs[fam.palleles(person_ids)]
+                if np.all(gt == 0):
+                    continue
+                res[index].append(
+                    summary_variant.clone().
+                    set_family(fam).
+                    set_genotype(vcf, gt)
+                )
+        return self.vars_df[matched], res
 
     def query_families(self, family_ids, df=None):
         samples = self.ped_df['familyId'].isin(set(family_ids)).values
@@ -174,6 +192,6 @@ class Study(object):
                 (self.ped_df['role'] & role_query.value).values.astype(np.bool)
             ].personId.values
             print(samples)
-            df, variants, persons = self.query_persons(samples, df)
+            df, variants = self.query_persons(samples, df)
 
-        return df, variants, persons
+        return df, variants
