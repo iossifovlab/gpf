@@ -41,3 +41,20 @@
 |q601  | 5293    | 0.463s  |                   |
 |q701  | 66348   | 1140s   | 46.9s             |
 |q801  | 263243  | 24.3s   | 0.217s            |
+
+
+## Study AGRE_WG_859
+
+Import of `AGRE_WG_859` into MySQL
+```
+(daework) lubo@dory:~/Work/seq-pipeline/DATA-DEV-SIMONS-PRODUCTION/cccc/AGRE_WG_859$ date && \
+    myisam_transmitted_import.py \
+    -s AGRE_WG_859_sql_summary_variants_myisam.sql.gz \
+    -f AGRE_WG_859_sql_family_variants_myisam.sql.gz \
+    -e AGRE_WG_859_sql_gene_effect_variants_myisam.sql.gz \
+    -H 127.0.0.1 -P 3311 -u root -p... -D agre_wg && \
+    date
+Fri Feb  9 11:38:25 EET 2018
+...
+Wed Feb 14 18:16:28 EET 2018
+```
