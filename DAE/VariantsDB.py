@@ -80,6 +80,10 @@ class Person:
         else:
             self.atts = {}
 
+    @property
+    def layout_position(self):
+        return self.atts.get("layoutCoords", None)
+
     def __repr__(self):
         return "Person({}; {}; {})".format(
             self.personId, self.role, self.gender)

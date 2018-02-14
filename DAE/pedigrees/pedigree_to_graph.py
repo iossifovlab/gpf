@@ -340,8 +340,7 @@ def main():
         help="save the layout with pedigree info ")
     parser.add_argument(
         "--layout-column", metavar="l", default="layoutCoords",
-        help="layout column name to be used when saving the layout",
-        )
+        help="layout column name to be used when saving the layout")
 
     args = parser.parse_args()
     with open(args.file, "r") as input_file:

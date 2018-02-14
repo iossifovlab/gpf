@@ -366,7 +366,8 @@ class Variant:
         return [
             [
                 self.familyId, p.personId, getattr(p, 'dadId', ''),
-                getattr(p, 'momId', ''), p.gender.name, get_color(p)
+                getattr(p, 'momId', ''), p.gender.name, get_color(p),
+                p.layout_position
             ] +
             variant_count_v3(
                 bs, index, self.location, p.gender.name, denovo_parent)
