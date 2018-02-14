@@ -33,6 +33,8 @@ def get_datasets_by_study(study_group_name):
     ds_to_check = map(frozenset, ds_to_check)
     return ds_to_check
 
+def belongs_to_dataset(study_name):
+    return len(list(itertools.chain(*get_datasets_by_study(study_name)))) != 0
 
 def user_has_study_permission(user, study_group_name):
     ds_to_check = set(get_datasets_by_study(study_group_name))

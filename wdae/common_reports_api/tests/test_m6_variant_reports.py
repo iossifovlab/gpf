@@ -32,7 +32,7 @@ class Test(unittest.TestCase):
 
     def test_family_report_we_phenotypes(self):
         fr = FamiliesReport('ALL WHOLE EXOME')
-
+        fr.build()
         self.assertEqual(6, len(fr.phenotypes))
         self.assertEquals(['autism',
                            'congenital heart disease',
@@ -47,14 +47,18 @@ class Test(unittest.TestCase):
 
     def test_family_report_ssc_phenotypes(self):
         fr = FamiliesReport('ALL SSC')
-
+        fr.build()
         self.assertEqual(2, len(fr.phenotypes))
-        self.assertEquals(['autism',
-                           'unaffected'], fr.phenotypes)
+        self.assertEquals(['autism', 'unaffected'], fr.phenotypes)
 
     def test_family_counters_autism_iossifov(self):
         fr = FamiliesReport('IossifovWE2012')
-        fc = ChildrenCounter('autism')
+        fc = ChildrenCounter('autism', {
+            'autism': {
+                'name': 'autism',
+                'color': '#e35252'
+            }
+        })
         fc.build(fr.studies)
 
         self.assertEqual(314, fc.children_male)
@@ -62,68 +66,48 @@ class Test(unittest.TestCase):
 
     def test_family_counters_uaffected_iossifov(self):
         fr = FamiliesReport('IossifovWE2012')
-        fc = ChildrenCounter('unaffected')
+        fc = ChildrenCounter('unaffected', {
+            'unaffected': {
+                'name': 'unaffected',
+                'color': '#ffffff'
+            }
+        })
         fc.build(fr.studies)
 
         self.assertEqual(161, fc.children_male)
         self.assertEqual(182, fc.children_female)
-
-    def test_family_counters_bad_phenotype(self):
-        with self.assertRaises(ValueError):
-            ChildrenCounter('ala-bala-portokala')
 
     def test_families_report_we_build_does_not_raise(self):
         fr = FamiliesReport('ALL WHOLE EXOME')
         self.assertTrue(fr)
 
     def test_families_counters_phenotype_test(self):
-        fc = FamiliesCounters('autism')
+        fc = FamiliesCounters('autism', {'autism': {'name' : 'autism'}})
         self.assertTrue(fc)
 
     def test_families_counters_phenotype_unaffected(self):
         with self.assertRaises(ValueError):
-            FamiliesCounters('unaffected')
+            FamiliesCounters('unaffected', {'unaffected': {'name' : 'unaffected'}})
 
     def test_families_counters_phenotype_wrong(self):
         with self.assertRaises(ValueError):
-            FamiliesCounters('ala-bala-portokala')
-
-    def test_family_configuration_to_pedigree_prbF(self):
-        prbF = [["mom", "F", 0],
-                ["dad", "M", 0],
-                ["prb", "F", 0]]
-        pedigree = CommonBase.family_configuration_to_pedigree('prbF')
-        self.assertTrue(prbF, pedigree)
-
-    def test_family_configuration_to_pedigree_prbMsibF(self):
-        prbMsibF = [["mom", "F", 0],
-                    ["dad", "M", 0],
-                    ["prb", "M", 0],
-                    ["sib", "F", 0]]
-        pedigree = CommonBase.family_configuration_to_pedigree('prbMsibF')
-        self.assertEqual(prbMsibF, pedigree)
-
-    def test_family_configuration_to_pedigree_prbMsibMsibF(self):
-        prbMsibMsibF = [["mom", "F", 0],
-                        ["dad", "M", 0],
-                        ["prb", "M", 0],
-                        ["sib", "M", 0],
-                        ["sib", "F", 0]]
-        pedigree = CommonBase.family_configuration_to_pedigree('prbMsibMsibF')
-        self.assertEqual(prbMsibMsibF, pedigree)
+            FamiliesCounters('ala-bala-portokala', {})
 
     def test_family_configuration_to_pedigree_v3_prbMsibF(self):
+        fr = FamiliesReport('ALL WHOLE EXOME')
+        fc = FamiliesCounters('autism', fr.legend)
         prbMsibF = [
             ['f1', 'p1', '', '', 'F', '#ffffff', 0, 0],
             ['f1', 'p2', '', '', 'M', '#ffffff', 0, 0],
             ['f1', 'p3', 'p1', 'p2', 'M', '#e35252', 0, 0],
             ['f1', 'p4', 'p1', 'p2', 'F', '#ffffff', 0, 0],
         ]
-        pedigree = CommonBase.family_configuration_to_pedigree_v3(
-            'prbMsibF', 'autism')
+        pedigree = fc.family_configuration_to_pedigree_v3('prbMsibF')
         self.assertEqual(prbMsibF, pedigree)
 
     def test_family_configuration_to_pedigree_v3_prbMsibMsibF(self):
+        fr = FamiliesReport('ALL WHOLE EXOME')
+        fc = FamiliesCounters('autism', fr.legend)
         prbMsibMsibF = [
             ['f1', 'p1', '', '', 'F', '#ffffff', 0, 0],
             ['f1', 'p2', '', '', 'M', '#ffffff', 0, 0],
@@ -131,8 +115,7 @@ class Test(unittest.TestCase):
             ['f1', 'p4', 'p1', 'p2', 'M', '#ffffff', 0, 0],
             ['f1', 'p5', 'p1', 'p2', 'F', '#ffffff', 0, 0]
         ]
-        pedigree = CommonBase.family_configuration_to_pedigree_v3(
-            'prbMsibMsibF', 'autism')
+        pedigree = fc.family_configuration_to_pedigree_v3('prbMsibMsibF')
         self.assertEqual(prbMsibMsibF, pedigree)
 
     def test_family_reports_build(self):
@@ -178,10 +161,10 @@ class Test(unittest.TestCase):
 
     def test_denovo_counter_autism_iossifov(self):
         fr = FamiliesReport('IossifovWE2014')
-        cc = ChildrenCounter('autism')
+        cc = ChildrenCounter('autism', fr.legend)
         cc.build(fr.studies)
 
-        dc = DenovoEventsCounter('autism', cc, 'LGDs')
+        dc = DenovoEventsCounter('autism', fr.legend, cc, 'LGDs')
         dc.build(fr.studies)
 
         self.assertEqual(383, dc.events_count)
@@ -191,10 +174,10 @@ class Test(unittest.TestCase):
 
     def test_denovo_counter_unaffected_iossifov(self):
         fr = FamiliesReport('IossifovWE2014')
-        cc = ChildrenCounter('unaffected')
+        cc = ChildrenCounter('unaffected', fr.legend)
         cc.build(fr.studies)
 
-        dc = DenovoEventsCounter('unaffected', cc, 'LGDs')
+        dc = DenovoEventsCounter('unaffected', fr.legend, cc, 'LGDs')
         dc.build(fr.studies)
 
         self.assertEqual(178, dc.events_count)

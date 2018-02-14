@@ -4,15 +4,18 @@ Created on Jul 27, 2015
 @author: lubo
 '''
 from collections import defaultdict, Counter
+import itertools
+import logging
+import zlib
+import cPickle
 
 from query_prepare import EFFECT_GROUPS, build_effect_types
 from DAE import vDB
 import precompute
-import cPickle
-import zlib
+import preloaded
 from common_reports_api.studies import get_denovo_studies_names, \
     get_transmitted_studies_names
-import logging
+from common_reports_api.permissions import get_datasets_by_study
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,83 +35,11 @@ class CommonBase(object):
     def effect_groups():
         return ['LGDs', 'nonsynonymous', 'UTRs', 'CNV']
 
-    def all_phenotypes(self):
-        return self.COLORS.keys()
-
-    COLORS = {
-        'acromelic frontonasal dysostosis': '#4286f4',
-        'amyotrophic lateral sclerosis': '#f49841',
-        'anophthalmia microphthalmia': '#f44141',
-        'autism': '#e35252',
-        'bipolar disorder': '#775050',
-        'cantu syndrome': '#507677',
-        'congenital diaphragmatic hernia': '#735077',
-        'congenital heart disease': '#b8008a',
-        'developmental disorder': '#4c2525',
-        'early onset alzheimer': '#ff7a7a',
-        'early onset parkinson': '#ffff79',
-        'epilepsy': '#e3d252',
-        'intellectual disability': '#99d8e8',
-        'neural tube defects': '#79ff9c',
-        'schizophrenia': '#98e352',
-        'sporadic infantile spasm syndrome': '#79acff',
-        'unaffected': '#ffffff',
-        #         'unknown': '#aaaaaa',
-    }
-
-    @classmethod
-    def get_color(cls, role, phenotype):
-        if role == 'prb':
-            return cls.COLORS.get(phenotype, '#aaaaaa')
-        else:
-            return cls.COLORS.get('unaffected', '#aaaaaa')
-
     @staticmethod
     def family_configuration(family):
         return "".join([family[pid].role + family[pid].gender
                         for pid in sorted(family.keys(),
                                           key=lambda x: (family[x].role, x))])
-
-    @staticmethod
-    def family_configuration_to_pedigree(family_configuration):
-        pedigree = [[family_configuration[i: i + 3],
-                     family_configuration[i + 3: i + 4],
-                     0] for i in range(0, len(family_configuration), 4)]
-        LOGGER.debug("{}; {}".format(family_configuration, pedigree))
-        result = [['mom', 'F', 0], ['dad', 'M', 0]]
-        result.extend(pedigree)
-        return result
-
-    @classmethod
-    def family_configuration_to_pedigree_v3(
-            cls, family_configuration, phenotype):
-
-        res = [
-            [
-                'f1', 'p1', '', '',
-                'F', cls.get_color('mom', 'unaffected'), 0, 0],
-            [
-                'f1', 'p2', '', '',
-                'M', cls.get_color('dad', 'unaffected'), 0, 0],
-        ]
-
-        pedigree = [
-            [
-                family_configuration[i: i + 3],
-                family_configuration[i + 3: i + 4],
-            ]
-            for i in range(0, len(family_configuration), 4)
-        ]
-        pedigree = [
-            [
-                'f1', 'p{}'.format(counter + 3), 'p1', 'p2',
-                gender, cls.get_color(role, phenotype), 0, 0
-            ]
-            for counter, [role, gender] in enumerate(pedigree)
-        ]
-        res.extend(pedigree)
-        return res
-
 
 class CounterBase(CommonBase):
 
@@ -129,8 +60,6 @@ class CounterBase(CommonBase):
     def __init__(self, phenotype):
         super(CommonBase, self).__init__()
         self.phenotype = phenotype
-        if phenotype not in self.all_phenotypes():
-            raise ValueError("unexpected phenotype '{}'".format(phenotype))
 
     def filter_studies(self, all_studies):
         if self.phenotype == 'unaffected':
@@ -174,10 +103,14 @@ class ChildrenCounter(CounterBase):
 
 class FamiliesCounters(CounterBase):
 
-    def __init__(self, phenotype):
+    def __init__(self, phenotype, legend):
         super(FamiliesCounters, self).__init__(phenotype)
         if phenotype == 'unaffected':
             raise ValueError("unexpected phenotype '{}'".format(phenotype))
+        if phenotype not in legend:
+            raise ValueError("phenotype '{}' not present in legend".format(
+                phenotype))
+        self.legend = legend
         self.total = 0
 
     def build(self, all_studies):
@@ -191,8 +124,7 @@ class FamiliesCounters(CounterBase):
 
         self.data = {}
         for (fconf, count) in family_type_counter.items():
-            pedigree = self.family_configuration_to_pedigree_v3(
-                fconf, self.phenotype)
+            pedigree = self.family_configuration_to_pedigree_v3(fconf)
             self.data[fconf] = (pedigree, count)
             self.total += count
 
@@ -206,6 +138,39 @@ class FamiliesCounters(CounterBase):
     def counters(self):
         res = self.data.values()[:]
         res = sorted(res, key=lambda v: (-v[1]))
+        return res
+
+    def get_color(self, role):
+        if role == 'prb':
+            return self.legend[self.phenotype]
+        else:
+            return self.legend['unaffected']
+
+    def family_configuration_to_pedigree_v3(self, family_configuration):
+        res = [
+            [
+                'f1', 'p1', '', '',
+                'F', self.get_color('mom'), 0, 0],
+            [
+                'f1', 'p2', '', '',
+                'M', self.get_color('dad'), 0, 0],
+        ]
+
+        pedigree = [
+            [
+                family_configuration[i: i + 3],
+                family_configuration[i + 3: i + 4],
+            ]
+            for i in range(0, len(family_configuration), 4)
+        ]
+        pedigree = [
+            [
+                'f1', 'p{}'.format(counter + 3), 'p1', 'p2',
+                gender, self.get_color(role), 0, 0
+            ]
+            for counter, [role, gender] in enumerate(pedigree)
+        ]
+        res.extend(pedigree)
         return res
 
 
@@ -225,20 +190,23 @@ class ReportBase(CommonBase):
         self._calc_phenotypes()
 
     def _calc_phenotypes(self):
-        phenotypes = set([
-            st.get_attr('study.phenotype')
-            for st in self.studies
-            if st.get_attr('study.phenotype') is not None
-        ])
-        if not phenotypes:
-            phenotypes = [
-                p for p in self.all_phenotypes() if p != 'unaffected'
-            ]
-        phenotypes = list(phenotypes)
+        dataset_ids = itertools.chain(*get_datasets_by_study(self.study_name))
+
+        self.legend = {}
+        dataset_factory = preloaded.register.get('datasets').get_factory()
+        for dataset_id in dataset_ids:
+            dataset = dataset_factory.get_dataset(dataset_id)
+            self.legend.update({
+                pheno_color['id']: pheno_color['color']
+                for pheno_color in dataset.get_legend(person_grouping='phenotype')
+            })
+
+        phenotypes = self.legend.keys()
+        if 'unaffected' in phenotypes:
+            phenotypes.remove('unaffected')
         phenotypes.sort()
         phenotypes.append('unaffected')
         self.phenotypes = phenotypes
-
 
 class FamiliesReport(ReportBase, precompute.register.Precompute):
 
@@ -253,12 +221,17 @@ class FamiliesReport(ReportBase, precompute.register.Precompute):
 
     def build(self):
         self.families_total = 0
+        encountered_phenotypes = []
         for phenotype in self.phenotypes[:-1]:
             assert phenotype != 'unaffected'
-            fc = FamiliesCounters(phenotype)
+            fc = FamiliesCounters(phenotype, self.legend)
             fc.build(self.studies)
-            self.families_counters.append(fc)
-            self.families_total += fc.total
+            if fc.total != 0:
+                self.families_counters.append(fc)
+                self.families_total += fc.total
+                encountered_phenotypes.append(phenotype)
+
+        self.phenotypes = encountered_phenotypes + ['unaffected']
 
         for phenotype in self.phenotypes:
             cc = ChildrenCounter(phenotype)
@@ -295,6 +268,17 @@ class FamiliesReport(ReportBase, precompute.register.Precompute):
         self.families_total = cPickle.loads(zlib.decompress(ft))
         cc = data['children_counters']
         self.children_counters = cPickle.loads(zlib.decompress(cc))
+        self._remove_zero_count_phenotypes()
+
+    def _remove_zero_count_phenotypes(self):
+        for index in range(0, len(self.families_counters)):
+            if self.families_counters[index].total == 0:
+                self.phenotypes.remove(self.families_counters[index].phenotype)
+                del self.families_counters[index]
+
+        for index in range(0, len(self.children_counters)):
+            if self.children_counters[index].phenotype not in self.phenotypes:
+                del self.children_counters[index]
 
 
 class DenovoEventsCounter(CounterBase):
@@ -372,6 +356,7 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
     def __init__(self, study_name, families_report):
         super(DenovoEventsReport, self).__init__(study_name)
         self.families_report = families_report
+        self.phenotypes = families_report.phenotypes
         self.rows = {}
         self._effect_groups = super(DenovoEventsReport, self).effect_groups()
         self._effect_types = super(DenovoEventsReport, self).effect_types()
@@ -417,10 +402,11 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
         all_zeroes = True
 
         for row in self.rows:
+            ec = None
             for col in row.row:
                 if col.phenotype == phenotype:
                     ec = col
-            if not ec.is_zeroes():
+            if ec is not None and not ec.is_zeroes():
                 all_zeroes = False
                 break
         return all_zeroes
@@ -480,6 +466,7 @@ class StudyVariantReports(ReportBase, precompute.register.Precompute):
     def build(self):
         self.families_report = FamiliesReport(self.study_name)
         self.families_report.build()
+        self.phenotypes = self.families_report.phenotypes
 
         if self.has_denovo():
             self.denovo_report = DenovoEventsReport(
@@ -504,6 +491,7 @@ class StudyVariantReports(ReportBase, precompute.register.Precompute):
         assert self.study_name == data['study_name']
         self.families_report = FamiliesReport(self.study_name)
         self.families_report.deserialize(data['families_report'])
+        self.phenotypes = self.families_report.phenotypes
         if 'denovo_report' in data and data['denovo_report']:
             self.denovo_report = DenovoEventsReport(self.study_name,
                                                     self.families_report)
