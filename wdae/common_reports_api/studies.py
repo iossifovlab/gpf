@@ -2,6 +2,7 @@ from DAE import vDB
 from collections import Counter, defaultdict
 from helpers.logger import LOGGER
 from precompute.register import Precompute
+import preloaded
 import cPickle
 import zlib
 
@@ -95,8 +96,18 @@ def get_denovo_studies_names():
     r = [(stN, dsc) for _o, stN, dsc in sorted(r)]
     return r
 
+def get_sorted_datasets():
+    datasets = preloaded.register.get('datasets').get_factory().get_datasets()
+    return sorted(datasets,
+        key=lambda ds: ds.descriptor.get('wdae.production.order', '0'))
+
+def get_datasets_names():
+    return [(dataset.descriptor['name'], '')
+            for dataset in get_sorted_datasets()]
+
 def get_all_studies_names():
-    return get_denovo_studies_names() + get_transmitted_studies_names()
+    return get_datasets_names() + get_denovo_studies_names() + \
+        get_transmitted_studies_names()
 
 class StudiesSummaries(Precompute):
     def __init__(self):
@@ -146,11 +157,18 @@ class StudiesSummaries(Precompute):
 
     @classmethod
     def __build_studies_summaries(cls):
-        return [cls.__build_single_study_summary(name, description)
-                for name, description in get_all_studies_names()]
+        result = [
+            cls.__build_single_studies_summary(dataset.descriptor['name'], '',
+                dataset.studies)
+            for dataset in get_sorted_datasets()
+        ]
+        result += [cls.__build_single_studies_summary(name, description,
+                        vDB.get_studies(name))
+                   for name, description in get_all_studies_names()]
+        return result 
 
     @classmethod
-    def __build_single_study_summary(cls, name, description):
+    def __build_single_studies_summary(cls, name, description, studies):
         phenotype = set()
         study_type = set()
         study_year = set()
@@ -158,7 +176,6 @@ class StudiesSummaries(Precompute):
         has_denovo = False
         has_transmitted = False
 
-        studies = vDB.get_studies(name)
         for study in studies:
             if study.get_attr('study.phenotype'):
                 phenotype.add(study.get_attr('study.phenotype'))

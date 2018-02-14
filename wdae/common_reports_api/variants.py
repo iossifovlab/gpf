@@ -13,8 +13,7 @@ from query_prepare import EFFECT_GROUPS, build_effect_types
 from DAE import vDB
 import precompute
 import preloaded
-from common_reports_api.studies import get_denovo_studies_names, \
-    get_transmitted_studies_names
+from common_reports_api.studies import get_all_studies_names
 from common_reports_api.permissions import get_datasets_by_study
 
 LOGGER = logging.getLogger(__name__)
@@ -179,17 +178,29 @@ class ReportBase(CommonBase):
     def __init__(self, study_name):
         super(ReportBase, self).__init__()
         self.study_name = study_name
-        if study_name in vDB.get_study_group_names():
-            study = vDB.get_study_group(study_name)
+
+        dataset = preloaded.register.get('datasets').get_factory() \
+                .get_dataset_by_name(study_name)
+
+        if dataset is not None:
+            self.study_description = ''
+            self.studies = dataset.studies
+            self.legend = {
+                pheno_color['id']: pheno_color['color']
+                for pheno_color in dataset.get_legend(person_grouping='phenotype')
+            }
         else:
-            study = vDB.get_study(study_name)
+            if study_name in vDB.get_study_group_names():
+                study = vDB.get_study_group(study_name)
+            else:
+                study = vDB.get_study(study_name)
+            self.study_description = study.description
+            self.studies = vDB.get_studies(self.study_name)
+            self._init_study_legend()
 
-        self.study_description = study.description
+        self._init_phenotypes()
 
-        self.studies = vDB.get_studies(self.study_name)
-        self._calc_phenotypes()
-
-    def _calc_phenotypes(self):
+    def _init_study_legend(self):
         dataset_ids = itertools.chain(*get_datasets_by_study(self.study_name))
 
         self.legend = {}
@@ -201,6 +212,7 @@ class ReportBase(CommonBase):
                 for pheno_color in dataset.get_legend(person_grouping='phenotype')
             })
 
+    def _init_phenotypes(self):
         phenotypes = self.legend.keys()
         if 'unaffected' in phenotypes:
             phenotypes.remove('unaffected')
@@ -507,7 +519,7 @@ class VariantReports(precompute.register.Precompute):
 
     @property
     def studies(self):
-        return get_denovo_studies_names() + get_transmitted_studies_names()
+        return get_all_studies_names()
 
     def is_precomputed(self):
         return self.data is not None

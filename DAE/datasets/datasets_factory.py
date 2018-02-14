@@ -56,6 +56,12 @@ class DatasetsFactory(dict):
 
         return result
 
+    def get_dataset_by_name(self, name):
+        for desc in self.datasets_config.get_datasets():
+            if desc['name'] == name:
+                return self.get_dataset(desc['id'])
+        return None
+
     def get_description_datasets(self):
         datasets_description = self.datasets_config.get_datasets()
         result = []
