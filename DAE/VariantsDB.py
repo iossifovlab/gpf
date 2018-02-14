@@ -104,6 +104,9 @@ class Study:
                 self._configSection, 'description')
         self.phdb = None
 
+        self._families = None
+        self._badFamilies = None
+
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)
 
@@ -290,18 +293,20 @@ class Study:
 
     @property
     def families(self):
-        self._load_family_data()
-        return self.families
+        if self._families is None:
+            self._load_family_data()
+        return self._families
 
     @property
     def badFamilies(self):
-        self._load_family_data()
-        return self.badFamilies
+        if self._badFamilies is None:
+            self._load_family_data()
+        return self._badFamilies
 
     def _load_family_data(self):
         if not self.vdb._config.has_option(
                 self._configSection, "familyInfo.file"):
-            self.families = {}
+            self._families = {}
             return
         fdFile = self.vdb._config.get(self._configSection, "familyInfo.file")
         fdFormat = self.vdb._config.get(
@@ -324,11 +329,11 @@ class Study:
         print("Loading family data from: {} for collection {}".format(
              fdFile, self.name), file=sys.stderr)
 
-        self.families, self.badFamilies = fmMethod[fdFormat](fdFile)
+        self._families, self._badFamilies = fmMethod[fdFormat](fdFile)
         phenotype = self.get_attr('study.phenotype')
         if not phenotype:
             return
-        for fam in self.families.values():
+        for fam in self._families.values():
             fam.phenotype = phenotype
             fam.atts['phenotype'] = phenotype
             for p in fam.memberInOrder:
