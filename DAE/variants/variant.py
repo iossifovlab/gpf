@@ -6,7 +6,10 @@ Created on Feb 13, 2018
 from __future__ import print_function
 
 import re
+
 from DAE import genomesDB
+import numpy as np
+
 
 SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
 INS_RE = re.compile('^ins\(([ACGT]+)\)$')
@@ -96,6 +99,9 @@ class FamilyVariant(VariantBase):
         self.vcf = None
         self.gt = None
 
+        self._best_st = None
+        self._is_mendelian = None
+
     @staticmethod
     def from_variant_base(v):
         return FamilyVariant(
@@ -123,12 +129,14 @@ class FamilyVariant(VariantBase):
         self.family = family
         return self
 
-    def set_genotype(self, vcf, gt):
+    def set_genotype(self, vcf, gt=None):
         self.vcf = vcf
         if gt is None:
-            self.gt = vcf.gt_idxs[self.family.allels]
-        else:
-            self.gt = gt
+            gt = vcf.gt_idxs[self.family.alleles]
+        print(gt)
+        print(len(self.family))
+
+        self.gt = gt.reshape([2, len(self.family)])
         return self
 
     def set_summary(self, sv):
@@ -159,3 +167,29 @@ class FamilyVariant(VariantBase):
         v.gt = self.gt
 
         return v
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            alt = np.sum(self.gt, axis=0, dtype=np.int8)
+            ref = ref - alt
+            self._best_st = np.stack([ref, alt], axis=0)
+        return self._best_st
+
+    def is_medelian(self):
+        if self._is_mendelian is None:
+            mendelians = []
+            for pid, parents in self.family.parents.items():
+                person_ids = [pid]
+                person_ids.extend(parents)
+                index = self.family.ssamples(person_ids)
+                child = self.gt[:, index[0]]
+                mendelian = False
+                for pindex in range(1, len(index)):
+                    parent = self.gt[:, index[pindex]]
+                    if child[0] == parent[0] or child[1] == parent[1]:
+                        mendelian = True
+                mendelians.append(mendelian)
+            self._is_mendelian = all(mendelians)
+        return self._is_mendelian

@@ -175,7 +175,7 @@ class RawFamilyVariants(Families):
                 res[index].append(
                     summary_variant.clone().
                     set_family(fam).
-                    set_genotype(vcf, gt)
+                    set_genotype(vcf)
                 )
         return self.vars_df[matched], res
 
