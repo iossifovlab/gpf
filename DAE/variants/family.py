@@ -15,17 +15,15 @@ class Family(object):
         return np.stack([2 * samples, 2 * samples + 1]). \
             reshape([1, 2 * len(samples)], order='F')[0]
 
-    def _build_parents(self, persons):
-        parents = {}
+    def _build_trios(self, persons):
+        trios = {}
         for pid, p in persons.items():
-            pp = []
-            if p['momId'] in persons:
+            if p['momId'] in persons and p['dadId'] in persons:
+                pp = [pid]
                 pp.append(p['momId'])
-            if p['dadId'] in persons:
                 pp.append(p['dadId'])
-            if pp:
-                parents[pid] = pp
-        return parents
+                trios[pid] = pp
+        return trios
 
     def _build_persons(self, ped_df):
         persons = {}
@@ -41,7 +39,7 @@ class Family(object):
         self.samples = self.ped_df.index.values
         self.alleles = self.samples_to_alleles(self.samples)
         self.persons = self._build_persons(self.ped_df)
-        self.parents = self._build_parents(self.persons)
+        self.trios = self._build_trios(self.persons)
 
     def psamples(self, person_ids):
         return self.ped_df[

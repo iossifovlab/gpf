@@ -131,12 +131,11 @@ class FamilyVariant(VariantBase):
 
     def set_genotype(self, vcf, gt=None):
         self.vcf = vcf
-        if gt is None:
+        if gt is not None:
+            self.gt = gt
+        else:
             gt = vcf.gt_idxs[self.family.alleles]
-        print(gt)
-        print(len(self.family))
-
-        self.gt = gt.reshape([2, len(self.family)])
+            self.gt = gt.reshape([2, len(self.family)])
         return self
 
     def set_summary(self, sv):
@@ -166,6 +165,9 @@ class FamilyVariant(VariantBase):
         v.vcf = self.vcf
         v.gt = self.gt
 
+        v._best_st = None
+        v._gt = None
+
         return v
 
     @property
@@ -180,16 +182,17 @@ class FamilyVariant(VariantBase):
     def is_medelian(self):
         if self._is_mendelian is None:
             mendelians = []
-            for pid, parents in self.family.parents.items():
-                person_ids = [pid]
-                person_ids.extend(parents)
-                index = self.family.ssamples(person_ids)
-                child = self.gt[:, index[0]]
-                mendelian = False
-                for pindex in range(1, len(index)):
-                    parent = self.gt[:, index[pindex]]
-                    if child[0] == parent[0] or child[1] == parent[1]:
-                        mendelian = True
-                mendelians.append(mendelian)
+            for _pid, trio in self.family.trios.items():
+                index = self.family.ssamples(trio)
+                tgt = self.gt[:, index]
+                ch = tgt[:, 0]
+                p1 = tgt[:, 1]
+                p2 = tgt[:, 2]
+
+                m1 = (ch[0] == p1[0] or ch[0] == p1[1]) and \
+                    (ch[1] == p2[0] or ch[1] == p2[1])
+                m2 = (ch[0] == p2[0] or ch[0] == p2[1]) and \
+                    (ch[1] == p1[0] or ch[1] == p1[1])
+                mendelians.append(m1 or m2)
             self._is_mendelian = all(mendelians)
         return self._is_mendelian

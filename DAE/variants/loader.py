@@ -55,19 +55,17 @@ class RawVariantsLoader(object):
         assert self.config.pedigree
         assert os.path.exists(self.config.pedigree)
 
+        return self.load_pedigree_file(self.config.pedigree)
+
+    @staticmethod
+    def load_pedigree_file(infile):
         ped_df = pd.read_csv(
-            self.config.pedigree, sep='\t', index_col=False,
+            infile, sep='\t', index_col=False,
             converters={
                 'role': lambda r: Role.from_name(r).value
             }
         )
-        ped = {}
-        for p in ped_df.to_dict(orient='records'):
-            ped[p['personId']] = p
-
-        assert len(ped) == len(ped_df)
-
-        return ped_df, ped
+        return ped_df
 
     def load_vcf(self):
         assert self.config.vcf

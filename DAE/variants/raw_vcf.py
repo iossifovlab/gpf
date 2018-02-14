@@ -55,7 +55,7 @@ class RawFamilyVariants(Families):
 
     def load(self):
         loader = RawVariantsLoader(self.config)
-        self.ped_df, self.ped = loader.load_pedigree()
+        self.ped_df = loader.load_pedigree()
         self.families_build(self.ped_df)
 
         self.vcf = loader.load_vcf()

@@ -8,7 +8,7 @@ from variants.family import Family, Families
 
 def test_study_load(uagre_loader):
 
-    ped_df, _ped = uagre_loader.load_pedigree()
+    ped_df = uagre_loader.load_pedigree()
 
     assert ped_df is not None
 
