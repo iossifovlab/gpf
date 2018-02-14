@@ -31,10 +31,10 @@ class VCFWrapper(object):
         return self._samples
 
 
-class StudyLoader(object):
+class RawVariantsLoader(object):
 
-    def __init__(self, study_config):
-        self.config = study_config
+    def __init__(self, config):
+        self.config = config
 
     def load_summary(self):
         print(self.config.summary)
@@ -117,13 +117,13 @@ def match_variants(vars_df, vcf):
 
 class VariantMatcher(object):
 
-    def __init__(self, study_config):
-        self.config = study_config
+    def __init__(self, config):
+        self.config = config
         self.vars_df = None
         self.vcf_vars = None
 
     def _run(self):
-        loader = StudyLoader(self.config)
+        loader = RawVariantsLoader(self.config)
         vcf = loader.load_vcf()
         vars_df = loader.load_summary()
         return match_variants(vars_df, vcf)

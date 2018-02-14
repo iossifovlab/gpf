@@ -9,10 +9,10 @@ from DAE import genomesDB
 from RegionOperations import Region
 import numpy as np
 import pandas as pd
-from variants.loader import StudyLoader, VariantMatcher
+from variants.loader import RawVariantsLoader, VariantMatcher
 from numba import jit
 from variants.family import Families, Family
-from variants.variant import Variant
+from variants.variant import FamilyVariant
 from collections import defaultdict
 
 
@@ -46,15 +46,15 @@ def filter_gene_effect(effects, effect_types, gene_symbols):
             if ge['eff'] in effect_types and ge['sym'] in gene_symbols]
 
 
-class Study(Families):
+class RawFamilyVariants(Families):
 
     def __init__(self, config):
-        super(Study, self).__init__()
+        super(RawFamilyVariants, self).__init__()
         self.config = config
         self._gene_models = None
 
     def load(self):
-        loader = StudyLoader(self.config)
+        loader = RawVariantsLoader(self.config)
         self.ped_df, self.ped = loader.load_pedigree()
         self.families_build(self.ped_df)
 
@@ -166,7 +166,7 @@ class Study(Families):
                 continue
 
             matched[index] = True
-            summary_variant = Variant.from_dict(row)
+            summary_variant = FamilyVariant.from_dict(row)
 
             for fam in families.values():
                 gt = vcf.gt_idxs[fam.palleles(person_ids)]

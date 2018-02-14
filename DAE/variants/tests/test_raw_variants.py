@@ -1,0 +1,134 @@
+'''
+Created on Feb 9, 2018
+
+@author: lubo
+'''
+from RegionOperations import Region
+
+
+def test_study_load(uagre):
+
+    assert uagre.vars_df is not None
+    assert uagre.vcf_vars is not None
+
+    assert len(uagre.vars_df) == len(uagre.vcf_vars)
+
+
+def test_study_query_regions(uagre):
+    df = uagre.query_regions([Region("1", 11541, 11541)])
+    assert df is not None
+    assert len(df) == 1
+
+
+def test_study_query_regions_2(uagre):
+    regions = [
+        Region("1", 11541, 11541),
+        Region("1", 54711, 54721)
+    ]
+    df = uagre.query_regions(regions)
+    assert df is not None
+    assert len(df) == 3
+
+
+def test_query_genes(uagre):
+    genes = ['FAM87B']
+    df = uagre.query_genes(genes)
+    assert df is not None
+    assert len(df) == 6
+
+
+def test_query_effect_types(uagre):
+    # print(uagre.vars_df['effectGene'])
+
+    df = uagre.query_effect_types(['frame-shift'])
+    assert len(df) == 2
+
+
+def test_query_genes_and_effect_types(uagre):
+    genes = ['KIAA1751']
+    effect_types = ['frame-shift']
+    df = uagre.query_genes_effect_types(effect_types, genes)
+    assert len(df) == 2
+
+    df = uagre.query_genes_effect_types(None, genes)
+    assert len(df) == 205
+
+    df = uagre.query_genes_effect_types(
+        ['frame-shift', 'missense'], genes)
+    assert len(df) == 4
+
+    df = uagre.query_genes_effect_types(
+        ['frame-shift', 'missense', 'synonymous'], genes)
+    assert len(df) == 7
+
+
+def test_query_genes_3(uagre):
+    genes = ['FAM87B', 'SAMD11', 'NOC2L']
+    df = uagre.query_genes(genes)
+    assert df is not None
+
+    assert len(df) == 81
+
+
+def test_query_persons(uagre):
+    genes = ['KIAA1751']
+    effect_types = ['frame-shift']
+    df = uagre.query_genes_effect_types(effect_types, genes)
+
+    pdf, pgt = uagre.query_persons(['AU1921202'], df)
+    assert len(pdf) == 2
+    assert len(pgt) == 2
+    pdf, pgt = uagre.query_persons(
+        ['AU1921202', 'AU1921211'], df)
+    assert len(pdf) == 2
+    assert len(pgt) == 2
+
+
+def test_query_persons_all(uagre):
+
+    pdf, pgt = uagre.query_persons(['AU1921202'])
+    assert len(pdf) == 12044
+    assert len(pgt) == 12044
+
+    pdf, pgt = uagre.query_persons(
+        ['AU1921202', 'AU1921211'])
+    assert len(pdf) == 16822
+    assert len(pgt) == 16822
+
+
+def test_query_persons_missing(uagre):
+    genes = ['KIAA1751']
+    effect_types = ['frame-shift']
+    df = uagre.query_genes_effect_types(effect_types, genes)
+
+    pdf, pgt = uagre.query_persons(['AU1921201'], df)
+    assert len(pdf) == 0
+    assert len(pgt) == 0
+
+    pdf, pgt = uagre.query_persons(
+        ['AU1921201', 'AU1921305'], df)
+    assert len(pdf) == 0
+    assert len(pgt) == 0
+
+
+def test_query_families(uagre):
+    genes = ['KIAA1751']
+    effect_types = ['frame-shift']
+    df = uagre.query_genes_effect_types(effect_types, genes)
+
+    pdf, pgt = uagre.query_families(['AU1921'], df)
+    assert len(pdf) == 2
+    assert len(pgt) == 2
+
+
+# def test_nan_gene_effects(uagre):
+#     df = uagre.vars_df
+#     df = df[df['effectGene'].isnull()]
+#     print(df)
+#
+#     loader = StudyLoader(uagre.config)
+#     vv = loader.load_summary()
+#
+#     print(len(vv))
+#     print(len(uagre.vars_df))
+#     print(len(df))

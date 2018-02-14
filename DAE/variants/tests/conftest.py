@@ -3,10 +3,11 @@ Created on Feb 7, 2018
 
 @author: lubo
 '''
-from variants.configure import Configure
-from variants.loader import StudyLoader
 import pytest
-from variants.study import Study
+
+from variants.configure import Configure
+from variants.loader import RawVariantsLoader
+from variants.raw_vcf import RawFamilyVariants
 
 
 @pytest.fixture(scope='session')
@@ -17,11 +18,11 @@ def uagre_config():
 
 @pytest.fixture(scope='session')
 def uagre_loader(uagre_config):
-    return StudyLoader(uagre_config)
+    return RawVariantsLoader(uagre_config)
 
 
 @pytest.fixture(scope='session')
-def uagre_study(uagre_config):
-    study = Study(uagre_config)
-    study.load()
-    return study
+def uagre(uagre_config):
+    fvariants = RawFamilyVariants(uagre_config)
+    fvariants.load()
+    return fvariants

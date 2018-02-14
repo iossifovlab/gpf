@@ -78,10 +78,10 @@ class VariantBase(object):
             self.position > other.position
 
 
-class Variant(VariantBase):
+class FamilyVariant(VariantBase):
 
     def __init__(self, chromosome, position, reference, alternative):
-        super(Variant, self).__init__(
+        super(FamilyVariant, self).__init__(
             chromosome, position, reference, alternative)
         self.n_par_called = None
         self.prcnt_par_called = None
@@ -98,22 +98,23 @@ class Variant(VariantBase):
 
     @staticmethod
     def from_variant_base(v):
-        return Variant(v.chromosome, v.position, v.reference, v.alternative)
+        return FamilyVariant(
+            v.chromosome, v.position, v.reference, v.alternative)
 
     @staticmethod
     def from_dae_variant(chrom, pos, variant):
         chrom, position, ref, alt = dae2vcf_variant(chrom, pos, variant)
-        return Variant(chrom, position - 1, ref, alt)
+        return FamilyVariant(chrom, position - 1, ref, alt)
 
     @staticmethod
     def from_vcf_variant(variant):
         assert len(variant.ALT) == 1
-        return Variant(
+        return FamilyVariant(
             variant.CHROM, variant.start, variant.REF, str(variant.ALT[0]))
 
     @staticmethod
     def from_dict(row):
-        v = Variant.from_dae_variant(
+        v = FamilyVariant.from_dae_variant(
             row['chr'], row['position'], row['variant'])
         v.set_summary(row)
         return v
@@ -143,7 +144,7 @@ class Variant(VariantBase):
         return self
 
     def clone(self):
-        v = Variant.from_variant_base(self)
+        v = FamilyVariant.from_variant_base(self)
         v.n_par_called = self.n_par_called
         v.prcnt_par_called = self.prcnt_par_called
         v.n_alt_allels = self.n_alt_allels
