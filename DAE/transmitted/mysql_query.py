@@ -241,9 +241,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
                           self['presentInParent']))
         w = [self.PRESENT_IN_PARENT_MAPPING[pip]
              for pip in self['presentInParent']]
-        # print("PRESENT_IN_PARENT: {}".format(w))
         if len(set(w)) == 4:
-            # print("PRESENT_IN_PARENT: {}".format(set(w)))
             return None
 
         where = " ( {} ) ".format(' OR '.join(w))
@@ -343,7 +341,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         if self['regionS']:
             w = self._build_regions_where()
             if w is None:
-                print "bad regions: {}".format(self['regionS'])
+                LOGGER.warn("bad regions: {}".format(self['regionS']))
             else:
                 where.append(w)
         fw = self._build_freq_where()
@@ -494,8 +492,6 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         except Exception as ex:
             LOGGER.error("unexpected db error: %s", ex)
             traceback.print_exc()
-            print("unexpected db error: {}".format(ex))
-            # connection.close()
             raise StopIteration
 
     def get_transmitted_variants(self, **kwargs):
@@ -541,7 +537,6 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         except StopIteration:
             connection.close()
         except Exception as ex:
-            print("unexpected db error: %s", ex)
             traceback.print_exc()
             LOGGER.error("unexpected db error: %s", ex)
             if connection:

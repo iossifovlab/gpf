@@ -4,6 +4,10 @@ Created on Nov 5, 2015
 @author: lubo
 '''
 from django.conf import settings
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class Preload(object):
@@ -33,7 +37,8 @@ def register(key, preload):
         settings,
         "PRELOAD_ACTIVE",
         False)
-
+    logger.info("preload register() called for {}: preload_active={}".format(
+        key, preload_active))
     if preload_active:
         preload.load()
 

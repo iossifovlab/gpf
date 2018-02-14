@@ -60,9 +60,13 @@ class MetaDataset(Dataset):
         if study.has_denovo:
             denovo_filters = self.get_denovo_filters(safe=safe, **kwargs)
             variant_iterators.append(study.get_denovo_variants(**denovo_filters))
+
         if study.has_transmitted:
             transmitted_filters = self.get_transmitted_filters(safe=safe, **kwargs)
-            variant_iterators.append(study.get_transmitted_variants(**transmitted_filters))
+            present_in_parent = transmitted_filters.get('presentInParent')
+            if transmitted_filters.get('familyIds', None) != [] and \
+                    not (present_in_parent and present_in_parent == ['neither']):
+                variant_iterators.append(study.get_transmitted_variants(**transmitted_filters))
 
         for variant in heapq.merge(*variant_iterators):
             variant.atts['dataset'] = study.dataset_name

@@ -17,8 +17,10 @@ from pheno_tool.genotype_helper import VariantsType as VT
 from pheno_tool.pheno_common import PhenoFilterBuilder, PhenoResult
 import statsmodels.api as sm
 from pheno.common import Role, Gender
+import logging
 
 # from utils.profiler import profile
+LOGGER = logging.getLogger(__name__)
 
 
 class PhenoTool(object):
@@ -77,7 +79,7 @@ class PhenoTool(object):
 
             return True
         else:
-            print("mismatched persons: {} != {}".format(p1, p2))
+            LOGGER.info("mismatched persons: {} != {}".format(p1, p2))
             return False
 
     @classmethod

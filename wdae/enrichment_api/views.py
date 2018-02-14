@@ -15,6 +15,13 @@ from common.query_base import GeneSymsMixin
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
+import logging
+
+# from memory_profiler import profile
+# fp = open('memory_profiler_basic_mean.log', 'w+')
+# precision = 5
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EnrichmentModelsMixin(object):
@@ -143,6 +150,7 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
             return desc
         return None
 
+    # @profile(precision=precision, stream=fp)
     def post(self, request):
         query = request.data
         dataset_id = query.get('datasetId', None)
@@ -176,7 +184,7 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
             }
             return Response(enrichment)
         except Exception:
-            print("error while processing genotype query")
+            LOGGER.exception("error while processing genotype query")
             traceback.print_exc()
 
             return Response(status=status.HTTP_400_BAD_REQUEST)

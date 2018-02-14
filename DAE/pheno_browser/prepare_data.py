@@ -7,7 +7,6 @@ import os
 import matplotlib as mpl
 import numpy as np
 
-from pheno.pheno_regression import PhenoRegression
 from pheno.pheno_db import Measure
 mpl.use('PS')
 import matplotlib.pyplot as plt  # @IgnorePep8
@@ -16,7 +15,6 @@ plt.ioff()
 from pheno_browser.db import DbManager  # @IgnorePep8
 from pheno.common import Role, MeasureType  # @IgnorePep8
 
-from DAE import pheno  # @IgnorePep8
 from pheno_browser.graphs import draw_linregres  # @IgnorePep8
 from pheno_browser.graphs import draw_measure_violinplot  # @IgnorePep8
 from pheno_browser.graphs import draw_categorical_violin_distribution  # @IgnorePep8
@@ -147,19 +145,23 @@ class PreparePhenoBrowserBase(object):
         dd.loc[:, 'age'] = dd['age'].astype(np.float32)
         dd = dd[np.isfinite(dd.age)]
 
-        if len(dd) > 5:
-            res_male, res_female = draw_linregres(
-                dd, 'age', measure.measure_id, jitter=0.1)
-            res['pvalue_correlation_age_male'] = res_male.pvalues['age'] \
-                if res_male is not None else None
-            res['pvalue_correlation_age_female'] = res_female.pvalues['age'] \
-                if res_female is not None else None
-
-            if res_male is not None or res_female is not None:
-                (res['figure_correlation_age_small'],
-                 res['figure_correlation_age']) = \
-                    self.save_fig(measure, "prb_regression_by_age")
+        if dd[measure.measure_id].nunique() == 1:
             return res
+
+        if len(dd) <= 5:
+            return res
+
+        res_male, res_female = draw_linregres(
+            dd, 'age', measure.measure_id, jitter=0.1)
+        res['pvalue_correlation_age_male'] = res_male.pvalues['age'] \
+            if res_male is not None else None
+        res['pvalue_correlation_age_female'] = res_female.pvalues['age'] \
+            if res_female is not None else None
+
+        if res_male is not None or res_female is not None:
+            (res['figure_correlation_age_small'],
+             res['figure_correlation_age']) = \
+                self.save_fig(measure, "prb_regression_by_age")
         return res
 
     def build_regression_by_nviq(self, measure):
@@ -183,6 +185,9 @@ class PreparePhenoBrowserBase(object):
         dd = dd[np.isfinite(dd.nonverbal_iq)]
 
         if len(dd) <= 5:
+            return res
+
+        if dd[measure.measure_id].nunique() == 1:
             return res
 
         res_male, res_female = draw_linregres(
@@ -272,14 +277,12 @@ class PreparePhenoBrowserBase(object):
             res.update(self.build_regression_by_age(measure))
         elif measure.measure_type == MeasureType.categorical:
             res.update(self.build_values_categorical_distribution(measure))
-        else:
-            res.update(self.build_values_other_distribution(measure))
         return res
 
     def run(self):
         db = DbManager(dbfile=self.browser_db)
         db.build()
-        
+
         for instrument in self.pheno_db.instruments.values():
             progress_nl()
             for measure in instrument.measures.values():

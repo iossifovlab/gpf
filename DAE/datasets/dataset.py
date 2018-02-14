@@ -12,6 +12,10 @@ from gene.weights import WeightsLoader
 from datasets.family_pheno_base import FamilyPhenoQueryMixin
 from pheno.pheno_regression import PhenoRegression
 from collections import defaultdict
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class Dataset(QueryBase, FamilyPhenoQueryMixin):
@@ -20,7 +24,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def __init__(self, dataset_descriptor):
         self.descriptor = dataset_descriptor
-        print("loading dataset <{}>; pheno db: <{}>".format(
+        logger.info("loading dataset <{}>; pheno db: <{}>".format(
             self.descriptor['id'],
             self.descriptor['phenoDB'],
         ))
@@ -218,12 +222,30 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     def load(self):
         if self.families:
             return
+        self.load_studies()
         self.load_families()
         self.load_pheno_families()
         self.load_pedigree_selectors()
         self.load_pheno_columns()
         self.load_pheno_filters()
         self.load_family_filters_by_study()
+
+    def load_studies(self):
+        for st in self.studies:
+            logger.info("loading studies for dataset <{}>: study {}".format(
+                self.dataset_id,
+                st.name
+            ))
+            st._load_family_data()
+            if not st.has_denovo:
+                return
+            if 'default' in st._dnvData:
+                logger.info("denovo data for study: {} from cache".format(
+                    st.name))
+            else:
+                logger.info("loading denovo data for study: {}".format(
+                    st.name))
+                st._load_dnv_data()
 
     def load_pheno_db(self):
         pheno_db = None
@@ -232,7 +254,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             pheno_id = self.descriptor['phenoDB']
             if pheno.has_pheno_db(pheno_id):
                 pheno_db = pheno.get_pheno_db(pheno_id)
-                pheno_reg = PhenoRegression.build(pheno_id)
+                pheno_reg = PhenoRegression.build_from_config(pheno_id)
         self.pheno_db = pheno_db
         self.pheno_reg = pheno_reg
 
@@ -523,7 +545,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         denovo = self.get_denovo_variants(safe=safe, **kwargs)
         transmitted = self.get_transmitted_variants(safe=safe, **kwargs)
         augment_vars = self._get_var_augmenter(safe=safe, **kwargs)
-        variants = itertools.imap(augment_vars,
+        variants = itertools.imap(
+            augment_vars,
             itertools.chain.from_iterable([denovo, transmitted]))
         return self._phenotype_filter(variants, **kwargs)
 
@@ -532,7 +555,6 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         response = legend.domain[:]
         response.append(legend.default)
         return response
-
 
     def _phenotype_filter(self, variants, **kwargs):
         phenotype_filter = self._get_phenotype_filter(**kwargs)
@@ -548,7 +570,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return [key for (key, _) in self.get_genotype_columns(matches)] + \
             [key for (_, _, key, _) in self.get_pheno_columns(matches)]
 
-    def __get_columns_for(self, view_type):
+    def _get_columns_for(self, view_type):
         gb = self.descriptor['genotypeBrowser']
         if gb is None:
             return self.get_columns()
@@ -556,15 +578,17 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return self.get_columns(lambda column: column['id'] in columns)
 
     def get_preview_columns(self):
-        return self.__get_columns_for('preview')
+        return self._get_columns_for('preview')
 
     def get_download_columns(self):
-        return self.__get_columns_for('download')
+        return self._get_columns_for('download')
 
     def get_column_labels(self):
-        column_labels = { key: label for (key, label) in self.get_genotype_columns() }
-        column_labels.update({ key: label for (_, _, key, label) in self.get_pheno_columns() })
-        return  column_labels
+        column_labels = {key: label for (
+            key, label) in self.get_genotype_columns()}
+        column_labels.update(
+            {key: label for (_, _, key, label) in self.get_pheno_columns()})
+        return column_labels
 
     def get_pheno_columns(self, matches=None):
         gb = self.descriptor['genotypeBrowser']
@@ -581,7 +605,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             name = pheno_column['name']
             slots = pheno_column['slots']
             columns.extend([
-                (s['role'], s['source'], s['id'], '{} {}'.format(name, s['name']))
+                (s['role'], s['source'], s['id'],
+                 '{} {}'.format(name, s['name']))
                 for s in slots])
         return columns
 
@@ -607,7 +632,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
     def get_variants_preview(self, safe=True, **kwargs):
         return generate_response(self.get_variants(safe, **kwargs),
-            self.get_columns(), self.get_column_labels())
+                                 self.get_columns(), self.get_column_labels())
 
     def _get_var_augmenter(self, safe=True, **kwargs):
         legend = self.get_pedigree_selector(**kwargs)

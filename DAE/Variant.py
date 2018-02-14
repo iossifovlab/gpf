@@ -405,7 +405,7 @@ PRESENT_IN_CHILD_FILTER_MAPPING = {
     "autism and unaffected":
     lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
     "affected and unaffected":
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh),
     "neither":
     lambda inCh: len(inCh) == 0,
 
@@ -416,11 +416,11 @@ PRESENT_IN_CHILD_FILTER_MAPPING = {
     ("unaffected only", 'F'):
     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
     ("autism and unaffected", 'F'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('F' == inCh[3] or 'F' == inCh[7])),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+                  ('F' in inCh)),
     ("affected and unaffected", 'F'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('F' == inCh[3] or 'F' == inCh[7])),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+                  ('F' in inCh)),
     ("neither", 'F'):
     lambda inCh: (len(inCh) == 0),
 
@@ -431,11 +431,11 @@ PRESENT_IN_CHILD_FILTER_MAPPING = {
     ("unaffected only", 'M'):
     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
     ("autism and unaffected", 'M'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('M' == inCh[3] or 'M' == inCh[7])),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+                  ('M' in inCh)),
     ("affected and unaffected", 'M'):
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0] and
-                  ('M' == inCh[3] or 'M' == inCh[7])),
+    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+                  ('M' in inCh)),
     ("neither", 'M'):
     lambda inCh: (len(inCh) == 0),
     'F':

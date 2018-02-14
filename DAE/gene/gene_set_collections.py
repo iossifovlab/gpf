@@ -15,6 +15,9 @@ from DAE import vDB
 from itertools import groupby
 import cPickle
 from pheno.pheno_regression import PhenoRegression
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class CacheMixin(object):
@@ -101,7 +104,7 @@ class DenovoGeneSetsType(object):
         assert self.gene_term is not None
 
         if gene_set_id not in self.gene_term.t2G:
-            print("gene set {} not found...".format(gene_set_id))
+            LOGGER.warn("gene set {} not found...".format(gene_set_id))
             return set()
         syms = self.gene_term.t2G[gene_set_id].keys()
         return set(syms)
@@ -385,7 +388,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         from pheno.pheno_factory import PhenoFactory
         pf = PhenoFactory()
         pheno_db = pf.get_pheno_db('ssc')
-        pheno_reg = PhenoRegression.build('ssc')
+        pheno_reg = PhenoRegression.build_from_config('ssc')
         assert pheno_db is not None
         measure_id = pheno_reg.get_nonverbal_iq_measure_id(None)
         nvIQ = pheno_db.get_measure_values(measure_id)

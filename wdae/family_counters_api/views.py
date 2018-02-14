@@ -8,6 +8,9 @@ from rest_framework.response import Response
 from genotype_browser.views import QueryBaseView
 from rest_framework.exceptions import NotAuthenticated
 import traceback
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class FamilyCounters(QueryBaseView):
@@ -90,12 +93,12 @@ Example:
             res = [res[s['id']] for s in pedigree_selector['domain']]
             return Response(res, status=status.HTTP_200_OK)
         except NotAuthenticated:
-            print("error while processing genotype query")
+            LOGGER.exception("error while processing genotype query")
             traceback.print_exc()
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
         except Exception:
-            print("error while processing genotype query")
+            LOGGER.exception("error while processing genotype query")
             traceback.print_exc()
 
             return Response(status=status.HTTP_400_BAD_REQUEST)

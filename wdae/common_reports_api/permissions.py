@@ -9,7 +9,6 @@ import itertools
 def user_has_study_permission(user, study_group_name):
     # study_name_to_dataset_id = cache.get('study_name_to_dataset_id')
     # if study_name_to_dataset_id is None:
-    #     print('Building cache...')
     study_name_to_dataset_id = defaultdict(list)
     for ds in user_has_study_permission.datasets_factory.get_datasets():
         studies = [vDB.get_studies(study) for study in ds.descriptor['studies'].split(',')]
