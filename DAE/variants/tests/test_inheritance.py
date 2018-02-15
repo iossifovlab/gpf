@@ -186,3 +186,68 @@ def test_mendelian_simple_2(fv2):
     v.gt = np.array([[0, 1, 1, 0],
                      [0, 1, 0, 1]])
     assert v.is_medelian()
+
+
+PED3 = """
+# TWO GENERATION PEDIGREE
+familyId, personId, dadId, momId, gender, status, role
+f1,       gd1,      0,     0,     1,      1,      pathernal_grandfather
+f1,       gm1,      0,     0,     2,      1,      pathernal_grandmother
+f1,       d1,       gd1,   gm1,   1,      1,      dad
+f1,       m1,       0,     0,     2,      1,      mom
+f1,       p1,       d1,    m1,    1,      2,      prb
+"""
+
+
+@pytest.fixture(scope='session')
+def fam3():
+    ped_df = RawVariantsLoader.load_pedigree_file(
+        StringIO.StringIO(PED3), sep=',')
+
+    family = Family("f1", ped_df)
+    assert len(family.trios) == 2
+    return family
+
+
+@pytest.fixture(scope='session')
+def fv3(fam3):
+    v = FamilyVariant("1", 11539, "T", "TA")
+    v.set_family(fam3)
+    return v
+
+
+def test_mendelian_simple_3(fv3):
+    v = fv3.clone()
+    v.gt = np.array([[0, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0]])
+    assert v.is_medelian()
+
+    v = fv3.clone()
+    v.gt = np.array([[1, 0, 0, 0, 0],
+                     [0, 0, 0, 0, 0]])
+    assert v.is_medelian()
+
+    v = fv3.clone()
+    v.gt = np.array([[1, 0, 0, 0, 0],
+                     [1, 0, 0, 0, 0]])
+    assert not v.is_medelian()
+
+    v = fv3.clone()
+    v.gt = np.array([[1, 0, 1, 0, 0],
+                     [1, 0, 0, 0, 0]])
+    assert v.is_medelian()
+
+    v = fv3.clone()
+    v.gt = np.array([[1, 1, 1, 0, 0],
+                     [1, 0, 0, 0, 0]])
+    assert v.is_medelian()
+
+    v = fv3.clone()
+    v.gt = np.array([[1, 1, 1, 0, 0],
+                     [1, 0, 1, 0, 0]])
+    assert not v.is_medelian()
+
+    v = fv3.clone()
+    v.gt = np.array([[1, 1, 1, 0, 1],
+                     [1, 0, 1, 0, 0]])
+    assert v.is_medelian()

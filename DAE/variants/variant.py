@@ -193,9 +193,6 @@ class FamilyVariant(VariantBase):
                     (ch[1] == p2[0] or ch[1] == p2[1])
                 m2 = (ch[0] == p2[0] or ch[0] == p2[1]) and \
                     (ch[1] == p1[0] or ch[1] == p1[1])
-                if not (m1 or m2):
-                    print(trio)
-                    print(self.gt[:, index])
                 mendelians.append(m1 or m2)
             self._is_mendelian = all(mendelians)
         return self._is_mendelian
