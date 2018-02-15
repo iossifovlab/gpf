@@ -53,22 +53,12 @@ export class GenotypeBrowserComponent extends QueryStateCollector
             this.genotypeBrowserState = Object.assign({},
                                           { datasetId: this.selectedDatasetId },
                                           stateObject);
-            this.router.navigate(
-              [ '.', { state: JSON.stringify(stateObject) }],
-              { relativeTo: this.route }
-            );
           },
           error => {
             this.genotypePreviewsArray = null;
             console.warn(error);
           });
       });
-
-    this.route.params.take(1).subscribe(
-      (params: Params) => {
-        this.stateRestoreService.onParamsUpdate(params['state']);
-      }
-    );
   }
 
   ngOnInit() {
