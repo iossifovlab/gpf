@@ -3,7 +3,10 @@ Created on Feb 9, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 from RegionOperations import Region
+from variants.roles import Role, RoleQuery
 
 
 def test_study_load(uagre):
@@ -14,13 +17,13 @@ def test_study_load(uagre):
     assert len(uagre.vars_df) == len(uagre.vcf_vars)
 
 
-def test_study_query_regions(uagre):
+def test_query_regions(uagre):
     df = uagre.query_regions([Region("1", 11541, 11541)])
     assert df is not None
     assert len(df) == 1
 
 
-def test_study_query_regions_2(uagre):
+def test_query_regions_2(uagre):
     regions = [
         Region("1", 11541, 11541),
         Region("1", 54711, 54721)
@@ -132,3 +135,35 @@ def test_query_families(uagre):
 #     print(len(vv))
 #     print(len(uagre.vars_df))
 #     print(len(df))
+
+def test_query_variants_single(uagre):
+    vs = uagre.query_variants(regions=[Region("1", 11541, 11541)])
+    for v in vs:
+        print(v, "Medelian: ", v.is_medelian())
+        print(v.gt)
+        print(v.best_st)
+
+
+def test_query_variants_persons_all(uagre):
+    vs = uagre.query_variants(
+        genes=['FAM87B'],
+        person_ids=['AU1921202'])
+    for v in vs:
+        print(v, "Medelian: ", v.is_medelian())
+        print(v.gt)
+        print(v.best_st)
+
+
+def test_query_variants_roles_dad(uagre):
+    genes = ['KIAA1751']
+    role_query = RoleQuery(Role.dad)
+
+    vs = uagre.query_variants(
+        genes=genes,
+        roles=[role_query]
+    )
+
+    for v in vs:
+        print(v, "Medelian: ", v.is_medelian())
+        print(v.gt)
+        print(v.best_st)

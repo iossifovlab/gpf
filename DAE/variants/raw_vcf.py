@@ -14,6 +14,7 @@ from numba import jit
 from variants.family import Families, Family
 from variants.variant import FamilyVariant
 from collections import defaultdict
+import itertools
 
 
 @jit
@@ -71,7 +72,24 @@ class RawFamilyVariants(Families):
                       np.arange(len(self.vars_df)))
 
     def query_variants(self, **kwargs):
-        pass
+        df = self.vars_df
+        if 'regions' in kwargs:
+            df = self.query_regions(kwargs['regions'], df)
+        if 'genes' in kwargs:
+            df = self.query_genes(kwargs['genes'], df)
+        if 'effect_types' in kwargs:
+            df = self.query_effect_types(kwargs['effect_types'], df)
+
+        if 'roles' in kwargs:
+            vs = self.query_roles(kwargs['roles'], df)
+        elif 'family_ids' in kwargs:
+            vs = self.query_families(kwargs['family_ids'], df)
+        elif 'person_ids' in kwargs:
+            vs = self.query_persons(kwargs['person_ids'], df)
+        else:
+            vs = self.wrap_variants(df)
+        for v in vs:
+            yield v
 
     @property
     def gene_models(self):
@@ -158,7 +176,6 @@ class RawFamilyVariants(Families):
 
         variants = self.vcf_vars
 
-        res = defaultdict(list)
         for index, row in df.iterrows():
             vcf = variants[index]
             gt = vcf.gt_idxs[alleles]
@@ -172,12 +189,23 @@ class RawFamilyVariants(Families):
                 gt = vcf.gt_idxs[fam.palleles(person_ids)]
                 if np.all(gt == 0):
                     continue
-                res[index].append(
-                    summary_variant.clone().
-                    set_family(fam).
+                v = summary_variant.clone(). \
+                    set_family(fam). \
                     set_genotype(vcf)
-                )
-        return self.vars_df[matched], res
+                yield v
+
+    def wrap_variants(self, df):
+        variants = self.vcf_vars
+        for index, row in df.iterrows():
+            vcf = variants[index]
+
+            summary_variant = FamilyVariant.from_dict(row)
+
+            for fam in self.families.values():
+                v = summary_variant.clone(). \
+                    set_family(fam). \
+                    set_genotype(vcf)
+                yield v
 
     def query_families(self, family_ids, df=None):
         samples = self.ped_df['familyId'].isin(set(family_ids)).values
@@ -191,7 +219,5 @@ class RawFamilyVariants(Families):
             samples = self.ped_df[
                 (self.ped_df['role'] & role_query.value).values.astype(np.bool)
             ].personId.values
-            print(samples)
-            df, variants = self.query_persons(samples, df)
-
-        return df, variants
+            for v in self.query_persons(samples, df):
+                yield v
