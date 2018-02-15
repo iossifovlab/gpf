@@ -5,6 +5,14 @@ const enum Gender {
 
 export class PedigreeData {
 
+  static parsePosition(position: string) {
+    if (position != null) {
+      let result = position.split(',').map(x => parseFloat(x));
+      return result as [number, number];
+    }
+    return null;
+  }
+
   static fromArray(arr: Array<any>): PedigreeData {
     return new PedigreeData(
       arr[0],
@@ -13,8 +21,9 @@ export class PedigreeData {
       arr[3],
       arr[4],
       arr[5],
-      arr[6],
-      arr[7]
+      PedigreeData.parsePosition(arr[6]),
+      arr[7],
+      arr[8]
     );
   }
 
@@ -25,6 +34,7 @@ export class PedigreeData {
     readonly mother: string,
     readonly gender: string,
     readonly color: string,
+    readonly position: [number, number],
     readonly label: string,
     readonly smallLabel: string
   ) { }

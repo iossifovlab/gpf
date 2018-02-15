@@ -15,52 +15,14 @@ type Edge = GraphEdge<Vertex>;
 export class PerfectlyDrawablePedigreeService {
 
   createSandwichInstance(family: PedigreeData[]) {
+    let [idsToIndividualUnit, idsToMatingUnit] = this.getIndividualsAndMatingUnitMaps(family);
 
-    let idToNodeMap = new Map<string, Individual>();
-    let idsToMatingUnit = new Map<string, MatingUnit>();
-
-    let getOrCreateIndividual = (name) => {
-      if (idToNodeMap.has(name)) {
-        return idToNodeMap.get(name);
-      } else {
-        let individual = new Individual();
-        idToNodeMap.set(name, individual);
-        return individual;
-      }
-    };
-
-    for (let individual of family) {
-      let mother = getOrCreateIndividual(individual.mother);
-      let father = getOrCreateIndividual(individual.father);
-      if (mother !== father && !idsToMatingUnit.has(individual.mother + ',' + individual.father)) {
-        idsToMatingUnit.set(individual.mother + ',' + individual.father, new MatingUnit(mother, father));
-      }
-      let parentNode = idsToMatingUnit.get(individual.mother + ',' + individual.father);
-
-      let node = getOrCreateIndividual(individual.id);
-
-      node.pedigreeData = individual;
-      if (mother !== father) {
-        node.parents = new ParentalUnit(mother, father);
-      }
-
-      if (parentNode) {
-        parentNode.children.individuals.push(node);
-      }
-    }
-
-    let individualVertices: Vertex[] = [];
-    idToNodeMap.delete('0');
-    idToNodeMap.delete('');
-    idToNodeMap.forEach(individual => {
-      individualVertices.push(individual);
-    });
-
+    let individualVertices = this.getIndividualsFromMap(idsToIndividualUnit) as IndividualSet[];
 
     let matingVertices: Vertex[] = [];
     let sibshipVertices: Vertex[] = [];
-    idsToMatingUnit.forEach(matingUnit => {
 
+    idsToMatingUnit.forEach(matingUnit => {
       matingVertices.push(matingUnit);
       if (matingUnit.children.individuals.length > 0) {
         sibshipVertices.push(matingUnit.children);
@@ -153,6 +115,62 @@ export class PerfectlyDrawablePedigreeService {
     );
 
     return new SandwichInstance(allVertices, requiredEdges, forbiddenEdges);
+  }
+
+  private getIndividualsAndMatingUnitMaps(family: PedigreeData[]):
+      [Map<string, Individual>, Map<string, MatingUnit>] {
+    let idToNodeMap = new Map<string, Individual>();
+    let idsToMatingUnit = new Map<string, MatingUnit>();
+
+    let getOrCreateIndividual = (name) => {
+      if (idToNodeMap.has(name)) {
+        return idToNodeMap.get(name);
+      } else {
+        let individual = new Individual();
+        idToNodeMap.set(name, individual);
+        return individual;
+      }
+    };
+
+    for (let individual of family) {
+      let mother = getOrCreateIndividual(individual.mother);
+      let father = getOrCreateIndividual(individual.father);
+      if (mother !== father && !idsToMatingUnit.has(individual.mother + ',' + individual.father)) {
+        idsToMatingUnit.set(individual.mother + ',' + individual.father, new MatingUnit(mother, father));
+      }
+      let parentNode = idsToMatingUnit.get(individual.mother + ',' + individual.father);
+
+      let node = getOrCreateIndividual(individual.id);
+
+      node.pedigreeData = individual;
+      if (mother !== father) {
+        node.parents = new ParentalUnit(mother, father);
+      }
+
+      if (parentNode) {
+        parentNode.children.individuals.push(node);
+      }
+    }
+
+    idToNodeMap.delete('0');
+    idToNodeMap.delete('');
+
+    return [idToNodeMap, idsToMatingUnit]
+  }
+
+  private getIndividualsFromMap(idToNodeMap: Map<string, Individual>) {
+    let individualVertices: Individual[] = [];
+    idToNodeMap.forEach(individual => {
+      individualVertices.push(individual);
+    });
+
+    return individualVertices;
+  }
+
+  getIndividuals(family: PedigreeData[]) {
+    let idToNodeMap = this.getIndividualsAndMatingUnitMaps(family)[0];
+
+    return this.getIndividualsFromMap(idToNodeMap);
   }
 
   isPDP(family: PedigreeData[]) {
