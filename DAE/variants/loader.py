@@ -58,12 +58,14 @@ class RawVariantsLoader(object):
         return self.load_pedigree_file(self.config.pedigree)
 
     @staticmethod
-    def load_pedigree_file(infile):
+    def load_pedigree_file(infile, sep="\t"):
         ped_df = pd.read_csv(
-            infile, sep='\t', index_col=False,
+            infile, sep=sep, index_col=False,
+            skipinitialspace=True,
             converters={
                 'role': lambda r: Role.from_name(r).value
-            }
+            },
+            comment="#",
         )
         return ped_df
 
