@@ -102,7 +102,7 @@ class Test(unittest.TestCase):
             ['f1', 'p3', 'p1', 'p2', 'M', '#e35252', 0, 0],
             ['f1', 'p4', 'p1', 'p2', 'F', '#ffffff', 0, 0],
         ]
-        pedigree = fc.family_configuration_to_pedigree_v3('prbMsibF')
+        pedigree = fc.family_configuration_to_pedigree_v3('momFdadMprbMsibF')
         self.assertEqual(prbMsibF, pedigree)
 
     def test_family_configuration_to_pedigree_v3_prbMsibMsibF(self):
@@ -115,7 +115,7 @@ class Test(unittest.TestCase):
             ['f1', 'p4', 'p1', 'p2', 'M', '#ffffff', 0, 0],
             ['f1', 'p5', 'p1', 'p2', 'F', '#ffffff', 0, 0]
         ]
-        pedigree = fc.family_configuration_to_pedigree_v3('prbMsibMsibF')
+        pedigree = fc.family_configuration_to_pedigree_v3('momFdadMprbMsibMsibF')
         self.assertEqual(prbMsibMsibF, pedigree)
 
     def test_family_reports_build(self):

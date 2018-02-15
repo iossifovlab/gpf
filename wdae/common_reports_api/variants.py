@@ -42,14 +42,16 @@ class CommonBase(object):
 
 class CounterBase(CommonBase):
 
-    @staticmethod
-    def build_families_buffer(studies):
+    def build_families_buffer(self, studies):
         families_buffer = defaultdict(dict)
         for st in studies:
-            for f in st.families.values():
-                children = [f.memberInOrder[c]
-                            for c in range(2, len(f.memberInOrder))]
-                for p in children:
+            families = st.families.values()
+            if not st.has_attr('study.phenotype') and \
+                    self.phenotype != 'unaffected':
+                families = filter(
+                    lambda f: f.atts['phenotype'] == self.phenotype, families)
+            for f in families:
+                for p in f.memberInOrder:
                     if p.personId in families_buffer[f.familyId]:
                         pass
                     else:
@@ -64,7 +66,8 @@ class CounterBase(CommonBase):
         if self.phenotype == 'unaffected':
             return all_studies
         studies = [st for st in all_studies
-                   if st.get_attr('study.phenotype') == self.phenotype]
+                   if not st.has_attr('study.phenotype') or \
+                        st.get_attr('study.phenotype') == self.phenotype]
         return studies
 
 
@@ -75,10 +78,11 @@ class ChildrenCounter(CounterBase):
 
         self.children_male = 0
         self.children_female = 0
+        self.children_unknown = 0
 
     @property
     def children_total(self):
-        return self.children_male + self.children_female
+        return self.children_male + self.children_female + self.children_unknown
 
     def check_phenotype(self, person):
         if self.phenotype == 'unaffected':
@@ -98,6 +102,7 @@ class ChildrenCounter(CounterBase):
 
         self.children_female = children_counter['F']
         self.children_male = children_counter['M']
+        self.children_unknown = children_counter['U']
 
 
 class FamiliesCounters(CounterBase):
@@ -128,7 +133,8 @@ class FamiliesCounters(CounterBase):
             self.total += count
 
     def get_counter(self, fconf):
-        return self.data.get(fconf, 0)
+        return self.data.get(fconf,
+            (self.family_configuration_to_pedigree_v3(fconf), 0))
 
     def type_counters(self):
         return sorted(self.data.values())
@@ -146,15 +152,6 @@ class FamiliesCounters(CounterBase):
             return self.legend['unaffected']
 
     def family_configuration_to_pedigree_v3(self, family_configuration):
-        res = [
-            [
-                'f1', 'p1', '', '',
-                'F', self.get_color('mom'), 0, 0],
-            [
-                'f1', 'p2', '', '',
-                'M', self.get_color('dad'), 0, 0],
-        ]
-
         pedigree = [
             [
                 family_configuration[i: i + 3],
@@ -164,13 +161,15 @@ class FamiliesCounters(CounterBase):
         ]
         pedigree = [
             [
-                'f1', 'p{}'.format(counter + 3), 'p1', 'p2',
+                'f1', 'p{}'.format(counter + 1),
+                'p1' if counter > 1 else '',
+                'p2' if counter > 1 else '',
                 gender, self.get_color(role), 0, 0
             ]
             for counter, [role, gender] in enumerate(pedigree)
         ]
-        res.extend(pedigree)
-        return res
+
+        return pedigree
 
 
 class ReportBase(CommonBase):

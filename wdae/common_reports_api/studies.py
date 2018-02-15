@@ -12,8 +12,7 @@ def family_buffer(studies):
     fam_buff = defaultdict(dict)
     for study in studies:
         for f in study.families.values():
-            for p in [f.memberInOrder[c]
-                      for c in xrange(2, len(f.memberInOrder))]:
+            for p in f.memberInOrder:
                 if p.personId in fam_buff[f.familyId]:
                     prev_p = fam_buff[f.familyId][p.personId]
                     if prev_p.role != p.role or prev_p.gender != p.gender:

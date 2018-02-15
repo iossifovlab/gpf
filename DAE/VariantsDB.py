@@ -405,6 +405,7 @@ class Study:
             fmId = str(dtR['familyId'])
             families[fmId].familyId = fmId
             atts = {x: dtR[x] for x in dt.dtype.names}
+            families[fmId].atts.update(atts)
             p = Person(atts)
             p.personId = atts['personId']
             p.gender = atts['gender']

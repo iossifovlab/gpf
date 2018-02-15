@@ -10,6 +10,7 @@ class ChildrenCounterSerializer(serializers.Serializer):
     phenotype = serializers.CharField()
     children_male = serializers.IntegerField()
     children_female = serializers.IntegerField()
+    children_unknown = serializers.IntegerField()
     children_total = serializers.IntegerField()
 
 
