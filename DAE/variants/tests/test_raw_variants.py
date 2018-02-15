@@ -78,25 +78,22 @@ def test_query_persons(uagre):
     effect_types = ['frame-shift']
     df = uagre.query_genes_effect_types(effect_types, genes)
 
-    pdf, pgt = uagre.query_persons(['AU1921202'], df)
-    assert len(pdf) == 2
-    assert len(pgt) == 2
-    pdf, pgt = uagre.query_persons(
+    vs = uagre.query_persons(['AU1921202'], df)
+    assert len(list(vs)) == 2
+
+    vs = uagre.query_persons(
         ['AU1921202', 'AU1921211'], df)
-    assert len(pdf) == 2
-    assert len(pgt) == 2
+    assert len(list(vs)) == 2
 
 
 def test_query_persons_all(uagre):
 
-    pdf, pgt = uagre.query_persons(['AU1921202'])
-    assert len(pdf) == 12044
-    assert len(pgt) == 12044
+    vs = uagre.query_persons(['AU1921202'])
+    assert len(list(vs)) == 12044
 
-    pdf, pgt = uagre.query_persons(
+    vs = uagre.query_persons(
         ['AU1921202', 'AU1921211'])
-    assert len(pdf) == 16822
-    assert len(pgt) == 16822
+    assert len(list(vs)) == 16822
 
 
 def test_query_persons_missing(uagre):
@@ -104,14 +101,12 @@ def test_query_persons_missing(uagre):
     effect_types = ['frame-shift']
     df = uagre.query_genes_effect_types(effect_types, genes)
 
-    pdf, pgt = uagre.query_persons(['AU1921201'], df)
-    assert len(pdf) == 0
-    assert len(pgt) == 0
+    vs = uagre.query_persons(['AU1921201'], df)
+    assert len(list(vs)) == 0
 
-    pdf, pgt = uagre.query_persons(
+    vs = uagre.query_persons(
         ['AU1921201', 'AU1921305'], df)
-    assert len(pdf) == 0
-    assert len(pgt) == 0
+    assert len(list(vs)) == 0
 
 
 def test_query_families(uagre):
@@ -119,9 +114,8 @@ def test_query_families(uagre):
     effect_types = ['frame-shift']
     df = uagre.query_genes_effect_types(effect_types, genes)
 
-    pdf, pgt = uagre.query_families(['AU1921'], df)
-    assert len(pdf) == 2
-    assert len(pgt) == 2
+    vs = uagre.query_families(['AU1921'], df)
+    assert len(list(vs)) == 2
 
 
 # def test_nan_gene_effects(uagre):

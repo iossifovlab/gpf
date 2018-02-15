@@ -19,15 +19,12 @@ from variants.variant import FamilyVariant
 def test_mendelian(uagre):
     df = uagre.query_regions([Region("1", 11541, 54721)])
 
-    res_df, variants = uagre.query_families(['AU1921'], df)
-    assert len(res_df) == 5
-    assert len(variants) == 5
+    variants = uagre.query_families(['AU1921'], df)
 
-    for vs in variants.values():
-        for v in vs:
-            print(v, v.is_medelian(), v.effect_type)
-            print(v.best_st)
-            print(v.gt)
+    for v in variants:
+        print(v, v.is_medelian(), v.effect_type)
+        print(v.best_st)
+        print(v.gt)
 
 
 PED1 = """
