@@ -54,14 +54,13 @@ class VariantBase(object):
 
     @staticmethod
     def from_dae_variant(chrom, pos, variant):
-        chrom, position, ref, alt = dae2vcf_variant(chrom, pos, variant)
-        return VariantBase(chrom, position - 1, ref, alt)
+        return VariantBase(*dae2vcf_variant(chrom, pos, variant))
 
     @staticmethod
     def from_vcf_variant(variant):
         assert len(variant.ALT) == 1
         return VariantBase(
-            variant.CHROM, variant.start, variant.REF, str(variant.ALT[0]))
+            variant.CHROM, variant.start + 1, variant.REF, str(variant.ALT[0]))
 
     def __eq__(self, other):
         return self.chromosome == other.chromosome and \
@@ -109,12 +108,14 @@ class FamilyVariant(VariantBase):
 
     @staticmethod
     def from_dae_variant(chrom, pos, variant):
-        chrom, position, ref, alt = dae2vcf_variant(chrom, pos, variant)
-        return FamilyVariant(chrom, position - 1, ref, alt)
+        return FamilyVariant(*dae2vcf_variant(chrom, pos, variant))
 
     @staticmethod
     def from_vcf_variant(variant):
         assert len(variant.ALT) == 1
+        print(
+            variant.CHROM, variant.start + 1,
+            variant.REF, str(variant.ALT[0]))
         return FamilyVariant(
             variant.CHROM, variant.start, variant.REF, str(variant.ALT[0]))
 
@@ -135,7 +136,7 @@ class FamilyVariant(VariantBase):
             self.gt = gt
         else:
             gt = vcf.gt_idxs[self.family.alleles]
-            self.gt = gt.reshape([2, len(self.family)])
+            self.gt = gt.reshape([2, len(self.family)], order='F')
         return self
 
     def set_summary(self, sv):

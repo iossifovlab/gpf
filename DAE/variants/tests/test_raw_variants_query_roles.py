@@ -9,7 +9,7 @@ from variants.roles import Role, RoleQuery
 
 def test_query_roles_dad(uagre):
     genes = ['KIAA1751']
-    df = uagre.query_genes(genes)
+    df = uagre.query_genes(genes, uagre.vars_df)
 
     role_query = RoleQuery(Role.dad)
     variants = uagre.query_roles([role_query], df)
@@ -18,7 +18,7 @@ def test_query_roles_dad(uagre):
 
 def test_query_roles_mom(uagre):
     genes = ['KIAA1751']
-    df = uagre.query_genes(genes)
+    df = uagre.query_genes(genes, uagre.vars_df)
 
     role_query = RoleQuery(Role.mom)
     variants = uagre.query_roles([role_query], df)
@@ -27,7 +27,7 @@ def test_query_roles_mom(uagre):
 
 def test_query_roles_prb(uagre):
     genes = ['KIAA1751']
-    df = uagre.query_genes(genes)
+    df = uagre.query_genes(genes, uagre.vars_df)
 
     role_query = RoleQuery(Role.prb)
     variants = uagre.query_roles([role_query], df)
@@ -36,7 +36,7 @@ def test_query_roles_prb(uagre):
 
 def test_query_roles_grandparents(uagre):
     genes = ['KIAA1751']
-    df = uagre.query_genes(genes)
+    df = uagre.query_genes(genes, uagre.vars_df)
 
     role_query = RoleQuery(Role.maternal_grandmother). \
         or_(Role.maternal_grandfather)

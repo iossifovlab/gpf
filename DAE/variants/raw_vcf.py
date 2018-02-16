@@ -13,8 +13,6 @@ from variants.loader import RawVariantsLoader, VariantMatcher
 from numba import jit
 from variants.family import Families, Family
 from variants.variant import FamilyVariant
-from collections import defaultdict
-import itertools
 
 
 @jit
@@ -73,12 +71,16 @@ class RawFamilyVariants(Families):
 
     def query_variants(self, **kwargs):
         df = self.vars_df
+
         if 'regions' in kwargs:
             df = self.query_regions(kwargs['regions'], df)
         if 'genes' in kwargs:
             df = self.query_genes(kwargs['genes'], df)
         if 'effect_types' in kwargs:
             df = self.query_effect_types(kwargs['effect_types'], df)
+
+        if df is None:
+            raise StopIteration()
 
         if 'roles' in kwargs:
             vs = self.query_roles(kwargs['roles'], df)
@@ -130,7 +132,9 @@ class RawFamilyVariants(Families):
         else:
             return pd.concat(sub_dfs)
 
-    def query_genes(self, gene_symbols, df=None):
+    def query_genes(self, gene_symbols, df):
+        if df is None:
+            return None
         regions = self.get_gene_regions(gene_symbols)
         df = self.query_regions(regions, df)
         index = df['effectGene'].apply(
@@ -139,11 +143,9 @@ class RawFamilyVariants(Families):
         )
         return df[index]
 
-    def query_effect_types(self, effect_types, df=None):
+    def query_effect_types(self, effect_types, df):
         if df is None:
-            assert np.all(self.vars_df.index.values ==
-                          np.arange(len(self.vars_df)))
-            df = self.vars_df
+            return None
 
         index = df['effectGene'].apply(
             lambda effect_gene:
@@ -151,7 +153,10 @@ class RawFamilyVariants(Families):
         )
         return df[index]
 
-    def query_genes_effect_types(self, effect_types, gene_symbols,  df=None):
+    def query_genes_effect_types(self, effect_types, gene_symbols,  df):
+        if df is None:
+            return None
+
         regions = self.get_gene_regions(gene_symbols)
         df = self.query_regions(regions, df)
         index = df['effectGene'].apply(
@@ -161,18 +166,21 @@ class RawFamilyVariants(Families):
         )
         return df[index]
 
-    def query_persons(self, person_ids, df=None):
+    def query_persons(self, person_ids, df):
+        if df is None:
+            raise StopIteration()
+
         samples = self.ped_df[
             self.ped_df['personId'].isin(set(person_ids))
         ].index.values
+
         alleles = Family.samples_to_alleles(samples)
+
         matched = pd.Series(
             data=np.zeros(len(self.vars_df), dtype=np.bool),
             index=self.vars_df.index, dtype=np.bool)
 
         families = self.families_query_by_person(person_ids)
-        if df is None:
-            df = self.vars_df
 
         variants = self.vcf_vars
 
@@ -195,6 +203,9 @@ class RawFamilyVariants(Families):
                 yield v
 
     def wrap_variants(self, df):
+        if df is None:
+            raise StopIteration()
+
         variants = self.vcf_vars
         for index, row in df.iterrows():
             vcf = variants[index]
