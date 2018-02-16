@@ -37,7 +37,6 @@ class RawVariantsLoader(object):
         self.config = config
 
     def load_summary(self):
-        print(self.config.summary)
         assert self.config.summary
         assert os.path.exists(self.config.summary)
 

@@ -14,19 +14,18 @@ class Configure(ConfigBox):
         super(Configure, self).__init__(data, **kwargs)
 
     @staticmethod
-    def from_file(filename=None, wd=None):
-        if wd is None:
+    def from_file(work_dir=None, filename=None):
+        if work_dir is None:
             from default_settings import DATA_DIR
-            wd = DATA_DIR
+            work_dir = DATA_DIR
 
         if filename is None:
             from default_settings import CONFIG_FILE
             filename = CONFIG_FILE
 
         if not os.path.exists(filename):
-            filename = os.path.abspath(os.path.join(wd, filename))
+            filename = os.path.abspath(os.path.join(work_dir, filename))
 
-        print(filename)
         assert os.path.exists(filename)
 
         conf = reusables.config_dict(
@@ -34,11 +33,10 @@ class Configure(ConfigBox):
             auto_find=False,
             verify=True,
             defaults={
-                'wd': DATA_DIR,
+                'wd': work_dir,
             })
-        print(conf)
 
-        return Configure(conf)
+        return Configure(conf['dataset'])
 
     @staticmethod
     def from_dict(data):

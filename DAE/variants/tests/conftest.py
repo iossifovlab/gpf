@@ -13,7 +13,7 @@ from variants.raw_vcf import RawFamilyVariants
 @pytest.fixture(scope='session')
 def uagre_config():
     config = Configure.from_file()
-    return config['study.uagre']
+    return config
 
 
 @pytest.fixture(scope='session')

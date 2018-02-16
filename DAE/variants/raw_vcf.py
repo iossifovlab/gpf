@@ -232,3 +232,25 @@ class RawFamilyVariants(Families):
             ].personId.values
             for v in self.query_persons(samples, df):
                 yield v
+
+
+if __name__ == "__main__":
+    import os
+    from variants.configure import Configure
+
+    work_dir = os.environ.get(
+        "DAE_DATA_DIR",
+        "/home/lubo/Work/seq-pipeline/data-variants/"
+    )
+
+    config = Configure.from_file(work_dir)
+    print(config)
+
+    fvars = RawFamilyVariants(config)
+    fvars.load()
+
+    vs = fvars.query_variants(regions=[Region("1", 130000, 139999)])
+    for v in vs:
+        print(v, v.effect_type, v.effect_gene, v.is_medelian(), sep="\t")
+        print(v.gt)
+        print(v.best_st)
