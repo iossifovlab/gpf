@@ -46,8 +46,7 @@ class CounterBase(CommonBase):
         families_buffer = defaultdict(dict)
         for st in studies:
             families = st.families.values()
-            if not st.has_attr('study.phenotype') and \
-                    self.phenotype != 'unaffected':
+            if len(st.phenotypes) > 1 and self.phenotype != 'unaffected':
                 families = filter(
                     lambda f: f.atts['phenotype'] == self.phenotype, families)
             for f in families:
@@ -66,8 +65,7 @@ class CounterBase(CommonBase):
         if self.phenotype == 'unaffected':
             return all_studies
         studies = [st for st in all_studies
-                   if not st.has_attr('study.phenotype') or \
-                        st.get_attr('study.phenotype') == self.phenotype]
+                   if self.phenotype in st.phenotypes]
         return studies
 
 
@@ -212,9 +210,8 @@ class ReportBase(CommonBase):
             })
 
     def _init_phenotypes(self):
-        phenotypes = self.legend.keys()
-        if 'unaffected' in phenotypes:
-            phenotypes.remove('unaffected')
+        phenotypes = list(set(itertools.chain(
+            *[st.phenotypes for st in self.studies])))
         phenotypes.sort()
         phenotypes.append('unaffected')
         self.phenotypes = phenotypes
@@ -232,7 +229,6 @@ class FamiliesReport(ReportBase, precompute.register.Precompute):
 
     def build(self):
         self.families_total = 0
-        encountered_phenotypes = []
         for phenotype in self.phenotypes[:-1]:
             assert phenotype != 'unaffected'
             fc = FamiliesCounters(phenotype, self.legend)
@@ -240,9 +236,6 @@ class FamiliesReport(ReportBase, precompute.register.Precompute):
             if fc.total != 0:
                 self.families_counters.append(fc)
                 self.families_total += fc.total
-                encountered_phenotypes.append(phenotype)
-
-        self.phenotypes = encountered_phenotypes + ['unaffected']
 
         for phenotype in self.phenotypes:
             cc = ChildrenCounter(phenotype)
@@ -279,18 +272,6 @@ class FamiliesReport(ReportBase, precompute.register.Precompute):
         self.families_total = cPickle.loads(zlib.decompress(ft))
         cc = data['children_counters']
         self.children_counters = cPickle.loads(zlib.decompress(cc))
-        self._remove_zero_count_phenotypes()
-
-    def _remove_zero_count_phenotypes(self):
-        for index in range(0, len(self.families_counters)):
-            if self.families_counters[index].total == 0:
-                self.phenotypes.remove(self.families_counters[index].phenotype)
-                del self.families_counters[index]
-
-        for index in range(0, len(self.children_counters)):
-            if self.children_counters[index].phenotype not in self.phenotypes:
-                del self.children_counters[index]
-
 
 class DenovoEventsCounter(CounterBase):
 
@@ -367,7 +348,6 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
     def __init__(self, study_name, families_report):
         super(DenovoEventsReport, self).__init__(study_name)
         self.families_report = families_report
-        self.phenotypes = families_report.phenotypes
         self.rows = {}
         self._effect_groups = super(DenovoEventsReport, self).effect_groups()
         self._effect_types = super(DenovoEventsReport, self).effect_types()
@@ -477,7 +457,6 @@ class StudyVariantReports(ReportBase, precompute.register.Precompute):
     def build(self):
         self.families_report = FamiliesReport(self.study_name)
         self.families_report.build()
-        self.phenotypes = self.families_report.phenotypes
 
         if self.has_denovo():
             self.denovo_report = DenovoEventsReport(
@@ -502,7 +481,6 @@ class StudyVariantReports(ReportBase, precompute.register.Precompute):
         assert self.study_name == data['study_name']
         self.families_report = FamiliesReport(self.study_name)
         self.families_report.deserialize(data['families_report'])
-        self.phenotypes = self.families_report.phenotypes
         if 'denovo_report' in data and data['denovo_report']:
             self.denovo_report = DenovoEventsReport(self.study_name,
                                                     self.families_report)

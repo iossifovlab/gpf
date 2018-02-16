@@ -176,8 +176,7 @@ class StudiesSummaries(Precompute):
         has_transmitted = False
 
         for study in studies:
-            if study.get_attr('study.phenotype'):
-                phenotype.add(study.get_attr('study.phenotype'))
+            phenotype.update(study.phenotypes)
             if study.get_attr('study.type'):
                 study_type.add(study.get_attr('study.type'))
             if study.get_attr('study.year'):

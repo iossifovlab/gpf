@@ -102,10 +102,17 @@ class Study:
         if self.vdb._config.has_option(self._configSection, 'description'):
             self.description = self.vdb._config.get(
                 self._configSection, 'description')
+
+        self.phenotypes = []
+        if self.vdb._config.has_option(self._configSection, 'study.phenotype'):
+            phenotypes = self.vdb._config.get(self._configSection, 'study.phenotype')
+            self.phenotypes = [p.strip() for p in phenotypes.split(',')]
+
         self.phdb = None
 
         self._families = None
         self._badFamilies = None
+
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)
@@ -330,9 +337,10 @@ class Study:
              fdFile, self.name), file=sys.stderr)
 
         self._families, self._badFamilies = fmMethod[fdFormat](fdFile)
-        phenotype = self.get_attr('study.phenotype')
-        if not phenotype:
+
+        if len(self.phenotypes) != 1:
             return
+        phenotype = self.phenotypes[0]
         for fam in self._families.values():
             fam.phenotype = phenotype
             fam.atts['phenotype'] = phenotype
