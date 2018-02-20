@@ -140,100 +140,100 @@ class RawFamilyVariants(Families):
                 regions.append(Region(gm.chr, gm.tx[0] - 200, gm.tx[1] + 200))
         return regions
 
-    def query_regions(self, regions, df=None):
-        assert type(regions) == list
-
-        if df is None:
-            df = self.vars_df
-
-        sub_dfs = []
-        for reg in regions:
-            rdf = df[
-                np.logical_and(
-                    reg.chr == self.vars_df.chr,
-                    np.logical_and(
-                        reg.start <= self.vars_df.position,
-                        reg.stop >= self.vars_df.position
-                    )
-                )]
-            if len(rdf) > 0:
-                sub_dfs.append(rdf)
-        if len(sub_dfs) == 0:
-            return None
-        elif len(sub_dfs) == 1:
-            return sub_dfs[0]
-        else:
-            return pd.concat(sub_dfs)
-
-    def query_genes(self, gene_symbols, df):
-        if df is None:
-            return None
-        regions = self.get_gene_regions(gene_symbols)
-        df = self.query_regions(regions, df)
-        index = df['effectGene'].apply(
-            lambda effect_gene:
-            len(filter_gene_effects(effect_gene, None, gene_symbols)) > 0
-        )
-        return df[index]
-
-    def query_effect_types(self, effect_types, df):
-        if df is None:
-            return None
-
-        index = df['effectGene'].apply(
-            lambda effect_gene:
-            len(filter_gene_effects(effect_gene, effect_types, None)) > 0
-        )
-        return df[index]
-
-    def query_genes_effect_types(self, effect_types, gene_symbols,  df):
-        if df is None:
-            return None
-
-        regions = self.get_gene_regions(gene_symbols)
-        df = self.query_regions(regions, df)
-        index = df['effectGene'].apply(
-            lambda effect_gene:
-            len(filter_gene_effects(
-                effect_gene, effect_types, gene_symbols)) > 0
-        )
-        return df[index]
-
-    def query_persons(self, person_ids, df):
-        if df is None:
-            raise StopIteration()
-
-        samples = self.ped_df[
-            self.ped_df['personId'].isin(set(person_ids))
-        ].index.values
-
-        alleles = Family.samples_to_alleles(samples)
-
-        matched = pd.Series(
-            data=np.zeros(len(self.vars_df), dtype=np.bool),
-            index=self.vars_df.index, dtype=np.bool)
-
-        families = self.families_query_by_person(person_ids)
-
-        variants = self.vcf_vars
-
-        for index, row in df.iterrows():
-            vcf = variants[index]
-            gt = vcf.gt_idxs[alleles]
-            if np.all(gt == 0):
-                continue
-
-            matched[index] = True
-            summary_variant = FamilyVariant.from_dict(row)
-
-            for fam in families.values():
-                gt = vcf.gt_idxs[fam.palleles(person_ids)]
-                if np.all(gt == 0):
-                    continue
-                v = summary_variant.clone(). \
-                    set_family(fam). \
-                    set_genotype(vcf)
-                yield v
+#     def query_regions(self, regions, df=None):
+#         assert type(regions) == list
+#
+#         if df is None:
+#             df = self.vars_df
+#
+#         sub_dfs = []
+#         for reg in regions:
+#             rdf = df[
+#                 np.logical_and(
+#                     reg.chr == self.vars_df.chr,
+#                     np.logical_and(
+#                         reg.start <= self.vars_df.position,
+#                         reg.stop >= self.vars_df.position
+#                     )
+#                 )]
+#             if len(rdf) > 0:
+#                 sub_dfs.append(rdf)
+#         if len(sub_dfs) == 0:
+#             return None
+#         elif len(sub_dfs) == 1:
+#             return sub_dfs[0]
+#         else:
+#             return pd.concat(sub_dfs)
+#
+#     def query_genes(self, gene_symbols, df):
+#         if df is None:
+#             return None
+#         regions = self.get_gene_regions(gene_symbols)
+#         df = self.query_regions(regions, df)
+#         index = df['effectGene'].apply(
+#             lambda effect_gene:
+#             len(filter_gene_effects(effect_gene, None, gene_symbols)) > 0
+#         )
+#         return df[index]
+#
+#     def query_effect_types(self, effect_types, df):
+#         if df is None:
+#             return None
+#
+#         index = df['effectGene'].apply(
+#             lambda effect_gene:
+#             len(filter_gene_effects(effect_gene, effect_types, None)) > 0
+#         )
+#         return df[index]
+#
+#     def query_genes_effect_types(self, effect_types, gene_symbols,  df):
+#         if df is None:
+#             return None
+#
+#         regions = self.get_gene_regions(gene_symbols)
+#         df = self.query_regions(regions, df)
+#         index = df['effectGene'].apply(
+#             lambda effect_gene:
+#             len(filter_gene_effects(
+#                 effect_gene, effect_types, gene_symbols)) > 0
+#         )
+#         return df[index]
+#
+#     def query_persons(self, person_ids, df):
+#         if df is None:
+#             raise StopIteration()
+#
+#         samples = self.ped_df[
+#             self.ped_df['personId'].isin(set(person_ids))
+#         ].index.values
+#
+#         alleles = Family.samples_to_alleles(samples)
+#
+#         matched = pd.Series(
+#             data=np.zeros(len(self.vars_df), dtype=np.bool),
+#             index=self.vars_df.index, dtype=np.bool)
+#
+#         families = self.families_query_by_person(person_ids)
+#
+#         variants = self.vcf_vars
+#
+#         for index, row in df.iterrows():
+#             vcf = variants[index]
+#             gt = vcf.gt_idxs[alleles]
+#             if np.all(gt == 0):
+#                 continue
+#
+#             matched[index] = True
+#             summary_variant = FamilyVariant.from_dict(row)
+#
+#             for fam in families.values():
+#                 gt = vcf.gt_idxs[fam.palleles(person_ids)]
+#                 if np.all(gt == 0):
+#                     continue
+#                 v = summary_variant.clone(). \
+#                     set_family(fam). \
+#                     set_genotype(vcf)
+#                 yield v
 
     def wrap_variants(self, df):
         if df is None:
@@ -251,20 +251,20 @@ class RawFamilyVariants(Families):
                     set_genotype(vcf)
                 yield v
 
-    def query_families(self, family_ids, df=None):
-        samples = self.ped_df['familyId'].isin(set(family_ids)).values
-        persons = (self.ped_df['personId'].values)[samples]
-        return self.query_persons(persons, df)
-
-    def query_roles(self, role_queries, df=None):
-        assert role_queries
-
-        for role_query in role_queries:
-            samples = self.ped_df[
-                (self.ped_df['role'] & role_query.value).values.astype(np.bool)
-            ].personId.values
-            for v in self.query_persons(samples, df):
-                yield v
+#     def query_families(self, family_ids, df=None):
+#         samples = self.ped_df['familyId'].isin(set(family_ids)).values
+#         persons = (self.ped_df['personId'].values)[samples]
+#         return self.query_persons(persons, df)
+#
+#     def query_roles(self, role_queries, df=None):
+#         assert role_queries
+#
+#         for role_query in role_queries:
+#             samples = self.ped_df[
+#                 (self.ped_df['role'] & role_query.value).values.astype(np.bool)
+#             ].personId.values
+#             for v in self.query_persons(samples, df):
+#                 yield v
 
 
 if __name__ == "__main__":
