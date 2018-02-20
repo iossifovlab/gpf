@@ -13,6 +13,7 @@ from variants.loader import RawVariantsLoader
 from numba import jit
 from variants.family import Families, Family
 from variants.variant import FamilyVariant
+from variants.configure import Configure
 
 
 @jit
@@ -47,9 +48,14 @@ def filter_gene_effect(effects, effect_types, gene_symbols):
 
 class RawFamilyVariants(Families):
 
-    def __init__(self, config):
+    def __init__(self, config=None, prefix=None):
         super(RawFamilyVariants, self).__init__()
+        if prefix is not None:
+            config = Configure.from_prefix(prefix)
         self.config = config
+        assert self.config is not None
+        assert isinstance(self.config, Configure)
+
         self._gene_models = None
 
     def load(self):
@@ -238,7 +244,6 @@ class RawFamilyVariants(Families):
 
 if __name__ == "__main__":
     import os
-    from variants.configure import Configure
 
     work_dir = os.environ.get(
         "DAE_DATA_DIR",

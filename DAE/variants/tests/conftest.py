@@ -12,7 +12,7 @@ from variants.raw_vcf import RawFamilyVariants
 
 @pytest.fixture(scope='session')
 def uagre_config():
-    config = Configure.from_file()
+    config = Configure.from_config()
     return config
 
 

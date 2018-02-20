@@ -12,9 +12,12 @@ class Configure(ConfigBox):
 
     def __init__(self, data, **kwargs):
         super(Configure, self).__init__(data, **kwargs)
+        assert os.path.exists(self.pedigree)
+        assert os.path.exists(self.vcf)
+        assert os.path.exists(self.annotation)
 
     @staticmethod
-    def from_file(work_dir=None, filename=None):
+    def from_config(work_dir=None, filename=None):
         if work_dir is None:
             from default_settings import DATA_DIR
             work_dir = DATA_DIR
@@ -39,5 +42,14 @@ class Configure(ConfigBox):
         return Configure(conf['dataset'])
 
     @staticmethod
-    def from_dict(data):
-        return Configure(data)
+    def from_dict(conf):
+        return Configure(conf)
+
+    @staticmethod
+    def from_prefix(prefix):
+        conf = {
+            'pedigree': '{}.ped'.format(prefix),
+            'vcf': '{}.vcv'.format(prefix),
+            'annotation': '{}-eff.txt'.format(prefix),
+        }
+        return Configure(conf)
