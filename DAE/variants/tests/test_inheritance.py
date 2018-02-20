@@ -17,9 +17,8 @@ from variants.variant import FamilyVariant
 
 
 def test_mendelian(uagre):
-    df = uagre.query_regions([Region("1", 11541, 54721)])
-
-    variants = uagre.query_families(['AU1921'], df)
+    variants = uagre.query_variants(
+        family_id=['AU1921'], regions=[Region("1", 11541, 54721)])
 
     for v in variants:
         print(v, v.is_medelian(), v.effect_type)
