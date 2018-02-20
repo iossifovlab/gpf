@@ -24,5 +24,4 @@ def uagre_loader(uagre_config):
 @pytest.fixture(scope='session')
 def uagre(uagre_config):
     fvariants = RawFamilyVariants(uagre_config)
-    fvariants.load()
     return fvariants

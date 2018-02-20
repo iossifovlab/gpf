@@ -57,8 +57,9 @@ class RawFamilyVariants(Families):
         assert isinstance(self.config, Configure)
 
         self._gene_models = None
+        self._load()
 
-    def load(self):
+    def _load(self):
         loader = RawVariantsLoader(self.config)
         self.ped_df = loader.load_pedigree()
         self.families_build(self.ped_df)
@@ -67,10 +68,7 @@ class RawFamilyVariants(Families):
         self.samples = self.vcf.samples
 
         assert np.all(self.samples == self.ped_df['personId'].values)
-        # matcher = VariantMatcher(self.config)
-        # matcher.match()
-        # self.vars_df = matcher.vars_df
-        # self.vcf_vars = matcher.vcf_vars
+
         self.vars_df = loader.load_annotation()
         self.vcf_vars = list(self.vcf.vcf)
         assert len(self.vars_df) == len(self.vcf_vars)
@@ -245,16 +243,12 @@ class RawFamilyVariants(Families):
 if __name__ == "__main__":
     import os
 
-    work_dir = os.environ.get(
-        "DAE_DATA_DIR",
-        "/home/lubo/Work/seq-pipeline/data-variants/"
+    prefix = os.environ.get(
+        "DAE_UAGRE_PREFIX=",
+        "/home/lubo/Work/seq-pipeline/data-raw-dev/uagre/test_agre"
     )
 
-    config = Configure.from_file(work_dir)
-    print(config)
-
-    fvars = RawFamilyVariants(config)
-    fvars.load()
+    fvars = RawFamilyVariants(prefix=prefix)
 
     vs = fvars.query_variants(regions=[Region("1", 130000, 139999)])
     for v in vs:

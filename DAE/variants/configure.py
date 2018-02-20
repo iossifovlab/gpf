@@ -12,9 +12,9 @@ class Configure(ConfigBox):
 
     def __init__(self, data, **kwargs):
         super(Configure, self).__init__(data, **kwargs)
-        assert os.path.exists(self.pedigree)
-        assert os.path.exists(self.vcf)
-        assert os.path.exists(self.annotation)
+        assert os.path.exists(self.pedigree), self.pedigree
+        assert os.path.exists(self.vcf), self.vcf
+        assert os.path.exists(self.annotation), self.annotation
 
     @staticmethod
     def from_config(work_dir=None, filename=None):
@@ -49,7 +49,7 @@ class Configure(ConfigBox):
     def from_prefix(prefix):
         conf = {
             'pedigree': '{}.ped'.format(prefix),
-            'vcf': '{}.vcv'.format(prefix),
+            'vcf': '{}.vcf'.format(prefix),
             'annotation': '{}-eff.txt'.format(prefix),
         }
         return Configure(conf)
