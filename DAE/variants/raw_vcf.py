@@ -61,10 +61,12 @@ class RawFamilyVariants(Families):
         self.samples = self.vcf.samples
 
         assert np.all(self.samples == self.ped_df['personId'].values)
-        matcher = VariantMatcher(self.config)
-        matcher.match()
-        self.vars_df = matcher.vars_df
-        self.vcf_vars = matcher.vcf_vars
+        # matcher = VariantMatcher(self.config)
+        # matcher.match()
+        # self.vars_df = matcher.vars_df
+        # self.vcf_vars = matcher.vcf_vars
+        self.vars_df = loader.load_summary()
+        self.vcf_vars = list(self.vcf.vcf)
         assert len(self.vars_df) == len(self.vcf_vars)
         assert np.all(self.vars_df.index.values ==
                       np.arange(len(self.vars_df)))

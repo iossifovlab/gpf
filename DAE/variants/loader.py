@@ -40,14 +40,13 @@ class RawVariantsLoader(object):
         assert self.config.summary
         assert os.path.exists(self.config.summary)
 
-        with gzip.GzipFile(self.config.summary, 'r') as infile:
+        with open(self.config.summary, 'r') as infile:
             sum_df = pd.read_csv(
                 infile, sep='\t', index_col=False,
                 dtype={
                     'chr': str,
-                    'position': np.int32,
+                    'pos': np.int32,
                 })
-        sum_df.drop('familyData', axis=1, inplace=True)
         return sum_df
 
     def load_pedigree(self):

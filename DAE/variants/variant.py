@@ -121,8 +121,7 @@ class FamilyVariant(VariantBase):
 
     @staticmethod
     def from_dict(row):
-        v = FamilyVariant.from_dae_variant(
-            row['chr'], row['position'], row['variant'])
+        v = FamilyVariant(row['chr'],row['pos'], row['refA'], row['altA'])
         v.set_summary(row)
         return v
 
@@ -140,10 +139,10 @@ class FamilyVariant(VariantBase):
         return self
 
     def set_summary(self, sv):
-        self.n_par_called = sv['all.nParCalled']
-        self.prcnt_par_called = sv['all.prcntParCalled']
-        self.n_alt_allels = sv['all.nAltAlls']
-        self.alt_freq = sv['all.altFreq']
+        # self.n_par_called = sv['all.nParCalled']
+        # self.prcnt_par_called = sv['all.prcntParCalled']
+        # self.n_alt_allels = sv['all.nAltAlls']
+        # self.alt_freq = sv['all.altFreq']
 
         self.effect_type = sv['effectType']
         self.effect_gene = sv['effectGene']
