@@ -8,6 +8,10 @@ from __future__ import print_function
 import numpy as np
 
 
+class Person(object):
+    pass
+
+
 class Family(object):
 
     @staticmethod
@@ -27,10 +31,12 @@ class Family(object):
 
     def _build_persons(self, ped_df):
         persons = {}
+        members = []
         for index, person in enumerate(ped_df.to_dict(orient="records")):
             person['index'] = index
             persons[person['personId']] = person
-        return persons
+            members.append(person)
+        return persons, members
 
     def __init__(self, family_id, ped_df):
         self.family_id = family_id
@@ -38,7 +44,7 @@ class Family(object):
         assert np.all(ped_df['familyId'].isin(set([family_id])).values)
         self.samples = self.ped_df.index.values
         self.alleles = self.samples_to_alleles(self.samples)
-        self.persons = self._build_persons(self.ped_df)
+        self.persons, self.members = self._build_persons(self.ped_df)
         self.trios = self._build_trios(self.persons)
 
     def psamples(self, person_ids):
@@ -63,7 +69,7 @@ class Family(object):
     def members_in_order(self):
         return self.ped_df['personId'].values
 
-    def members_with_role(self, role_query):
+    def members_with_roles(self, role_query):
         roles_df = self.ped_df[
             np.bitwise_and(
                 self.ped_df.role.values,

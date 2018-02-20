@@ -85,15 +85,15 @@ class RawFamilyVariants(Families):
         return filter_gene_effects(v.effect_gene, effect_types, genes)
 
     def filter_persons(self, v, person_ids):
-        return v.in_persons(person_ids)
+        return v.present_in_persons(person_ids)
 
     def filter_families(self, v, family_ids):
         return v.family_id in family_ids
 
     def filter_roles(self, v, roles):
         role_query = RoleQuery.from_list(roles)
-        mems = v.members_with_role(role_query)
-        return v.in_persons(mems)
+        mems = v.members_with_roles(role_query)
+        return v.present_in_persons(mems)
 
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:
@@ -111,6 +111,10 @@ class RawFamilyVariants(Families):
                 return False
         if 'roles' in kwargs:
             if not self.filter_roles(v, kwargs.get('roles')):
+                return False
+        if 'filter' in kwargs:
+            fun = kwargs['filter']
+            if not fun(v):
                 return False
         return True
 
