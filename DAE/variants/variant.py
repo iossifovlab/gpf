@@ -106,6 +106,7 @@ class FamilyVariant(VariantBase):
 
         self._best_st = None
         self._is_mendelian = None
+        self._members_with_variant = None
 
     @staticmethod
     def from_variant_base(v):
@@ -124,6 +125,30 @@ class FamilyVariant(VariantBase):
             variant.REF, str(variant.ALT[0]))
         return FamilyVariant(
             variant.CHROM, variant.start, variant.REF, str(variant.ALT[0]))
+
+    @property
+    def location(self):
+        return "{}:{}".format(self.chromosome, self.position)
+
+    @property
+    def members_in_order(self):
+        return self.family.members_in_order
+
+    @property
+    def family_id(self):
+        return self.family.family_id
+
+    @property
+    def members_with_variant(self):
+        if self._members_with_variant is None:
+            ms = self.members_in_order
+            index = np.nonzero(np.sum(self.gt, axis=0))
+            ps = ms[index]
+            self._members_with_variant = set(ps)
+        return self._members_with_variant
+
+    def in_person(self, person_id):
+        return person_id in self.members_with_variant
 
     @staticmethod
     def from_dict(row):

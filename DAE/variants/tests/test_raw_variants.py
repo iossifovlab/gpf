@@ -18,9 +18,11 @@ def test_study_load(uagre):
 
 
 def test_query_regions(uagre):
-    df = uagre.query_regions([Region("1", 11540, 11541)], uagre.vars_df)
-    assert df is not None
-    assert len(df) == 1
+    regions = [Region("1", 11540, 11541)]
+    vs = uagre.query_variants(regions=regions)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 1
 
 
 def test_query_regions_2(uagre):
@@ -28,125 +30,149 @@ def test_query_regions_2(uagre):
         Region("1", 11540, 11541),
         Region("1", 54710, 54721)
     ]
-    df = uagre.query_regions(regions, uagre.vars_df)
-    assert df is not None
-    assert len(df) == 3
+    vs = uagre.query_variants(regions=regions)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 3
 
 
 def test_query_genes(uagre):
     genes = ['FAM87B']
-    df = uagre.query_genes(genes, uagre.vars_df)
-    assert df is not None
-    assert len(df) == 7
+    vs = uagre.query_variants(genes=genes)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 7
 
 
 def test_query_effect_types(uagre):
-    # print(uagre.vars_df['effectGene'])
-
-    df = uagre.query_effect_types(['frame-shift'], uagre.vars_df)
-    assert len(df) == 2
+    effect_types = ['frame-shift']
+    vs = uagre.query_variants(effect_types=effect_types)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 2
 
 
 def test_query_genes_and_effect_types(uagre):
     genes = ['KIAA1751']
     effect_types = ['frame-shift']
-    df = uagre.query_genes_effect_types(effect_types, genes, uagre.vars_df)
-    assert len(df) == 2
+    vs = uagre.query_variants(effect_types=effect_types, genes=genes)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 2
 
-    df = uagre.query_genes_effect_types(None, genes, uagre.vars_df)
-    assert len(df) == 227
+    vs = uagre.query_variants(genes=genes)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 227
 
-    df = uagre.query_genes_effect_types(
-        ['frame-shift', 'missense'], genes, uagre.vars_df)
-    assert len(df) == 4
+    vs = uagre.query_variants(
+        effect_types=['frame-shift', 'missense'], genes=genes)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 4
 
-    df = uagre.query_genes_effect_types(
-        ['frame-shift', 'missense', 'synonymous'], genes, uagre.vars_df)
-    assert len(df) == 7
+    vs = uagre.query_variants(
+        effect_types=['frame-shift', 'missense', 'synonymous'], genes=genes)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 7
 
 
 def test_query_genes_3(uagre):
     genes = ['FAM87B', 'SAMD11', 'NOC2L']
-    df = uagre.query_genes(genes, uagre.vars_df)
-    assert df is not None
-
-    assert len(df) == 114
+    vs = uagre.query_variants(genes=genes)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 112
 
 
 def test_query_persons(uagre):
     genes = ['KIAA1751']
     effect_types = ['frame-shift']
-    df = uagre.query_genes_effect_types(effect_types, genes, uagre.vars_df)
 
-    vs = uagre.query_persons(['AU1921202'], df)
-    assert len(list(vs)) == 2
+    vs = uagre.query_variants(
+        genes=genes, effect_types=effect_types,
+        person_ids=['AU1921202'])
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 2
 
-    vs = uagre.query_persons(
-        ['AU1921202', 'AU1921211'], df)
-    assert len(list(vs)) == 2
+    vs = uagre.query_variants(
+        genes=genes, effect_types=effect_types,
+        person_ids=['AU1921202', 'AU1921211'])
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 2
 
 
 def test_query_persons_all(uagre):
+    vs = uagre.query_variants(
+        person_ids=['AU1921202'])
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 15977
 
-    vs = uagre.query_persons(['AU1921202'], uagre.vars_df)
-    assert len(list(vs)) == 15977
-
-    vs = uagre.query_persons(
-        ['AU1921202', 'AU1921211'], uagre.vars_df)
+    vs = uagre.query_variants(
+        person_ids=['AU1921202', 'AU1921211'])
     assert len(list(vs)) == 21299
 
 
-def test_query_persons_missing(uagre):
+def test_query_persons_combined(uagre):
     genes = ['KIAA1751']
     effect_types = ['frame-shift']
-    df = uagre.query_genes_effect_types(effect_types, genes, uagre.vars_df)
-
-    vs = uagre.query_persons(['AU1921201'], df)
-    assert len(list(vs)) == 0
-
-    vs = uagre.query_persons(
-        ['AU1921201', 'AU1921305'], df)
-    assert len(list(vs)) == 0
-
-
-def test_query_families(uagre):
-    genes = ['KIAA1751']
-    effect_types = ['frame-shift']
-    df = uagre.query_genes_effect_types(effect_types, genes, uagre.vars_df)
-
-    vs = uagre.query_families(['AU1921'], df)
-    assert len(list(vs)) == 2
-
-
-def test_query_variants_single(uagre):
     vs = uagre.query_variants(
-        regions=[Region("1", 11541, 11541)])
-    for v in vs:
-        print(v, "Medelian: ", v.is_medelian())
-        print(v.gt)
-        print(v.best_st)
-
-
-def test_query_variants_persons_all(uagre):
-    vs = uagre.query_variants(
-        genes=['FAM87B'],
+        genes=genes, effect_types=effect_types,
         person_ids=['AU1921202'])
-    for v in vs:
-        print(v, "Medelian: ", v.is_medelian())
-        print(v.gt)
-        print(v.best_st)
-
-
-def test_query_variants_roles_dad(uagre):
-    genes = ['KIAA1751']
-    role_query = RoleQuery(Role.dad)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 2
 
     vs = uagre.query_variants(
-        genes=genes,
-        roles=[role_query]
-    )
+        genes=genes, effect_types=effect_types,
+        person_ids=['AU1921201', 'AU1921305'])
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 0
 
-    for v in vs:
-        print(v, "Medelian: ", v.is_medelian())
-        print(v.gt)
-        print(v.best_st)
+
+# def test_query_families(uagre):
+#     genes = ['KIAA1751']
+#     effect_types = ['frame-shift']
+#     df = uagre.query_genes_effect_types(effect_types, genes, uagre.vars_df)
+#
+#     vs = uagre.query_families(['AU1921'], df)
+#     assert len(list(vs)) == 2
+#
+#
+# def test_query_variants_single(uagre):
+#     vs = uagre.query_variants(
+#         regions=[Region("1", 11541, 11541)])
+#     for v in vs:
+#         print(v, "Medelian: ", v.is_medelian())
+#         print(v.gt)
+#         print(v.best_st)
+#
+#
+# def test_query_variants_persons_all(uagre):
+#     vs = uagre.query_variants(
+#         genes=['FAM87B'],
+#         person_ids=['AU1921202'])
+#     for v in vs:
+#         print(v, "Medelian: ", v.is_medelian())
+#         print(v.gt)
+#         print(v.best_st)
+#
+#
+# def test_query_variants_roles_dad(uagre):
+#     genes = ['KIAA1751']
+#     role_query = RoleQuery(Role.dad)
+#
+#     vs = uagre.query_variants(
+#         genes=genes,
+#         roles=[role_query]
+#     )
+#
+#     for v in vs:
+#         print(v, "Medelian: ", v.is_medelian())
+#         print(v.gt)
+#         print(v.best_st)

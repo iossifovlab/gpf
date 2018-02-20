@@ -59,6 +59,10 @@ class Family(object):
             index.append(self.persons[pid]['index'])
         return index
 
+    @property
+    def members_in_order(self):
+        return self.ped_df['personId'].values
+
 
 class Families(object):
 

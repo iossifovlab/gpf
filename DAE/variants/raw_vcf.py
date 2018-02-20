@@ -36,7 +36,7 @@ def parse_gene_effect(effect):
 
 
 @jit
-def filter_gene_effect(effects, effect_types, gene_symbols):
+def filter_gene_effects(effects, effect_types, gene_symbols):
     gene_effects = parse_gene_effect(effects)
     if effect_types is None:
         return [ge for ge in gene_effects if ge['sym'] in gene_symbols]
@@ -75,28 +75,43 @@ class RawFamilyVariants(Families):
         assert np.all(self.vars_df.index.values ==
                       np.arange(len(self.vars_df)))
 
+    def filter_regions(self, v, regions):
+        for reg in regions:
+            if reg.chr == v.chromosome and \
+                    reg.start <= v.position and \
+                    reg.stop >= v.position:
+                return True
+        return False
+
+    def filter_gene_effects(self, v, effect_types, genes):
+        return filter_gene_effects(v.effect_gene, effect_types, genes)
+
+    def filter_persons(self, v, person_ids):
+        for pid in person_ids:
+            if v.in_person(pid):
+                return True
+        return False
+
+    def filter_variant(self, v, **kwargs):
+        if 'regions' in kwargs:
+            if not self.filter_regions(v, kwargs['regions']):
+                return False
+        if 'genes' in kwargs or 'effect_types' in kwargs:
+            if not self.filter_gene_effects(
+                    v, kwargs.get('effect_types'), kwargs.get('genes')):
+                return False
+        if 'person_ids' in kwargs:
+            if not self.filter_persons(v, kwargs.get('person_ids')):
+                return False
+        return True
+
     def query_variants(self, **kwargs):
         df = self.vars_df
+        vs = self.wrap_variants(df)
 
-        if 'regions' in kwargs:
-            df = self.query_regions(kwargs['regions'], df)
-        if 'genes' in kwargs:
-            df = self.query_genes(kwargs['genes'], df)
-        if 'effect_types' in kwargs:
-            df = self.query_effect_types(kwargs['effect_types'], df)
-
-        if df is None:
-            raise StopIteration()
-
-        if 'roles' in kwargs:
-            vs = self.query_roles(kwargs['roles'], df)
-        elif 'family_ids' in kwargs:
-            vs = self.query_families(kwargs['family_ids'], df)
-        elif 'person_ids' in kwargs:
-            vs = self.query_persons(kwargs['person_ids'], df)
-        else:
-            vs = self.wrap_variants(df)
         for v in vs:
+            if not self.filter_variant(v, **kwargs):
+                continue
             yield v
 
     @property
@@ -145,7 +160,7 @@ class RawFamilyVariants(Families):
         df = self.query_regions(regions, df)
         index = df['effectGene'].apply(
             lambda effect_gene:
-            len(filter_gene_effect(effect_gene, None, gene_symbols)) > 0
+            len(filter_gene_effects(effect_gene, None, gene_symbols)) > 0
         )
         return df[index]
 
@@ -155,7 +170,7 @@ class RawFamilyVariants(Families):
 
         index = df['effectGene'].apply(
             lambda effect_gene:
-            len(filter_gene_effect(effect_gene, effect_types, None)) > 0
+            len(filter_gene_effects(effect_gene, effect_types, None)) > 0
         )
         return df[index]
 
@@ -167,7 +182,7 @@ class RawFamilyVariants(Families):
         df = self.query_regions(regions, df)
         index = df['effectGene'].apply(
             lambda effect_gene:
-            len(filter_gene_effect(
+            len(filter_gene_effects(
                 effect_gene, effect_types, gene_symbols)) > 0
         )
         return df[index]
