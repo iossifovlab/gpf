@@ -63,6 +63,17 @@ class Family(object):
     def members_in_order(self):
         return self.ped_df['personId'].values
 
+    def members_with_role(self, role_query):
+        roles_df = self.ped_df[
+            np.bitwise_and(
+                self.ped_df.role.values,
+                role_query.value
+            ).astype(bool)
+        ]
+        if len(roles_df) == 0:
+            return []
+        return roles_df['personId'].values
+
 
 class Families(object):
 

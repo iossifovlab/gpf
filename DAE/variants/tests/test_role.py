@@ -3,7 +3,7 @@ Created on Feb 13, 2018
 
 @author: lubo
 '''
-from variants.roles import Role
+from variants.roles import Role, RoleQuery
 from variants.roles import RoleQuery as rq
 
 
@@ -51,3 +51,12 @@ def test_convert_from_bad_name():
     assert isinstance(role, Role)
 
     assert role == Role.unknown
+
+
+def test_role_query_from_list():
+    role = RoleQuery.from_list([Role.prb, Role.sib])
+
+    assert role.value & Role.prb.value
+    assert role.value & Role.sib.value
+
+    assert not (role.value & Role.dad.value)

@@ -14,6 +14,7 @@ from numba import jit
 from variants.family import Families, Family
 from variants.variant import FamilyVariant
 from variants.configure import Configure
+from variants.roles import RoleQuery
 
 
 @jit
@@ -87,13 +88,15 @@ class RawFamilyVariants(Families):
         return filter_gene_effects(v.effect_gene, effect_types, genes)
 
     def filter_persons(self, v, person_ids):
-        for pid in person_ids:
-            if v.in_person(pid):
-                return True
-        return False
+        return v.in_persons(person_ids)
 
     def filter_families(self, v, family_ids):
         return v.family_id in family_ids
+
+    def filter_roles(self, v, roles):
+        role_query = RoleQuery.from_list(roles)
+        mems = v.members_with_role(role_query)
+        return v.in_persons(mems)
 
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:
@@ -108,6 +111,9 @@ class RawFamilyVariants(Families):
                 return False
         if 'family_ids' in kwargs:
             if not self.filter_families(v, kwargs.get('family_ids')):
+                return False
+        if 'roles' in kwargs:
+            if not self.filter_roles(v, kwargs.get('roles')):
                 return False
         return True
 

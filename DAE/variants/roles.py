@@ -81,3 +81,8 @@ class RoleQuery(object):
     def complement(self):
         self.value = (~self.value & Role.all.value)
         return self
+
+    @classmethod
+    def from_list(cls, roles):
+        rqs = map(RoleQuery, roles)
+        return reduce(lambda r1, r2: r1.or_(r2), rqs)

@@ -147,8 +147,11 @@ class FamilyVariant(VariantBase):
             self._members_with_variant = set(ps)
         return self._members_with_variant
 
-    def in_person(self, person_id):
-        return person_id in self.members_with_variant
+    def members_with_role(self, roles):
+        return self.family.members_with_role(roles)
+
+    def in_persons(self, person_ids):
+        return set(person_ids) & self.members_with_variant
 
     @staticmethod
     def from_dict(row):

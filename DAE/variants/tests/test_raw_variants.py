@@ -181,16 +181,16 @@ def test_query_variants_persons_all(uagre):
         print(v.best_st)
 
 
-# def test_query_variants_roles_dad(uagre):
-#     genes = ['KIAA1751']
-#     role_query = RoleQuery(Role.dad)
-#
-#     vs = uagre.query_variants(
-#         genes=genes,
-#         roles=[role_query]
-#     )
-#
-#     for v in vs:
-#         print(v, "Medelian: ", v.is_medelian())
-#         print(v.gt)
-#         print(v.best_st)
+def test_query_variants_roles_dad(uagre):
+    genes = ['KIAA1751']
+    role_query = RoleQuery(Role.dad)
+
+    vs = uagre.query_variants(
+        genes=genes,
+        roles=[role_query]
+    )
+
+    for v in vs:
+        print(v, "Medelian: ", v.is_medelian())
+        print(v.gt)
+        print(v.best_st)

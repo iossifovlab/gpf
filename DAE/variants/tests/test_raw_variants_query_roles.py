@@ -9,37 +9,37 @@ from variants.roles import Role, RoleQuery
 
 def test_query_roles_dad(uagre):
     genes = ['KIAA1751']
-    df = uagre.query_genes(genes, uagre.vars_df)
 
     role_query = RoleQuery(Role.dad)
-    variants = uagre.query_roles([role_query], df)
-    assert len(list(variants)) == 36
+    vs = uagre.query_variants(roles=[role_query], genes=genes)
+    vl = list(vs)
+    assert len(vl) == 36
 
 
 def test_query_roles_mom(uagre):
     genes = ['KIAA1751']
-    df = uagre.query_genes(genes, uagre.vars_df)
 
     role_query = RoleQuery(Role.mom)
-    variants = uagre.query_roles([role_query], df)
-    assert len(list(variants)) == 200
+    vs = uagre.query_variants(roles=[role_query], genes=genes)
+    vl = list(vs)
+    assert len(vl) == 200
 
 
 def test_query_roles_prb(uagre):
     genes = ['KIAA1751']
-    df = uagre.query_genes(genes, uagre.vars_df)
-
     role_query = RoleQuery(Role.prb)
-    variants = uagre.query_roles([role_query], df)
-    assert len(list(variants)) == 193
+
+    vs = uagre.query_variants(roles=[role_query], genes=genes)
+    vl = list(vs)
+    assert len(vl) == 193
 
 
 def test_query_roles_grandparents(uagre):
     genes = ['KIAA1751']
-    df = uagre.query_genes(genes, uagre.vars_df)
 
     role_query = RoleQuery(Role.maternal_grandmother). \
         or_(Role.maternal_grandfather)
-    variants = uagre.query_roles([role_query], df)
+    vs = uagre.query_variants(roles=[role_query], genes=genes)
+    vl = list(vs)
 
-    assert len(list(variants)) == 195
+    assert len(vl) == 195
