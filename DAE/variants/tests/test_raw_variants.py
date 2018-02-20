@@ -135,34 +135,52 @@ def test_query_persons_combined(uagre):
     assert len(vl) == 0
 
 
-# def test_query_families(uagre):
-#     genes = ['KIAA1751']
-#     effect_types = ['frame-shift']
-#     df = uagre.query_genes_effect_types(effect_types, genes, uagre.vars_df)
-#
-#     vs = uagre.query_families(['AU1921'], df)
-#     assert len(list(vs)) == 2
-#
-#
-# def test_query_variants_single(uagre):
-#     vs = uagre.query_variants(
-#         regions=[Region("1", 11541, 11541)])
-#     for v in vs:
-#         print(v, "Medelian: ", v.is_medelian())
-#         print(v.gt)
-#         print(v.best_st)
-#
-#
-# def test_query_variants_persons_all(uagre):
-#     vs = uagre.query_variants(
-#         genes=['FAM87B'],
-#         person_ids=['AU1921202'])
-#     for v in vs:
-#         print(v, "Medelian: ", v.is_medelian())
-#         print(v.gt)
-#         print(v.best_st)
-#
-#
+def test_query_families(uagre):
+    genes = ['KIAA1751']
+    effect_types = ['frame-shift']
+    family_ids = ['AU1921']
+    vs = uagre.query_variants(
+        genes=genes,
+        effect_types=effect_types,
+        family_ids=family_ids)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 2
+
+
+def test_query_families_0(uagre):
+    genes = ['KIAA1751']
+    effect_types = ['frame-shift']
+    family_ids = ['wrong_family_id']
+    vs = uagre.query_variants(
+        genes=genes,
+        effect_types=effect_types,
+        family_ids=family_ids)
+    assert vs is not None
+    vl = list(vs)
+    assert len(vl) == 0
+
+
+def test_query_variants_single(uagre):
+    vs = uagre.query_variants(
+        regions=[Region("1", 11540, 11541)])
+    for v in vs:
+        print(v, "Medelian: ", v.is_medelian())
+        print(v.gt)
+        print(v.best_st)
+        assert v.is_medelian()
+
+
+def test_query_variants_persons_all(uagre):
+    vs = uagre.query_variants(
+        genes=['FAM87B'],
+        person_ids=['AU1921202'])
+    for v in vs:
+        print(v, "Medelian: ", v.is_medelian())
+        print(v.gt)
+        print(v.best_st)
+
+
 # def test_query_variants_roles_dad(uagre):
 #     genes = ['KIAA1751']
 #     role_query = RoleQuery(Role.dad)

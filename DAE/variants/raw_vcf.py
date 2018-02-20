@@ -92,6 +92,9 @@ class RawFamilyVariants(Families):
                 return True
         return False
 
+    def filter_families(self, v, family_ids):
+        return v.family_id in family_ids
+
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:
             if not self.filter_regions(v, kwargs['regions']):
@@ -102,6 +105,9 @@ class RawFamilyVariants(Families):
                 return False
         if 'person_ids' in kwargs:
             if not self.filter_persons(v, kwargs.get('person_ids')):
+                return False
+        if 'family_ids' in kwargs:
+            if not self.filter_families(v, kwargs.get('family_ids')):
                 return False
         return True
 
