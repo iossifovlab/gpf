@@ -9,7 +9,7 @@ from DAE import genomesDB
 from RegionOperations import Region
 import numpy as np
 import pandas as pd
-from variants.loader import RawVariantsLoader, VariantMatcher
+from variants.loader import RawVariantsLoader
 from numba import jit
 from variants.family import Families, Family
 from variants.variant import FamilyVariant
@@ -65,7 +65,7 @@ class RawFamilyVariants(Families):
         # matcher.match()
         # self.vars_df = matcher.vars_df
         # self.vcf_vars = matcher.vcf_vars
-        self.vars_df = loader.load_summary()
+        self.vars_df = loader.load_annotation()
         self.vcf_vars = list(self.vcf.vcf)
         assert len(self.vars_df) == len(self.vcf_vars)
         assert np.all(self.vars_df.index.values ==

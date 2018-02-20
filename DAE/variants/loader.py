@@ -4,7 +4,6 @@ Created on Feb 7, 2018
 @author: lubo
 '''
 from __future__ import print_function
-import gzip
 import os
 
 from cyvcf2 import VCF
@@ -36,18 +35,18 @@ class RawVariantsLoader(object):
     def __init__(self, config):
         self.config = config
 
-    def load_summary(self):
-        assert self.config.summary
-        assert os.path.exists(self.config.summary)
+    def load_annotation(self):
+        assert self.config.annotation
+        assert os.path.exists(self.config.annotation)
 
-        with open(self.config.summary, 'r') as infile:
-            sum_df = pd.read_csv(
+        with open(self.config.annotation, 'r') as infile:
+            annot_df = pd.read_csv(
                 infile, sep='\t', index_col=False,
                 dtype={
                     'chr': str,
-                    'pos': np.int32,
+                    'position': np.int32,
                 })
-        return sum_df
+        return annot_df
 
     def load_pedigree(self):
         assert self.config.pedigree
@@ -84,8 +83,7 @@ def match_variants(vars_df, vcf):
 
     matched_vcf = []
     for index, row in vars_df.iterrows():
-        v1 = VariantBase.from_dae_variant(
-            row['chr'], row['position'], row['variant'])
+        v1 = VariantBase.from_dict(row)
 
         variant = next(vs_iter)
         v2 = VariantBase.from_vcf_variant(variant)
@@ -123,7 +121,7 @@ class VariantMatcher(object):
     def _run(self):
         loader = RawVariantsLoader(self.config)
         vcf = loader.load_vcf()
-        vars_df = loader.load_summary()
+        vars_df = loader.load_annotation()
         return match_variants(vars_df, vcf)
 
     def match(self):

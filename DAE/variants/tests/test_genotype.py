@@ -51,9 +51,12 @@ def test_11540_130000_gt(uagre):
 
 
 def test_non_medelian(uagre):
+    count = 0
     vs = uagre.query_variants()
     for v in vs:
-        assert v.is_medelian()
+        if not v.is_medelian():
+            count += 1
+    assert count == 4681
 
 
 def test_empty_query(uagre):

@@ -62,6 +62,12 @@ class VariantBase(object):
         return VariantBase(
             variant.CHROM, variant.start + 1, variant.REF, str(variant.ALT[0]))
 
+    @staticmethod
+    def from_dict(row):
+        v = FamilyVariant(
+            row['chr'], row['position'], row['refA'], row['altA'])
+        return v
+
     def __eq__(self, other):
         return self.chromosome == other.chromosome and \
             self.position == other.position and \
@@ -121,7 +127,8 @@ class FamilyVariant(VariantBase):
 
     @staticmethod
     def from_dict(row):
-        v = FamilyVariant(row['chr'],row['pos'], row['refA'], row['altA'])
+        v = FamilyVariant(
+            row['chr'], row['position'], row['refA'], row['altA'])
         v.set_summary(row)
         return v
 

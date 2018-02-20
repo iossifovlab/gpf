@@ -18,15 +18,15 @@ def test_study_load(uagre):
 
 
 def test_query_regions(uagre):
-    df = uagre.query_regions([Region("1", 11541, 11541)], uagre.vars_df)
+    df = uagre.query_regions([Region("1", 11540, 11541)], uagre.vars_df)
     assert df is not None
     assert len(df) == 1
 
 
 def test_query_regions_2(uagre):
     regions = [
-        Region("1", 11541, 11541),
-        Region("1", 54711, 54721)
+        Region("1", 11540, 11541),
+        Region("1", 54710, 54721)
     ]
     df = uagre.query_regions(regions, uagre.vars_df)
     assert df is not None
@@ -37,7 +37,7 @@ def test_query_genes(uagre):
     genes = ['FAM87B']
     df = uagre.query_genes(genes, uagre.vars_df)
     assert df is not None
-    assert len(df) == 6
+    assert len(df) == 7
 
 
 def test_query_effect_types(uagre):
@@ -54,7 +54,7 @@ def test_query_genes_and_effect_types(uagre):
     assert len(df) == 2
 
     df = uagre.query_genes_effect_types(None, genes, uagre.vars_df)
-    assert len(df) == 205
+    assert len(df) == 227
 
     df = uagre.query_genes_effect_types(
         ['frame-shift', 'missense'], genes, uagre.vars_df)
@@ -70,7 +70,7 @@ def test_query_genes_3(uagre):
     df = uagre.query_genes(genes, uagre.vars_df)
     assert df is not None
 
-    assert len(df) == 81
+    assert len(df) == 114
 
 
 def test_query_persons(uagre):
@@ -89,11 +89,11 @@ def test_query_persons(uagre):
 def test_query_persons_all(uagre):
 
     vs = uagre.query_persons(['AU1921202'], uagre.vars_df)
-    assert len(list(vs)) == 12044
+    assert len(list(vs)) == 15977
 
     vs = uagre.query_persons(
         ['AU1921202', 'AU1921211'], uagre.vars_df)
-    assert len(list(vs)) == 16822
+    assert len(list(vs)) == 21299
 
 
 def test_query_persons_missing(uagre):

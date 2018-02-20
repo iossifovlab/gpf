@@ -13,7 +13,7 @@ def test_query_roles_dad(uagre):
 
     role_query = RoleQuery(Role.dad)
     variants = uagre.query_roles([role_query], df)
-    assert len(list(variants)) == 28
+    assert len(list(variants)) == 36
 
 
 def test_query_roles_mom(uagre):
@@ -22,7 +22,7 @@ def test_query_roles_mom(uagre):
 
     role_query = RoleQuery(Role.mom)
     variants = uagre.query_roles([role_query], df)
-    assert len(list(variants)) == 181
+    assert len(list(variants)) == 200
 
 
 def test_query_roles_prb(uagre):
@@ -31,7 +31,7 @@ def test_query_roles_prb(uagre):
 
     role_query = RoleQuery(Role.prb)
     variants = uagre.query_roles([role_query], df)
-    assert len(list(variants)) == 174
+    assert len(list(variants)) == 193
 
 
 def test_query_roles_grandparents(uagre):
@@ -42,4 +42,4 @@ def test_query_roles_grandparents(uagre):
         or_(Role.maternal_grandfather)
     variants = uagre.query_roles([role_query], df)
 
-    assert len(list(variants)) == 188
+    assert len(list(variants)) == 195
