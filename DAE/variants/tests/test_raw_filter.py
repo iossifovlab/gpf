@@ -16,7 +16,8 @@ def test_query_by_filter(uagre):
     vs = uagre.query_variants(
         genes=genes,
         filter=lambda v: rq1.match(
-            v.variant_in_roles) and not rq2.match(v.variant_in_roles)
+            RoleQuery.from_list(v.variant_in_roles)) and
+        not rq2.match(RoleQuery.from_list(v.variant_in_roles))
     )
     vl = list(vs)
     assert len(vl) == 35

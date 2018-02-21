@@ -115,8 +115,8 @@ class RawFamilyVariants(Families):
 
     def filter_roles(self, v, roles):
         role_query = RoleQuery.from_list(roles)
-        roles = v.variant_in_roles
-        return bool(roles.value & role_query.value)
+        roles = RoleQuery.from_list(v.variant_in_roles)
+        return role_query.match(roles)
 
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:

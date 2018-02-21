@@ -9,7 +9,6 @@ import re
 
 from DAE import genomesDB
 import numpy as np
-from variants.roles import RoleQuery
 
 
 SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
@@ -154,13 +153,10 @@ class FamilyVariant(VariantBase):
     @property
     def variant_in_roles(self):
         if self._variant_in_roles is None:
-            print(self.family.persons)
-            self._variant_in_roles = RoleQuery.from_list(
-                [
-                    self.family.persons[pid]['role']
-                    for pid in self.variant_in_members
-                ]
-            )
+            self._variant_in_roles = [
+                self.family.persons[pid]['role']
+                for pid in self.variant_in_members
+            ]
         return self._variant_in_roles
 
     @staticmethod
