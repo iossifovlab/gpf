@@ -81,11 +81,11 @@ class ChildrenCounter(CounterBase):
 
         self.children_male = 0
         self.children_female = 0
-        self.children_unknown = 0
+        self.children_unspecified = 0
 
     @property
     def children_total(self):
-        return self.children_male + self.children_female + self.children_unknown
+        return self.children_male + self.children_female + self.children_unspecified
 
     def check_phenotype(self, person):
         if self.phenotype_id == 'unaffected':
@@ -105,7 +105,7 @@ class ChildrenCounter(CounterBase):
 
         self.children_female = children_counter['F']
         self.children_male = children_counter['M']
-        self.children_unknown = children_counter['U']
+        self.children_unspecified = children_counter['U']
 
 
 class FamiliesCounters(CounterBase):

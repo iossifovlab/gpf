@@ -203,13 +203,13 @@ class StudyTypesMixin(object):
 
 
 class ChildGenderMixin(object):
-    GENDER = ['male', 'female', 'unknown']
-    GENDER_MAP = {'male': 'M', 'female': 'F', 'unknown': 'U'}
+    GENDER = ['male', 'female', 'unspecified']
+    GENDER_MAP = {'male': 'M', 'female': 'F', 'unspecified': 'U'}
 
     def build_child_gender(self, gender):
-        assert gender in ['all', 'male', 'female', 'unknown']
+        assert gender in ['all', 'male', 'female', 'unspecified']
         if gender == 'all':
-            return ['male', 'female', 'unknown']
+            return ['male', 'female', 'unspecified']
         else:
             return [gender]
 

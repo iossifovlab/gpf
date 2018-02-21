@@ -32,7 +32,7 @@ def normalRefCopyNumber(location, gender):
                 return 1
             elif gender == 'U':
                 LOGGER.warn(
-                    'unknown gender when calculating normal number of allels '
+                    'unspecified gender when calculating normal number of allels '
                     'in chr%s',
                     location
                 )
@@ -44,7 +44,7 @@ def normalRefCopyNumber(location, gender):
             return 1
         elif gender == 'U':
             LOGGER.warn(
-                'unknown gender when calculating normal number of allels '
+                'unspecified gender when calculating normal number of allels '
                 'in chr%s',
                 location
             )

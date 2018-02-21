@@ -102,13 +102,13 @@ class Test(APITestCase):
         count_filter = res['LGDs']['all']['countFilter']
         print(count_filter)
         assert set(count_filter['gender']) == \
-            set(['male', 'female', 'unknown'])
+            set(['male', 'female', 'unspecified'])
 
         self.assertIn('overlapFilter', res['LGDs']['all'])
         overlap_filter = res['LGDs']['all']['overlapFilter']
         print(overlap_filter)
         assert set(overlap_filter['gender']) == \
-            set(['male', 'female', 'unknown'])
+            set(['male', 'female', 'unspecified'])
 
     def test_filter_hints_lgds_rec_gender(self):
         res = self.res[0]

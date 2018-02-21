@@ -180,7 +180,7 @@ def test_get_complex_variants(denovodb):
     assert 1 == count(vs)
 
 
-def test_get_unknown_gender_variants(denovodb):
+def test_get_unspecified_gender_variants(denovodb):
     query = {
         "datasetId": "denovo_db",
         "effectTypes": [
@@ -192,7 +192,7 @@ def test_get_unknown_gender_variants(denovodb):
             "complex"
         ],
         "gender": [
-            "unknown"
+            "unspecified"
         ]
     }
     vs = denovodb.get_variants(**query)
