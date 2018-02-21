@@ -139,7 +139,7 @@ class FamilyVariant(VariantBase):
         return self.family.family_id
 
     @property
-    def members_with_variant(self):
+    def variant_in_members(self):
         if self._members_with_variant is None:
             ms = self.members_in_order
             index = np.nonzero(np.sum(self.gt, axis=0))
@@ -147,14 +147,8 @@ class FamilyVariant(VariantBase):
             self._members_with_variant = set(ps)
         return self._members_with_variant
 
-    def members_with_roles(self, roles):
-        return self.family.members_with_roles(roles)
-
-    def present_in_persons(self, person_ids):
-        return set(person_ids) & self.members_with_variant
-
-    def present_in_roles(self, roles):
-        return set(self.members_with_roles(roles)) & self.members_with_variant
+    def variant_in_roles(self, roles):
+        return self.family.variant_in_roles(roles)
 
     @staticmethod
     def from_dict(row):

@@ -9,7 +9,7 @@ from RegionOperations import Region
 import numpy as np
 from variants.loader import RawVariantsLoader
 from numba import jit
-from variants.family import Families
+from variants.family import Families, Family
 from variants.variant import FamilyVariant
 from variants.configure import Configure
 from variants.roles import RoleQuery
@@ -45,6 +45,29 @@ def filter_gene_effects(effects, effect_types, gene_symbols):
             if ge['eff'] in effect_types and ge['sym'] in gene_symbols]
 
 
+class VcfFamily(Family):
+
+    @staticmethod
+    def samples_to_alleles_index(samples):
+        return np.stack([2 * samples, 2 * samples + 1]). \
+            reshape([1, 2 * len(samples)], order='F')[0]
+
+    def __init__(self, family_id, ped_df):
+        super(VcfFamily, self).__init__(family_id, ped_df)
+
+        self.samples = self.ped_df.index.values
+        self.alleles = VcfFamily.samples_to_alleles_index(self.samples)
+
+    def gsamples_index(self, person_ids):
+        return self.ped_df[
+            self.ped_df['personId'].isin(set(person_ids))
+        ].index.values
+
+    def galleles_index(self, person_ids):
+        p = self.gsamples(person_ids)
+        return self.samples_to_alleles_index(p)
+
+
 class RawFamilyVariants(Families):
 
     def __init__(self, config=None, prefix=None):
@@ -60,7 +83,7 @@ class RawFamilyVariants(Families):
     def _load(self):
         loader = RawVariantsLoader(self.config)
         self.ped_df = loader.load_pedigree()
-        self.families_build(self.ped_df)
+        self.families_build(self.ped_df, family_class=VcfFamily)
 
         self.vcf = loader.load_vcf()
         self.samples = self.vcf.samples
@@ -92,7 +115,7 @@ class RawFamilyVariants(Families):
 
     def filter_roles(self, v, roles):
         role_query = RoleQuery.from_list(roles)
-        mems = v.members_with_roles(role_query)
+        mems = v.variant_in_roles(role_query)
         return v.present_in_persons(mems)
 
     def filter_variant(self, v, **kwargs):

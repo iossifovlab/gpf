@@ -9,15 +9,24 @@ import numpy as np
 
 
 class Person(object):
-    pass
+
+    def __init__(self, atts=None):
+        if atts:
+            self.atts = atts
+        else:
+            self.atts = {}
+        assert 'personId' in atts
+        self.person_id = atts['personId']
+        self.sex = atts['sex']
+        self.role = atts['role']
+        self.status = atts['status']
+
+    def __repr__(self):
+        return "Person({}; {}; {})".format(
+            self.personId, self.role, self.gender)
 
 
 class Family(object):
-
-    @staticmethod
-    def samples_to_alleles(samples):
-        return np.stack([2 * samples, 2 * samples + 1]). \
-            reshape([1, 2 * len(samples)], order='F')[0]
 
     def _build_trios(self, persons):
         trios = {}
@@ -35,31 +44,20 @@ class Family(object):
         for index, person in enumerate(ped_df.to_dict(orient="records")):
             person['index'] = index
             persons[person['personId']] = person
-            members.append(person)
+            members.append(Person(person))
         return persons, members
 
     def __init__(self, family_id, ped_df):
         self.family_id = family_id
         self.ped_df = ped_df
         assert np.all(ped_df['familyId'].isin(set([family_id])).values)
-        self.samples = self.ped_df.index.values
-        self.alleles = self.samples_to_alleles(self.samples)
         self.persons, self.members = self._build_persons(self.ped_df)
         self.trios = self._build_trios(self.persons)
-
-    def psamples(self, person_ids):
-        return self.ped_df[
-            self.ped_df['personId'].isin(set(person_ids))
-        ].index.values
-
-    def palleles(self, person_ids):
-        p = self.psamples(person_ids)
-        return self.samples_to_alleles(p)
 
     def __len__(self):
         return len(self.ped_df)
 
-    def ssamples(self, person_ids):
+    def _ssamples(self, person_ids):
         index = []
         for pid in person_ids:
             index.append(self.persons[pid]['index'])
@@ -69,7 +67,7 @@ class Family(object):
     def members_in_order(self):
         return self.ped_df['personId'].values
 
-    def members_with_roles(self, role_query):
+    def members_in_roles(self, role_query):
         roles_df = self.ped_df[
             np.bitwise_and(
                 self.ped_df.role.values,
@@ -88,10 +86,10 @@ class Families(object):
         self.families = {}
         self.persons = {}
 
-    def families_build(self, ped_df):
+    def families_build(self, ped_df, family_class=Family):
         self.ped_df = ped_df
         for family_id, fam_df in self.ped_df.groupby(by='familyId'):
-            family = Family(family_id, fam_df)
+            family = family_class(family_id, fam_df)
             self.families[family_id] = family
             for person_id in self.ped_df['personId'].values:
                 self.persons[person_id] = family
