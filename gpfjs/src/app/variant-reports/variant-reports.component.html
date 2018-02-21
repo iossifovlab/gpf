@@ -57,6 +57,13 @@
             </tr>
 
             <tr>
+              <th>Unspecified</th>
+              <td *ngFor="let childrenCounter of orderByColumnOrder(variantReport.familyReport.childrenCounters, variantReport.familyReport.phenotypes)">
+                {{ childrenCounter.childrenUnspecified }}
+              </td>
+            </tr>
+
+            <tr>
               <th>Total</th>
               <td *ngFor="let childrenCounter of orderByColumnOrder(variantReport.familyReport.childrenCounters, variantReport.familyReport.phenotypes)">
                 {{ childrenCounter.childrenTotal }}

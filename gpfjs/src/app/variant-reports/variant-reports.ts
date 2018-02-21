@@ -32,6 +32,7 @@ export class ChildrenCounter {
       json['phenotype'],
       json['children_male'],
       json['children_female'],
+      json['children_unspecified'],
       json['children_total'],
     );
   }
@@ -40,6 +41,7 @@ export class ChildrenCounter {
     readonly phenotype: string,
     readonly childrenMale: number,
     readonly childrenFemale: number,
+    readonly childrenUnspecified: number,
     readonly childrenTotal: number,
   ) {}
 }
