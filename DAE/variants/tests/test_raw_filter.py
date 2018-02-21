@@ -8,7 +8,7 @@ from variants.roles import RoleQuery
 
 
 def test_query_by_filter(uagre):
-    genes = ['KIAA1751']
+    genes = ['NOC2L']
 
     rq1 = RoleQuery(Role.dad)
     rq2 = RoleQuery(Role.mom)
@@ -19,4 +19,4 @@ def test_query_by_filter(uagre):
             v.variant_in_roles) and not rq2.match(v.variant_in_roles)
     )
     vl = list(vs)
-    assert len(vl) == 36
+    assert len(vl) == 35

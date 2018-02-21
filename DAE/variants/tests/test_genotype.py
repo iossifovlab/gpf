@@ -56,7 +56,7 @@ def test_non_medelian(uagre):
     for v in vs:
         if not v.is_medelian():
             count += 1
-    assert count == 4681
+    assert count == 138
 
 
 def test_empty_query(uagre):
