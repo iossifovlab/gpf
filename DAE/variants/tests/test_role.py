@@ -4,7 +4,7 @@ Created on Feb 13, 2018
 @author: lubo
 '''
 from variants.roles import Role, RoleQuery
-from variants.roles import RoleQuery as rq
+from variants.roles import RoleQuery as RQ
 
 
 def test_role_all_simple():
@@ -18,23 +18,27 @@ def test_role_all():
 
 
 def test_role_query():
-    query = rq(Role.prb).or_(Role.sib). \
-        and_not_(Role.mom).and_not_(Role.dad)
+    query = RQ.role(Role.prb).\
+        or_(RQ.role(Role.sib)). \
+        and_not_(RQ.role(Role.mom)).\
+        and_not_(RQ.role(Role.dad))
 
-    assert query.value & Role.prb.value
-    assert query.value & Role.sib.value
+    assert query.match([Role.prb])
+    assert query.match([Role.sib])
 
-    assert not (query.value & Role.mom.value)
-    assert not (query.value & Role.dad.value)
+    assert not query.match([Role.mom])
+    assert not query.match([Role.dad])
 
 
 def test_role_query_expression():
 
-    query = rq(Role.prb).and_not_(rq(Role.mom).or_(Role.dad))
+    query = RQ.role(Role.prb).\
+        and_not_(RQ.role(Role.mom).
+                 or_(RQ.role(Role.dad)))
 
-    assert query.value & Role.prb.value
-    assert not (query.value & Role.mom.value)
-    assert not (query.value & Role.dad.value)
+    assert query.match([Role.prb])
+    assert not query.match([Role.mom])
+    assert not query.match([Role.dad])
 
 
 def test_convert_from_name():
@@ -54,9 +58,9 @@ def test_convert_from_bad_name():
 
 
 def test_role_query_from_list():
-    role = RoleQuery.from_list([Role.prb, Role.sib])
+    rq = RoleQuery.any_([Role.prb, Role.sib])
 
-    assert role.value & Role.prb.value
-    assert role.value & Role.sib.value
+    assert rq.match([Role.prb])
+    assert rq.match([Role.sib])
 
-    assert not (role.value & Role.dad.value)
+    assert not rq.match([Role.dad])
