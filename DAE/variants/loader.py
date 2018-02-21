@@ -60,7 +60,7 @@ class RawVariantsLoader(object):
             infile, sep=sep, index_col=False,
             skipinitialspace=True,
             converters={
-                'role': lambda r: Role.from_name(r).value
+                'role': lambda r: Role.from_name(r)
             },
             comment="#",
         )

@@ -86,3 +86,6 @@ class RoleQuery(object):
     def from_list(cls, roles):
         rqs = map(RoleQuery, roles)
         return reduce(lambda r1, r2: r1.or_(r2), rqs)
+
+    def match(self, role):
+        return bool(self.value & role.value)

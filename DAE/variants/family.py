@@ -57,7 +57,7 @@ class Family(object):
     def __len__(self):
         return len(self.ped_df)
 
-    def _ssamples(self, person_ids):
+    def members_index(self, person_ids):
         index = []
         for pid in person_ids:
             index.append(self.persons[pid]['index'])

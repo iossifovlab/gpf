@@ -28,10 +28,10 @@ def test_mendelian(uagre):
 
 PED1 = """
 # SIMPLE TRIO
-familyId,    personId,    dadId,    momId,    gender,    status,    role
-f1,          d1,          0,        0,        1,         1,         dad
-f1,          m1,          0,        0,        2,         1,         mom
-f1,          p1,          d1,       m1,       1,         2,         prb
+familyId,    personId,    dadId,    momId,    sex,   status,    role
+f1,          d1,          0,        0,        1,     1,         dad
+f1,          m1,          0,        0,        2,     1,         mom
+f1,          p1,          d1,       m1,       1,     2,         prb
 """
 
 
@@ -99,11 +99,11 @@ def test_mendelian_simple_1(fv1):
 
 PED2 = """
 # SIMPLE QUAD
-familyId,    personId,    dadId,    momId,    gender,    status,    role
-f1,          d1,          0,        0,        1,         1,         dad
-f1,          m1,          0,        0,        2,         1,         mom
-f1,          p1,          d1,       m1,       1,         2,         prb
-f1,          s1,          d1,       m1,       1,         1,         sib
+familyId,    personId,    dadId,    momId,    sex,    status,    role
+f1,          d1,          0,        0,        1,      1,         dad
+f1,          m1,          0,        0,        2,      1,         mom
+f1,          p1,          d1,       m1,       1,      2,         prb
+f1,          s1,          d1,       m1,       1,      1,         sib
 """
 
 
@@ -186,12 +186,12 @@ def test_mendelian_simple_2(fv2):
 
 PED3 = """
 # TWO GENERATION PEDIGREE
-familyId, personId, dadId, momId, gender, status, role
-f1,       gd1,      0,     0,     1,      1,      pathernal_grandfather
-f1,       gm1,      0,     0,     2,      1,      pathernal_grandmother
-f1,       d1,       gd1,   gm1,   1,      1,      dad
-f1,       m1,       0,     0,     2,      1,      mom
-f1,       p1,       d1,    m1,    1,      2,      prb
+familyId, personId, dadId, momId, sex,   status, role
+f1,       gd1,      0,     0,     1,     1,      pathernal_grandfather
+f1,       gm1,      0,     0,     2,     1,      pathernal_grandmother
+f1,       d1,       gd1,   gm1,   1,     1,      dad
+f1,       m1,       0,     0,     2,     1,      mom
+f1,       p1,       d1,    m1,    1,     2,      prb
 """
 
 

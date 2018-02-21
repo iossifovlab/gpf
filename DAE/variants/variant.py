@@ -9,6 +9,7 @@ import re
 
 from DAE import genomesDB
 import numpy as np
+from variants.roles import RoleQuery
 
 
 SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
@@ -106,7 +107,8 @@ class FamilyVariant(VariantBase):
 
         self._best_st = None
         self._is_mendelian = None
-        self._members_with_variant = None
+        self._variant_in_members = None
+        self._variant_in_roles = None
 
     @staticmethod
     def from_variant_base(v):
@@ -140,15 +142,24 @@ class FamilyVariant(VariantBase):
 
     @property
     def variant_in_members(self):
-        if self._members_with_variant is None:
+        if self._variant_in_members is None:
             ms = self.members_in_order
             index = np.nonzero(np.sum(self.gt, axis=0))
             ps = ms[index]
-            self._members_with_variant = set(ps)
-        return self._members_with_variant
+            self._variant_in_members = set(ps)
+        return self._variant_in_members
 
-    def variant_in_roles(self, roles):
-        return self.family.variant_in_roles(roles)
+    @property
+    def variant_in_roles(self):
+        if self._variant_in_roles is None:
+            print(self.family.persons)
+            self._variant_in_roles = RoleQuery.from_list(
+                [
+                    self.family.persons[pid]['role']
+                    for pid in self.variant_in_members
+                ]
+            )
+        return self._variant_in_roles
 
     @staticmethod
     def from_dict(row):
@@ -215,7 +226,7 @@ class FamilyVariant(VariantBase):
         if self._is_mendelian is None:
             mendelians = []
             for _pid, trio in self.family.trios.items():
-                index = self.family.ssamples(trio)
+                index = self.family.members_index(trio)
                 tgt = self.gt[:, index]
                 ch = tgt[:, 0]
                 p1 = tgt[:, 1]

@@ -58,14 +58,14 @@ class VcfFamily(Family):
         self.samples = self.ped_df.index.values
         self.alleles = VcfFamily.samples_to_alleles_index(self.samples)
 
-    def gsamples_index(self, person_ids):
+    def vcf_samples_index(self, person_ids):
         return self.ped_df[
             self.ped_df['personId'].isin(set(person_ids))
         ].index.values
 
-    def galleles_index(self, person_ids):
-        p = self.gsamples(person_ids)
-        return self.samples_to_alleles_index(p)
+    def vcf_alleles_index(self, person_ids):
+        p = self.vcf_samples_index(person_ids)
+        return VcfFamily.samples_to_alleles_index(p)
 
 
 class RawFamilyVariants(Families):
@@ -108,15 +108,15 @@ class RawFamilyVariants(Families):
         return filter_gene_effects(v.effect_gene, effect_types, genes)
 
     def filter_persons(self, v, person_ids):
-        return v.present_in_persons(person_ids)
+        return bool(v.variant_in_members & set(person_ids))
 
     def filter_families(self, v, family_ids):
         return v.family_id in family_ids
 
     def filter_roles(self, v, roles):
         role_query = RoleQuery.from_list(roles)
-        mems = v.variant_in_roles(role_query)
-        return v.present_in_persons(mems)
+        roles = v.variant_in_roles
+        return bool(roles.value & role_query.value)
 
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:
