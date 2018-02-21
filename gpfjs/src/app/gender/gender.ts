@@ -9,5 +9,5 @@ export class Gender {
   @Equals(true, {
     message: 'select at least one'
   })
-  unknown = true;
+  unspecified = true;
 };

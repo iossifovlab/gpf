@@ -29,11 +29,11 @@
         <div class="checkbox">
           <label>
             <input
-                #unknownCheckbox
+                #unspecifiedCheckbox
                 type="checkbox"
-                [checked]="gender.unknown"
-                (change)="genderCheckValue('unknown',unknownCheckbox.checked)">
-            <span class="gender-icon unknown">?</span>
+                [checked]="gender.unspecified"
+                (change)="genderCheckValue('unspecified',unspecifiedCheckbox.checked)">
+            <span class="gender-icon unspecified"></span>
           </label>
         </div>
     </div>

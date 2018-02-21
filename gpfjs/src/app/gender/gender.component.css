@@ -16,8 +16,9 @@
     border-radius: 40px;
 }
 
-.gender-icon.unknown {
-    border-radius: 5px;
-    text-align: center;
-    font-size: 0.8em;
+.gender-icon.unspecified {
+    border-radius: 0px;
+    -ms-transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
 }
