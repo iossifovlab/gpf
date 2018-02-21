@@ -51,7 +51,7 @@ class Family(object):
         self.family_id = family_id
         self.ped_df = ped_df
         assert np.all(ped_df['familyId'].isin(set([family_id])).values)
-        self.persons, self.members = self._build_persons(self.ped_df)
+        self.persons, self.members_in_order = self._build_persons(self.ped_df)
         self.trios = self._build_trios(self.persons)
 
     def __len__(self):
@@ -64,7 +64,7 @@ class Family(object):
         return index
 
     @property
-    def members_in_order(self):
+    def members_ids(self):
         return self.ped_df['personId'].values
 
     def members_in_roles(self, role_query):

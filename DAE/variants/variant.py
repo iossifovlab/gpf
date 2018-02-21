@@ -137,16 +137,18 @@ class FamilyVariant(VariantBase):
         return self.family.members_in_order
 
     @property
+    def members_ids(self):
+        return self.family.members_ids
+
+    @property
     def family_id(self):
         return self.family.family_id
 
     @property
     def variant_in_members(self):
         if self._variant_in_members is None:
-            ms = self.members_in_order
             index = np.nonzero(np.sum(self.gt, axis=0))
-            ps = ms[index]
-            self._variant_in_members = set(ps)
+            self._variant_in_members = set(self.members_ids[index])
         return self._variant_in_members
 
     @property
