@@ -164,7 +164,6 @@ class AQVisitor(ast.NodeVisitor):
         self.query = None
 
     def visit(self, node):
-        print(ast.dump(node))
         return ast.NodeVisitor.visit(self, node)
 
     def visit_Call(self, node):
@@ -209,6 +208,16 @@ class AQVisitor(ast.NodeVisitor):
         assert isinstance(node.op, ast.Not)
         operand = self.visit(node.operand)
         return QNot([operand])
+
+    def visit_BinOp(self, node):
+        left = self.visit(node.left)
+        right = self.visit(node.right)
+        if isinstance(node.op, ast.BitAnd):
+            return QAnd([left, right])
+        elif isinstance(node.op, ast.BitOr):
+            return QOr([left, right])
+        else:
+            assert False, "unexpected binary operation"
 
 
 class RoleQuery(object):
@@ -257,7 +266,6 @@ class RoleQuery(object):
     @staticmethod
     def parse(query):
         tree = ast.parse(query, mode='eval')
-        print(ast.dump(tree))
         visitor = AQVisitor()
         return RoleQuery(visitor.visit(tree))
 

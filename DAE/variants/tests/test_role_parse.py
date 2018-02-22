@@ -8,26 +8,6 @@ import ast
 from variants.roles import RoleQuery, Role
 
 
-def test_simple():
-    tree = ast.parse("print('hello')")
-    print(tree)
-
-    tree = ast.parse("eq(prb,sib)")
-    print(ast.dump(tree))
-
-    tree = ast.parse("eq(prb,sib)", mode='eval')
-    print(ast.dump(tree))
-
-    tree = ast.parse("mom and any(prb,sib)", mode='eval')
-    print(ast.dump(tree))
-
-    tree = ast.parse("mom and not any(prb,sib)", mode='eval')
-    print(ast.dump(tree))
-
-    tree = ast.parse("mom and not (prb and sib)", mode='eval')
-    print(ast.dump(tree))
-
-
 def test_role_query_parse_eq_simple():
     rq = RoleQuery.parse("eq(prb,sib)")
     assert rq is not None
@@ -84,3 +64,45 @@ def test_role_query_parse_not_simple():
     assert rq.match([Role.sib])
     assert not rq.match([Role.prb])
     assert not rq.match([Role.sib, Role.prb])
+
+
+def test_role_query_mixed_1():
+    rq = RoleQuery.parse("mom and not (prb and sib)")
+    assert rq is not None
+
+    assert rq.match([Role.mom])
+    assert rq.match([Role.mom, Role.dad])
+    assert rq.match([Role.mom, Role.prb])
+    assert rq.match([Role.mom, Role.sib])
+    assert not rq.match([Role.mom, Role.prb, Role.sib])
+
+
+def test_role_query_mixed_2():
+    rq = RoleQuery.parse("mom and not (prb or sib)")
+    assert rq is not None
+
+    assert rq.match([Role.mom])
+    assert rq.match([Role.mom, Role.dad])
+    assert not rq.match([Role.mom, Role.prb])
+    assert not rq.match([Role.mom, Role.sib])
+    assert not rq.match([Role.mom, Role.prb, Role.sib])
+
+
+def test_role_query_parse_bit_and_simple():
+    rq = RoleQuery.parse("prb & sib")
+    assert rq is not None
+
+    assert rq.match([Role.prb, Role.sib])
+    assert rq.match([Role.prb, Role.sib, Role.dad])
+    assert not rq.match([Role.prb])
+
+
+def test_role_query_parse_bit_or_simple():
+    rq = RoleQuery.parse("prb | sib")
+    assert rq is not None
+
+    assert rq.match([Role.prb, Role.sib])
+    assert rq.match([Role.prb, Role.sib, Role.dad])
+    assert rq.match([Role.prb])
+
+    assert not rq.match([Role.dad])
