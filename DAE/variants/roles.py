@@ -143,9 +143,9 @@ class QEq(QLeaf):
 
 class AQVisitor(ast.NodeVisitor):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, attr_class, *args, **kwargs):
         ast.NodeVisitor.__init__(self, *args, **kwargs)
-        self.query = None
+        self.attr_class = attr_class
 
     def visit(self, node):
         return ast.NodeVisitor.visit(self, node)
@@ -153,9 +153,9 @@ class AQVisitor(ast.NodeVisitor):
     def visit_Call(self, node):
         assert isinstance(node, ast.Call)
         assert node.func.id in set(['eq', 'any', 'all'])
-        assert all([a.id in Role.__members__ for a in node.args])
+        assert all([a.id in self.attr_class.__members__ for a in node.args])
 
-        vals = set([Role.from_name(a.id) for a in node.args])
+        vals = set([self.attr_class.from_name(a.id) for a in node.args])
         pred = node.func.id
         if pred == 'eq':
             return QEq(vals)
@@ -182,8 +182,8 @@ class AQVisitor(ast.NodeVisitor):
 
     def visit_Name(self, node):
         assert isinstance(node.ctx, ast.Load)
-        assert node.id in Role.__members__
-        attr = Role.from_name(node.id)
+        assert node.id in self.attr_class.__members__
+        attr = self.attr_class.from_name(node.id)
         return QAny(set([attr]))
 
     def visit_UnaryOp(self, node):
@@ -204,7 +204,7 @@ class AQVisitor(ast.NodeVisitor):
             assert False, "unexpected binary operation"
 
 
-class RoleQuery(object):
+class AQuery(object):
 
     def __init__(self, qnode):
         self.qnode = qnode
@@ -225,29 +225,34 @@ class RoleQuery(object):
         self.qnode = QOr([self.qnode, QNot([rq.qnode])])
         return self
 
-    @staticmethod
-    def any_of(*vals):
+    @classmethod
+    def any_of(cls, *vals):
         qnode = QAny(set(vals))
-        return RoleQuery(qnode)
+        return cls(qnode)
 
-    @staticmethod
-    def all_of(*vals):
+    @classmethod
+    def all_of(cls, *vals):
         qnode = QAll(set(vals))
-        return RoleQuery(qnode)
+        return cls(qnode)
 
-    @staticmethod
-    def eq_of(*vals):
+    @classmethod
+    def eq_of(cls, *vals):
         qnode = QEq(set(vals))
-        return RoleQuery(qnode)
+        return cls(qnode)
 
     def match(self, vals):
         return self.qnode.match(set(vals))
 
-    @staticmethod
-    def parse(query):
+    @classmethod
+    def parse(cls, query):
         tree = ast.parse(query, mode='eval')
-        visitor = AQVisitor()
-        return RoleQuery(visitor.visit(tree))
+        visitor = AQVisitor(cls.ATTR_CLASS)
+        return cls(visitor.visit(tree))
+
+
+class RoleQuery(AQuery):
+    ATTR_CLASS = Role
+    pass
 
 # class RoleQuery(object):
 #
