@@ -205,6 +205,7 @@ class AQVisitor(ast.NodeVisitor):
 
 
 class AQuery(object):
+    ATTR_CLASS = None
 
     def __init__(self, qnode):
         self.qnode = qnode
@@ -252,7 +253,7 @@ class AQuery(object):
 
 class RoleQuery(AQuery):
     ATTR_CLASS = Role
-    pass
+
 
 # class RoleQuery(object):
 #
