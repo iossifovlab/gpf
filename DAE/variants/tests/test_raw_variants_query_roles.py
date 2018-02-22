@@ -43,3 +43,14 @@ def test_query_roles_grandparents(uagre):
     vl = list(vs)
 
     assert len(vl) == 37
+
+
+def test_query_roles_grandparents_string(uagre):
+    genes = ['NOC2L']
+
+    vs = uagre.query_variants(
+        roles='any(maternal_grandmother, maternal_grandfather)',
+        genes=genes)
+    vl = list(vs)
+
+    assert len(vl) == 37

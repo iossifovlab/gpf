@@ -146,6 +146,10 @@ class RawFamilyVariants(Families):
         df = self.vars_df
         vs = self.wrap_variants(df)
 
+        if 'roles' in kwargs and isinstance(kwargs['roles'], str):
+            role_query = RoleQuery.parse(kwargs['roles'])
+            kwargs['roles'] = role_query
+
         for v in vs:
             if not self.filter_variant(v, **kwargs):
                 continue
