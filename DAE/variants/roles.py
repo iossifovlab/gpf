@@ -5,6 +5,7 @@ Created on Feb 13, 2018
 '''
 from __future__ import print_function
 import enum
+import ast
 
 
 class Role(enum.Enum):
@@ -156,6 +157,60 @@ class QEq(QLeaf):
         return self.vals == vals
 
 
+class AQVisitor(ast.NodeVisitor):
+
+    def __init__(self, *args, **kwargs):
+        ast.NodeVisitor.__init__(self, *args, **kwargs)
+        self.query = None
+
+    def visit(self, node):
+        print(ast.dump(node))
+        return ast.NodeVisitor.visit(self, node)
+
+    def visit_Call(self, node):
+        assert isinstance(node, ast.Call)
+        assert node.func.id in set(['eq', 'any', 'all'])
+        assert all([a.id in Role.__members__ for a in node.args])
+
+        vals = [Role.from_name(a.id) for a in node.args]
+        pred = node.func.id
+        if pred == 'eq':
+            return RoleQuery.eq_(vals)
+        elif pred == 'any':
+            return RoleQuery.any_(vals)
+        elif pred == 'all':
+            return RoleQuery.all_(vals)
+
+    def visit_Expression(self, node):
+        assert isinstance(node, ast.Expression)
+        return self.visit(node.body)
+
+    def visit_BoolOp(self, node):
+        assert isinstance(node, ast.BoolOp)
+        assert len(node.values) == 2
+
+        left = self.visit(node.values[0])
+        right = self.visit(node.values[1])
+
+        if isinstance(node.op, ast.And):
+            return QAnd([left, right])
+        elif isinstance(node.op, ast.Or):
+            return QOr([left, right])
+
+    def visit_Name(self, node):
+        assert isinstance(node.ctx, ast.Load)
+        assert node.id in Role.__members__
+        attr = Role.from_name(node.id)
+        return QAny(set([attr]))
+
+    def visit_UnaryOp(self, node):
+        assert isinstance(node, ast.UnaryOp)
+
+        assert isinstance(node.op, ast.Not)
+        operand = self.visit(node.operand)
+        return QNot([operand])
+
+
 class RoleQuery(object):
 
     def __init__(self, qnode):
@@ -198,6 +253,13 @@ class RoleQuery(object):
 
     def match(self, vals):
         return self.qnode.match(set(vals))
+
+    @staticmethod
+    def parse(query):
+        tree = ast.parse(query, mode='eval')
+        print(ast.dump(tree))
+        visitor = AQVisitor()
+        return RoleQuery(visitor.visit(tree))
 
 # class RoleQuery(object):
 #
