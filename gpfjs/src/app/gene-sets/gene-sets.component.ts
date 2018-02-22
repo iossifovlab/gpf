@@ -60,9 +60,17 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
 
   restoreGeneTypes(geneSetsTypes, geneSetCollection: GeneSetsCollection) {
     let geneTypes = geneSetCollection.types
-      .filter(geneType => geneType.datasetName in geneSetsTypes);
+      .filter(geneType => geneType.datasetId in geneSetsTypes);
     if (geneTypes.length !== 0) {
       this.geneSetsState.geneSetsTypes = Object.create(null);
+      for (let geneType of geneTypes) {
+        let datasetId = geneType.datasetId;
+        for (let phenotype of geneType.phenotypes) {
+          if (geneSetsTypes[datasetId].indexOf(phenotype.id) > -1) {
+            this.geneSetsState.select(datasetId, phenotype.id);
+          }
+        }
+      }
     }
   }
 
