@@ -10,7 +10,7 @@ from variants.roles import Role, RoleQuery
 def test_query_roles_dad(uagre):
     genes = ['NOC2L']
 
-    role_query = RoleQuery.any_([Role.dad])
+    role_query = RoleQuery.any_of(Role.dad)
     vs = uagre.query_variants(roles=role_query, genes=genes)
     vl = list(vs)
     assert len(vl) == 34
@@ -19,7 +19,7 @@ def test_query_roles_dad(uagre):
 def test_query_roles_mom(uagre):
     genes = ['NOC2L']
 
-    role_query = RoleQuery.any_([Role.mom])
+    role_query = RoleQuery.any_of(Role.mom)
     vs = uagre.query_variants(roles=role_query, genes=genes)
     vl = list(vs)
     assert len(vl) == 36
@@ -27,7 +27,7 @@ def test_query_roles_mom(uagre):
 
 def test_query_roles_prb(uagre):
     genes = ['NOC2L']
-    role_query = RoleQuery.any_([Role.prb])
+    role_query = RoleQuery.any_of(Role.prb)
 
     vs = uagre.query_variants(roles=role_query, genes=genes)
     vl = list(vs)
@@ -37,8 +37,8 @@ def test_query_roles_prb(uagre):
 def test_query_roles_grandparents(uagre):
     genes = ['NOC2L']
 
-    role_query = RoleQuery.any_(
-        [Role.maternal_grandmother, Role.maternal_grandfather])
+    role_query = RoleQuery.any_of(
+        Role.maternal_grandmother, Role.maternal_grandfather)
     vs = uagre.query_variants(roles=role_query, genes=genes)
     vl = list(vs)
 

@@ -63,24 +63,8 @@ class Role(enum.Enum):
             return Role.unknown
 
 
-def bv(v):
-    return "{:023b}".format(v)
-
-
-@enum.unique
-class QType(enum.Enum):
-    ALL = 1
-    ANY = 2
-    EQ = 3
-    AND = 4
-    OR = 5
-    NOT = 6
-
-
 class QNode(object):
-    def __init__(self, optype, vals=None, children=None):
-        assert isinstance(optype, QType)
-        self.optype = optype
+    def __init__(self, vals=None, children=None):
         self.vals = vals
         self.children = children
 
@@ -90,23 +74,23 @@ class QNode(object):
 
 class QComposite(QNode):
 
-    def __init__(self, optype, children):
+    def __init__(self, children):
         assert isinstance(children, list)
         assert all([isinstance(ch, QNode) for ch in children])
-        super(QComposite, self).__init__(optype, children=children)
+        super(QComposite, self).__init__(children=children)
 
 
 class QLeaf(QNode):
 
-    def __init__(self, optype, vals):
+    def __init__(self, vals):
         assert isinstance(vals, set)
         assert all([isinstance(v, enum.Enum) for v in vals])
-        super(QLeaf, self).__init__(optype, vals=vals)
+        super(QLeaf, self).__init__(vals=vals)
 
 
 class QAnd(QComposite):
     def __init__(self, children):
-        super(QAnd, self).__init__(QType.AND, children=children)
+        super(QAnd, self).__init__(children=children)
 
     def match(self, vals):
         return all([q.match(vals) for q in self.children])
@@ -114,7 +98,7 @@ class QAnd(QComposite):
 
 class QOr(QComposite):
     def __init__(self, children):
-        super(QOr, self).__init__(QType.OR, children=children)
+        super(QOr, self).__init__(children=children)
 
     def match(self, vals):
         return any([q.match(vals) for q in self.children])
@@ -123,7 +107,7 @@ class QOr(QComposite):
 class QNot(QComposite):
     def __init__(self, children):
         assert len(children) == 1
-        super(QNot, self).__init__(QType.NOT, children=children)
+        super(QNot, self).__init__(children=children)
 
     def match(self, vals):
         q = self.children[0]
@@ -132,7 +116,7 @@ class QNot(QComposite):
 
 class QAll(QLeaf):
     def __init__(self, vals):
-        super(QAll, self).__init__(QType.ALL, vals=vals)
+        super(QAll, self).__init__(vals=vals)
 
     def match(self, vals):
         assert isinstance(vals, set)
@@ -141,7 +125,7 @@ class QAll(QLeaf):
 
 class QAny(QLeaf):
     def __init__(self, vals):
-        super(QAny, self).__init__(QType.ANY, vals=vals)
+        super(QAny, self).__init__(vals=vals)
 
     def match(self, vals):
         assert isinstance(vals, set)
@@ -150,7 +134,7 @@ class QAny(QLeaf):
 
 class QEq(QLeaf):
     def __init__(self, vals):
-        super(QEq, self).__init__(QType.EQ, vals=vals)
+        super(QEq, self).__init__(vals=vals)
 
     def match(self, vals):
         assert isinstance(vals, set)
@@ -171,14 +155,14 @@ class AQVisitor(ast.NodeVisitor):
         assert node.func.id in set(['eq', 'any', 'all'])
         assert all([a.id in Role.__members__ for a in node.args])
 
-        vals = [Role.from_name(a.id) for a in node.args]
+        vals = set([Role.from_name(a.id) for a in node.args])
         pred = node.func.id
         if pred == 'eq':
-            return RoleQuery.eq_(vals)
+            return QEq(vals)
         elif pred == 'any':
-            return RoleQuery.any_(vals)
+            return QAny(vals)
         elif pred == 'all':
-            return RoleQuery.all_(vals)
+            return QAll(vals)
 
     def visit_Expression(self, node):
         assert isinstance(node, ast.Expression)
@@ -242,21 +226,17 @@ class RoleQuery(object):
         return self
 
     @staticmethod
-    def role(r):
-        return RoleQuery.any_([r])
-
-    @staticmethod
-    def any_(vals):
+    def any_of(*vals):
         qnode = QAny(set(vals))
         return RoleQuery(qnode)
 
     @staticmethod
-    def all_(vals):
+    def all_of(*vals):
         qnode = QAll(set(vals))
         return RoleQuery(qnode)
 
     @staticmethod
-    def eq_(vals):
+    def eq_of(*vals):
         qnode = QEq(set(vals))
         return RoleQuery(qnode)
 

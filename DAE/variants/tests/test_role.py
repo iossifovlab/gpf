@@ -18,10 +18,10 @@ def test_role_all():
 
 
 def test_role_query():
-    query = RQ.role(Role.prb).\
-        or_(RQ.role(Role.sib)). \
-        and_not_(RQ.role(Role.mom)).\
-        and_not_(RQ.role(Role.dad))
+    query = RQ.any_of(Role.prb).\
+        or_(RQ.any_of(Role.sib)). \
+        and_not_(RQ.any_of(Role.mom)).\
+        and_not_(RQ.any_of(Role.dad))
 
     assert query.match([Role.prb])
     assert query.match([Role.sib])
@@ -32,9 +32,9 @@ def test_role_query():
 
 def test_role_query_expression():
 
-    query = RQ.role(Role.prb).\
-        and_not_(RQ.role(Role.mom).
-                 or_(RQ.role(Role.dad)))
+    query = RQ.any_of(Role.prb).\
+        and_not_(RQ.any_of(Role.mom).
+                 or_(RQ.any_of(Role.dad)))
 
     assert query.match([Role.prb])
     assert not query.match([Role.mom])
@@ -58,7 +58,7 @@ def test_convert_from_bad_name():
 
 
 def test_role_query_from_list():
-    rq = RoleQuery.any_([Role.prb, Role.sib])
+    rq = RoleQuery.any_of(Role.prb, Role.sib)
 
     assert rq.match([Role.prb])
     assert rq.match([Role.sib])

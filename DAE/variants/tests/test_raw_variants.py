@@ -183,7 +183,7 @@ def test_query_variants_persons_all(uagre):
 
 def test_query_variants_roles_dad(uagre):
     genes = ['NOC2L']
-    role_query = RoleQuery.role(Role.dad)
+    role_query = RoleQuery.any_of(Role.dad)
 
     vs = uagre.query_variants(
         genes=genes,

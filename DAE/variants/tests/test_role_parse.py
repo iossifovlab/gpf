@@ -4,7 +4,6 @@ Created on Feb 21, 2018
 @author: lubo
 '''
 from __future__ import print_function
-import ast
 from variants.roles import RoleQuery, Role
 
 
