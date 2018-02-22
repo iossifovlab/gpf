@@ -136,7 +136,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         ]
 
         self.variant_criterias = []
-        self.variant_criterias_names = set()
+        self.criterias_by_phenotype_names = set()
         for variant_criteria_id in self._get_att_list('variantCriterias'):
             source = self._get_att(
                 'variantCriterias.{}.source'.format(variant_criteria_id))
@@ -154,9 +154,10 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                  }
                  for segment_arr in segments_arrs]
             )
-            self.variant_criterias_names.update([segment_arr[0]
+            self.criterias_by_phenotype_names.update([segment_arr[0]
                 for segment_arr in segments_arrs])
 
+        self.criterias_by_phenotype_names.update({'Recurrent', 'Single'})
         self.gene_sets_names = self._get_att_list('geneSetsNames')
 
     def _get_att_list(self, att_name):
@@ -248,8 +249,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         effect_type = criterias[0]
         effect_type_subsets = self.cache[dataset_id][effect_type]
 
-        variant_criterias = self.variant_criterias_names.intersection(criterias)
-        other_criterias = set(criterias[1:]) - variant_criterias
+        criterias_by_phenotype = self.criterias_by_phenotype_names \
+            .intersection(criterias)
+        other_criterias = set(criterias[1:]) - criterias_by_phenotype
 
         result = set()
 
@@ -257,7 +259,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 lambda item: item[0] in phenotypes,
                 effect_type_subsets.iteritems()):
             pheno_genes = set().union(*phenotype_subsets.values())
-            for criteria in variant_criterias:
+            for criteria in criterias_by_phenotype:
                 pheno_genes &= phenotype_subsets.get(criteria, set())
             result |= pheno_genes
 
@@ -272,7 +274,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                              for phenotype in self._get_configured_dataset_legend(dataset)}
                          for effect_type in self.effect_types}
         self.cache[dataset['id']] = dataset_cache
-        pedigree_selector = self.datasets_pedigree_selectors[dataset['id']]
+        pedigree_selector = self.datasets_pedigree_selectors[dataset['id']]['source']
         for effect_type in self.effect_types:
             variants = list(vDB.get_denovo_variants(dataset['studies'],
                 effectTypes=effect_type['value']))
@@ -282,33 +284,31 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 for variant in filter(lambda v: self._matches(v, criteria), variants):
                     gene_symbols = {ge['sym'] for ge in variant.requestedGeneEffects}
                     if 'sib' in variant.inChS:
-                        effect_cache.setdefault('unaffected', {})\
+                        effect_cache.setdefault('unaffected', {}) \
                             .setdefault(key, set()).update(gene_symbols)
                     if 'prb' in variant.inChS:
-                        family = variant.study.families[variant.familyId]
-                        if dataset['id'] == 'SD':
-                            print(family.atts)
-                        if family is not None and pedigree_selector['source'] in family.atts:
+                        if pedigree_selector in variant.family_atts:
                             effect_cache.setdefault(
-                                family.atts[pedigree_selector['source']], {})\
-                                    .setdefault(key, set()).update(gene_symbols)
+                                variant.family_atts[pedigree_selector], {}) \
+                                .setdefault(key, set()).update(gene_symbols)
 
             # recurrent / non recurrent
-            gene_family_list = sorted(
-                [(ge['sym'], v.familyId)
+            gene_summary_list = sorted(
+                [(ge['sym'], 'prb' in v.inChS, 'sib' in v.inChS,
+                      v.family_atts.get(pedigree_selector), v.familyId)
                  for v in variants for ge in v.requestedGeneEffects])
             gene_counts = {gene: len(set(gene_families))
                            for gene, gene_families
-                           in groupby(gene_family_list, key=lambda x: x[0])}
-            single = set()
-            recurrent = set()
-            for gene, count in gene_counts.iteritems():
-                if count > 1:
-                    recurrent.add(gene)
-                else:
-                    single.add(gene)
-            effect_cache['Single'] = single
-            effect_cache['Recurrent'] = recurrent
+                           in groupby(gene_summary_list, key=lambda x: x[0:4])}
+
+            for (gene, in_prb, in_sib, phenotype), count in gene_counts.iteritems():
+                count_type = 'Recurrent' if count > 1 else 'Single'
+                if in_prb and phenotype is not None:
+                    effect_cache.setdefault(phenotype, {}) \
+                        .setdefault(count_type, set()).add(gene)
+                if in_sib:
+                    effect_cache.setdefault('unaffected', {}) \
+                        .setdefault(count_type, set()).add(gene)
 
             # study type
             for variant in variants:

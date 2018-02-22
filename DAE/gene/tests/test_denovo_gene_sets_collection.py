@@ -54,4 +54,4 @@ def test_denovo_lgds_recurrent(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
     gs = denovo.get_gene_set('LGDs.Recurrent', gene_sets_types={'SD': ['autism']})
     assert gs is not None
-    assert gs['count'] == 85
+    assert gs['count'] == 45

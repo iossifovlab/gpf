@@ -302,6 +302,10 @@ class Variant:
     def phenotype(self):
         return self.atts.get('phenotype', self.study.get_attr('study.phenotype'))
 
+    @property
+    def family_atts(self):
+        return self.study.families[self.familyId].atts
+
     VIP_COLORS = {
         'deletion': '#e35252',
         'duplication': '#98e352',
