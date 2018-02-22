@@ -203,7 +203,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 return pedigree_selector.domain
         return None
 
+    @staticmethod
+    def _filter_out_empty_types(gene_sets_types):
+        return {k: v for k, v in gene_sets_types.iteritems() if len(v) > 0}
+
     def get_gene_sets(self, gene_sets_types={'SD': ['autism']}, **kwargs):
+        gene_sets_types = self._filter_out_empty_types(gene_sets_types)
         gene_sets_types_desc = '{}::{}'.format(
             ', '.join(set(gene_sets_types.keys())),
             ', '.join(set(chain(*gene_sets_types.values()))))
@@ -219,6 +224,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return result
 
     def get_gene_set(self, gene_set_id, gene_sets_types={'SD': ['autism']}, **kwargs):
+        gene_sets_types = self._filter_out_empty_types(gene_sets_types)
         syms = self._get_gene_set_syms(gene_set_id, gene_sets_types)
         if not syms:
             return None
