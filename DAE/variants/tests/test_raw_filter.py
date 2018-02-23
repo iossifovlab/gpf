@@ -33,7 +33,6 @@ def test_query_by_filter(uagre):
         r1 = rq1.match(vals)
         r2 = rq2.match(vals)
         return r1 and (not r2)
-    print(ffun(vals))
     assert ffun(vals)
 
     vs = uagre.query_variants(
