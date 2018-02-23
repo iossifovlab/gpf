@@ -4,6 +4,7 @@ Created on Feb 16, 2017
 @author: lubo
 '''
 import ast
+from copy import deepcopy
 from rest_framework import views, status
 from rest_framework.response import Response
 from gene.gene_set_collections import GeneSetsCollections
@@ -12,19 +13,61 @@ import itertools
 from django.utils.http import urlencode
 
 from preloaded import register
+from datasets_api.permissions import IsDatasetAllowed
+from users_api.authentication import SessionAuthenticationWithoutCSRF
 
-
-class GeneSetsCollectionsView(views.APIView):
+class GeneSetsBaseView(views.APIView):
+    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         self.gscs = register.get('gene_sets_collections')
 
+    @classmethod
+    def permitted_datasets(cls, dataset_ids, user):
+        return filter(
+            lambda dataset_id: IsDatasetAllowed.user_has_permission(
+                user, dataset_id),
+            dataset_ids)
+
+    @classmethod
+    def permitted_denovo_gene_sets_types(cls, gene_sets_types, user):
+        if type(gene_sets_types) is list:
+            permitted_datasets = cls.permitted_datasets(
+                {gene_set_type['datasetId'] for gene_set_type in gene_sets_types},
+                user)
+            return filter(lambda gene_set_type:
+                    gene_set_type['datasetId'] in permitted_datasets,
+                gene_sets_types)
+        elif type(gene_sets_types) is dict:
+            permitted_datasets = cls.permitted_datasets(
+                set(gene_sets_types.keys()), user)
+            return {k: v
+                    for k, v in gene_sets_types.iteritems()
+                    if k in permitted_datasets}
+        else:
+            raise 'KUR'
+
+
+class GeneSetsCollectionsView(GeneSetsBaseView):
+
+    def __init__(self):
+        super(GeneSetsCollectionsView, self).__init__()
+
     def get(self, request):
-        response = self.gscs.get_gene_sets_collections()
-        return Response(response, status=status.HTTP_200_OK, )
+        gene_sets_collections = deepcopy(self.gscs.get_gene_sets_collections())
+
+        for gene_sets_collection in gene_sets_collections:
+            if gene_sets_collection['name'] == 'denovo':
+                permitted_types = self.permitted_denovo_gene_sets_types(
+                    gene_sets_collection['types'], request.user)
+                gene_sets_collection['types'] = permitted_types
+                break
+
+        return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
 
-class GeneSetsView(views.APIView):
+class GeneSetsView(GeneSetsBaseView):
     """
         {
         "geneSetsCollection": "main",
@@ -37,7 +80,7 @@ class GeneSetsView(views.APIView):
     """
 
     def __init__(self):
-        self.gscs = register.get('gene_sets_collections')
+        super(GeneSetsView, self).__init__()
 
     @staticmethod
     def _build_download_url(query):
@@ -55,7 +98,8 @@ class GeneSetsView(views.APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if 'geneSetsTypes' in data:
-            gene_sets_types = data['geneSetsTypes']
+            gene_sets_types = self.permitted_denovo_gene_sets_types(
+                data['geneSetsTypes'], request.user)
         else:
             gene_sets_types = []
 
@@ -82,7 +126,7 @@ class GeneSetsView(views.APIView):
                 'download': self._build_download_url({
                     'geneSetsCollection': gene_sets_collection_id,
                     'geneSet': gs['name'],
-                    'geneSetsTypes': ','.join(gene_sets_types)
+                    'geneSetsTypes': gene_sets_types
                 })
             }
             for gs in response
@@ -91,7 +135,7 @@ class GeneSetsView(views.APIView):
         return Response(response, status=status.HTTP_200_OK)
 
 
-class GeneSetDownloadView(views.APIView):
+class GeneSetDownloadView(GeneSetsBaseView):
     """
         {
         "geneSetsCollection": "denovo",
@@ -103,13 +147,12 @@ class GeneSetDownloadView(views.APIView):
     """
 
     def __init__(self):
-        self.gscs = register.get('gene_sets_collections')
+        super(GeneSetDownloadView, self).__init__()
 
     def post(self, request):
-        data = request.data
-        return self._build_response(data)
+        return self._build_response(request.data, request.user)
 
-    def _build_response(self, data):
+    def _build_response(self, data, user):
         if 'geneSetsCollection' not in data or 'geneSet' not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data['geneSetsCollection']
@@ -119,7 +162,8 @@ class GeneSetDownloadView(views.APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if 'geneSetsTypes' in data:
-            gene_sets_types = data['geneSetsTypes']
+            gene_sets_types = self.permitted_denovo_gene_sets_types(
+                data['geneSetsTypes'], user)
         else:
             gene_sets_types = []
 
@@ -152,4 +196,4 @@ class GeneSetDownloadView(views.APIView):
 
     def get(self, request):
         data = self._parse_query_params(request.query_params)
-        return self._build_response(data)
+        return self._build_response(data, request.user)

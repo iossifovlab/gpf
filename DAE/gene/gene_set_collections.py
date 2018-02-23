@@ -208,11 +208,15 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _filter_out_empty_types(gene_sets_types):
         return {k: v for k, v in gene_sets_types.iteritems() if len(v) > 0}
 
-    def get_gene_sets(self, gene_sets_types={'SD': ['autism']}, **kwargs):
-        gene_sets_types = self._filter_out_empty_types(gene_sets_types)
-        gene_sets_types_desc = '{}::{}'.format(
+    @staticmethod
+    def _format_description(gene_sets_types):
+        return '{}::{}'.format(
             ', '.join(set(gene_sets_types.keys())),
             ', '.join(set(chain(*gene_sets_types.values()))))
+
+    def get_gene_sets(self, gene_sets_types={'SD': ['autism']}, **kwargs):
+        gene_sets_types = self._filter_out_empty_types(gene_sets_types)
+        gene_sets_types_desc = self._format_description(gene_sets_types)
         result = []
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
@@ -234,7 +238,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             "name": gene_set_id,
             "count": len(syms),
             "syms": syms,
-            "desc": "{} ({})".format(gene_set_id, ";".join(gene_sets_types)),
+            "desc": "{} ({})".format(gene_set_id, self._format_description(gene_sets_types))
         }
 
     def _get_gene_set_syms(self, gene_set_id, gene_sets_types):
