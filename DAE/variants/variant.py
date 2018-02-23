@@ -291,3 +291,8 @@ class FamilyVariant(VariantBase):
                     (np.all(p1 != 0) or np.all(p2 != 0)))
             self._is_omission = any(omissions)
         return self._is_omission
+
+    def inheritance(self):
+        if self._inheritance is None:
+            pass
+        return self._inheritance

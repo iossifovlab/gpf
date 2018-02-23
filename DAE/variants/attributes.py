@@ -83,6 +83,19 @@ class Sex(enum.Enum):
         return Sex(int(val))
 
 
+class Inheritance(enum.Enum):
+    mendelian = 1
+    denovo = 2
+    omission = 3
+    other = 4
+    unknown = 100
+
+    @staticmethod
+    def from_name(name):
+        assert name in Inheritance.__members__
+        return Inheritance[name]
+
+
 class QNode(object):
     def __init__(self, vals=None, children=None):
         self.vals = vals
