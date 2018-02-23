@@ -20,6 +20,8 @@ export class SaveQueryButtonComponent implements OnInit {
 
   private urlUUID: string;
   private url: string;
+  private savedUrlUUID: string;
+  buttonValue = "Copy";
 
   constructor(
   	private datasetsService: DatasetsService,
@@ -34,18 +36,25 @@ export class SaveQueryButtonComponent implements OnInit {
   ngOnInit() {
   }
 
-    onClick() {
+    saveIfOpened(opened: boolean) {
+      if(opened) {
+        this.buttonValue = "Copy";
         this.parentComponent.getCurrentState()
-        .take(1)
-        .subscribe(state => {
-            this.saveQueryService.saveQuery(state, this.queryType)
-                .take(1)
-                .subscribe(response => {
-                    this.urlUUID = response["uuid"];
-                });
-        },
-        error => {
-        });
+          .take(1)
+          .subscribe(state => {
+              this.saveQueryService.saveQuery(state, this.queryType)
+                  .take(1)
+                  .subscribe(response => {
+                      this.urlUUID = response["uuid"];
+                  });
+          },
+          error => {
+          });
+      } else {
+        this.savedUrlUUID = null;
+        this.url = null;
+      }
+      
     }
 
 
@@ -54,17 +63,22 @@ export class SaveQueryButtonComponent implements OnInit {
             return '';
         }
 
-        if (!this.url) {
+        if (this.savedUrlUUID != this.urlUUID) {
             let pathname = this.router.createUrlTree(
                 ["load-query", this.urlUUID]).toString();
 
             this.url = window.location.origin + pathname;
+            this.savedUrlUUID = this.urlUUID;
         }
 
         return this.url;
         
     }
 
-
+    copyToClipboard(input) {
+      input.select()
+      document.execCommand("Copy");
+      this.buttonValue = "Copied";
+    }
 
 }
