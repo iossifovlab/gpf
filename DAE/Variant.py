@@ -323,9 +323,9 @@ class Variant:
     @property
     def phenotype(self):
         if len(self.study.phenotypes) == 1:
-            self.study.phenotypes[0]
+            return self.study.phenotypes[0]
         else:
-            self.atts.get(self.phenotypeAtt, None)
+            return self.atts.get(self.phenotypeAtt, None)
 
     VIP_COLORS = {
         'deletion': '#e35252',
