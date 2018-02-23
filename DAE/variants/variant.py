@@ -220,7 +220,7 @@ class FamilyVariant(VariantBase):
             self._best_st = np.stack([ref, alt], axis=0)
         return self._best_st
 
-    def is_medelian(self):
+    def is_mendelian(self):
         if self._is_mendelian is None:
             mendelians = []
             for _pid, trio in self.family.trios.items():

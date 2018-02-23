@@ -165,10 +165,10 @@ def test_query_variants_single(uagre):
     vs = uagre.query_variants(
         regions=[Region("1", 11540, 11541)])
     for v in vs:
-        print(v, "Medelian: ", v.is_medelian())
+        print(v, "mendelian: ", v.is_mendelian())
         print(v.gt)
         print(v.best_st)
-        assert v.is_medelian()
+        assert v.is_mendelian()
 
 
 def test_query_variants_persons_all(uagre):
@@ -176,7 +176,7 @@ def test_query_variants_persons_all(uagre):
         genes=['FAM87B'],
         person_ids=['AU1921202'])
     for v in vs:
-        print(v, "Medelian: ", v.is_medelian())
+        print(v, "mendelian: ", v.is_mendelian())
         print(v.gt)
         print(v.best_st)
 
@@ -191,6 +191,6 @@ def test_query_variants_roles_dad(uagre):
     )
 
     for v in vs:
-        print(v, "Medelian: ", v.is_medelian())
+        print(v, "mendelian: ", v.is_mendelian())
         print(v.gt)
         print(v.best_st)

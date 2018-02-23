@@ -16,7 +16,7 @@ def test_11540_gt(uagre):
 
     # assert v.position == 11540
 
-    print(v, v.is_medelian())
+    print(v, v.is_mendelian())
     assert v.position == 11540
 
     print(v.gt)
@@ -34,7 +34,7 @@ def test_130000_gt(uagre):
     vs = uagre.query_variants(regions=[Region("1", 135000, 139999)])
     for v in vs:
         print("-------------------------------------------------------------")
-        print(v, v.is_medelian())
+        print(v, v.is_mendelian())
         print(v.gt)
         print(v.best_st)
         print("-------------------------------------------------------------")
@@ -44,17 +44,17 @@ def test_11540_130000_gt(uagre):
     vs = uagre.query_variants(regions=[Region("1", 11540, 139999)])
     for v in vs:
         print("-------------------------------------------------------------")
-        print(v, v.is_medelian())
+        print(v, v.is_mendelian())
         print(v.gt)
         print(v.best_st)
         print("-------------------------------------------------------------")
 
 
-def test_non_medelian(uagre):
+def test_non_mendelian(uagre):
     count = 0
     vs = uagre.query_variants()
     for v in vs:
-        if not v.is_medelian():
+        if not v.is_mendelian():
             count += 1
     assert count == 138
 

@@ -21,7 +21,7 @@ def test_mendelian(uagre):
         family_id=['AU1921'], regions=[Region("1", 11541, 54721)])
 
     for v in variants:
-        print(v, v.is_medelian(), v.effect_type)
+        print(v, v.is_mendelian(), v.effect_type)
         print(v.best_st)
         print(v.gt)
 
@@ -59,42 +59,42 @@ def test_mendelian_simple_1(fv1):
     v = fv1.clone()
     v.gt = np.array([[0, 0, 0],
                      [0, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv1.clone()
     v.gt = np.array([[0, 0, 1],
                      [0, 0, 0]])
-    assert not v.is_medelian()
+    assert not v.is_mendelian()
 
     v = fv1.clone()
     v.gt = np.array([[0, 0, 0],
                      [0, 0, 1]])
-    assert not v.is_medelian()
+    assert not v.is_mendelian()
 
     v = fv1.clone()
     v.gt = np.array([[1, 0, 0],
                      [0, 0, 1]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv1.clone()
     v.gt = np.array([[0, 0, 0],
                      [1, 0, 1]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv1.clone()
     v.gt = np.array([[1, 0, 0],
                      [1, 0, 1]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv1.clone()
     v.gt = np.array([[1, 1, 0],
                      [1, 0, 1]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv1.clone()
     v.gt = np.array([[1, 1, 1],
                      [1, 0, 1]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
 
 PED2 = """
@@ -131,57 +131,57 @@ def test_mendelian_simple_2(fv2):
     v = fv2.clone()
     v.gt = np.array([[0, 0, 0, 0],
                      [0, 0, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[1, 1, 0, 0],
                      [0, 0, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[1, 1, 1, 0],
                      [0, 0, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[1, 1, 1, 1],
                      [0, 0, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[1, 1, 1, 1],
                      [0, 0, 1, 1]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[1, 1, 1, 1],
                      [1, 1, 1, 1]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[1, 1, 1, 1],
                      [0, 0, 1, 1]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[0, 1, 1, 1],
                      [0, 1, 1, 1]])
-    assert not v.is_medelian()
+    assert not v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[0, 1, 1, 1],
                      [0, 1, 0, 1]])
-    assert not v.is_medelian()
+    assert not v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[0, 1, 1, 1],
                      [0, 1, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv2.clone()
     v.gt = np.array([[0, 1, 1, 0],
                      [0, 1, 0, 1]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
 
 PED3 = """
@@ -216,34 +216,34 @@ def test_mendelian_simple_3(fv3):
     v = fv3.clone()
     v.gt = np.array([[0, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv3.clone()
     v.gt = np.array([[1, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv3.clone()
     v.gt = np.array([[1, 0, 0, 0, 0],
                      [1, 0, 0, 0, 0]])
-    assert not v.is_medelian()
+    assert not v.is_mendelian()
 
     v = fv3.clone()
     v.gt = np.array([[1, 0, 1, 0, 0],
                      [1, 0, 0, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv3.clone()
     v.gt = np.array([[1, 1, 1, 0, 0],
                      [1, 0, 0, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
 
     v = fv3.clone()
     v.gt = np.array([[1, 1, 1, 0, 0],
                      [1, 0, 1, 0, 0]])
-    assert not v.is_medelian()
+    assert not v.is_mendelian()
 
     v = fv3.clone()
     v.gt = np.array([[1, 1, 1, 0, 1],
                      [1, 0, 1, 0, 0]])
-    assert v.is_medelian()
+    assert v.is_mendelian()
