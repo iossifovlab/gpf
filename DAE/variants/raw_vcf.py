@@ -5,7 +5,6 @@ Created on Feb 8, 2018
 '''
 from __future__ import print_function
 
-from RegionOperations import Region
 import numpy as np
 from variants.loader import RawVariantsLoader
 from variants.family import Families, Family
@@ -190,8 +189,10 @@ if __name__ == "__main__":
 
     fvars = RawFamilyVariants(prefix=prefix)
 
-    vs = fvars.query_variants(regions=[Region("1", 130000, 139999)])
-    for v in vs:
-        print(v, v.effect_type, v.effect_gene, v.is_medelian(), sep="\t")
-        print(v.gt)
+    vs = fvars.query_variants(
+        inheritance='denovo or omission',
+        genes=['CLCN6', 'MTHFR', ]  # , 'DRAXIN'
+    )
+    for c, v in enumerate(vs):
+        print(c, v, v.effect_type, v.effect_gene, v.inheritance, sep="\t")
         print(v.best_st)
