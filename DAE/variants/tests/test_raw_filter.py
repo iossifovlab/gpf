@@ -5,7 +5,7 @@ Created on Feb 20, 2018
 '''
 from __future__ import print_function
 from pheno.common import Role
-from variants.roles import RoleQuery
+from variants.attributes import RoleQuery
 import pytest
 
 
@@ -13,8 +13,8 @@ import pytest
 def test_query_by_filter(uagre):
     genes = ['NOC2L']
 
-    rq1 = RoleQuery.role(Role.dad)
-    rq2 = RoleQuery.role(Role.maternal_cousin)
+    rq1 = RoleQuery.any_of(Role.dad)
+    rq2 = RoleQuery.any_of(Role.maternal_cousin)
 
     vals = [
         Role.maternal_aunt,

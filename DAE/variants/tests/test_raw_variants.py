@@ -6,7 +6,7 @@ Created on Feb 9, 2018
 from __future__ import print_function
 
 from RegionOperations import Region
-from variants.roles import Role, RoleQuery
+from variants.attributes import Role, RoleQuery
 
 
 def test_study_load(uagre):

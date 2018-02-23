@@ -12,7 +12,7 @@ from numba import jit
 from variants.family import Families, Family
 from variants.variant import FamilyVariant
 from variants.configure import Configure
-from variants.roles import RoleQuery
+from variants.attributes import RoleQuery
 
 
 @jit

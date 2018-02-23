@@ -63,6 +63,26 @@ class Role(enum.Enum):
             return Role.unknown
 
 
+class Sex(enum.Enum):
+    male = 1
+    female = 2
+    unspecified = 4
+
+    @staticmethod
+    def from_name(name):
+        if name == 'male' or name == 'M':
+            return Sex.male
+        elif name == 'female' or name == 'F':
+            return Sex.female
+        elif name == 'unspecified' or name == 'U':
+            return Sex.unspecified
+        raise ValueError("unexpected sex type: " + name)
+
+    @staticmethod
+    def from_value(val):
+        return Sex(int(val))
+
+
 class QNode(object):
     def __init__(self, vals=None, children=None):
         self.vals = vals
@@ -254,6 +274,9 @@ class AQuery(object):
 class RoleQuery(AQuery):
     ATTR_CLASS = Role
 
+
+class SexQuery(AQuery):
+    ATTR_CLASS = Sex
 
 # class RoleQuery(object):
 #

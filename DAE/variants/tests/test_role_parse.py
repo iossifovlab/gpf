@@ -4,7 +4,7 @@ Created on Feb 21, 2018
 @author: lubo
 '''
 from __future__ import print_function
-from variants.roles import RoleQuery, Role
+from variants.attributes import RoleQuery, Role
 
 
 def test_role_query_parse_eq_simple():

@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from numba import jit
-from variants.roles import Role
+from variants.attributes import Role, Sex
 from variants.variant import VariantBase
 
 
@@ -60,7 +60,8 @@ class RawVariantsLoader(object):
             infile, sep=sep, index_col=False,
             skipinitialspace=True,
             converters={
-                'role': lambda r: Role.from_name(r)
+                'role': lambda r: Role.from_name(r),
+                'sex': lambda s: Sex.from_value(s),
             },
             comment="#",
         )

@@ -4,7 +4,7 @@ Created on Feb 13, 2018
 @author: lubo
 '''
 from __future__ import print_function
-from variants.roles import Role, RoleQuery
+from variants.attributes import Role, RoleQuery
 
 
 def test_query_roles_dad(uagre):

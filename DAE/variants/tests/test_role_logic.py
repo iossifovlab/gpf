@@ -3,8 +3,8 @@ Created on Feb 21, 2018
 
 @author: lubo
 '''
-from variants.roles import Role
-from variants.roles import RoleQuery as RQ
+from variants.attributes import Role
+from variants.attributes import RoleQuery as RQ
 
 
 def test_role_any():

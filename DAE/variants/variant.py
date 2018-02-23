@@ -108,6 +108,8 @@ class FamilyVariant(VariantBase):
         self._is_mendelian = None
         self._is_denovo = None
         self._is_omission = None
+        self._inheritance = None
+
         self._variant_in_members = None
         self._variant_in_roles = None
 
