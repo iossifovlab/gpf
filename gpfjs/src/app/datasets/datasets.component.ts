@@ -31,6 +31,7 @@ export class DatasetsComponent implements OnInit {
   }
 
   ngOnInit() {
+    console.log("datasets component init");
     this.route.params.subscribe(
       (params: Params) => {
         this.datasetsService.setSelectedDatasetById(params['dataset']);

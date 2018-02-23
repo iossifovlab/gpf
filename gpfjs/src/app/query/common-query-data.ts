@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs';
+
 import { GeneSetsState } from '../gene-sets/gene-sets-state';
 import { GeneSymbols } from '../gene-symbols/gene-symbols';
 import { GeneWeightsState } from '../gene-weights/gene-weights-store';
@@ -8,6 +10,9 @@ export interface GeneSetState {
   geneSetsTypes?: string[];
 }
 
+export interface SaveQuery {
+  getCurrentState(): Observable<any>;
+}
 
 export class CommonQueryData {
   geneSymbols: string[];
