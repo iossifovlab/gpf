@@ -9,7 +9,11 @@ import { Observable } from 'rxjs';
 @Component({
   selector: 'gpf-enrichment-tool',
   templateUrl: './enrichment-tool.component.html',
-  styleUrls: ['./enrichment-tool.component.css']
+  styleUrls: ['./enrichment-tool.component.css'],
+  providers: [{
+    provide: QueryStateCollector,
+    useExisting: EnrichmentToolComponent
+  }]
 })
 export class EnrichmentToolComponent extends QueryStateCollector implements OnInit {
   enrichmentResults: EnrichmentResults;
@@ -29,6 +33,18 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
         this.selectedDatasetId = params['dataset'];
       }
     );
+  }
+
+  getCurrentState() {
+    let state = this.collectState();
+
+    return Observable.zip(...state)
+      .map(state => {
+        let stateObject = Object.assign(
+          { datasetId: this.selectedDatasetId },
+          ...state);
+        return stateObject;
+      });
   }
 
   submitQuery() {

@@ -16,7 +16,10 @@ import { Dataset } from '../datasets/datasets';
   selector: 'gpf-genotype-browser',
   templateUrl: './genotype-browser.component.html',
   styleUrls: ['./genotype-browser.component.css'],
-  providers: [{provide: QueryStateCollector, useExisting: GenotypeBrowserComponent}]
+  providers: [{
+    provide: QueryStateCollector,
+    useExisting: GenotypeBrowserComponent
+  }]
 })
 export class GenotypeBrowserComponent extends QueryStateCollector
     implements OnInit, OnChanges, AfterViewInit {
