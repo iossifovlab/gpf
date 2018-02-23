@@ -4,17 +4,17 @@ Created on Feb 20, 2018
 @author: lubo
 '''
 from __future__ import print_function
-from pheno.common import Role
-from variants.attributes import RoleQuery
-import pytest
+from variants.attributes import RoleQuery, Role
+# import pytest
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 def test_query_by_filter(uagre):
     genes = ['NOC2L']
 
     rq1 = RoleQuery.any_of(Role.dad)
     rq2 = RoleQuery.any_of(Role.maternal_cousin)
+    rq = RoleQuery.parse("dad and not maternal_cousin")
 
     vals = [
         Role.maternal_aunt,
@@ -30,15 +30,22 @@ def test_query_by_filter(uagre):
     assert not rq2.match(vals)
 
     def ffun(vals):
-        print("FFUN:", vals)
-        return (rq1.match(vals)
-                and (not rq2.match(vals)))
+        r1 = rq1.match(vals)
+        r2 = rq2.match(vals)
+        return r1 and (not r2)
     print(ffun(vals))
     assert ffun(vals)
+
+    vs = uagre.query_variants(
+        genes=genes,
+        roles=rq
+    )
+    vl = list(vs)
+    assert len(vl) == 13
 
     vs = uagre.query_variants(
         genes=genes,
         filter=lambda v: ffun(v.variant_in_roles)
     )
     vl = list(vs)
-    assert len(vl) == 35
+    assert len(vl) == 13

@@ -39,7 +39,7 @@ class Role(enum.Enum):
     paternal_grandmother = 1 << 19
     paternal_grandfather = 1 << 20
 
-    unknown = 1 << 21
+    unknown = 1 << 31
 
     all = prb | sib | child | \
         maternal_half_sibling | paternal_half_sibling | \
@@ -85,10 +85,10 @@ class Sex(enum.Enum):
 
 class Inheritance(enum.Enum):
     mendelian = 1
-    denovo = 2
-    omission = 3
-    other = 4
-    unknown = 100
+    denovo = 1 << 1
+    omission = 1 << 2
+    other = 1 << 3
+    unknown = 1 << 15
 
     @staticmethod
     def from_name(name):
