@@ -112,6 +112,7 @@ class FamilyVariant(VariantBase):
 
         self._variant_in_members = None
         self._variant_in_roles = None
+        self._variant_in_sexes = None
 
     @staticmethod
     def from_variant_base(v):
@@ -162,6 +163,15 @@ class FamilyVariant(VariantBase):
                 for pid in self.variant_in_members
             ]
         return self._variant_in_roles
+
+    @property
+    def variant_in_sexes(self):
+        if self._variant_in_sexes is None:
+            self._variant_in_sexes = set([
+                self.family.persons[pid]['sex']
+                for pid in self.variant_in_members
+            ])
+        return self._variant_in_sexes
 
     @staticmethod
     def from_dict(row):

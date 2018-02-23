@@ -8,14 +8,12 @@ from __future__ import print_function
 from RegionOperations import Region
 import numpy as np
 from variants.loader import RawVariantsLoader
-from numba import jit
 from variants.family import Families, Family
 from variants.variant import FamilyVariant
 from variants.configure import Configure
-from variants.attributes import RoleQuery
+from variants.attributes import RoleQuery, SexQuery
 
 
-@jit
 def split_gene_effect(effects):
     result = []
     if not isinstance(effects, str):
@@ -26,23 +24,11 @@ def split_gene_effect(effects):
     return result
 
 
-@jit
 def parse_gene_effect(effect):
     if effect in set(["CNV+", "CNV-", "intergenic"]):
         return [{'eff': effect, 'sym': ""}]
 
     return split_gene_effect(effect)
-
-
-@jit
-def filter_gene_effects(effects, effect_types, gene_symbols):
-    gene_effects = parse_gene_effect(effects)
-    if effect_types is None:
-        return [ge for ge in gene_effects if ge['sym'] in gene_symbols]
-    if gene_symbols is None:
-        return [ge for ge in gene_effects if ge['eff'] in effect_types]
-    return [ge for ge in gene_effects
-            if ge['eff'] in effect_types and ge['sym'] in gene_symbols]
 
 
 class VcfFamily(Family):
@@ -104,8 +90,15 @@ class RawFamilyVariants(Families):
                 return True
         return False
 
-    def filter_gene_effects(self, v, effect_types, genes):
-        return filter_gene_effects(v.effect_gene, effect_types, genes)
+    @staticmethod
+    def filter_gene_effects(v, effect_types, genes):
+        gene_effects = parse_gene_effect(v.effect_gene)
+        if effect_types is None:
+            return [ge for ge in gene_effects if ge['sym'] in genes]
+        if genes is None:
+            return [ge for ge in gene_effects if ge['eff'] in effect_types]
+        return [ge for ge in gene_effects
+                if ge['eff'] in effect_types and ge['sym'] in genes]
 
     def filter_persons(self, v, person_ids):
         return bool(v.variant_in_members & set(person_ids))
@@ -115,6 +108,9 @@ class RawFamilyVariants(Families):
 
     def filter_roles(self, v, role_query):
         return role_query.match(v.variant_in_roles)
+
+    def filter_sexes(self, v, sexes_query):
+        return sexes_query.match(v.variant_in_sexes)
 
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:
@@ -133,6 +129,10 @@ class RawFamilyVariants(Families):
         if 'roles' in kwargs:
             if not self.filter_roles(v, kwargs.get('roles')):
                 return False
+        if 'sexes' in kwargs:
+            if not self.filter_sexes(v, kwargs.get('sexes')):
+                return False
+
         if 'filter' in kwargs:
             func = kwargs['filter']
             if not func(v):
@@ -149,6 +149,10 @@ class RawFamilyVariants(Families):
         if 'roles' in kwargs and isinstance(kwargs['roles'], str):
             role_query = RoleQuery.parse(kwargs['roles'])
             kwargs['roles'] = role_query
+
+        if 'sexes' in kwargs and isinstance(kwargs['sexes'], str):
+            sex_query = SexQuery.parse(kwargs['sexes'])
+            kwargs['sexes'] = sex_query
 
         for v in vs:
             if not self.filter_variant(v, **kwargs):
