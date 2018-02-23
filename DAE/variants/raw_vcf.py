@@ -11,7 +11,7 @@ from variants.loader import RawVariantsLoader
 from variants.family import Families, Family
 from variants.variant import FamilyVariant
 from variants.configure import Configure
-from variants.attributes import RoleQuery, SexQuery
+from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 
 
 def split_gene_effect(effects):
@@ -106,12 +106,6 @@ class RawFamilyVariants(Families):
     def filter_families(self, v, family_ids):
         return v.family_id in family_ids
 
-    def filter_roles(self, v, role_query):
-        return role_query.match(v.variant_in_roles)
-
-    def filter_sexes(self, v, sexes_query):
-        return sexes_query.match(v.variant_in_sexes)
-
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:
             if not self.filter_regions(v, kwargs['regions']):
@@ -127,10 +121,16 @@ class RawFamilyVariants(Families):
             if not self.filter_families(v, kwargs.get('family_ids')):
                 return False
         if 'roles' in kwargs:
-            if not self.filter_roles(v, kwargs.get('roles')):
+            query = kwargs['roles']
+            if not query.match(v.variant_in_roles):
                 return False
         if 'sexes' in kwargs:
-            if not self.filter_sexes(v, kwargs.get('sexes')):
+            query = kwargs['sexes']
+            if not query.match(v.variant_in_sexes):
+                return False
+        if 'inheritance' in kwargs:
+            query = kwargs['inheritance']
+            if not query.match([v.inheritance]):
                 return False
 
         if 'filter' in kwargs:
@@ -147,12 +147,16 @@ class RawFamilyVariants(Families):
         vs = self.wrap_variants(df)
 
         if 'roles' in kwargs and isinstance(kwargs['roles'], str):
-            role_query = RoleQuery.parse(kwargs['roles'])
-            kwargs['roles'] = role_query
+            query = RoleQuery.parse(kwargs['roles'])
+            kwargs['roles'] = query
 
         if 'sexes' in kwargs and isinstance(kwargs['sexes'], str):
-            sex_query = SexQuery.parse(kwargs['sexes'])
-            kwargs['sexes'] = sex_query
+            query = SexQuery.parse(kwargs['sexes'])
+            kwargs['sexes'] = query
+
+        if 'inheritance' in kwargs and isinstance(kwargs['inheritance'], str):
+            query = InheritanceQuery.parse(kwargs['inheritance'])
+            kwargs['inheritance'] = query
 
         for v in vs:
             if not self.filter_variant(v, **kwargs):

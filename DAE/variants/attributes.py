@@ -291,6 +291,10 @@ class RoleQuery(AQuery):
 class SexQuery(AQuery):
     ATTR_CLASS = Sex
 
+
+class InheritanceQuery(AQuery):
+    ATTR_CLASS = Inheritance
+
 # class RoleQuery(object):
 #
 #     def __init__(self, value, complement=Role.all.value):

@@ -1,0 +1,46 @@
+'''
+Created on Feb 23, 2018
+
+@author: lubo
+'''
+
+
+def test_query_inheritance(uagre):
+    vs = uagre.query_variants(inheritance='denovo or omission')
+    assert vs is not None
+    vl = list(vs)
+
+    for v in vl:
+        assert v.is_denovo() or v.is_omission()
+
+    assert len(vl) == 138
+
+
+def test_query_inheritance_denovo(uagre):
+    vs = uagre.query_variants(inheritance='denovo')
+    assert vs is not None
+    vl = list(vs)
+
+    for v in vl:
+        assert v.is_denovo()
+
+    assert len(vl) == 94
+
+
+def test_query_inheritance_omission(uagre):
+    vs = uagre.query_variants(inheritance='omission')
+    assert vs is not None
+    vl = list(vs)
+
+    for v in vl:
+        assert v.is_omission()
+
+    assert len(vl) == 44
+
+
+def test_query_inheritance_other(uagre):
+    vs = uagre.query_variants(inheritance='other')
+    assert vs is not None
+    vl = list(vs)
+
+    assert len(vl) == 0

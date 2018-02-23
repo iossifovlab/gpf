@@ -9,6 +9,7 @@ import re
 
 from DAE import genomesDB
 import numpy as np
+from variants.attributes import Inheritance
 
 
 SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
@@ -292,7 +293,17 @@ class FamilyVariant(VariantBase):
             self._is_omission = any(omissions)
         return self._is_omission
 
+    @property
     def inheritance(self):
         if self._inheritance is None:
-            pass
+            if self.is_mendelian():
+                self._inheritance = Inheritance.mendelian
+            elif self.is_denovo():
+                self._inheritance = Inheritance.denovo
+            elif self.is_omission():
+                self._inheritance = Inheritance.omission
+            elif self.is_unknown():
+                self._inheritance = Inheritance.unknown
+            else:
+                self._inheritance = Inheritance.other
         return self._inheritance
