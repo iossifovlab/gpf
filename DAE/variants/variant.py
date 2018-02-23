@@ -48,6 +48,7 @@ class VariantBase(object):
         self.position = position
         self.reference = reference
         self.alternative = alternative
+        self.alt = alternative.split(',')
 
     def __repr__(self):
         return '{}:{} {}->{}'.format(
@@ -59,7 +60,7 @@ class VariantBase(object):
 
     @staticmethod
     def from_vcf_variant(variant):
-        assert len(variant.ALT) == 1
+        # assert len(variant.ALT) == 1
         return VariantBase(
             variant.CHROM, variant.start + 1, variant.REF, str(variant.ALT[0]))
 
@@ -230,9 +231,17 @@ class FamilyVariant(VariantBase):
     def best_st(self):
         if self._best_st is None:
             ref = (2 * np.ones(len(self.family), dtype=np.int8))
-            alt = np.sum(self.gt, axis=0, dtype=np.int8)
-            ref = ref - alt
-            self._best_st = np.stack([ref, alt], axis=0)
+            alt_alleles = []
+            for anum in range(1, len(self.alt) + 1):
+                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                alt_gt[self.gt == anum] = 1
+
+                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                ref = ref - alt
+                alt_alleles.append(alt)
+            best = [ref]
+            best.extend(alt_alleles)
+            self._best_st = np.stack(best, axis=0)
         return self._best_st
 
     def is_mendelian(self):

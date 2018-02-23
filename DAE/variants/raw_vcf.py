@@ -11,6 +11,7 @@ from variants.family import Families, Family
 from variants.variant import FamilyVariant
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
+from RegionOperations import Region
 
 
 def split_gene_effect(effects):
@@ -179,16 +180,23 @@ if __name__ == "__main__":
     import os
 
     prefix = os.environ.get(
-        "DAE_UAGRE_PREFIX=",
-        "/home/lubo/Work/seq-pipeline/data-raw-dev/uagre/test_agre"
+        "DAE_UAGRE_PREFIX",
+        "/home/lubo/Work/seq-pipeline/data-raw-dev/nagre/nano_agre1"
     )
 
     fvars = RawFamilyVariants(prefix=prefix)
 
     vs = fvars.query_variants(
         inheritance='denovo or omission',
-        genes=['CLCN6', 'MTHFR', ]  # , 'DRAXIN'
     )
     for c, v in enumerate(vs):
         print(c, v, v.effect_type, v.effect_gene, v.inheritance, sep="\t")
+        print(v.best_st)
+
+    regions = [Region("1", 900718, 900719)]
+    vs = fvars.query_variants(regions=regions)
+
+    for v in vs:
+        print(v)
+        print(v.gt)
         print(v.best_st)
