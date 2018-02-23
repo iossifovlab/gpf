@@ -99,12 +99,6 @@ class RawFamilyVariants(Families):
         return [ge for ge in gene_effects
                 if ge['eff'] in effect_types and ge['sym'] in genes]
 
-    def filter_persons(self, v, person_ids):
-        return bool(v.variant_in_members & set(person_ids))
-
-    def filter_families(self, v, family_ids):
-        return v.family_id in family_ids
-
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:
             if not self.filter_regions(v, kwargs['regions']):
@@ -114,10 +108,12 @@ class RawFamilyVariants(Families):
                     v, kwargs.get('effect_types'), kwargs.get('genes')):
                 return False
         if 'person_ids' in kwargs:
-            if not self.filter_persons(v, kwargs.get('person_ids')):
+            person_ids = kwargs['person_ids']
+            if not v.variant_in_members & set(person_ids):
                 return False
         if 'family_ids' in kwargs:
-            if not self.filter_families(v, kwargs.get('family_ids')):
+            family_ids = kwargs['family_ids']
+            if v.family_id not in family_ids:
                 return False
         if 'roles' in kwargs:
             query = kwargs['roles']
