@@ -3,6 +3,7 @@ Created on Mar 3, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
 
 
 def count(vs):
@@ -99,6 +100,8 @@ def test_get_variants_with_autism_and_unaffected(sd):
     vs = sd.get_variants(**query)
     assert vs is not None
     vs = list(vs)
+    for v in vs:
+        print(v.familyId, v.studyName, v.location, v.variant)
     assert 5 == count(vs)
 
 
