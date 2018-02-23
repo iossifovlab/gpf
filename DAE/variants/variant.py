@@ -106,6 +106,8 @@ class FamilyVariant(VariantBase):
 
         self._best_st = None
         self._is_mendelian = None
+        self._is_denovo = None
+        self._is_omission = None
         self._variant_in_members = None
         self._variant_in_roles = None
 
@@ -237,3 +239,43 @@ class FamilyVariant(VariantBase):
                 mendelians.append(m1 or m2)
             self._is_mendelian = all(mendelians)
         return self._is_mendelian
+
+    def is_denovo(self):
+        if self._is_denovo is None:
+            denovos = []
+            for _pid, trio in self.family.trios.items():
+                index = self.family.members_index(trio)
+                tgt = self.gt[:, index]
+                ch = tgt[:, 0]
+                p1 = tgt[:, 1]
+                p2 = tgt[:, 2]
+
+                m1 = (ch[0] != p1[0] and ch[0] != p1[1]) or \
+                    (ch[1] != p2[0] and ch[1] != p2[1])
+                m2 = (ch[0] != p2[0] and ch[0] != p2[1]) or \
+                    (ch[1] != p1[0] and ch[1] != p1[1])
+                denovos.append(
+                    m1 and m2 and
+                    np.all(p1 == 0) and np.all(p2 == 0))
+            self._is_denovo = any(denovos)
+        return self._is_denovo
+
+    def is_omission(self):
+        if self._is_omission is None:
+            omissions = []
+            for _pid, trio in self.family.trios.items():
+                index = self.family.members_index(trio)
+                tgt = self.gt[:, index]
+                ch = tgt[:, 0]
+                p1 = tgt[:, 1]
+                p2 = tgt[:, 2]
+
+                m1 = (ch[0] != p1[0] and ch[0] != p1[1]) or \
+                    (ch[1] != p2[0] and ch[1] != p2[1])
+                m2 = (ch[0] != p2[0] and ch[0] != p2[1]) or \
+                    (ch[1] != p1[0] and ch[1] != p1[1])
+                omissions.append(
+                    m1 and m2 and
+                    (np.all(p1 != 0) or np.all(p2 != 0)))
+            self._is_omission = any(omissions)
+        return self._is_omission

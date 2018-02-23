@@ -55,48 +55,6 @@ def fv1(fam1):
     return v
 
 
-def test_mendelian_simple_1(fv1):
-    v = fv1.clone()
-    v.gt = np.array([[0, 0, 0],
-                     [0, 0, 0]])
-    assert v.is_mendelian()
-
-    v = fv1.clone()
-    v.gt = np.array([[0, 0, 1],
-                     [0, 0, 0]])
-    assert not v.is_mendelian()
-
-    v = fv1.clone()
-    v.gt = np.array([[0, 0, 0],
-                     [0, 0, 1]])
-    assert not v.is_mendelian()
-
-    v = fv1.clone()
-    v.gt = np.array([[1, 0, 0],
-                     [0, 0, 1]])
-    assert v.is_mendelian()
-
-    v = fv1.clone()
-    v.gt = np.array([[0, 0, 0],
-                     [1, 0, 1]])
-    assert v.is_mendelian()
-
-    v = fv1.clone()
-    v.gt = np.array([[1, 0, 0],
-                     [1, 0, 1]])
-    assert v.is_mendelian()
-
-    v = fv1.clone()
-    v.gt = np.array([[1, 1, 0],
-                     [1, 0, 1]])
-    assert v.is_mendelian()
-
-    v = fv1.clone()
-    v.gt = np.array([[1, 1, 1],
-                     [1, 0, 1]])
-    assert v.is_mendelian()
-
-
 PED2 = """
 # SIMPLE QUAD
 familyId,    personId,    dadId,    momId,    sex,    status,    role
@@ -105,83 +63,6 @@ f1,          m1,          0,        0,        2,      1,         mom
 f1,          p1,          d1,       m1,       1,      2,         prb
 f1,          s1,          d1,       m1,       1,      1,         sib
 """
-
-
-@pytest.fixture(scope='session')
-def fam2():
-    ped_df = RawVariantsLoader.load_pedigree_file(
-        StringIO.StringIO(PED2), sep=',')
-    print(ped_df.dtypes)
-    print(ped_df)
-    print(ped_df.to_dict(orient='records'))
-
-    family = Family("f1", ped_df)
-    assert len(family.trios) == 2
-    return family
-
-
-@pytest.fixture(scope='session')
-def fv2(fam2):
-    v = FamilyVariant("1", 11539, "T", "TA")
-    v.set_family(fam2)
-    return v
-
-
-def test_mendelian_simple_2(fv2):
-    v = fv2.clone()
-    v.gt = np.array([[0, 0, 0, 0],
-                     [0, 0, 0, 0]])
-    assert v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[1, 1, 0, 0],
-                     [0, 0, 0, 0]])
-    assert v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[1, 1, 1, 0],
-                     [0, 0, 0, 0]])
-    assert v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[1, 1, 1, 1],
-                     [0, 0, 0, 0]])
-    assert v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[1, 1, 1, 1],
-                     [0, 0, 1, 1]])
-    assert v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[1, 1, 1, 1],
-                     [1, 1, 1, 1]])
-    assert v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[1, 1, 1, 1],
-                     [0, 0, 1, 1]])
-    assert v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[0, 1, 1, 1],
-                     [0, 1, 1, 1]])
-    assert not v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[0, 1, 1, 1],
-                     [0, 1, 0, 1]])
-    assert not v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[0, 1, 1, 1],
-                     [0, 1, 0, 0]])
-    assert v.is_mendelian()
-
-    v = fv2.clone()
-    v.gt = np.array([[0, 1, 1, 0],
-                     [0, 1, 0, 1]])
-    assert v.is_mendelian()
 
 
 PED3 = """
@@ -212,38 +93,268 @@ def fv3(fam3):
     return v
 
 
-def test_mendelian_simple_3(fv3):
+@pytest.fixture(scope='session')
+def fam2():
+    ped_df = RawVariantsLoader.load_pedigree_file(
+        StringIO.StringIO(PED2), sep=',')
+    print(ped_df.dtypes)
+    print(ped_df)
+    print(ped_df.to_dict(orient='records'))
+
+    family = Family("f1", ped_df)
+    assert len(family.trios) == 2
+    return family
+
+
+@pytest.fixture(scope='session')
+def fv2(fam2):
+    v = FamilyVariant("1", 11539, "T", "TA")
+    v.set_family(fam2)
+    return v
+
+
+def test_mendelian_trio_1(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[0, 0, 0],
+                     [0, 0, 0]])
+    assert v.is_mendelian()
+
+
+def test_non_mendelian_trio_1(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[0, 0, 1],
+                     [0, 0, 0]])
+    assert not v.is_mendelian()
+
+
+def test_non_mendelian_trio_2(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[0, 0, 0],
+                     [0, 0, 1]])
+    assert not v.is_mendelian()
+
+
+def test_mendelian_trio_2(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[1, 0, 0],
+                     [0, 0, 1]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_trio_3(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[0, 0, 0],
+                     [1, 0, 1]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_trio_4(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[1, 0, 0],
+                     [1, 0, 1]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_trio_5(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[1, 1, 0],
+                     [1, 0, 1]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_trio_6(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[1, 1, 1],
+                     [1, 0, 1]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_quad_1(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[0, 0, 0, 0],
+                     [0, 0, 0, 0]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_quad_2(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[1, 1, 0, 0],
+                     [0, 0, 0, 0]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_quad_3(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[1, 1, 1, 0],
+                     [0, 0, 0, 0]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_quad_4(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[1, 1, 1, 1],
+                     [0, 0, 0, 0]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_quad_5(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[1, 1, 1, 1],
+                     [0, 0, 1, 1]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_quad_6(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[1, 1, 1, 1],
+                     [1, 1, 1, 1]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_quad_7(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[1, 1, 1, 1],
+                     [0, 0, 1, 1]])
+    assert v.is_mendelian()
+
+
+def test_non_mendelian_quad_1(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[0, 1, 1, 1],
+                     [0, 1, 1, 1]])
+    assert not v.is_mendelian()
+
+
+def test_non_mendelian_quad_2(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[0, 1, 1, 1],
+                     [0, 1, 0, 1]])
+    assert not v.is_mendelian()
+
+
+def test_mendelian_quad_8(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[0, 1, 1, 1],
+                     [0, 1, 0, 0]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_quad_9(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[0, 1, 1, 0],
+                     [0, 1, 0, 1]])
+    assert v.is_mendelian()
+
+
+def test_mendelian_multi_1(fv3):
     v = fv3.clone()
     v.gt = np.array([[0, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0]])
     assert v.is_mendelian()
 
+
+def test_mendelian_multi_2(fv3):
     v = fv3.clone()
     v.gt = np.array([[1, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0]])
     assert v.is_mendelian()
 
+
+def test_mendelian_multi_3(fv3):
     v = fv3.clone()
     v.gt = np.array([[1, 0, 0, 0, 0],
                      [1, 0, 0, 0, 0]])
     assert not v.is_mendelian()
 
+
+def test_mendelian_multi_4(fv3):
     v = fv3.clone()
     v.gt = np.array([[1, 0, 1, 0, 0],
                      [1, 0, 0, 0, 0]])
     assert v.is_mendelian()
 
+
+def test_mendelian_multi_5(fv3):
     v = fv3.clone()
     v.gt = np.array([[1, 1, 1, 0, 0],
                      [1, 0, 0, 0, 0]])
     assert v.is_mendelian()
 
+
+def test_mendelian_multi_6(fv3):
     v = fv3.clone()
     v.gt = np.array([[1, 1, 1, 0, 0],
                      [1, 0, 1, 0, 0]])
     assert not v.is_mendelian()
 
+
+def test_mendelian_multi_7(fv3):
     v = fv3.clone()
     v.gt = np.array([[1, 1, 1, 0, 1],
                      [1, 0, 1, 0, 0]])
     assert v.is_mendelian()
+
+
+def test_denovo_trio_1(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[0, 0, 1],
+                     [0, 0, 0]])
+    assert not v.is_mendelian()
+    assert v.is_denovo()
+
+
+def test_denovo_trio_2(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[0, 0, 1],
+                     [0, 0, 1]])
+    assert not v.is_mendelian()
+    assert v.is_denovo()
+
+
+def test_denovo_trio_3(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[0, 0, 0],
+                     [0, 0, 1]])
+    assert not v.is_mendelian()
+    assert v.is_denovo()
+
+
+def test_not_denovo_trio_1(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[0, 0, 0],
+                     [0, 0, 0]])
+    assert v.is_mendelian()
+    assert not v.is_denovo()
+
+
+def test_not_denovo_trio_2(fv1):
+    v = fv1.clone()
+    v.gt = np.array([[0, 1, 0],
+                     [0, 1, 0]])
+    assert not v.is_mendelian()
+    assert not v.is_denovo()
+    assert v.is_omission()
+
+
+def test_denovo_quad_1(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[0, 0, 1, 0],
+                     [0, 0, 0, 0]])
+    assert not v.is_mendelian()
+    assert v.is_denovo()
+
+
+def test_denovo_quad_2(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[0, 0, 0, 1],
+                     [0, 0, 0, 0]])
+    assert not v.is_mendelian()
+    assert v.is_denovo()
+
+
+def test_not_denovo_quad_1(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[1, 0, 0, 1],
+                     [0, 0, 0, 0]])
+    assert v.is_mendelian()
+    assert not v.is_denovo()
