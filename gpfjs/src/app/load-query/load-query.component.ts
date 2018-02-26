@@ -31,7 +31,6 @@ export class LoadQueryComponent implements OnInit {
       console.log("LoadQueryComponent loaded");
       this.route.params.subscribe(
           params => {
-              console.log("params", params)
               if (!params['uuid']) {
                   this.router.navigate(['/']);
               } else {
@@ -52,7 +51,7 @@ export class LoadQueryComponent implements OnInit {
   }
 
   private restoreQuery(queryData: {}, page: string) {
-      console.log("restoring data", queryData, page);
+      console.log(queryData, page);
       if (page in PAGE_TYPE_TO_NAVIGATE) {
           let navigationParams = 
               PAGE_TYPE_TO_NAVIGATE[page](queryData['datasetId']);
