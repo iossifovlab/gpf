@@ -1,5 +1,5 @@
 <div ngbDropdown class="d-inline-block" autoClose="outside" placement="top" (openChange)="saveIfOpened($event)"> 
-	<button class="btn btn-default" ngbDropdownToggle id="dropdownBasic1">Save query</button>
+	<button class="btn btn-default" ngbDropdownToggle id="dropdownBasic1">Share query</button>
 	<div ngbDropdownMenu aria-labelledby="dropdownBasic1" >
 		<div class="input-group">
 			<input #link type="disabled" value="{{ createUrl() }}" (click)="$event.target.select()" width="400px" />
