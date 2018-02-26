@@ -16,9 +16,8 @@ import logging
 # from denovo_gene_sets import build_denovo_gene_sets
 from gene.config import GeneInfoConfig
 from datasets.config import DatasetsConfig
-from GeneTerms import loadGeneTerm, GeneTerms
+from GeneTerms import loadGeneTerm
 from DAE import vDB
-from pheno.pheno_regression import PhenoRegression
 
 LOGGER = logging.getLogger(__name__)
 
@@ -231,7 +230,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             })
         return result
 
-    def get_gene_set(self, gene_set_id, gene_sets_types={'SD': ['autism']}, **kwargs):
+    def get_gene_set(self, gene_set_id,
+                     gene_sets_types={'SD': ['autism']}, **kwargs):
         gene_sets_types = self._filter_out_empty_types(gene_sets_types)
         syms = self._get_gene_set_syms(gene_set_id, gene_sets_types)
         if not syms:
@@ -241,14 +241,16 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             "name": gene_set_id,
             "count": len(syms),
             "syms": syms,
-            "desc": "{} ({})".format(gene_set_id, self._format_description(gene_sets_types))
+            "desc": "{} ({})".format(
+                gene_set_id, self._format_description(gene_sets_types))
         }
 
     def _get_gene_set_syms(self, gene_set_id, gene_sets_types):
         gene_set_syms = set()
         for dataset_id, phenotypes in gene_sets_types.iteritems():
             gene_set_syms.update(
-                self._get_gene_set_syms_for_dataset(gene_set_id, dataset_id, phenotypes))
+                self._get_gene_set_syms_for_dataset(
+                    gene_set_id, dataset_id, phenotypes))
         return gene_set_syms
 
     def _get_gene_set_syms_for_dataset(self, name, dataset_id, phenotypes):
@@ -276,19 +278,23 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return result
 
     def _gene_sets_for(self, dataset):
-        dataset_cache = {effect_type['name']:
-                         {phenotype['id']: {}
-                             for phenotype in self._get_configured_dataset_legend(dataset)}
-                         for effect_type in self.effect_types}
+        dataset_cache = {
+            effect_type['name']:
+            {phenotype['id']: {}
+             for phenotype in self._get_configured_dataset_legend(dataset)}
+            for effect_type in self.effect_types}
         self.cache[dataset['id']] = dataset_cache
-        pedigree_selector = self.datasets_pedigree_selectors[dataset['id']]['source']
+        pedigree_selector = self.datasets_pedigree_selectors[
+            dataset['id']]['source']
         for effect_type in self.effect_types:
-            variants = list(vDB.get_denovo_variants(dataset['studies'],
-                                                    effectTypes=effect_type['value']))
+            variants = list(vDB.get_denovo_variants(
+                dataset['studies'],
+                effectTypes=effect_type['value']))
             effect_cache = dataset_cache[effect_type['name']]
             for criteria in chain(*self.variant_criterias):
                 key = criteria['name']
-                for variant in filter(lambda v: self._matches(v, criteria), variants):
+                for variant in filter(
+                        lambda v: self._matches(v, criteria), variants):
                     gene_symbols = {ge['sym']
                                     for ge in variant.requestedGeneEffects}
                     if 'sib' in variant.inChS:
@@ -309,7 +315,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                            for gene, gene_families
                            in groupby(gene_summary_list, key=lambda x: x[0:4])}
 
-            for (gene, in_prb, in_sib, phenotype), count in gene_counts.iteritems():
+            for (gene, in_prb,
+                 in_sib, phenotype), count in gene_counts.iteritems():
                 count_type = 'Recurrent' if count > 1 else 'Single'
                 if in_prb and phenotype is not None:
                     effect_cache.setdefault(phenotype, {}) \
