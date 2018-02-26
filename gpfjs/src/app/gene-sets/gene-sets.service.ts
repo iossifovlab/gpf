@@ -27,14 +27,14 @@ export class GeneSetsService {
       });
   }
 
-  getGeneSets(selectedGeneSetsCollection: string, searchTerm: string, geneSetsTypesNames: Array<string>): Observable<GeneSet[]> {
+  getGeneSets(selectedGeneSetsCollection: string, searchTerm: string, geneSetsTypes: Object): Observable<GeneSet[]> {
     let headers = new Headers({ 'Content-Type': 'application/json' });
     let options = new RequestOptions({ headers: headers });
     return this.http
       .post(this.geneSetsSearchUrl, {
         geneSetsCollection: selectedGeneSetsCollection,
         filter: searchTerm,
-        geneSetsTypes: geneSetsTypesNames,
+        geneSetsTypes: geneSetsTypes,
         limit: 100
       }, options)
       .map(res => {
