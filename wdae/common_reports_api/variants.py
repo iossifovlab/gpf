@@ -3,6 +3,8 @@ Created on Jul 27, 2015
 
 @author: lubo
 '''
+from __future__ import print_function
+
 from collections import defaultdict, Counter
 import itertools
 import logging
@@ -40,6 +42,7 @@ class CommonBase(object):
                         for pid in sorted(family.keys(),
                                           key=lambda x: (family[x].role, x))])
 
+
 class CounterBase(CommonBase):
 
     def build_families_buffer(self, studies):
@@ -48,7 +51,8 @@ class CounterBase(CommonBase):
             families = st.families.values()
             if len(st.phenotypes) > 1 and self.phenotype_id != 'unaffected':
                 families = filter(
-                    lambda f: f.atts['phenotype'] == self.phenotype_id, families)
+                    lambda f: f.atts['phenotype'] == self.phenotype_id,
+                    families)
             for f in families:
                 for p in f.memberInOrder:
                     if p.personId in families_buffer[f.familyId]:
@@ -85,7 +89,9 @@ class ChildrenCounter(CounterBase):
 
     @property
     def children_total(self):
-        return self.children_male + self.children_female + self.children_unspecified
+        return self.children_male + \
+            self.children_female + \
+            self.children_unspecified
 
     def check_phenotype(self, person):
         if self.phenotype_id == 'unaffected':
@@ -132,7 +138,8 @@ class FamiliesCounters(CounterBase):
             self.total += count
 
     def get_counter(self, fconf):
-        return self.data.get(fconf,
+        return self.data.get(
+            fconf,
             (self.family_configuration_to_pedigree_v3(fconf), 0))
 
     def type_counters(self):
@@ -145,8 +152,9 @@ class FamiliesCounters(CounterBase):
         return res
 
     def get_color(self, role):
-        return self.legend[self.phenotype_id if role == 'prb' else 'unaffected']\
-            ['color']
+        return self.legend[
+            self.phenotype_id if role == 'prb' else 'unaffected'
+        ]['color']
 
     def family_configuration_to_pedigree_v3(self, family_configuration):
         pedigree = [
@@ -176,14 +184,15 @@ class ReportBase(CommonBase):
         self.study_name = study_name
 
         dataset = preloaded.register.get('datasets').get_factory() \
-                .get_dataset_by_name(study_name)
+            .get_dataset_by_name(study_name)
 
         if dataset is not None:
             self.study_description = ''
             self.studies = dataset.studies
             self.legend = {
                 pheno_legend['id']: pheno_legend
-                for pheno_legend in dataset.get_legend(person_grouping='phenotype')
+                for pheno_legend in dataset.get_legend(
+                    person_grouping='phenotype')
             }
         else:
             if study_name in vDB.get_study_group_names():
@@ -205,7 +214,8 @@ class ReportBase(CommonBase):
             dataset = dataset_factory.get_dataset(dataset_id)
             self.legend.update({
                 pheno_legend['id']: pheno_legend
-                for pheno_legend in dataset.get_legend(person_grouping='phenotype')
+                for pheno_legend in dataset.get_legend(
+                    person_grouping='phenotype')
             })
 
     def _init_phenotypes(self):
@@ -217,7 +227,8 @@ class ReportBase(CommonBase):
 
     @property
     def phenotypes(self):
-        return [self.legend[id]['name'] for id in self.phenotype_ids]
+        return [self.legend[lid]['name'] for lid in self.phenotype_ids]
+
 
 class FamiliesReport(ReportBase, precompute.register.Precompute):
 
@@ -275,6 +286,7 @@ class FamiliesReport(ReportBase, precompute.register.Precompute):
         self.families_total = cPickle.loads(zlib.decompress(ft))
         cc = data['children_counters']
         self.children_counters = cPickle.loads(zlib.decompress(cc))
+
 
 class DenovoEventsCounter(CounterBase):
 
@@ -368,7 +380,8 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
         row = []
         for phenotype_id in self.phenotype_ids:
             cc = self.families_report.get_children_counters(phenotype_id)
-            ec = DenovoEventsCounter(phenotype_id, self.legend, cc, effect_type)
+            ec = DenovoEventsCounter(
+                phenotype_id, self.legend, cc, effect_type)
             ec.build(self.studies)
             assert ec.phenotype_id == phenotype_id
             row.append(ec)
