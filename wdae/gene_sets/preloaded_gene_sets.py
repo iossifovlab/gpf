@@ -3,12 +3,9 @@ Created on Feb 29, 2016
 
 @author: lubo
 '''
-import cPickle
-import zlib
-
 from gene.gene_set_collections import GeneSetsCollections
-import precompute
 import preloaded
+
 
 class GeneSetsCollectionsPreload(preloaded.register.Preload):
 

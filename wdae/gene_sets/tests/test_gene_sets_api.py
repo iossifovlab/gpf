@@ -3,13 +3,39 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
-
-from rest_framework import status
-from rest_framework.test import APITestCase
+from django.contrib.auth import get_user_model
 from django.utils.http import urlencode
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
+
+from datasets_api.models import Dataset
 
 
 class Test(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        Dataset.recreate_dataset_perm('SD', [])
+        Dataset.recreate_dataset_perm('SSC', [])
+        Dataset.recreate_dataset_perm('VIP', [])
+        Dataset.recreate_dataset_perm('TEST', [])
+        Dataset.recreate_dataset_perm('SPARK', [])
+        Dataset.recreate_dataset_perm('AGRE_WG', [])
+        Dataset.recreate_dataset_perm('denovo_db', [])
+
+        User = get_user_model()
+        u = User.objects.create(
+            email="admin@example.com",
+            name="First",
+            is_staff=True,
+            is_active=True,
+            is_superuser=True)
+        u.set_password("secret")
+        u.save()
+
+        Token.objects.get_or_create(user=u)
+        cls.user = u
+        cls.user.save()
 
     def test_gene_sets_collections(self):
         url = "/api/v3/gene_sets/gene_sets_collections"
@@ -105,7 +131,7 @@ class Test(APITestCase):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
             "geneSetsTypes": {
-                "SD":["autism"]
+                "SD": ["autism"]
             }
         }
         request = "{}?{}".format(url, urlencode(query))

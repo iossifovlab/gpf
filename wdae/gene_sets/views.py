@@ -7,7 +7,6 @@ import ast
 from copy import deepcopy
 from rest_framework import views, status
 from rest_framework.response import Response
-from gene.gene_set_collections import GeneSetsCollections
 from django.http.response import StreamingHttpResponse
 import itertools
 from django.utils.http import urlencode
@@ -15,6 +14,7 @@ from django.utils.http import urlencode
 from preloaded import register
 from datasets_api.permissions import IsDatasetAllowed
 from users_api.authentication import SessionAuthenticationWithoutCSRF
+
 
 class GeneSetsBaseView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
@@ -34,11 +34,12 @@ class GeneSetsBaseView(views.APIView):
     def permitted_denovo_gene_sets_types(cls, gene_sets_types, user):
         if type(gene_sets_types) is list:
             permitted_datasets = cls.permitted_datasets(
-                {gene_set_type['datasetId'] for gene_set_type in gene_sets_types},
+                {gene_set_type['datasetId']
+                    for gene_set_type in gene_sets_types},
                 user)
             return filter(lambda gene_set_type:
-                    gene_set_type['datasetId'] in permitted_datasets,
-                gene_sets_types)
+                          gene_set_type['datasetId'] in permitted_datasets,
+                          gene_sets_types)
         elif type(gene_sets_types) is dict:
             permitted_datasets = cls.permitted_datasets(
                 set(gene_sets_types.keys()), user)
@@ -46,7 +47,7 @@ class GeneSetsBaseView(views.APIView):
                     for k, v in gene_sets_types.iteritems()
                     if k in permitted_datasets}
         else:
-            raise 'KUR'
+            raise ValueError()
 
 
 class GeneSetsCollectionsView(GeneSetsBaseView):
